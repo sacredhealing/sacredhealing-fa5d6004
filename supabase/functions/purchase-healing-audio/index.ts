@@ -98,6 +98,28 @@ serve(async (req) => {
         shc_paid: audio.price_shc,
       });
 
+      // Process affiliate commission
+      try {
+        const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
+        const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+        await fetch(`${SUPABASE_URL}/functions/v1/process-affiliate-commission`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+          },
+          body: JSON.stringify({
+            userId: user.id,
+            purchaseType: 'healing_audio',
+            purchaseAmount: audio.price_shc,
+            purchaseId: audioId,
+          }),
+        });
+        console.log('[PURCHASE-HEALING-AUDIO] Affiliate commission processed');
+      } catch (commissionError) {
+        console.error('[PURCHASE-HEALING-AUDIO] Affiliate commission error (non-blocking):', commissionError);
+      }
+
       return new Response(JSON.stringify({ 
         success: true, 
         audioUrl: audio.audio_url 

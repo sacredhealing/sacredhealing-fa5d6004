@@ -122,6 +122,26 @@ serve(async (req) => {
         .update({ purchase_count: track.purchase_count + 1 })
         .eq('id', trackId);
 
+      // Process affiliate commission
+      try {
+        const commissionResponse = await fetch(`${SUPABASE_URL}/functions/v1/process-affiliate-commission`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+          },
+          body: JSON.stringify({
+            userId: user.id,
+            purchaseType: 'music',
+            purchaseAmount: track.price_shc,
+            purchaseId: trackId,
+          }),
+        });
+        console.log('Affiliate commission processed:', await commissionResponse.json());
+      } catch (commissionError) {
+        console.error('Affiliate commission error (non-blocking):', commissionError);
+      }
+
       console.log(`SHC purchase completed for ${track.title}`);
 
       return new Response(

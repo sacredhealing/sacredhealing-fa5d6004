@@ -128,6 +128,28 @@ serve(async (req) => {
         .update({ enrollment_count: course.enrollment_count + 1 })
         .eq("id", courseId);
 
+      // Process affiliate commission
+      try {
+        const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
+        const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+        await fetch(`${SUPABASE_URL}/functions/v1/process-affiliate-commission`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+          },
+          body: JSON.stringify({
+            userId: user.id,
+            purchaseType: 'course',
+            purchaseAmount: course.price_shc,
+            purchaseId: courseId,
+          }),
+        });
+        console.log('[ENROLL-COURSE] Affiliate commission processed');
+      } catch (commissionError) {
+        console.error('[ENROLL-COURSE] Affiliate commission error (non-blocking):', commissionError);
+      }
+
       return new Response(JSON.stringify({ 
         success: true,
         message: "Successfully enrolled!"
