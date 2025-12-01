@@ -15,6 +15,8 @@ import Wallet from "./pages/Wallet";
 import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
 import AdminMusic from "./pages/AdminMusic";
+import AdminHealing from "./pages/AdminHealing";
+import Healing from "./pages/Healing";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,9 +38,11 @@ const App = () => (
               <Route path="/music" element={<Music />} />
               <Route path="/wallet" element={<Wallet />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/healing" element={<Healing />} />
             </Route>
             <Route path="/admin" element={<Admin />} />
             <Route path="/admin/music" element={<AdminMusic />} />
+            <Route path="/admin/healing" element={<AdminHealing />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
