@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      affiliate_earnings: {
+        Row: {
+          affiliate_user_id: string
+          commission_rate: number
+          commission_shc: number
+          created_at: string
+          id: string
+          paid_at: string | null
+          purchase_amount: number
+          purchase_id: string | null
+          purchase_type: string
+          referred_user_id: string
+          status: string
+        }
+        Insert: {
+          affiliate_user_id: string
+          commission_rate?: number
+          commission_shc: number
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          purchase_amount?: number
+          purchase_id?: string | null
+          purchase_type: string
+          referred_user_id: string
+          status?: string
+        }
+        Update: {
+          affiliate_user_id?: string
+          commission_rate?: number
+          commission_shc?: number
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          purchase_amount?: number
+          purchase_id?: string | null
+          purchase_type?: string
+          referred_user_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       announcement_dismissals: {
         Row: {
           announcement_id: string
@@ -624,7 +666,11 @@ export type Database = {
           full_name: string | null
           id: string
           last_login_date: string | null
+          referral_code: string | null
+          referred_by: string | null
           streak_days: number
+          total_affiliate_earnings: number | null
+          total_referrals: number | null
           updated_at: string
           user_id: string
         }
@@ -634,7 +680,11 @@ export type Database = {
           full_name?: string | null
           id?: string
           last_login_date?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
           streak_days?: number
+          total_affiliate_earnings?: number | null
+          total_referrals?: number | null
           updated_at?: string
           user_id: string
         }
@@ -644,9 +694,51 @@ export type Database = {
           full_name?: string | null
           id?: string
           last_login_date?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
           streak_days?: number
+          total_affiliate_earnings?: number | null
+          total_referrals?: number | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_referred_by_fkey"
+            columns: ["referred_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      referral_signups: {
+        Row: {
+          created_at: string
+          id: string
+          referral_code: string
+          referred_bonus_shc: number
+          referred_user_id: string
+          referrer_user_id: string
+          signup_bonus_shc: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          referral_code: string
+          referred_bonus_shc?: number
+          referred_user_id: string
+          referrer_user_id: string
+          signup_bonus_shc?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          referral_code?: string
+          referred_bonus_shc?: number
+          referred_user_id?: string
+          referrer_user_id?: string
+          signup_bonus_shc?: number
         }
         Relationships: []
       }
@@ -781,7 +873,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_referral_code: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never
