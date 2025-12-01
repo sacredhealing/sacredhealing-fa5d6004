@@ -14,6 +14,131 @@ export type Database = {
   }
   public: {
     Tables: {
+      healing_audio: {
+        Row: {
+          audio_url: string
+          category: string
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          duration_seconds: number
+          id: string
+          is_free: boolean
+          play_count: number
+          preview_url: string | null
+          price_shc: number
+          price_usd: number
+          title: string
+        }
+        Insert: {
+          audio_url: string
+          category?: string
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number
+          id?: string
+          is_free?: boolean
+          play_count?: number
+          preview_url?: string | null
+          price_shc?: number
+          price_usd?: number
+          title: string
+        }
+        Update: {
+          audio_url?: string
+          category?: string
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number
+          id?: string
+          is_free?: boolean
+          play_count?: number
+          preview_url?: string | null
+          price_shc?: number
+          price_usd?: number
+          title?: string
+        }
+        Relationships: []
+      }
+      healing_audio_purchases: {
+        Row: {
+          amount_paid: number | null
+          audio_id: string
+          id: string
+          payment_method: string
+          purchased_at: string
+          shc_paid: number | null
+          user_id: string
+        }
+        Insert: {
+          amount_paid?: number | null
+          audio_id: string
+          id?: string
+          payment_method: string
+          purchased_at?: string
+          shc_paid?: number | null
+          user_id: string
+        }
+        Update: {
+          amount_paid?: number | null
+          audio_id?: string
+          id?: string
+          payment_method?: string
+          purchased_at?: string
+          shc_paid?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "healing_audio_purchases_audio_id_fkey"
+            columns: ["audio_id"]
+            isOneToOne: false
+            referencedRelation: "healing_audio"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      healing_purchases: {
+        Row: {
+          amount_paid: number
+          created_at: string
+          expires_at: string
+          id: string
+          purchase_type: string
+          starts_at: string
+          status: string
+          stripe_payment_id: string | null
+          stripe_subscription_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount_paid: number
+          created_at?: string
+          expires_at: string
+          id?: string
+          purchase_type: string
+          starts_at?: string
+          status?: string
+          stripe_payment_id?: string | null
+          stripe_subscription_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount_paid?: number
+          created_at?: string
+          expires_at?: string
+          id?: string
+          purchase_type?: string
+          starts_at?: string
+          status?: string
+          stripe_payment_id?: string | null
+          stripe_subscription_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       meditation_completions: {
         Row: {
           completed_at: string

@@ -175,7 +175,7 @@ const Admin: React.FC = () => {
         </div>
 
         {/* Quick Links */}
-        <div className="grid grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-3 gap-4 mb-8">
           <Button 
             variant="outline" 
             className="h-20 flex flex-col items-center justify-center gap-2"
@@ -191,6 +191,14 @@ const Admin: React.FC = () => {
           >
             <Music size={24} className="text-accent" />
             <span>Music Store</span>
+          </Button>
+          <Button 
+            variant="outline" 
+            className="h-20 flex flex-col items-center justify-center gap-2"
+            onClick={() => navigate('/admin/healing')}
+          >
+            <Music size={24} className="text-secondary" />
+            <span>Healing Audio</span>
           </Button>
         </div>
 

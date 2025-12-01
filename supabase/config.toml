@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.purchase-music]
 verify_jwt = false
+
+[functions.create-healing-checkout]
+verify_jwt = false
+
+[functions.purchase-healing-audio]
+verify_jwt = false
