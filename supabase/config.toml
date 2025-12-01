@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.purchase-healing-audio]
 verify_jwt = false
+
+[functions.enroll-course]
+verify_jwt = false
