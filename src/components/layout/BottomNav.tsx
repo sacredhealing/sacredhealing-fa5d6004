@@ -9,7 +9,7 @@ const getNavItems = (t: (key: string) => string) => [
   { to: '/meditations', icon: Play, label: t('nav.meditate') },
   { to: '/healing', icon: Sparkles, label: t('nav.healing') },
   { to: '/music', icon: Music2, label: t('nav.music') },
-  { to: '/wallet', icon: Wallet, label: t('nav.wallet') },
+  { to: '/profile', icon: User, label: t('nav.profile') },
 ];
 
 export const BottomNav: React.FC = () => {
