@@ -5,7 +5,11 @@
     "cancel": "Avbryt",
     "loading": "Laddar...",
     "error": "Fel",
-    "success": "Lyckades"
+    "success": "Lyckades",
+    "learnMore": "Läs mer",
+    "viewAll": "Visa alla",
+    "upgradeNow": "Uppgradera nu",
+    "featured": "Utvald"
   },
   "nav": {
     "home": "Hem",
@@ -17,13 +21,21 @@
   },
   "dashboard": {
     "greeting": "God morgon",
+    "sacredSoul": "Helig Själ",
     "streak": "dagars svit",
-    "balance": "SHC Saldo",
+    "balance": "Ditt SHC Saldo",
     "claimRewards": "Hämta Belöningar",
     "todaysWisdom": "Dagens Visdom",
     "todaysMeditation": "Dagens Meditation",
     "startSession": "Starta Session",
     "quickActions": "Snabbåtgärder"
+  },
+  "quickActions": {
+    "meditate": "Meditera",
+    "videos": "Videor",
+    "courses": "Kurser",
+    "earn": "Tjäna",
+    "wallet": "Plånbok"
   },
   "meditations": {
     "title": "Meditationer",
@@ -71,7 +83,16 @@
     "help": "Hjälp & Support",
     "signOut": "Logga ut",
     "upgradePremium": "Uppgradera till Premium",
-    "unlockFeatures": "Lås upp alla meditationer, kurser och exklusivt innehåll"
+    "unlockFeatures": "Lås upp alla meditationer, kurser och exklusivt innehåll",
+    "promoteEarn": "Marknadsför & Tjäna",
+    "promoteEarnDesc": "Dela och tjäna SHC belöningar",
+    "appearance": "Utseende",
+    "darkMode": "Mörkt läge",
+    "privacy": "Integritet",
+    "dataAndSecurity": "Data & säkerhet",
+    "appPreferences": "App-inställningar",
+    "dailyReminders": "Dagliga påminnelser",
+    "web3Wallet": "Web3 plånbok"
   },
   "courses": {
     "title": "Kurser",
@@ -95,5 +116,48 @@
     "musicStore": "Musikbutik",
     "uploadTrack": "Ladda upp spår",
     "manageContent": "Hantera innehåll"
+  },
+  "incomeStreams": {
+    "title": "Inkomstströmmar",
+    "subtitle": "Upptäck sätt att tjäna",
+    "moreOpportunities": "Fler Möjligheter",
+    "noStreams": "Inga inkomstströmmar tillgängliga ännu.",
+    "checkBackSoon": "Kom tillbaka snart för möjligheter!",
+    "shcCoin": {
+      "title": "Det Heliga Läkande Myntet",
+      "badge": "SHC Token",
+      "description1": "Det Heliga Läkande Myntet är mer än en symbol—det är en mild följeslagare på resan tillbaka till dig själv. Genomsyrat av läkande energi och spirituell intention, påminner det dig om att sakta ner, andas djupt och återknyta kontakten med den inre visdom som vägleder ditt liv.",
+      "description2": "Varje mynt bär essensen av frihet—frihet från gamla mönster, frihet att växa och frihet att stiga till den fullaste versionen av vem du är. Som läkande musik för själen uppmuntrar dess närvaro balans, klarhet och förnyelse.",
+      "description3": "Designat för att inspirera personlig transformation öppnar Det Heliga Läkande Myntet också vägen mot",
+      "financialFreedom": "finansiell frihet",
+      "description4": "Det representerar harmoni: när din energi är klar och ditt syfte uppvaknat, flödar överflöd med större lätthet.",
+      "symbolOfGrowth": "En symbol för tillväxt, ett verktyg för empowerment och en väktare av inre ljus.",
+      "tokenAddress": "Token-adress (Solana)",
+      "howToBuy": "Hur du köper SHC",
+      "buyWithPhantom": "Köp med Phantom Plånbok",
+      "buyWithCard": "Köp med Kreditkort",
+      "phantomStep1": "Ladda ner Phantom Plånbok (mobil eller webbläsartillägg)",
+      "phantomStep2": "Skapa eller importera din plånbok och lägg till SOL (Solana)",
+      "phantomStep3": "Öppna Phantom och tryck på Byt-ikonen",
+      "phantomStep4": "Välj SOL som token du byter från",
+      "phantomStep5": "Klistra in SHC token-adressen ovan eller sök \"Sacred Healing Coin\"",
+      "phantomStep6": "Ange beloppet och bekräfta bytet",
+      "getPhantomWallet": "Hämta Phantom Plånbok",
+      "cardStep1": "Öppna Phantom Plånbok och tryck på Köp",
+      "cardStep2": "Välj din föredragna leverantör (MoonPay, Coinbase, etc.)",
+      "cardStep3": "Ange dina kortuppgifter och belopp för att köpa SOL",
+      "cardStep4": "När SOL anländer, använd Byt-funktionen",
+      "cardStep5": "Byt din SOL mot SHC med token-adressen ovan",
+      "cardTip": "Tips: Phantoms inbyggda \"Köp\"-funktion låter dig köpa krypto direkt med ditt kort—ingen extern börs behövs!",
+      "tradeOnRaydium": "Handla SHC på Raydium"
+    }
+  },
+  "badges": {
+    "firstMeditation": "Första Meditation",
+    "sevenDayStreak": "7-dagars Svit",
+    "courseComplete": "Kurs Avslutad",
+    "thirtyDayStreak": "30-dagars Svit",
+    "premiumMember": "Premium Medlem",
+    "hundredSessions": "100 Sessioner"
   }
 }

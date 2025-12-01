@@ -5,7 +5,11 @@
     "cancel": "Cancel",
     "loading": "Loading...",
     "error": "Error",
-    "success": "Success"
+    "success": "Success",
+    "learnMore": "Learn More",
+    "viewAll": "View All",
+    "upgradeNow": "Upgrade Now",
+    "featured": "Featured"
   },
   "nav": {
     "home": "Home",
@@ -17,13 +21,21 @@
   },
   "dashboard": {
     "greeting": "Good morning",
+    "sacredSoul": "Sacred Soul",
     "streak": "day streak",
-    "balance": "SHC Balance",
+    "balance": "Your SHC Balance",
     "claimRewards": "Claim Rewards",
     "todaysWisdom": "Today's Wisdom",
     "todaysMeditation": "Today's Meditation",
     "startSession": "Start Session",
     "quickActions": "Quick Actions"
+  },
+  "quickActions": {
+    "meditate": "Meditate",
+    "videos": "Videos",
+    "courses": "Courses",
+    "earn": "Earn",
+    "wallet": "Wallet"
   },
   "meditations": {
     "title": "Meditations",
@@ -71,7 +83,16 @@
     "help": "Help & Support",
     "signOut": "Sign Out",
     "upgradePremium": "Upgrade to Premium",
-    "unlockFeatures": "Unlock all meditations, courses, and exclusive content"
+    "unlockFeatures": "Unlock all meditations, courses, and exclusive content",
+    "promoteEarn": "Promote & Earn",
+    "promoteEarnDesc": "Share and earn SHC rewards",
+    "appearance": "Appearance",
+    "darkMode": "Dark mode",
+    "privacy": "Privacy",
+    "dataAndSecurity": "Data & security",
+    "appPreferences": "App preferences",
+    "dailyReminders": "Daily reminders",
+    "web3Wallet": "Web3 wallet"
   },
   "courses": {
     "title": "Courses",
@@ -95,5 +116,48 @@
     "musicStore": "Music Store",
     "uploadTrack": "Upload Track",
     "manageContent": "Manage Content"
+  },
+  "incomeStreams": {
+    "title": "Income Streams",
+    "subtitle": "Discover ways to earn",
+    "moreOpportunities": "More Opportunities",
+    "noStreams": "No income streams available yet.",
+    "checkBackSoon": "Check back soon for opportunities!",
+    "shcCoin": {
+      "title": "The Sacred Healing Coin",
+      "badge": "SHC Token",
+      "description1": "The Sacred Healing Coin is more than a symbol—it is a gentle companion on the journey back to yourself. Infused with the vibrations of healing energy and spiritual intention, it serves as a reminder to slow down, breathe deeply, and reconnect with the inner wisdom that guides your life.",
+      "description2": "Each coin carries the essence of freedom—freedom from old patterns, freedom to grow, and freedom to rise into the fullest version of who you are. Like healing music for the soul, its presence encourages balance, clarity, and renewal.",
+      "description3": "Designed to inspire personal transformation, the Sacred Healing Coin also opens the path toward",
+      "financialFreedom": "financial freedom",
+      "description4": "It represents alignment: when your energy is clear and your purpose awakened, abundance flows with greater ease.",
+      "symbolOfGrowth": "A symbol of growth, a tool of empowerment, and a keeper of inner light.",
+      "tokenAddress": "Token Address (Solana)",
+      "howToBuy": "How to Buy SHC",
+      "buyWithPhantom": "Buy with Phantom Wallet",
+      "buyWithCard": "Buy with Credit Card",
+      "phantomStep1": "Download Phantom Wallet (mobile or browser extension)",
+      "phantomStep2": "Create or import your wallet and add SOL (Solana)",
+      "phantomStep3": "Open Phantom and tap the Swap icon",
+      "phantomStep4": "Select SOL as the token you're swapping from",
+      "phantomStep5": "Paste the SHC token address above or search \"Sacred Healing Coin\"",
+      "phantomStep6": "Enter the amount and confirm the swap",
+      "getPhantomWallet": "Get Phantom Wallet",
+      "cardStep1": "Open Phantom Wallet and tap Buy",
+      "cardStep2": "Select your preferred provider (MoonPay, Coinbase, etc.)",
+      "cardStep3": "Enter your card details and amount to purchase SOL",
+      "cardStep4": "Once SOL arrives, use the Swap feature",
+      "cardStep5": "Swap your SOL for SHC using the token address above",
+      "cardTip": "Tip: Phantom's built-in \"Buy\" feature lets you purchase crypto directly with your card—no external exchange needed!",
+      "tradeOnRaydium": "Trade SHC on Raydium"
+    }
+  },
+  "badges": {
+    "firstMeditation": "First Meditation",
+    "sevenDayStreak": "7-Day Streak",
+    "courseComplete": "Course Complete",
+    "thirtyDayStreak": "30-Day Streak",
+    "premiumMember": "Premium Member",
+    "hundredSessions": "100 Sessions"
   }
 }
