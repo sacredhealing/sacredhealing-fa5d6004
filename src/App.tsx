@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppLayout } from "./components/layout/AppLayout";
+import { ProtectedRoute } from "./components/layout/ProtectedRoute";
 import Splash from "./pages/Splash";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -25,13 +26,15 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Splash />} />
           <Route path="/auth" element={<Auth />} />
-          <Route element={<AppLayout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/meditations" element={<Meditations />} />
-            <Route path="/courses" element={<Courses />} />
-            <Route path="/music" element={<Music />} />
-            <Route path="/wallet" element={<Wallet />} />
-            <Route path="/profile" element={<Profile />} />
+          <Route element={<ProtectedRoute />}>
+            <Route element={<AppLayout />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/meditations" element={<Meditations />} />
+              <Route path="/courses" element={<Courses />} />
+              <Route path="/music" element={<Music />} />
+              <Route path="/wallet" element={<Wallet />} />
+              <Route path="/profile" element={<Profile />} />
+            </Route>
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
