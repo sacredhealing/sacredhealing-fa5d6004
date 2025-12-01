@@ -1,7 +1,12 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { User, Mail, Flame, Award, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LotusIcon } from '@/components/icons/LotusIcon';
+import { useAuth } from '@/hooks/useAuth';
+import { usePhantomWallet } from '@/hooks/usePhantomWallet';
+import { useSHCBalance } from '@/hooks/useSHCBalance';
+import { useToast } from '@/hooks/use-toast';
 
 const badges = [
   { id: 1, emoji: '🧘', title: 'First Meditation', earned: true },
@@ -12,15 +17,38 @@ const badges = [
   { id: 6, emoji: '🎯', title: '100 Sessions', earned: false },
 ];
 
-const menuItems = [
-  { icon: Bell, label: 'Notifications', sublabel: 'Daily reminders' },
-  { icon: Wallet, label: 'Connect Phantom', sublabel: 'Web3 wallet' },
-  { icon: Moon, label: 'Appearance', sublabel: 'Dark mode' },
-  { icon: Shield, label: 'Privacy', sublabel: 'Data & security' },
-  { icon: Settings, label: 'Settings', sublabel: 'App preferences' },
-];
-
 const Profile: React.FC = () => {
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+  const { walletAddress, connectWallet } = usePhantomWallet();
+  const { balance } = useSHCBalance();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast({
+      title: "Signed out",
+      description: "See you soon!"
+    });
+    navigate('/');
+  };
+
+  const menuItems = [
+    { icon: Bell, label: 'Notifications', sublabel: 'Daily reminders', onClick: () => {} },
+    { 
+      icon: Wallet, 
+      label: 'Connect Phantom', 
+      sublabel: walletAddress ? `${walletAddress.slice(0,4)}...${walletAddress.slice(-4)}` : 'Web3 wallet',
+      onClick: connectWallet 
+    },
+    { icon: Moon, label: 'Appearance', sublabel: 'Dark mode', onClick: () => {} },
+    { icon: Shield, label: 'Privacy', sublabel: 'Data & security', onClick: () => {} },
+    { icon: Settings, label: 'Settings', sublabel: 'App preferences', onClick: () => {} },
+  ];
+
+  const userName = user?.user_metadata?.full_name || 'Sacred Soul';
+  const userEmail = user?.email || '';
+
   return (
     <div className="min-h-screen px-4 pt-6">
       {/* Profile Header */}
@@ -36,8 +64,8 @@ const Profile: React.FC = () => {
           </div>
         </div>
         
-        <h1 className="mt-4 text-2xl font-heading font-bold text-foreground">Sacred Soul</h1>
-        <p className="text-muted-foreground">sacred.soul@email.com</p>
+        <h1 className="mt-4 text-2xl font-heading font-bold text-foreground">{userName}</h1>
+        <p className="text-muted-foreground">{userEmail}</p>
         
         {/* Stats */}
         <div className="flex gap-8 mt-6">
@@ -46,8 +74,10 @@ const Profile: React.FC = () => {
             <p className="text-xs text-muted-foreground">Day Streak</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-heading font-bold text-secondary">23</p>
-            <p className="text-xs text-muted-foreground">Sessions</p>
+            <p className="text-2xl font-heading font-bold text-secondary">
+              {balance?.balance.toLocaleString() ?? '0'}
+            </p>
+            <p className="text-xs text-muted-foreground">SHC Balance</p>
           </div>
           <div className="text-center">
             <p className="text-2xl font-heading font-bold text-accent">3</p>
@@ -102,6 +132,7 @@ const Profile: React.FC = () => {
         {menuItems.map((item) => (
           <button
             key={item.label}
+            onClick={item.onClick}
             className="w-full flex items-center gap-4 p-4 rounded-xl bg-gradient-card border border-border/50 hover:bg-muted/50 transition-all"
           >
             <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
@@ -117,7 +148,11 @@ const Profile: React.FC = () => {
       </div>
 
       {/* Logout */}
-      <Button variant="ghost" className="w-full mt-6 text-destructive hover:text-destructive hover:bg-destructive/10">
+      <Button 
+        variant="ghost" 
+        className="w-full mt-6 text-destructive hover:text-destructive hover:bg-destructive/10"
+        onClick={handleSignOut}
+      >
         <LogOut size={18} />
         Sign Out
       </Button>
