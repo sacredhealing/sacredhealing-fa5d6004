@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useSHCBalance } from '@/hooks/useSHCBalance';
+import { useAllSiteContent } from '@/hooks/useSiteContent';
 
 interface HealingAudio {
   id: string;
@@ -25,6 +26,7 @@ const Healing: React.FC = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { balance } = useSHCBalance();
+  const { content, isLoading: contentLoading } = useAllSiteContent();
   const [audioTracks, setAudioTracks] = useState<HealingAudio[]>([]);
   const [ownedAudioIds, setOwnedAudioIds] = useState<Set<string>>(new Set());
   const [hasHealingAccess, setHasHealingAccess] = useState(false);
@@ -32,12 +34,14 @@ const Healing: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Get content from database with fallbacks
+  const getContent = (key: string, fallback: string) => content[key] || fallback;
+
   useEffect(() => {
     fetchAudioTracks();
     checkHealingAccess();
     checkOwnedAudio();
 
-    // Check for success params
     const params = new URLSearchParams(window.location.search);
     if (params.get('success') === 'true') {
       toast({
@@ -101,8 +105,9 @@ const Healing: React.FC = () => {
 
       if (error) throw error;
       if (data?.url) window.open(data.url, '_blank');
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      toast({ title: "Error", description: message, variant: "destructive" });
     } finally {
       setIsProcessing(false);
     }
@@ -129,8 +134,9 @@ const Healing: React.FC = () => {
         toast({ title: "Purchase Complete!", description: `You now own ${audio.title}` });
         setOwnedAudioIds(prev => new Set([...prev, audio.id]));
       }
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      toast({ title: "Error", description: message, variant: "destructive" });
     } finally {
       setIsProcessing(false);
     }
@@ -165,15 +171,22 @@ const Healing: React.FC = () => {
   const freeAudios = audioTracks.filter(a => a.is_free);
   const paidAudios = audioTracks.filter(a => !a.is_free);
 
+  const oneTimePrice = getContent('healing_price_onetime', '197');
+  const monthlyPrice = getContent('healing_price_monthly', '50');
+
   return (
     <div className="min-h-screen p-6 space-y-8">
       {/* Header */}
       <div className="text-center space-y-2">
         <div className="flex items-center justify-center gap-2">
           <Sparkles className="w-8 h-8 text-primary" />
-          <h1 className="text-3xl font-bold text-foreground">Sacred Healing Space</h1>
+          <h1 className="text-3xl font-bold text-foreground">
+            {getContent('healing_main_title', 'Sacred Healing Space')}
+          </h1>
         </div>
-        <p className="text-muted-foreground">Begin your transformative journey</p>
+        <p className="text-muted-foreground">
+          {getContent('healing_main_subtitle', 'Begin your transformative journey')}
+        </p>
       </div>
 
       {/* Healing Description Section */}
@@ -185,50 +198,46 @@ const Healing: React.FC = () => {
           </div>
           
           <div className="prose prose-sm text-muted-foreground space-y-4">
-            <p>
-              Welcome to a sacred space designed for deep healing and transformation. Our healing program combines 
-              ancient wisdom with modern energy healing techniques to help you release blockages, restore balance, 
-              and awaken your inner healing power.
-            </p>
+            <p>{getContent('healing_intro', 'Welcome to a sacred space designed for deep healing and transformation.')}</p>
             
             <div className="grid md:grid-cols-2 gap-4 mt-4">
               <div className="bg-background/50 rounded-lg p-4">
                 <h3 className="font-semibold text-foreground flex items-center gap-2">
-                  <Star className="w-4 h-4 text-primary" /> Daily Healing Sessions
+                  <Star className="w-4 h-4 text-primary" /> 
+                  {getContent('healing_feature_1_title', 'Daily Healing Sessions')}
                 </h3>
                 <p className="text-sm mt-2">
-                  Guided meditations and energy transmissions to align your chakras, clear emotional wounds, 
-                  and activate your body's natural healing abilities.
+                  {getContent('healing_feature_1_text', 'Guided meditations and energy transmissions to align your chakras.')}
                 </p>
               </div>
               
               <div className="bg-background/50 rounded-lg p-4">
                 <h3 className="font-semibold text-foreground flex items-center gap-2">
-                  <Star className="w-4 h-4 text-primary" /> Frequency Healing
+                  <Star className="w-4 h-4 text-primary" /> 
+                  {getContent('healing_feature_2_title', 'Frequency Healing')}
                 </h3>
                 <p className="text-sm mt-2">
-                  Special audio tracks infused with healing frequencies (432Hz, 528Hz) designed to 
-                  harmonize your energy field and promote cellular regeneration.
+                  {getContent('healing_feature_2_text', 'Special audio tracks infused with healing frequencies.')}
                 </p>
               </div>
               
               <div className="bg-background/50 rounded-lg p-4">
                 <h3 className="font-semibold text-foreground flex items-center gap-2">
-                  <Star className="w-4 h-4 text-primary" /> Chakra Balancing
+                  <Star className="w-4 h-4 text-primary" /> 
+                  {getContent('healing_feature_3_title', 'Chakra Balancing')}
                 </h3>
                 <p className="text-sm mt-2">
-                  Targeted healing sessions for each of your seven main chakras, helping you release 
-                  stored trauma and restore energetic flow.
+                  {getContent('healing_feature_3_text', 'Targeted healing sessions for each of your seven main chakras.')}
                 </p>
               </div>
               
               <div className="bg-background/50 rounded-lg p-4">
                 <h3 className="font-semibold text-foreground flex items-center gap-2">
-                  <Star className="w-4 h-4 text-primary" /> Emotional Release
+                  <Star className="w-4 h-4 text-primary" /> 
+                  {getContent('healing_feature_4_title', 'Emotional Release')}
                 </h3>
                 <p className="text-sm mt-2">
-                  Gentle techniques to help you process and release old emotions, traumas, and limiting 
-                  beliefs that no longer serve your highest good.
+                  {getContent('healing_feature_4_text', 'Gentle techniques to help you process and release old emotions.')}
                 </p>
               </div>
             </div>
@@ -254,7 +263,7 @@ const Healing: React.FC = () => {
                 </div>
                 
                 <div className="text-3xl font-bold text-primary">
-                  $197
+                  ${oneTimePrice}
                   <span className="text-sm font-normal text-muted-foreground"> / 30 days</span>
                 </div>
                 
@@ -297,7 +306,7 @@ const Healing: React.FC = () => {
                 </div>
                 
                 <div className="text-3xl font-bold text-foreground">
-                  $50
+                  ${monthlyPrice}
                   <span className="text-sm font-normal text-muted-foreground"> / month</span>
                 </div>
                 
@@ -316,7 +325,7 @@ const Healing: React.FC = () => {
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-green-500" />
-                    <span>$150 total minimum</span>
+                    <span>${parseInt(monthlyPrice) * 3} total minimum</span>
                   </li>
                 </ul>
                 

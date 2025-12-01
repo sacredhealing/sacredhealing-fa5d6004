@@ -165,41 +165,13 @@ const Admin: React.FC = () => {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
+          <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
             <ArrowLeft size={20} />
           </Button>
           <div>
-            <h1 className="text-3xl font-heading font-bold text-foreground">Admin Panel</h1>
-            <p className="text-muted-foreground">Manage your content</p>
+            <h1 className="text-3xl font-heading font-bold text-foreground">Meditations</h1>
+            <p className="text-muted-foreground">Upload and manage meditation content</p>
           </div>
-        </div>
-
-        {/* Quick Links */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <Button 
-            variant="outline" 
-            className="h-20 flex flex-col items-center justify-center gap-2"
-            onClick={() => {}}
-          >
-            <Music size={24} className="text-primary" />
-            <span>Meditations</span>
-          </Button>
-          <Button 
-            variant="outline" 
-            className="h-20 flex flex-col items-center justify-center gap-2"
-            onClick={() => navigate('/admin/music')}
-          >
-            <Music size={24} className="text-accent" />
-            <span>Music Store</span>
-          </Button>
-          <Button 
-            variant="outline" 
-            className="h-20 flex flex-col items-center justify-center gap-2"
-            onClick={() => navigate('/admin/healing')}
-          >
-            <Music size={24} className="text-secondary" />
-            <span>Healing Audio</span>
-          </Button>
         </div>
 
         {/* Upload Form */}

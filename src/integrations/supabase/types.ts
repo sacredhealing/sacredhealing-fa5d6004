@@ -380,6 +380,39 @@ export type Database = {
         }
         Relationships: []
       }
+      site_content: {
+        Row: {
+          content: string
+          content_key: string
+          content_type: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          content_key: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          content_key?: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_balances: {
         Row: {
           balance: number
