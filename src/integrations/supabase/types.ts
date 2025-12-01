@@ -14,6 +14,161 @@ export type Database = {
   }
   public: {
     Tables: {
+      course_enrollments: {
+        Row: {
+          amount_paid: number | null
+          certificate_issued: boolean
+          certificate_url: string | null
+          completed_at: string | null
+          course_id: string
+          id: string
+          payment_method: string | null
+          progress_percent: number
+          shc_paid: number | null
+          started_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_paid?: number | null
+          certificate_issued?: boolean
+          certificate_url?: string | null
+          completed_at?: string | null
+          course_id: string
+          id?: string
+          payment_method?: string | null
+          progress_percent?: number
+          shc_paid?: number | null
+          started_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_paid?: number | null
+          certificate_issued?: boolean
+          certificate_url?: string | null
+          completed_at?: string | null
+          course_id?: string
+          id?: string
+          payment_method?: string | null
+          progress_percent?: number
+          shc_paid?: number | null
+          started_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_enrollments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      course_materials: {
+        Row: {
+          course_id: string
+          created_at: string
+          file_type: string
+          file_url: string
+          id: string
+          lesson_id: string | null
+          title: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          file_type?: string
+          file_url: string
+          id?: string
+          lesson_id?: string | null
+          title: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          file_type?: string
+          file_url?: string
+          id?: string
+          lesson_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_materials_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_materials_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      courses: {
+        Row: {
+          category: string
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          difficulty_level: string
+          duration_hours: number
+          enrollment_count: number
+          has_certificate: boolean
+          id: string
+          instructor_name: string | null
+          is_free: boolean
+          is_premium_only: boolean
+          lesson_count: number
+          price_shc: number | null
+          price_usd: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          difficulty_level?: string
+          duration_hours?: number
+          enrollment_count?: number
+          has_certificate?: boolean
+          id?: string
+          instructor_name?: string | null
+          is_free?: boolean
+          is_premium_only?: boolean
+          lesson_count?: number
+          price_shc?: number | null
+          price_usd?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          difficulty_level?: string
+          duration_hours?: number
+          enrollment_count?: number
+          has_certificate?: boolean
+          id?: string
+          instructor_name?: string | null
+          is_free?: boolean
+          is_premium_only?: boolean
+          lesson_count?: number
+          price_shc?: number | null
+          price_usd?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       healing_audio: {
         Row: {
           audio_url: string
@@ -138,6 +293,95 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      lesson_progress: {
+        Row: {
+          completed: boolean
+          completed_at: string | null
+          course_id: string
+          id: string
+          lesson_id: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          course_id: string
+          id?: string
+          lesson_id: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+          course_id?: string
+          id?: string
+          lesson_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_progress_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_progress_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lessons: {
+        Row: {
+          content_type: string
+          content_url: string | null
+          course_id: string
+          created_at: string
+          description: string | null
+          duration_minutes: number
+          id: string
+          is_preview: boolean
+          order_index: number
+          title: string
+        }
+        Insert: {
+          content_type?: string
+          content_url?: string | null
+          course_id: string
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          is_preview?: boolean
+          order_index?: number
+          title: string
+        }
+        Update: {
+          content_type?: string
+          content_url?: string | null
+          course_id?: string
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          is_preview?: boolean
+          order_index?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lessons_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       meditation_completions: {
         Row: {

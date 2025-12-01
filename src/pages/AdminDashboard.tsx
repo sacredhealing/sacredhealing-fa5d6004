@@ -8,7 +8,8 @@ import {
   Play, 
   Settings,
   Users,
-  CreditCard
+  CreditCard,
+  BookOpen
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -20,6 +21,13 @@ const adminSections = [
     icon: FileText,
     href: '/admin/content',
     color: 'text-blue-500',
+  },
+  {
+    title: 'Courses',
+    description: 'Create and manage courses with lessons & certificates',
+    icon: BookOpen,
+    href: '/admin/courses',
+    color: 'text-orange-500',
   },
   {
     title: 'Meditations',
