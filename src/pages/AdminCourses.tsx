@@ -26,6 +26,8 @@ interface Course {
   instructor_name: string;
   enrollment_count: number;
   lesson_count: number;
+  recurring_price_usd: number | null;
+  recurring_interval: string | null;
 }
 
 interface Lesson {
@@ -62,6 +64,8 @@ const AdminCourses: React.FC = () => {
     price_shc: 500,
     has_certificate: true,
     instructor_name: 'Sacred Healing Academy',
+    recurring_price_usd: null as number | null,
+    recurring_interval: null as string | null,
   });
 
   const [lessonForm, setLessonForm] = useState({
@@ -122,6 +126,8 @@ const AdminCourses: React.FC = () => {
         price_shc: 500,
         has_certificate: true,
         instructor_name: 'Sacred Healing Academy',
+        recurring_price_usd: null,
+        recurring_interval: null,
       });
       fetchCourses();
     }
@@ -290,7 +296,7 @@ const AdminCourses: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label>Price (USD)</Label>
+                    <Label>One-Time Price (USD)</Label>
                     <Input
                       type="number"
                       step="0.01"
@@ -306,6 +312,46 @@ const AdminCourses: React.FC = () => {
                       onChange={(e) => setCourseForm({ ...courseForm, price_shc: parseInt(e.target.value) })}
                     />
                   </div>
+                </div>
+
+                {/* Recurring Payment Section */}
+                <div className="border border-border rounded-lg p-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-base font-medium">Recurring Payment Option</Label>
+                    <Switch
+                      checked={courseForm.recurring_interval !== null}
+                      onCheckedChange={(checked) => setCourseForm({ 
+                        ...courseForm, 
+                        recurring_interval: checked ? 'month' : null,
+                        recurring_price_usd: checked ? 19.99 : null
+                      })}
+                    />
+                  </div>
+                  
+                  {courseForm.recurring_interval && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Recurring Price (USD)</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={courseForm.recurring_price_usd || ''}
+                          onChange={(e) => setCourseForm({ ...courseForm, recurring_price_usd: parseFloat(e.target.value) })}
+                        />
+                      </div>
+                      <div>
+                        <Label>Billing Interval</Label>
+                        <select
+                          value={courseForm.recurring_interval}
+                          onChange={(e) => setCourseForm({ ...courseForm, recurring_interval: e.target.value })}
+                          className="w-full h-10 px-3 rounded-md bg-background border border-input"
+                        >
+                          <option value="month">Monthly</option>
+                          <option value="year">Yearly</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex flex-wrap gap-6">
@@ -369,6 +415,11 @@ const AdminCourses: React.FC = () => {
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-muted-foreground">
                           ${course.price_usd} / {course.price_shc} SHC
+                          {course.recurring_price_usd && (
+                            <span className="text-primary ml-2">
+                              + ${course.recurring_price_usd}/{course.recurring_interval}
+                            </span>
+                          )}
                         </span>
                         <Button
                           variant="ghost"
