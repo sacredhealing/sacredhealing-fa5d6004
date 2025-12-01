@@ -1,6 +1,7 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { BottomNav } from './BottomNav';
+import { AnnouncementPopup } from '@/components/AnnouncementPopup';
 
 export const AppLayout: React.FC = () => {
   return (
@@ -17,6 +18,7 @@ export const AppLayout: React.FC = () => {
       </main>
       
       <BottomNav />
+      <AnnouncementPopup />
     </div>
   );
 };

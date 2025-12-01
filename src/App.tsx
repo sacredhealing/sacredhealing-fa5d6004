@@ -19,6 +19,7 @@ import AdminMusic from "./pages/AdminMusic";
 import AdminHealing from "./pages/AdminHealing";
 import AdminContent from "./pages/AdminContent";
 import AdminCourses from "./pages/AdminCourses";
+import AdminAnnouncements from "./pages/AdminAnnouncements";
 import Healing from "./pages/Healing";
 import NotFound from "./pages/NotFound";
 
@@ -49,6 +50,7 @@ const App = () => (
             <Route path="/admin/healing" element={<AdminHealing />} />
             <Route path="/admin/content" element={<AdminContent />} />
             <Route path="/admin/courses" element={<AdminCourses />} />
+            <Route path="/admin/announcements" element={<AdminAnnouncements />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
