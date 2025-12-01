@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { usePhantomWallet } from '@/hooks/usePhantomWallet';
 import { useSHCBalance } from '@/hooks/useSHCBalance';
 import { formatDistanceToNow } from 'date-fns';
+import { toast } from 'sonner';
 
 const rewards = [
   { id: 1, title: 'Daily Login - Day 7', reward: 20, icon: Calendar, completed: false, available: true },
@@ -97,7 +98,22 @@ const Wallet: React.FC = () => {
               <ArrowDownLeft size={16} />
               Deposit
             </Button>
-            <Button variant="gold" size="sm" className="flex-1">
+            <Button 
+              variant="gold" 
+              size="sm" 
+              className="flex-1"
+              onClick={() => {
+                if (!walletAddress) {
+                  toast.error('Connect your wallet first', {
+                    description: 'You need to connect your Phantom wallet to claim SHC'
+                  });
+                  return;
+                }
+                toast.info('Coming soon!', {
+                  description: 'Daily rewards claiming will be available soon'
+                });
+              }}
+            >
               <Gift size={16} />
               Claim
             </Button>
@@ -179,7 +195,15 @@ const Wallet: React.FC = () => {
                 </p>
               </div>
               {!reward.completed && reward.available && (
-                <Button variant="spiritual" size="sm">
+                <Button 
+                  variant="spiritual" 
+                  size="sm"
+                  onClick={() => {
+                    toast.info('Coming soon!', {
+                      description: `${reward.title} reward will be claimable soon`
+                    });
+                  }}
+                >
                   Claim
                 </Button>
               )}
