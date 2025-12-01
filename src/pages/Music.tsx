@@ -3,6 +3,7 @@ import { Play, Pause, Music2, ShoppingCart, Download, Heart, Clock, Sparkles, Lo
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { toast } from '@/hooks/use-toast';
+import { PaymentModal } from '@/components/music/PaymentModal';
 
 interface Track {
   id: number;
@@ -34,6 +35,7 @@ const Music: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [activeTab, setActiveTab] = useState<'all' | 'owned' | 'liked'>('all');
+  const [purchaseTrackData, setPurchaseTrackData] = useState<Track | null>(null);
   const progressInterval = useRef<NodeJS.Timeout | null>(null);
 
   const ownedTracks = tracks.filter(t => t.owned);
@@ -83,17 +85,18 @@ const Music: React.FC = () => {
     };
   }, [isPlaying, currentTrack]);
 
-  const purchaseTrack = (track: Track) => {
+  const openPurchaseModal = (track: Track) => {
+    setPurchaseTrackData(track);
+  };
+
+  const completePurchase = () => {
+    if (!purchaseTrackData) return;
     setTracks(prev => prev.map(t => 
-      t.id === track.id ? { ...t, owned: true } : t
+      t.id === purchaseTrackData.id ? { ...t, owned: true } : t
     ));
-    if (currentTrack?.id === track.id) {
-      setCurrentTrack({ ...track, owned: true });
+    if (currentTrack?.id === purchaseTrackData.id) {
+      setCurrentTrack({ ...purchaseTrackData, owned: true });
     }
-    toast({
-      title: "Purchase successful! 🎉",
-      description: `You earned +${track.shcReward} SHC! Enjoy "${track.title}"`,
-    });
   };
 
   const toggleLike = (trackId: number) => {
@@ -239,7 +242,7 @@ const Music: React.FC = () => {
                   <Download size={16} />
                 </Button>
               ) : (
-                <Button variant="gold" size="sm" onClick={() => purchaseTrack(track)}>
+                <Button variant="gold" size="sm" onClick={() => openPurchaseModal(track)}>
                   <ShoppingCart size={14} />
                   {track.price}
                 </Button>
@@ -293,7 +296,7 @@ const Music: React.FC = () => {
                 onValueChange={(val) => setProgress(val[0])}
               />
               {!currentTrack.owned && (
-                <Button variant="gold" size="sm" onClick={() => purchaseTrack(currentTrack)}>
+                <Button variant="gold" size="sm" onClick={() => openPurchaseModal(currentTrack)}>
                   Buy {currentTrack.price} SHC
                 </Button>
               )}
@@ -306,6 +309,16 @@ const Music: React.FC = () => {
             )}
           </div>
         </div>
+      )}
+
+      {/* Payment Modal */}
+      {purchaseTrackData && (
+        <PaymentModal
+          track={purchaseTrackData}
+          isOpen={!!purchaseTrackData}
+          onClose={() => setPurchaseTrackData(null)}
+          onPurchaseComplete={completePurchase}
+        />
       )}
     </div>
   );
