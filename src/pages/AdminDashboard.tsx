@@ -9,12 +9,20 @@ import {
   Settings,
   Users,
   CreditCard,
-  BookOpen
+  BookOpen,
+  Bell
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
 const adminSections = [
+  {
+    title: 'Announcements',
+    description: 'Send notices and updates to all users',
+    icon: Bell,
+    href: '/admin/announcements',
+    color: 'text-yellow-500',
+  },
   {
     title: 'Site Content',
     description: 'Edit text, titles, and descriptions throughout the app',
