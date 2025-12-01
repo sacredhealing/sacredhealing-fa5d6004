@@ -29,8 +29,8 @@ serve(async (req) => {
     const user = data.user;
     if (!user?.email) throw new Error("User not authenticated");
 
-    const { courseId, paymentMethod } = await req.json();
-    console.log("[ENROLL-COURSE] Course:", courseId, "Method:", paymentMethod);
+    const { courseId, paymentMethod, isRecurring } = await req.json();
+    console.log("[ENROLL-COURSE] Course:", courseId, "Method:", paymentMethod, "Recurring:", isRecurring);
 
     // Get course details
     const { data: course, error: courseError } = await supabaseAdmin
@@ -159,7 +159,7 @@ serve(async (req) => {
       });
     }
 
-    // Handle Stripe payment
+    // Handle Stripe payment (one-time or subscription)
     if (paymentMethod === "stripe") {
       const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
         apiVersion: "2025-08-27.basil",
@@ -172,6 +172,49 @@ serve(async (req) => {
       }
 
       const origin = req.headers.get("origin") || "https://localhost:3000";
+
+      // Check if recurring payment is requested and available
+      if (isRecurring && course.recurring_price_usd && course.recurring_interval) {
+        console.log("[ENROLL-COURSE] Creating subscription checkout");
+        
+        // Create a subscription checkout session
+        const session = await stripe.checkout.sessions.create({
+          customer: customerId,
+          customer_email: customerId ? undefined : user.email,
+          line_items: [
+            {
+              price_data: {
+                currency: "usd",
+                product_data: {
+                  name: `${course.title} (Subscription)`,
+                  description: course.description || "Online course subscription",
+                },
+                unit_amount: Math.round(course.recurring_price_usd * 100),
+                recurring: {
+                  interval: course.recurring_interval as "month" | "year",
+                },
+              },
+              quantity: 1,
+            },
+          ],
+          mode: "subscription",
+          success_url: `${origin}/courses?enrolled=${courseId}`,
+          cancel_url: `${origin}/courses`,
+          metadata: {
+            user_id: user.id,
+            course_id: courseId,
+            payment_type: "subscription",
+          },
+        });
+
+        return new Response(JSON.stringify({ url: session.url }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+
+      // One-time payment
+      console.log("[ENROLL-COURSE] Creating one-time payment checkout");
       const session = await stripe.checkout.sessions.create({
         customer: customerId,
         customer_email: customerId ? undefined : user.email,
@@ -194,6 +237,7 @@ serve(async (req) => {
         metadata: {
           user_id: user.id,
           course_id: courseId,
+          payment_type: "one_time",
         },
       });
 

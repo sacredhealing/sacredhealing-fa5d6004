@@ -230,6 +230,8 @@ export type Database = {
           lesson_count: number
           price_shc: number | null
           price_usd: number | null
+          recurring_interval: string | null
+          recurring_price_usd: number | null
           title: string
           updated_at: string
         }
@@ -249,6 +251,8 @@ export type Database = {
           lesson_count?: number
           price_shc?: number | null
           price_usd?: number | null
+          recurring_interval?: string | null
+          recurring_price_usd?: number | null
           title: string
           updated_at?: string
         }
@@ -268,6 +272,8 @@ export type Database = {
           lesson_count?: number
           price_shc?: number | null
           price_usd?: number | null
+          recurring_interval?: string | null
+          recurring_price_usd?: number | null
           title?: string
           updated_at?: string
         }
