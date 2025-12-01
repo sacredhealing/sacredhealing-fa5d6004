@@ -170,8 +170,28 @@ const Admin: React.FC = () => {
           </Button>
           <div>
             <h1 className="text-3xl font-heading font-bold text-foreground">Admin Panel</h1>
-            <p className="text-muted-foreground">Manage your meditations</p>
+            <p className="text-muted-foreground">Manage your content</p>
           </div>
+        </div>
+
+        {/* Quick Links */}
+        <div className="grid grid-cols-2 gap-4 mb-8">
+          <Button 
+            variant="outline" 
+            className="h-20 flex flex-col items-center justify-center gap-2"
+            onClick={() => {}}
+          >
+            <Music size={24} className="text-primary" />
+            <span>Meditations</span>
+          </Button>
+          <Button 
+            variant="outline" 
+            className="h-20 flex flex-col items-center justify-center gap-2"
+            onClick={() => navigate('/admin/music')}
+          >
+            <Music size={24} className="text-accent" />
+            <span>Music Store</span>
+          </Button>
         </div>
 
         {/* Upload Form */}

@@ -91,6 +91,101 @@ export type Database = {
         }
         Relationships: []
       }
+      music_purchases: {
+        Row: {
+          amount_paid: number | null
+          id: string
+          payment_method: string
+          purchased_at: string
+          shc_paid: number | null
+          stripe_payment_id: string | null
+          track_id: string
+          user_id: string
+        }
+        Insert: {
+          amount_paid?: number | null
+          id?: string
+          payment_method: string
+          purchased_at?: string
+          shc_paid?: number | null
+          stripe_payment_id?: string | null
+          track_id: string
+          user_id: string
+        }
+        Update: {
+          amount_paid?: number | null
+          id?: string
+          payment_method?: string
+          purchased_at?: string
+          shc_paid?: number | null
+          stripe_payment_id?: string | null
+          track_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "music_purchases_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "music_tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      music_tracks: {
+        Row: {
+          artist: string
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          duration_seconds: number
+          full_audio_url: string
+          genre: string
+          id: string
+          play_count: number
+          preview_url: string
+          price_shc: number
+          price_usd: number
+          purchase_count: number
+          shc_reward: number
+          title: string
+        }
+        Insert: {
+          artist?: string
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number
+          full_audio_url: string
+          genre?: string
+          id?: string
+          play_count?: number
+          preview_url: string
+          price_shc?: number
+          price_usd?: number
+          purchase_count?: number
+          shc_reward?: number
+          title: string
+        }
+        Update: {
+          artist?: string
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number
+          full_audio_url?: string
+          genre?: string
+          id?: string
+          play_count?: number
+          preview_url?: string
+          price_shc?: number
+          price_usd?: number
+          purchase_count?: number
+          shc_reward?: number
+          title?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
