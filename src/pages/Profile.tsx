@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Flame, Award, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield } from 'lucide-react';
+import { User, Mail, Flame, Award, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LotusIcon } from '@/components/icons/LotusIcon';
 import { useAuth } from '@/hooks/useAuth';
@@ -34,6 +34,7 @@ const Profile: React.FC = () => {
   };
 
   const menuItems = [
+    { icon: LayoutDashboard, label: 'Admin Panel', sublabel: 'Manage content', onClick: () => navigate('/admin') },
     { icon: Bell, label: 'Notifications', sublabel: 'Daily reminders', onClick: () => {} },
     { 
       icon: Wallet, 
