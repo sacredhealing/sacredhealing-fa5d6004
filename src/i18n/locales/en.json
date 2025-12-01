@@ -1,0 +1,98 @@
+{
+  "common": {
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  },
+  "nav": {
+    "home": "Home",
+    "meditate": "Meditate",
+    "music": "Music",
+    "wallet": "Wallet",
+    "profile": "Profile"
+  },
+  "dashboard": {
+    "greeting": "Good morning",
+    "streak": "day streak",
+    "balance": "SHC Balance",
+    "claimRewards": "Claim Rewards",
+    "todaysWisdom": "Today's Wisdom",
+    "todaysMeditation": "Today's Meditation",
+    "startSession": "Start Session",
+    "quickActions": "Quick Actions"
+  },
+  "meditations": {
+    "title": "Meditations",
+    "subtitle": "Find your inner peace",
+    "categories": {
+      "all": "All",
+      "morning": "Morning",
+      "sleep": "Sleep",
+      "healing": "Healing",
+      "focus": "Focus",
+      "anxiety": "Anxiety"
+    },
+    "duration": "min",
+    "reward": "SHC",
+    "premium": "Premium",
+    "featuredSeries": "Featured Series",
+    "exploreSeries": "Explore Series"
+  },
+  "music": {
+    "title": "Music Store",
+    "subtitle": "Original healing frequencies",
+    "owned": "Owned",
+    "buy": "Buy",
+    "preview": "Preview",
+    "download": "Download",
+    "noTracks": "No music tracks available yet"
+  },
+  "wallet": {
+    "title": "Wallet",
+    "balance": "Balance",
+    "send": "Send",
+    "receive": "Receive",
+    "history": "History",
+    "connectWallet": "Connect Wallet"
+  },
+  "profile": {
+    "title": "Profile",
+    "streak": "Streak",
+    "balance": "Balance",
+    "badges": "Badges",
+    "settings": "Settings",
+    "language": "Language",
+    "notifications": "Notifications",
+    "premium": "Premium",
+    "help": "Help & Support",
+    "signOut": "Sign Out",
+    "upgradePremium": "Upgrade to Premium",
+    "unlockFeatures": "Unlock all meditations, courses, and exclusive content"
+  },
+  "courses": {
+    "title": "Courses",
+    "subtitle": "Deepen your practice",
+    "lessons": "lessons",
+    "completed": "Completed",
+    "inProgress": "In Progress",
+    "available": "Available",
+    "unlock": "Unlock",
+    "continue": "Continue"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot Password?"
+  },
+  "admin": {
+    "title": "Admin Panel",
+    "musicStore": "Music Store",
+    "uploadTrack": "Upload Track",
+    "manageContent": "Manage Content"
+  }
+}

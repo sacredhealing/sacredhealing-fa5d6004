@@ -1,8 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Flame, Award, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield, LayoutDashboard } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { User, Mail, Flame, Award, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield, LayoutDashboard, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LotusIcon } from '@/components/icons/LotusIcon';
+import { LanguageSelector } from '@/components/LanguageSelector';
 import { useAuth } from '@/hooks/useAuth';
 import { usePhantomWallet } from '@/hooks/usePhantomWallet';
 import { useSHCBalance } from '@/hooks/useSHCBalance';
@@ -19,6 +21,7 @@ const badges = [
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user, signOut } = useAuth();
   const { walletAddress, connectWallet } = usePhantomWallet();
   const { balance } = useSHCBalance();
@@ -27,24 +30,24 @@ const Profile: React.FC = () => {
   const handleSignOut = async () => {
     await signOut();
     toast({
-      title: "Signed out",
+      title: t('profile.signOut'),
       description: "See you soon!"
     });
     navigate('/');
   };
 
   const menuItems = [
-    { icon: LayoutDashboard, label: 'Admin Panel', sublabel: 'Manage content', onClick: () => navigate('/admin') },
-    { icon: Bell, label: 'Notifications', sublabel: 'Daily reminders', onClick: () => {} },
+    { icon: LayoutDashboard, label: t('admin.title'), sublabel: t('admin.manageContent'), onClick: () => navigate('/admin') },
+    { icon: Bell, label: t('profile.notifications'), sublabel: 'Daily reminders', onClick: () => {} },
     { 
       icon: Wallet, 
-      label: 'Connect Phantom', 
+      label: t('wallet.connectWallet'), 
       sublabel: walletAddress ? `${walletAddress.slice(0,4)}...${walletAddress.slice(-4)}` : 'Web3 wallet',
       onClick: connectWallet 
     },
     { icon: Moon, label: 'Appearance', sublabel: 'Dark mode', onClick: () => {} },
     { icon: Shield, label: 'Privacy', sublabel: 'Data & security', onClick: () => {} },
-    { icon: Settings, label: 'Settings', sublabel: 'App preferences', onClick: () => {} },
+    { icon: Settings, label: t('profile.settings'), sublabel: 'App preferences', onClick: () => {} },
   ];
 
   const userName = user?.user_metadata?.full_name || 'Sacred Soul';
@@ -72,17 +75,17 @@ const Profile: React.FC = () => {
         <div className="flex gap-8 mt-6">
           <div className="text-center">
             <p className="text-2xl font-heading font-bold text-primary">7</p>
-            <p className="text-xs text-muted-foreground">Day Streak</p>
+            <p className="text-xs text-muted-foreground">{t('profile.streak')}</p>
           </div>
           <div className="text-center">
             <p className="text-2xl font-heading font-bold text-secondary">
               {balance?.balance.toLocaleString() ?? '0'}
             </p>
-            <p className="text-xs text-muted-foreground">SHC Balance</p>
+            <p className="text-xs text-muted-foreground">{t('profile.balance')}</p>
           </div>
           <div className="text-center">
             <p className="text-2xl font-heading font-bold text-accent">3</p>
-            <p className="text-xs text-muted-foreground">Badges</p>
+            <p className="text-xs text-muted-foreground">{t('profile.badges')}</p>
           </div>
         </div>
       </div>
@@ -90,7 +93,7 @@ const Profile: React.FC = () => {
       {/* Badges */}
       <div className="mb-8 animate-slide-up">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-heading font-semibold text-foreground">Badges</h2>
+          <h2 className="text-lg font-heading font-semibold text-foreground">{t('profile.badges')}</h2>
           <button className="text-sm text-primary">View All</button>
         </div>
         <div className="grid grid-cols-3 gap-3">
@@ -112,14 +115,20 @@ const Profile: React.FC = () => {
         </div>
       </div>
 
+      {/* Language Selector */}
+      <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+        <h2 className="text-lg font-heading font-semibold text-foreground mb-3">{t('profile.language')}</h2>
+        <LanguageSelector />
+      </div>
+
       {/* Premium CTA */}
-      <div className="mb-8 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+      <div className="mb-8 animate-slide-up" style={{ animationDelay: '0.15s' }}>
         <div className="relative overflow-hidden rounded-2xl bg-gradient-healing p-5 glow-purple">
           <div className="absolute top-0 right-0 w-24 h-24 bg-accent/30 rounded-full blur-2xl" />
           <div className="relative">
-            <h3 className="text-lg font-heading font-bold text-foreground mb-1">Go Premium</h3>
+            <h3 className="text-lg font-heading font-bold text-foreground mb-1">{t('profile.upgradePremium')}</h3>
             <p className="text-foreground/80 text-sm mb-4">
-              Unlock all meditations, courses & earn 2,000 SHC bonus!
+              {t('profile.unlockFeatures')}
             </p>
             <Button variant="gold" size="sm">
               Upgrade Now
@@ -129,7 +138,7 @@ const Profile: React.FC = () => {
       </div>
 
       {/* Menu */}
-      <div className="space-y-2 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+      <div className="space-y-2 animate-slide-up" style={{ animationDelay: '0.25s' }}>
         {menuItems.map((item) => (
           <button
             key={item.label}
@@ -155,7 +164,7 @@ const Profile: React.FC = () => {
         onClick={handleSignOut}
       >
         <LogOut size={18} />
-        Sign Out
+        {t('profile.signOut')}
       </Button>
     </div>
   );

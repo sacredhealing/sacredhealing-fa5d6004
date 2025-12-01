@@ -1,0 +1,98 @@
+{
+  "common": {
+    "back": "Atrás",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito"
+  },
+  "nav": {
+    "home": "Inicio",
+    "meditate": "Meditar",
+    "music": "Música",
+    "wallet": "Cartera",
+    "profile": "Perfil"
+  },
+  "dashboard": {
+    "greeting": "Buenos días",
+    "streak": "días de racha",
+    "balance": "Saldo SHC",
+    "claimRewards": "Reclamar Recompensas",
+    "todaysWisdom": "Sabiduría del Día",
+    "todaysMeditation": "Meditación del Día",
+    "startSession": "Iniciar Sesión",
+    "quickActions": "Acciones Rápidas"
+  },
+  "meditations": {
+    "title": "Meditaciones",
+    "subtitle": "Encuentra tu paz interior",
+    "categories": {
+      "all": "Todas",
+      "morning": "Mañana",
+      "sleep": "Sueño",
+      "healing": "Sanación",
+      "focus": "Enfoque",
+      "anxiety": "Ansiedad"
+    },
+    "duration": "min",
+    "reward": "SHC",
+    "premium": "Premium",
+    "featuredSeries": "Serie Destacada",
+    "exploreSeries": "Explorar Serie"
+  },
+  "music": {
+    "title": "Tienda de Música",
+    "subtitle": "Frecuencias curativas originales",
+    "owned": "Comprado",
+    "buy": "Comprar",
+    "preview": "Vista previa",
+    "download": "Descargar",
+    "noTracks": "No hay pistas de música disponibles todavía"
+  },
+  "wallet": {
+    "title": "Cartera",
+    "balance": "Saldo",
+    "send": "Enviar",
+    "receive": "Recibir",
+    "history": "Historial",
+    "connectWallet": "Conectar Cartera"
+  },
+  "profile": {
+    "title": "Perfil",
+    "streak": "Racha",
+    "balance": "Saldo",
+    "badges": "Insignias",
+    "settings": "Configuración",
+    "language": "Idioma",
+    "notifications": "Notificaciones",
+    "premium": "Premium",
+    "help": "Ayuda y Soporte",
+    "signOut": "Cerrar Sesión",
+    "upgradePremium": "Actualizar a Premium",
+    "unlockFeatures": "Desbloquea todas las meditaciones, cursos y contenido exclusivo"
+  },
+  "courses": {
+    "title": "Cursos",
+    "subtitle": "Profundiza tu práctica",
+    "lessons": "lecciones",
+    "completed": "Completados",
+    "inProgress": "En Progreso",
+    "available": "Disponibles",
+    "unlock": "Desbloquear",
+    "continue": "Continuar"
+  },
+  "auth": {
+    "signIn": "Iniciar Sesión",
+    "signUp": "Registrarse",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?"
+  },
+  "admin": {
+    "title": "Panel de Admin",
+    "musicStore": "Tienda de Música",
+    "uploadTrack": "Subir Pista",
+    "manageContent": "Gestionar Contenido"
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "common": {
+    "back": "Tillbaka",
+    "save": "Spara",
+    "cancel": "Avbryt",
+    "loading": "Laddar...",
+    "error": "Fel",
+    "success": "Lyckades"
+  },
+  "nav": {
+    "home": "Hem",
+    "meditate": "Meditera",
+    "music": "Musik",
+    "wallet": "Plånbok",
+    "profile": "Profil"
+  },
+  "dashboard": {
+    "greeting": "God morgon",
+    "streak": "dagars svit",
+    "balance": "SHC Saldo",
+    "claimRewards": "Hämta Belöningar",
+    "todaysWisdom": "Dagens Visdom",
+    "todaysMeditation": "Dagens Meditation",
+    "startSession": "Starta Session",
+    "quickActions": "Snabbåtgärder"
+  },
+  "meditations": {
+    "title": "Meditationer",
+    "subtitle": "Hitta din inre frid",
+    "categories": {
+      "all": "Alla",
+      "morning": "Morgon",
+      "sleep": "Sömn",
+      "healing": "Läkning",
+      "focus": "Fokus",
+      "anxiety": "Ångest"
+    },
+    "duration": "min",
+    "reward": "SHC",
+    "premium": "Premium",
+    "featuredSeries": "Utvald Serie",
+    "exploreSeries": "Utforska Serie"
+  },
+  "music": {
+    "title": "Musikbutik",
+    "subtitle": "Originala läkande frekvenser",
+    "owned": "Ägd",
+    "buy": "Köp",
+    "preview": "Förhandsgranska",
+    "download": "Ladda ner",
+    "noTracks": "Inga musikspår tillgängliga ännu"
+  },
+  "wallet": {
+    "title": "Plånbok",
+    "balance": "Saldo",
+    "send": "Skicka",
+    "receive": "Ta emot",
+    "history": "Historik",
+    "connectWallet": "Anslut Plånbok"
+  },
+  "profile": {
+    "title": "Profil",
+    "streak": "Svit",
+    "balance": "Saldo",
+    "badges": "Märken",
+    "settings": "Inställningar",
+    "language": "Språk",
+    "notifications": "Notifikationer",
+    "premium": "Premium",
+    "help": "Hjälp & Support",
+    "signOut": "Logga ut",
+    "upgradePremium": "Uppgradera till Premium",
+    "unlockFeatures": "Lås upp alla meditationer, kurser och exklusivt innehåll"
+  },
+  "courses": {
+    "title": "Kurser",
+    "subtitle": "Fördjupa din praktik",
+    "lessons": "lektioner",
+    "completed": "Avklarade",
+    "inProgress": "Pågående",
+    "available": "Tillgängliga",
+    "unlock": "Lås upp",
+    "continue": "Fortsätt"
+  },
+  "auth": {
+    "signIn": "Logga in",
+    "signUp": "Registrera dig",
+    "email": "E-post",
+    "password": "Lösenord",
+    "forgotPassword": "Glömt lösenord?"
+  },
+  "admin": {
+    "title": "Adminpanel",
+    "musicStore": "Musikbutik",
+    "uploadTrack": "Ladda upp spår",
+    "manageContent": "Hantera innehåll"
+  }
+}
