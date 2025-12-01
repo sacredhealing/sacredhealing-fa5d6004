@@ -13,9 +13,11 @@ import Courses from "./pages/Courses";
 import Music from "./pages/Music";
 import Wallet from "./pages/Wallet";
 import Profile from "./pages/Profile";
+import AdminDashboard from "./pages/AdminDashboard";
 import Admin from "./pages/Admin";
 import AdminMusic from "./pages/AdminMusic";
 import AdminHealing from "./pages/AdminHealing";
+import AdminContent from "./pages/AdminContent";
 import Healing from "./pages/Healing";
 import NotFound from "./pages/NotFound";
 
@@ -40,9 +42,11 @@ const App = () => (
               <Route path="/profile" element={<Profile />} />
               <Route path="/healing" element={<Healing />} />
             </Route>
-            <Route path="/admin" element={<Admin />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/meditations" element={<Admin />} />
             <Route path="/admin/music" element={<AdminMusic />} />
             <Route path="/admin/healing" element={<AdminHealing />} />
+            <Route path="/admin/content" element={<AdminContent />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
