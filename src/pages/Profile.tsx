@@ -10,15 +10,6 @@ import { usePhantomWallet } from '@/hooks/usePhantomWallet';
 import { useSHCBalance } from '@/hooks/useSHCBalance';
 import { useToast } from '@/hooks/use-toast';
 
-const badges = [
-  { id: 1, emoji: '🧘', title: 'First Meditation', earned: true },
-  { id: 2, emoji: '🔥', title: '7-Day Streak', earned: true },
-  { id: 3, emoji: '📚', title: 'Course Complete', earned: true },
-  { id: 4, emoji: '🌟', title: '30-Day Streak', earned: false },
-  { id: 5, emoji: '👑', title: 'Premium Member', earned: false },
-  { id: 6, emoji: '🎯', title: '100 Sessions', earned: false },
-];
-
 const Profile: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -26,6 +17,15 @@ const Profile: React.FC = () => {
   const { walletAddress, connectWallet } = usePhantomWallet();
   const { balance } = useSHCBalance();
   const { toast } = useToast();
+
+  const badges = [
+    { id: 1, emoji: '🧘', titleKey: 'badges.firstMeditation', earned: true },
+    { id: 2, emoji: '🔥', titleKey: 'badges.sevenDayStreak', earned: true },
+    { id: 3, emoji: '📚', titleKey: 'badges.courseComplete', earned: true },
+    { id: 4, emoji: '🌟', titleKey: 'badges.thirtyDayStreak', earned: false },
+    { id: 5, emoji: '👑', titleKey: 'badges.premiumMember', earned: false },
+    { id: 6, emoji: '🎯', titleKey: 'badges.hundredSessions', earned: false },
+  ];
 
   const handleSignOut = async () => {
     await signOut();
@@ -37,21 +37,21 @@ const Profile: React.FC = () => {
   };
 
   const menuItems = [
-    { icon: Megaphone, label: 'Promote & Earn', sublabel: 'Share and earn SHC rewards', onClick: () => navigate('/promote') },
+    { icon: Megaphone, label: t('profile.promoteEarn'), sublabel: t('profile.promoteEarnDesc'), onClick: () => navigate('/promote') },
     { icon: LayoutDashboard, label: t('admin.title'), sublabel: t('admin.manageContent'), onClick: () => navigate('/admin') },
-    { icon: Bell, label: t('profile.notifications'), sublabel: 'Daily reminders', onClick: () => {} },
+    { icon: Bell, label: t('profile.notifications'), sublabel: t('profile.dailyReminders'), onClick: () => {} },
     { 
       icon: Wallet, 
       label: t('wallet.connectWallet'), 
-      sublabel: walletAddress ? `${walletAddress.slice(0,4)}...${walletAddress.slice(-4)}` : 'Web3 wallet',
+      sublabel: walletAddress ? `${walletAddress.slice(0,4)}...${walletAddress.slice(-4)}` : t('profile.web3Wallet'),
       onClick: connectWallet 
     },
-    { icon: Moon, label: 'Appearance', sublabel: 'Dark mode', onClick: () => {} },
-    { icon: Shield, label: 'Privacy', sublabel: 'Data & security', onClick: () => {} },
-    { icon: Settings, label: t('profile.settings'), sublabel: 'App preferences', onClick: () => {} },
+    { icon: Moon, label: t('profile.appearance'), sublabel: t('profile.darkMode'), onClick: () => {} },
+    { icon: Shield, label: t('profile.privacy'), sublabel: t('profile.dataAndSecurity'), onClick: () => {} },
+    { icon: Settings, label: t('profile.settings'), sublabel: t('profile.appPreferences'), onClick: () => {} },
   ];
 
-  const userName = user?.user_metadata?.full_name || 'Sacred Soul';
+  const userName = user?.user_metadata?.full_name || t('dashboard.sacredSoul');
   const userEmail = user?.email || '';
 
   return (
@@ -95,7 +95,7 @@ const Profile: React.FC = () => {
       <div className="mb-8 animate-slide-up">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-heading font-semibold text-foreground">{t('profile.badges')}</h2>
-          <button className="text-sm text-primary">View All</button>
+          <button className="text-sm text-primary">{t('common.viewAll')}</button>
         </div>
         <div className="grid grid-cols-3 gap-3">
           {badges.map((badge) => (
@@ -109,7 +109,7 @@ const Profile: React.FC = () => {
             >
               <span className="text-3xl">{badge.emoji}</span>
               <p className={`text-xs mt-2 ${badge.earned ? 'text-foreground' : 'text-muted-foreground'}`}>
-                {badge.title}
+                {t(badge.titleKey)}
               </p>
             </div>
           ))}
@@ -132,7 +132,7 @@ const Profile: React.FC = () => {
               {t('profile.unlockFeatures')}
             </p>
             <Button variant="gold" size="sm">
-              Upgrade Now
+              {t('common.upgradeNow')}
             </Button>
           </div>
         </div>

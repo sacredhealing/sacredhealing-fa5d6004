@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ExternalLink, DollarSign, TrendingUp, Users, Sparkles, Copy, CreditCard, Wallet, Check } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ interface IncomeStream {
 }
 
 const IncomeStreams: React.FC = () => {
+  const { t } = useTranslation();
   const [streams, setStreams] = useState<IncomeStream[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [copied, setCopied] = useState(false);
@@ -46,7 +48,7 @@ const IncomeStreams: React.FC = () => {
   const copyAddress = () => {
     navigator.clipboard.writeText(SHC_TOKEN_ADDRESS);
     setCopied(true);
-    toast.success('Token address copied!');
+    toast.success(t('common.success'));
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -93,8 +95,8 @@ const IncomeStreams: React.FC = () => {
             <DollarSign className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Income Streams</h1>
-            <p className="text-sm text-muted-foreground">Discover ways to earn</p>
+            <h1 className="text-2xl font-bold text-foreground">{t('incomeStreams.title')}</h1>
+            <p className="text-sm text-muted-foreground">{t('incomeStreams.subtitle')}</p>
           </div>
         </div>
       </div>
@@ -109,30 +111,26 @@ const IncomeStreams: React.FC = () => {
                 <Sparkles className="w-7 h-7 text-white" />
               </div>
               <div>
-                <CardTitle className="text-xl text-foreground">The Sacred Healing Coin</CardTitle>
-                <Badge className="bg-accent/20 text-accent mt-1">SHC Token</Badge>
+                <CardTitle className="text-xl text-foreground">{t('incomeStreams.shcCoin.title')}</CardTitle>
+                <Badge className="bg-accent/20 text-accent mt-1">{t('incomeStreams.shcCoin.badge')}</Badge>
               </div>
             </div>
           </CardHeader>
           <CardContent className="relative space-y-4">
             <div className="prose prose-sm text-muted-foreground space-y-3">
+              <p>{t('incomeStreams.shcCoin.description1')}</p>
+              <p>{t('incomeStreams.shcCoin.description2')}</p>
               <p>
-                The Sacred Healing Coin is more than a symbol—it is a gentle companion on the journey back to yourself. Infused with the vibrations of healing energy and spiritual intention, it serves as a reminder to slow down, breathe deeply, and reconnect with the inner wisdom that guides your life.
-              </p>
-              <p>
-                Each coin carries the essence of freedom—freedom from old patterns, freedom to grow, and freedom to rise into the fullest version of who you are. Like healing music for the soul, its presence encourages balance, clarity, and renewal.
-              </p>
-              <p>
-                Designed to inspire personal transformation, the Sacred Healing Coin also opens the path toward <span className="text-accent font-medium">financial freedom</span>. It represents alignment: when your energy is clear and your purpose awakened, abundance flows with greater ease.
+                {t('incomeStreams.shcCoin.description3')} <span className="text-accent font-medium">{t('incomeStreams.shcCoin.financialFreedom')}</span>. {t('incomeStreams.shcCoin.description4')}
               </p>
               <p className="text-foreground font-medium">
-                ✨ A symbol of growth, a tool of empowerment, and a keeper of inner light.
+                ✨ {t('incomeStreams.shcCoin.symbolOfGrowth')}
               </p>
             </div>
 
             {/* Token Address */}
             <div className="bg-background/50 rounded-xl p-4 border border-border/50">
-              <p className="text-xs text-muted-foreground mb-2">Token Address (Solana)</p>
+              <p className="text-xs text-muted-foreground mb-2">{t('incomeStreams.shcCoin.tokenAddress')}</p>
               <div className="flex items-center gap-2">
                 <code className="flex-1 text-xs bg-muted/50 rounded-lg p-2 text-foreground font-mono break-all">
                   {SHC_TOKEN_ADDRESS}
@@ -145,21 +143,21 @@ const IncomeStreams: React.FC = () => {
 
             {/* How to Buy Section */}
             <div className="space-y-4">
-              <h3 className="font-heading font-semibold text-foreground">How to Buy SHC</h3>
+              <h3 className="font-heading font-semibold text-foreground">{t('incomeStreams.shcCoin.howToBuy')}</h3>
               
               {/* Phantom Wallet Method */}
               <div className="bg-background/50 rounded-xl p-4 border border-border/50 space-y-3">
                 <div className="flex items-center gap-2">
                   <Wallet className="w-5 h-5 text-primary" />
-                  <h4 className="font-medium text-foreground">Buy with Phantom Wallet</h4>
+                  <h4 className="font-medium text-foreground">{t('incomeStreams.shcCoin.buyWithPhantom')}</h4>
                 </div>
                 <ol className="text-sm text-muted-foreground space-y-2 ml-7 list-decimal">
-                  <li>Download <a href="https://phantom.app" target="_blank" rel="noopener" className="text-primary hover:underline">Phantom Wallet</a> (mobile or browser extension)</li>
-                  <li>Create or import your wallet and add SOL (Solana)</li>
-                  <li>Open Phantom and tap the <span className="text-foreground">Swap</span> icon</li>
-                  <li>Select SOL as the token you're swapping from</li>
-                  <li>Paste the SHC token address above or search "Sacred Healing Coin"</li>
-                  <li>Enter the amount and confirm the swap</li>
+                  <li>{t('incomeStreams.shcCoin.phantomStep1')}</li>
+                  <li>{t('incomeStreams.shcCoin.phantomStep2')}</li>
+                  <li>{t('incomeStreams.shcCoin.phantomStep3')}</li>
+                  <li>{t('incomeStreams.shcCoin.phantomStep4')}</li>
+                  <li>{t('incomeStreams.shcCoin.phantomStep5')}</li>
+                  <li>{t('incomeStreams.shcCoin.phantomStep6')}</li>
                 </ol>
                 <Button 
                   variant="outline" 
@@ -167,7 +165,7 @@ const IncomeStreams: React.FC = () => {
                   onClick={() => window.open('https://phantom.app', '_blank')}
                 >
                   <ExternalLink className="w-4 h-4 mr-2" />
-                  Get Phantom Wallet
+                  {t('incomeStreams.shcCoin.getPhantomWallet')}
                 </Button>
               </div>
 
@@ -175,17 +173,17 @@ const IncomeStreams: React.FC = () => {
               <div className="bg-background/50 rounded-xl p-4 border border-border/50 space-y-3">
                 <div className="flex items-center gap-2">
                   <CreditCard className="w-5 h-5 text-secondary" />
-                  <h4 className="font-medium text-foreground">Buy with Credit Card</h4>
+                  <h4 className="font-medium text-foreground">{t('incomeStreams.shcCoin.buyWithCard')}</h4>
                 </div>
                 <ol className="text-sm text-muted-foreground space-y-2 ml-7 list-decimal">
-                  <li>Open Phantom Wallet and tap <span className="text-foreground">Buy</span></li>
-                  <li>Select your preferred provider (MoonPay, Coinbase, etc.)</li>
-                  <li>Enter your card details and amount to purchase SOL</li>
-                  <li>Once SOL arrives, use the <span className="text-foreground">Swap</span> feature</li>
-                  <li>Swap your SOL for SHC using the token address above</li>
+                  <li>{t('incomeStreams.shcCoin.cardStep1')}</li>
+                  <li>{t('incomeStreams.shcCoin.cardStep2')}</li>
+                  <li>{t('incomeStreams.shcCoin.cardStep3')}</li>
+                  <li>{t('incomeStreams.shcCoin.cardStep4')}</li>
+                  <li>{t('incomeStreams.shcCoin.cardStep5')}</li>
                 </ol>
                 <p className="text-xs text-muted-foreground mt-2">
-                  💡 Tip: Phantom's built-in "Buy" feature lets you purchase crypto directly with your card—no external exchange needed!
+                  💡 {t('incomeStreams.shcCoin.cardTip')}
                 </p>
               </div>
 
@@ -196,7 +194,7 @@ const IncomeStreams: React.FC = () => {
                 onClick={() => window.open(`https://raydium.io/swap/?inputMint=sol&outputMint=${SHC_TOKEN_ADDRESS}`, '_blank')}
               >
                 <TrendingUp className="w-4 h-4 mr-2" />
-                Trade SHC on Raydium
+                {t('incomeStreams.shcCoin.tradeOnRaydium')}
               </Button>
             </div>
           </CardContent>
@@ -205,7 +203,7 @@ const IncomeStreams: React.FC = () => {
 
       {/* Other Income Streams */}
       <div className="px-4 mb-4">
-        <h2 className="text-lg font-heading font-semibold text-foreground">More Opportunities</h2>
+        <h2 className="text-lg font-heading font-semibold text-foreground">{t('incomeStreams.moreOpportunities')}</h2>
       </div>
 
       {/* Content */}
@@ -214,8 +212,8 @@ const IncomeStreams: React.FC = () => {
           <Card className="bg-card/50 backdrop-blur-sm border-border/50">
             <CardContent className="py-12 text-center">
               <DollarSign className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">No income streams available yet.</p>
-              <p className="text-sm text-muted-foreground mt-1">Check back soon for opportunities!</p>
+              <p className="text-muted-foreground">{t('incomeStreams.noStreams')}</p>
+              <p className="text-sm text-muted-foreground mt-1">{t('incomeStreams.checkBackSoon')}</p>
             </CardContent>
           </Card>
         ) : (
@@ -244,7 +242,7 @@ const IncomeStreams: React.FC = () => {
                     </Badge>
                     {stream.is_featured && (
                       <Badge variant="secondary" className="bg-amber-500/20 text-amber-400">
-                        Featured
+                        {t('common.featured')}
                       </Badge>
                     )}
                   </div>
@@ -267,7 +265,7 @@ const IncomeStreams: React.FC = () => {
                   onClick={() => window.open(stream.link, '_blank')}
                 >
                   <ExternalLink className="h-4 w-4 mr-2" />
-                  Learn More
+                  {t('common.learnMore')}
                 </Button>
               </CardContent>
             </Card>

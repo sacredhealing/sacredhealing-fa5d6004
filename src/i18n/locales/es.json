@@ -5,7 +5,11 @@
     "cancel": "Cancelar",
     "loading": "Cargando...",
     "error": "Error",
-    "success": "Éxito"
+    "success": "Éxito",
+    "learnMore": "Más información",
+    "viewAll": "Ver todo",
+    "upgradeNow": "Actualizar ahora",
+    "featured": "Destacado"
   },
   "nav": {
     "home": "Inicio",
@@ -17,13 +21,21 @@
   },
   "dashboard": {
     "greeting": "Buenos días",
+    "sacredSoul": "Alma Sagrada",
     "streak": "días de racha",
-    "balance": "Saldo SHC",
+    "balance": "Tu Saldo SHC",
     "claimRewards": "Reclamar Recompensas",
     "todaysWisdom": "Sabiduría del Día",
     "todaysMeditation": "Meditación del Día",
     "startSession": "Iniciar Sesión",
     "quickActions": "Acciones Rápidas"
+  },
+  "quickActions": {
+    "meditate": "Meditar",
+    "videos": "Videos",
+    "courses": "Cursos",
+    "earn": "Ganar",
+    "wallet": "Cartera"
   },
   "meditations": {
     "title": "Meditaciones",
@@ -71,7 +83,16 @@
     "help": "Ayuda y Soporte",
     "signOut": "Cerrar Sesión",
     "upgradePremium": "Actualizar a Premium",
-    "unlockFeatures": "Desbloquea todas las meditaciones, cursos y contenido exclusivo"
+    "unlockFeatures": "Desbloquea todas las meditaciones, cursos y contenido exclusivo",
+    "promoteEarn": "Promocionar y Ganar",
+    "promoteEarnDesc": "Comparte y gana recompensas SHC",
+    "appearance": "Apariencia",
+    "darkMode": "Modo oscuro",
+    "privacy": "Privacidad",
+    "dataAndSecurity": "Datos y seguridad",
+    "appPreferences": "Preferencias de la app",
+    "dailyReminders": "Recordatorios diarios",
+    "web3Wallet": "Cartera Web3"
   },
   "courses": {
     "title": "Cursos",
@@ -95,5 +116,48 @@
     "musicStore": "Tienda de Música",
     "uploadTrack": "Subir Pista",
     "manageContent": "Gestionar Contenido"
+  },
+  "incomeStreams": {
+    "title": "Fuentes de Ingresos",
+    "subtitle": "Descubre formas de ganar",
+    "moreOpportunities": "Más Oportunidades",
+    "noStreams": "No hay fuentes de ingresos disponibles todavía.",
+    "checkBackSoon": "¡Vuelve pronto para ver oportunidades!",
+    "shcCoin": {
+      "title": "La Moneda de Sanación Sagrada",
+      "badge": "Token SHC",
+      "description1": "La Moneda de Sanación Sagrada es más que un símbolo—es un compañero gentil en el viaje de regreso a ti mismo. Imbuida con las vibraciones de energía sanadora e intención espiritual, sirve como un recordatorio para desacelerar, respirar profundamente y reconectar con la sabiduría interior que guía tu vida.",
+      "description2": "Cada moneda lleva la esencia de la libertad—libertad de viejos patrones, libertad para crecer y libertad para elevarte a la versión más plena de quien eres. Como música sanadora para el alma, su presencia fomenta el equilibrio, la claridad y la renovación.",
+      "description3": "Diseñada para inspirar la transformación personal, la Moneda de Sanación Sagrada también abre el camino hacia la",
+      "financialFreedom": "libertad financiera",
+      "description4": "Representa la alineación: cuando tu energía está clara y tu propósito despierto, la abundancia fluye con mayor facilidad.",
+      "symbolOfGrowth": "Un símbolo de crecimiento, una herramienta de empoderamiento y un guardián de la luz interior.",
+      "tokenAddress": "Dirección del Token (Solana)",
+      "howToBuy": "Cómo Comprar SHC",
+      "buyWithPhantom": "Comprar con Cartera Phantom",
+      "buyWithCard": "Comprar con Tarjeta de Crédito",
+      "phantomStep1": "Descarga Phantom Wallet (móvil o extensión de navegador)",
+      "phantomStep2": "Crea o importa tu cartera y añade SOL (Solana)",
+      "phantomStep3": "Abre Phantom y toca el icono de Intercambio",
+      "phantomStep4": "Selecciona SOL como el token que intercambias",
+      "phantomStep5": "Pega la dirección del token SHC arriba o busca \"Sacred Healing Coin\"",
+      "phantomStep6": "Ingresa la cantidad y confirma el intercambio",
+      "getPhantomWallet": "Obtener Cartera Phantom",
+      "cardStep1": "Abre Phantom Wallet y toca Comprar",
+      "cardStep2": "Selecciona tu proveedor preferido (MoonPay, Coinbase, etc.)",
+      "cardStep3": "Ingresa los datos de tu tarjeta y la cantidad para comprar SOL",
+      "cardStep4": "Una vez que llegue el SOL, usa la función de Intercambio",
+      "cardStep5": "Intercambia tu SOL por SHC usando la dirección del token arriba",
+      "cardTip": "Consejo: ¡La función \"Comprar\" integrada de Phantom te permite comprar cripto directamente con tu tarjeta—sin necesidad de intercambio externo!",
+      "tradeOnRaydium": "Intercambiar SHC en Raydium"
+    }
+  },
+  "badges": {
+    "firstMeditation": "Primera Meditación",
+    "sevenDayStreak": "Racha de 7 Días",
+    "courseComplete": "Curso Completado",
+    "thirtyDayStreak": "Racha de 30 Días",
+    "premiumMember": "Miembro Premium",
+    "hundredSessions": "100 Sesiones"
   }
 }
