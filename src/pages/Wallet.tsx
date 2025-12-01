@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
-import { Sparkles, ArrowUpRight, ArrowDownLeft, Gift, Clock, CheckCircle, Calendar, Play, Users, Crown } from 'lucide-react';
+import { Sparkles, ArrowUpRight, ArrowDownLeft, Gift, Clock, CheckCircle, Calendar, Play, Users, Crown, Wallet as WalletIcon, Link } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { usePhantomWallet } from '@/hooks/usePhantomWallet';
+import { useSHCBalance } from '@/hooks/useSHCBalance';
+import { formatDistanceToNow } from 'date-fns';
 
 const rewards = [
   { id: 1, title: 'Daily Login - Day 7', reward: 20, icon: Calendar, completed: false, available: true },
@@ -10,16 +13,18 @@ const rewards = [
   { id: 5, title: 'Go Premium', reward: 2000, icon: Crown, completed: false, available: true },
 ];
 
-const transactions = [
-  { id: 1, type: 'earned', title: 'Daily Login Reward', amount: 7, time: '2 hours ago' },
-  { id: 2, type: 'earned', title: 'Meditation Completed', amount: 5, time: '1 day ago' },
-  { id: 3, type: 'spent', title: 'Course Unlock', amount: -300, time: '3 days ago' },
-  { id: 4, type: 'earned', title: 'Weekly Streak', amount: 50, time: '5 days ago' },
-  { id: 5, type: 'earned', title: 'Referral Bonus', amount: 100, time: '1 week ago' },
-];
-
 const Wallet: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'rewards' | 'history'>('rewards');
+  const { walletAddress, isConnecting, connectWallet, disconnectWallet } = usePhantomWallet();
+  const { balance, transactions, isLoading, withdrawSHC } = useSHCBalance();
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
+
+  const handleWithdraw = async () => {
+    if (!walletAddress || !balance || balance.balance <= 0) return;
+    setIsWithdrawing(true);
+    await withdrawSHC(balance.balance);
+    setIsWithdrawing(false);
+  };
 
   return (
     <div className="min-h-screen px-4 pt-6">
@@ -29,6 +34,40 @@ const Wallet: React.FC = () => {
         <p className="text-muted-foreground mt-1">Earn and manage your tokens</p>
       </header>
 
+      {/* Wallet Connection */}
+      {!walletAddress ? (
+        <div className="bg-muted/30 rounded-xl p-4 mb-4 border border-border/30 animate-slide-up">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <WalletIcon className="text-primary" size={20} />
+              <span className="text-sm text-muted-foreground">Connect Phantom to withdraw SHC</span>
+            </div>
+            <Button 
+              variant="spiritual" 
+              size="sm" 
+              onClick={connectWallet}
+              disabled={isConnecting}
+            >
+              {isConnecting ? 'Connecting...' : 'Connect'}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-secondary/10 rounded-xl p-4 mb-4 border border-secondary/30 animate-slide-up">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Link className="text-secondary" size={16} />
+              <span className="text-sm text-foreground">
+                {walletAddress.slice(0, 4)}...{walletAddress.slice(-4)}
+              </span>
+            </div>
+            <Button variant="ghost" size="sm" onClick={disconnectWallet}>
+              Disconnect
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Balance Card */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-spiritual p-6 mb-6 animate-slide-up">
         <div className="absolute top-0 right-0 w-40 h-40 bg-accent/20 rounded-full blur-3xl" />
@@ -37,18 +76,26 @@ const Wallet: React.FC = () => {
         <div className="relative">
           <p className="text-foreground/70 text-sm mb-1">Total Balance</p>
           <div className="flex items-baseline gap-2 mb-4">
-            <span className="text-5xl font-heading font-bold text-foreground">1,250</span>
+            <span className="text-5xl font-heading font-bold text-foreground">
+              {isLoading ? '...' : (balance?.balance.toLocaleString() ?? '0')}
+            </span>
             <span className="text-xl text-accent font-medium">SHC</span>
           </div>
 
           <div className="flex gap-3">
-            <Button variant="glass" size="sm" className="flex-1">
+            <Button 
+              variant="glass" 
+              size="sm" 
+              className="flex-1"
+              onClick={handleWithdraw}
+              disabled={!walletAddress || !balance || balance.balance <= 0 || isWithdrawing}
+            >
               <ArrowUpRight size={16} />
-              Send
+              {isWithdrawing ? 'Sending...' : 'Withdraw'}
             </Button>
-            <Button variant="glass" size="sm" className="flex-1">
+            <Button variant="glass" size="sm" className="flex-1" disabled>
               <ArrowDownLeft size={16} />
-              Receive
+              Deposit
             </Button>
             <Button variant="gold" size="sm" className="flex-1">
               <Gift size={16} />
@@ -65,11 +112,13 @@ const Wallet: React.FC = () => {
           <p className="text-xs text-muted-foreground">Day Streak</p>
         </div>
         <div className="flex-1 bg-muted/30 rounded-xl p-4 border border-border/30 text-center">
-          <p className="text-2xl font-heading font-bold text-secondary">23</p>
-          <p className="text-xs text-muted-foreground">Sessions</p>
+          <p className="text-2xl font-heading font-bold text-secondary">{transactions.length}</p>
+          <p className="text-xs text-muted-foreground">Transactions</p>
         </div>
         <div className="flex-1 bg-muted/30 rounded-xl p-4 border border-border/30 text-center">
-          <p className="text-2xl font-heading font-bold text-accent">850</p>
+          <p className="text-2xl font-heading font-bold text-accent">
+            {isLoading ? '...' : (balance?.total_earned.toLocaleString() ?? '0')}
+          </p>
           <p className="text-xs text-muted-foreground">Earned</p>
         </div>
       </div>
@@ -155,10 +204,10 @@ const Wallet: React.FC = () => {
                 )}
               </div>
               <div className="flex-1">
-                <p className="font-medium text-foreground">{tx.title}</p>
+                <p className="font-medium text-foreground">{tx.description}</p>
                 <p className="text-xs text-muted-foreground flex items-center gap-1">
                   <Clock size={10} />
-                  {tx.time}
+                  {formatDistanceToNow(new Date(tx.created_at), { addSuffix: true })}
                 </p>
               </div>
               <span className={`font-heading font-semibold ${
