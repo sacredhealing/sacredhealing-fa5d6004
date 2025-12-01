@@ -3,18 +3,25 @@ import { useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, Copy, Share2, Users, DollarSign, Gift, 
   TrendingUp, CheckCircle, Clock, Megaphone, Heart,
-  Sparkles, Target, Award
+  Sparkles, Target, Award, Edit3, Save, X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { useAffiliate } from '@/hooks/useAffiliate';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 const Promote: React.FC = () => {
   const navigate = useNavigate();
-  const { data, isLoading, getReferralLink } = useAffiliate();
+  const { user } = useAuth();
+  const { data, isLoading, getReferralLink, refetch } = useAffiliate();
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [customCode, setCustomCode] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   const referralLink = getReferralLink();
 
@@ -49,6 +56,76 @@ const Promote: React.FC = () => {
       }
     } else {
       copyToClipboard();
+    }
+  };
+
+  const startEditing = () => {
+    setCustomCode(data?.referralCode || '');
+    setIsEditing(true);
+  };
+
+  const cancelEditing = () => {
+    setIsEditing(false);
+    setCustomCode('');
+  };
+
+  const saveCustomCode = async () => {
+    if (!user || !customCode.trim()) return;
+    
+    // Validate: only alphanumeric, hyphens, underscores, 3-30 chars
+    const sanitized = customCode.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+    if (sanitized.length < 3 || sanitized.length > 30) {
+      toast({
+        title: "Invalid Code",
+        description: "Code must be 3-30 characters (letters, numbers, hyphens, underscores)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      // Check if code is already taken
+      const { data: existing } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('referral_code', sanitized)
+        .neq('user_id', user.id)
+        .single();
+
+      if (existing) {
+        toast({
+          title: "Code Taken",
+          description: "This referral code is already in use. Try another one.",
+          variant: "destructive",
+        });
+        setIsSaving(false);
+        return;
+      }
+
+      // Update the code
+      const { error } = await supabase
+        .from('profiles')
+        .update({ referral_code: sanitized })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Code Updated!",
+        description: `Your new referral code is: ${sanitized}`,
+      });
+      setIsEditing(false);
+      refetch();
+    } catch (error) {
+      console.error('Error updating referral code:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update referral code. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -114,9 +191,57 @@ const Promote: React.FC = () => {
               Share
             </Button>
           </div>
-          <p className="text-center text-xs text-muted-foreground mt-3">
-            Code: <span className="font-mono font-bold text-primary">{data?.referralCode}</span>
-          </p>
+          
+          {/* Editable Referral Code */}
+          <div className="mt-4 p-3 rounded-xl bg-background/30 border border-border/30">
+            {isEditing ? (
+              <div className="space-y-3">
+                <p className="text-xs text-muted-foreground">Customize your referral code:</p>
+                <Input
+                  value={customCode}
+                  onChange={(e) => setCustomCode(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))}
+                  placeholder="your-name"
+                  className="font-mono text-sm"
+                  maxLength={30}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Only letters, numbers, hyphens, and underscores. 3-30 characters.
+                </p>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={saveCustomCode} 
+                    size="sm" 
+                    disabled={isSaving || customCode.length < 3}
+                    className="flex-1"
+                  >
+                    {isSaving ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
+                    ) : (
+                      <>
+                        <Save className="h-3 w-3 mr-1" />
+                        Save
+                      </>
+                    )}
+                  </Button>
+                  <Button onClick={cancelEditing} size="sm" variant="outline" className="flex-1">
+                    <X className="h-3 w-3 mr-1" />
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">Your code:</p>
+                  <p className="font-mono font-bold text-primary">{data?.referralCode}</p>
+                </div>
+                <Button onClick={startEditing} size="sm" variant="ghost">
+                  <Edit3 className="h-4 w-4 mr-1" />
+                  Customize
+                </Button>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
