@@ -10,7 +10,8 @@ import {
   Users,
   CreditCard,
   BookOpen,
-  Bell
+  Bell,
+  DollarSign
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -38,6 +39,13 @@ const adminSections = [
     color: 'text-orange-500',
   },
   {
+    title: 'Income Streams',
+    description: 'Share money-making opportunities with users',
+    icon: DollarSign,
+    href: '/admin/income-streams',
+    color: 'text-green-500',
+  },
+  {
     title: 'Meditations',
     description: 'Upload and manage meditation audio files',
     icon: Play,
@@ -56,7 +64,7 @@ const adminSections = [
     description: 'Upload and manage music tracks for sale',
     icon: Music,
     href: '/admin/music',
-    color: 'text-green-500',
+    color: 'text-emerald-500',
   },
 ];
 

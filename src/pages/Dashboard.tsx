@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Play, BookOpen, Gift, Wallet, Flame, Sparkles } from 'lucide-react';
+import { Play, BookOpen, Gift, Wallet, Flame, Sparkles, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LotusIcon } from '@/components/icons/LotusIcon';
 
@@ -19,7 +19,7 @@ const todaysMeditation = {
 const quickActions = [
   { icon: Play, label: 'Meditate', to: '/meditations', color: 'primary' },
   { icon: BookOpen, label: 'Courses', to: '/courses', color: 'secondary' },
-  { icon: Gift, label: 'Rewards', to: '/wallet', color: 'accent' },
+  { icon: DollarSign, label: 'Earn', to: '/income-streams', color: 'accent' },
   { icon: Wallet, label: 'Wallet', to: '/wallet', color: 'purple' },
 ];
 

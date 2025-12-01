@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Edit, Trash2, GripVertical, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -16,17 +16,17 @@ import { supabase } from '@/integrations/supabase/client';
 interface IncomeStream {
   id: string;
   title: string;
-  description: string;
+  description: string | null;
   link: string;
   category: string;
-  potential_earnings: string;
+  potential_earnings: string | null;
   is_featured: boolean;
   is_active: boolean;
   image_url: string | null;
   order_index: number;
 }
 
-const emptyStream: Omit<IncomeStream, 'id'> = {
+const emptyStream = {
   title: '',
   description: '',
   link: '',
@@ -34,7 +34,7 @@ const emptyStream: Omit<IncomeStream, 'id'> = {
   potential_earnings: '',
   is_featured: false,
   is_active: true,
-  image_url: null,
+  image_url: '',
   order_index: 0,
 };
 
@@ -44,7 +44,7 @@ const AdminIncomeStreams: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingStream, setEditingStream] = useState<IncomeStream | null>(null);
-  const [formData, setFormData] = useState<Omit<IncomeStream, 'id'>>(emptyStream);
+  const [formData, setFormData] = useState(emptyStream);
 
   useEffect(() => {
     fetchStreams();
@@ -52,11 +52,11 @@ const AdminIncomeStreams: React.FC = () => {
 
   const fetchStreams = async () => {
     const { data, error } = await supabase
-      .from('income_streams')
+      .from('income_streams' as any)
       .select('*')
       .order('order_index', { ascending: true });
 
-    if (data) setStreams(data);
+    if (data) setStreams(data as unknown as IncomeStream[]);
     if (error) console.error('Error fetching streams:', error);
     setIsLoading(false);
   };
@@ -67,10 +67,22 @@ const AdminIncomeStreams: React.FC = () => {
       return;
     }
 
+    const payload = {
+      title: formData.title,
+      description: formData.description || null,
+      link: formData.link,
+      category: formData.category,
+      potential_earnings: formData.potential_earnings || null,
+      is_featured: formData.is_featured,
+      is_active: formData.is_active,
+      image_url: formData.image_url || null,
+      order_index: formData.order_index,
+    };
+
     if (editingStream) {
       const { error } = await supabase
-        .from('income_streams')
-        .update(formData)
+        .from('income_streams' as any)
+        .update(payload)
         .eq('id', editingStream.id);
 
       if (error) {
@@ -80,8 +92,8 @@ const AdminIncomeStreams: React.FC = () => {
       toast.success('Income stream updated');
     } else {
       const { error } = await supabase
-        .from('income_streams')
-        .insert({ ...formData, order_index: streams.length });
+        .from('income_streams' as any)
+        .insert({ ...payload, order_index: streams.length });
 
       if (error) {
         toast.error('Failed to create');
@@ -100,13 +112,13 @@ const AdminIncomeStreams: React.FC = () => {
     setEditingStream(stream);
     setFormData({
       title: stream.title,
-      description: stream.description,
+      description: stream.description || '',
       link: stream.link,
       category: stream.category,
-      potential_earnings: stream.potential_earnings,
+      potential_earnings: stream.potential_earnings || '',
       is_featured: stream.is_featured,
       is_active: stream.is_active,
-      image_url: stream.image_url,
+      image_url: stream.image_url || '',
       order_index: stream.order_index,
     });
     setIsDialogOpen(true);
@@ -116,7 +128,7 @@ const AdminIncomeStreams: React.FC = () => {
     if (!confirm('Are you sure you want to delete this income stream?')) return;
 
     const { error } = await supabase
-      .from('income_streams')
+      .from('income_streams' as any)
       .delete()
       .eq('id', id);
 
@@ -130,7 +142,7 @@ const AdminIncomeStreams: React.FC = () => {
 
   const toggleActive = async (stream: IncomeStream) => {
     const { error } = await supabase
-      .from('income_streams')
+      .from('income_streams' as any)
       .update({ is_active: !stream.is_active })
       .eq('id', stream.id);
 
@@ -234,8 +246,8 @@ const AdminIncomeStreams: React.FC = () => {
                 <div className="space-y-2">
                   <Label>Image URL (optional)</Label>
                   <Input
-                    value={formData.image_url || ''}
-                    onChange={(e) => setFormData({ ...formData, image_url: e.target.value || null })}
+                    value={formData.image_url}
+                    onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
                     placeholder="https://..."
                   />
                 </div>

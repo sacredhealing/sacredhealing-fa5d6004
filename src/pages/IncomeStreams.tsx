@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import { ExternalLink, DollarSign, TrendingUp, Users, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,17 +8,16 @@ import { supabase } from '@/integrations/supabase/client';
 interface IncomeStream {
   id: string;
   title: string;
-  description: string;
+  description: string | null;
   link: string;
   category: string;
-  potential_earnings: string;
+  potential_earnings: string | null;
   is_featured: boolean;
   image_url: string | null;
   order_index: number;
 }
 
 const IncomeStreams: React.FC = () => {
-  const { t } = useTranslation();
   const [streams, setStreams] = useState<IncomeStream[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -29,13 +27,13 @@ const IncomeStreams: React.FC = () => {
 
   const fetchStreams = async () => {
     const { data, error } = await supabase
-      .from('income_streams')
+      .from('income_streams' as any)
       .select('*')
       .eq('is_active', true)
       .order('order_index', { ascending: true });
 
     if (data) {
-      setStreams(data);
+      setStreams(data as unknown as IncomeStream[]);
     }
     if (error) console.error('Error fetching income streams:', error);
     setIsLoading(false);
@@ -44,13 +42,13 @@ const IncomeStreams: React.FC = () => {
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'affiliate':
-        return <Users className="h-5 w-5" />;
+        return <Users className="h-4 w-4" />;
       case 'investment':
-        return <TrendingUp className="h-5 w-5" />;
+        return <TrendingUp className="h-4 w-4" />;
       case 'passive':
-        return <Sparkles className="h-5 w-5" />;
+        return <Sparkles className="h-4 w-4" />;
       default:
-        return <DollarSign className="h-5 w-5" />;
+        return <DollarSign className="h-4 w-4" />;
     }
   };
 
@@ -139,9 +137,11 @@ const IncomeStreams: React.FC = () => {
                 )}
               </CardHeader>
               <CardContent className="space-y-4">
-                <CardDescription className="text-muted-foreground whitespace-pre-line">
-                  {stream.description}
-                </CardDescription>
+                {stream.description && (
+                  <CardDescription className="text-muted-foreground whitespace-pre-line">
+                    {stream.description}
+                  </CardDescription>
+                )}
                 <Button 
                   className="w-full" 
                   onClick={() => window.open(stream.link, '_blank')}
