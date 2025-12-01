@@ -919,6 +919,57 @@ export type Database = {
         }
         Relationships: []
       }
+      video_completions: {
+        Row: {
+          id: string
+          shc_earned: number
+          user_id: string
+          video_id: string
+          video_title: string | null
+          watched_at: string
+        }
+        Insert: {
+          id?: string
+          shc_earned?: number
+          user_id: string
+          video_id: string
+          video_title?: string | null
+          watched_at?: string
+        }
+        Update: {
+          id?: string
+          shc_earned?: number
+          user_id?: string
+          video_id?: string
+          video_title?: string | null
+          watched_at?: string
+        }
+        Relationships: []
+      }
+      youtube_channels: {
+        Row: {
+          channel_id: string
+          channel_name: string
+          created_at: string
+          id: string
+          is_active: boolean
+        }
+        Insert: {
+          channel_id: string
+          channel_name: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+        }
+        Update: {
+          channel_id?: string
+          channel_name?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

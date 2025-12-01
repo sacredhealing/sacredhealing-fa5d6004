@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Play, BookOpen, Gift, Wallet, Flame, Sparkles, DollarSign } from 'lucide-react';
+import { Play, BookOpen, Gift, Wallet, Flame, Sparkles, DollarSign, Youtube } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LotusIcon } from '@/components/icons/LotusIcon';
 
@@ -18,8 +18,8 @@ const todaysMeditation = {
 
 const quickActions = [
   { icon: Play, label: 'Meditate', to: '/meditations', color: 'primary' },
+  { icon: Youtube, label: 'Videos', to: '/spiritual-education', color: 'red' },
   { icon: BookOpen, label: 'Courses', to: '/courses', color: 'secondary' },
-  { icon: DollarSign, label: 'Earn', to: '/income-streams', color: 'accent' },
   { icon: Wallet, label: 'Wallet', to: '/wallet', color: 'purple' },
 ];
 
@@ -110,6 +110,7 @@ const Dashboard: React.FC = () => {
                   action.color === 'primary' ? 'bg-primary/20 text-primary' :
                   action.color === 'secondary' ? 'bg-secondary/20 text-secondary' :
                   action.color === 'accent' ? 'bg-accent/20 text-accent' :
+                  action.color === 'red' ? 'bg-red-500/20 text-red-500' :
                   'bg-purple/20 text-purple'
                 }`}>
                   <action.icon size={22} />
