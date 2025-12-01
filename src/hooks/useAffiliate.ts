@@ -26,6 +26,7 @@ export const useAffiliate = () => {
   const { user } = useAuth();
   const [data, setData] = useState<AffiliateData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     if (!user) {
@@ -79,16 +80,21 @@ export const useAffiliate = () => {
     };
 
     fetchAffiliateData();
-  }, [user]);
+  }, [user, refreshKey]);
 
   const getReferralLink = () => {
     if (!data?.referralCode) return '';
     return `${window.location.origin}/auth?ref=${data.referralCode}`;
   };
 
+  const refetch = () => {
+    setRefreshKey(prev => prev + 1);
+  };
+
   return {
     data,
     isLoading,
     getReferralLink,
+    refetch,
   };
 };
