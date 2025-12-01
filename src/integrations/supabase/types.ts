@@ -14,6 +14,83 @@ export type Database = {
   }
   public: {
     Tables: {
+      meditation_completions: {
+        Row: {
+          completed_at: string
+          duration_listened: number
+          id: string
+          meditation_id: string
+          shc_earned: number
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          duration_listened?: number
+          id?: string
+          meditation_id: string
+          shc_earned?: number
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          duration_listened?: number
+          id?: string
+          meditation_id?: string
+          shc_earned?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meditation_completions_meditation_id_fkey"
+            columns: ["meditation_id"]
+            isOneToOne: false
+            referencedRelation: "meditations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meditations: {
+        Row: {
+          audio_url: string
+          category: string
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          duration_minutes: number
+          id: string
+          is_premium: boolean
+          play_count: number
+          shc_reward: number
+          title: string
+        }
+        Insert: {
+          audio_url: string
+          category?: string
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          is_premium?: boolean
+          play_count?: number
+          shc_reward?: number
+          title: string
+        }
+        Update: {
+          audio_url?: string
+          category?: string
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          is_premium?: boolean
+          play_count?: number
+          shc_reward?: number
+          title?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
