@@ -20,6 +20,7 @@ const quickActions = [
   { icon: Play, label: 'Meditate', to: '/meditations', color: 'primary' },
   { icon: Youtube, label: 'Videos', to: '/spiritual-education', color: 'red' },
   { icon: BookOpen, label: 'Courses', to: '/courses', color: 'secondary' },
+  { icon: DollarSign, label: 'Earn', to: '/income-streams', color: 'accent' },
   { icon: Wallet, label: 'Wallet', to: '/wallet', color: 'purple' },
 ];
 
@@ -102,18 +103,18 @@ const Dashboard: React.FC = () => {
       {/* Quick Actions */}
       <div className="animate-slide-up" style={{ animationDelay: '0.3s' }}>
         <h2 className="text-lg font-heading font-semibold text-foreground mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-5 gap-2">
           {quickActions.map((action) => (
             <Link key={action.label} to={action.to}>
-              <div className="flex flex-col items-center gap-2 p-4 rounded-xl bg-muted/30 border border-border/30 hover:bg-muted/50 transition-all duration-300">
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+              <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-muted/30 border border-border/30 hover:bg-muted/50 transition-all duration-300">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
                   action.color === 'primary' ? 'bg-primary/20 text-primary' :
                   action.color === 'secondary' ? 'bg-secondary/20 text-secondary' :
                   action.color === 'accent' ? 'bg-accent/20 text-accent' :
                   action.color === 'red' ? 'bg-red-500/20 text-red-500' :
                   'bg-purple/20 text-purple'
                 }`}>
-                  <action.icon size={22} />
+                  <action.icon size={20} />
                 </div>
                 <span className="text-xs font-medium text-foreground">{action.label}</span>
               </div>
