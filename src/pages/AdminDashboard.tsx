@@ -11,7 +11,8 @@ import {
   CreditCard,
   BookOpen,
   Bell,
-  DollarSign
+  DollarSign,
+  Youtube
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -44,6 +45,13 @@ const adminSections = [
     icon: DollarSign,
     href: '/admin/income-streams',
     color: 'text-green-500',
+  },
+  {
+    title: 'YouTube Channels',
+    description: 'Manage channels for Spiritual Education videos',
+    icon: Youtube,
+    href: '/admin/youtube',
+    color: 'text-red-500',
   },
   {
     title: 'Meditations',

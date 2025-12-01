@@ -21,9 +21,11 @@ import AdminContent from "./pages/AdminContent";
 import AdminCourses from "./pages/AdminCourses";
 import AdminAnnouncements from "./pages/AdminAnnouncements";
 import AdminIncomeStreams from "./pages/AdminIncomeStreams";
+import AdminYouTube from "./pages/AdminYouTube";
 import Healing from "./pages/Healing";
 import Promote from "./pages/Promote";
 import IncomeStreams from "./pages/IncomeStreams";
+import SpiritualEducation from "./pages/SpiritualEducation";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,6 +50,7 @@ const App = () => (
               <Route path="/healing" element={<Healing />} />
               <Route path="/promote" element={<Promote />} />
               <Route path="/income-streams" element={<IncomeStreams />} />
+              <Route path="/spiritual-education" element={<SpiritualEducation />} />
             </Route>
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/meditations" element={<Admin />} />
@@ -57,6 +60,7 @@ const App = () => (
             <Route path="/admin/courses" element={<AdminCourses />} />
             <Route path="/admin/announcements" element={<AdminAnnouncements />} />
             <Route path="/admin/income-streams" element={<AdminIncomeStreams />} />
+            <Route path="/admin/youtube" element={<AdminYouTube />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
