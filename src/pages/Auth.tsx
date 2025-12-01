@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LotusIcon } from '@/components/icons/LotusIcon';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Mail, Lock, User, ArrowRight, Sparkles, Loader2 } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Sparkles, Loader2, Gift } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { usePhantomWallet } from '@/hooks/usePhantomWallet';
+import { supabase } from '@/integrations/supabase/client';
 
 const Auth: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const referralCode = searchParams.get('ref');
   const { signIn, signUp, isAuthenticated, isLoading: authLoading } = useAuth();
   const { connectWallet, isConnecting } = usePhantomWallet();
   const { toast } = useToast();
@@ -19,6 +22,13 @@ const Auth: React.FC = () => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // If there's a referral code, default to signup mode
+  useEffect(() => {
+    if (referralCode) {
+      setIsLogin(false);
+    }
+  }, [referralCode]);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -68,7 +78,7 @@ const Auth: React.FC = () => {
           return;
         }
         
-        const { error } = await signUp(email, password, name);
+        const { data, error } = await signUp(email, password, name);
         if (error) {
           toast({
             title: "Sign up failed",
@@ -76,10 +86,86 @@ const Auth: React.FC = () => {
             variant: "destructive"
           });
         } else {
-          toast({
-            title: "Welcome to Sacred Healing!",
-            description: "You've received 50 SHC as a welcome bonus!"
-          });
+          // Process referral if there's a code
+          if (referralCode && data.user) {
+            try {
+              // Find the referrer by code
+              const { data: referrerProfile } = await supabase
+                .from('profiles')
+                .select('user_id')
+                .eq('referral_code', referralCode)
+                .single();
+
+              if (referrerProfile) {
+                // Update the new user's profile with referred_by
+                await supabase
+                  .from('profiles')
+                  .update({ referred_by: referrerProfile.user_id })
+                  .eq('user_id', data.user.id);
+
+                // Create referral signup record
+                await supabase.from('referral_signups').insert({
+                  referrer_user_id: referrerProfile.user_id,
+                  referred_user_id: data.user.id,
+                  referral_code: referralCode,
+                  signup_bonus_shc: 100,
+                  referred_bonus_shc: 50,
+                });
+
+                // Award bonus to referrer (100 SHC)
+                const { data: referrerBalance } = await supabase
+                  .from('user_balances')
+                  .select('balance, total_earned')
+                  .eq('user_id', referrerProfile.user_id)
+                  .single();
+
+                if (referrerBalance) {
+                  await supabase
+                    .from('user_balances')
+                    .update({
+                      balance: Number(referrerBalance.balance) + 100,
+                      total_earned: Number(referrerBalance.total_earned) + 100
+                    })
+                    .eq('user_id', referrerProfile.user_id);
+
+                  await supabase.from('shc_transactions').insert({
+                    user_id: referrerProfile.user_id,
+                    type: 'earned',
+                    amount: 100,
+                    description: 'Referral bonus - new user signup',
+                    status: 'completed'
+                  });
+                }
+
+                // Update referrer's total_referrals
+                await supabase
+                  .from('profiles')
+                  .update({ total_referrals: (referrerProfile as any).total_referrals ? (referrerProfile as any).total_referrals + 1 : 1 })
+                  .eq('user_id', referrerProfile.user_id);
+
+                toast({
+                  title: "Welcome to Sacred Healing!",
+                  description: "You've received 50 SHC welcome bonus! Your referrer got 100 SHC too!"
+                });
+              } else {
+                toast({
+                  title: "Welcome to Sacred Healing!",
+                  description: "You've received 50 SHC as a welcome bonus!"
+                });
+              }
+            } catch (refError) {
+              console.error('Referral processing error:', refError);
+              toast({
+                title: "Welcome to Sacred Healing!",
+                description: "You've received 50 SHC as a welcome bonus!"
+              });
+            }
+          } else {
+            toast({
+              title: "Welcome to Sacred Healing!",
+              description: "You've received 50 SHC as a welcome bonus!"
+            });
+          }
           navigate('/dashboard');
         }
       }
@@ -131,6 +217,17 @@ const Auth: React.FC = () => {
             {isLogin ? 'Welcome back, beautiful soul' : 'Begin your healing journey'}
           </p>
         </div>
+
+        {/* Referral Banner */}
+        {referralCode && !isLogin && (
+          <div className="mt-6 p-4 rounded-xl bg-secondary/20 border border-secondary/30 flex items-center gap-3 animate-fade-in">
+            <Gift className="w-6 h-6 text-secondary flex-shrink-0" />
+            <div>
+              <p className="font-medium text-foreground">You've been invited!</p>
+              <p className="text-sm text-muted-foreground">Sign up now and get 50 SHC bonus</p>
+            </div>
+          </div>
+        )}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="mt-10 space-y-4 animate-slide-up">

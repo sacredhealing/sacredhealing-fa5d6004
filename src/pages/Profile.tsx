@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { User, Mail, Flame, Award, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield, LayoutDashboard, Globe } from 'lucide-react';
+import { User, Mail, Flame, Award, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield, LayoutDashboard, Globe, Megaphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LotusIcon } from '@/components/icons/LotusIcon';
 import { LanguageSelector } from '@/components/LanguageSelector';
@@ -37,6 +37,7 @@ const Profile: React.FC = () => {
   };
 
   const menuItems = [
+    { icon: Megaphone, label: 'Promote & Earn', sublabel: 'Share and earn SHC rewards', onClick: () => navigate('/promote') },
     { icon: LayoutDashboard, label: t('admin.title'), sublabel: t('admin.manageContent'), onClick: () => navigate('/admin') },
     { icon: Bell, label: t('profile.notifications'), sublabel: 'Daily reminders', onClick: () => {} },
     { 
