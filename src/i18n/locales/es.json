@@ -23,8 +23,9 @@
   "community": {
     "title": "Comunidad",
     "feed": "Muro",
-    "chatRooms": "Salas de Chat",
-    "messages": "Mensajes",
+    "support": "Apoyo",
+    "chatRooms": "Chat",
+    "messages": "DMs",
     "shareSomething": "Comparte algo con la comunidad...",
     "post": "Publicar",
     "noPosts": "Sin publicaciones aún. ¡Sé el primero en compartir!",
@@ -44,6 +45,23 @@
     "noUsersFound": "No se encontraron usuarios",
     "noConversations": "Sin conversaciones aún",
     "startConversation": "¡Inicia la conversación!"
+  },
+  "supportCircle": {
+    "createRequest": "Crear Solicitud",
+    "question": "Pregunta",
+    "videoSuggestion": "Idea de Video",
+    "healingBlessing": "Bendición",
+    "all": "Todos",
+    "titlePlaceholder": "Título de tu solicitud",
+    "recipientPlaceholder": "Nombre de la persona que necesita sanación",
+    "contentPlaceholder": "Describe tu solicitud en detalle...",
+    "submit": "Enviar Solicitud",
+    "requestCreated": "¡Tu solicitud ha sido compartida!",
+    "noRequests": "Sin solicitudes aún. ¡Sé el primero en preguntar!",
+    "resolved": "Resuelto",
+    "prayingFor": "Orando por",
+    "praying": "orando",
+    "supporting": "apoyando"
   },
   "dashboard": {
     "greeting": "Buenos días",

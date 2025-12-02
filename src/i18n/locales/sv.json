@@ -23,8 +23,9 @@
   "community": {
     "title": "Gemenskap",
     "feed": "Flöde",
-    "chatRooms": "Chattrum",
-    "messages": "Meddelanden",
+    "support": "Stöd",
+    "chatRooms": "Chatt",
+    "messages": "DM",
     "shareSomething": "Dela något med gemenskapen...",
     "post": "Posta",
     "noPosts": "Inga inlägg ännu. Var först att dela!",
@@ -44,6 +45,23 @@
     "noUsersFound": "Inga användare hittades",
     "noConversations": "Inga konversationer ännu",
     "startConversation": "Starta konversationen!"
+  },
+  "supportCircle": {
+    "createRequest": "Skapa Förfrågan",
+    "question": "Fråga",
+    "videoSuggestion": "Videoförslag",
+    "healingBlessing": "Välsignelse",
+    "all": "Alla",
+    "titlePlaceholder": "Titel på din förfrågan",
+    "recipientPlaceholder": "Namn på person som behöver läkning",
+    "contentPlaceholder": "Beskriv din förfrågan i detalj...",
+    "submit": "Skicka Förfrågan",
+    "requestCreated": "Din förfrågan har delats!",
+    "noRequests": "Inga förfrågningar ännu. Var först att fråga!",
+    "resolved": "Löst",
+    "prayingFor": "Ber för",
+    "praying": "ber",
+    "supporting": "stöttar"
   },
   "dashboard": {
     "greeting": "God morgon",

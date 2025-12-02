@@ -973,6 +973,35 @@ export type Database = {
         }
         Relationships: []
       }
+      request_supports: {
+        Row: {
+          created_at: string
+          id: string
+          request_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          request_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          request_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_supports_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "support_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reviews: {
         Row: {
           comment: string
@@ -1084,6 +1113,42 @@ export type Database = {
           metadata?: Json | null
           title?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      support_requests: {
+        Row: {
+          category: string
+          content: string
+          created_at: string
+          id: string
+          is_resolved: boolean
+          recipient_name: string | null
+          support_count: number
+          title: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          content: string
+          created_at?: string
+          id?: string
+          is_resolved?: boolean
+          recipient_name?: string | null
+          support_count?: number
+          title: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_resolved?: boolean
+          recipient_name?: string | null
+          support_count?: number
+          title?: string
+          user_id?: string
         }
         Relationships: []
       }

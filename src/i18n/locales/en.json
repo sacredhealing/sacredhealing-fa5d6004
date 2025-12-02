@@ -23,8 +23,9 @@
   "community": {
     "title": "Community",
     "feed": "Feed",
-    "chatRooms": "Chat Rooms",
-    "messages": "Messages",
+    "support": "Support",
+    "chatRooms": "Chat",
+    "messages": "DMs",
     "shareSomething": "Share something with the community...",
     "post": "Post",
     "noPosts": "No posts yet. Be the first to share!",
@@ -44,6 +45,23 @@
     "noUsersFound": "No users found",
     "noConversations": "No conversations yet",
     "startConversation": "Start the conversation!"
+  },
+  "supportCircle": {
+    "createRequest": "Create Request",
+    "question": "Question",
+    "videoSuggestion": "Video Idea",
+    "healingBlessing": "Blessing",
+    "all": "All",
+    "titlePlaceholder": "Title of your request",
+    "recipientPlaceholder": "Name of person needing healing",
+    "contentPlaceholder": "Describe your request in detail...",
+    "submit": "Submit Request",
+    "requestCreated": "Your request has been shared!",
+    "noRequests": "No requests yet. Be the first to ask!",
+    "resolved": "Resolved",
+    "prayingFor": "Praying for",
+    "praying": "praying",
+    "supporting": "supporting"
   },
   "dashboard": {
     "greeting": "Good morning",
