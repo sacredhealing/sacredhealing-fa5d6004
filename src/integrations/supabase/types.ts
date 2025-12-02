@@ -740,6 +740,51 @@ export type Database = {
         }
         Relationships: []
       }
+      mastering_orders: {
+        Row: {
+          amount_paid: number
+          contact_email: string
+          created_at: string
+          file_urls: string[] | null
+          id: string
+          notes: string | null
+          package_type: string
+          status: string
+          stripe_payment_id: string | null
+          track_count: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_paid: number
+          contact_email: string
+          created_at?: string
+          file_urls?: string[] | null
+          id?: string
+          notes?: string | null
+          package_type: string
+          status?: string
+          stripe_payment_id?: string | null
+          track_count?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_paid?: number
+          contact_email?: string
+          created_at?: string
+          file_urls?: string[] | null
+          id?: string
+          notes?: string | null
+          package_type?: string
+          status?: string
+          stripe_payment_id?: string | null
+          track_count?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       meditation_completions: {
         Row: {
           completed_at: string

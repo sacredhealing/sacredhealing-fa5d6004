@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useSHCBalance } from '@/hooks/useSHCBalance';
 import { useSearchParams } from 'react-router-dom';
+import MasteringService from '@/components/music/MasteringService';
 
 interface Track {
   id: string;
@@ -48,6 +49,22 @@ const Music: React.FC = () => {
     const purchasedTrackId = searchParams.get('purchased');
     if (purchasedTrackId) {
       handleStripeSuccess(purchasedTrackId);
+    }
+
+    // Handle mastering order success/cancel
+    const masteringSuccess = searchParams.get('mastering_success');
+    const masteringCancelled = searchParams.get('mastering_cancelled');
+    
+    if (masteringSuccess) {
+      toast({
+        title: "Mastering order placed!",
+        description: "Thank you! I'll send your professionally mastered track to your email within 3-5 business days."
+      });
+    } else if (masteringCancelled) {
+      toast({
+        title: "Order cancelled",
+        description: "Your mastering order was cancelled. Your files have been saved if you want to try again."
+      });
     }
 
     return () => {
@@ -219,6 +236,9 @@ const Music: React.FC = () => {
         </h1>
         <p className="text-muted-foreground mt-1">Healing beats & spiritual sounds</p>
       </header>
+
+      {/* Mastering Service */}
+      <MasteringService />
 
       {/* Stats */}
       <div className="flex gap-4 mb-6 animate-slide-up">
