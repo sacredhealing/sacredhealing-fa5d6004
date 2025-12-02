@@ -15,9 +15,9 @@ import {
   Zap
 } from 'lucide-react';
 import heroImage from '@/assets/hero-together.jpg';
-import lailaPortrait from '@/assets/laila-portrait.jpg';
-import adamWaterfall from '@/assets/adam-waterfall.jpg';
-import lailaAdamTogether from '@/assets/laila-adam-together.jpg';
+import lailaSmile from '@/assets/laila-smile.jpg';
+import adamDrum from '@/assets/adam-drum.jpg';
+import lailaAdamPink from '@/assets/laila-adam-pink.jpg';
 
 const Home: React.FC = () => {
   const services = [
@@ -49,18 +49,18 @@ const Home: React.FC = () => {
 
   const testimonials = [
     {
-      name: 'Maria S.',
-      text: 'The healing sessions with Laila completely transformed my life. I finally found inner peace after years of searching.',
+      name: 'Anna S.',
+      text: "Laila and Adam's sessions have completely transformed my energy. I feel lighter, clearer, and more connected to myself.",
       rating: 5
     },
     {
-      name: 'Erik L.',
-      text: "Adam's meditations and music have become an essential part of my daily practice. The frequencies are truly powerful.",
+      name: 'Johan M.',
+      text: "The Soulwave Activation helped me release years of limiting beliefs. I now feel empowered to follow my dreams.",
       rating: 5
     },
     {
-      name: 'Anna K.',
-      text: 'The Stargate community feels like family. The weekly sessions have accelerated my spiritual growth tremendously.',
+      name: 'Maria L.',
+      text: "Their teachings are gentle yet profound. I've experienced real healing and a deeper connection to my intuition.",
       rating: 5
     }
   ];
@@ -78,12 +78,13 @@ const Home: React.FC = () => {
         <div className="relative z-10 container mx-auto px-4 text-center py-20">
           <div className="animate-fade-in">
             <Sparkles className="w-12 h-12 text-gold mx-auto mb-6" />
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading font-bold text-foreground mb-6">
-              Sacred Healing
-              <span className="block text-gold mt-2">Vibration</span>
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading font-bold text-foreground mb-6 leading-tight">
+              Awaken Your Energy.
+              <span className="block text-gold mt-2">Heal Your Mind.</span>
+              <span className="block text-turquoise mt-2">Transform Your Life.</span>
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto mb-8">
-              Awaken Your Sacred Gifts Through Ancient Wisdom & Modern Healing
+              Join Laila & Adam on a journey of sacred healing, meditation, and vibrational transformation.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/auth">
@@ -126,10 +127,9 @@ const Home: React.FC = () => {
           <Card className="bg-gradient-to-r from-purple/10 via-gold/10 to-turquoise/10 border-none p-8 md:p-12 mb-16 text-center">
             <h3 className="text-2xl md:text-3xl font-heading text-foreground mb-4">Our Sacred Mission</h3>
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              We believe every soul carries divine gifts waiting to be awakened. Through the fusion of 
-              ancient yogic wisdom, sound healing, and energetic transmissions, we guide seekers on their 
-              path to self-realization. Our mission is to create a global community of awakened beings, 
-              supporting each other in living their highest truth.
+              Our mission is to guide people toward <span className="text-gold font-semibold">holistic well-being, inner clarity, and spiritual awakening</span> through 
+              sacred healing practices, sound, and meditation. We envision a world where every individual can access 
+              their own power, align with their true purpose, and live a life of balance, peace, and joy.
             </p>
           </Card>
 
@@ -139,19 +139,18 @@ const Home: React.FC = () => {
             <Card className="bg-card/50 backdrop-blur border-border/50 overflow-hidden group">
               <div className="aspect-[4/5] overflow-hidden">
                 <img 
-                  src={lailaPortrait} 
-                  alt="Laila - Sacred Healing Guide"
+                  src={lailaSmile} 
+                  alt="Laila Amrouche - Spiritual Guide"
                   className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
                 />
               </div>
               <div className="p-6 md:p-8">
-                <h3 className="text-2xl font-heading font-bold text-foreground mb-2">Laila</h3>
-                <p className="text-gold font-medium mb-4">Healer & Yoga Teacher</p>
+                <h3 className="text-2xl font-heading font-bold text-foreground mb-2">Laila Amrouche</h3>
+                <p className="text-gold font-medium mb-4">Spiritual Guide, Yogi & Sound Healer</p>
                 <p className="text-muted-foreground leading-relaxed">
-                  Laila is a gifted healer, intuitive guide, and certified yoga teacher with over 15 years 
-                  of experience. Her unique ability to channel healing energy and activate sacred gifts 
-                  has transformed thousands of lives. Through her warm presence and deep wisdom, she creates 
-                  safe spaces for profound healing and spiritual awakening.
+                  Laila is a spiritual guide, yogi, and sound healer who channels divine energy through meditation, 
+                  mantra, and transformational breathwork. She empowers individuals to awaken their intuition, 
+                  open their hearts, and master the mind.
                 </p>
               </div>
             </Card>
@@ -160,19 +159,18 @@ const Home: React.FC = () => {
             <Card className="bg-card/50 backdrop-blur border-border/50 overflow-hidden group">
               <div className="aspect-[4/5] overflow-hidden">
                 <img 
-                  src={adamWaterfall} 
-                  alt="Adam - Sacred Music Creator"
+                  src={adamDrum} 
+                  alt="Adam - Energy Practitioner"
                   className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                 />
               </div>
               <div className="p-6 md:p-8">
                 <h3 className="text-2xl font-heading font-bold text-foreground mb-2">Adam</h3>
-                <p className="text-gold font-medium mb-4">Sound Healer & Music Producer</p>
+                <p className="text-gold font-medium mb-4">Energy Practitioner & Sacred Guide</p>
                 <p className="text-muted-foreground leading-relaxed">
-                  Adam is a visionary sound healer and music producer with 23 years of experience creating 
-                  transformational frequencies. His channeled meditations and 432Hz compositions carry 
-                  powerful healing vibrations that activate DNA and expand consciousness. Through his music, 
-                  he bridges the ancient and the modern, creating soundscapes for deep transformation.
+                  Adam is a grounding presence and energy practitioner who supports the healing process through 
+                  vibrational medicine, meditation, and sacred guidance. His work helps individuals realign with 
+                  their life purpose and inner wisdom.
                 </p>
               </div>
             </Card>
@@ -182,9 +180,9 @@ const Home: React.FC = () => {
           <div className="mt-16 text-center">
             <Card className="bg-card/50 backdrop-blur border-border/50 overflow-hidden inline-block max-w-2xl mx-auto">
               <img 
-                src={lailaAdamTogether} 
+                src={lailaAdamPink} 
                 alt="Laila and Adam together"
-                className="w-full aspect-[4/3] object-cover"
+                className="w-full aspect-[4/3] object-cover object-top"
               />
               <div className="p-6">
                 <p className="text-muted-foreground italic">
