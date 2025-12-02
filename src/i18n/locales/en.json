@@ -159,5 +159,21 @@
     "thirtyDayStreak": "30-Day Streak",
     "premiumMember": "Premium Member",
     "hundredSessions": "100 Sessions"
+  },
+  "reviews": {
+    "title": "Reviews & Comments",
+    "reviews": "reviews",
+    "earnReward": "Earn 1000 SHC!",
+    "rewardDescription": "Write a review and get 1000 SHC tokens as a reward",
+    "writeReview": "Write Review",
+    "yourRating": "Your Rating",
+    "titlePlaceholder": "Review title (optional)",
+    "commentPlaceholder": "Share your experience...",
+    "submit": "Submit Review",
+    "yourReview": "Your Review",
+    "noReviews": "No reviews yet",
+    "beFirst": "Be the first to review!",
+    "signInToReview": "Sign in to leave a review and earn rewards",
+    "anonymous": "User"
   }
 }

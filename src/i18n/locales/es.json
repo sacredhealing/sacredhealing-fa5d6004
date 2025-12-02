@@ -159,5 +159,21 @@
     "thirtyDayStreak": "Racha de 30 Días",
     "premiumMember": "Miembro Premium",
     "hundredSessions": "100 Sesiones"
+  },
+  "reviews": {
+    "title": "Reseñas y Comentarios",
+    "reviews": "reseñas",
+    "earnReward": "¡Gana 1000 SHC!",
+    "rewardDescription": "Escribe una reseña y obtén 1000 tokens SHC como recompensa",
+    "writeReview": "Escribir Reseña",
+    "yourRating": "Tu Calificación",
+    "titlePlaceholder": "Título de la reseña (opcional)",
+    "commentPlaceholder": "Comparte tu experiencia...",
+    "submit": "Enviar Reseña",
+    "yourReview": "Tu Reseña",
+    "noReviews": "Sin reseñas todavía",
+    "beFirst": "¡Sé el primero en opinar!",
+    "signInToReview": "Inicia sesión para dejar una reseña y ganar recompensas",
+    "anonymous": "Usuario"
   }
 }
