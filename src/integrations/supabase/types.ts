@@ -375,38 +375,59 @@ export type Database = {
         Row: {
           amount_paid: number
           contact_email: string | null
+          contract_signed: boolean | null
           created_at: string
+          custom_description: string | null
+          frequency: string | null
           id: string
+          include_voice_addon: boolean | null
           notes: string | null
           package_type: string
+          service_type: string
+          sound_type: string | null
           status: string
           stripe_payment_id: string | null
           updated_at: string
           user_id: string
+          voice_file_url: string | null
         }
         Insert: {
           amount_paid: number
           contact_email?: string | null
+          contract_signed?: boolean | null
           created_at?: string
+          custom_description?: string | null
+          frequency?: string | null
           id?: string
+          include_voice_addon?: boolean | null
           notes?: string | null
           package_type: string
+          service_type?: string
+          sound_type?: string | null
           status?: string
           stripe_payment_id?: string | null
           updated_at?: string
           user_id: string
+          voice_file_url?: string | null
         }
         Update: {
           amount_paid?: number
           contact_email?: string | null
+          contract_signed?: boolean | null
           created_at?: string
+          custom_description?: string | null
+          frequency?: string | null
           id?: string
+          include_voice_addon?: boolean | null
           notes?: string | null
           package_type?: string
+          service_type?: string
+          sound_type?: string | null
           status?: string
           stripe_payment_id?: string | null
           updated_at?: string
           user_id?: string
+          voice_file_url?: string | null
         }
         Relationships: []
       }

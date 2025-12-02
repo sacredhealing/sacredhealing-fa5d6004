@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Play, Clock, Sparkles, Leaf, Moon, Sun, Heart, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CustomMeditationBooking from '@/components/meditation/CustomMeditationBooking';
+import CustomMeditationCreation from '@/components/meditation/CustomMeditationCreation';
 import { toast } from 'sonner';
 
 const categories = [
@@ -56,6 +57,11 @@ const Meditations: React.FC = () => {
       {/* Custom Channeled Meditation Booking */}
       <div className="mb-8">
         <CustomMeditationBooking />
+      </div>
+
+      {/* Custom Meditation Creation for Creators */}
+      <div className="mb-8">
+        <CustomMeditationCreation />
       </div>
 
       {/* Categories */}
