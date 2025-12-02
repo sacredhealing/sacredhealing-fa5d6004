@@ -793,6 +793,51 @@ export type Database = {
         }
         Relationships: []
       }
+      reviews: {
+        Row: {
+          comment: string
+          content_id: string
+          content_type: string
+          created_at: string
+          id: string
+          is_verified_purchase: boolean | null
+          rating: number | null
+          reward_amount: number | null
+          reward_claimed: boolean | null
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment: string
+          content_id: string
+          content_type: string
+          created_at?: string
+          id?: string
+          is_verified_purchase?: boolean | null
+          rating?: number | null
+          reward_amount?: number | null
+          reward_claimed?: boolean | null
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comment?: string
+          content_id?: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          is_verified_purchase?: boolean | null
+          rating?: number | null
+          reward_amount?: number | null
+          reward_claimed?: boolean | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       shc_transactions: {
         Row: {
           amount: number

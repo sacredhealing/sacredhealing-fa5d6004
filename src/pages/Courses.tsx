@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Lock, Award, Clock, Sparkles, CheckCircle, Loader2, RefreshCw } from 'lucide-react';
+import { Play, Lock, Award, Clock, Sparkles, CheckCircle, Loader2, RefreshCw, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { ReviewSection } from '@/components/reviews/ReviewSection';
 
 interface Course {
   id: string;
@@ -34,6 +35,7 @@ const Courses: React.FC = () => {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [enrollingId, setEnrollingId] = useState<string | null>(null);
+  const [selectedCourseForReview, setSelectedCourseForReview] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCourses();
@@ -293,8 +295,31 @@ const Courses: React.FC = () => {
                         </Button>
                       </div>
                     )}
+
+                    {/* Review button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedCourseForReview(selectedCourseForReview === course.id ? null : course.id);
+                      }}
+                      className="mt-3 flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      <MessageSquare size={14} />
+                      <span>Reviews & Comments (Earn 1000 SHC)</span>
+                    </button>
                   </div>
                 </div>
+
+                {/* Review Section */}
+                {selectedCourseForReview === course.id && (
+                  <div className="mt-4 pt-4 border-t border-border/30">
+                    <ReviewSection
+                      contentType="course"
+                      contentId={course.id}
+                      contentTitle={course.title}
+                    />
+                  </div>
+                )}
               </div>
             );
           })}

@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useSHCBalance } from '@/hooks/useSHCBalance';
 import { useAllSiteContent } from '@/hooks/useSiteContent';
+import { ReviewSection } from '@/components/reviews/ReviewSection';
 
 interface HealingAudio {
   id: string;
@@ -480,6 +481,15 @@ const Healing: React.FC = () => {
           <p className="text-muted-foreground">Healing audio coming soon...</p>
         </Card>
       )}
+
+      {/* Reviews Section */}
+      <div className="mt-8">
+        <ReviewSection 
+          contentType="healing" 
+          contentId="healing-space"
+          contentTitle="Sacred Healing Space"
+        />
+      </div>
     </div>
   );
 };

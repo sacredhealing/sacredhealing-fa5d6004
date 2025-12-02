@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { ReviewSection } from '@/components/reviews/ReviewSection';
 
 interface Video {
   id: string;
@@ -296,6 +297,15 @@ const SpiritualEducation: React.FC = () => {
                   Sign in to earn SHC rewards for watching videos
                 </p>
               )}
+
+              {/* Reviews for this video */}
+              <div className="mt-6 border-t border-border/50 pt-4 max-h-60 overflow-y-auto">
+                <ReviewSection
+                  contentType="video"
+                  contentId={selectedVideo.id}
+                  contentTitle={selectedVideo.title}
+                />
+              </div>
             </div>
           </div>
         </div>

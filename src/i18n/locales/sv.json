@@ -159,5 +159,21 @@
     "thirtyDayStreak": "30-dagars Svit",
     "premiumMember": "Premium Medlem",
     "hundredSessions": "100 Sessioner"
+  },
+  "reviews": {
+    "title": "Recensioner & Kommentarer",
+    "reviews": "recensioner",
+    "earnReward": "Tjäna 1000 SHC!",
+    "rewardDescription": "Skriv en recension och få 1000 SHC tokens som belöning",
+    "writeReview": "Skriv Recension",
+    "yourRating": "Ditt Betyg",
+    "titlePlaceholder": "Recensionstitel (valfritt)",
+    "commentPlaceholder": "Dela din upplevelse...",
+    "submit": "Skicka Recension",
+    "yourReview": "Din Recension",
+    "noReviews": "Inga recensioner ännu",
+    "beFirst": "Var först med att recensera!",
+    "signInToReview": "Logga in för att skriva en recension och tjäna belöningar",
+    "anonymous": "Användare"
   }
 }
