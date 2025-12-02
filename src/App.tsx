@@ -35,6 +35,7 @@ import Transformation from "./pages/Transformation";
 import AdminMantras from "./pages/AdminMantras";
 import AdminShop from "./pages/AdminShop";
 import StargateMembership from "./pages/StargateMembership";
+import PractitionerCertification from "./pages/PractitionerCertification";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -67,6 +68,7 @@ const App = () => (
               <Route path="/shop" element={<Shop />} />
               <Route path="/transformation" element={<Transformation />} />
               <Route path="/stargate" element={<StargateMembership />} />
+              <Route path="/certification" element={<PractitionerCertification />} />
             </Route>
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/meditations" element={<Admin />} />
