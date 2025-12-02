@@ -175,7 +175,7 @@ const WealthMeditationService: React.FC = () => {
 
           <div className="flex items-center gap-4 mb-4">
             <div>
-              <span className="text-3xl font-heading font-bold text-gradient-gold">€147</span>
+              <span className="text-3xl font-heading font-bold text-gradient-gold">€47</span>
               <span className="text-muted-foreground text-sm ml-2">one-time</span>
             </div>
           </div>
@@ -286,7 +286,7 @@ const WealthMeditationService: React.FC = () => {
             <div className="space-y-4 pt-4 border-t border-border">
               <div className="flex items-center justify-between text-lg font-semibold">
                 <span>Total:</span>
-                <span className="text-gradient-gold">€147</span>
+                <span className="text-gradient-gold">€47</span>
               </div>
               
               <Button

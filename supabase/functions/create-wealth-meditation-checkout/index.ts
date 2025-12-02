@@ -12,7 +12,7 @@ const logStep = (step: string, details?: any) => {
   console.log(`[WEALTH-MEDITATION-CHECKOUT] ${step}${detailsStr}`);
 };
 
-const PRICE_AMOUNT = 14700; // €147 in cents
+const PRICE_AMOUNT = 4700; // €47 in cents
 
 const AFFIRMATIONS = `108 RIKEDOMS-AFFIRMATIONER
 
@@ -193,7 +193,7 @@ serve(async (req) => {
       .insert({
         user_id: user.id,
         package_type: "wealth_108",
-        amount_paid: 147,
+        amount_paid: 47,
         status: "pending",
         notes: "108 Wealth Reprogramming Meditation",
         contact_email: email,
