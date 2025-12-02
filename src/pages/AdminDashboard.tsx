@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
@@ -14,10 +14,12 @@ import {
   DollarSign,
   Youtube,
   ShoppingBag,
-  Crown
+  Crown,
+  Trophy
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { supabase } from '@/integrations/supabase/client';
 
 const adminSections = [
   {
@@ -94,6 +96,39 @@ const adminSections = [
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const [stats, setStats] = useState({ members: 0, activeThisMonth: 0, totalSHC: 0 });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      const { count: memberCount } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+
+      const { data: activeData } = await supabase
+        .from('shc_transactions')
+        .select('user_id')
+        .gte('created_at', startOfMonth.toISOString());
+
+      const uniqueActive = new Set(activeData?.map(d => d.user_id) || []);
+
+      const { data: balances } = await supabase
+        .from('user_balances')
+        .select('total_earned');
+
+      const totalSHC = balances?.reduce((sum, b) => sum + Number(b.total_earned), 0) || 0;
+
+      setStats({
+        members: memberCount || 0,
+        activeThisMonth: uniqueActive.size,
+        totalSHC
+      });
+    };
+    fetchStats();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -107,6 +142,25 @@ const AdminDashboard: React.FC = () => {
             <h1 className="text-2xl font-bold text-foreground">Admin Dashboard</h1>
             <p className="text-muted-foreground">Manage all your app content</p>
           </div>
+        </div>
+
+        {/* Stats Overview */}
+        <div className="grid grid-cols-3 gap-4">
+          <Card className="p-4 text-center">
+            <Users className="w-6 h-6 mx-auto text-primary mb-2" />
+            <p className="text-2xl font-bold text-foreground">{stats.members.toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground">Total Members</p>
+          </Card>
+          <Card className="p-4 text-center">
+            <Trophy className="w-6 h-6 mx-auto text-secondary mb-2" />
+            <p className="text-2xl font-bold text-foreground">{stats.activeThisMonth.toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground">Active This Month</p>
+          </Card>
+          <Card className="p-4 text-center">
+            <Sparkles className="w-6 h-6 mx-auto text-accent mb-2" />
+            <p className="text-2xl font-bold text-foreground">{(stats.totalSHC / 1000).toFixed(1)}K</p>
+            <p className="text-xs text-muted-foreground">SHC Distributed</p>
+          </Card>
         </div>
 
         {/* Admin Sections Grid */}

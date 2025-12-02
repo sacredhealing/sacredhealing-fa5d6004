@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Play, BookOpen, Gift, Wallet, Flame, Sparkles, DollarSign, Youtube, ShoppingBag, Crown, Music, Heart } from 'lucide-react';
+import { Play, BookOpen, Gift, Wallet, Flame, Sparkles, DollarSign, Youtube, ShoppingBag, Crown, Music, Heart, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LotusIcon } from '@/components/icons/LotusIcon';
 import { SocialShare } from '@/components/SocialShare';
@@ -184,6 +184,20 @@ const Dashboard: React.FC = () => {
                 <div>
                   <h3 className="font-semibold text-foreground text-sm">Coaching</h3>
                   <p className="text-xs text-muted-foreground">6-Month Program</p>
+                </div>
+              </div>
+            </Card>
+          </Link>
+
+          <Link to="/leaderboard">
+            <Card className="p-4 bg-gradient-to-br from-yellow-500/20 to-orange-500/10 border-yellow-500/30 hover:border-yellow-500/50 transition-all col-span-2">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-yellow-500/20">
+                  <Trophy className="w-5 h-5 text-yellow-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground text-sm">Leaderboard</h3>
+                  <p className="text-xs text-muted-foreground">Top earners win 5,000 SHC monthly</p>
                 </div>
               </div>
             </Card>
