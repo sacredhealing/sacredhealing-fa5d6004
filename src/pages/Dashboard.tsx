@@ -190,7 +190,7 @@ const Dashboard: React.FC = () => {
           </Link>
 
           <Link to="/leaderboard">
-            <Card className="p-4 bg-gradient-to-br from-yellow-500/20 to-orange-500/10 border-yellow-500/30 hover:border-yellow-500/50 transition-all col-span-2">
+            <Card className="p-4 bg-gradient-to-br from-yellow-500/20 to-orange-500/10 border-yellow-500/30 hover:border-yellow-500/50 transition-all">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-yellow-500/20">
                   <Trophy className="w-5 h-5 text-yellow-400" />
@@ -198,6 +198,20 @@ const Dashboard: React.FC = () => {
                 <div>
                   <h3 className="font-semibold text-foreground text-sm">Leaderboard</h3>
                   <p className="text-xs text-muted-foreground">Top earners win 5,000 SHC monthly</p>
+                </div>
+              </div>
+            </Card>
+          </Link>
+
+          <Link to="/affirmation-soundtrack">
+            <Card className="p-4 bg-gradient-to-br from-violet-500/20 to-fuchsia-500/10 border-violet-500/30 hover:border-violet-500/50 transition-all">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-violet-500/20">
+                  <Music className="w-5 h-5 text-violet-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground text-sm">Affirmation Soundtrack</h3>
+                  <p className="text-xs text-muted-foreground">Personalized for you</p>
                 </div>
               </div>
             </Card>
