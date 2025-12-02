@@ -1,5 +1,8 @@
 project_id = "ssygukfdbtehvtndandn"
 
+[functions.create-mastering-checkout]
+verify_jwt = true
+
 [functions.shc-transfer]
 verify_jwt = false
 
