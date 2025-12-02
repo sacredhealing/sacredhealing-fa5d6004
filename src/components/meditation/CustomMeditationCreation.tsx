@@ -332,20 +332,21 @@ const CustomMeditationCreation: React.FC = () => {
                 <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
                   Select Sound Style
                 </h4>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="flex flex-wrap gap-2">
                   {soundTypes.map((sound) => (
-                    <Card
+                    <button
                       key={sound.id}
-                      className={`p-3 cursor-pointer transition-all ${
+                      type="button"
+                      className={`p-3 rounded-lg border text-left transition-all flex-1 min-w-[140px] ${
                         selectedSoundType === sound.id
-                          ? 'border-primary ring-2 ring-primary/20'
-                          : 'border-border hover:border-primary/50'
+                          ? 'border-primary ring-2 ring-primary/20 bg-primary/5'
+                          : 'border-border hover:border-primary/50 bg-card'
                       }`}
                       onClick={() => setSelectedSoundType(sound.id)}
                     >
                       <div className="font-semibold text-sm">{sound.label}</div>
                       <div className="text-xs text-muted-foreground">{sound.description}</div>
-                    </Card>
+                    </button>
                   ))}
                 </div>
               </div>
