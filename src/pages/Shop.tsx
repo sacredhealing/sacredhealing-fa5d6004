@@ -1,14 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ShoppingBag, Palette, Shirt, Star, Filter, Heart } from 'lucide-react';
+import { ShoppingBag, Palette, Shirt, Star, Heart, Sparkles, PenTool, Check, ArrowRight, Info } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface ShopProduct {
   id: string;
@@ -26,7 +44,11 @@ const categoryIcons: Record<string, React.ElementType> = {
   clothing: Shirt,
   art: Palette,
   accessories: Star,
+  'healing-shirts': Sparkles,
 };
+
+const SHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+const SHIRT_COLORS = ['White', 'Black', 'Natural', 'Navy'];
 
 const Shop = () => {
   const { t } = useTranslation();
@@ -35,6 +57,14 @@ const Shop = () => {
   const [products, setProducts] = useState<ShopProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('all');
+  const [customOrderOpen, setCustomOrderOpen] = useState(false);
+  const [customFormData, setCustomFormData] = useState({
+    intention: '',
+    shirtSize: '',
+    shirtColor: '',
+    email: '',
+    notes: '',
+  });
 
   useEffect(() => {
     fetchProducts();
@@ -66,9 +96,24 @@ const Shop = () => {
       navigate('/auth');
       return;
     }
-
-    // TODO: Implement Stripe checkout
     toast.info('Checkout coming soon!');
+  };
+
+  const handleCustomOrder = () => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+    
+    if (!customFormData.intention || !customFormData.shirtSize || !customFormData.shirtColor || !customFormData.email) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+    
+    // TODO: Implement Stripe checkout for custom orders
+    toast.success('Custom design request submitted! We will contact you soon.');
+    setCustomOrderOpen(false);
+    setCustomFormData({ intention: '', shirtSize: '', shirtColor: '', email: '', notes: '' });
   };
 
   if (loading) {
@@ -92,11 +137,225 @@ const Shop = () => {
         </p>
       </div>
 
+      {/* Healing Art Shirts Section */}
+      <div className="px-4 py-6 space-y-6">
+        {/* Ready-Made Designs */}
+        <Card className="overflow-hidden border-primary/20">
+          <div className="bg-gradient-to-br from-purple-500/20 via-pink-500/10 to-amber-500/10 p-6">
+            <div className="flex items-start gap-4">
+              <div className="w-14 h-14 rounded-xl bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                <Sparkles className="w-7 h-7 text-purple-400" />
+              </div>
+              <div className="flex-1">
+                <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 mb-2">
+                  Wearable Healing Art
+                </Badge>
+                <h2 className="text-xl font-bold text-foreground mb-2">
+                  Healing Art on Shirts — Ready-Made Designs
+                </h2>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Original sacred artwork printed on soft, high-quality shirts. Choose from a curated gallery of ready-made designs that carry uplifting energy and support your daily practice.
+                </p>
+              </div>
+            </div>
+            
+            <div className="mt-5 space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-xs text-muted-foreground">Sacred-geometry artwork</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-xs text-muted-foreground">Comfortable fabric</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-xs text-muted-foreground">Multiple sizes (XS-XXL)</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-xs text-muted-foreground">High-quality print</span>
+                </div>
+              </div>
+              
+              <div className="pt-3 border-t border-border/50">
+                <p className="text-xs text-muted-foreground mb-3">
+                  <Info className="w-3 h-3 inline mr-1" />
+                  Created by Laila & Adam with intentional vibration for your spiritual focus
+                </p>
+                <Button className="w-full" onClick={() => setActiveCategory('healing-shirts')}>
+                  Browse Designs
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Custom Designs */}
+        <Card className="overflow-hidden border-amber-500/20">
+          <div className="bg-gradient-to-br from-amber-500/20 via-orange-500/10 to-pink-500/10 p-6">
+            <div className="flex items-start gap-4">
+              <div className="w-14 h-14 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                <PenTool className="w-7 h-7 text-amber-400" />
+              </div>
+              <div className="flex-1">
+                <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 mb-2">
+                  Personalized Creation
+                </Badge>
+                <h2 className="text-xl font-bold text-foreground mb-2">
+                  Healing Art on Shirts — Custom Design
+                </h2>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Your own healing art, printed on a shirt. Laila crafts one-of-a-kind artwork tailored to your energy, intention, or mantra—perfect for personal rituals or meaningful gifts.
+                </p>
+              </div>
+            </div>
+            
+            <div className="mt-5 space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-xs text-muted-foreground">Personalized by Laila</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-xs text-muted-foreground">Choose shirt style & color</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-xs text-muted-foreground">Amplify your intention</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-xs text-muted-foreground">Review before final print</span>
+                </div>
+              </div>
+              
+              <div className="bg-background/50 rounded-lg p-3 mt-3">
+                <p className="text-xs text-muted-foreground mb-1 font-medium">Process:</p>
+                <p className="text-xs text-muted-foreground">
+                  Submit intention → Design draft → Approve → Print & ship (Est. 2-3 weeks)
+                </p>
+              </div>
+              
+              <div className="flex items-center justify-between pt-3 border-t border-border/50">
+                <div>
+                  <span className="text-2xl font-bold text-foreground">€89</span>
+                  <span className="text-sm text-muted-foreground ml-1">starting price</span>
+                </div>
+                <Dialog open={customOrderOpen} onOpenChange={setCustomOrderOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="default" className="bg-amber-500 hover:bg-amber-600">
+                      Order Custom
+                      <Sparkles className="w-4 h-4 ml-2" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Custom Healing Art Shirt</DialogTitle>
+                      <DialogDescription>
+                        Share your intention and we'll create a unique design for you
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 pt-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="intention">Your Intention / Mantra *</Label>
+                        <Textarea
+                          id="intention"
+                          placeholder="Describe your intention, mantra, or theme for the artwork..."
+                          value={customFormData.intention}
+                          onChange={(e) => setCustomFormData(prev => ({ ...prev, intention: e.target.value }))}
+                          rows={3}
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Shirt Size *</Label>
+                          <Select
+                            value={customFormData.shirtSize}
+                            onValueChange={(value) => setCustomFormData(prev => ({ ...prev, shirtSize: value }))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select size" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {SHIRT_SIZES.map(size => (
+                                <SelectItem key={size} value={size}>{size}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label>Shirt Color *</Label>
+                          <Select
+                            value={customFormData.shirtColor}
+                            onValueChange={(value) => setCustomFormData(prev => ({ ...prev, shirtColor: value }))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select color" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {SHIRT_COLORS.map(color => (
+                                <SelectItem key={color} value={color}>{color}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Contact Email *</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="your@email.com"
+                          value={customFormData.email}
+                          onChange={(e) => setCustomFormData(prev => ({ ...prev, email: e.target.value }))}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="notes">Additional Notes (Optional)</Label>
+                        <Textarea
+                          id="notes"
+                          placeholder="Any specific colors, symbols, or preferences..."
+                          value={customFormData.notes}
+                          onChange={(e) => setCustomFormData(prev => ({ ...prev, notes: e.target.value }))}
+                          rows={2}
+                        />
+                      </div>
+                      
+                      <div className="bg-muted/50 rounded-lg p-3">
+                        <p className="text-xs text-muted-foreground">
+                          <strong>What's included:</strong> Personalized sacred artwork, high-quality print, one revision round, and shipping within Europe.
+                        </p>
+                      </div>
+                      
+                      <Button onClick={handleCustomOrder} className="w-full bg-amber-500 hover:bg-amber-600">
+                        Submit Request — €89
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+          </div>
+        </Card>
+      </div>
+
       {/* Category Tabs */}
       <div className="px-4 py-4">
         <Tabs defaultValue="all" value={activeCategory} onValueChange={setActiveCategory}>
-          <TabsList className="w-full grid grid-cols-4">
+          <TabsList className="w-full grid grid-cols-5">
             <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="healing-shirts">
+              <Sparkles className="w-4 h-4 mr-1" />
+              Shirts
+            </TabsTrigger>
             <TabsTrigger value="clothing">
               <Shirt className="w-4 h-4 mr-1" />
               Clothing
@@ -105,7 +364,7 @@ const Shop = () => {
               <Palette className="w-4 h-4 mr-1" />
               Art
             </TabsTrigger>
-            <TabsTrigger value="accessories">Accessories</TabsTrigger>
+            <TabsTrigger value="accessories">Acc.</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
@@ -172,7 +431,7 @@ const Shop = () => {
                   {/* Product Info */}
                   <div className="p-3">
                     <Badge variant="outline" className="text-xs mb-2 capitalize">
-                      {product.category}
+                      {product.category === 'healing-shirts' ? 'Healing Art' : product.category}
                     </Badge>
                     <h3 className="font-semibold text-foreground text-sm truncate">
                       {product.name}
@@ -208,11 +467,25 @@ const Shop = () => {
             <Heart className="w-5 h-5 text-pink-400" />
             About Our Collection
           </h3>
-          <p className="text-sm text-muted-foreground leading-relaxed">
+          <p className="text-sm text-muted-foreground leading-relaxed mb-4">
             Each piece in our collection is infused with sacred healing energy by Laila. 
             Our clothing features unique spiritual designs, and our art pieces carry powerful 
             healing frequencies to transform your space and energy field.
           </p>
+          <div className="grid grid-cols-2 gap-3 text-xs text-muted-foreground">
+            <div>
+              <strong className="text-foreground">Fabric:</strong> 100% organic cotton, soft & breathable
+            </div>
+            <div>
+              <strong className="text-foreground">Fit:</strong> Regular & relaxed options
+            </div>
+            <div>
+              <strong className="text-foreground">Care:</strong> Machine wash cold, tumble dry low
+            </div>
+            <div>
+              <strong className="text-foreground">Use:</strong> Daily wear, meditation, gifting
+            </div>
+          </div>
         </Card>
       </div>
     </div>
