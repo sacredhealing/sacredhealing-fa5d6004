@@ -149,7 +149,7 @@ const WealthMeditationService: React.FC = () => {
                 <li><strong>Complete your purchase</strong> below</li>
                 <li><strong>Receive the 108 affirmations</strong> via email</li>
                 <li><strong>Record yourself</strong> reading all 108 affirmations</li>
-                <li><strong>Reply to the email</strong> with your audio file attached</li>
+                <li><strong>Send your audio file</strong> to sacredhealingvibe@gmail.com</li>
                 <li><strong>Receive your personalized meditation</strong> within 5-7 days</li>
               </ol>
             </div>
@@ -225,7 +225,7 @@ const WealthMeditationService: React.FC = () => {
               )}
 
               <p className="text-xs text-center text-muted-foreground">
-                After payment, you'll receive the 108 affirmations via email. Record yourself reading them and reply with your audio file.
+                After payment, you'll receive the 108 affirmations via email. Record yourself reading them and send your audio to sacredhealingvibe@gmail.com
               </p>
             </div>
           </div>

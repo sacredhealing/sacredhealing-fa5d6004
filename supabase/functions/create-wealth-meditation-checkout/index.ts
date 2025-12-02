@@ -169,6 +169,7 @@ const sendAffirmationsEmail = async (email: string, bookingId: string) => {
             .affirmation-section { background: #fff; padding: 20px; border-radius: 8px; margin: 15px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
             .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #d4af37; color: #666; }
             .highlight { background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0; }
+            .email-box { background: #d4af37; color: #000; padding: 15px 25px; border-radius: 8px; font-size: 18px; font-weight: bold; text-align: center; margin: 20px 0; }
           </style>
         </head>
         <body>
@@ -182,14 +183,16 @@ const sendAffirmationsEmail = async (email: string, bookingId: string) => {
               <li><strong>Read through all 108 affirmations below</strong> - Feel each one as you read it</li>
               <li><strong>Record yourself reading ALL 108 affirmations aloud</strong> - Use your phone's voice recorder in a quiet space</li>
               <li><strong>Speak slowly, clearly, and with feeling</strong> - Your authentic voice is what matters, not perfection!</li>
-              <li><strong>Reply to this email with your audio file attached</strong> (MP3, WAV, or M4A)</li>
+              <li><strong>Send your audio file to the email below</strong> (MP3, WAV, or M4A)</li>
               <li><strong>Receive your personalized wealth meditation</strong> within 5-7 business days</li>
             </ol>
             <p><em>💡 Tip: Don't worry about audio quality — I'll transform your recording into professional, studio-quality sound with 528/639 Hz frequencies!</em></p>
           </div>
 
           <div class="highlight">
-            <strong>🎯 Important:</strong> Simply reply to this email with your voice recording attached. That's all you need to do!
+            <strong>🎯 Send your voice recording to:</strong>
+            <div class="email-box">sacredhealingvibe@gmail.com</div>
+            <p style="margin-top: 10px; font-size: 14px;">Please include your name and "108 Wealth Meditation" in the subject line.</p>
           </div>
 
           <hr style="margin: 30px 0; border: none; border-top: 3px solid #d4af37;">
@@ -203,7 +206,7 @@ ${AFFIRMATIONS}
           <hr style="margin: 30px 0; border: none; border-top: 3px solid #d4af37;">
 
           <div class="footer">
-            <p><strong>Ready?</strong> Record yourself reading all 108 affirmations and reply to this email with your audio file.</p>
+            <p><strong>Ready?</strong> Record yourself reading all 108 affirmations and send your audio file to <strong>sacredhealingvibe@gmail.com</strong></p>
             <p>Your personalized wealth meditation will be created and sent to you within 5-7 business days.</p>
             <p style="margin-top: 30px;">With love and abundance,<br><strong>Sacred Healing Team</strong> ✨</p>
             <p style="font-size: 12px; color: #999;">Booking Reference: ${bookingId}</p>
