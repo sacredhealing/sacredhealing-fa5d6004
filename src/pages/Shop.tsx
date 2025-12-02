@@ -423,7 +423,11 @@ const Shop = () => {
               const mainImage = product.images[0];
 
               return (
-                <Card key={product.id} className="overflow-hidden">
+                <Card 
+                  key={product.id} 
+                  className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                  onClick={() => navigate(`/shop/${product.id}`)}
+                >
                   {/* Product Image */}
                   <div className="aspect-square bg-gradient-to-br from-pink-500/10 to-purple-500/10 relative">
                     {mainImage ? (
@@ -460,6 +464,7 @@ const Shop = () => {
                       size="icon"
                       variant="ghost"
                       className="absolute bottom-2 right-2 bg-background/80 hover:bg-background rounded-full w-8 h-8"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       <Heart className="w-4 h-4" />
                     </Button>
@@ -483,7 +488,10 @@ const Shop = () => {
                       <span className="font-bold text-foreground">€{product.price_eur}</span>
                       <Button 
                         size="sm" 
-                        onClick={() => handleBuyNow(product)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleBuyNow(product);
+                        }}
                         disabled={product.stock_quantity === 0 || purchasing === product.id}
                       >
                         {purchasing === product.id ? '...' : 'Buy'}

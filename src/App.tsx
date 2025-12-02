@@ -31,6 +31,7 @@ import PrivateSessions from "./pages/PrivateSessions";
 import Membership from "./pages/Membership";
 import Mantras from "./pages/Mantras";
 import Shop from "./pages/Shop";
+import ProductDetail from "./pages/ProductDetail";
 import Transformation from "./pages/Transformation";
 import AdminMantras from "./pages/AdminMantras";
 import AdminShop from "./pages/AdminShop";
@@ -66,6 +67,7 @@ const App = () => (
               <Route path="/membership" element={<Membership />} />
               <Route path="/mantras" element={<Mantras />} />
               <Route path="/shop" element={<Shop />} />
+              <Route path="/shop/:id" element={<ProductDetail />} />
               <Route path="/transformation" element={<Transformation />} />
               <Route path="/stargate" element={<StargateMembership />} />
               <Route path="/certification" element={<PractitionerCertification />} />
