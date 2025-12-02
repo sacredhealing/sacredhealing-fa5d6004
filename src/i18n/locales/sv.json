@@ -1,4 +1,10 @@
 {
+  "share": {
+    "shareWith": "Dela med vänner",
+    "copyLink": "Kopiera länk",
+    "linkCopied": "Länk kopierad!",
+    "copyFailed": "Kunde inte kopiera länk"
+  },
   "common": {
     "back": "Tillbaka",
     "save": "Spara",
@@ -72,7 +78,9 @@
     "todaysWisdom": "Dagens Visdom",
     "todaysMeditation": "Dagens Meditation",
     "startSession": "Starta Session",
-    "quickActions": "Snabbåtgärder"
+    "quickActions": "Snabbåtgärder",
+    "inviteFriends": "Bjud in vänner",
+    "inviteDescription": "Dela Sacred Healing med dina vänner och hjälp dem på deras andliga resa."
   },
   "quickActions": {
     "meditate": "Meditera",

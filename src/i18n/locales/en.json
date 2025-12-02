@@ -1,4 +1,10 @@
 {
+  "share": {
+    "shareWith": "Share with friends",
+    "copyLink": "Copy Link",
+    "linkCopied": "Link copied to clipboard!",
+    "copyFailed": "Failed to copy link"
+  },
   "common": {
     "back": "Back",
     "save": "Save",
@@ -72,7 +78,9 @@
     "todaysWisdom": "Today's Wisdom",
     "todaysMeditation": "Today's Meditation",
     "startSession": "Start Session",
-    "quickActions": "Quick Actions"
+    "quickActions": "Quick Actions",
+    "inviteFriends": "Invite Friends",
+    "inviteDescription": "Share Sacred Healing with your friends and help them on their spiritual journey."
   },
   "quickActions": {
     "meditate": "Meditate",
