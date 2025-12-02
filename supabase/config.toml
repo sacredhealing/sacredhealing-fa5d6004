@@ -50,3 +50,6 @@ verify_jwt = false
 
 [functions.send-questionnaire-notification]
 verify_jwt = true
+
+[functions.create-transformation-checkout]
+verify_jwt = false
