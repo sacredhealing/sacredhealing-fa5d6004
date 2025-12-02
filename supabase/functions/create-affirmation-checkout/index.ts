@@ -71,7 +71,7 @@ serve(async (req) => {
         },
       ],
       mode: "payment",
-      success_url: `${origin}/affirmation-soundtrack?success=true&package=${packageType}`,
+      success_url: `${origin}/affirmation-success?package=${packageType}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/affirmation-soundtrack?canceled=true`,
       metadata: {
         user_id: user.id,

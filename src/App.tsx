@@ -39,6 +39,7 @@ import StargateMembership from "./pages/StargateMembership";
 import PractitionerCertification from "./pages/PractitionerCertification";
 import Leaderboard from "./pages/Leaderboard";
 import AffirmationSoundtrack from "./pages/AffirmationSoundtrack";
+import AffirmationSuccess from "./pages/AffirmationSuccess";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -75,6 +76,7 @@ const App = () => (
               <Route path="/certification" element={<PractitionerCertification />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="/affirmation-soundtrack" element={<AffirmationSoundtrack />} />
+              <Route path="/affirmation-success" element={<AffirmationSuccess />} />
             </Route>
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/meditations" element={<Admin />} />
