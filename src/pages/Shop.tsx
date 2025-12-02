@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useWishlist } from '@/hooks/useWishlist';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -55,6 +56,7 @@ const Shop = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  const { isInWishlist, toggleWishlist } = useWishlist();
   const [products, setProducts] = useState<ShopProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState<string | null>(null);
@@ -463,10 +465,15 @@ const Shop = () => {
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="absolute bottom-2 right-2 bg-background/80 hover:bg-background rounded-full w-8 h-8"
-                      onClick={(e) => e.stopPropagation()}
+                      className={`absolute bottom-2 right-2 bg-background/80 hover:bg-background rounded-full w-8 h-8 ${
+                        isInWishlist(product.id) ? 'text-pink-500' : ''
+                      }`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleWishlist(product.id);
+                      }}
                     >
-                      <Heart className="w-4 h-4" />
+                      <Heart className={`w-4 h-4 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
                     </Button>
                   </div>
 

@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useWishlist } from '@/hooks/useWishlist';
 import { toast } from 'sonner';
 
 interface ShopProduct {
@@ -34,6 +35,7 @@ const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isInWishlist, toggleWishlist } = useWishlist();
   const [product, setProduct] = useState<ShopProduct | null>(null);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
@@ -155,9 +157,12 @@ const ProductDetail = () => {
           <Button
             size="icon"
             variant="ghost"
-            className="absolute top-4 right-4 bg-background/80 hover:bg-background rounded-full"
+            className={`absolute top-4 right-4 bg-background/80 hover:bg-background rounded-full ${
+              isInWishlist(product.id) ? 'text-pink-500' : ''
+            }`}
+            onClick={() => toggleWishlist(product.id)}
           >
-            <Heart className="w-5 h-5" />
+            <Heart className={`w-5 h-5 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
           </Button>
 
           {product.stock_quantity <= 5 && product.stock_quantity > 0 && (
