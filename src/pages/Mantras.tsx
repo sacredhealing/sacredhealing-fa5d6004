@@ -220,10 +220,14 @@ const Mantras = () => {
                     {mantra.description && (
                       <p className="text-sm text-muted-foreground truncate">{mantra.description}</p>
                     )}
-                    <div className="flex items-center gap-3 mt-1">
+                    <div className="flex items-center gap-3 mt-1 flex-wrap">
                       <span className="flex items-center gap-1 text-xs text-muted-foreground">
                         <Clock className="w-3 h-3" />
                         {formatDuration(mantra.duration_seconds)}
+                      </span>
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Play className="w-3 h-3" />
+                        {mantra.play_count} plays
                       </span>
                       <Badge variant="outline" className="text-xs bg-amber-500/10 text-amber-400 border-amber-500/30">
                         <Coins className="w-3 h-3 mr-1" />
