@@ -53,6 +53,17 @@ const Mantras = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Convert Google Drive sharing links to direct download URLs
+  const getPlayableUrl = (url: string): string => {
+    // Check if it's a Google Drive link
+    const driveMatch = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+    if (driveMatch) {
+      const fileId = driveMatch[1];
+      return `https://drive.google.com/uc?export=download&id=${fileId}`;
+    }
+    return url;
+  };
+
   const handlePlay = async (mantra: Mantra) => {
     if (playingId === mantra.id) {
       // Pause
@@ -66,8 +77,8 @@ const Mantras = () => {
       audioRef.current.pause();
     }
 
-    // Create new audio
-    const audio = new Audio(mantra.audio_url);
+    // Create new audio with playable URL
+    const audio = new Audio(getPlayableUrl(mantra.audio_url));
     audioRef.current = audio;
 
     audio.addEventListener('timeupdate', () => {
