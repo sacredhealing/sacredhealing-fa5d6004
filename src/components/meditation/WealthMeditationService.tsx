@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { Sparkles, Upload, Loader2, Check, Zap, Heart, DollarSign, Star } from 'lucide-react';
+import { Sparkles, Loader2, Check, Zap, Heart, DollarSign, Star, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -12,65 +11,12 @@ import { toast } from 'sonner';
 const WealthMeditationService: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
-  const [voiceFile, setVoiceFile] = useState<File | null>(null);
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [uploadingVoice, setUploadingVoice] = useState(false);
-
-  const handleVoiceUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    if (!file.type.startsWith('audio/')) {
-      toast.error('Please upload an audio file');
-      return;
-    }
-    
-    if (file.size > 100 * 1024 * 1024) {
-      toast.error('File size must be under 100MB');
-      return;
-    }
-    
-    setVoiceFile(file);
-    toast.success('Voice file selected');
-  };
-
-  const uploadVoiceFile = async (): Promise<string | null> => {
-    if (!voiceFile || !user) return null;
-    
-    setUploadingVoice(true);
-    try {
-      const fileExt = voiceFile.name.split('.').pop();
-      const fileName = `wealth-meditation/${user.id}/${Date.now()}.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('meditations')
-        .upload(fileName, voiceFile);
-      
-      if (uploadError) throw uploadError;
-      
-      const { data: { publicUrl } } = supabase.storage
-        .from('meditations')
-        .getPublicUrl(fileName);
-      
-      return publicUrl;
-    } catch (error: any) {
-      console.error('Upload error:', error);
-      toast.error('Failed to upload voice file');
-      return null;
-    } finally {
-      setUploadingVoice(false);
-    }
-  };
 
   const handlePurchase = async () => {
     if (!isAuthenticated) {
       toast.error('Please sign in to purchase');
-      return;
-    }
-
-    if (!voiceFile) {
-      toast.error('Please upload your voice recording with the 108 affirmations');
       return;
     }
 
@@ -81,18 +27,10 @@ const WealthMeditationService: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const voiceFileUrl = await uploadVoiceFile();
-      if (!voiceFileUrl) {
-        throw new Error('Failed to upload voice file');
-      }
-
       const { data: { session } } = await supabase.auth.getSession();
       
       const response = await supabase.functions.invoke('create-wealth-meditation-checkout', {
-        body: { 
-          voiceFileUrl,
-          email,
-        },
+        body: { email },
         headers: {
           Authorization: `Bearer ${session?.access_token}`,
         },
@@ -105,7 +43,7 @@ const WealthMeditationService: React.FC = () => {
       if (response.data?.url) {
         window.open(response.data.url, '_blank');
         setIsOpen(false);
-        toast.success('Redirecting to checkout...');
+        toast.success('Redirecting to checkout... After payment, you will receive the 108 affirmations via email.');
       }
     } catch (error: any) {
       console.error('Purchase error:', error);
@@ -204,43 +142,16 @@ const WealthMeditationService: React.FC = () => {
             {/* How it works */}
             <div className="space-y-3 p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
               <h4 className="font-semibold text-sm flex items-center gap-2">
-                <Sparkles size={16} className="text-yellow-500" />
+                <Mail size={16} className="text-yellow-500" />
                 How it works:
               </h4>
               <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
-                <li>Record yourself reading all 108 affirmations (any quality is fine!)</li>
-                <li>Upload your recording below</li>
-                <li>Complete checkout</li>
-                <li>Receive the 108 affirmations via email</li>
-                <li>I transform your voice into a professional, frequency-infused wealth meditation</li>
-                <li>Your personalized meditation is delivered within 5-7 days</li>
+                <li><strong>Complete your purchase</strong> below</li>
+                <li><strong>Receive the 108 affirmations</strong> via email</li>
+                <li><strong>Record yourself</strong> reading all 108 affirmations</li>
+                <li><strong>Reply to the email</strong> with your audio file attached</li>
+                <li><strong>Receive your personalized meditation</strong> within 5-7 days</li>
               </ol>
-            </div>
-
-            {/* Voice Upload */}
-            <div className="space-y-3">
-              <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                Upload Your Voice Recording *
-              </h4>
-              <p className="text-sm text-muted-foreground">
-                Record yourself reading the 108 affirmations. Don't worry about audio quality — I'll transform it into studio-quality sound!
-              </p>
-              <label className="flex items-center gap-2 p-4 rounded-lg border border-dashed border-border hover:border-yellow-500/50 cursor-pointer transition-all bg-muted/20">
-                <Upload size={24} className="text-muted-foreground" />
-                <div className="flex-1">
-                  <span className="text-sm font-medium">
-                    {voiceFile ? voiceFile.name : 'Click to upload your voice recording'}
-                  </span>
-                  <p className="text-xs text-muted-foreground">MP3, WAV, M4A up to 100MB</p>
-                </div>
-                {voiceFile && <Check size={20} className="text-green-500" />}
-                <input
-                  type="file"
-                  accept="audio/*"
-                  onChange={handleVoiceUpload}
-                  className="hidden"
-                />
-              </label>
             </div>
 
             {/* Email */}
@@ -249,7 +160,7 @@ const WealthMeditationService: React.FC = () => {
                 Email Address *
               </h4>
               <p className="text-sm text-muted-foreground">
-                We'll send the 108 affirmations and your completed meditation to this email.
+                We'll send the 108 affirmations to this email after purchase.
               </p>
               <Input
                 type="email"
@@ -265,11 +176,11 @@ const WealthMeditationService: React.FC = () => {
               <ul className="text-sm text-muted-foreground space-y-1">
                 <li className="flex items-center gap-2">
                   <Check size={14} className="text-green-500" />
-                  All 108 wealth affirmations (Swedish) via email
+                  108 wealth affirmations sent to your email (immediately after purchase)
                 </li>
                 <li className="flex items-center gap-2">
                   <Check size={14} className="text-green-500" />
-                  Your personalized wealth meditation (5-7 days)
+                  Your personalized wealth meditation (5-7 days after you send your recording)
                 </li>
                 <li className="flex items-center gap-2">
                   <Check size={14} className="text-green-500" />
@@ -291,13 +202,13 @@ const WealthMeditationService: React.FC = () => {
               
               <Button
                 onClick={handlePurchase}
-                disabled={!voiceFile || !email || isLoading || !isAuthenticated || uploadingVoice}
+                disabled={!email || isLoading || !isAuthenticated}
                 className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600"
               >
-                {isLoading || uploadingVoice ? (
+                {isLoading ? (
                   <>
                     <Loader2 size={18} className="mr-2 animate-spin" />
-                    {uploadingVoice ? 'Uploading voice...' : 'Processing...'}
+                    Processing...
                   </>
                 ) : (
                   <>
@@ -312,6 +223,10 @@ const WealthMeditationService: React.FC = () => {
                   Please sign in to purchase
                 </p>
               )}
+
+              <p className="text-xs text-center text-muted-foreground">
+                After payment, you'll receive the 108 affirmations via email. Record yourself reading them and reply with your audio file.
+              </p>
             </div>
           </div>
         </DialogContent>

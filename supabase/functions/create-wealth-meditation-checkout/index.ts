@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { Resend } from "https://esm.sh/resend@4.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -139,6 +140,92 @@ RIKEDOM & ÖVERFLÖD (81–108)
 107. Min rikedom hjälper mig att göra gott i världen.
 108. Jag är evig överflöd.`;
 
+const sendAffirmationsEmail = async (email: string, bookingId: string) => {
+  const resendApiKey = Deno.env.get("RESEND_API_KEY");
+  if (!resendApiKey) {
+    logStep("RESEND_API_KEY not configured");
+    return false;
+  }
+
+  const resend = new Resend(resendApiKey);
+  
+  try {
+    const { error } = await resend.emails.send({
+      from: "Sacred Healing <onboarding@resend.dev>",
+      to: [email],
+      subject: "✨ Your 108 Wealth Affirmations - Record & Transform Your Life",
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.8; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; background: #fefefe; }
+            h1 { color: #d4af37; text-align: center; }
+            h2 { color: #8B7355; margin-top: 30px; border-bottom: 2px solid #d4af37; padding-bottom: 10px; }
+            .instructions { background: linear-gradient(135deg, #f9f6f0, #fff8e7); padding: 25px; border-radius: 12px; margin: 25px 0; border-left: 4px solid #d4af37; }
+            .instructions h3 { color: #d4af37; margin-top: 0; }
+            .instructions ol { margin-left: 20px; }
+            .instructions li { margin-bottom: 12px; }
+            .affirmation-section { background: #fff; padding: 20px; border-radius: 8px; margin: 15px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+            .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #d4af37; color: #666; }
+            .highlight { background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0; }
+          </style>
+        </head>
+        <body>
+          <h1>✨ Your 108 Wealth Reprogramming Affirmations</h1>
+          
+          <p style="text-align: center; font-size: 18px;">Thank you for your purchase! Your transformation journey begins now.</p>
+          
+          <div class="instructions">
+            <h3>📝 Next Steps to Receive Your Personalized Meditation:</h3>
+            <ol>
+              <li><strong>Read through all 108 affirmations below</strong> - Feel each one as you read it</li>
+              <li><strong>Record yourself reading ALL 108 affirmations aloud</strong> - Use your phone's voice recorder in a quiet space</li>
+              <li><strong>Speak slowly, clearly, and with feeling</strong> - Your authentic voice is what matters, not perfection!</li>
+              <li><strong>Reply to this email with your audio file attached</strong> (MP3, WAV, or M4A)</li>
+              <li><strong>Receive your personalized wealth meditation</strong> within 5-7 business days</li>
+            </ol>
+            <p><em>💡 Tip: Don't worry about audio quality — I'll transform your recording into professional, studio-quality sound with 528/639 Hz frequencies!</em></p>
+          </div>
+
+          <div class="highlight">
+            <strong>🎯 Important:</strong> Simply reply to this email with your voice recording attached. That's all you need to do!
+          </div>
+
+          <hr style="margin: 30px 0; border: none; border-top: 3px solid #d4af37;">
+
+          <div class="affirmation-section">
+            <pre style="white-space: pre-wrap; font-family: Georgia, serif; font-size: 15px; line-height: 2.2; color: #444;">
+${AFFIRMATIONS}
+            </pre>
+          </div>
+
+          <hr style="margin: 30px 0; border: none; border-top: 3px solid #d4af37;">
+
+          <div class="footer">
+            <p><strong>Ready?</strong> Record yourself reading all 108 affirmations and reply to this email with your audio file.</p>
+            <p>Your personalized wealth meditation will be created and sent to you within 5-7 business days.</p>
+            <p style="margin-top: 30px;">With love and abundance,<br><strong>Sacred Healing Team</strong> ✨</p>
+            <p style="font-size: 12px; color: #999;">Booking Reference: ${bookingId}</p>
+          </div>
+        </body>
+        </html>
+      `,
+    });
+
+    if (error) {
+      logStep("Email send error", { error });
+      return false;
+    }
+    
+    logStep("Email sent successfully", { email });
+    return true;
+  } catch (err) {
+    logStep("Email sending failed", { error: err });
+    return false;
+  }
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -162,13 +249,9 @@ serve(async (req) => {
     }
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const { voiceFileUrl, email } = await req.json();
+    const { email } = await req.json();
     
-    logStep("Request data", { voiceFileUrl: voiceFileUrl ? "provided" : "missing", email });
-
-    if (!voiceFileUrl) {
-      throw new Error("Voice file URL is required");
-    }
+    logStep("Request data", { email });
 
     if (!email) {
       throw new Error("Email address is required");
@@ -195,11 +278,10 @@ serve(async (req) => {
         package_type: "wealth_108",
         amount_paid: 47,
         status: "pending",
-        notes: "108 Wealth Reprogramming Meditation",
+        notes: "108 Wealth Reprogramming Meditation - Awaiting payment",
         contact_email: email,
         service_type: "wealth_meditation",
-        voice_file_url: voiceFileUrl,
-        custom_description: "User's voice recording for 108 wealth affirmations transformation",
+        custom_description: "Awaiting voice recording after payment",
       })
       .select()
       .single();
@@ -210,7 +292,7 @@ serve(async (req) => {
     }
     logStep("Booking created", { bookingId: booking.id });
 
-    // Create checkout session with price_data (no pre-created price needed)
+    // Create checkout session with price_data
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
@@ -240,13 +322,23 @@ serve(async (req) => {
 
     logStep("Checkout session created", { sessionId: session.id });
 
-    // Note: In production, you'd send the affirmations email via a webhook after successful payment
-    // For now, we'll include them in the response for the success page to handle
+    // Send affirmations email immediately after checkout creation
+    // User pays -> gets email with affirmations -> records and replies
+    const emailSent = await sendAffirmationsEmail(email, booking.id);
+    
+    // Update booking to mark email as sent
+    if (emailSent) {
+      await supabaseClient
+        .from('custom_meditation_bookings')
+        .update({ 
+          notes: "108 Wealth Reprogramming Meditation - Affirmations email sent, awaiting voice recording" 
+        })
+        .eq('id', booking.id);
+    }
     
     return new Response(JSON.stringify({ 
       url: session.url, 
       bookingId: booking.id,
-      affirmations: AFFIRMATIONS 
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
