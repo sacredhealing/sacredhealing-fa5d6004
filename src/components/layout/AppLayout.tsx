@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { BottomNav } from './BottomNav';
 import { AnnouncementPopup } from '@/components/AnnouncementPopup';
+import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
 
 export const AppLayout: React.FC = () => {
   return (
@@ -19,6 +20,7 @@ export const AppLayout: React.FC = () => {
       
       <BottomNav />
       <AnnouncementPopup />
+      <PWAInstallPrompt />
     </div>
   );
 };
