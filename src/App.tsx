@@ -26,6 +26,7 @@ import Healing from "./pages/Healing";
 import Promote from "./pages/Promote";
 import IncomeStreams from "./pages/IncomeStreams";
 import SpiritualEducation from "./pages/SpiritualEducation";
+import Community from "./pages/Community";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -51,6 +52,7 @@ const App = () => (
               <Route path="/promote" element={<Promote />} />
               <Route path="/income-streams" element={<IncomeStreams />} />
               <Route path="/spiritual-education" element={<SpiritualEducation />} />
+              <Route path="/community" element={<Community />} />
             </Route>
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/meditations" element={<Admin />} />
