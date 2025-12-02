@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, MessageCircle, Mail } from 'lucide-react';
+import { Users, MessageCircle, Mail, Heart } from 'lucide-react';
 import CommunityFeed from '@/components/community/CommunityFeed';
 import ChatRooms from '@/components/community/ChatRooms';
 import PrivateMessages from '@/components/community/PrivateMessages';
+import SupportCircle from '@/components/community/SupportCircle';
 
 const Community = () => {
   const { t } = useTranslation();
@@ -15,23 +16,31 @@ const Community = () => {
       <h1 className="text-2xl font-bold text-foreground mb-6">{t('community.title')}</h1>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6">
-          <TabsTrigger value="feed" className="flex items-center gap-2">
+        <TabsList className="grid w-full grid-cols-4 mb-6">
+          <TabsTrigger value="feed" className="flex items-center gap-1 px-2">
             <Users className="h-4 w-4" />
-            <span className="hidden sm:inline">{t('community.feed')}</span>
+            <span className="hidden sm:inline text-xs">{t('community.feed')}</span>
           </TabsTrigger>
-          <TabsTrigger value="chat" className="flex items-center gap-2">
+          <TabsTrigger value="support" className="flex items-center gap-1 px-2">
+            <Heart className="h-4 w-4" />
+            <span className="hidden sm:inline text-xs">{t('community.support')}</span>
+          </TabsTrigger>
+          <TabsTrigger value="chat" className="flex items-center gap-1 px-2">
             <MessageCircle className="h-4 w-4" />
-            <span className="hidden sm:inline">{t('community.chatRooms')}</span>
+            <span className="hidden sm:inline text-xs">{t('community.chatRooms')}</span>
           </TabsTrigger>
-          <TabsTrigger value="messages" className="flex items-center gap-2">
+          <TabsTrigger value="messages" className="flex items-center gap-1 px-2">
             <Mail className="h-4 w-4" />
-            <span className="hidden sm:inline">{t('community.messages')}</span>
+            <span className="hidden sm:inline text-xs">{t('community.messages')}</span>
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="feed">
           <CommunityFeed />
+        </TabsContent>
+
+        <TabsContent value="support">
+          <SupportCircle />
         </TabsContent>
 
         <TabsContent value="chat">
