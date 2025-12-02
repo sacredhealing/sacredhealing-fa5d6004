@@ -219,7 +219,7 @@ const AdminMantras = () => {
                   <Input
                     type="number"
                     value={formData.duration_seconds}
-                    onChange={(e) => setFormData({ ...formData, duration_seconds: parseInt(e.target.value) })}
+                    onChange={(e) => setFormData({ ...formData, duration_seconds: parseInt(e.target.value) || 180 })}
                   />
                 </div>
                 <div>
@@ -227,7 +227,7 @@ const AdminMantras = () => {
                   <Input
                     type="number"
                     value={formData.shc_reward}
-                    onChange={(e) => setFormData({ ...formData, shc_reward: parseInt(e.target.value) })}
+                    onChange={(e) => setFormData({ ...formData, shc_reward: parseInt(e.target.value) || 111 })}
                   />
                 </div>
               </div>
