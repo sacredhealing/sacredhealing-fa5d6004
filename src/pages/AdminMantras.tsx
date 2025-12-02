@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import AudioUpload from '@/components/admin/AudioUpload';
 
 interface Mantra {
   id: string;
@@ -195,14 +196,12 @@ const AdminMantras = () => {
                 />
               </div>
 
-              <div>
-                <Label>Audio URL *</Label>
-                <Input
-                  value={formData.audio_url}
-                  onChange={(e) => setFormData({ ...formData, audio_url: e.target.value })}
-                  placeholder="https://..."
-                />
-              </div>
+              <AudioUpload
+                value={formData.audio_url}
+                onChange={(url) => setFormData({ ...formData, audio_url: url })}
+                folder="mantras"
+                label="Audio File *"
+              />
 
               <div>
                 <Label>Cover Image URL</Label>
