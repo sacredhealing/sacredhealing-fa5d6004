@@ -1,14 +1,14 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Home, Play, Music2, Wallet, User, Sparkles } from 'lucide-react';
+import { Home, Play, Music2, User, Sparkles, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const getNavItems = (t: (key: string) => string) => [
   { to: '/dashboard', icon: Home, label: t('nav.home') },
   { to: '/meditations', icon: Play, label: t('nav.meditate') },
+  { to: '/community', icon: Users, label: t('nav.community') },
   { to: '/healing', icon: Sparkles, label: t('nav.healing') },
-  { to: '/music', icon: Music2, label: t('nav.music') },
   { to: '/profile', icon: User, label: t('nav.profile') },
 ];
 
