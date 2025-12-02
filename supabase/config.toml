@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.create-stargate-checkout]
 verify_jwt = false
+
+[functions.send-telegram-invite]
+verify_jwt = false
