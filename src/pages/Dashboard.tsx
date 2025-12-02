@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Play, BookOpen, Gift, Wallet, Flame, Sparkles, DollarSign, Youtube } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LotusIcon } from '@/components/icons/LotusIcon';
+import { SocialShare } from '@/components/SocialShare';
 
 const dailyQuote = {
   text: "The wound is the place where the Light enters you.",
@@ -124,6 +125,16 @@ const Dashboard: React.FC = () => {
             </Link>
           ))}
         </div>
+      </div>
+
+      {/* Social Share */}
+      <div className="mt-8 rounded-2xl bg-muted/30 border border-border/30 p-5 animate-slide-up" style={{ animationDelay: '0.4s' }}>
+        <h2 className="text-lg font-heading font-semibold text-foreground mb-3">{t('dashboard.inviteFriends')}</h2>
+        <p className="text-sm text-muted-foreground mb-4">{t('dashboard.inviteDescription')}</p>
+        <SocialShare 
+          title="Sacred Healing App"
+          text="Join me on Sacred Healing - Transform your spiritual journey and earn SHC tokens! 🧘‍♀️✨"
+        />
       </div>
     </div>
   );
