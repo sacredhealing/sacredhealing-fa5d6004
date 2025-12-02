@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ShoppingBag, Palette, Shirt, Star, Heart, Sparkles, PenTool, Check, ArrowRight, Info } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -53,9 +53,11 @@ const SHIRT_COLORS = ['White', 'Black', 'Natural', 'Navy'];
 const Shop = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const [products, setProducts] = useState<ShopProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [purchasing, setPurchasing] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState('all');
   const [customOrderOpen, setCustomOrderOpen] = useState(false);
   const [customFormData, setCustomFormData] = useState({
@@ -68,7 +70,17 @@ const Shop = () => {
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+    
+    // Handle success/cancel from Stripe redirect
+    const success = searchParams.get('success');
+    const canceled = searchParams.get('canceled');
+    
+    if (success === 'true') {
+      toast.success('Payment successful! Your order is being processed.');
+    } else if (canceled === 'true') {
+      toast.info('Payment was canceled.');
+    }
+  }, [searchParams]);
 
   const fetchProducts = async () => {
     const { data, error } = await supabase
@@ -96,7 +108,32 @@ const Shop = () => {
       navigate('/auth');
       return;
     }
-    toast.info('Checkout coming soon!');
+    
+    setPurchasing(product.id);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('create-shop-checkout', {
+        body: {
+          productId: product.id,
+          productName: product.name,
+          priceEur: product.price_eur,
+          quantity: 1,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      } else {
+        throw new Error('No checkout URL returned');
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      toast.error('Failed to start checkout. Please try again.');
+    } finally {
+      setPurchasing(null);
+    }
   };
 
   const handleCustomOrder = () => {
@@ -447,9 +484,9 @@ const Shop = () => {
                       <Button 
                         size="sm" 
                         onClick={() => handleBuyNow(product)}
-                        disabled={product.stock_quantity === 0}
+                        disabled={product.stock_quantity === 0 || purchasing === product.id}
                       >
-                        Buy
+                        {purchasing === product.id ? '...' : 'Buy'}
                       </Button>
                     </div>
                   </div>
