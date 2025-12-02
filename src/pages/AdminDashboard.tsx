@@ -12,7 +12,9 @@ import {
   BookOpen,
   Bell,
   DollarSign,
-  Youtube
+  Youtube,
+  ShoppingBag,
+  Crown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -73,6 +75,20 @@ const adminSections = [
     icon: Music,
     href: '/admin/music',
     color: 'text-emerald-500',
+  },
+  {
+    title: 'Mantras',
+    description: 'Manage sacred mantras for users to earn 111 SHC',
+    icon: Crown,
+    href: '/admin/mantras',
+    color: 'text-amber-500',
+  },
+  {
+    title: 'Shop Products',
+    description: "Manage Laila's clothing and art for sale",
+    icon: ShoppingBag,
+    href: '/admin/shop',
+    color: 'text-pink-500',
   },
 ];
 
