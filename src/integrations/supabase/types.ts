@@ -56,6 +56,48 @@ export type Database = {
         }
         Relationships: []
       }
+      affirmation_questionnaires: {
+        Row: {
+          additional_notes: string | null
+          challenges: string
+          created_at: string
+          goals: string
+          id: string
+          intentions: string
+          package_type: string
+          status: string
+          stripe_payment_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          additional_notes?: string | null
+          challenges: string
+          created_at?: string
+          goals: string
+          id?: string
+          intentions: string
+          package_type: string
+          status?: string
+          stripe_payment_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          additional_notes?: string | null
+          challenges?: string
+          created_at?: string
+          goals?: string
+          id?: string
+          intentions?: string
+          package_type?: string
+          status?: string
+          stripe_payment_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       announcement_dismissals: {
         Row: {
           announcement_id: string
