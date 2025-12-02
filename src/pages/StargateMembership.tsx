@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Star, Calendar, Heart, Users, MessageCircle, Sparkles, Check, Loader2 } from 'lucide-react';
+import { Star, Calendar, Heart, Users, MessageCircle, Sparkles, Check, Loader2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,14 +14,38 @@ const StargateMembership = () => {
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
 
+  const [telegramLink, setTelegramLink] = useState<string | null>(null);
+
   useEffect(() => {
-    if (searchParams.get('success') === 'true') {
-      toast.success('Välkommen till Stargate Membership! Du får snart ett välkomstmail.');
-    }
+    const handleSuccess = async () => {
+      if (searchParams.get('success') === 'true' && user) {
+        toast.success('Välkommen till Stargate Membership!');
+        
+        // Get Telegram invite link
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          const { data, error } = await supabase.functions.invoke('send-telegram-invite', {
+            headers: {
+              Authorization: `Bearer ${session?.access_token}`,
+            },
+          });
+          
+          if (!error && data?.invite_link) {
+            setTelegramLink(data.invite_link);
+            toast.success('Din Telegram-inbjudan är klar!');
+          }
+        } catch (err) {
+          console.error('Error getting Telegram invite:', err);
+        }
+      }
+    };
+
+    handleSuccess();
+
     if (searchParams.get('canceled') === 'true') {
       toast.info('Betalningen avbröts.');
     }
-  }, [searchParams]);
+  }, [searchParams, user]);
 
   const handleSubscribe = async () => {
     if (!user) {
@@ -86,6 +110,31 @@ const StargateMembership = () => {
 
   return (
     <div className="min-h-screen bg-background pb-24">
+      {/* Telegram Invite Card */}
+      {telegramLink && (
+        <div className="px-4 py-6">
+          <Card className="max-w-lg mx-auto p-6 bg-gradient-to-br from-green-500/20 to-teal-500/10 border-green-500/30 text-center">
+            <MessageCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
+            <h3 className="text-xl font-bold text-foreground mb-2">
+              Välkommen till Stargate! 🎉
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              Klicka nedan för att gå med i vår privata Telegram-grupp:
+            </p>
+            <Button 
+              asChild
+              className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white"
+            >
+              <a href={telegramLink} target="_blank" rel="noopener noreferrer">
+                <MessageCircle className="w-4 h-4 mr-2" />
+                Gå med i Telegram-gruppen
+                <ExternalLink className="w-4 h-4 ml-2" />
+              </a>
+            </Button>
+          </Card>
+        </div>
+      )}
+
       {/* Hero Section */}
       <div className="relative bg-gradient-to-br from-purple-900/40 via-background to-amber-900/20 px-4 py-12 text-center overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PHBhdGggZD0iTTMwIDBjMTYuNTY5IDAgMzAgMTMuNDMxIDMwIDMwIDAgMTYuNTY5LTEzLjQzMSAzMC0zMCAzMEMxMy40MzEgNjAgMCA0Ni41NjkgMCAzMCAwIDEzLjQzMSAxMy40MzEgMCAzMCAwem0wIDEwYy0xMS4wNDYgMC0yMCA4Ljk1NC0yMCAyMHM4Ljk1NCAyMCAyMCAyMCAyMC04Ljk1NCAyMC0yMC04Ljk1NC0yMC0yMC0yMHoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-50"></div>
