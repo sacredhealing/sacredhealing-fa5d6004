@@ -42,6 +42,7 @@ import AffirmationSoundtrack from "./pages/AffirmationSoundtrack";
 import AffirmationSuccess from "./pages/AffirmationSuccess";
 import PregnancyProgram from "./pages/PregnancyProgram";
 import Install from "./pages/Install";
+import SpiritualTransformation from "./pages/SpiritualTransformation";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -81,6 +82,7 @@ const App = () => (
               <Route path="/affirmation-success" element={<AffirmationSuccess />} />
               <Route path="/pregnancy-program" element={<PregnancyProgram />} />
               <Route path="/install" element={<Install />} />
+              <Route path="/spiritual-transformation" element={<SpiritualTransformation />} />
             </Route>
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/meditations" element={<Admin />} />
