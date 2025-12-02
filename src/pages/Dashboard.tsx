@@ -1,10 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Play, BookOpen, Gift, Wallet, Flame, Sparkles, DollarSign, Youtube } from 'lucide-react';
+import { Play, BookOpen, Gift, Wallet, Flame, Sparkles, DollarSign, Youtube, ShoppingBag, Crown, Music, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LotusIcon } from '@/components/icons/LotusIcon';
 import { SocialShare } from '@/components/SocialShare';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 const dailyQuote = {
   text: "The wound is the place where the Light enters you.",
@@ -124,6 +126,68 @@ const Dashboard: React.FC = () => {
               </div>
             </Link>
           ))}
+        </div>
+      </div>
+
+      {/* Featured Sections */}
+      <div className="mt-6 animate-slide-up" style={{ animationDelay: '0.35s' }}>
+        <h2 className="text-lg font-heading font-semibold text-foreground mb-4">Explore</h2>
+        <div className="grid grid-cols-2 gap-3">
+          <Link to="/mantras">
+            <Card className="p-4 bg-gradient-to-br from-purple-500/20 to-amber-500/10 border-purple-500/30 hover:border-purple-500/50 transition-all">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-purple-500/20">
+                  <Music className="w-5 h-5 text-purple-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground text-sm">Mantras</h3>
+                  <p className="text-xs text-muted-foreground">Earn 111 SHC</p>
+                </div>
+              </div>
+            </Card>
+          </Link>
+          
+          <Link to="/shop">
+            <Card className="p-4 bg-gradient-to-br from-pink-500/20 to-purple-500/10 border-pink-500/30 hover:border-pink-500/50 transition-all">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-pink-500/20">
+                  <ShoppingBag className="w-5 h-5 text-pink-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground text-sm">Shop</h3>
+                  <p className="text-xs text-muted-foreground">Laila's Collection</p>
+                </div>
+              </div>
+            </Card>
+          </Link>
+          
+          <Link to="/membership">
+            <Card className="p-4 bg-gradient-to-br from-amber-500/20 to-purple-500/10 border-amber-500/30 hover:border-amber-500/50 transition-all">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-amber-500/20">
+                  <Crown className="w-5 h-5 text-amber-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground text-sm">Membership</h3>
+                  <p className="text-xs text-muted-foreground">Upgrade your plan</p>
+                </div>
+              </div>
+            </Card>
+          </Link>
+          
+          <Link to="/transformation">
+            <Card className="p-4 bg-gradient-to-br from-green-500/20 to-emerald-500/10 border-green-500/30 hover:border-green-500/50 transition-all">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-green-500/20">
+                  <Heart className="w-5 h-5 text-green-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground text-sm">Coaching</h3>
+                  <p className="text-xs text-muted-foreground">6-Month Program</p>
+                </div>
+              </div>
+            </Card>
+          </Link>
         </div>
       </div>
 
