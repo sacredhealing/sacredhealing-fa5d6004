@@ -28,6 +28,12 @@ import IncomeStreams from "./pages/IncomeStreams";
 import SpiritualEducation from "./pages/SpiritualEducation";
 import Community from "./pages/Community";
 import PrivateSessions from "./pages/PrivateSessions";
+import Membership from "./pages/Membership";
+import Mantras from "./pages/Mantras";
+import Shop from "./pages/Shop";
+import Transformation from "./pages/Transformation";
+import AdminMantras from "./pages/AdminMantras";
+import AdminShop from "./pages/AdminShop";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -55,6 +61,10 @@ const App = () => (
               <Route path="/spiritual-education" element={<SpiritualEducation />} />
               <Route path="/community" element={<Community />} />
               <Route path="/private-sessions" element={<PrivateSessions />} />
+              <Route path="/membership" element={<Membership />} />
+              <Route path="/mantras" element={<Mantras />} />
+              <Route path="/shop" element={<Shop />} />
+              <Route path="/transformation" element={<Transformation />} />
             </Route>
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/meditations" element={<Admin />} />
@@ -65,6 +75,8 @@ const App = () => (
             <Route path="/admin/announcements" element={<AdminAnnouncements />} />
             <Route path="/admin/income-streams" element={<AdminIncomeStreams />} />
             <Route path="/admin/youtube" element={<AdminYouTube />} />
+            <Route path="/admin/mantras" element={<AdminMantras />} />
+            <Route path="/admin/shop" element={<AdminShop />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -630,6 +630,77 @@ export type Database = {
           },
         ]
       }
+      mantra_completions: {
+        Row: {
+          completed_at: string
+          id: string
+          mantra_id: string | null
+          shc_earned: number
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          id?: string
+          mantra_id?: string | null
+          shc_earned?: number
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          id?: string
+          mantra_id?: string | null
+          shc_earned?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mantra_completions_mantra_id_fkey"
+            columns: ["mantra_id"]
+            isOneToOne: false
+            referencedRelation: "mantras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mantras: {
+        Row: {
+          audio_url: string
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          duration_seconds: number
+          id: string
+          is_active: boolean
+          play_count: number
+          shc_reward: number
+          title: string
+        }
+        Insert: {
+          audio_url: string
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number
+          id?: string
+          is_active?: boolean
+          play_count?: number
+          shc_reward?: number
+          title: string
+        }
+        Update: {
+          audio_url?: string
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number
+          id?: string
+          is_active?: boolean
+          play_count?: number
+          shc_reward?: number
+          title?: string
+        }
+        Relationships: []
+      }
       meditation_completions: {
         Row: {
           completed_at: string
@@ -704,6 +775,45 @@ export type Database = {
           play_count?: number
           shc_reward?: number
           title?: string
+        }
+        Relationships: []
+      }
+      membership_tiers: {
+        Row: {
+          billing_interval: string | null
+          created_at: string
+          description: string | null
+          features: Json | null
+          id: string
+          is_active: boolean
+          name: string
+          order_index: number
+          price_eur: number
+          slug: string
+        }
+        Insert: {
+          billing_interval?: string | null
+          created_at?: string
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean
+          name: string
+          order_index?: number
+          price_eur?: number
+          slug: string
+        }
+        Update: {
+          billing_interval?: string | null
+          created_at?: string
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          order_index?: number
+          price_eur?: number
+          slug?: string
         }
         Relationships: []
       }
@@ -1209,6 +1319,90 @@ export type Database = {
         }
         Relationships: []
       }
+      shop_orders: {
+        Row: {
+          created_at: string
+          id: string
+          items: Json
+          notes: string | null
+          shipping_address: Json | null
+          status: string
+          stripe_payment_id: string | null
+          total_eur: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          items?: Json
+          notes?: string | null
+          shipping_address?: Json | null
+          status?: string
+          stripe_payment_id?: string | null
+          total_eur: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          items?: Json
+          notes?: string | null
+          shipping_address?: Json | null
+          status?: string
+          stripe_payment_id?: string | null
+          total_eur?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      shop_products: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          images: Json | null
+          is_active: boolean
+          is_featured: boolean
+          name: string
+          price_eur: number
+          sizes: Json | null
+          stock_quantity: number
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          images?: Json | null
+          is_active?: boolean
+          is_featured?: boolean
+          name: string
+          price_eur: number
+          sizes?: Json | null
+          stock_quantity?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          images?: Json | null
+          is_active?: boolean
+          is_featured?: boolean
+          name?: string
+          price_eur?: number
+          sizes?: Json | null
+          stock_quantity?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       site_content: {
         Row: {
           content: string
@@ -1278,6 +1472,92 @@ export type Database = {
         }
         Relationships: []
       }
+      transformation_enrollments: {
+        Row: {
+          created_at: string
+          current_module: number
+          ends_at: string | null
+          id: string
+          program_id: string | null
+          starts_at: string
+          status: string
+          stripe_payment_id: string | null
+          updated_at: string
+          user_id: string
+          whatsapp_group_link: string | null
+        }
+        Insert: {
+          created_at?: string
+          current_module?: number
+          ends_at?: string | null
+          id?: string
+          program_id?: string | null
+          starts_at?: string
+          status?: string
+          stripe_payment_id?: string | null
+          updated_at?: string
+          user_id: string
+          whatsapp_group_link?: string | null
+        }
+        Update: {
+          created_at?: string
+          current_module?: number
+          ends_at?: string | null
+          id?: string
+          program_id?: string | null
+          starts_at?: string
+          status?: string
+          stripe_payment_id?: string | null
+          updated_at?: string
+          user_id?: string
+          whatsapp_group_link?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transformation_enrollments_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "transformation_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transformation_programs: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration_months: number
+          features: Json
+          id: string
+          is_active: boolean
+          modules: Json
+          name: string
+          price_eur: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration_months?: number
+          features?: Json
+          id?: string
+          is_active?: boolean
+          modules?: Json
+          name: string
+          price_eur?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration_months?: number
+          features?: Json
+          id?: string
+          is_active?: boolean
+          modules?: Json
+          name?: string
+          price_eur?: number
+        }
+        Relationships: []
+      }
       user_balances: {
         Row: {
           balance: number
@@ -1307,6 +1587,50 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_memberships: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          starts_at: string
+          status: string
+          stripe_subscription_id: string | null
+          tier_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          starts_at?: string
+          status?: string
+          stripe_subscription_id?: string | null
+          tier_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          starts_at?: string
+          status?: string
+          stripe_subscription_id?: string | null
+          tier_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_memberships_tier_id_fkey"
+            columns: ["tier_id"]
+            isOneToOne: false
+            referencedRelation: "membership_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_wallets: {
         Row: {
