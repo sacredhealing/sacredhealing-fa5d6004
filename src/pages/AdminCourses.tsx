@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, BookOpen, Loader2, Save, Video, FileText } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, BookOpen, Loader2, Save, Video, FileText, Music, Type } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -73,6 +73,7 @@ const AdminCourses: React.FC = () => {
     description: '',
     content_type: 'video',
     content_url: '',
+    text_content: '',
     duration_minutes: 10,
     is_preview: false,
   });
@@ -152,11 +153,19 @@ const AdminCourses: React.FC = () => {
     if (!selectedCourse) return;
     setIsLoading(true);
 
-    const { error } = await supabase.from('lessons').insert({
-      ...lessonForm,
+    // For text content type, store text_content in description field
+    const lessonData = {
+      title: lessonForm.title,
+      description: lessonForm.content_type === 'text' ? lessonForm.text_content : lessonForm.description,
+      content_type: lessonForm.content_type,
+      content_url: lessonForm.content_type === 'text' ? null : lessonForm.content_url,
+      duration_minutes: lessonForm.duration_minutes,
+      is_preview: lessonForm.is_preview,
       course_id: selectedCourse.id,
       order_index: lessons.length,
-    });
+    };
+
+    const { error } = await supabase.from('lessons').insert(lessonData);
 
     if (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
@@ -173,6 +182,7 @@ const AdminCourses: React.FC = () => {
         description: '',
         content_type: 'video',
         content_url: '',
+        text_content: '',
         duration_minutes: 10,
         is_preview: false,
       });
@@ -476,33 +486,96 @@ const AdminCourses: React.FC = () => {
                       </div>
                     </div>
 
-                    <div>
-                      <Label>Description</Label>
-                      <Textarea
-                        value={lessonForm.description}
-                        onChange={(e) => setLessonForm({ ...lessonForm, description: e.target.value })}
-                        placeholder="What students will learn in this lesson..."
-                      />
-                    </div>
+                    {/* Description - shown for video, audio, pdf */}
+                    {lessonForm.content_type !== 'text' && (
+                      <div>
+                        <Label>Description</Label>
+                        <Textarea
+                          value={lessonForm.description}
+                          onChange={(e) => setLessonForm({ ...lessonForm, description: e.target.value })}
+                          placeholder="What students will learn in this lesson..."
+                        />
+                      </div>
+                    )}
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label>Content URL</Label>
-                        <Input
-                          value={lessonForm.content_url}
-                          onChange={(e) => setLessonForm({ ...lessonForm, content_url: e.target.value })}
-                          placeholder="https://..."
-                        />
+                    {/* Content URL - shown for video and pdf */}
+                    {(lessonForm.content_type === 'video' || lessonForm.content_type === 'pdf') && (
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label>{lessonForm.content_type === 'video' ? 'Video URL' : 'PDF URL'}</Label>
+                          <Input
+                            value={lessonForm.content_url}
+                            onChange={(e) => setLessonForm({ ...lessonForm, content_url: e.target.value })}
+                            placeholder={lessonForm.content_type === 'video' ? 'https://youtube.com/... or https://vimeo.com/...' : 'https://example.com/document.pdf'}
+                          />
+                        </div>
+                        <div>
+                          <Label>Duration (minutes)</Label>
+                          <Input
+                            type="number"
+                            value={lessonForm.duration_minutes}
+                            onChange={(e) => setLessonForm({ ...lessonForm, duration_minutes: parseInt(e.target.value) })}
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <Label>Duration (minutes)</Label>
-                        <Input
-                          type="number"
-                          value={lessonForm.duration_minutes}
-                          onChange={(e) => setLessonForm({ ...lessonForm, duration_minutes: parseInt(e.target.value) })}
-                        />
+                    )}
+
+                    {/* Audio URL - shown for audio type */}
+                    {lessonForm.content_type === 'audio' && (
+                      <div className="space-y-4">
+                        <div>
+                          <Label className="flex items-center gap-2">
+                            <Music className="w-4 h-4" />
+                            Audio URL
+                          </Label>
+                          <Input
+                            value={lessonForm.content_url}
+                            onChange={(e) => setLessonForm({ ...lessonForm, content_url: e.target.value })}
+                            placeholder="https://example.com/audio.mp3"
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Enter direct URL to MP3, WAV, or other audio file
+                          </p>
+                        </div>
+                        <div className="w-1/2">
+                          <Label>Duration (minutes)</Label>
+                          <Input
+                            type="number"
+                            value={lessonForm.duration_minutes}
+                            onChange={(e) => setLessonForm({ ...lessonForm, duration_minutes: parseInt(e.target.value) })}
+                          />
+                        </div>
                       </div>
-                    </div>
+                    )}
+
+                    {/* Text Content - shown for text type */}
+                    {lessonForm.content_type === 'text' && (
+                      <div className="space-y-4">
+                        <div>
+                          <Label className="flex items-center gap-2">
+                            <Type className="w-4 h-4" />
+                            Text Content
+                          </Label>
+                          <Textarea
+                            value={lessonForm.text_content}
+                            onChange={(e) => setLessonForm({ ...lessonForm, text_content: e.target.value })}
+                            placeholder="Enter the full text/article content for this lesson..."
+                            className="min-h-[200px]"
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Write or paste the full article/text content. Supports plain text.
+                          </p>
+                        </div>
+                        <div className="w-1/2">
+                          <Label>Reading Time (minutes)</Label>
+                          <Input
+                            type="number"
+                            value={lessonForm.duration_minutes}
+                            onChange={(e) => setLessonForm({ ...lessonForm, duration_minutes: parseInt(e.target.value) })}
+                          />
+                        </div>
+                      </div>
+                    )}
 
                     <div className="flex items-center gap-2">
                       <Switch
@@ -539,6 +612,8 @@ const AdminCourses: React.FC = () => {
                               {index + 1}
                             </span>
                             {lesson.content_type === 'video' && <Video className="w-4 h-4 text-muted-foreground" />}
+                            {lesson.content_type === 'audio' && <Music className="w-4 h-4 text-muted-foreground" />}
+                            {lesson.content_type === 'text' && <Type className="w-4 h-4 text-muted-foreground" />}
                             {lesson.content_type === 'pdf' && <FileText className="w-4 h-4 text-muted-foreground" />}
                             <div>
                               <p className="font-medium text-foreground">{lesson.title}</p>
