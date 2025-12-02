@@ -14,6 +14,7 @@ const logStep = (step: string, details?: any) => {
 };
 
 const PRICE_AMOUNT = 4700; // €47 in cents
+const DISCOUNTED_PRICE_AMOUNT = 2700; // €27 in cents (€20 discount for course bundle)
 
 const AFFIRMATIONS = `108 RIKEDOMS-AFFIRMATIONER
 
@@ -252,9 +253,12 @@ serve(async (req) => {
     }
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const { email } = await req.json();
+    const { email, discounted } = await req.json();
     
-    logStep("Request data", { email });
+    const priceAmount = discounted ? DISCOUNTED_PRICE_AMOUNT : PRICE_AMOUNT;
+    const priceInEur = priceAmount / 100;
+    
+    logStep("Request data", { email, discounted, priceAmount });
 
     if (!email) {
       throw new Error("Email address is required");
@@ -278,10 +282,12 @@ serve(async (req) => {
       .from("custom_meditation_bookings")
       .insert({
         user_id: user.id,
-        package_type: "wealth_108",
-        amount_paid: 47,
+        package_type: discounted ? "wealth_108_discounted" : "wealth_108",
+        amount_paid: priceInEur,
         status: "pending",
-        notes: "108 Wealth Reprogramming Meditation - Awaiting payment",
+        notes: discounted 
+          ? "108 Wealth Reprogramming Meditation (Course Bundle Discount) - Awaiting payment" 
+          : "108 Wealth Reprogramming Meditation - Awaiting payment",
         contact_email: email,
         service_type: "wealth_meditation",
         custom_description: "Awaiting voice recording after payment",
@@ -304,10 +310,12 @@ serve(async (req) => {
           price_data: {
             currency: "eur",
             product_data: {
-              name: "108 Wealth Reprogramming Meditation",
+              name: discounted 
+                ? "108 Wealth Reprogramming Meditation (Bundle Discount)" 
+                : "108 Wealth Reprogramming Meditation",
               description: "Your personalized wealth activation meditation with 528/639 Hz frequencies",
             },
-            unit_amount: PRICE_AMOUNT,
+            unit_amount: priceAmount,
           },
           quantity: 1,
         },
@@ -320,6 +328,7 @@ serve(async (req) => {
         user_id: user.id,
         service_type: "wealth_meditation",
         delivery_email: email,
+        discounted: discounted ? "true" : "false",
       },
     });
 

@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Lock, Award, Clock, Sparkles, CheckCircle, Loader2, RefreshCw, MessageSquare } from 'lucide-react';
+import { Play, Lock, Award, Clock, Sparkles, CheckCircle, Loader2, RefreshCw, MessageSquare, Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { ReviewSection } from '@/components/reviews/ReviewSection';
+import WealthCourseUpsell from '@/components/courses/WealthCourseUpsell';
+
+// Swedish Wealth Course ID
+const WEALTH_COURSE_ID = 'f6b3a3e2-c78e-4234-8cf4-cc059655e118';
 
 interface Course {
   id: string;
@@ -36,6 +40,7 @@ const Courses: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [enrollingId, setEnrollingId] = useState<string | null>(null);
   const [selectedCourseForReview, setSelectedCourseForReview] = useState<string | null>(null);
+  const [showWealthUpsell, setShowWealthUpsell] = useState(false);
 
   useEffect(() => {
     fetchCourses();
@@ -86,9 +91,17 @@ const Courses: React.FC = () => {
 
       if (data.url) {
         window.open(data.url, '_blank');
+        // Show upsell for wealth course after successful checkout redirect
+        if (course.id === WEALTH_COURSE_ID) {
+          setTimeout(() => setShowWealthUpsell(true), 500);
+        }
       } else if (data.success) {
         toast.success(data.message || 'Enrolled successfully!');
         fetchEnrollments();
+        // Show upsell for wealth course after free enrollment
+        if (course.id === WEALTH_COURSE_ID) {
+          setShowWealthUpsell(true);
+        }
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to enroll');
@@ -111,6 +124,8 @@ const Courses: React.FC = () => {
 
   return (
     <div className="min-h-screen px-4 pt-6 pb-24">
+      {/* Upsell Dialog */}
+      <WealthCourseUpsell isOpen={showWealthUpsell} onOpenChange={setShowWealthUpsell} />
       {/* Header */}
       <header className="mb-6 animate-fade-in">
         <h1 className="text-3xl font-heading font-bold text-foreground">Courses</h1>
@@ -163,9 +178,14 @@ const Courses: React.FC = () => {
                       <span className="text-xs font-medium text-secondary">Done</span>
                     </div>
                   )}
-                  {course.is_premium_only && (
+                {course.is_premium_only && (
                     <div className="px-2 py-1 bg-accent/20 rounded-full">
                       <span className="text-xs font-medium text-accent">Premium</span>
+                    </div>
+                  )}
+                  {course.id === WEALTH_COURSE_ID && (
+                    <div className="px-2 py-1 bg-yellow-500/20 rounded-full">
+                      <span className="text-xs font-medium text-yellow-500">🇸🇪 Svenska</span>
                     </div>
                   )}
                   {course.recurring_price_usd && (
