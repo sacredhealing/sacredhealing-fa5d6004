@@ -40,6 +40,7 @@ import PractitionerCertification from "./pages/PractitionerCertification";
 import Leaderboard from "./pages/Leaderboard";
 import AffirmationSoundtrack from "./pages/AffirmationSoundtrack";
 import AffirmationSuccess from "./pages/AffirmationSuccess";
+import PregnancyProgram from "./pages/PregnancyProgram";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -77,6 +78,7 @@ const App = () => (
               <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="/affirmation-soundtrack" element={<AffirmationSoundtrack />} />
               <Route path="/affirmation-success" element={<AffirmationSuccess />} />
+              <Route path="/pregnancy-program" element={<PregnancyProgram />} />
             </Route>
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/meditations" element={<Admin />} />
