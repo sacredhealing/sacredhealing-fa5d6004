@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 const getNavItems = (t: (key: string) => string) => [
   { to: '/dashboard', icon: Home, label: t('nav.home') },
   { to: '/meditations', icon: Play, label: t('nav.meditate') },
-  { to: '/community', icon: Users, label: t('nav.community') },
+  { to: '/music', icon: Music2, label: t('nav.music') },
   { to: '/healing', icon: Sparkles, label: t('nav.healing') },
   { to: '/profile', icon: User, label: t('nav.profile') },
 ];
