@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Pause, Music2, ShoppingCart, Download, Heart, Clock, Sparkles, Lock, ListMusic, Loader2, CreditCard, Coins } from 'lucide-react';
+import { Play, Pause, Music2, ShoppingCart, Download, Heart, Clock, Sparkles, Lock, ListMusic, Loader2, CreditCard, Coins, Headphones } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
@@ -17,9 +17,11 @@ interface Track {
   duration_seconds: number;
   preview_url: string;
   full_audio_url: string;
+  cover_image_url: string | null;
   price_usd: number;
   price_shc: number;
   shc_reward: number;
+  play_count: number;
 }
 
 const Music: React.FC = () => {
@@ -311,13 +313,23 @@ const Music: React.FC = () => {
               }`}
               style={{ animationDelay: `${index * 0.05}s` }}
             >
-              {/* Cover & Play */}
+            {/* Cover & Play */}
               <button
                 onClick={() => playTrack(track)}
-                className="relative w-14 h-14 rounded-lg bg-gradient-spiritual flex items-center justify-center shrink-0"
+                className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0"
               >
-                <Music2 size={24} className="text-foreground/70" />
-                <div className="absolute inset-0 bg-background/60 rounded-lg flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                {track.cover_image_url ? (
+                  <img 
+                    src={track.cover_image_url} 
+                    alt={track.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-spiritual flex items-center justify-center">
+                    <Music2 size={24} className="text-foreground/70" />
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-background/60 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
                   {isCurrentTrack && isPlaying ? (
                     <Pause className="text-primary" size={20} />
                   ) : (
@@ -335,10 +347,17 @@ const Music: React.FC = () => {
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-foreground truncate">{track.title}</p>
                 <p className="text-xs text-muted-foreground">{track.artist}</p>
-                <div className="flex items-center gap-2 mt-1">
+                {track.description && (
+                  <p className="text-xs text-muted-foreground/70 truncate mt-0.5">{track.description}</p>
+                )}
+                <div className="flex items-center gap-3 mt-1">
                   <span className="text-xs text-muted-foreground flex items-center gap-1">
                     <Clock size={10} />
                     {formatDuration(track.duration_seconds)}
+                  </span>
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Headphones size={10} />
+                    {track.play_count.toLocaleString()}
                   </span>
                   {!isOwned && (
                     <span className="text-xs text-accent flex items-center gap-1">
@@ -405,8 +424,18 @@ const Music: React.FC = () => {
         <div className="fixed bottom-20 left-0 right-0 px-4 z-40 animate-slide-up">
           <div className="bg-card/95 backdrop-blur-lg rounded-2xl border border-border/50 p-4 shadow-lg">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 rounded-lg bg-gradient-spiritual flex items-center justify-center">
-                <Music2 size={20} className="text-foreground/70" />
+              <div className="w-12 h-12 rounded-lg overflow-hidden">
+                {currentTrack.cover_image_url ? (
+                  <img 
+                    src={currentTrack.cover_image_url} 
+                    alt={currentTrack.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-spiritual flex items-center justify-center">
+                    <Music2 size={20} className="text-foreground/70" />
+                  </div>
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-foreground truncate">{currentTrack.title}</p>

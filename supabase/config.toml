@@ -41,3 +41,6 @@ verify_jwt = false
 
 [functions.create-shop-checkout]
 verify_jwt = false
+
+[functions.distribute-monthly-rewards]
+verify_jwt = false
