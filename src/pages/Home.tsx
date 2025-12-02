@@ -308,7 +308,8 @@ const Home: React.FC = () => {
               <h3 className="font-heading font-bold text-xl text-foreground">Sacred Healing Vibration</h3>
               <p className="text-muted-foreground text-sm">Awakening sacred gifts worldwide</p>
             </div>
-            <div className="flex gap-6 text-sm text-muted-foreground">
+            <div className="flex flex-wrap gap-6 text-sm text-muted-foreground">
+              <Link to="/about" className="hover:text-foreground transition-colors">About Us</Link>
               <Link to="/auth" className="hover:text-foreground transition-colors">Get Started</Link>
               <Link to="/spiritual-education" className="hover:text-foreground transition-colors">Free Content</Link>
               <Link to="/private-sessions" className="hover:text-foreground transition-colors">Sessions</Link>
