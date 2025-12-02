@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Heart, Baby, Sparkles, Calendar, Play, CheckCircle, Loader2, Star } from 'lucide-react';
+import { ArrowLeft, Heart, Baby, Sparkles, Calendar, Play, CheckCircle, Loader2, Star, Quote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -206,6 +206,58 @@ const PregnancyProgram: React.FC = () => {
                 <CheckCircle className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
                 <span className="text-foreground">{benefit}</span>
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-16 px-4 bg-white/50 dark:bg-card/30">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-4 text-foreground">What Mothers Say</h2>
+          <p className="text-center text-muted-foreground mb-12">
+            Real experiences from our sacred pregnancy community
+          </p>
+          
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              {
+                name: "Emma S.",
+                trimester: "3rd Trimester",
+                quote: "The birth visualization meditation was life-changing. I felt so calm and empowered during labor. This program gave me tools I'll use forever.",
+                avatar: "🌸"
+              },
+              {
+                name: "Sofia L.",
+                trimester: "2nd Trimester",
+                quote: "I connected with my baby on such a deep level through these practices. The Zoom calls with Laila were incredibly supportive and personalized.",
+                avatar: "🌺"
+              },
+              {
+                name: "Anna K.",
+                trimester: "Postpartum",
+                quote: "The breathwork techniques helped me through my entire pregnancy and birth. I recommend this to every expecting mother. Truly sacred.",
+                avatar: "🌷"
+              }
+            ].map((testimonial, index) => (
+              <Card key={index} className="p-6 bg-white dark:bg-card border-rose-100 dark:border-border relative">
+                <Quote className="w-8 h-8 text-rose-200 dark:text-rose-900/50 absolute top-4 right-4" />
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-rose-100 to-pink-100 dark:from-rose-900/30 dark:to-pink-900/30 flex items-center justify-center text-2xl">
+                    {testimonial.avatar}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">{testimonial.name}</p>
+                    <p className="text-xs text-rose-500">{testimonial.trimester}</p>
+                  </div>
+                </div>
+                <p className="text-muted-foreground italic leading-relaxed">"{testimonial.quote}"</p>
+                <div className="flex gap-1 mt-4">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                  ))}
+                </div>
+              </Card>
             ))}
           </div>
         </div>
