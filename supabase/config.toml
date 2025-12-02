@@ -47,3 +47,6 @@ verify_jwt = false
 
 [functions.create-affirmation-checkout]
 verify_jwt = false
+
+[functions.send-questionnaire-notification]
+verify_jwt = true
