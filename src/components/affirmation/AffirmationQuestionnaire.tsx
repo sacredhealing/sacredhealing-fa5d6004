@@ -66,6 +66,23 @@ const AffirmationQuestionnaire: React.FC<AffirmationQuestionnaireProps> = ({
 
       if (error) throw error;
 
+      // Send email notification
+      try {
+        await supabase.functions.invoke('send-questionnaire-notification', {
+          body: {
+            userEmail: user.email,
+            userName: user.user_metadata?.full_name || '',
+            packageType,
+            goals: formData.goals.trim(),
+            challenges: formData.challenges.trim(),
+            intentions: formData.intentions.trim(),
+            additionalNotes: formData.additional_notes.trim() || undefined,
+          }
+        });
+      } catch (emailError) {
+        console.error('Failed to send notification email:', emailError);
+      }
+
       toast({
         title: 'Questionnaire Submitted!',
         description: 'Thank you! We will create your personalized soundtrack based on your responses.',
