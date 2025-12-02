@@ -1047,6 +1047,132 @@ export type Database = {
         }
         Relationships: []
       }
+      session_bookings: {
+        Row: {
+          amount_paid: number | null
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          package_id: string
+          practitioner: string
+          session_type_id: string
+          status: string
+          stripe_payment_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_paid?: number | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          package_id: string
+          practitioner?: string
+          session_type_id: string
+          status?: string
+          stripe_payment_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_paid?: number | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          package_id?: string
+          practitioner?: string
+          session_type_id?: string
+          status?: string
+          stripe_payment_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_bookings_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "session_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_bookings_session_type_id_fkey"
+            columns: ["session_type_id"]
+            isOneToOne: false
+            referencedRelation: "session_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_packages: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          order_index: number
+          price_eur: number
+          session_count: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          order_index?: number
+          price_eur: number
+          session_count?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          order_index?: number
+          price_eur?: number
+          session_count?: number
+        }
+        Relationships: []
+      }
+      session_types: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          order_index: number
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          order_index?: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          order_index?: number
+        }
+        Relationships: []
+      }
       shc_transactions: {
         Row: {
           amount: number
