@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.create-meditation-checkout]
 verify_jwt = false
+
+[functions.create-stargate-checkout]
+verify_jwt = false
