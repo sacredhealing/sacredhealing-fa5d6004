@@ -6,6 +6,9 @@ verify_jwt = true
 [functions.create-meditation-creation-checkout]
 verify_jwt = true
 
+[functions.create-wealth-meditation-checkout]
+verify_jwt = true
+
 [functions.shc-transfer]
 verify_jwt = false
 
