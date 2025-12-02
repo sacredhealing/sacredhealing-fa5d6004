@@ -63,19 +63,28 @@ export const usePhantomWallet = () => {
       // Save to database
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { error } = await supabase
+        // First check if wallet already exists
+        const { data: existingWallet } = await supabase
           .from('user_wallets')
-          .upsert({
-            user_id: user.id,
-            wallet_address: address,
-            wallet_type: 'phantom',
-            is_primary: true
-          }, {
-            onConflict: 'user_id,wallet_address'
-          });
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('wallet_address', address)
+          .single();
 
-        if (error) {
-          console.error('Error saving wallet:', error);
+        if (!existingWallet) {
+          // Insert new wallet
+          const { error } = await supabase
+            .from('user_wallets')
+            .insert({
+              user_id: user.id,
+              wallet_address: address,
+              wallet_type: 'phantom',
+              is_primary: true
+            });
+
+          if (error) {
+            console.error('Error saving wallet:', error);
+          }
         }
       }
 

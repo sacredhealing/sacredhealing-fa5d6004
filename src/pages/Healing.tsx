@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Sparkles, Play, Pause, Lock, Download, Heart, Clock, Music, CheckCircle, Star } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Sparkles, Play, Pause, Lock, Download, Heart, Clock, Music, CheckCircle, Star, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
@@ -189,6 +190,27 @@ const Healing: React.FC = () => {
           {getContent('healing_main_subtitle', 'Begin your transformative journey')}
         </p>
       </div>
+
+      {/* Private Sessions CTA */}
+      <Card className="p-6 bg-gradient-to-r from-accent/20 via-primary/20 to-secondary/20 border-accent/30">
+        <div className="flex flex-col md:flex-row items-center gap-4">
+          <div className="w-16 h-16 rounded-full bg-accent/30 flex items-center justify-center shrink-0">
+            <Calendar className="w-8 h-8 text-accent" />
+          </div>
+          <div className="flex-1 text-center md:text-left">
+            <h3 className="text-xl font-heading font-bold text-foreground">Book a Private Session</h3>
+            <p className="text-muted-foreground text-sm mt-1">
+              1-on-1 transformative sessions with Adam or Laila. Yoga, voice healing, trauma release & more.
+            </p>
+          </div>
+          <Link to="/private-sessions">
+            <Button variant="gold" className="shrink-0">
+              <Calendar className="w-4 h-4 mr-2" />
+              Book Session
+            </Button>
+          </Link>
+        </div>
+      </Card>
 
       {/* Healing Description Section */}
       <Card className="p-6 bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/20">
