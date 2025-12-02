@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -249,7 +248,7 @@ const CustomMeditationCreation: React.FC = () => {
 
       {/* Booking Dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-heading">Create Your Custom Meditation</DialogTitle>
             <DialogDescription>
@@ -257,8 +256,7 @@ const CustomMeditationCreation: React.FC = () => {
             </DialogDescription>
           </DialogHeader>
 
-          <ScrollArea className="flex-1 pr-4">
-            <div className="space-y-6 mt-4">
+          <div className="space-y-6 mt-4">
               {/* Package Selection */}
               <div className="space-y-3">
                 <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
@@ -468,7 +466,6 @@ const CustomMeditationCreation: React.FC = () => {
                 )}
               </div>
             </div>
-          </ScrollArea>
         </DialogContent>
       </Dialog>
     </>
