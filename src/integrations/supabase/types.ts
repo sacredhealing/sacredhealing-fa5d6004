@@ -371,6 +371,45 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_meditation_bookings: {
+        Row: {
+          amount_paid: number
+          contact_email: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          package_type: string
+          status: string
+          stripe_payment_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_paid: number
+          contact_email?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          package_type: string
+          status?: string
+          stripe_payment_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_paid?: number
+          contact_email?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          package_type?: string
+          status?: string
+          stripe_payment_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       healing_audio: {
         Row: {
           audio_url: string

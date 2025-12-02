@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Play, Clock, Sparkles, Leaf, Moon, Sun, Heart, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import CustomMeditationBooking from '@/components/meditation/CustomMeditationBooking';
+import { toast } from 'sonner';
 
 const categories = [
   { id: 'all', label: 'All', icon: Sparkles },
@@ -24,10 +27,23 @@ const meditations = [
 
 const Meditations: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState('all');
+  const [searchParams] = useSearchParams();
 
   const filteredMeditations = activeCategory === 'all' 
     ? meditations 
     : meditations.filter(m => m.category === activeCategory);
+
+  // Handle payment success/cancel
+  useEffect(() => {
+    const success = searchParams.get('success');
+    const cancelled = searchParams.get('cancelled');
+    
+    if (success === 'true') {
+      toast.success('Payment successful! Adam will begin channeling your meditation.');
+    } else if (cancelled === 'true') {
+      toast.info('Payment was cancelled');
+    }
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen px-4 pt-6">
@@ -36,6 +52,11 @@ const Meditations: React.FC = () => {
         <h1 className="text-3xl font-heading font-bold text-foreground">Meditations</h1>
         <p className="text-muted-foreground mt-1">Find your inner peace</p>
       </header>
+
+      {/* Custom Channeled Meditation Booking */}
+      <div className="mb-8">
+        <CustomMeditationBooking />
+      </div>
 
       {/* Categories */}
       <div className="flex gap-2 overflow-x-auto pb-4 mb-6 scrollbar-hide animate-slide-up">
