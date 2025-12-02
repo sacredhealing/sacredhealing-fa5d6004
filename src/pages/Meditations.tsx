@@ -4,6 +4,7 @@ import { Play, Clock, Sparkles, Leaf, Moon, Sun, Heart, Brain } from 'lucide-rea
 import { Button } from '@/components/ui/button';
 import CustomMeditationBooking from '@/components/meditation/CustomMeditationBooking';
 import CustomMeditationCreation from '@/components/meditation/CustomMeditationCreation';
+import WealthMeditationService from '@/components/meditation/WealthMeditationService';
 import { toast } from 'sonner';
 
 const categories = [
@@ -37,10 +38,13 @@ const Meditations: React.FC = () => {
   // Handle payment success/cancel
   useEffect(() => {
     const success = searchParams.get('success');
+    const wealthSuccess = searchParams.get('wealth_success');
     const cancelled = searchParams.get('cancelled');
     
     if (success === 'true') {
       toast.success('Payment successful! Adam will begin channeling your meditation.');
+    } else if (wealthSuccess === 'true') {
+      toast.success('Payment successful! Check your email for the 108 affirmations. Your personalized wealth meditation will be delivered within 5-7 days.');
     } else if (cancelled === 'true') {
       toast.info('Payment was cancelled');
     }
@@ -53,6 +57,11 @@ const Meditations: React.FC = () => {
         <h1 className="text-3xl font-heading font-bold text-foreground">Meditations</h1>
         <p className="text-muted-foreground mt-1">Find your inner peace</p>
       </header>
+
+      {/* 108 Wealth Reprogramming Meditation */}
+      <div className="mb-8">
+        <WealthMeditationService />
+      </div>
 
       {/* Custom Channeled Meditation Booking */}
       <div className="mb-8">
