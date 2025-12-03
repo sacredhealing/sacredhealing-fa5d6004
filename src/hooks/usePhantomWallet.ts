@@ -26,8 +26,11 @@ const isIOS = () => {
 };
 
 const getPhantomDeepLink = () => {
-  const currentUrl = encodeURIComponent(window.location.href);
-  return `https://phantom.app/ul/browse/${currentUrl}?ref=${currentUrl}`;
+  // Use Phantom's connect deep link which properly handles the wallet connection flow
+  const currentUrl = window.location.href;
+  const encodedUrl = encodeURIComponent(currentUrl);
+  // phantom://browse opens the URL in Phantom's in-app browser
+  return `https://phantom.app/ul/browse/${encodedUrl}`;
 };
 
 const getAppStoreLink = () => {
@@ -35,6 +38,11 @@ const getAppStoreLink = () => {
     return 'https://apps.apple.com/app/phantom-solana-wallet/id1598432977';
   }
   return 'https://play.google.com/store/apps/details?id=app.phantom';
+};
+
+// Check if we're inside Phantom's in-app browser
+const isInPhantomBrowser = () => {
+  return typeof window !== 'undefined' && window.solana?.isPhantom;
 };
 
 export const usePhantomWallet = () => {
@@ -63,33 +71,33 @@ export const usePhantomWallet = () => {
   const connectWallet = useCallback(async () => {
     const provider = window.solana;
     
-    // If on mobile and Phantom not detected, use deep link
+    // If on mobile and Phantom not detected
     if (!provider?.isPhantom) {
       if (isMobile()) {
         toast({
-          title: "Opening Phantom",
-          description: "Redirecting to Phantom app..."
+          title: "Opening Phantom App",
+          description: "If Phantom doesn't open, please install it first from the app store."
         });
-        // Try deep link first, which opens Phantom if installed
-        window.location.href = getPhantomDeepLink();
         
-        // Fallback to app store after short delay if deep link doesn't work
-        setTimeout(() => {
-          toast({
-            title: "Phantom not installed?",
-            description: "Download Phantom from the app store",
-          });
-          window.open(getAppStoreLink(), '_blank');
-        }, 2500);
+        // Try deep link to open in Phantom's browser
+        const deepLink = getPhantomDeepLink();
+        
+        // Create a hidden link and click it for better mobile support
+        const link = document.createElement('a');
+        link.href = deepLink;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
         return null;
       } else {
-        // Desktop - open Phantom website
+        // Desktop - show helpful message
         toast({
-          title: "Phantom not found",
-          description: "Please install Phantom wallet extension",
+          title: "Install Phantom Wallet",
+          description: "Click the help link below for installation instructions.",
           variant: "destructive"
         });
-        window.open('https://phantom.app/', '_blank');
         return null;
       }
     }
