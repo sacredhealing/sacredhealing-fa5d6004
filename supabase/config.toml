@@ -53,3 +53,9 @@ verify_jwt = true
 
 [functions.create-transformation-checkout]
 verify_jwt = false
+
+[functions.create-music-membership-checkout]
+verify_jwt = true
+
+[functions.check-music-membership]
+verify_jwt = true
