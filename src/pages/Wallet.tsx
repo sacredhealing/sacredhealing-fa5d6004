@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Sparkles, ArrowUpRight, ArrowDownLeft, Gift, Clock, CheckCircle, Calendar, Play, Users, Crown, Wallet as WalletIcon, Link } from 'lucide-react';
+import { Sparkles, ArrowUpRight, ArrowDownLeft, Gift, Clock, CheckCircle, Calendar, Play, Users, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePhantomWallet } from '@/hooks/usePhantomWallet';
 import { useSHCBalance } from '@/hooks/useSHCBalance';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
+import WalletConnectCard from '@/components/wallet/WalletConnectCard';
 
 const rewards = [
   { id: 1, title: 'Daily Login - Day 7', reward: 20, icon: Calendar, completed: false, available: true },
@@ -16,7 +17,7 @@ const rewards = [
 
 const Wallet: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'rewards' | 'history'>('rewards');
-  const { walletAddress, isConnecting, connectWallet, disconnectWallet } = usePhantomWallet();
+  const { walletAddress } = usePhantomWallet();
   const { balance, transactions, isLoading, withdrawSHC } = useSHCBalance();
   const [isWithdrawing, setIsWithdrawing] = useState(false);
 
@@ -36,38 +37,7 @@ const Wallet: React.FC = () => {
       </header>
 
       {/* Wallet Connection */}
-      {!walletAddress ? (
-        <div className="bg-muted/30 rounded-xl p-4 mb-4 border border-border/30 animate-slide-up">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <WalletIcon className="text-primary" size={20} />
-              <span className="text-sm text-muted-foreground">Connect Phantom to withdraw SHC</span>
-            </div>
-            <Button 
-              variant="spiritual" 
-              size="sm" 
-              onClick={connectWallet}
-              disabled={isConnecting}
-            >
-              {isConnecting ? 'Connecting...' : 'Connect'}
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <div className="bg-secondary/10 rounded-xl p-4 mb-4 border border-secondary/30 animate-slide-up">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Link className="text-secondary" size={16} />
-              <span className="text-sm text-foreground">
-                {walletAddress.slice(0, 4)}...{walletAddress.slice(-4)}
-              </span>
-            </div>
-            <Button variant="ghost" size="sm" onClick={disconnectWallet}>
-              Disconnect
-            </Button>
-          </div>
-        </div>
-      )}
+      <WalletConnectCard />
 
       {/* Balance Card */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-spiritual p-6 mb-6 animate-slide-up">
