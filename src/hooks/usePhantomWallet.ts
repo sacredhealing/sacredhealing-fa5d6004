@@ -17,6 +17,26 @@ declare global {
   }
 }
 
+const isMobile = () => {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+};
+
+const isIOS = () => {
+  return /iPhone|iPad|iPod/i.test(navigator.userAgent);
+};
+
+const getPhantomDeepLink = () => {
+  const currentUrl = encodeURIComponent(window.location.href);
+  return `https://phantom.app/ul/browse/${currentUrl}?ref=${currentUrl}`;
+};
+
+const getAppStoreLink = () => {
+  if (isIOS()) {
+    return 'https://apps.apple.com/app/phantom-solana-wallet/id1598432977';
+  }
+  return 'https://play.google.com/store/apps/details?id=app.phantom';
+};
+
 export const usePhantomWallet = () => {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -43,14 +63,35 @@ export const usePhantomWallet = () => {
   const connectWallet = useCallback(async () => {
     const provider = window.solana;
     
+    // If on mobile and Phantom not detected, use deep link
     if (!provider?.isPhantom) {
-      toast({
-        title: "Phantom not found",
-        description: "Please install Phantom wallet extension",
-        variant: "destructive"
-      });
-      window.open('https://phantom.app/', '_blank');
-      return null;
+      if (isMobile()) {
+        toast({
+          title: "Opening Phantom",
+          description: "Redirecting to Phantom app..."
+        });
+        // Try deep link first, which opens Phantom if installed
+        window.location.href = getPhantomDeepLink();
+        
+        // Fallback to app store after short delay if deep link doesn't work
+        setTimeout(() => {
+          toast({
+            title: "Phantom not installed?",
+            description: "Download Phantom from the app store",
+          });
+          window.open(getAppStoreLink(), '_blank');
+        }, 2500);
+        return null;
+      } else {
+        // Desktop - open Phantom website
+        toast({
+          title: "Phantom not found",
+          description: "Please install Phantom wallet extension",
+          variant: "destructive"
+        });
+        window.open('https://phantom.app/', '_blank');
+        return null;
+      }
     }
 
     setIsConnecting(true);
