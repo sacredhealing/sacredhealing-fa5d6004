@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSHCBalance } from '@/hooks/useSHCBalance';
 import { useSearchParams } from 'react-router-dom';
 import MasteringService from '@/components/music/MasteringService';
+import MusicMembershipBanner from '@/components/music/MusicMembershipBanner';
 
 interface Track {
   id: string;
@@ -66,6 +67,22 @@ const Music: React.FC = () => {
       toast({
         title: "Order cancelled",
         description: "Your mastering order was cancelled. Your files have been saved if you want to try again."
+      });
+    }
+
+    // Handle membership success
+    const membershipSuccess = searchParams.get('membership_success');
+    const membershipCancelled = searchParams.get('membership_cancelled');
+    
+    if (membershipSuccess) {
+      toast({
+        title: "Welcome to Music Membership! 🎵",
+        description: `Your ${membershipSuccess} subscription is now active. Enjoy unlimited music and 33 SHC per stream!`
+      });
+    } else if (membershipCancelled) {
+      toast({
+        title: "Subscription cancelled",
+        description: "Your membership checkout was cancelled."
       });
     }
 
@@ -238,6 +255,9 @@ const Music: React.FC = () => {
         </h1>
         <p className="text-muted-foreground mt-1">Healing beats & spiritual sounds</p>
       </header>
+
+      {/* Music Membership */}
+      <MusicMembershipBanner />
 
       {/* Mastering Service */}
       <MasteringService />

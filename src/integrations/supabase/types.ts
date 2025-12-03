@@ -964,6 +964,42 @@ export type Database = {
         }
         Relationships: []
       }
+      music_memberships: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          plan_type: string
+          starts_at: string
+          status: string
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          plan_type: string
+          starts_at?: string
+          status?: string
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          plan_type?: string
+          starts_at?: string
+          status?: string
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       music_purchases: {
         Row: {
           amount_paid: number | null
