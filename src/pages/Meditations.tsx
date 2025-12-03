@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import CustomMeditationBooking from '@/components/meditation/CustomMeditationBooking';
 import CustomMeditationCreation from '@/components/meditation/CustomMeditationCreation';
 import WealthMeditationService from '@/components/meditation/WealthMeditationService';
+import MeditationMembershipBanner from '@/components/meditation/MeditationMembershipBanner';
 import { toast } from 'sonner';
 
 const categories = [
@@ -40,12 +41,16 @@ const Meditations: React.FC = () => {
     const success = searchParams.get('success');
     const wealthSuccess = searchParams.get('wealth_success');
     const cancelled = searchParams.get('cancelled');
+    const membershipSuccess = searchParams.get('membership_success');
+    const membershipCancelled = searchParams.get('membership_cancelled');
     
     if (success === 'true') {
       toast.success('Payment successful! Adam will begin channeling your meditation.');
     } else if (wealthSuccess === 'true') {
       toast.success('Payment successful! Check your email for the 108 affirmations. Your personalized wealth meditation will be delivered within 5-7 days.');
-    } else if (cancelled === 'true') {
+    } else if (membershipSuccess) {
+      toast.success(`Welcome to Meditation Membership! 🧘 Your ${membershipSuccess} subscription is now active. Enjoy unlimited meditations and 33 SHC per session!`);
+    } else if (cancelled === 'true' || membershipCancelled === 'true') {
       toast.info('Payment was cancelled');
     }
   }, [searchParams]);
@@ -57,6 +62,9 @@ const Meditations: React.FC = () => {
         <h1 className="text-3xl font-heading font-bold text-foreground">Meditations</h1>
         <p className="text-muted-foreground mt-1">Find your inner peace</p>
       </header>
+
+      {/* Meditation Membership */}
+      <MeditationMembershipBanner />
 
       {/* 108 Wealth Reprogramming Meditation */}
       <div className="mb-8">
