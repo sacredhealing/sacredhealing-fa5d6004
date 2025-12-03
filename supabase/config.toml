@@ -59,3 +59,9 @@ verify_jwt = true
 
 [functions.check-music-membership]
 verify_jwt = true
+
+[functions.create-meditation-membership-checkout]
+verify_jwt = true
+
+[functions.check-meditation-membership]
+verify_jwt = true
