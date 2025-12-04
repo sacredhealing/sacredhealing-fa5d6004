@@ -6,9 +6,10 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useSHCBalance } from '@/hooks/useSHCBalance';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { useTranslatedItems } from '@/hooks/useTranslateContent';
 import MasteringService from '@/components/music/MasteringService';
 import MusicMembershipBanner from '@/components/music/MusicMembershipBanner';
-
 interface Track {
   id: string;
   title: string;
@@ -28,6 +29,7 @@ interface Track {
 const Music: React.FC = () => {
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const { balance, refreshBalance } = useSHCBalance();
   
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -235,7 +237,10 @@ const Music: React.FC = () => {
 
   const ownedTracks = tracks.filter(t => purchasedIds.includes(t.id));
   const likedTracks = tracks.filter(t => likedIds.includes(t.id));
-  const displayTracks = activeTab === 'all' ? tracks : activeTab === 'owned' ? ownedTracks : likedTracks;
+  const baseDisplayTracks = activeTab === 'all' ? tracks : activeTab === 'owned' ? ownedTracks : likedTracks;
+  
+  // Translate track titles and descriptions
+  const { items: displayTracks } = useTranslatedItems(baseDisplayTracks, ['title', 'description']);
 
   if (isLoading) {
     return (
@@ -251,9 +256,9 @@ const Music: React.FC = () => {
       <header className="mb-6 animate-fade-in">
         <h1 className="text-3xl font-heading font-bold text-foreground flex items-center gap-2">
           <Music2 className="text-primary" />
-          Sacred Music
+          {t('music.title')}
         </h1>
-        <p className="text-muted-foreground mt-1">Healing beats & spiritual sounds</p>
+        <p className="text-muted-foreground mt-1">{t('music.subtitle')}</p>
       </header>
 
       {/* Music Membership */}
@@ -266,15 +271,15 @@ const Music: React.FC = () => {
       <div className="flex gap-4 mb-6 animate-slide-up">
         <div className="flex-1 bg-muted/30 rounded-xl p-4 border border-border/30 text-center">
           <p className="text-2xl font-heading font-bold text-primary">{ownedTracks.length}</p>
-          <p className="text-xs text-muted-foreground">Owned</p>
+          <p className="text-xs text-muted-foreground">{t('music.owned')}</p>
         </div>
         <div className="flex-1 bg-muted/30 rounded-xl p-4 border border-border/30 text-center">
           <p className="text-2xl font-heading font-bold text-secondary">{balance?.balance.toLocaleString() ?? '0'}</p>
-          <p className="text-xs text-muted-foreground">SHC</p>
+          <p className="text-xs text-muted-foreground">{t('wallet.balance')}</p>
         </div>
         <div className="flex-1 bg-muted/30 rounded-xl p-4 border border-border/30 text-center">
           <p className="text-2xl font-heading font-bold text-accent">{tracks.length}</p>
-          <p className="text-xs text-muted-foreground">Tracks</p>
+          <p className="text-xs text-muted-foreground">{t('music.tracks')}</p>
         </div>
       </div>
 
@@ -289,7 +294,7 @@ const Music: React.FC = () => {
           }`}
         >
           <Music2 size={16} />
-          All
+          {t('meditations.categories.all')}
         </button>
         <button
           onClick={() => setActiveTab('owned')}
@@ -300,7 +305,7 @@ const Music: React.FC = () => {
           }`}
         >
           <ListMusic size={16} />
-          My Music
+          {t('music.myMusic')}
         </button>
         <button
           onClick={() => setActiveTab('liked')}
@@ -311,7 +316,7 @@ const Music: React.FC = () => {
           }`}
         >
           <Heart size={16} />
-          Liked
+          {t('music.liked')}
         </button>
       </div>
 
@@ -430,10 +435,10 @@ const Music: React.FC = () => {
             <Music2 className="mx-auto text-muted-foreground mb-3" size={48} />
             <p className="text-muted-foreground">
               {activeTab === 'owned' 
-                ? "You haven't purchased any tracks yet" 
+                ? t('music.noOwnedTracks')
                 : activeTab === 'liked'
-                ? "No liked tracks yet"
-                : "No tracks available yet"}
+                ? t('music.noLikedTracks')
+                : t('music.noTracks')}
             </p>
           </div>
         )}

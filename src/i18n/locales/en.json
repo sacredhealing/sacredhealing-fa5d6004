@@ -182,8 +182,8 @@
     "channeledDesc": "Personalized channeled experience with integrated music composition"
   },
   "music": {
-    "title": "Music Store",
-    "subtitle": "Original healing frequencies",
+    "title": "Sacred Music",
+    "subtitle": "Healing beats & spiritual sounds",
     "owned": "Owned",
     "buy": "Buy",
     "preview": "Preview",
@@ -192,7 +192,20 @@
     "masteringService": "Mastering Service",
     "masteringDesc": "Professional audio mastering for release-quality sound",
     "perTrack": "per track",
-    "tracks": "tracks"
+    "tracks": "Tracks",
+    "myMusic": "My Music",
+    "liked": "Liked",
+    "noOwnedTracks": "You haven't purchased any tracks yet",
+    "noLikedTracks": "No liked tracks yet",
+    "fullTrack": "Full Track",
+    "previewTrack": "30s Preview",
+    "purchaseComplete": "Purchase complete!",
+    "trackAvailable": "Your track is now available to stream and download",
+    "previewEnded": "Preview ended",
+    "purchaseToListen": "Purchase this track to listen to the full version!",
+    "purchaseFailed": "Purchase failed",
+    "payWith": "Pay with",
+    "orPayWith": "Or pay with"
   },
   "wallet": {
     "title": "Wallet",
