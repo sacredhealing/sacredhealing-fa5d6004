@@ -11,42 +11,42 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-const frequencies = [
-  { id: '432hz', label: '432 Hz', description: 'Universal healing frequency' },
-  { id: '528hz', label: '528 Hz', description: 'DNA repair & transformation' },
-  { id: '639hz', label: '639 Hz', description: 'Connection & relationships' },
-  { id: '741hz', label: '741 Hz', description: 'Intuition & awakening' },
-];
-
-const soundTypes = [
-  { id: 'indian', label: 'Indian', description: 'Traditional spiritual sounds' },
-  { id: 'shamanic', label: 'Shamanic', description: 'Primal earth rhythms' },
-  { id: 'cosmic', label: 'Cosmic', description: 'Ethereal space ambience' },
-  { id: 'relaxed', label: 'Relaxed', description: 'Gentle & soothing' },
-  { id: 'nature', label: 'Nature', description: 'Natural soundscapes' },
-];
-
-const packages = [
-  {
-    id: 'single',
-    name: 'Single Meditation',
-    price: 97,
-    description: '1 Custom Meditation',
-    popular: false,
-  },
-  {
-    id: 'triple',
-    name: '3 Meditation Pack',
-    price: 197,
-    originalPrice: 291,
-    description: '3 Custom Meditations',
-    popular: true,
-    savings: '€94',
-  },
-];
-
 const CustomMeditationCreation: React.FC = () => {
   const { t } = useTranslation();
+
+  const frequencies = [
+    { id: '432hz', label: '432 Hz', description: t('meditationCreation.freq432') },
+    { id: '528hz', label: '528 Hz', description: t('meditationCreation.freq528') },
+    { id: '639hz', label: '639 Hz', description: t('meditationCreation.freq639') },
+    { id: '741hz', label: '741 Hz', description: t('meditationCreation.freq741') },
+  ];
+
+  const soundTypes = [
+    { id: 'indian', label: t('meditationCreation.soundIndian'), description: t('meditationCreation.soundIndianDesc') },
+    { id: 'shamanic', label: t('meditationCreation.soundShamanic'), description: t('meditationCreation.soundShamanicDesc') },
+    { id: 'cosmic', label: t('meditationCreation.soundCosmic'), description: t('meditationCreation.soundCosmicDesc') },
+    { id: 'relaxed', label: t('meditationCreation.soundRelaxed'), description: t('meditationCreation.soundRelaxedDesc') },
+    { id: 'nature', label: t('meditationCreation.soundNature'), description: t('meditationCreation.soundNatureDesc') },
+  ];
+
+  const packages = [
+    {
+      id: 'single',
+      name: t('meditationCreation.singlePackage'),
+      price: 97,
+      description: t('meditationCreation.singleDesc'),
+      popular: false,
+    },
+    {
+      id: 'triple',
+      name: t('meditationCreation.triplePackage'),
+      price: 197,
+      originalPrice: 291,
+      description: t('meditationCreation.tripleDesc'),
+      popular: true,
+      savings: '€94',
+    },
+  ];
   const { user, isAuthenticated } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<'single' | 'triple' | null>(null);
@@ -193,45 +193,43 @@ const CustomMeditationCreation: React.FC = () => {
         
         <div className="relative">
           <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 mb-3">
-            🎵 For Creators & Healers
+            🎵 {t('meditationCreation.badge')}
           </Badge>
           
           <h3 className="text-2xl font-heading font-bold text-foreground mb-2">
-            Custom Meditation Creation
+            {t('meditationCreation.title')}
           </h3>
           
           <p className="text-foreground/80 mb-4 leading-relaxed">
-            Influencers, healers, mediums — get your own customized meditation for YouTube, Spotify, 
-            workshops & more. Choose your frequency, sound style, and I create it for you. 
-            All meditations are mastered in high quality, ready for release.
+            {t('meditationCreation.description')}
           </p>
 
           <div className="grid grid-cols-1 gap-2 mb-5">
             <div className="flex items-center gap-2 text-sm text-foreground/70">
               <Radio size={16} className="text-purple-400" />
-              <span>Choose frequency: 432hz, 528hz, 639hz, 741hz</span>
+              <span>{t('meditationCreation.feature1')}</span>
             </div>
             <div className="flex items-center gap-2 text-sm text-foreground/70">
               <Music size={16} className="text-amber-400" />
-              <span>Sound styles: Indian, Shamanic, Cosmic & more</span>
+              <span>{t('meditationCreation.feature2')}</span>
             </div>
             <div className="flex items-center gap-2 text-sm text-foreground/70">
               <Mic size={16} className="text-purple-400" />
-              <span>Voice addon available (+€37)</span>
+              <span>{t('meditationCreation.feature3')}</span>
             </div>
           </div>
 
           <div className="flex items-center gap-4 mb-4">
             <div>
               <span className="text-3xl font-heading font-bold text-gradient-gold">€97</span>
-              <span className="text-muted-foreground text-sm ml-2">single</span>
+              <span className="text-muted-foreground text-sm ml-2">{t('meditationCreation.single')}</span>
             </div>
-            <div className="text-muted-foreground">or</div>
+            <div className="text-muted-foreground">{t('common.or')}</div>
             <div>
               <span className="text-3xl font-heading font-bold text-gradient-gold">€197</span>
-              <span className="text-muted-foreground text-sm ml-2">for 3</span>
+              <span className="text-muted-foreground text-sm ml-2">{t('meditationCreation.for3')}</span>
               <Badge variant="secondary" className="ml-2 bg-green-500/20 text-green-400 border-green-500/30">
-                Save €94
+                {t('meditationCreation.save94')}
               </Badge>
             </div>
           </div>
@@ -241,7 +239,7 @@ const CustomMeditationCreation: React.FC = () => {
             className="bg-gradient-to-r from-amber-500 to-purple-600 hover:from-amber-600 hover:to-purple-700 text-white font-semibold"
           >
             <Sparkles size={18} className="mr-2" />
-            Create My Meditation
+            {t('meditationCreation.createButton')}
           </Button>
         </div>
       </div>
@@ -250,9 +248,9 @@ const CustomMeditationCreation: React.FC = () => {
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl font-heading">Create Your Custom Meditation</DialogTitle>
+            <DialogTitle className="text-xl font-heading">{t('meditationCreation.dialogTitle')}</DialogTitle>
             <DialogDescription>
-              Professional meditation creation for your brand
+              {t('meditationCreation.dialogDescription')}
             </DialogDescription>
           </DialogHeader>
 
@@ -260,7 +258,7 @@ const CustomMeditationCreation: React.FC = () => {
               {/* Package Selection */}
               <div className="space-y-3">
                 <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                  Select Package
+                  {t('meditationCreation.selectPackage')}
                 </h4>
                 <div className="grid gap-3">
                   {packages.map((pkg) => (
@@ -283,8 +281,8 @@ const CustomMeditationCreation: React.FC = () => {
                           <div>
                             <div className="flex items-center gap-2">
                               <span className="font-semibold">{pkg.name}</span>
-                              {pkg.popular && (
-                                <Badge className="bg-amber-500/20 text-amber-400 text-xs">Best Value</Badge>
+                                {pkg.popular && (
+                                <Badge className="bg-amber-500/20 text-amber-400 text-xs">{t('meditationCreation.bestValue')}</Badge>
                               )}
                             </div>
                             <p className="text-sm text-muted-foreground">{pkg.description}</p>
@@ -305,7 +303,7 @@ const CustomMeditationCreation: React.FC = () => {
               {/* Frequency Selection */}
               <div className="space-y-3">
                 <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                  Select Frequency
+                  {t('meditationCreation.selectFrequency')}
                 </h4>
                 <div className="grid grid-cols-2 gap-2">
                   {frequencies.map((freq) => (
@@ -328,7 +326,7 @@ const CustomMeditationCreation: React.FC = () => {
               {/* Sound Type Selection */}
               <div className="space-y-3">
                 <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                  Select Sound Style
+                  {t('meditationCreation.selectSoundStyle')}
                 </h4>
                 <div className="flex flex-wrap gap-2">
                   {soundTypes.map((sound) => (
@@ -352,10 +350,10 @@ const CustomMeditationCreation: React.FC = () => {
               {/* Custom Description */}
               <div className="space-y-2">
                 <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                  Custom Details (Optional)
+                  {t('meditationCreation.customDetails')}
                 </h4>
                 <Textarea
-                  placeholder="Describe exactly what you want the meditation sound to be... any specific instruments, moods, themes, or intentions..."
+                  placeholder={t('meditationCreation.customPlaceholder')}
                   value={customDescription}
                   onChange={(e) => setCustomDescription(e.target.value)}
                   rows={3}
@@ -373,10 +371,10 @@ const CustomMeditationCreation: React.FC = () => {
                     />
                     <div>
                       <label htmlFor="voiceAddon" className="font-semibold cursor-pointer">
-                        Add Your Voice (+€37)
+                        {t('meditationCreation.addVoice')}
                       </label>
                       <p className="text-sm text-muted-foreground">
-                        I'll professionally mix your voice into the meditation
+                        {t('meditationCreation.voiceMixDesc')}
                       </p>
                     </div>
                   </div>
@@ -385,12 +383,12 @@ const CustomMeditationCreation: React.FC = () => {
                 {includeVoiceAddon && (
                   <div className="mt-3">
                     <p className="text-sm text-muted-foreground mb-2">
-                      Don't worry about audio quality — I can make a phone recording sound professional!
+                      {t('meditationCreation.voiceQualityNote')}
                     </p>
                     <label className="flex items-center gap-2 p-3 rounded-lg border border-dashed border-border hover:border-primary/50 cursor-pointer transition-all">
                       <Upload size={20} className="text-muted-foreground" />
                       <span className="text-sm">
-                        {voiceFile ? voiceFile.name : 'Upload your voice recording'}
+                        {voiceFile ? voiceFile.name : t('meditationCreation.uploadVoice')}
                       </span>
                       <input
                         type="file"
@@ -408,15 +406,14 @@ const CustomMeditationCreation: React.FC = () => {
                 <div className="flex items-start gap-3">
                   <FileText size={20} className="text-amber-500 mt-0.5" />
                   <div>
-                    <h4 className="font-semibold text-sm">Ownership Agreement</h4>
+                    <h4 className="font-semibold text-sm">{t('meditationCreation.ownershipTitle')}</h4>
                     <p className="text-sm text-muted-foreground mt-1">
-                      By purchasing, you agree to a 50/50 ownership split of the created meditation. 
-                      This means:
+                      {t('meditationCreation.ownershipDesc')}
                     </p>
                     <ul className="text-sm text-muted-foreground mt-2 space-y-1 list-disc list-inside">
-                      <li>You own 50% of all streaming royalties</li>
-                      <li>Sacred Healing Music (Adam Gil Lazaro) owns 50%</li>
-                      <li>When uploading to DistroKid or any other distributor, you must add <strong>"Sacred Healing Music Adam Gil Lazaro"</strong> as a collaborator/co-owner</li>
+                      <li>{t('meditationCreation.ownership1')}</li>
+                      <li>{t('meditationCreation.ownership2')}</li>
+                      <li>{t('meditationCreation.ownership3')}</li>
                     </ul>
                   </div>
                 </div>
