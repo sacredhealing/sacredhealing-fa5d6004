@@ -704,5 +704,33 @@
     "step1": "Select your package and upload your audio file(s)",
     "step2": "Complete the secure payment via Stripe",
     "step3": "Receive your professionally mastered track(s) via email within 3-5 business days"
+  },
+  "customMeditation": {
+    "badge": "Personalized Experience",
+    "title": "Custom Channeled Meditation",
+    "description": "Experience a deeply personal meditation channeled by Adam, featuring your own 432hz healing music, energy field scanning, soul readings, and spiritual guidance.",
+    "feature1": "Energy field scanning & reading",
+    "feature2": "Healing & life guidance",
+    "feature3": "Soul reading & past life insights",
+    "feature4": "Spirit connection & messages",
+    "feature5": "Custom 432hz music composition",
+    "single": "single",
+    "for2": "for 2",
+    "save43": "Save €43",
+    "bookButton": "Book Your Meditation",
+    "dialogTitle": "Book Your Custom Meditation",
+    "dialogDescription": "Adam will channel a personalized meditation just for you",
+    "whatsIncluded": "What's Included",
+    "selectPackage": "Select Package",
+    "singlePackage": "Single Meditation",
+    "singleDesc": "1 Custom Channeled Meditation",
+    "doublePackage": "Double Pack",
+    "doubleDesc": "2 Custom Channeled Meditations",
+    "bestValue": "Best Value",
+    "specialRequests": "Special Requests (Optional)",
+    "notesPlaceholder": "Share any specific intentions, areas of focus, or questions you'd like addressed in your meditation...",
+    "processing": "Processing...",
+    "continuePayment": "Continue to Payment",
+    "signInRequired": "Please sign in to book your meditation"
   }
 }

@@ -647,5 +647,33 @@
     "step1": "Välj ditt paket och ladda upp dina ljudfiler",
     "step2": "Slutför den säkra betalningen via Stripe",
     "step3": "Få dina professionellt mastrade spår via e-post inom 3-5 arbetsdagar"
+  },
+  "customMeditation": {
+    "badge": "Personlig upplevelse",
+    "title": "Anpassad kanaliserad meditation",
+    "description": "Upplev en djupt personlig meditation kanaliserad av Adam, med din egen 432hz läkande musik, energifältsskanning, själsläsningar och andlig vägledning.",
+    "feature1": "Energifältsskanning & läsning",
+    "feature2": "Läkning & livsvägledning",
+    "feature3": "Själsläsning & tidigare liv insikter",
+    "feature4": "Andekontakt & meddelanden",
+    "feature5": "Anpassad 432hz musikkomposition",
+    "single": "singel",
+    "for2": "för 2",
+    "save43": "Spara €43",
+    "bookButton": "Boka din meditation",
+    "dialogTitle": "Boka din anpassade meditation",
+    "dialogDescription": "Adam kommer att kanalisera en personlig meditation just för dig",
+    "whatsIncluded": "Vad ingår",
+    "selectPackage": "Välj paket",
+    "singlePackage": "Enkel meditation",
+    "singleDesc": "1 anpassad kanaliserad meditation",
+    "doublePackage": "Dubbelpaket",
+    "doubleDesc": "2 anpassade kanaliserade meditationer",
+    "bestValue": "Bästa värde",
+    "specialRequests": "Särskilda önskemål (valfritt)",
+    "notesPlaceholder": "Dela eventuella specifika intentioner, fokusområden eller frågor du vill ha besvarade i din meditation...",
+    "processing": "Bearbetar...",
+    "continuePayment": "Fortsätt till betalning",
+    "signInRequired": "Logga in för att boka din meditation"
   }
 }

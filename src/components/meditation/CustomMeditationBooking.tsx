@@ -21,29 +21,29 @@ const CustomMeditationBooking: React.FC = () => {
   const packages = [
     {
       id: 'single',
-      name: 'Single Meditation',
+      name: t('customMeditation.singlePackage'),
       price: 70,
       originalPrice: null,
-      description: '1 Custom Channeled Meditation',
+      description: t('customMeditation.singleDesc'),
       popular: false,
     },
     {
       id: 'double',
-      name: 'Double Pack',
+      name: t('customMeditation.doublePackage'),
       price: 97,
       originalPrice: 140,
-      description: '2 Custom Channeled Meditations',
+      description: t('customMeditation.doubleDesc'),
       popular: true,
       savings: '€43',
     },
   ];
 
   const features = [
-    { icon: Eye, text: 'Energy field scanning & reading' },
-    { icon: Heart, text: 'Healing & life guidance' },
-    { icon: Sparkles, text: 'Soul reading & past life insights' },
-    { icon: Star, text: 'Spirit connection & messages' },
-    { icon: Music, text: 'Custom 432hz music composition' },
+    { icon: Eye, text: t('customMeditation.feature1') },
+    { icon: Heart, text: t('customMeditation.feature2') },
+    { icon: Sparkles, text: t('customMeditation.feature3') },
+    { icon: Star, text: t('customMeditation.feature4') },
+    { icon: Music, text: t('customMeditation.feature5') },
   ];
 
   const handleBooking = async () => {
@@ -94,16 +94,15 @@ const CustomMeditationBooking: React.FC = () => {
         
         <div className="relative">
           <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 mb-3">
-            ✨ Personalized Experience
+            ✨ {t('customMeditation.badge')}
           </Badge>
           
           <h3 className="text-2xl font-heading font-bold text-foreground mb-2">
-            Custom Channeled Meditation
+            {t('customMeditation.title')}
           </h3>
           
           <p className="text-foreground/80 mb-4 leading-relaxed">
-            Experience a deeply personal meditation channeled by Adam, featuring your own 
-            432hz healing music, energy field scanning, soul readings, and spiritual guidance.
+            {t('customMeditation.description')}
           </p>
 
           <div className="grid grid-cols-1 gap-2 mb-5">
@@ -118,14 +117,14 @@ const CustomMeditationBooking: React.FC = () => {
           <div className="flex items-center gap-4 mb-4">
             <div>
               <span className="text-3xl font-heading font-bold text-gradient-gold">€70</span>
-              <span className="text-muted-foreground text-sm ml-2">single</span>
+              <span className="text-muted-foreground text-sm ml-2">{t('customMeditation.single')}</span>
             </div>
-            <div className="text-muted-foreground">or</div>
+            <div className="text-muted-foreground">{t('common.or')}</div>
             <div>
               <span className="text-3xl font-heading font-bold text-gradient-gold">€97</span>
-              <span className="text-muted-foreground text-sm ml-2">for 2</span>
+              <span className="text-muted-foreground text-sm ml-2">{t('customMeditation.for2')}</span>
               <Badge variant="secondary" className="ml-2 bg-green-500/20 text-green-400 border-green-500/30">
-                Save €43
+                {t('customMeditation.save43')}
               </Badge>
             </div>
           </div>
@@ -135,7 +134,7 @@ const CustomMeditationBooking: React.FC = () => {
             className="bg-gradient-to-r from-purple-600 to-amber-500 hover:from-purple-700 hover:to-amber-600 text-white font-semibold"
           >
             <Sparkles size={18} className="mr-2" />
-            Book Your Meditation
+            {t('customMeditation.bookButton')}
           </Button>
         </div>
       </div>
@@ -144,9 +143,9 @@ const CustomMeditationBooking: React.FC = () => {
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl font-heading">Book Your Custom Meditation</DialogTitle>
+            <DialogTitle className="text-xl font-heading">{t('customMeditation.dialogTitle')}</DialogTitle>
             <DialogDescription>
-              Adam will channel a personalized meditation just for you
+              {t('customMeditation.dialogDescription')}
             </DialogDescription>
           </DialogHeader>
 
@@ -154,7 +153,7 @@ const CustomMeditationBooking: React.FC = () => {
             {/* Features */}
             <div className="space-y-3">
               <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                What's Included
+                {t('customMeditation.whatsIncluded')}
               </h4>
               {features.map((feature, index) => (
                 <div key={index} className="flex items-center gap-3 text-sm">
@@ -169,7 +168,7 @@ const CustomMeditationBooking: React.FC = () => {
             {/* Package Selection */}
             <div className="space-y-3">
               <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                Select Package
+                {t('customMeditation.selectPackage')}
               </h4>
               <div className="grid gap-3">
                 {packages.map((pkg) => (
@@ -193,7 +192,7 @@ const CustomMeditationBooking: React.FC = () => {
                           <div className="flex items-center gap-2">
                             <span className="font-semibold">{pkg.name}</span>
                             {pkg.popular && (
-                              <Badge className="bg-amber-500/20 text-amber-400 text-xs">Best Value</Badge>
+                              <Badge className="bg-amber-500/20 text-amber-400 text-xs">{t('customMeditation.bestValue')}</Badge>
                             )}
                           </div>
                           <p className="text-sm text-muted-foreground">{pkg.description}</p>
@@ -214,10 +213,10 @@ const CustomMeditationBooking: React.FC = () => {
             {/* Notes */}
             <div className="space-y-2">
               <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                Special Requests (Optional)
+                {t('customMeditation.specialRequests')}
               </h4>
               <Textarea
-                placeholder="Share any specific intentions, areas of focus, or questions you'd like addressed in your meditation..."
+                placeholder={t('customMeditation.notesPlaceholder')}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
@@ -233,19 +232,19 @@ const CustomMeditationBooking: React.FC = () => {
               {isLoading ? (
                 <>
                   <Loader2 size={18} className="mr-2 animate-spin" />
-                  Processing...
+                  {t('customMeditation.processing')}
                 </>
               ) : (
                 <>
                   <Sparkles size={18} className="mr-2" />
-                  Continue to Payment
+                  {t('customMeditation.continuePayment')}
                 </>
               )}
             </Button>
 
             {!isAuthenticated && (
               <p className="text-sm text-center text-muted-foreground">
-                Please sign in to book your meditation
+                {t('customMeditation.signInRequired')}
               </p>
             )}
           </div>
