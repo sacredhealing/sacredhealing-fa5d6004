@@ -13,6 +13,7 @@ const languages = [
   { code: 'en', name: 'English', flag: '🇬🇧' },
   { code: 'sv', name: 'Svenska', flag: '🇸🇪' },
   { code: 'es', name: 'Español', flag: '🇪🇸' },
+  { code: 'no', name: 'Norsk', flag: '🇳🇴' },
 ];
 
 export const LanguageSelector: React.FC = () => {
