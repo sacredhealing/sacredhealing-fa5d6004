@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Sparkles, Loader2, Check, Zap, Heart, DollarSign, Star, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 const WealthMeditationService: React.FC = () => {
+  const { t } = useTranslation();
   const { user, isAuthenticated } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [email, setEmail] = useState('');
@@ -16,12 +18,12 @@ const WealthMeditationService: React.FC = () => {
 
   const handlePurchase = async () => {
     if (!isAuthenticated) {
-      toast.error('Please sign in to purchase');
+      toast.error(t('wealth.signInRequired'));
       return;
     }
 
     if (!email) {
-      toast.error('Please enter your email address');
+      toast.error(t('wealth.emailRequired'));
       return;
     }
 
@@ -43,7 +45,7 @@ const WealthMeditationService: React.FC = () => {
       if (response.data?.url) {
         window.open(response.data.url, '_blank');
         setIsOpen(false);
-        toast.success('Redirecting to checkout... After payment, you will receive the 108 affirmations via email.');
+        toast.success(t('wealth.checkoutSuccess'));
       }
     } catch (error: any) {
       console.error('Purchase error:', error);
@@ -62,59 +64,59 @@ const WealthMeditationService: React.FC = () => {
         
         <div className="relative">
           <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 mb-3">
-            ✨ Wealth Activation
+            ✨ {t('wealth.badge')}
           </Badge>
           
           <h3 className="text-2xl font-heading font-bold text-foreground mb-2">
-            108 Wealth Reprogramming Meditation
+            {t('wealth.title')}
           </h3>
           
           <p className="text-foreground/80 mb-4 leading-relaxed">
-            Activate abundance. Rewire your subconscious. Step into the wealth you're meant for.
+            {t('wealth.subtitle')}
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
             <div className="space-y-2">
               <h4 className="font-semibold text-sm text-yellow-400 flex items-center gap-2">
-                <Zap size={16} /> What it does:
+                <Zap size={16} /> {t('wealth.whatItDoes')}
               </h4>
               <ul className="text-sm text-foreground/70 space-y-1">
-                <li>• Reprograms your mind for success</li>
-                <li>• Clears money blocks</li>
-                <li>• Raises vibration with 528/639 Hz</li>
-                <li>• Strengthens confidence & self-worth</li>
+                <li>• {t('wealth.benefit1')}</li>
+                <li>• {t('wealth.benefit2')}</li>
+                <li>• {t('wealth.benefit3')}</li>
+                <li>• {t('wealth.benefit4')}</li>
               </ul>
             </div>
             
             <div className="space-y-2">
               <h4 className="font-semibold text-sm text-amber-400 flex items-center gap-2">
-                <Star size={16} /> What's inside:
+                <Star size={16} /> {t('wealth.whatsInside')}
               </h4>
               <ul className="text-sm text-foreground/70 space-y-1">
-                <li>• 108 powerful money-affirmations</li>
-                <li>• Deep theta subconscious activation</li>
-                <li>• Energetic alignment + neuroprogramming</li>
-                <li>• Your voice transformed to studio-quality</li>
+                <li>• {t('wealth.inside1')}</li>
+                <li>• {t('wealth.inside2')}</li>
+                <li>• {t('wealth.inside3')}</li>
+                <li>• {t('wealth.inside4')}</li>
               </ul>
             </div>
           </div>
 
           <div className="bg-background/30 rounded-lg p-4 mb-5 border border-border/50">
             <h4 className="font-semibold text-sm text-orange-400 flex items-center gap-2 mb-2">
-              <Heart size={16} /> For you if you want to:
+              <Heart size={16} /> {t('wealth.forYouIf')}
             </h4>
             <div className="grid grid-cols-2 gap-2 text-sm text-foreground/70">
-              <span>• Attract more money & opportunities</span>
-              <span>• Break old financial patterns</span>
-              <span>• Feel calmer & more abundant</span>
-              <span>• Manifest faster with less effort</span>
+              <span>• {t('wealth.goal1')}</span>
+              <span>• {t('wealth.goal2')}</span>
+              <span>• {t('wealth.goal3')}</span>
+              <span>• {t('wealth.goal4')}</span>
             </div>
           </div>
 
           <div className="flex items-center gap-4 mb-4">
             <div>
               <span className="text-3xl font-heading font-bold text-gradient-gold">€47</span>
-              <span className="text-muted-foreground text-sm ml-2">one-time</span>
+              <span className="text-muted-foreground text-sm ml-2">{t('wealth.oneTime')}</span>
             </div>
           </div>
 
@@ -123,7 +125,7 @@ const WealthMeditationService: React.FC = () => {
             className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold"
           >
             <DollarSign size={18} className="mr-2" />
-            Activate My Wealth Codes
+            {t('wealth.activateButton')}
           </Button>
         </div>
       </div>
@@ -132,9 +134,9 @@ const WealthMeditationService: React.FC = () => {
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl font-heading">108 Wealth Reprogramming Meditation</DialogTitle>
+            <DialogTitle className="text-xl font-heading">{t('wealth.title')}</DialogTitle>
             <DialogDescription>
-              Transform your voice into a professional wealth activation meditation
+              {t('wealth.dialogDescription')}
             </DialogDescription>
           </DialogHeader>
 
@@ -143,24 +145,24 @@ const WealthMeditationService: React.FC = () => {
             <div className="space-y-3 p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
               <h4 className="font-semibold text-sm flex items-center gap-2">
                 <Mail size={16} className="text-yellow-500" />
-                How it works:
+                {t('wealth.howItWorks')}
               </h4>
               <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
-                <li><strong>Complete your purchase</strong> below</li>
-                <li><strong>Receive the 108 affirmations</strong> via email</li>
-                <li><strong>Record yourself</strong> reading all 108 affirmations</li>
-                <li><strong>Send your audio file</strong> to sacredhealingvibe@gmail.com</li>
-                <li><strong>Receive your personalized meditation</strong> within 5-7 days</li>
+                <li><strong>{t('wealth.step1')}</strong></li>
+                <li><strong>{t('wealth.step2')}</strong></li>
+                <li><strong>{t('wealth.step3')}</strong></li>
+                <li><strong>{t('wealth.step4')}</strong></li>
+                <li><strong>{t('wealth.step5')}</strong></li>
               </ol>
             </div>
 
             {/* Email */}
             <div className="space-y-3">
               <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                Email Address *
+                {t('wealth.emailLabel')} *
               </h4>
               <p className="text-sm text-muted-foreground">
-                We'll send the 108 affirmations to this email after purchase.
+                {t('wealth.emailDescription')}
               </p>
               <Input
                 type="email"
@@ -172,23 +174,23 @@ const WealthMeditationService: React.FC = () => {
 
             {/* What you get */}
             <div className="space-y-3 p-4 rounded-lg bg-muted/30 border border-border">
-              <h4 className="font-semibold text-sm">What you'll receive:</h4>
+              <h4 className="font-semibold text-sm">{t('wealth.whatYouGet')}</h4>
               <ul className="text-sm text-muted-foreground space-y-1">
                 <li className="flex items-center gap-2">
                   <Check size={14} className="text-green-500" />
-                  108 wealth affirmations sent to your email (immediately after purchase)
+                  {t('wealth.receive1')}
                 </li>
                 <li className="flex items-center gap-2">
                   <Check size={14} className="text-green-500" />
-                  Your personalized wealth meditation (5-7 days after you send your recording)
+                  {t('wealth.receive2')}
                 </li>
                 <li className="flex items-center gap-2">
                   <Check size={14} className="text-green-500" />
-                  528Hz & 639Hz frequency infusion
+                  {t('wealth.receive3')}
                 </li>
                 <li className="flex items-center gap-2">
                   <Check size={14} className="text-green-500" />
-                  Professional studio-quality audio
+                  {t('wealth.receive4')}
                 </li>
               </ul>
             </div>
@@ -196,7 +198,7 @@ const WealthMeditationService: React.FC = () => {
             {/* Price & Purchase */}
             <div className="space-y-4 pt-4 border-t border-border">
               <div className="flex items-center justify-between text-lg font-semibold">
-                <span>Total:</span>
+                <span>{t('wealth.total')}</span>
                 <span className="text-gradient-gold">€47</span>
               </div>
               
@@ -208,24 +210,24 @@ const WealthMeditationService: React.FC = () => {
                 {isLoading ? (
                   <>
                     <Loader2 size={18} className="mr-2 animate-spin" />
-                    Processing...
+                    {t('wealth.processing')}
                   </>
                 ) : (
                   <>
                     <Sparkles size={18} className="mr-2" />
-                    Continue to Payment
+                    {t('wealth.continuePayment')}
                   </>
                 )}
               </Button>
 
               {!isAuthenticated && (
                 <p className="text-sm text-center text-muted-foreground">
-                  Please sign in to purchase
+                  {t('wealth.signInRequired')}
                 </p>
               )}
 
               <p className="text-xs text-center text-muted-foreground">
-                After payment, you'll receive the 108 affirmations via email. Record yourself reading them and send your audio to sacredhealingvibe@gmail.com
+                {t('wealth.afterPayment')}
               </p>
             </div>
           </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Crown, Sparkles, Loader2, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -16,6 +17,7 @@ interface MembershipStatus {
 }
 
 const MeditationMembershipBanner: React.FC = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [membership, setMembership] = useState<MembershipStatus | null>(null);
@@ -85,13 +87,13 @@ const MeditationMembershipBanner: React.FC = () => {
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-foreground">Meditation Member</span>
+              <span className="font-semibold text-foreground">{t('membership.meditationMember')}</span>
               <Badge className="bg-purple-500 text-white text-xs">
-                {membership.planType === 'yearly' ? 'Yearly' : 'Monthly'}
+                {membership.planType === 'yearly' ? t('membership.yearly') : t('membership.monthly')}
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground">
-              Unlimited meditations • 33 SHC per session • Renews {membership.subscriptionEnd ? new Date(membership.subscriptionEnd).toLocaleDateString() : 'soon'}
+              {t('membership.unlimitedMeditations')} • 33 SHC {t('membership.perSession')} • {t('membership.renews')} {membership.subscriptionEnd ? new Date(membership.subscriptionEnd).toLocaleDateString() : t('membership.soon')}
             </p>
           </div>
           <Sparkles className="w-5 h-5 text-purple-500" />
@@ -108,19 +110,19 @@ const MeditationMembershipBanner: React.FC = () => {
       <div className="relative">
         <div className="flex items-center gap-2 mb-3">
           <LotusIcon className="w-6 h-6 text-purple-500" />
-          <h3 className="text-lg font-heading font-bold text-foreground">Meditation Membership</h3>
-          <Badge className="bg-purple-500 text-white">New</Badge>
+          <h3 className="text-lg font-heading font-bold text-foreground">{t('membership.meditationMembership')}</h3>
+          <Badge className="bg-purple-500 text-white">{t('common.new')}</Badge>
         </div>
         
         <p className="text-sm text-muted-foreground mb-4">
-          Unlock unlimited access to all our guided meditations and earn 33 SHC coins per session!
+          {t('membership.meditationDescription')}
         </p>
 
         <div className="grid grid-cols-2 gap-3 mb-4">
           {/* Monthly Plan */}
           <div className="p-3 rounded-xl border border-border/50 bg-background/50">
-            <p className="text-xs text-muted-foreground mb-1">Monthly</p>
-            <p className="text-xl font-bold text-foreground">€4.99<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
+            <p className="text-xs text-muted-foreground mb-1">{t('membership.monthly')}</p>
+            <p className="text-xl font-bold text-foreground">€4.99<span className="text-sm font-normal text-muted-foreground">/{t('membership.mo')}</span></p>
             <Button 
               size="sm" 
               variant="outline" 
@@ -131,16 +133,16 @@ const MeditationMembershipBanner: React.FC = () => {
               {subscribing === 'monthly' ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                'Subscribe'
+                t('membership.subscribe')
               )}
             </Button>
           </div>
 
           {/* Yearly Plan */}
           <div className="p-3 rounded-xl border-2 border-purple-500/50 bg-purple-500/5 relative">
-            <Badge className="absolute -top-2 -right-2 bg-green-500 text-white text-[10px]">Save €10!</Badge>
-            <p className="text-xs text-muted-foreground mb-1">Yearly</p>
-            <p className="text-xl font-bold text-foreground">€49<span className="text-sm font-normal text-muted-foreground">/yr</span></p>
+            <Badge className="absolute -top-2 -right-2 bg-green-500 text-white text-[10px]">{t('membership.save10')}</Badge>
+            <p className="text-xs text-muted-foreground mb-1">{t('membership.yearly')}</p>
+            <p className="text-xl font-bold text-foreground">€49<span className="text-sm font-normal text-muted-foreground">/{t('membership.yr')}</span></p>
             <Button 
               size="sm" 
               className="w-full mt-2 bg-purple-500 hover:bg-purple-600 text-white"
@@ -150,17 +152,17 @@ const MeditationMembershipBanner: React.FC = () => {
               {subscribing === 'yearly' ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                'Subscribe'
+                t('membership.subscribe')
               )}
             </Button>
           </div>
         </div>
 
         <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1"><Check className="w-3 h-3 text-green-500" />All meditations</span>
-          <span className="flex items-center gap-1"><Check className="w-3 h-3 text-green-500" />33 SHC/session</span>
-          <span className="flex items-center gap-1"><Check className="w-3 h-3 text-green-500" />Premium content</span>
-          <span className="flex items-center gap-1"><Check className="w-3 h-3 text-green-500" />Cancel anytime</span>
+          <span className="flex items-center gap-1"><Check className="w-3 h-3 text-green-500" />{t('membership.allMeditations')}</span>
+          <span className="flex items-center gap-1"><Check className="w-3 h-3 text-green-500" />33 SHC/{t('membership.session')}</span>
+          <span className="flex items-center gap-1"><Check className="w-3 h-3 text-green-500" />{t('membership.premiumContent')}</span>
+          <span className="flex items-center gap-1"><Check className="w-3 h-3 text-green-500" />{t('membership.cancelAnytime')}</span>
         </div>
       </div>
     </Card>
