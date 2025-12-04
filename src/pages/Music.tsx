@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSHCBalance } from '@/hooks/useSHCBalance';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useTranslatedItems } from '@/hooks/useTranslateContent';
+import { TranslatedText } from '@/components/TranslatedText';
 import MasteringService from '@/components/music/MasteringService';
 import MusicMembershipBanner from '@/components/music/MusicMembershipBanner';
 interface Track {
@@ -237,10 +237,7 @@ const Music: React.FC = () => {
 
   const ownedTracks = tracks.filter(t => purchasedIds.includes(t.id));
   const likedTracks = tracks.filter(t => likedIds.includes(t.id));
-  const baseDisplayTracks = activeTab === 'all' ? tracks : activeTab === 'owned' ? ownedTracks : likedTracks;
-  
-  // Translate track titles and descriptions
-  const { items: displayTracks } = useTranslatedItems(baseDisplayTracks, ['title', 'description']);
+  const displayTracks = activeTab === 'all' ? tracks : activeTab === 'owned' ? ownedTracks : likedTracks;
 
   if (isLoading) {
     return (
@@ -370,10 +367,14 @@ const Music: React.FC = () => {
 
               {/* Info */}
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-foreground truncate">{track.title}</p>
+                <p className="font-medium text-foreground truncate">
+                  <TranslatedText>{track.title}</TranslatedText>
+                </p>
                 <p className="text-xs text-muted-foreground">{track.artist}</p>
                 {track.description && (
-                  <p className="text-xs text-muted-foreground/70 truncate mt-0.5">{track.description}</p>
+                  <p className="text-xs text-muted-foreground/70 truncate mt-0.5">
+                    <TranslatedText>{track.description}</TranslatedText>
+                  </p>
                 )}
                 <div className="flex items-center gap-3 mt-1">
                   <span className="text-xs text-muted-foreground flex items-center gap-1">
@@ -463,9 +464,11 @@ const Music: React.FC = () => {
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-foreground truncate">{currentTrack.title}</p>
+                <p className="font-medium text-foreground truncate">
+                  <TranslatedText>{currentTrack.title}</TranslatedText>
+                </p>
                 <p className="text-xs text-muted-foreground">
-                  {purchasedIds.includes(currentTrack.id) ? 'Full Track' : '30s Preview'}
+                  {purchasedIds.includes(currentTrack.id) ? t('music.fullTrack') : t('music.previewTrack')}
                 </p>
               </div>
               <button
