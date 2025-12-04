@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useSHCBalance } from '@/hooks/useSHCBalance';
 import { useAllSiteContent } from '@/hooks/useSiteContent';
 import { ReviewSection } from '@/components/reviews/ReviewSection';
+import { TranslatedContent } from '@/components/TranslatedContent';
 
 interface HealingAudio {
   id: string;
@@ -47,8 +48,8 @@ const Healing: React.FC = () => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('success') === 'true') {
       toast({
-        title: "Payment Successful!",
-        description: "Welcome to your Sacred Healing Journey",
+        title: t('healing.paymentSuccess', 'Payment Successful!'),
+        description: t('healing.welcomeJourney', 'Welcome to your Sacred Healing Journey'),
       });
       window.history.replaceState({}, '', '/healing');
       checkHealingAccess();
@@ -97,7 +98,7 @@ const Healing: React.FC = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        toast({ title: "Please sign in", variant: "destructive" });
+        toast({ title: t('common.signIn', 'Please sign in'), variant: "destructive" });
         return;
       }
 
@@ -109,7 +110,7 @@ const Healing: React.FC = () => {
       if (data?.url) window.open(data.url, '_blank');
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unknown error';
-      toast({ title: "Error", description: message, variant: "destructive" });
+      toast({ title: t('common.error', 'Error'), description: message, variant: "destructive" });
     } finally {
       setIsProcessing(false);
     }
@@ -120,7 +121,7 @@ const Healing: React.FC = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        toast({ title: "Please sign in", variant: "destructive" });
+        toast({ title: t('common.signIn', 'Please sign in'), variant: "destructive" });
         return;
       }
 
@@ -133,12 +134,12 @@ const Healing: React.FC = () => {
       if (data?.url) {
         window.open(data.url, '_blank');
       } else if (data?.success) {
-        toast({ title: "Purchase Complete!", description: `You now own ${audio.title}` });
+        toast({ title: t('healing.purchaseComplete', 'Purchase Complete!'), description: t('healing.youNowOwn', 'You now own') + ` ${audio.title}` });
         setOwnedAudioIds(prev => new Set([...prev, audio.id]));
       }
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unknown error';
-      toast({ title: "Error", description: message, variant: "destructive" });
+      toast({ title: t('common.error', 'Error'), description: message, variant: "destructive" });
     } finally {
       setIsProcessing(false);
     }
@@ -183,11 +184,11 @@ const Healing: React.FC = () => {
         <div className="flex items-center justify-center gap-2">
           <Sparkles className="w-8 h-8 text-primary" />
           <h1 className="text-3xl font-bold text-foreground">
-            {getContent('healing_main_title', 'Sacred Healing Space')}
+            <TranslatedContent text={getContent('healing_main_title', 'Sacred Healing Space')} />
           </h1>
         </div>
         <p className="text-muted-foreground">
-          {getContent('healing_main_subtitle', 'Begin your transformative journey')}
+          <TranslatedContent text={getContent('healing_main_subtitle', 'Begin your transformative journey')} />
         </p>
       </div>
 
@@ -198,15 +199,15 @@ const Healing: React.FC = () => {
             <Calendar className="w-8 h-8 text-accent" />
           </div>
           <div className="flex-1 text-center md:text-left">
-            <h3 className="text-xl font-heading font-bold text-foreground">Book a Private Session</h3>
+            <h3 className="text-xl font-heading font-bold text-foreground">{t('healing.bookPrivateSession', 'Book a Private Session')}</h3>
             <p className="text-muted-foreground text-sm mt-1">
-              1-on-1 transformative sessions with Adam or Laila. Yoga, voice healing, trauma release & more.
+              {t('healing.privateSessionDesc', '1-on-1 transformative sessions with Adam or Laila. Yoga, voice healing, trauma release & more.')}
             </p>
           </div>
           <Link to="/private-sessions">
             <Button variant="gold" className="shrink-0">
               <Calendar className="w-4 h-4 mr-2" />
-              Book Session
+              {t('healing.bookSession', 'Book Session')}
             </Button>
           </Link>
         </div>
@@ -217,50 +218,50 @@ const Healing: React.FC = () => {
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <Heart className="w-6 h-6 text-primary" />
-            <h2 className="text-xl font-semibold text-foreground">How Sacred Healing Works</h2>
+            <h2 className="text-xl font-semibold text-foreground">{t('healing.howItWorks', 'How Sacred Healing Works')}</h2>
           </div>
           
           <div className="prose prose-sm text-muted-foreground space-y-4">
-            <p>{getContent('healing_intro', 'Welcome to a sacred space designed for deep healing and transformation.')}</p>
+            <p><TranslatedContent text={getContent('healing_intro', 'Welcome to a sacred space designed for deep healing and transformation. Our healing program combines ancient wisdom with modern energy healing techniques to help you release blockages, restore balance, and awaken your inner healing power.')} /></p>
             
             <div className="grid md:grid-cols-2 gap-4 mt-4">
               <div className="bg-background/50 rounded-lg p-4">
                 <h3 className="font-semibold text-foreground flex items-center gap-2">
                   <Star className="w-4 h-4 text-primary" /> 
-                  {getContent('healing_feature_1_title', 'Daily Healing Sessions')}
+                  <TranslatedContent text={getContent('healing_feature_1_title', 'Daily Healing Sessions')} />
                 </h3>
                 <p className="text-sm mt-2">
-                  {getContent('healing_feature_1_text', 'Guided meditations and energy transmissions to align your chakras.')}
+                  <TranslatedContent text={getContent('healing_feature_1_text', 'Guided meditations and energy transmissions to align your chakras.')} />
                 </p>
               </div>
               
               <div className="bg-background/50 rounded-lg p-4">
                 <h3 className="font-semibold text-foreground flex items-center gap-2">
                   <Star className="w-4 h-4 text-primary" /> 
-                  {getContent('healing_feature_2_title', 'Frequency Healing')}
+                  <TranslatedContent text={getContent('healing_feature_2_title', 'Frequency Healing')} />
                 </h3>
                 <p className="text-sm mt-2">
-                  {getContent('healing_feature_2_text', 'Special audio tracks infused with healing frequencies.')}
+                  <TranslatedContent text={getContent('healing_feature_2_text', 'Special audio tracks infused with healing frequencies.')} />
                 </p>
               </div>
               
               <div className="bg-background/50 rounded-lg p-4">
                 <h3 className="font-semibold text-foreground flex items-center gap-2">
                   <Star className="w-4 h-4 text-primary" /> 
-                  {getContent('healing_feature_3_title', 'Chakra Balancing')}
+                  <TranslatedContent text={getContent('healing_feature_3_title', 'Chakra Balancing')} />
                 </h3>
                 <p className="text-sm mt-2">
-                  {getContent('healing_feature_3_text', 'Targeted healing sessions for each of your seven main chakras.')}
+                  <TranslatedContent text={getContent('healing_feature_3_text', 'Targeted healing sessions for each of your seven main chakras.')} />
                 </p>
               </div>
               
               <div className="bg-background/50 rounded-lg p-4">
                 <h3 className="font-semibold text-foreground flex items-center gap-2">
                   <Star className="w-4 h-4 text-primary" /> 
-                  {getContent('healing_feature_4_title', 'Emotional Release')}
+                  <TranslatedContent text={getContent('healing_feature_4_title', 'Emotional Release')} />
                 </h3>
                 <p className="text-sm mt-2">
-                  {getContent('healing_feature_4_text', 'Gentle techniques to help you process and release old emotions.')}
+                  <TranslatedContent text={getContent('healing_feature_4_text', 'Gentle techniques to help you process and release old emotions.')} />
                 </p>
               </div>
             </div>
@@ -271,41 +272,41 @@ const Healing: React.FC = () => {
       {/* Pricing Plans */}
       {!hasHealingAccess && (
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-center text-foreground">Choose Your Healing Journey</h2>
+          <h2 className="text-xl font-semibold text-center text-foreground">{t('healing.chooseJourney', 'Choose Your Healing Journey')}</h2>
           
           <div className="grid md:grid-cols-2 gap-4">
             {/* One-time Plan */}
             <Card className="p-6 border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-transparent relative overflow-hidden">
               <div className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full">
-                Best Value
+                {t('healing.bestValue', 'Best Value')}
               </div>
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-foreground">30-Day Healing Journey</h3>
-                  <p className="text-muted-foreground text-sm">One-time payment, full access</p>
+                  <h3 className="text-lg font-semibold text-foreground">{t('healing.thirtyDayJourney', '30-Day Healing Journey')}</h3>
+                  <p className="text-muted-foreground text-sm">{t('healing.oneTimePayment', 'One-time payment, full access')}</p>
                 </div>
                 
                 <div className="text-3xl font-bold text-primary">
                   ${oneTimePrice}
-                  <span className="text-sm font-normal text-muted-foreground"> / 30 days</span>
+                  <span className="text-sm font-normal text-muted-foreground"> / {t('healing.thirtyDays', '30 days')}</span>
                 </div>
                 
                 <ul className="space-y-2 text-sm">
                   <li className="flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-green-500" />
-                    <span>Full access for 30 days</span>
+                    <span>{t('healing.fullAccess', 'Full access for 30 days')}</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-green-500" />
-                    <span>All healing audio tracks</span>
+                    <span>{t('healing.allTracks', 'All healing audio tracks')}</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-green-500" />
-                    <span>Daily guided sessions</span>
+                    <span>{t('healing.dailySessions', 'Daily guided sessions')}</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-green-500" />
-                    <span>No commitment</span>
+                    <span>{t('healing.noCommitment', 'No commitment')}</span>
                   </li>
                 </ul>
                 
@@ -315,7 +316,7 @@ const Healing: React.FC = () => {
                   onClick={() => handlePurchasePlan('one_time')}
                   disabled={isProcessing}
                 >
-                  Start Your Journey
+                  {t('healing.startJourney', 'Start Your Journey')}
                 </Button>
               </div>
             </Card>
@@ -324,31 +325,31 @@ const Healing: React.FC = () => {
             <Card className="p-6 border border-border">
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-foreground">Monthly Healing</h3>
-                  <p className="text-muted-foreground text-sm">Subscription (min. 3 months)</p>
+                  <h3 className="text-lg font-semibold text-foreground">{t('healing.monthlyHealing', 'Monthly Healing')}</h3>
+                  <p className="text-muted-foreground text-sm">{t('healing.subscriptionMin', 'Subscription (min. 3 months)')}</p>
                 </div>
                 
                 <div className="text-3xl font-bold text-foreground">
                   ${monthlyPrice}
-                  <span className="text-sm font-normal text-muted-foreground"> / month</span>
+                  <span className="text-sm font-normal text-muted-foreground"> / {t('healing.month', 'month')}</span>
                 </div>
                 
                 <ul className="space-y-2 text-sm">
                   <li className="flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-green-500" />
-                    <span>Continuous access</span>
+                    <span>{t('healing.continuousAccess', 'Continuous access')}</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-green-500" />
-                    <span>All healing audio tracks</span>
+                    <span>{t('healing.allTracks', 'All healing audio tracks')}</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-green-500" />
-                    <span>Cancel after 3 months</span>
+                    <span>{t('healing.cancelAfter', 'Cancel after 3 months')}</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-green-500" />
-                    <span>${parseInt(monthlyPrice) * 3} total minimum</span>
+                    <span>${parseInt(monthlyPrice) * 3} {t('healing.totalMinimum', 'total minimum')}</span>
                   </li>
                 </ul>
                 
@@ -358,7 +359,7 @@ const Healing: React.FC = () => {
                   onClick={() => handlePurchasePlan('subscription')}
                   disabled={isProcessing}
                 >
-                  Subscribe Monthly
+                  {t('healing.subscribeMonthly', 'Subscribe Monthly')}
                 </Button>
               </div>
             </Card>
@@ -371,7 +372,7 @@ const Healing: React.FC = () => {
         <Card className="p-4 bg-green-500/10 border-green-500/30">
           <div className="flex items-center gap-2 text-green-500">
             <CheckCircle className="w-5 h-5" />
-            <span className="font-medium">You have active healing access!</span>
+            <span className="font-medium">{t('healing.activeAccess', 'You have active healing access!')}</span>
           </div>
         </Card>
       )}
@@ -381,7 +382,7 @@ const Healing: React.FC = () => {
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
             <Music className="w-5 h-5 text-primary" />
-            Free Healing Audio
+            {t('healing.freeAudio', 'Free Healing Audio')}
           </h2>
           
           <div className="grid gap-3">
@@ -400,11 +401,11 @@ const Healing: React.FC = () => {
                   </button>
                   
                   <div className="flex-1">
-                    <h3 className="font-medium text-foreground">{audio.title}</h3>
+                    <h3 className="font-medium text-foreground"><TranslatedContent text={audio.title} /></h3>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Clock className="w-3 h-3" />
                       <span>{formatDuration(audio.duration_seconds)}</span>
-                      <span className="text-green-500 font-medium">• FREE</span>
+                      <span className="text-green-500 font-medium">• {t('healing.free', 'FREE')}</span>
                     </div>
                   </div>
                   
@@ -423,7 +424,7 @@ const Healing: React.FC = () => {
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-primary" />
-            Premium Healing Audio
+            {t('healing.premiumAudio', 'Premium Healing Audio')}
           </h2>
           
           <div className="grid gap-3">
@@ -443,24 +444,25 @@ const Healing: React.FC = () => {
                         <Play className="w-5 h-5 text-primary ml-1" />
                       )}
                       {!owned && (
-                        <Lock className="w-3 h-3 text-primary absolute -top-1 -right-1" />
+                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-accent rounded-full flex items-center justify-center">
+                          <Lock className="w-3 h-3 text-accent-foreground" />
+                        </div>
                       )}
                     </button>
                     
                     <div className="flex-1">
-                      <h3 className="font-medium text-foreground">{audio.title}</h3>
+                      <h3 className="font-medium text-foreground"><TranslatedContent text={audio.title} /></h3>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Clock className="w-3 h-3" />
                         <span>{formatDuration(audio.duration_seconds)}</span>
-                        {!owned && (
+                        {owned ? (
+                          <span className="text-green-500 font-medium">• {t('healing.owned', 'OWNED')}</span>
+                        ) : (
                           <>
-                            <span>•</span>
-                            <span className="text-primary">{audio.price_shc} SHC</span>
-                            <span>or</span>
-                            <span className="text-primary">${audio.price_usd}</span>
+                            <span className="text-primary font-medium">• ${audio.price_usd}</span>
+                            <span className="text-accent font-medium">/ {audio.price_shc} SHC</span>
                           </>
                         )}
-                        {owned && <span className="text-green-500 font-medium">• OWNED</span>}
                       </div>
                     </div>
                     
@@ -474,7 +476,7 @@ const Healing: React.FC = () => {
                           variant="outline" 
                           size="sm"
                           onClick={() => handlePurchaseAudio(audio, 'shc')}
-                          disabled={isProcessing || (balance?.balance || 0) < audio.price_shc}
+                          disabled={isProcessing || (balance?.balance ?? 0) < audio.price_shc}
                         >
                           {audio.price_shc} SHC
                         </Button>
@@ -496,22 +498,8 @@ const Healing: React.FC = () => {
         </div>
       )}
 
-      {/* Empty state */}
-      {audioTracks.length === 0 && (
-        <Card className="p-8 text-center">
-          <Music className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">Healing audio coming soon...</p>
-        </Card>
-      )}
-
       {/* Reviews Section */}
-      <div className="mt-8">
-        <ReviewSection 
-          contentType="healing" 
-          contentId="healing-space"
-          contentTitle="Sacred Healing Space"
-        />
-      </div>
+      <ReviewSection contentType="healing" contentId="healing-page" />
     </div>
   );
 };
