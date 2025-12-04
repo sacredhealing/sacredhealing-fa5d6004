@@ -646,5 +646,33 @@
     "step1": "Velg pakken din og last opp lydfilene dine",
     "step2": "Fullfør den sikre betalingen via Stripe",
     "step3": "Motta dine profesjonelt mastrede spor via e-post innen 3-5 virkedager"
+  },
+  "customMeditation": {
+    "badge": "Personlig opplevelse",
+    "title": "Tilpasset kanalisert meditasjon",
+    "description": "Opplev en dypt personlig meditasjon kanalisert av Adam, med din egen 432hz helbredende musikk, energifeltskanning, sjelslesninger og åndelig veiledning.",
+    "feature1": "Energifeltskanning & lesning",
+    "feature2": "Helbredelse & livsveiledning",
+    "feature3": "Sjelslesning & tidligere liv innsikter",
+    "feature4": "Åndekontakt & meldinger",
+    "feature5": "Tilpasset 432hz musikkomposisjon",
+    "single": "enkelt",
+    "for2": "for 2",
+    "save43": "Spar €43",
+    "bookButton": "Bestill din meditasjon",
+    "dialogTitle": "Bestill din tilpassede meditasjon",
+    "dialogDescription": "Adam vil kanalisere en personlig meditasjon bare for deg",
+    "whatsIncluded": "Hva er inkludert",
+    "selectPackage": "Velg pakke",
+    "singlePackage": "Enkel meditasjon",
+    "singleDesc": "1 tilpasset kanalisert meditasjon",
+    "doublePackage": "Dobbelpakke",
+    "doubleDesc": "2 tilpassede kanaliserte meditasjoner",
+    "bestValue": "Beste verdi",
+    "specialRequests": "Spesielle ønsker (valgfritt)",
+    "notesPlaceholder": "Del eventuelle spesifikke intensjoner, fokusområder eller spørsmål du vil ha besvart i meditasjonen din...",
+    "processing": "Behandler...",
+    "continuePayment": "Fortsett til betaling",
+    "signInRequired": "Logg inn for å bestille meditasjonen din"
   }
 }
