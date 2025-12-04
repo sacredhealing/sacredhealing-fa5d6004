@@ -6,20 +6,22 @@ import { useSHCBalance } from '@/hooks/useSHCBalance';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import WalletConnectCard from '@/components/wallet/WalletConnectCard';
-
-const rewards = [
-  { id: 1, title: 'Daily Login - Day 7', reward: 20, icon: Calendar, completed: false, available: true },
-  { id: 2, title: 'Complete a Meditation', reward: 5, icon: Play, completed: true, available: false },
-  { id: 3, title: '7-Day Streak Bonus', reward: 50, icon: CheckCircle, completed: false, available: true },
-  { id: 4, title: 'Invite a Friend', reward: 100, icon: Users, completed: false, available: true },
-  { id: 5, title: 'Go Premium', reward: 2000, icon: Crown, completed: false, available: true },
-];
+import { useTranslation } from 'react-i18next';
 
 const Wallet: React.FC = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'rewards' | 'history'>('rewards');
   const { walletAddress } = usePhantomWallet();
   const { balance, transactions, isLoading, withdrawSHC } = useSHCBalance();
   const [isWithdrawing, setIsWithdrawing] = useState(false);
+
+  const rewards = [
+    { id: 1, title: t('wallet.dailyLoginDay7'), reward: 20, icon: Calendar, completed: false, available: true },
+    { id: 2, title: t('wallet.completeMeditation'), reward: 5, icon: Play, completed: true, available: false },
+    { id: 3, title: t('wallet.streakBonus7Day'), reward: 50, icon: CheckCircle, completed: false, available: true },
+    { id: 4, title: t('wallet.inviteFriend'), reward: 100, icon: Users, completed: false, available: true },
+    { id: 5, title: t('wallet.goPremium'), reward: 2000, icon: Crown, completed: false, available: true },
+  ];
 
   const handleWithdraw = async () => {
     if (!walletAddress || !balance || balance.balance <= 0) return;
@@ -32,8 +34,8 @@ const Wallet: React.FC = () => {
     <div className="min-h-screen px-4 pt-6">
       {/* Header */}
       <header className="mb-6 animate-fade-in">
-        <h1 className="text-3xl font-heading font-bold text-foreground">SHC Wallet</h1>
-        <p className="text-muted-foreground mt-1">Earn and manage your tokens</p>
+        <h1 className="text-3xl font-heading font-bold text-foreground">{t('wallet.title')}</h1>
+        <p className="text-muted-foreground mt-1">{t('wallet.subtitle')}</p>
       </header>
 
       {/* Wallet Connection */}
@@ -45,7 +47,7 @@ const Wallet: React.FC = () => {
         <div className="absolute bottom-0 left-0 w-32 h-32 bg-secondary/20 rounded-full blur-2xl" />
         
         <div className="relative">
-          <p className="text-foreground/70 text-sm mb-1">Total Balance</p>
+          <p className="text-foreground/70 text-sm mb-1">{t('wallet.totalBalance')}</p>
           <div className="flex items-baseline gap-2 mb-4">
             <span className="text-5xl font-heading font-bold text-foreground">
               {isLoading ? '...' : (balance?.balance.toLocaleString() ?? '0')}
@@ -62,11 +64,11 @@ const Wallet: React.FC = () => {
               disabled={!walletAddress || !balance || balance.balance <= 0 || isWithdrawing}
             >
               <ArrowUpRight size={16} />
-              {isWithdrawing ? 'Sending...' : 'Withdraw'}
+              {isWithdrawing ? t('wallet.sending') : t('wallet.withdraw')}
             </Button>
             <Button variant="glass" size="sm" className="flex-1" disabled>
               <ArrowDownLeft size={16} />
-              Deposit
+              {t('wallet.deposit')}
             </Button>
             <Button 
               variant="gold" 
@@ -74,18 +76,18 @@ const Wallet: React.FC = () => {
               className="flex-1"
               onClick={() => {
                 if (!walletAddress) {
-                  toast.error('Connect your wallet first', {
-                    description: 'You need to connect your Phantom wallet to claim SHC'
+                  toast.error(t('wallet.connectFirst'), {
+                    description: t('wallet.connectFirstDesc')
                   });
                   return;
                 }
-                toast.info('Coming soon!', {
-                  description: 'Daily rewards claiming will be available soon'
+                toast.info(t('wallet.comingSoon'), {
+                  description: t('wallet.comingSoonDesc')
                 });
               }}
             >
               <Gift size={16} />
-              Claim
+              {t('wallet.claim')}
             </Button>
           </div>
         </div>
@@ -95,17 +97,17 @@ const Wallet: React.FC = () => {
       <div className="flex gap-4 mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
         <div className="flex-1 bg-muted/30 rounded-xl p-4 border border-border/30 text-center">
           <p className="text-2xl font-heading font-bold text-primary">7</p>
-          <p className="text-xs text-muted-foreground">Day Streak</p>
+          <p className="text-xs text-muted-foreground">{t('wallet.dayStreak')}</p>
         </div>
         <div className="flex-1 bg-muted/30 rounded-xl p-4 border border-border/30 text-center">
           <p className="text-2xl font-heading font-bold text-secondary">{transactions.length}</p>
-          <p className="text-xs text-muted-foreground">Transactions</p>
+          <p className="text-xs text-muted-foreground">{t('wallet.transactions')}</p>
         </div>
         <div className="flex-1 bg-muted/30 rounded-xl p-4 border border-border/30 text-center">
           <p className="text-2xl font-heading font-bold text-accent">
             {isLoading ? '...' : (balance?.total_earned.toLocaleString() ?? '0')}
           </p>
-          <p className="text-xs text-muted-foreground">Earned</p>
+          <p className="text-xs text-muted-foreground">{t('wallet.earned')}</p>
         </div>
       </div>
 
@@ -119,7 +121,7 @@ const Wallet: React.FC = () => {
               : 'bg-muted/30 text-muted-foreground'
           }`}
         >
-          Rewards
+          {t('wallet.rewards')}
         </button>
         <button
           onClick={() => setActiveTab('history')}
@@ -129,7 +131,7 @@ const Wallet: React.FC = () => {
               : 'bg-muted/30 text-muted-foreground'
           }`}
         >
-          History
+          {t('wallet.history')}
         </button>
       </div>
 
@@ -169,12 +171,12 @@ const Wallet: React.FC = () => {
                   variant="spiritual" 
                   size="sm"
                   onClick={() => {
-                    toast.info('Coming soon!', {
-                      description: `${reward.title} reward will be claimable soon`
+                    toast.info(t('wallet.comingSoon'), {
+                      description: t('wallet.rewardComingSoon', { title: reward.title })
                     });
                   }}
                 >
-                  Claim
+                  {t('wallet.claim')}
                 </Button>
               )}
             </div>

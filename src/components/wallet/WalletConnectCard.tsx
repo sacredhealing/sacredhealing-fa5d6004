@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { Wallet, ExternalLink, Smartphone, Monitor, ChevronDown, ChevronUp, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePhantomWallet } from '@/hooks/usePhantomWallet';
+import { useTranslation } from 'react-i18next';
 
 const WalletConnectCard: React.FC = () => {
+  const { t } = useTranslation();
   const { walletAddress, isConnecting, isPhantomInstalled, connectWallet, disconnectWallet } = usePhantomWallet();
   const [showInstructions, setShowInstructions] = useState(false);
   
@@ -18,14 +20,14 @@ const WalletConnectCard: React.FC = () => {
               <CheckCircle className="text-secondary" size={16} />
             </div>
             <div>
-              <p className="text-sm font-medium text-foreground">Wallet Connected</p>
+              <p className="text-sm font-medium text-foreground">{t('wallet.walletConnected')}</p>
               <p className="text-xs text-muted-foreground font-mono">
                 {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
               </p>
             </div>
           </div>
           <Button variant="ghost" size="sm" onClick={disconnectWallet}>
-            Disconnect
+            {t('wallet.disconnect')}
           </Button>
         </div>
       </div>
@@ -41,8 +43,8 @@ const WalletConnectCard: React.FC = () => {
             <Wallet className="text-primary" size={20} />
           </div>
           <div>
-            <p className="text-sm font-medium text-foreground">Connect Phantom Wallet</p>
-            <p className="text-xs text-muted-foreground">Required to withdraw SHC tokens</p>
+            <p className="text-sm font-medium text-foreground">{t('wallet.connectPhantom')}</p>
+            <p className="text-xs text-muted-foreground">{t('wallet.requiredToWithdraw')}</p>
           </div>
         </div>
         <Button 
@@ -51,7 +53,7 @@ const WalletConnectCard: React.FC = () => {
           onClick={connectWallet}
           disabled={isConnecting}
         >
-          {isConnecting ? 'Connecting...' : 'Connect'}
+          {isConnecting ? t('wallet.connecting') : t('wallet.connect')}
         </Button>
       </div>
 
@@ -61,7 +63,7 @@ const WalletConnectCard: React.FC = () => {
         className="w-full flex items-center justify-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors py-2"
       >
         {showInstructions ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-        {showInstructions ? 'Hide instructions' : 'Need help? View setup instructions'}
+        {showInstructions ? t('wallet.hideInstructions') : t('wallet.needHelp')}
       </button>
 
       {/* Expandable Instructions */}
@@ -69,9 +71,9 @@ const WalletConnectCard: React.FC = () => {
         <div className="mt-3 pt-3 border-t border-border/30 space-y-4 animate-fade-in">
           {/* What is Phantom */}
           <div>
-            <h4 className="text-sm font-medium text-foreground mb-2">What is Phantom?</h4>
+            <h4 className="text-sm font-medium text-foreground mb-2">{t('wallet.whatIsPhantom')}</h4>
             <p className="text-xs text-muted-foreground">
-              Phantom is a secure crypto wallet for Solana. You need it to receive and store your SHC tokens.
+              {t('wallet.phantomDescription')}
             </p>
           </div>
 
@@ -83,12 +85,12 @@ const WalletConnectCard: React.FC = () => {
                   <Smartphone size={12} className="text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-foreground">Mobile Setup</p>
+                  <p className="text-sm font-medium text-foreground">{t('wallet.mobileSetup')}</p>
                   <ol className="text-xs text-muted-foreground mt-1 space-y-1.5 list-decimal list-inside">
-                    <li>Download the Phantom app from your app store</li>
-                    <li>Create a new wallet or import existing</li>
-                    <li>Return here and tap "Connect"</li>
-                    <li>Approve the connection in Phantom</li>
+                    <li>{t('wallet.mobileStep1')}</li>
+                    <li>{t('wallet.mobileStep2')}</li>
+                    <li>{t('wallet.mobileStep3')}</li>
+                    <li>{t('wallet.mobileStep4')}</li>
                   </ol>
                 </div>
               </div>
@@ -125,12 +127,12 @@ const WalletConnectCard: React.FC = () => {
                   <Monitor size={12} className="text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-foreground">Desktop Setup</p>
+                  <p className="text-sm font-medium text-foreground">{t('wallet.desktopSetup')}</p>
                   <ol className="text-xs text-muted-foreground mt-1 space-y-1.5 list-decimal list-inside">
-                    <li>Install the Phantom browser extension</li>
-                    <li>Create a new wallet or import existing</li>
-                    <li>Click "Connect" above</li>
-                    <li>Approve the connection in the popup</li>
+                    <li>{t('wallet.desktopStep1')}</li>
+                    <li>{t('wallet.desktopStep2')}</li>
+                    <li>{t('wallet.desktopStep3')}</li>
+                    <li>{t('wallet.desktopStep4')}</li>
                   </ol>
                 </div>
               </div>
@@ -143,7 +145,7 @@ const WalletConnectCard: React.FC = () => {
               >
                 <Button variant="outline" size="sm" className="w-full text-xs">
                   <ExternalLink size={12} />
-                  Get Phantom Extension
+                  {t('wallet.getPhantomExtension')}
                 </Button>
               </a>
             </div>
@@ -159,8 +161,8 @@ const WalletConnectCard: React.FC = () => {
               isPhantomInstalled ? 'bg-secondary' : 'bg-muted-foreground'
             }`} />
             {isPhantomInstalled 
-              ? 'Phantom detected - ready to connect!' 
-              : 'Phantom not detected yet'}
+              ? t('wallet.phantomDetected')
+              : t('wallet.phantomNotDetected')}
           </div>
         </div>
       )}
