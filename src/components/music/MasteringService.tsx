@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Music, Upload, Mail, FileAudio, Loader2, CheckCircle2, Sparkles, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +12,7 @@ interface MasteringServiceProps {
 }
 
 const MasteringService: React.FC<MasteringServiceProps> = ({ onSuccess }) => {
+  const { t } = useTranslation();
   const [selectedPackage, setSelectedPackage] = useState<'single' | 'bundle' | null>(null);
   const [contactEmail, setContactEmail] = useState('');
   const [notes, setNotes] = useState('');
@@ -21,16 +23,16 @@ const MasteringService: React.FC<MasteringServiceProps> = ({ onSuccess }) => {
   const packages = [
     {
       id: 'single' as const,
-      name: '1 Track',
+      name: t('mastering.singleTrack'),
       price: '€147',
-      description: 'One song, beat, or meditation professionally mastered',
+      description: t('mastering.singleDesc'),
       tracks: 1
     },
     {
       id: 'bundle' as const,
-      name: '3 Tracks Bundle',
+      name: t('mastering.bundleTracks'),
       price: '€397',
-      description: 'Three tracks professionally mastered (save €44!)',
+      description: t('mastering.bundleDesc'),
       tracks: 3
     }
   ];
@@ -153,10 +155,10 @@ const MasteringService: React.FC<MasteringServiceProps> = ({ onSuccess }) => {
             </div>
             <div>
               <h2 className="text-xl font-heading font-bold text-foreground">
-                Professional Music Mastering
+                {t('mastering.title')}
               </h2>
               <p className="text-muted-foreground text-sm mt-1">
-                23 years of music production & mixing engineering experience
+                {t('mastering.subtitle')}
               </p>
             </div>
           </div>
@@ -166,10 +168,9 @@ const MasteringService: React.FC<MasteringServiceProps> = ({ onSuccess }) => {
             <div className="flex gap-3">
               <Info className="text-primary shrink-0 mt-0.5" size={18} />
               <div className="text-sm text-foreground/80">
-                <p className="font-medium mb-2">Are you an artist that needs your music mastered?</p>
+                <p className="font-medium mb-2">{t('mastering.infoTitle')}</p>
                 <p className="text-muted-foreground">
-                  Send me your WAV or MP3 file and I will master and mix it for you. 
-                  Perfect for your meditation, new beat, or song you want to release in high quality.
+                  {t('mastering.infoDesc')}
                 </p>
               </div>
             </div>
@@ -205,7 +206,7 @@ const MasteringService: React.FC<MasteringServiceProps> = ({ onSuccess }) => {
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
                   <Mail className="inline mr-2" size={14} />
-                  Your Email (for delivery)
+                  {t('mastering.emailLabel')}
                 </label>
                 <Input
                   type="email"
@@ -220,7 +221,7 @@ const MasteringService: React.FC<MasteringServiceProps> = ({ onSuccess }) => {
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
                   <FileAudio className="inline mr-2" size={14} />
-                  Upload Your Music (WAV or MP3)
+                  {t('mastering.uploadLabel')}
                 </label>
                 <div className="border-2 border-dashed border-border/50 rounded-xl p-4 text-center hover:border-secondary/50 transition-colors">
                   <input
@@ -234,10 +235,10 @@ const MasteringService: React.FC<MasteringServiceProps> = ({ onSuccess }) => {
                   <label htmlFor="music-upload" className="cursor-pointer">
                     <Upload className="mx-auto text-muted-foreground mb-2" size={32} />
                     <p className="text-sm text-muted-foreground">
-                      Click to upload {selectedPackage === 'bundle' ? 'up to 3 files' : '1 file'}
+                      {selectedPackage === 'bundle' ? t('mastering.uploadUpTo3') : t('mastering.upload1File')}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      WAV or MP3 format
+                      {t('mastering.wavOrMp3')}
                     </p>
                   </label>
                 </div>
@@ -256,10 +257,10 @@ const MasteringService: React.FC<MasteringServiceProps> = ({ onSuccess }) => {
               {/* Notes */}
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
-                  Special Instructions (optional)
+                  {t('mastering.specialInstructions')}
                 </label>
                 <Textarea
-                  placeholder="Any specific requirements or preferences for your mastering..."
+                  placeholder={t('mastering.instructionsPlaceholder')}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   className="bg-background/50 min-h-[80px]"
@@ -276,31 +277,31 @@ const MasteringService: React.FC<MasteringServiceProps> = ({ onSuccess }) => {
                 {submitting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    {uploading ? 'Uploading files...' : 'Processing...'}
+                    {uploading ? t('mastering.uploading') : t('mastering.processing')}
                   </>
                 ) : (
                   <>
                     <Sparkles className="mr-2" size={18} />
-                    Proceed to Payment
+                    {t('mastering.proceedToPayment')}
                   </>
                 )}
               </Button>
 
               {/* How it works */}
               <div className="bg-muted/20 rounded-xl p-4 border border-border/30">
-                <h4 className="font-medium text-foreground text-sm mb-3">How it works:</h4>
+                <h4 className="font-medium text-foreground text-sm mb-3">{t('mastering.howItWorks')}</h4>
                 <ol className="text-xs text-muted-foreground space-y-2">
                   <li className="flex gap-2">
                     <span className="w-5 h-5 rounded-full bg-secondary/20 text-secondary flex items-center justify-center shrink-0 text-xs font-bold">1</span>
-                    <span>Select your package and upload your audio file(s)</span>
+                    <span>{t('mastering.step1')}</span>
                   </li>
                   <li className="flex gap-2">
                     <span className="w-5 h-5 rounded-full bg-secondary/20 text-secondary flex items-center justify-center shrink-0 text-xs font-bold">2</span>
-                    <span>Complete the secure payment via Stripe</span>
+                    <span>{t('mastering.step2')}</span>
                   </li>
                   <li className="flex gap-2">
                     <span className="w-5 h-5 rounded-full bg-secondary/20 text-secondary flex items-center justify-center shrink-0 text-xs font-bold">3</span>
-                    <span>Receive your professionally mastered track(s) via email within 3-5 business days</span>
+                    <span>{t('mastering.step3')}</span>
                   </li>
                 </ol>
               </div>
