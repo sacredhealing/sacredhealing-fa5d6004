@@ -182,8 +182,8 @@
     "channeledDesc": "Personlig kanalisert opplevelse med integrert musikkkomposisjon"
   },
   "music": {
-    "title": "Musikkbutikk",
-    "subtitle": "Originale helingsfrekvenser",
+    "title": "Hellig Musikk",
+    "subtitle": "Helbredende beats & åndelige lyder",
     "owned": "Eid",
     "buy": "Kjøp",
     "preview": "Forhåndsvis",
@@ -192,7 +192,13 @@
     "masteringService": "Masteringtjeneste",
     "masteringDesc": "Profesjonell lydmastering for utgivelseskvalitet",
     "perTrack": "per spor",
-    "tracks": "spor"
+    "tracks": "Spor",
+    "myMusic": "Min Musikk",
+    "liked": "Likte",
+    "noOwnedTracks": "Du har ikke kjøpt noen spor ennå",
+    "noLikedTracks": "Ingen likte spor ennå",
+    "fullTrack": "Fullt spor",
+    "previewTrack": "30s forhåndsvisning"
   },
   "wallet": {
     "title": "Lommebok",

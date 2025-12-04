@@ -182,8 +182,8 @@
     "channeledDesc": "Personlig kanaliserad upplevelse med integrerad musikkkomposition"
   },
   "music": {
-    "title": "Musikbutik",
-    "subtitle": "Originala läkande frekvenser",
+    "title": "Helig Musik",
+    "subtitle": "Helande beats & andliga ljud",
     "owned": "Ägd",
     "buy": "Köp",
     "preview": "Förhandsgranska",
@@ -192,7 +192,13 @@
     "masteringService": "Masteringtjänst",
     "masteringDesc": "Professionell ljudmastering för utgivningskvalitet",
     "perTrack": "per spår",
-    "tracks": "spår"
+    "tracks": "Spår",
+    "myMusic": "Min Musik",
+    "liked": "Gillade",
+    "noOwnedTracks": "Du har inte köpt några spår än",
+    "noLikedTracks": "Inga gillade spår än",
+    "fullTrack": "Fullt spår",
+    "previewTrack": "30s förhandsvisning"
   },
   "wallet": {
     "title": "Plånbok",
