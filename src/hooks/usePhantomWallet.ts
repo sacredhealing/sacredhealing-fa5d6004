@@ -69,72 +69,81 @@ export const usePhantomWallet = () => {
   }, []);
 
   const connectWallet = useCallback(async () => {
-    const provider = window.solana;
-    
-    // If on mobile and Phantom not detected
-    if (!provider?.isPhantom) {
-      if (isMobile()) {
-        toast({
-          title: "Opening Phantom App",
-          description: "If Phantom doesn't open, please install it first from the app store."
-        });
-        
-        // Try deep link to open in Phantom's browser
-        const deepLink = getPhantomDeepLink();
-        
-        // Create a hidden link and click it for better mobile support
-        const link = document.createElement('a');
-        link.href = deepLink;
-        link.style.display = 'none';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        return null;
-      } else {
-        // Desktop - show helpful message
-        toast({
-          title: "Install Phantom Wallet",
-          description: "Click the help link below for installation instructions.",
-          variant: "destructive"
-        });
-        return null;
-      }
-    }
-
     setIsConnecting(true);
     
     try {
+      const provider = window.solana;
+      
+      // If Phantom not detected
+      if (!provider?.isPhantom) {
+        if (isMobile()) {
+          toast({
+            title: "Opening Phantom App",
+            description: "If Phantom doesn't open, please install it first from the app store."
+          });
+          
+          // Try deep link to open in Phantom's browser
+          const deepLink = getPhantomDeepLink();
+          window.location.href = deepLink;
+          setIsConnecting(false);
+          return null;
+        } else {
+          // Desktop - show helpful message
+          toast({
+            title: "Install Phantom Wallet",
+            description: "Please install the Phantom browser extension first, then refresh the page.",
+            variant: "destructive"
+          });
+          setIsConnecting(false);
+          return null;
+        }
+      }
+
+      // Phantom is installed, try to connect
       const response = await provider.connect();
       const address = response.publicKey.toString();
       setWalletAddress(address);
 
-      // Save to database
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        // First check if wallet already exists
-        const { data: existingWallet } = await supabase
-          .from('user_wallets')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('wallet_address', address)
-          .single();
-
-        if (!existingWallet) {
-          // Insert new wallet
-          const { error } = await supabase
+      // Save to database (optional - don't fail if this errors)
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          // First, unset any existing primary wallets for this user
+          await supabase
             .from('user_wallets')
-            .insert({
-              user_id: user.id,
-              wallet_address: address,
-              wallet_type: 'phantom',
-              is_primary: true
-            });
+            .update({ is_primary: false })
+            .eq('user_id', user.id)
+            .eq('is_primary', true);
 
-          if (error) {
-            console.error('Error saving wallet:', error);
+          // Check if this wallet already exists for the user
+          const { data: existingWallet } = await supabase
+            .from('user_wallets')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('wallet_address', address)
+            .maybeSingle();
+
+          if (existingWallet) {
+            // Update existing wallet to be primary
+            await supabase
+              .from('user_wallets')
+              .update({ is_primary: true })
+              .eq('id', existingWallet.id);
+          } else {
+            // Insert new wallet
+            await supabase
+              .from('user_wallets')
+              .insert({
+                user_id: user.id,
+                wallet_address: address,
+                wallet_type: 'phantom',
+                is_primary: true
+              });
           }
         }
+      } catch (dbError) {
+        console.error('Error saving wallet to database:', dbError);
+        // Don't fail the connection just because DB save failed
       }
 
       toast({
@@ -145,11 +154,20 @@ export const usePhantomWallet = () => {
       return address;
     } catch (error: any) {
       console.error('Wallet connection error:', error);
-      toast({
-        title: "Connection failed",
-        description: error.message || "Failed to connect wallet",
-        variant: "destructive"
-      });
+      
+      // Handle user rejection specifically
+      if (error.code === 4001 || error.message?.includes('User rejected')) {
+        toast({
+          title: "Connection cancelled",
+          description: "You cancelled the wallet connection request.",
+        });
+      } else {
+        toast({
+          title: "Connection failed",
+          description: error.message || "Failed to connect wallet. Please try again.",
+          variant: "destructive"
+        });
+      }
       return null;
     } finally {
       setIsConnecting(false);
