@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Play, Clock, Sparkles, Leaf, Moon, Sun, Heart, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CustomMeditationBooking from '@/components/meditation/CustomMeditationBooking';
@@ -7,15 +8,6 @@ import CustomMeditationCreation from '@/components/meditation/CustomMeditationCr
 import WealthMeditationService from '@/components/meditation/WealthMeditationService';
 import MeditationMembershipBanner from '@/components/meditation/MeditationMembershipBanner';
 import { toast } from 'sonner';
-
-const categories = [
-  { id: 'all', label: 'All', icon: Sparkles },
-  { id: 'morning', label: 'Morning', icon: Sun },
-  { id: 'sleep', label: 'Sleep', icon: Moon },
-  { id: 'healing', label: 'Healing', icon: Heart },
-  { id: 'focus', label: 'Focus', icon: Brain },
-  { id: 'nature', label: 'Nature', icon: Leaf },
-];
 
 const meditations = [
   { id: 1, title: 'Morning Awakening', duration: '10 min', category: 'morning', reward: 5, premium: false },
@@ -29,8 +21,18 @@ const meditations = [
 ];
 
 const Meditations: React.FC = () => {
+  const { t } = useTranslation();
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchParams] = useSearchParams();
+
+  const categories = [
+    { id: 'all', label: t('meditations.categories.all', 'All'), icon: Sparkles },
+    { id: 'morning', label: t('meditations.categories.morning', 'Morning'), icon: Sun },
+    { id: 'sleep', label: t('meditations.categories.sleep', 'Sleep'), icon: Moon },
+    { id: 'healing', label: t('meditations.categories.healing', 'Healing'), icon: Heart },
+    { id: 'focus', label: t('meditations.categories.focus', 'Focus'), icon: Brain },
+    { id: 'nature', label: t('meditations.categories.nature', 'Nature'), icon: Leaf },
+  ];
 
   const filteredMeditations = activeCategory === 'all' 
     ? meditations 
@@ -45,22 +47,22 @@ const Meditations: React.FC = () => {
     const membershipCancelled = searchParams.get('membership_cancelled');
     
     if (success === 'true') {
-      toast.success('Payment successful! Adam will begin channeling your meditation.');
+      toast.success(t('meditations.paymentSuccess', 'Payment successful! Adam will begin channeling your meditation.'));
     } else if (wealthSuccess === 'true') {
-      toast.success('Payment successful! Check your email for the 108 affirmations. Your personalized wealth meditation will be delivered within 5-7 days.');
+      toast.success(t('meditations.wealthSuccess', 'Payment successful! Check your email for the 108 affirmations.'));
     } else if (membershipSuccess) {
-      toast.success(`Welcome to Meditation Membership! 🧘 Your ${membershipSuccess} subscription is now active. Enjoy unlimited meditations and 33 SHC per session!`);
+      toast.success(t('meditations.membershipSuccess', 'Welcome to Meditation Membership! Your subscription is now active.'));
     } else if (cancelled === 'true' || membershipCancelled === 'true') {
-      toast.info('Payment was cancelled');
+      toast.info(t('meditations.paymentCancelled', 'Payment was cancelled'));
     }
-  }, [searchParams]);
+  }, [searchParams, t]);
 
   return (
     <div className="min-h-screen px-4 pt-6">
       {/* Header */}
       <header className="mb-6 animate-fade-in">
-        <h1 className="text-3xl font-heading font-bold text-foreground">Meditations</h1>
-        <p className="text-muted-foreground mt-1">Find your inner peace</p>
+        <h1 className="text-3xl font-heading font-bold text-foreground">{t('meditations.title', 'Meditations')}</h1>
+        <p className="text-muted-foreground mt-1">{t('meditations.subtitle', 'Find your inner peace')}</p>
       </header>
 
       {/* Meditation Membership */}
@@ -109,7 +111,7 @@ const Meditations: React.FC = () => {
           >
             {meditation.premium && (
               <div className="absolute top-3 right-3 px-2 py-1 bg-accent/20 rounded-full">
-                <span className="text-xs font-medium text-accent">Premium</span>
+                <span className="text-xs font-medium text-accent">{t('meditations.premium', 'Premium')}</span>
               </div>
             )}
             
@@ -138,19 +140,19 @@ const Meditations: React.FC = () => {
 
       {/* Featured */}
       <div className="mt-8 mb-8 animate-slide-up" style={{ animationDelay: '0.4s' }}>
-        <h2 className="text-lg font-heading font-semibold text-foreground mb-4">Featured Series</h2>
+        <h2 className="text-lg font-heading font-semibold text-foreground mb-4">{t('meditations.featuredSeries', 'Featured Series')}</h2>
         <div className="relative overflow-hidden rounded-2xl bg-gradient-healing p-6 glow-turquoise">
           <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-accent/30 rounded-full blur-2xl" />
           <h3 className="text-xl font-heading font-bold text-foreground mb-2">
-            21-Day Healing Journey
+            {t('meditations.healingJourney', '21-Day Healing Journey')}
           </h3>
           <p className="text-foreground/80 text-sm mb-4">
-            Transform your life with daily guided meditations
+            {t('meditations.healingJourneyDesc', 'Transform your life with daily guided meditations')}
           </p>
           <div className="flex items-center gap-3">
             <Button variant="glass" size="sm">
               <Play size={16} />
-              Start Journey
+              {t('meditations.startJourney', 'Start Journey')}
             </Button>
             <span className="text-sm text-foreground/70">
               <Sparkles size={14} className="inline text-accent mr-1" />
