@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Play, Clock, Sparkles, Leaf, Moon, Sun, Heart, Brain } from 'lucide-react';
+import { TranslatedText } from '@/components/TranslatedText';
 import { Button } from '@/components/ui/button';
 import CustomMeditationBooking from '@/components/meditation/CustomMeditationBooking';
 import CustomMeditationCreation from '@/components/meditation/CustomMeditationCreation';
@@ -121,7 +122,9 @@ const Meditations: React.FC = () => {
               </button>
               
               <div className="flex-1">
-                <h3 className="font-heading font-semibold text-foreground">{meditation.title}</h3>
+                <h3 className="font-heading font-semibold text-foreground">
+                  <TranslatedText>{meditation.title}</TranslatedText>
+                </h3>
                 <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Clock size={14} />
