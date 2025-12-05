@@ -2,17 +2,20 @@ import React, { useState } from 'react';
 import { Sparkles, ArrowUpRight, ArrowDownLeft, Gift, Clock, CheckCircle, Calendar, Play, Users, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePhantomWallet } from '@/hooks/usePhantomWallet';
+import { useSHC } from '@/contexts/SHCContext';
 import { useSHCBalance } from '@/hooks/useSHCBalance';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import WalletConnectCard from '@/components/wallet/WalletConnectCard';
 import { useTranslation } from 'react-i18next';
+import { AnimatedCounter } from '@/components/ui/animated-counter';
 
 const Wallet: React.FC = () => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'rewards' | 'history'>('rewards');
   const { walletAddress } = usePhantomWallet();
-  const { balance, transactions, isLoading, withdrawSHC } = useSHCBalance();
+  const { balance, profile, isLoading } = useSHC();
+  const { transactions, withdrawSHC } = useSHCBalance();
   const [isWithdrawing, setIsWithdrawing] = useState(false);
 
   const rewards = [
@@ -49,9 +52,10 @@ const Wallet: React.FC = () => {
         <div className="relative">
           <p className="text-foreground/70 text-sm mb-1">{t('wallet.totalBalance')}</p>
           <div className="flex items-baseline gap-2 mb-4">
-            <span className="text-5xl font-heading font-bold text-foreground">
-              {isLoading ? '...' : (balance?.balance.toLocaleString() ?? '0')}
-            </span>
+            <AnimatedCounter 
+              value={balance?.balance ?? 0}
+              className="text-5xl font-heading font-bold text-foreground"
+            />
             <span className="text-xl text-accent font-medium">SHC</span>
           </div>
 
@@ -96,7 +100,7 @@ const Wallet: React.FC = () => {
       {/* Streak info */}
       <div className="flex gap-4 mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
         <div className="flex-1 bg-muted/30 rounded-xl p-4 border border-border/30 text-center">
-          <p className="text-2xl font-heading font-bold text-primary">7</p>
+          <p className="text-2xl font-heading font-bold text-primary">{profile?.streak_days ?? 0}</p>
           <p className="text-xs text-muted-foreground">{t('wallet.dayStreak')}</p>
         </div>
         <div className="flex-1 bg-muted/30 rounded-xl p-4 border border-border/30 text-center">
@@ -105,7 +109,7 @@ const Wallet: React.FC = () => {
         </div>
         <div className="flex-1 bg-muted/30 rounded-xl p-4 border border-border/30 text-center">
           <p className="text-2xl font-heading font-bold text-accent">
-            {isLoading ? '...' : (balance?.total_earned.toLocaleString() ?? '0')}
+            <AnimatedCounter value={balance?.total_earned ?? 0} />
           </p>
           <p className="text-xs text-muted-foreground">{t('wallet.earned')}</p>
         </div>

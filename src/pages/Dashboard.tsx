@@ -7,6 +7,8 @@ import { LotusIcon } from '@/components/icons/LotusIcon';
 import { SocialShare } from '@/components/SocialShare';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useSHC } from '@/contexts/SHCContext';
+import { AnimatedCounter } from '@/components/ui/animated-counter';
 
 const dailyQuote = {
   text: "The wound is the place where the Light enters you.",
@@ -22,6 +24,7 @@ const todaysMeditation = {
 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
+  const { balance, profile, isLoading } = useSHC();
 
   const quickActions = [
     { icon: Play, labelKey: 'quickActions.meditate', to: '/meditations', color: 'primary' },
@@ -41,7 +44,9 @@ const Dashboard: React.FC = () => {
         </div>
         <div className="flex items-center gap-2 bg-muted/50 rounded-full px-4 py-2">
           <Flame className="text-accent" size={18} />
-          <span className="font-heading font-semibold text-foreground">7</span>
+          <span className="font-heading font-semibold text-foreground">
+            {profile?.streak_days ?? 0}
+          </span>
           <span className="text-sm text-muted-foreground">{t('dashboard.streak')}</span>
         </div>
       </header>
@@ -53,7 +58,10 @@ const Dashboard: React.FC = () => {
           <div>
             <p className="text-sm text-muted-foreground mb-1">{t('dashboard.balance')}</p>
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-heading font-bold text-gradient-gold">1,250</span>
+              <AnimatedCounter 
+                value={balance?.balance ?? 0} 
+                className="text-4xl font-heading font-bold text-gradient-gold"
+              />
               <span className="text-lg text-accent font-medium">SHC</span>
             </div>
           </div>
