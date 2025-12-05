@@ -61,7 +61,7 @@ serve(async (req) => {
     }
 
     // Handle free courses
-    if (course.is_free || (course.price_usd === 0 && course.price_shc === 0)) {
+    if (course.is_free || (course.price_usd === 0)) {
       await supabaseAdmin.from("course_enrollments").insert({
         user_id: user.id,
         course_id: courseId,
@@ -74,81 +74,6 @@ serve(async (req) => {
         .from("courses")
         .update({ enrollment_count: course.enrollment_count + 1 })
         .eq("id", courseId);
-
-      return new Response(JSON.stringify({ 
-        success: true,
-        message: "Successfully enrolled!"
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
-    }
-
-    // Handle SHC payment
-    if (paymentMethod === "shc") {
-      const { data: balance } = await supabaseAdmin
-        .from("user_balances")
-        .select("balance")
-        .eq("user_id", user.id)
-        .single();
-
-      if (!balance || balance.balance < course.price_shc) {
-        throw new Error("Insufficient SHC balance");
-      }
-
-      // Deduct balance
-      await supabaseAdmin
-        .from("user_balances")
-        .update({
-          balance: balance.balance - course.price_shc,
-          total_spent: balance.balance + course.price_shc,
-        })
-        .eq("user_id", user.id);
-
-      // Record transaction
-      await supabaseAdmin.from("shc_transactions").insert({
-        user_id: user.id,
-        type: "spent",
-        amount: course.price_shc,
-        description: `Enrolled in course: ${course.title}`,
-        status: "completed",
-      });
-
-      // Create enrollment
-      await supabaseAdmin.from("course_enrollments").insert({
-        user_id: user.id,
-        course_id: courseId,
-        payment_method: "shc",
-        shc_paid: course.price_shc,
-      });
-
-      // Increment enrollment count
-      await supabaseAdmin
-        .from("courses")
-        .update({ enrollment_count: course.enrollment_count + 1 })
-        .eq("id", courseId);
-
-      // Process affiliate commission
-      try {
-        const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
-        const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-        await fetch(`${SUPABASE_URL}/functions/v1/process-affiliate-commission`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-          },
-          body: JSON.stringify({
-            userId: user.id,
-            purchaseType: 'course',
-            purchaseAmount: course.price_shc,
-            purchaseId: courseId,
-          }),
-        });
-        console.log('[ENROLL-COURSE] Affiliate commission processed');
-      } catch (commissionError) {
-        console.error('[ENROLL-COURSE] Affiliate commission error (non-blocking):', commissionError);
-      }
 
       return new Response(JSON.stringify({ 
         success: true,
@@ -247,7 +172,7 @@ serve(async (req) => {
       });
     }
 
-    throw new Error("Invalid payment method");
+    throw new Error("Invalid payment method. Use 'stripe' or 'crypto'");
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";
     console.error("[ENROLL-COURSE] Error:", message);
