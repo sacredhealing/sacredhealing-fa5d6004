@@ -10,18 +10,13 @@ import { Badge } from '@/components/ui/badge';
 import { useSHC } from '@/contexts/SHCContext';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
 import { useDailyQuote } from '@/hooks/useDailyQuote';
-
-const todaysMeditation = {
-  title: "Morning Awakening",
-  duration: "10 min",
-  category: "Mindfulness",
-  reward: 5
-};
+import { useDailyMeditation } from '@/hooks/useDailyMeditation';
 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
   const { balance, profile, isLoading } = useSHC();
   const { quote, isVisible } = useDailyQuote();
+  const { meditation: dailyMeditation, isLoading: meditationLoading } = useDailyMeditation();
 
   const quickActions = [
     { icon: Play, labelKey: 'quickActions.meditate', to: '/meditations', color: 'primary' },
@@ -99,23 +94,53 @@ const Dashboard: React.FC = () => {
               <LotusIcon size={80} />
             </div>
             <div className="relative">
-              <span className="inline-block px-3 py-1 bg-background/20 rounded-full text-xs font-medium text-foreground mb-3">
-                {todaysMeditation.category}
-              </span>
-              <h3 className="text-xl font-heading font-bold text-foreground mb-2">
-                {todaysMeditation.title}
-              </h3>
-              <div className="flex items-center gap-4 text-foreground/80 text-sm">
-                <span>{todaysMeditation.duration}</span>
-                <span className="flex items-center gap-1">
-                  <Sparkles size={14} className="text-accent" />
-                  +{todaysMeditation.reward} SHC
-                </span>
-              </div>
-              <Button variant="glass" size="sm" className="mt-4">
-                <Play size={16} />
-                {t('dashboard.startSession')}
-              </Button>
+              {meditationLoading ? (
+                <div className="animate-pulse">
+                  <div className="h-6 w-24 bg-background/20 rounded-full mb-3" />
+                  <div className="h-7 w-48 bg-background/20 rounded mb-2" />
+                  <div className="h-5 w-32 bg-background/20 rounded" />
+                </div>
+              ) : dailyMeditation ? (
+                <>
+                  <span className="inline-block px-3 py-1 bg-background/20 rounded-full text-xs font-medium text-foreground mb-3">
+                    {dailyMeditation.category}
+                  </span>
+                  <h3 className="text-xl font-heading font-bold text-foreground mb-2">
+                    {dailyMeditation.title}
+                  </h3>
+                  <div className="flex items-center gap-4 text-foreground/80 text-sm">
+                    <span>{dailyMeditation.duration_minutes} min</span>
+                    <span className="flex items-center gap-1">
+                      <Sparkles size={14} className="text-accent" />
+                      +{dailyMeditation.shc_reward || 100} SHC
+                    </span>
+                  </div>
+                  <Button variant="glass" size="sm" className="mt-4">
+                    <Play size={16} />
+                    {t('dashboard.startSession')}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <span className="inline-block px-3 py-1 bg-background/20 rounded-full text-xs font-medium text-foreground mb-3">
+                    Mindfulness
+                  </span>
+                  <h3 className="text-xl font-heading font-bold text-foreground mb-2">
+                    Morning Awakening
+                  </h3>
+                  <div className="flex items-center gap-4 text-foreground/80 text-sm">
+                    <span>10 min</span>
+                    <span className="flex items-center gap-1">
+                      <Sparkles size={14} className="text-accent" />
+                      +100 SHC
+                    </span>
+                  </div>
+                  <Button variant="glass" size="sm" className="mt-4">
+                    <Play size={16} />
+                    {t('dashboard.startSession')}
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </Link>
