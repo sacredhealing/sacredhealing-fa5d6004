@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { X, Bell, Sparkles, AlertTriangle, CheckCircle, Info } from 'lucide-react';
+import { X, Bell, Sparkles, AlertTriangle, CheckCircle, Info, ExternalLink, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -9,6 +9,10 @@ interface Announcement {
   title: string;
   message: string;
   type: string;
+  image_url: string | null;
+  link_url: string | null;
+  audio_url: string | null;
+  recurring: string | null;
 }
 
 export const AnnouncementPopup: React.FC = () => {
@@ -31,6 +35,25 @@ export const AnnouncementPopup: React.FC = () => {
 
     if (error || !announcements?.length) return;
 
+    // Filter by expiry and recurring logic
+    const now = new Date();
+    const validAnnouncements = announcements.filter(a => {
+      // Check if expired
+      if (a.expires_at && new Date(a.expires_at) < now) return false;
+      
+      // For recurring weekly announcements, check if it should show today
+      if (a.recurring === 'weekly') {
+        const startDay = new Date(a.starts_at).getDay();
+        const todayDay = now.getDay();
+        // Show on the same day of week as the original start date
+        return startDay === todayDay;
+      }
+      
+      return true;
+    });
+
+    if (!validAnnouncements.length) return;
+
     // If user is logged in, filter out dismissed announcements
     if (user) {
       const { data: dismissals } = await supabase
@@ -39,7 +62,7 @@ export const AnnouncementPopup: React.FC = () => {
         .eq('user_id', user.id);
 
       const dismissedIds = new Set(dismissals?.map(d => d.announcement_id) || []);
-      const unread = announcements.find(a => !dismissedIds.has(a.id));
+      const unread = validAnnouncements.find(a => !dismissedIds.has(a.id));
       
       if (unread) {
         setAnnouncement(unread);
@@ -48,7 +71,7 @@ export const AnnouncementPopup: React.FC = () => {
     } else {
       // For non-logged in users, use localStorage
       const dismissed = JSON.parse(localStorage.getItem('dismissed_announcements') || '[]');
-      const unread = announcements.find(a => !dismissed.includes(a.id));
+      const unread = validAnnouncements.find(a => !dismissed.includes(a.id));
       
       if (unread) {
         setAnnouncement(unread);
@@ -97,7 +120,7 @@ export const AnnouncementPopup: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className={`relative w-full max-w-md bg-gradient-to-br ${getBgColor()} border rounded-2xl p-6 shadow-2xl animate-in zoom-in-95 duration-300`}>
+      <div className={`relative w-full max-w-md bg-gradient-to-br ${getBgColor()} border rounded-2xl p-6 shadow-2xl animate-in zoom-in-95 duration-300 bg-card`}>
         <Button
           variant="ghost"
           size="icon"
@@ -112,16 +135,55 @@ export const AnnouncementPopup: React.FC = () => {
             {getIcon()}
           </div>
           <div className="flex-1 pt-1">
-            <h3 className="text-lg font-semibold text-foreground mb-2">
-              {announcement.title}
-            </h3>
-            <p className="text-muted-foreground leading-relaxed">
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-foreground">
+                {announcement.title}
+              </h3>
+              {announcement.recurring && (
+                <span className="px-2 py-0.5 rounded text-xs bg-purple-500/20 text-purple-400 flex items-center gap-1">
+                  <RefreshCw className="h-3 w-3" />
+                  {announcement.recurring}
+                </span>
+              )}
+            </div>
+            <p className="text-muted-foreground leading-relaxed mt-2">
               {announcement.message}
             </p>
           </div>
         </div>
 
-        <div className="mt-6 flex justify-end">
+        {/* Image */}
+        {announcement.image_url && (
+          <div className="mt-4">
+            <img 
+              src={announcement.image_url} 
+              alt="" 
+              className="w-full rounded-lg object-cover max-h-48"
+            />
+          </div>
+        )}
+
+        {/* Audio Player */}
+        {announcement.audio_url && (
+          <div className="mt-4">
+            <audio controls className="w-full" src={announcement.audio_url}>
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+        )}
+
+        <div className="mt-6 flex gap-3 justify-end">
+          {/* Link Button */}
+          {announcement.link_url && (
+            <Button 
+              variant="outline" 
+              onClick={() => window.open(announcement.link_url!, '_blank')}
+              className="flex items-center gap-2"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Learn More
+            </Button>
+          )}
           <Button onClick={handleDismiss} className="px-6">
             Got it
           </Button>
