@@ -87,6 +87,7 @@ const Dashboard: React.FC = () => {
         >
           {quote ? `"${quote}"` : 'Loading wisdom...'}
         </p>
+        <p className="text-muted-foreground text-sm mt-3">— Paramahamsa Vishwananda</p>
       </div>
 
       {/* Today's Meditation */}
