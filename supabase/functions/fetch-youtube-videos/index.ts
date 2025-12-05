@@ -15,7 +15,6 @@ serve(async (req) => {
   try {
     console.log("[FETCH-YOUTUBE] Scraping channel page:", CHANNEL_URL);
 
-    // Fetch the YouTube channel page
     const response = await fetch(CHANNEL_URL, {
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -30,8 +29,6 @@ serve(async (req) => {
     const html = await response.text();
     console.log("[FETCH-YOUTUBE] Page fetched, length:", html.length);
 
-    // YouTube embeds video data in a JSON object within the HTML
-    // Look for ytInitialData which contains all the video information
     const videos: Array<{
       id: string;
       title: string;
@@ -41,7 +38,7 @@ serve(async (req) => {
       channelTitle: string;
     }> = [];
 
-    // Try to find ytInitialData JSON
+    // Try to find ytInitialData JSON - contains ALL videos on the page
     const ytInitialDataMatch = html.match(/var ytInitialData = ({.*?});<\/script>/s);
     
     if (ytInitialDataMatch) {
@@ -49,7 +46,7 @@ serve(async (req) => {
         const ytData = JSON.parse(ytInitialDataMatch[1]);
         console.log("[FETCH-YOUTUBE] Found ytInitialData");
         
-        // Navigate to the video list in the JSON structure
+        // Navigate to the video list
         const tabs = ytData?.contents?.twoColumnBrowseResultsRenderer?.tabs || [];
         
         for (const tab of tabs) {
@@ -58,8 +55,10 @@ serve(async (req) => {
           for (const item of tabContent) {
             const videoRenderer = item?.richItemRenderer?.content?.videoRenderer;
             
-            if (videoRenderer && videos.length < 4) {
+            if (videoRenderer) {
               const videoId = videoRenderer.videoId;
+              if (!videoId) continue;
+              
               const title = videoRenderer.title?.runs?.[0]?.text || "Untitled";
               const thumbnail = videoRenderer.thumbnail?.thumbnails?.slice(-1)[0]?.url || 
                                `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
@@ -82,30 +81,26 @@ serve(async (req) => {
       }
     }
 
-    // Fallback: Try regex patterns to extract video IDs from HTML
+    // Fallback: regex extraction
     if (videos.length === 0) {
       console.log("[FETCH-YOUTUBE] Trying fallback regex extraction");
       
-      // Pattern 1: Look for videoId in various formats
       const videoIdPattern = /"videoId":"([a-zA-Z0-9_-]{11})"/g;
       const foundIds = new Set<string>();
       let match;
       
-      while ((match = videoIdPattern.exec(html)) !== null && foundIds.size < 4) {
+      while ((match = videoIdPattern.exec(html)) !== null) {
         foundIds.add(match[1]);
       }
       
-      // Pattern 2: Alternative pattern
       if (foundIds.size === 0) {
         const altPattern = /\/watch\?v=([a-zA-Z0-9_-]{11})/g;
-        while ((match = altPattern.exec(html)) !== null && foundIds.size < 4) {
+        while ((match = altPattern.exec(html)) !== null) {
           foundIds.add(match[1]);
         }
       }
 
-      // Try to extract titles for each video ID
       for (const videoId of foundIds) {
-        // Try to find title associated with this video
         const titlePattern = new RegExp(`"videoId":"${videoId}"[^}]*"title":\\{"runs":\\[\\{"text":"([^"]+)"`, 's');
         const titleMatch = html.match(titlePattern);
         const title = titleMatch ? titleMatch[1] : `Video ${videoId}`;
@@ -121,9 +116,9 @@ serve(async (req) => {
       }
     }
 
-    console.log("[FETCH-YOUTUBE] Videos extracted:", videos.length);
+    console.log("[FETCH-YOUTUBE] Total videos extracted:", videos.length);
 
-    return new Response(JSON.stringify({ videos, nextPageToken: null }), {
+    return new Response(JSON.stringify({ videos }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
@@ -131,7 +126,7 @@ serve(async (req) => {
     console.error("[FETCH-YOUTUBE] Error:", message);
     return new Response(JSON.stringify({ error: message, videos: [] }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200, // Return 200 with empty videos instead of error
+      status: 200,
     });
   }
 });

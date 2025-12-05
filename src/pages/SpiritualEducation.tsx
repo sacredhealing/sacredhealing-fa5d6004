@@ -10,8 +10,8 @@ import { ReviewSection } from '@/components/reviews/ReviewSection';
 interface Video {
   id: string;
   title: string;
-  description: string;
   thumbnail: string;
+  url: string;
   publishedAt: string;
   channelTitle: string;
 }
@@ -19,11 +19,11 @@ interface Video {
 const SpiritualEducation: React.FC = () => {
   const { user, session } = useAuth();
   const [videos, setVideos] = useState<Video[]>([]);
+  const [filteredVideos, setFilteredVideos] = useState<Video[]>([]);
   const [watchedVideos, setWatchedVideos] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
-  const [nextPageToken, setNextPageToken] = useState<string | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [isClaimingReward, setIsClaimingReward] = useState(false);
 
@@ -36,21 +36,29 @@ const SpiritualEducation: React.FC = () => {
     }
   }, [user]);
 
-  const fetchVideos = async (search = '', pageToken = '') => {
+  useEffect(() => {
+    // Filter videos when search query changes
+    if (searchQuery.trim()) {
+      const filtered = videos.filter(v => 
+        v.title.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredVideos(filtered);
+      setCurrentPage(0);
+    } else {
+      setFilteredVideos(videos);
+    }
+  }, [searchQuery, videos]);
+
+  const fetchVideos = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('fetch-youtube-videos', {
-        body: { search, pageToken }
-      });
+      const { data, error } = await supabase.functions.invoke('fetch-youtube-videos');
 
       if (error) throw error;
 
-      if (pageToken && data.videos) {
-        setVideos(prev => [...prev, ...data.videos]);
-      } else {
-        setVideos(data.videos || []);
-      }
-      setNextPageToken(data.nextPageToken);
+      const fetchedVideos = data.videos || [];
+      setVideos(fetchedVideos);
+      setFilteredVideos(fetchedVideos);
     } catch (err) {
       console.error('Error fetching videos:', err);
       toast.error('Failed to load videos');
@@ -73,8 +81,6 @@ const SpiritualEducation: React.FC = () => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setCurrentPage(0);
-    fetchVideos(searchQuery);
   };
 
   const handleClaimReward = async () => {
@@ -112,22 +118,22 @@ const SpiritualEducation: React.FC = () => {
     }
   };
 
-  const loadMore = () => {
-    if (nextPageToken) {
-      fetchVideos(searchQuery, nextPageToken);
+  const totalPages = Math.ceil(filteredVideos.length / VIDEOS_PER_PAGE);
+  const displayedVideos = filteredVideos.slice(
+    currentPage * VIDEOS_PER_PAGE, 
+    (currentPage + 1) * VIDEOS_PER_PAGE
+  );
+
+  const handleNext = () => {
+    if (currentPage < totalPages - 1) {
+      setCurrentPage(prev => prev + 1);
     }
   };
 
-  const displayedVideos = videos.slice(currentPage * VIDEOS_PER_PAGE, (currentPage + 1) * VIDEOS_PER_PAGE);
-  const totalPages = Math.ceil(videos.length / VIDEOS_PER_PAGE);
-  const canGoNext = currentPage < totalPages - 1 || nextPageToken;
-  const canGoPrev = currentPage > 0;
-
-  const handleNext = () => {
-    if (currentPage >= totalPages - 1 && nextPageToken) {
-      loadMore();
+  const handlePrev = () => {
+    if (currentPage > 0) {
+      setCurrentPage(prev => prev - 1);
     }
-    setCurrentPage(prev => prev + 1);
   };
 
   return (
@@ -172,15 +178,14 @@ const SpiritualEducation: React.FC = () => {
       </div>
 
       {/* Video Grid */}
-      {isLoading && videos.length === 0 ? (
+      {isLoading ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
-      ) : videos.length === 0 ? (
+      ) : filteredVideos.length === 0 ? (
         <div className="text-center py-12">
           <Youtube className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">No videos available</p>
-          <p className="text-sm text-muted-foreground mt-1">Add YouTube channels in the admin panel</p>
+          <p className="text-muted-foreground">No videos found</p>
         </div>
       ) : (
         <>
@@ -220,29 +225,31 @@ const SpiritualEducation: React.FC = () => {
           </div>
 
           {/* Pagination */}
-          <div className="flex items-center justify-center gap-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(prev => prev - 1)}
-              disabled={!canGoPrev}
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Previous
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              Page {currentPage + 1}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleNext}
-              disabled={!canGoNext}
-            >
-              Next
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handlePrev}
+                disabled={currentPage === 0}
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Previous
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Page {currentPage + 1} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleNext}
+                disabled={currentPage >= totalPages - 1}
+              >
+                Next
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
         </>
       )}
 
