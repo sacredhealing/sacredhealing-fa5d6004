@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SHC_REWARD = 3;
+const SHC_REWARD = 100;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
