@@ -149,37 +149,36 @@ const Courses: React.FC = () => {
         </div>
       </div>
 
-      {/* Course Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+      {/* Course Grid - Promotional Cards */}
+      <div className="flex flex-wrap justify-center gap-6 max-w-5xl mx-auto">
         {/* Stargate Membership Card */}
         <div
           onClick={() => window.location.href = '/stargate'}
-          className="relative overflow-hidden rounded-xl border border-primary/50 bg-gradient-to-br from-primary/20 via-accent/10 to-secondary/20 cursor-pointer transition-all duration-200 hover:scale-[1.03] hover:shadow-lg hover:shadow-primary/20 animate-slide-up"
+          className="w-[300px] rounded-2xl overflow-hidden bg-card border border-primary/50 cursor-pointer transition-all duration-300 hover:scale-[1.03] hover:shadow-2xl animate-slide-up flex flex-col"
         >
-          <div className="aspect-[4/3] relative overflow-hidden flex items-center justify-center">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-accent/30" />
-            <span className="text-6xl relative z-10">🌟</span>
-            <div className="absolute top-2 left-2">
-              <span className="px-2 py-0.5 bg-primary/90 rounded-full text-[10px] font-medium text-primary-foreground">
+          <div className="h-[180px] relative overflow-hidden flex items-center justify-center bg-gradient-to-br from-primary/30 via-accent/20 to-secondary/30">
+            <span className="text-7xl">🌟</span>
+            <div className="absolute top-3 left-3">
+              <span className="px-2 py-1 bg-primary/90 rounded-full text-xs font-medium text-primary-foreground">
                 Community
               </span>
             </div>
           </div>
-          <div className="p-3">
-            <h3 className="font-heading font-semibold text-sm text-foreground line-clamp-2 leading-tight">
+          <div className="p-4 flex-1 flex flex-col">
+            <h3 className="font-heading font-bold text-lg text-foreground mb-2">
               Stargate Membership
             </h3>
-            <div className="flex items-center gap-2 mt-2 text-[10px] text-muted-foreground">
-              <span className="flex items-center gap-0.5">
-                <Sparkles size={10} className="text-primary" />
-                €25/month
-              </span>
-            </div>
+            <p className="flex-1 text-sm text-muted-foreground leading-relaxed mb-4">
+              Explore the Stargate community and unlock new spiritual dimensions. Join bi-weekly Zoom sessions and our private Telegram group.
+            </p>
+            <Button className="w-full rounded-xl">
+              View & Sign Up
+            </Button>
           </div>
         </div>
 
         {courses.length === 0 ? (
-          <div className="col-span-full text-center py-12">
+          <div className="w-full text-center py-12">
             <p className="text-muted-foreground">No courses available yet</p>
           </div>
         ) : (
@@ -192,11 +191,11 @@ const Courses: React.FC = () => {
               <div
                 key={course.id}
                 onClick={() => window.location.href = `/courses/${course.id}`}
-                className="relative overflow-hidden rounded-xl border border-border/30 bg-card cursor-pointer transition-all duration-200 hover:scale-[1.03] hover:shadow-lg animate-slide-up"
+                className="w-[300px] rounded-2xl overflow-hidden bg-card border border-border/30 cursor-pointer transition-all duration-300 hover:scale-[1.03] hover:shadow-2xl animate-slide-up flex flex-col"
                 style={{ animationDelay: `${index * 0.05}s` }}
               >
                 {/* Course Thumbnail */}
-                <div className="aspect-[4/3] relative overflow-hidden bg-muted/30">
+                <div className="h-[180px] relative overflow-hidden bg-muted/30">
                   {course.cover_image_url ? (
                     <img 
                       src={course.cover_image_url} 
@@ -205,24 +204,24 @@ const Courses: React.FC = () => {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-accent/20">
-                      <span className="text-4xl">📚</span>
+                      <span className="text-5xl">📚</span>
                     </div>
                   )}
                   
                   {/* Badges */}
-                  <div className="absolute top-2 left-2 flex flex-wrap gap-1">
+                  <div className="absolute top-3 left-3 flex flex-wrap gap-1">
                     {course.is_free && (
-                      <span className="px-2 py-0.5 bg-secondary/90 rounded-full text-[10px] font-medium text-secondary-foreground">
+                      <span className="px-2 py-1 bg-secondary/90 rounded-full text-xs font-medium text-secondary-foreground">
                         Free
                       </span>
                     )}
                     {course.is_premium_only && (
-                      <span className="px-2 py-0.5 bg-accent/90 rounded-full text-[10px] font-medium text-accent-foreground">
+                      <span className="px-2 py-1 bg-accent/90 rounded-full text-xs font-medium text-accent-foreground">
                         Premium
                       </span>
                     )}
                     {course.id === WEALTH_COURSE_ID && (
-                      <span className="px-2 py-0.5 bg-yellow-500/90 rounded-full text-[10px] font-medium text-yellow-950">
+                      <span className="px-2 py-1 bg-yellow-500/90 rounded-full text-xs font-medium text-yellow-950">
                         🇸🇪
                       </span>
                     )}
@@ -230,7 +229,7 @@ const Courses: React.FC = () => {
 
                   {/* Progress indicator */}
                   {isEnrolled && progress > 0 && (
-                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-muted/50">
+                    <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-muted/50">
                       <div 
                         className="h-full bg-primary"
                         style={{ width: `${progress}%` }}
@@ -240,30 +239,36 @@ const Courses: React.FC = () => {
 
                   {/* Completion badge */}
                   {progress === 100 && (
-                    <div className="absolute top-2 right-2">
-                      <CheckCircle size={20} className="text-secondary drop-shadow-md" />
+                    <div className="absolute top-3 right-3">
+                      <CheckCircle size={24} className="text-secondary drop-shadow-md" />
                     </div>
                   )}
                 </div>
 
-                {/* Course Title */}
-                <div className="p-3">
-                  <h3 className="font-heading font-semibold text-sm text-foreground line-clamp-2 leading-tight">
+                {/* Course Content */}
+                <div className="p-4 flex-1 flex flex-col">
+                  <h3 className="font-heading font-bold text-lg text-foreground mb-2">
                     {course.title}
                   </h3>
-                  <div className="flex items-center gap-2 mt-2 text-[10px] text-muted-foreground">
-                    <span className="flex items-center gap-0.5">
-                      <Play size={10} />
-                      {course.lesson_count}
+                  <p className="flex-1 text-sm text-muted-foreground leading-relaxed mb-4 line-clamp-3">
+                    {course.description || 'Expand your consciousness with this transformative course.'}
+                  </p>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
+                    <span className="flex items-center gap-1">
+                      <Play size={12} />
+                      {course.lesson_count} lessons
                     </span>
-                    <span className="flex items-center gap-0.5">
-                      <Clock size={10} />
+                    <span className="flex items-center gap-1">
+                      <Clock size={12} />
                       {course.duration_hours}h
                     </span>
                     {course.has_certificate && (
-                      <Award size={10} className="text-accent" />
+                      <Award size={12} className="text-accent" />
                     )}
                   </div>
+                  <Button className="w-full rounded-xl">
+                    {isEnrolled ? 'Continue Learning' : 'View & Sign Up'}
+                  </Button>
                 </div>
               </div>
             );
