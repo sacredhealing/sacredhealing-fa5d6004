@@ -7,15 +7,16 @@ import { LotusIcon } from '@/components/icons/LotusIcon';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { useAuth } from '@/hooks/useAuth';
 import { usePhantomWallet } from '@/hooks/usePhantomWallet';
-import { useSHCBalance } from '@/hooks/useSHCBalance';
+import { useSHC } from '@/contexts/SHCContext';
 import { useToast } from '@/hooks/use-toast';
+import { AnimatedCounter } from '@/components/ui/animated-counter';
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user, signOut } = useAuth();
   const { walletAddress, connectWallet } = usePhantomWallet();
-  const { balance } = useSHCBalance();
+  const { balance, profile } = useSHC();
   const { toast } = useToast();
 
   const badges = [
@@ -75,12 +76,12 @@ const Profile: React.FC = () => {
         {/* Stats */}
         <div className="flex gap-8 mt-6">
           <div className="text-center">
-            <p className="text-2xl font-heading font-bold text-primary">7</p>
+            <p className="text-2xl font-heading font-bold text-primary">{profile?.streak_days ?? 0}</p>
             <p className="text-xs text-muted-foreground">{t('profile.streak')}</p>
           </div>
           <div className="text-center">
             <p className="text-2xl font-heading font-bold text-secondary">
-              {balance?.balance.toLocaleString() ?? '0'}
+              <AnimatedCounter value={balance?.balance ?? 0} />
             </p>
             <p className="text-xs text-muted-foreground">{t('profile.balance')}</p>
           </div>

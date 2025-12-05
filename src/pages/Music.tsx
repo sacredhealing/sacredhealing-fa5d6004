@@ -4,12 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useSHCBalance } from '@/hooks/useSHCBalance';
+import { useSHC } from '@/contexts/SHCContext';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { TranslatedText } from '@/components/TranslatedText';
 import MasteringService from '@/components/music/MasteringService';
 import MusicMembershipBanner from '@/components/music/MusicMembershipBanner';
+import { AnimatedCounter } from '@/components/ui/animated-counter';
 interface Track {
   id: string;
   title: string;
@@ -30,7 +31,7 @@ const Music: React.FC = () => {
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { t } = useTranslation();
-  const { balance, refreshBalance } = useSHCBalance();
+  const { balance, refreshBalance, addOptimisticBalance } = useSHC();
   
   const [tracks, setTracks] = useState<Track[]>([]);
   const [purchasedIds, setPurchasedIds] = useState<string[]>([]);
@@ -42,9 +43,12 @@ const Music: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'all' | 'owned' | 'liked'>('all');
   const [purchasingId, setPurchasingId] = useState<string | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState<Track | null>(null);
+  const [rewardedTracks, setRewardedTracks] = useState<Set<string>>(new Set());
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressInterval = useRef<NodeJS.Timeout | null>(null);
+
+  const MUSIC_REWARD = 100;
 
   useEffect(() => {
     fetchTracks();
@@ -160,12 +164,20 @@ const Music: React.FC = () => {
       audioRef.current = new Audio(audioUrl);
       audioRef.current.play();
       
-      audioRef.current.onended = () => {
+      audioRef.current.onended = async () => {
         setIsPlaying(false);
         if (!isOwned) {
           toast({
             title: "Preview ended",
             description: "Purchase this track to listen to the full version!",
+          });
+        } else if (!rewardedTracks.has(track.id)) {
+          // Award SHC for listening to full track
+          setRewardedTracks(prev => new Set([...prev, track.id]));
+          addOptimisticBalance(MUSIC_REWARD);
+          toast({
+            title: `🎵 +${MUSIC_REWARD} SHC earned!`,
+            description: `You completed listening to "${track.title}"`,
           });
         }
       };
@@ -271,7 +283,9 @@ const Music: React.FC = () => {
           <p className="text-xs text-muted-foreground">{t('music.owned')}</p>
         </div>
         <div className="flex-1 bg-muted/30 rounded-xl p-4 border border-border/30 text-center">
-          <p className="text-2xl font-heading font-bold text-secondary">{balance?.balance.toLocaleString() ?? '0'}</p>
+          <p className="text-2xl font-heading font-bold text-secondary">
+            <AnimatedCounter value={balance?.balance ?? 0} />
+          </p>
           <p className="text-xs text-muted-foreground">{t('wallet.balance')}</p>
         </div>
         <div className="flex-1 bg-muted/30 rounded-xl p-4 border border-border/30 text-center">

@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { ReviewSection } from '@/components/reviews/ReviewSection';
+import { useSHC } from '@/contexts/SHCContext';
 
 // YouTube IFrame API types
 declare global {
@@ -42,6 +43,7 @@ const SHC_REWARD = 100;
 
 const SpiritualEducation: React.FC = () => {
   const { user, session } = useAuth();
+  const { addOptimisticBalance } = useSHC();
   const [videos, setVideos] = useState<Video[]>([]);
   const [filteredVideos, setFilteredVideos] = useState<Video[]>([]);
   const [watchedVideos, setWatchedVideos] = useState<Set<string>>(new Set());
@@ -183,6 +185,7 @@ const SpiritualEducation: React.FC = () => {
         toast.success(`🎉 You earned ${SHC_REWARD} SHC for watching this video!`);
         setWatchedVideos(prev => new Set([...prev, selectedVideo.id]));
         setSessionRewardedVideos(prev => new Set([...prev, selectedVideo.id]));
+        addOptimisticBalance(SHC_REWARD);
       }
     } catch (err) {
       console.error('Failed to claim reward:', err);
@@ -219,6 +222,7 @@ const SpiritualEducation: React.FC = () => {
         toast.success(`🎉 You earned ${SHC_REWARD} SHC!`);
         setWatchedVideos(prev => new Set([...prev, selectedVideo.id]));
         setSessionRewardedVideos(prev => new Set([...prev, selectedVideo.id]));
+        addOptimisticBalance(SHC_REWARD);
       }
     } catch (err) {
       toast.error('Failed to claim reward');
