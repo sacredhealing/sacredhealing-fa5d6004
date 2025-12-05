@@ -150,13 +150,40 @@ const Courses: React.FC = () => {
       </div>
 
       {/* Course Grid */}
-      {courses.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">No courses available yet</p>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        {/* Stargate Membership Card */}
+        <div
+          onClick={() => window.location.href = '/stargate'}
+          className="relative overflow-hidden rounded-xl border border-primary/50 bg-gradient-to-br from-primary/20 via-accent/10 to-secondary/20 cursor-pointer transition-all duration-200 hover:scale-[1.03] hover:shadow-lg hover:shadow-primary/20 animate-slide-up"
+        >
+          <div className="aspect-[4/3] relative overflow-hidden flex items-center justify-center">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-accent/30" />
+            <span className="text-6xl relative z-10">🌟</span>
+            <div className="absolute top-2 left-2">
+              <span className="px-2 py-0.5 bg-primary/90 rounded-full text-[10px] font-medium text-primary-foreground">
+                Community
+              </span>
+            </div>
+          </div>
+          <div className="p-3">
+            <h3 className="font-heading font-semibold text-sm text-foreground line-clamp-2 leading-tight">
+              Stargate Membership
+            </h3>
+            <div className="flex items-center gap-2 mt-2 text-[10px] text-muted-foreground">
+              <span className="flex items-center gap-0.5">
+                <Sparkles size={10} className="text-primary" />
+                €25/month
+              </span>
+            </div>
+          </div>
         </div>
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {courses.map((course, index) => {
+
+        {courses.length === 0 ? (
+          <div className="col-span-full text-center py-12">
+            <p className="text-muted-foreground">No courses available yet</p>
+          </div>
+        ) : (
+          courses.map((course, index) => {
             const enrollment = getEnrollment(course.id);
             const isEnrolled = !!enrollment;
             const progress = enrollment?.progress_percent || 0;
@@ -240,9 +267,9 @@ const Courses: React.FC = () => {
                 </div>
               </div>
             );
-          })}
-        </div>
-      )}
+          })
+        )}
+      </div>
     </div>
   );
 };
