@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Play, BookOpen, Gift, Wallet, Flame, Sparkles, DollarSign, Youtube, ShoppingBag, Crown, Music, Heart, Trophy } from 'lucide-react';
+import { Play, BookOpen, Gift, Wallet, Flame, Sparkles, DollarSign, Youtube, ShoppingBag, Crown, Music, Heart, Trophy, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LotusIcon } from '@/components/icons/LotusIcon';
 import { SocialShare } from '@/components/SocialShare';
@@ -9,11 +9,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useSHC } from '@/contexts/SHCContext';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
-
-const dailyQuote = {
-  text: "The wound is the place where the Light enters you.",
-  author: "Rumi"
-};
+import { useDailyQuote } from '@/hooks/useDailyQuote';
 
 const todaysMeditation = {
   title: "Morning Awakening",
@@ -25,6 +21,7 @@ const todaysMeditation = {
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
   const { balance, profile, isLoading } = useSHC();
+  const { quote, isVisible } = useDailyQuote();
 
   const quickActions = [
     { icon: Play, labelKey: 'quickActions.meditate', to: '/meditations', color: 'primary' },
@@ -76,11 +73,20 @@ const Dashboard: React.FC = () => {
         </Link>
       </div>
 
-      {/* Daily Quote */}
-      <div className="rounded-2xl bg-muted/30 border border-border/30 p-5 mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-        <p className="text-sm text-secondary mb-2 font-medium">{t('dashboard.todaysWisdom')}</p>
-        <p className="text-foreground italic leading-relaxed">"{dailyQuote.text}"</p>
-        <p className="text-muted-foreground text-sm mt-2">— {dailyQuote.author}</p>
+      {/* Today's Wisdom */}
+      <div className="rounded-2xl bg-gradient-to-br from-amber-500/20 via-purple-500/10 to-pink-500/20 border border-amber-500/30 p-6 mb-6 animate-slide-up text-center shadow-lg" style={{ animationDelay: '0.1s' }}>
+        <div className="flex items-center justify-center gap-2 mb-4">
+          <Star className="w-5 h-5 text-amber-400" />
+          <h2 className="text-lg font-heading font-semibold text-amber-400">
+            {t('dashboard.todaysWisdom')}
+          </h2>
+          <Star className="w-5 h-5 text-amber-400" />
+        </div>
+        <p 
+          className={`text-foreground italic leading-relaxed text-lg transition-opacity duration-500 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
+        >
+          {quote ? `"${quote}"` : 'Loading wisdom...'}
+        </p>
       </div>
 
       {/* Today's Meditation */}
