@@ -129,31 +129,43 @@ export type Database = {
       }
       announcements: {
         Row: {
+          audio_url: string | null
           created_at: string
           expires_at: string | null
           id: string
+          image_url: string | null
           is_active: boolean
+          link_url: string | null
           message: string
+          recurring: string | null
           starts_at: string
           title: string
           type: string
         }
         Insert: {
+          audio_url?: string | null
           created_at?: string
           expires_at?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean
+          link_url?: string | null
           message: string
+          recurring?: string | null
           starts_at?: string
           title: string
           type?: string
         }
         Update: {
+          audio_url?: string | null
           created_at?: string
           expires_at?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean
+          link_url?: string | null
           message?: string
+          recurring?: string | null
           starts_at?: string
           title?: string
           type?: string

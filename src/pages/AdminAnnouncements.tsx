@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Send, Bell, Trash2, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Plus, Send, Bell, Trash2, Eye, EyeOff, Image, Link, Music, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -20,6 +20,10 @@ interface Announcement {
   starts_at: string;
   expires_at: string | null;
   created_at: string;
+  image_url: string | null;
+  link_url: string | null;
+  audio_url: string | null;
+  recurring: string | null;
 }
 
 export default function AdminAnnouncements() {
@@ -31,6 +35,11 @@ export default function AdminAnnouncements() {
   const [message, setMessage] = useState('');
   const [type, setType] = useState('info');
   const [expiresIn, setExpiresIn] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
+  const [linkUrl, setLinkUrl] = useState('');
+  const [audioUrl, setAudioUrl] = useState('');
+  const [recurring, setRecurring] = useState('');
+  const [startsAt, setStartsAt] = useState('');
 
   const { data: announcements, isLoading } = useQuery({
     queryKey: ['admin-announcements'],
@@ -52,11 +61,18 @@ export default function AdminAnnouncements() {
         expires_at = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
       }
       
+      const starts_at = startsAt ? new Date(startsAt).toISOString() : new Date().toISOString();
+      
       const { error } = await supabase.from('announcements').insert({
         title,
         message,
         type,
         expires_at,
+        starts_at,
+        image_url: imageUrl || null,
+        link_url: linkUrl || null,
+        audio_url: audioUrl || null,
+        recurring: recurring || null,
       });
       if (error) throw error;
     },
@@ -66,6 +82,11 @@ export default function AdminAnnouncements() {
       setMessage('');
       setType('info');
       setExpiresIn('');
+      setImageUrl('');
+      setLinkUrl('');
+      setAudioUrl('');
+      setRecurring('');
+      setStartsAt('');
       toast({ title: 'Announcement sent!', description: 'Users will see it when they open the app.' });
     },
     onError: (error: Error) => {
@@ -146,6 +167,42 @@ export default function AdminAnnouncements() {
               />
             </div>
 
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Image className="h-4 w-4" />
+                Image URL (optional)
+              </Label>
+              <Input
+                placeholder="https://example.com/image.jpg"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Link className="h-4 w-4" />
+                Website Link (optional)
+              </Label>
+              <Input
+                placeholder="https://example.com"
+                value={linkUrl}
+                onChange={(e) => setLinkUrl(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Music className="h-4 w-4" />
+                Audio URL (optional)
+              </Label>
+              <Input
+                placeholder="https://example.com/audio.mp3"
+                value={audioUrl}
+                onChange={(e) => setAudioUrl(e.target.value)}
+              />
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Type</Label>
@@ -160,6 +217,33 @@ export default function AdminAnnouncements() {
                     <SelectItem value="promotion">Promotion</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <RefreshCw className="h-4 w-4" />
+                  Recurring
+                </Label>
+                <Select value={recurring} onValueChange={setRecurring}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="None" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Publish Date/Time</Label>
+                <Input
+                  type="datetime-local"
+                  value={startsAt}
+                  onChange={(e) => setStartsAt(e.target.value)}
+                />
               </div>
 
               <div className="space-y-2">
@@ -185,7 +269,7 @@ export default function AdminAnnouncements() {
               disabled={!title || !message || createMutation.isPending}
             >
               <Bell className="h-4 w-4 mr-2" />
-              Send Announcement
+              Publish Announcement
             </Button>
           </CardContent>
         </Card>
@@ -203,18 +287,44 @@ export default function AdminAnnouncements() {
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span className={`px-2 py-0.5 rounded text-xs ${getTypeColor(ann.type)}`}>
                           {ann.type}
                         </span>
+                        {ann.recurring && (
+                          <span className="px-2 py-0.5 rounded text-xs bg-purple-500/20 text-purple-400 flex items-center gap-1">
+                            <RefreshCw className="h-3 w-3" />
+                            {ann.recurring}
+                          </span>
+                        )}
                         {!ann.is_active && (
                           <span className="text-xs text-muted-foreground">Inactive</span>
                         )}
                       </div>
                       <h3 className="font-medium">{ann.title}</h3>
                       <p className="text-sm text-muted-foreground mt-1">{ann.message}</p>
+                      
+                      {ann.image_url && (
+                        <img src={ann.image_url} alt="" className="mt-2 rounded-lg max-h-32 object-cover" />
+                      )}
+                      
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {ann.link_url && (
+                          <a href={ann.link_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
+                            <Link className="h-3 w-3" />
+                            Link
+                          </a>
+                        )}
+                        {ann.audio_url && (
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Music className="h-3 w-3" />
+                            Audio attached
+                          </span>
+                        )}
+                      </div>
+                      
                       <p className="text-xs text-muted-foreground mt-2">
-                        {new Date(ann.created_at).toLocaleDateString()}
+                        {new Date(ann.starts_at).toLocaleString()}
                         {ann.expires_at && ` • Expires: ${new Date(ann.expires_at).toLocaleDateString()}`}
                       </p>
                     </div>
