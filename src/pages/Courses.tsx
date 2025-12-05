@@ -26,6 +26,7 @@ interface Course {
   enrollment_count: number;
   recurring_price_usd: number | null;
   recurring_interval: string | null;
+  cover_image_url: string | null;
 }
 
 interface Enrollment {
@@ -148,13 +149,13 @@ const Courses: React.FC = () => {
         </div>
       </div>
 
-      {/* Course List */}
+      {/* Course Grid */}
       {courses.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-muted-foreground">No courses available yet</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {courses.map((course, index) => {
             const enrollment = getEnrollment(course.id);
             const isEnrolled = !!enrollment;
@@ -163,183 +164,80 @@ const Courses: React.FC = () => {
             return (
               <div
                 key={course.id}
-                className={`relative overflow-hidden rounded-2xl border p-5 animate-slide-up transition-all duration-300 ${
-                  !isEnrolled && !course.is_free
-                    ? 'bg-muted/20 border-border/30'
-                    : 'bg-gradient-card border-border/50 hover:scale-[1.02]'
-                }`}
+                onClick={() => window.location.href = `/courses/${course.id}`}
+                className="relative overflow-hidden rounded-xl border border-border/30 bg-card cursor-pointer transition-all duration-200 hover:scale-[1.03] hover:shadow-lg animate-slide-up"
                 style={{ animationDelay: `${index * 0.05}s` }}
               >
-                {/* Badge indicators */}
-                <div className="absolute top-3 right-3 flex gap-2">
-                  {progress === 100 && (
-                    <div className="flex items-center gap-1 px-2 py-1 bg-secondary/20 rounded-full">
-                      <CheckCircle size={12} className="text-secondary" />
-                      <span className="text-xs font-medium text-secondary">Done</span>
-                    </div>
-                  )}
-                {course.is_premium_only && (
-                    <div className="px-2 py-1 bg-accent/20 rounded-full">
-                      <span className="text-xs font-medium text-accent">Premium</span>
-                    </div>
-                  )}
-                  {course.id === WEALTH_COURSE_ID && (
-                    <div className="px-2 py-1 bg-yellow-500/20 rounded-full">
-                      <span className="text-xs font-medium text-yellow-500">🇸🇪 Svenska</span>
-                    </div>
-                  )}
-                  {course.recurring_price_usd && (
-                    <div className="px-2 py-1 bg-primary/20 rounded-full">
-                      <RefreshCw size={10} className="inline text-primary mr-1" />
-                      <span className="text-xs font-medium text-primary">Subscription</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex gap-4">
-                  {/* Course icon */}
-                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl ${
-                    !isEnrolled && !course.is_free ? 'bg-muted/30' : 'bg-primary/20'
-                  }`}>
-                    {!isEnrolled && !course.is_free ? (
-                      <Lock size={24} className="text-muted-foreground" />
-                    ) : (
-                      <span>📚</span>
-                    )}
-                  </div>
-
-                  <div className="flex-1">
-                    <h3 className={`font-heading font-semibold ${
-                      !isEnrolled && !course.is_free ? 'text-muted-foreground' : 'text-foreground'
-                    }`}>
-                      {course.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                      {course.description}
-                    </p>
-
-                    {/* Meta info */}
-                    <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Play size={12} />
-                        {course.lesson_count} lessons
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock size={12} />
-                        {course.duration_hours}h
-                      </span>
-                      {course.has_certificate && (
-                        <span className="flex items-center gap-1">
-                          <Award size={12} className="text-accent" />
-                          Certificate
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Progress bar for enrolled courses */}
-                    {isEnrolled && progress > 0 && progress < 100 && (
-                      <div className="mt-3">
-                        <div className="flex justify-between text-xs mb-1">
-                          <span className="text-muted-foreground">Progress</span>
-                          <span className="text-primary">{progress}%</span>
-                        </div>
-                        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-gradient-healing rounded-full"
-                            style={{ width: `${progress}%` }}
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Enrollment buttons */}
-                    {!isEnrolled && (
-                      <div className="mt-3 space-y-2">
-                        {course.is_free ? (
-                          <Button 
-                            variant="spiritual" 
-                            size="sm"
-                            disabled={enrollingId === course.id}
-                            onClick={() => handleEnroll(course, 'free')}
-                          >
-                            {enrollingId === course.id ? (
-                              <Loader2 size={14} className="animate-spin" />
-                            ) : (
-                              <Play size={14} />
-                            )}
-                            Start Free Course
-                          </Button>
-                        ) : (
-                          <div className="flex flex-wrap gap-2">
-                            {/* One-time payment options */}
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              disabled={enrollingId === course.id}
-                              onClick={() => handleEnroll(course, 'shc')}
-                            >
-                              <Sparkles size={14} className="text-accent" />
-                              {course.price_shc} SHC
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              disabled={enrollingId === course.id}
-                              onClick={() => handleEnroll(course, 'stripe')}
-                            >
-                              ${course.price_usd}
-                            </Button>
-
-                            {/* Subscription option */}
-                            {course.recurring_price_usd && course.recurring_interval && (
-                              <Button 
-                                variant="gold" 
-                                size="sm"
-                                disabled={enrollingId === course.id}
-                                onClick={() => handleEnroll(course, 'stripe', true)}
-                              >
-                                <RefreshCw size={14} />
-                                ${course.recurring_price_usd}/{course.recurring_interval === 'month' ? 'mo' : 'yr'}
-                              </Button>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {isEnrolled && progress < 100 && (
-                      <div className="mt-3">
-                        <Button variant="spiritual" size="sm">
-                          <Play size={14} />
-                          Continue Learning
-                        </Button>
-                      </div>
-                    )}
-
-                    {/* Review button */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedCourseForReview(selectedCourseForReview === course.id ? null : course.id);
-                      }}
-                      className="mt-3 flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
-                    >
-                      <MessageSquare size={14} />
-                      <span>Reviews & Comments (Earn 1000 SHC)</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Review Section */}
-                {selectedCourseForReview === course.id && (
-                  <div className="mt-4 pt-4 border-t border-border/30">
-                    <ReviewSection
-                      contentType="course"
-                      contentId={course.id}
-                      contentTitle={course.title}
+                {/* Course Thumbnail */}
+                <div className="aspect-[4/3] relative overflow-hidden bg-muted/30">
+                  {course.cover_image_url ? (
+                    <img 
+                      src={course.cover_image_url} 
+                      alt={course.title}
+                      className="w-full h-full object-cover"
                     />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-accent/20">
+                      <span className="text-4xl">📚</span>
+                    </div>
+                  )}
+                  
+                  {/* Badges */}
+                  <div className="absolute top-2 left-2 flex flex-wrap gap-1">
+                    {course.is_free && (
+                      <span className="px-2 py-0.5 bg-secondary/90 rounded-full text-[10px] font-medium text-secondary-foreground">
+                        Free
+                      </span>
+                    )}
+                    {course.is_premium_only && (
+                      <span className="px-2 py-0.5 bg-accent/90 rounded-full text-[10px] font-medium text-accent-foreground">
+                        Premium
+                      </span>
+                    )}
+                    {course.id === WEALTH_COURSE_ID && (
+                      <span className="px-2 py-0.5 bg-yellow-500/90 rounded-full text-[10px] font-medium text-yellow-950">
+                        🇸🇪
+                      </span>
+                    )}
                   </div>
-                )}
+
+                  {/* Progress indicator */}
+                  {isEnrolled && progress > 0 && (
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-muted/50">
+                      <div 
+                        className="h-full bg-primary"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Completion badge */}
+                  {progress === 100 && (
+                    <div className="absolute top-2 right-2">
+                      <CheckCircle size={20} className="text-secondary drop-shadow-md" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Course Title */}
+                <div className="p-3">
+                  <h3 className="font-heading font-semibold text-sm text-foreground line-clamp-2 leading-tight">
+                    {course.title}
+                  </h3>
+                  <div className="flex items-center gap-2 mt-2 text-[10px] text-muted-foreground">
+                    <span className="flex items-center gap-0.5">
+                      <Play size={10} />
+                      {course.lesson_count}
+                    </span>
+                    <span className="flex items-center gap-0.5">
+                      <Clock size={10} />
+                      {course.duration_hours}h
+                    </span>
+                    {course.has_certificate && (
+                      <Award size={10} className="text-accent" />
+                    )}
+                  </div>
+                </div>
               </div>
             );
           })}
