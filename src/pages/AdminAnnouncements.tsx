@@ -224,12 +224,12 @@ export default function AdminAnnouncements() {
                   <RefreshCw className="h-4 w-4" />
                   Recurring
                 </Label>
-                <Select value={recurring} onValueChange={setRecurring}>
+                <Select value={recurring || "none"} onValueChange={(v) => setRecurring(v === "none" ? "" : v)}>
                   <SelectTrigger>
                     <SelectValue placeholder="None" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
                     <SelectItem value="weekly">Weekly</SelectItem>
                   </SelectContent>
                 </Select>
@@ -248,12 +248,12 @@ export default function AdminAnnouncements() {
 
               <div className="space-y-2">
                 <Label>Expires after</Label>
-                <Select value={expiresIn} onValueChange={setExpiresIn}>
+                <Select value={expiresIn || "never"} onValueChange={(v) => setExpiresIn(v === "never" ? "" : v)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Never" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Never</SelectItem>
+                    <SelectItem value="never">Never</SelectItem>
                     <SelectItem value="1">1 hour</SelectItem>
                     <SelectItem value="24">24 hours</SelectItem>
                     <SelectItem value="72">3 days</SelectItem>
