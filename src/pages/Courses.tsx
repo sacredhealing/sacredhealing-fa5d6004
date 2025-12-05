@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { ReviewSection } from '@/components/reviews/ReviewSection';
 import WealthCourseUpsell from '@/components/courses/WealthCourseUpsell';
+import { useNavigate } from 'react-router-dom';
 
 // Swedish Wealth Course ID
 const WEALTH_COURSE_ID = 'f6b3a3e2-c78e-4234-8cf4-cc059655e118';
@@ -36,6 +37,7 @@ interface Enrollment {
 
 const Courses: React.FC = () => {
   const { user, session } = useAuth();
+  const navigate = useNavigate();
   const [courses, setCourses] = useState<Course[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -92,14 +94,12 @@ const Courses: React.FC = () => {
 
       if (data.url) {
         window.open(data.url, '_blank');
-        // Show upsell for wealth course after successful checkout redirect
         if (course.id === WEALTH_COURSE_ID) {
           setTimeout(() => setShowWealthUpsell(true), 500);
         }
       } else if (data.success) {
         toast.success(data.message || 'Enrolled successfully!');
         fetchEnrollments();
-        // Show upsell for wealth course after free enrollment
         if (course.id === WEALTH_COURSE_ID) {
           setShowWealthUpsell(true);
         }
@@ -125,8 +125,8 @@ const Courses: React.FC = () => {
 
   return (
     <div className="min-h-screen px-4 pt-6 pb-24">
-      {/* Upsell Dialog */}
       <WealthCourseUpsell isOpen={showWealthUpsell} onOpenChange={setShowWealthUpsell} />
+      
       {/* Header */}
       <header className="mb-6 animate-fade-in">
         <h1 className="text-3xl font-heading font-bold text-foreground">Courses</h1>
@@ -149,31 +149,68 @@ const Courses: React.FC = () => {
         </div>
       </div>
 
-      {/* Course Grid - Promotional Cards */}
-      <div className="flex flex-wrap justify-center gap-6 max-w-5xl mx-auto">
+      {/* Course List */}
+      <div className="space-y-4 max-w-4xl mx-auto">
         {/* Stargate Membership Card */}
         <div
-          onClick={() => window.location.href = '/stargate'}
-          className="w-[300px] rounded-2xl overflow-hidden bg-card border border-primary/50 cursor-pointer transition-all duration-300 hover:scale-[1.03] hover:shadow-2xl animate-slide-up flex flex-col"
+          className="bg-card rounded-xl border border-border/30 p-5 relative cursor-pointer hover:border-primary/50 transition-all animate-slide-up"
+          onClick={() => navigate('/stargate')}
         >
-          <div className="h-[180px] relative overflow-hidden flex items-center justify-center bg-gradient-to-br from-primary/30 via-accent/20 to-secondary/30">
-            <span className="text-7xl">🌟</span>
-            <div className="absolute top-3 left-3">
-              <span className="px-2 py-1 bg-primary/90 rounded-full text-xs font-medium text-primary-foreground">
-                Community
-              </span>
+          <div className="flex gap-4">
+            <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
+              <Sparkles className="w-5 h-5 text-primary" />
             </div>
-          </div>
-          <div className="p-4 flex-1 flex flex-col">
-            <h3 className="font-heading font-bold text-lg text-foreground mb-2">
-              Stargate Membership
-            </h3>
-            <p className="flex-1 text-sm text-muted-foreground leading-relaxed mb-4">
-              Explore the Stargate community and unlock new spiritual dimensions. Join bi-weekly Zoom sessions and our private Telegram group.
-            </p>
-            <Button className="w-full rounded-xl">
-              View & Sign Up
-            </Button>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-4">
+                <h3 className="font-heading font-bold text-lg text-foreground">Stargate Membership</h3>
+                <span className="px-3 py-1 bg-primary/90 rounded-full text-xs font-medium text-primary-foreground whitespace-nowrap">
+                  Subscription
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                Explore the Stargate community and unlock new spiritual dimensions. Bi-weekly Zoom sessions (Mantrachanting, Healing Chamber, Bhagavad Gita), private Telegram group with daily inspiration and spiritual support.
+              </p>
+              
+              <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Play size={12} />
+                  Bi-weekly sessions
+                </span>
+                <span className="flex items-center gap-1">
+                  <MessageSquare size={12} />
+                  Telegram Group
+                </span>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 mt-4">
+                <span className="px-3 py-1.5 bg-secondary/20 rounded-full text-xs font-medium text-secondary flex items-center gap-1">
+                  <Sparkles size={12} />
+                  500 SHC
+                </span>
+                <span className="px-3 py-1.5 bg-muted rounded-full text-xs font-medium text-foreground">
+                  €25
+                </span>
+                <span className="px-3 py-1.5 bg-primary/20 rounded-full text-xs font-medium text-primary flex items-center gap-1">
+                  <RefreshCw size={12} />
+                  €25/mo
+                </span>
+              </div>
+
+              <button 
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary mt-3 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedCourseForReview('stargate');
+                }}
+              >
+                <MessageSquare size={12} />
+                Reviews & Comments (Earn 1000 SHC)
+              </button>
+
+              <Button className="mt-4 rounded-xl" size="sm">
+                View & Sign Up
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -190,91 +227,156 @@ const Courses: React.FC = () => {
             return (
               <div
                 key={course.id}
-                onClick={() => window.location.href = `/courses/${course.id}`}
-                className="w-[300px] rounded-2xl overflow-hidden bg-card border border-border/30 cursor-pointer transition-all duration-300 hover:scale-[1.03] hover:shadow-2xl animate-slide-up flex flex-col"
+                className="bg-card rounded-xl border border-border/30 p-5 relative cursor-pointer hover:border-primary/50 transition-all animate-slide-up"
                 style={{ animationDelay: `${index * 0.05}s` }}
+                onClick={() => navigate(`/courses/${course.id}`)}
               >
-                {/* Course Thumbnail */}
-                <div className="h-[180px] relative overflow-hidden bg-muted/30">
-                  {course.cover_image_url ? (
-                    <img 
-                      src={course.cover_image_url} 
-                      alt={course.title}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-accent/20">
-                      <span className="text-5xl">📚</span>
-                    </div>
-                  )}
-                  
-                  {/* Badges */}
-                  <div className="absolute top-3 left-3 flex flex-wrap gap-1">
-                    {course.is_free && (
-                      <span className="px-2 py-1 bg-secondary/90 rounded-full text-xs font-medium text-secondary-foreground">
-                        Free
-                      </span>
-                    )}
-                    {course.is_premium_only && (
-                      <span className="px-2 py-1 bg-accent/90 rounded-full text-xs font-medium text-accent-foreground">
-                        Premium
-                      </span>
-                    )}
-                    {course.id === WEALTH_COURSE_ID && (
-                      <span className="px-2 py-1 bg-yellow-500/90 rounded-full text-xs font-medium text-yellow-950">
-                        🇸🇪
-                      </span>
+                <div className="flex gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
+                    {isEnrolled ? (
+                      progress === 100 ? (
+                        <CheckCircle className="w-5 h-5 text-secondary" />
+                      ) : (
+                        <Lock className="w-5 h-5 text-primary" />
+                      )
+                    ) : (
+                      <Lock className="w-5 h-5 text-muted-foreground" />
                     )}
                   </div>
-
-                  {/* Progress indicator */}
-                  {isEnrolled && progress > 0 && (
-                    <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-muted/50">
-                      <div 
-                        className="h-full bg-primary"
-                        style={{ width: `${progress}%` }}
-                      />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-4">
+                      <h3 className="font-heading font-bold text-lg text-foreground">{course.title}</h3>
+                      {course.recurring_price_usd && (
+                        <span className="px-3 py-1 bg-primary/90 rounded-full text-xs font-medium text-primary-foreground whitespace-nowrap">
+                          Subscription
+                        </span>
+                      )}
+                      {course.is_free && (
+                        <span className="px-3 py-1 bg-secondary/90 rounded-full text-xs font-medium text-secondary-foreground whitespace-nowrap">
+                          Free
+                        </span>
+                      )}
                     </div>
-                  )}
-
-                  {/* Completion badge */}
-                  {progress === 100 && (
-                    <div className="absolute top-3 right-3">
-                      <CheckCircle size={24} className="text-secondary drop-shadow-md" />
+                    <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                      {course.description || 'Expand your consciousness with this transformative course.'}
+                    </p>
+                    
+                    <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Play size={12} />
+                        {course.lesson_count} lessons
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock size={12} />
+                        {course.duration_hours}h
+                      </span>
+                      {course.has_certificate && (
+                        <span className="flex items-center gap-1">
+                          <Award size={12} className="text-accent" />
+                          Certificate
+                        </span>
+                      )}
                     </div>
-                  )}
-                </div>
 
-                {/* Course Content */}
-                <div className="p-4 flex-1 flex flex-col">
-                  <h3 className="font-heading font-bold text-lg text-foreground mb-2">
-                    {course.title}
-                  </h3>
-                  <p className="flex-1 text-sm text-muted-foreground leading-relaxed mb-4 line-clamp-3">
-                    {course.description || 'Expand your consciousness with this transformative course.'}
-                  </p>
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
-                    <span className="flex items-center gap-1">
-                      <Play size={12} />
-                      {course.lesson_count} lessons
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock size={12} />
-                      {course.duration_hours}h
-                    </span>
-                    {course.has_certificate && (
-                      <Award size={12} className="text-accent" />
+                    {/* Pricing Badges */}
+                    <div className="flex flex-wrap items-center gap-2 mt-4">
+                      {course.price_shc > 0 && (
+                        <span className="px-3 py-1.5 bg-secondary/20 rounded-full text-xs font-medium text-secondary flex items-center gap-1">
+                          <Sparkles size={12} />
+                          {course.price_shc} SHC
+                        </span>
+                      )}
+                      {!course.is_free && course.price_usd > 0 && (
+                        <span className="px-3 py-1.5 bg-muted rounded-full text-xs font-medium text-foreground">
+                          ${course.price_usd}
+                        </span>
+                      )}
+                      {course.recurring_price_usd && course.recurring_interval && (
+                        <span className="px-3 py-1.5 bg-primary/20 rounded-full text-xs font-medium text-primary flex items-center gap-1">
+                          <RefreshCw size={12} />
+                          ${course.recurring_price_usd}/{course.recurring_interval === 'month' ? 'mo' : course.recurring_interval}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Progress Bar */}
+                    {isEnrolled && progress > 0 && progress < 100 && (
+                      <div className="mt-3">
+                        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-primary rounded-full transition-all"
+                            style={{ width: `${progress}%` }}
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">{progress}% complete</p>
+                      </div>
                     )}
+
+                    {/* Reviews Link */}
+                    <button 
+                      className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary mt-3 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedCourseForReview(course.id);
+                      }}
+                    >
+                      <MessageSquare size={12} />
+                      Reviews & Comments (Earn 1000 SHC)
+                    </button>
+
+                    {/* Action Button */}
+                    <Button 
+                      className="mt-4 rounded-xl" 
+                      size="sm"
+                      disabled={enrollingId === course.id}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (isEnrolled) {
+                          navigate(`/courses/${course.id}`);
+                        } else if (course.is_free) {
+                          handleEnroll(course, 'free');
+                        } else {
+                          navigate(`/courses/${course.id}`);
+                        }
+                      }}
+                    >
+                      {enrollingId === course.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : isEnrolled ? (
+                        'Continue Learning'
+                      ) : (
+                        'View & Sign Up'
+                      )}
+                    </Button>
                   </div>
-                  <Button className="w-full rounded-xl">
-                    {isEnrolled ? 'Continue Learning' : 'View & Sign Up'}
-                  </Button>
                 </div>
               </div>
             );
           })
         )}
       </div>
+
+      {/* Review Section Modal */}
+      {selectedCourseForReview && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-card rounded-2xl border border-border max-w-2xl w-full max-h-[80vh] overflow-y-auto p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-heading font-bold text-lg">Reviews & Comments</h3>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setSelectedCourseForReview(null)}
+              >
+                Close
+              </Button>
+            </div>
+            <ReviewSection 
+              contentType="course" 
+              contentId={selectedCourseForReview} 
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
