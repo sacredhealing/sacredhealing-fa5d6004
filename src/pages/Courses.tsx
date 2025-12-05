@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Lock, Award, Clock, Sparkles, CheckCircle, Loader2, RefreshCw, MessageSquare, Gift } from 'lucide-react';
+import { Play, Lock, Award, Clock, Sparkles, CheckCircle, Loader2, RefreshCw, MessageSquare, Globe, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -7,9 +7,17 @@ import { toast } from 'sonner';
 import { ReviewSection } from '@/components/reviews/ReviewSection';
 import WealthCourseUpsell from '@/components/courses/WealthCourseUpsell';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 // Swedish Wealth Course ID
 const WEALTH_COURSE_ID = 'f6b3a3e2-c78e-4234-8cf4-cc059655e118';
+
+const languages: Record<string, { name: string; flag: string }> = {
+  en: { name: 'English', flag: '🇬🇧' },
+  sv: { name: 'Swedish', flag: '🇸🇪' },
+  es: { name: 'Spanish', flag: '🇪🇸' },
+  no: { name: 'Norwegian', flag: '🇳🇴' },
+};
 
 interface Course {
   id: string;
@@ -28,6 +36,7 @@ interface Course {
   recurring_price_usd: number | null;
   recurring_interval: string | null;
   cover_image_url: string | null;
+  language: string;
 }
 
 interface Enrollment {
@@ -38,12 +47,15 @@ interface Enrollment {
 const Courses: React.FC = () => {
   const { user, session } = useAuth();
   const navigate = useNavigate();
+  const { i18n } = useTranslation();
   const [courses, setCourses] = useState<Course[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [enrollingId, setEnrollingId] = useState<string | null>(null);
   const [selectedCourseForReview, setSelectedCourseForReview] = useState<string | null>(null);
   const [showWealthUpsell, setShowWealthUpsell] = useState(false);
+
+  const currentLanguage = i18n.language?.split('-')[0] || 'en';
 
   useEffect(() => {
     fetchCourses();
@@ -74,9 +86,16 @@ const Courses: React.FC = () => {
     return enrollments.find(e => e.course_id === courseId);
   };
 
-  const handleEnroll = async (course: Course, paymentMethod: 'free' | 'shc' | 'stripe', isRecurring = false) => {
+  const handleEnroll = async (course: Course, paymentMethod: 'free' | 'stripe' | 'crypto', isRecurring = false) => {
     if (!user || !session) {
       toast.error('Please sign in to enroll');
+      return;
+    }
+
+    if (paymentMethod === 'crypto') {
+      toast.info('Opening Phantom Wallet for payment...');
+      // Navigate to wallet page or trigger Phantom deep link
+      navigate('/wallet?action=pay&courseId=' + course.id);
       return;
     }
 
@@ -111,9 +130,19 @@ const Courses: React.FC = () => {
     }
   };
 
+  const getLanguageInfo = (code: string) => {
+    return languages[code] || languages.en;
+  };
+
+  // Filter courses to show based on user's selected language preference
+  const filteredCourses = courses.filter(course => {
+    // Show courses that match user's language or English as fallback
+    return course.language === currentLanguage || course.language === 'en' || !course.language;
+  });
+
   const completedCount = enrollments.filter(e => e.progress_percent === 100).length;
   const inProgressCount = enrollments.filter(e => e.progress_percent > 0 && e.progress_percent < 100).length;
-  const availableCount = courses.length - enrollments.length;
+  const availableCount = filteredCourses.length - enrollments.length;
 
   if (isLoading) {
     return (
@@ -162,7 +191,10 @@ const Courses: React.FC = () => {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-4">
-                <h3 className="font-heading font-bold text-lg text-foreground">Stargate Membership</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-heading font-bold text-lg text-foreground">Stargate Membership</h3>
+                  <span className="text-lg" title="Swedish">🇸🇪</span>
+                </div>
                 <span className="px-3 py-1 bg-primary/90 rounded-full text-xs font-medium text-primary-foreground whitespace-nowrap">
                   Subscription
                 </span>
@@ -183,16 +215,16 @@ const Courses: React.FC = () => {
               </div>
 
               <div className="flex flex-wrap items-center gap-2 mt-4">
-                <span className="px-3 py-1.5 bg-secondary/20 rounded-full text-xs font-medium text-secondary flex items-center gap-1">
-                  <Sparkles size={12} />
-                  500 SHC
-                </span>
                 <span className="px-3 py-1.5 bg-muted rounded-full text-xs font-medium text-foreground">
                   €25
                 </span>
                 <span className="px-3 py-1.5 bg-primary/20 rounded-full text-xs font-medium text-primary flex items-center gap-1">
                   <RefreshCw size={12} />
                   €25/mo
+                </span>
+                <span className="px-3 py-1.5 bg-secondary/20 rounded-full text-xs font-medium text-secondary flex items-center gap-1">
+                  <Wallet size={12} />
+                  Crypto
                 </span>
               </div>
 
@@ -204,7 +236,7 @@ const Courses: React.FC = () => {
                 }}
               >
                 <MessageSquare size={12} />
-                Reviews & Comments (Earn 1000 SHC)
+                Reviews & Comments
               </button>
 
               <Button className="mt-4 rounded-xl" size="sm">
@@ -214,15 +246,16 @@ const Courses: React.FC = () => {
           </div>
         </div>
 
-        {courses.length === 0 ? (
+        {filteredCourses.length === 0 ? (
           <div className="w-full text-center py-12">
             <p className="text-muted-foreground">No courses available yet</p>
           </div>
         ) : (
-          courses.map((course, index) => {
+          filteredCourses.map((course, index) => {
             const enrollment = getEnrollment(course.id);
             const isEnrolled = !!enrollment;
             const progress = enrollment?.progress_percent || 0;
+            const langInfo = getLanguageInfo(course.language || 'en');
 
             return (
               <div
@@ -245,17 +278,22 @@ const Courses: React.FC = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-4">
-                      <h3 className="font-heading font-bold text-lg text-foreground">{course.title}</h3>
-                      {course.recurring_price_usd && (
-                        <span className="px-3 py-1 bg-primary/90 rounded-full text-xs font-medium text-primary-foreground whitespace-nowrap">
-                          Subscription
-                        </span>
-                      )}
-                      {course.is_free && (
-                        <span className="px-3 py-1 bg-secondary/90 rounded-full text-xs font-medium text-secondary-foreground whitespace-nowrap">
-                          Free
-                        </span>
-                      )}
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-heading font-bold text-lg text-foreground">{course.title}</h3>
+                        <span className="text-lg" title={langInfo.name}>{langInfo.flag}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        {course.recurring_price_usd && (
+                          <span className="px-3 py-1 bg-primary/90 rounded-full text-xs font-medium text-primary-foreground whitespace-nowrap">
+                            Subscription
+                          </span>
+                        )}
+                        {course.is_free && (
+                          <span className="px-3 py-1 bg-secondary/90 rounded-full text-xs font-medium text-secondary-foreground whitespace-nowrap">
+                            Free
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
                       {course.description || 'Expand your consciousness with this transformative course.'}
@@ -278,14 +316,8 @@ const Courses: React.FC = () => {
                       )}
                     </div>
 
-                    {/* Pricing Badges */}
+                    {/* Pricing Badges - No SHC, added Crypto */}
                     <div className="flex flex-wrap items-center gap-2 mt-4">
-                      {course.price_shc > 0 && (
-                        <span className="px-3 py-1.5 bg-secondary/20 rounded-full text-xs font-medium text-secondary flex items-center gap-1">
-                          <Sparkles size={12} />
-                          {course.price_shc} SHC
-                        </span>
-                      )}
                       {!course.is_free && course.price_usd > 0 && (
                         <span className="px-3 py-1.5 bg-muted rounded-full text-xs font-medium text-foreground">
                           ${course.price_usd}
@@ -295,6 +327,12 @@ const Courses: React.FC = () => {
                         <span className="px-3 py-1.5 bg-primary/20 rounded-full text-xs font-medium text-primary flex items-center gap-1">
                           <RefreshCw size={12} />
                           ${course.recurring_price_usd}/{course.recurring_interval === 'month' ? 'mo' : course.recurring_interval}
+                        </span>
+                      )}
+                      {!course.is_free && (
+                        <span className="px-3 py-1.5 bg-secondary/20 rounded-full text-xs font-medium text-secondary flex items-center gap-1">
+                          <Wallet size={12} />
+                          Crypto
                         </span>
                       )}
                     </div>
@@ -321,7 +359,7 @@ const Courses: React.FC = () => {
                       }}
                     >
                       <MessageSquare size={12} />
-                      Reviews & Comments (Earn 1000 SHC)
+                      Reviews & Comments
                     </button>
 
                     {/* Action Button */}

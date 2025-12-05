@@ -361,6 +361,7 @@ export type Database = {
           instructor_name: string | null
           is_free: boolean
           is_premium_only: boolean
+          language: string
           lesson_count: number
           price_shc: number | null
           price_usd: number | null
@@ -382,6 +383,7 @@ export type Database = {
           instructor_name?: string | null
           is_free?: boolean
           is_premium_only?: boolean
+          language?: string
           lesson_count?: number
           price_shc?: number | null
           price_usd?: number | null
@@ -403,6 +405,7 @@ export type Database = {
           instructor_name?: string | null
           is_free?: boolean
           is_premium_only?: boolean
+          language?: string
           lesson_count?: number
           price_shc?: number | null
           price_usd?: number | null
