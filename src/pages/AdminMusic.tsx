@@ -79,7 +79,11 @@ const AdminMusic: React.FC = () => {
       
       const { error: previewError } = await supabase.storage
         .from('songs')
-        .upload(previewName, previewFile, { cacheControl: '3600', upsert: false });
+        .upload(previewName, previewFile, { 
+          cacheControl: '3600', 
+          upsert: false,
+          contentType: previewFile.type || 'audio/mpeg'
+        });
 
       if (previewError) throw previewError;
 
@@ -89,7 +93,11 @@ const AdminMusic: React.FC = () => {
       
       const { error: fullError } = await supabase.storage
         .from('songs')
-        .upload(fullName, fullFile, { cacheControl: '3600', upsert: false });
+        .upload(fullName, fullFile, { 
+          cacheControl: '3600', 
+          upsert: false,
+          contentType: fullFile.type || 'audio/mpeg'
+        });
 
       if (fullError) throw fullError;
 
