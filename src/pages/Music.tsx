@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Pause, Music2, Clock, Plus, List, Sparkles, Loader2, X, GripVertical, Edit2, Check, Crown } from 'lucide-react';
+import { Play, Pause, Music2, Clock, Plus, List, Sparkles, Loader2, X, GripVertical, Edit2, Check, Crown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useSHC } from '@/contexts/SHCContext';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 
 interface Track {
   id: string;
@@ -41,6 +41,7 @@ const MUSIC_PRICE_ID = 'price_1SaGG4APsnbrivP0nnavK58y';
 
 const Music: React.FC = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { addOptimisticBalance } = useSHC();
   
@@ -311,6 +312,23 @@ const Music: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Mastering Service Banner */}
+      <button
+        onClick={() => navigate('/mastering')}
+        className="w-full flex items-center justify-between bg-muted/30 border border-border/50 rounded-lg p-3 mb-4 hover:bg-muted/50 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+            <Music2 size={14} className="text-primary" />
+          </div>
+          <div className="text-left">
+            <p className="text-sm font-medium">Music Mastering</p>
+            <p className="text-xs text-muted-foreground">From €147</p>
+          </div>
+        </div>
+        <ChevronRight size={16} className="text-muted-foreground" />
+      </button>
 
       {/* Tabs */}
       <div className="flex gap-2 mb-4">
