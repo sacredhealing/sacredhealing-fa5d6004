@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import Meditations from "./pages/Meditations";
 import Courses from "./pages/Courses";
 import Music from "./pages/Music";
+import Mastering from "./pages/Mastering";
 import Wallet from "./pages/Wallet";
 import Profile from "./pages/Profile";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -66,6 +67,7 @@ const App = () => (
               <Route path="/meditations" element={<Meditations />} />
               <Route path="/courses" element={<Courses />} />
               <Route path="/music" element={<Music />} />
+              <Route path="/mastering" element={<Mastering />} />
               <Route path="/wallet" element={<Wallet />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/healing" element={<Healing />} />
