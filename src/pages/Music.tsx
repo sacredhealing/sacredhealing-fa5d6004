@@ -1,16 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Pause, Music2, ShoppingCart, Download, Heart, Clock, Sparkles, Lock, ListMusic, Loader2, CreditCard, Coins, Headphones } from 'lucide-react';
+import { Play, Pause, Music2, Clock, Plus, List, Sparkles, Loader2, X, GripVertical, Edit2, Check, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useSHC } from '@/contexts/SHCContext';
 import { useSearchParams } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { TranslatedText } from '@/components/TranslatedText';
-import MasteringService from '@/components/music/MasteringService';
-import MusicMembershipBanner from '@/components/music/MusicMembershipBanner';
-import { AnimatedCounter } from '@/components/ui/animated-counter';
+
 interface Track {
   id: string;
   title: string;
@@ -22,131 +18,123 @@ interface Track {
   full_audio_url: string;
   cover_image_url: string | null;
   price_usd: number;
-  price_shc: number;
   shc_reward: number;
   play_count: number;
   bpm: number | null;
+  release_date: string | null;
+  created_at: string;
 }
+
+interface Playlist {
+  id: string;
+  name: string;
+  user_id: string;
+}
+
+interface PlayHistory {
+  track_id: string;
+  play_count: number;
+}
+
+const GENRES = ['all', 'meditation', 'healing', 'gym', 'yoga', 'run', 'mindpower', 'instrumentals', 'beats'];
+const MUSIC_PRICE_ID = 'price_1SaGG4APsnbrivP0nnavK58y';
 
 const Music: React.FC = () => {
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const { t } = useTranslation();
-  const { balance, refreshBalance, addOptimisticBalance } = useSHC();
+  const { addOptimisticBalance } = useSHC();
   
   const [tracks, setTracks] = useState<Track[]>([]);
   const [purchasedIds, setPurchasedIds] = useState<string[]>([]);
-  const [likedIds, setLikedIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [activeTab, setActiveTab] = useState<'all' | 'owned' | 'liked'>('all');
-  const [purchasingId, setPurchasingId] = useState<string | null>(null);
-  const [showPaymentModal, setShowPaymentModal] = useState<Track | null>(null);
-  const [rewardedTracks, setRewardedTracks] = useState<Set<string>>(new Set());
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [activeTab, setActiveTab] = useState<'browse' | 'playlists' | 'history'>('browse');
+  const [selectedGenre, setSelectedGenre] = useState('all');
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [checkingSubscription, setCheckingSubscription] = useState(true);
+  
+  // Playlists
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [playHistory, setPlayHistory] = useState<PlayHistory[]>([]);
+  const [newPlaylistName, setNewPlaylistName] = useState('');
+  const [editingPlaylistId, setEditingPlaylistId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState('');
+  const [selectedPlaylist, setSelectedPlaylist] = useState<string | null>(null);
+  const [playlistTracks, setPlaylistTracks] = useState<string[]>([]);
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const progressInterval = useRef<NodeJS.Timeout | null>(null);
-
   const MUSIC_REWARD = 100;
+  const PREVIEW_LIMIT = 30;
 
   useEffect(() => {
     fetchTracks();
     fetchPurchases();
+    checkSubscription();
+    fetchPlaylists();
+    fetchPlayHistory();
     
-    // Handle successful Stripe purchase redirect
-    const purchasedTrackId = searchParams.get('purchased');
-    if (purchasedTrackId) {
-      handleStripeSuccess(purchasedTrackId);
-    }
-
-    // Handle mastering order success/cancel
-    const masteringSuccess = searchParams.get('mastering_success');
-    const masteringCancelled = searchParams.get('mastering_cancelled');
-    
-    if (masteringSuccess) {
-      toast({
-        title: "Mastering order placed!",
-        description: "Thank you! I'll send your professionally mastered track to your email within 3-5 business days."
-      });
-    } else if (masteringCancelled) {
-      toast({
-        title: "Order cancelled",
-        description: "Your mastering order was cancelled. Your files have been saved if you want to try again."
-      });
-    }
-
-    // Handle membership success
     const membershipSuccess = searchParams.get('membership_success');
-    const membershipCancelled = searchParams.get('membership_cancelled');
-    
     if (membershipSuccess) {
-      toast({
-        title: "Welcome to Music Membership! 🎵",
-        description: `Your ${membershipSuccess} subscription is now active. Enjoy unlimited music and 33 SHC per stream!`
-      });
-    } else if (membershipCancelled) {
-      toast({
-        title: "Subscription cancelled",
-        description: "Your membership checkout was cancelled."
-      });
+      toast({ title: "Subscription active!", description: "Enjoy unlimited music streaming." });
+      setIsSubscribed(true);
     }
 
     return () => {
-      if (progressInterval.current) clearInterval(progressInterval.current);
       if (audioRef.current) audioRef.current.pause();
     };
   }, [searchParams]);
 
-  const handleStripeSuccess = async (trackId: string) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    await supabase
-      .from('music_purchases')
-      .upsert({
-        user_id: user.id,
-        track_id: trackId,
-        payment_method: 'stripe',
-        amount_paid: 0
-      }, { onConflict: 'user_id,track_id' });
-
-    toast({
-      title: "Purchase complete!",
-      description: "Your track is now available to stream and download"
-    });
-    fetchPurchases();
+  const checkSubscription = async () => {
+    try {
+      const { data } = await supabase.functions.invoke('check-music-membership');
+      setIsSubscribed(data?.hasAccess || false);
+    } catch (error) {
+      console.error('Error checking subscription:', error);
+    } finally {
+      setCheckingSubscription(false);
+    }
   };
 
   const fetchTracks = async () => {
-    const { data, error } = await supabase
-      .from('music_tracks')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (!error && data) {
-      setTracks(data);
-    }
+    const { data } = await supabase.from('music_tracks').select('*').order('created_at', { ascending: false });
+    if (data) setTracks(data);
     setIsLoading(false);
   };
 
   const fetchPurchases = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-
-    const { data } = await supabase
-      .from('music_purchases')
-      .select('track_id')
-      .eq('user_id', user.id);
-
-    if (data) {
-      setPurchasedIds(data.map(p => p.track_id));
-    }
+    const { data } = await supabase.from('music_purchases').select('track_id').eq('user_id', user.id);
+    if (data) setPurchasedIds(data.map(p => p.track_id));
   };
 
-  const playTrack = (track: Track) => {
-    const isOwned = purchasedIds.includes(track.id);
+  const fetchPlaylists = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { data } = await supabase.from('user_playlists').select('*').eq('user_id', user.id).order('created_at');
+    if (data) setPlaylists(data);
+  };
+
+  const fetchPlayHistory = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { data } = await supabase.from('music_play_history').select('track_id, play_count').eq('user_id', user.id).order('play_count', { ascending: false });
+    if (data) setPlayHistory(data);
+  };
+
+  const fetchPlaylistTracks = async (playlistId: string) => {
+    const { data } = await supabase.from('playlist_tracks').select('track_id').eq('playlist_id', playlistId).order('order_index');
+    if (data) setPlaylistTracks(data.map(pt => pt.track_id));
+  };
+
+  const hasAccess = (track: Track) => isSubscribed || purchasedIds.includes(track.id);
+
+  const playTrack = async (track: Track) => {
+    const canPlayFull = hasAccess(track);
     
     if (currentTrack?.id === track.id) {
       if (isPlaying) {
@@ -156,91 +144,383 @@ const Music: React.FC = () => {
         audioRef.current?.play();
         setIsPlaying(true);
       }
-    } else {
-      if (audioRef.current) {
+      return;
+    }
+
+    if (audioRef.current) audioRef.current.pause();
+    
+    const audioUrl = canPlayFull ? track.full_audio_url : track.preview_url;
+    audioRef.current = new Audio(audioUrl);
+    
+    audioRef.current.onloadedmetadata = () => {
+      if (audioRef.current) setDuration(audioRef.current.duration);
+    };
+    
+    audioRef.current.ontimeupdate = () => {
+      if (!audioRef.current) return;
+      const time = audioRef.current.currentTime;
+      setCurrentTime(time);
+      setProgress((time / audioRef.current.duration) * 100);
+      
+      // Limit preview to 30 seconds
+      if (!canPlayFull && time >= PREVIEW_LIMIT) {
         audioRef.current.pause();
-      }
-      
-      const audioUrl = isOwned ? track.full_audio_url : track.preview_url;
-      audioRef.current = new Audio(audioUrl);
-      audioRef.current.play();
-      
-      audioRef.current.onended = async () => {
+        audioRef.current.currentTime = 0;
         setIsPlaying(false);
-        if (!isOwned) {
-          toast({
-            title: "Preview ended",
-            description: "Purchase this track to listen to the full version!",
-          });
-        } else if (!rewardedTracks.has(track.id)) {
-          // Award SHC for listening to full track
-          setRewardedTracks(prev => new Set([...prev, track.id]));
-          addOptimisticBalance(MUSIC_REWARD);
-          toast({
-            title: `🎵 +${MUSIC_REWARD} SHC earned!`,
-            description: `You completed listening to "${track.title}"`,
-          });
-        }
-      };
-      
-      audioRef.current.ontimeupdate = () => {
-        if (audioRef.current) {
-          const percent = (audioRef.current.currentTime / audioRef.current.duration) * 100;
-          setProgress(percent);
-        }
-      };
-      
-      setCurrentTrack(track);
-      setProgress(0);
-      setIsPlaying(true);
-    }
-  };
-
-  const handlePurchase = async (track: Track, method: 'shc' | 'stripe') => {
-    setPurchasingId(track.id);
-    setShowPaymentModal(null);
-
-    try {
-      const response = await supabase.functions.invoke('purchase-music', {
-        body: { trackId: track.id, paymentMethod: method }
-      });
-
-      if (response.error) throw response.error;
-      
-      const data = response.data;
-
-      if (method === 'stripe' && data.checkoutUrl) {
-        window.open(data.checkoutUrl, '_blank');
-      } else if (method === 'shc') {
-        toast({
-          title: "Purchase complete!",
-          description: `You bought "${track.title}" and earned +${track.shc_reward} SHC!`
-        });
-        fetchPurchases();
-        refreshBalance();
+        toast({ title: "Preview ended", description: "Subscribe or purchase to hear the full track." });
       }
-    } catch (error: any) {
-      toast({
-        title: "Purchase failed",
-        description: error.message || "Something went wrong",
-        variant: "destructive"
-      });
-    } finally {
-      setPurchasingId(null);
+    };
+    
+    audioRef.current.onended = async () => {
+      setIsPlaying(false);
+      if (canPlayFull) {
+        addOptimisticBalance(MUSIC_REWARD);
+        toast({ title: `+${MUSIC_REWARD} SHC earned!`, description: `Completed "${track.title}"` });
+      }
+    };
+    
+    audioRef.current.play();
+    setCurrentTrack(track);
+    setProgress(0);
+    setCurrentTime(0);
+    setIsPlaying(true);
+    
+    // Update play history
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.from('music_play_history').upsert({
+        user_id: user.id,
+        track_id: track.id,
+        play_count: (playHistory.find(h => h.track_id === track.id)?.play_count || 0) + 1,
+        last_played_at: new Date().toISOString()
+      }, { onConflict: 'user_id,track_id' });
+      fetchPlayHistory();
     }
   };
 
-  const toggleLike = (trackId: string) => {
-    setLikedIds(prev => 
-      prev.includes(trackId) 
-        ? prev.filter(id => id !== trackId)
-        : [...prev, trackId]
-    );
+  const seekAudio = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!audioRef.current || !currentTrack) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const percent = (e.clientX - rect.left) / rect.width;
+    const seekTime = percent * audioRef.current.duration;
+    
+    // Limit seeking for non-subscribers
+    if (!hasAccess(currentTrack) && seekTime > PREVIEW_LIMIT) {
+      toast({ title: "Preview limit", description: "Subscribe to seek past 30 seconds." });
+      return;
+    }
+    
+    audioRef.current.currentTime = seekTime;
+    setProgress(percent * 100);
+    setCurrentTime(seekTime);
   };
 
-  const downloadTrack = (track: Track) => {
-    window.open(track.full_audio_url, '_blank');
+  const handleSubscribe = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('create-music-membership-checkout', {
+        body: { planType: 'monthly' }
+      });
+      if (error) throw error;
+      if (data?.url) window.open(data.url, '_blank');
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
   };
+
+  const handlePurchaseTrack = async (track: Track) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('purchase-music', {
+        body: { trackId: track.id, paymentMethod: 'stripe' }
+      });
+      if (error) throw error;
+      if (data?.checkoutUrl) window.open(data.checkoutUrl, '_blank');
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const createPlaylist = async () => {
+    if (!newPlaylistName.trim()) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    
+    await supabase.from('user_playlists').insert({ user_id: user.id, name: newPlaylistName.trim() });
+    setNewPlaylistName('');
+    fetchPlaylists();
+    toast({ title: "Playlist created" });
+  };
+
+  const renamePlaylist = async (id: string) => {
+    if (!editingName.trim()) return;
+    await supabase.from('user_playlists').update({ name: editingName.trim() }).eq('id', id);
+    setEditingPlaylistId(null);
+    fetchPlaylists();
+  };
+
+  const deletePlaylist = async (id: string) => {
+    await supabase.from('user_playlists').delete().eq('id', id);
+    fetchPlaylists();
+    if (selectedPlaylist === id) setSelectedPlaylist(null);
+  };
+
+  const addToPlaylist = async (playlistId: string, trackId: string) => {
+    const maxOrder = playlistTracks.length;
+    await supabase.from('playlist_tracks').insert({ playlist_id: playlistId, track_id: trackId, order_index: maxOrder });
+    fetchPlaylistTracks(playlistId);
+    toast({ title: "Added to playlist" });
+  };
+
+  const removeFromPlaylist = async (playlistId: string, trackId: string) => {
+    await supabase.from('playlist_tracks').delete().eq('playlist_id', playlistId).eq('track_id', trackId);
+    fetchPlaylistTracks(playlistId);
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const filteredTracks = selectedGenre === 'all' ? tracks : tracks.filter(t => t.genre === selectedGenre);
+  const newReleases = [...tracks].sort((a, b) => new Date(b.release_date || b.created_at).getTime() - new Date(a.release_date || a.created_at).getTime()).slice(0, 5);
+  const historyTracks = playHistory.map(h => tracks.find(t => t.id === h.track_id)).filter(Boolean) as Track[];
+  const playlistTracksList = playlistTracks.map(id => tracks.find(t => t.id === id)).filter(Boolean) as Track[];
+
+  if (isLoading || checkingSubscription) {
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
+  }
+
+  return (
+    <div className="min-h-screen px-4 pt-6 pb-32">
+      {/* Header */}
+      <header className="mb-4">
+        <h1 className="text-2xl font-heading font-bold text-foreground flex items-center gap-2">
+          <Music2 className="text-primary" /> Music
+        </h1>
+      </header>
+
+      {/* Subscription Banner */}
+      {!isSubscribed && (
+        <div className="bg-primary/10 border border-primary/30 rounded-lg p-4 mb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Crown className="text-primary" size={20} />
+              <span className="text-sm">Unlimited streaming for €4.99/month</span>
+            </div>
+            <Button size="sm" onClick={handleSubscribe}>Subscribe</Button>
+          </div>
+        </div>
+      )}
+
+      {/* Tabs */}
+      <div className="flex gap-2 mb-4">
+        {(['browse', 'playlists', 'history'] as const).map(tab => (
+          <button
+            key={tab}
+            onClick={() => { setActiveTab(tab); if (tab === 'browse') setSelectedPlaylist(null); }}
+            className={`px-4 py-2 rounded-lg text-sm font-medium ${activeTab === tab ? 'bg-primary text-primary-foreground' : 'bg-muted/30 text-muted-foreground'}`}
+          >
+            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {/* Browse Tab */}
+      {activeTab === 'browse' && (
+        <>
+          {/* Genres */}
+          <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
+            {GENRES.map(g => (
+              <button
+                key={g}
+                onClick={() => setSelectedGenre(g)}
+                className={`px-3 py-1 rounded-full text-xs whitespace-nowrap ${selectedGenre === g ? 'bg-primary text-primary-foreground' : 'bg-muted/50 text-muted-foreground'}`}
+              >
+                {g.charAt(0).toUpperCase() + g.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          {/* New Releases */}
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold mb-3">New Releases</h2>
+            <div className="space-y-2">
+              {newReleases.map(track => (
+                <TrackRow 
+                  key={track.id} 
+                  track={track} 
+                  isPlaying={isPlaying && currentTrack?.id === track.id}
+                  hasAccess={hasAccess(track)}
+                  isSubscribed={isSubscribed}
+                  onPlay={() => playTrack(track)}
+                  onPurchase={() => handlePurchaseTrack(track)}
+                  showDate
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* All Tracks */}
+          <div>
+            <h2 className="text-lg font-semibold mb-3">All Tracks ({filteredTracks.length})</h2>
+            <div className="space-y-2">
+              {filteredTracks.map(track => (
+                <TrackRow 
+                  key={track.id} 
+                  track={track} 
+                  isPlaying={isPlaying && currentTrack?.id === track.id}
+                  hasAccess={hasAccess(track)}
+                  isSubscribed={isSubscribed}
+                  onPlay={() => playTrack(track)}
+                  onPurchase={() => handlePurchaseTrack(track)}
+                  playlists={playlists}
+                  onAddToPlaylist={(pid) => addToPlaylist(pid, track.id)}
+                />
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Playlists Tab */}
+      {activeTab === 'playlists' && (
+        <div>
+          {/* Create Playlist */}
+          <div className="flex gap-2 mb-4">
+            <Input
+              value={newPlaylistName}
+              onChange={e => setNewPlaylistName(e.target.value)}
+              placeholder="New playlist name"
+              className="flex-1"
+            />
+            <Button size="sm" onClick={createPlaylist}><Plus size={16} /></Button>
+          </div>
+
+          {selectedPlaylist ? (
+            <>
+              <div className="flex items-center gap-2 mb-4">
+                <Button variant="ghost" size="sm" onClick={() => setSelectedPlaylist(null)}>← Back</Button>
+                <span className="font-semibold">{playlists.find(p => p.id === selectedPlaylist)?.name}</span>
+              </div>
+              <div className="space-y-2">
+                {playlistTracksList.map(track => (
+                  <div key={track.id} className="flex items-center gap-2">
+                    <GripVertical size={16} className="text-muted-foreground cursor-grab" />
+                    <div className="flex-1">
+                      <TrackRow 
+                        track={track} 
+                        isPlaying={isPlaying && currentTrack?.id === track.id}
+                        hasAccess={hasAccess(track)}
+                        isSubscribed={isSubscribed}
+                        onPlay={() => playTrack(track)}
+                        onPurchase={() => handlePurchaseTrack(track)}
+                        compact
+                      />
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={() => removeFromPlaylist(selectedPlaylist, track.id)}>
+                      <X size={14} />
+                    </Button>
+                  </div>
+                ))}
+                {playlistTracksList.length === 0 && <p className="text-muted-foreground text-sm">No tracks yet</p>}
+              </div>
+            </>
+          ) : (
+            <div className="space-y-2">
+              {playlists.map(pl => (
+                <div key={pl.id} className="flex items-center gap-2 p-3 bg-muted/30 rounded-lg">
+                  <List size={18} className="text-muted-foreground" />
+                  {editingPlaylistId === pl.id ? (
+                    <>
+                      <Input value={editingName} onChange={e => setEditingName(e.target.value)} className="flex-1 h-8" />
+                      <Button size="icon" variant="ghost" onClick={() => renamePlaylist(pl.id)}><Check size={14} /></Button>
+                    </>
+                  ) : (
+                    <>
+                      <span className="flex-1 cursor-pointer" onClick={() => { setSelectedPlaylist(pl.id); fetchPlaylistTracks(pl.id); }}>{pl.name}</span>
+                      <Button size="icon" variant="ghost" onClick={() => { setEditingPlaylistId(pl.id); setEditingName(pl.name); }}><Edit2 size={14} /></Button>
+                      <Button size="icon" variant="ghost" onClick={() => deletePlaylist(pl.id)}><X size={14} /></Button>
+                    </>
+                  )}
+                </div>
+              ))}
+              {playlists.length === 0 && <p className="text-muted-foreground text-sm">Create your first playlist</p>}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* History Tab */}
+      {activeTab === 'history' && (
+        <div>
+          <h2 className="text-lg font-semibold mb-3">Most Played</h2>
+          <div className="space-y-2">
+            {historyTracks.map((track, i) => (
+              <div key={track.id} className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground w-6">{i + 1}</span>
+                <div className="flex-1">
+                  <TrackRow 
+                    track={track} 
+                    isPlaying={isPlaying && currentTrack?.id === track.id}
+                    hasAccess={hasAccess(track)}
+                    isSubscribed={isSubscribed}
+                    onPlay={() => playTrack(track)}
+                    onPurchase={() => handlePurchaseTrack(track)}
+                    compact
+                  />
+                </div>
+                <span className="text-xs text-muted-foreground">{playHistory.find(h => h.track_id === track.id)?.play_count} plays</span>
+              </div>
+            ))}
+            {historyTracks.length === 0 && <p className="text-muted-foreground text-sm">No play history yet</p>}
+          </div>
+        </div>
+      )}
+
+      {/* Audio Player */}
+      {currentTrack && (
+        <div className="fixed bottom-20 left-0 right-0 px-4 z-40">
+          <div className="bg-card border border-border rounded-xl p-3">
+            <div className="flex items-center gap-3 mb-2">
+              <button onClick={() => playTrack(currentTrack)} className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+                {isPlaying ? <Pause size={18} className="text-primary-foreground" /> : <Play size={18} className="text-primary-foreground ml-0.5" />}
+              </button>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{currentTrack.title}</p>
+                <p className="text-xs text-muted-foreground">{currentTrack.artist}</p>
+              </div>
+              {!hasAccess(currentTrack) && <span className="text-xs bg-accent/20 text-accent px-2 py-0.5 rounded">Preview</span>}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground w-10">{formatTime(currentTime)}</span>
+              <div className="flex-1 h-1 bg-muted rounded-full cursor-pointer" onClick={seekAudio}>
+                <div className="h-full bg-primary rounded-full" style={{ width: `${progress}%` }} />
+              </div>
+              <span className="text-xs text-muted-foreground w-10">{formatTime(hasAccess(currentTrack) ? duration : Math.min(duration, PREVIEW_LIMIT))}</span>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Track Row Component
+interface TrackRowProps {
+  track: Track;
+  isPlaying: boolean;
+  hasAccess: boolean;
+  isSubscribed: boolean;
+  onPlay: () => void;
+  onPurchase: () => void;
+  showDate?: boolean;
+  compact?: boolean;
+  playlists?: Playlist[];
+  onAddToPlaylist?: (playlistId: string) => void;
+}
+
+const TrackRow: React.FC<TrackRowProps> = ({ track, isPlaying, hasAccess, isSubscribed, onPlay, onPurchase, showDate, compact, playlists, onAddToPlaylist }) => {
+  const [showPlaylistMenu, setShowPlaylistMenu] = useState(false);
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -248,340 +528,49 @@ const Music: React.FC = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const ownedTracks = tracks.filter(t => purchasedIds.includes(t.id));
-  const likedTracks = tracks.filter(t => likedIds.includes(t.id));
-  const displayTracks = activeTab === 'all' ? tracks : activeTab === 'owned' ? ownedTracks : likedTracks;
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen px-4 pt-6 pb-32">
-      {/* Header */}
-      <header className="mb-6 animate-fade-in">
-        <h1 className="text-3xl font-heading font-bold text-foreground flex items-center gap-2">
-          <Music2 className="text-primary" />
-          {t('music.title')}
-        </h1>
-        <p className="text-muted-foreground mt-1">{t('music.subtitle')}</p>
-      </header>
-
-      {/* Music Membership */}
-      <MusicMembershipBanner />
-
-      {/* Mastering Service */}
-      <MasteringService />
-
-      {/* Stats */}
-      <div className="flex gap-4 mb-6 animate-slide-up">
-        <div className="flex-1 bg-muted/30 rounded-xl p-4 border border-border/30 text-center">
-          <p className="text-2xl font-heading font-bold text-primary">{ownedTracks.length}</p>
-          <p className="text-xs text-muted-foreground">{t('music.owned')}</p>
-        </div>
-        <div className="flex-1 bg-muted/30 rounded-xl p-4 border border-border/30 text-center">
-          <p className="text-2xl font-heading font-bold text-secondary">
-            <AnimatedCounter value={balance?.balance ?? 0} />
-          </p>
-          <p className="text-xs text-muted-foreground">{t('wallet.balance')}</p>
-        </div>
-        <div className="flex-1 bg-muted/30 rounded-xl p-4 border border-border/30 text-center">
-          <p className="text-2xl font-heading font-bold text-accent">{tracks.length}</p>
-          <p className="text-xs text-muted-foreground">{t('music.tracks')}</p>
+    <div className={`flex items-center gap-3 ${compact ? 'py-1' : 'p-3 bg-muted/20 rounded-lg'}`}>
+      <button onClick={onPlay} className={`${compact ? 'w-8 h-8' : 'w-12 h-12'} rounded-lg overflow-hidden shrink-0 bg-muted flex items-center justify-center`}>
+        {track.cover_image_url ? (
+          <img src={track.cover_image_url} alt="" className="w-full h-full object-cover" />
+        ) : (
+          isPlaying ? <Pause size={compact ? 14 : 18} className="text-primary" /> : <Play size={compact ? 14 : 18} className="text-primary" />
+        )}
+      </button>
+      
+      <div className="flex-1 min-w-0">
+        <p className={`font-medium truncate ${compact ? 'text-sm' : ''}`}>{track.title}</p>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <span>{track.artist}</span>
+          <span>•</span>
+          <span className="flex items-center gap-1"><Clock size={10} />{formatDuration(track.duration_seconds)}</span>
+          {track.bpm && <span>• {track.bpm} BPM</span>}
+          {showDate && track.release_date && <span>• {new Date(track.release_date).toLocaleDateString()}</span>}
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 mb-4 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-        <button
-          onClick={() => setActiveTab('all')}
-          className={`flex-1 py-3 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 ${
-            activeTab === 'all'
-              ? 'bg-primary text-primary-foreground'
-              : 'bg-muted/30 text-muted-foreground'
-          }`}
-        >
-          <Music2 size={16} />
-          {t('meditations.categories.all')}
-        </button>
-        <button
-          onClick={() => setActiveTab('owned')}
-          className={`flex-1 py-3 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 ${
-            activeTab === 'owned'
-              ? 'bg-primary text-primary-foreground'
-              : 'bg-muted/30 text-muted-foreground'
-          }`}
-        >
-          <ListMusic size={16} />
-          {t('music.myMusic')}
-        </button>
-        <button
-          onClick={() => setActiveTab('liked')}
-          className={`flex-1 py-3 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 ${
-            activeTab === 'liked'
-              ? 'bg-primary text-primary-foreground'
-              : 'bg-muted/30 text-muted-foreground'
-          }`}
-        >
-          <Heart size={16} />
-          {t('music.liked')}
-        </button>
-      </div>
-
-      {/* Track List */}
-      <div className="space-y-3 animate-fade-in">
-        {displayTracks.map((track, index) => {
-          const isOwned = purchasedIds.includes(track.id);
-          const isLiked = likedIds.includes(track.id);
-          const isPurchasing = purchasingId === track.id;
-          const isCurrentTrack = currentTrack?.id === track.id;
-
-          return (
-            <div
-              key={track.id}
-              className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
-                isCurrentTrack
-                  ? 'bg-primary/10 border-primary/50'
-                  : 'bg-gradient-card border-border/50'
-              }`}
-              style={{ animationDelay: `${index * 0.05}s` }}
-            >
-            {/* Cover & Play */}
-              <button
-                onClick={() => playTrack(track)}
-                className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0"
-              >
-                {track.cover_image_url ? (
-                  <img 
-                    src={track.cover_image_url} 
-                    alt={track.title}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-spiritual flex items-center justify-center">
-                    <Music2 size={24} className="text-foreground/70" />
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-background/60 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                  {isCurrentTrack && isPlaying ? (
-                    <Pause className="text-primary" size={20} />
-                  ) : (
-                    <Play className="text-primary" size={20} />
-                  )}
-                </div>
-                {!isOwned && (
-                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-accent rounded-full flex items-center justify-center">
-                    <Lock size={10} className="text-accent-foreground" />
-                  </div>
-                )}
-              </button>
-
-              {/* Info */}
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-foreground truncate">
-                  <TranslatedText>{track.title}</TranslatedText>
-                </p>
-                <p className="text-xs text-muted-foreground">{track.artist}</p>
-                {track.description && (
-                  <p className="text-xs text-muted-foreground/70 truncate mt-0.5">
-                    <TranslatedText>{track.description}</TranslatedText>
-                  </p>
-                )}
-                <div className="flex items-center gap-3 mt-1">
-                  <span className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Clock size={10} />
-                    {formatDuration(track.duration_seconds)}
-                  </span>
-                  {track.bpm && (
-                    <span className="text-xs text-muted-foreground">
-                      {track.bpm} BPM
-                    </span>
-                  )}
-                  <span className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Headphones size={10} />
-                    {track.play_count.toLocaleString()}
-                  </span>
-                  {!isOwned && (
-                    <span className="text-xs text-accent flex items-center gap-1">
-                      <Sparkles size={10} />
-                      +{track.shc_reward} SHC
-                    </span>
-                  )}
-                </div>
+      <div className="flex items-center gap-2">
+        {hasAccess ? (
+          <span className="text-xs text-green-500 flex items-center gap-1"><Sparkles size={12} />Included</span>
+        ) : isSubscribed ? (
+          <span className="text-xs text-green-500">Included</span>
+        ) : (
+          <Button size="sm" variant="outline" onClick={onPurchase}>€{track.price_usd}</Button>
+        )}
+        
+        {playlists && playlists.length > 0 && (
+          <div className="relative">
+            <Button size="icon" variant="ghost" onClick={() => setShowPlaylistMenu(!showPlaylistMenu)}><Plus size={14} /></Button>
+            {showPlaylistMenu && (
+              <div className="absolute right-0 top-full mt-1 bg-card border border-border rounded-lg p-2 z-50 min-w-32">
+                {playlists.map(pl => (
+                  <button key={pl.id} onClick={() => { onAddToPlaylist?.(pl.id); setShowPlaylistMenu(false); }} className="block w-full text-left px-2 py-1 text-sm hover:bg-muted rounded">{pl.name}</button>
+                ))}
               </div>
-
-              {/* Actions */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => toggleLike(track.id)}
-                  className={`p-2 rounded-full transition-colors ${
-                    isLiked ? 'text-destructive' : 'text-muted-foreground hover:text-destructive'
-                  }`}
-                >
-                  <Heart size={18} fill={isLiked ? 'currentColor' : 'none'} />
-                </button>
-                
-                {isOwned ? (
-                  <Button variant="ghost" size="sm" onClick={() => downloadTrack(track)}>
-                    <Download size={16} />
-                  </Button>
-                ) : (
-                  <Button 
-                    variant="gold" 
-                    size="sm" 
-                    onClick={() => setShowPaymentModal(track)}
-                    disabled={isPurchasing}
-                  >
-                    {isPurchasing ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <>
-                        <ShoppingCart size={14} />
-                        ${track.price_usd}
-                      </>
-                    )}
-                  </Button>
-                )}
-              </div>
-            </div>
-          );
-        })}
-
-        {displayTracks.length === 0 && (
-          <div className="text-center py-12">
-            <Music2 className="mx-auto text-muted-foreground mb-3" size={48} />
-            <p className="text-muted-foreground">
-              {activeTab === 'owned' 
-                ? t('music.noOwnedTracks')
-                : activeTab === 'liked'
-                ? t('music.noLikedTracks')
-                : t('music.noTracks')}
-            </p>
+            )}
           </div>
         )}
       </div>
-
-      {/* Now Playing Bar */}
-      {currentTrack && (
-        <div className="fixed bottom-20 left-0 right-0 px-4 z-40 animate-slide-up">
-          <div className="bg-card/95 backdrop-blur-lg rounded-2xl border border-border/50 p-4 shadow-lg">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 rounded-lg overflow-hidden">
-                {currentTrack.cover_image_url ? (
-                  <img 
-                    src={currentTrack.cover_image_url} 
-                    alt={currentTrack.title}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-spiritual flex items-center justify-center">
-                    <Music2 size={20} className="text-foreground/70" />
-                  </div>
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-foreground truncate">
-                  <TranslatedText>{currentTrack.title}</TranslatedText>
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {purchasedIds.includes(currentTrack.id) ? t('music.fullTrack') : t('music.previewTrack')}
-                </p>
-              </div>
-              <button
-                onClick={() => playTrack(currentTrack)}
-                className="w-10 h-10 rounded-full bg-primary flex items-center justify-center"
-              >
-                {isPlaying ? (
-                  <Pause className="text-primary-foreground" size={20} />
-                ) : (
-                  <Play className="text-primary-foreground" size={20} />
-                )}
-              </button>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <Slider
-                value={[progress]}
-                max={100}
-                step={1}
-                className="flex-1"
-              />
-              {!purchasedIds.includes(currentTrack.id) && (
-                <Button variant="gold" size="sm" onClick={() => setShowPaymentModal(currentTrack)}>
-                  Buy ${currentTrack.price_usd}
-                </Button>
-              )}
-            </div>
-            
-            {!purchasedIds.includes(currentTrack.id) && (
-              <p className="text-xs text-muted-foreground text-center mt-2">
-                Purchase to unlock full track & earn +{currentTrack.shc_reward} SHC
-              </p>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Payment Modal */}
-      {showPaymentModal && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
-          <div className="bg-gradient-card border border-border/50 rounded-2xl p-6 w-full max-w-md animate-slide-up">
-            <h3 className="text-xl font-heading font-bold text-foreground mb-2">
-              Buy "{showPaymentModal.title}"
-            </h3>
-            <p className="text-muted-foreground text-sm mb-6">
-              Choose your payment method
-            </p>
-
-            <div className="space-y-3">
-              {/* SHC Payment */}
-              <button
-                onClick={() => handlePurchase(showPaymentModal, 'shc')}
-                disabled={!balance || balance.balance < showPaymentModal.price_shc}
-                className="w-full flex items-center gap-4 p-4 rounded-xl border border-border/50 hover:border-accent/50 hover:bg-accent/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <div className="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center">
-                  <Coins className="text-accent" size={24} />
-                </div>
-                <div className="flex-1 text-left">
-                  <p className="font-medium text-foreground">Pay with SHC</p>
-                  <p className="text-sm text-muted-foreground">
-                    {showPaymentModal.price_shc} SHC + earn {showPaymentModal.shc_reward} back
-                  </p>
-                </div>
-              </button>
-
-              {/* Stripe Payment */}
-              <button
-                onClick={() => handlePurchase(showPaymentModal, 'stripe')}
-                className="w-full flex items-center gap-4 p-4 rounded-xl border border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-all"
-              >
-                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                  <CreditCard className="text-primary" size={24} />
-                </div>
-                <div className="flex-1 text-left">
-                  <p className="font-medium text-foreground">Credit Card</p>
-                  <p className="text-sm text-muted-foreground">
-                    ${showPaymentModal.price_usd} USD via Stripe
-                  </p>
-                </div>
-              </button>
-            </div>
-
-            <Button 
-              variant="ghost" 
-              className="w-full mt-4"
-              onClick={() => setShowPaymentModal(null)}
-            >
-              Cancel
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
