@@ -1051,6 +1051,38 @@ export type Database = {
         }
         Relationships: []
       }
+      music_play_history: {
+        Row: {
+          id: string
+          last_played_at: string
+          play_count: number
+          track_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          last_played_at?: string
+          play_count?: number
+          track_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          last_played_at?: string
+          play_count?: number
+          track_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "music_play_history_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "music_tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       music_purchases: {
         Row: {
           amount_paid: number | null
@@ -1108,6 +1140,7 @@ export type Database = {
           price_shc: number
           price_usd: number
           purchase_count: number
+          release_date: string | null
           shc_reward: number
           title: string
         }
@@ -1126,6 +1159,7 @@ export type Database = {
           price_shc?: number
           price_usd?: number
           purchase_count?: number
+          release_date?: string | null
           shc_reward?: number
           title: string
         }
@@ -1144,10 +1178,50 @@ export type Database = {
           price_shc?: number
           price_usd?: number
           purchase_count?: number
+          release_date?: string | null
           shc_reward?: number
           title?: string
         }
         Relationships: []
+      }
+      playlist_tracks: {
+        Row: {
+          created_at: string
+          id: string
+          order_index: number
+          playlist_id: string
+          track_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_index?: number
+          playlist_id: string
+          track_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_index?: number
+          playlist_id?: string
+          track_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "playlist_tracks_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "user_playlists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "playlist_tracks_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "music_tracks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       post_comments: {
         Row: {
@@ -1868,6 +1942,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_playlists: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_wallets: {
         Row: {

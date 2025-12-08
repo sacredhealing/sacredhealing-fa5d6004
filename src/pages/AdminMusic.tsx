@@ -17,7 +17,7 @@ interface MusicTrack {
   purchase_count: number;
 }
 
-const genres = ['meditation', 'ambient', 'healing', 'nature', 'binaural', 'chanting', 'instrumental', 'beats', 'song', 'hip hop', 'reggae', 'indian', 'shaman'];
+const genres = ['meditation', 'healing', 'gym', 'yoga', 'run', 'mindpower', 'instrumentals', 'beats'];
 
 const AdminMusic: React.FC = () => {
   const navigate = useNavigate();
