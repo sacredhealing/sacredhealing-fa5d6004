@@ -190,12 +190,12 @@ const Courses: React.FC = () => {
               <Sparkles className="w-5 h-5 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="font-heading font-bold text-lg text-foreground">Stargate Membership</h3>
-                  <span className="text-lg" title="Swedish">🇸🇪</span>
+                  <span className="text-base shrink-0" title="Swedish">🇸🇪</span>
                 </div>
-                <span className="px-3 py-1 bg-primary/90 rounded-full text-xs font-medium text-primary-foreground whitespace-nowrap">
+                <span className="px-2 py-0.5 bg-primary/90 rounded-full text-[10px] font-medium text-primary-foreground w-fit">
                   Subscription
                 </span>
               </div>
@@ -277,19 +277,19 @@ const Courses: React.FC = () => {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex items-center gap-2">
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="font-heading font-bold text-lg text-foreground">{course.title}</h3>
-                        <span className="text-lg" title={langInfo.name}>{langInfo.flag}</span>
+                        <span className="text-base shrink-0" title={langInfo.name}>{langInfo.flag}</span>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-1.5">
                         {course.recurring_price_usd && (
-                          <span className="px-3 py-1 bg-primary/90 rounded-full text-xs font-medium text-primary-foreground whitespace-nowrap">
+                          <span className="px-2 py-0.5 bg-primary/90 rounded-full text-[10px] font-medium text-primary-foreground whitespace-nowrap">
                             Subscription
                           </span>
                         )}
                         {course.is_free && (
-                          <span className="px-3 py-1 bg-secondary/90 rounded-full text-xs font-medium text-secondary-foreground whitespace-nowrap">
+                          <span className="px-2 py-0.5 bg-secondary/90 rounded-full text-[10px] font-medium text-secondary-foreground whitespace-nowrap">
                             Free
                           </span>
                         )}

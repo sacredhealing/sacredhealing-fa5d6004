@@ -13,23 +13,35 @@ const getNavItems = (t: (key: string) => string) => [
   { to: '/profile', icon: User, label: t('nav.profile') },
 ];
 
+const NAV_LABELS: Record<string, string> = {
+  '/dashboard': 'Home',
+  '/meditations': 'Meditate',
+  '/music': 'Music',
+  '/healing': 'Healing',
+  '/community': 'Community',
+  '/profile': 'Profile',
+};
+
 export const BottomNav: React.FC = () => {
   const { t } = useTranslation();
   const navItems = getNavItems(t);
   
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-xl border-t border-border/50 pb-[env(safe-area-inset-bottom)]">
-      <div className="flex items-center justify-between px-2 py-1.5 sm:py-2 sm:px-4 w-full max-w-2xl mx-auto">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-t border-border/50 safe-area-bottom">
+      <div 
+        className="grid grid-cols-6 w-full px-1 py-1"
+        style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}
+      >
         {navItems.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
             className={({ isActive }) =>
               cn(
-                'flex flex-col items-center gap-0.5 px-1.5 py-1.5 sm:px-3 sm:py-2 rounded-xl transition-all duration-300 flex-1 min-w-0',
+                'flex flex-col items-center justify-center gap-0.5 py-2 rounded-lg transition-all duration-200',
                 isActive
-                  ? 'text-primary bg-primary/10'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'text-primary'
+                  : 'text-muted-foreground hover:text-foreground active:text-foreground'
               )
             }
           >
@@ -37,11 +49,13 @@ export const BottomNav: React.FC = () => {
               <>
                 <item.icon
                   className={cn(
-                    'w-5 h-5 sm:w-[22px] sm:h-[22px] transition-all duration-300 shrink-0',
-                    isActive && 'drop-shadow-[0_0_8px_hsl(var(--primary))]'
+                    'w-5 h-5 shrink-0',
+                    isActive && 'drop-shadow-[0_0_6px_hsl(var(--primary))]'
                   )}
                 />
-                <span className="text-[10px] sm:text-xs font-medium truncate max-w-full">{item.label}</span>
+                <span className="text-[9px] xs:text-[10px] font-medium leading-tight">
+                  {NAV_LABELS[item.to] || item.label}
+                </span>
               </>
             )}
           </NavLink>
