@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { User, Mail, Flame, Award, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield, LayoutDashboard, Globe, Megaphone } from 'lucide-react';
@@ -10,6 +10,10 @@ import { usePhantomWallet } from '@/hooks/usePhantomWallet';
 import { useSHC } from '@/contexts/SHCContext';
 import { useToast } from '@/hooks/use-toast';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
+import { NotificationsDialog } from '@/components/profile/NotificationsDialog';
+import { AppearanceDialog } from '@/components/profile/AppearanceDialog';
+import { PrivacyDialog } from '@/components/profile/PrivacyDialog';
+import { SettingsDialog } from '@/components/profile/SettingsDialog';
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
@@ -18,6 +22,11 @@ const Profile: React.FC = () => {
   const { walletAddress, connectWallet } = usePhantomWallet();
   const { balance, profile } = useSHC();
   const { toast } = useToast();
+  
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [appearanceOpen, setAppearanceOpen] = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const badges = [
     { id: 1, emoji: '🧘', titleKey: 'badges.firstMeditation', earned: true },
@@ -40,16 +49,16 @@ const Profile: React.FC = () => {
   const menuItems = [
     { icon: Megaphone, label: t('profile.promoteEarn'), sublabel: t('profile.promoteEarnDesc'), onClick: () => navigate('/promote') },
     { icon: LayoutDashboard, label: t('admin.title'), sublabel: t('admin.manageContent'), onClick: () => navigate('/admin') },
-    { icon: Bell, label: t('profile.notifications'), sublabel: t('profile.dailyReminders'), onClick: () => {} },
+    { icon: Bell, label: t('profile.notifications'), sublabel: t('profile.dailyReminders'), onClick: () => setNotificationsOpen(true) },
     { 
       icon: Wallet, 
       label: t('wallet.connectWallet'), 
       sublabel: walletAddress ? `${walletAddress.slice(0,4)}...${walletAddress.slice(-4)}` : t('profile.web3Wallet'),
       onClick: connectWallet 
     },
-    { icon: Moon, label: t('profile.appearance'), sublabel: t('profile.darkMode'), onClick: () => {} },
-    { icon: Shield, label: t('profile.privacy'), sublabel: t('profile.dataAndSecurity'), onClick: () => {} },
-    { icon: Settings, label: t('profile.settings'), sublabel: t('profile.appPreferences'), onClick: () => {} },
+    { icon: Moon, label: t('profile.appearance'), sublabel: t('profile.darkMode'), onClick: () => setAppearanceOpen(true) },
+    { icon: Shield, label: t('profile.privacy'), sublabel: t('profile.dataAndSecurity'), onClick: () => setPrivacyOpen(true) },
+    { icon: Settings, label: t('profile.settings'), sublabel: t('profile.appPreferences'), onClick: () => setSettingsOpen(true) },
   ];
 
   const userName = user?.user_metadata?.full_name || t('dashboard.sacredSoul');
@@ -168,6 +177,12 @@ const Profile: React.FC = () => {
         <LogOut size={18} />
         {t('profile.signOut')}
       </Button>
+
+      {/* Dialogs */}
+      <NotificationsDialog open={notificationsOpen} onOpenChange={setNotificationsOpen} />
+      <AppearanceDialog open={appearanceOpen} onOpenChange={setAppearanceOpen} />
+      <PrivacyDialog open={privacyOpen} onOpenChange={setPrivacyOpen} />
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
   );
 };
