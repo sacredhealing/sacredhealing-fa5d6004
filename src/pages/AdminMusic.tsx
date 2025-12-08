@@ -73,33 +73,33 @@ const AdminMusic: React.FC = () => {
       const timestamp = Date.now();
       const randomId = Math.random().toString(36).slice(2);
       
-      // Upload preview
+      // Upload preview to songs bucket
       const previewExt = previewFile.name.split('.').pop();
       const previewName = `${timestamp}-${randomId}-preview.${previewExt}`;
       
       const { error: previewError } = await supabase.storage
-        .from('music-previews')
-        .upload(previewName, previewFile);
+        .from('songs')
+        .upload(previewName, previewFile, { cacheControl: '3600', upsert: false });
 
       if (previewError) throw previewError;
 
-      // Upload full track
+      // Upload full track to songs bucket
       const fullExt = fullFile.name.split('.').pop();
       const fullName = `${timestamp}-${randomId}-full.${fullExt}`;
       
       const { error: fullError } = await supabase.storage
-        .from('music-full')
-        .upload(fullName, fullFile);
+        .from('songs')
+        .upload(fullName, fullFile, { cacheControl: '3600', upsert: false });
 
       if (fullError) throw fullError;
 
-      // Get URLs
+      // Get public URLs
       const { data: { publicUrl: previewUrl } } = supabase.storage
-        .from('music-previews')
+        .from('songs')
         .getPublicUrl(previewName);
 
       const { data: { publicUrl: fullUrl } } = supabase.storage
-        .from('music-full')
+        .from('songs')
         .getPublicUrl(fullName);
 
       // Insert track record
