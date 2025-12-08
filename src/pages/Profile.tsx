@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { User, Mail, Flame, Award, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield, LayoutDashboard, Globe, Megaphone } from 'lucide-react';
+import { User, Mail, Flame, Award, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield, LayoutDashboard, Globe, Megaphone, Crown, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LotusIcon } from '@/components/icons/LotusIcon';
 import { LanguageSelector } from '@/components/LanguageSelector';
@@ -132,18 +132,49 @@ const Profile: React.FC = () => {
         <LanguageSelector />
       </div>
 
-      {/* Premium CTA */}
+      {/* Premium CTA - Membership Card */}
       <div className="mb-8 animate-slide-up" style={{ animationDelay: '0.15s' }}>
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-healing p-5 glow-purple">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-accent/30 rounded-full blur-2xl" />
-          <div className="relative">
-            <h3 className="text-lg font-heading font-bold text-foreground mb-1">{t('profile.upgradePremium')}</h3>
-            <p className="text-foreground/80 text-sm mb-4">
-              {t('profile.unlockFeatures')}
-            </p>
-            <Button variant="gold" size="sm">
-              {t('common.upgradeNow')}
-            </Button>
+        <div 
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-500/20 via-background to-amber-500/10 border border-border/50 p-5 cursor-pointer hover:border-primary/50 transition-all"
+          onClick={() => navigate('/membership')}
+        >
+          <div className="flex items-start gap-4">
+            <div className="p-3 rounded-xl bg-amber-500/20">
+              <Crown className="w-6 h-6 text-amber-500" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-lg text-foreground">{t('profile.upgradePremium')}</h3>
+              <p className="text-sm text-muted-foreground mb-3">
+                {t('profile.unlockFeatures')}
+              </p>
+              
+              <ul className="space-y-1.5 mb-4">
+                <li className="flex items-center gap-2 text-sm text-foreground">
+                  <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                  All meditations & courses
+                </li>
+                <li className="flex items-center gap-2 text-sm text-foreground">
+                  <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                  Premium healing content
+                </li>
+                <li className="flex items-center gap-2 text-sm text-foreground">
+                  <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                  Priority support
+                </li>
+              </ul>
+
+              <Button 
+                variant="gold" 
+                size="sm"
+                className="w-full"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate('/membership');
+                }}
+              >
+                {t('common.upgradeNow')}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
