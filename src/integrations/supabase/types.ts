@@ -1095,6 +1095,7 @@ export type Database = {
       music_tracks: {
         Row: {
           artist: string
+          bpm: number | null
           cover_image_url: string | null
           created_at: string
           description: string | null
@@ -1112,6 +1113,7 @@ export type Database = {
         }
         Insert: {
           artist?: string
+          bpm?: number | null
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
@@ -1129,6 +1131,7 @@ export type Database = {
         }
         Update: {
           artist?: string
+          bpm?: number | null
           cover_image_url?: string | null
           created_at?: string
           description?: string | null

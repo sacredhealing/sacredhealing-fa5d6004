@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { X, CreditCard, Wallet, Bitcoin, Sparkles, Check } from 'lucide-react';
+import { X, CreditCard, Wallet, Check, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
+import { usePhantomWallet } from '@/hooks/usePhantomWallet';
 
 interface Track {
   id: number;
@@ -18,17 +19,12 @@ interface PaymentModalProps {
   onPurchaseComplete: () => void;
 }
 
-type PaymentMethod = 'shc' | 'card' | 'paypal' | 'crypto';
+type PaymentMethod = 'card' | 'crypto';
 
 const paymentMethods = [
-  { id: 'shc' as PaymentMethod, name: 'SHC Tokens', icon: Sparkles, description: 'Pay with your SHC balance' },
   { id: 'card' as PaymentMethod, name: 'Credit Card', icon: CreditCard, description: 'Visa, Mastercard, Amex' },
-  { id: 'paypal' as PaymentMethod, name: 'PayPal', icon: Wallet, description: 'Pay with PayPal account' },
-  { id: 'crypto' as PaymentMethod, name: 'Crypto', icon: Bitcoin, description: 'SOL, USDC, ETH' },
+  { id: 'crypto' as PaymentMethod, name: 'Phantom Wallet', icon: Wallet, description: 'Pay with SOL via Phantom' },
 ];
-
-// Mock price conversion (1 SHC = $0.10 USD)
-const SHC_TO_USD = 0.10;
 
 export const PaymentModal: React.FC<PaymentModalProps> = ({
   track,
@@ -36,17 +32,33 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   onClose,
   onPurchaseComplete,
 }) => {
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('shc');
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('card');
   const [isProcessing, setIsProcessing] = useState(false);
+  const { walletAddress, isPhantomInstalled, connectWallet } = usePhantomWallet();
 
   if (!isOpen) return null;
 
-  const usdPrice = (track.price * SHC_TO_USD).toFixed(2);
+  const usdPrice = track.price.toFixed(2);
 
   const handlePayment = async () => {
     setIsProcessing(true);
     
-    // Simulate payment processing
+    if (selectedMethod === 'crypto') {
+      if (!walletAddress) {
+        await connectWallet();
+        setIsProcessing(false);
+        return;
+      }
+      // TODO: Implement crypto payment via Phantom
+      toast({
+        title: "Crypto payment coming soon",
+        description: "Phantom wallet integration for payments is being finalized",
+      });
+      setIsProcessing(false);
+      return;
+    }
+    
+    // Simulate card payment processing
     await new Promise(resolve => setTimeout(resolve, 1500));
     
     setIsProcessing(false);
@@ -54,7 +66,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     onClose();
     
     toast({
-      title: "Purchase successful! 🎉",
+      title: "Purchase successful!",
       description: `You earned +${track.shcReward} SHC! Enjoy "${track.title}"`,
     });
   };
@@ -90,8 +102,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               <p className="font-medium text-foreground">{track.title}</p>
               <p className="text-sm text-muted-foreground">Sacred Healing</p>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-primary font-heading font-bold">{track.price} SHC</span>
-                <span className="text-muted-foreground">≈ ${usdPrice}</span>
+                <span className="text-primary font-heading font-bold">${usdPrice}</span>
               </div>
             </div>
           </div>
@@ -151,10 +162,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               </>
             ) : (
               <>
-                {selectedMethod === 'shc' && `Pay ${track.price} SHC`}
                 {selectedMethod === 'card' && `Pay $${usdPrice}`}
-                {selectedMethod === 'paypal' && `Pay $${usdPrice} with PayPal`}
-                {selectedMethod === 'crypto' && `Pay with Crypto`}
+                {selectedMethod === 'crypto' && (walletAddress ? `Pay with Phantom` : `Connect Phantom Wallet`)}
               </>
             )}
           </Button>

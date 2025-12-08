@@ -17,7 +17,7 @@ interface MusicTrack {
   purchase_count: number;
 }
 
-const genres = ['meditation', 'ambient', 'healing', 'nature', 'binaural', 'chanting', 'instrumental'];
+const genres = ['meditation', 'ambient', 'healing', 'nature', 'binaural', 'chanting', 'instrumental', 'beats', 'song', 'hip hop', 'reggae', 'indian', 'shaman'];
 
 const AdminMusic: React.FC = () => {
   const navigate = useNavigate();
@@ -32,7 +32,7 @@ const AdminMusic: React.FC = () => {
   const [genre, setGenre] = useState('meditation');
   const [duration, setDuration] = useState('180');
   const [priceUsd, setPriceUsd] = useState('2.99');
-  const [priceShc, setPriceShc] = useState('100');
+  const [bpm, setBpm] = useState('');
   const [shcReward, setShcReward] = useState('10');
   const [previewFile, setPreviewFile] = useState<File | null>(null);
   const [fullFile, setFullFile] = useState<File | null>(null);
@@ -114,7 +114,7 @@ const AdminMusic: React.FC = () => {
           preview_url: previewUrl,
           full_audio_url: fullUrl,
           price_usd: parseFloat(priceUsd),
-          price_shc: parseInt(priceShc),
+          bpm: bpm ? parseInt(bpm) : null,
           shc_reward: parseInt(shcReward)
         });
 
@@ -132,7 +132,7 @@ const AdminMusic: React.FC = () => {
       setGenre('meditation');
       setDuration('180');
       setPriceUsd('2.99');
-      setPriceShc('100');
+      setBpm('');
       setShcReward('10');
       setPreviewFile(null);
       setFullFile(null);
@@ -256,12 +256,14 @@ const AdminMusic: React.FC = () => {
               </div>
               
               <div>
-                <label className="block text-sm text-muted-foreground mb-1">Price (SHC tokens)</label>
+                <label className="block text-sm text-muted-foreground mb-1">BPM (optional)</label>
                 <Input
                   type="number"
-                  value={priceShc}
-                  onChange={(e) => setPriceShc(e.target.value)}
-                  min="0"
+                  value={bpm}
+                  onChange={(e) => setBpm(e.target.value)}
+                  min="40"
+                  max="300"
+                  placeholder="120"
                   className="bg-muted/50"
                 />
               </div>
@@ -357,7 +359,7 @@ const AdminMusic: React.FC = () => {
                       {track.artist} • {track.genre} • {Math.floor(track.duration_seconds / 60)}:{(track.duration_seconds % 60).toString().padStart(2, '0')}
                     </p>
                     <p className="text-xs text-accent">
-                      ${track.price_usd} / {track.price_shc} SHC • {track.purchase_count} sales
+                      ${track.price_usd} • {track.purchase_count} sales
                     </p>
                   </div>
                   <Button
