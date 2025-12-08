@@ -25,6 +25,7 @@ interface Track {
   price_shc: number;
   shc_reward: number;
   play_count: number;
+  bpm: number | null;
 }
 
 const Music: React.FC = () => {
@@ -395,6 +396,11 @@ const Music: React.FC = () => {
                     <Clock size={10} />
                     {formatDuration(track.duration_seconds)}
                   </span>
+                  {track.bpm && (
+                    <span className="text-xs text-muted-foreground">
+                      {track.bpm} BPM
+                    </span>
+                  )}
                   <span className="text-xs text-muted-foreground flex items-center gap-1">
                     <Headphones size={10} />
                     {track.play_count.toLocaleString()}
