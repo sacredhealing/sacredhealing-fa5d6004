@@ -142,22 +142,72 @@ const translations = {
   }
 };
 
-const faqs = [
-  { question: "How do I prepare myself for the healing?", answer: "You can receive the healing energy anytime, but choosing a specific time allows deeper connection. Sit or lie down comfortably, invite the energy to flow, and optionally listen to our healing music on Spotify or YouTube." },
-  { question: "When will my healing start?", answer: "Healing begins after registration and booking your preferred date and time. The energy is programmed to flow according to your selected schedule." },
-  { question: "How do I receive the healing at a distance?", answer: "Choose a time to receive the healing. Energy flows through the quantum field without restrictions. This encourages surrender and trust." },
-  { question: "Do I have to do anything to make the healing work?", answer: "No special action is required, but meditation or being open enhances receptivity. Visualize receiving the energy and optionally pray for all beings. You can also send healing to someone else." },
-  { question: "Is The Sacred Healing Vibration the same as Reiki?", answer: "Both draw from the universal source, but Sacred Healing Vibration does not follow a learned Reiki method. Frequencies are intuitively scanned and sent to support your unique needs." },
-  { question: "Who can receive the healing?", answer: "Anyone or anything: adults, children, animals, those passing away, recently passed, or spaces like homes and vehicles. Healing works anywhere in the quantum universe." },
-  { question: "How long is the healing sent for, and how often?", answer: "Each session is sent for approximately 30 minutes on the date and time booked." },
-  { question: "How does the healing transform?", answer: "The Sacred Healing Vibration transmits divine love and light to the physical, emotional, mental, and spiritual levels. It works face-to-face or remotely. Being open enhances the experience." },
-  { question: "What exactly will the energy heal?", answer: "Supports organ health, immune system, circulation, vitality, spiritual growth, focus, motivation, calmness, sleep, emotional balance, recovery, pain relief, and any other frequencies needed for your healing journey." },
-  { question: "Does the healing cure physical symptoms or diseases?", answer: "Healing works on spiritual, mental, emotional, and physical levels. Spiritual and mental effects are noticed first, while emotional and physical improvements may take longer. Detox-like effects may occur. Not a substitute for medical care." },
-  { question: "Can I sign someone else up for the healing?", answer: "Yes, you can register family, friends, or pets. Provide a photograph of the recipient after payment." },
-  { question: "If I give the healing to someone else, do they have to know?", answer: "No. Healing works subtly on their body, mind, emotions, and spirit. Out of respect, ask first if possible." },
-  { question: "Does the healing negatively affect other medical treatments?", answer: "No, the energy works on a subtle level and does not interfere with mainstream or alternative treatments. Temporary detox symptoms may occur." },
-  { question: "Does it cost anything to receive the healing?", answer: "Pricing: 30-Day Healing €197, 14-Day Healing €147, 7-Day Healing €97. Option to subscribe 3 months for €147 per month." }
-];
+const faqTranslations = {
+  en: [
+    { question: "How do I prepare myself for the healing?", answer: "You can receive the healing energy anytime, but choosing a specific time allows deeper connection. Sit or lie down comfortably, invite the energy to flow, and optionally listen to our healing music on Spotify or YouTube." },
+    { question: "When will my healing start?", answer: "Healing begins after registration and booking your preferred date and time. The energy is programmed to flow according to your selected schedule." },
+    { question: "How do I receive the healing at a distance?", answer: "Choose a time to receive the healing. Energy flows through the quantum field without restrictions. This encourages surrender and trust." },
+    { question: "Do I have to do anything to make the healing work?", answer: "No special action is required, but meditation or being open enhances receptivity. Visualize receiving the energy and optionally pray for all beings. You can also send healing to someone else." },
+    { question: "Is The Sacred Healing Vibration the same as Reiki?", answer: "Both draw from the universal source, but Sacred Healing Vibration does not follow a learned Reiki method. Frequencies are intuitively scanned and sent to support your unique needs." },
+    { question: "Who can receive the healing?", answer: "Anyone or anything: adults, children, animals, those passing away, recently passed, or spaces like homes and vehicles. Healing works anywhere in the quantum universe." },
+    { question: "How long is the healing sent for, and how often?", answer: "Each session is sent for approximately 30 minutes on the date and time booked." },
+    { question: "How does the healing transform?", answer: "The Sacred Healing Vibration transmits divine love and light to the physical, emotional, mental, and spiritual levels. It works face-to-face or remotely. Being open enhances the experience." },
+    { question: "What exactly will the energy heal?", answer: "Supports organ health, immune system, circulation, vitality, spiritual growth, focus, motivation, calmness, sleep, emotional balance, recovery, pain relief, and any other frequencies needed for your healing journey." },
+    { question: "Does the healing cure physical symptoms or diseases?", answer: "Healing works on spiritual, mental, emotional, and physical levels. Spiritual and mental effects are noticed first, while emotional and physical improvements may take longer. Detox-like effects may occur. Not a substitute for medical care." },
+    { question: "Can I sign someone else up for the healing?", answer: "Yes, you can register family, friends, or pets. Provide a photograph of the recipient after payment." },
+    { question: "If I give the healing to someone else, do they have to know?", answer: "No. Healing works subtly on their body, mind, emotions, and spirit. Out of respect, ask first if possible." },
+    { question: "Does the healing negatively affect other medical treatments?", answer: "No, the energy works on a subtle level and does not interfere with mainstream or alternative treatments. Temporary detox symptoms may occur." },
+    { question: "Does it cost anything to receive the healing?", answer: "Pricing: 30-Day Healing €197, 14-Day Healing €147, 7-Day Healing €97. Option to subscribe 3 months for €147 per month." }
+  ],
+  sv: [
+    { question: "Hur förbereder jag mig för healingen?", answer: "Du kan ta emot healingenergin när som helst, men att välja en specifik tid möjliggör djupare koppling. Sitt eller ligg bekvämt, bjud in energin att flöda, och lyssna gärna på vår healingmusik på Spotify eller YouTube." },
+    { question: "När börjar min healing?", answer: "Healingen börjar efter registrering och bokning av ditt önskade datum och tid. Energin är programmerad att flöda enligt ditt valda schema." },
+    { question: "Hur tar jag emot healingen på distans?", answer: "Välj en tid för att ta emot healingen. Energi flödar genom kvantfältet utan begränsningar. Detta uppmuntrar till överlåtelse och tillit." },
+    { question: "Måste jag göra något för att healingen ska fungera?", answer: "Ingen speciell åtgärd krävs, men meditation eller öppenhet förstärker mottagligheten. Visualisera att du tar emot energin och be gärna för alla varelser. Du kan också skicka healing till någon annan." },
+    { question: "Är Sacred Healing Vibration samma som Reiki?", answer: "Båda hämtar från den universella källan, men Sacred Healing Vibration följer inte en inlärd Reiki-metod. Frekvenser skannas intuitivt och skickas för att stödja dina unika behov." },
+    { question: "Vem kan ta emot healingen?", answer: "Vem som helst eller vad som helst: vuxna, barn, djur, de som går bort, nyligen avlidna, eller utrymmen som hem och fordon. Healing fungerar överallt i kvantuniversum." },
+    { question: "Hur länge skickas healingen och hur ofta?", answer: "Varje session skickas i cirka 30 minuter på det bokade datumet och tiden." },
+    { question: "Hur transformerar healingen?", answer: "Sacred Healing Vibration överför gudomlig kärlek och ljus till fysiska, emotionella, mentala och andliga nivåer. Det fungerar ansikte mot ansikte eller på distans. Öppenhet förstärker upplevelsen." },
+    { question: "Vad exakt kommer energin att heala?", answer: "Stöder organhälsa, immunsystem, cirkulation, vitalitet, andlig tillväxt, fokus, motivation, lugn, sömn, emotionell balans, återhämtning, smärtlindring och alla andra frekvenser som behövs för din healingresa." },
+    { question: "Botar healingen fysiska symptom eller sjukdomar?", answer: "Healing verkar på andliga, mentala, emotionella och fysiska nivåer. Andliga och mentala effekter märks först, medan emotionella och fysiska förbättringar kan ta längre tid. Detox-liknande effekter kan förekomma. Ersätter inte medicinsk vård." },
+    { question: "Kan jag anmäla någon annan för healingen?", answer: "Ja, du kan registrera familj, vänner eller husdjur. Ge ett fotografi av mottagaren efter betalning." },
+    { question: "Om jag ger healingen till någon annan, måste de veta om det?", answer: "Nej. Healing verkar subtilt på deras kropp, sinne, känslor och ande. Av respekt, fråga först om möjligt." },
+    { question: "Påverkar healingen andra medicinska behandlingar negativt?", answer: "Nej, energin verkar på en subtil nivå och stör inte konventionella eller alternativa behandlingar. Tillfälliga detox-symptom kan förekomma." },
+    { question: "Kostar det något att ta emot healingen?", answer: "Prissättning: 30-dagars Healing €197, 14-dagars Healing €147, 7-dagars Healing €97. Möjlighet att prenumerera 3 månader för €147 per månad." }
+  ],
+  es: [
+    { question: "¿Cómo me preparo para la sanación?", answer: "Puedes recibir la energía de sanación en cualquier momento, pero elegir un momento específico permite una conexión más profunda. Siéntate o acuéstate cómodamente, invita a la energía a fluir y, opcionalmente, escucha nuestra música de sanación en Spotify o YouTube." },
+    { question: "¿Cuándo comenzará mi sanación?", answer: "La sanación comienza después del registro y la reserva de tu fecha y hora preferidas. La energía está programada para fluir según tu horario seleccionado." },
+    { question: "¿Cómo recibo la sanación a distancia?", answer: "Elige un momento para recibir la sanación. La energía fluye a través del campo cuántico sin restricciones. Esto fomenta la entrega y la confianza." },
+    { question: "¿Tengo que hacer algo para que la sanación funcione?", answer: "No se requiere ninguna acción especial, pero la meditación o estar abierto mejora la receptividad. Visualiza recibir la energía y opcionalmente ora por todos los seres. También puedes enviar sanación a otra persona." },
+    { question: "¿Es la Vibración de Sanación Sagrada lo mismo que Reiki?", answer: "Ambos provienen de la fuente universal, pero la Vibración de Sanación Sagrada no sigue un método Reiki aprendido. Las frecuencias se escanean intuitivamente y se envían para apoyar tus necesidades únicas." },
+    { question: "¿Quién puede recibir la sanación?", answer: "Cualquiera o cualquier cosa: adultos, niños, animales, personas que están falleciendo, recientemente fallecidas, o espacios como hogares y vehículos. La sanación funciona en cualquier lugar del universo cuántico." },
+    { question: "¿Cuánto tiempo se envía la sanación y con qué frecuencia?", answer: "Cada sesión se envía durante aproximadamente 30 minutos en la fecha y hora reservadas." },
+    { question: "¿Cómo transforma la sanación?", answer: "La Vibración de Sanación Sagrada transmite amor divino y luz a los niveles físico, emocional, mental y espiritual. Funciona cara a cara o de forma remota. Estar abierto mejora la experiencia." },
+    { question: "¿Qué exactamente sanará la energía?", answer: "Apoya la salud de los órganos, sistema inmunológico, circulación, vitalidad, crecimiento espiritual, enfoque, motivación, calma, sueño, equilibrio emocional, recuperación, alivio del dolor y cualquier otra frecuencia necesaria para tu viaje de sanación." },
+    { question: "¿La sanación cura síntomas físicos o enfermedades?", answer: "La sanación actúa en niveles espirituales, mentales, emocionales y físicos. Los efectos espirituales y mentales se notan primero, mientras que las mejoras emocionales y físicas pueden tardar más. Pueden ocurrir efectos similares a la desintoxicación. No sustituye la atención médica." },
+    { question: "¿Puedo inscribir a otra persona para la sanación?", answer: "Sí, puedes registrar familia, amigos o mascotas. Proporciona una fotografía del destinatario después del pago." },
+    { question: "Si le doy la sanación a otra persona, ¿tienen que saberlo?", answer: "No. La sanación actúa sutilmente en su cuerpo, mente, emociones y espíritu. Por respeto, pregunta primero si es posible." },
+    { question: "¿La sanación afecta negativamente otros tratamientos médicos?", answer: "No, la energía actúa a un nivel sutil y no interfiere con tratamientos convencionales o alternativos. Pueden ocurrir síntomas temporales de desintoxicación." },
+    { question: "¿Cuesta algo recibir la sanación?", answer: "Precios: Sanación de 30 días €197, Sanación de 14 días €147, Sanación de 7 días €97. Opción de suscribirse 3 meses por €147 al mes." }
+  ],
+  no: [
+    { question: "Hvordan forbereder jeg meg på healingen?", answer: "Du kan motta healingenergien når som helst, men å velge et bestemt tidspunkt muliggjør dypere tilkobling. Sitt eller ligg komfortabelt, inviter energien til å flyte, og lytt gjerne til vår healingmusikk på Spotify eller YouTube." },
+    { question: "Når starter healingen min?", answer: "Healingen begynner etter registrering og booking av ønsket dato og tid. Energien er programmert til å flyte i henhold til din valgte tidsplan." },
+    { question: "Hvordan mottar jeg healingen på avstand?", answer: "Velg et tidspunkt for å motta healingen. Energi flyter gjennom kvantefeltet uten begrensninger. Dette oppmuntrer til overgivelse og tillit." },
+    { question: "Må jeg gjøre noe for at healingen skal fungere?", answer: "Ingen spesiell handling er nødvendig, men meditasjon eller åpenhet forsterker mottakeligheten. Visualiser at du mottar energien og be gjerne for alle vesener. Du kan også sende healing til noen andre." },
+    { question: "Er Sacred Healing Vibration det samme som Reiki?", answer: "Begge henter fra den universelle kilden, men Sacred Healing Vibration følger ikke en innlært Reiki-metode. Frekvenser skannes intuitivt og sendes for å støtte dine unike behov." },
+    { question: "Hvem kan motta healingen?", answer: "Hvem som helst eller hva som helst: voksne, barn, dyr, de som går bort, nylig avdøde, eller rom som hjem og kjøretøy. Healing fungerer hvor som helst i kvanteuniverset." },
+    { question: "Hvor lenge sendes healingen og hvor ofte?", answer: "Hver sesjon sendes i omtrent 30 minutter på den bookede datoen og tidspunktet." },
+    { question: "Hvordan transformerer healingen?", answer: "Sacred Healing Vibration overfører guddommelig kjærlighet og lys til fysiske, emosjonelle, mentale og åndelige nivåer. Det fungerer ansikt til ansikt eller på avstand. Åpenhet forsterker opplevelsen." },
+    { question: "Hva eksakt vil energien heale?", answer: "Støtter organhelse, immunsystem, sirkulasjon, vitalitet, åndelig vekst, fokus, motivasjon, ro, søvn, emosjonell balanse, restitusjon, smertelindring og alle andre frekvenser som trengs for din healingreise." },
+    { question: "Kurerer healingen fysiske symptomer eller sykdommer?", answer: "Healing virker på åndelige, mentale, emosjonelle og fysiske nivåer. Åndelige og mentale effekter merkes først, mens emosjonelle og fysiske forbedringer kan ta lengre tid. Detox-lignende effekter kan forekomme. Erstatter ikke medisinsk behandling." },
+    { question: "Kan jeg melde på noen andre for healingen?", answer: "Ja, du kan registrere familie, venner eller kjæledyr. Gi et fotografi av mottakeren etter betaling." },
+    { question: "Hvis jeg gir healingen til noen andre, må de vite om det?", answer: "Nei. Healing virker subtilt på deres kropp, sinn, følelser og ånd. Av respekt, spør først hvis mulig." },
+    { question: "Påvirker healingen andre medisinske behandlinger negativt?", answer: "Nei, energien virker på et subtilt nivå og forstyrrer ikke konvensjonelle eller alternative behandlinger. Midlertidige detox-symptomer kan forekomme." },
+    { question: "Koster det noe å motta healingen?", answer: "Priser: 30-dagers Healing €197, 14-dagers Healing €147, 7-dagers Healing €97. Mulighet for å abonnere 3 måneder for €147 per måned." }
+  ]
+};
 
 const testimonials = [
   { 
@@ -499,7 +549,7 @@ const Healing: React.FC = () => {
       <div className="space-y-6">
         <h2 className="text-2xl font-bold text-center text-foreground">{t.faqTitle}</h2>
         <Accordion type="multiple" className="space-y-2">
-          {faqs.map((faq, i) => (
+          {(faqTranslations[currentLang as keyof typeof faqTranslations] || faqTranslations.en).map((faq, i) => (
             <AccordionItem key={i} value={`faq-${i}`} className="border border-border rounded-lg px-4">
               <AccordionTrigger className="text-left text-foreground hover:no-underline">
                 {faq.question}
