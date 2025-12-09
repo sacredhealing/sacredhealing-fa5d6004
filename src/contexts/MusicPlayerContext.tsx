@@ -48,6 +48,7 @@ interface MusicPlayerContextType {
   formatTime: (seconds: number) => string;
   refreshPurchases: () => Promise<void>;
   checkSubscription: () => Promise<void>;
+  stopTrack: () => void;
 }
 
 const MusicPlayerContext = createContext<MusicPlayerContextType | null>(null);
@@ -274,6 +275,18 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     toast({ title: isLiked ? "Removed from likes" : "Added to likes" });
   }, [toast]);
 
+  const stopTrack = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    setCurrentTrack(null);
+    setIsPlaying(false);
+    setProgress(0);
+    setCurrentTime(0);
+    setDuration(0);
+  }, []);
+
   return (
     <MusicPlayerContext.Provider value={{
       currentTrack,
@@ -301,6 +314,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       formatTime,
       refreshPurchases,
       checkSubscription,
+      stopTrack,
     }}>
       {children}
     </MusicPlayerContext.Provider>
