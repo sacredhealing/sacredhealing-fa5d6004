@@ -8,7 +8,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useSHCBalance } from '@/hooks/useSHCBalance';
-import { useAllSiteContent } from '@/hooks/useSiteContent';
 import { ReviewSection } from '@/components/reviews/ReviewSection';
 import { TranslatedContent } from '@/components/TranslatedContent';
 import { usePhantomWallet } from '@/hooks/usePhantomWallet';
@@ -40,6 +39,109 @@ const HEALING_PLANS: HealingPlan[] = [
   { id: '30_day', name: '30-Day Healing', price: 197, days: 30 },
 ];
 
+const translations = {
+  en: {
+    heroTitle: "30 Days of Sacred Healing",
+    heroSubtitle: "Experience energetic, emotional, mental, and spiritual transformation with Adam & Laila's Sacred Healing Vibration.",
+    moreAboutHealingTitle: "More About the Healing",
+    moreAboutHealingText: "The 30 Days of Healing is designed to support your overall well-being and enhance multiple aspects of your life. Through this regular healing practice, we help you replenish your energy and vitality using divine energies of love, light, peace, and chi. This process may help promote balance, calm, and clarity, supporting body, mind, and spirit.",
+    healthTitle: "Health & Vitality",
+    healthText: "Supports energetic balance, vitality, organ and immune system function, circulation, digestive and reproductive health, stress relief, and overall wellness.",
+    mentalTitle: "Mental & Emotional Balance",
+    mentalText: "Helps reduce stress, anxiety, and negative thought patterns while promoting emotional stability, self-love, and positive mindset.",
+    spiritualTitle: "Spiritual Transformation",
+    spiritualText: "Supports awakening your spiritual potential, deeper meditation, higher vibration, wisdom, and connection with inner divinity.",
+    testimonialsTitle: "Testimonials",
+    faqTitle: "Frequently Asked Questions",
+    purchaseTitle: "Join the Healing",
+    purchaseSubtitle: "Select the package that fits your needs:",
+    button7Day: "7-Day Healing - €97",
+    button14Day: "14-Day Healing - €147",
+    button30Day: "30-Day Healing - €197",
+    button3Month: "Subscribe 3 Months - €147/mo",
+    activeAccess: "You have active healing access!",
+    freeAudio: "Free Healing Audio",
+    premiumAudio: "Premium Healing Audio",
+    free: "FREE",
+    owned: "OWNED"
+  },
+  sv: {
+    heroTitle: "30 Dagar av Helig Healing",
+    heroSubtitle: "Upplev energisk, emotionell, mental och andlig transformation med Adam & Lailas Sacred Healing Vibration.",
+    moreAboutHealingTitle: "Mer om Healing",
+    moreAboutHealingText: "De 30 dagarna av Healing är utformade för att stödja ditt välbefinnande och förbättra flera aspekter av ditt liv. Genom denna regelbundna healing hjälper vi dig att fylla på energi och vitalitet med gudomlig energi av kärlek, ljus, fred och chi. Denna process kan främja balans, lugn och klarhet, stödja kropp, sinne och själ.",
+    healthTitle: "Hälsa & Vitalitet",
+    healthText: "Stöder energibalans, vitalitet, organ- och immunsystemfunktion, cirkulation, matsmältnings- och reproduktiv hälsa, stresslindring och allmänt välbefinnande.",
+    mentalTitle: "Mental & Emotionell Balans",
+    mentalText: "Hjälper till att minska stress, ångest och negativa tankemönster samtidigt som det främjar emotionell stabilitet, självkärlek och positivt tänkande.",
+    spiritualTitle: "Andlig Transformation",
+    spiritualText: "Stöder uppvaknande av din andliga potential, djupare meditation, högre vibration, visdom och kontakt med din inre gudomlighet.",
+    testimonialsTitle: "Testimonials",
+    faqTitle: "Vanliga Frågor",
+    purchaseTitle: "Bli Medlem i Healing",
+    purchaseSubtitle: "Välj paketet som passar dig:",
+    button7Day: "7-Dagars Healing - €97",
+    button14Day: "14-Dagars Healing - €147",
+    button30Day: "30-Dagars Healing - €197",
+    button3Month: "Prenumerera 3 Månader - €147/månad",
+    activeAccess: "Du har aktiv healing-åtkomst!",
+    freeAudio: "Gratis Healing Audio",
+    premiumAudio: "Premium Healing Audio",
+    free: "GRATIS",
+    owned: "ÄGER"
+  },
+  es: {
+    heroTitle: "30 Días de Sanación Sagrada",
+    heroSubtitle: "Experimenta la transformación energética, emocional, mental y espiritual con la Vibración de Sanación Sagrada de Adam y Laila.",
+    moreAboutHealingTitle: "Más Sobre la Sanación",
+    moreAboutHealingText: "Los 30 Días de Sanación están diseñados para apoyar tu bienestar general y mejorar múltiples aspectos de tu vida. A través de esta práctica regular de sanación, ayudamos a reponer tu energía y vitalidad utilizando energías divinas de amor, luz, paz y chi. Este proceso puede promover equilibrio, calma y claridad, apoyando cuerpo, mente y espíritu.",
+    healthTitle: "Salud & Vitalidad",
+    healthText: "Apoya el equilibrio energético, vitalidad, función de órganos y sistema inmunológico, circulación, salud digestiva y reproductiva, alivio del estrés y bienestar general.",
+    mentalTitle: "Equilibrio Mental & Emocional",
+    mentalText: "Ayuda a reducir el estrés, la ansiedad y los patrones de pensamiento negativos mientras promueve estabilidad emocional, amor propio y una mentalidad positiva.",
+    spiritualTitle: "Transformación Espiritual",
+    spiritualText: "Apoya el despertar de tu potencial espiritual, meditación más profunda, vibración más alta, sabiduría y conexión con la divinidad interior.",
+    testimonialsTitle: "Testimonios",
+    faqTitle: "Preguntas Frecuentes",
+    purchaseTitle: "Únete a la Sanación",
+    purchaseSubtitle: "Selecciona el paquete que se adapta a tus necesidades:",
+    button7Day: "Sanación de 7 Días - €97",
+    button14Day: "Sanación de 14 Días - €147",
+    button30Day: "Sanación de 30 Días - €197",
+    button3Month: "Suscribirse 3 Meses - €147/mes",
+    activeAccess: "¡Tienes acceso activo a sanación!",
+    freeAudio: "Audio de Sanación Gratuito",
+    premiumAudio: "Audio de Sanación Premium",
+    free: "GRATIS",
+    owned: "COMPRADO"
+  },
+  no: {
+    heroTitle: "30 Dager med Hellig Healing",
+    heroSubtitle: "Opplev energisk, emosjonell, mental og åndelig transformasjon med Adam & Lailas Sacred Healing Vibration.",
+    moreAboutHealingTitle: "Mer om Healing",
+    moreAboutHealingText: "De 30 dagene med Healing er designet for å støtte ditt generelle velvære og forbedre flere aspekter av livet ditt. Gjennom denne regelmessige healingpraksisen hjelper vi deg med å fylle på energi og vitalitet ved hjelp av guddommelige energier av kjærlighet, lys, fred og chi. Denne prosessen kan fremme balanse, ro og klarhet, og støtte kropp, sinn og sjel.",
+    healthTitle: "Helse & Vitalitet",
+    healthText: "Støtter energibalanse, vitalitet, organ- og immunsystemfunksjon, sirkulasjon, fordøyelses- og reproduktiv helse, stressavlastning og generell velvære.",
+    mentalTitle: "Mental & Emosjonell Balanse",
+    mentalText: "Hjelper med å redusere stress, angst og negative tankemønstre samtidig som det fremmer emosjonell stabilitet, egenkjærlighet og positiv tankegang.",
+    spiritualTitle: "Åndelig Transformasjon",
+    spiritualText: "Støtter oppvåkning av ditt åndelige potensial, dypere meditasjon, høyere vibrasjon, visdom og forbindelse med din indre guddommelighet.",
+    testimonialsTitle: "Testimonials",
+    faqTitle: "Ofte Stilte Spørsmål",
+    purchaseTitle: "Bli Med på Healing",
+    purchaseSubtitle: "Velg pakken som passer dine behov:",
+    button7Day: "7-Dagers Healing - €97",
+    button14Day: "14-Dagers Healing - €147",
+    button30Day: "30-Dagers Healing - €197",
+    button3Month: "Abonner 3 Måneder - €147/mnd",
+    activeAccess: "Du har aktiv healing-tilgang!",
+    freeAudio: "Gratis Healing Audio",
+    premiumAudio: "Premium Healing Audio",
+    free: "GRATIS",
+    owned: "EIERD"
+  }
+};
+
 const faqs = [
   { question: "How do I prepare myself for the healing?", answer: "You can receive the healing energy anytime, but choosing a specific time allows deeper connection. Sit or lie down comfortably, invite the energy to flow, and optionally listen to our healing music on Spotify or YouTube." },
   { question: "When will my healing start?", answer: "Healing begins after registration and booking your preferred date and time. The energy is programmed to flow according to your selected schedule." },
@@ -67,20 +169,19 @@ const testimonials = [
     ] 
   },
   { 
-    name: "Cathrine Nummiranta", 
+    name: "Michelle Folhmann", 
     text: "I 'randomly' came into contact with Adam & Laila, and from that day on my life has gone through positive transformations on every level. My life has taken turns I never thought were possible, and for that I am forever grateful." 
   },
   { 
-    name: "Anonymous", 
+    name: "Cathrine Nummiranta", 
     text: "Everything changed at Adam's workshop. I am free from old stress and totally cured from the panic attacks I had since I was 14 years old. I listen daily to Adam & Laila's meditations. There are no words for how much it means to me." 
   }
 ];
 
 const Healing: React.FC = () => {
-  const { t } = useTranslation();
+  const { i18n } = useTranslation();
   const { toast } = useToast();
   const { balance } = useSHCBalance();
-  const { content, isLoading: contentLoading } = useAllSiteContent();
   const { walletAddress, isPhantomInstalled, connectWallet, isConnecting } = usePhantomWallet();
   
   const [audioTracks, setAudioTracks] = useState<HealingAudio[]>([]);
@@ -92,7 +193,9 @@ const Healing: React.FC = () => {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const getContent = (key: string, fallback: string) => content[key] || fallback;
+  // Get current language translations
+  const currentLang = i18n.language?.split('-')[0] || 'en';
+  const t = translations[currentLang as keyof typeof translations] || translations.en;
 
   useEffect(() => {
     fetchAudioTracks();
@@ -102,8 +205,8 @@ const Healing: React.FC = () => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('success') === 'true') {
       toast({
-        title: t('healing.paymentSuccess', 'Payment Successful!'),
-        description: t('healing.welcomeJourney', 'Welcome to your Sacred Healing Journey'),
+        title: 'Payment Successful!',
+        description: 'Welcome to your Sacred Healing Journey',
       });
       window.history.replaceState({}, '', '/healing');
       checkHealingAccess();
@@ -158,7 +261,7 @@ const Healing: React.FC = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        toast({ title: t('common.signIn', 'Please sign in'), variant: "destructive" });
+        toast({ title: 'Please sign in', variant: "destructive" });
         return;
       }
 
@@ -170,7 +273,7 @@ const Healing: React.FC = () => {
       if (data?.url) window.open(data.url, '_blank');
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unknown error';
-      toast({ title: t('common.error', 'Error'), description: message, variant: "destructive" });
+      toast({ title: 'Error', description: message, variant: "destructive" });
     } finally {
       setIsProcessing(false);
     }
@@ -211,13 +314,8 @@ const Healing: React.FC = () => {
         return;
       }
 
-      // Treasury wallet address for receiving payments
       const treasuryWallet = "BAfPGN6DUAKYVwmmGkhMQxJyDv2cHEHRnfcbzy1GNy5j";
-      
-      // Convert EUR to approximate SOL
       const solAmount = (plan.price * 0.005).toFixed(4);
-      
-      // Open Phantom to send SOL manually with instructions
       const solanaUrl = `https://phantom.app/ul/v1/browse/https://solscan.io/account/${treasuryWallet}`;
       
       toast({
@@ -240,7 +338,7 @@ const Healing: React.FC = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        toast({ title: t('common.signIn', 'Please sign in'), variant: "destructive" });
+        toast({ title: 'Please sign in', variant: "destructive" });
         return;
       }
 
@@ -252,7 +350,7 @@ const Healing: React.FC = () => {
       if (data?.url) window.open(data.url, '_blank');
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unknown error';
-      toast({ title: t('common.error', 'Error'), description: message, variant: "destructive" });
+      toast({ title: 'Error', description: message, variant: "destructive" });
     } finally {
       setIsProcessing(false);
     }
@@ -263,7 +361,7 @@ const Healing: React.FC = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        toast({ title: t('common.signIn', 'Please sign in'), variant: "destructive" });
+        toast({ title: 'Please sign in', variant: "destructive" });
         return;
       }
 
@@ -276,12 +374,12 @@ const Healing: React.FC = () => {
       if (data?.url) {
         window.open(data.url, '_blank');
       } else if (data?.success) {
-        toast({ title: t('healing.purchaseComplete', 'Purchase Complete!'), description: t('healing.youNowOwn', 'You now own') + ` ${audio.title}` });
+        toast({ title: 'Purchase Complete!', description: `You now own ${audio.title}` });
         setOwnedAudioIds(prev => new Set([...prev, audio.id]));
       }
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unknown error';
-      toast({ title: t('common.error', 'Error'), description: message, variant: "destructive" });
+      toast({ title: 'Error', description: message, variant: "destructive" });
     } finally {
       setIsProcessing(false);
     }
@@ -317,29 +415,25 @@ const Healing: React.FC = () => {
   const paidAudios = audioTracks.filter(a => !a.is_free);
 
   return (
-    <div className="min-h-screen p-6 space-y-10">
+    <div className="min-h-screen p-6 space-y-12">
       {/* Hero Section */}
       <Card className="bg-gradient-to-r from-primary/30 to-pink-500/30 border-none text-center overflow-hidden">
         <CardContent className="py-10 px-6">
           <Sparkles className="w-12 h-12 text-primary mx-auto mb-4" />
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">30 Days of Sacred Healing</h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Experience energetic, emotional, mental, and spiritual transformation with Adam & Laila's Sacred Healing Vibration.
-          </p>
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">{t.heroTitle}</h1>
+          <p className="text-muted-foreground max-w-2xl mx-auto">{t.heroSubtitle}</p>
         </CardContent>
       </Card>
 
       {/* Main Content Sections */}
-      <div className="space-y-6">
+      <div className="space-y-8">
         <Card className="border-border">
           <CardContent className="pt-6">
             <h2 className="text-2xl font-bold text-foreground mb-3 flex items-center gap-2">
               <Heart className="w-6 h-6 text-primary" />
-              More About the Healing
+              {t.moreAboutHealingTitle}
             </h2>
-            <p className="text-muted-foreground">
-              The 30 Days of Healing is designed to support your overall well-being and enhance multiple aspects of your life. Through this regular healing practice, we help you replenish your energy and vitality using divine energies of love, light, peace, and chi. This process may help promote balance, calm, and clarity, supporting body, mind, and spirit.
-            </p>
+            <p className="text-muted-foreground">{t.moreAboutHealingText}</p>
           </CardContent>
         </Card>
 
@@ -347,30 +441,24 @@ const Healing: React.FC = () => {
           <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
             <CardContent className="pt-6">
               <Star className="w-8 h-8 text-primary mb-3" />
-              <h3 className="text-lg font-semibold text-foreground mb-2">Health & Vitality</h3>
-              <p className="text-sm text-muted-foreground">
-                Supports energetic balance, vitality, organ and immune system function, circulation, digestive and reproductive health, stress relief, and overall wellness.
-              </p>
+              <h3 className="text-lg font-semibold text-foreground mb-2">{t.healthTitle}</h3>
+              <p className="text-sm text-muted-foreground">{t.healthText}</p>
             </CardContent>
           </Card>
 
           <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
             <CardContent className="pt-6">
               <Heart className="w-8 h-8 text-primary mb-3" />
-              <h3 className="text-lg font-semibold text-foreground mb-2">Mental & Emotional Balance</h3>
-              <p className="text-sm text-muted-foreground">
-                Helps reduce stress, anxiety, and negative thought patterns while promoting emotional stability, self-love, and positive mindset.
-              </p>
+              <h3 className="text-lg font-semibold text-foreground mb-2">{t.mentalTitle}</h3>
+              <p className="text-sm text-muted-foreground">{t.mentalText}</p>
             </CardContent>
           </Card>
 
           <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
             <CardContent className="pt-6">
               <Sparkles className="w-8 h-8 text-primary mb-3" />
-              <h3 className="text-lg font-semibold text-foreground mb-2">Spiritual Transformation</h3>
-              <p className="text-sm text-muted-foreground">
-                Supports awakening your spiritual potential, deeper meditation, higher vibration, wisdom, and connection with inner divinity.
-              </p>
+              <h3 className="text-lg font-semibold text-foreground mb-2">{t.spiritualTitle}</h3>
+              <p className="text-sm text-muted-foreground">{t.spiritualText}</p>
             </CardContent>
           </Card>
         </div>
@@ -378,16 +466,16 @@ const Healing: React.FC = () => {
 
       {/* Testimonials Section */}
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-center text-foreground">Testimonials</h2>
+        <h2 className="text-2xl font-bold text-center text-foreground">{t.testimonialsTitle}</h2>
         <div className="space-y-4">
-          {testimonials.map((t, i) => (
+          {testimonials.map((testimonial, i) => (
             <Card key={i} className="border-border">
               <CardContent className="pt-6 space-y-4">
-                <h3 className="font-semibold text-foreground text-lg">{t.name}</h3>
-                {t.text && <p className="text-muted-foreground italic">"{t.text}"</p>}
-                {t.videos && (
+                <h3 className="font-semibold text-foreground text-lg">{testimonial.name}</h3>
+                {testimonial.text && <p className="text-muted-foreground italic">"{testimonial.text}"</p>}
+                {testimonial.videos && (
                   <div className="grid md:grid-cols-3 gap-4">
-                    {t.videos.map((url, j) => (
+                    {testimonial.videos.map((url, j) => (
                       <div key={j} className="aspect-video">
                         <iframe
                           className="w-full h-full rounded-lg"
@@ -409,7 +497,7 @@ const Healing: React.FC = () => {
 
       {/* FAQ Section */}
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-center text-foreground">Frequently Asked Questions</h2>
+        <h2 className="text-2xl font-bold text-center text-foreground">{t.faqTitle}</h2>
         <Accordion type="multiple" className="space-y-2">
           {faqs.map((faq, i) => (
             <AccordionItem key={i} value={`faq-${i}`} className="border border-border rounded-lg px-4">
@@ -428,8 +516,8 @@ const Healing: React.FC = () => {
       {!hasHealingAccess && (
         <div className="space-y-6">
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-foreground mb-2">Join the Healing</h2>
-            <p className="text-muted-foreground">Select the package that fits your needs:</p>
+            <h2 className="text-2xl font-bold text-foreground mb-2">{t.purchaseTitle}</h2>
+            <p className="text-muted-foreground">{t.purchaseSubtitle}</p>
           </div>
           
           <div className="flex flex-wrap justify-center gap-4">
@@ -441,7 +529,10 @@ const Healing: React.FC = () => {
                 onClick={() => openPaymentModal(plan)}
                 disabled={isProcessing}
               >
-                {plan.name} - €{plan.price}
+                {currentLang === 'en' && `${plan.name} - €${plan.price}`}
+                {currentLang === 'sv' && `${plan.days}-Dagars Healing - €${plan.price}`}
+                {currentLang === 'es' && `Sanación de ${plan.days} Días - €${plan.price}`}
+                {currentLang === 'no' && `${plan.days}-Dagers Healing - €${plan.price}`}
               </Button>
             ))}
             <Button 
@@ -450,7 +541,7 @@ const Healing: React.FC = () => {
               onClick={handleSubscriptionStripe}
               disabled={isProcessing}
             >
-              Subscribe 3 Months - €147/mo
+              {t.button3Month}
             </Button>
           </div>
         </div>
@@ -479,7 +570,7 @@ const Healing: React.FC = () => {
             <Button
               variant="outline"
               size="lg"
-              className="w-full flex items-center justify-center gap-3 border-purple-500 text-purple-500 hover:bg-purple-500/10"
+              className="w-full flex items-center justify-center gap-3 border-primary text-primary hover:bg-primary/10"
               onClick={() => selectedPlan && handleCryptoPayment(selectedPlan)}
               disabled={isProcessing}
             >
@@ -495,7 +586,7 @@ const Healing: React.FC = () => {
         <Card className="p-4 bg-green-500/10 border-green-500/30">
           <div className="flex items-center gap-2 text-green-500">
             <CheckCircle className="w-5 h-5" />
-            <span className="font-medium">{t('healing.activeAccess', 'You have active healing access!')}</span>
+            <span className="font-medium">{t.activeAccess}</span>
           </div>
         </Card>
       )}
@@ -505,7 +596,7 @@ const Healing: React.FC = () => {
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
             <Music className="w-5 h-5 text-primary" />
-            {t('healing.freeAudio', 'Free Healing Audio')}
+            {t.freeAudio}
           </h2>
           
           <div className="grid gap-3">
@@ -528,7 +619,7 @@ const Healing: React.FC = () => {
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Clock className="w-3 h-3" />
                       <span>{formatDuration(audio.duration_seconds)}</span>
-                      <span className="text-green-500 font-medium">• {t('healing.free', 'FREE')}</span>
+                      <span className="text-green-500 font-medium">• {t.free}</span>
                     </div>
                   </div>
                   
@@ -547,7 +638,7 @@ const Healing: React.FC = () => {
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-primary" />
-            {t('healing.premiumAudio', 'Premium Healing Audio')}
+            {t.premiumAudio}
           </h2>
           
           <div className="grid gap-3">
@@ -577,7 +668,7 @@ const Healing: React.FC = () => {
                         <Clock className="w-3 h-3" />
                         <span>{formatDuration(audio.duration_seconds)}</span>
                         {owned || hasHealingAccess ? (
-                          <span className="text-green-500 font-medium">• {t('healing.owned', 'OWNED')}</span>
+                          <span className="text-green-500 font-medium">• {t.owned}</span>
                         ) : (
                           <span className="text-primary font-medium">• ${audio.price_usd}</span>
                         )}
