@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { PromoBanner } from '@/components/ui/promo-banner';
+import { ServiceBannerRow } from '@/components/ui/service-banner-row';
 
 const WealthMeditationService: React.FC = () => {
   const { t } = useTranslation();
@@ -55,36 +55,13 @@ const WealthMeditationService: React.FC = () => {
     }
   };
 
-  const featuresLeft = [
-    { icon: Zap, text: t('wealth.benefit1') },
-    { icon: Zap, text: t('wealth.benefit2') },
-    { icon: Zap, text: t('wealth.benefit3') },
-    { icon: Zap, text: t('wealth.benefit4') },
-  ];
-
-  const featuresRight = [
-    { icon: Star, text: t('wealth.inside1') },
-    { icon: Star, text: t('wealth.inside2') },
-    { icon: Star, text: t('wealth.inside3') },
-    { icon: Star, text: t('wealth.inside4') },
-  ];
-
   return (
     <>
-      <PromoBanner
-        badge={t('wealth.badge')}
-        badgeIcon="✨"
+      <ServiceBannerRow
+        icon={Zap}
         title={t('wealth.title')}
-        description={t('wealth.subtitle')}
-        featuresLeft={featuresLeft}
-        featuresRight={featuresRight}
-        prices={[{ amount: 47, label: t('wealth.oneTime'), isHighlighted: true }]}
-        ctaText={t('wealth.activateButton')}
-        ctaIcon={DollarSign}
+        subtitle={`€47 • ${t('wealth.badge')}`}
         onCtaClick={() => setIsOpen(true)}
-        gradientFrom="from-yellow-500/20"
-        gradientVia="via-amber-500/15"
-        gradientTo="to-orange-500/20"
         accentColor="yellow"
       />
 
@@ -99,6 +76,45 @@ const WealthMeditationService: React.FC = () => {
           </DialogHeader>
 
           <div className="space-y-6 mt-4">
+            {/* What it does */}
+            <div className="space-y-2">
+              <h4 className="font-semibold text-sm text-yellow-400 flex items-center gap-2">
+                <Zap size={16} /> {t('wealth.whatItDoes')}
+              </h4>
+              <ul className="text-sm text-muted-foreground space-y-1">
+                <li>• {t('wealth.benefit1')}</li>
+                <li>• {t('wealth.benefit2')}</li>
+                <li>• {t('wealth.benefit3')}</li>
+                <li>• {t('wealth.benefit4')}</li>
+              </ul>
+            </div>
+
+            {/* What's inside */}
+            <div className="space-y-2">
+              <h4 className="font-semibold text-sm text-amber-400 flex items-center gap-2">
+                <Star size={16} /> {t('wealth.whatsInside')}
+              </h4>
+              <ul className="text-sm text-muted-foreground space-y-1">
+                <li>• {t('wealth.inside1')}</li>
+                <li>• {t('wealth.inside2')}</li>
+                <li>• {t('wealth.inside3')}</li>
+                <li>• {t('wealth.inside4')}</li>
+              </ul>
+            </div>
+
+            {/* For you if */}
+            <div className="p-4 rounded-lg bg-background/30 border border-border/50">
+              <h4 className="font-semibold text-sm text-orange-400 flex items-center gap-2 mb-2">
+                <Heart size={16} /> {t('wealth.forYouIf')}
+              </h4>
+              <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
+                <span>• {t('wealth.goal1')}</span>
+                <span>• {t('wealth.goal2')}</span>
+                <span>• {t('wealth.goal3')}</span>
+                <span>• {t('wealth.goal4')}</span>
+              </div>
+            </div>
+
             {/* How it works */}
             <div className="space-y-3 p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
               <h4 className="font-semibold text-sm flex items-center gap-2">

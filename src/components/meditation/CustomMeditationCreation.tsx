@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { PromoBanner } from '@/components/ui/promo-banner';
+import { ServiceBannerRow } from '@/components/ui/service-banner-row';
 
 const CustomMeditationCreation: React.FC = () => {
   const { t } = useTranslation();
@@ -64,12 +64,6 @@ const CustomMeditationCreation: React.FC = () => {
   const totalPrice = selectedPackage 
     ? packages.find(p => p.id === selectedPackage)!.price + (includeVoiceAddon ? 37 : 0)
     : 0;
-
-  const features = [
-    { icon: Radio, text: t('meditationCreation.feature1') },
-    { icon: Music, text: t('meditationCreation.feature2') },
-    { icon: Mic, text: t('meditationCreation.feature3') },
-  ];
 
   const handleVoiceUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -194,22 +188,11 @@ const CustomMeditationCreation: React.FC = () => {
 
   return (
     <>
-      <PromoBanner
-        badge={t('meditationCreation.badge')}
-        badgeIcon="🎵"
+      <ServiceBannerRow
+        icon={Music}
         title={t('meditationCreation.title')}
-        description={t('meditationCreation.description')}
-        features={features}
-        prices={[
-          { amount: 97, label: t('meditationCreation.single'), isHighlighted: true },
-          { amount: 197, label: t('meditationCreation.for3'), savings: t('meditationCreation.save94'), isHighlighted: true },
-        ]}
-        ctaText={t('meditationCreation.createButton')}
-        ctaIcon={Sparkles}
+        subtitle={`${t('meditationCreation.badge')} • €97-€197`}
         onCtaClick={() => setIsOpen(true)}
-        gradientFrom="from-amber-600/30"
-        gradientVia="via-purple-500/20"
-        gradientTo="to-amber-800/30"
         accentColor="amber"
       />
 

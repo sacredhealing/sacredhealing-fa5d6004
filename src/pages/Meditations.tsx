@@ -69,18 +69,10 @@ const Meditations: React.FC = () => {
       {/* Meditation Membership */}
       <MeditationMembershipBanner />
 
-      {/* 108 Wealth Reprogramming Meditation */}
-      <div className="mb-8">
+      {/* Services - Compact row style */}
+      <div className="space-y-3 mb-6">
         <WealthMeditationService />
-      </div>
-
-      {/* Custom Channeled Meditation Booking */}
-      <div className="mb-8">
         <CustomMeditationBooking />
-      </div>
-
-      {/* Custom Meditation Creation for Creators */}
-      <div className="mb-8">
         <CustomMeditationCreation />
       </div>
 

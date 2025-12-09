@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { PromoBanner } from '@/components/ui/promo-banner';
+import { ServiceBannerRow } from '@/components/ui/service-banner-row';
 
 const CustomMeditationBooking: React.FC = () => {
   const { t } = useTranslation();
@@ -43,6 +43,8 @@ const CustomMeditationBooking: React.FC = () => {
     { icon: Eye, text: t('customMeditation.feature1') },
     { icon: Heart, text: t('customMeditation.feature2') },
     { icon: Sparkles, text: t('customMeditation.feature3') },
+    { icon: Star, text: t('customMeditation.feature4') },
+    { icon: Music, text: t('customMeditation.feature5') },
   ];
 
   const handleBooking = async () => {
@@ -86,22 +88,11 @@ const CustomMeditationBooking: React.FC = () => {
 
   return (
     <>
-      <PromoBanner
-        badge={t('customMeditation.badge')}
-        badgeIcon="✨"
+      <ServiceBannerRow
+        icon={Sparkles}
         title={t('customMeditation.title')}
-        description={t('customMeditation.description')}
-        features={features}
-        prices={[
-          { amount: 70, label: t('customMeditation.single'), isHighlighted: true },
-          { amount: 97, label: t('customMeditation.for2'), savings: t('customMeditation.save43'), isHighlighted: true },
-        ]}
-        ctaText={t('customMeditation.bookButton')}
-        ctaIcon={Sparkles}
+        subtitle={`${t('customMeditation.badge')} • €70-€97`}
         onCtaClick={() => setIsOpen(true)}
-        gradientFrom="from-purple-600/30"
-        gradientVia="via-amber-500/20"
-        gradientTo="to-purple-800/30"
         accentColor="purple"
       />
 
@@ -121,13 +112,7 @@ const CustomMeditationBooking: React.FC = () => {
               <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
                 {t('customMeditation.whatsIncluded')}
               </h4>
-              {[
-                { icon: Eye, text: t('customMeditation.feature1') },
-                { icon: Heart, text: t('customMeditation.feature2') },
-                { icon: Sparkles, text: t('customMeditation.feature3') },
-                { icon: Star, text: t('customMeditation.feature4') },
-                { icon: Music, text: t('customMeditation.feature5') },
-              ].map((feature, index) => (
+              {features.map((feature, index) => (
                 <div key={index} className="flex items-center gap-3 text-sm">
                   <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                     <feature.icon size={16} className="text-primary" />
