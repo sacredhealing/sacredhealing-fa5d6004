@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Upload, Plus, Trash2, Music, Loader2, ArrowLeft, Edit2, X, Image, Check } from 'lucide-react';
+import { Upload, Plus, Trash2, Music, Loader2, ArrowLeft, Edit2, X, Image, Check, Disc } from 'lucide-react';
+import AlbumManager from '@/components/admin/AlbumManager';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
@@ -317,10 +319,23 @@ const AdminMusic: React.FC = () => {
           </Button>
           <div>
             <h1 className="text-3xl font-heading font-bold text-foreground">Music Manager</h1>
-            <p className="text-muted-foreground">Upload beats & songs for sale</p>
+            <p className="text-muted-foreground">Upload tracks & albums for sale</p>
           </div>
         </div>
 
+        <Tabs defaultValue="tracks" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="tracks" className="flex items-center gap-2">
+              <Music size={16} />
+              Tracks
+            </TabsTrigger>
+            <TabsTrigger value="albums" className="flex items-center gap-2">
+              <Disc size={16} />
+              Albums
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="tracks">
         {/* Upload Form */}
         <div className="bg-gradient-card border border-border/50 rounded-2xl p-6 mb-8">
           <h2 className="text-xl font-heading font-semibold text-foreground mb-4 flex items-center gap-2">
@@ -630,6 +645,12 @@ const AdminMusic: React.FC = () => {
             </div>
           )}
         </div>
+          </TabsContent>
+
+          <TabsContent value="albums">
+            <AlbumManager />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

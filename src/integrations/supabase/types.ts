@@ -98,6 +98,83 @@ export type Database = {
         }
         Relationships: []
       }
+      album_purchases: {
+        Row: {
+          album_id: string
+          amount_paid: number | null
+          id: string
+          payment_method: string
+          purchased_at: string
+          stripe_payment_id: string | null
+          user_id: string
+        }
+        Insert: {
+          album_id: string
+          amount_paid?: number | null
+          id?: string
+          payment_method: string
+          purchased_at?: string
+          stripe_payment_id?: string | null
+          user_id: string
+        }
+        Update: {
+          album_id?: string
+          amount_paid?: number | null
+          id?: string
+          payment_method?: string
+          purchased_at?: string
+          stripe_payment_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "album_purchases_album_id_fkey"
+            columns: ["album_id"]
+            isOneToOne: false
+            referencedRelation: "music_albums"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      album_tracks: {
+        Row: {
+          album_id: string
+          created_at: string
+          id: string
+          order_index: number
+          track_id: string
+        }
+        Insert: {
+          album_id: string
+          created_at?: string
+          id?: string
+          order_index?: number
+          track_id: string
+        }
+        Update: {
+          album_id?: string
+          created_at?: string
+          id?: string
+          order_index?: number
+          track_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "album_tracks_album_id_fkey"
+            columns: ["album_id"]
+            isOneToOne: false
+            referencedRelation: "music_albums"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "album_tracks_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "music_tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       announcement_dismissals: {
         Row: {
           announcement_id: string
@@ -1012,6 +1089,39 @@ export type Database = {
           order_index?: number
           price_eur?: number
           slug?: string
+        }
+        Relationships: []
+      }
+      music_albums: {
+        Row: {
+          artist: string
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          id: string
+          price_usd: number
+          release_date: string | null
+          title: string
+        }
+        Insert: {
+          artist?: string
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          price_usd?: number
+          release_date?: string | null
+          title: string
+        }
+        Update: {
+          artist?: string
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          price_usd?: number
+          release_date?: string | null
+          title?: string
         }
         Relationships: []
       }
