@@ -192,27 +192,6 @@ const Healing: React.FC = () => {
         </p>
       </div>
 
-      {/* Private Sessions CTA */}
-      <Card className="p-6 bg-gradient-to-r from-accent/20 via-primary/20 to-secondary/20 border-accent/30">
-        <div className="flex flex-col md:flex-row items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-accent/30 flex items-center justify-center shrink-0">
-            <Calendar className="w-8 h-8 text-accent" />
-          </div>
-          <div className="flex-1 text-center md:text-left">
-            <h3 className="text-xl font-heading font-bold text-foreground">{t('healing.bookPrivateSession', 'Book a Private Session')}</h3>
-            <p className="text-muted-foreground text-sm mt-1">
-              {t('healing.privateSessionDesc', '1-on-1 transformative sessions with Adam or Laila. Yoga, voice healing, trauma release & more.')}
-            </p>
-          </div>
-          <Link to="/private-sessions">
-            <Button variant="gold" className="shrink-0">
-              <Calendar className="w-4 h-4 mr-2" />
-              {t('healing.bookSession', 'Book Session')}
-            </Button>
-          </Link>
-        </div>
-      </Card>
-
       {/* Healing Description Section */}
       <Card className="p-6 bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/20">
         <div className="space-y-4">
