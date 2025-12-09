@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { PromoBanner } from '@/components/ui/promo-banner';
 
 interface MembershipStatus {
   hasMembership: boolean;
@@ -101,70 +102,81 @@ const MusicMembershipBanner: React.FC = () => {
     );
   }
 
-  // Show subscription options
+  // Show subscription options using PromoBanner layout
+  const features = [
+    { icon: Check, text: t('membership.allTracks') },
+    { icon: Check, text: `33 SHC/${t('membership.stream')}` },
+    { icon: Check, text: t('membership.downloads') },
+    { icon: Check, text: t('membership.cancelAnytime') },
+  ];
+
   return (
-    <Card className="p-6 mb-6 bg-gradient-to-br from-amber-500/10 via-primary/5 to-purple-500/10 border-amber-500/30 overflow-hidden relative">
-      <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl -mr-16 -mt-16" />
-      
-      <div className="relative">
-        <div className="flex items-center gap-2 mb-3">
-          <Crown className="w-6 h-6 text-amber-500" />
-          <h3 className="text-lg font-heading font-bold text-foreground">{t('membership.musicMembership')}</h3>
-          <Badge className="bg-amber-500 text-white">{t('common.new')}</Badge>
-        </div>
+    <div className="mb-6">
+      <div className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-amber-500/10 via-primary/5 to-purple-500/10 border border-amber-500/30">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl -mr-16 -mt-16" />
         
-        <p className="text-sm text-muted-foreground mb-4">
-          {t('membership.musicDescription')}
-        </p>
+        <div className="relative">
+          <div className="flex items-center gap-2 mb-3">
+            <Crown className="w-6 h-6 text-amber-500" />
+            <h3 className="text-xl font-heading font-bold text-foreground">{t('membership.musicMembership')}</h3>
+            <Badge className="bg-amber-500 text-white">{t('common.new')}</Badge>
+          </div>
+          
+          <p className="text-sm text-muted-foreground mb-4">
+            {t('membership.musicDescription')}
+          </p>
 
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          {/* Monthly Plan */}
-          <div className="p-3 rounded-xl border border-border/50 bg-background/50">
-            <p className="text-xs text-muted-foreground mb-1">{t('membership.monthly')}</p>
-            <p className="text-xl font-bold text-foreground">€4.99<span className="text-sm font-normal text-muted-foreground">/{t('membership.mo')}</span></p>
-            <Button 
-              size="sm" 
-              variant="outline" 
-              className="w-full mt-2"
-              onClick={() => handleSubscribe('monthly')}
-              disabled={subscribing !== null}
-            >
-              {subscribing === 'monthly' ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                t('membership.subscribe')
-              )}
-            </Button>
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            {/* Monthly Plan */}
+            <div className="p-3 rounded-xl border border-border/50 bg-background/50">
+              <p className="text-xs text-muted-foreground mb-1">{t('membership.monthly')}</p>
+              <p className="text-xl font-bold text-foreground">€4.99<span className="text-sm font-normal text-muted-foreground">/{t('membership.mo')}</span></p>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="w-full mt-2"
+                onClick={() => handleSubscribe('monthly')}
+                disabled={subscribing !== null}
+              >
+                {subscribing === 'monthly' ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  t('membership.subscribe')
+                )}
+              </Button>
+            </div>
+
+            {/* Yearly Plan */}
+            <div className="p-3 rounded-xl border-2 border-amber-500/50 bg-amber-500/5 relative">
+              <Badge className="absolute -top-2 -right-2 bg-green-500 text-white text-[10px]">{t('membership.save10')}</Badge>
+              <p className="text-xs text-muted-foreground mb-1">{t('membership.yearly')}</p>
+              <p className="text-xl font-bold text-foreground">€49<span className="text-sm font-normal text-muted-foreground">/{t('membership.yr')}</span></p>
+              <Button 
+                size="sm" 
+                className="w-full mt-2 bg-amber-500 hover:bg-amber-600 text-white"
+                onClick={() => handleSubscribe('yearly')}
+                disabled={subscribing !== null}
+              >
+                {subscribing === 'yearly' ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  t('membership.subscribe')
+                )}
+              </Button>
+            </div>
           </div>
 
-          {/* Yearly Plan */}
-          <div className="p-3 rounded-xl border-2 border-amber-500/50 bg-amber-500/5 relative">
-            <Badge className="absolute -top-2 -right-2 bg-green-500 text-white text-[10px]">{t('membership.save10')}</Badge>
-            <p className="text-xs text-muted-foreground mb-1">{t('membership.yearly')}</p>
-            <p className="text-xl font-bold text-foreground">€49<span className="text-sm font-normal text-muted-foreground">/{t('membership.yr')}</span></p>
-            <Button 
-              size="sm" 
-              className="w-full mt-2 bg-amber-500 hover:bg-amber-600 text-white"
-              onClick={() => handleSubscribe('yearly')}
-              disabled={subscribing !== null}
-            >
-              {subscribing === 'yearly' ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                t('membership.subscribe')
-              )}
-            </Button>
+          <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+            {features.map((feature, index) => (
+              <span key={index} className="flex items-center gap-1">
+                <Check className="w-3 h-3 text-green-500" />
+                {feature.text}
+              </span>
+            ))}
           </div>
-        </div>
-
-        <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1"><Check className="w-3 h-3 text-green-500" />{t('membership.allTracks')}</span>
-          <span className="flex items-center gap-1"><Check className="w-3 h-3 text-green-500" />33 SHC/{t('membership.stream')}</span>
-          <span className="flex items-center gap-1"><Check className="w-3 h-3 text-green-500" />{t('membership.downloads')}</span>
-          <span className="flex items-center gap-1"><Check className="w-3 h-3 text-green-500" />{t('membership.cancelAnytime')}</span>
         </div>
       </div>
-    </Card>
+    </div>
   );
 };
 

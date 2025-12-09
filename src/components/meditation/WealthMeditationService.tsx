@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Sparkles, Loader2, Check, Zap, Heart, DollarSign, Star, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { PromoBanner } from '@/components/ui/promo-banner';
 
 const WealthMeditationService: React.FC = () => {
   const { t } = useTranslation();
@@ -55,80 +55,38 @@ const WealthMeditationService: React.FC = () => {
     }
   };
 
+  const featuresLeft = [
+    { icon: Zap, text: t('wealth.benefit1') },
+    { icon: Zap, text: t('wealth.benefit2') },
+    { icon: Zap, text: t('wealth.benefit3') },
+    { icon: Zap, text: t('wealth.benefit4') },
+  ];
+
+  const featuresRight = [
+    { icon: Star, text: t('wealth.inside1') },
+    { icon: Star, text: t('wealth.inside2') },
+    { icon: Star, text: t('wealth.inside3') },
+    { icon: Star, text: t('wealth.inside4') },
+  ];
+
   return (
     <>
-      {/* Featured Card */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-yellow-500/20 via-amber-500/15 to-orange-500/20 border border-yellow-500/30 p-6 animate-slide-up">
-        <div className="absolute -top-10 -right-10 w-40 h-40 bg-yellow-500/20 rounded-full blur-3xl" />
-        <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-orange-500/20 rounded-full blur-2xl" />
-        
-        <div className="relative">
-          <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 mb-3">
-            ✨ {t('wealth.badge')}
-          </Badge>
-          
-          <h3 className="text-2xl font-heading font-bold text-foreground mb-2">
-            {t('wealth.title')}
-          </h3>
-          
-          <p className="text-foreground/80 mb-4 leading-relaxed">
-            {t('wealth.subtitle')}
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
-            <div className="space-y-2">
-              <h4 className="font-semibold text-sm text-yellow-400 flex items-center gap-2">
-                <Zap size={16} /> {t('wealth.whatItDoes')}
-              </h4>
-              <ul className="text-sm text-foreground/70 space-y-1">
-                <li>• {t('wealth.benefit1')}</li>
-                <li>• {t('wealth.benefit2')}</li>
-                <li>• {t('wealth.benefit3')}</li>
-                <li>• {t('wealth.benefit4')}</li>
-              </ul>
-            </div>
-            
-            <div className="space-y-2">
-              <h4 className="font-semibold text-sm text-amber-400 flex items-center gap-2">
-                <Star size={16} /> {t('wealth.whatsInside')}
-              </h4>
-              <ul className="text-sm text-foreground/70 space-y-1">
-                <li>• {t('wealth.inside1')}</li>
-                <li>• {t('wealth.inside2')}</li>
-                <li>• {t('wealth.inside3')}</li>
-                <li>• {t('wealth.inside4')}</li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="bg-background/30 rounded-lg p-4 mb-5 border border-border/50">
-            <h4 className="font-semibold text-sm text-orange-400 flex items-center gap-2 mb-2">
-              <Heart size={16} /> {t('wealth.forYouIf')}
-            </h4>
-            <div className="grid grid-cols-2 gap-2 text-sm text-foreground/70">
-              <span>• {t('wealth.goal1')}</span>
-              <span>• {t('wealth.goal2')}</span>
-              <span>• {t('wealth.goal3')}</span>
-              <span>• {t('wealth.goal4')}</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 mb-4">
-            <div>
-              <span className="text-3xl font-heading font-bold text-gradient-gold">€47</span>
-              <span className="text-muted-foreground text-sm ml-2">{t('wealth.oneTime')}</span>
-            </div>
-          </div>
-
-          <Button 
-            onClick={() => setIsOpen(true)} 
-            className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold"
-          >
-            <DollarSign size={18} className="mr-2" />
-            {t('wealth.activateButton')}
-          </Button>
-        </div>
-      </div>
+      <PromoBanner
+        badge={t('wealth.badge')}
+        badgeIcon="✨"
+        title={t('wealth.title')}
+        description={t('wealth.subtitle')}
+        featuresLeft={featuresLeft}
+        featuresRight={featuresRight}
+        prices={[{ amount: 47, label: t('wealth.oneTime'), isHighlighted: true }]}
+        ctaText={t('wealth.activateButton')}
+        ctaIcon={DollarSign}
+        onCtaClick={() => setIsOpen(true)}
+        gradientFrom="from-yellow-500/20"
+        gradientVia="via-amber-500/15"
+        gradientTo="to-orange-500/20"
+        accentColor="yellow"
+      />
 
       {/* Purchase Dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
