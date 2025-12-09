@@ -1,15 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Sparkles, Play, Pause, Lock, Download, Heart, Clock, Music, CheckCircle, Star } from 'lucide-react';
+import { Sparkles, Play, Pause, Lock, Download, Heart, Clock, Music, CheckCircle, Star, CreditCard, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useSHCBalance } from '@/hooks/useSHCBalance';
 import { useAllSiteContent } from '@/hooks/useSiteContent';
 import { ReviewSection } from '@/components/reviews/ReviewSection';
 import { TranslatedContent } from '@/components/TranslatedContent';
+import { usePhantomWallet } from '@/hooks/usePhantomWallet';
 
 interface HealingAudio {
   id: string;
@@ -24,6 +26,19 @@ interface HealingAudio {
   price_shc: number;
   category: string;
 }
+
+interface HealingPlan {
+  id: string;
+  name: string;
+  price: number;
+  days: number;
+}
+
+const HEALING_PLANS: HealingPlan[] = [
+  { id: '7_day', name: '7-Day Healing', price: 97, days: 7 },
+  { id: '14_day', name: '14-Day Healing', price: 147, days: 14 },
+  { id: '30_day', name: '30-Day Healing', price: 197, days: 30 },
+];
 
 const faqs = [
   { question: "How do I prepare myself for the healing?", answer: "You can receive the healing energy anytime, but choosing a specific time allows deeper connection. Sit or lie down comfortably, invite the energy to flow, and optionally listen to our healing music on Spotify or YouTube." },
@@ -66,11 +81,15 @@ const Healing: React.FC = () => {
   const { toast } = useToast();
   const { balance } = useSHCBalance();
   const { content, isLoading: contentLoading } = useAllSiteContent();
+  const { walletAddress, isPhantomInstalled, connectWallet, isConnecting } = usePhantomWallet();
+  
   const [audioTracks, setAudioTracks] = useState<HealingAudio[]>([]);
   const [ownedAudioIds, setOwnedAudioIds] = useState<Set<string>>(new Set());
   const [hasHealingAccess, setHasHealingAccess] = useState(false);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<HealingPlan | null>(null);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const getContent = (key: string, fallback: string) => content[key] || fallback;
@@ -128,8 +147,14 @@ const Healing: React.FC = () => {
     }
   };
 
-  const handlePurchasePlan = async (planType: string) => {
+  const openPaymentModal = (plan: HealingPlan) => {
+    setSelectedPlan(plan);
+    setPaymentModalOpen(true);
+  };
+
+  const handleStripePayment = async (planType: string) => {
     setIsProcessing(true);
+    setPaymentModalOpen(false);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -139,6 +164,88 @@ const Healing: React.FC = () => {
 
       const { data, error } = await supabase.functions.invoke('create-healing-checkout', {
         body: { planType },
+      });
+
+      if (error) throw error;
+      if (data?.url) window.open(data.url, '_blank');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      toast({ title: t('common.error', 'Error'), description: message, variant: "destructive" });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleCryptoPayment = async (plan: HealingPlan) => {
+    setPaymentModalOpen(false);
+    
+    if (!isPhantomInstalled) {
+      toast({
+        title: "Phantom Not Installed",
+        description: "Please install Phantom wallet to pay with crypto",
+        variant: "destructive",
+      });
+      window.open('https://phantom.app/', '_blank');
+      return;
+    }
+
+    if (!walletAddress) {
+      try {
+        await connectWallet();
+      } catch {
+        toast({
+          title: "Connection Failed",
+          description: "Please connect your Phantom wallet",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    setIsProcessing(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({ title: "Please sign in", variant: "destructive" });
+        setIsProcessing(false);
+        return;
+      }
+
+      // Treasury wallet address for receiving payments
+      const treasuryWallet = "BAfPGN6DUAKYVwmmGkhMQxJyDv2cHEHRnfcbzy1GNy5j";
+      
+      // Convert EUR to approximate SOL
+      const solAmount = (plan.price * 0.005).toFixed(4);
+      
+      // Open Phantom to send SOL manually with instructions
+      const solanaUrl = `https://phantom.app/ul/v1/browse/https://solscan.io/account/${treasuryWallet}`;
+      
+      toast({
+        title: "Send SOL to Complete Purchase",
+        description: `Please send ${solAmount} SOL to: ${treasuryWallet.slice(0, 8)}...${treasuryWallet.slice(-8)}. Contact support after sending to activate your healing access.`,
+      });
+      
+      window.open(solanaUrl, '_blank');
+      
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Payment failed';
+      toast({ title: "Payment Failed", description: message, variant: "destructive" });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleSubscriptionStripe = async () => {
+    setIsProcessing(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({ title: t('common.signIn', 'Please sign in'), variant: "destructive" });
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('create-healing-checkout', {
+        body: { planType: 'subscription' },
       });
 
       if (error) throw error;
@@ -326,34 +433,21 @@ const Healing: React.FC = () => {
           </div>
           
           <div className="flex flex-wrap justify-center gap-4">
-            <Button 
-              variant="gold" 
-              size="lg"
-              onClick={() => handlePurchasePlan('7_day')}
-              disabled={isProcessing}
-            >
-              7-Day Healing - €97
-            </Button>
-            <Button 
-              variant="gold" 
-              size="lg"
-              onClick={() => handlePurchasePlan('14_day')}
-              disabled={isProcessing}
-            >
-              14-Day Healing - €147
-            </Button>
-            <Button 
-              variant="gold" 
-              size="lg"
-              onClick={() => handlePurchasePlan('30_day')}
-              disabled={isProcessing}
-            >
-              30-Day Healing - €197
-            </Button>
+            {HEALING_PLANS.map((plan) => (
+              <Button 
+                key={plan.id}
+                variant="gold" 
+                size="lg"
+                onClick={() => openPaymentModal(plan)}
+                disabled={isProcessing}
+              >
+                {plan.name} - €{plan.price}
+              </Button>
+            ))}
             <Button 
               variant="outline" 
               size="lg"
-              onClick={() => handlePurchasePlan('subscription')}
+              onClick={handleSubscriptionStripe}
               disabled={isProcessing}
             >
               Subscribe 3 Months - €147/mo
@@ -361,6 +455,40 @@ const Healing: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Payment Method Modal */}
+      <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Choose Payment Method</DialogTitle>
+            <DialogDescription>
+              {selectedPlan && `${selectedPlan.name} - €${selectedPlan.price}`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Button
+              variant="gold"
+              size="lg"
+              className="w-full flex items-center justify-center gap-3"
+              onClick={() => selectedPlan && handleStripePayment(selectedPlan.id)}
+              disabled={isProcessing}
+            >
+              <CreditCard className="w-5 h-5" />
+              Pay with Card
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="w-full flex items-center justify-center gap-3 border-purple-500 text-purple-500 hover:bg-purple-500/10"
+              onClick={() => selectedPlan && handleCryptoPayment(selectedPlan)}
+              disabled={isProcessing}
+            >
+              <Wallet className="w-5 h-5" />
+              Pay with Crypto (SOL)
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Access Badge */}
       {hasHealingAccess && (
