@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { PromoBanner } from '@/components/ui/promo-banner';
 
 const CustomMeditationBooking: React.FC = () => {
   const { t } = useTranslation();
@@ -42,8 +43,6 @@ const CustomMeditationBooking: React.FC = () => {
     { icon: Eye, text: t('customMeditation.feature1') },
     { icon: Heart, text: t('customMeditation.feature2') },
     { icon: Sparkles, text: t('customMeditation.feature3') },
-    { icon: Star, text: t('customMeditation.feature4') },
-    { icon: Music, text: t('customMeditation.feature5') },
   ];
 
   const handleBooking = async () => {
@@ -87,57 +86,24 @@ const CustomMeditationBooking: React.FC = () => {
 
   return (
     <>
-      {/* Featured Card */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600/30 via-amber-500/20 to-purple-800/30 border border-purple-500/30 p-6 animate-slide-up">
-        <div className="absolute -top-10 -right-10 w-40 h-40 bg-amber-500/20 rounded-full blur-3xl" />
-        <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-500/20 rounded-full blur-2xl" />
-        
-        <div className="relative">
-          <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 mb-3">
-            ✨ {t('customMeditation.badge')}
-          </Badge>
-          
-          <h3 className="text-2xl font-heading font-bold text-foreground mb-2">
-            {t('customMeditation.title')}
-          </h3>
-          
-          <p className="text-foreground/80 mb-4 leading-relaxed">
-            {t('customMeditation.description')}
-          </p>
-
-          <div className="grid grid-cols-1 gap-2 mb-5">
-            {features.slice(0, 3).map((feature, index) => (
-              <div key={index} className="flex items-center gap-2 text-sm text-foreground/70">
-                <feature.icon size={16} className="text-amber-400" />
-                <span>{feature.text}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-4 mb-4">
-            <div>
-              <span className="text-3xl font-heading font-bold text-gradient-gold">€70</span>
-              <span className="text-muted-foreground text-sm ml-2">{t('customMeditation.single')}</span>
-            </div>
-            <div className="text-muted-foreground">{t('common.or')}</div>
-            <div>
-              <span className="text-3xl font-heading font-bold text-gradient-gold">€97</span>
-              <span className="text-muted-foreground text-sm ml-2">{t('customMeditation.for2')}</span>
-              <Badge variant="secondary" className="ml-2 bg-green-500/20 text-green-400 border-green-500/30">
-                {t('customMeditation.save43')}
-              </Badge>
-            </div>
-          </div>
-
-          <Button 
-            onClick={() => setIsOpen(true)} 
-            className="bg-gradient-to-r from-purple-600 to-amber-500 hover:from-purple-700 hover:to-amber-600 text-white font-semibold"
-          >
-            <Sparkles size={18} className="mr-2" />
-            {t('customMeditation.bookButton')}
-          </Button>
-        </div>
-      </div>
+      <PromoBanner
+        badge={t('customMeditation.badge')}
+        badgeIcon="✨"
+        title={t('customMeditation.title')}
+        description={t('customMeditation.description')}
+        features={features}
+        prices={[
+          { amount: 70, label: t('customMeditation.single'), isHighlighted: true },
+          { amount: 97, label: t('customMeditation.for2'), savings: t('customMeditation.save43'), isHighlighted: true },
+        ]}
+        ctaText={t('customMeditation.bookButton')}
+        ctaIcon={Sparkles}
+        onCtaClick={() => setIsOpen(true)}
+        gradientFrom="from-purple-600/30"
+        gradientVia="via-amber-500/20"
+        gradientTo="to-purple-800/30"
+        accentColor="purple"
+      />
 
       {/* Booking Dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -155,7 +121,13 @@ const CustomMeditationBooking: React.FC = () => {
               <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
                 {t('customMeditation.whatsIncluded')}
               </h4>
-              {features.map((feature, index) => (
+              {[
+                { icon: Eye, text: t('customMeditation.feature1') },
+                { icon: Heart, text: t('customMeditation.feature2') },
+                { icon: Sparkles, text: t('customMeditation.feature3') },
+                { icon: Star, text: t('customMeditation.feature4') },
+                { icon: Music, text: t('customMeditation.feature5') },
+              ].map((feature, index) => (
                 <div key={index} className="flex items-center gap-3 text-sm">
                   <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                     <feature.icon size={16} className="text-primary" />
