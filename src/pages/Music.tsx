@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Music2, Plus, List, Crown, ChevronRight, X, GripVertical, Edit2, Check, Loader2 } from 'lucide-react';
+import { Music2, Plus, List, Crown, ChevronRight, X, GripVertical, Edit2, Check, Loader2, Disc } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -19,6 +19,15 @@ interface PlayHistory {
   play_count: number;
 }
 
+interface Album {
+  id: string;
+  title: string;
+  artist: string;
+  description: string | null;
+  cover_image_url: string | null;
+  price_usd: number;
+}
+
 const GENRES = ['all', 'beats', 'meditation', 'mystic', 'reggae', 'hip-hop', 'reggaeton', 'indian', 'shamanic'];
 
 const Music: React.FC = () => {
@@ -28,9 +37,13 @@ const Music: React.FC = () => {
   const { isSubscribed, checkSubscription, refreshPurchases, playTrack } = useMusicPlayer();
   
   const [tracks, setTracks] = useState<Track[]>([]);
+  const [albums, setAlbums] = useState<Album[]>([]);
+  const [purchasedAlbumIds, setPurchasedAlbumIds] = useState<string[]>([]);
+  const [albumTracksMap, setAlbumTracksMap] = useState<Record<string, string[]>>({});
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'browse' | 'playlists' | 'history'>('browse');
+  const [activeTab, setActiveTab] = useState<'browse' | 'albums' | 'playlists' | 'history'>('browse');
   const [selectedGenre, setSelectedGenre] = useState('all');
+  const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
   
   // Playlists
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
@@ -43,15 +56,23 @@ const Music: React.FC = () => {
 
   useEffect(() => {
     fetchTracks();
+    fetchAlbums();
     fetchPlaylists();
     fetchPlayHistory();
+    fetchPurchasedAlbums();
     checkSubscription();
     refreshPurchases();
     
     const membershipSuccess = searchParams.get('membership_success');
+    const albumSuccess = searchParams.get('album_success');
     if (membershipSuccess) {
       toast({ title: "Subscription active!", description: "Enjoy unlimited music streaming." });
       checkSubscription();
+    }
+    if (albumSuccess) {
+      toast({ title: "Album purchased!", description: "You now have full access to all tracks in this album." });
+      fetchPurchasedAlbums();
+      refreshPurchases();
     }
   }, [searchParams]);
 
@@ -59,6 +80,45 @@ const Music: React.FC = () => {
     const { data } = await supabase.from('music_tracks').select('*').order('created_at', { ascending: false });
     if (data) setTracks(data as Track[]);
     setIsLoading(false);
+  };
+
+  const fetchAlbums = async () => {
+    const { data: albumsData } = await supabase.from('music_albums').select('*').order('created_at', { ascending: false });
+    if (albumsData) setAlbums(albumsData);
+    
+    // Fetch album tracks
+    const { data: albumTracks } = await supabase.from('album_tracks').select('album_id, track_id').order('order_index');
+    if (albumTracks) {
+      const map: Record<string, string[]> = {};
+      albumTracks.forEach(at => {
+        if (!map[at.album_id]) map[at.album_id] = [];
+        map[at.album_id].push(at.track_id);
+      });
+      setAlbumTracksMap(map);
+    }
+  };
+
+  const fetchPurchasedAlbums = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { data } = await supabase.from('album_purchases').select('album_id').eq('user_id', user.id);
+    if (data) setPurchasedAlbumIds(data.map(p => p.album_id));
+  };
+
+  const hasAlbumAccess = (albumId: string) => {
+    return isSubscribed || purchasedAlbumIds.includes(albumId);
+  };
+
+  const handlePurchaseAlbum = async (album: Album) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('create-album-checkout', {
+        body: { albumId: album.id }
+      });
+      if (error) throw error;
+      if (data?.url) window.open(data.url, '_blank');
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
   };
 
   const fetchPlaylists = async () => {
@@ -192,21 +252,108 @@ const Music: React.FC = () => {
       </button>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-4">
-        {(['browse', 'playlists', 'history'] as const).map(tab => (
+      <div className="flex gap-2 mb-4 overflow-x-auto">
+        {(['browse', 'albums', 'playlists', 'history'] as const).map(tab => (
           <button
             key={tab}
-            onClick={() => { setActiveTab(tab); if (tab === 'browse') setSelectedPlaylist(null); }}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            onClick={() => { setActiveTab(tab); if (tab === 'browse') { setSelectedPlaylist(null); setSelectedAlbum(null); } }}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
               activeTab === tab 
                 ? 'bg-primary text-primary-foreground' 
                 : 'bg-muted/30 text-muted-foreground hover:bg-muted/50'
             }`}
           >
+            {tab === 'albums' && <Disc size={14} className="inline mr-1" />}
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
           </button>
         ))}
       </div>
+
+      {/* Albums Tab */}
+      {activeTab === 'albums' && (
+        <div>
+          {selectedAlbum ? (
+            <>
+              <div className="flex items-center gap-2 mb-4">
+                <Button variant="ghost" size="sm" onClick={() => setSelectedAlbum(null)}>← Back</Button>
+              </div>
+              
+              {/* Album Header */}
+              <div className="flex gap-4 mb-6">
+                {selectedAlbum.cover_image_url ? (
+                  <img src={selectedAlbum.cover_image_url} alt={selectedAlbum.title} className="w-24 h-24 rounded-xl object-cover" />
+                ) : (
+                  <div className="w-24 h-24 rounded-xl bg-muted flex items-center justify-center">
+                    <Disc size={32} className="text-muted-foreground" />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <h2 className="text-xl font-bold">{selectedAlbum.title}</h2>
+                  <p className="text-sm text-muted-foreground">{selectedAlbum.artist}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{albumTracksMap[selectedAlbum.id]?.length || 0} tracks</p>
+                  
+                  {hasAlbumAccess(selectedAlbum.id) ? (
+                    <span className="text-xs text-primary mt-2 inline-block">✓ Full access</span>
+                  ) : (
+                    <Button size="sm" className="mt-2" onClick={() => handlePurchaseAlbum(selectedAlbum)}>
+                      Buy Album ${selectedAlbum.price_usd}
+                    </Button>
+                  )}
+                </div>
+              </div>
+              
+              {/* Album Tracks */}
+              <div className="space-y-2">
+                {(albumTracksMap[selectedAlbum.id] || []).map(trackId => {
+                  const track = tracks.find(t => t.id === trackId);
+                  if (!track) return null;
+                  return (
+                    <TrackCard
+                      key={track.id}
+                      track={track}
+                      playlists={playlists}
+                      onAddToPlaylist={addToPlaylist}
+                      onPurchase={handlePurchaseTrack}
+                      allTracks={tracks.filter(t => albumTracksMap[selectedAlbum.id]?.includes(t.id))}
+                    />
+                  );
+                })}
+              </div>
+            </>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {albums.map(album => (
+                <button
+                  key={album.id}
+                  onClick={() => setSelectedAlbum(album)}
+                  className="bg-muted/30 border border-border/50 rounded-xl p-3 text-left hover:bg-muted/50 transition-colors"
+                >
+                  {album.cover_image_url ? (
+                    <img src={album.cover_image_url} alt={album.title} className="w-full aspect-square rounded-lg object-cover mb-2" />
+                  ) : (
+                    <div className="w-full aspect-square rounded-lg bg-muted flex items-center justify-center mb-2">
+                      <Disc size={32} className="text-muted-foreground" />
+                    </div>
+                  )}
+                  <h3 className="font-medium text-sm truncate">{album.title}</h3>
+                  <p className="text-xs text-muted-foreground truncate">{album.artist}</p>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-xs text-muted-foreground">{albumTracksMap[album.id]?.length || 0} tracks</span>
+                    {hasAlbumAccess(album.id) ? (
+                      <span className="text-xs text-primary">✓ Owned</span>
+                    ) : (
+                      <span className="text-xs text-primary font-medium">${album.price_usd}</span>
+                    )}
+                  </div>
+                </button>
+              ))}
+              {albums.length === 0 && (
+                <p className="col-span-2 text-muted-foreground text-sm text-center py-8">No albums available yet</p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Browse Tab */}
       {activeTab === 'browse' && (

@@ -74,6 +74,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [isLoop, setIsLoop] = useState(false);
   const [queue, setQueue] = useState<Track[]>([]);
   const [purchasedIds, setPurchasedIds] = useState<string[]>([]);
+  const [purchasedAlbumTrackIds, setPurchasedAlbumTrackIds] = useState<string[]>([]);
   const [likedIds, setLikedIds] = useState<string[]>([]);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [currentQueueIndex, setCurrentQueueIndex] = useState(0);
@@ -82,8 +83,8 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const MUSIC_REWARD = 100;
 
   const hasAccess = useCallback((track: Track) => {
-    return isSubscribed || purchasedIds.includes(track.id);
-  }, [isSubscribed, purchasedIds]);
+    return isSubscribed || purchasedIds.includes(track.id) || purchasedAlbumTrackIds.includes(track.id);
+  }, [isSubscribed, purchasedIds, purchasedAlbumTrackIds]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -94,8 +95,20 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const refreshPurchases = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    const { data } = await supabase.from('music_purchases').select('track_id').eq('user_id', user.id);
-    if (data) setPurchasedIds(data.map(p => p.track_id));
+    
+    // Fetch individual track purchases
+    const { data: trackPurchases } = await supabase.from('music_purchases').select('track_id').eq('user_id', user.id);
+    if (trackPurchases) setPurchasedIds(trackPurchases.map(p => p.track_id));
+    
+    // Fetch album purchases and their tracks
+    const { data: albumPurchases } = await supabase.from('album_purchases').select('album_id').eq('user_id', user.id);
+    if (albumPurchases && albumPurchases.length > 0) {
+      const albumIds = albumPurchases.map(p => p.album_id);
+      const { data: albumTracks } = await supabase.from('album_tracks').select('track_id').in('album_id', albumIds);
+      if (albumTracks) setPurchasedAlbumTrackIds(albumTracks.map(t => t.track_id));
+    } else {
+      setPurchasedAlbumTrackIds([]);
+    }
   };
 
   const checkSubscription = async () => {
@@ -122,7 +135,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   }, []);
 
   const playTrack = useCallback(async (track: Track, newQueue?: Track[]) => {
-    const canPlayFull = isSubscribed || purchasedIds.includes(track.id);
+    const canPlayFull = isSubscribed || purchasedIds.includes(track.id) || purchasedAlbumTrackIds.includes(track.id);
     
     if (currentTrack?.id === track.id && audioRef.current) {
       if (isPlaying) {
@@ -204,7 +217,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         last_played_at: new Date().toISOString()
       }, { onConflict: 'user_id,track_id' });
     }
-  }, [currentTrack, isPlaying, volume, isSubscribed, purchasedIds, isLoop, isShuffle, queue, currentQueueIndex, addOptimisticBalance, toast]);
+  }, [currentTrack, isPlaying, volume, isSubscribed, purchasedIds, purchasedAlbumTrackIds, isLoop, isShuffle, queue, currentQueueIndex, addOptimisticBalance, toast]);
 
   const togglePlay = useCallback(() => {
     if (!audioRef.current || !currentTrack) return;
