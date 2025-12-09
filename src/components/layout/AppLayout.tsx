@@ -1,6 +1,7 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { BottomNav } from './BottomNav';
+import { BackButton } from './BackButton';
 import { AnnouncementPopup } from '@/components/AnnouncementPopup';
 import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
 import { NowPlayingBar } from '@/components/music/NowPlayingBar';
@@ -14,6 +15,9 @@ export const AppLayout: React.FC = () => {
         <div className="absolute bottom-1/4 right-0 w-80 h-80 bg-secondary/20 rounded-full blur-3xl" />
         <div className="absolute top-1/2 left-0 w-64 h-64 bg-accent/10 rounded-full blur-3xl" />
       </div>
+      
+      {/* Universal back button */}
+      <BackButton />
       
       <main className="relative pb-24">
         <Outlet />
