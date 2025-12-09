@@ -228,25 +228,6 @@ const Music: React.FC = () => {
             ))}
           </div>
 
-          {/* New Releases */}
-          {newReleases.length > 0 && (
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold mb-3">New Releases</h2>
-              <div className="space-y-2">
-                {newReleases.map(track => (
-                  <TrackCard
-                    key={track.id}
-                    track={track}
-                    playlists={playlists}
-                    onAddToPlaylist={addToPlaylist}
-                    onPurchase={handlePurchaseTrack}
-                    allTracks={newReleases}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* Tracks */}
           <div className="space-y-2">
             {filteredTracks.map(track => (
