@@ -1,18 +1,46 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LotusIcon } from '@/components/icons/LotusIcon';
+import { supabase } from '@/integrations/supabase/client';
 
 const Splash: React.FC = () => {
   const navigate = useNavigate();
   const [fadeOut, setFadeOut] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setFadeOut(true);
-      setTimeout(() => navigate('/auth'), 500);
-    }, 2500);
-    
-    return () => clearTimeout(timer);
+    const checkAuthAndRedirect = async () => {
+      try {
+        // Check for existing valid session
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Session check error:', error);
+        }
+
+        // Allow splash animation to show briefly
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        setFadeOut(true);
+        setAuthChecked(true);
+        
+        setTimeout(() => {
+          if (session?.access_token) {
+            // Valid token exists - auto-login to dashboard
+            navigate('/dashboard', { replace: true });
+          } else {
+            // No valid token - show login screen
+            navigate('/auth', { replace: true });
+          }
+        }, 500);
+      } catch (err) {
+        console.error('Auth check failed:', err);
+        setFadeOut(true);
+        setTimeout(() => navigate('/auth', { replace: true }), 500);
+      }
+    };
+
+    checkAuthAndRedirect();
   }, [navigate]);
 
   return (
@@ -40,15 +68,22 @@ const Splash: React.FC = () => {
           Awaken Your Inner Light
         </p>
 
-        {/* Loading dots */}
-        <div className="mt-12 flex gap-2">
-          {[0, 1, 2].map((i) => (
-            <div
-              key={i}
-              className="w-2 h-2 rounded-full bg-primary animate-pulse-slow"
-              style={{ animationDelay: `${i * 0.2}s` }}
-            />
-          ))}
+        {/* Loading indicator */}
+        <div className="mt-12 flex flex-col items-center gap-3">
+          <div className="flex gap-2">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="w-2 h-2 rounded-full bg-primary animate-pulse-slow"
+                style={{ animationDelay: `${i * 0.2}s` }}
+              />
+            ))}
+          </div>
+          {authChecked && (
+            <p className="text-xs text-muted-foreground animate-fade-in">
+              {fadeOut ? 'Redirecting...' : 'Checking session...'}
+            </p>
+          )}
         </div>
       </div>
     </div>
