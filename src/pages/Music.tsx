@@ -247,24 +247,21 @@ const Music: React.FC = () => {
             </div>
           )}
 
-          {/* All Tracks */}
-          <div>
-            <h2 className="text-lg font-semibold mb-3">All Tracks ({filteredTracks.length})</h2>
-            <div className="space-y-2">
-              {filteredTracks.map(track => (
-                <TrackCard
-                  key={track.id}
-                  track={track}
-                  playlists={playlists}
-                  onAddToPlaylist={addToPlaylist}
-                  onPurchase={handlePurchaseTrack}
-                  allTracks={filteredTracks}
-                />
-              ))}
-              {filteredTracks.length === 0 && (
-                <p className="text-muted-foreground text-sm text-center py-8">No tracks in this genre yet</p>
-              )}
-            </div>
+          {/* Tracks */}
+          <div className="space-y-2">
+            {filteredTracks.map(track => (
+              <TrackCard
+                key={track.id}
+                track={track}
+                playlists={playlists}
+                onAddToPlaylist={addToPlaylist}
+                onPurchase={handlePurchaseTrack}
+                allTracks={filteredTracks}
+              />
+            ))}
+            {filteredTracks.length === 0 && (
+              <p className="text-muted-foreground text-sm text-center py-8">No tracks in this genre yet</p>
+            )}
           </div>
         </>
       )}
