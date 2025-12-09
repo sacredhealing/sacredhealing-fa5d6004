@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SHCProvider } from "@/contexts/SHCContext";
+import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppLayout } from "./components/layout/AppLayout";
 import { ProtectedRoute } from "./components/layout/ProtectedRoute";
@@ -54,57 +55,59 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <SHCProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route element={<ProtectedRoute />}>
-            <Route element={<AppLayout />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/meditations" element={<Meditations />} />
-              <Route path="/courses" element={<Courses />} />
-              <Route path="/music" element={<Music />} />
-              <Route path="/mastering" element={<Mastering />} />
-              <Route path="/wallet" element={<Wallet />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/healing" element={<Healing />} />
-              <Route path="/promote" element={<Promote />} />
-              <Route path="/income-streams" element={<IncomeStreams />} />
-              <Route path="/spiritual-education" element={<SpiritualEducation />} />
-              <Route path="/community" element={<Community />} />
-              <Route path="/private-sessions" element={<PrivateSessions />} />
-              <Route path="/membership" element={<Membership />} />
-              <Route path="/mantras" element={<Mantras />} />
-              <Route path="/shop" element={<Shop />} />
-              <Route path="/shop/:id" element={<ProductDetail />} />
-              <Route path="/transformation" element={<Transformation />} />
-              <Route path="/stargate" element={<StargateMembership />} />
-              <Route path="/certification" element={<PractitionerCertification />} />
-              <Route path="/leaderboard" element={<Leaderboard />} />
-              <Route path="/affirmation-soundtrack" element={<AffirmationSoundtrack />} />
-              <Route path="/affirmation-success" element={<AffirmationSuccess />} />
-              <Route path="/pregnancy-program" element={<PregnancyProgram />} />
-              <Route path="/install" element={<Install />} />
-              <Route path="/spiritual-transformation" element={<SpiritualTransformation />} />
+        <MusicPlayerProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route element={<ProtectedRoute />}>
+              <Route element={<AppLayout />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/meditations" element={<Meditations />} />
+                <Route path="/courses" element={<Courses />} />
+                <Route path="/music" element={<Music />} />
+                <Route path="/mastering" element={<Mastering />} />
+                <Route path="/wallet" element={<Wallet />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/healing" element={<Healing />} />
+                <Route path="/promote" element={<Promote />} />
+                <Route path="/income-streams" element={<IncomeStreams />} />
+                <Route path="/spiritual-education" element={<SpiritualEducation />} />
+                <Route path="/community" element={<Community />} />
+                <Route path="/private-sessions" element={<PrivateSessions />} />
+                <Route path="/membership" element={<Membership />} />
+                <Route path="/mantras" element={<Mantras />} />
+                <Route path="/shop" element={<Shop />} />
+                <Route path="/shop/:id" element={<ProductDetail />} />
+                <Route path="/transformation" element={<Transformation />} />
+                <Route path="/stargate" element={<StargateMembership />} />
+                <Route path="/certification" element={<PractitionerCertification />} />
+                <Route path="/leaderboard" element={<Leaderboard />} />
+                <Route path="/affirmation-soundtrack" element={<AffirmationSoundtrack />} />
+                <Route path="/affirmation-success" element={<AffirmationSuccess />} />
+                <Route path="/pregnancy-program" element={<PregnancyProgram />} />
+                <Route path="/install" element={<Install />} />
+                <Route path="/spiritual-transformation" element={<SpiritualTransformation />} />
+              </Route>
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/meditations" element={<Admin />} />
+              <Route path="/admin/music" element={<AdminMusic />} />
+              <Route path="/admin/healing" element={<AdminHealing />} />
+              <Route path="/admin/content" element={<AdminContent />} />
+              <Route path="/admin/courses" element={<AdminCourses />} />
+              <Route path="/admin/announcements" element={<AdminAnnouncements />} />
+              <Route path="/admin/income-streams" element={<AdminIncomeStreams />} />
+              <Route path="/admin/youtube" element={<AdminYouTube />} />
+              <Route path="/admin/mantras" element={<AdminMantras />} />
+              <Route path="/admin/shop" element={<AdminShop />} />
             </Route>
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/meditations" element={<Admin />} />
-            <Route path="/admin/music" element={<AdminMusic />} />
-            <Route path="/admin/healing" element={<AdminHealing />} />
-            <Route path="/admin/content" element={<AdminContent />} />
-            <Route path="/admin/courses" element={<AdminCourses />} />
-            <Route path="/admin/announcements" element={<AdminAnnouncements />} />
-            <Route path="/admin/income-streams" element={<AdminIncomeStreams />} />
-            <Route path="/admin/youtube" element={<AdminYouTube />} />
-            <Route path="/admin/mantras" element={<AdminMantras />} />
-            <Route path="/admin/shop" element={<AdminShop />} />
-          </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </MusicPlayerProvider>
       </SHCProvider>
     </TooltipProvider>
   </QueryClientProvider>

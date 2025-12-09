@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { BottomNav } from './BottomNav';
 import { AnnouncementPopup } from '@/components/AnnouncementPopup';
 import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
+import { NowPlayingBar } from '@/components/music/NowPlayingBar';
 
 export const AppLayout: React.FC = () => {
   return (
@@ -18,6 +19,7 @@ export const AppLayout: React.FC = () => {
         <Outlet />
       </main>
       
+      <NowPlayingBar />
       <BottomNav />
       <AnnouncementPopup />
       <PWAInstallPrompt />
