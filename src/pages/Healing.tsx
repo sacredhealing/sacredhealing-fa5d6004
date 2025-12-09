@@ -241,14 +241,22 @@ const Healing: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<HealingPlan | null>(null);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [dynamicContent, setDynamicContent] = useState<Record<string, string>>({});
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Get current language translations
   const currentLang = i18n.language?.split('-')[0] || 'en';
   const t = translations[currentLang as keyof typeof translations] || translations.en;
 
+  // Helper to get content from database or fallback to static
+  const getContent = (key: string, fallback: string) => {
+    const dbKey = `healing_${key}_${currentLang}`;
+    return dynamicContent[dbKey] || fallback;
+  };
+
   useEffect(() => {
     fetchAudioTracks();
+    fetchDynamicContent();
     checkHealingAccess();
     checkOwnedAudio();
 
@@ -262,6 +270,25 @@ const Healing: React.FC = () => {
       checkHealingAccess();
     }
   }, []);
+
+  useEffect(() => {
+    fetchDynamicContent();
+  }, [currentLang]);
+
+  const fetchDynamicContent = async () => {
+    const { data } = await supabase
+      .from('site_content')
+      .select('content_key, content')
+      .like('content_key', 'healing_%');
+    
+    if (data) {
+      const contentMap: Record<string, string> = {};
+      data.forEach(item => {
+        contentMap[item.content_key] = item.content;
+      });
+      setDynamicContent(contentMap);
+    }
+  };
 
   const fetchAudioTracks = async () => {
     const { data } = await supabase
@@ -470,8 +497,12 @@ const Healing: React.FC = () => {
       <Card className="bg-gradient-to-r from-primary/30 to-pink-500/30 border-none text-center overflow-hidden">
         <CardContent className="py-10 px-6">
           <Sparkles className="w-12 h-12 text-primary mx-auto mb-4" />
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">{t.heroTitle}</h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto">{t.heroSubtitle}</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
+            {getContent('hero_title', t.heroTitle)}
+          </h1>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            {getContent('hero_subtitle', t.heroSubtitle)}
+          </p>
         </CardContent>
       </Card>
 
@@ -481,9 +512,9 @@ const Healing: React.FC = () => {
           <CardContent className="pt-6">
             <h2 className="text-2xl font-bold text-foreground mb-3 flex items-center gap-2">
               <Heart className="w-6 h-6 text-primary" />
-              {t.moreAboutHealingTitle}
+              {getContent('about_title', t.moreAboutHealingTitle)}
             </h2>
-            <p className="text-muted-foreground">{t.moreAboutHealingText}</p>
+            <p className="text-muted-foreground">{getContent('about_text', t.moreAboutHealingText)}</p>
           </CardContent>
         </Card>
 
@@ -491,24 +522,30 @@ const Healing: React.FC = () => {
           <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
             <CardContent className="pt-6">
               <Star className="w-8 h-8 text-primary mb-3" />
-              <h3 className="text-lg font-semibold text-foreground mb-2">{t.healthTitle}</h3>
-              <p className="text-sm text-muted-foreground">{t.healthText}</p>
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                {getContent('health_title', t.healthTitle)}
+              </h3>
+              <p className="text-sm text-muted-foreground">{getContent('health_text', t.healthText)}</p>
             </CardContent>
           </Card>
 
           <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
             <CardContent className="pt-6">
               <Heart className="w-8 h-8 text-primary mb-3" />
-              <h3 className="text-lg font-semibold text-foreground mb-2">{t.mentalTitle}</h3>
-              <p className="text-sm text-muted-foreground">{t.mentalText}</p>
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                {getContent('mental_title', t.mentalTitle)}
+              </h3>
+              <p className="text-sm text-muted-foreground">{getContent('mental_text', t.mentalText)}</p>
             </CardContent>
           </Card>
 
           <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
             <CardContent className="pt-6">
               <Sparkles className="w-8 h-8 text-primary mb-3" />
-              <h3 className="text-lg font-semibold text-foreground mb-2">{t.spiritualTitle}</h3>
-              <p className="text-sm text-muted-foreground">{t.spiritualText}</p>
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                {getContent('spiritual_title', t.spiritualTitle)}
+              </h3>
+              <p className="text-sm text-muted-foreground">{getContent('spiritual_text', t.spiritualText)}</p>
             </CardContent>
           </Card>
         </div>

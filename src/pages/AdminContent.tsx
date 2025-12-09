@@ -181,39 +181,64 @@ const AdminContent: React.FC = () => {
                 <h2 className="text-lg font-semibold">Healing Page Content</h2>
               </div>
               
-              <div className="space-y-4">
-                {/* Titles */}
-                <div className="border-b pb-4">
-                  <h3 className="text-sm font-medium text-muted-foreground mb-3">Page Header</h3>
-                  <div className="space-y-4">
-                    {healingContent.filter(c => c.content_key.includes('title') || c.content_key.includes('subtitle')).map(renderContentEditor)}
-                  </div>
-                </div>
+              {/* Language Tabs for Healing */}
+              <Tabs defaultValue="en" className="w-full">
+                <TabsList className="grid w-full grid-cols-4 mb-4">
+                  <TabsTrigger value="en">🇬🇧 English</TabsTrigger>
+                  <TabsTrigger value="sv">🇸🇪 Swedish</TabsTrigger>
+                  <TabsTrigger value="es">🇪🇸 Spanish</TabsTrigger>
+                  <TabsTrigger value="no">🇳🇴 Norwegian</TabsTrigger>
+                </TabsList>
 
-                {/* Introduction */}
-                <div className="border-b pb-4">
-                  <h3 className="text-sm font-medium text-muted-foreground mb-3">Introduction</h3>
-                  <div className="space-y-4">
-                    {healingContent.filter(c => c.content_key.includes('intro')).map(renderContentEditor)}
-                  </div>
-                </div>
+                {['en', 'sv', 'es', 'no'].map(lang => (
+                  <TabsContent key={lang} value={lang} className="space-y-6">
+                    {/* Hero Section */}
+                    <div className="border-b pb-4">
+                      <h3 className="text-sm font-medium text-muted-foreground mb-3">Hero Section</h3>
+                      <div className="space-y-4">
+                        {healingContent.filter(c => c.content_key === `healing_hero_title_${lang}`).map(renderContentEditor)}
+                        {healingContent.filter(c => c.content_key === `healing_hero_subtitle_${lang}`).map(renderContentEditor)}
+                      </div>
+                    </div>
 
-                {/* Features */}
-                <div className="border-b pb-4">
-                  <h3 className="text-sm font-medium text-muted-foreground mb-3">Features</h3>
-                  <div className="space-y-4">
-                    {healingContent.filter(c => c.content_key.includes('feature')).map(renderContentEditor)}
-                  </div>
-                </div>
+                    {/* About Section */}
+                    <div className="border-b pb-4">
+                      <h3 className="text-sm font-medium text-muted-foreground mb-3">About the Healing</h3>
+                      <div className="space-y-4">
+                        {healingContent.filter(c => c.content_key === `healing_about_title_${lang}`).map(renderContentEditor)}
+                        {healingContent.filter(c => c.content_key === `healing_about_text_${lang}`).map(renderContentEditor)}
+                      </div>
+                    </div>
 
-                {/* Pricing */}
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-3">Pricing</h3>
-                  <div className="space-y-4">
-                    {healingContent.filter(c => c.content_key.includes('price')).map(renderContentEditor)}
-                  </div>
-                </div>
-              </div>
+                    {/* Health Section */}
+                    <div className="border-b pb-4">
+                      <h3 className="text-sm font-medium text-muted-foreground mb-3">Health & Vitality</h3>
+                      <div className="space-y-4">
+                        {healingContent.filter(c => c.content_key === `healing_health_title_${lang}`).map(renderContentEditor)}
+                        {healingContent.filter(c => c.content_key === `healing_health_text_${lang}`).map(renderContentEditor)}
+                      </div>
+                    </div>
+
+                    {/* Mental Section */}
+                    <div className="border-b pb-4">
+                      <h3 className="text-sm font-medium text-muted-foreground mb-3">Mental & Emotional Balance</h3>
+                      <div className="space-y-4">
+                        {healingContent.filter(c => c.content_key === `healing_mental_title_${lang}`).map(renderContentEditor)}
+                        {healingContent.filter(c => c.content_key === `healing_mental_text_${lang}`).map(renderContentEditor)}
+                      </div>
+                    </div>
+
+                    {/* Spiritual Section */}
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground mb-3">Spiritual Transformation</h3>
+                      <div className="space-y-4">
+                        {healingContent.filter(c => c.content_key === `healing_spiritual_title_${lang}`).map(renderContentEditor)}
+                        {healingContent.filter(c => c.content_key === `healing_spiritual_text_${lang}`).map(renderContentEditor)}
+                      </div>
+                    </div>
+                  </TabsContent>
+                ))}
+              </Tabs>
             </Card>
           </TabsContent>
 
