@@ -7,6 +7,34 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Healing packages with Stripe price IDs
+const HEALING_PRICES = {
+  "7_day": {
+    price_id: "price_1ScQ1kAPsnbrivP0WyM3D226",
+    name: "7-Day Sacred Healing",
+    amount: 97,
+    days: 7,
+  },
+  "14_day": {
+    price_id: "price_1ScQ1zAPsnbrivP0okHYqlxq",
+    name: "14-Day Sacred Healing",
+    amount: 147,
+    days: 14,
+  },
+  "30_day": {
+    price_id: "price_1ScQ2EAPsnbrivP0m97lDHTo",
+    name: "30-Day Sacred Healing",
+    amount: 197,
+    days: 30,
+  },
+  "subscription": {
+    price_id: "price_1ScQ2WAPsnbrivP0LvXzZVDG",
+    name: "Sacred Healing Monthly Subscription",
+    amount: 147,
+    days: 30,
+  },
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -27,6 +55,11 @@ serve(async (req) => {
     const { planType } = await req.json();
     console.log("[HEALING-CHECKOUT] Plan type:", planType);
 
+    const planConfig = HEALING_PRICES[planType as keyof typeof HEALING_PRICES];
+    if (!planConfig) {
+      throw new Error(`Invalid plan type: ${planType}`);
+    }
+
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
     });
@@ -40,74 +73,61 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "https://localhost:3000";
 
-    if (planType === "one_time") {
-      // One-time payment of $197 for 30 days
+    if (planType === "subscription") {
+      // Monthly subscription
       const session = await stripe.checkout.sessions.create({
         customer: customerId,
         customer_email: customerId ? undefined : user.email,
         line_items: [
           {
-            price_data: {
-              currency: "usd",
-              product_data: {
-                name: "30-Day Healing Journey",
-                description: "Full access to the Sacred Healing Space for 30 days",
-              },
-              unit_amount: 19700, // $197.00
-            },
+            price: planConfig.price_id,
             quantity: 1,
           },
         ],
-        mode: "payment",
-        success_url: `${origin}/healing?success=true&type=one_time`,
+        mode: "subscription",
+        success_url: `${origin}/healing?success=true&type=${planType}`,
         cancel_url: `${origin}/healing?canceled=true`,
         metadata: {
           user_id: user.id,
-          plan_type: "one_time",
+          plan_type: planType,
+          days: planConfig.days.toString(),
         },
       });
+
+      console.log("[HEALING-CHECKOUT] Created subscription session:", session.id);
 
       return new Response(JSON.stringify({ url: session.url }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
-    } else if (planType === "subscription") {
-      // Monthly subscription of $50/month (min 3 months enforced in UI)
+    } else {
+      // One-time payment
       const session = await stripe.checkout.sessions.create({
         customer: customerId,
         customer_email: customerId ? undefined : user.email,
         line_items: [
           {
-            price_data: {
-              currency: "usd",
-              product_data: {
-                name: "Monthly Healing Subscription",
-                description: "Monthly access to the Sacred Healing Space ($50/month, minimum 3 months)",
-              },
-              unit_amount: 5000, // $50.00
-              recurring: {
-                interval: "month",
-              },
-            },
+            price: planConfig.price_id,
             quantity: 1,
           },
         ],
-        mode: "subscription",
-        success_url: `${origin}/healing?success=true&type=subscription`,
+        mode: "payment",
+        success_url: `${origin}/healing?success=true&type=${planType}`,
         cancel_url: `${origin}/healing?canceled=true`,
         metadata: {
           user_id: user.id,
-          plan_type: "subscription",
+          plan_type: planType,
+          days: planConfig.days.toString(),
         },
       });
+
+      console.log("[HEALING-CHECKOUT] Created payment session:", session.id);
 
       return new Response(JSON.stringify({ url: session.url }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
     }
-
-    throw new Error("Invalid plan type");
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";
     console.error("[HEALING-CHECKOUT] Error:", message);
