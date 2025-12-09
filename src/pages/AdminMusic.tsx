@@ -17,7 +17,22 @@ interface MusicTrack {
   purchase_count: number;
 }
 
-const genres = ['meditation', 'healing', 'gym', 'yoga', 'run', 'mindpower', 'instrumentals', 'beats'];
+const GENRES = ['beats', 'meditation', 'mystic', 'reggae', 'hip-hop', 'reggaeton', 'indian', 'shamanic'];
+
+// Helper functions for duration conversion
+const parseDuration = (timeStr: string): number => {
+  const parts = timeStr.split(':').map(p => parseInt(p) || 0);
+  if (parts.length === 2) {
+    return parts[0] * 60 + parts[1];
+  }
+  return 0;
+};
+
+const formatDuration = (seconds: number): string => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
 
 const AdminMusic: React.FC = () => {
   const navigate = useNavigate();
@@ -29,8 +44,8 @@ const AdminMusic: React.FC = () => {
   const [title, setTitle] = useState('');
   const [artist, setArtist] = useState('Sacred Healing');
   const [description, setDescription] = useState('');
-  const [genre, setGenre] = useState('meditation');
-  const [duration, setDuration] = useState('180');
+  const [genre, setGenre] = useState('beats');
+  const [durationInput, setDurationInput] = useState('3:00');
   const [priceUsd, setPriceUsd] = useState('2.99');
   const [bpm, setBpm] = useState('');
   const [shcReward, setShcReward] = useState('10');
@@ -118,7 +133,7 @@ const AdminMusic: React.FC = () => {
           artist,
           description: description || null,
           genre,
-          duration_seconds: parseInt(duration),
+          duration_seconds: parseDuration(durationInput),
           preview_url: previewUrl,
           full_audio_url: fullUrl,
           price_usd: parseFloat(priceUsd),
@@ -137,8 +152,8 @@ const AdminMusic: React.FC = () => {
       setTitle('');
       setArtist('Sacred Healing');
       setDescription('');
-      setGenre('meditation');
-      setDuration('180');
+      setGenre('beats');
+      setDurationInput('3:00');
       setPriceUsd('2.99');
       setBpm('');
       setShcReward('10');
@@ -234,19 +249,18 @@ const AdminMusic: React.FC = () => {
                   onChange={(e) => setGenre(e.target.value)}
                   className="w-full h-10 px-3 rounded-md bg-muted/50 border border-border text-foreground"
                 >
-                  {genres.map(g => (
-                    <option key={g} value={g}>{g.charAt(0).toUpperCase() + g.slice(1)}</option>
+                  {GENRES.map(g => (
+                    <option key={g} value={g}>{g.charAt(0).toUpperCase() + g.slice(1).replace('-', ' ')}</option>
                   ))}
                 </select>
               </div>
               
               <div>
-                <label className="block text-sm text-muted-foreground mb-1">Duration (seconds)</label>
+                <label className="block text-sm text-muted-foreground mb-1">Duration (mm:ss)</label>
                 <Input
-                  type="number"
-                  value={duration}
-                  onChange={(e) => setDuration(e.target.value)}
-                  min="30"
+                  value={durationInput}
+                  onChange={(e) => setDurationInput(e.target.value)}
+                  placeholder="3:42"
                   className="bg-muted/50"
                 />
               </div>
@@ -364,10 +378,10 @@ const AdminMusic: React.FC = () => {
                   <div className="flex-1">
                     <h3 className="font-medium text-foreground">{track.title}</h3>
                     <p className="text-sm text-muted-foreground">
-                      {track.artist} • {track.genre} • {Math.floor(track.duration_seconds / 60)}:{(track.duration_seconds % 60).toString().padStart(2, '0')}
+                      {track.artist} • {track.genre} • {formatDuration(track.duration_seconds)}
                     </p>
                     <p className="text-xs text-accent">
-                      ${track.price_usd} • {track.purchase_count} sales
+                      ${track.price_usd} • {track.purchase_count} sales • {(track as any).play_count || 0} plays
                     </p>
                   </div>
                   <Button

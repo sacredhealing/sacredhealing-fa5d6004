@@ -19,7 +19,7 @@ interface PlayHistory {
   play_count: number;
 }
 
-const GENRES = ['all', 'meditation', 'healing', 'gym', 'yoga', 'run', 'mindpower', 'instrumentals', 'beats'];
+const GENRES = ['all', 'beats', 'meditation', 'mystic', 'reggae', 'hip-hop', 'reggaeton', 'indian', 'shamanic'];
 
 const Music: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -213,7 +213,7 @@ const Music: React.FC = () => {
         <>
           {/* Genres */}
           <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide">
-            {GENRES.map(g => (
+          {GENRES.map(g => (
               <button
                 key={g}
                 onClick={() => setSelectedGenre(g)}
@@ -223,7 +223,7 @@ const Music: React.FC = () => {
                     : 'bg-muted/50 text-muted-foreground hover:bg-muted'
                 }`}
               >
-                {g.charAt(0).toUpperCase() + g.slice(1)}
+                {g === 'all' ? 'All' : g.charAt(0).toUpperCase() + g.slice(1).replace('-', ' ')}
               </button>
             ))}
           </div>
