@@ -99,6 +99,13 @@ const adminSections = [
     href: '/admin/private-sessions',
     color: 'text-indigo-500',
   },
+  {
+    title: 'Transformation Program',
+    description: 'Manage program details, variations, and pricing',
+    icon: Sparkles,
+    href: '/admin/transformation',
+    color: 'text-amber-500',
+  },
 ];
 
 const AdminDashboard: React.FC = () => {

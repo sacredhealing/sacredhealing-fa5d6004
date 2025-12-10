@@ -1992,9 +1992,12 @@ export type Database = {
           duration_months: number
           features: Json
           id: string
+          installment_count: number | null
+          installment_price_eur: number | null
           is_active: boolean
           modules: Json
           name: string
+          practitioner: string | null
           price_eur: number
         }
         Insert: {
@@ -2003,9 +2006,12 @@ export type Database = {
           duration_months?: number
           features?: Json
           id?: string
+          installment_count?: number | null
+          installment_price_eur?: number | null
           is_active?: boolean
           modules?: Json
           name: string
+          practitioner?: string | null
           price_eur?: number
         }
         Update: {
@@ -2014,12 +2020,71 @@ export type Database = {
           duration_months?: number
           features?: Json
           id?: string
+          installment_count?: number | null
+          installment_price_eur?: number | null
           is_active?: boolean
           modules?: Json
           name?: string
+          practitioner?: string | null
           price_eur?: number
         }
         Relationships: []
+      }
+      transformation_variations: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration_months: number | null
+          features: Json | null
+          id: string
+          installment_count: number | null
+          installment_price_eur: number | null
+          is_active: boolean | null
+          name: string
+          order_index: number | null
+          price_eur: number
+          program_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration_months?: number | null
+          features?: Json | null
+          id?: string
+          installment_count?: number | null
+          installment_price_eur?: number | null
+          is_active?: boolean | null
+          name: string
+          order_index?: number | null
+          price_eur?: number
+          program_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration_months?: number | null
+          features?: Json | null
+          id?: string
+          installment_count?: number | null
+          installment_price_eur?: number | null
+          is_active?: boolean | null
+          name?: string
+          order_index?: number | null
+          price_eur?: number
+          program_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transformation_variations_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "transformation_programs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_balances: {
         Row: {

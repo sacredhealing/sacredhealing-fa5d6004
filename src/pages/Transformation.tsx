@@ -10,14 +10,16 @@ import {
   Award, 
   Users, 
   Check,
-  ChevronDown,
-  ChevronUp,
-  Calendar
+  Calendar,
+  CreditCard,
+  Wallet
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -37,16 +39,29 @@ interface TransformationProgram {
   duration_months: number;
   modules: Module[];
   features: string[];
+  installment_price_eur: number;
+  installment_count: number;
+  practitioner: string;
 }
 
-const featureIcons: Record<string, React.ElementType> = {
-  'zoom': Video,
-  'whatsapp': MessageCircle,
-  'healing': Heart,
-  'materials': BookOpen,
-  'certificate': Award,
-  'community': Users,
-};
+interface Variation {
+  id: string;
+  name: string;
+  description: string;
+  features: string[];
+  price_eur: number;
+  installment_price_eur: number;
+  installment_count: number;
+  duration_months: number;
+}
+
+interface Practitioner {
+  id: string;
+  name: string;
+  slug: string;
+  subtitle: string | null;
+  image_url: string | null;
+}
 
 const getFeatureIcon = (feature: string): React.ElementType => {
   const lower = feature.toLowerCase();
@@ -64,39 +79,114 @@ const Transformation = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [program, setProgram] = useState<TransformationProgram | null>(null);
+  const [variations, setVariations] = useState<Variation[]>([]);
+  const [practitioners, setPractitioners] = useState<Practitioner[]>([]);
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState(false);
+  
+  // Selection states
+  const [selectedVariation, setSelectedVariation] = useState<Variation | null>(null);
+  const [selectedPractitioner, setSelectedPractitioner] = useState<Practitioner | null>(null);
+  const [paymentType, setPaymentType] = useState<'full' | 'installment'>('full');
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
 
   useEffect(() => {
-    fetchProgram();
+    fetchData();
   }, []);
 
-  const fetchProgram = async () => {
-    const { data, error } = await supabase
+  const fetchData = async () => {
+    // Fetch program
+    const { data: programData } = await supabase
       .from('transformation_programs')
       .select('*')
       .single();
 
-    if (data) {
+    if (programData) {
       setProgram({
-        ...data,
-        modules: (data.modules as unknown) as Module[],
-        features: (data.features as unknown) as string[],
+        ...programData,
+        modules: (programData.modules as unknown) as Module[],
+        features: (programData.features as unknown) as string[],
+        installment_price_eur: programData.installment_price_eur || 0,
+        installment_count: programData.installment_count || 3,
+        practitioner: programData.practitioner || 'both'
       });
     }
+
+    // Fetch variations
+    const { data: variationsData } = await supabase
+      .from('transformation_variations')
+      .select('*')
+      .eq('is_active', true)
+      .order('order_index', { ascending: true });
+
+    if (variationsData) {
+      setVariations(variationsData.map(v => ({
+        ...v,
+        features: v.features as string[]
+      })));
+    }
+
+    // Fetch practitioners
+    const { data: practitionerData } = await supabase
+      .from('practitioners')
+      .select('*');
+
+    if (practitionerData) {
+      setPractitioners(practitionerData);
+    }
+
     setLoading(false);
   };
 
-  const handleEnroll = async () => {
+  const getCurrentPrice = () => {
+    const source = selectedVariation || program;
+    if (!source) return 0;
+    return paymentType === 'full' ? source.price_eur : source.installment_price_eur;
+  };
+
+  const getInstallmentCount = () => {
+    const source = selectedVariation || program;
+    return source?.installment_count || 3;
+  };
+
+  const getTotalInstallmentPrice = () => {
+    const source = selectedVariation || program;
+    if (!source) return 0;
+    return source.installment_price_eur * source.installment_count;
+  };
+
+  const handleEnroll = () => {
     if (!user) {
       navigate('/auth');
       return;
     }
+    
+    // Check if practitioner selection is needed
+    if (program?.practitioner === 'both' && !selectedPractitioner) {
+      toast.error('Please select a practitioner first');
+      return;
+    }
+    
+    setShowPaymentDialog(true);
+  };
 
+  const processPayment = async (method: 'card' | 'crypto') => {
     setEnrolling(true);
-    // TODO: Implement Stripe checkout for €2497
-    toast.info('Payment integration coming soon!');
+    
+    try {
+      if (method === 'card') {
+        // TODO: Create Stripe checkout with proper price ID
+        toast.info('Stripe checkout coming soon!');
+      } else {
+        // Crypto payment instructions
+        toast.info('Please send payment to: BAfPGN6DUAKYVwmmGkhMQxJyDv2cHEHRnfcbzy1GNy5j');
+      }
+    } catch (error) {
+      toast.error('Payment failed. Please try again.');
+    }
+    
     setEnrolling(false);
+    setShowPaymentDialog(false);
   };
 
   if (loading) {
@@ -121,6 +211,9 @@ const Transformation = () => {
     );
   }
 
+  const currentSource = selectedVariation || program;
+  const showPractitionerSelection = program.practitioner === 'both';
+
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Hero Section */}
@@ -135,7 +228,7 @@ const Transformation = () => {
           <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
             <span className="flex items-center gap-1">
               <Calendar className="w-4 h-4" />
-              {program.duration_months} months
+              {currentSource.duration_months} months
             </span>
             <span className="flex items-center gap-1">
               <BookOpen className="w-4 h-4" />
@@ -145,13 +238,119 @@ const Transformation = () => {
         </div>
       </div>
 
-      {/* Price Card */}
-      <div className="px-4 -mt-4 relative z-10">
+      {/* Variations Banner */}
+      {variations.length > 0 && (
+        <div className="px-4 py-4">
+          <h2 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">Choose Your Package</h2>
+          <div className="flex gap-3 overflow-x-auto pb-2">
+            <Card 
+              className={`p-4 min-w-[160px] cursor-pointer transition-all ${
+                !selectedVariation ? 'border-amber-500 bg-amber-500/10' : 'border-border hover:border-amber-500/50'
+              }`}
+              onClick={() => setSelectedVariation(null)}
+            >
+              <h3 className="font-semibold text-foreground text-sm">Standard</h3>
+              <p className="text-amber-500 font-bold mt-1">€{program.price_eur}</p>
+              <p className="text-xs text-muted-foreground mt-1">{program.duration_months} months</p>
+            </Card>
+            {variations.map((v) => (
+              <Card 
+                key={v.id}
+                className={`p-4 min-w-[160px] cursor-pointer transition-all ${
+                  selectedVariation?.id === v.id ? 'border-amber-500 bg-amber-500/10' : 'border-border hover:border-amber-500/50'
+                }`}
+                onClick={() => setSelectedVariation(v)}
+              >
+                <h3 className="font-semibold text-foreground text-sm">{v.name}</h3>
+                <p className="text-amber-500 font-bold mt-1">€{v.price_eur}</p>
+                <p className="text-xs text-muted-foreground mt-1">{v.duration_months} months</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Practitioner Selection */}
+      {showPractitionerSelection && practitioners.length > 0 && (
+        <div className="px-4 py-4">
+          <h2 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">Choose Your Guide</h2>
+          <div className="grid grid-cols-2 gap-3">
+            {practitioners.map((p) => (
+              <Card 
+                key={p.id}
+                className={`p-4 cursor-pointer transition-all text-center ${
+                  selectedPractitioner?.id === p.id ? 'border-amber-500 bg-amber-500/10' : 'border-border hover:border-amber-500/50'
+                }`}
+                onClick={() => setSelectedPractitioner(p)}
+              >
+                <Avatar className="w-16 h-16 mx-auto mb-2 border-2 border-amber-500/30">
+                  {p.image_url ? (
+                    <AvatarImage src={p.image_url} alt={p.name} />
+                  ) : (
+                    <AvatarFallback className="bg-amber-500/20 text-amber-500">
+                      {p.name.charAt(0)}
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+                <h3 className="font-semibold text-foreground">{p.name}</h3>
+                {p.subtitle && (
+                  <p className="text-xs text-muted-foreground mt-1">{p.subtitle}</p>
+                )}
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Price Card with Payment Options */}
+      <div className="px-4 py-4">
         <Card className="p-6 bg-gradient-to-br from-amber-500/10 to-purple-500/10 border-amber-500/30">
-          <div className="text-center">
+          <div className="text-center mb-4">
             <p className="text-sm text-muted-foreground mb-1">Investment in Your Transformation</p>
-            <div className="text-4xl font-bold text-foreground mb-2">€{program.price_eur.toLocaleString()}</div>
-            <p className="text-sm text-muted-foreground mb-4">One-time payment • Lifetime access to materials</p>
+            
+            {/* Payment Type Toggle */}
+            {currentSource.installment_price_eur > 0 && (
+              <div className="flex gap-2 justify-center mb-4">
+                <Button
+                  variant={paymentType === 'full' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setPaymentType('full')}
+                  className={paymentType === 'full' ? 'bg-amber-500 hover:bg-amber-600' : ''}
+                >
+                  Full Payment
+                </Button>
+                <Button
+                  variant={paymentType === 'installment' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setPaymentType('installment')}
+                  className={paymentType === 'installment' ? 'bg-amber-500 hover:bg-amber-600' : ''}
+                >
+                  {getInstallmentCount()} Installments
+                </Button>
+              </div>
+            )}
+            
+            {paymentType === 'full' ? (
+              <>
+                <div className="text-4xl font-bold text-foreground mb-2">€{currentSource.price_eur.toLocaleString()}</div>
+                <p className="text-sm text-muted-foreground mb-4">One-time payment • Lifetime access to materials</p>
+              </>
+            ) : (
+              <>
+                <div className="text-4xl font-bold text-foreground mb-2">
+                  €{currentSource.installment_price_eur.toLocaleString()}<span className="text-lg">/month</span>
+                </div>
+                <p className="text-sm text-muted-foreground mb-2">
+                  {getInstallmentCount()} payments • Total: €{getTotalInstallmentPrice().toLocaleString()}
+                </p>
+                {getTotalInstallmentPrice() > currentSource.price_eur && (
+                  <p className="text-xs text-amber-500 mb-4">
+                    Save €{(getTotalInstallmentPrice() - currentSource.price_eur).toLocaleString()} with full payment!
+                  </p>
+                )}
+              </>
+            )}
+            
             <Button 
               onClick={handleEnroll}
               disabled={enrolling}
@@ -168,7 +367,7 @@ const Transformation = () => {
       <div className="px-4 py-6">
         <h2 className="text-lg font-bold text-foreground mb-4">What's Included</h2>
         <div className="grid grid-cols-2 gap-3">
-          {program.features.map((feature, idx) => {
+          {(selectedVariation?.features || program.features).map((feature, idx) => {
             const Icon = getFeatureIcon(feature);
             return (
               <Card key={idx} className="p-4 flex items-start gap-3">
@@ -219,7 +418,7 @@ const Transformation = () => {
             <div>
               <h3 className="font-semibold text-foreground mb-2">Daily WhatsApp Connection</h3>
               <p className="text-sm text-muted-foreground">
-                Stay connected with your practitioner every day. Get guidance, share your experiences, 
+                Stay connected with {selectedPractitioner?.name || 'your practitioner'} every day. Get guidance, share your experiences, 
                 and receive healing support whenever you need it throughout your transformation journey.
               </p>
             </div>
@@ -249,9 +448,56 @@ const Transformation = () => {
           className="w-full bg-amber-500 hover:bg-amber-600 text-white shadow-lg"
           size="lg"
         >
-          {enrolling ? 'Processing...' : `Enroll Now • €${program.price_eur.toLocaleString()}`}
+          {enrolling ? 'Processing...' : paymentType === 'full' 
+            ? `Enroll Now • €${currentSource.price_eur.toLocaleString()}`
+            : `Enroll Now • €${currentSource.installment_price_eur}/mo`
+          }
         </Button>
       </div>
+
+      {/* Payment Method Dialog */}
+      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Choose Payment Method</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div className="text-center mb-4">
+              <p className="text-sm text-muted-foreground">
+                {selectedVariation?.name || 'Standard Package'}
+                {selectedPractitioner && ` with ${selectedPractitioner.name}`}
+              </p>
+              <p className="text-2xl font-bold text-foreground">
+                {paymentType === 'full' 
+                  ? `€${currentSource.price_eur.toLocaleString()}`
+                  : `€${currentSource.installment_price_eur}/mo × ${getInstallmentCount()}`
+                }
+              </p>
+            </div>
+            
+            <Button 
+              onClick={() => processPayment('card')}
+              disabled={enrolling}
+              className="w-full"
+              size="lg"
+            >
+              <CreditCard className="w-5 h-5 mr-2" />
+              Pay with Card
+            </Button>
+            
+            <Button 
+              onClick={() => processPayment('crypto')}
+              disabled={enrolling}
+              variant="outline"
+              className="w-full"
+              size="lg"
+            >
+              <Wallet className="w-5 h-5 mr-2" />
+              Pay with Crypto
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
