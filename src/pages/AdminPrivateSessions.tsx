@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -20,6 +20,7 @@ interface SessionType {
   image_url: string | null;
   order_index: number;
   is_active: boolean;
+  practitioner: string;
 }
 
 interface SessionPackage {
@@ -49,6 +50,7 @@ const AdminPrivateSessions: React.FC = () => {
     image_url: '',
     order_index: 0,
     is_active: true,
+    practitioner: 'both',
   });
 
   const [packageForm, setPackageForm] = useState({
@@ -92,6 +94,7 @@ const AdminPrivateSessions: React.FC = () => {
         image_url: type.image_url || '',
         order_index: type.order_index,
         is_active: type.is_active,
+        practitioner: type.practitioner || 'both',
       });
     } else {
       setEditingType(null);
@@ -103,6 +106,7 @@ const AdminPrivateSessions: React.FC = () => {
         image_url: '',
         order_index: sessionTypes.length + 1,
         is_active: true,
+        practitioner: 'both',
       });
     }
     setTypeDialogOpen(true);
@@ -203,6 +207,12 @@ const AdminPrivateSessions: React.FC = () => {
     }
   };
 
+  const getPractitionerLabel = (p: string) => {
+    if (p === 'adam') return 'Adam only';
+    if (p === 'laila') return 'Laila only';
+    return 'Both';
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -241,7 +251,7 @@ const AdminPrivateSessions: React.FC = () => {
                 <div className="flex-1">
                   <div className="font-medium">{type.name}</div>
                   <div className="text-sm text-muted-foreground">
-                    {type.category} • {type.is_active ? 'Active' : 'Inactive'}
+                    {type.category} • {type.is_active ? 'Active' : 'Inactive'} • {getPractitionerLabel(type.practitioner)}
                   </div>
                   {type.calendly_url && (
                     <a
@@ -334,21 +344,39 @@ const AdminPrivateSessions: React.FC = () => {
                   placeholder="Describe this session type"
                 />
               </div>
-              <div>
-                <Label>Category</Label>
-                <Select
-                  value={typeForm.category}
-                  onValueChange={(v) => setTypeForm({ ...typeForm, category: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="spiritual">Spiritual</SelectItem>
-                    <SelectItem value="healing">Healing</SelectItem>
-                    <SelectItem value="men">Men's Work</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Category</Label>
+                  <Select
+                    value={typeForm.category}
+                    onValueChange={(v) => setTypeForm({ ...typeForm, category: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="spiritual">Spiritual</SelectItem>
+                      <SelectItem value="healing">Healing</SelectItem>
+                      <SelectItem value="men">Men's Work</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Practitioner</Label>
+                  <Select
+                    value={typeForm.practitioner}
+                    onValueChange={(v) => setTypeForm({ ...typeForm, practitioner: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="both">Both</SelectItem>
+                      <SelectItem value="adam">Adam only</SelectItem>
+                      <SelectItem value="laila">Laila only</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div>
                 <Label>Calendly URL (optional)</Label>
