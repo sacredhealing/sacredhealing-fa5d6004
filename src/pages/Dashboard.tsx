@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Play, BookOpen, Gift, Wallet, Flame, Sparkles, DollarSign, Youtube, ShoppingBag, Crown, Music, Heart, Trophy, Star, Calendar } from 'lucide-react';
+import { Play, BookOpen, Gift, Wallet, Flame, Sparkles, DollarSign, Youtube, ShoppingBag, Crown, Music, Heart, Trophy, Star, Calendar, Headphones } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LotusIcon } from '@/components/icons/LotusIcon';
 import { SocialShare } from '@/components/SocialShare';
@@ -266,6 +266,20 @@ const Dashboard: React.FC = () => {
                 <div>
                   <h3 className="font-semibold text-foreground text-sm">{t('healing.bookPrivateSession', 'Private Sessions')}</h3>
                   <p className="text-xs text-muted-foreground">1-on-1 with Adam or Laila</p>
+                </div>
+              </div>
+            </Card>
+          </Link>
+
+          <Link to="/podcast">
+            <Card className="p-4 bg-gradient-to-br from-emerald-500/20 to-green-500/10 border-emerald-500/30 hover:border-emerald-500/50 transition-all">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-emerald-500/20">
+                  <Headphones className="w-5 h-5 text-emerald-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground text-sm">Podcast</h3>
+                  <p className="text-xs text-muted-foreground">280K+ streams on Spotify</p>
                 </div>
               </div>
             </Card>
