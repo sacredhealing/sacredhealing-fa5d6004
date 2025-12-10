@@ -47,13 +47,13 @@ const Podcast: React.FC = () => {
           </p>
         </Card>
 
-        {/* Spotify Embed */}
-        <Card className="p-4 overflow-hidden">
+        {/* Spotify Embed - Full Episode List */}
+        <Card className="p-0 overflow-hidden border-none bg-transparent">
           <iframe 
             style={{ borderRadius: '12px' }}
             src="https://open.spotify.com/embed/show/2nhPr6e1a4dhivvIgMcceI?utm_source=generator&theme=0"
             width="100%"
-            height="352"
+            height="800"
             frameBorder="0"
             allowFullScreen
             allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
