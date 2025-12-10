@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Calendar, User, Sparkles, Heart, Shield, Users, CreditCard, Wallet, ExternalLink, ArrowLeft } from 'lucide-react';
+import { Calendar, User, Sparkles, Heart, Shield, CreditCard, Wallet, ExternalLink, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -33,6 +33,15 @@ interface SessionPackage {
   price_eur: number;
 }
 
+interface Practitioner {
+  id: string;
+  name: string;
+  slug: string;
+  subtitle: string | null;
+  image_url: string | null;
+  description: string | null;
+}
+
 const categoryIcons: Record<string, React.ReactNode> = {
   spiritual: <Sparkles className="w-5 h-5" />,
   healing: <Heart className="w-5 h-5" />,
@@ -47,6 +56,7 @@ const PrivateSessions: React.FC = () => {
   
   const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
   const [packages, setPackages] = useState<SessionPackage[]>([]);
+  const [practitioners, setPractitioners] = useState<Practitioner[]>([]);
   const [selectedPractitioner, setSelectedPractitioner] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<string>('');
   const [selectedPackage, setSelectedPackage] = useState<string>('');
@@ -55,6 +65,12 @@ const PrivateSessions: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+
+  // Fallback images
+  const fallbackImages: Record<string, string> = {
+    adam: adamDrum,
+    laila: lailaPortrait,
+  };
 
   useEffect(() => {
     fetchData();
@@ -85,19 +101,24 @@ const PrivateSessions: React.FC = () => {
 
   const fetchData = async () => {
     try {
-      const [typesRes, packagesRes] = await Promise.all([
+      const [typesRes, packagesRes, practitionersRes] = await Promise.all([
         supabase.from('session_types').select('*').eq('is_active', true).order('order_index'),
-        supabase.from('session_packages').select('*').eq('is_active', true).order('order_index')
+        supabase.from('session_packages').select('*').eq('is_active', true).order('order_index'),
+        supabase.from('practitioners').select('*')
       ]);
 
       if (typesRes.data) setSessionTypes(typesRes.data);
       if (packagesRes.data) setPackages(packagesRes.data);
+      if (practitionersRes.data) setPractitioners(practitionersRes.data);
     } catch (error) {
       console.error('Error fetching session data:', error);
     } finally {
       setIsLoading(false);
     }
   };
+
+  const getPractitioner = (slug: string) => practitioners.find(p => p.slug === slug);
+  const currentPractitioner = selectedPractitioner ? getPractitioner(selectedPractitioner) : null;
 
   const filteredSessionTypes = sessionTypes.filter(type => 
     type.practitioner === 'both' || type.practitioner === selectedPractitioner
@@ -154,13 +175,11 @@ const PrivateSessions: React.FC = () => {
       `Send €${selectedPackageData?.price_eur} worth of SOL to: BAfPGN6DUAKYVwmmGkhMQxJyDv2cHEHRnfcbzy1GNy5j and email sacredhealingvibe@gmail.com with your transaction ID and session details.`
     );
     
-    // Copy wallet address
     navigator.clipboard.writeText('BAfPGN6DUAKYVwmmGkhMQxJyDv2cHEHRnfcbzy1GNy5j');
     toast.success('Wallet address copied!');
     
     setPaymentDialogOpen(false);
     
-    // Open Calendly if available
     if (selectedTypeData?.calendly_url) {
       setTimeout(() => {
         window.open(selectedTypeData.calendly_url!, '_blank');
@@ -200,65 +219,43 @@ const PrivateSessions: React.FC = () => {
           </p>
         </header>
 
-        <div className="grid grid-cols-1 gap-6">
-          {/* Adam Card */}
-          <Card 
-            className="overflow-hidden cursor-pointer hover:border-primary transition-all animate-slide-up"
-            onClick={() => setSelectedPractitioner('adam')}
-          >
-            <div className="aspect-[16/9] overflow-hidden">
-              <img 
-                src={adamDrum} 
-                alt="Adam" 
-                className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-              />
-            </div>
-            <CardContent className="p-6">
-              <h2 className="text-2xl font-heading font-bold mb-2">Adam</h2>
-              <p className="text-muted-foreground text-sm mb-4">
-                Spiritual Guide & Energy Practitioner
-              </p>
-              <p className="text-foreground/80">
-                Supporting healing through vibrational medicine and meditation, helping individuals realign with life purpose and inner wisdom.
-              </p>
-              <Button className="w-full mt-4" variant="outline">
-                View Adam's Sessions
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Laila Card */}
-          <Card 
-            className="overflow-hidden cursor-pointer hover:border-primary transition-all animate-slide-up"
-            style={{ animationDelay: '0.1s' }}
-            onClick={() => setSelectedPractitioner('laila')}
-          >
-            <div className="aspect-[16/9] overflow-hidden">
-              <img 
-                src={lailaPortrait} 
-                alt="Laila" 
-                className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-              />
-            </div>
-            <CardContent className="p-6">
-              <h2 className="text-2xl font-heading font-bold mb-2">Laila</h2>
-              <p className="text-muted-foreground text-sm mb-4">
-                Yogi & Sound Healer
-              </p>
-              <p className="text-foreground/80">
-                Channeling divine energy through meditation, mantra, and transformational breathwork, empowering individuals to awaken their intuition.
-              </p>
-              <Button className="w-full mt-4" variant="outline">
-                View Laila's Sessions
-              </Button>
-            </CardContent>
-          </Card>
+        <div className="space-y-4">
+          {['adam', 'laila'].map((slug) => {
+            const practitioner = getPractitioner(slug);
+            const imageUrl = practitioner?.image_url || fallbackImages[slug];
+            
+            return (
+              <div
+                key={slug}
+                className="flex items-center gap-4 p-4 rounded-2xl bg-card border border-border hover:border-primary cursor-pointer transition-all animate-slide-up"
+                onClick={() => setSelectedPractitioner(slug)}
+              >
+                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-primary shrink-0">
+                  <img 
+                    src={imageUrl} 
+                    alt={practitioner?.name || slug} 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-xl font-heading font-bold">
+                    Sessions with {practitioner?.name || slug}
+                  </h2>
+                  <p className="text-muted-foreground text-sm">
+                    {practitioner?.subtitle || (slug === 'adam' ? 'Spiritual Guide & Energy Practitioner' : 'Yogi & Sound Healer')}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     );
   }
 
   // Step 2: Choose Session Type & Package
+  const practitionerImage = currentPractitioner?.image_url || fallbackImages[selectedPractitioner];
+
   return (
     <div className="min-h-screen px-4 py-6 pb-32">
       {/* Header with Back Button */}
@@ -277,21 +274,21 @@ const PrivateSessions: React.FC = () => {
           Choose different guide
         </Button>
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-primary">
+          <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-primary shrink-0">
             <img 
-              src={selectedPractitioner === 'adam' ? adamDrum : lailaPortrait} 
-              alt={selectedPractitioner === 'adam' ? 'Adam' : 'Laila'}
+              src={practitionerImage} 
+              alt={currentPractitioner?.name || selectedPractitioner}
               className="w-full h-full object-cover"
             />
           </div>
           <div>
             <h1 className="text-2xl font-heading font-bold text-foreground">
-              Sessions with {selectedPractitioner === 'adam' ? 'Adam' : 'Laila'}
+              Sessions with {currentPractitioner?.name || selectedPractitioner}
             </h1>
             <p className="text-muted-foreground text-sm">
-              {selectedPractitioner === 'adam' 
+              {currentPractitioner?.subtitle || (selectedPractitioner === 'adam' 
                 ? 'Spiritual Guide & Energy Practitioner'
-                : 'Yogi & Sound Healer'}
+                : 'Yogi & Sound Healer')}
             </p>
           </div>
         </div>
