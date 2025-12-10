@@ -92,6 +92,13 @@ const adminSections = [
     href: '/admin/shop',
     color: 'text-pink-500',
   },
+  {
+    title: 'Private Sessions',
+    description: 'Manage session types, packages, and Calendly links',
+    icon: Users,
+    href: '/admin/private-sessions',
+    color: 'text-indigo-500',
+  },
 ];
 
 const AdminDashboard: React.FC = () => {

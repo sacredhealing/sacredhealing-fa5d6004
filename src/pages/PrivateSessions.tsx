@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
-import { Calendar, User, Sparkles, Heart, Brain, Music, Shield, Users } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Calendar, User, Sparkles, Heart, Shield, Users, CreditCard, Wallet, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -15,14 +16,16 @@ import { toast } from 'sonner';
 interface SessionType {
   id: string;
   name: string;
-  description: string;
+  description: string | null;
   category: string;
+  calendly_url: string | null;
+  image_url: string | null;
 }
 
 interface SessionPackage {
   id: string;
   name: string;
-  description: string;
+  description: string | null;
   session_count: number;
   price_eur: number;
 }
@@ -37,6 +40,7 @@ const PrivateSessions: React.FC = () => {
   const { t } = useTranslation();
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   
   const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
   const [packages, setPackages] = useState<SessionPackage[]>([]);
@@ -47,10 +51,28 @@ const PrivateSessions: React.FC = () => {
   const [contactEmail, setContactEmail] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchData();
-  }, []);
+    
+    // Handle success redirect from Stripe
+    const success = searchParams.get('success');
+    const calendlyUrl = searchParams.get('calendly');
+    
+    if (success === 'true') {
+      toast.success('Payment successful! Redirecting to booking...');
+      if (calendlyUrl) {
+        setTimeout(() => {
+          window.open(calendlyUrl, '_blank');
+        }, 1500);
+      }
+    }
+    
+    if (searchParams.get('canceled') === 'true') {
+      toast.error('Payment was canceled');
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (user?.email) {
@@ -74,7 +96,7 @@ const PrivateSessions: React.FC = () => {
     }
   };
 
-  const handleBookSession = async () => {
+  const handleBookSession = () => {
     if (!isAuthenticated) {
       toast.error('Please sign in to book a session');
       navigate('/auth');
@@ -86,30 +108,65 @@ const PrivateSessions: React.FC = () => {
       return;
     }
 
-    setIsSubmitting(true);
+    setPaymentDialogOpen(true);
+  };
 
+  const handleStripePayment = async () => {
+    setIsSubmitting(true);
     try {
-      const { error } = await supabase.from('session_bookings').insert({
-        user_id: user!.id,
-        session_type_id: selectedType,
-        package_id: selectedPackage,
-        practitioner: selectedPractitioner,
-        notes,
-        contact_email: contactEmail,
-        status: 'pending'
+      const selectedTypeData = sessionTypes.find(t => t.id === selectedType);
+      
+      const { data, error } = await supabase.functions.invoke('create-session-checkout', {
+        body: {
+          packageId: selectedPackage,
+          sessionTypeId: selectedType,
+          practitioner: selectedPractitioner,
+          notes,
+          contactEmail,
+          calendlyUrl: selectedTypeData?.calendly_url || '',
+        },
       });
 
       if (error) throw error;
-
-      toast.success('Session booked! We will contact you shortly to schedule your session.');
-      setNotes('');
-      setSelectedType('');
-      setSelectedPackage('');
+      if (data?.url) {
+        window.location.href = data.url;
+      }
     } catch (error: any) {
-      console.error('Error booking session:', error);
-      toast.error('Failed to book session. Please try again.');
+      console.error('Error creating checkout:', error);
+      toast.error('Failed to create payment session');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleCryptoPayment = () => {
+    const selectedTypeData = sessionTypes.find(t => t.id === selectedType);
+    const selectedPackageData = packages.find(p => p.id === selectedPackage);
+    
+    toast.info(
+      `Send €${selectedPackageData?.price_eur} worth of SOL to: BAfPGN6DUAKYVwmmGkhMQxJyDv2cHEHRnfcbzy1GNy5j and email sacredhealingvibe@gmail.com with your transaction ID and session details.`
+    );
+    
+    // Copy wallet address
+    navigator.clipboard.writeText('BAfPGN6DUAKYVwmmGkhMQxJyDv2cHEHRnfcbzy1GNy5j');
+    toast.success('Wallet address copied!');
+    
+    setPaymentDialogOpen(false);
+    
+    // Open Calendly if available
+    if (selectedTypeData?.calendly_url) {
+      setTimeout(() => {
+        window.open(selectedTypeData.calendly_url!, '_blank');
+      }, 2000);
+    }
+  };
+
+  const openCalendlyDirectly = () => {
+    const selectedTypeData = sessionTypes.find(t => t.id === selectedType);
+    if (selectedTypeData?.calendly_url) {
+      window.open(selectedTypeData.calendly_url, '_blank');
+    } else {
+      toast.info('No Calendly link configured for this session type');
     }
   };
 
@@ -285,9 +342,59 @@ const PrivateSessions: React.FC = () => {
           className="w-full h-14 text-lg font-heading"
           variant="gold"
         >
-          {isSubmitting ? 'Booking...' : selectedPackageData ? `Book for €${selectedPackageData.price_eur}` : 'Select options to book'}
+          {isSubmitting ? 'Processing...' : selectedPackageData ? `Book for €${selectedPackageData.price_eur}` : 'Select options to book'}
         </Button>
       </div>
+
+      {/* Payment Dialog */}
+      <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Choose Payment Method</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Button
+              onClick={handleStripePayment}
+              disabled={isSubmitting}
+              className="w-full h-12 justify-start gap-3"
+              variant="outline"
+            >
+              <CreditCard size={20} />
+              <div className="text-left">
+                <div className="font-medium">Pay with Card</div>
+                <div className="text-xs text-muted-foreground">Secure Stripe checkout</div>
+              </div>
+            </Button>
+            
+            <Button
+              onClick={handleCryptoPayment}
+              disabled={isSubmitting}
+              className="w-full h-12 justify-start gap-3"
+              variant="outline"
+            >
+              <Wallet size={20} />
+              <div className="text-left">
+                <div className="font-medium">Pay with Crypto</div>
+                <div className="text-xs text-muted-foreground">SOL via Phantom wallet</div>
+              </div>
+            </Button>
+
+            {sessionTypes.find(t => t.id === selectedType)?.calendly_url && (
+              <Button
+                onClick={openCalendlyDirectly}
+                className="w-full h-12 justify-start gap-3"
+                variant="ghost"
+              >
+                <ExternalLink size={20} />
+                <div className="text-left">
+                  <div className="font-medium">Book on Calendly</div>
+                  <div className="text-xs text-muted-foreground">Schedule directly</div>
+                </div>
+              </Button>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

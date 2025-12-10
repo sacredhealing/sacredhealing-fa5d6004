@@ -1676,28 +1676,34 @@ export type Database = {
       }
       session_types: {
         Row: {
+          calendly_url: string | null
           category: string
           created_at: string
           description: string | null
           id: string
+          image_url: string | null
           is_active: boolean
           name: string
           order_index: number
         }
         Insert: {
+          calendly_url?: string | null
           category?: string
           created_at?: string
           description?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean
           name: string
           order_index?: number
         }
         Update: {
+          calendly_url?: string | null
           category?: string
           created_at?: string
           description?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean
           name?: string
           order_index?: number
