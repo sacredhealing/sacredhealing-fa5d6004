@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, BookOpen, Loader2, Save, Video, FileText, Music, Type, Edit2, X, Globe } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, BookOpen, Loader2, Save, Video, FileText, Music, Type, Edit2, X, Globe, Link as LinkIcon, FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -43,6 +43,15 @@ interface Lesson {
   is_preview: boolean;
 }
 
+interface Material {
+  id: string;
+  course_id: string;
+  lesson_id: string | null;
+  title: string;
+  file_url: string;
+  file_type: string;
+}
+
 const categories = ['healing', 'yoga', 'meditation', 'spiritual', 'wellness', 'mindfulness', 'abundance'];
 const difficultyLevels = ['beginner', 'intermediate', 'advanced'];
 const languages = [
@@ -58,6 +67,8 @@ const AdminCourses: React.FC = () => {
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [materials, setMaterials] = useState<Material[]>([]);
+  const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   
   const [courseForm, setCourseForm] = useState({
@@ -87,6 +98,12 @@ const AdminCourses: React.FC = () => {
     is_preview: false,
   });
 
+  const [materialForm, setMaterialForm] = useState({
+    title: '',
+    file_url: '',
+    file_type: 'text',
+  });
+
   useEffect(() => {
     fetchCourses();
   }, []);
@@ -94,8 +111,15 @@ const AdminCourses: React.FC = () => {
   useEffect(() => {
     if (selectedCourse) {
       fetchLessons(selectedCourse.id);
+      fetchMaterials(selectedCourse.id);
     }
   }, [selectedCourse]);
+
+  useEffect(() => {
+    if (selectedLesson) {
+      fetchMaterials(selectedLesson.course_id, selectedLesson.id);
+    }
+  }, [selectedLesson]);
 
   const fetchCourses = async () => {
     const { data } = await supabase
@@ -112,6 +136,20 @@ const AdminCourses: React.FC = () => {
       .eq('course_id', courseId)
       .order('order_index');
     if (data) setLessons(data);
+  };
+
+  const fetchMaterials = async (courseId: string, lessonId?: string) => {
+    let query = supabase
+      .from('course_materials')
+      .select('*')
+      .eq('course_id', courseId);
+    
+    if (lessonId) {
+      query = query.eq('lesson_id', lessonId);
+    }
+    
+    const { data } = await query.order('created_at');
+    if (data) setMaterials(data);
   };
 
   const resetCourseForm = () => {
@@ -253,6 +291,9 @@ const AdminCourses: React.FC = () => {
   const handleDeleteLesson = async (lessonId: string) => {
     if (!selectedCourse) return;
     
+    // Delete materials associated with this lesson first
+    await supabase.from('course_materials').delete().eq('lesson_id', lessonId);
+    
     const { error } = await supabase.from('lessons').delete().eq('id', lessonId);
     if (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
@@ -263,11 +304,56 @@ const AdminCourses: React.FC = () => {
         .eq('id', selectedCourse.id);
       fetchLessons(selectedCourse.id);
       fetchCourses();
+      if (selectedLesson?.id === lessonId) setSelectedLesson(null);
+    }
+  };
+
+  const handleAddMaterial = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedCourse || !selectedLesson) return;
+    setIsLoading(true);
+
+    const { error } = await supabase.from('course_materials').insert({
+      course_id: selectedCourse.id,
+      lesson_id: selectedLesson.id,
+      title: materialForm.title,
+      file_url: materialForm.file_url,
+      file_type: materialForm.file_type,
+    });
+
+    if (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Material added!' });
+      setMaterialForm({ title: '', file_url: '', file_type: 'text' });
+      fetchMaterials(selectedCourse.id, selectedLesson.id);
+    }
+    setIsLoading(false);
+  };
+
+  const handleDeleteMaterial = async (materialId: string) => {
+    const { error } = await supabase.from('course_materials').delete().eq('id', materialId);
+    if (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } else {
+      if (selectedCourse && selectedLesson) {
+        fetchMaterials(selectedCourse.id, selectedLesson.id);
+      }
     }
   };
 
   const getLanguageInfo = (code: string) => {
     return languages.find(l => l.code === code) || languages[0];
+  };
+
+  const getMaterialIcon = (type: string) => {
+    switch (type) {
+      case 'text': return <Type className="w-4 h-4 text-green-500" />;
+      case 'audio': return <Music className="w-4 h-4 text-purple-500" />;
+      case 'pdf': return <FileText className="w-4 h-4 text-red-500" />;
+      case 'youtube': return <Video className="w-4 h-4 text-blue-500" />;
+      default: return <LinkIcon className="w-4 h-4 text-muted-foreground" />;
+    }
   };
 
   return (
@@ -291,6 +377,9 @@ const AdminCourses: React.FC = () => {
             <TabsTrigger value="courses">Courses</TabsTrigger>
             <TabsTrigger value="lessons" disabled={!selectedCourse}>
               Lessons {selectedCourse && `(${selectedCourse.title})`}
+            </TabsTrigger>
+            <TabsTrigger value="materials" disabled={!selectedLesson}>
+              Materials {selectedLesson && `(${selectedLesson.title})`}
             </TabsTrigger>
           </TabsList>
 
@@ -651,14 +740,17 @@ const AdminCourses: React.FC = () => {
                     Lessons ({lessons.length})
                   </h2>
 
-                  {lessons.length === 0 ? (
+                {lessons.length === 0 ? (
                     <p className="text-muted-foreground text-center py-8">No lessons yet</p>
                   ) : (
                     <div className="space-y-2">
                       {lessons.map((lesson, index) => (
                         <div
                           key={lesson.id}
-                          className="flex items-center justify-between p-3 rounded-lg bg-muted/30"
+                          className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
+                            selectedLesson?.id === lesson.id ? 'bg-primary/10 border border-primary' : 'bg-muted/30 hover:bg-muted/50'
+                          }`}
+                          onClick={() => setSelectedLesson(lesson)}
                         >
                           <div className="flex items-center gap-3">
                             <span className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-sm font-medium">
@@ -678,10 +770,152 @@ const AdminCourses: React.FC = () => {
                               </p>
                             </div>
                           </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedLesson(lesson);
+                              }}
+                              className="text-xs"
+                            >
+                              <FolderOpen className="w-3 h-3 mr-1" />
+                              Materials
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteLesson(lesson.id);
+                              }}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+              </>
+            )}
+          </TabsContent>
+
+          {/* Materials Tab */}
+          <TabsContent value="materials" className="space-y-6">
+            {selectedLesson && selectedCourse && (
+              <>
+                {/* Add Material Form */}
+                <Card className="p-6">
+                  <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <Plus className="w-5 h-5" />
+                    Add Material to "{selectedLesson.title}"
+                  </h2>
+
+                  <form onSubmit={handleAddMaterial} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Material Title</Label>
+                        <Input
+                          value={materialForm.title}
+                          onChange={(e) => setMaterialForm({ ...materialForm, title: e.target.value })}
+                          placeholder="Lesson notes, Audio guide, etc."
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label>Material Type</Label>
+                        <select
+                          value={materialForm.file_type}
+                          onChange={(e) => setMaterialForm({ ...materialForm, file_type: e.target.value })}
+                          className="w-full h-10 px-3 rounded-md bg-background border border-input"
+                        >
+                          <option value="text">Text Content</option>
+                          <option value="audio">Audio File URL</option>
+                          <option value="pdf">PDF URL</option>
+                          <option value="youtube">YouTube Video URL</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label>
+                        {materialForm.file_type === 'text' ? 'Text Content' : 
+                         materialForm.file_type === 'youtube' ? 'YouTube Video URL' :
+                         materialForm.file_type === 'pdf' ? 'PDF URL' :
+                         'Audio File URL'}
+                      </Label>
+                      {materialForm.file_type === 'text' ? (
+                        <Textarea
+                          value={materialForm.file_url}
+                          onChange={(e) => setMaterialForm({ ...materialForm, file_url: e.target.value })}
+                          placeholder="Enter text content here..."
+                          className="min-h-[150px]"
+                          required
+                        />
+                      ) : (
+                        <Input
+                          value={materialForm.file_url}
+                          onChange={(e) => setMaterialForm({ ...materialForm, file_url: e.target.value })}
+                          placeholder={
+                            materialForm.file_type === 'youtube' ? 'https://www.youtube.com/watch?v=...' :
+                            materialForm.file_type === 'pdf' ? 'https://example.com/document.pdf' :
+                            'https://example.com/audio.mp3'
+                          }
+                          required
+                        />
+                      )}
+                    </div>
+
+                    <Button type="submit" disabled={isLoading}>
+                      {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+                      Add Material
+                    </Button>
+                  </form>
+                </Card>
+
+                {/* Materials List */}
+                <Card className="p-6">
+                  <h2 className="text-lg font-semibold mb-4">
+                    Materials for "{selectedLesson.title}" ({materials.length})
+                  </h2>
+
+                  {materials.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-8">No materials added yet</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {materials.map((material) => (
+                        <div
+                          key={material.id}
+                          className="flex items-center justify-between p-3 rounded-lg bg-muted/30"
+                        >
+                          <div className="flex items-center gap-3">
+                            {getMaterialIcon(material.file_type)}
+                            <div>
+                              <p className="font-medium text-foreground">{material.title}</p>
+                              <p className="text-xs text-muted-foreground capitalize">
+                                {material.file_type}
+                                {material.file_type !== 'text' && (
+                                  <a 
+                                    href={material.file_url} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-primary ml-2 hover:underline"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    View
+                                  </a>
+                                )}
+                              </p>
+                            </div>
+                          </div>
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleDeleteLesson(lesson.id)}
+                            onClick={() => handleDeleteMaterial(material.id)}
                             className="text-destructive hover:text-destructive"
                           >
                             <Trash2 className="w-4 h-4" />
