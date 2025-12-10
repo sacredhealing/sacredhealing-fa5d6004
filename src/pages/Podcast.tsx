@@ -3,7 +3,8 @@ import { ArrowLeft, BarChart3, Users, Headphones } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import PodcastEpisodeList from '@/components/podcast/PodcastEpisodeList';
+
+const SPOTIFY_SHOW_ID = "2nhPr6e1a4dhivvIgMcceI";
 
 const Podcast: React.FC = () => {
   return (
@@ -42,17 +43,26 @@ const Podcast: React.FC = () => {
             <Headphones className="w-6 h-6 text-turquoise" />
             <h2 className="font-semibold text-foreground">All Episodes</h2>
           </div>
-          <p className="text-sm text-muted-foreground">
-            Join Laila & Adam for deep spiritual conversations, guided meditations, and transformative teachings.
+          <p className="text-sm text-muted-foreground mb-4">
+            Join Laila & Adam for deep spiritual conversations, guided meditations, and transformative teachings. Play episodes directly below or scroll to see more.
           </p>
+          
+          {/* Spotify Embed - Plays audio inside the app with scrollable episode list */}
+          <iframe
+            src={`https://open.spotify.com/embed/show/${SPOTIFY_SHOW_ID}?utm_source=generator&theme=0`}
+            width="100%"
+            height="500"
+            frameBorder="0"
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            loading="lazy"
+            className="rounded-lg"
+            title="Sacred Healing Vibration Podcast"
+          />
         </Card>
-
-        {/* Episode List */}
-        <PodcastEpisodeList />
 
         {/* Open in Spotify */}
         <a 
-          href="https://open.spotify.com/show/2nhPr6e1a4dhivvIgMcceI?si=J074mOeaTdiZd89hAgpmKQ" 
+          href={`https://open.spotify.com/show/${SPOTIFY_SHOW_ID}`}
           target="_blank" 
           rel="noopener noreferrer"
           className="block"
