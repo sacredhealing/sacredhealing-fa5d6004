@@ -376,12 +376,19 @@ const AdminCourses: React.FC = () => {
           <TabsList>
             <TabsTrigger value="courses">Courses</TabsTrigger>
             <TabsTrigger value="lessons" disabled={!selectedCourse}>
-              Lessons {selectedCourse && `(${selectedCourse.title})`}
+              Lessons {selectedCourse ? `(${selectedCourse.title})` : '(Select a course)'}
             </TabsTrigger>
             <TabsTrigger value="materials" disabled={!selectedLesson}>
-              Materials {selectedLesson && `(${selectedLesson.title})`}
+              Materials {selectedLesson ? `(${selectedLesson.title})` : '(Select a lesson)'}
             </TabsTrigger>
           </TabsList>
+
+          {/* Selection Status */}
+          {!selectedCourse && (
+            <div className="mt-4 p-3 rounded-lg bg-primary/10 border border-primary/20 text-sm text-muted-foreground">
+              👆 Scroll down and <strong>click on a course</strong> below to manage its lessons and materials
+            </div>
+          )}
 
           <TabsContent value="courses" className="space-y-6">
             {/* Create/Edit Course Form */}
