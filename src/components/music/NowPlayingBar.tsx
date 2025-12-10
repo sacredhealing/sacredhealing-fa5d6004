@@ -152,42 +152,30 @@ export const NowPlayingBar: React.FC = () => {
               <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full shrink-0 font-medium">Preview</span>
             )}
 
-            {/* Mini Controls */}
-            <div className="flex items-center gap-1">
-              <button 
-                onClick={() => toggleLike(currentTrack.id)}
-                className={`p-2 rounded-full hover:bg-muted/50 ${isLiked ? 'text-red-500' : 'text-muted-foreground'}`}
-              >
-                <Heart size={18} fill={isLiked ? 'currentColor' : 'none'} />
-              </button>
-              <button onClick={toggleShuffle} className={`p-2 rounded-full hover:bg-muted/50 ${isShuffle ? 'text-primary' : 'text-muted-foreground'}`}>
-                <Shuffle size={16} />
-              </button>
-              <button onClick={prevTrack} className="p-2 rounded-full hover:bg-muted/50 text-foreground">
-                <SkipBack size={18} />
+            {/* Mini Controls - reduced for space */}
+            <div className="flex items-center gap-0.5">
+              <button onClick={prevTrack} className="p-1.5 rounded-full hover:bg-muted/50 text-foreground">
+                <SkipBack size={16} />
               </button>
               <button 
                 onClick={togglePlay}
-                className="w-11 h-11 rounded-full bg-primary flex items-center justify-center text-primary-foreground shadow-lg"
+                className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground shadow-lg"
               >
-                {isPlaying ? <Pause size={22} /> : <Play size={22} className="ml-0.5" />}
+                {isPlaying ? <Pause size={20} /> : <Play size={20} className="ml-0.5" />}
               </button>
-              <button onClick={nextTrack} className="p-2 rounded-full hover:bg-muted/50 text-foreground">
-                <SkipForward size={18} />
-              </button>
-              <button onClick={toggleLoop} className={`p-2 rounded-full hover:bg-muted/50 ${isLoop ? 'text-primary' : 'text-muted-foreground'}`}>
-                <Repeat size={16} />
+              <button onClick={nextTrack} className="p-1.5 rounded-full hover:bg-muted/50 text-foreground">
+                <SkipForward size={16} />
               </button>
             </div>
           </div>
 
           {/* Progress Bar + Time */}
           <div className="mt-2 flex items-center gap-2">
-            <span className="text-[10px] text-muted-foreground w-8">{formatTime(currentTime)}</span>
+            <span className="text-[10px] text-muted-foreground w-10 shrink-0">{formatTime(currentTime)}</span>
             <div className="flex-1 h-1 bg-muted rounded-full cursor-pointer" onClick={handleSeek}>
               <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
             </div>
-            <span className="text-[10px] text-muted-foreground w-8 text-right">{formatTime(displayDuration)}</span>
+            <span className="text-[10px] text-muted-foreground w-10 text-right shrink-0">{formatTime(displayDuration)}</span>
           </div>
         </div>
 
