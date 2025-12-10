@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Plus, Pencil, Trash2, ExternalLink, Save, X } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, ExternalLink, Save, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,14 +33,26 @@ interface SessionPackage {
   is_active: boolean;
 }
 
+interface Practitioner {
+  id: string;
+  name: string;
+  slug: string;
+  subtitle: string | null;
+  image_url: string | null;
+  description: string | null;
+}
+
 const AdminPrivateSessions: React.FC = () => {
   const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
   const [packages, setPackages] = useState<SessionPackage[]>([]);
+  const [practitioners, setPractitioners] = useState<Practitioner[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingType, setEditingType] = useState<SessionType | null>(null);
   const [editingPackage, setEditingPackage] = useState<SessionPackage | null>(null);
+  const [editingPractitioner, setEditingPractitioner] = useState<Practitioner | null>(null);
   const [typeDialogOpen, setTypeDialogOpen] = useState(false);
   const [packageDialogOpen, setPackageDialogOpen] = useState(false);
+  const [practitionerDialogOpen, setPractitionerDialogOpen] = useState(false);
 
   const [typeForm, setTypeForm] = useState({
     name: '',
@@ -62,19 +74,28 @@ const AdminPrivateSessions: React.FC = () => {
     is_active: true,
   });
 
+  const [practitionerForm, setPractitionerForm] = useState({
+    name: '',
+    subtitle: '',
+    image_url: '',
+    description: '',
+  });
+
   useEffect(() => {
     fetchData();
   }, []);
 
   const fetchData = async () => {
     try {
-      const [typesRes, packagesRes] = await Promise.all([
+      const [typesRes, packagesRes, practitionersRes] = await Promise.all([
         supabase.from('session_types').select('*').order('order_index'),
         supabase.from('session_packages').select('*').order('order_index'),
+        supabase.from('practitioners').select('*'),
       ]);
 
       if (typesRes.data) setSessionTypes(typesRes.data);
       if (packagesRes.data) setPackages(packagesRes.data);
+      if (practitionersRes.data) setPractitioners(practitionersRes.data);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Failed to load data');
@@ -137,6 +158,17 @@ const AdminPrivateSessions: React.FC = () => {
     setPackageDialogOpen(true);
   };
 
+  const openPractitionerDialog = (practitioner: Practitioner) => {
+    setEditingPractitioner(practitioner);
+    setPractitionerForm({
+      name: practitioner.name,
+      subtitle: practitioner.subtitle || '',
+      image_url: practitioner.image_url || '',
+      description: practitioner.description || '',
+    });
+    setPractitionerDialogOpen(true);
+  };
+
   const saveType = async () => {
     try {
       if (editingType) {
@@ -177,6 +209,23 @@ const AdminPrivateSessions: React.FC = () => {
       fetchData();
     } catch (error: any) {
       console.error('Error saving package:', error);
+      toast.error(error.message || 'Failed to save');
+    }
+  };
+
+  const savePractitioner = async () => {
+    if (!editingPractitioner) return;
+    try {
+      const { error } = await supabase
+        .from('practitioners')
+        .update(practitionerForm)
+        .eq('id', editingPractitioner.id);
+      if (error) throw error;
+      toast.success('Practitioner updated');
+      setPractitionerDialogOpen(false);
+      fetchData();
+    } catch (error: any) {
+      console.error('Error saving practitioner:', error);
       toast.error(error.message || 'Failed to save');
     }
   };
@@ -232,6 +281,38 @@ const AdminPrivateSessions: React.FC = () => {
           </Link>
           <h1 className="text-2xl font-heading font-bold">Private Sessions Admin</h1>
         </div>
+
+        {/* Practitioners */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Practitioners</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {practitioners.map((p) => (
+              <div
+                key={p.id}
+                className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-muted flex items-center justify-center">
+                    {p.image_url ? (
+                      <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <User size={24} className="text-muted-foreground" />
+                    )}
+                  </div>
+                  <div>
+                    <div className="font-medium">{p.name}</div>
+                    <div className="text-sm text-muted-foreground">{p.subtitle}</div>
+                  </div>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => openPractitionerDialog(p)}>
+                  <Pencil size={16} />
+                </Button>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
 
         {/* Session Types */}
         <Card className="mb-6">
@@ -456,6 +537,58 @@ const AdminPrivateSessions: React.FC = () => {
                   Save
                 </Button>
                 <Button variant="outline" onClick={() => setPackageDialogOpen(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Practitioner Dialog */}
+        <Dialog open={practitionerDialogOpen} onOpenChange={setPractitionerDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Edit {editingPractitioner?.name}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Name</Label>
+                <Input
+                  value={practitionerForm.name}
+                  onChange={(e) => setPractitionerForm({ ...practitionerForm, name: e.target.value })}
+                  placeholder="Name"
+                />
+              </div>
+              <div>
+                <Label>Subtitle</Label>
+                <Input
+                  value={practitionerForm.subtitle}
+                  onChange={(e) => setPractitionerForm({ ...practitionerForm, subtitle: e.target.value })}
+                  placeholder="e.g. Yogi & Sound Healer"
+                />
+              </div>
+              <div>
+                <Label>Image URL</Label>
+                <Input
+                  value={practitionerForm.image_url}
+                  onChange={(e) => setPractitionerForm({ ...practitionerForm, image_url: e.target.value })}
+                  placeholder="https://..."
+                />
+              </div>
+              <div>
+                <Label>Description</Label>
+                <Textarea
+                  value={practitionerForm.description}
+                  onChange={(e) => setPractitionerForm({ ...practitionerForm, description: e.target.value })}
+                  placeholder="Full description..."
+                />
+              </div>
+              <div className="flex gap-3">
+                <Button onClick={savePractitioner} className="flex-1">
+                  <Save size={16} className="mr-2" />
+                  Save
+                </Button>
+                <Button variant="outline" onClick={() => setPractitionerDialogOpen(false)}>
                   Cancel
                 </Button>
               </div>
