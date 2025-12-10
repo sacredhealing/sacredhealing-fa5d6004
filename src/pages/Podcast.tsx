@@ -3,6 +3,7 @@ import { ArrowLeft, BarChart3, Users, Headphones } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import PodcastEpisodeList from '@/components/podcast/PodcastEpisodeList';
 
 const Podcast: React.FC = () => {
   return (
@@ -39,27 +40,15 @@ const Podcast: React.FC = () => {
         <Card className="p-4">
           <div className="flex items-center gap-3 mb-4">
             <Headphones className="w-6 h-6 text-turquoise" />
-            <h2 className="font-semibold text-foreground">Awaken Your Spiritual Bliss Podcast</h2>
+            <h2 className="font-semibold text-foreground">All Episodes</h2>
           </div>
-          <p className="text-sm text-muted-foreground mb-4">
-            Join Laila & Adam for deep spiritual conversations, guided meditations, and transformative teachings. 
-            Available on Spotify and all major podcast platforms.
+          <p className="text-sm text-muted-foreground">
+            Join Laila & Adam for deep spiritual conversations, guided meditations, and transformative teachings.
           </p>
         </Card>
 
-        {/* Spotify Embed - Full Episode List */}
-        <Card className="p-0 overflow-hidden border-none bg-transparent">
-          <iframe 
-            style={{ borderRadius: '12px' }}
-            src="https://open.spotify.com/embed/show/2nhPr6e1a4dhivvIgMcceI?utm_source=generator&theme=0"
-            width="100%"
-            height="800"
-            frameBorder="0"
-            allowFullScreen
-            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-            loading="lazy"
-          />
-        </Card>
+        {/* Episode List */}
+        <PodcastEpisodeList />
 
         {/* Open in Spotify */}
         <a 
@@ -69,7 +58,7 @@ const Podcast: React.FC = () => {
           className="block"
         >
           <Button className="w-full bg-[#1DB954] hover:bg-[#1DB954]/90 text-white">
-            Open in Spotify
+            Open Full Show in Spotify
           </Button>
         </a>
       </div>
