@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Plus, Pencil, Trash2, ExternalLink, Save, User } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ArrowLeft, Plus, Pencil, Trash2, ExternalLink, Save, User, Upload, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -41,6 +41,146 @@ interface Practitioner {
   image_url: string | null;
   description: string | null;
 }
+
+interface PractitionerDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  practitioner: Practitioner | null;
+  form: {
+    name: string;
+    subtitle: string;
+    image_url: string;
+    description: string;
+  };
+  setForm: React.Dispatch<React.SetStateAction<{
+    name: string;
+    subtitle: string;
+    image_url: string;
+    description: string;
+  }>>;
+  onSave: () => void;
+}
+
+const PractitionerDialog: React.FC<PractitionerDialogProps> = ({
+  open,
+  onOpenChange,
+  practitioner,
+  form,
+  setForm,
+  onSave,
+}) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${practitioner?.slug || 'practitioner'}-${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('practitioners')
+        .upload(fileName, file, { contentType: file.type, upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from('practitioners').getPublicUrl(fileName);
+      setForm({ ...form, image_url: data.publicUrl });
+      toast.success('Image uploaded');
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast.error(error.message || 'Failed to upload image');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Edit {practitioner?.name}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label>Name</Label>
+            <Input
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              placeholder="Name"
+            />
+          </div>
+          <div>
+            <Label>Subtitle</Label>
+            <Input
+              value={form.subtitle}
+              onChange={(e) => setForm({ ...form, subtitle: e.target.value })}
+              placeholder="e.g. Yogi & Sound Healer"
+            />
+          </div>
+          <div>
+            <Label>Profile Image</Label>
+            <div className="flex items-center gap-3 mt-2">
+              <div className="w-16 h-16 rounded-full overflow-hidden bg-muted flex items-center justify-center">
+                {form.image_url ? (
+                  <img src={form.image_url} alt="Preview" className="w-full h-full object-cover" />
+                ) : (
+                  <User size={24} className="text-muted-foreground" />
+                )}
+              </div>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                accept="image/*"
+                className="hidden"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+              >
+                {uploading ? (
+                  <>
+                    <Loader2 size={16} className="mr-2 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <Upload size={16} className="mr-2" />
+                    Upload Image
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+          <div>
+            <Label>Description</Label>
+            <Textarea
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              placeholder="Full description..."
+            />
+          </div>
+          <div className="flex gap-3">
+            <Button onClick={onSave} className="flex-1">
+              <Save size={16} className="mr-2" />
+              Save
+            </Button>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const AdminPrivateSessions: React.FC = () => {
   const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
@@ -545,56 +685,14 @@ const AdminPrivateSessions: React.FC = () => {
         </Dialog>
 
         {/* Practitioner Dialog */}
-        <Dialog open={practitionerDialogOpen} onOpenChange={setPractitionerDialogOpen}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Edit {editingPractitioner?.name}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label>Name</Label>
-                <Input
-                  value={practitionerForm.name}
-                  onChange={(e) => setPractitionerForm({ ...practitionerForm, name: e.target.value })}
-                  placeholder="Name"
-                />
-              </div>
-              <div>
-                <Label>Subtitle</Label>
-                <Input
-                  value={practitionerForm.subtitle}
-                  onChange={(e) => setPractitionerForm({ ...practitionerForm, subtitle: e.target.value })}
-                  placeholder="e.g. Yogi & Sound Healer"
-                />
-              </div>
-              <div>
-                <Label>Image URL</Label>
-                <Input
-                  value={practitionerForm.image_url}
-                  onChange={(e) => setPractitionerForm({ ...practitionerForm, image_url: e.target.value })}
-                  placeholder="https://..."
-                />
-              </div>
-              <div>
-                <Label>Description</Label>
-                <Textarea
-                  value={practitionerForm.description}
-                  onChange={(e) => setPractitionerForm({ ...practitionerForm, description: e.target.value })}
-                  placeholder="Full description..."
-                />
-              </div>
-              <div className="flex gap-3">
-                <Button onClick={savePractitioner} className="flex-1">
-                  <Save size={16} className="mr-2" />
-                  Save
-                </Button>
-                <Button variant="outline" onClick={() => setPractitionerDialogOpen(false)}>
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <PractitionerDialog
+          open={practitionerDialogOpen}
+          onOpenChange={setPractitionerDialogOpen}
+          practitioner={editingPractitioner}
+          form={practitionerForm}
+          setForm={setPractitionerForm}
+          onSave={savePractitioner}
+        />
       </div>
     </div>
   );
