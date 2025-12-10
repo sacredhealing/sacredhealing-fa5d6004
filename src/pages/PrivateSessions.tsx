@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Calendar, User, Sparkles, Heart, Shield, Users, CreditCard, Wallet, ExternalLink } from 'lucide-react';
+import { Calendar, User, Sparkles, Heart, Shield, Users, CreditCard, Wallet, ExternalLink, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -12,6 +12,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import lailaPortrait from '@/assets/laila-portrait.jpg';
+import adamDrum from '@/assets/adam-drum.jpg';
 
 interface SessionType {
   id: string;
@@ -20,6 +22,7 @@ interface SessionType {
   category: string;
   calendly_url: string | null;
   image_url: string | null;
+  practitioner: string;
 }
 
 interface SessionPackage {
@@ -44,9 +47,9 @@ const PrivateSessions: React.FC = () => {
   
   const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
   const [packages, setPackages] = useState<SessionPackage[]>([]);
+  const [selectedPractitioner, setSelectedPractitioner] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<string>('');
   const [selectedPackage, setSelectedPackage] = useState<string>('');
-  const [selectedPractitioner, setSelectedPractitioner] = useState<string>('adam');
   const [notes, setNotes] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -83,8 +86,8 @@ const PrivateSessions: React.FC = () => {
   const fetchData = async () => {
     try {
       const [typesRes, packagesRes] = await Promise.all([
-        supabase.from('session_types').select('*').order('order_index'),
-        supabase.from('session_packages').select('*').order('order_index')
+        supabase.from('session_types').select('*').eq('is_active', true).order('order_index'),
+        supabase.from('session_packages').select('*').eq('is_active', true).order('order_index')
       ]);
 
       if (typesRes.data) setSessionTypes(typesRes.data);
@@ -95,6 +98,10 @@ const PrivateSessions: React.FC = () => {
       setIsLoading(false);
     }
   };
+
+  const filteredSessionTypes = sessionTypes.filter(type => 
+    type.practitioner === 'both' || type.practitioner === selectedPractitioner
+  );
 
   const handleBookSession = () => {
     if (!isAuthenticated) {
@@ -180,60 +187,118 @@ const PrivateSessions: React.FC = () => {
     );
   }
 
+  // Step 1: Choose Practitioner
+  if (!selectedPractitioner) {
+    return (
+      <div className="min-h-screen px-4 py-6 pb-32">
+        <header className="mb-8 animate-fade-in">
+          <h1 className="text-3xl font-heading font-bold text-foreground mb-2">
+            Private Sessions
+          </h1>
+          <p className="text-muted-foreground">
+            Choose your guide for a transformative 1-on-1 session
+          </p>
+        </header>
+
+        <div className="grid grid-cols-1 gap-6">
+          {/* Adam Card */}
+          <Card 
+            className="overflow-hidden cursor-pointer hover:border-primary transition-all animate-slide-up"
+            onClick={() => setSelectedPractitioner('adam')}
+          >
+            <div className="aspect-[16/9] overflow-hidden">
+              <img 
+                src={adamDrum} 
+                alt="Adam" 
+                className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+              />
+            </div>
+            <CardContent className="p-6">
+              <h2 className="text-2xl font-heading font-bold mb-2">Adam</h2>
+              <p className="text-muted-foreground text-sm mb-4">
+                Spiritual Guide & Energy Practitioner
+              </p>
+              <p className="text-foreground/80">
+                Supporting healing through vibrational medicine and meditation, helping individuals realign with life purpose and inner wisdom.
+              </p>
+              <Button className="w-full mt-4" variant="outline">
+                View Adam's Sessions
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Laila Card */}
+          <Card 
+            className="overflow-hidden cursor-pointer hover:border-primary transition-all animate-slide-up"
+            style={{ animationDelay: '0.1s' }}
+            onClick={() => setSelectedPractitioner('laila')}
+          >
+            <div className="aspect-[16/9] overflow-hidden">
+              <img 
+                src={lailaPortrait} 
+                alt="Laila" 
+                className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+              />
+            </div>
+            <CardContent className="p-6">
+              <h2 className="text-2xl font-heading font-bold mb-2">Laila</h2>
+              <p className="text-muted-foreground text-sm mb-4">
+                Yogi & Sound Healer
+              </p>
+              <p className="text-foreground/80">
+                Channeling divine energy through meditation, mantra, and transformational breathwork, empowering individuals to awaken their intuition.
+              </p>
+              <Button className="w-full mt-4" variant="outline">
+                View Laila's Sessions
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Step 2: Choose Session Type & Package
   return (
     <div className="min-h-screen px-4 py-6 pb-32">
-      {/* Header */}
+      {/* Header with Back Button */}
       <header className="mb-8 animate-fade-in">
-        <h1 className="text-3xl font-heading font-bold text-foreground mb-2">
-          Private Sessions
-        </h1>
-        <p className="text-muted-foreground">
-          Book a transformative 1-on-1 session with Adam or Laila
-        </p>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="mb-4 -ml-2"
+          onClick={() => {
+            setSelectedPractitioner(null);
+            setSelectedType('');
+            setSelectedPackage('');
+          }}
+        >
+          <ArrowLeft size={16} className="mr-2" />
+          Choose different guide
+        </Button>
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-primary">
+            <img 
+              src={selectedPractitioner === 'adam' ? adamDrum : lailaPortrait} 
+              alt={selectedPractitioner === 'adam' ? 'Adam' : 'Laila'}
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div>
+            <h1 className="text-2xl font-heading font-bold text-foreground">
+              Sessions with {selectedPractitioner === 'adam' ? 'Adam' : 'Laila'}
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              {selectedPractitioner === 'adam' 
+                ? 'Spiritual Guide & Energy Practitioner'
+                : 'Yogi & Sound Healer'}
+            </p>
+          </div>
+        </div>
       </header>
 
-      {/* Practitioners */}
-      <Card className="mb-6 animate-slide-up">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users size={20} />
-            Choose Your Guide
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <RadioGroup value={selectedPractitioner} onValueChange={setSelectedPractitioner} className="grid grid-cols-2 gap-4">
-            <div>
-              <RadioGroupItem value="adam" id="adam" className="peer sr-only" />
-              <Label
-                htmlFor="adam"
-                className="flex flex-col items-center justify-center rounded-xl border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer transition-all"
-              >
-                <div className="w-16 h-16 rounded-full bg-gradient-healing flex items-center justify-center mb-2">
-                  <User size={32} className="text-foreground" />
-                </div>
-                <span className="font-heading font-semibold">Adam</span>
-                <span className="text-xs text-muted-foreground">Spiritual Guide</span>
-              </Label>
-            </div>
-            <div>
-              <RadioGroupItem value="laila" id="laila" className="peer sr-only" />
-              <Label
-                htmlFor="laila"
-                className="flex flex-col items-center justify-center rounded-xl border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer transition-all"
-              >
-                <div className="w-16 h-16 rounded-full bg-gradient-card flex items-center justify-center mb-2">
-                  <User size={32} className="text-foreground" />
-                </div>
-                <span className="font-heading font-semibold">Laila</span>
-                <span className="text-xs text-muted-foreground">Healing Practitioner</span>
-              </Label>
-            </div>
-          </RadioGroup>
-        </CardContent>
-      </Card>
-
       {/* Session Types */}
-      <Card className="mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+      <Card className="mb-6 animate-slide-up">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Sparkles size={20} />
@@ -241,34 +306,40 @@ const PrivateSessions: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <RadioGroup value={selectedType} onValueChange={setSelectedType} className="space-y-3">
-            {sessionTypes.map((type) => (
-              <div key={type.id}>
-                <RadioGroupItem value={type.id} id={type.id} className="peer sr-only" />
-                <Label
-                  htmlFor={type.id}
-                  className="flex items-start gap-3 rounded-xl border-2 border-muted bg-popover p-4 hover:bg-accent/50 peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer transition-all"
-                >
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                    type.category === 'healing' ? 'bg-pink-500/20 text-pink-400' :
-                    type.category === 'men' ? 'bg-blue-500/20 text-blue-400' :
-                    'bg-purple-500/20 text-purple-400'
-                  }`}>
-                    {categoryIcons[type.category] || <Sparkles className="w-5 h-5" />}
-                  </div>
-                  <div>
-                    <span className="font-heading font-semibold block">{type.name}</span>
-                    <span className="text-sm text-muted-foreground">{type.description}</span>
-                  </div>
-                </Label>
-              </div>
-            ))}
-          </RadioGroup>
+          {filteredSessionTypes.length === 0 ? (
+            <p className="text-muted-foreground text-center py-4">
+              No sessions available for this practitioner yet.
+            </p>
+          ) : (
+            <RadioGroup value={selectedType} onValueChange={setSelectedType} className="space-y-3">
+              {filteredSessionTypes.map((type) => (
+                <div key={type.id}>
+                  <RadioGroupItem value={type.id} id={type.id} className="peer sr-only" />
+                  <Label
+                    htmlFor={type.id}
+                    className="flex items-start gap-3 rounded-xl border-2 border-muted bg-popover p-4 hover:bg-accent/50 peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer transition-all"
+                  >
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                      type.category === 'healing' ? 'bg-pink-500/20 text-pink-400' :
+                      type.category === 'men' ? 'bg-blue-500/20 text-blue-400' :
+                      'bg-purple-500/20 text-purple-400'
+                    }`}>
+                      {categoryIcons[type.category] || <Sparkles className="w-5 h-5" />}
+                    </div>
+                    <div>
+                      <span className="font-heading font-semibold block">{type.name}</span>
+                      <span className="text-sm text-muted-foreground">{type.description}</span>
+                    </div>
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
+          )}
         </CardContent>
       </Card>
 
       {/* Packages */}
-      <Card className="mb-6 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+      <Card className="mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar size={20} />
@@ -304,7 +375,7 @@ const PrivateSessions: React.FC = () => {
       </Card>
 
       {/* Contact & Notes */}
-      <Card className="mb-6 animate-slide-up" style={{ animationDelay: '0.3s' }}>
+      <Card className="mb-6 animate-slide-up" style={{ animationDelay: '0.2s' }}>
         <CardHeader>
           <CardTitle>Your Details</CardTitle>
           <CardDescription>We'll contact you to schedule your session</CardDescription>

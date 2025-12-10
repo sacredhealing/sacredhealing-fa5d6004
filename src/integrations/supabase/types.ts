@@ -1685,6 +1685,7 @@ export type Database = {
           is_active: boolean
           name: string
           order_index: number
+          practitioner: string
         }
         Insert: {
           calendly_url?: string | null
@@ -1696,6 +1697,7 @@ export type Database = {
           is_active?: boolean
           name: string
           order_index?: number
+          practitioner?: string
         }
         Update: {
           calendly_url?: string | null
@@ -1707,6 +1709,7 @@ export type Database = {
           is_active?: boolean
           name?: string
           order_index?: number
+          practitioner?: string
         }
         Relationships: []
       }
