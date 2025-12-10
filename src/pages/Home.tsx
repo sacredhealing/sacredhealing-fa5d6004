@@ -12,7 +12,8 @@ import {
   ArrowRight,
   Play,
   Shield,
-  Zap
+  Zap,
+  Headphones
 } from 'lucide-react';
 import heroImage from '@/assets/hero-together.jpg';
 import lailaSmile from '@/assets/laila-smile.jpg';
@@ -234,11 +235,18 @@ const Home: React.FC = () => {
                 <p className="text-xs sm:text-sm text-muted-foreground">Become a certified Sacred Healing Vibration Practitioner in 12 months</p>
               </Card>
             </Link>
-            <Link to="/transformation" className="block sm:col-span-2 md:col-span-1">
+            <Link to="/transformation" className="block">
               <Card className="bg-gradient-to-br from-turquoise/20 to-turquoise/5 border-turquoise/30 p-4 sm:p-6 hover:border-turquoise/50 transition-all h-full">
                 <Zap className="w-8 h-8 sm:w-10 sm:h-10 text-turquoise mb-2 sm:mb-3" />
                 <h4 className="font-heading font-bold text-foreground mb-1 sm:mb-2 text-sm sm:text-base">6-Month Transformation</h4>
                 <p className="text-xs sm:text-sm text-muted-foreground">Deep personal transformation with private coaching and daily support</p>
+              </Card>
+            </Link>
+            <Link to="/podcast" className="block">
+              <Card className="bg-gradient-to-br from-[#1DB954]/20 to-[#1DB954]/5 border-[#1DB954]/30 p-4 sm:p-6 hover:border-[#1DB954]/50 transition-all h-full">
+                <Headphones className="w-8 h-8 sm:w-10 sm:h-10 text-[#1DB954] mb-2 sm:mb-3" />
+                <h4 className="font-heading font-bold text-foreground mb-1 sm:mb-2 text-sm sm:text-base">Podcast</h4>
+                <p className="text-xs sm:text-sm text-muted-foreground">280K+ streams • Awaken Your Spiritual Bliss on Spotify</p>
               </Card>
             </Link>
           </div>
