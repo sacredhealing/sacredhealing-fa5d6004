@@ -71,6 +71,8 @@ const AdminMusic: React.FC = () => {
   const [editPrice, setEditPrice] = useState('');
   const [editBpm, setEditBpm] = useState('');
   const [editCoverFile, setEditCoverFile] = useState<File | null>(null);
+  const [editPreviewFile, setEditPreviewFile] = useState<File | null>(null);
+  const [editFullFile, setEditFullFile] = useState<File | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -240,6 +242,31 @@ const AdminMusic: React.FC = () => {
   const cancelEditing = () => {
     setEditingTrack(null);
     setEditCoverFile(null);
+    setEditPreviewFile(null);
+    setEditFullFile(null);
+  };
+
+  const uploadAudioFile = async (file: File, suffix: string): Promise<string> => {
+    const timestamp = Date.now();
+    const randomId = Math.random().toString(36).slice(2);
+    const ext = file.name.split('.').pop();
+    const fileName = `${timestamp}-${randomId}-${suffix}.${ext}`;
+    
+    const { error } = await supabase.storage
+      .from('songs')
+      .upload(fileName, file, { 
+        cacheControl: '3600', 
+        upsert: false,
+        contentType: file.type || 'audio/mpeg'
+      });
+
+    if (error) throw error;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('songs')
+      .getPublicUrl(fileName);
+
+    return publicUrl;
   };
 
   const saveEdit = async () => {
@@ -248,9 +275,19 @@ const AdminMusic: React.FC = () => {
 
     try {
       let coverUrl = editingTrack.cover_image_url;
+      let previewUrl = editingTrack.preview_url;
+      let fullUrl = editingTrack.full_audio_url;
       
       if (editCoverFile) {
         coverUrl = await uploadImage(editCoverFile);
+      }
+
+      if (editPreviewFile) {
+        previewUrl = await uploadAudioFile(editPreviewFile, 'preview');
+      }
+
+      if (editFullFile) {
+        fullUrl = await uploadAudioFile(editFullFile, 'full');
       }
 
       const { error } = await supabase
@@ -263,7 +300,9 @@ const AdminMusic: React.FC = () => {
           duration_seconds: parseDuration(editDuration),
           price_usd: parseFloat(editPrice),
           bpm: editBpm ? parseInt(editBpm) : null,
-          cover_image_url: coverUrl
+          cover_image_url: coverUrl,
+          preview_url: previewUrl,
+          full_audio_url: fullUrl
         })
         .eq('id', editingTrack.id);
 
@@ -573,7 +612,7 @@ const AdminMusic: React.FC = () => {
                         className="bg-muted/50"
                       />
                       
-                      <div className="flex items-center gap-4">
+                      <div className="flex flex-wrap items-center gap-3">
                         <label className="flex items-center gap-2 cursor-pointer">
                           <input
                             type="file"
@@ -584,6 +623,32 @@ const AdminMusic: React.FC = () => {
                           <div className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg hover:bg-muted/50 transition-colors">
                             <Image size={16} />
                             <span className="text-sm">{editCoverFile ? editCoverFile.name : 'Change cover'}</span>
+                          </div>
+                        </label>
+                        
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="file"
+                            accept="audio/*"
+                            onChange={(e) => setEditPreviewFile(e.target.files?.[0] || null)}
+                            className="hidden"
+                          />
+                          <div className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg hover:bg-muted/50 transition-colors">
+                            <Upload size={16} />
+                            <span className="text-sm">{editPreviewFile ? editPreviewFile.name : 'Change preview'}</span>
+                          </div>
+                        </label>
+                        
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="file"
+                            accept="audio/*"
+                            onChange={(e) => setEditFullFile(e.target.files?.[0] || null)}
+                            className="hidden"
+                          />
+                          <div className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg hover:bg-muted/50 transition-colors">
+                            <Upload size={16} />
+                            <span className="text-sm">{editFullFile ? editFullFile.name : 'Change full track'}</span>
                           </div>
                         </label>
                         
