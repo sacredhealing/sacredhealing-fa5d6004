@@ -69,6 +69,7 @@ const AdminCourses: React.FC = () => {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [materials, setMaterials] = useState<Material[]>([]);
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
+  const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   
   const [courseForm, setCourseForm] = useState({
@@ -306,6 +307,70 @@ const AdminCourses: React.FC = () => {
       fetchCourses();
       if (selectedLesson?.id === lessonId) setSelectedLesson(null);
     }
+  };
+
+  const handleEditLesson = (lesson: Lesson) => {
+    setEditingLesson(lesson);
+    setLessonForm({
+      title: lesson.title,
+      description: lesson.content_type === 'text' ? '' : (lesson.description || ''),
+      content_type: lesson.content_type,
+      content_url: lesson.content_url || '',
+      text_content: lesson.content_type === 'text' ? (lesson.description || '') : '',
+      duration_minutes: lesson.duration_minutes,
+      is_preview: lesson.is_preview,
+    });
+  };
+
+  const handleUpdateLesson = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingLesson || !selectedCourse) return;
+    setIsLoading(true);
+
+    const lessonData = {
+      title: lessonForm.title,
+      description: lessonForm.content_type === 'text' ? lessonForm.text_content : lessonForm.description,
+      content_type: lessonForm.content_type,
+      content_url: lessonForm.content_type === 'text' ? null : lessonForm.content_url,
+      duration_minutes: lessonForm.duration_minutes,
+      is_preview: lessonForm.is_preview,
+    };
+
+    const { error } = await supabase
+      .from('lessons')
+      .update(lessonData)
+      .eq('id', editingLesson.id);
+
+    if (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Lesson updated!' });
+      setEditingLesson(null);
+      setLessonForm({
+        title: '',
+        description: '',
+        content_type: 'video',
+        content_url: '',
+        text_content: '',
+        duration_minutes: 10,
+        is_preview: false,
+      });
+      fetchLessons(selectedCourse.id);
+    }
+    setIsLoading(false);
+  };
+
+  const handleCancelLessonEdit = () => {
+    setEditingLesson(null);
+    setLessonForm({
+      title: '',
+      description: '',
+      content_type: 'video',
+      content_url: '',
+      text_content: '',
+      duration_minutes: 10,
+      is_preview: false,
+    });
   };
 
   const handleAddMaterial = async (e: React.FormEvent) => {
@@ -652,14 +717,29 @@ const AdminCourses: React.FC = () => {
           <TabsContent value="lessons" className="space-y-6">
             {selectedCourse && (
               <>
-                {/* Add Lesson Form */}
+                {/* Add/Edit Lesson Form */}
                 <Card className="p-6">
                   <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <Plus className="w-5 h-5" />
-                    Add Lesson to "{selectedCourse.title}"
+                    {editingLesson ? (
+                      <>
+                        <Edit2 className="w-5 h-5" />
+                        Edit Lesson: {editingLesson.title}
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-5 h-5" />
+                        Add Lesson to "{selectedCourse.title}"
+                      </>
+                    )}
+                    {editingLesson && (
+                      <Button variant="ghost" size="sm" onClick={handleCancelLessonEdit} className="ml-auto">
+                        <X className="w-4 h-4 mr-1" />
+                        Cancel
+                      </Button>
+                    )}
                   </h2>
 
-                  <form onSubmit={handleAddLesson} className="space-y-4">
+                  <form onSubmit={editingLesson ? handleUpdateLesson : handleAddLesson} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label>Lesson Title</Label>
@@ -735,8 +815,14 @@ const AdminCourses: React.FC = () => {
                     </div>
 
                     <Button type="submit" disabled={isLoading}>
-                      {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
-                      Add Lesson
+                      {isLoading ? (
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      ) : editingLesson ? (
+                        <Save className="w-4 h-4 mr-2" />
+                      ) : (
+                        <Plus className="w-4 h-4 mr-2" />
+                      )}
+                      {editingLesson ? 'Update Lesson' : 'Add Lesson'}
                     </Button>
                   </form>
                 </Card>
@@ -778,6 +864,16 @@ const AdminCourses: React.FC = () => {
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditLesson(lesson);
+                              }}
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </Button>
                             <Button
                               variant="outline"
                               size="sm"
