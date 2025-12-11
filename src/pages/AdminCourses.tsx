@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-
+import AudioUpload from '@/components/admin/AudioUpload';
 interface Course {
   id: string;
   title: string;
@@ -849,31 +849,39 @@ const AdminCourses: React.FC = () => {
                     </div>
 
                     <div>
-                      <Label>
-                        {materialForm.file_type === 'text' ? 'Text Content' : 
-                         materialForm.file_type === 'youtube' ? 'YouTube Video URL' :
-                         materialForm.file_type === 'pdf' ? 'PDF URL' :
-                         'Audio File URL'}
-                      </Label>
                       {materialForm.file_type === 'text' ? (
-                        <Textarea
+                        <>
+                          <Label>Text Content</Label>
+                          <Textarea
+                            value={materialForm.file_url}
+                            onChange={(e) => setMaterialForm({ ...materialForm, file_url: e.target.value })}
+                            placeholder="Enter text content here..."
+                            className="min-h-[150px]"
+                            required
+                          />
+                        </>
+                      ) : materialForm.file_type === 'audio' ? (
+                        <AudioUpload
                           value={materialForm.file_url}
-                          onChange={(e) => setMaterialForm({ ...materialForm, file_url: e.target.value })}
-                          placeholder="Enter text content here..."
-                          className="min-h-[150px]"
-                          required
+                          onChange={(url) => setMaterialForm({ ...materialForm, file_url: url })}
+                          folder="courses"
+                          label="Audio File"
                         />
                       ) : (
-                        <Input
-                          value={materialForm.file_url}
-                          onChange={(e) => setMaterialForm({ ...materialForm, file_url: e.target.value })}
-                          placeholder={
-                            materialForm.file_type === 'youtube' ? 'https://www.youtube.com/watch?v=...' :
-                            materialForm.file_type === 'pdf' ? 'https://example.com/document.pdf' :
-                            'https://example.com/audio.mp3'
-                          }
-                          required
-                        />
+                        <>
+                          <Label>
+                            {materialForm.file_type === 'youtube' ? 'YouTube Video URL' : 'PDF URL'}
+                          </Label>
+                          <Input
+                            value={materialForm.file_url}
+                            onChange={(e) => setMaterialForm({ ...materialForm, file_url: e.target.value })}
+                            placeholder={
+                              materialForm.file_type === 'youtube' ? 'https://www.youtube.com/watch?v=...' :
+                              'https://example.com/document.pdf'
+                            }
+                            required
+                          />
+                        </>
                       )}
                     </div>
 
