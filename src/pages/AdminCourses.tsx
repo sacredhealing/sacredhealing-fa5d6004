@@ -775,6 +775,23 @@ const AdminCourses: React.FC = () => {
                           className="min-h-[200px]"
                         />
                       </div>
+                    ) : lessonForm.content_type === 'audio' ? (
+                      <>
+                        <div>
+                          <Label>Description</Label>
+                          <Textarea
+                            value={lessonForm.description}
+                            onChange={(e) => setLessonForm({ ...lessonForm, description: e.target.value })}
+                            placeholder="Brief description of this lesson..."
+                          />
+                        </div>
+                        <AudioUpload
+                          value={lessonForm.content_url}
+                          onChange={(url) => setLessonForm({ ...lessonForm, content_url: url })}
+                          folder="courses"
+                          label="Upload Audio File"
+                        />
+                      </>
                     ) : (
                       <>
                         <div>
@@ -786,11 +803,11 @@ const AdminCourses: React.FC = () => {
                           />
                         </div>
                         <div>
-                          <Label>Content URL</Label>
+                          <Label>Content URL {lessonForm.content_type === 'video' && '(YouTube or video URL)'}</Label>
                           <Input
                             value={lessonForm.content_url}
                             onChange={(e) => setLessonForm({ ...lessonForm, content_url: e.target.value })}
-                            placeholder="https://..."
+                            placeholder={lessonForm.content_type === 'video' ? 'https://youtube.com/watch?v=...' : 'https://...'}
                           />
                         </div>
                       </>
