@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Loader2, Image, Music, X, Check, Edit2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Plus, Trash2, Loader2, Image, Music, X, Check, Edit2, Upload, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
@@ -51,6 +51,22 @@ const AlbumManager: React.FC = () => {
   const [editCoverFile, setEditCoverFile] = useState<File | null>(null);
   const [editSelectedTracks, setEditSelectedTracks] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  
+  // New track form state
+  const [showNewTrackForm, setShowNewTrackForm] = useState(false);
+  const [isCreatingTrack, setIsCreatingTrack] = useState(false);
+  const [newTrackTitle, setNewTrackTitle] = useState('');
+  const [newTrackArtist, setNewTrackArtist] = useState('Sacred Healing');
+  const [newTrackDuration, setNewTrackDuration] = useState('');
+  const [newTrackGenre, setNewTrackGenre] = useState('meditation');
+  const [newTrackBpm, setNewTrackBpm] = useState('');
+  const [newTrackPrice, setNewTrackPrice] = useState('2.99');
+  const [newTrackPreviewFile, setNewTrackPreviewFile] = useState<File | null>(null);
+  const [newTrackFullFile, setNewTrackFullFile] = useState<File | null>(null);
+  const [newTrackCoverFile, setNewTrackCoverFile] = useState<File | null>(null);
+  const previewInputRef = useRef<HTMLInputElement>(null);
+  const fullInputRef = useRef<HTMLInputElement>(null);
+  const trackCoverInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchData();
@@ -107,6 +123,109 @@ const AlbumManager: React.FC = () => {
       .getPublicUrl(fileName);
 
     return publicUrl;
+  };
+
+  const uploadAudioFile = async (file: File, folder: string): Promise<string> => {
+    const timestamp = Date.now();
+    const randomId = Math.random().toString(36).slice(2);
+    const ext = file.name.split('.').pop();
+    const fileName = `${folder}/${timestamp}-${randomId}.${ext}`;
+    
+    const { error } = await supabase.storage
+      .from('songs')
+      .upload(fileName, file, { 
+        cacheControl: '3600', 
+        upsert: false,
+        contentType: 'audio/mpeg'
+      });
+
+    if (error) throw error;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('songs')
+      .getPublicUrl(fileName);
+
+    return publicUrl;
+  };
+
+  const parseDuration = (timeStr: string): number => {
+    if (!timeStr) return 180;
+    const parts = timeStr.split(':');
+    if (parts.length === 2) {
+      return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+    }
+    return parseInt(timeStr) || 180;
+  };
+
+  const handleCreateTrack = async () => {
+    if (!newTrackTitle || !newTrackPreviewFile || !newTrackFullFile) {
+      toast({
+        title: "Missing fields",
+        description: "Please provide title, preview audio, and full audio",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsCreatingTrack(true);
+
+    try {
+      // Upload files
+      const previewUrl = await uploadAudioFile(newTrackPreviewFile, 'previews');
+      const fullUrl = await uploadAudioFile(newTrackFullFile, 'full-tracks');
+      
+      let coverUrl: string | null = null;
+      if (newTrackCoverFile) {
+        coverUrl = await uploadImage(newTrackCoverFile);
+      }
+
+      // Create track
+      const { data: track, error } = await supabase
+        .from('music_tracks')
+        .insert({
+          title: newTrackTitle,
+          artist: newTrackArtist,
+          duration_seconds: parseDuration(newTrackDuration),
+          genre: newTrackGenre,
+          bpm: newTrackBpm ? parseInt(newTrackBpm) : null,
+          price_usd: parseFloat(newTrackPrice),
+          preview_url: previewUrl,
+          full_audio_url: fullUrl,
+          cover_image_url: coverUrl
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast({ title: "Track created!", description: `"${newTrackTitle}" added` });
+
+      // Auto-select the new track
+      setSelectedTracks(prev => [...prev, track.id]);
+
+      // Reset form
+      setNewTrackTitle('');
+      setNewTrackArtist('Sacred Healing');
+      setNewTrackDuration('');
+      setNewTrackGenre('meditation');
+      setNewTrackBpm('');
+      setNewTrackPrice('2.99');
+      setNewTrackPreviewFile(null);
+      setNewTrackFullFile(null);
+      setNewTrackCoverFile(null);
+      setShowNewTrackForm(false);
+
+      // Refresh tracks list
+      fetchData();
+    } catch (error: any) {
+      toast({
+        title: "Track creation failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsCreatingTrack(false);
+    }
   };
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -373,6 +492,169 @@ const AlbumManager: React.FC = () => {
             />
           </div>
           
+          {/* Add New Track Section */}
+          <div className="border border-border/50 rounded-lg overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setShowNewTrackForm(!showNewTrackForm)}
+              className="w-full flex items-center justify-between p-3 bg-muted/30 hover:bg-muted/50 transition-colors"
+            >
+              <span className="flex items-center gap-2 text-sm font-medium text-primary">
+                <Plus size={16} />
+                Add New Track
+              </span>
+              {showNewTrackForm ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
+            
+            {showNewTrackForm && (
+              <div className="p-4 space-y-3 border-t border-border/50">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1">Track Title *</label>
+                    <Input
+                      value={newTrackTitle}
+                      onChange={(e) => setNewTrackTitle(e.target.value)}
+                      placeholder="Track name"
+                      className="bg-muted/50 h-9"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1">Artist</label>
+                    <Input
+                      value={newTrackArtist}
+                      onChange={(e) => setNewTrackArtist(e.target.value)}
+                      placeholder="Artist name"
+                      className="bg-muted/50 h-9"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1">Duration (mm:ss)</label>
+                    <Input
+                      value={newTrackDuration}
+                      onChange={(e) => setNewTrackDuration(e.target.value)}
+                      placeholder="3:45"
+                      className="bg-muted/50 h-9"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1">Genre</label>
+                    <select
+                      value={newTrackGenre}
+                      onChange={(e) => setNewTrackGenre(e.target.value)}
+                      className="w-full h-9 rounded-md border border-input bg-muted/50 px-3 text-sm"
+                    >
+                      <option value="meditation">Meditation</option>
+                      <option value="beats">Beats</option>
+                      <option value="mystic">Mystic</option>
+                      <option value="reggae">Reggae</option>
+                      <option value="hip-hop">Hip Hop</option>
+                      <option value="reggaeton">Reggaeton</option>
+                      <option value="indian">Indian</option>
+                      <option value="shamanic">Shamanic</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1">BPM (optional)</label>
+                    <Input
+                      type="number"
+                      value={newTrackBpm}
+                      onChange={(e) => setNewTrackBpm(e.target.value)}
+                      placeholder="120"
+                      className="bg-muted/50 h-9"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1">Price (USD)</label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={newTrackPrice}
+                      onChange={(e) => setNewTrackPrice(e.target.value)}
+                      className="bg-muted/50 h-9"
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1">30s Preview Audio *</label>
+                    <input
+                      ref={previewInputRef}
+                      type="file"
+                      accept="audio/*"
+                      onChange={(e) => setNewTrackPreviewFile(e.target.files?.[0] || null)}
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => previewInputRef.current?.click()}
+                      className="w-full h-9 flex items-center justify-center gap-2 border border-dashed border-border/50 rounded-md text-sm text-muted-foreground hover:border-primary/50"
+                    >
+                      <Upload size={14} />
+                      {newTrackPreviewFile ? newTrackPreviewFile.name.slice(0, 15) + '...' : 'Preview'}
+                    </button>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1">Full Track Audio *</label>
+                    <input
+                      ref={fullInputRef}
+                      type="file"
+                      accept="audio/*"
+                      onChange={(e) => setNewTrackFullFile(e.target.files?.[0] || null)}
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fullInputRef.current?.click()}
+                      className="w-full h-9 flex items-center justify-center gap-2 border border-dashed border-border/50 rounded-md text-sm text-muted-foreground hover:border-primary/50"
+                    >
+                      <Upload size={14} />
+                      {newTrackFullFile ? newTrackFullFile.name.slice(0, 15) + '...' : 'Full Track'}
+                    </button>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1">Cover Image</label>
+                    <input
+                      ref={trackCoverInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setNewTrackCoverFile(e.target.files?.[0] || null)}
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => trackCoverInputRef.current?.click()}
+                      className="w-full h-9 flex items-center justify-center gap-2 border border-dashed border-border/50 rounded-md text-sm text-muted-foreground hover:border-primary/50"
+                    >
+                      <Image size={14} />
+                      {newTrackCoverFile ? newTrackCoverFile.name.slice(0, 15) + '...' : 'Cover'}
+                    </button>
+                  </div>
+                </div>
+                
+                <Button 
+                  type="button" 
+                  onClick={handleCreateTrack} 
+                  disabled={isCreatingTrack}
+                  size="sm"
+                  className="w-full"
+                >
+                  {isCreatingTrack ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Creating Track...
+                    </>
+                  ) : (
+                    <>
+                      <Plus size={14} />
+                      Create Track & Add to Album
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
+          </div>
+
           {/* Track Selection */}
           <div>
             <label className="block text-sm text-muted-foreground mb-2">
@@ -381,7 +663,7 @@ const AlbumManager: React.FC = () => {
             <div className="max-h-48 overflow-y-auto border border-border/50 rounded-lg p-2 space-y-1">
               {tracks.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  No tracks available. Upload tracks first.
+                  No tracks available. Create a track above.
                 </p>
               ) : (
                 tracks.map(track => (
