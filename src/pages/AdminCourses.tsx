@@ -70,6 +70,7 @@ const AdminCourses: React.FC = () => {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
+  const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   
   const [courseForm, setCourseForm] = useState({
@@ -405,6 +406,45 @@ const AdminCourses: React.FC = () => {
         fetchMaterials(selectedCourse.id, selectedLesson.id);
       }
     }
+  };
+
+  const handleEditMaterial = (material: Material) => {
+    setEditingMaterial(material);
+    setMaterialForm({
+      title: material.title,
+      file_url: material.file_url,
+      file_type: material.file_type,
+    });
+  };
+
+  const handleUpdateMaterial = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingMaterial || !selectedCourse || !selectedLesson) return;
+    setIsLoading(true);
+
+    const { error } = await supabase
+      .from('course_materials')
+      .update({
+        title: materialForm.title,
+        file_url: materialForm.file_url,
+        file_type: materialForm.file_type,
+      })
+      .eq('id', editingMaterial.id);
+
+    if (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Material updated!' });
+      setEditingMaterial(null);
+      setMaterialForm({ title: '', file_url: '', file_type: 'text' });
+      fetchMaterials(selectedCourse.id, selectedLesson.id);
+    }
+    setIsLoading(false);
+  };
+
+  const handleCancelMaterialEdit = () => {
+    setEditingMaterial(null);
+    setMaterialForm({ title: '', file_url: '', file_type: 'text' });
   };
 
   const getLanguageInfo = (code: string) => {
@@ -928,14 +968,29 @@ const AdminCourses: React.FC = () => {
           <TabsContent value="materials" className="space-y-6">
             {selectedLesson && selectedCourse && (
               <>
-                {/* Add Material Form */}
+                {/* Add/Edit Material Form */}
                 <Card className="p-6">
                   <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <Plus className="w-5 h-5" />
-                    Add Material to "{selectedLesson.title}"
+                    {editingMaterial ? (
+                      <>
+                        <Edit2 className="w-5 h-5" />
+                        Edit Material: {editingMaterial.title}
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-5 h-5" />
+                        Add Material to "{selectedLesson.title}"
+                      </>
+                    )}
+                    {editingMaterial && (
+                      <Button variant="ghost" size="sm" onClick={handleCancelMaterialEdit} className="ml-auto">
+                        <X className="w-4 h-4 mr-1" />
+                        Cancel
+                      </Button>
+                    )}
                   </h2>
 
-                  <form onSubmit={handleAddMaterial} className="space-y-4">
+                  <form onSubmit={editingMaterial ? handleUpdateMaterial : handleAddMaterial} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label>Material Title</Label>
@@ -954,7 +1009,7 @@ const AdminCourses: React.FC = () => {
                           className="w-full h-10 px-3 rounded-md bg-background border border-input"
                         >
                           <option value="text">Text Content</option>
-                          <option value="audio">Audio File URL</option>
+                          <option value="audio">Audio File</option>
                           <option value="pdf">PDF URL</option>
                           <option value="youtube">YouTube Video URL</option>
                         </select>
@@ -999,8 +1054,14 @@ const AdminCourses: React.FC = () => {
                     </div>
 
                     <Button type="submit" disabled={isLoading}>
-                      {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
-                      Add Material
+                      {isLoading ? (
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      ) : editingMaterial ? (
+                        <Save className="w-4 h-4 mr-2" />
+                      ) : (
+                        <Plus className="w-4 h-4 mr-2" />
+                      )}
+                      {editingMaterial ? 'Update Material' : 'Add Material'}
                     </Button>
                   </form>
                 </Card>
@@ -1040,14 +1101,23 @@ const AdminCourses: React.FC = () => {
                               </p>
                             </div>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteMaterial(material.id)}
-                            className="text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEditMaterial(material)}
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteMaterial(material.id)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
                       ))}
                     </div>
