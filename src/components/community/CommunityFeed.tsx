@@ -19,6 +19,8 @@ import { AvatarRequiredAlert } from './AvatarRequiredAlert';
 import { ProfileEditDialog } from '@/components/profile/ProfileEditDialog';
 import AdminPostCreator from './AdminPostCreator';
 import RichMediaPost from './RichMediaPost';
+import LiveStreamList from './LiveStreamList';
+import AdminGoLive from './AdminGoLive';
 
 const CommunityFeed = () => {
   const { t } = useTranslation();
@@ -43,6 +45,14 @@ const CommunityFeed = () => {
       {user && !hasAvatar && (
         <AvatarRequiredAlert onUploadClick={() => setProfileEditOpen(true)} />
       )}
+
+      {/* Admin Go Live Button */}
+      {isAdmin && (
+        <AdminGoLive />
+      )}
+
+      {/* Live Streams */}
+      <LiveStreamList />
 
       {/* Admin Post Creator - Only visible to admins */}
       {isAdmin && (
