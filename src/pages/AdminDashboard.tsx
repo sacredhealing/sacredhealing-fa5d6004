@@ -15,7 +15,8 @@ import {
   Youtube,
   ShoppingBag,
   Crown,
-  Trophy
+  Trophy,
+  Mail
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -105,6 +106,13 @@ const adminSections = [
     icon: Sparkles,
     href: '/admin/transformation',
     color: 'text-amber-500',
+  },
+  {
+    title: 'Email List',
+    description: 'Manage subscribers and send bulk emails',
+    icon: Mail,
+    href: '/admin/email-list',
+    color: 'text-cyan-500',
   },
 ];
 
