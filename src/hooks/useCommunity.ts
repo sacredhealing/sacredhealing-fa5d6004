@@ -8,6 +8,13 @@ interface Post {
   user_id: string;
   content: string;
   image_url: string | null;
+  audio_url: string | null;
+  video_url: string | null;
+  pdf_url: string | null;
+  post_type: string;
+  is_live_recording: boolean;
+  live_recording_title: string | null;
+  live_recording_description: string | null;
   likes_count: number;
   comments_count: number;
   created_at: string;
