@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Music, Play, Pause, Coins, Clock, Sparkles } from 'lucide-react';
+import { Music, Play, Pause, Coins, Clock, Sparkles, Repeat } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -29,6 +29,7 @@ const Mantras = () => {
   const [loading, setLoading] = useState(true);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [progress, setProgress] = useState<Record<string, number>>({});
+  const [isLooping, setIsLooping] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -87,13 +88,20 @@ const Mantras = () => {
     });
 
     audio.addEventListener('ended', async () => {
-      setPlayingId(null);
-      setProgress(prev => ({ ...prev, [mantra.id]: 0 }));
-      
       // Award SHC if logged in
       if (user) {
         await awardMantraReward(mantra);
       }
+      
+      // If looping, restart the audio
+      if (isLooping) {
+        audio.currentTime = 0;
+        audio.play();
+        return;
+      }
+      
+      setPlayingId(null);
+      setProgress(prev => ({ ...prev, [mantra.id]: 0 }));
     });
 
     try {
@@ -179,6 +187,17 @@ const Mantras = () => {
           <Coins className="w-3 h-3 mr-1" />
           111 SHC per mantra
         </Badge>
+        
+        {/* Loop Toggle */}
+        <Button
+          variant={isLooping ? 'default' : 'outline'}
+          size="sm"
+          className="mt-3"
+          onClick={() => setIsLooping(!isLooping)}
+        >
+          <Repeat className={`w-4 h-4 mr-2 ${isLooping ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
+          {isLooping ? 'Loop On' : 'Loop Off'}
+        </Button>
       </div>
 
       {/* Mantras List */}
