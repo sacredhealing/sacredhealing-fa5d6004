@@ -65,3 +65,6 @@ verify_jwt = true
 
 [functions.check-meditation-membership]
 verify_jwt = true
+
+[functions.generate-agora-token]
+verify_jwt = true

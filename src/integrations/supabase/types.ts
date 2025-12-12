@@ -878,6 +878,80 @@ export type Database = {
           },
         ]
       }
+      live_stream_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          stream_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          stream_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          stream_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_stream_messages_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "live_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_streams: {
+        Row: {
+          admin_user_id: string
+          channel_name: string
+          created_at: string
+          description: string | null
+          ended_at: string | null
+          id: string
+          recording_url: string | null
+          started_at: string
+          status: string
+          title: string
+          viewer_count: number
+        }
+        Insert: {
+          admin_user_id: string
+          channel_name: string
+          created_at?: string
+          description?: string | null
+          ended_at?: string | null
+          id?: string
+          recording_url?: string | null
+          started_at?: string
+          status?: string
+          title: string
+          viewer_count?: number
+        }
+        Update: {
+          admin_user_id?: string
+          channel_name?: string
+          created_at?: string
+          description?: string | null
+          ended_at?: string | null
+          id?: string
+          recording_url?: string | null
+          started_at?: string
+          status?: string
+          title?: string
+          viewer_count?: number
+        }
+        Relationships: []
+      }
       mantra_completions: {
         Row: {
           completed_at: string
