@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCommunity, usePostComments } from '@/hooks/useCommunity';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,17 +15,21 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { AvatarRequiredAlert } from './AvatarRequiredAlert';
+import { ProfileEditDialog } from '@/components/profile/ProfileEditDialog';
 
 const CommunityFeed = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { hasAvatar } = useProfile();
   const { posts, isLoading, createPost, likePost, fetchPosts } = useCommunity();
   const [newPost, setNewPost] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expandedPost, setExpandedPost] = useState<string | null>(null);
+  const [profileEditOpen, setProfileEditOpen] = useState(false);
 
   const handleSubmit = async () => {
-    if (!newPost.trim() || isSubmitting) return;
+    if (!newPost.trim() || isSubmitting || !hasAvatar) return;
     setIsSubmitting(true);
     const success = await createPost(newPost.trim());
     if (success) setNewPost('');
@@ -41,19 +46,25 @@ const CommunityFeed = () => {
 
   return (
     <div className="space-y-4">
+      {/* Avatar Required Alert */}
+      {user && !hasAvatar && (
+        <AvatarRequiredAlert onUploadClick={() => setProfileEditOpen(true)} />
+      )}
+
       {/* Create Post */}
       {user && (
         <Card className="bg-card border-border">
           <CardContent className="p-4">
             <Textarea
-              placeholder={t('community.shareSomething')}
+              placeholder={hasAvatar ? t('community.shareSomething') : t('community.uploadAvatarFirst')}
               value={newPost}
               onChange={(e) => setNewPost(e.target.value)}
               className="mb-3 resize-none"
               rows={3}
+              disabled={!hasAvatar}
             />
             <div className="flex justify-end">
-              <Button onClick={handleSubmit} disabled={!newPost.trim() || isSubmitting}>
+              <Button onClick={handleSubmit} disabled={!newPost.trim() || isSubmitting || !hasAvatar}>
                 {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
                 {t('community.post')}
               </Button>
@@ -101,7 +112,8 @@ const CommunityFeed = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => likePost(post.id)}
+                  onClick={() => hasAvatar && likePost(post.id)}
+                  disabled={!hasAvatar}
                   className={post.user_liked ? 'text-red-500' : 'text-muted-foreground'}
                 >
                   <Heart className={`h-4 w-4 mr-1 ${post.user_liked ? 'fill-current' : ''}`} />
@@ -115,7 +127,7 @@ const CommunityFeed = () => {
                     </Button>
                   </CollapsibleTrigger>
                   <CollapsibleContent className="mt-4">
-                    <PostComments postId={post.id} onCommentAdded={fetchPosts} />
+                    <PostComments postId={post.id} onCommentAdded={fetchPosts} hasAvatar={hasAvatar} />
                   </CollapsibleContent>
                 </Collapsible>
               </div>
@@ -123,11 +135,13 @@ const CommunityFeed = () => {
           </Card>
         ))
       )}
+
+      <ProfileEditDialog open={profileEditOpen} onOpenChange={setProfileEditOpen} />
     </div>
   );
 };
 
-const PostComments = ({ postId, onCommentAdded }: { postId: string; onCommentAdded: () => void }) => {
+const PostComments = ({ postId, onCommentAdded, hasAvatar }: { postId: string; onCommentAdded: () => void; hasAvatar: boolean }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { comments, isLoading, addComment } = usePostComments(postId);
@@ -135,7 +149,7 @@ const PostComments = ({ postId, onCommentAdded }: { postId: string; onCommentAdd
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
-    if (!newComment.trim() || isSubmitting) return;
+    if (!newComment.trim() || isSubmitting || !hasAvatar) return;
     setIsSubmitting(true);
     const success = await addComment(newComment.trim());
     if (success) {
@@ -147,7 +161,7 @@ const PostComments = ({ postId, onCommentAdded }: { postId: string; onCommentAdd
 
   return (
     <div className="space-y-3 border-t border-border pt-4">
-      {user && (
+      {user && hasAvatar && (
         <div className="flex gap-2">
           <Input
             placeholder={t('community.writeComment')}

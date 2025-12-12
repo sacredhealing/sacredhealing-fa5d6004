@@ -239,6 +239,7 @@
     "chatRooms": "Chat",
     "messages": "DMs",
     "shareSomething": "Share something with the community...",
+    "uploadAvatarFirst": "Upload a profile picture to start posting...",
     "post": "Post",
     "noPosts": "No posts yet. Be the first to share!",
     "writeComment": "Write a comment...",
@@ -256,7 +257,10 @@
     "searchUsers": "Search users...",
     "noUsersFound": "No users found",
     "noConversations": "No conversations yet",
-    "startConversation": "Start the conversation!"
+    "startConversation": "Start the conversation!",
+    "profileRequired": "Profile Picture Required",
+    "profileRequiredDesc": "Please upload a profile picture to chat, comment, or like content.",
+    "uploadNow": "Upload now"
   },
   "supportCircle": {
     "createRequest": "Create Request",
@@ -416,7 +420,13 @@
     "dataAndSecurity": "Data & security",
     "appPreferences": "App preferences",
     "dailyReminders": "Daily reminders",
-    "web3Wallet": "Web3 wallet"
+    "web3Wallet": "Web3 wallet",
+    "editProfile": "Edit Profile",
+    "tapToChange": "Tap to change profile picture",
+    "fullName": "Full Name",
+    "enterName": "Enter your name",
+    "bio": "Bio",
+    "enterBio": "Tell us a little about yourself..."
   },
   "courses": {
     "title": "Courses",
