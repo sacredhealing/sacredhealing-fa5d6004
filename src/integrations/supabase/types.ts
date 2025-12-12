@@ -565,6 +565,39 @@ export type Database = {
         }
         Relationships: []
       }
+      email_subscribers: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          is_active: boolean
+          name: string | null
+          source: string
+          subscribed_at: string
+          unsubscribed_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          is_active?: boolean
+          name?: string | null
+          source?: string
+          subscribed_at?: string
+          unsubscribed_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          is_active?: boolean
+          name?: string | null
+          source?: string
+          subscribed_at?: string
+          unsubscribed_at?: string | null
+        }
+        Relationships: []
+      }
       healing_audio: {
         Row: {
           audio_url: string

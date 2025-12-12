@@ -41,6 +41,7 @@ import AdminMantras from "./pages/AdminMantras";
 import AdminShop from "./pages/AdminShop";
 import AdminPrivateSessions from "./pages/AdminPrivateSessions";
 import AdminTransformation from "./pages/AdminTransformation";
+import AdminEmailList from "./pages/AdminEmailList";
 import StargateMembership from "./pages/StargateMembership";
 import PractitionerCertification from "./pages/PractitionerCertification";
 import Leaderboard from "./pages/Leaderboard";
@@ -109,6 +110,7 @@ const App = () => (
               <Route path="/admin/shop" element={<AdminShop />} />
               <Route path="/admin/private-sessions" element={<AdminPrivateSessions />} />
               <Route path="/admin/transformation" element={<AdminTransformation />} />
+              <Route path="/admin/email-list" element={<AdminEmailList />} />
             </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
