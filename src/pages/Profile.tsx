@@ -1,32 +1,36 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { User, Mail, Flame, Award, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield, LayoutDashboard, Globe, Megaphone, Crown, Check } from 'lucide-react';
+import { User, Mail, Flame, Award, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield, LayoutDashboard, Globe, Megaphone, Crown, Check, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { LotusIcon } from '@/components/icons/LotusIcon';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { useAuth } from '@/hooks/useAuth';
 import { usePhantomWallet } from '@/hooks/usePhantomWallet';
 import { useSHC } from '@/contexts/SHCContext';
+import { useProfile } from '@/hooks/useProfile';
 import { useToast } from '@/hooks/use-toast';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
 import { NotificationsDialog } from '@/components/profile/NotificationsDialog';
 import { AppearanceDialog } from '@/components/profile/AppearanceDialog';
 import { PrivacyDialog } from '@/components/profile/PrivacyDialog';
 import { SettingsDialog } from '@/components/profile/SettingsDialog';
+import { ProfileEditDialog } from '@/components/profile/ProfileEditDialog';
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user, signOut } = useAuth();
   const { walletAddress, connectWallet } = usePhantomWallet();
-  const { balance, profile } = useSHC();
+  const { balance, profile: shcProfile } = useSHC();
+  const { profile } = useProfile();
   const { toast } = useToast();
   
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [appearanceOpen, setAppearanceOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [profileEditOpen, setProfileEditOpen] = useState(false);
 
   const badges = [
     { id: 1, emoji: '🧘', titleKey: 'badges.firstMeditation', earned: true },
@@ -70,22 +74,33 @@ const Profile: React.FC = () => {
       <div className="flex flex-col items-center mb-8 animate-fade-in">
         <div className="relative">
           <div className="w-24 h-24 rounded-full bg-gradient-healing p-1 glow-purple">
-            <div className="w-full h-full rounded-full bg-background flex items-center justify-center">
-              <LotusIcon size={48} />
-            </div>
+            <Avatar className="w-full h-full">
+              <AvatarImage src={profile?.avatar_url || undefined} />
+              <AvatarFallback className="bg-background text-4xl">
+                {userName?.charAt(0) || '🧘'}
+              </AvatarFallback>
+            </Avatar>
           </div>
-          <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-secondary-foreground">
-            <Flame size={16} />
-          </div>
+          <button 
+            onClick={() => setProfileEditOpen(true)}
+            className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            <Pencil size={14} />
+          </button>
         </div>
         
         <h1 className="mt-4 text-2xl font-heading font-bold text-foreground">{userName}</h1>
         <p className="text-muted-foreground">{userEmail}</p>
         
+        {/* Bio */}
+        {profile?.bio && (
+          <p className="mt-2 text-sm text-muted-foreground text-center max-w-xs">{profile.bio}</p>
+        )}
+        
         {/* Stats */}
         <div className="flex gap-8 mt-6">
           <div className="text-center">
-            <p className="text-2xl font-heading font-bold text-primary">{profile?.streak_days ?? 0}</p>
+            <p className="text-2xl font-heading font-bold text-primary">{shcProfile?.streak_days ?? 0}</p>
             <p className="text-xs text-muted-foreground">{t('profile.streak')}</p>
           </div>
           <div className="text-center">
@@ -214,6 +229,7 @@ const Profile: React.FC = () => {
       <AppearanceDialog open={appearanceOpen} onOpenChange={setAppearanceOpen} />
       <PrivacyDialog open={privacyOpen} onOpenChange={setPrivacyOpen} />
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <ProfileEditDialog open={profileEditOpen} onOpenChange={setProfileEditOpen} />
     </div>
   );
 };

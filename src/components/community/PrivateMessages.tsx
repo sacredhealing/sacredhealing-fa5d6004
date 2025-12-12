@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCommunity, usePrivateChat, useAllUsers } from '@/hooks/useCommunity';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,16 +11,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, ArrowLeft, Send, Loader2, Mail, Search } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { AvatarRequiredAlert } from './AvatarRequiredAlert';
+import { ProfileEditDialog } from '@/components/profile/ProfileEditDialog';
 
 const PrivateMessages = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { hasAvatar } = useProfile();
   const { conversations, isLoading } = useCommunity();
   const [selectedPartner, setSelectedPartner] = useState<string | null>(null);
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
+  const [profileEditOpen, setProfileEditOpen] = useState(false);
 
   if (selectedPartner) {
-    return <PrivateChatView partnerId={selectedPartner} onBack={() => setSelectedPartner(null)} />;
+    return <PrivateChatView partnerId={selectedPartner} onBack={() => setSelectedPartner(null)} hasAvatar={hasAvatar} />;
   }
 
   if (isLoading) {
@@ -32,8 +37,13 @@ const PrivateMessages = () => {
 
   return (
     <div className="space-y-4">
+      {/* Avatar Required Alert */}
+      {user && !hasAvatar && (
+        <AvatarRequiredAlert onUploadClick={() => setProfileEditOpen(true)} />
+      )}
+
       {/* New Chat Button */}
-      {user && (
+      {user && hasAvatar && (
         <Dialog open={isNewChatOpen} onOpenChange={setIsNewChatOpen}>
           <DialogTrigger asChild>
             <Button className="w-full">
@@ -99,6 +109,8 @@ const PrivateMessages = () => {
           </Card>
         ))
       )}
+
+      <ProfileEditDialog open={profileEditOpen} onOpenChange={setProfileEditOpen} />
     </div>
   );
 };
@@ -150,7 +162,7 @@ const UserSelector = ({ onSelect }: { onSelect: (userId: string) => void }) => {
   );
 };
 
-const PrivateChatView = ({ partnerId, onBack }: { partnerId: string; onBack: () => void }) => {
+const PrivateChatView = ({ partnerId, onBack, hasAvatar }: { partnerId: string; onBack: () => void; hasAvatar: boolean }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { messages, partnerProfile, isLoading, sendMessage } = usePrivateChat(partnerId);
@@ -158,7 +170,7 @@ const PrivateChatView = ({ partnerId, onBack }: { partnerId: string; onBack: () 
   const [isSending, setIsSending] = useState(false);
 
   const handleSend = async () => {
-    if (!newMessage.trim() || isSending) return;
+    if (!newMessage.trim() || isSending || !hasAvatar) return;
     setIsSending(true);
     await sendMessage(newMessage.trim());
     setNewMessage('');
@@ -215,7 +227,7 @@ const PrivateChatView = ({ partnerId, onBack }: { partnerId: string; onBack: () 
       </ScrollArea>
 
       {/* Input */}
-      {user && (
+      {user && hasAvatar && (
         <div className="flex gap-2 mt-4 pt-4 border-t border-border">
           <Input
             placeholder={t('community.typeMessage')}

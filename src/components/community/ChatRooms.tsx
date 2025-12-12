@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCommunity, useChatRoom } from '@/hooks/useCommunity';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,16 +11,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, ArrowLeft, Send, Loader2, Users } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { AvatarRequiredAlert } from './AvatarRequiredAlert';
+import { ProfileEditDialog } from '@/components/profile/ProfileEditDialog';
 
 const ChatRooms = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { hasAvatar } = useProfile();
   const { chatRooms, isLoading, createChatRoom } = useCommunity();
   const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [newRoomName, setNewRoomName] = useState('');
   const [newRoomDesc, setNewRoomDesc] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [profileEditOpen, setProfileEditOpen] = useState(false);
 
   const handleCreateRoom = async () => {
     if (!newRoomName.trim() || isCreating) return;
@@ -34,7 +39,7 @@ const ChatRooms = () => {
   };
 
   if (selectedRoom) {
-    return <ChatRoomView roomId={selectedRoom} onBack={() => setSelectedRoom(null)} />;
+    return <ChatRoomView roomId={selectedRoom} onBack={() => setSelectedRoom(null)} hasAvatar={hasAvatar} />;
   }
 
   if (isLoading) {
@@ -47,8 +52,13 @@ const ChatRooms = () => {
 
   return (
     <div className="space-y-4">
+      {/* Avatar Required Alert */}
+      {user && !hasAvatar && (
+        <AvatarRequiredAlert onUploadClick={() => setProfileEditOpen(true)} />
+      )}
+
       {/* Create Room Button */}
-      {user && (
+      {user && hasAvatar && (
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
             <Button className="w-full">
@@ -111,11 +121,13 @@ const ChatRooms = () => {
           </Card>
         ))
       )}
+
+      <ProfileEditDialog open={profileEditOpen} onOpenChange={setProfileEditOpen} />
     </div>
   );
 };
 
-const ChatRoomView = ({ roomId, onBack }: { roomId: string; onBack: () => void }) => {
+const ChatRoomView = ({ roomId, onBack, hasAvatar }: { roomId: string; onBack: () => void; hasAvatar: boolean }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { messages, isLoading, sendMessage } = useChatRoom(roomId);
@@ -123,7 +135,7 @@ const ChatRoomView = ({ roomId, onBack }: { roomId: string; onBack: () => void }
   const [isSending, setIsSending] = useState(false);
 
   const handleSend = async () => {
-    if (!newMessage.trim() || isSending) return;
+    if (!newMessage.trim() || isSending || !hasAvatar) return;
     setIsSending(true);
     await sendMessage(newMessage.trim());
     setNewMessage('');
@@ -183,7 +195,7 @@ const ChatRoomView = ({ roomId, onBack }: { roomId: string; onBack: () => void }
       </ScrollArea>
 
       {/* Input */}
-      {user && (
+      {user && hasAvatar && (
         <div className="flex gap-2 mt-4 pt-4 border-t border-border">
           <Input
             placeholder={t('community.typeMessage')}
