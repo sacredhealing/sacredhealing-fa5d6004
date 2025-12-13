@@ -52,6 +52,7 @@ import Install from "./pages/Install";
 import SpiritualTransformation from "./pages/SpiritualTransformation";
 import Podcast from "./pages/Podcast";
 import LiveRecordings from "./pages/LiveRecordings";
+import AIIncomeEngine from "./pages/AIIncomeEngine";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -98,6 +99,7 @@ const App = () => (
                 <Route path="/spiritual-transformation" element={<SpiritualTransformation />} />
                 <Route path="/podcast" element={<Podcast />} />
                 <Route path="/live-recordings" element={<LiveRecordings />} />
+                <Route path="/ai-income" element={<AIIncomeEngine />} />
               </Route>
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/meditations" element={<Admin />} />
