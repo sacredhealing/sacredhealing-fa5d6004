@@ -3,9 +3,6 @@ import { Card, CardContent } from "@/components/ui/card"
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts"
 import { motion } from "framer-motion"
 
-const BOT_URL = "https://YOUR_BOT_DOMAIN/bot_state.json"
-// leave as-is for now — real bot plugs in later
-
 interface BotState {
   status: string
   regime: string
@@ -16,7 +13,7 @@ interface BotState {
 }
 
 interface HistoryPoint {
-  t: number
+  t: string
   v: number
 }
 
@@ -48,35 +45,26 @@ export default function AIIncomeEngine() {
 
   const [history, setHistory] = useState<HistoryPoint[]>([])
 
+  // Simulate live bot behavior every 3 seconds
   useEffect(() => {
-    const tick = async () => {
-      try {
-        // 🔗 TRY REAL BOT FIRST
-        const res = await fetch(BOT_URL, { cache: "no-store" })
-        if (!res.ok) throw new Error("bot offline")
-        const data = await res.json()
-        setBot(data)
-        setHistory((h) => [...h.slice(-20), { t: Date.now(), v: data.pnl }])
-      } catch {
-        // 🧪 FALLBACK: SAFE TEST MODE
-        setBot((prev) => {
-          const next = {
-            ...prev,
-            pnl: +(prev.pnl + (Math.random() - 0.4)).toFixed(2),
-            trades_today:
-              prev.trades_today + (Math.random() > 0.75 ? 1 : 0),
-            last_signal: Math.random() > 0.6 ? "BUY" : "WAIT",
-            regime: Math.random() > 0.85 ? "COLD" : "HOT",
-          }
-          setHistory((h) => [...h.slice(-20), { t: Date.now(), v: next.pnl }])
-          return next
-        })
-      }
+    const tick = () => {
+      setBot((prev) => {
+        const next = {
+          ...prev,
+          pnl: +(prev.pnl + (Math.random() - 0.4)).toFixed(2),
+          trades_today: prev.trades_today + (Math.random() > 0.7 ? 1 : 0),
+          last_signal: Math.random() > 0.6 ? "BUY" : "WAIT",
+          regime: Math.random() > 0.8 ? "COLD" : "HOT",
+          status: "ACTIVE",
+        }
+        setHistory((h) => [...h.slice(-20), { t: new Date().toLocaleTimeString(), v: next.pnl }])
+        return next
+      })
     }
 
     tick()
-    const i = setInterval(tick, 3000)
-    return () => clearInterval(i)
+    const interval = setInterval(tick, 3000)
+    return () => clearInterval(interval)
   }, [])
 
   return (
@@ -91,9 +79,7 @@ export default function AIIncomeEngine() {
 
       <Card>
         <CardContent className="p-5 text-sm text-muted-foreground">
-          This AI system monitors new Solana memecoin launches, tracks whale
-          wallets, measures momentum, and only trades during favorable market
-          regimes. Students observe signals, risk controls, and performance live.
+          This AI system simulates scanning Solana memecoin launches, tracks whale wallets, measures momentum, and trades in favorable regimes. Students can observe live signals and performance in real time.
         </CardContent>
       </Card>
 
@@ -109,8 +95,8 @@ export default function AIIncomeEngine() {
           <h2 className="font-semibold mb-2 text-foreground">Strategy PnL (%)</h2>
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={history}>
-              <XAxis dataKey="t" hide />
-              <YAxis stroke="hsl(var(--muted-foreground))" />
+              <XAxis dataKey="t" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
               <Tooltip
                 contentStyle={{
                   backgroundColor: 'hsl(var(--card))',
@@ -130,6 +116,12 @@ export default function AIIncomeEngine() {
       <Card>
         <CardContent className="p-5 text-sm text-muted-foreground">
           Last AI Signal: <strong className="text-foreground">{bot.last_signal}</strong>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-5 text-sm text-muted-foreground">
+          Note: This is a <strong className="text-foreground">simulated bot</strong>. No real money is used. Students are observing performance for educational purposes.
         </CardContent>
       </Card>
     </div>
