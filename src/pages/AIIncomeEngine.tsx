@@ -3,6 +3,9 @@ import { Card, CardContent } from "@/components/ui/card"
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts"
 import { motion } from "framer-motion"
 
+const BOT_URL = "https://YOUR_BOT_DOMAIN/bot_state.json"
+// leave as-is for now — real bot plugs in later
+
 interface BotState {
   status: string
   regime: string
@@ -10,6 +13,11 @@ interface BotState {
   pnl: number
   trades_today: number
   last_signal: string
+}
+
+interface HistoryPoint {
+  t: number
+  v: number
 }
 
 interface StatProps {
@@ -30,32 +38,46 @@ function Stat({ label, value }: StatProps) {
 
 export default function AIIncomeEngine() {
   const [bot, setBot] = useState<BotState>({
-    status: "ACTIVE",
-    regime: "HOT",
-    risk: "NORMAL",
+    status: "TEST MODE",
+    regime: "WARM",
+    risk: "SAFE",
     pnl: 0,
     trades_today: 0,
     last_signal: "WAIT",
   })
 
-  // 🔁 SIMULATED LIVE BOT (auto-updates)
+  const [history, setHistory] = useState<HistoryPoint[]>([])
+
   useEffect(() => {
-    const interval = setInterval(() => {
-      setBot((prev) => ({
-        ...prev,
-        pnl: +(prev.pnl + (Math.random() - 0.3)).toFixed(2),
-        trades_today: prev.trades_today + (Math.random() > 0.7 ? 1 : 0),
-        last_signal: Math.random() > 0.6 ? "BUY" : "WAIT",
-        regime: Math.random() > 0.8 ? "COLD" : "HOT",
-      }))
-    }, 3000)
+    const tick = async () => {
+      try {
+        // 🔗 TRY REAL BOT FIRST
+        const res = await fetch(BOT_URL, { cache: "no-store" })
+        if (!res.ok) throw new Error("bot offline")
+        const data = await res.json()
+        setBot(data)
+        setHistory((h) => [...h.slice(-20), { t: Date.now(), v: data.pnl }])
+      } catch {
+        // 🧪 FALLBACK: SAFE TEST MODE
+        setBot((prev) => {
+          const next = {
+            ...prev,
+            pnl: +(prev.pnl + (Math.random() - 0.4)).toFixed(2),
+            trades_today:
+              prev.trades_today + (Math.random() > 0.75 ? 1 : 0),
+            last_signal: Math.random() > 0.6 ? "BUY" : "WAIT",
+            regime: Math.random() > 0.85 ? "COLD" : "HOT",
+          }
+          setHistory((h) => [...h.slice(-20), { t: Date.now(), v: next.pnl }])
+          return next
+        })
+      }
+    }
 
-    return () => clearInterval(interval)
+    tick()
+    const i = setInterval(tick, 3000)
+    return () => clearInterval(i)
   }, [])
-
-  const pnlData = [
-    { t: "Now", v: bot.pnl }
-  ]
 
   return (
     <div className="p-6 space-y-6">
@@ -68,43 +90,45 @@ export default function AIIncomeEngine() {
       </motion.h1>
 
       <Card>
-        <CardContent className="p-6 text-sm text-muted-foreground">
-          This AI system scans new Solana memecoin launches, tracks whale wallets,
-          measures momentum, and only trades during favorable market conditions.
-          Students can observe signals and performance live.
+        <CardContent className="p-5 text-sm text-muted-foreground">
+          This AI system monitors new Solana memecoin launches, tracks whale
+          wallets, measures momentum, and only trades during favorable market
+          regimes. Students observe signals, risk controls, and performance live.
         </CardContent>
       </Card>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Stat label="Status" value={bot.status} />
+        <Stat label="Bot Status" value={bot.status} />
         <Stat label="Market Regime" value={bot.regime} />
         <Stat label="Risk State" value={bot.risk} />
         <Stat label="Trades Today" value={bot.trades_today} />
       </div>
 
       <Card>
-        <CardContent className="p-6">
-          <h2 className="font-semibold mb-2 text-foreground">Live Strategy PnL (%)</h2>
-          <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={pnlData}>
-              <XAxis dataKey="t" stroke="hsl(var(--muted-foreground))" />
+        <CardContent className="p-5">
+          <h2 className="font-semibold mb-2 text-foreground">Strategy PnL (%)</h2>
+          <ResponsiveContainer width="100%" height={220}>
+            <LineChart data={history}>
+              <XAxis dataKey="t" hide />
               <YAxis stroke="hsl(var(--muted-foreground))" />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'hsl(var(--card))', 
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'hsl(var(--card))',
                   border: '1px solid hsl(var(--border))',
                   borderRadius: '8px'
                 }}
               />
-              <Line type="monotone" dataKey="v" stroke="hsl(var(--primary))" strokeWidth={2} />
+              <Line type="monotone" dataKey="v" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
-          <p className="mt-2 text-sm text-muted-foreground">Current PnL: {bot.pnl}%</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Current PnL: <strong className="text-foreground">{bot.pnl}%</strong>
+          </p>
         </CardContent>
       </Card>
 
       <Card>
-        <CardContent className="p-6 text-sm text-muted-foreground">
+        <CardContent className="p-5 text-sm text-muted-foreground">
           Last AI Signal: <strong className="text-foreground">{bot.last_signal}</strong>
         </CardContent>
       </Card>
