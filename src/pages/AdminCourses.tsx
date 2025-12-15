@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, BookOpen, Loader2, Save, Video, FileText, Music, Type, Edit2, X, Globe, Link as LinkIcon, FolderOpen } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, BookOpen, Loader2, Save, Video, FileText, Music, Type, Edit2, X, Globe, Link as LinkIcon, FolderOpen, ChevronUp, ChevronDown, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -50,6 +50,7 @@ interface Material {
   title: string;
   file_url: string;
   file_type: string;
+  order_index: number;
 }
 
 const categories = ['healing', 'yoga', 'meditation', 'spiritual', 'wellness', 'mindfulness', 'abundance'];
@@ -150,8 +151,52 @@ const AdminCourses: React.FC = () => {
       query = query.eq('lesson_id', lessonId);
     }
     
-    const { data } = await query.order('created_at');
+    const { data } = await query.order('order_index');
     if (data) setMaterials(data);
+  };
+
+  const handleMoveLesson = async (lessonId: string, direction: 'up' | 'down') => {
+    if (!selectedCourse) return;
+    
+    const currentIndex = lessons.findIndex(l => l.id === lessonId);
+    if (currentIndex === -1) return;
+    
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    if (targetIndex < 0 || targetIndex >= lessons.length) return;
+
+    const currentLesson = lessons[currentIndex];
+    const targetLesson = lessons[targetIndex];
+
+    // Swap order_index values
+    await Promise.all([
+      supabase.from('lessons').update({ order_index: targetLesson.order_index }).eq('id', currentLesson.id),
+      supabase.from('lessons').update({ order_index: currentLesson.order_index }).eq('id', targetLesson.id),
+    ]);
+
+    fetchLessons(selectedCourse.id);
+    toast({ title: 'Lesson order updated' });
+  };
+
+  const handleMoveMaterial = async (materialId: string, direction: 'up' | 'down') => {
+    if (!selectedCourse || !selectedLesson) return;
+    
+    const currentIndex = materials.findIndex(m => m.id === materialId);
+    if (currentIndex === -1) return;
+    
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    if (targetIndex < 0 || targetIndex >= materials.length) return;
+
+    const currentMaterial = materials[currentIndex];
+    const targetMaterial = materials[targetIndex];
+
+    // Swap order_index values
+    await Promise.all([
+      supabase.from('course_materials').update({ order_index: targetMaterial.order_index }).eq('id', currentMaterial.id),
+      supabase.from('course_materials').update({ order_index: currentMaterial.order_index }).eq('id', targetMaterial.id),
+    ]);
+
+    fetchMaterials(selectedCourse.id, selectedLesson.id);
+    toast({ title: 'Material order updated' });
   };
 
   const resetCourseForm = () => {
@@ -385,6 +430,7 @@ const AdminCourses: React.FC = () => {
       title: materialForm.title,
       file_url: materialForm.file_url,
       file_type: materialForm.file_type,
+      order_index: materials.length,
     });
 
     if (error) {
@@ -903,6 +949,33 @@ const AdminCourses: React.FC = () => {
                           onClick={() => setSelectedLesson(lesson)}
                         >
                           <div className="flex items-center gap-3">
+                            {/* Reorder Controls */}
+                            <div className="flex flex-col gap-0.5">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-5 w-5"
+                                disabled={index === 0}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleMoveLesson(lesson.id, 'up');
+                                }}
+                              >
+                                <ChevronUp className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-5 w-5"
+                                disabled={index === lessons.length - 1}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleMoveLesson(lesson.id, 'down');
+                                }}
+                              >
+                                <ChevronDown className="w-3 h-3" />
+                              </Button>
+                            </div>
                             <span className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-sm font-medium">
                               {index + 1}
                             </span>
@@ -1076,12 +1149,36 @@ const AdminCourses: React.FC = () => {
                     <p className="text-muted-foreground text-center py-8">No materials added yet</p>
                   ) : (
                     <div className="space-y-2">
-                      {materials.map((material) => (
+                      {materials.map((material, index) => (
                         <div
                           key={material.id}
                           className="flex items-center justify-between p-3 rounded-lg bg-muted/30"
                         >
                           <div className="flex items-center gap-3">
+                            {/* Reorder Controls */}
+                            <div className="flex flex-col gap-0.5">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-5 w-5"
+                                disabled={index === 0}
+                                onClick={() => handleMoveMaterial(material.id, 'up')}
+                              >
+                                <ChevronUp className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-5 w-5"
+                                disabled={index === materials.length - 1}
+                                onClick={() => handleMoveMaterial(material.id, 'down')}
+                              >
+                                <ChevronDown className="w-3 h-3" />
+                              </Button>
+                            </div>
+                            <span className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-xs font-medium">
+                              {index + 1}
+                            </span>
                             {getMaterialIcon(material.file_type)}
                             <div>
                               <p className="font-medium text-foreground">{material.title}</p>
