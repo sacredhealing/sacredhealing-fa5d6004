@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 interface PhantomProvider {
   isPhantom: boolean;
   publicKey: { toString: () => string } | null;
-  connect: () => Promise<{ publicKey: { toString: () => string } }>;
+  connect: (opts?: { onlyIfTrusted?: boolean }) => Promise<{ publicKey: { toString: () => string } }>;
   disconnect: () => Promise<void>;
   on: (event: string, callback: (args: any) => void) => void;
   off: (event: string, callback: (args: any) => void) => void;
@@ -52,18 +52,50 @@ export const usePhantomWallet = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    const checkPhantom = () => {
+    const checkPhantomAndReconnect = async () => {
       const provider = window.solana;
       setIsPhantomInstalled(!!provider?.isPhantom);
       
+      // If Phantom is already connected, use that address
       if (provider?.publicKey) {
         setWalletAddress(provider.publicKey.toString());
+        return;
+      }
+      
+      // Try to auto-reconnect from saved wallet
+      if (provider?.isPhantom) {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const { data: savedWallet } = await supabase
+              .from('user_wallets')
+              .select('wallet_address')
+              .eq('user_id', user.id)
+              .eq('is_primary', true)
+              .maybeSingle();
+            
+            if (savedWallet) {
+              // Try silent reconnect (doesn't prompt user)
+              try {
+                const response = await provider.connect({ onlyIfTrusted: true });
+                if (response.publicKey) {
+                  setWalletAddress(response.publicKey.toString());
+                }
+              } catch {
+                // Silent reconnect failed - user will need to manually connect
+                // This is expected if the user revoked permission
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error checking saved wallet:', error);
+        }
       }
     };
 
     // Check immediately and after a short delay (Phantom may load after page)
-    checkPhantom();
-    const timeout = setTimeout(checkPhantom, 500);
+    checkPhantomAndReconnect();
+    const timeout = setTimeout(checkPhantomAndReconnect, 500);
 
     return () => clearTimeout(timeout);
   }, []);
