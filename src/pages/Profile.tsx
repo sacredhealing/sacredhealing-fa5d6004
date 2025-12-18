@@ -10,6 +10,7 @@ import { usePhantomWallet } from '@/hooks/usePhantomWallet';
 import { useSHC } from '@/contexts/SHCContext';
 import { useProfile } from '@/hooks/useProfile';
 import { useToast } from '@/hooks/use-toast';
+import { useAdminRole } from '@/hooks/useAdminRole';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
 import { NotificationsDialog } from '@/components/profile/NotificationsDialog';
 import { AppearanceDialog } from '@/components/profile/AppearanceDialog';
@@ -25,6 +26,7 @@ const Profile: React.FC = () => {
   const { balance, profile: shcProfile } = useSHC();
   const { profile } = useProfile();
   const { toast } = useToast();
+  const { isAdmin } = useAdminRole();
   
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [appearanceOpen, setAppearanceOpen] = useState(false);
@@ -45,14 +47,16 @@ const Profile: React.FC = () => {
     await signOut();
     toast({
       title: t('profile.signOut'),
-      description: "See you soon!"
+      description: t('profile.seeYouSoon')
     });
     navigate('/');
   };
 
+  // Build menu items - only show admin link if user is admin
   const menuItems = [
     { icon: Megaphone, label: t('profile.promoteEarn'), sublabel: t('profile.promoteEarnDesc'), onClick: () => navigate('/promote') },
-    { icon: LayoutDashboard, label: t('admin.title'), sublabel: t('admin.manageContent'), onClick: () => navigate('/admin') },
+    // Admin panel only visible to admins
+    ...(isAdmin ? [{ icon: LayoutDashboard, label: t('admin.title'), sublabel: t('admin.manageContent'), onClick: () => navigate('/admin') }] : []),
     { icon: Bell, label: t('profile.notifications'), sublabel: t('profile.dailyReminders'), onClick: () => setNotificationsOpen(true) },
     { 
       icon: Wallet, 
@@ -166,15 +170,15 @@ const Profile: React.FC = () => {
               <ul className="space-y-1.5 mb-4">
                 <li className="flex items-center gap-2 text-sm text-foreground">
                   <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                  All meditations & courses
+                  {t('profile.premiumFeature1')}
                 </li>
                 <li className="flex items-center gap-2 text-sm text-foreground">
                   <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                  Premium healing content
+                  {t('profile.premiumFeature2')}
                 </li>
                 <li className="flex items-center gap-2 text-sm text-foreground">
                   <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                  Priority support
+                  {t('profile.premiumFeature3')}
                 </li>
               </ul>
 

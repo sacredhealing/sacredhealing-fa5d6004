@@ -290,7 +290,27 @@
     "startSession": "Start Session",
     "quickActions": "Quick Actions",
     "inviteFriends": "Invite Friends",
-    "inviteDescription": "Share Sacred Healing with your friends and help them on their spiritual journey."
+    "inviteDescription": "Share Sacred Healing with your friends and help them on their spiritual journey.",
+    "loadingWisdom": "Loading wisdom...",
+    "morningAwakening": "Morning Awakening",
+    "explore": "Explore",
+    "mantras": "Mantras",
+    "earnMantras": "Earn 111 SHC",
+    "lailasCollection": "Laila's Collection",
+    "membership": "Membership",
+    "upgradeYourPlan": "Upgrade your plan",
+    "coaching": "Coaching",
+    "sixMonthProgram": "6-Month Program",
+    "leaderboard": "Leaderboard",
+    "leaderboardDesc": "Top earners win 5,000 SHC monthly",
+    "affirmationSoundtrack": "Affirmation Soundtrack",
+    "personalizedForYou": "Personalized for you",
+    "privateSessions": "Private Sessions",
+    "privateSessionsDesc": "1-on-1 with Adam or Laila",
+    "podcast": "Podcast",
+    "podcastDesc": "280K+ streams on Spotify",
+    "aiIncomeEngine": "AI Income Engine",
+    "aiIncomeDesc": "Earn with AI trading"
   },
   "quickActions": {
     "meditate": "Meditate",
@@ -410,6 +430,7 @@
     "premium": "Premium",
     "help": "Help & Support",
     "signOut": "Sign Out",
+    "seeYouSoon": "See you soon!",
     "upgradePremium": "Upgrade to Premium",
     "unlockFeatures": "Unlock all meditations, courses, and exclusive content",
     "promoteEarn": "Promote & Earn",
@@ -426,7 +447,10 @@
     "fullName": "Full Name",
     "enterName": "Enter your name",
     "bio": "Bio",
-    "enterBio": "Tell us a little about yourself..."
+    "enterBio": "Tell us a little about yourself...",
+    "premiumFeature1": "All meditations & courses",
+    "premiumFeature2": "Premium healing content",
+    "premiumFeature3": "Priority support"
   },
   "courses": {
     "title": "Courses",

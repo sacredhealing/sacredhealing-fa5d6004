@@ -223,7 +223,27 @@
     "startSession": "Start økt",
     "quickActions": "Hurtighandlinger",
     "inviteFriends": "Inviter venner",
-    "inviteDescription": "Del Sacred Healing med vennene dine og hjelp dem på deres spirituelle reise."
+    "inviteDescription": "Del Sacred Healing med vennene dine og hjelp dem på deres spirituelle reise.",
+    "loadingWisdom": "Laster visdom...",
+    "morningAwakening": "Morgenoppvåkning",
+    "explore": "Utforsk",
+    "mantras": "Mantraer",
+    "earnMantras": "Tjen 111 SHC",
+    "lailasCollection": "Lailas Kolleksjon",
+    "membership": "Medlemskap",
+    "upgradeYourPlan": "Oppgrader planen din",
+    "coaching": "Coaching",
+    "sixMonthProgram": "6-måneders program",
+    "leaderboard": "Ledertavle",
+    "leaderboardDesc": "Toppvinnere vinner 5000 SHC månedlig",
+    "affirmationSoundtrack": "Bekreftelseslydspor",
+    "personalizedForYou": "Personlig for deg",
+    "privateSessions": "Private økter",
+    "privateSessionsDesc": "1-til-1 med Adam eller Laila",
+    "podcast": "Podcast",
+    "podcastDesc": "280K+ strømmer på Spotify",
+    "aiIncomeEngine": "AI Inntektsmotor",
+    "aiIncomeDesc": "Tjen med AI-handel"
   },
   "quickActions": {
     "meditate": "Mediter",
@@ -336,6 +356,7 @@
     "premium": "Premium",
     "help": "Hjelp og støtte",
     "signOut": "Logg ut",
+    "seeYouSoon": "Ses snart!",
     "upgradePremium": "Oppgrader til Premium",
     "unlockFeatures": "Lås opp alle meditasjoner, kurs og eksklusivt innhold",
     "promoteEarn": "Promoter og tjen",
@@ -346,7 +367,10 @@
     "dataAndSecurity": "Data og sikkerhet",
     "appPreferences": "App-preferanser",
     "dailyReminders": "Daglige påminnelser",
-    "web3Wallet": "Web3-lommebok"
+    "web3Wallet": "Web3-lommebok",
+    "premiumFeature1": "Alle meditasjoner og kurs",
+    "premiumFeature2": "Premium helbredende innhold",
+    "premiumFeature3": "Prioritert støtte"
   },
   "courses": {
     "title": "Kurs",

@@ -80,7 +80,7 @@ const Dashboard: React.FC = () => {
         <p 
           className={`text-foreground italic leading-relaxed text-lg transition-opacity duration-500 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
         >
-          {quote ? `"${quote}"` : 'Loading wisdom...'}
+          {quote ? `"${quote}"` : t('dashboard.loadingWisdom')}
         </p>
         <p className="text-muted-foreground text-sm mt-3">— Paramahamsa Vishwananda</p>
       </div>
@@ -123,13 +123,13 @@ const Dashboard: React.FC = () => {
               ) : (
                 <>
                   <span className="inline-block px-3 py-1 bg-background/20 rounded-full text-xs font-medium text-foreground mb-3">
-                    Mindfulness
+                    {t('meditations.categories.focus')}
                   </span>
                   <h3 className="text-xl font-heading font-bold text-foreground mb-2">
-                    Morning Awakening
+                    {t('dashboard.morningAwakening')}
                   </h3>
                   <div className="flex items-center gap-4 text-foreground/80 text-sm">
-                    <span>10 min</span>
+                    <span>10 {t('meditations.duration')}</span>
                     <span className="flex items-center gap-1">
                       <Sparkles size={14} className="text-accent" />
                       +100 SHC
@@ -171,7 +171,7 @@ const Dashboard: React.FC = () => {
 
       {/* Featured Sections */}
       <div className="mt-6 animate-slide-up" style={{ animationDelay: '0.35s' }}>
-        <h2 className="text-lg font-heading font-semibold text-foreground mb-4">Explore</h2>
+        <h2 className="text-lg font-heading font-semibold text-foreground mb-4">{t('dashboard.explore')}</h2>
         <div className="grid grid-cols-2 gap-3">
           <Link to="/mantras">
             <Card className="p-4 bg-gradient-to-br from-purple-500/20 to-amber-500/10 border-purple-500/30 hover:border-purple-500/50 transition-all">
@@ -180,8 +180,8 @@ const Dashboard: React.FC = () => {
                   <Music className="w-5 h-5 text-purple-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-foreground text-sm">Mantras</h3>
-                  <p className="text-xs text-muted-foreground">Earn 111 SHC</p>
+                  <h3 className="font-semibold text-foreground text-sm">{t('dashboard.mantras')}</h3>
+                  <p className="text-xs text-muted-foreground">{t('dashboard.earnMantras')}</p>
                 </div>
               </div>
             </Card>
@@ -194,8 +194,8 @@ const Dashboard: React.FC = () => {
                   <ShoppingBag className="w-5 h-5 text-pink-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-foreground text-sm">Shop</h3>
-                  <p className="text-xs text-muted-foreground">Laila's Collection</p>
+                  <h3 className="font-semibold text-foreground text-sm">{t('nav.shop')}</h3>
+                  <p className="text-xs text-muted-foreground">{t('dashboard.lailasCollection')}</p>
                 </div>
               </div>
             </Card>
@@ -208,8 +208,8 @@ const Dashboard: React.FC = () => {
                   <Crown className="w-5 h-5 text-amber-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-foreground text-sm">Membership</h3>
-                  <p className="text-xs text-muted-foreground">Upgrade your plan</p>
+                  <h3 className="font-semibold text-foreground text-sm">{t('dashboard.membership')}</h3>
+                  <p className="text-xs text-muted-foreground">{t('dashboard.upgradeYourPlan')}</p>
                 </div>
               </div>
             </Card>
@@ -222,8 +222,8 @@ const Dashboard: React.FC = () => {
                   <Heart className="w-5 h-5 text-green-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-foreground text-sm">Coaching</h3>
-                  <p className="text-xs text-muted-foreground">6-Month Program</p>
+                  <h3 className="font-semibold text-foreground text-sm">{t('dashboard.coaching')}</h3>
+                  <p className="text-xs text-muted-foreground">{t('dashboard.sixMonthProgram')}</p>
                 </div>
               </div>
             </Card>
@@ -236,8 +236,8 @@ const Dashboard: React.FC = () => {
                   <Trophy className="w-5 h-5 text-yellow-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-foreground text-sm">Leaderboard</h3>
-                  <p className="text-xs text-muted-foreground">Top earners win 5,000 SHC monthly</p>
+                  <h3 className="font-semibold text-foreground text-sm">{t('dashboard.leaderboard')}</h3>
+                  <p className="text-xs text-muted-foreground">{t('dashboard.leaderboardDesc')}</p>
                 </div>
               </div>
             </Card>
@@ -250,8 +250,8 @@ const Dashboard: React.FC = () => {
                   <Music className="w-5 h-5 text-violet-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-foreground text-sm">Affirmation Soundtrack</h3>
-                  <p className="text-xs text-muted-foreground">Personalized for you</p>
+                  <h3 className="font-semibold text-foreground text-sm">{t('dashboard.affirmationSoundtrack')}</h3>
+                  <p className="text-xs text-muted-foreground">{t('dashboard.personalizedForYou')}</p>
                 </div>
               </div>
             </Card>
@@ -264,8 +264,8 @@ const Dashboard: React.FC = () => {
                   <Calendar className="w-5 h-5 text-amber-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-foreground text-sm">{t('healing.bookPrivateSession', 'Private Sessions')}</h3>
-                  <p className="text-xs text-muted-foreground">1-on-1 with Adam or Laila</p>
+                  <h3 className="font-semibold text-foreground text-sm">{t('dashboard.privateSessions')}</h3>
+                  <p className="text-xs text-muted-foreground">{t('dashboard.privateSessionsDesc')}</p>
                 </div>
               </div>
             </Card>
@@ -278,8 +278,8 @@ const Dashboard: React.FC = () => {
                   <Headphones className="w-5 h-5 text-emerald-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-foreground text-sm">Podcast</h3>
-                  <p className="text-xs text-muted-foreground">280K+ streams on Spotify</p>
+                  <h3 className="font-semibold text-foreground text-sm">{t('dashboard.podcast')}</h3>
+                  <p className="text-xs text-muted-foreground">{t('dashboard.podcastDesc')}</p>
                 </div>
               </div>
             </Card>
@@ -292,8 +292,8 @@ const Dashboard: React.FC = () => {
                   <Bot className="w-5 h-5 text-cyan-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-foreground text-sm">AI Income Engine</h3>
-                  <p className="text-xs text-muted-foreground">Earn with AI trading</p>
+                  <h3 className="font-semibold text-foreground text-sm">{t('dashboard.aiIncomeEngine')}</h3>
+                  <p className="text-xs text-muted-foreground">{t('dashboard.aiIncomeDesc')}</p>
                 </div>
               </div>
             </Card>

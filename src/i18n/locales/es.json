@@ -80,7 +80,27 @@
     "startSession": "Iniciar Sesión",
     "quickActions": "Acciones Rápidas",
     "inviteFriends": "Invitar amigos",
-    "inviteDescription": "Comparte Sacred Healing con tus amigos y ayúdalos en su viaje espiritual."
+    "inviteDescription": "Comparte Sacred Healing con tus amigos y ayúdalos en su viaje espiritual.",
+    "loadingWisdom": "Cargando sabiduría...",
+    "morningAwakening": "Despertar Matutino",
+    "explore": "Explorar",
+    "mantras": "Mantras",
+    "earnMantras": "Gana 111 SHC",
+    "lailasCollection": "Colección de Laila",
+    "membership": "Membresía",
+    "upgradeYourPlan": "Mejora tu plan",
+    "coaching": "Coaching",
+    "sixMonthProgram": "Programa de 6 meses",
+    "leaderboard": "Clasificación",
+    "leaderboardDesc": "Los mejores ganan 5,000 SHC mensualmente",
+    "affirmationSoundtrack": "Banda Sonora de Afirmaciones",
+    "personalizedForYou": "Personalizado para ti",
+    "privateSessions": "Sesiones Privadas",
+    "privateSessionsDesc": "1-a-1 con Adam o Laila",
+    "podcast": "Podcast",
+    "podcastDesc": "280K+ reproducciones en Spotify",
+    "aiIncomeEngine": "Motor de Ingresos IA",
+    "aiIncomeDesc": "Gana con trading IA"
   },
   "quickActions": {
     "meditate": "Meditar",
@@ -134,6 +154,7 @@
     "premium": "Premium",
     "help": "Ayuda y Soporte",
     "signOut": "Cerrar Sesión",
+    "seeYouSoon": "¡Hasta pronto!",
     "upgradePremium": "Actualizar a Premium",
     "unlockFeatures": "Desbloquea todas las meditaciones, cursos y contenido exclusivo",
     "promoteEarn": "Promocionar y Ganar",
@@ -144,7 +165,10 @@
     "dataAndSecurity": "Datos y seguridad",
     "appPreferences": "Preferencias de la app",
     "dailyReminders": "Recordatorios diarios",
-    "web3Wallet": "Cartera Web3"
+    "web3Wallet": "Cartera Web3",
+    "premiumFeature1": "Todas las meditaciones y cursos",
+    "premiumFeature2": "Contenido premium de sanación",
+    "premiumFeature3": "Soporte prioritario"
   },
   "courses": {
     "title": "Cursos",
