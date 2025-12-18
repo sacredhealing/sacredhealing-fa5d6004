@@ -25,6 +25,37 @@ serve(async (req) => {
   try {
     const { userId, purchaseType, purchaseAmount, purchaseId } = await req.json();
     
+    // Input validation
+    if (!userId || typeof userId !== 'string') {
+      throw new Error('Invalid userId');
+    }
+    if (typeof purchaseAmount !== 'number' || purchaseAmount <= 0) {
+      throw new Error('Invalid purchase amount');
+    }
+    if (purchaseAmount > 100000) {
+      throw new Error('Purchase amount exceeds maximum');
+    }
+    const allowedTypes = ['course', 'membership', 'healing', 'music', 'healing_audio', 'meditation', 'transformation', 'session'];
+    if (!allowedTypes.includes(purchaseType)) {
+      throw new Error('Invalid purchase type');
+    }
+    
+    // Check for duplicate processing
+    if (purchaseId) {
+      const { data: existing } = await supabaseAdmin
+        .from('affiliate_earnings')
+        .select('id')
+        .eq('purchase_id', purchaseId)
+        .maybeSingle();
+      if (existing) {
+        logStep("Commission already processed for this purchase", { purchaseId });
+        return new Response(JSON.stringify({ success: true, message: "Commission already processed" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+    }
+    
     logStep("Processing affiliate commission", { userId, purchaseType, purchaseAmount });
 
     // Get user's profile to check if they were referred
