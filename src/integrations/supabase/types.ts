@@ -1256,6 +1256,41 @@ export type Database = {
         }
         Relationships: []
       }
+      music_completions: {
+        Row: {
+          completed_at: string
+          duration_listened: number
+          id: string
+          shc_earned: number
+          track_id: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          duration_listened?: number
+          id?: string
+          shc_earned?: number
+          track_id: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          duration_listened?: number
+          id?: string
+          shc_earned?: number
+          track_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "music_completions_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "music_tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       music_memberships: {
         Row: {
           created_at: string

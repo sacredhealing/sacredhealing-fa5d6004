@@ -80,7 +80,6 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [currentQueueIndex, setCurrentQueueIndex] = useState(0);
 
   const PREVIEW_LIMIT = 30;
-  const MUSIC_REWARD = 100;
 
   const hasAccess = useCallback((track: Track) => {
     return isSubscribed || purchasedIds.includes(track.id) || purchasedAlbumTrackIds.includes(track.id);
@@ -175,6 +174,9 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }
     };
     
+    // Track start time for duration validation
+    const playStartTime = Date.now();
+    
     audioRef.current.onended = async () => {
       if (isLoop && audioRef.current) {
         audioRef.current.currentTime = 0;
@@ -183,9 +185,64 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }
       
       setIsPlaying(false);
+      
+      // Validate and award SHC only for full track plays with anti-farming
       if (canPlayFull) {
-        addOptimisticBalance(MUSIC_REWARD);
-        toast({ title: `+${MUSIC_REWARD} SHC earned!`, description: `Completed "${track.title}"` });
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const durationListened = Math.floor((Date.now() - playStartTime) / 1000);
+          const minDuration = Math.floor(track.duration_seconds * 0.8); // 80% minimum
+          
+          // Check if user completed this track in the last 24 hours
+          const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+          const { data: recentCompletion } = await supabase
+            .from('music_completions')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('track_id', track.id)
+            .gte('completed_at', twentyFourHoursAgo)
+            .limit(1);
+          
+          if (recentCompletion && recentCompletion.length > 0) {
+            toast({ title: "Already completed today", description: "Earn rewards again after 24 hours." });
+          } else if (durationListened >= minDuration) {
+            // Record completion
+            await supabase.from('music_completions').insert({
+              user_id: user.id,
+              track_id: track.id,
+              duration_listened: durationListened,
+              shc_earned: track.shc_reward
+            });
+            
+            // Update balance
+            const { data: balanceData } = await supabase
+              .from('user_balances')
+              .select('balance, total_earned')
+              .eq('user_id', user.id)
+              .maybeSingle();
+            
+            if (balanceData) {
+              await supabase.from('user_balances').update({
+                balance: balanceData.balance + track.shc_reward,
+                total_earned: balanceData.total_earned + track.shc_reward
+              }).eq('user_id', user.id);
+            }
+            
+            // Record transaction
+            await supabase.from('shc_transactions').insert({
+              user_id: user.id,
+              type: 'earned',
+              amount: track.shc_reward,
+              description: `Music completed: ${track.title}`,
+              status: 'completed'
+            });
+            
+            addOptimisticBalance(track.shc_reward);
+            toast({ title: `+${track.shc_reward} SHC earned!`, description: `Completed "${track.title}"` });
+          } else {
+            toast({ title: "Listen longer", description: "Listen to at least 80% to earn rewards." });
+          }
+        }
       }
       
       // Auto-play next
@@ -207,7 +264,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       setCurrentQueueIndex(newQueue.findIndex(t => t.id === track.id) || 0);
     }
     
-    // Update play history
+    // Update play history and increment global play count
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       await supabase.from('music_play_history').upsert({
@@ -217,6 +274,11 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         last_played_at: new Date().toISOString()
       }, { onConflict: 'user_id,track_id' });
     }
+    
+    // Increment global play count
+    await supabase.from('music_tracks').update({
+      play_count: track.play_count + 1
+    }).eq('id', track.id);
   }, [currentTrack, isPlaying, volume, isSubscribed, purchasedIds, purchasedAlbumTrackIds, isLoop, isShuffle, queue, currentQueueIndex, addOptimisticBalance, toast]);
 
   const togglePlay = useCallback(() => {
