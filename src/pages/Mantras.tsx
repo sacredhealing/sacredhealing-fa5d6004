@@ -119,10 +119,29 @@ const Mantras = () => {
   };
 
   const awardMantraReward = async (mantra: Mantra) => {
+    if (!user) return;
+    
     try {
+      // Check if user completed this mantra in the last 24 hours (anti-farming)
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { data: recentCompletion } = await supabase
+        .from('mantra_completions')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('mantra_id', mantra.id)
+        .gte('completed_at', twentyFourHoursAgo)
+        .limit(1);
+      
+      if (recentCompletion && recentCompletion.length > 0) {
+        toast.info('Already completed today', {
+          description: 'Earn rewards again after 24 hours',
+        });
+        return;
+      }
+      
       // Record completion
       await supabase.from('mantra_completions').insert({
-        user_id: user?.id,
+        user_id: user.id,
         mantra_id: mantra.id,
         shc_earned: mantra.shc_reward,
       });
@@ -131,8 +150,8 @@ const Mantras = () => {
       const { data: balanceData } = await supabase
         .from('user_balances')
         .select('balance, total_earned')
-        .eq('user_id', user?.id)
-        .single();
+        .eq('user_id', user.id)
+        .maybeSingle();
 
       if (balanceData) {
         await supabase
@@ -141,12 +160,12 @@ const Mantras = () => {
             balance: balanceData.balance + mantra.shc_reward,
             total_earned: balanceData.total_earned + mantra.shc_reward,
           })
-          .eq('user_id', user?.id);
+          .eq('user_id', user.id);
       }
 
       // Record transaction
       await supabase.from('shc_transactions').insert({
-        user_id: user?.id,
+        user_id: user.id,
         type: 'earned',
         amount: mantra.shc_reward,
         description: `Mantra completed: ${mantra.title}`,
