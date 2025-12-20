@@ -529,6 +529,103 @@ export type Database = {
         }
         Relationships: []
       }
+      curated_playlist_items: {
+        Row: {
+          created_at: string
+          id: string
+          meditation_id: string | null
+          order_index: number | null
+          playlist_id: string
+          track_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          meditation_id?: string | null
+          order_index?: number | null
+          playlist_id: string
+          track_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          meditation_id?: string | null
+          order_index?: number | null
+          playlist_id?: string
+          track_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "curated_playlist_items_meditation_id_fkey"
+            columns: ["meditation_id"]
+            isOneToOne: false
+            referencedRelation: "meditations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "curated_playlist_items_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "curated_playlists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "curated_playlist_items_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "music_tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      curated_playlists: {
+        Row: {
+          category: string
+          content_type: string
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          duration_range: string | null
+          id: string
+          is_active: boolean | null
+          mood: string | null
+          order_index: number | null
+          theme: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          content_type?: string
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_range?: string | null
+          id?: string
+          is_active?: boolean | null
+          mood?: string | null
+          order_index?: number | null
+          theme?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          content_type?: string
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_range?: string | null
+          id?: string
+          is_active?: boolean | null
+          mood?: string | null
+          order_index?: number | null
+          theme?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       custom_meditation_bookings: {
         Row: {
           amount_paid: number
