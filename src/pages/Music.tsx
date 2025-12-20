@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Music2, Plus, List, Crown, ChevronRight, X, GripVertical, Edit2, Check, Loader2, Disc } from 'lucide-react';
+import { Music2, Plus, List, Crown, ChevronRight, X, GripVertical, Edit2, Check, Loader2, Disc, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -7,7 +7,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useMusicPlayer, Track } from '@/contexts/MusicPlayerContext';
 import { TrackCard } from '@/components/music/TrackCard';
-
+import { CuratedPlaylistCard } from '@/components/music/CuratedPlaylistCard';
+import { useCuratedPlaylists, CuratedPlaylist } from '@/hooks/useCuratedPlaylists';
 interface Playlist {
   id: string;
   name: string;
@@ -45,7 +46,12 @@ const Music: React.FC = () => {
   const [selectedGenre, setSelectedGenre] = useState('all');
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
   
-  // Playlists
+  // Curated playlists
+  const { playlists: curatedPlaylists, loading: curatedLoading, getPlaylistItems } = useCuratedPlaylists('music');
+  const [selectedCuratedPlaylist, setSelectedCuratedPlaylist] = useState<CuratedPlaylist | null>(null);
+  const [curatedPlaylistTracks, setCuratedPlaylistTracks] = useState<Track[]>([]);
+  
+  // User Playlists
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [playHistory, setPlayHistory] = useState<PlayHistory[]>([]);
   const [newPlaylistName, setNewPlaylistName] = useState('');
@@ -256,7 +262,14 @@ const Music: React.FC = () => {
         {(['browse', 'albums', 'playlists', 'history'] as const).map(tab => (
           <button
             key={tab}
-            onClick={() => { setActiveTab(tab); if (tab === 'browse') { setSelectedPlaylist(null); setSelectedAlbum(null); } }}
+            onClick={() => { 
+              setActiveTab(tab); 
+              if (tab === 'browse') { 
+                setSelectedPlaylist(null); 
+                setSelectedAlbum(null); 
+                setSelectedCuratedPlaylist(null);
+              } 
+            }}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
               activeTab === tab 
                 ? 'bg-primary text-primary-foreground' 
@@ -358,39 +371,121 @@ const Music: React.FC = () => {
       {/* Browse Tab */}
       {activeTab === 'browse' && (
         <>
-          {/* Genres */}
-          <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide">
-          {GENRES.map(g => (
-              <button
-                key={g}
-                onClick={() => setSelectedGenre(g)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
-                  selectedGenre === g 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'bg-muted/50 text-muted-foreground hover:bg-muted'
-                }`}
-              >
-                {g === 'all' ? 'All' : g.charAt(0).toUpperCase() + g.slice(1).replace('-', ' ')}
-              </button>
-            ))}
-          </div>
+          {selectedCuratedPlaylist ? (
+            /* Curated Playlist Detail View */
+            <>
+              <div className="flex items-center gap-2 mb-4">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => { setSelectedCuratedPlaylist(null); setCuratedPlaylistTracks([]); }}
+                >
+                  <ArrowLeft size={16} className="mr-1" /> Back
+                </Button>
+              </div>
+              
+              {/* Playlist Header */}
+              <div className="flex gap-4 mb-6">
+                {selectedCuratedPlaylist.cover_image_url ? (
+                  <img 
+                    src={selectedCuratedPlaylist.cover_image_url} 
+                    alt={selectedCuratedPlaylist.title} 
+                    className="w-24 h-24 rounded-xl object-cover" 
+                  />
+                ) : (
+                  <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                    <Music2 size={32} className="text-muted-foreground" />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <h2 className="text-xl font-bold">{selectedCuratedPlaylist.title}</h2>
+                  {selectedCuratedPlaylist.description && (
+                    <p className="text-sm text-muted-foreground mt-1">{selectedCuratedPlaylist.description}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {selectedCuratedPlaylist.track_count} tracks • {Math.floor(selectedCuratedPlaylist.total_duration / 60)} min
+                  </p>
+                </div>
+              </div>
+              
+              {/* Playlist Tracks */}
+              <div className="space-y-2">
+                {curatedPlaylistTracks.map(track => (
+                  <TrackCard
+                    key={track.id}
+                    track={track}
+                    playlists={playlists}
+                    onAddToPlaylist={addToPlaylist}
+                    onPurchase={handlePurchaseTrack}
+                    allTracks={curatedPlaylistTracks}
+                  />
+                ))}
+                {curatedPlaylistTracks.length === 0 && (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            /* Browse View with Curated Playlists */
+            <>
+              {/* Curated Playlists Section */}
+              {curatedPlaylists.length > 0 && (
+                <div className="mb-6">
+                  <h2 className="text-lg font-semibold mb-3">Featured Playlists</h2>
+                  <div className="grid grid-cols-2 gap-3">
+                    {curatedPlaylists.map(playlist => (
+                      <CuratedPlaylistCard
+                        key={playlist.id}
+                        playlist={playlist}
+                        onClick={async () => {
+                          setSelectedCuratedPlaylist(playlist);
+                          const items = await getPlaylistItems(playlist.id);
+                          setCuratedPlaylistTracks(items as Track[]);
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
 
-          {/* Tracks */}
-          <div className="space-y-2">
-            {filteredTracks.map(track => (
-              <TrackCard
-                key={track.id}
-                track={track}
-                playlists={playlists}
-                onAddToPlaylist={addToPlaylist}
-                onPurchase={handlePurchaseTrack}
-                allTracks={filteredTracks}
-              />
-            ))}
-            {filteredTracks.length === 0 && (
-              <p className="text-muted-foreground text-sm text-center py-8">No tracks in this genre yet</p>
-            )}
-          </div>
+              {/* Genres Filter */}
+              <h2 className="text-lg font-semibold mb-3">All Tracks</h2>
+              <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide">
+                {GENRES.map(g => (
+                  <button
+                    key={g}
+                    onClick={() => setSelectedGenre(g)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+                      selectedGenre === g 
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                    }`}
+                  >
+                    {g === 'all' ? 'All' : g.charAt(0).toUpperCase() + g.slice(1).replace('-', ' ')}
+                  </button>
+                ))}
+              </div>
+
+              {/* Tracks */}
+              <div className="space-y-2">
+                {filteredTracks.map(track => (
+                  <TrackCard
+                    key={track.id}
+                    track={track}
+                    playlists={playlists}
+                    onAddToPlaylist={addToPlaylist}
+                    onPurchase={handlePurchaseTrack}
+                    allTracks={filteredTracks}
+                  />
+                ))}
+                {filteredTracks.length === 0 && (
+                  <p className="text-muted-foreground text-sm text-center py-8">No tracks in this genre yet</p>
+                )}
+              </div>
+            </>
+          )}
         </>
       )}
 
