@@ -138,12 +138,23 @@ export const SHCProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!error) {
       setProfile(prev => prev ? { ...prev, streak_days: newStreak, last_login_date: today } : null);
       
-      // Award streak bonus on day 7
-      if (newStreak === 7 && profileData.streak_days < 7) {
-        await earnSHC(20, '7-day streak bonus!');
-        toast.success('🔥 7-day streak! +20 SHC bonus!');
+      // Award streak bonuses at milestones
+      if (newStreak === 3 && profileData.streak_days < 3) {
+        await earnSHC(10, '3-day streak bonus!');
+        toast.success('🔥 3-day streak! +10 SHC bonus!');
+      } else if (newStreak === 7 && profileData.streak_days < 7) {
+        await earnSHC(25, '7-day streak bonus!');
+        toast.success('🔥 7-day streak! +25 SHC bonus!');
+      } else if (newStreak === 14 && profileData.streak_days < 14) {
+        await earnSHC(50, '14-day streak bonus!');
+        toast.success('🔥 14-day streak! +50 SHC bonus!');
+      } else if (newStreak === 30 && profileData.streak_days < 30) {
+        await earnSHC(100, '30-day streak bonus!');
+        toast.success('🔥 30-day streak! +100 SHC bonus!');
       } else if (newStreak > 1) {
-        toast.success(`🔥 ${newStreak} day streak!`);
+        // Small daily bonus for maintaining streak (5 SHC per day after day 1)
+        await earnSHC(5, `Day ${newStreak} streak bonus`);
+        toast.success(`🔥 ${newStreak} day streak! +5 SHC`);
       }
     }
   }, [user]);
