@@ -50,7 +50,10 @@
     "searchUsers": "Buscar usuarios...",
     "noUsersFound": "No se encontraron usuarios",
     "noConversations": "Sin conversaciones aún",
-    "startConversation": "¡Inicia la conversación!"
+    "startConversation": "¡Inicia la conversación!",
+    "profileRequired": "Foto de Perfil Requerida",
+    "profileRequiredDesc": "Por favor sube una foto de perfil para chatear, comentar o dar me gusta.",
+    "uploadNow": "Subir ahora"
   },
   "supportCircle": {
     "createRequest": "Crear Solicitud",

@@ -193,7 +193,10 @@
     "searchUsers": "Søk etter brukere...",
     "noUsersFound": "Ingen brukere funnet",
     "noConversations": "Ingen samtaler ennå",
-    "startConversation": "Start samtalen!"
+    "startConversation": "Start samtalen!",
+    "profileRequired": "Profilbilde Kreves",
+    "profileRequiredDesc": "Vennligst last opp et profilbilde for å chatte, kommentere eller like innhold.",
+    "uploadNow": "Last opp nå"
   },
   "supportCircle": {
     "createRequest": "Opprett forespørsel",

@@ -193,7 +193,10 @@
     "searchUsers": "Sök användare...",
     "noUsersFound": "Inga användare hittades",
     "noConversations": "Inga konversationer ännu",
-    "startConversation": "Starta konversationen!"
+    "startConversation": "Starta konversationen!",
+    "profileRequired": "Profilbild Krävs",
+    "profileRequiredDesc": "Vänligen ladda upp en profilbild för att chatta, kommentera eller gilla innehåll.",
+    "uploadNow": "Ladda upp nu"
   },
   "supportCircle": {
     "createRequest": "Skapa Förfrågan",
