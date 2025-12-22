@@ -11,6 +11,7 @@ import { useSHC } from '@/contexts/SHCContext';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
 import { useDailyQuote } from '@/hooks/useDailyQuote';
 import { useDailyMeditation } from '@/hooks/useDailyMeditation';
+import { HealingProgressCard } from '@/components/healing/HealingProgressCard';
 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
@@ -173,6 +174,9 @@ const Dashboard: React.FC = () => {
       <div className="mt-6 animate-slide-up" style={{ animationDelay: '0.35s' }}>
         <h2 className="text-lg font-heading font-semibold text-foreground mb-4">{t('dashboard.explore')}</h2>
         <div className="grid grid-cols-2 gap-3">
+          {/* Healing Progress Card */}
+          <HealingProgressCard variant="compact" />
+          
           <Link to="/mantras">
             <Card className="p-4 bg-gradient-to-br from-purple-500/20 to-amber-500/10 border-purple-500/30 hover:border-purple-500/50 transition-all">
               <div className="flex items-center gap-3">

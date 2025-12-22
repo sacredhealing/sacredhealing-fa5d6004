@@ -11,6 +11,7 @@ import { useSHCBalance } from '@/hooks/useSHCBalance';
 import { ReviewSection } from '@/components/reviews/ReviewSection';
 import { TranslatedContent } from '@/components/TranslatedContent';
 import { usePhantomWallet } from '@/hooks/usePhantomWallet';
+import { HealingProgressCard } from '@/components/healing/HealingProgressCard';
 
 interface HealingAudio {
   id: string;
@@ -505,6 +506,9 @@ const Healing: React.FC = () => {
           </p>
         </CardContent>
       </Card>
+
+      {/* Healing Progress Card */}
+      <HealingProgressCard variant="full" />
 
       {/* Main Content Sections */}
       <div className="space-y-8">
