@@ -175,13 +175,27 @@ const Transformation = () => {
     
     try {
       if (method === 'card') {
-        // TODO: Create Stripe checkout with proper price ID
-        toast.info('Stripe checkout coming soon!');
+        const currentPrice = getCurrentPrice();
+        const { data, error } = await supabase.functions.invoke('create-transformation-checkout', {
+          body: { 
+            priceEur: currentPrice,
+            programId: program?.id,
+            variationId: selectedVariation?.id || null,
+            practitionerId: selectedPractitioner?.id || null,
+            paymentType,
+            programName: selectedVariation?.name || program?.name
+          }
+        });
+        
+        if (error) throw error;
+        if (data?.url) {
+          window.open(data.url, '_blank');
+        }
       } else {
-        // Crypto payment instructions
         toast.info('Please send payment to: BAfPGN6DUAKYVwmmGkhMQxJyDv2cHEHRnfcbzy1GNy5j');
       }
     } catch (error) {
+      console.error('Payment error:', error);
       toast.error('Payment failed. Please try again.');
     }
     

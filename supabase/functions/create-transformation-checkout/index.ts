@@ -7,6 +7,11 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const logStep = (step: string, details?: any) => {
+  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
+  console.log(`[TRANSFORMATION-CHECKOUT] ${step}${detailsStr}`);
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -18,19 +23,25 @@ serve(async (req) => {
   );
 
   try {
-    const { priceId } = await req.json();
-    console.log("[TRANSFORMATION-CHECKOUT] Starting checkout with priceId:", priceId);
+    const { priceEur, programId, variationId, practitionerId, paymentType, programName, priceId } = await req.json();
+    logStep("Starting checkout", { priceEur, programId, variationId, paymentType, priceId });
 
     // Get user if authenticated
     const authHeader = req.headers.get("Authorization");
     let userEmail: string | undefined;
+    let userId: string | undefined;
     let customerId: string | undefined;
 
     if (authHeader) {
       const token = authHeader.replace("Bearer ", "");
       const { data } = await supabaseClient.auth.getUser(token);
       userEmail = data.user?.email;
-      console.log("[TRANSFORMATION-CHECKOUT] User email:", userEmail);
+      userId = data.user?.id;
+      logStep("User authenticated", { email: userEmail, userId });
+    }
+
+    if (!userEmail) {
+      throw new Error("User not authenticated");
     }
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
@@ -38,12 +49,49 @@ serve(async (req) => {
     });
 
     // Check if customer exists
-    if (userEmail) {
-      const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
-      if (customers.data.length > 0) {
-        customerId = customers.data[0].id;
-        console.log("[TRANSFORMATION-CHECKOUT] Found existing customer:", customerId);
-      }
+    const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
+    if (customers.data.length > 0) {
+      customerId = customers.data[0].id;
+      logStep("Found existing customer", { customerId });
+    }
+
+    const origin = req.headers.get("origin") || "https://ssygukfdbtehvtndandn.lovableproject.com";
+
+    // If a specific priceId is provided, use it directly
+    if (priceId) {
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        customer_email: customerId ? undefined : userEmail,
+        line_items: [
+          {
+            price: priceId,
+            quantity: 1,
+          },
+        ],
+        mode: "payment",
+        success_url: `${origin}/dashboard?payment=success`,
+        cancel_url: `${origin}/transformation?payment=cancelled`,
+        metadata: {
+          user_id: userId || '',
+          program_id: programId || '',
+          variation_id: variationId || '',
+          practitioner_id: practitionerId || '',
+          payment_type: paymentType || 'full',
+          type: 'transformation'
+        },
+      });
+
+      logStep("Session created with priceId", { sessionId: session.id });
+
+      return new Response(JSON.stringify({ url: session.url }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    // Otherwise use dynamic pricing
+    if (!priceEur) {
+      throw new Error("Price is required");
     }
 
     const session = await stripe.checkout.sessions.create({
@@ -51,16 +99,33 @@ serve(async (req) => {
       customer_email: customerId ? undefined : userEmail,
       line_items: [
         {
-          price: priceId,
+          price_data: {
+            currency: "eur",
+            product_data: {
+              name: programName || "Transformation Program",
+              description: paymentType === 'installment' 
+                ? "Monthly payment for Transformation Program" 
+                : "Full payment for Transformation Program",
+            },
+            unit_amount: Math.round(priceEur * 100),
+          },
           quantity: 1,
         },
       ],
       mode: "payment",
-      success_url: `${req.headers.get("origin")}/dashboard?payment=success`,
-      cancel_url: `${req.headers.get("origin")}/spiritual-transformation?payment=cancelled`,
+      success_url: `${origin}/dashboard?payment=success`,
+      cancel_url: `${origin}/transformation?payment=cancelled`,
+      metadata: {
+        user_id: userId || '',
+        program_id: programId || '',
+        variation_id: variationId || '',
+        practitioner_id: practitionerId || '',
+        payment_type: paymentType || 'full',
+        type: 'transformation'
+      },
     });
 
-    console.log("[TRANSFORMATION-CHECKOUT] Session created:", session.id);
+    logStep("Session created with dynamic pricing", { sessionId: session.id });
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -68,7 +133,7 @@ serve(async (req) => {
     });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("[TRANSFORMATION-CHECKOUT] Error:", errorMessage);
+    logStep("ERROR", { message: errorMessage });
     return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
