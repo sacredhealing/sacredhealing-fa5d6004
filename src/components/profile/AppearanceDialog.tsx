@@ -1,27 +1,49 @@
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Moon, Sun, Monitor } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from '@/hooks/use-toast';
 
 interface AppearanceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
+const getStoredTheme = (): 'dark' | 'light' | 'system' => {
+  const stored = localStorage.getItem('app-theme');
+  if (stored === 'dark' || stored === 'light' || stored === 'system') {
+    return stored;
+  }
+  return 'dark';
+};
+
+const applyTheme = (theme: 'dark' | 'light' | 'system') => {
+  document.documentElement.classList.remove('light', 'dark');
+  if (theme === 'system') {
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.classList.add(prefersDark ? 'dark' : 'light');
+  } else {
+    document.documentElement.classList.add(theme);
+  }
+};
+
+// Apply theme on initial load
+if (typeof window !== 'undefined') {
+  applyTheme(getStoredTheme());
+}
+
 export const AppearanceDialog: React.FC<AppearanceDialogProps> = ({ open, onOpenChange }) => {
-  const [theme, setTheme] = React.useState<'dark' | 'light' | 'system'>('dark');
+  const [theme, setTheme] = React.useState<'dark' | 'light' | 'system'>(getStoredTheme);
 
   const handleThemeChange = (newTheme: 'dark' | 'light' | 'system') => {
     setTheme(newTheme);
-    // For now, app is dark mode only - this is prepared for future theme support
-    document.documentElement.classList.remove('light', 'dark');
-    if (newTheme === 'system') {
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      document.documentElement.classList.add(prefersDark ? 'dark' : 'light');
-    } else {
-      document.documentElement.classList.add(newTheme);
-    }
+    localStorage.setItem('app-theme', newTheme);
+    applyTheme(newTheme);
+    toast({
+      title: "Theme updated",
+      description: `Theme changed to ${newTheme}`,
+    });
   };
 
   const themeOptions = [
@@ -38,6 +60,9 @@ export const AppearanceDialog: React.FC<AppearanceDialogProps> = ({ open, onOpen
             <Moon size={20} className="text-primary" />
             Appearance
           </DialogTitle>
+          <DialogDescription>
+            Choose your preferred theme for the app
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <Label className="text-muted-foreground text-sm">Choose your theme</Label>
