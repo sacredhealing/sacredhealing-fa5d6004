@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { LotusIcon } from '@/components/icons/LotusIcon';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 const Auth: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const referralCode = searchParams.get('ref');
   const { signIn, signUp, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -42,8 +44,8 @@ const Auth: React.FC = () => {
     
     if (!email || !password) {
       toast({
-        title: "Missing fields",
-        description: "Please enter your email and password",
+        title: t('auth.missingFields'),
+        description: t('auth.enterEmailPassword'),
         variant: "destructive"
       });
       return;
@@ -56,22 +58,22 @@ const Auth: React.FC = () => {
         const { error } = await signIn(email, password);
         if (error) {
           toast({
-            title: "Sign in failed",
+            title: t('auth.signInFailed'),
             description: error.message,
             variant: "destructive"
           });
         } else {
           toast({
-            title: "Welcome back!",
-            description: "You've signed in successfully"
+            title: t('auth.welcomeBackMessage'),
+            description: t('auth.welcomeBackMessage')
           });
           navigate('/dashboard');
         }
       } else {
         if (!name) {
           toast({
-            title: "Missing name",
-            description: "Please enter your name",
+            title: t('auth.missingName'),
+            description: t('auth.enterName'),
             variant: "destructive"
           });
           setIsSubmitting(false);
@@ -81,7 +83,7 @@ const Auth: React.FC = () => {
         const { data, error } = await signUp(email, password, name);
         if (error) {
           toast({
-            title: "Sign up failed",
+            title: t('auth.signUpFailed'),
             description: error.message,
             variant: "destructive"
           });
@@ -144,26 +146,26 @@ const Auth: React.FC = () => {
                   .eq('user_id', referrerProfile.user_id);
 
                 toast({
-                  title: "Welcome to Sacred Healing!",
-                  description: "You've received 50 SHC welcome bonus! Your referrer got 100 SHC too!"
+                  title: t('auth.welcomeBonus'),
+                  description: t('auth.welcomeReferral')
                 });
               } else {
                 toast({
-                  title: "Welcome to Sacred Healing!",
-                  description: "You've received 50 SHC as a welcome bonus!"
+                  title: t('auth.welcomeBonus'),
+                  description: t('auth.welcomeBonus')
                 });
               }
             } catch (refError) {
               console.error('Referral processing error:', refError);
               toast({
-                title: "Welcome to Sacred Healing!",
-                description: "You've received 50 SHC as a welcome bonus!"
+                title: t('auth.welcomeBonus'),
+                description: t('auth.welcomeBonus')
               });
             }
           } else {
             toast({
-              title: "Welcome to Sacred Healing!",
-              description: "You've received 50 SHC as a welcome bonus!"
+              title: t('auth.welcomeBonus'),
+              description: t('auth.welcomeBonus')
             });
           }
           navigate('/dashboard');
@@ -171,8 +173,8 @@ const Auth: React.FC = () => {
       }
     } catch (err) {
       toast({
-        title: "Error",
-        description: "Something went wrong. Please try again.",
+        title: t('auth.error'),
+        description: t('auth.somethingWrong'),
         variant: "destructive"
       });
     } finally {
@@ -184,8 +186,8 @@ const Auth: React.FC = () => {
     const address = await connectWallet();
     if (address) {
       toast({
-        title: "Wallet connected",
-        description: "Please also create an account to use the app"
+        title: t('auth.walletConnected'),
+        description: t('auth.createAccountFirst')
       });
     }
   };
@@ -214,7 +216,7 @@ const Auth: React.FC = () => {
             Sacred Healing
           </h1>
           <p className="mt-2 text-muted-foreground">
-            {isLogin ? 'Welcome back, beautiful soul' : 'Begin your healing journey'}
+            {isLogin ? t('auth.welcomeBack') : t('auth.beginJourney')}
           </p>
         </div>
 
@@ -223,8 +225,8 @@ const Auth: React.FC = () => {
           <div className="mt-6 p-4 rounded-xl bg-secondary/20 border border-secondary/30 flex items-center gap-3 animate-fade-in">
             <Gift className="w-6 h-6 text-secondary flex-shrink-0" />
             <div>
-              <p className="font-medium text-foreground">You've been invited!</p>
-              <p className="text-sm text-muted-foreground">Sign up now and get 50 SHC bonus</p>
+              <p className="font-medium text-foreground">{t('auth.youveBeenInvited')}</p>
+              <p className="text-sm text-muted-foreground">{t('auth.signUpBonus')}</p>
             </div>
           </div>
         )}
@@ -236,7 +238,7 @@ const Auth: React.FC = () => {
               <User className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
               <Input
                 type="text"
-                placeholder="Your Name"
+                placeholder={t('auth.yourName')}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="pl-12 h-14 bg-muted/50 border-border/50 rounded-xl text-foreground placeholder:text-muted-foreground focus:ring-primary"
@@ -248,7 +250,7 @@ const Auth: React.FC = () => {
             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
             <Input
               type="email"
-              placeholder="Email Address"
+              placeholder={t('auth.emailAddress')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="pl-12 h-14 bg-muted/50 border-border/50 rounded-xl text-foreground placeholder:text-muted-foreground focus:ring-primary"
@@ -259,7 +261,7 @@ const Auth: React.FC = () => {
             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
             <Input
               type="password"
-              placeholder="Password"
+              placeholder={t('auth.password')}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="pl-12 h-14 bg-muted/50 border-border/50 rounded-xl text-foreground placeholder:text-muted-foreground focus:ring-primary"
@@ -271,7 +273,7 @@ const Auth: React.FC = () => {
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : (
               <>
-                {isLogin ? 'Sign In' : 'Create Account'}
+                {isLogin ? t('auth.signIn') : t('auth.createAccount')}
                 <ArrowRight size={20} />
               </>
             )}
@@ -281,7 +283,7 @@ const Auth: React.FC = () => {
         {/* Divider */}
         <div className="flex items-center gap-4 my-8">
           <div className="flex-1 h-px bg-border/50" />
-          <span className="text-sm text-muted-foreground">or continue with</span>
+          <span className="text-sm text-muted-foreground">{t('auth.orContinueWith')}</span>
           <div className="flex-1 h-px bg-border/50" />
         </div>
 
@@ -299,19 +301,19 @@ const Auth: React.FC = () => {
             ) : (
               <Sparkles className="w-5 h-5 mr-2 text-purple" />
             )}
-            Connect Phantom Wallet
+            {t('auth.connectPhantomWallet')}
           </Button>
         </div>
 
         {/* Toggle */}
         <p className="mt-8 text-center text-muted-foreground">
-          {isLogin ? "Don't have an account?" : 'Already have an account?'}
+          {isLogin ? t('auth.noAccount') : t('auth.haveAccount')}
           <button
             type="button"
             onClick={() => setIsLogin(!isLogin)}
             className="ml-2 text-primary font-medium hover:underline"
           >
-            {isLogin ? 'Sign Up' : 'Sign In'}
+            {isLogin ? t('auth.signUp') : t('auth.signIn')}
           </button>
         </p>
       </div>
