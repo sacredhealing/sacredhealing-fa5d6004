@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, Copy, Share2, Users, DollarSign, Gift, 
   TrendingUp, CheckCircle, Clock, Megaphone, Heart,
-  Sparkles, Target, Award, Edit3, Save, X
+  Sparkles, Target, Award, Edit3, Save, X, Wallet, ArrowRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,18 +12,22 @@ import { useAffiliate } from '@/hooks/useAffiliate';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useSHCPrice } from '@/hooks/useSHCPrice';
 
 const Promote: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data, isLoading, getReferralLink, refetch } = useAffiliate();
   const { toast } = useToast();
+  const { convertShcToEur, formatEur, price } = useSHCPrice();
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [customCode, setCustomCode] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
   const referralLink = getReferralLink();
+  const totalEarnings = data?.totalEarnings || 0;
+  const eurValue = convertShcToEur(totalEarnings);
 
   const copyToClipboard = async () => {
     try {
@@ -163,6 +167,29 @@ const Promote: React.FC = () => {
           <p className="text-muted-foreground text-sm">Share Sacred Healing and earn rewards</p>
         </div>
       </div>
+
+      {/* Withdraw Earnings Card */}
+      {totalEarnings > 0 && (
+        <Card className="mb-6 bg-gradient-to-r from-secondary/20 to-primary/20 border-secondary/30 animate-fade-in">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Your Earnings</p>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-heading font-bold text-foreground">{totalEarnings}</span>
+                  <span className="text-accent">SHC</span>
+                </div>
+                <p className="text-sm text-secondary font-medium">≈ {formatEur(eurValue)}</p>
+              </div>
+              <Button onClick={() => navigate('/wallet?tab=affiliate')} variant="gold">
+                <Wallet className="h-4 w-4 mr-2" />
+                Withdraw
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Referral Link Card */}
       <Card className="mb-6 bg-gradient-healing border-border/50 glow-purple animate-fade-in">
