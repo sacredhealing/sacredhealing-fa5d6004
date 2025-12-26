@@ -56,6 +56,84 @@ export type Database = {
         }
         Relationships: []
       }
+      affiliate_payout_accounts: {
+        Row: {
+          account_status: string
+          country: string | null
+          created_at: string
+          currency: string | null
+          id: string
+          payout_method: string
+          stripe_connect_account_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_status?: string
+          country?: string | null
+          created_at?: string
+          currency?: string | null
+          id?: string
+          payout_method?: string
+          stripe_connect_account_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_status?: string
+          country?: string | null
+          created_at?: string
+          currency?: string | null
+          id?: string
+          payout_method?: string
+          stripe_connect_account_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      affiliate_payouts: {
+        Row: {
+          amount_eur: number
+          amount_shc: number
+          completed_at: string | null
+          created_at: string
+          id: string
+          payout_method: string
+          status: string
+          stripe_payout_id: string | null
+          tx_signature: string | null
+          user_id: string
+          wallet_address: string | null
+        }
+        Insert: {
+          amount_eur: number
+          amount_shc: number
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          payout_method: string
+          status?: string
+          stripe_payout_id?: string | null
+          tx_signature?: string | null
+          user_id: string
+          wallet_address?: string | null
+        }
+        Update: {
+          amount_eur?: number
+          amount_shc?: number
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          payout_method?: string
+          status?: string
+          stripe_payout_id?: string | null
+          tx_signature?: string | null
+          user_id?: string
+          wallet_address?: string | null
+        }
+        Relationships: []
+      }
       affirmation_questionnaires: {
         Row: {
           additional_notes: string | null
