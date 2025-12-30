@@ -56,6 +56,11 @@ import Podcast from "./pages/Podcast";
 import LiveRecordings from "./pages/LiveRecordings";
 import AIIncomeEngine from "./pages/AIIncomeEngine";
 import NotFound from "./pages/NotFound";
+import AffiliateDetail from "./pages/income-streams/AffiliateDetail";
+import SHCCoinDetail from "./pages/income-streams/SHCCoinDetail";
+import CopyTradingDetail from "./pages/income-streams/CopyTradingDetail";
+import AIIncomeDetail from "./pages/income-streams/AIIncomeDetail";
+import EducationDetail from "./pages/income-streams/EducationDetail";
 import "@/lib/performance"; // Initialize performance monitoring
 
 const App = () => (
@@ -83,6 +88,11 @@ const App = () => (
                   <Route path="/healing" element={<Healing />} />
                   <Route path="/promote" element={<Promote />} />
                   <Route path="/income-streams" element={<IncomeStreams />} />
+                  <Route path="/income-streams/affiliate" element={<AffiliateDetail />} />
+                  <Route path="/income-streams/shc-coin" element={<SHCCoinDetail />} />
+                  <Route path="/income-streams/copy-trading" element={<CopyTradingDetail />} />
+                  <Route path="/income-streams/ai-income" element={<AIIncomeDetail />} />
+                  <Route path="/income-streams/education" element={<EducationDetail />} />
                   <Route path="/spiritual-education" element={<SpiritualEducation />} />
                   <Route path="/community" element={<Community />} />
                   <Route path="/private-sessions" element={<PrivateSessions />} />
