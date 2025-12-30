@@ -84,7 +84,12 @@ const IncomeStreams: React.FC = () => {
       .order('order_index', { ascending: true });
 
     if (data) {
-      setDbStreams(data as unknown as IncomeStream[]);
+      // Filter out any streams that duplicate the static ones
+      const filtered = (data as unknown as IncomeStream[]).filter(
+        stream => !stream.title.toLowerCase().includes('copy trading') && 
+                  !stream.title.toLowerCase().includes('ai income')
+      );
+      setDbStreams(filtered);
     }
   };
 
