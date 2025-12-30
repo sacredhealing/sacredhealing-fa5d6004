@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Play, BookOpen, Gift, Wallet, Flame, Sparkles, DollarSign, Youtube, ShoppingBag, Crown, Music, Heart, Trophy, Star, Calendar, Headphones, Bot } from 'lucide-react';
+import { Play, BookOpen, Gift, Wallet, Flame, Sparkles, DollarSign, Youtube, ShoppingBag, Crown, Music, Heart, Trophy, Star, Calendar, Headphones } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LotusIcon } from '@/components/icons/LotusIcon';
 import { SocialShare } from '@/components/SocialShare';
@@ -289,19 +289,6 @@ const Dashboard: React.FC = () => {
             </Card>
           </Link>
 
-          <Link to="/ai-income">
-            <Card className="p-4 bg-gradient-to-br from-cyan-500/20 to-emerald-500/10 border-cyan-500/30 hover:border-cyan-500/50 transition-all">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-cyan-500/20">
-                  <Bot className="w-5 h-5 text-cyan-400" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-foreground text-sm">{t('dashboard.aiIncomeEngine')}</h3>
-                  <p className="text-xs text-muted-foreground">{t('dashboard.aiIncomeDesc')}</p>
-                </div>
-              </div>
-            </Card>
-          </Link>
         </div>
       </div>
 
