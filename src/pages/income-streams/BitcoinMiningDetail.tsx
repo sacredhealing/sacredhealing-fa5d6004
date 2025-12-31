@@ -56,10 +56,8 @@ const BitcoinMiningDetail: React.FC = () => {
             <CardContent className="p-3 text-center">
               <Percent className="w-5 h-5 text-orange-500 mx-auto mb-1" />
               <p className="text-xs text-muted-foreground">{t('bitcoinMining.returns', 'Returns')}</p>
-              <p className="font-bold text-foreground text-sm">
-                {content['bitcoin_mining_returns'] || '5-15%'}
-              </p>
-              <p className="text-xs text-muted-foreground">{t('bitcoinMining.monthly', 'monthly*')}</p>
+              <p className="font-bold text-foreground text-sm">14%</p>
+              <p className="text-xs text-muted-foreground">{t('bitcoinMining.perCard', 'per card')}</p>
             </CardContent>
           </Card>
           <Card className="bg-gradient-to-br from-blue-500/20 to-cyan-500/10 border-blue-500/30">
@@ -67,15 +65,15 @@ const BitcoinMiningDetail: React.FC = () => {
               <Zap className="w-5 h-5 text-blue-500 mx-auto mb-1" />
               <p className="text-xs text-muted-foreground">{t('bitcoinMining.effort', 'Effort')}</p>
               <p className="font-bold text-foreground text-sm">{t('bitcoinMining.passive', 'Passive')}</p>
-              <p className="text-xs text-muted-foreground">{t('bitcoinMining.income', 'Income')}</p>
+              <p className="text-xs text-muted-foreground">{t('bitcoinMining.automated', 'Automated')}</p>
             </CardContent>
           </Card>
           <Card className="bg-gradient-to-br from-purple-500/20 to-pink-500/10 border-purple-500/30">
             <CardContent className="p-3 text-center">
               <Clock className="w-5 h-5 text-purple-500 mx-auto mb-1" />
-              <p className="text-xs text-muted-foreground">{t('bitcoinMining.payout', 'Payout')}</p>
-              <p className="font-bold text-foreground text-sm">{t('bitcoinMining.daily', 'Daily')}</p>
-              <p className="text-xs text-muted-foreground">{t('bitcoinMining.rewards', 'Rewards')}</p>
+              <p className="text-xs text-muted-foreground">{t('bitcoinMining.cycle', 'Cycle')}</p>
+              <p className="font-bold text-foreground text-sm">~90</p>
+              <p className="text-xs text-muted-foreground">{t('bitcoinMining.days', 'days')}</p>
             </CardContent>
           </Card>
         </div>
@@ -84,87 +82,112 @@ const BitcoinMiningDetail: React.FC = () => {
         <Card className="bg-card/50 border-border/50">
           <CardContent className="p-4">
             <p className="text-muted-foreground">
-              {content['bitcoin_mining_description'] || t('bitcoinMining.description', 'Earn Bitcoin passively through cloud mining. No hardware required - simply invest and watch your crypto portfolio grow with daily mining rewards.')}
+              {content['bitcoin_mining_description'] || t('bitcoinMining.description', 'Invest in a license that mines bitcoin through mining cards. The cards create bitcoin mining through an advanced computer algorithm that gives 14% back per card. It takes approximately 90 days until your 114% is mined.')}
             </p>
           </CardContent>
         </Card>
 
-        {/* Get Started Steps */}
+        {/* License Options */}
         <Card className="bg-card/50 border-border/50">
           <CardHeader>
-            <CardTitle className="text-lg">🔗 {t('bitcoinMining.getStarted', 'Get Started')}</CardTitle>
+            <CardTitle className="text-lg">💳 {t('bitcoinMining.licenseOptions', 'License Options')}</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Step 1 */}
+          <CardContent className="space-y-4">
+            <div className="p-3 rounded-lg bg-background/50 border border-border/50">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-semibold text-foreground">$300 {t('bitcoinMining.license', 'License')}</span>
+                <Badge variant="secondary">{t('bitcoinMining.starter', 'Starter')}</Badge>
+              </div>
+              <p className="text-sm text-muted-foreground">{t('bitcoinMining.upTo', 'Up to')} 9 {t('bitcoinMining.miningCards', 'mining cards')}</p>
+            </div>
+            <div className="p-3 rounded-lg bg-background/50 border border-border/50">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-semibold text-foreground">$1,000 {t('bitcoinMining.license', 'License')}</span>
+                <Badge variant="secondary">{t('bitcoinMining.growth', 'Growth')}</Badge>
+              </div>
+              <p className="text-sm text-muted-foreground">{t('bitcoinMining.upTo', 'Up to')} 30 {t('bitcoinMining.miningCards', 'mining cards')}</p>
+            </div>
+            <div className="p-3 rounded-lg bg-gradient-to-br from-orange-500/10 to-amber-500/5 border border-orange-500/30">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-semibold text-foreground">$1,500 {t('bitcoinMining.license', 'License')}</span>
+                <Badge className="bg-orange-500/20 text-orange-400">{t('bitcoinMining.premium', 'Premium')}</Badge>
+              </div>
+              <p className="text-sm text-muted-foreground">{t('bitcoinMining.upTo', 'Up to')} 50 {t('bitcoinMining.miningCards', 'mining cards')}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* How It Works */}
+        <Card className="bg-card/50 border-border/50">
+          <CardHeader>
+            <CardTitle className="text-lg">⚡ {t('bitcoinMining.howItWorks', 'How It Works')}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <div className="space-y-3">
-              <div className="flex gap-3">
-                <div className="w-8 h-8 rounded-full bg-orange-500/20 text-orange-500 flex items-center justify-center shrink-0 font-bold text-sm">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-orange-500/20 text-orange-500 flex items-center justify-center shrink-0 font-bold text-sm mt-0.5">
                   1
                 </div>
-                <div className="flex-1">
-                  <h4 className="font-semibold text-foreground">
-                    {content['bitcoin_mining_step1'] || t('bitcoinMining.step1', 'Create Your Mining Account')}
-                  </h4>
+                <div>
+                  <h4 className="font-semibold text-foreground">{t('bitcoinMining.buyCards', 'Buy Mining Cards')}</h4>
+                  <p className="text-sm text-muted-foreground">{t('bitcoinMining.cardCost', 'Each card costs ~$300 and generates approximately $4/day in mining rewards.')}</p>
                 </div>
               </div>
-              <Button 
-                className="w-full bg-orange-600 hover:bg-orange-700" 
-                onClick={() => window.open(miningLink, '_blank')}
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                {t('bitcoinMining.signUp', 'Sign Up for Cloud Mining')}
-              </Button>
-            </div>
-
-            {/* Step 2 */}
-            <div className="space-y-3">
-              <div className="flex gap-3">
-                <div className="w-8 h-8 rounded-full bg-blue-500/20 text-blue-500 flex items-center justify-center shrink-0 font-bold text-sm">
+              
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-blue-500/20 text-blue-500 flex items-center justify-center shrink-0 font-bold text-sm mt-0.5">
                   2
                 </div>
-                <div className="flex-1">
-                  <h4 className="font-semibold text-foreground">
-                    {content['bitcoin_mining_step2'] || t('bitcoinMining.step2', 'Choose Your Mining Plan')}
-                  </h4>
+                <div>
+                  <h4 className="font-semibold text-foreground">{t('bitcoinMining.autoCompound', 'Auto-Compound Growth')}</h4>
+                  <p className="text-sm text-muted-foreground">{t('bitcoinMining.autoCompoundDesc', 'Earnings automatically purchase new cards. 4 cards become 10 cards in ~90 days!')}</p>
                 </div>
               </div>
-              <div className="ml-11 space-y-2 text-sm">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Check className="w-4 h-4 text-green-500" />
-                  <span>{t('bitcoinMining.minInvestment', 'Minimum investment')}: <span className="text-foreground font-medium">{content['bitcoin_mining_min_investment'] || '$100'}</span></span>
+              
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-green-500/20 text-green-500 flex items-center justify-center shrink-0 font-bold text-sm mt-0.5">
+                  3
                 </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Check className="w-4 h-4 text-green-500" />
-                  <span>{t('bitcoinMining.contracts', 'Multiple contract durations available')}</span>
-                </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Check className="w-4 h-4 text-green-500" />
-                  <span>{t('bitcoinMining.hashpower', 'Instant hashpower allocation')}</span>
+                <div>
+                  <h4 className="font-semibold text-foreground">{t('bitcoinMining.scaleUp', 'Scale Your Income')}</h4>
+                  <p className="text-sm text-muted-foreground">{t('bitcoinMining.scaleUpDesc', '30 cards = ~$30,000/month • 50 cards = ~$60,000/month in Bitcoin!')}</p>
                 </div>
               </div>
             </div>
+          </CardContent>
+        </Card>
 
-            {/* Step 3 */}
-            <div className="space-y-3">
-              <div className="flex gap-3">
-                <div className="w-8 h-8 rounded-full bg-green-500/20 text-green-500 flex items-center justify-center shrink-0 font-bold text-sm">
-                  3
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-semibold text-foreground">
-                    {content['bitcoin_mining_step3'] || t('bitcoinMining.step3', 'Start Earning Bitcoin')}
-                  </h4>
-                </div>
-              </div>
-              <div className="ml-11 space-y-2 text-sm">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Check className="w-4 h-4 text-green-500" />
-                  <span>{t('bitcoinMining.dailyRewards', 'Daily mining rewards credited to your account')}</span>
-                </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Check className="w-4 h-4 text-green-500" />
-                  <span>{t('bitcoinMining.withdrawAnytime', 'Withdraw anytime to your wallet')}</span>
-                </div>
+        {/* Earnings Example */}
+        <Card className="bg-gradient-to-br from-amber-500/10 to-yellow-500/5 border-amber-500/30">
+          <CardHeader>
+            <CardTitle className="text-lg">💰 {t('bitcoinMining.earningsExample', 'Earnings Example')}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between p-3 rounded-lg bg-background/50">
+              <span className="text-muted-foreground">4 {t('bitcoinMining.cards', 'cards')}</span>
+              <span className="font-bold text-foreground">$16/{t('bitcoinMining.day', 'day')} → $400/{t('bitcoinMining.month', 'month')}</span>
+            </div>
+            <div className="flex items-center justify-between p-3 rounded-lg bg-background/50">
+              <span className="text-muted-foreground">10 {t('bitcoinMining.cards', 'cards')}</span>
+              <span className="font-bold text-foreground">$40/{t('bitcoinMining.day', 'day')} → $1,000/{t('bitcoinMining.month', 'month')}</span>
+            </div>
+            <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-br from-orange-500/20 to-amber-500/10">
+              <span className="text-foreground font-medium">30 {t('bitcoinMining.cards', 'cards')}</span>
+              <span className="font-bold text-orange-400">$120/{t('bitcoinMining.day', 'day')} → $3,000/{t('bitcoinMining.month', 'month')}</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Future Potential */}
+        <Card className="bg-card/50 border-border/50">
+          <CardContent className="p-4">
+            <div className="flex gap-3">
+              <TrendingUp className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+              <div>
+                <p className="text-foreground font-medium mb-1">📈 {t('bitcoinMining.futurePotential', 'Future Potential')}</p>
+                <p className="text-sm text-muted-foreground">
+                  {t('bitcoinMining.futurePotentialDesc', 'Bitcoin is predicted to reach $15 million within 5 years. What you mine today could be worth 10x — holding your Bitcoin creates enormous future opportunity!')}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -215,13 +238,16 @@ const BitcoinMiningDetail: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Footer Message */}
+        {/* Get Started */}
         <Card className="bg-gradient-to-br from-primary/10 to-purple-500/5 border-primary/30">
           <CardContent className="p-4 text-center">
-            <p className="text-foreground">
-              ✨ {t('bitcoinMining.tagline', 'Earn Bitcoin while you sleep.')}
+            <p className="text-foreground font-medium mb-2">
+              🚀 {t('bitcoinMining.interested', 'Interested in Getting Started?')}
             </p>
-            <p className="text-muted-foreground mt-2">
+            <p className="text-sm text-muted-foreground mb-4">
+              {t('bitcoinMining.zoomDesc', "Book a Zoom call with our team. We'll explain everything in depth, answer your questions, and help you get started.")}
+            </p>
+            <p className="text-muted-foreground text-sm">
               {t('bitcoinMining.closing', 'Start your crypto journey today.')}<br />
               <span className="font-semibold text-foreground">Shreem Brzee</span>
             </p>
@@ -235,7 +261,7 @@ const BitcoinMiningDetail: React.FC = () => {
           onClick={() => window.open(miningLink, '_blank')}
         >
           <ExternalLink className="w-4 h-4 mr-2" />
-          {t('bitcoinMining.startMining', 'Start Mining Bitcoin')}
+          {t('bitcoinMining.bookZoom', 'Book a Zoom Meeting')}
         </Button>
       </div>
     </div>
