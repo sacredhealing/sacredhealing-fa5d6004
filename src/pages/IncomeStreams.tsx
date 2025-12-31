@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { DollarSign, TrendingUp, Users, Sparkles, ArrowRight, Coins, GraduationCap, Bot } from 'lucide-react';
+import { DollarSign, TrendingUp, Users, Sparkles, ArrowRight, Coins, GraduationCap, Bot, Cpu } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -47,6 +47,15 @@ const staticStreams = [
     icon: TrendingUp,
     color: 'from-green-500 to-emerald-600',
     badge: 'Passive',
+  },
+  {
+    id: 'bitcoin-mining',
+    slug: 'bitcoin-mining',
+    title: 'Bitcoin Mining',
+    description: 'Earn Bitcoin passively through cloud mining. No hardware required.',
+    icon: Cpu,
+    color: 'from-orange-500 to-amber-600',
+    badge: 'Crypto',
   },
   {
     id: 'ai-income',
@@ -193,7 +202,7 @@ const IncomeStreams: React.FC = () => {
               Ready to start earning? Explore any stream above to get started.
             </p>
             <Button variant="outline" size="sm" asChild>
-              <Link to="/promote">
+              <Link to="/income-streams/affiliate">
                 <Users className="w-4 h-4 mr-2" />
                 Quick Start: Affiliate Program
               </Link>

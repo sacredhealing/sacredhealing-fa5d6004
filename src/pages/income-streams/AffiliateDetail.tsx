@@ -1,18 +1,172 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowLeft, Users, Check, ExternalLink, DollarSign, Share2 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { 
+  ArrowLeft, Copy, Share2, Users, DollarSign, Gift, 
+  TrendingUp, CheckCircle, Clock, Megaphone, Heart,
+  Sparkles, Target, Award, Edit3, Save, X, Wallet, ArrowRight, Check, Percent
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { useAffiliate } from '@/hooks/useAffiliate';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useSHCPrice } from '@/hooks/useSHCPrice';
+import { useSiteContent } from '@/hooks/useSiteContent';
 
 const AffiliateDetail: React.FC = () => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { data, isLoading, getReferralLink, refetch } = useAffiliate();
+  const { toast } = useToast();
+  const { convertShcToEur, formatEur } = useSHCPrice();
+  const [copied, setCopied] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [customCode, setCustomCode] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Fetch editable content
+  const { content } = useSiteContent([
+    'affiliate_title',
+    'affiliate_subtitle',
+    'affiliate_description',
+    'affiliate_step1',
+    'affiliate_step2',
+    'affiliate_step3',
+    'affiliate_step4',
+  ]);
+
+  const referralLink = getReferralLink();
+  const totalEarnings = data?.totalEarnings || 0;
+  const eurValue = convertShcToEur(totalEarnings);
+
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(referralLink);
+      setCopied(true);
+      toast({
+        title: t('affiliate.linkCopied', 'Link Copied!'),
+        description: t('affiliate.linkCopiedDesc', 'Your referral link has been copied to clipboard'),
+      });
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      toast({
+        title: t('affiliate.failedToCopy', 'Failed to copy'),
+        description: t('affiliate.copyManually', 'Please copy the link manually'),
+        variant: "destructive",
+      });
+    }
+  };
+
+  const shareLink = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Join Sacred Healing',
+          text: t('affiliate.shareText', 'Start your healing journey and earn rewards! Use my referral link:'),
+          url: referralLink,
+        });
+      } catch (err) {
+        console.log('Share cancelled');
+      }
+    } else {
+      copyToClipboard();
+    }
+  };
+
+  const startEditing = () => {
+    setCustomCode(data?.referralCode || '');
+    setIsEditing(true);
+  };
+
+  const cancelEditing = () => {
+    setIsEditing(false);
+    setCustomCode('');
+  };
+
+  const saveCustomCode = async () => {
+    if (!user || !customCode.trim()) return;
+    
+    const sanitized = customCode.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+    if (sanitized.length < 3 || sanitized.length > 30) {
+      toast({
+        title: t('affiliate.invalidCode', 'Invalid Code'),
+        description: t('affiliate.codeRequirements', 'Code must be 3-30 characters (letters, numbers, hyphens, underscores)'),
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const { data: existing } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('referral_code', sanitized)
+        .neq('user_id', user.id)
+        .single();
+
+      if (existing) {
+        toast({
+          title: t('affiliate.codeTaken', 'Code Taken'),
+          description: t('affiliate.codeTakenDesc', 'This referral code is already in use. Try another one.'),
+          variant: "destructive",
+        });
+        setIsSaving(false);
+        return;
+      }
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ referral_code: sanitized })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: t('affiliate.codeUpdated', 'Code Updated!'),
+        description: `${t('affiliate.newCode', 'Your new referral code is')}: ${sanitized}`,
+      });
+      setIsEditing(false);
+      refetch();
+    } catch (error) {
+      console.error('Error updating referral code:', error);
+      toast({
+        title: t('common.error', 'Error'),
+        description: t('affiliate.updateError', 'Failed to update referral code. Please try again.'),
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const commissionTiers = [
+    { type: t('affiliate.newUserSignup', 'New User Signup'), reward: '100 SHC', icon: Users },
+    { type: t('affiliate.musicPurchase', 'Music Purchase'), reward: '30%', icon: DollarSign },
+    { type: t('affiliate.courseEnrollment', 'Course Enrollment'), reward: '30%', icon: Award },
+    { type: t('affiliate.healingSubscription', 'Healing Subscription'), reward: '30%', icon: Heart },
+  ];
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen pb-24">
       {/* Header */}
       <div className="px-4 pt-4 pb-6">
         <Link to="/income-streams" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-4">
           <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm">Back to Income Streams</span>
+          <span className="text-sm">{t('common.back', 'Back to Income Streams')}</span>
         </Link>
         
         <div className="flex items-center gap-3">
@@ -20,44 +174,162 @@ const AffiliateDetail: React.FC = () => {
             <Users className="w-7 h-7 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Affiliate Program</h1>
-            <Badge variant="secondary" className="mt-1">Popular</Badge>
+            <h1 className="text-2xl font-bold text-foreground">
+              {content['affiliate_title'] || t('affiliate.title', 'Affiliate Program')}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {content['affiliate_subtitle'] || t('affiliate.subtitle', 'Share & Earn Rewards')}
+            </p>
           </div>
         </div>
       </div>
 
       <div className="px-4 space-y-6">
-        {/* Overview */}
+        {/* Key Stats */}
+        <div className="grid grid-cols-3 gap-3">
+          <Card className="bg-gradient-to-br from-green-500/20 to-emerald-500/10 border-green-500/30">
+            <CardContent className="p-3 text-center">
+              <Percent className="w-5 h-5 text-green-500 mx-auto mb-1" />
+              <p className="text-xs text-muted-foreground">{t('affiliate.commission', 'Commission')}</p>
+              <p className="font-bold text-foreground text-sm">30%</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-to-br from-blue-500/20 to-cyan-500/10 border-blue-500/30">
+            <CardContent className="p-3 text-center">
+              <Users className="w-5 h-5 text-blue-500 mx-auto mb-1" />
+              <p className="text-xs text-muted-foreground">{t('affiliate.referrals', 'Referrals')}</p>
+              <p className="font-bold text-foreground text-sm">{data?.totalReferrals || 0}</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-to-br from-purple-500/20 to-pink-500/10 border-purple-500/30">
+            <CardContent className="p-3 text-center">
+              <TrendingUp className="w-5 h-5 text-purple-500 mx-auto mb-1" />
+              <p className="text-xs text-muted-foreground">{t('affiliate.earned', 'Earned')}</p>
+              <p className="font-bold text-foreground text-sm">{totalEarnings} SHC</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Withdraw Earnings Card */}
+        {totalEarnings > 0 && (
+          <Card className="bg-gradient-to-r from-secondary/20 to-primary/20 border-secondary/30">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">{t('affiliate.yourEarnings', 'Your Earnings')}</p>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-2xl font-bold text-foreground">{totalEarnings}</span>
+                    <span className="text-accent">SHC</span>
+                  </div>
+                  <p className="text-sm text-secondary font-medium">≈ {formatEur(eurValue)}</p>
+                </div>
+                <Button onClick={() => navigate('/wallet?tab=affiliate')} variant="gold">
+                  <Wallet className="h-4 w-4 mr-2" />
+                  {t('affiliate.withdraw', 'Withdraw')}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Description */}
         <Card className="bg-card/50 border-border/50">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-primary" />
-              What is it?
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-muted-foreground">
-            <p>
-              Our affiliate program allows you to earn commissions by referring new users to the platform. 
-              When someone signs up using your unique referral link and makes a purchase, you earn a percentage of their transaction.
-            </p>
-            <p>
-              This is a great way to earn passive income while helping others discover our spiritual wellness platform.
+          <CardContent className="p-4">
+            <p className="text-muted-foreground">
+              {content['affiliate_description'] || t('affiliate.description', 'Earn commissions by referring new users to the platform. When someone signs up using your unique referral link and makes a purchase, you earn a percentage of their transaction.')}
             </p>
           </CardContent>
         </Card>
 
-        {/* How it works */}
+        {/* Referral Link Card */}
+        <Card className="bg-gradient-healing border-border/50">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Sparkles className="h-5 w-5 text-secondary" />
+              {t('affiliate.yourReferralLink', 'Your Referral Link')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-background/50 rounded-xl p-4 mb-4">
+              <p className="text-sm text-muted-foreground mb-2">{t('affiliate.shareThisLink', 'Share this link')}:</p>
+              <p className="text-foreground font-mono text-sm break-all">{referralLink}</p>
+            </div>
+            <div className="flex gap-3">
+              <Button onClick={copyToClipboard} variant="outline" className="flex-1">
+                {copied ? <CheckCircle className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
+                {copied ? t('affiliate.copied', 'Copied!') : t('affiliate.copyLink', 'Copy Link')}
+              </Button>
+              <Button onClick={shareLink} variant="gold" className="flex-1">
+                <Share2 className="h-4 w-4 mr-2" />
+                {t('affiliate.share', 'Share')}
+              </Button>
+            </div>
+            
+            {/* Editable Referral Code */}
+            <div className="mt-4 p-3 rounded-xl bg-background/30 border border-border/30">
+              {isEditing ? (
+                <div className="space-y-3">
+                  <p className="text-xs text-muted-foreground">{t('affiliate.customizeCode', 'Customize your referral code')}:</p>
+                  <Input
+                    value={customCode}
+                    onChange={(e) => setCustomCode(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))}
+                    placeholder="your-name"
+                    className="font-mono text-sm"
+                    maxLength={30}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t('affiliate.codeRules', 'Only letters, numbers, hyphens, and underscores. 3-30 characters.')}
+                  </p>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={saveCustomCode} 
+                      size="sm" 
+                      disabled={isSaving || customCode.length < 3}
+                      className="flex-1"
+                    >
+                      {isSaving ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
+                      ) : (
+                        <>
+                          <Save className="h-3 w-3 mr-1" />
+                          {t('common.save', 'Save')}
+                        </>
+                      )}
+                    </Button>
+                    <Button onClick={cancelEditing} size="sm" variant="outline" className="flex-1">
+                      <X className="h-3 w-3 mr-1" />
+                      {t('common.cancel', 'Cancel')}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-muted-foreground">{t('affiliate.yourCode', 'Your code')}:</p>
+                    <p className="font-mono font-bold text-primary">{data?.referralCode}</p>
+                  </div>
+                  <Button onClick={startEditing} size="sm" variant="ghost">
+                    <Edit3 className="h-4 w-4 mr-1" />
+                    {t('affiliate.customize', 'Customize')}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* How It Works */}
         <Card className="bg-card/50 border-border/50">
           <CardHeader>
-            <CardTitle className="text-lg">How It Works</CardTitle>
+            <CardTitle className="text-lg">🔗 {t('affiliate.howItWorks', 'How It Works')}</CardTitle>
           </CardHeader>
           <CardContent>
             <ol className="space-y-4">
               {[
-                { step: 1, title: 'Get Your Link', desc: 'Go to the Promote page and copy your unique referral link.' },
-                { step: 2, title: 'Share It', desc: 'Share your link with friends, on social media, or your website.' },
-                { step: 3, title: 'Earn Commissions', desc: 'When someone signs up and makes a purchase, you earn a commission.' },
-                { step: 4, title: 'Get Paid', desc: 'Withdraw your earnings via bank transfer or crypto wallet.' },
+                { step: 1, title: t('affiliate.getLink', 'Get Your Link'), desc: content['affiliate_step1'] || t('affiliate.step1Desc', 'Copy your unique referral link above.') },
+                { step: 2, title: t('affiliate.shareIt', 'Share It'), desc: content['affiliate_step2'] || t('affiliate.step2Desc', 'Share your link with friends, on social media, or your website.') },
+                { step: 3, title: t('affiliate.earnCommissions', 'Earn Commissions'), desc: content['affiliate_step3'] || t('affiliate.step3Desc', 'When someone signs up and makes a purchase, you earn a commission.') },
+                { step: 4, title: t('affiliate.getPaid', 'Get Paid'), desc: content['affiliate_step4'] || t('affiliate.step4Desc', 'Withdraw your earnings via bank transfer or crypto wallet.') },
               ].map((item) => (
                 <li key={item.step} className="flex gap-4">
                   <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0 font-semibold text-sm">
@@ -73,43 +345,125 @@ const AffiliateDetail: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Benefits */}
-        <Card className="bg-card/50 border-border/50">
+        {/* Commission Structure */}
+        <Card className="bg-gradient-to-br from-amber-500/10 to-yellow-500/5 border-amber-500/30">
           <CardHeader>
-            <CardTitle className="text-lg">Benefits</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Gift className="h-5 w-5 text-secondary" />
+              {t('affiliate.howYouEarn', 'How You Earn')}
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <ul className="space-y-3">
-              {[
-                'Competitive commission rates',
-                'Real-time tracking dashboard',
-                'Multiple payout options (bank, crypto)',
-                'No limit on earnings',
-                'Lifetime referral tracking',
-              ].map((benefit, index) => (
-                <li key={index} className="flex items-center gap-3">
-                  <Check className="w-5 h-5 text-green-500 shrink-0" />
-                  <span className="text-muted-foreground">{benefit}</span>
-                </li>
-              ))}
-            </ul>
+          <CardContent className="space-y-3">
+            {commissionTiers.map((tier, index) => (
+              <div key={index} className="flex items-center justify-between p-3 rounded-xl bg-background/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                    <tier.icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <span className="text-foreground">{tier.type}</span>
+                </div>
+                <Badge className="bg-green-500 text-white">{tier.reward}</Badge>
+              </div>
+            ))}
           </CardContent>
         </Card>
 
-        {/* CTA */}
-        <div className="space-y-3 pt-2">
-          <Button className="w-full" size="lg" asChild>
-            <Link to="/promote">
-              <Share2 className="w-4 h-4 mr-2" />
-              Get Started with Affiliate Program
-            </Link>
-          </Button>
-          <Button variant="outline" className="w-full" asChild>
-            <Link to="/wallet">
-              View Your Earnings
-            </Link>
-          </Button>
-        </div>
+        {/* Promotion Tips */}
+        <Card className="bg-card/50 border-border/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Megaphone className="h-5 w-5 text-accent" />
+              {t('affiliate.promotionTips', 'Promotion Tips')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {[
+              { tip: t('affiliate.tip1', 'Share your unique link on social media'), icon: Share2 },
+              { tip: t('affiliate.tip2', 'Tell friends about your healing journey'), icon: Heart },
+              { tip: t('affiliate.tip3', 'Include link in your bio or signature'), icon: Target },
+              { tip: t('affiliate.tip4', 'Create content about Sacred Healing'), icon: Megaphone },
+            ].map((item, index) => (
+              <div key={index} className="flex items-center gap-3 p-3 rounded-xl bg-background/50">
+                <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center">
+                  <item.icon className="h-4 w-4 text-accent" />
+                </div>
+                <span className="text-foreground text-sm">{item.tip}</span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Recent Referrals */}
+        {(data?.recentReferrals?.length || 0) > 0 && (
+          <Card className="bg-card/50 border-border/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                {t('affiliate.recentReferrals', 'Recent Referrals')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {data?.recentReferrals.map((referral) => (
+                <div key={referral.id} className="flex items-center justify-between p-3 rounded-xl bg-background/50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-foreground">{t('affiliate.newSignup', 'New signup')}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(referral.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="font-bold text-secondary">+{referral.signup_bonus_shc} SHC</span>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Earnings History */}
+        {(data?.earningsHistory?.length || 0) > 0 && (
+          <Card className="bg-card/50 border-border/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5 text-secondary" />
+                {t('affiliate.earningsHistory', 'Earnings History')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {data?.earningsHistory.map((earning) => (
+                <div key={earning.id} className="flex items-center justify-between p-3 rounded-xl bg-background/50">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      earning.status === 'paid' ? 'bg-green-500/20' : 'bg-yellow-500/20'
+                    }`}>
+                      {earning.status === 'paid' ? (
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Clock className="h-4 w-4 text-yellow-500" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm text-foreground capitalize">{earning.purchase_type}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(earning.created_at).toLocaleDateString()} • {earning.status}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="font-bold text-secondary">+{earning.commission_shc} SHC</span>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Main CTA */}
+        <Button onClick={shareLink} className="w-full" size="lg" variant="gold">
+          <Share2 className="w-4 h-4 mr-2" />
+          {t('affiliate.shareNow', 'Share Your Link Now')}
+        </Button>
       </div>
     </div>
   );
