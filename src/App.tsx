@@ -29,7 +29,7 @@ import AdminAnnouncements from "./pages/AdminAnnouncements";
 import AdminIncomeStreams from "./pages/AdminIncomeStreams";
 import AdminYouTube from "./pages/AdminYouTube";
 import Healing from "./pages/Healing";
-import Promote from "./pages/Promote";
+import Breathing from "./pages/Breathing";
 import IncomeStreams from "./pages/IncomeStreams";
 import SpiritualEducation from "./pages/SpiritualEducation";
 import Community from "./pages/Community";
@@ -59,6 +59,7 @@ import NotFound from "./pages/NotFound";
 import AffiliateDetail from "./pages/income-streams/AffiliateDetail";
 import SHCCoinDetail from "./pages/income-streams/SHCCoinDetail";
 import CopyTradingDetail from "./pages/income-streams/CopyTradingDetail";
+import BitcoinMiningDetail from "./pages/income-streams/BitcoinMiningDetail";
 import AIIncomeDetail from "./pages/income-streams/AIIncomeDetail";
 import EducationDetail from "./pages/income-streams/EducationDetail";
 import "@/lib/performance"; // Initialize performance monitoring
@@ -86,11 +87,12 @@ const App = () => (
                   <Route path="/wallet" element={<Wallet />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/healing" element={<Healing />} />
-                  <Route path="/promote" element={<Promote />} />
+                  <Route path="/breathing" element={<Breathing />} />
                   <Route path="/income-streams" element={<IncomeStreams />} />
                   <Route path="/income-streams/affiliate" element={<AffiliateDetail />} />
                   <Route path="/income-streams/shc-coin" element={<SHCCoinDetail />} />
                   <Route path="/income-streams/copy-trading" element={<CopyTradingDetail />} />
+                  <Route path="/income-streams/bitcoin-mining" element={<BitcoinMiningDetail />} />
                   <Route path="/income-streams/ai-income" element={<AIIncomeDetail />} />
                   <Route path="/income-streams/education" element={<EducationDetail />} />
                   <Route path="/spiritual-education" element={<SpiritualEducation />} />
