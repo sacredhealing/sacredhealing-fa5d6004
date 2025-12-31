@@ -96,7 +96,9 @@ const IncomeStreams: React.FC = () => {
       // Filter out any streams that duplicate the static ones
       const filtered = (data as unknown as IncomeStream[]).filter(
         stream => !stream.title.toLowerCase().includes('copy trading') && 
-                  !stream.title.toLowerCase().includes('ai income')
+                  !stream.title.toLowerCase().includes('ai income') &&
+                  !stream.title.toLowerCase().includes('bitcoin') &&
+                  !stream.title.toLowerCase().includes('mining')
       );
       setDbStreams(filtered);
     }
