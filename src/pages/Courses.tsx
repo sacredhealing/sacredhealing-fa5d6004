@@ -134,15 +134,12 @@ const Courses: React.FC = () => {
     return languages[code] || languages.en;
   };
 
-  // Filter courses to show based on user's selected language preference
-  const filteredCourses = courses.filter(course => {
-    // Show courses that match user's language or English as fallback
-    return course.language === currentLanguage || course.language === 'en' || !course.language;
-  });
+  // Show all courses regardless of language
+  const filteredCourses = courses;
 
   const completedCount = enrollments.filter(e => e.progress_percent === 100).length;
   const inProgressCount = enrollments.filter(e => e.progress_percent > 0 && e.progress_percent < 100).length;
-  const availableCount = filteredCourses.length - enrollments.length;
+  const availableCount = courses.length - enrollments.length;
 
   if (isLoading) {
     return (
