@@ -1119,14 +1119,26 @@ export type Database = {
       }
       income_streams: {
         Row: {
+          badge_text: string | null
+          badge_text_es: string | null
+          badge_text_no: string | null
+          badge_text_sv: string | null
           category: string
+          color_from: string | null
+          color_to: string | null
           created_at: string
+          cta_button_text: string | null
+          cta_button_text_es: string | null
+          cta_button_text_no: string | null
+          cta_button_text_sv: string | null
           description: string | null
           description_es: string | null
           description_no: string | null
           description_sv: string | null
+          icon_name: string | null
           id: string
           image_url: string | null
+          internal_slug: string | null
           is_active: boolean
           is_featured: boolean
           link: string
@@ -1142,14 +1154,26 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          badge_text?: string | null
+          badge_text_es?: string | null
+          badge_text_no?: string | null
+          badge_text_sv?: string | null
           category?: string
+          color_from?: string | null
+          color_to?: string | null
           created_at?: string
+          cta_button_text?: string | null
+          cta_button_text_es?: string | null
+          cta_button_text_no?: string | null
+          cta_button_text_sv?: string | null
           description?: string | null
           description_es?: string | null
           description_no?: string | null
           description_sv?: string | null
+          icon_name?: string | null
           id?: string
           image_url?: string | null
+          internal_slug?: string | null
           is_active?: boolean
           is_featured?: boolean
           link: string
@@ -1165,14 +1189,26 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          badge_text?: string | null
+          badge_text_es?: string | null
+          badge_text_no?: string | null
+          badge_text_sv?: string | null
           category?: string
+          color_from?: string | null
+          color_to?: string | null
           created_at?: string
+          cta_button_text?: string | null
+          cta_button_text_es?: string | null
+          cta_button_text_no?: string | null
+          cta_button_text_sv?: string | null
           description?: string | null
           description_es?: string | null
           description_no?: string | null
           description_sv?: string | null
+          icon_name?: string | null
           id?: string
           image_url?: string | null
+          internal_slug?: string | null
           is_active?: boolean
           is_featured?: boolean
           link?: string
