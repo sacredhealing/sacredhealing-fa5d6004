@@ -1122,6 +1122,9 @@ export type Database = {
           category: string
           created_at: string
           description: string | null
+          description_es: string | null
+          description_no: string | null
+          description_sv: string | null
           id: string
           image_url: string | null
           is_active: boolean
@@ -1129,13 +1132,22 @@ export type Database = {
           link: string
           order_index: number
           potential_earnings: string | null
+          potential_earnings_es: string | null
+          potential_earnings_no: string | null
+          potential_earnings_sv: string | null
           title: string
+          title_es: string | null
+          title_no: string | null
+          title_sv: string | null
           updated_at: string
         }
         Insert: {
           category?: string
           created_at?: string
           description?: string | null
+          description_es?: string | null
+          description_no?: string | null
+          description_sv?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean
@@ -1143,13 +1155,22 @@ export type Database = {
           link: string
           order_index?: number
           potential_earnings?: string | null
+          potential_earnings_es?: string | null
+          potential_earnings_no?: string | null
+          potential_earnings_sv?: string | null
           title: string
+          title_es?: string | null
+          title_no?: string | null
+          title_sv?: string | null
           updated_at?: string
         }
         Update: {
           category?: string
           created_at?: string
           description?: string | null
+          description_es?: string | null
+          description_no?: string | null
+          description_sv?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean
@@ -1157,7 +1178,13 @@ export type Database = {
           link?: string
           order_index?: number
           potential_earnings?: string | null
+          potential_earnings_es?: string | null
+          potential_earnings_no?: string | null
+          potential_earnings_sv?: string | null
           title?: string
+          title_es?: string | null
+          title_no?: string | null
+          title_sv?: string | null
           updated_at?: string
         }
         Relationships: []
