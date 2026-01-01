@@ -73,6 +73,51 @@ const AdminProjectsTab = () => {
     return matchesType && matchesStatus && matchesSearch;
   });
 
+  const createTasksFromTemplate = async (projectId: string, projectType: string) => {
+    // Fetch task_templates from settings
+    const { data: settingsData } = await supabase
+      .from('admin_settings')
+      .select('value')
+      .eq('category', 'task_templates')
+      .single();
+
+    let templates: Record<string, string[]> = {};
+    
+    if (settingsData?.value) {
+      const value = settingsData.value as { templates?: Record<string, string[]> };
+      templates = value.templates || {};
+    } else {
+      // Default templates if no settings exist
+      templates = {
+        development: ['Setup Repository', 'Design Architecture', 'Implementation', 'Testing', 'Code Review', 'Deployment'],
+        marketing: ['Research', 'Strategy', 'Content Creation', 'Review', 'Launch'],
+        content: ['Planning', 'Draft', 'Review', 'Publish'],
+        design: ['Research', 'Wireframes', 'Mockups', 'Prototype', 'Review'],
+        general: ['Planning', 'Execution', 'Review'],
+        research: ['Define Scope', 'Gather Data', 'Analysis', 'Report'],
+      };
+    }
+
+    const taskTitles = templates[projectType] || templates['general'] || [];
+    
+    if (taskTitles.length > 0) {
+      const tasks = taskTitles.map((title) => ({
+        title,
+        project_id: projectId,
+        status: 'pending',
+        priority: 'medium',
+      }));
+
+      const { error } = await supabase.from('admin_tasks').insert(tasks);
+      
+      if (error) {
+        console.error('Failed to create tasks from template:', error);
+      } else {
+        toast.success(`Created ${tasks.length} tasks from template`);
+      }
+    }
+  };
+
   const handleSubmit = async () => {
     if (!formData.title.trim()) {
       toast.error('Title is required');
@@ -92,14 +137,20 @@ const AdminProjectsTab = () => {
         fetchProjects();
       }
     } else {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('admin_projects')
-        .insert([formData]);
+        .insert([formData])
+        .select()
+        .single();
 
       if (error) {
         toast.error('Failed to create project');
       } else {
         toast.success('Project created');
+        // Auto-create tasks from template
+        if (data) {
+          await createTasksFromTemplate(data.id, formData.type);
+        }
         fetchProjects();
       }
     }

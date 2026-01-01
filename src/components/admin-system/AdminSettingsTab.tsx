@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 
 interface Setting {
@@ -21,12 +22,22 @@ interface Setting {
 
 interface SettingValue {
   items?: string[];
+  templates?: Record<string, string[]>;
   [key: string]: unknown;
 }
 
-const defaultSettings = {
+const defaultSettings: Record<string, SettingValue> = {
   project_types: { items: ['general', 'development', 'marketing', 'content', 'design', 'research'] },
-  task_templates: { items: ['Bug Fix', 'Feature Request', 'Documentation', 'Review', 'Deployment'] },
+  task_templates: { 
+    templates: {
+      development: ['Setup Repository', 'Design Architecture', 'Implementation', 'Testing', 'Code Review', 'Deployment'],
+      marketing: ['Research', 'Strategy', 'Content Creation', 'Review', 'Launch'],
+      content: ['Planning', 'Draft', 'Review', 'Publish'],
+      design: ['Research', 'Wireframes', 'Mockups', 'Prototype', 'Review'],
+      general: ['Planning', 'Execution', 'Review'],
+      research: ['Define Scope', 'Gather Data', 'Analysis', 'Report'],
+    }
+  },
   status_labels: { items: ['pending', 'in-progress', 'review', 'completed', 'blocked', 'cancelled'] },
   content_types: { items: ['document', 'image', 'video', 'audio', 'link', 'other'] },
 };
@@ -38,6 +49,8 @@ const AdminSettingsTab = () => {
   const [editingSetting, setEditingSetting] = useState<Setting | null>(null);
   const [activeTab, setActiveTab] = useState('project_types');
   const [newItem, setNewItem] = useState('');
+  const [selectedProjectType, setSelectedProjectType] = useState('general');
+  const [newTaskTemplate, setNewTaskTemplate] = useState('');
   const [formData, setFormData] = useState({
     category: '',
     value: '{}',
@@ -71,12 +84,21 @@ const AdminSettingsTab = () => {
   const getSettingValue = (category: string): SettingValue => {
     const setting = settings.find(s => s.category === category);
     if (setting) return setting.value as SettingValue;
-    return defaultSettings[category as keyof typeof defaultSettings] || { items: [] };
+    return defaultSettings[category] || { items: [] };
   };
 
   const getSettingItems = (category: string): string[] => {
     const value = getSettingValue(category);
     return value.items || [];
+  };
+
+  const getTaskTemplates = (): Record<string, string[]> => {
+    const value = getSettingValue('task_templates');
+    return value.templates || defaultSettings.task_templates.templates || {};
+  };
+
+  const getProjectTypes = (): string[] => {
+    return getSettingItems('project_types');
   };
 
   const handleAddItem = async (category: string) => {
@@ -135,6 +157,80 @@ const AdminSettingsTab = () => {
         toast.error('Failed to remove item');
       } else {
         toast.success('Item removed');
+        fetchSettings();
+      }
+    }
+  };
+
+  const handleAddTaskTemplate = async () => {
+    if (!newTaskTemplate.trim()) return;
+
+    const existingSetting = settings.find(s => s.category === 'task_templates');
+    const currentTemplates = getTaskTemplates();
+    const currentTasks = currentTemplates[selectedProjectType] || [];
+
+    if (currentTasks.includes(newTaskTemplate.trim())) {
+      toast.error('Task already exists for this project type');
+      return;
+    }
+
+    const newTemplates = {
+      ...currentTemplates,
+      [selectedProjectType]: [...currentTasks, newTaskTemplate.trim()],
+    };
+
+    const newValue = { templates: newTemplates };
+
+    if (existingSetting) {
+      const { error } = await supabase
+        .from('admin_settings')
+        .update({ value: newValue })
+        .eq('id', existingSetting.id);
+
+      if (error) {
+        toast.error('Failed to add task template');
+      } else {
+        toast.success('Task template added');
+        fetchSettings();
+      }
+    } else {
+      const { error } = await supabase
+        .from('admin_settings')
+        .insert([{ category: 'task_templates', value: newValue }]);
+
+      if (error) {
+        toast.error('Failed to add task template');
+      } else {
+        toast.success('Task template added');
+        fetchSettings();
+      }
+    }
+
+    setNewTaskTemplate('');
+  };
+
+  const handleRemoveTaskTemplate = async (projectType: string, task: string) => {
+    const existingSetting = settings.find(s => s.category === 'task_templates');
+    const currentTemplates = getTaskTemplates();
+    const currentTasks = currentTemplates[projectType] || [];
+
+    const newTemplates = {
+      ...currentTemplates,
+      [projectType]: currentTasks.filter(t => t !== task),
+    };
+
+    const newValue = { templates: newTemplates };
+
+    if (existingSetting) {
+      const { error } = await supabase
+        .from('admin_settings')
+        .update({ value: newValue })
+        .eq('id', existingSetting.id);
+
+      if (error) {
+        toast.error('Failed to remove task template');
+      } else {
+        toast.success('Task template removed');
         fetchSettings();
       }
     }
@@ -226,6 +322,9 @@ const AdminSettingsTab = () => {
     return <p className="text-muted-foreground">Loading settings...</p>;
   }
 
+  const projectTypes = getProjectTypes();
+  const taskTemplates = getTaskTemplates();
+
   return (
     <div className="space-y-6">
       {/* Quick Settings */}
@@ -244,7 +343,8 @@ const AdminSettingsTab = () => {
               ))}
             </TabsList>
 
-            {settingCategories.map((cat) => (
+            {/* Project Types, Status Labels, Content Types */}
+            {settingCategories.filter(cat => cat.id !== 'task_templates').map((cat) => (
               <TabsContent key={cat.id} value={cat.id} className="space-y-4">
                 <div className="flex gap-2">
                   <Input
@@ -273,6 +373,63 @@ const AdminSettingsTab = () => {
                 </div>
               </TabsContent>
             ))}
+
+            {/* Task Templates - Special handling */}
+            <TabsContent value="task_templates" className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Define tasks that are automatically created when a project of each type is created.
+              </p>
+              
+              <div className="flex gap-2">
+                <Select value={selectedProjectType} onValueChange={setSelectedProjectType}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Project Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projectTypes.map((type) => (
+                      <SelectItem key={type} value={type}>{type}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  placeholder="Add task template..."
+                  value={newTaskTemplate}
+                  onChange={(e) => setNewTaskTemplate(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddTaskTemplate()}
+                  className="flex-1"
+                />
+                <Button onClick={handleAddTaskTemplate}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                {projectTypes.map((projectType) => {
+                  const tasks = taskTemplates[projectType] || [];
+                  if (tasks.length === 0) return null;
+                  
+                  return (
+                    <div key={projectType} className="border rounded-lg p-3">
+                      <h4 className="font-medium mb-2 capitalize">{projectType}</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {tasks.map((task, idx) => (
+                          <Badge key={`${task}-${idx}`} variant="outline" className="px-3 py-1 text-sm">
+                            {task}
+                            <button
+                              onClick={() => handleRemoveTaskTemplate(projectType, task)}
+                              className="ml-2 text-muted-foreground hover:text-destructive"
+                            >
+                              ×
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
