@@ -6,16 +6,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { useSiteContent } from '@/hooks/useSiteContent';
 
+import { supabase } from '@/integrations/supabase/client';
+
 type BreathPhase = 'inhale' | 'hold' | 'exhale' | 'holdOut' | 'idle';
 
 interface BreathingPattern {
   id: string;
   name: string;
-  description: string;
+  description: string | null;
   inhale: number;
   hold: number;
   exhale: number;
-  holdOut: number;
+  hold_out: number;
   cycles: number;
 }
 
@@ -27,38 +29,8 @@ const defaultPatterns: BreathingPattern[] = [
     inhale: 4,
     hold: 4,
     exhale: 4,
-    holdOut: 4,
+    hold_out: 4,
     cycles: 4,
-  },
-  {
-    id: '478',
-    name: '4-7-8 Relaxation',
-    description: 'Deep relaxation technique for sleep and anxiety relief.',
-    inhale: 4,
-    hold: 7,
-    exhale: 8,
-    holdOut: 0,
-    cycles: 4,
-  },
-  {
-    id: 'energize',
-    name: 'Energizing Breath',
-    description: 'Short, powerful breaths to boost energy and alertness.',
-    inhale: 2,
-    hold: 0,
-    exhale: 2,
-    holdOut: 0,
-    cycles: 10,
-  },
-  {
-    id: 'calm',
-    name: 'Calming Breath',
-    description: 'Longer exhales activate the parasympathetic nervous system.',
-    inhale: 4,
-    hold: 2,
-    exhale: 6,
-    holdOut: 2,
-    cycles: 6,
   },
 ];
 
@@ -72,6 +44,7 @@ const Breathing: React.FC = () => {
     'breathing_description',
   ]);
 
+  const [patterns, setPatterns] = useState<BreathingPattern[]>(defaultPatterns);
   const [selectedPattern, setSelectedPattern] = useState<BreathingPattern>(defaultPatterns[0]);
   const [isActive, setIsActive] = useState(false);
   const [phase, setPhase] = useState<BreathPhase>('idle');
@@ -80,6 +53,23 @@ const Breathing: React.FC = () => {
   const [totalSeconds, setTotalSeconds] = useState(0);
   
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Fetch patterns from database
+  useEffect(() => {
+    const fetchPatterns = async () => {
+      const { data, error } = await supabase
+        .from('breathing_patterns')
+        .select('*')
+        .eq('is_active', true)
+        .order('order_index', { ascending: true });
+
+      if (!error && data && data.length > 0) {
+        setPatterns(data);
+        setSelectedPattern(data[0]);
+      }
+    };
+    fetchPatterns();
+  }, []);
 
   const phaseColors: Record<BreathPhase, string> = {
     inhale: 'from-blue-500 to-cyan-500',
@@ -105,7 +95,7 @@ const Breathing: React.FC = () => {
       case 'hold':
         return 'exhale';
       case 'exhale':
-        return pattern.holdOut > 0 ? 'holdOut' : 'inhale';
+        return pattern.hold_out > 0 ? 'holdOut' : 'inhale';
       case 'holdOut':
         return 'inhale';
       default:
@@ -118,7 +108,7 @@ const Breathing: React.FC = () => {
       case 'inhale': return selectedPattern.inhale;
       case 'hold': return selectedPattern.hold;
       case 'exhale': return selectedPattern.exhale;
-      case 'holdOut': return selectedPattern.holdOut;
+      case 'holdOut': return selectedPattern.hold_out;
       default: return 0;
     }
   };
@@ -280,7 +270,7 @@ const Breathing: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {defaultPatterns.map((pattern) => (
+            {patterns.map((pattern) => (
               <button
                 key={pattern.id}
                 onClick={() => {
@@ -298,7 +288,7 @@ const Breathing: React.FC = () => {
                 <div className="flex items-center justify-between mb-1">
                   <h4 className="font-semibold text-foreground">{pattern.name}</h4>
                   <span className="text-xs text-muted-foreground">
-                    {pattern.inhale}-{pattern.hold}-{pattern.exhale}{pattern.holdOut > 0 ? `-${pattern.holdOut}` : ''}
+                    {pattern.inhale}-{pattern.hold}-{pattern.exhale}{pattern.hold_out > 0 ? `-${pattern.hold_out}` : ''}
                   </span>
                 </div>
                 <p className="text-sm text-muted-foreground">{pattern.description}</p>

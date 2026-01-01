@@ -63,6 +63,7 @@ import BitcoinMiningDetail from "./pages/income-streams/BitcoinMiningDetail";
 import AIIncomeDetail from "./pages/income-streams/AIIncomeDetail";
 import EducationDetail from "./pages/income-streams/EducationDetail";
 import AdminSystem from "./pages/AdminSystem";
+import AdminBreathing from "./pages/AdminBreathing";
 import "@/lib/performance"; // Initialize performance monitoring
 
 const App = () => (
@@ -131,6 +132,7 @@ const App = () => (
                 <Route path="/admin/transformation" element={<AdminTransformation />} />
                 <Route path="/admin/email-list" element={<AdminEmailList />} />
                 <Route path="/admin/system" element={<AdminSystem />} />
+                <Route path="/admin/breathing" element={<AdminBreathing />} />
               </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>

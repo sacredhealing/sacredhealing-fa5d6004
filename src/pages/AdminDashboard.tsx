@@ -17,7 +17,8 @@ import {
   Crown,
   Trophy,
   Mail,
-  FolderKanban
+  FolderKanban,
+  Wind
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -121,6 +122,13 @@ const adminSections = [
     icon: FolderKanban,
     href: '/admin/system',
     color: 'text-violet-500',
+  },
+  {
+    title: 'Breathing Exercises',
+    description: 'Manage breathing patterns and exercises',
+    icon: Wind,
+    href: '/admin/breathing',
+    color: 'text-cyan-500',
   },
 ];
 
