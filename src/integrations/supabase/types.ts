@@ -524,6 +524,7 @@ export type Database = {
       }
       breathing_patterns: {
         Row: {
+          audio_url: string | null
           created_at: string
           cycles: number
           description: string | null
@@ -536,8 +537,10 @@ export type Database = {
           name: string
           order_index: number
           updated_at: string
+          youtube_url: string | null
         }
         Insert: {
+          audio_url?: string | null
           created_at?: string
           cycles?: number
           description?: string | null
@@ -550,8 +553,10 @@ export type Database = {
           name: string
           order_index?: number
           updated_at?: string
+          youtube_url?: string | null
         }
         Update: {
+          audio_url?: string | null
           created_at?: string
           cycles?: number
           description?: string | null
@@ -564,6 +569,7 @@ export type Database = {
           name?: string
           order_index?: number
           updated_at?: string
+          youtube_url?: string | null
         }
         Relationships: []
       }

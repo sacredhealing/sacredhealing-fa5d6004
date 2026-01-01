@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Play, Pause, RotateCcw, Wind, Heart, Sparkles, Clock } from 'lucide-react';
+import { ArrowLeft, Play, Pause, RotateCcw, Wind, Heart, Sparkles, Clock, Youtube, Music } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
@@ -19,6 +19,8 @@ interface BreathingPattern {
   exhale: number;
   hold_out: number;
   cycles: number;
+  youtube_url?: string | null;
+  audio_url?: string | null;
 }
 
 const defaultPatterns: BreathingPattern[] = [
@@ -239,6 +241,39 @@ const Breathing: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* Media Section - YouTube or Audio */}
+        {selectedPattern.youtube_url && (
+          <Card className="bg-card/50 border-border/50 overflow-hidden">
+            <CardContent className="p-0">
+              <div className="aspect-video">
+                <iframe
+                  src={selectedPattern.youtube_url.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')}
+                  className="w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  title={selectedPattern.name}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {selectedPattern.audio_url && !selectedPattern.youtube_url && (
+          <Card className="bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border-cyan-500/30">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <Music className="w-5 h-5 text-cyan-500" />
+                <span className="font-medium text-foreground">{t('breathing.guidedAudio', 'Guided Audio')}</span>
+              </div>
+              <audio
+                src={selectedPattern.audio_url}
+                controls
+                className="w-full"
+              />
+            </CardContent>
+          </Card>
+        )}
 
         {/* Controls */}
         <div className="flex gap-3 justify-center">

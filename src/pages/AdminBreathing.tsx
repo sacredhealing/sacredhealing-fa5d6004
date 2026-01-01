@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, Wind, Loader2, GripVertical, Save, Edit2 } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Wind, Loader2, GripVertical, Save, Edit2, Youtube, Music, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,6 +19,8 @@ interface BreathingPattern {
   cycles: number;
   order_index: number;
   is_active: boolean;
+  youtube_url: string | null;
+  audio_url: string | null;
 }
 
 const AdminBreathing: React.FC = () => {
@@ -37,7 +39,10 @@ const AdminBreathing: React.FC = () => {
     exhale: 4,
     hold_out: 0,
     cycles: 4,
+    youtube_url: '',
+    audio_url: '',
   });
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     fetchPatterns();
@@ -77,6 +82,8 @@ const AdminBreathing: React.FC = () => {
         hold_out: formData.hold_out,
         cycles: formData.cycles,
         order_index: maxOrder + 1,
+        youtube_url: formData.youtube_url || null,
+        audio_url: formData.audio_url || null,
       });
 
     if (error) {
@@ -84,7 +91,7 @@ const AdminBreathing: React.FC = () => {
       console.error(error);
     } else {
       toast.success('Pattern added');
-      setFormData({ name: '', description: '', inhale: 4, hold: 4, exhale: 4, hold_out: 0, cycles: 4 });
+      setFormData({ name: '', description: '', inhale: 4, hold: 4, exhale: 4, hold_out: 0, cycles: 4, youtube_url: '', audio_url: '' });
       setShowAddForm(false);
       fetchPatterns();
     }
@@ -102,6 +109,8 @@ const AdminBreathing: React.FC = () => {
         hold_out: pattern.hold_out,
         cycles: pattern.cycles,
         is_active: pattern.is_active,
+        youtube_url: pattern.youtube_url,
+        audio_url: pattern.audio_url,
       })
       .eq('id', pattern.id);
 
@@ -257,6 +266,30 @@ const AdminBreathing: React.FC = () => {
                 </div>
               </div>
 
+              {/* Media Section */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-border/50">
+                <div>
+                  <label className="text-sm text-muted-foreground mb-1 block flex items-center gap-2">
+                    <Youtube className="w-4 h-4" /> YouTube URL
+                  </label>
+                  <Input
+                    value={formData.youtube_url}
+                    onChange={(e) => setFormData({ ...formData, youtube_url: e.target.value })}
+                    placeholder="https://youtube.com/watch?v=..."
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground mb-1 block flex items-center gap-2">
+                    <Music className="w-4 h-4" /> Audio URL
+                  </label>
+                  <Input
+                    value={formData.audio_url}
+                    onChange={(e) => setFormData({ ...formData, audio_url: e.target.value })}
+                    placeholder="https://... or upload below"
+                  />
+                </div>
+              </div>
+
               <div className="flex gap-2 justify-end">
                 <Button variant="outline" onClick={() => setShowAddForm(false)}>Cancel</Button>
                 <Button onClick={handleAdd}>
@@ -343,6 +376,33 @@ const AdminBreathing: React.FC = () => {
                           ))}
                         />
                       </div>
+                      {/* Media Section */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-border/50">
+                        <div>
+                          <label className="text-sm text-muted-foreground mb-1 block flex items-center gap-2">
+                            <Youtube className="w-4 h-4" /> YouTube URL
+                          </label>
+                          <Input
+                            value={pattern.youtube_url || ''}
+                            onChange={(e) => setPatterns(patterns.map(p => 
+                              p.id === pattern.id ? { ...p, youtube_url: e.target.value } : p
+                            ))}
+                            placeholder="https://youtube.com/watch?v=..."
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm text-muted-foreground mb-1 block flex items-center gap-2">
+                            <Music className="w-4 h-4" /> Audio URL
+                          </label>
+                          <Input
+                            value={pattern.audio_url || ''}
+                            onChange={(e) => setPatterns(patterns.map(p => 
+                              p.id === pattern.id ? { ...p, audio_url: e.target.value } : p
+                            ))}
+                            placeholder="https://..."
+                          />
+                        </div>
+                      </div>
                       <div className="flex gap-2 justify-end">
                         <Button variant="outline" onClick={() => { setEditingId(null); fetchPatterns(); }}>
                           Cancel
@@ -370,7 +430,11 @@ const AdminBreathing: React.FC = () => {
                       </div>
                       
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-foreground">{pattern.name}</h3>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-foreground">{pattern.name}</h3>
+                          {pattern.youtube_url && <Youtube className="w-4 h-4 text-red-500" />}
+                          {pattern.audio_url && <Music className="w-4 h-4 text-green-500" />}
+                        </div>
                         <p className="text-sm text-muted-foreground truncate">{pattern.description}</p>
                         <p className="text-xs text-muted-foreground mt-1">
                           {pattern.inhale}-{pattern.hold}-{pattern.exhale}-{pattern.hold_out} • {pattern.cycles} cycles
