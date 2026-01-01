@@ -16,7 +16,8 @@ import {
   ShoppingBag,
   Crown,
   Trophy,
-  Mail
+  Mail,
+  FolderKanban
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -113,6 +114,13 @@ const adminSections = [
     icon: Mail,
     href: '/admin/email-list',
     color: 'text-cyan-500',
+  },
+  {
+    title: 'Admin System',
+    description: 'Manage projects, tasks, content, events & settings',
+    icon: FolderKanban,
+    href: '/admin/system',
+    color: 'text-violet-500',
   },
 ];
 
