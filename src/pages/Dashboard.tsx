@@ -170,139 +170,142 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Featured Sections */}
+      {/* Featured Sections - Explore */}
       <div className="mt-6 animate-slide-up" style={{ animationDelay: '0.35s' }}>
         <h2 className="text-lg font-heading font-semibold text-foreground mb-4">{t('dashboard.explore')}</h2>
-        <div className="grid grid-cols-2 gap-3">
-          {/* Healing Progress Card */}
+        
+        {/* Healing Journey - Primary Large Card */}
+        <div className="mb-4">
           <HealingProgressCard variant="compact" />
-          
+        </div>
+
+        {/* Other Explore Items - Responsive Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           <Link to="/mantras">
-            <Card className="p-4 bg-gradient-to-br from-purple-500/20 to-amber-500/10 border-purple-500/30 hover:border-purple-500/50 transition-all">
+            <Card className="p-4 bg-gradient-to-br from-purple-500/20 to-amber-500/10 border-purple-500/30 hover:border-purple-500/50 transition-all h-full">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-purple-500/20">
+                <div className="p-2 rounded-lg bg-purple-500/20 shrink-0">
                   <Music className="w-5 h-5 text-purple-400" />
                 </div>
-                <div>
-                  <h3 className="font-semibold text-foreground text-sm">{t('dashboard.mantras')}</h3>
-                  <p className="text-xs text-muted-foreground">{t('dashboard.earnMantras')}</p>
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-foreground text-sm truncate">{t('dashboard.mantras')}</h3>
+                  <p className="text-xs text-muted-foreground truncate">{t('dashboard.earnMantras')}</p>
                 </div>
               </div>
             </Card>
           </Link>
 
           <Link to="/breathing">
-            <Card className="p-4 bg-gradient-to-br from-cyan-500/20 to-blue-500/10 border-cyan-500/30 hover:border-cyan-500/50 transition-all">
+            <Card className="p-4 bg-gradient-to-br from-cyan-500/20 to-blue-500/10 border-cyan-500/30 hover:border-cyan-500/50 transition-all h-full">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-cyan-500/20">
+                <div className="p-2 rounded-lg bg-cyan-500/20 shrink-0">
                   <Wind className="w-5 h-5 text-cyan-400" />
                 </div>
-                <div>
-                  <h3 className="font-semibold text-foreground text-sm">{t('dashboard.breathing', 'Breathing')}</h3>
-                  <p className="text-xs text-muted-foreground">{t('dashboard.breathingDesc', 'Calm & energize')}</p>
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-foreground text-sm truncate">{t('dashboard.breathing', 'Breathing')}</h3>
+                  <p className="text-xs text-muted-foreground truncate">{t('dashboard.breathingDesc', 'Calm & energize')}</p>
                 </div>
               </div>
             </Card>
           </Link>
           
           <Link to="/shop">
-            <Card className="p-4 bg-gradient-to-br from-pink-500/20 to-purple-500/10 border-pink-500/30 hover:border-pink-500/50 transition-all">
+            <Card className="p-4 bg-gradient-to-br from-pink-500/20 to-purple-500/10 border-pink-500/30 hover:border-pink-500/50 transition-all h-full">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-pink-500/20">
+                <div className="p-2 rounded-lg bg-pink-500/20 shrink-0">
                   <ShoppingBag className="w-5 h-5 text-pink-400" />
                 </div>
-                <div>
-                  <h3 className="font-semibold text-foreground text-sm">{t('nav.shop')}</h3>
-                  <p className="text-xs text-muted-foreground">{t('dashboard.lailasCollection')}</p>
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-foreground text-sm truncate">{t('nav.shop')}</h3>
+                  <p className="text-xs text-muted-foreground truncate">{t('dashboard.lailasCollection')}</p>
                 </div>
               </div>
             </Card>
           </Link>
           
           <Link to="/membership">
-            <Card className="p-4 bg-gradient-to-br from-amber-500/20 to-purple-500/10 border-amber-500/30 hover:border-amber-500/50 transition-all">
+            <Card className="p-4 bg-gradient-to-br from-amber-500/20 to-purple-500/10 border-amber-500/30 hover:border-amber-500/50 transition-all h-full">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-amber-500/20">
+                <div className="p-2 rounded-lg bg-amber-500/20 shrink-0">
                   <Crown className="w-5 h-5 text-amber-400" />
                 </div>
-                <div>
-                  <h3 className="font-semibold text-foreground text-sm">{t('dashboard.membership')}</h3>
-                  <p className="text-xs text-muted-foreground">{t('dashboard.upgradeYourPlan')}</p>
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-foreground text-sm truncate">{t('dashboard.membership')}</h3>
+                  <p className="text-xs text-muted-foreground truncate">{t('dashboard.upgradeYourPlan')}</p>
                 </div>
               </div>
             </Card>
           </Link>
           
           <Link to="/transformation">
-            <Card className="p-4 bg-gradient-to-br from-green-500/20 to-emerald-500/10 border-green-500/30 hover:border-green-500/50 transition-all">
+            <Card className="p-4 bg-gradient-to-br from-green-500/20 to-emerald-500/10 border-green-500/30 hover:border-green-500/50 transition-all h-full">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-green-500/20">
+                <div className="p-2 rounded-lg bg-green-500/20 shrink-0">
                   <Heart className="w-5 h-5 text-green-400" />
                 </div>
-                <div>
-                  <h3 className="font-semibold text-foreground text-sm">{t('dashboard.coaching')}</h3>
-                  <p className="text-xs text-muted-foreground">{t('dashboard.sixMonthProgram')}</p>
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-foreground text-sm truncate">{t('dashboard.coaching')}</h3>
+                  <p className="text-xs text-muted-foreground truncate">{t('dashboard.sixMonthProgram')}</p>
                 </div>
               </div>
             </Card>
           </Link>
 
           <Link to="/leaderboard">
-            <Card className="p-4 bg-gradient-to-br from-yellow-500/20 to-orange-500/10 border-yellow-500/30 hover:border-yellow-500/50 transition-all">
+            <Card className="p-4 bg-gradient-to-br from-yellow-500/20 to-orange-500/10 border-yellow-500/30 hover:border-yellow-500/50 transition-all h-full">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-yellow-500/20">
+                <div className="p-2 rounded-lg bg-yellow-500/20 shrink-0">
                   <Trophy className="w-5 h-5 text-yellow-400" />
                 </div>
-                <div>
-                  <h3 className="font-semibold text-foreground text-sm">{t('dashboard.leaderboard')}</h3>
-                  <p className="text-xs text-muted-foreground">{t('dashboard.leaderboardDesc')}</p>
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-foreground text-sm truncate">{t('dashboard.leaderboard')}</h3>
+                  <p className="text-xs text-muted-foreground truncate">{t('dashboard.leaderboardDesc')}</p>
                 </div>
               </div>
             </Card>
           </Link>
 
           <Link to="/affirmation-soundtrack">
-            <Card className="p-4 bg-gradient-to-br from-violet-500/20 to-fuchsia-500/10 border-violet-500/30 hover:border-violet-500/50 transition-all">
+            <Card className="p-4 bg-gradient-to-br from-violet-500/20 to-fuchsia-500/10 border-violet-500/30 hover:border-violet-500/50 transition-all h-full">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-violet-500/20">
+                <div className="p-2 rounded-lg bg-violet-500/20 shrink-0">
                   <Music className="w-5 h-5 text-violet-400" />
                 </div>
-                <div>
-                  <h3 className="font-semibold text-foreground text-sm">{t('dashboard.affirmationSoundtrack')}</h3>
-                  <p className="text-xs text-muted-foreground">{t('dashboard.personalizedForYou')}</p>
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-foreground text-sm truncate">{t('dashboard.affirmationSoundtrack')}</h3>
+                  <p className="text-xs text-muted-foreground truncate">{t('dashboard.personalizedForYou')}</p>
                 </div>
               </div>
             </Card>
           </Link>
 
           <Link to="/private-sessions">
-            <Card className="p-4 bg-gradient-to-br from-amber-500/20 to-orange-500/10 border-amber-500/30 hover:border-amber-500/50 transition-all">
+            <Card className="p-4 bg-gradient-to-br from-amber-500/20 to-orange-500/10 border-amber-500/30 hover:border-amber-500/50 transition-all h-full">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-amber-500/20">
+                <div className="p-2 rounded-lg bg-amber-500/20 shrink-0">
                   <Calendar className="w-5 h-5 text-amber-400" />
                 </div>
-                <div>
-                  <h3 className="font-semibold text-foreground text-sm">{t('dashboard.privateSessions')}</h3>
-                  <p className="text-xs text-muted-foreground">{t('dashboard.privateSessionsDesc')}</p>
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-foreground text-sm truncate">{t('dashboard.privateSessions')}</h3>
+                  <p className="text-xs text-muted-foreground truncate">{t('dashboard.privateSessionsDesc')}</p>
                 </div>
               </div>
             </Card>
           </Link>
 
           <Link to="/podcast">
-            <Card className="p-4 bg-gradient-to-br from-emerald-500/20 to-green-500/10 border-emerald-500/30 hover:border-emerald-500/50 transition-all">
+            <Card className="p-4 bg-gradient-to-br from-emerald-500/20 to-green-500/10 border-emerald-500/30 hover:border-emerald-500/50 transition-all h-full">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-emerald-500/20">
+                <div className="p-2 rounded-lg bg-emerald-500/20 shrink-0">
                   <Headphones className="w-5 h-5 text-emerald-400" />
                 </div>
-                <div>
-                  <h3 className="font-semibold text-foreground text-sm">{t('dashboard.podcast')}</h3>
-                  <p className="text-xs text-muted-foreground">{t('dashboard.podcastDesc')}</p>
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-foreground text-sm truncate">{t('dashboard.podcast')}</h3>
+                  <p className="text-xs text-muted-foreground truncate">{t('dashboard.podcastDesc')}</p>
                 </div>
               </div>
             </Card>
           </Link>
-
         </div>
       </div>
 
