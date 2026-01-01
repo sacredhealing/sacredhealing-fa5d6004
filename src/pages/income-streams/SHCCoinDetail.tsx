@@ -49,7 +49,7 @@ const SHCCoinDetail: React.FC = () => {
           </CardHeader>
           <CardContent className="space-y-3 text-muted-foreground">
             <p>
-              SHC (Sacred Heart Coin) is our native utility token built on the Solana blockchain. 
+              SHC (Sacred Healing Coin) is our native utility token built on the Solana blockchain. 
               It powers the ecosystem and rewards active community members.
             </p>
             <p>
