@@ -150,7 +150,7 @@ const BitcoinMiningDetail: React.FC = () => {
                 </div>
                 <div>
                   <h4 className="font-semibold text-foreground">{t('bitcoinMining.scaleUp', 'Scale Your Income')}</h4>
-                  <p className="text-sm text-muted-foreground">{t('bitcoinMining.scaleUpDesc', '30 cards = ~$30,000/month • 50 cards = ~$60,000/month in Bitcoin!')}</p>
+                  <p className="text-sm text-muted-foreground">{t('bitcoinMining.scaleUpDesc', '30 cards = ~$3,000/month • 50 cards = ~$6,000/month in Bitcoin!')}</p>
                 </div>
               </div>
             </div>
@@ -186,7 +186,7 @@ const BitcoinMiningDetail: React.FC = () => {
               <div>
                 <p className="text-foreground font-medium mb-1">📈 {t('bitcoinMining.futurePotential', 'Future Potential')}</p>
                 <p className="text-sm text-muted-foreground">
-                  {t('bitcoinMining.futurePotentialDesc', 'Bitcoin is predicted to reach $15 million within 5 years. What you mine today could be worth 10x — holding your Bitcoin creates enormous future opportunity!')}
+                  {t('bitcoinMining.futurePotentialDesc', 'Bitcoin is predicted to reach $1.5 million within 5 years. What you mine today could be worth 10x — holding your Bitcoin creates enormous future opportunity!')}
                 </p>
               </div>
             </div>
