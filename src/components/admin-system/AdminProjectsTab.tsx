@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Archive, ArchiveRestore } from 'lucide-react';
+import { Plus, Edit, Trash2, Archive, ArchiveRestore, Eye, Filter } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import ProjectDetailDialog from './ProjectDetailDialog';
 
 interface Project {
   id: string;
@@ -27,7 +28,15 @@ const AdminProjectsTab = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
+  
+  // Filters
+  const [filterType, setFilterType] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  
   const [formData, setFormData] = useState({
     title: '',
     type: 'general',
@@ -56,6 +65,13 @@ const AdminProjectsTab = () => {
     }
     setLoading(false);
   };
+
+  const filteredProjects = projects.filter((project) => {
+    const matchesType = filterType === 'all' || project.type === filterType;
+    const matchesStatus = filterStatus === 'all' || project.status === filterStatus;
+    const matchesSearch = project.title.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesType && matchesStatus && matchesSearch;
+  });
 
   const handleSubmit = async () => {
     if (!formData.title.trim()) {
@@ -100,6 +116,11 @@ const AdminProjectsTab = () => {
       description: project.description || '',
     });
     setDialogOpen(true);
+  };
+
+  const handleViewDetail = (project: Project) => {
+    setSelectedProject(project);
+    setDetailOpen(true);
   };
 
   const handleArchive = async (project: Project) => {
@@ -150,124 +171,172 @@ const AdminProjectsTab = () => {
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Projects</CardTitle>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowArchived(!showArchived)}
-          >
-            {showArchived ? 'Show Active' : 'Show Archived'}
-          </Button>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm" onClick={resetForm}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Project
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{editingProject ? 'Edit Project' : 'New Project'}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label>Title</Label>
-                  <Input
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="Project title"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
+    <>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Projects</CardTitle>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowArchived(!showArchived)}
+            >
+              {showArchived ? 'Show Active' : 'Show Archived'}
+            </Button>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" onClick={resetForm}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Project
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{editingProject ? 'Edit Project' : 'New Project'}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
                   <div>
-                    <Label>Type</Label>
-                    <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {projectTypes.map((t) => (
-                          <SelectItem key={t} value={t}>{t}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label>Title</Label>
+                    <Input
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      placeholder="Project title"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Type</Label>
+                      <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v })}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {projectTypes.map((t) => (
+                            <SelectItem key={t} value={t}>{t}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Status</Label>
+                      <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {projectStatuses.map((s) => (
+                            <SelectItem key={s} value={s}>{s}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                   <div>
-                    <Label>Status</Label>
-                    <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {projectStatuses.map((s) => (
-                          <SelectItem key={s} value={s}>{s}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label>Description</Label>
+                    <Textarea
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      placeholder="Project description"
+                      rows={3}
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" onClick={resetForm}>Cancel</Button>
+                    <Button onClick={handleSubmit}>
+                      {editingProject ? 'Update' : 'Create'}
+                    </Button>
                   </div>
                 </div>
-                <div>
-                  <Label>Description</Label>
-                  <Textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Project description"
-                    rows={3}
-                  />
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={resetForm}>Cancel</Button>
-                  <Button onClick={handleSubmit}>
-                    {editingProject ? 'Update' : 'Create'}
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <p className="text-muted-foreground">Loading...</p>
-        ) : projects.length === 0 ? (
-          <p className="text-muted-foreground">No {showArchived ? 'archived' : 'active'} projects</p>
-        ) : (
-          <div className="space-y-3">
-            {projects.map((project) => (
-              <div
-                key={project.id}
-                className="flex items-center justify-between p-4 border rounded-lg"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-medium">{project.title}</h3>
-                    <Badge variant="outline">{project.type}</Badge>
-                    <Badge className={getStatusColor(project.status)}>{project.status}</Badge>
-                  </div>
-                  {project.description && (
-                    <p className="text-sm text-muted-foreground">{project.description}</p>
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="ghost" size="icon" onClick={() => handleEdit(project)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleArchive(project)}>
-                    {project.archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleDelete(project.id)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              </div>
-            ))}
+              </DialogContent>
+            </Dialog>
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Filters */}
+          <div className="flex flex-wrap gap-3 p-3 bg-muted/50 rounded-lg">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Filters:</span>
+            </div>
+            <Input
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-48 h-8"
+            />
+            <Select value={filterType} onValueChange={setFilterType}>
+              <SelectTrigger className="w-32 h-8">
+                <SelectValue placeholder="Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                {projectTypes.map((t) => (
+                  <SelectItem key={t} value={t}>{t}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-32 h-8">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                {projectStatuses.map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {loading ? (
+            <p className="text-muted-foreground">Loading...</p>
+          ) : filteredProjects.length === 0 ? (
+            <p className="text-muted-foreground">No {showArchived ? 'archived' : 'active'} projects</p>
+          ) : (
+            <div className="space-y-3">
+              {filteredProjects.map((project) => (
+                <div
+                  key={project.id}
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                  onClick={() => handleViewDetail(project)}
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-medium">{project.title}</h3>
+                      <Badge variant="outline">{project.type}</Badge>
+                      <Badge className={getStatusColor(project.status)}>{project.status}</Badge>
+                    </div>
+                    {project.description && (
+                      <p className="text-sm text-muted-foreground line-clamp-1">{project.description}</p>
+                    )}
+                  </div>
+                  <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                    <Button variant="ghost" size="icon" onClick={() => handleViewDetail(project)}>
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleEdit(project)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleArchive(project)}>
+                      {project.archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(project.id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <ProjectDetailDialog
+        project={selectedProject}
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+      />
+    </>
   );
 };
 
