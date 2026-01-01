@@ -522,6 +522,51 @@ export type Database = {
         }
         Relationships: []
       }
+      breathing_patterns: {
+        Row: {
+          created_at: string
+          cycles: number
+          description: string | null
+          exhale: number
+          hold: number
+          hold_out: number
+          id: string
+          inhale: number
+          is_active: boolean
+          name: string
+          order_index: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          cycles?: number
+          description?: string | null
+          exhale?: number
+          hold?: number
+          hold_out?: number
+          id?: string
+          inhale?: number
+          is_active?: boolean
+          name: string
+          order_index?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          cycles?: number
+          description?: string | null
+          exhale?: number
+          hold?: number
+          hold_out?: number
+          id?: string
+          inhale?: number
+          is_active?: boolean
+          name?: string
+          order_index?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           content: string
