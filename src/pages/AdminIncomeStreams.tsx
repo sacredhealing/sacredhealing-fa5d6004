@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Edit, Trash2, Globe } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2, Globe, GripVertical, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -34,6 +34,18 @@ interface IncomeStream {
   is_active: boolean;
   image_url: string | null;
   order_index: number;
+  icon_name: string | null;
+  badge_text: string | null;
+  badge_text_sv: string | null;
+  badge_text_es: string | null;
+  badge_text_no: string | null;
+  color_from: string | null;
+  color_to: string | null;
+  internal_slug: string | null;
+  cta_button_text: string | null;
+  cta_button_text_sv: string | null;
+  cta_button_text_es: string | null;
+  cta_button_text_no: string | null;
 }
 
 const emptyStream = {
@@ -55,6 +67,18 @@ const emptyStream = {
   is_active: true,
   image_url: '',
   order_index: 0,
+  icon_name: 'Sparkles',
+  badge_text: '',
+  badge_text_sv: '',
+  badge_text_es: '',
+  badge_text_no: '',
+  color_from: 'primary',
+  color_to: 'primary/70',
+  internal_slug: '',
+  cta_button_text: 'Learn More',
+  cta_button_text_sv: '',
+  cta_button_text_es: '',
+  cta_button_text_no: '',
 };
 
 const languages = [
@@ -62,6 +86,27 @@ const languages = [
   { code: 'sv', name: 'Swedish', flag: '🇸🇪' },
   { code: 'es', name: 'Spanish', flag: '🇪🇸' },
   { code: 'no', name: 'Norwegian', flag: '🇳🇴' },
+];
+
+const iconOptions = [
+  'Sparkles', 'Users', 'Coins', 'TrendingUp', 'Cpu', 'Bot', 
+  'GraduationCap', 'Heart', 'Star', 'Zap', 'Globe', 'Shield', 'DollarSign'
+];
+
+const colorOptions = [
+  { value: 'primary', label: 'Primary (Purple)' },
+  { value: 'accent', label: 'Accent (Gold)' },
+  { value: 'green-500', label: 'Green' },
+  { value: 'emerald-600', label: 'Emerald' },
+  { value: 'blue-500', label: 'Blue' },
+  { value: 'cyan-500', label: 'Cyan' },
+  { value: 'orange-500', label: 'Orange' },
+  { value: 'amber-500', label: 'Amber' },
+  { value: 'amber-600', label: 'Amber Dark' },
+  { value: 'violet-500', label: 'Violet' },
+  { value: 'purple-600', label: 'Purple Dark' },
+  { value: 'pink-500', label: 'Pink' },
+  { value: 'red-500', label: 'Red' },
 ];
 
 const AdminIncomeStreams: React.FC = () => {
@@ -113,6 +158,18 @@ const AdminIncomeStreams: React.FC = () => {
       is_active: formData.is_active,
       image_url: formData.image_url || null,
       order_index: formData.order_index,
+      icon_name: formData.icon_name || 'Sparkles',
+      badge_text: formData.badge_text || null,
+      badge_text_sv: formData.badge_text_sv || null,
+      badge_text_es: formData.badge_text_es || null,
+      badge_text_no: formData.badge_text_no || null,
+      color_from: formData.color_from || 'primary',
+      color_to: formData.color_to || 'primary/70',
+      internal_slug: formData.internal_slug || null,
+      cta_button_text: formData.cta_button_text || 'Learn More',
+      cta_button_text_sv: formData.cta_button_text_sv || null,
+      cta_button_text_es: formData.cta_button_text_es || null,
+      cta_button_text_no: formData.cta_button_text_no || null,
     };
 
     if (editingStream) {
@@ -123,6 +180,7 @@ const AdminIncomeStreams: React.FC = () => {
 
       if (error) {
         toast.error('Failed to update');
+        console.error(error);
         return;
       }
       toast.success('Income stream updated');
@@ -133,6 +191,7 @@ const AdminIncomeStreams: React.FC = () => {
 
       if (error) {
         toast.error('Failed to create');
+        console.error(error);
         return;
       }
       toast.success('Income stream created');
@@ -166,6 +225,18 @@ const AdminIncomeStreams: React.FC = () => {
       is_active: stream.is_active,
       image_url: stream.image_url || '',
       order_index: stream.order_index,
+      icon_name: stream.icon_name || 'Sparkles',
+      badge_text: stream.badge_text || '',
+      badge_text_sv: stream.badge_text_sv || '',
+      badge_text_es: stream.badge_text_es || '',
+      badge_text_no: stream.badge_text_no || '',
+      color_from: stream.color_from || 'primary',
+      color_to: stream.color_to || 'primary/70',
+      internal_slug: stream.internal_slug || '',
+      cta_button_text: stream.cta_button_text || 'Learn More',
+      cta_button_text_sv: stream.cta_button_text_sv || '',
+      cta_button_text_es: stream.cta_button_text_es || '',
+      cta_button_text_no: stream.cta_button_text_no || '',
     });
     setActiveLang('en');
     setIsDialogOpen(true);
@@ -200,6 +271,27 @@ const AdminIncomeStreams: React.FC = () => {
     fetchStreams();
   };
 
+  const moveStream = async (stream: IncomeStream, direction: 'up' | 'down') => {
+    const currentIndex = streams.findIndex(s => s.id === stream.id);
+    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    
+    if (newIndex < 0 || newIndex >= streams.length) return;
+
+    const otherStream = streams[newIndex];
+    
+    await supabase
+      .from('income_streams')
+      .update({ order_index: newIndex })
+      .eq('id', stream.id);
+    
+    await supabase
+      .from('income_streams')
+      .update({ order_index: currentIndex })
+      .eq('id', otherStream.id);
+
+    fetchStreams();
+  };
+
   const openNewDialog = () => {
     setEditingStream(null);
     setFormData(emptyStream);
@@ -216,6 +308,8 @@ const AdminIncomeStreams: React.FC = () => {
   const getTitleField = () => activeLang === 'en' ? 'title' : `title_${activeLang}` as keyof typeof formData;
   const getDescField = () => activeLang === 'en' ? 'description' : `description_${activeLang}` as keyof typeof formData;
   const getEarningsField = () => activeLang === 'en' ? 'potential_earnings' : `potential_earnings_${activeLang}` as keyof typeof formData;
+  const getBadgeField = () => activeLang === 'en' ? 'badge_text' : `badge_text_${activeLang}` as keyof typeof formData;
+  const getCtaField = () => activeLang === 'en' ? 'cta_button_text' : `cta_button_text_${activeLang}` as keyof typeof formData;
 
   if (isLoading) {
     return (
@@ -234,149 +328,233 @@ const AdminIncomeStreams: React.FC = () => {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={openNewDialog}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Stream
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>
-                  {editingStream ? 'Edit Income Stream' : 'New Income Stream'}
-                </DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                {/* Language Tabs */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Globe className="h-4 w-4 text-muted-foreground" />
-                    <Label className="text-sm text-muted-foreground">Translations</Label>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => window.open('/income-streams', '_blank')}>
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Preview
+            </Button>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={openNewDialog}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Stream
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingStream ? 'Edit Income Stream' : 'New Income Stream'}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  {/* Language Tabs */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Globe className="h-4 w-4 text-muted-foreground" />
+                      <Label className="text-sm text-muted-foreground">Content Language</Label>
+                    </div>
+                    <Tabs value={activeLang} onValueChange={setActiveLang}>
+                      <TabsList className="grid grid-cols-4 w-full">
+                        {languages.map((lang) => (
+                          <TabsTrigger key={lang.code} value={lang.code} className="text-xs">
+                            {lang.flag} {lang.name}
+                          </TabsTrigger>
+                        ))}
+                      </TabsList>
+                    </Tabs>
                   </div>
-                  <Tabs value={activeLang} onValueChange={setActiveLang}>
-                    <TabsList className="grid grid-cols-4 w-full">
-                      {languages.map((lang) => (
-                        <TabsTrigger key={lang.code} value={lang.code} className="text-xs">
-                          {lang.flag} {lang.name}
-                        </TabsTrigger>
-                      ))}
-                    </TabsList>
-                  </Tabs>
-                </div>
 
-                {/* Translatable Fields */}
-                <div className="space-y-2">
-                  <Label>
-                    Title {activeLang === 'en' ? '*' : `(${languages.find(l => l.code === activeLang)?.name})`}
-                  </Label>
-                  <Input
-                    value={formData[getTitleField()] as string}
-                    onChange={(e) => setFormData({ ...formData, [getTitleField()]: e.target.value })}
-                    placeholder={activeLang === 'en' ? 'e.g., Affiliate Marketing Program' : `Translation for ${languages.find(l => l.code === activeLang)?.name}`}
-                  />
-                  {activeLang !== 'en' && formData.title && (
-                    <p className="text-xs text-muted-foreground">English: {formData.title}</p>
-                  )}
-                </div>
+                  {/* Translatable Fields */}
+                  <div className="space-y-2">
+                    <Label>
+                      Title {activeLang === 'en' ? '*' : `(${languages.find(l => l.code === activeLang)?.name})`}
+                    </Label>
+                    <Input
+                      value={formData[getTitleField()] as string}
+                      onChange={(e) => setFormData({ ...formData, [getTitleField()]: e.target.value })}
+                      placeholder={activeLang === 'en' ? 'e.g., Affiliate Marketing Program' : `Translation for ${languages.find(l => l.code === activeLang)?.name}`}
+                    />
+                    {activeLang !== 'en' && formData.title && (
+                      <p className="text-xs text-muted-foreground">English: {formData.title}</p>
+                    )}
+                  </div>
 
-                <div className="space-y-2">
-                  <Label>
-                    Description {activeLang !== 'en' ? `(${languages.find(l => l.code === activeLang)?.name})` : ''}
-                  </Label>
-                  <Textarea
-                    value={formData[getDescField()] as string}
-                    onChange={(e) => setFormData({ ...formData, [getDescField()]: e.target.value })}
-                    placeholder={activeLang === 'en' ? 'Describe this income opportunity...' : `Translation for ${languages.find(l => l.code === activeLang)?.name}`}
-                    rows={3}
-                  />
-                  {activeLang !== 'en' && formData.description && (
-                    <p className="text-xs text-muted-foreground line-clamp-2">English: {formData.description}</p>
-                  )}
-                </div>
+                  <div className="space-y-2">
+                    <Label>
+                      Description {activeLang !== 'en' ? `(${languages.find(l => l.code === activeLang)?.name})` : ''}
+                    </Label>
+                    <Textarea
+                      value={formData[getDescField()] as string}
+                      onChange={(e) => setFormData({ ...formData, [getDescField()]: e.target.value })}
+                      placeholder={activeLang === 'en' ? 'Describe this income opportunity...' : `Translation for ${languages.find(l => l.code === activeLang)?.name}`}
+                      rows={3}
+                    />
+                    {activeLang !== 'en' && formData.description && (
+                      <p className="text-xs text-muted-foreground line-clamp-2">English: {formData.description}</p>
+                    )}
+                  </div>
 
-                <div className="space-y-2">
-                  <Label>
-                    Potential Earnings {activeLang !== 'en' ? `(${languages.find(l => l.code === activeLang)?.name})` : ''}
-                  </Label>
-                  <Input
-                    value={formData[getEarningsField()] as string}
-                    onChange={(e) => setFormData({ ...formData, [getEarningsField()]: e.target.value })}
-                    placeholder={activeLang === 'en' ? 'e.g., $500-$5000/month' : `Translation for ${languages.find(l => l.code === activeLang)?.name}`}
-                  />
-                  {activeLang !== 'en' && formData.potential_earnings && (
-                    <p className="text-xs text-muted-foreground">English: {formData.potential_earnings}</p>
-                  )}
-                </div>
-
-                {/* Non-translatable fields (only show on English tab for clarity) */}
-                {activeLang === 'en' && (
-                  <>
+                  <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>Link *</Label>
+                      <Label>
+                        Badge Text {activeLang !== 'en' ? `(${languages.find(l => l.code === activeLang)?.name})` : ''}
+                      </Label>
                       <Input
-                        value={formData.link}
-                        onChange={(e) => setFormData({ ...formData, link: e.target.value })}
-                        placeholder="https://..."
+                        value={formData[getBadgeField()] as string}
+                        onChange={(e) => setFormData({ ...formData, [getBadgeField()]: e.target.value })}
+                        placeholder={activeLang === 'en' ? 'e.g., Popular, New' : 'Translation'}
                       />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Category</Label>
-                        <Select
-                          value={formData.category}
-                          onValueChange={(value) => setFormData({ ...formData, category: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="affiliate">Affiliate</SelectItem>
-                            <SelectItem value="investment">Investment</SelectItem>
-                            <SelectItem value="passive">Passive Income</SelectItem>
-                            <SelectItem value="freelance">Freelance</SelectItem>
-                            <SelectItem value="other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
+                    <div className="space-y-2">
+                      <Label>
+                        Potential Earnings {activeLang !== 'en' ? `(${languages.find(l => l.code === activeLang)?.name})` : ''}
+                      </Label>
+                      <Input
+                        value={formData[getEarningsField()] as string}
+                        onChange={(e) => setFormData({ ...formData, [getEarningsField()]: e.target.value })}
+                        placeholder={activeLang === 'en' ? 'e.g., $500-$5000/month' : 'Translation'}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Non-translatable fields (only show on English tab for clarity) */}
+                  {activeLang === 'en' && (
+                    <>
+                      <div className="border-t pt-4 mt-4">
+                        <Label className="text-sm text-muted-foreground mb-3 block">Settings (applies to all languages)</Label>
                       </div>
+                      
                       <div className="space-y-2">
-                        <Label>Image URL</Label>
+                        <Label>Link *</Label>
+                        <Input
+                          value={formData.link}
+                          onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+                          placeholder="https://... or /income-streams/slug for internal links"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Use /income-streams/slug for internal pages or full URL for external links
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Internal Slug</Label>
+                          <Input
+                            value={formData.internal_slug}
+                            onChange={(e) => setFormData({ ...formData, internal_slug: e.target.value })}
+                            placeholder="e.g., affiliate, shc-coin"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Category</Label>
+                          <Select
+                            value={formData.category}
+                            onValueChange={(value) => setFormData({ ...formData, category: value })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="affiliate">Affiliate</SelectItem>
+                              <SelectItem value="investment">Investment</SelectItem>
+                              <SelectItem value="passive">Passive Income</SelectItem>
+                              <SelectItem value="freelance">Freelance</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <Label>Icon</Label>
+                          <Select
+                            value={formData.icon_name}
+                            onValueChange={(value) => setFormData({ ...formData, icon_name: value })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {iconOptions.map((icon) => (
+                                <SelectItem key={icon} value={icon}>{icon}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Color From</Label>
+                          <Select
+                            value={formData.color_from}
+                            onValueChange={(value) => setFormData({ ...formData, color_from: value })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {colorOptions.map((color) => (
+                                <SelectItem key={color.value} value={color.value}>{color.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Color To</Label>
+                          <Select
+                            value={formData.color_to}
+                            onValueChange={(value) => setFormData({ ...formData, color_to: value })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {colorOptions.map((color) => (
+                                <SelectItem key={color.value} value={color.value}>{color.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Image URL (optional)</Label>
                         <Input
                           value={formData.image_url}
                           onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
                           placeholder="https://..."
                         />
                       </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Switch
-                          checked={formData.is_featured}
-                          onCheckedChange={(checked) => setFormData({ ...formData, is_featured: checked })}
-                        />
-                        <Label>Featured</Label>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Switch
-                          checked={formData.is_active}
-                          onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-                        />
-                        <Label>Active</Label>
-                      </div>
-                    </div>
-                  </>
-                )}
 
-                <Button onClick={handleSave} className="w-full">
-                  {editingStream ? 'Update' : 'Create'} Income Stream
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={formData.is_featured}
+                            onCheckedChange={(checked) => setFormData({ ...formData, is_featured: checked })}
+                          />
+                          <Label>Featured</Label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={formData.is_active}
+                            onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                          />
+                          <Label>Active</Label>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  <Button onClick={handleSave} className="w-full">
+                    {editingStream ? 'Update' : 'Create'} Income Stream
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
         <h1 className="text-2xl font-bold text-foreground">Manage Income Streams</h1>
         <p className="text-sm text-muted-foreground">
-          Add and edit income opportunities • Supports EN, SV, ES, NO
+          Full control over /income-streams page • {streams.length} streams
         </p>
       </div>
 
@@ -389,7 +567,7 @@ const AdminIncomeStreams: React.FC = () => {
             </CardContent>
           </Card>
         ) : (
-          streams.map((stream) => {
+          streams.map((stream, index) => {
             const { complete, hasTranslations } = getTranslationStatus(stream);
             return (
               <Card 
@@ -398,17 +576,50 @@ const AdminIncomeStreams: React.FC = () => {
               >
                 <CardContent className="py-4">
                   <div className="flex items-start gap-3">
+                    {/* Reorder buttons */}
+                    <div className="flex flex-col gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={() => moveStream(stream, 'up')}
+                        disabled={index === 0}
+                      >
+                        <span className="text-xs">↑</span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={() => moveStream(stream, 'down')}
+                        disabled={index === streams.length - 1}
+                      >
+                        <span className="text-xs">↓</span>
+                      </Button>
+                    </div>
+
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className="text-xs text-muted-foreground">#{index + 1}</span>
                         <h3 className="font-medium truncate">{stream.title}</h3>
                         {stream.is_featured && (
                           <Badge variant="secondary" className="bg-amber-500/20 text-amber-400 text-xs">
                             Featured
                           </Badge>
                         )}
+                        {stream.badge_text && (
+                          <Badge variant="outline" className="text-xs">
+                            {stream.badge_text}
+                          </Badge>
+                        )}
                         <Badge variant="outline" className="text-xs capitalize">
                           {stream.category}
                         </Badge>
+                        {stream.internal_slug && (
+                          <Badge variant="outline" className="text-xs bg-blue-500/10 text-blue-500 border-blue-500/30">
+                            {stream.internal_slug}
+                          </Badge>
+                        )}
                         {hasTranslations && (
                           <Badge 
                             variant="outline" 
@@ -419,16 +630,22 @@ const AdminIncomeStreams: React.FC = () => {
                           </Badge>
                         )}
                       </div>
+                      {stream.description && (
+                        <p className="text-sm text-muted-foreground line-clamp-1">{stream.description}</p>
+                      )}
                       {stream.potential_earnings && (
                         <p className="text-sm text-primary">{stream.potential_earnings}</p>
                       )}
-                      <p className="text-xs text-muted-foreground truncate mt-1">{stream.link}</p>
+                      <p className="text-xs text-muted-foreground truncate mt-1">
+                        {stream.icon_name} • {stream.link}
+                      </p>
                     </div>
                     <div className="flex items-center gap-2">
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => toggleActive(stream)}
+                        title={stream.is_active ? 'Deactivate' : 'Activate'}
                       >
                         <div className={`w-2 h-2 rounded-full ${stream.is_active ? 'bg-green-500' : 'bg-muted'}`} />
                       </Button>
