@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, FolderKanban, CheckSquare, FileText, Calendar, Settings, Users } from 'lucide-react';
+import { ArrowLeft, FolderKanban, CheckSquare, FileText, Calendar, Settings, Users, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useAuth } from '@/hooks/useAuth';
+import AdminDashboardTab from '@/components/admin-system/AdminDashboardTab';
 import AdminProjectsTab from '@/components/admin-system/AdminProjectsTab';
 import AdminTasksTab from '@/components/admin-system/AdminTasksTab';
 import AdminContentTab from '@/components/admin-system/AdminContentTab';
@@ -17,7 +18,7 @@ const AdminSystem = () => {
   const navigate = useNavigate();
   const { isAdmin, isLoading: isAdminLoading } = useAdminRole();
   const { isLoading: isAuthLoading } = useAuth();
-  const [activeTab, setActiveTab] = useState('projects');
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   if (isAuthLoading || isAdminLoading) {
     return (
@@ -46,6 +47,7 @@ const AdminSystem = () => {
   }
 
   const tabs = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'projects', label: 'Projects', icon: FolderKanban },
     { id: 'tasks', label: 'Tasks', icon: CheckSquare },
     { id: 'content', label: 'Content', icon: FileText },
@@ -82,6 +84,10 @@ const AdminSystem = () => {
               </TabsTrigger>
             ))}
           </TabsList>
+
+          <TabsContent value="dashboard">
+            <AdminDashboardTab />
+          </TabsContent>
 
           <TabsContent value="projects">
             <AdminProjectsTab />

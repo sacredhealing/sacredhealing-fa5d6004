@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Check } from 'lucide-react';
+import { Plus, Edit, Trash2, Check, Filter } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,6 +34,13 @@ const AdminTasksTab = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  
+  // Filters
+  const [filterProject, setFilterProject] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [filterPriority, setFilterPriority] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  
   const [formData, setFormData] = useState({
     project_id: '',
     title: '',
@@ -72,6 +79,14 @@ const AdminTasksTab = () => {
       .order('title');
     setProjects(data || []);
   };
+
+  const filteredTasks = tasks.filter((task) => {
+    const matchesProject = filterProject === 'all' || task.project_id === filterProject || (filterProject === 'none' && !task.project_id);
+    const matchesStatus = filterStatus === 'all' || task.status === filterStatus;
+    const matchesPriority = filterPriority === 'all' || task.priority === filterPriority;
+    const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesProject && matchesStatus && matchesPriority && matchesSearch;
+  });
 
   const handleSubmit = async () => {
     if (!formData.title.trim()) {
@@ -274,14 +289,62 @@ const AdminTasksTab = () => {
           </DialogContent>
         </Dialog>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
+        {/* Filters */}
+        <div className="flex flex-wrap gap-3 p-3 bg-muted/50 rounded-lg">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">Filters:</span>
+          </div>
+          <Input
+            placeholder="Search..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-48 h-8"
+          />
+          <Select value={filterProject} onValueChange={setFilterProject}>
+            <SelectTrigger className="w-40 h-8">
+              <SelectValue placeholder="Project" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Projects</SelectItem>
+              <SelectItem value="none">No Project</SelectItem>
+              {projects.map((p) => (
+                <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger className="w-32 h-8">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              {taskStatuses.map((s) => (
+                <SelectItem key={s} value={s}>{s}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={filterPriority} onValueChange={setFilterPriority}>
+            <SelectTrigger className="w-32 h-8">
+              <SelectValue placeholder="Priority" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Priorities</SelectItem>
+              {taskPriorities.map((p) => (
+                <SelectItem key={p} value={p}>{p}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         {loading ? (
           <p className="text-muted-foreground">Loading...</p>
-        ) : tasks.length === 0 ? (
-          <p className="text-muted-foreground">No tasks yet</p>
+        ) : filteredTasks.length === 0 ? (
+          <p className="text-muted-foreground">No tasks found</p>
         ) : (
           <div className="space-y-3">
-            {tasks.map((task) => (
+            {filteredTasks.map((task) => (
               <div
                 key={task.id}
                 className="flex items-center justify-between p-4 border rounded-lg"
@@ -294,7 +357,7 @@ const AdminTasksTab = () => {
                   </div>
                   <p className="text-sm text-muted-foreground">{getProjectTitle(task.project_id)}</p>
                   {task.notes && (
-                    <p className="text-sm text-muted-foreground mt-1">{task.notes}</p>
+                    <p className="text-sm text-muted-foreground mt-1 line-clamp-1">{task.notes}</p>
                   )}
                 </div>
                 <div className="flex gap-2">

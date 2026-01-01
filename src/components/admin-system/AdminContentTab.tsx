@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, ExternalLink } from 'lucide-react';
+import { Plus, Edit, Trash2, ExternalLink, Filter, FileText, Image, Video, Music, Link, File } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,6 +33,12 @@ const AdminContentTab = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingContent, setEditingContent] = useState<Content | null>(null);
+  
+  // Filters
+  const [filterType, setFilterType] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  
   const [formData, setFormData] = useState({
     project_id: '',
     title: '',
@@ -44,6 +50,18 @@ const AdminContentTab = () => {
 
   const contentTypes = ['document', 'image', 'video', 'audio', 'link', 'other'];
   const contentStatuses = ['draft', 'review', 'approved', 'published', 'archived'];
+
+  const getContentIcon = (type: string) => {
+    const icons: Record<string, React.ReactNode> = {
+      document: <FileText className="h-4 w-4" />,
+      image: <Image className="h-4 w-4" />,
+      video: <Video className="h-4 w-4" />,
+      audio: <Music className="h-4 w-4" />,
+      link: <Link className="h-4 w-4" />,
+      other: <File className="h-4 w-4" />,
+    };
+    return icons[type] || <File className="h-4 w-4" />;
+  };
 
   useEffect(() => {
     fetchContents();
@@ -72,6 +90,13 @@ const AdminContentTab = () => {
       .order('title');
     setProjects(data || []);
   };
+
+  const filteredContents = contents.filter((content) => {
+    const matchesType = filterType === 'all' || content.content_type === filterType;
+    const matchesStatus = filterStatus === 'all' || content.status === filterStatus;
+    const matchesSearch = content.title.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesType && matchesStatus && matchesSearch;
+  });
 
   const handleSubmit = async () => {
     if (!formData.title.trim()) {
@@ -167,7 +192,7 @@ const AdminContentTab = () => {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Content</CardTitle>
+        <CardTitle>Content Library</CardTitle>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm" onClick={resetForm}>
@@ -257,26 +282,63 @@ const AdminContentTab = () => {
           </DialogContent>
         </Dialog>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
+        {/* Filters */}
+        <div className="flex flex-wrap gap-3 p-3 bg-muted/50 rounded-lg">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">Filters:</span>
+          </div>
+          <Input
+            placeholder="Search..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-48 h-8"
+          />
+          <Select value={filterType} onValueChange={setFilterType}>
+            <SelectTrigger className="w-32 h-8">
+              <SelectValue placeholder="Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              {contentTypes.map((t) => (
+                <SelectItem key={t} value={t}>{t}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger className="w-32 h-8">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              {contentStatuses.map((s) => (
+                <SelectItem key={s} value={s}>{s}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         {loading ? (
           <p className="text-muted-foreground">Loading...</p>
-        ) : contents.length === 0 ? (
-          <p className="text-muted-foreground">No content yet</p>
+        ) : filteredContents.length === 0 ? (
+          <p className="text-muted-foreground">No content found</p>
         ) : (
-          <div className="space-y-3">
-            {contents.map((content) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredContents.map((content) => (
               <div
                 key={content.id}
-                className="flex items-center justify-between p-4 border rounded-lg"
+                className="p-4 border rounded-lg hover:bg-muted/50 transition-colors"
               >
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-medium">{content.title}</h3>
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    {getContentIcon(content.content_type)}
                     <Badge variant="outline">{content.content_type}</Badge>
-                    <Badge className={getStatusColor(content.status)}>{content.status}</Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground">{getProjectTitle(content.project_id)}</p>
+                  <Badge className={getStatusColor(content.status)}>{content.status}</Badge>
                 </div>
+                <h3 className="font-medium mb-1 line-clamp-1">{content.title}</h3>
+                <p className="text-xs text-muted-foreground mb-3">{getProjectTitle(content.project_id)}</p>
                 <div className="flex gap-2">
                   {content.file_url && (
                     <Button variant="ghost" size="icon" asChild>

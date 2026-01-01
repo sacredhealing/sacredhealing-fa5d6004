@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Calendar } from 'lucide-react';
+import { Plus, Edit, Trash2, Calendar, Filter, Radio, Rocket } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 
 interface Event {
@@ -34,6 +35,12 @@ const AdminEventsTab = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [activeTab, setActiveTab] = useState<string>('all');
+  
+  // Filters
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  
   const [formData, setFormData] = useState({
     project_id: '',
     title: '',
@@ -43,7 +50,7 @@ const AdminEventsTab = () => {
     notes: '',
   });
 
-  const eventTypes = ['meeting', 'deadline', 'launch', 'review', 'presentation', 'other'];
+  const eventTypes = ['meeting', 'deadline', 'launch', 'review', 'presentation', 'live', 'release', 'other'];
   const eventStatuses = ['scheduled', 'in-progress', 'completed', 'cancelled', 'postponed'];
 
   useEffect(() => {
@@ -73,6 +80,15 @@ const AdminEventsTab = () => {
       .order('title');
     setProjects(data || []);
   };
+
+  const filteredEvents = events.filter((event) => {
+    const matchesTab = activeTab === 'all' || 
+      (activeTab === 'lives' && event.event_type === 'live') ||
+      (activeTab === 'releases' && event.event_type === 'release');
+    const matchesStatus = filterStatus === 'all' || event.status === filterStatus;
+    const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesTab && matchesStatus && matchesSearch;
+  });
 
   const handleSubmit = async () => {
     if (!formData.title.trim()) {
@@ -168,6 +184,9 @@ const AdminEventsTab = () => {
     return projects.find(p => p.id === projectId)?.title || 'Unknown';
   };
 
+  const livesCount = events.filter(e => e.event_type === 'live').length;
+  const releasesCount = events.filter(e => e.event_type === 'release').length;
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -261,14 +280,54 @@ const AdminEventsTab = () => {
           </DialogContent>
         </Dialog>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
+        {/* Category Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList>
+            <TabsTrigger value="all">All Events ({events.length})</TabsTrigger>
+            <TabsTrigger value="lives" className="flex items-center gap-1">
+              <Radio className="h-3 w-3" />
+              Lives ({livesCount})
+            </TabsTrigger>
+            <TabsTrigger value="releases" className="flex items-center gap-1">
+              <Rocket className="h-3 w-3" />
+              Releases ({releasesCount})
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+        {/* Filters */}
+        <div className="flex flex-wrap gap-3 p-3 bg-muted/50 rounded-lg">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">Filters:</span>
+          </div>
+          <Input
+            placeholder="Search..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-48 h-8"
+          />
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger className="w-32 h-8">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              {eventStatuses.map((s) => (
+                <SelectItem key={s} value={s}>{s}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         {loading ? (
           <p className="text-muted-foreground">Loading...</p>
-        ) : events.length === 0 ? (
-          <p className="text-muted-foreground">No events yet</p>
+        ) : filteredEvents.length === 0 ? (
+          <p className="text-muted-foreground">No events found</p>
         ) : (
           <div className="space-y-3">
-            {events.map((event) => (
+            {filteredEvents.map((event) => (
               <div
                 key={event.id}
                 className="flex items-center justify-between p-4 border rounded-lg"
