@@ -66,11 +66,13 @@ const IncomeStreams: React.FC = () => {
   const { t, i18n } = useTranslation();
   const [streams, setStreams] = useState<IncomeStream[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Get current language reactively
   const currentLang = i18n.language?.split('-')[0] || 'en';
 
   useEffect(() => {
     fetchStreams();
-  }, []);
+  }, [currentLang]); // Re-fetch when language changes to ensure fresh render
 
   const fetchStreams = async () => {
     const { data, error } = await supabase
