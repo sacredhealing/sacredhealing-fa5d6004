@@ -1,18 +1,21 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, TrendingUp, Check, ExternalLink, AlertTriangle, Percent, Zap, Users, CreditCard, MessageCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 const CopyTradingDetail: React.FC = () => {
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-screen pb-24">
       {/* Header */}
       <div className="px-4 pt-4 pb-6">
         <Link to="/income-streams" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-4">
           <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm">Back to Income Streams</span>
+          <span className="text-sm">{t('common.back', 'Back to Income Streams')}</span>
         </Link>
         
         <div className="flex items-center gap-3">
@@ -20,8 +23,8 @@ const CopyTradingDetail: React.FC = () => {
             <TrendingUp className="w-7 h-7 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">💹 Copy Trading</h1>
-            <p className="text-sm text-muted-foreground">Automated Forex Income</p>
+            <h1 className="text-2xl font-bold text-foreground">💹 {t('copyTrading.title', 'Copy Trading')}</h1>
+            <p className="text-sm text-muted-foreground">{t('copyTrading.subtitle', 'Automated Forex Income')}</p>
           </div>
         </div>
       </div>
@@ -32,25 +35,25 @@ const CopyTradingDetail: React.FC = () => {
           <Card className="bg-gradient-to-br from-green-500/20 to-emerald-500/10 border-green-500/30">
             <CardContent className="p-3 text-center">
               <Percent className="w-5 h-5 text-green-500 mx-auto mb-1" />
-              <p className="text-xs text-muted-foreground">Target</p>
-              <p className="font-bold text-foreground text-sm">Up to 30%+</p>
-              <p className="text-xs text-muted-foreground">monthly*</p>
+              <p className="text-xs text-muted-foreground">{t('copyTrading.target', 'Target')}</p>
+              <p className="font-bold text-foreground text-sm">{t('copyTrading.upTo30', 'Up to 30%+')}</p>
+              <p className="text-xs text-muted-foreground">{t('copyTrading.monthly', 'monthly*')}</p>
             </CardContent>
           </Card>
           <Card className="bg-gradient-to-br from-blue-500/20 to-cyan-500/10 border-blue-500/30">
             <CardContent className="p-3 text-center">
               <Zap className="w-5 h-5 text-blue-500 mx-auto mb-1" />
-              <p className="text-xs text-muted-foreground">Effort</p>
-              <p className="font-bold text-foreground text-sm">Fully</p>
-              <p className="text-xs text-muted-foreground">Automated</p>
+              <p className="text-xs text-muted-foreground">{t('copyTrading.effort', 'Effort')}</p>
+              <p className="font-bold text-foreground text-sm">{t('copyTrading.fully', 'Fully')}</p>
+              <p className="text-xs text-muted-foreground">{t('copyTrading.automated', 'Automated')}</p>
             </CardContent>
           </Card>
           <Card className="bg-gradient-to-br from-purple-500/20 to-pink-500/10 border-purple-500/30">
             <CardContent className="p-3 text-center">
               <Users className="w-5 h-5 text-purple-500 mx-auto mb-1" />
-              <p className="text-xs text-muted-foreground">Experience</p>
-              <p className="font-bold text-foreground text-sm">None</p>
-              <p className="text-xs text-muted-foreground">needed</p>
+              <p className="text-xs text-muted-foreground">{t('copyTrading.experience', 'Experience')}</p>
+              <p className="font-bold text-foreground text-sm">{t('copyTrading.none', 'None')}</p>
+              <p className="text-xs text-muted-foreground">{t('copyTrading.needed', 'needed')}</p>
             </CardContent>
           </Card>
         </div>
@@ -59,7 +62,7 @@ const CopyTradingDetail: React.FC = () => {
         <Card className="bg-card/50 border-border/50">
           <CardContent className="p-4">
             <p className="text-muted-foreground">
-              Earn from the forex market by automatically copying a professional trading system.
+              {t('copyTrading.description', 'Earn from the forex market by automatically copying a professional trading system.')}
             </p>
           </CardContent>
         </Card>
@@ -67,7 +70,7 @@ const CopyTradingDetail: React.FC = () => {
         {/* Get Started Steps */}
         <Card className="bg-card/50 border-border/50">
           <CardHeader>
-            <CardTitle className="text-lg">🔗 Get Started in 3 Simple Steps</CardTitle>
+            <CardTitle className="text-lg">🔗 {t('copyTrading.getStartedSteps', 'Get Started in 3 Simple Steps')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Step 1 */}
@@ -77,7 +80,7 @@ const CopyTradingDetail: React.FC = () => {
                   1
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-semibold text-foreground">Create Your Trading Account</h4>
+                  <h4 className="font-semibold text-foreground">{t('copyTrading.step1Title', 'Create Your Trading Account')}</h4>
                 </div>
               </div>
               <Button 
@@ -85,7 +88,7 @@ const CopyTradingDetail: React.FC = () => {
                 onClick={() => window.open('https://ultgo.com/yuE3Ub', '_blank')}
               >
                 <ExternalLink className="w-4 h-4 mr-2" />
-                Open an Ultima Markets Account
+                {t('copyTrading.openAccount', 'Open an Ultima Markets Account')}
               </Button>
             </div>
 
@@ -96,13 +99,13 @@ const CopyTradingDetail: React.FC = () => {
                   2
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-semibold text-foreground">Open a Trading Account</h4>
+                  <h4 className="font-semibold text-foreground">{t('copyTrading.step2Title', 'Open a Trading Account')}</h4>
                 </div>
               </div>
               <div className="ml-11 space-y-2 text-sm">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Check className="w-4 h-4 text-green-500" />
-                  <span>Under €2,000 → <span className="text-foreground font-medium">Cent Standard STP</span></span>
+                  <span>{t('copyTrading.under2k', 'Under €2,000')} → <span className="text-foreground font-medium">Cent Standard STP</span></span>
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Check className="w-4 h-4 text-green-500" />
@@ -110,10 +113,10 @@ const CopyTradingDetail: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Check className="w-4 h-4 text-green-500" />
-                  <span>Currency: <span className="text-foreground font-medium">USD</span></span>
+                  <span>{t('copyTrading.currency', 'Currency')}: <span className="text-foreground font-medium">USD</span></span>
                 </div>
                 <p className="text-xs text-muted-foreground italic mt-2">
-                  (Account login details are sent to your email.)
+                  ({t('copyTrading.loginDetails', 'Account login details are sent to your email.')})
                 </p>
               </div>
             </div>
@@ -125,7 +128,7 @@ const CopyTradingDetail: React.FC = () => {
                   3
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-semibold text-foreground">Join the Copy Trading System</h4>
+                  <h4 className="font-semibold text-foreground">{t('copyTrading.step3Title', 'Join the Copy Trading System')}</h4>
                 </div>
               </div>
               <Button 
@@ -133,17 +136,17 @@ const CopyTradingDetail: React.FC = () => {
                 onClick={() => window.open('https://social.ultimamarkets.com/portal/registration/subscription/87738/ShreemBrzee', '_blank')}
               >
                 <ExternalLink className="w-4 h-4 mr-2" />
-                Subscribe to Automated Copy Trading
+                {t('copyTrading.subscribeCopy', 'Subscribe to Automated Copy Trading')}
               </Button>
               <div className="ml-11 space-y-2 text-sm">
-                <p className="text-muted-foreground font-medium">Use these settings:</p>
+                <p className="text-muted-foreground font-medium">{t('copyTrading.useSettings', 'Use these settings')}:</p>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Check className="w-4 h-4 text-green-500" />
-                  <span>Server: <span className="text-foreground font-medium">Ultima Markets Live 1</span></span>
+                  <span>{t('copyTrading.server', 'Server')}: <span className="text-foreground font-medium">Ultima Markets Live 1</span></span>
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Check className="w-4 h-4 text-green-500" />
-                  <span>Confirm Nickname: <span className="text-foreground font-medium">Shreem Brzee</span></span>
+                  <span>{t('copyTrading.confirmNickname', 'Confirm Nickname')}: <span className="text-foreground font-medium">Shreem Brzee</span></span>
                 </div>
               </div>
             </div>
@@ -153,20 +156,20 @@ const CopyTradingDetail: React.FC = () => {
         {/* Profit Split */}
         <Card className="bg-gradient-to-br from-amber-500/10 to-yellow-500/5 border-amber-500/30">
           <CardHeader>
-            <CardTitle className="text-lg">💰 Profit Split</CardTitle>
+            <CardTitle className="text-lg">💰 {t('copyTrading.profitSplit', 'Profit Split')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between p-3 rounded-lg bg-green-500/10">
-              <span className="text-foreground font-medium">Your Profit</span>
+              <span className="text-foreground font-medium">{t('copyTrading.yourProfit', 'Your Profit')}</span>
               <Badge className="bg-green-500 text-white text-lg px-3">80%</Badge>
             </div>
             <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-              <span className="text-muted-foreground">Sacred Healing (system provider)</span>
+              <span className="text-muted-foreground">{t('copyTrading.systemProvider', 'Sacred Healing (system provider)')}</span>
               <Badge variant="secondary" className="text-lg px-3">20%</Badge>
             </div>
             <div className="flex items-center gap-2 text-green-500 font-medium mt-2">
               <Check className="w-5 h-5" />
-              <span>Free to join</span>
+              <span>{t('copyTrading.freeToJoin', 'Free to join')}</span>
             </div>
           </CardContent>
         </Card>
@@ -176,7 +179,7 @@ const CopyTradingDetail: React.FC = () => {
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <CreditCard className="w-5 h-5 text-primary" />
-              Deposits & Withdrawals
+              {t('copyTrading.depositsWithdrawals', 'Deposits & Withdrawals')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -184,16 +187,16 @@ const CopyTradingDetail: React.FC = () => {
               <li className="flex items-center gap-3">
                 <Check className="w-5 h-5 text-green-500 shrink-0" />
                 <span className="text-muted-foreground">
-                  Minimum deposit: <span className="text-foreground font-medium">€50</span> (card or crypto)
+                  {t('copyTrading.minDeposit', 'Minimum deposit')}: <span className="text-foreground font-medium">€50</span> ({t('copyTrading.cardOrCrypto', 'card or crypto')})
                 </span>
               </li>
               <li className="flex items-center gap-3">
                 <Check className="w-5 h-5 text-green-500 shrink-0" />
-                <span className="text-muted-foreground">Deposit & withdraw directly inside your Ultima Markets dashboard</span>
+                <span className="text-muted-foreground">{t('copyTrading.depositWithdrawDashboard', 'Deposit & withdraw directly inside your Ultima Markets dashboard')}</span>
               </li>
               <li className="flex items-center gap-3">
                 <MessageCircle className="w-5 h-5 text-blue-500 shrink-0" />
-                <span className="text-muted-foreground">Built-in support chat available</span>
+                <span className="text-muted-foreground">{t('copyTrading.supportChat', 'Built-in support chat available')}</span>
               </li>
             </ul>
           </CardContent>
@@ -205,9 +208,9 @@ const CopyTradingDetail: React.FC = () => {
             <div className="flex gap-3">
               <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
               <div>
-                <p className="text-foreground font-medium mb-1">⚠️ Trading involves risk. Results are not guaranteed.</p>
+                <p className="text-foreground font-medium mb-1">⚠️ {t('copyTrading.riskTitle', 'Trading involves risk. Results are not guaranteed.')}</p>
                 <p className="text-sm text-muted-foreground">
-                  Only invest what you can afford to lose.
+                  {t('copyTrading.riskDesc', 'Only invest what you can afford to lose.')}
                 </p>
               </div>
             </div>
@@ -218,10 +221,10 @@ const CopyTradingDetail: React.FC = () => {
         <Card className="bg-gradient-to-br from-primary/10 to-purple-500/5 border-primary/30">
           <CardContent className="p-4 text-center">
             <p className="text-foreground">
-              ✨ Fully automated. Transparent. Scalable.
+              ✨ {t('copyTrading.footer', 'Fully automated. Transparent. Scalable.')}
             </p>
             <p className="text-muted-foreground mt-2">
-              Happy Trading,<br />
+              {t('copyTrading.happyTrading', 'Happy Trading')},<br />
               <span className="font-semibold text-foreground">Shreem Brzee</span>
             </p>
           </CardContent>
@@ -234,7 +237,7 @@ const CopyTradingDetail: React.FC = () => {
           onClick={() => window.open('https://ultgo.com/yuE3Ub', '_blank')}
         >
           <ExternalLink className="w-4 h-4 mr-2" />
-          Get Started Now
+          {t('copyTrading.getStartedNow', 'Get Started Now')}
         </Button>
       </div>
     </div>
