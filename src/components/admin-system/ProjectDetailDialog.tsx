@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
-import { CheckSquare, FileText, Calendar, MessageSquare, ExternalLink, ListChecks } from 'lucide-react';
+import { CheckSquare, FileText, Calendar, MessageSquare, ExternalLink, ListChecks, Check, Circle } from 'lucide-react';
 import { toast } from 'sonner';
 import { ProjectWorkflowStages, PROJECT_WORKFLOW_LABELS, DEFAULT_PROJECT_WORKFLOW } from './AdminProjectsTab';
 
@@ -234,38 +234,38 @@ const ProjectDetailDialog = ({ project, open, onOpenChange }: ProjectDetailDialo
                 <CardTitle className="text-sm flex items-center justify-between">
                   <span>Project Workflow</span>
                   <div className="flex items-center gap-2">
-                    <Progress value={calculateWorkflowProgress()} className="w-32" />
+                    <Progress value={calculateWorkflowProgress()} className="w-32 h-2" />
                     <span className="text-sm font-normal">{calculateWorkflowProgress()}%</span>
+                    {isProjectFinished() && (
+                      <Badge className="bg-green-500/10 text-green-500">Finished</Badge>
+                    )}
                   </div>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
-                {Object.entries(PROJECT_WORKFLOW_LABELS).map(([key, label]) => (
-                  <button
-                    key={key}
-                    onClick={() => toggleWorkflowStage(key as keyof ProjectWorkflowStages)}
-                    className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors ${
-                      workflowStages[key as keyof ProjectWorkflowStages]
-                        ? 'bg-green-500/10 border-green-500/30'
-                        : 'bg-muted/50 hover:bg-muted'
-                    }`}
-                  >
-                    <div
-                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                        workflowStages[key as keyof ProjectWorkflowStages]
-                          ? 'bg-green-500 border-green-500'
-                          : 'border-muted-foreground'
-                      }`}
-                    >
-                      {workflowStages[key as keyof ProjectWorkflowStages] && (
-                        <CheckSquare className="h-3 w-3 text-white" />
-                      )}
-                    </div>
-                    <span className={workflowStages[key as keyof ProjectWorkflowStages] ? 'line-through text-muted-foreground' : ''}>
-                      {label}
-                    </span>
-                  </button>
-                ))}
+              <CardContent>
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                  {Object.entries(PROJECT_WORKFLOW_LABELS).map(([key, label]) => {
+                    const isChecked = workflowStages[key as keyof ProjectWorkflowStages];
+                    return (
+                      <div
+                        key={key}
+                        className={`flex flex-col items-center p-3 rounded-lg border cursor-pointer transition-all text-xs ${
+                          isChecked
+                            ? 'bg-green-500/10 border-green-500/30'
+                            : 'bg-muted/50 hover:bg-muted'
+                        }`}
+                        onClick={() => toggleWorkflowStage(key as keyof ProjectWorkflowStages)}
+                      >
+                        {isChecked ? (
+                          <Check className="h-4 w-4 mb-1 text-green-500" />
+                        ) : (
+                          <Circle className="h-4 w-4 mb-1 text-muted-foreground" />
+                        )}
+                        <span className="text-center">{label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
                 {isProjectFinished() && (
                   <div className="mt-4 p-4 bg-green-500/10 border border-green-500/30 rounded-lg text-center">
                     <Badge className="bg-green-500 text-white">Project Finished</Badge>

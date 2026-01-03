@@ -85,6 +85,7 @@ const AdminProjectsTab = () => {
       .from('admin_projects')
       .select('*')
       .eq('archived', showArchived)
+      .neq('type', 'music') // Exclude music projects - they have their own section
       .order('created_at', { ascending: false });
 
     if (error) {
