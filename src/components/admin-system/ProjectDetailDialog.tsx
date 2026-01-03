@@ -85,8 +85,10 @@ const ProjectDetailDialog = ({ project, open, onOpenChange }: ProjectDetailDialo
   };
 
   const calculateWorkflowProgress = () => {
-    const totalStages = Object.keys(workflowStages).length;
-    const completedStages = Object.values(workflowStages).filter(Boolean).length;
+    if (!workflowStages) return 0;
+    const stages = Object.values(workflowStages);
+    const totalStages = stages.length;
+    const completedStages = stages.filter(stage => stage === true).length;
     return totalStages > 0 ? Math.round((completedStages / totalStages) * 100) : 0;
   };
 
