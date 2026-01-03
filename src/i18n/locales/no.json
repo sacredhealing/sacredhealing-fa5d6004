@@ -820,5 +820,27 @@
     "createAccountFirst": "Vennligst opprett også en konto for å bruke appen",
     "error": "Feil",
     "somethingWrong": "Noe gikk galt. Prøv igjen."
+  },
+  "breathing": {
+    "title": "Pusteøvelser",
+    "subtitle": "Ro & energi",
+    "description": "Pusteøvelser hjelper med å redusere stress, forbedre fokus og fremme avslapning. Velg et mønster nedenfor og følg med.",
+    "inhale": "Pust inn",
+    "hold": "Hold",
+    "exhale": "Pust ut",
+    "holdOut": "Hold",
+    "ready": "Klar",
+    "cycle": "Syklus",
+    "guidedAudio": "Guidet lyd",
+    "start": "Start",
+    "stop": "Stopp",
+    "reset": "Tilbakestill",
+    "choosePattern": "Velg et mønster",
+    "benefits": "Fordeler",
+    "benefit1": "Reduserer stress og angst",
+    "benefit2": "Forbedrer fokus og konsentrasjon",
+    "benefit3": "Fremmer bedre søvn",
+    "benefit4": "Senker blodtrykket",
+    "benefit5": "Øker energinivåene"
   }
 }

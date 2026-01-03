@@ -1051,5 +1051,27 @@
     "createAccountFirst": "Vänligen skapa också ett konto för att använda appen",
     "error": "Fel",
     "somethingWrong": "Något gick fel. Försök igen."
+  },
+  "breathing": {
+    "title": "Andningsövningar",
+    "subtitle": "Lugn & energi",
+    "description": "Andningsövningar hjälper till att minska stress, förbättra fokus och främja avslappning. Välj ett mönster nedan och följ med.",
+    "inhale": "Andas in",
+    "hold": "Håll",
+    "exhale": "Andas ut",
+    "holdOut": "Håll",
+    "ready": "Redo",
+    "cycle": "Cykel",
+    "guidedAudio": "Guidad ljud",
+    "start": "Start",
+    "stop": "Stopp",
+    "reset": "Återställ",
+    "choosePattern": "Välj ett mönster",
+    "benefits": "Fördelar",
+    "benefit1": "Minskar stress och ångest",
+    "benefit2": "Förbättrar fokus och koncentration",
+    "benefit3": "Främjar bättre sömn",
+    "benefit4": "Sänker blodtrycket",
+    "benefit5": "Ökar energinivåerna"
   }
 }
