@@ -86,3 +86,6 @@ verify_jwt = true
 
 [functions.send-shc-p2p]
 verify_jwt = true
+
+[functions.notify-course-release]
+verify_jwt = true

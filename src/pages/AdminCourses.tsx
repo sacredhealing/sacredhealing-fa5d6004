@@ -20,6 +20,8 @@ interface Course {
   duration_hours: number;
   is_free: boolean;
   is_premium_only: boolean;
+  is_published?: boolean;
+  linked_project_id?: string | null;
   price_usd: number;
   price_shc: number;
   has_certificate: boolean;

@@ -810,8 +810,10 @@ export type Database = {
           instructor_name: string | null
           is_free: boolean
           is_premium_only: boolean
+          is_published: boolean
           language: string
           lesson_count: number
+          linked_project_id: string | null
           price_shc: number | null
           price_usd: number | null
           recurring_interval: string | null
@@ -832,8 +834,10 @@ export type Database = {
           instructor_name?: string | null
           is_free?: boolean
           is_premium_only?: boolean
+          is_published?: boolean
           language?: string
           lesson_count?: number
+          linked_project_id?: string | null
           price_shc?: number | null
           price_usd?: number | null
           recurring_interval?: string | null
@@ -854,8 +858,10 @@ export type Database = {
           instructor_name?: string | null
           is_free?: boolean
           is_premium_only?: boolean
+          is_published?: boolean
           language?: string
           lesson_count?: number
+          linked_project_id?: string | null
           price_shc?: number | null
           price_usd?: number | null
           recurring_interval?: string | null
@@ -863,7 +869,15 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "courses_linked_project_id_fkey"
+            columns: ["linked_project_id"]
+            isOneToOne: false
+            referencedRelation: "admin_projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       curated_playlist_items: {
         Row: {
