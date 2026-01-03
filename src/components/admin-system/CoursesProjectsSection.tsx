@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, GraduationCap, CheckCircle2, Circle } from 'lucide-react';
+import { Plus, Edit2, Trash2, GraduationCap, CheckCircle2, Circle, Rocket, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,7 @@ import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
 
 interface CourseProject {
   id: string;
@@ -19,6 +20,7 @@ interface CourseProject {
   workflow_stages: Record<string, boolean>;
   created_at: string;
   updated_at: string;
+  added_to_app?: boolean;
 }
 
 const COURSE_WORKFLOW_STAGES = [
@@ -40,10 +42,12 @@ const DEFAULT_WORKFLOW: Record<string, boolean> = COURSE_WORKFLOW_STAGES.reduce(
 }, {} as Record<string, boolean>);
 
 const CoursesProjectsSection = () => {
+  const { session } = useAuth();
   const [projects, setProjects] = useState<CourseProject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<CourseProject | null>(null);
+  const [publishingId, setPublishingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: ''
@@ -191,6 +195,92 @@ const CoursesProjectsSection = () => {
     setIsDialogOpen(true);
   };
 
+  // Publish course: create/update in courses table and send notifications
+  const handlePublishCourse = async (project: CourseProject) => {
+    if (!isProjectFinished(project.workflow_stages)) {
+      toast.error('Complete all workflow stages before publishing');
+      return;
+    }
+
+    setPublishingId(project.id);
+
+    try {
+      // Check if course already exists linked to this project
+      const { data: existingCourse } = await supabase
+        .from('courses')
+        .select('id')
+        .eq('linked_project_id', project.id)
+        .maybeSingle();
+
+      if (existingCourse) {
+        // Update existing course to published
+        const { error: updateError } = await supabase
+          .from('courses')
+          .update({
+            title: project.title,
+            description: project.description,
+            is_published: true,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingCourse.id);
+
+        if (updateError) throw updateError;
+      } else {
+        // Create new course entry
+        const { error: insertError } = await supabase
+          .from('courses')
+          .insert({
+            title: project.title,
+            description: project.description,
+            is_published: true,
+            linked_project_id: project.id,
+            category: 'healing',
+            difficulty_level: 'beginner',
+            duration_hours: 1,
+            lesson_count: 0,
+            is_free: false,
+            price_usd: 0,
+            has_certificate: true
+          });
+
+        if (insertError) throw insertError;
+      }
+
+      // Mark project as added to app
+      await supabase
+        .from('admin_projects')
+        .update({ 
+          added_to_app: true,
+          status: 'published',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', project.id);
+
+      // Send notifications to subscribers
+      try {
+        await supabase.functions.invoke('notify-course-release', {
+          body: {
+            courseId: project.id,
+            courseTitle: project.title,
+            courseDescription: project.description
+          }
+        });
+        console.log('Notifications sent successfully');
+      } catch (notifyError) {
+        console.error('Failed to send notifications:', notifyError);
+        // Don't fail the whole operation if notifications fail
+      }
+
+      toast.success('Course published successfully! Notifications sent to subscribers.');
+      fetchProjects();
+    } catch (error) {
+      console.error('Error publishing course:', error);
+      toast.error('Failed to publish course');
+    } finally {
+      setPublishingId(null);
+    }
+  };
+
   if (isLoading) {
     return <div className="text-center py-8 text-muted-foreground">Loading courses...</div>;
   }
@@ -264,9 +354,14 @@ const CoursesProjectsSection = () => {
                       <CardTitle className="flex items-center gap-2">
                         <GraduationCap className="h-5 w-5 text-primary" />
                         {project.title}
-                        {finished && (
+                        {finished && !project.added_to_app && (
+                          <Badge variant="default" className="bg-amber-500">
+                            Ready to Publish
+                          </Badge>
+                        )}
+                        {project.added_to_app && (
                           <Badge variant="default" className="bg-green-500">
-                            Finished
+                            Published
                           </Badge>
                         )}
                       </CardTitle>
@@ -319,6 +414,42 @@ const CoursesProjectsSection = () => {
                       })}
                     </div>
                   </div>
+
+                  {/* Finish & Publish Button - only show when all stages complete and not yet published */}
+                  {finished && !project.added_to_app && (
+                    <div className="pt-2 border-t border-border/50">
+                      <Button 
+                        onClick={() => handlePublishCourse(project)}
+                        disabled={publishingId === project.id}
+                        className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                      >
+                        {publishingId === project.id ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Publishing...
+                          </>
+                        ) : (
+                          <>
+                            <Rocket className="h-4 w-4 mr-2" />
+                            Finish & Publish Course
+                          </>
+                        )}
+                      </Button>
+                      <p className="text-xs text-muted-foreground mt-2 text-center">
+                        This will make the course visible on /courses and notify all subscribers
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Already published indicator */}
+                  {project.added_to_app && (
+                    <div className="pt-2 border-t border-border/50">
+                      <div className="flex items-center justify-center gap-2 text-green-400 text-sm">
+                        <CheckCircle2 className="h-4 w-4" />
+                        Course is live on /courses
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             );

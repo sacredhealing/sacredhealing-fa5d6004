@@ -65,9 +65,11 @@ const Courses: React.FC = () => {
   }, [user]);
 
   const fetchCourses = async () => {
+    // Only fetch published courses for public visibility
     const { data } = await supabase
       .from('courses')
       .select('*')
+      .eq('is_published', true)
       .order('created_at', { ascending: false });
     if (data) setCourses(data as unknown as Course[]);
     setIsLoading(false);
