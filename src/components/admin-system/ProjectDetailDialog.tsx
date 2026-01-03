@@ -62,10 +62,27 @@ const ProjectDetailDialog = ({ project, open, onOpenChange }: ProjectDetailDialo
   useEffect(() => {
     if (project && open) {
       fetchLinkedData();
+      fetchWorkflowStages();
       setNotes(project.description || '');
-      setWorkflowStages(project.workflow_stages || DEFAULT_PROJECT_WORKFLOW);
     }
   }, [project, open]);
+
+  const fetchWorkflowStages = async () => {
+    if (!project) return;
+    
+    const { data, error } = await supabase
+      .from('admin_projects')
+      .select('workflow_stages')
+      .eq('id', project.id)
+      .single();
+    
+    if (!error && data) {
+      const stages = data.workflow_stages as unknown as ProjectWorkflowStages;
+      setWorkflowStages(stages || DEFAULT_PROJECT_WORKFLOW);
+    } else {
+      setWorkflowStages(project.workflow_stages || DEFAULT_PROJECT_WORKFLOW);
+    }
+  };
 
   const calculateWorkflowProgress = () => {
     const totalStages = Object.keys(workflowStages).length;
