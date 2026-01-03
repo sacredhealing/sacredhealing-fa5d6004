@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Archive, ArchiveRestore, Eye, Filter } from 'lucide-react';
+import { Plus, Edit, Trash2, Archive, ArchiveRestore, Eye, Filter, Download } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import ProjectDetailDialog from './ProjectDetailDialog';
+import FileUpload from '@/components/admin/FileUpload';
 
 // Default workflow stages for all projects
 export const DEFAULT_PROJECT_WORKFLOW = {
@@ -50,6 +51,8 @@ interface Project {
   archived: boolean;
   created_at: string;
   workflow_stages?: ProjectWorkflowStages;
+  file_url?: string;
+  file_urls?: string[];
 }
 
 const AdminProjectsTab = () => {
@@ -71,6 +74,7 @@ const AdminProjectsTab = () => {
     type: 'general',
     status: 'active',
     description: '',
+    file_url: '',
   });
 
   const projectTypes = ['general', 'development', 'marketing', 'content', 'design', 'research', 'music'];
@@ -94,7 +98,8 @@ const AdminProjectsTab = () => {
       const typedProjects = (data || []).map(p => ({
         ...p,
         workflow_stages: p.workflow_stages as unknown as ProjectWorkflowStages | undefined,
-      }));
+        file_urls: Array.isArray(p.file_urls) ? (p.file_urls as unknown as string[]) : [],
+      })) as Project[];
       setProjects(typedProjects);
     }
     setLoading(false);
@@ -161,7 +166,10 @@ const AdminProjectsTab = () => {
     if (editingProject) {
       const { error } = await supabase
         .from('admin_projects')
-        .update(formData)
+        .update({
+          ...formData,
+          file_url: formData.file_url || null,
+        })
         .eq('id', editingProject.id);
 
       if (error) {
@@ -173,7 +181,11 @@ const AdminProjectsTab = () => {
     } else {
       const { data, error } = await supabase
         .from('admin_projects')
-        .insert([{ ...formData, workflow_stages: DEFAULT_PROJECT_WORKFLOW }])
+        .insert([{ 
+          ...formData, 
+          file_url: formData.file_url || null,
+          workflow_stages: DEFAULT_PROJECT_WORKFLOW 
+        }])
         .select()
         .single();
 
@@ -199,6 +211,7 @@ const AdminProjectsTab = () => {
       type: project.type,
       status: project.status,
       description: project.description || '',
+      file_url: project.file_url || '',
     });
     setDialogOpen(true);
   };
@@ -239,9 +252,23 @@ const AdminProjectsTab = () => {
   };
 
   const resetForm = () => {
-    setFormData({ title: '', type: 'general', status: 'active', description: '' });
+    setFormData({ title: '', type: 'general', status: 'active', description: '', file_url: '' });
     setEditingProject(null);
     setDialogOpen(false);
+  };
+
+  const handleFileChange = async (projectId: string, fileUrl: string) => {
+    const { error } = await supabase
+      .from('admin_projects')
+      .update({ file_url: fileUrl || null })
+      .eq('id', projectId);
+
+    if (error) {
+      toast.error('Failed to update file');
+    } else {
+      toast.success('File updated');
+      fetchProjects();
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -325,6 +352,13 @@ const AdminProjectsTab = () => {
                       rows={3}
                     />
                   </div>
+                  <FileUpload
+                    value={formData.file_url}
+                    onChange={(url) => setFormData({ ...formData, file_url: url })}
+                    folder="projects"
+                    fileType="all"
+                    label="Project File (.m4a, .mp3, .wav, .aiff, .pdf, .docx, .txt)"
+                  />
                   <div className="flex justify-end gap-2">
                     <Button variant="outline" onClick={resetForm}>Cancel</Button>
                     <Button onClick={handleSubmit}>
@@ -393,6 +427,17 @@ const AdminProjectsTab = () => {
                     </div>
                     {project.description && (
                       <p className="text-sm text-muted-foreground line-clamp-1">{project.description}</p>
+                    )}
+                    {project.file_url && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-xs mt-1"
+                        onClick={(e) => { e.stopPropagation(); window.open(project.file_url, '_blank'); }}
+                      >
+                        <Download className="h-3 w-3 mr-1" />
+                        Download File
+                      </Button>
                     )}
                   </div>
                   <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>

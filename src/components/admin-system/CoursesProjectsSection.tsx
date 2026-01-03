@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, GraduationCap, CheckCircle2, Circle, Rocket, Loader2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, GraduationCap, CheckCircle2, Circle, Rocket, Loader2, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
+import FileUpload from '@/components/admin/FileUpload';
 
 interface CourseProject {
   id: string;
@@ -21,6 +22,8 @@ interface CourseProject {
   created_at: string;
   updated_at: string;
   added_to_app?: boolean;
+  file_url?: string;
+  file_urls?: string[];
 }
 
 const COURSE_WORKFLOW_STAGES = [
@@ -50,7 +53,8 @@ const CoursesProjectsSection = () => {
   const [publishingId, setPublishingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',
-    description: ''
+    description: '',
+    file_url: ''
   });
 
   useEffect(() => {
@@ -70,8 +74,11 @@ const CoursesProjectsSection = () => {
 
       const formattedProjects = (data || []).map(project => ({
         ...project,
-        workflow_stages: (project.workflow_stages as Record<string, boolean>) || DEFAULT_WORKFLOW
-      }));
+        workflow_stages: (project.workflow_stages as Record<string, boolean>) || DEFAULT_WORKFLOW,
+        file_urls: Array.isArray(project.file_urls) 
+          ? (project.file_urls as unknown as string[]) 
+          : []
+      })) as CourseProject[];
 
       setProjects(formattedProjects);
     } catch (error) {
@@ -105,6 +112,7 @@ const CoursesProjectsSection = () => {
           .update({
             title: formData.title,
             description: formData.description,
+            file_url: formData.file_url || null,
             updated_at: new Date().toISOString()
           })
           .eq('id', editingProject.id);
@@ -119,7 +127,8 @@ const CoursesProjectsSection = () => {
             description: formData.description,
             type: 'course',
             status: 'planning',
-            workflow_stages: DEFAULT_WORKFLOW
+            workflow_stages: DEFAULT_WORKFLOW,
+            file_url: formData.file_url || null
           });
 
         if (error) throw error;
@@ -128,7 +137,7 @@ const CoursesProjectsSection = () => {
 
       setIsDialogOpen(false);
       setEditingProject(null);
-      setFormData({ title: '', description: '' });
+      setFormData({ title: '', description: '', file_url: '' });
       fetchProjects();
     } catch (error) {
       console.error('Error saving course:', error);
@@ -140,9 +149,24 @@ const CoursesProjectsSection = () => {
     setEditingProject(project);
     setFormData({
       title: project.title,
-      description: project.description || ''
+      description: project.description || '',
+      file_url: project.file_url || ''
     });
     setIsDialogOpen(true);
+  };
+
+  const handleFileChange = async (projectId: string, fileUrl: string) => {
+    const { error } = await supabase
+      .from('admin_projects')
+      .update({ file_url: fileUrl || null, updated_at: new Date().toISOString() })
+      .eq('id', projectId);
+
+    if (error) {
+      toast.error('Failed to update file');
+    } else {
+      toast.success('File updated');
+      fetchProjects();
+    }
   };
 
   const handleDelete = async (projectId: string) => {
@@ -191,7 +215,7 @@ const CoursesProjectsSection = () => {
 
   const openNewDialog = () => {
     setEditingProject(null);
-    setFormData({ title: '', description: '' });
+    setFormData({ title: '', description: '', file_url: '' });
     setIsDialogOpen(true);
   };
 
@@ -326,6 +350,13 @@ const CoursesProjectsSection = () => {
                   rows={3}
                 />
               </div>
+              <FileUpload
+                value={formData.file_url}
+                onChange={(url) => setFormData({ ...formData, file_url: url })}
+                folder="courses"
+                fileType="document"
+                label="Course File (.pdf, .docx, .txt)"
+              />
               <Button onClick={handleSubmit} className="w-full">
                 {editingProject ? 'Update Course' : 'Create Course'}
               </Button>
@@ -413,6 +444,32 @@ const CoursesProjectsSection = () => {
                         );
                       })}
                     </div>
+                  </div>
+
+                  {/* File Upload Section */}
+                  <div className="space-y-2 pt-2 border-t border-border/50">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium">Course Files</p>
+                      {project.file_url && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open(project.file_url, '_blank')}
+                        >
+                          <Download className="h-4 w-4 mr-2" />
+                          Download File
+                        </Button>
+                      )}
+                    </div>
+                    {!project.file_url && (
+                      <FileUpload
+                        value={project.file_url || ''}
+                        onChange={(url) => handleFileChange(project.id, url)}
+                        folder="courses"
+                        fileType="document"
+                        label="Upload Course File (.pdf, .docx, .txt)"
+                      />
+                    )}
                   </div>
 
                   {/* Finish & Publish Button - only show when all stages complete and not yet published */}

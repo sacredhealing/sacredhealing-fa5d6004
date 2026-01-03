@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Music, Check, Circle, ChevronDown, ChevronRight, ListMusic } from 'lucide-react';
+import { Plus, Edit, Trash2, Music, Check, Circle, ChevronDown, ChevronRight, ListMusic, Download } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
+import FileUpload from '@/components/admin/FileUpload';
 
 interface WorkflowStages {
   idea: boolean;
@@ -34,6 +35,7 @@ interface Song {
   order_index: number;
   workflow_stages: WorkflowStages;
   created_at: string;
+  file_url?: string;
 }
 
 interface MusicProject {
@@ -107,6 +109,7 @@ const MusicProjectsSection = () => {
 
   const [songFormData, setSongFormData] = useState({
     title: '',
+    file_url: '',
   });
 
   useEffect(() => {
@@ -307,7 +310,10 @@ const MusicProjectsSection = () => {
     if (editingSong) {
       const { error } = await supabase
         .from('music_project_songs')
-        .update({ title: songFormData.title })
+        .update({ 
+          title: songFormData.title,
+          file_url: songFormData.file_url || null
+        })
         .eq('id', editingSong.id);
 
       if (error) {
@@ -326,6 +332,7 @@ const MusicProjectsSection = () => {
           title: songFormData.title,
           order_index: projectSongs.length,
           workflow_stages: workflowJson,
+          file_url: songFormData.file_url || null,
         }]);
 
       if (error) {
@@ -410,14 +417,14 @@ const MusicProjectsSection = () => {
 
   const handleEditSong = (song: Song) => {
     setEditingSong(song);
-    setSongFormData({ title: song.title });
+    setSongFormData({ title: song.title, file_url: song.file_url || '' });
     setSongDialogOpen(true);
   };
 
   const handleAddSong = (projectId: string) => {
     setSelectedProjectId(projectId);
     setEditingSong(null);
-    setSongFormData({ title: '' });
+    setSongFormData({ title: '', file_url: '' });
     setSongDialogOpen(true);
   };
 
@@ -460,10 +467,24 @@ const MusicProjectsSection = () => {
   };
 
   const resetSongForm = () => {
-    setSongFormData({ title: '' });
+    setSongFormData({ title: '', file_url: '' });
     setEditingSong(null);
     setSelectedProjectId(null);
     setSongDialogOpen(false);
+  };
+
+  const handleSongFileChange = async (songId: string, fileUrl: string) => {
+    const { error } = await supabase
+      .from('music_project_songs')
+      .update({ file_url: fileUrl || null })
+      .eq('id', songId);
+
+    if (error) {
+      toast.error('Failed to update file');
+    } else {
+      toast.success('File updated');
+      fetchProjects();
+    }
   };
 
   const getMusicTypeLabel = (type: string | null) => {
@@ -541,10 +562,17 @@ const MusicProjectsSection = () => {
                 <Label>Song Title</Label>
                 <Input
                   value={songFormData.title}
-                  onChange={(e) => setSongFormData({ title: e.target.value })}
+                  onChange={(e) => setSongFormData({ ...songFormData, title: e.target.value })}
                   placeholder="Song title"
                 />
               </div>
+              <FileUpload
+                value={songFormData.file_url}
+                onChange={(url) => setSongFormData({ ...songFormData, file_url: url })}
+                folder="music-projects"
+                fileType="audio"
+                label="Audio File (.m4a, .mp3, .wav, .aiff)"
+              />
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={resetSongForm}>Cancel</Button>
                 <Button onClick={handleSongSubmit}>
@@ -645,12 +673,23 @@ const MusicProjectsSection = () => {
                               return (
                                 <div key={song.id} className="border rounded-lg p-3 bg-background">
                                   <div className="flex items-center justify-between mb-3">
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 flex-wrap">
                                       <span className="font-medium text-sm">{song.title}</span>
                                       {songFinished ? (
                                         <Badge className="bg-green-500/10 text-green-500 text-xs">Done</Badge>
                                       ) : (
                                         <Badge variant="secondary" className="text-xs">{songProgress}%</Badge>
+                                      )}
+                                      {song.file_url && (
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-6 px-2 text-xs"
+                                          onClick={() => window.open(song.file_url, '_blank')}
+                                        >
+                                          <Download className="h-3 w-3 mr-1" />
+                                          Download
+                                        </Button>
                                       )}
                                     </div>
                                     <div className="flex gap-1">
@@ -662,6 +701,19 @@ const MusicProjectsSection = () => {
                                       </Button>
                                     </div>
                                   </div>
+
+                                  {/* File Upload for Song */}
+                                  {!song.file_url && (
+                                    <div className="mb-3">
+                                      <FileUpload
+                                        value={song.file_url || ''}
+                                        onChange={(url) => handleSongFileChange(song.id, url)}
+                                        folder="music-projects"
+                                        fileType="audio"
+                                        label="Audio File"
+                                      />
+                                    </div>
+                                  )}
 
                                   {/* Song Workflow Stages */}
                                   <div className="grid grid-cols-4 sm:grid-cols-7 gap-1">

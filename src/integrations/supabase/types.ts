@@ -109,6 +109,8 @@ export type Database = {
           created_at: string
           description: string | null
           distrokid_released: boolean | null
+          file_url: string | null
+          file_urls: Json | null
           id: string
           music_type: string | null
           owner: string | null
@@ -124,6 +126,8 @@ export type Database = {
           created_at?: string
           description?: string | null
           distrokid_released?: boolean | null
+          file_url?: string | null
+          file_urls?: Json | null
           id?: string
           music_type?: string | null
           owner?: string | null
@@ -139,6 +143,8 @@ export type Database = {
           created_at?: string
           description?: string | null
           distrokid_released?: boolean | null
+          file_url?: string | null
+          file_urls?: Json | null
           id?: string
           music_type?: string | null
           owner?: string | null
@@ -1872,6 +1878,7 @@ export type Database = {
       music_project_songs: {
         Row: {
           created_at: string
+          file_url: string | null
           id: string
           order_index: number
           project_id: string
@@ -1881,6 +1888,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          file_url?: string | null
           id?: string
           order_index?: number
           project_id: string
@@ -1890,6 +1898,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          file_url?: string | null
           id?: string
           order_index?: number
           project_id?: string
