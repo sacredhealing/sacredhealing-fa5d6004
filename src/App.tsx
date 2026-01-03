@@ -64,6 +64,7 @@ import AIIncomeDetail from "./pages/income-streams/AIIncomeDetail";
 import EducationDetail from "./pages/income-streams/EducationDetail";
 import AdminSystem from "./pages/AdminSystem";
 import AdminBreathing from "./pages/AdminBreathing";
+import AdminAffirmation from "./pages/AdminAffirmation";
 import "@/lib/performance"; // Initialize performance monitoring
 
 const App = () => (
@@ -133,6 +134,7 @@ const App = () => (
                 <Route path="/admin/email-list" element={<AdminEmailList />} />
                 <Route path="/admin/system" element={<AdminSystem />} />
                 <Route path="/admin/breathing" element={<AdminBreathing />} />
+                <Route path="/admin/affirmation" element={<AdminAffirmation />} />
               </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>
