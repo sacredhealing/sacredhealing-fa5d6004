@@ -171,7 +171,8 @@ const MusicProjectsSection = () => {
   const calculateSongProgress = (song: Song): number => {
     const stages = song.workflow_stages;
     const completedStages = Object.values(stages).filter(Boolean).length;
-    return Math.round((completedStages / 7) * 100);
+    const totalStages = Object.keys(stages).length;
+    return Math.round((completedStages / totalStages) * 100);
   };
 
   const isSongFinished = (song: Song): boolean => {
