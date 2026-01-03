@@ -642,13 +642,89 @@
     "audioFiles": "Lydfiler for hjemmepraksis"
   },
   "affirmation": {
+    "badge": "Hellig lydheling",
     "title": "Personlig affirmasjonslysspor",
-    "subtitle": "Tilpassede affirmasjoner med helingsfrekvenser",
+    "subtitle": "Omprogrammer sinnet ditt og manifester drømmene dine",
+    "description": "Opplev en meditasjon laget unikt for deg, designet for å tilpasse underbevisstheten din med dine mål, drømmer og personlige vekst. Denne lydmeditasjonen kombinerer hellige lyder, helingsfrekvenser og affirmasjoner for å støtte dyp transformasjon.",
+    "whatsIncluded": "Hva som er inkludert",
+    "benefitsTitle": "Fordeler",
+    "howItWorksTitle": "Slik fungerer det",
+    "checkoutError": "Kunne ikke opprette betalingsøkt",
     "includes": "Inkluderer",
     "customAffirmations": "Tilpassede affirmasjoner for dine mål",
     "healingFrequencies": "Helingsfrekvenser og binaurale beats",
     "soothingMusic": "Beroligende musikk",
-    "dailyUse": "Designet for daglig bruk"
+    "dailyUse": "Designet for daglig bruk",
+    "included": {
+      "affirmations": {
+        "title": "Tilpassede affirmasjoner",
+        "desc": "Skreddersydd for dine personlige mål og utfordringer, designet for å omprogrammere begrensende overbevisninger."
+      },
+      "frequencies": {
+        "title": "Helingsfrekvenser & hellige lyder",
+        "desc": "Aktiver avslapning, klarhet og energetisk harmoni."
+      },
+      "binaural": {
+        "title": "Binaurale beats & beroligende musikk",
+        "desc": "Harmoniser sinn, hjerte og energi for manifestasjon og fokus."
+      }
+    },
+    "benefits": {
+      "reprogram": "Omprogrammer underbevisste mønstre og gamle tankemønstre",
+      "manifest": "Støtt manifestasjon av mål og ønsker",
+      "clarity": "Forbedre klarhet, selvtillit og indre ro",
+      "spiritual": "Integrer daglig åndelig praksis med letthet"
+    },
+    "howItWorks": {
+      "step1": {
+        "title": "Spørreskjema",
+        "desc": "Del dine personlige mål, utfordringer og intensjoner."
+      },
+      "step2": {
+        "title": "Tilpasset meditasjon",
+        "desc": "Motta et unikt affirmasjonslysspor skapt for din energi."
+      },
+      "step3": {
+        "title": "Daglig bruk",
+        "desc": "Lytt regelmessig for å forsterke transformasjon og manifestasjon i livet ditt."
+      }
+    },
+    "basicPackage": {
+      "title": "Personlig affirmasjonslysspor",
+      "cta": "Få ditt personlige lysspor"
+    },
+    "ultimatePackage": {
+      "badge": "BESTE VERDI",
+      "title": "Det ultimate Soulwave-aktiveringspakken",
+      "subtitle": "Oppnå drømmene dine og transformer livet ditt",
+      "savings": "Spar 497 SEK sammenlignet med separat kjøp",
+      "cta": "Få den ultimate pakken",
+      "includes": "Inkluderer 30 dagers healing + Personlig lysspor + Privat økt"
+    },
+    "ultimate": {
+      "soundtrack": {
+        "title": "Personlig affirmasjonslysspor",
+        "item1": "Skreddersydde affirmasjoner for å omprogrammere underbevisstheten din",
+        "item2": "Hellige lyder og helingsfrekvenser",
+        "item3": "Binaurale beats og beroligende bakgrunnsmusikk"
+      },
+      "healing": {
+        "title": "30 dagers helingsoverføring",
+        "item1": "Daglige helingsøkter med guddommelige energier",
+        "item2": "Styrk immunforsvaret & fjern negativitet",
+        "item3": "Overvinn fysiske og mentale utfordringer"
+      },
+      "session": {
+        "title": "Privat nettøkt",
+        "item1": "En-til-en økt for å utforske frykter og mål",
+        "item2": "Skriftlig spilleplan for reisen din",
+        "item3": "Direkte veiledning fra hellige healere"
+      }
+    },
+    "footer": {
+      "title": "Tre inn i harmoni, klarhet og egenmakt.",
+      "desc": "Bruk ditt personlige lysspor daglig for å hele, manifestere og omprogrammere sinnet ditt."
+    }
   },
   "promote": {
     "title": "Promoter og tjen",

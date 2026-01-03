@@ -873,13 +873,89 @@
     "audioFiles": "Ljudfiler för hemmaövning"
   },
   "affirmation": {
+    "badge": "Helig ljudhealing",
     "title": "Personligt affirmationsljudspår",
-    "subtitle": "Anpassade affirmationer med läkningsfrekvenser",
+    "subtitle": "Omprogrammera ditt sinne och manifestera dina drömmar",
+    "description": "Upplev en meditation skapad unikt för dig, designad för att anpassa ditt undermedvetna med dina mål, drömmar och personliga tillväxt. Denna ljudmeditation kombinerar heliga ljud, läkningsfrekvenser och affirmationer för att stödja djup transformation.",
+    "whatsIncluded": "Vad som ingår",
+    "benefitsTitle": "Fördelar",
+    "howItWorksTitle": "Så fungerar det",
+    "checkoutError": "Kunde inte skapa betalningssession",
     "includes": "Inkluderar",
     "customAffirmations": "Anpassade affirmationer för dina mål",
     "healingFrequencies": "Läkningsfrekvenser och binaurala beats",
     "soothingMusic": "Lugnande musik",
-    "dailyUse": "Designat för daglig användning"
+    "dailyUse": "Designat för daglig användning",
+    "included": {
+      "affirmations": {
+        "title": "Anpassade affirmationer",
+        "desc": "Skräddarsydda för dina personliga mål och utmaningar, designade för att omprogrammera begränsande övertygelser."
+      },
+      "frequencies": {
+        "title": "Läkningsfrekvenser & heliga ljud",
+        "desc": "Aktivera avslappning, klarhet och energetisk harmoni."
+      },
+      "binaural": {
+        "title": "Binaurala beats & lugnande musik",
+        "desc": "Harmonisera sinne, hjärta och energi för manifestation och fokus."
+      }
+    },
+    "benefits": {
+      "reprogram": "Omprogrammera undermedvetna mönster och gamla tankemönster",
+      "manifest": "Stöd manifestation av mål och önskningar",
+      "clarity": "Förbättra klarhet, självförtroende och inre lugn",
+      "spiritual": "Integrera daglig andlig praktik med lätthet"
+    },
+    "howItWorks": {
+      "step1": {
+        "title": "Frågeformulär",
+        "desc": "Dela dina personliga mål, utmaningar och intentioner."
+      },
+      "step2": {
+        "title": "Anpassad meditation",
+        "desc": "Ta emot ett unikt affirmationsljudspår skapat för din energi."
+      },
+      "step3": {
+        "title": "Daglig användning",
+        "desc": "Lyssna regelbundet för att förstärka transformation och manifestation i ditt liv."
+      }
+    },
+    "basicPackage": {
+      "title": "Personligt affirmationsljudspår",
+      "cta": "Få ditt personliga ljudspår"
+    },
+    "ultimatePackage": {
+      "badge": "BÄSTA VÄRDE",
+      "title": "Det ultimata Soulwave-aktiveringspaketet",
+      "subtitle": "Uppnå dina drömmar och transformera ditt liv",
+      "savings": "Spara 497 SEK jämfört med separat köp",
+      "cta": "Få det ultimata paketet",
+      "includes": "Inkluderar 30 dagars healing + Personligt ljudspår + Privat session"
+    },
+    "ultimate": {
+      "soundtrack": {
+        "title": "Personligt affirmationsljudspår",
+        "item1": "Skräddarsydda affirmationer för att omprogrammera ditt undermedvetna",
+        "item2": "Heliga ljud och läkningsfrekvenser",
+        "item3": "Binaurala beats och lugnande bakgrundsmusik"
+      },
+      "healing": {
+        "title": "30 dagars healingöverföring",
+        "item1": "Dagliga healingsessioner med gudomliga energier",
+        "item2": "Stärk immunsystemet & rensa negativitet",
+        "item3": "Övervinn fysiska och mentala utmaningar"
+      },
+      "session": {
+        "title": "Privat onlinesession",
+        "item1": "En-till-en session för att utforska dina rädslor och mål",
+        "item2": "Skriftlig spelplan för din resa",
+        "item3": "Direkt vägledning från heliga healers"
+      }
+    },
+    "footer": {
+      "title": "Kliv in i harmoni, klarhet och egenmakt.",
+      "desc": "Använd ditt personliga ljudspår dagligen för att hela, manifestera och omprogrammera ditt sinne."
+    }
   },
   "promote": {
     "title": "Marknadsför & Tjäna",

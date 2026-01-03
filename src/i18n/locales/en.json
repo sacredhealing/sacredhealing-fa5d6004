@@ -940,13 +940,89 @@
     "audioFiles": "Audio files for at-home practice"
   },
   "affirmation": {
+    "badge": "Sacred Sound Healing",
     "title": "Personalized Affirmation Soundtrack",
-    "subtitle": "Custom affirmations with healing frequencies",
+    "subtitle": "Reprogram Your Mind and Manifest Your Dreams",
+    "description": "Experience a meditation crafted uniquely for you, designed to align your subconscious with your goals, dreams, and personal growth. This audio meditation combines sacred sounds, healing frequencies, and affirmations to support deep transformation.",
+    "whatsIncluded": "What's Included",
+    "benefitsTitle": "Benefits",
+    "howItWorksTitle": "How It Works",
+    "checkoutError": "Failed to create checkout session",
     "includes": "Includes",
     "customAffirmations": "Custom affirmations for your goals",
     "healingFrequencies": "Healing frequencies and binaural beats",
     "soothingMusic": "Soothing music",
-    "dailyUse": "Designed for daily use"
+    "dailyUse": "Designed for daily use",
+    "included": {
+      "affirmations": {
+        "title": "Custom Affirmations",
+        "desc": "Tailored to your personal goals and challenges, designed to reprogram limiting beliefs."
+      },
+      "frequencies": {
+        "title": "Healing Frequencies & Sacred Sounds",
+        "desc": "Activate relaxation, clarity, and energetic alignment."
+      },
+      "binaural": {
+        "title": "Binaural Beats & Soothing Music",
+        "desc": "Harmonize mind, heart, and energy for manifestation and focus."
+      }
+    },
+    "benefits": {
+      "reprogram": "Reprogram subconscious patterns and old thought loops",
+      "manifest": "Support manifestation of goals and desires",
+      "clarity": "Enhance clarity, confidence, and inner calm",
+      "spiritual": "Integrate daily spiritual practice with ease"
+    },
+    "howItWorks": {
+      "step1": {
+        "title": "Questionnaire",
+        "desc": "Share your personal goals, challenges, and intentions."
+      },
+      "step2": {
+        "title": "Custom Meditation",
+        "desc": "Receive a one-of-a-kind affirmation soundtrack created for your energy."
+      },
+      "step3": {
+        "title": "Daily Use",
+        "desc": "Listen regularly to amplify transformation and manifestation in your life."
+      }
+    },
+    "basicPackage": {
+      "title": "Personalized Affirmation Soundtrack",
+      "cta": "Get Your Personalized Soundtrack"
+    },
+    "ultimatePackage": {
+      "badge": "BEST VALUE",
+      "title": "The Ultimate Soulwave Activation Package",
+      "subtitle": "Achieve Your Dreams and Transform Your Life",
+      "savings": "Save 497 SEK vs purchasing separately",
+      "cta": "Get The Ultimate Package",
+      "includes": "Includes 30 Days of Healing + Personalized Soundtrack + Private Session"
+    },
+    "ultimate": {
+      "soundtrack": {
+        "title": "Personalized Affirmation Soundtrack",
+        "item1": "Tailored affirmations to reprogram your subconscious mind",
+        "item2": "Sacred sounds and healing frequencies",
+        "item3": "Binaural beats and soothing background music"
+      },
+      "healing": {
+        "title": "30 Days of Healing Transmission",
+        "item1": "Daily healing sessions with divine energies",
+        "item2": "Strengthen immune system & clear negativity",
+        "item3": "Overcome physical and mental challenges"
+      },
+      "session": {
+        "title": "Private Online Session",
+        "item1": "One-on-one session to explore your fears and goals",
+        "item2": "Written game plan for your journey",
+        "item3": "Direct guidance from sacred healers"
+      }
+    },
+    "footer": {
+      "title": "Step into alignment, clarity, and empowerment.",
+      "desc": "Use your personalized soundtrack daily to heal, manifest, and reprogram your mind."
+    }
   },
   "promote": {
     "title": "Promote & Earn",
