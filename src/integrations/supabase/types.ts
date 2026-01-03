@@ -104,37 +104,49 @@ export type Database = {
       }
       admin_projects: {
         Row: {
+          added_to_app: boolean | null
           archived: boolean
           created_at: string
           description: string | null
+          distrokid_released: boolean | null
           id: string
+          music_type: string | null
           owner: string | null
           status: string
           title: string
           type: string
           updated_at: string
+          workflow_stages: Json | null
         }
         Insert: {
+          added_to_app?: boolean | null
           archived?: boolean
           created_at?: string
           description?: string | null
+          distrokid_released?: boolean | null
           id?: string
+          music_type?: string | null
           owner?: string | null
           status?: string
           title: string
           type?: string
           updated_at?: string
+          workflow_stages?: Json | null
         }
         Update: {
+          added_to_app?: boolean | null
           archived?: boolean
           created_at?: string
           description?: string | null
+          distrokid_released?: boolean | null
           id?: string
+          music_type?: string | null
           owner?: string | null
           status?: string
           title?: string
           type?: string
           updated_at?: string
+          workflow_stages?: Json | null
         }
         Relationships: []
       }

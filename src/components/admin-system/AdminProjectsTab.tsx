@@ -44,7 +44,7 @@ const AdminProjectsTab = () => {
     description: '',
   });
 
-  const projectTypes = ['general', 'development', 'marketing', 'content', 'design', 'research'];
+  const projectTypes = ['general', 'development', 'marketing', 'content', 'design', 'research', 'music'];
   const projectStatuses = ['active', 'planning', 'on-hold', 'completed', 'cancelled'];
 
   useEffect(() => {
