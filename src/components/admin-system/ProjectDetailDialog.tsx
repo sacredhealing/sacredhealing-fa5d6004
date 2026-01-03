@@ -7,8 +7,10 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { CheckSquare, FileText, Calendar, MessageSquare, ExternalLink } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { CheckSquare, FileText, Calendar, MessageSquare, ExternalLink, ListChecks } from 'lucide-react';
 import { toast } from 'sonner';
+import { ProjectWorkflowStages, PROJECT_WORKFLOW_LABELS, DEFAULT_PROJECT_WORKFLOW } from './AdminProjectsTab';
 
 interface Project {
   id: string;
@@ -17,6 +19,7 @@ interface Project {
   status: string;
   description: string | null;
   created_at: string;
+  workflow_stages?: ProjectWorkflowStages;
 }
 
 interface Task {
@@ -54,13 +57,46 @@ const ProjectDetailDialog = ({ project, open, onOpenChange }: ProjectDetailDialo
   const [events, setEvents] = useState<Event[]>([]);
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
+  const [workflowStages, setWorkflowStages] = useState<ProjectWorkflowStages>(DEFAULT_PROJECT_WORKFLOW);
 
   useEffect(() => {
     if (project && open) {
       fetchLinkedData();
       setNotes(project.description || '');
+      setWorkflowStages(project.workflow_stages || DEFAULT_PROJECT_WORKFLOW);
     }
   }, [project, open]);
+
+  const calculateWorkflowProgress = () => {
+    const totalStages = Object.keys(workflowStages).length;
+    const completedStages = Object.values(workflowStages).filter(Boolean).length;
+    return totalStages > 0 ? Math.round((completedStages / totalStages) * 100) : 0;
+  };
+
+  const isProjectFinished = () => {
+    return Object.values(workflowStages).every(Boolean);
+  };
+
+  const toggleWorkflowStage = async (stageKey: keyof ProjectWorkflowStages) => {
+    if (!project) return;
+    
+    const updatedStages = {
+      ...workflowStages,
+      [stageKey]: !workflowStages[stageKey],
+    };
+    
+    setWorkflowStages(updatedStages);
+    
+    const { error } = await supabase
+      .from('admin_projects')
+      .update({ workflow_stages: updatedStages })
+      .eq('id', project.id);
+      
+    if (error) {
+      toast.error('Failed to update workflow');
+      setWorkflowStages(workflowStages);
+    }
+  };
 
   const fetchLinkedData = async () => {
     if (!project) return;
@@ -132,8 +168,12 @@ const ProjectDetailDialog = ({ project, open, onOpenChange }: ProjectDetailDialo
         </DialogHeader>
 
         <Tabs defaultValue="overview" className="mt-4">
-          <TabsList className="grid grid-cols-5 w-full">
+          <TabsList className="grid grid-cols-6 w-full">
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="workflow" className="flex items-center gap-1">
+              <ListChecks className="h-3 w-3" />
+              Workflow
+            </TabsTrigger>
             <TabsTrigger value="tasks" className="flex items-center gap-1">
               <CheckSquare className="h-3 w-3" />
               Tasks ({tasks.length})
@@ -174,6 +214,64 @@ const ProjectDetailDialog = ({ project, open, onOpenChange }: ProjectDetailDialo
                   <p className="text-muted-foreground">Linked Items</p>
                   <p className="font-medium">{tasks.length + contents.length + events.length} items</p>
                 </div>
+                <div className="col-span-2">
+                  <p className="text-muted-foreground">Workflow Progress</p>
+                  <div className="flex items-center gap-3 mt-1">
+                    <Progress value={calculateWorkflowProgress()} className="flex-1" />
+                    <span className="text-sm font-medium">{calculateWorkflowProgress()}%</span>
+                    {isProjectFinished() && (
+                      <Badge className="bg-green-500/10 text-green-500">Finished</Badge>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="workflow" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm flex items-center justify-between">
+                  <span>Project Workflow</span>
+                  <div className="flex items-center gap-2">
+                    <Progress value={calculateWorkflowProgress()} className="w-32" />
+                    <span className="text-sm font-normal">{calculateWorkflowProgress()}%</span>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {Object.entries(PROJECT_WORKFLOW_LABELS).map(([key, label]) => (
+                  <button
+                    key={key}
+                    onClick={() => toggleWorkflowStage(key as keyof ProjectWorkflowStages)}
+                    className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                      workflowStages[key as keyof ProjectWorkflowStages]
+                        ? 'bg-green-500/10 border-green-500/30'
+                        : 'bg-muted/50 hover:bg-muted'
+                    }`}
+                  >
+                    <div
+                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                        workflowStages[key as keyof ProjectWorkflowStages]
+                          ? 'bg-green-500 border-green-500'
+                          : 'border-muted-foreground'
+                      }`}
+                    >
+                      {workflowStages[key as keyof ProjectWorkflowStages] && (
+                        <CheckSquare className="h-3 w-3 text-white" />
+                      )}
+                    </div>
+                    <span className={workflowStages[key as keyof ProjectWorkflowStages] ? 'line-through text-muted-foreground' : ''}>
+                      {label}
+                    </span>
+                  </button>
+                ))}
+                {isProjectFinished() && (
+                  <div className="mt-4 p-4 bg-green-500/10 border border-green-500/30 rounded-lg text-center">
+                    <Badge className="bg-green-500 text-white">Project Finished</Badge>
+                    <p className="text-sm text-muted-foreground mt-2">All workflow stages have been completed!</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

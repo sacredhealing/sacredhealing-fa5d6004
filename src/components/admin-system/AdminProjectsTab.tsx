@@ -12,6 +12,34 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import ProjectDetailDialog from './ProjectDetailDialog';
 
+// Default workflow stages for all projects
+export const DEFAULT_PROJECT_WORKFLOW = {
+  idea: false,
+  finished_coding: false,
+  integrated_into_app: false,
+  added_to_affiliate: false,
+  bought_domain: false,
+  released_into_app: false,
+};
+
+export const PROJECT_WORKFLOW_LABELS: Record<string, string> = {
+  idea: 'Idea',
+  finished_coding: 'Finished Coding',
+  integrated_into_app: 'Integrated into the App',
+  added_to_affiliate: 'Added to Affiliate',
+  bought_domain: 'Bought Domain',
+  released_into_app: 'Released into the App',
+};
+
+export interface ProjectWorkflowStages {
+  idea: boolean;
+  finished_coding: boolean;
+  integrated_into_app: boolean;
+  added_to_affiliate: boolean;
+  bought_domain: boolean;
+  released_into_app: boolean;
+}
+
 interface Project {
   id: string;
   title: string;
@@ -21,6 +49,7 @@ interface Project {
   description: string | null;
   archived: boolean;
   created_at: string;
+  workflow_stages?: ProjectWorkflowStages;
 }
 
 const AdminProjectsTab = () => {
@@ -61,7 +90,11 @@ const AdminProjectsTab = () => {
     if (error) {
       toast.error('Failed to fetch projects');
     } else {
-      setProjects(data || []);
+      const typedProjects = (data || []).map(p => ({
+        ...p,
+        workflow_stages: p.workflow_stages as unknown as ProjectWorkflowStages | undefined,
+      }));
+      setProjects(typedProjects);
     }
     setLoading(false);
   };
@@ -139,7 +172,7 @@ const AdminProjectsTab = () => {
     } else {
       const { data, error } = await supabase
         .from('admin_projects')
-        .insert([formData])
+        .insert([{ ...formData, workflow_stages: DEFAULT_PROJECT_WORKFLOW }])
         .select()
         .single();
 
