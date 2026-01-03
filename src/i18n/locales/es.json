@@ -526,6 +526,91 @@
     "error": "Error",
     "somethingWrong": "Algo salió mal. Por favor intenta de nuevo."
   },
+  "affirmation": {
+    "badge": "Sanación de Sonido Sagrado",
+    "title": "Banda Sonora de Afirmación Personalizada",
+    "subtitle": "Reprograma tu mente y manifiesta tus sueños",
+    "description": "Experimenta una meditación creada únicamente para ti, diseñada para alinear tu subconsciente con tus metas, sueños y crecimiento personal. Esta meditación de audio combina sonidos sagrados, frecuencias de sanación y afirmaciones para apoyar una transformación profunda.",
+    "whatsIncluded": "Qué está incluido",
+    "benefitsTitle": "Beneficios",
+    "howItWorksTitle": "Cómo funciona",
+    "checkoutError": "Error al crear la sesión de pago",
+    "includes": "Incluye",
+    "customAffirmations": "Afirmaciones personalizadas para tus metas",
+    "healingFrequencies": "Frecuencias de sanación y ritmos binaurales",
+    "soothingMusic": "Música relajante",
+    "dailyUse": "Diseñado para uso diario",
+    "included": {
+      "affirmations": {
+        "title": "Afirmaciones personalizadas",
+        "desc": "Adaptadas a tus metas y desafíos personales, diseñadas para reprogramar creencias limitantes."
+      },
+      "frequencies": {
+        "title": "Frecuencias de sanación y sonidos sagrados",
+        "desc": "Activa la relajación, claridad y alineación energética."
+      },
+      "binaural": {
+        "title": "Ritmos binaurales y música relajante",
+        "desc": "Armoniza mente, corazón y energía para la manifestación y el enfoque."
+      }
+    },
+    "benefits": {
+      "reprogram": "Reprograma patrones subconscientes y viejos bucles de pensamiento",
+      "manifest": "Apoya la manifestación de metas y deseos",
+      "clarity": "Mejora la claridad, confianza y calma interior",
+      "spiritual": "Integra la práctica espiritual diaria con facilidad"
+    },
+    "howItWorks": {
+      "step1": {
+        "title": "Cuestionario",
+        "desc": "Comparte tus metas personales, desafíos e intenciones."
+      },
+      "step2": {
+        "title": "Meditación personalizada",
+        "desc": "Recibe una banda sonora de afirmación única creada para tu energía."
+      },
+      "step3": {
+        "title": "Uso diario",
+        "desc": "Escucha regularmente para amplificar la transformación y manifestación en tu vida."
+      }
+    },
+    "basicPackage": {
+      "title": "Banda Sonora de Afirmación Personalizada",
+      "cta": "Obtén tu banda sonora personalizada"
+    },
+    "ultimatePackage": {
+      "badge": "MEJOR VALOR",
+      "title": "El paquete de activación Soulwave definitivo",
+      "subtitle": "Alcanza tus sueños y transforma tu vida",
+      "savings": "Ahorra 497 SEK comprando por separado",
+      "cta": "Obtén el paquete definitivo",
+      "includes": "Incluye 30 días de sanación + Banda sonora personalizada + Sesión privada"
+    },
+    "ultimate": {
+      "soundtrack": {
+        "title": "Banda sonora de afirmación personalizada",
+        "item1": "Afirmaciones personalizadas para reprogramar tu mente subconsciente",
+        "item2": "Sonidos sagrados y frecuencias de sanación",
+        "item3": "Ritmos binaurales y música de fondo relajante"
+      },
+      "healing": {
+        "title": "30 días de transmisión de sanación",
+        "item1": "Sesiones de sanación diarias con energías divinas",
+        "item2": "Fortalece el sistema inmunológico y limpia la negatividad",
+        "item3": "Supera desafíos físicos y mentales"
+      },
+      "session": {
+        "title": "Sesión privada en línea",
+        "item1": "Sesión uno a uno para explorar tus miedos y metas",
+        "item2": "Plan de acción escrito para tu viaje",
+        "item3": "Orientación directa de sanadores sagrados"
+      }
+    },
+    "footer": {
+      "title": "Entra en alineación, claridad y empoderamiento.",
+      "desc": "Usa tu banda sonora personalizada diariamente para sanar, manifestar y reprogramar tu mente."
+    }
+  },
   "promote": {
     "title": "Promocionar y Ganar",
     "subtitle": "Gana con Sacred Healing",
