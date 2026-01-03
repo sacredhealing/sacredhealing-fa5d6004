@@ -25,7 +25,10 @@ const COURSE_WORKFLOW_STAGES = [
   'Idea',
   'Arrangement',
   'PDF Text',
-  'Audios',
+  'YouTube to Studio One',
+  'Music to Meditations and Audios',
+  'Mix',
+  'Master',
   'Videos',
   'Cover',
   'Description'
