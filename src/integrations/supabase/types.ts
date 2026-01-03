@@ -1855,6 +1855,44 @@ export type Database = {
           },
         ]
       }
+      music_project_songs: {
+        Row: {
+          created_at: string
+          id: string
+          order_index: number
+          project_id: string
+          title: string
+          updated_at: string
+          workflow_stages: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_index?: number
+          project_id: string
+          title: string
+          updated_at?: string
+          workflow_stages?: Json
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_index?: number
+          project_id?: string
+          title?: string
+          updated_at?: string
+          workflow_stages?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "music_project_songs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "admin_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       music_purchases: {
         Row: {
           amount_paid: number | null
