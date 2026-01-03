@@ -1118,5 +1118,27 @@
     "createAccountFirst": "Please also create an account to use the app",
     "error": "Error",
     "somethingWrong": "Something went wrong. Please try again."
+  },
+  "breathing": {
+    "title": "Breathing Exercises",
+    "subtitle": "Calm & energize",
+    "description": "Breathing exercises help reduce stress, improve focus, and promote relaxation. Choose a pattern below and follow along.",
+    "inhale": "Breathe In",
+    "hold": "Hold",
+    "exhale": "Breathe Out",
+    "holdOut": "Hold",
+    "ready": "Ready",
+    "cycle": "Cycle",
+    "guidedAudio": "Guided Audio",
+    "start": "Start",
+    "stop": "Stop",
+    "reset": "Reset",
+    "choosePattern": "Choose a Pattern",
+    "benefits": "Benefits",
+    "benefit1": "Reduces stress and anxiety",
+    "benefit2": "Improves focus and concentration",
+    "benefit3": "Promotes better sleep",
+    "benefit4": "Lowers blood pressure",
+    "benefit5": "Increases energy levels"
   }
 }

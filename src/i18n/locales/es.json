@@ -545,5 +545,27 @@
     "withdrawEarnings": "Retirar Ganancias",
     "affiliateBalance": "Saldo de Afiliados",
     "goToWallet": "Ir a Cartera"
+  },
+  "breathing": {
+    "title": "Ejercicios de Respiración",
+    "subtitle": "Calma y energiza",
+    "description": "Los ejercicios de respiración ayudan a reducir el estrés, mejorar el enfoque y promover la relajación. Elige un patrón a continuación y sigue.",
+    "inhale": "Inhala",
+    "hold": "Mantén",
+    "exhale": "Exhala",
+    "holdOut": "Mantén",
+    "ready": "Listo",
+    "cycle": "Ciclo",
+    "guidedAudio": "Audio Guiado",
+    "start": "Iniciar",
+    "stop": "Detener",
+    "reset": "Reiniciar",
+    "choosePattern": "Elige un patrón",
+    "benefits": "Beneficios",
+    "benefit1": "Reduce el estrés y la ansiedad",
+    "benefit2": "Mejora el enfoque y la concentración",
+    "benefit3": "Promueve un mejor sueño",
+    "benefit4": "Reduce la presión arterial",
+    "benefit5": "Aumenta los niveles de energía"
   }
 }
