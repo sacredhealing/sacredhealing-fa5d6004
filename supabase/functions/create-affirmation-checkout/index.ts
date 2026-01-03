@@ -7,9 +7,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const PRICES = {
-  basic: "price_1SZs4pAPsnbrivP0zvyPJHqb", // Personalized Affirmation Soundtrack - 1,497 SEK
-  ultimate: "price_1SZs5FAPsnbrivP0OBTsyeON", // Ultimate Soulwave Activation Package - 2,997 SEK
+// Fallback prices if database lookup fails
+const FALLBACK_PRICES = {
+  basic: "price_1SZs4pAPsnbrivP0zvyPJHqb",
+  ultimate: "price_1SZs5FAPsnbrivP0OBTsyeON",
 };
 
 const logStep = (step: string, details?: any) => {
@@ -40,11 +41,27 @@ serve(async (req) => {
     logStep("User authenticated", { userId: user.id, email: user.email });
 
     const { packageType } = await req.json();
-    if (!packageType || !PRICES[packageType as keyof typeof PRICES]) {
+    if (!packageType || !['basic', 'ultimate'].includes(packageType)) {
       throw new Error("Invalid package type");
     }
 
-    const priceId = PRICES[packageType as keyof typeof PRICES];
+    // Fetch price ID from database
+    const priceKey = packageType === 'basic' ? 'basic_price' : 'ultimate_price';
+    const { data: priceData, error: priceError } = await supabaseClient
+      .from('affirmation_content')
+      .select('metadata')
+      .eq('content_key', priceKey)
+      .eq('language', 'en')
+      .single();
+
+    let priceId: string;
+    if (priceError || !priceData?.metadata?.stripe_price_id) {
+      logStep("Using fallback price", { packageType });
+      priceId = FALLBACK_PRICES[packageType as keyof typeof FALLBACK_PRICES];
+    } else {
+      priceId = priceData.metadata.stripe_price_id;
+    }
+
     logStep("Package selected", { packageType, priceId });
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {

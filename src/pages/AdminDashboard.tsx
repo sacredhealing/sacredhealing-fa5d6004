@@ -18,7 +18,8 @@ import {
   Trophy,
   Mail,
   FolderKanban,
-  Wind
+  Wind,
+  AudioLines
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -129,6 +130,13 @@ const adminSections = [
     icon: Wind,
     href: '/admin/breathing',
     color: 'text-cyan-500',
+  },
+  {
+    title: 'Affirmation Soundtrack',
+    description: 'Manage content and pricing for affirmation page',
+    icon: AudioLines,
+    href: '/admin/affirmation',
+    color: 'text-purple-500',
   },
 ];
 

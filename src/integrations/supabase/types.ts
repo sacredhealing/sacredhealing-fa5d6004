@@ -347,6 +347,42 @@ export type Database = {
         }
         Relationships: []
       }
+      affirmation_content: {
+        Row: {
+          content: string | null
+          content_key: string
+          content_type: string
+          created_at: string
+          id: string
+          language: string
+          metadata: Json | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          content?: string | null
+          content_key: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          language?: string
+          metadata?: Json | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          content?: string | null
+          content_key?: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          language?: string
+          metadata?: Json | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       affirmation_questionnaires: {
         Row: {
           additional_notes: string | null
