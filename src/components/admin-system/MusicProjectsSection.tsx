@@ -16,6 +16,9 @@ import { toast } from 'sonner';
 interface WorkflowStages {
   idea: boolean;
   arrangement: boolean;
+  logic_to_studio_one: boolean;
+  record_mpc: boolean;
+  record_studio_one_mpc: boolean;
   record_karaveera: boolean;
   record_kritagya: boolean;
   mix: boolean;
@@ -60,6 +63,9 @@ const MUSIC_TYPES = [
 const WORKFLOW_STAGES = [
   { key: 'idea', label: 'Idea' },
   { key: 'arrangement', label: 'Arrangement' },
+  { key: 'logic_to_studio_one', label: 'Move from Logic to Studio One' },
+  { key: 'record_mpc', label: 'Record from MPC' },
+  { key: 'record_studio_one_mpc', label: 'Record to Studio One from MPC' },
   { key: 'record_karaveera', label: 'Record – Karaveera Nivasini Dasi' },
   { key: 'record_kritagya', label: 'Record – Kritagya Das' },
   { key: 'mix', label: 'Mix' },
@@ -71,6 +77,9 @@ const WORKFLOW_STAGES = [
 const DEFAULT_WORKFLOW: WorkflowStages = {
   idea: false,
   arrangement: false,
+  logic_to_studio_one: false,
+  record_mpc: false,
+  record_studio_one_mpc: false,
   record_karaveera: false,
   record_kritagya: false,
   mix: false,
@@ -191,6 +200,9 @@ const MusicProjectsSection = () => {
     const completedStages = [
       stages.idea,
       stages.arrangement,
+      stages.logic_to_studio_one,
+      stages.record_mpc,
+      stages.record_studio_one_mpc,
       stages.record_karaveera,
       stages.record_kritagya,
       stages.mix,
@@ -198,7 +210,7 @@ const MusicProjectsSection = () => {
       stages.cover,
       releaseComplete,
     ].filter(Boolean).length;
-    return Math.round((completedStages / 8) * 100);
+    return Math.round((completedStages / 11) * 100);
   };
 
   const isProjectFinished = (project: MusicProject): boolean => {
