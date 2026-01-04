@@ -96,22 +96,6 @@ const Dashboard: React.FC = () => {
         </Link>
       </div>
 
-      {/* Today's Wisdom */}
-      <div className="rounded-2xl bg-gradient-to-br from-amber-500/20 via-purple-500/10 to-pink-500/20 border border-amber-500/30 p-6 mb-6 animate-slide-up text-center shadow-lg" style={{ animationDelay: '0.1s' }}>
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <Star className="w-5 h-5 text-amber-400" />
-          <h2 className="text-lg font-heading font-semibold text-amber-400">
-            {t('dashboard.todaysWisdom')}
-          </h2>
-          <Star className="w-5 h-5 text-amber-400" />
-        </div>
-        <p 
-          className={`text-foreground italic leading-relaxed text-lg transition-opacity duration-500 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
-        >
-          {quote ? `"${quote}"` : t('dashboard.loadingWisdom')}
-        </p>
-        <p className="text-muted-foreground text-sm mt-3">— Paramahamsa Vishwananda</p>
-      </div>
 
       {/* Today's Meditation */}
       <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.2s' }}>
