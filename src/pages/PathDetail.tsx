@@ -1,19 +1,32 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Clock, Star, Play, BookOpen, CheckCircle2, Lock, Wind, Music } from 'lucide-react';
+import { ArrowLeft, Clock, Star, Play, BookOpen, CheckCircle2, Lock, Wind, Music, Headphones } from 'lucide-react';
 import { useSpiritualPaths, SpiritualPath, PathDay } from '@/hooks/useSpiritualPaths';
+import { usePathTracks } from '@/hooks/usePathTracks';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+// Map path slugs to spiritual path values used in music tracks
+const PATH_SLUG_MAP: Record<string, string> = {
+  'inner-peace': 'inner_peace',
+  'deep-healing': 'deep_healing',
+  'sleep-sanctuary': 'sleep_sanctuary',
+  'focus-mastery': 'focus_mastery',
+  'awakening': 'awakening',
+};
 
 const PathDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { getPathBySlug, getPathDays, getProgressForPath, startPath, completeDay } = useSpiritualPaths();
+  
+  // Fetch path-specific music tracks
+  const pathTrackSlug = slug ? PATH_SLUG_MAP[slug] || slug.replace(/-/g, '_') : undefined;
+  const { data: pathTracks = [] } = usePathTracks(pathTrackSlug);
   
   const [path, setPath] = useState<SpiritualPath | null>(null);
   const [days, setDays] = useState<PathDay[]>([]);
@@ -246,6 +259,54 @@ const PathDetail: React.FC = () => {
               </p>
             )}
           </Accordion>
+
+          {/* Path-Specific Music Tracks */}
+          {pathTracks.length > 0 && (
+            <div className="mt-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-heading font-semibold text-lg text-foreground flex items-center gap-2">
+                  <Headphones className="w-5 h-5 text-primary" />
+                  Music for This Path
+                </h2>
+                <Link to="/music" className="text-sm text-primary hover:underline">
+                  See All
+                </Link>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                {pathTracks.slice(0, 4).map((track) => (
+                  <Link 
+                    key={track.id} 
+                    to={`/music/track/${track.id}`}
+                    className="group"
+                  >
+                    <Card className="p-3 bg-gradient-card border-border/50 hover:border-primary/50 transition-all">
+                      <div className="aspect-square rounded-lg overflow-hidden bg-muted mb-2">
+                        {track.cover_image_url ? (
+                          <img 
+                            src={track.cover_image_url} 
+                            alt={track.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Music className="w-8 h-8 text-muted-foreground" />
+                          </div>
+                        )}
+                      </div>
+                      <h4 className="font-medium text-sm text-foreground truncate">{track.title}</h4>
+                      <p className="text-xs text-muted-foreground truncate">{track.artist}</p>
+                      {track.affirmation && (
+                        <p className="text-xs text-primary/80 italic mt-1 line-clamp-2">
+                          "{track.affirmation}"
+                        </p>
+                      )}
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </motion.div>
       </div>
     </div>
