@@ -11,6 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { CheckSquare, FileText, Calendar, MessageSquare, ExternalLink, ListChecks, Check, Circle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useWorkflowTemplates } from '@/hooks/useWorkflowTemplates';
+import ItemWorkflowEditor from './ItemWorkflowEditor';
 
 interface Project {
   id: string;
@@ -92,14 +93,40 @@ const ProjectDetailDialog = ({ project, open, onOpenChange }: ProjectDetailDialo
 
   const calculateWorkflowProgress = () => {
     if (!workflowStages) return 0;
-    const stageKeys = projectStages.map(s => s.key);
-    const completedStages = stageKeys.filter(key => workflowStages[key]).length;
-    return stageKeys.length > 0 ? Math.round((completedStages / stageKeys.length) * 100) : 0;
+    // Include both template stages and any custom stages
+    const allStageKeys = Object.keys(workflowStages);
+    const completedStages = allStageKeys.filter(key => workflowStages[key]).length;
+    return allStageKeys.length > 0 ? Math.round((completedStages / allStageKeys.length) * 100) : 0;
   };
 
   const isProjectFinished = () => {
-    const stageKeys = projectStages.map(s => s.key);
-    return stageKeys.every(key => workflowStages[key]);
+    const allStageKeys = Object.keys(workflowStages);
+    return allStageKeys.length > 0 && allStageKeys.every(key => workflowStages[key]);
+  };
+
+  // Get custom stages (keys in workflow but not in template)
+  const getCustomStages = () => {
+    const templateKeys = projectStages.map(s => s.key);
+    return Object.keys(workflowStages)
+      .filter(key => !templateKeys.includes(key))
+      .map(key => ({
+        key,
+        label: key.replace(/^custom_/, '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+        order_index: 999
+      }));
+  };
+
+  const handleWorkflowUpdate = async (updatedWorkflow: Record<string, boolean>) => {
+    if (!project) return;
+    
+    const { error } = await supabase
+      .from('admin_projects')
+      .update({ workflow_stages: updatedWorkflow })
+      .eq('id', project.id);
+      
+    if (error) throw error;
+    
+    setWorkflowStages(updatedWorkflow);
   };
 
   const toggleWorkflowStage = async (stageKey: string) => {
@@ -268,6 +295,7 @@ const ProjectDetailDialog = ({ project, open, onOpenChange }: ProjectDetailDialo
                 </CardTitle>
               </CardHeader>
               <CardContent>
+                {/* Template Stages */}
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                   {projectStages.map((stage) => {
                     const isChecked = workflowStages[stage.key];
@@ -291,12 +319,56 @@ const ProjectDetailDialog = ({ project, open, onOpenChange }: ProjectDetailDialo
                     );
                   })}
                 </div>
+
+                {/* Custom Stages */}
+                {getCustomStages().length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-xs text-muted-foreground mb-2">Custom Stages</p>
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                      {getCustomStages().map((stage) => {
+                        const isChecked = workflowStages[stage.key];
+                        return (
+                          <div
+                            key={stage.key}
+                            className={`flex flex-col items-center p-3 rounded-lg border cursor-pointer transition-all text-xs ${
+                              isChecked
+                                ? 'bg-primary/10 border-primary/30'
+                                : 'bg-muted/50 hover:bg-muted'
+                            }`}
+                            onClick={() => toggleWorkflowStage(stage.key)}
+                          >
+                            {isChecked ? (
+                              <Check className="h-4 w-4 mb-1 text-primary" />
+                            ) : (
+                              <Circle className="h-4 w-4 mb-1 text-muted-foreground" />
+                            )}
+                            <span className="text-center">{stage.label}</span>
+                            <Badge variant="secondary" className="text-[10px] mt-1">Custom</Badge>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {isProjectFinished() && (
                   <div className="mt-4 p-4 bg-green-500/10 border border-green-500/30 rounded-lg text-center">
                     <Badge className="bg-green-500 text-white">Project Finished</Badge>
                     <p className="text-sm text-muted-foreground mt-2">All workflow stages have been completed!</p>
                   </div>
                 )}
+
+                {/* Edit Workflow Button */}
+                <div className="mt-4 pt-4 border-t flex justify-end">
+                  <ItemWorkflowEditor
+                    itemId={project.id}
+                    itemType="project"
+                    currentWorkflow={workflowStages}
+                    templateStages={projectStages}
+                    onWorkflowUpdate={handleWorkflowUpdate}
+                    onRefresh={fetchWorkflowStages}
+                  />
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

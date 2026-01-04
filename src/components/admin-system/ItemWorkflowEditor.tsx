@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, X, Settings2 } from 'lucide-react';
+import { Plus, X, Settings2, Check, Circle, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,7 @@ interface ItemWorkflowEditorProps {
   currentWorkflow: Record<string, boolean>;
   templateStages: WorkflowStage[];
   onWorkflowUpdate: (updatedWorkflow: Record<string, boolean>) => Promise<void>;
+  onRefresh?: () => void;
 }
 
 const ItemWorkflowEditor = ({
@@ -22,20 +23,24 @@ const ItemWorkflowEditor = ({
   currentWorkflow,
   templateStages,
   onWorkflowUpdate,
+  onRefresh,
 }: ItemWorkflowEditorProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [newStageKey, setNewStageKey] = useState('');
   const [newStageLabel, setNewStageLabel] = useState('');
   const [localWorkflow, setLocalWorkflow] = useState<Record<string, boolean>>({});
   const [customStages, setCustomStages] = useState<{ key: string; label: string }[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
 
   const openEditor = () => {
     setLocalWorkflow({ ...currentWorkflow });
     
-    // Identify custom stages (not in template)
+    // Identify custom stages (keys in currentWorkflow but not in template)
     const templateKeys = templateStages.map(s => s.key);
     const customKeys = Object.keys(currentWorkflow).filter(k => !templateKeys.includes(k));
-    setCustomStages(customKeys.map(k => ({ key: k, label: k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) })));
+    setCustomStages(customKeys.map(k => ({ 
+      key: k, 
+      label: k.replace(/^custom_/, '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) 
+    })));
     
     setIsOpen(true);
   };
@@ -56,7 +61,6 @@ const ItemWorkflowEditor = ({
     setLocalWorkflow(prev => ({ ...prev, [sanitizedKey]: false }));
     setCustomStages(prev => [...prev, { key: sanitizedKey, label: newStageLabel.trim() }]);
     setNewStageLabel('');
-    setNewStageKey('');
     toast.success('Custom stage added');
   };
 
@@ -70,17 +74,38 @@ const ItemWorkflowEditor = ({
     toast.success('Stage removed');
   };
 
-  const handleSave = async () => {
-    await onWorkflowUpdate(localWorkflow);
-    setIsOpen(false);
-    toast.success('Workflow updated');
+  const handleToggleStage = (stageKey: string) => {
+    setLocalWorkflow(prev => ({
+      ...prev,
+      [stageKey]: !prev[stageKey]
+    }));
   };
 
-  // Combine template stages with custom stages
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await onWorkflowUpdate(localWorkflow);
+      setIsOpen(false);
+      toast.success('Workflow updated');
+      onRefresh?.();
+    } catch (error) {
+      toast.error('Failed to update workflow');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Combine template stages with custom stages for display
   const allStages = [
-    ...templateStages,
-    ...customStages.filter(cs => !templateStages.find(ts => ts.key === cs.key))
+    ...templateStages.map(s => ({ key: s.key, label: s.label, isCustom: false })),
+    ...customStages.filter(cs => !templateStages.find(ts => ts.key === cs.key)).map(cs => ({ ...cs, isCustom: true }))
   ];
+
+  const calculateProgress = () => {
+    const stageKeys = allStages.map(s => s.key);
+    const completedCount = stageKeys.filter(key => localWorkflow[key]).length;
+    return stageKeys.length > 0 ? Math.round((completedCount / stageKeys.length) * 100) : 0;
+  };
 
   return (
     <>
@@ -95,37 +120,67 @@ const ItemWorkflowEditor = ({
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Customize Workflow for this {itemType}</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              Customize Workflow
+              <Badge variant="outline" className="capitalize">{itemType}</Badge>
+            </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
+            {/* Progress indicator */}
+            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+              <span className="text-sm text-muted-foreground">Progress:</span>
+              <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-primary transition-all" 
+                  style={{ width: `${calculateProgress()}%` }} 
+                />
+              </div>
+              <span className="text-sm font-medium">{calculateProgress()}%</span>
+            </div>
+
+            {/* Workflow Stages */}
             <div>
-              <Label className="text-sm font-medium">Current Workflow Stages</Label>
-              <div className="mt-2 space-y-2">
+              <Label className="text-sm font-medium mb-2 block">Workflow Stages</Label>
+              <p className="text-xs text-muted-foreground mb-3">
+                Click stages to toggle completion. Template stages shown with custom stages marked.
+              </p>
+              <div className="space-y-2">
                 {allStages.map(stage => {
-                  const isTemplate = templateStages.find(ts => ts.key === stage.key);
-                  const isCustom = !isTemplate;
-                  const stageLabel = isTemplate ? stage.label : customStages.find(cs => cs.key === stage.key)?.label || stage.key;
+                  const isChecked = localWorkflow[stage.key];
                   
                   return (
                     <div
                       key={stage.key}
-                      className="flex items-center justify-between p-2 border rounded-lg bg-muted/50"
+                      className={`flex items-center justify-between p-3 border rounded-lg transition-all cursor-pointer ${
+                        isChecked
+                          ? 'bg-green-500/10 border-green-500/30'
+                          : 'bg-muted/50 hover:bg-muted'
+                      }`}
+                      onClick={() => handleToggleStage(stage.key)}
                     >
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm">{stageLabel}</span>
-                        {isCustom && (
+                      <div className="flex items-center gap-3">
+                        {isChecked ? (
+                          <Check className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <Circle className="h-4 w-4 text-muted-foreground" />
+                        )}
+                        <span className="text-sm">{stage.label}</span>
+                        {stage.isCustom && (
                           <Badge variant="secondary" className="text-xs">Custom</Badge>
                         )}
                       </div>
-                      {isCustom && (
+                      {stage.isCustom && (
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleRemoveCustomStage(stage.key)}
-                          className="h-6 w-6 p-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveCustomStage(stage.key);
+                          }}
+                          className="h-6 w-6 p-0 hover:bg-destructive/10"
                         >
                           <X className="h-3 w-3 text-destructive" />
                         </Button>
@@ -133,22 +188,35 @@ const ItemWorkflowEditor = ({
                     </div>
                   );
                 })}
+                
+                {allStages.length === 0 && (
+                  <p className="text-center py-4 text-muted-foreground text-sm">
+                    No workflow stages defined.
+                  </p>
+                )}
               </div>
             </div>
 
+            {/* Add Custom Stage */}
             <div className="border-t pt-4">
               <Label className="text-sm font-medium">Add Custom Stage</Label>
               <p className="text-xs text-muted-foreground mb-2">
-                Add a unique workflow step for this specific {itemType}
+                Add a unique workflow step for this specific {itemType}. Custom stages only affect this item.
               </p>
               <div className="flex gap-2">
                 <Input
                   placeholder="Stage name (e.g., Special Review)"
                   value={newStageLabel}
                   onChange={(e) => setNewStageLabel(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddCustomStage();
+                    }
+                  }}
                   className="flex-1"
                 />
-                <Button onClick={handleAddCustomStage} size="sm">
+                <Button onClick={handleAddCustomStage} size="sm" variant="secondary">
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
@@ -159,8 +227,8 @@ const ItemWorkflowEditor = ({
             <Button variant="outline" onClick={() => setIsOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave}>
-              Save Changes
+            <Button onClick={handleSave} disabled={isSaving}>
+              {isSaving ? 'Saving...' : 'Save Changes'}
             </Button>
           </DialogFooter>
         </DialogContent>

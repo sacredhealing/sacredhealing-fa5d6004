@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import FileUpload from '@/components/admin/FileUpload';
 import { useWorkflowTemplates } from '@/hooks/useWorkflowTemplates';
+import ItemWorkflowEditor from './ItemWorkflowEditor';
 
 interface CourseProject {
   id: string;
@@ -81,14 +82,36 @@ const CoursesProjectsSection = () => {
   };
 
   const calculateProgress = (workflow: Record<string, boolean>) => {
-    const stageKeys = courseStages.map(s => s.key);
-    const completed = stageKeys.filter(key => workflow[key]).length;
-    return stageKeys.length > 0 ? Math.round((completed / stageKeys.length) * 100) : 0;
+    // Include both template and custom stages
+    const allStageKeys = Object.keys(workflow);
+    const completed = allStageKeys.filter(key => workflow[key]).length;
+    return allStageKeys.length > 0 ? Math.round((completed / allStageKeys.length) * 100) : 0;
   };
 
   const isProjectFinished = (workflow: Record<string, boolean>) => {
-    const stageKeys = courseStages.map(s => s.key);
-    return stageKeys.every(key => workflow[key]);
+    const allStageKeys = Object.keys(workflow);
+    return allStageKeys.length > 0 && allStageKeys.every(key => workflow[key]);
+  };
+
+  // Get custom stages (keys not in template)
+  const getCustomStages = (workflow: Record<string, boolean>): { key: string; label: string }[] => {
+    const templateKeys = courseStages.map(s => s.key);
+    return Object.keys(workflow)
+      .filter(key => !templateKeys.includes(key))
+      .map(key => ({
+        key,
+        label: key.replace(/^custom_/, '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+      }));
+  };
+
+  const handleCourseWorkflowUpdate = async (projectId: string, updatedWorkflow: Record<string, boolean>) => {
+    const { error } = await supabase
+      .from('admin_projects')
+      .update({ workflow_stages: updatedWorkflow })
+      .eq('id', projectId);
+    
+    if (error) throw error;
+    fetchProjects();
   };
 
   const handleSubmit = async () => {
@@ -412,7 +435,17 @@ const CoursesProjectsSection = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">Workflow Stages</p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium">Workflow Stages</p>
+                      <ItemWorkflowEditor
+                        itemId={project.id}
+                        itemType="course"
+                        currentWorkflow={project.workflow_stages}
+                        templateStages={courseStages}
+                        onWorkflowUpdate={(workflow) => handleCourseWorkflowUpdate(project.id, workflow)}
+                        onRefresh={fetchProjects}
+                      />
+                    </div>
                     <div className="flex flex-wrap gap-2">
                       {courseStages.map((stage) => {
                         const isCompleted = project.workflow_stages[stage.key];
@@ -432,6 +465,29 @@ const CoursesProjectsSection = () => {
                               <Circle className="h-3.5 w-3.5" />
                             )}
                             {stage.label}
+                          </button>
+                        );
+                      })}
+                      {/* Custom stages */}
+                      {getCustomStages(project.workflow_stages).map((stage) => {
+                        const isCompleted = project.workflow_stages[stage.key];
+                        return (
+                          <button
+                            key={stage.key}
+                            onClick={() => toggleWorkflowStage(project, stage.key)}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                              isCompleted
+                                ? 'bg-primary/20 text-primary hover:bg-primary/30'
+                                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                            }`}
+                          >
+                            {isCompleted ? (
+                              <CheckCircle2 className="h-3.5 w-3.5" />
+                            ) : (
+                              <Circle className="h-3.5 w-3.5" />
+                            )}
+                            {stage.label}
+                            <Badge variant="secondary" className="text-[10px] py-0 px-1 ml-1">Custom</Badge>
                           </button>
                         );
                       })}
