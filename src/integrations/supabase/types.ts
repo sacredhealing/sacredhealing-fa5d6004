@@ -2251,9 +2251,16 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           created_at: string
+          daily_goal_minutes: number
+          evening_reminder_time: string
           full_name: string | null
           id: string
           last_login_date: string | null
+          midday_reminder_time: string
+          morning_reminder_time: string
+          notification_style: string
+          onboarding_completed: boolean
+          preferred_practice_duration: number
           referral_code: string | null
           referred_by: string | null
           streak_days: number
@@ -2266,9 +2273,16 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          daily_goal_minutes?: number
+          evening_reminder_time?: string
           full_name?: string | null
           id?: string
           last_login_date?: string | null
+          midday_reminder_time?: string
+          morning_reminder_time?: string
+          notification_style?: string
+          onboarding_completed?: boolean
+          preferred_practice_duration?: number
           referral_code?: string | null
           referred_by?: string | null
           streak_days?: number
@@ -2281,9 +2295,16 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          daily_goal_minutes?: number
+          evening_reminder_time?: string
           full_name?: string | null
           id?: string
           last_login_date?: string | null
+          midday_reminder_time?: string
+          morning_reminder_time?: string
+          notification_style?: string
+          onboarding_completed?: boolean
+          preferred_practice_duration?: number
           referral_code?: string | null
           referred_by?: string | null
           streak_days?: number
@@ -2736,6 +2757,138 @@ export type Database = {
         }
         Relationships: []
       }
+      spiritual_path_days: {
+        Row: {
+          affirmation: string | null
+          breathing_pattern_id: string | null
+          created_at: string
+          day_number: number
+          description: string | null
+          evening_meditation_id: string | null
+          id: string
+          journal_prompt: string | null
+          mantra_id: string | null
+          morning_meditation_id: string | null
+          path_id: string
+          shc_reward: number
+          title: string
+        }
+        Insert: {
+          affirmation?: string | null
+          breathing_pattern_id?: string | null
+          created_at?: string
+          day_number: number
+          description?: string | null
+          evening_meditation_id?: string | null
+          id?: string
+          journal_prompt?: string | null
+          mantra_id?: string | null
+          morning_meditation_id?: string | null
+          path_id: string
+          shc_reward?: number
+          title: string
+        }
+        Update: {
+          affirmation?: string | null
+          breathing_pattern_id?: string | null
+          created_at?: string
+          day_number?: number
+          description?: string | null
+          evening_meditation_id?: string | null
+          id?: string
+          journal_prompt?: string | null
+          mantra_id?: string | null
+          morning_meditation_id?: string | null
+          path_id?: string
+          shc_reward?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "spiritual_path_days_breathing_pattern_id_fkey"
+            columns: ["breathing_pattern_id"]
+            isOneToOne: false
+            referencedRelation: "breathing_patterns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "spiritual_path_days_evening_meditation_id_fkey"
+            columns: ["evening_meditation_id"]
+            isOneToOne: false
+            referencedRelation: "meditations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "spiritual_path_days_mantra_id_fkey"
+            columns: ["mantra_id"]
+            isOneToOne: false
+            referencedRelation: "mantras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "spiritual_path_days_morning_meditation_id_fkey"
+            columns: ["morning_meditation_id"]
+            isOneToOne: false
+            referencedRelation: "meditations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "spiritual_path_days_path_id_fkey"
+            columns: ["path_id"]
+            isOneToOne: false
+            referencedRelation: "spiritual_paths"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      spiritual_paths: {
+        Row: {
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          difficulty: string
+          duration_days: number
+          goal_types: string[]
+          id: string
+          is_active: boolean
+          order_index: number
+          shc_reward_total: number
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          difficulty?: string
+          duration_days?: number
+          goal_types?: string[]
+          id?: string
+          is_active?: boolean
+          order_index?: number
+          shc_reward_total?: number
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          difficulty?: string
+          duration_days?: number
+          goal_types?: string[]
+          id?: string
+          is_active?: boolean
+          order_index?: number
+          shc_reward_total?: number
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       support_requests: {
         Row: {
           category: string
@@ -2953,6 +3106,122 @@ export type Database = {
         }
         Relationships: []
       }
+      user_daily_activities: {
+        Row: {
+          activity_date: string
+          created_at: string
+          evening_completed: boolean
+          evening_completed_at: string | null
+          evening_meditation_id: string | null
+          id: string
+          midday_completed: boolean
+          midday_completed_at: string | null
+          mood_evening: number | null
+          mood_morning: number | null
+          morning_completed: boolean
+          morning_completed_at: string | null
+          morning_meditation_id: string | null
+          shc_earned: number
+          user_id: string
+        }
+        Insert: {
+          activity_date?: string
+          created_at?: string
+          evening_completed?: boolean
+          evening_completed_at?: string | null
+          evening_meditation_id?: string | null
+          id?: string
+          midday_completed?: boolean
+          midday_completed_at?: string | null
+          mood_evening?: number | null
+          mood_morning?: number | null
+          morning_completed?: boolean
+          morning_completed_at?: string | null
+          morning_meditation_id?: string | null
+          shc_earned?: number
+          user_id: string
+        }
+        Update: {
+          activity_date?: string
+          created_at?: string
+          evening_completed?: boolean
+          evening_completed_at?: string | null
+          evening_meditation_id?: string | null
+          id?: string
+          midday_completed?: boolean
+          midday_completed_at?: string | null
+          mood_evening?: number | null
+          mood_morning?: number | null
+          morning_completed?: boolean
+          morning_completed_at?: string | null
+          morning_meditation_id?: string | null
+          shc_earned?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_daily_activities_evening_meditation_id_fkey"
+            columns: ["evening_meditation_id"]
+            isOneToOne: false
+            referencedRelation: "meditations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_daily_activities_morning_meditation_id_fkey"
+            columns: ["morning_meditation_id"]
+            isOneToOne: false
+            referencedRelation: "meditations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_journal_entries: {
+        Row: {
+          content: string | null
+          created_at: string
+          entry_date: string
+          gratitude_items: string[]
+          id: string
+          mood: number | null
+          path_day_id: string | null
+          prompt: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          entry_date?: string
+          gratitude_items?: string[]
+          id?: string
+          mood?: number | null
+          path_day_id?: string | null
+          prompt?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          entry_date?: string
+          gratitude_items?: string[]
+          id?: string
+          mood?: number | null
+          path_day_id?: string | null
+          prompt?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_journal_entries_path_day_id_fkey"
+            columns: ["path_day_id"]
+            isOneToOne: false
+            referencedRelation: "spiritual_path_days"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_memberships: {
         Row: {
           created_at: string
@@ -2993,6 +3262,50 @@ export type Database = {
             columns: ["tier_id"]
             isOneToOne: false
             referencedRelation: "membership_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_path_progress: {
+        Row: {
+          completed_at: string | null
+          current_day: number
+          id: string
+          is_active: boolean
+          last_activity_at: string
+          path_id: string
+          started_at: string
+          total_shc_earned: number
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          current_day?: number
+          id?: string
+          is_active?: boolean
+          last_activity_at?: string
+          path_id: string
+          started_at?: string
+          total_shc_earned?: number
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          current_day?: number
+          id?: string
+          is_active?: boolean
+          last_activity_at?: string
+          path_id?: string
+          started_at?: string
+          total_shc_earned?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_path_progress_path_id_fkey"
+            columns: ["path_id"]
+            isOneToOne: false
+            referencedRelation: "spiritual_paths"
             referencedColumns: ["id"]
           },
         ]
@@ -3038,6 +3351,30 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_spiritual_goals: {
+        Row: {
+          created_at: string
+          goal_type: string
+          id: string
+          priority: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          goal_type: string
+          id?: string
+          priority?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          goal_type?: string
+          id?: string
+          priority?: number | null
           user_id?: string
         }
         Relationships: []
