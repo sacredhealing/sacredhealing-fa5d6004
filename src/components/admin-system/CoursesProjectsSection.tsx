@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import FileUpload from '@/components/admin/FileUpload';
+import { useWorkflowTemplates } from '@/hooks/useWorkflowTemplates';
 
 interface CourseProject {
   id: string;
@@ -26,26 +27,9 @@ interface CourseProject {
   file_urls?: string[];
 }
 
-const COURSE_WORKFLOW_STAGES = [
-  'Idea',
-  'Arrangement',
-  'PDF Text',
-  'YouTube to Studio One',
-  'Music to Meditations and Audios',
-  'Mix',
-  'Master',
-  'Videos',
-  'Cover',
-  'Description'
-];
-
-const DEFAULT_WORKFLOW: Record<string, boolean> = COURSE_WORKFLOW_STAGES.reduce((acc, stage) => {
-  acc[stage] = false;
-  return acc;
-}, {} as Record<string, boolean>);
-
 const CoursesProjectsSection = () => {
   const { session } = useAuth();
+  const { getStagesForType, createDefaultWorkflow, loading: templatesLoading } = useWorkflowTemplates();
   const [projects, setProjects] = useState<CourseProject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -57,12 +41,19 @@ const CoursesProjectsSection = () => {
     file_url: ''
   });
 
+  // Get workflow stages from templates
+  const courseStages = getStagesForType('course');
+
   useEffect(() => {
-    fetchProjects();
-  }, []);
+    if (!templatesLoading) {
+      fetchProjects();
+    }
+  }, [templatesLoading]);
 
   const fetchProjects = async () => {
     try {
+      const defaultWorkflow = createDefaultWorkflow('course');
+      
       const { data, error } = await supabase
         .from('admin_projects')
         .select('*')
@@ -74,7 +65,7 @@ const CoursesProjectsSection = () => {
 
       const formattedProjects = (data || []).map(project => ({
         ...project,
-        workflow_stages: (project.workflow_stages as Record<string, boolean>) || DEFAULT_WORKFLOW,
+        workflow_stages: { ...defaultWorkflow, ...(project.workflow_stages as Record<string, boolean>) },
         file_urls: Array.isArray(project.file_urls) 
           ? (project.file_urls as unknown as string[]) 
           : []
@@ -90,13 +81,14 @@ const CoursesProjectsSection = () => {
   };
 
   const calculateProgress = (workflow: Record<string, boolean>) => {
-    const stages = COURSE_WORKFLOW_STAGES;
-    const completed = stages.filter(stage => workflow[stage]).length;
-    return Math.round((completed / stages.length) * 100);
+    const stageKeys = courseStages.map(s => s.key);
+    const completed = stageKeys.filter(key => workflow[key]).length;
+    return stageKeys.length > 0 ? Math.round((completed / stageKeys.length) * 100) : 0;
   };
 
   const isProjectFinished = (workflow: Record<string, boolean>) => {
-    return COURSE_WORKFLOW_STAGES.every(stage => workflow[stage]);
+    const stageKeys = courseStages.map(s => s.key);
+    return stageKeys.every(key => workflow[key]);
   };
 
   const handleSubmit = async () => {
@@ -127,7 +119,7 @@ const CoursesProjectsSection = () => {
             description: formData.description,
             type: 'course',
             status: 'planning',
-            workflow_stages: DEFAULT_WORKFLOW,
+            workflow_stages: createDefaultWorkflow('course'),
             file_url: formData.file_url || null
           });
 
@@ -422,12 +414,12 @@ const CoursesProjectsSection = () => {
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Workflow Stages</p>
                     <div className="flex flex-wrap gap-2">
-                      {COURSE_WORKFLOW_STAGES.map((stage) => {
-                        const isCompleted = project.workflow_stages[stage];
+                      {courseStages.map((stage) => {
+                        const isCompleted = project.workflow_stages[stage.key];
                         return (
                           <button
-                            key={stage}
-                            onClick={() => toggleWorkflowStage(project, stage)}
+                            key={stage.key}
+                            onClick={() => toggleWorkflowStage(project, stage.key)}
                             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
                               isCompleted
                                 ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
@@ -439,7 +431,7 @@ const CoursesProjectsSection = () => {
                             ) : (
                               <Circle className="h-3.5 w-3.5" />
                             )}
-                            {stage}
+                            {stage.label}
                           </button>
                         );
                       })}

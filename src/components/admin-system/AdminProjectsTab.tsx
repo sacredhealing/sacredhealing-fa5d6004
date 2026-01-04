@@ -12,34 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import ProjectDetailDialog from './ProjectDetailDialog';
 import FileUpload from '@/components/admin/FileUpload';
-
-// Default workflow stages for all projects
-export const DEFAULT_PROJECT_WORKFLOW = {
-  idea: false,
-  finished_coding: false,
-  integrated_into_app: false,
-  added_to_affiliate: false,
-  bought_domain: false,
-  released_into_app: false,
-};
-
-export const PROJECT_WORKFLOW_LABELS: Record<string, string> = {
-  idea: 'Idea',
-  finished_coding: 'Finished Coding',
-  integrated_into_app: 'Integrated into the App',
-  added_to_affiliate: 'Added to Affiliate',
-  bought_domain: 'Bought Domain',
-  released_into_app: 'Released into the App',
-};
-
-export interface ProjectWorkflowStages {
-  idea: boolean;
-  finished_coding: boolean;
-  integrated_into_app: boolean;
-  added_to_affiliate: boolean;
-  bought_domain: boolean;
-  released_into_app: boolean;
-}
+import { useWorkflowTemplates } from '@/hooks/useWorkflowTemplates';
 
 interface Project {
   id: string;
@@ -50,12 +23,13 @@ interface Project {
   description: string | null;
   archived: boolean;
   created_at: string;
-  workflow_stages?: ProjectWorkflowStages;
+  workflow_stages?: Record<string, boolean>;
   file_url?: string;
   file_urls?: string[];
 }
 
 const AdminProjectsTab = () => {
+  const { getStagesForType, createDefaultWorkflow, loading: templatesLoading } = useWorkflowTemplates();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -95,9 +69,10 @@ const AdminProjectsTab = () => {
     if (error) {
       toast.error('Failed to fetch projects');
     } else {
+      const defaultWorkflow = createDefaultWorkflow('project');
       const typedProjects = (data || []).map(p => ({
         ...p,
-        workflow_stages: p.workflow_stages as unknown as ProjectWorkflowStages | undefined,
+        workflow_stages: { ...defaultWorkflow, ...(p.workflow_stages as Record<string, boolean>) },
         file_urls: Array.isArray(p.file_urls) ? (p.file_urls as unknown as string[]) : [],
       })) as Project[];
       setProjects(typedProjects);
@@ -184,7 +159,7 @@ const AdminProjectsTab = () => {
         .insert([{ 
           ...formData, 
           file_url: formData.file_url || null,
-          workflow_stages: DEFAULT_PROJECT_WORKFLOW 
+          workflow_stages: createDefaultWorkflow('project') 
         }])
         .select()
         .single();
