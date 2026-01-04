@@ -81,7 +81,7 @@ export const TimeSelector: React.FC<TimeSelectorProps> = ({
                 id={slot.id}
                 type="time"
                 value={slot.value}
-                onChange={(e) => slot.onChange(e.target.value)}
+                onChange={(e) => slot.onChange(e.target.value || slot.value)}
                 className="w-28 bg-background/50 border-border/50"
               />
             </div>

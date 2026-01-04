@@ -62,6 +62,11 @@ export const useOnboarding = () => {
         });
       }
 
+      // Ensure times are valid (not empty) - use defaults if empty
+      const morningTime = data.morningTime || '07:00';
+      const middayTime = data.middayTime || '12:00';
+      const eveningTime = data.eveningTime || '21:00';
+
       // Update profile with preferences
       const { error: profileError } = await supabase
         .from('profiles')
@@ -70,9 +75,9 @@ export const useOnboarding = () => {
           preferred_practice_duration: data.practiceDuration,
           daily_goal_minutes: data.practiceDuration,
           notification_style: data.notificationStyle,
-          morning_reminder_time: data.morningTime,
-          midday_reminder_time: data.middayTime,
-          evening_reminder_time: data.eveningTime,
+          morning_reminder_time: morningTime,
+          midday_reminder_time: middayTime,
+          evening_reminder_time: eveningTime,
         })
         .eq('user_id', user.id);
 
