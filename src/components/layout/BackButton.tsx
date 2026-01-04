@@ -12,9 +12,13 @@ export const BackButton: React.FC = () => {
     return null;
   }
 
-  const handleBack = () => {
-    // Check if there's history to go back to
-    if (window.history.length > 2) {
+  const handleBack = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Check if there's meaningful history to go back to
+    // window.history.length includes the current page, so we need more than 2
+    if (window.history.state?.idx > 0) {
       navigate(-1);
     } else {
       // Fallback to dashboard/home
@@ -24,6 +28,7 @@ export const BackButton: React.FC = () => {
 
   return (
     <button
+      type="button"
       onClick={handleBack}
       className="fixed top-4 left-4 z-50 p-2 rounded-full bg-background/80 backdrop-blur-sm border border-border/50 shadow-lg hover:bg-accent transition-colors"
       aria-label="Go back"
