@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Upload, Plus, Trash2, Music, Loader2, ArrowLeft, Edit2, X, Image, Check, Disc, Sparkles, AlertCircle, Clock, RefreshCw } from 'lucide-react';
+import { Upload, Plus, Trash2, Music, Loader2, ArrowLeft, Edit2, X, Image, Check, Disc, Sparkles, AlertCircle, Clock, RefreshCw, Filter, CheckSquare, Square, Eye } from 'lucide-react';
 import AlbumManager from '@/components/admin/AlbumManager';
 import { TrackAnalysisSection } from '@/components/admin/TrackAnalysisSection';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -44,6 +45,14 @@ interface MusicTrack {
 }
 
 const GENRES = ['beats', 'meditation', 'mystic', 'reggae', 'hip-hop', 'reggaeton', 'indian', 'shamanic'];
+const STATUS_FILTERS = [
+  { value: 'all', label: 'All Tracks' },
+  { value: 'pending', label: 'Pending Analysis' },
+  { value: 'analyzing', label: 'Analyzing' },
+  { value: 'completed', label: 'Needs Review' },
+  { value: 'approved', label: 'Approved' },
+  { value: 'failed', label: 'Failed' },
+];
 
 const parseDuration = (timeStr: string): number => {
   const parts = timeStr.split(':').map(p => parseInt(p) || 0);
@@ -65,6 +74,12 @@ const AdminMusic: React.FC = () => {
   const [tracks, setTracks] = useState<MusicTrack[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
+  
+  // Filter and selection state
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedTracks, setSelectedTracks] = useState<Set<string>>(new Set());
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
+  const [previewTrack, setPreviewTrack] = useState<MusicTrack | null>(null);
   
   // Form state
   const [title, setTitle] = useState('');
@@ -109,6 +124,99 @@ const AdminMusic: React.FC = () => {
       setTracks(data || []);
     }
     setIsLoading(false);
+  };
+
+  const filteredTracks = tracks.filter(track => {
+    if (statusFilter === 'all') return true;
+    if (statusFilter === 'pending') return !track.analysis_status || track.analysis_status === 'pending';
+    return track.analysis_status === statusFilter;
+  });
+
+  const toggleTrackSelection = (trackId: string) => {
+    const newSelection = new Set(selectedTracks);
+    if (newSelection.has(trackId)) {
+      newSelection.delete(trackId);
+    } else {
+      newSelection.add(trackId);
+    }
+    setSelectedTracks(newSelection);
+  };
+
+  const selectAllVisible = () => {
+    const newSelection = new Set(filteredTracks.map(t => t.id));
+    setSelectedTracks(newSelection);
+  };
+
+  const clearSelection = () => {
+    setSelectedTracks(new Set());
+  };
+
+  const triggerAnalysis = async (track: MusicTrack) => {
+    try {
+      const response = await supabase.functions.invoke('analyze-music-track', {
+        body: {
+          trackId: track.id,
+          title: track.title,
+          artist: track.artist,
+          genre: track.genre,
+          duration_seconds: track.duration_seconds,
+          bpm: track.bpm,
+          description: track.description,
+        },
+      });
+
+      if (response.error) throw response.error;
+      return true;
+    } catch (error) {
+      console.error('Analysis failed for track:', track.id, error);
+      return false;
+    }
+  };
+
+  const bulkAnalyze = async () => {
+    if (selectedTracks.size === 0) return;
+    setIsBulkProcessing(true);
+
+    const tracksToAnalyze = tracks.filter(t => selectedTracks.has(t.id));
+    let successCount = 0;
+
+    for (const track of tracksToAnalyze) {
+      const success = await triggerAnalysis(track);
+      if (success) successCount++;
+    }
+
+    toast({
+      title: 'Bulk Analysis Started',
+      description: `Started analysis for ${successCount}/${tracksToAnalyze.length} tracks`,
+    });
+
+    setIsBulkProcessing(false);
+    clearSelection();
+    fetchTracks();
+  };
+
+  const bulkApprove = async () => {
+    if (selectedTracks.size === 0) return;
+    setIsBulkProcessing(true);
+
+    const { error } = await supabase
+      .from('music_tracks')
+      .update({ 
+        analysis_status: 'approved',
+        approved_at: new Date().toISOString(),
+      })
+      .in('id', Array.from(selectedTracks))
+      .eq('analysis_status', 'completed');
+
+    if (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Approved', description: `Approved ${selectedTracks.size} tracks` });
+    }
+
+    setIsBulkProcessing(false);
+    clearSelection();
+    fetchTracks();
   };
 
   const uploadImage = async (file: File): Promise<string | null> => {
@@ -195,8 +303,8 @@ const AdminMusic: React.FC = () => {
         .from('songs')
         .getPublicUrl(fullName);
 
-      // Insert track record
-      const { error: insertError } = await supabase
+      // Insert track record with pending analysis status
+      const { data: insertedTrack, error: insertError } = await supabase
         .from('music_tracks')
         .insert({
           title,
@@ -209,15 +317,46 @@ const AdminMusic: React.FC = () => {
           cover_image_url: coverUrl,
           price_usd: parseFloat(priceUsd),
           bpm: bpm ? parseInt(bpm) : null,
-          shc_reward: parseInt(shcReward)
-        });
+          shc_reward: parseInt(shcReward),
+          analysis_status: 'pending',
+        })
+        .select()
+        .single();
 
       if (insertError) throw insertError;
 
       toast({
         title: "Track added!",
-        description: `"${title}" has been uploaded successfully`
+        description: `"${title}" has been uploaded. Starting AI analysis...`
       });
+
+      // Auto-trigger AI analysis
+      if (insertedTrack) {
+        try {
+          await supabase.functions.invoke('analyze-music-track', {
+            body: {
+              trackId: insertedTrack.id,
+              title: insertedTrack.title,
+              artist: insertedTrack.artist,
+              genre: insertedTrack.genre,
+              duration_seconds: insertedTrack.duration_seconds,
+              bpm: insertedTrack.bpm,
+              description: insertedTrack.description,
+            },
+          });
+          toast({
+            title: "Analysis Started",
+            description: "AI is generating spiritual metadata for your track"
+          });
+        } catch (analysisError) {
+          console.error('Auto-analysis failed:', analysisError);
+          toast({
+            title: "Analysis Pending",
+            description: "Track uploaded. You can manually trigger analysis later.",
+            variant: "default"
+          });
+        }
+      }
 
       // Reset form
       setTitle('');
@@ -366,9 +505,33 @@ const AdminMusic: React.FC = () => {
     }
   };
 
+  const getStatusCounts = () => {
+    const counts: Record<string, number> = {
+      all: tracks.length,
+      pending: 0,
+      analyzing: 0,
+      completed: 0,
+      approved: 0,
+      failed: 0,
+    };
+
+    tracks.forEach(track => {
+      const status = track.analysis_status || 'pending';
+      if (counts[status] !== undefined) {
+        counts[status]++;
+      } else {
+        counts.pending++;
+      }
+    });
+
+    return counts;
+  };
+
+  const statusCounts = getStatusCounts();
+
   return (
     <div className="min-h-screen bg-background p-6">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
@@ -531,6 +694,13 @@ const AdminMusic: React.FC = () => {
               </div>
             </div>
             
+            <div className="bg-accent/10 border border-accent/30 rounded-lg p-3 flex items-start gap-2">
+              <Sparkles className="w-5 h-5 text-accent shrink-0 mt-0.5" />
+              <p className="text-sm text-muted-foreground">
+                <strong className="text-foreground">Auto-Analysis:</strong> After upload, AI will automatically generate mood, spiritual path, intended use, and affirmation for this track.
+              </p>
+            </div>
+            
             <Button type="submit" disabled={isUploading} className="w-full">
               {isUploading ? (
                 <>
@@ -547,26 +717,92 @@ const AdminMusic: React.FC = () => {
           </form>
         </div>
 
+        {/* Filters and Bulk Actions */}
+        <div className="bg-gradient-card border border-border/50 rounded-2xl p-4 mb-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Filter size={16} className="text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Filter:</span>
+            </div>
+            
+            <div className="flex flex-wrap gap-2">
+              {STATUS_FILTERS.map(filter => (
+                <Button
+                  key={filter.value}
+                  variant={statusFilter === filter.value ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setStatusFilter(filter.value)}
+                  className="text-xs"
+                >
+                  {filter.label}
+                  <Badge variant="secondary" className="ml-1 text-xs">
+                    {statusCounts[filter.value] || 0}
+                  </Badge>
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Bulk Actions */}
+          {selectedTracks.size > 0 && (
+            <div className="flex flex-wrap items-center gap-3 mt-4 pt-4 border-t border-border/50">
+              <span className="text-sm font-medium">{selectedTracks.size} selected</span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={bulkAnalyze}
+                disabled={isBulkProcessing}
+              >
+                {isBulkProcessing ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Sparkles size={14} className="mr-1" />}
+                Analyze Selected
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={bulkApprove}
+                disabled={isBulkProcessing}
+              >
+                {isBulkProcessing ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Check size={14} className="mr-1" />}
+                Approve Selected
+              </Button>
+              <Button variant="ghost" size="sm" onClick={clearSelection}>
+                Clear Selection
+              </Button>
+            </div>
+          )}
+
+          {filteredTracks.length > 0 && selectedTracks.size === 0 && (
+            <div className="mt-4 pt-4 border-t border-border/50">
+              <Button variant="ghost" size="sm" onClick={selectAllVisible}>
+                <CheckSquare size={14} className="mr-1" />
+                Select All Visible ({filteredTracks.length})
+              </Button>
+            </div>
+          )}
+        </div>
+
         {/* Tracks List */}
         <div>
           <h2 className="text-xl font-heading font-semibold text-foreground mb-4">
-            Your Tracks ({tracks.length})
+            {statusFilter === 'all' ? 'All Tracks' : STATUS_FILTERS.find(f => f.value === statusFilter)?.label} ({filteredTracks.length})
           </h2>
           
           {isLoading ? (
             <div className="flex justify-center py-8">
               <Loader2 className="w-6 h-6 animate-spin text-primary" />
             </div>
-          ) : tracks.length === 0 ? (
+          ) : filteredTracks.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">
-              No tracks yet. Upload your first one above!
+              {statusFilter === 'all' ? 'No tracks yet. Upload your first one above!' : `No tracks with status "${statusFilter}"`}
             </p>
           ) : (
             <div className="space-y-3">
-              {tracks.map((track) => (
+              {filteredTracks.map((track) => (
                 <div
                   key={track.id}
-                  className="bg-gradient-card border border-border/50 rounded-xl overflow-hidden"
+                  className={`bg-gradient-card border rounded-xl overflow-hidden transition-colors ${
+                    selectedTracks.has(track.id) ? 'border-primary' : 'border-border/50'
+                  }`}
                 >
                   {editingTrack?.id === track.id ? (
                     // Edit mode
@@ -692,6 +928,18 @@ const AdminMusic: React.FC = () => {
                   ) : (
                     // View mode
                     <div className="flex items-center gap-4 p-4">
+                      {/* Selection checkbox */}
+                      <button
+                        onClick={() => toggleTrackSelection(track.id)}
+                        className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {selectedTracks.has(track.id) ? (
+                          <CheckSquare size={20} className="text-primary" />
+                        ) : (
+                          <Square size={20} />
+                        )}
+                      </button>
+                      
                       <div className="w-14 h-14 rounded-lg overflow-hidden bg-muted shrink-0">
                         {track.cover_image_url ? (
                           <img src={track.cover_image_url} alt="" className="w-full h-full object-cover" />
@@ -706,28 +954,42 @@ const AdminMusic: React.FC = () => {
                         <p className="text-sm text-muted-foreground truncate">
                           {track.artist} • {track.genre.replace('-', ' ')} • {formatDuration(track.duration_seconds)}
                         </p>
-                        <p className="text-xs text-accent">
-                          ${track.price_usd} • {track.purchase_count} sales • {track.play_count || 0} plays
-                        </p>
-                        {/* Analysis status badge */}
-                        {track.analysis_status && (
-                          <div className="mt-1">
-                            {track.analysis_status === 'approved' && (
-                              <Badge className="bg-green-500/20 text-green-400 text-xs"><Check className="w-3 h-3 mr-1" />Approved</Badge>
-                            )}
-                            {track.analysis_status === 'completed' && (
-                              <Badge className="bg-amber-500/20 text-amber-400 text-xs"><AlertCircle className="w-3 h-3 mr-1" />Needs Review</Badge>
-                            )}
-                            {track.analysis_status === 'analyzing' && (
-                              <Badge className="bg-blue-500/20 text-blue-400 text-xs"><RefreshCw className="w-3 h-3 mr-1 animate-spin" />Analyzing</Badge>
-                            )}
-                            {track.analysis_status === 'pending' && (
-                              <Badge className="bg-muted text-muted-foreground text-xs"><Clock className="w-3 h-3 mr-1" />Pending</Badge>
-                            )}
-                          </div>
-                        )}
+                        <div className="flex flex-wrap items-center gap-2 mt-1">
+                          <span className="text-xs text-accent">
+                            ${track.price_usd} • {track.purchase_count} sales
+                          </span>
+                          {/* Analysis status badge */}
+                          {track.analysis_status === 'approved' && (
+                            <Badge className="bg-green-500/20 text-green-400 text-xs"><Check className="w-3 h-3 mr-1" />Approved</Badge>
+                          )}
+                          {track.analysis_status === 'completed' && (
+                            <Badge className="bg-amber-500/20 text-amber-400 text-xs"><AlertCircle className="w-3 h-3 mr-1" />Needs Review</Badge>
+                          )}
+                          {track.analysis_status === 'analyzing' && (
+                            <Badge className="bg-blue-500/20 text-blue-400 text-xs"><RefreshCw className="w-3 h-3 mr-1 animate-spin" />Analyzing</Badge>
+                          )}
+                          {track.analysis_status === 'failed' && (
+                            <Badge className="bg-red-500/20 text-red-400 text-xs"><AlertCircle className="w-3 h-3 mr-1" />Failed</Badge>
+                          )}
+                          {(!track.analysis_status || track.analysis_status === 'pending') && (
+                            <Badge className="bg-muted text-muted-foreground text-xs"><Clock className="w-3 h-3 mr-1" />Pending</Badge>
+                          )}
+                          {/* Path badge */}
+                          {track.spiritual_path && (
+                            <Badge variant="outline" className="text-xs">{track.spiritual_path}</Badge>
+                          )}
+                        </div>
                       </div>
                       <div className="flex items-center gap-1">
+                        {/* Quick preview button */}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setPreviewTrack(track)}
+                          title="Quick Preview"
+                        >
+                          <Eye size={18} />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"
@@ -758,6 +1020,93 @@ const AdminMusic: React.FC = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Quick Preview Dialog */}
+      <Dialog open={!!previewTrack} onOpenChange={() => setPreviewTrack(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Quick Preview</DialogTitle>
+          </DialogHeader>
+          {previewTrack && (
+            <div className="space-y-4">
+              <div className="flex items-start gap-4">
+                {previewTrack.cover_image_url ? (
+                  <img src={previewTrack.cover_image_url} alt="" className="w-20 h-20 rounded-lg object-cover" />
+                ) : (
+                  <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center">
+                    <Music size={24} className="text-muted-foreground" />
+                  </div>
+                )}
+                <div>
+                  <h3 className="font-semibold">{previewTrack.title}</h3>
+                  <p className="text-sm text-muted-foreground">{previewTrack.artist}</p>
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {previewTrack.mood && <Badge variant="secondary" className="text-xs">{previewTrack.mood}</Badge>}
+                    {previewTrack.spiritual_path && <Badge variant="outline" className="text-xs">{previewTrack.spiritual_path}</Badge>}
+                    {previewTrack.intended_use && <Badge variant="outline" className="text-xs">{previewTrack.intended_use}</Badge>}
+                  </div>
+                </div>
+              </div>
+
+              {previewTrack.auto_generated_description && (
+                <div className="bg-muted/50 rounded-lg p-3">
+                  <p className="text-xs text-muted-foreground mb-1">AI-Generated Description</p>
+                  <p className="text-sm">{previewTrack.auto_generated_description}</p>
+                </div>
+              )}
+
+              {previewTrack.auto_generated_affirmation && (
+                <div className="bg-accent/10 border border-accent/30 rounded-lg p-3">
+                  <p className="text-xs text-muted-foreground mb-1">Affirmation</p>
+                  <p className="text-sm italic">"{previewTrack.auto_generated_affirmation}"</p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Energy:</span>{' '}
+                  <span className="capitalize">{previewTrack.energy_level || 'N/A'}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Best Time:</span>{' '}
+                  <span className="capitalize">{previewTrack.best_time_of_day || 'N/A'}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Rhythm:</span>{' '}
+                  <span className="capitalize">{previewTrack.rhythm_type || 'N/A'}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Vocal:</span>{' '}
+                  <span className="capitalize">{previewTrack.vocal_type || 'N/A'}</span>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <Button className="flex-1" onClick={() => { setPreviewTrack(null); startEditing(previewTrack); }}>
+                  <Edit2 size={16} className="mr-1" />
+                  Edit Full Details
+                </Button>
+                {previewTrack.analysis_status === 'completed' && (
+                  <Button
+                    variant="outline"
+                    onClick={async () => {
+                      await supabase
+                        .from('music_tracks')
+                        .update({ analysis_status: 'approved', approved_at: new Date().toISOString() })
+                        .eq('id', previewTrack.id);
+                      setPreviewTrack(null);
+                      fetchTracks();
+                    }}
+                  >
+                    <Check size={16} className="mr-1" />
+                    Approve
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

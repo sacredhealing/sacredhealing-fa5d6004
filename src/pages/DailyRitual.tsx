@@ -1,7 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Sun, Cloud, Moon, Check, Sparkles, Play } from 'lucide-react';
+import { Sun, Cloud, Moon, Check, Sparkles, Play, Music, Headphones } from 'lucide-react';
 import { useDailyJourney } from '@/hooks/useDailyJourney';
+import { useDailyNudgeTracks } from '@/hooks/usePathTracks';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -16,6 +17,9 @@ const DailyRitual: React.FC = () => {
     completeEvening,
     getJourneyData 
   } = useDailyJourney();
+
+  // Get time-of-day appropriate tracks
+  const { data: nudgeTracks = [] } = useDailyNudgeTracks();
 
   const journeyData = getJourneyData();
 
@@ -165,6 +169,52 @@ const DailyRitual: React.FC = () => {
           );
         })}
       </div>
+
+      {/* Recommended Tracks for This Time */}
+      {nudgeTracks.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          className="mt-6"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-heading font-semibold text-foreground flex items-center gap-2">
+              <Headphones className="w-5 h-5 text-primary" />
+              Music for Now
+            </h2>
+            <Link to="/music" className="text-sm text-primary hover:underline">
+              Browse All
+            </Link>
+          </div>
+          
+          <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4">
+            {nudgeTracks.slice(0, 5).map((track) => (
+              <Link
+                key={track.id}
+                to={`/music/track/${track.id}`}
+                className="shrink-0 w-32 group"
+              >
+                <div className="aspect-square rounded-lg overflow-hidden bg-muted mb-2">
+                  {track.cover_image_url ? (
+                    <img
+                      src={track.cover_image_url}
+                      alt={track.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Music className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                  )}
+                </div>
+                <h4 className="font-medium text-sm text-foreground truncate">{track.title}</h4>
+                <p className="text-xs text-muted-foreground truncate">{track.artist}</p>
+              </Link>
+            ))}
+          </div>
+        </motion.div>
+      )}
 
       {/* Journal Link */}
       <motion.div
