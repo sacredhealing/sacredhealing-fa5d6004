@@ -20,7 +20,8 @@ import {
   FolderKanban,
   Wind,
   AudioLines,
-  BarChart3
+  BarChart3,
+  Map
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -145,6 +146,13 @@ const adminSections = [
     icon: BarChart3,
     href: '/admin/analytics',
     color: 'text-emerald-500',
+  },
+  {
+    title: 'Spiritual Paths',
+    description: 'Manage daily content for all 114 spiritual path days',
+    icon: Map,
+    href: '/admin/paths',
+    color: 'text-teal-500',
   },
 ];
 

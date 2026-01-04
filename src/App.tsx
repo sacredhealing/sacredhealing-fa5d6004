@@ -73,6 +73,7 @@ import SpiritualPaths from "./pages/SpiritualPaths";
 import PathDetail from "./pages/PathDetail";
 import DailyRitual from "./pages/DailyRitual";
 import Journal from "./pages/Journal";
+import AdminPaths from "./pages/AdminPaths";
 import "@/lib/performance"; // Initialize performance monitoring
 
 const App = () => (
@@ -152,6 +153,7 @@ const App = () => (
                 <Route path="/admin/breathing" element={<AdminBreathing />} />
                 <Route path="/admin/affirmation" element={<AdminAffirmation />} />
                 <Route path="/admin/analytics" element={<AdminAnalytics />} />
+                <Route path="/admin/paths" element={<AdminPaths />} />
               </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>
