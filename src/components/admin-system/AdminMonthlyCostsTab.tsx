@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Plus, Pencil, Trash2, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -34,7 +34,7 @@ const CATEGORIES = [
 
 const AdminMonthlyCostsTab = () => {
   const queryClient = useQueryClient();
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCost, setEditingCost] = useState<MonthlyCost | null>(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -73,7 +73,7 @@ const AdminMonthlyCostsTab = () => {
       queryClient.invalidateQueries({ queryKey: ['monthly-costs'] });
       toast.success('Cost added successfully');
       resetForm();
-      setIsAddDialogOpen(false);
+      setIsDialogOpen(false);
     },
     onError: () => {
       toast.error('Failed to add cost');
@@ -98,6 +98,7 @@ const AdminMonthlyCostsTab = () => {
       toast.success('Cost updated successfully');
       resetForm();
       setEditingCost(null);
+      setIsDialogOpen(false);
     },
     onError: () => {
       toast.error('Failed to update cost');
@@ -159,6 +160,21 @@ const AdminMonthlyCostsTab = () => {
       category: cost.category,
       notes: cost.notes || '',
     });
+    setIsDialogOpen(true);
+  };
+
+  const handleOpenAddDialog = () => {
+    resetForm();
+    setEditingCost(null);
+    setIsDialogOpen(true);
+  };
+
+  const handleDialogClose = (open: boolean) => {
+    if (!open) {
+      setEditingCost(null);
+      resetForm();
+    }
+    setIsDialogOpen(open);
   };
 
   const handleDelete = (id: string) => {
@@ -181,12 +197,13 @@ const AdminMonthlyCostsTab = () => {
     return CATEGORIES.find(c => c.value === value)?.label || value;
   };
 
-  const CostForm = () => (
+  // Form JSX rendered inline to avoid remounting on state changes
+  const formContent = (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="name">Name</Label>
+        <Label htmlFor="cost-name">Name</Label>
         <Input
-          id="name"
+          id="cost-name"
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           placeholder="e.g., Supabase Pro"
@@ -194,9 +211,9 @@ const AdminMonthlyCostsTab = () => {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="amount">Amount (€/month)</Label>
+        <Label htmlFor="cost-amount">Amount (€/month)</Label>
         <Input
-          id="amount"
+          id="cost-amount"
           type="number"
           step="0.01"
           min="0"
@@ -207,7 +224,7 @@ const AdminMonthlyCostsTab = () => {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="category">Category</Label>
+        <Label htmlFor="cost-category">Category</Label>
         <Select
           value={formData.category}
           onValueChange={(value) => setFormData({ ...formData, category: value })}
@@ -225,9 +242,9 @@ const AdminMonthlyCostsTab = () => {
         </Select>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="notes">Notes (optional)</Label>
+        <Label htmlFor="cost-notes">Notes (optional)</Label>
         <Textarea
-          id="notes"
+          id="cost-notes"
           value={formData.notes}
           onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
           placeholder="Additional notes..."
@@ -238,18 +255,13 @@ const AdminMonthlyCostsTab = () => {
         <Button type="submit" className="flex-1">
           {editingCost ? 'Update' : 'Add'} Cost
         </Button>
-        {editingCost && (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              setEditingCost(null);
-              resetForm();
-            }}
-          >
-            Cancel
-          </Button>
-        )}
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setIsDialogOpen(false)}
+        >
+          Cancel
+        </Button>
       </div>
     </form>
   );
@@ -282,6 +294,19 @@ const AdminMonthlyCostsTab = () => {
         </CardContent>
       </Card>
 
+      {/* Single controlled dialog for add/edit */}
+      <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingCost ? 'Edit Cost' : 'Add New Cost'}</DialogTitle>
+            <DialogDescription>
+              {editingCost ? 'Update this expense.' : 'Add a new monthly expense to track.'}
+            </DialogDescription>
+          </DialogHeader>
+          {formContent}
+        </DialogContent>
+      </Dialog>
+
       {/* Add New Cost */}
       <Card>
         <CardHeader>
@@ -290,21 +315,10 @@ const AdminMonthlyCostsTab = () => {
               <CardTitle>Monthly Expenses</CardTitle>
               <CardDescription>Track your recurring business costs</CardDescription>
             </div>
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={() => { resetForm(); setEditingCost(null); }}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Cost
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add New Cost</DialogTitle>
-                  <DialogDescription>Add a new monthly expense to track.</DialogDescription>
-                </DialogHeader>
-                <CostForm />
-              </DialogContent>
-            </Dialog>
+            <Button onClick={handleOpenAddDialog}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Cost
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -342,24 +356,13 @@ const AdminMonthlyCostsTab = () => {
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-1">
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handleEdit(cost)}
-                                  >
-                                    <Pencil className="h-4 w-4" />
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent>
-                                  <DialogHeader>
-                                    <DialogTitle>Edit Cost</DialogTitle>
-                                    <DialogDescription>Update this expense.</DialogDescription>
-                                  </DialogHeader>
-                                  <CostForm />
-                                </DialogContent>
-                              </Dialog>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleEdit(cost)}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
                               <Button
                                 variant="ghost"
                                 size="icon"
