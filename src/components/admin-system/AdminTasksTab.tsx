@@ -230,12 +230,12 @@ const AdminTasksTab = () => {
               </div>
               <div>
                 <Label>Project</Label>
-                <Select value={formData.project_id} onValueChange={(v) => setFormData({ ...formData, project_id: v })}>
+                <Select value={formData.project_id || "none"} onValueChange={(v) => setFormData({ ...formData, project_id: v === "none" ? "" : v })}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select project (optional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No Project</SelectItem>
+                    <SelectItem value="none">No Project</SelectItem>
                     {projects.map((p) => (
                       <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
                     ))}
