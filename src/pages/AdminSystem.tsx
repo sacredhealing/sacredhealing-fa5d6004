@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, FolderKanban, CheckSquare, FileText, Calendar, Settings, Users, LayoutDashboard, Music, GraduationCap, Workflow, DollarSign } from 'lucide-react';
+import { ArrowLeft, FolderKanban, CheckSquare, FileText, Calendar, Settings, Users, LayoutDashboard, Music, GraduationCap, Workflow, DollarSign, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -17,6 +17,7 @@ import MusicProjectsSection from '@/components/admin-system/MusicProjectsSection
 import CoursesProjectsSection from '@/components/admin-system/CoursesProjectsSection';
 import WorkflowTemplateManager from '@/components/admin-system/WorkflowTemplateManager';
 import AdminMonthlyCostsTab from '@/components/admin-system/AdminMonthlyCostsTab';
+import AdminRevenueTab from '@/components/admin-system/AdminRevenueTab';
 
 const AdminSystem = () => {
   const navigate = useNavigate();
@@ -60,6 +61,7 @@ const AdminSystem = () => {
     { id: 'content', label: 'Content', icon: FileText },
     { id: 'events', label: 'Events', icon: Calendar },
     { id: 'costs', label: 'Costs', icon: DollarSign },
+    { id: 'revenue', label: 'Revenue', icon: TrendingUp },
     { id: 'users', label: 'Users', icon: Users },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
@@ -127,6 +129,10 @@ const AdminSystem = () => {
 
           <TabsContent value="costs">
             <AdminMonthlyCostsTab />
+          </TabsContent>
+
+          <TabsContent value="revenue">
+            <AdminRevenueTab />
           </TabsContent>
 
           <TabsContent value="users">

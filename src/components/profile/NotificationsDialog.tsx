@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Bell, Moon, Sun, Sparkles, Heart, Leaf, Brain, Clock } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
+import { requestNotificationPermission, scheduleNotification, cancelNotification, rescheduleAllNotifications } from '@/services/NotificationService';
 
 interface NotificationsDialogProps {
   open: boolean;
@@ -58,16 +60,54 @@ export const NotificationsDialog: React.FC<NotificationsDialogProps> = ({ open, 
     return saved ? JSON.parse(saved) : defaultPreferences;
   });
 
-  React.useEffect(() => {
-    localStorage.setItem('notification-preferences', JSON.stringify(preferences));
+  // Save preferences and handle notification scheduling
+  const handlePreferenceChange = useCallback(async (
+    key: keyof NotificationPreferences, 
+    field: 'enabled' | 'time', 
+    value: boolean | string
+  ) => {
+    const newPreferences = {
+      ...preferences,
+      [key]: { ...preferences[key], [field]: value }
+    };
+    
+    setPreferences(newPreferences);
+    localStorage.setItem('notification-preferences', JSON.stringify(newPreferences));
+    
+    const setting = newPreferences[key];
+    
+    // Handle notification scheduling
+    if (field === 'enabled') {
+      if (value === true) {
+        // Request permission and schedule notification
+        const hasPermission = await requestNotificationPermission();
+        if (hasPermission) {
+          await scheduleNotification(key, setting.time);
+          toast.success('Reminder scheduled');
+        } else {
+          // Revert if permission denied
+          setPreferences(prev => ({
+            ...prev,
+            [key]: { ...prev[key], enabled: false }
+          }));
+          toast.error('Notification permission denied');
+        }
+      } else {
+        // Cancel notification
+        await cancelNotification(key);
+        toast.success('Reminder cancelled');
+      }
+    } else if (field === 'time' && setting.enabled) {
+      // Reschedule with new time
+      await scheduleNotification(key, value as string);
+      toast.success('Reminder time updated');
+    }
   }, [preferences]);
 
-  const updatePreference = (key: keyof NotificationPreferences, field: 'enabled' | 'time', value: boolean | string) => {
-    setPreferences(prev => ({
-      ...prev,
-      [key]: { ...prev[key], [field]: value }
-    }));
-  };
+  // Initialize notifications on mount
+  useEffect(() => {
+    rescheduleAllNotifications();
+  }, []);
 
   const reminderTypes = [
     {
@@ -173,7 +213,7 @@ export const NotificationsDialog: React.FC<NotificationsDialogProps> = ({ open, 
                     <Switch 
                       id={`${reminder.key}-toggle`}
                       checked={pref.enabled}
-                      onCheckedChange={(checked) => updatePreference(reminder.key, 'enabled', checked)}
+                      onCheckedChange={(checked) => handlePreferenceChange(reminder.key, 'enabled', checked)}
                     />
                   </div>
                   
@@ -184,7 +224,7 @@ export const NotificationsDialog: React.FC<NotificationsDialogProps> = ({ open, 
                         <span className="text-xs text-muted-foreground">Remind me at</span>
                         <Select 
                           value={pref.time}
-                          onValueChange={(value) => updatePreference(reminder.key, 'time', value)}
+                          onValueChange={(value) => handlePreferenceChange(reminder.key, 'time', value)}
                         >
                           <SelectTrigger className="w-28 h-8 text-xs">
                             <SelectValue />

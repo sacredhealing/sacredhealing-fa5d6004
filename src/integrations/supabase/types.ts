@@ -2361,6 +2361,48 @@ export type Database = {
           },
         ]
       }
+      revenue_records: {
+        Row: {
+          amount_shc: number | null
+          amount_usd: number
+          created_at: string | null
+          customer_email: string | null
+          customer_id: string | null
+          id: string
+          notes: string | null
+          payment_method: string | null
+          product_name: string | null
+          product_type: string
+          stripe_payment_id: string | null
+        }
+        Insert: {
+          amount_shc?: number | null
+          amount_usd?: number
+          created_at?: string | null
+          customer_email?: string | null
+          customer_id?: string | null
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          product_name?: string | null
+          product_type: string
+          stripe_payment_id?: string | null
+        }
+        Update: {
+          amount_shc?: number | null
+          amount_usd?: number
+          created_at?: string | null
+          customer_email?: string | null
+          customer_id?: string | null
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          product_name?: string | null
+          product_type?: string
+          stripe_payment_id?: string | null
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           comment: string
