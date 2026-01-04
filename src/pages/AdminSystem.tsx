@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, FolderKanban, CheckSquare, FileText, Calendar, Settings, Users, LayoutDashboard, Music, GraduationCap } from 'lucide-react';
+import { ArrowLeft, FolderKanban, CheckSquare, FileText, Calendar, Settings, Users, LayoutDashboard, Music, GraduationCap, Workflow } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -15,6 +15,7 @@ import AdminSettingsTab from '@/components/admin-system/AdminSettingsTab';
 import AdminUsersTab from '@/components/admin-system/AdminUsersTab';
 import MusicProjectsSection from '@/components/admin-system/MusicProjectsSection';
 import CoursesProjectsSection from '@/components/admin-system/CoursesProjectsSection';
+import WorkflowTemplateManager from '@/components/admin-system/WorkflowTemplateManager';
 
 const AdminSystem = () => {
   const navigate = useNavigate();
@@ -53,6 +54,7 @@ const AdminSystem = () => {
     { id: 'projects', label: 'Projects', icon: FolderKanban },
     { id: 'music', label: 'Music', icon: Music },
     { id: 'courses', label: 'Courses', icon: GraduationCap },
+    { id: 'workflows', label: 'Workflows', icon: Workflow },
     { id: 'tasks', label: 'Tasks', icon: CheckSquare },
     { id: 'content', label: 'Content', icon: FileText },
     { id: 'events', label: 'Events', icon: Calendar },
@@ -76,7 +78,7 @@ const AdminSystem = () => {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid grid-cols-4 md:grid-cols-8 gap-2 h-auto p-1">
+          <TabsList className="grid grid-cols-4 md:grid-cols-11 gap-2 h-auto p-1">
             {tabs.map((tab) => (
               <TabsTrigger
                 key={tab.id}
@@ -103,6 +105,10 @@ const AdminSystem = () => {
 
           <TabsContent value="courses">
             <CoursesProjectsSection />
+          </TabsContent>
+
+          <TabsContent value="workflows">
+            <WorkflowTemplateManager />
           </TabsContent>
 
           <TabsContent value="tasks">

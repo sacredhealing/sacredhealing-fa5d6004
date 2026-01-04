@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { CheckSquare, FileText, Calendar, MessageSquare, ExternalLink, ListChecks, Check, Circle } from 'lucide-react';
 import { toast } from 'sonner';
-import { ProjectWorkflowStages, PROJECT_WORKFLOW_LABELS, DEFAULT_PROJECT_WORKFLOW } from './AdminProjectsTab';
+import { useWorkflowTemplates } from '@/hooks/useWorkflowTemplates';
 
 interface Project {
   id: string;
@@ -19,7 +19,7 @@ interface Project {
   status: string;
   description: string | null;
   created_at: string;
-  workflow_stages?: ProjectWorkflowStages;
+  workflow_stages?: Record<string, boolean>;
 }
 
 interface Task {
@@ -52,12 +52,16 @@ interface ProjectDetailDialogProps {
 }
 
 const ProjectDetailDialog = ({ project, open, onOpenChange }: ProjectDetailDialogProps) => {
+  const { getStagesForType, createDefaultWorkflow } = useWorkflowTemplates();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [contents, setContents] = useState<Content[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
-  const [workflowStages, setWorkflowStages] = useState<ProjectWorkflowStages>(DEFAULT_PROJECT_WORKFLOW);
+  const [workflowStages, setWorkflowStages] = useState<Record<string, boolean>>({});
+
+  // Get workflow stages from templates
+  const projectStages = getStagesForType('project');
 
   useEffect(() => {
     if (project && open) {
@@ -70,6 +74,8 @@ const ProjectDetailDialog = ({ project, open, onOpenChange }: ProjectDetailDialo
   const fetchWorkflowStages = async () => {
     if (!project) return;
     
+    const defaultWorkflow = createDefaultWorkflow('project');
+    
     const { data, error } = await supabase
       .from('admin_projects')
       .select('workflow_stages')
@@ -77,26 +83,26 @@ const ProjectDetailDialog = ({ project, open, onOpenChange }: ProjectDetailDialo
       .single();
     
     if (!error && data) {
-      const stages = data.workflow_stages as unknown as ProjectWorkflowStages;
-      setWorkflowStages(stages || DEFAULT_PROJECT_WORKFLOW);
+      const stages = data.workflow_stages as Record<string, boolean>;
+      setWorkflowStages({ ...defaultWorkflow, ...(stages || {}) });
     } else {
-      setWorkflowStages(project.workflow_stages || DEFAULT_PROJECT_WORKFLOW);
+      setWorkflowStages({ ...defaultWorkflow, ...(project.workflow_stages || {}) });
     }
   };
 
   const calculateWorkflowProgress = () => {
     if (!workflowStages) return 0;
-    const stages = Object.values(workflowStages);
-    const totalStages = stages.length;
-    const completedStages = stages.filter(stage => stage === true).length;
-    return totalStages > 0 ? Math.round((completedStages / totalStages) * 100) : 0;
+    const stageKeys = projectStages.map(s => s.key);
+    const completedStages = stageKeys.filter(key => workflowStages[key]).length;
+    return stageKeys.length > 0 ? Math.round((completedStages / stageKeys.length) * 100) : 0;
   };
 
   const isProjectFinished = () => {
-    return Object.values(workflowStages).every(Boolean);
+    const stageKeys = projectStages.map(s => s.key);
+    return stageKeys.every(key => workflowStages[key]);
   };
 
-  const toggleWorkflowStage = async (stageKey: keyof ProjectWorkflowStages) => {
+  const toggleWorkflowStage = async (stageKey: string) => {
     if (!project) return;
     
     const updatedStages = {
@@ -263,24 +269,24 @@ const ProjectDetailDialog = ({ project, open, onOpenChange }: ProjectDetailDialo
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                  {Object.entries(PROJECT_WORKFLOW_LABELS).map(([key, label]) => {
-                    const isChecked = workflowStages[key as keyof ProjectWorkflowStages];
+                  {projectStages.map((stage) => {
+                    const isChecked = workflowStages[stage.key];
                     return (
                       <div
-                        key={key}
+                        key={stage.key}
                         className={`flex flex-col items-center p-3 rounded-lg border cursor-pointer transition-all text-xs ${
                           isChecked
                             ? 'bg-green-500/10 border-green-500/30'
                             : 'bg-muted/50 hover:bg-muted'
                         }`}
-                        onClick={() => toggleWorkflowStage(key as keyof ProjectWorkflowStages)}
+                        onClick={() => toggleWorkflowStage(stage.key)}
                       >
                         {isChecked ? (
                           <Check className="h-4 w-4 mb-1 text-green-500" />
                         ) : (
                           <Circle className="h-4 w-4 mb-1 text-muted-foreground" />
                         )}
-                        <span className="text-center">{label}</span>
+                        <span className="text-center">{stage.label}</span>
                       </div>
                     );
                   })}

@@ -3050,6 +3050,33 @@ export type Database = {
           },
         ]
       }
+      workflow_templates: {
+        Row: {
+          content_type: string
+          created_at: string
+          id: string
+          is_default: boolean
+          stages: Json
+          updated_at: string
+        }
+        Insert: {
+          content_type: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          stages?: Json
+          updated_at?: string
+        }
+        Update: {
+          content_type?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          stages?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       youtube_channels: {
         Row: {
           channel_id: string

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Music, Check, Circle, ChevronDown, ChevronRight, ListMusic, Download } from 'lucide-react';
+import { Plus, Edit, Trash2, Music, Check, Circle, ChevronDown, ChevronRight, ListMusic, Download, Settings2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,33 +7,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import FileUpload from '@/components/admin/FileUpload';
-
-interface WorkflowStages {
-  idea: boolean;
-  arrangement: boolean;
-  logic_to_studio_one: boolean;
-  record_mpc: boolean;
-  record_studio_one_mpc: boolean;
-  record_karaveera: boolean;
-  record_kritagya: boolean;
-  mix: boolean;
-  master: boolean;
-  cover: boolean;
-  release: boolean;
-}
+import { useWorkflowTemplates, WorkflowStage } from '@/hooks/useWorkflowTemplates';
 
 interface Song {
   id: string;
   project_id: string;
   title: string;
   order_index: number;
-  workflow_stages: WorkflowStages;
+  workflow_stages: Record<string, boolean>;
   created_at: string;
   file_url?: string;
 }
@@ -45,7 +32,7 @@ interface MusicProject {
   music_type: string | null;
   status: string;
   description: string | null;
-  workflow_stages: WorkflowStages;
+  workflow_stages: Record<string, boolean>;
   distrokid_released: boolean;
   added_to_app: boolean;
   created_at: string;
@@ -62,35 +49,8 @@ const MUSIC_TYPES = [
   { value: 'mantra', label: 'Mantra' },
 ];
 
-const WORKFLOW_STAGES = [
-  { key: 'idea', label: 'Idea' },
-  { key: 'arrangement', label: 'Arrangement' },
-  { key: 'logic_to_studio_one', label: 'Move from Logic to Studio One' },
-  { key: 'record_mpc', label: 'Record from MPC' },
-  { key: 'record_studio_one_mpc', label: 'Record to Studio One from MPC' },
-  { key: 'record_karaveera', label: 'Record – Karaveera Nivasini Dasi' },
-  { key: 'record_kritagya', label: 'Record – Kritagya Das' },
-  { key: 'mix', label: 'Mix' },
-  { key: 'master', label: 'Master' },
-  { key: 'cover', label: 'Cover' },
-  { key: 'release', label: 'Release' },
-] as const;
-
-const DEFAULT_WORKFLOW: WorkflowStages = {
-  idea: false,
-  arrangement: false,
-  logic_to_studio_one: false,
-  record_mpc: false,
-  record_studio_one_mpc: false,
-  record_karaveera: false,
-  record_kritagya: false,
-  mix: false,
-  master: false,
-  cover: false,
-  release: false,
-};
-
 const MusicProjectsSection = () => {
+  const { getStagesForType, createDefaultWorkflow, loading: templatesLoading } = useWorkflowTemplates();
   const [projects, setProjects] = useState<MusicProject[]>([]);
   const [songs, setSongs] = useState<Record<string, Song[]>>({});
   const [loading, setLoading] = useState(true);
@@ -112,11 +72,19 @@ const MusicProjectsSection = () => {
     file_url: '',
   });
 
+  // Get workflow stages from templates
+  const musicStages = getStagesForType('music');
+  const songStages = getStagesForType('song');
+
   useEffect(() => {
-    fetchProjects();
-  }, []);
+    if (!templatesLoading) {
+      fetchProjects();
+    }
+  }, [templatesLoading]);
 
   const fetchProjects = async () => {
+    const defaultWorkflow = createDefaultWorkflow('music');
+    
     const { data, error } = await supabase
       .from('admin_projects')
       .select('*')
@@ -130,8 +98,8 @@ const MusicProjectsSection = () => {
       const parsed = (data || []).map((p) => ({
         ...p,
         workflow_stages: typeof p.workflow_stages === 'object' && p.workflow_stages !== null 
-          ? { ...DEFAULT_WORKFLOW, ...(p.workflow_stages as object) }
-          : DEFAULT_WORKFLOW,
+          ? { ...defaultWorkflow, ...(p.workflow_stages as object) }
+          : defaultWorkflow,
       })) as MusicProject[];
       setProjects(parsed);
       
@@ -144,6 +112,8 @@ const MusicProjectsSection = () => {
   };
 
   const fetchAllSongs = async (projectIds: string[]) => {
+    const defaultSongWorkflow = createDefaultWorkflow('song');
+    
     const { data, error } = await supabase
       .from('music_project_songs')
       .select('*')
@@ -160,8 +130,8 @@ const MusicProjectsSection = () => {
       const parsed: Song = {
         ...song,
         workflow_stages: typeof song.workflow_stages === 'object' && song.workflow_stages !== null
-          ? { ...DEFAULT_WORKFLOW, ...(song.workflow_stages as object) }
-          : DEFAULT_WORKFLOW,
+          ? { ...defaultSongWorkflow, ...(song.workflow_stages as object) }
+          : defaultSongWorkflow,
       };
       if (!songsByProject[song.project_id]) {
         songsByProject[song.project_id] = [];
@@ -173,13 +143,14 @@ const MusicProjectsSection = () => {
 
   const calculateSongProgress = (song: Song): number => {
     const stages = song.workflow_stages;
-    const completedStages = Object.values(stages).filter(Boolean).length;
-    const totalStages = Object.keys(stages).length;
-    return Math.round((completedStages / totalStages) * 100);
+    const stageKeys = songStages.map(s => s.key);
+    const completedStages = stageKeys.filter(key => stages[key]).length;
+    return stageKeys.length > 0 ? Math.round((completedStages / stageKeys.length) * 100) : 0;
   };
 
   const isSongFinished = (song: Song): boolean => {
-    return calculateSongProgress(song) === 100;
+    const stageKeys = songStages.map(s => s.key);
+    return stageKeys.every(key => song.workflow_stages[key]);
   };
 
   const calculateProjectProgress = (project: MusicProject): number => {
@@ -200,21 +171,14 @@ const MusicProjectsSection = () => {
 
     // Fallback to project-level workflow for single tracks
     const stages = project.workflow_stages;
-    const releaseComplete = stages.release && project.distrokid_released && project.added_to_app;
-    const completedStages = [
-      stages.idea,
-      stages.arrangement,
-      stages.logic_to_studio_one,
-      stages.record_mpc,
-      stages.record_studio_one_mpc,
-      stages.record_karaveera,
-      stages.record_kritagya,
-      stages.mix,
-      stages.master,
-      stages.cover,
-      releaseComplete,
-    ].filter(Boolean).length;
-    return Math.round((completedStages / 11) * 100);
+    const stageKeys = musicStages.map(s => s.key);
+    const completedStages = stageKeys.filter(key => stages[key]).length;
+    const releaseComplete = project.distrokid_released && project.added_to_app;
+    
+    // Add release status to calculation
+    const totalSteps = stageKeys.length + 1; // +1 for release
+    const completedSteps = completedStages + (releaseComplete ? 1 : 0);
+    return totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0;
   };
 
   const isProjectFinished = (project: MusicProject): boolean => {
@@ -258,7 +222,7 @@ const MusicProjectsSection = () => {
       return;
     }
 
-    const workflowJson = JSON.parse(JSON.stringify(DEFAULT_WORKFLOW));
+    const workflowJson = createDefaultWorkflow('music');
 
     if (editingProject) {
       const { error } = await supabase
@@ -324,7 +288,7 @@ const MusicProjectsSection = () => {
       }
     } else if (selectedProjectId) {
       const projectSongs = songs[selectedProjectId] || [];
-      const workflowJson = JSON.parse(JSON.stringify(DEFAULT_WORKFLOW));
+      const workflowJson = createDefaultWorkflow('song');
       const { error } = await supabase
         .from('music_project_songs')
         .insert([{
@@ -349,7 +313,7 @@ const MusicProjectsSection = () => {
   const handleSongStageToggle = async (song: Song, stageKey: string) => {
     const updatedStages = {
       ...song.workflow_stages,
-      [stageKey]: !song.workflow_stages[stageKey as keyof WorkflowStages],
+      [stageKey]: !song.workflow_stages[stageKey],
     };
 
     const { error } = await supabase
@@ -372,7 +336,7 @@ const MusicProjectsSection = () => {
 
     const updatedStages = {
       ...project.workflow_stages,
-      [stageKey]: !project.workflow_stages[stageKey as keyof WorkflowStages],
+      [stageKey]: !project.workflow_stages[stageKey],
     };
 
     const { error } = await supabase
@@ -717,7 +681,7 @@ const MusicProjectsSection = () => {
 
                                   {/* Song Workflow Stages */}
                                   <div className="grid grid-cols-4 sm:grid-cols-7 gap-1">
-                                    {WORKFLOW_STAGES.map((stage) => {
+                                    {songStages.map((stage) => {
                                       const isChecked = song.workflow_stages[stage.key];
 
                                       return (
@@ -754,7 +718,7 @@ const MusicProjectsSection = () => {
                         <div>
                           <h4 className="text-sm font-medium mb-3">Workflow Stages</h4>
                           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
-                            {WORKFLOW_STAGES.map((stage) => {
+                            {musicStages.map((stage) => {
                               const isChecked = project.workflow_stages[stage.key];
 
                               return (
