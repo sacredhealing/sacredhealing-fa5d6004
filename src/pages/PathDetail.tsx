@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Clock, Star, Play, BookOpen, CheckCircle2, Lock } from 'lucide-react';
+import { ArrowLeft, Clock, Star, Play, BookOpen, CheckCircle2, Lock, Wind, Music } from 'lucide-react';
 import { useSpiritualPaths, SpiritualPath, PathDay } from '@/hooks/useSpiritualPaths';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -201,6 +201,26 @@ const PathDetail: React.FC = () => {
                           <div>
                             <p className="text-xs text-muted-foreground mb-1">Journal Prompt</p>
                             <p className="text-sm text-foreground">{day.journal_prompt}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {day.mantra_text && (
+                        <div className="flex items-start gap-2">
+                          <Music className="w-4 h-4 text-accent mt-0.5" />
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">Today's Mantra</p>
+                            <p className="text-sm text-foreground font-medium">{day.mantra_text}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {day.breathing_description && (
+                        <div className="flex items-start gap-2">
+                          <Wind className="w-4 h-4 text-primary mt-0.5" />
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">Breathing Practice</p>
+                            <p className="text-sm text-foreground">{day.breathing_description}</p>
                           </div>
                         </div>
                       )}

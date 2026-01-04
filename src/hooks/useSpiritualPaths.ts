@@ -30,6 +30,8 @@ export interface PathDay {
   breathing_pattern_id: string | null;
   journal_prompt: string | null;
   affirmation: string | null;
+  mantra_text: string | null;
+  breathing_description: string | null;
   shc_reward: number;
 }
 
