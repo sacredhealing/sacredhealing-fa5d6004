@@ -1216,5 +1216,24 @@
     "benefit3": "Promotes better sleep",
     "benefit4": "Lowers blood pressure",
     "benefit5": "Increases energy levels"
+  },
+  "explore": {
+    "title": "Explore",
+    "subtitle": "Discover your spiritual journey",
+    "featuredPlaylists": "Featured Playlists",
+    "searchPlaceholder": "Search for content...",
+    "categories": "Categories",
+    "all": "All",
+    "healing": "Healing",
+    "meditation": "Meditation",
+    "music": "Music",
+    "courses": "Courses",
+    "community": "Community",
+    "yourProgress": "Your Progress",
+    "totalListeningTime": "Total Listening Time",
+    "meditationsCompleted": "Meditations Completed",
+    "coursesEnrolled": "Courses Enrolled",
+    "featuredPrograms": "Featured Programs",
+    "viewAll": "View All"
   }
 }

@@ -1149,5 +1149,24 @@
     "benefit3": "Främjar bättre sömn",
     "benefit4": "Sänker blodtrycket",
     "benefit5": "Ökar energinivåerna"
+  },
+  "explore": {
+    "title": "Utforska",
+    "subtitle": "Upptäck din andliga resa",
+    "featuredPlaylists": "Utvalda Spellistor",
+    "searchPlaceholder": "Sök efter innehåll...",
+    "categories": "Kategorier",
+    "all": "Alla",
+    "healing": "Helande",
+    "meditation": "Meditation",
+    "music": "Musik",
+    "courses": "Kurser",
+    "community": "Gemenskap",
+    "yourProgress": "Din Framsteg",
+    "totalListeningTime": "Total Lyssningstid",
+    "meditationsCompleted": "Meditationer Slutförda",
+    "coursesEnrolled": "Inskrivna Kurser",
+    "featuredPrograms": "Utvalda Program",
+    "viewAll": "Visa Alla"
   }
 }

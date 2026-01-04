@@ -172,7 +172,14 @@ const Dashboard: React.FC = () => {
 
       {/* Featured Sections - Explore */}
       <div className="mt-6 animate-slide-up" style={{ animationDelay: '0.35s' }}>
-        <h2 className="text-lg font-heading font-semibold text-foreground mb-4">{t('dashboard.explore')}</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-heading font-semibold text-foreground">
+            {t('dashboard.explore')}
+          </h2>
+          <Link to="/explore" className="text-sm text-primary hover:text-primary/80 transition-colors">
+            {t('common.viewAll', 'View All')} →
+          </Link>
+        </div>
         
         {/* Healing Journey - Primary Large Card */}
         <div className="mb-4">

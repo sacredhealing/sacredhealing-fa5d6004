@@ -3,19 +3,29 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { 
   Music, Wind, ShoppingBag, Crown, Heart, Trophy, Calendar, Headphones,
-  Sparkles, DollarSign, Search, Zap, Star, BookOpen, Mic, Users
+  Sparkles, DollarSign, Search, Zap, Star, BookOpen, Mic, Users, Play, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { HealingProgressCard } from '@/components/healing/HealingProgressCard';
 import { useSHC } from '@/contexts/SHCContext';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
+import { useCuratedPlaylists } from '@/hooks/useCuratedPlaylists';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from '@/components/ui/carousel';
 
 const Explore: React.FC = () => {
   const { t } = useTranslation();
   const { balance, profile } = useSHC();
   const [searchQuery, setSearchQuery] = useState('');
+  const { playlists: meditationPlaylists, loading: playlistsLoading } = useCuratedPlaylists('meditation');
 
   const exploreCategories = [
     {
@@ -220,6 +230,58 @@ const Explore: React.FC = () => {
       <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
         <HealingProgressCard variant="full" />
       </div>
+
+      {/* Featured Playlists Carousel */}
+      {meditationPlaylists && meditationPlaylists.length > 0 && (
+        <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.12s' }}>
+          <h2 className="text-lg font-heading font-semibold text-foreground mb-4">
+            {t('explore.featuredPlaylists', 'Featured Playlists')}
+          </h2>
+          <Carousel
+            opts={{
+              align: 'start',
+              loop: true,
+            }}
+            className="w-full"
+          >
+            <CarouselContent className="-ml-2 md:-ml-4">
+              {meditationPlaylists.slice(0, 8).map((playlist) => (
+                <CarouselItem key={playlist.id} className="pl-2 md:pl-4 basis-[70%] sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
+                  <Link to={`/meditations?playlist=${playlist.id}`}>
+                    <Card className="relative overflow-hidden group cursor-pointer border-border/30 hover:border-primary/50 transition-all">
+                      <div className="aspect-square relative">
+                        {playlist.cover_image_url ? (
+                          <img
+                            src={playlist.cover_image_url}
+                            alt={playlist.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-primary/30 to-accent/20 flex items-center justify-center">
+                            <Music className="w-12 h-12 text-primary/50" />
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="w-12 h-12 rounded-full bg-primary/90 flex items-center justify-center">
+                            <Play className="w-5 h-5 text-primary-foreground ml-0.5" />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="absolute bottom-0 left-0 right-0 p-3">
+                        <h3 className="font-semibold text-foreground text-sm truncate">{playlist.title}</h3>
+                        <p className="text-xs text-muted-foreground truncate">{playlist.category}</p>
+                      </div>
+                    </Card>
+                  </Link>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="left-2 hidden sm:flex" />
+            <CarouselNext className="right-2 hidden sm:flex" />
+          </Carousel>
+        </div>
+      )}
 
       {/* Explore Grid */}
       <div className="animate-slide-up" style={{ animationDelay: '0.15s' }}>
