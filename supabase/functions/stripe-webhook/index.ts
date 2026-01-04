@@ -12,25 +12,57 @@ const logStep = (step: string, details?: unknown) => {
   console.log(`[STRIPE-WEBHOOK] ${step}${detailsStr}`);
 };
 
+// Price ID to product info mapping for revenue tracking
+const PRICE_TO_PRODUCT: Record<string, { type: string; name: string }> = {
+  // Stargate Transformation Online - €25/month
+  'price_1Os1suAPsnbrivP0PxsynQAO': { type: 'stargate', name: 'Stargate Transformation Online' },
+  // Stargate Membership - $25/month
+  'price_1SZqNuAPsnbrivP0ZygF4M88': { type: 'stargate', name: 'Stargate Membership' },
+  // Meditation Membership Monthly - €4.99/month
+  'price_1SaGNbAPsnbrivP0DBsBGh9V': { type: 'meditation', name: 'Meditation Membership Monthly' },
+  // Music Membership Monthly - €4.99/month
+  'price_1SaGG4APsnbrivP0nnavK58y': { type: 'music', name: 'Music Membership Monthly' },
+};
+
 // Maps checkout metadata types to affiliate purchase types
 const getPurchaseType = (metadata: Record<string, string>): string | null => {
   if (metadata.type === 'meditation_membership') return 'meditation';
   if (metadata.type === 'music_membership') return 'music';
+  if (metadata.type === 'stargate_membership') return 'stargate';
   if (metadata.plan_type) {
-    // Healing, transformation, certification, etc.
     if (metadata.days) return 'healing';
     if (metadata.program_id || metadata.variation_id) return 'transformation';
     return 'membership';
   }
   if (metadata.session_type_id) return 'session';
   if (metadata.course_id) return 'course';
-  if (metadata.order_id || metadata.product_id) return 'healing_audio'; // Shop orders
+  if (metadata.order_id || metadata.product_id) return 'shop';
   if (metadata.package_type) {
-    // Custom meditation or affirmation
     if (metadata.service_type) return 'meditation';
-    return 'course';
+    return 'affirmation';
   }
   return null;
+};
+
+// Get a human-readable product name from metadata
+const getProductName = (metadata: Record<string, string> | null): string => {
+  if (!metadata) return 'Stripe Purchase';
+  
+  if (metadata.type === 'meditation_membership') return 'Meditation Membership';
+  if (metadata.type === 'music_membership') return 'Music Membership';
+  if (metadata.type === 'stargate_membership') return 'Stargate Membership';
+  if (metadata.plan_type) {
+    if (metadata.days) return `Healing Package (${metadata.days} days)`;
+    return `Membership - ${metadata.plan_type}`;
+  }
+  if (metadata.session_type_id) return 'Private Session';
+  if (metadata.course_id) return 'Course Enrollment';
+  if (metadata.product_id) return 'Shop Purchase';
+  if (metadata.package_type) {
+    if (metadata.service_type) return `Custom Meditation - ${metadata.package_type}`;
+    return `Affirmation - ${metadata.package_type}`;
+  }
+  return 'Stripe Purchase';
 };
 
 serve(async (req) => {
@@ -82,7 +114,6 @@ serve(async (req) => {
         });
       }
     } else {
-      // No webhook secret - parse event directly (less secure, for development)
       logStep("WARNING: No STRIPE_WEBHOOK_SECRET configured, skipping signature verification");
       event = JSON.parse(body) as Stripe.Event;
     }
@@ -97,6 +128,7 @@ serve(async (req) => {
         sessionId: session.id, 
         paymentStatus: session.payment_status,
         amountTotal: session.amount_total,
+        currency: session.currency,
         metadata: session.metadata
       });
 
@@ -109,17 +141,7 @@ serve(async (req) => {
         });
       }
 
-      const userId = session.metadata?.user_id;
-      const amountTotal = session.amount_total; // In cents
-
-      if (!userId) {
-        logStep("No user_id in metadata, skipping affiliate processing");
-        return new Response(JSON.stringify({ received: true, processed: false }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        });
-      }
-
+      const amountTotal = session.amount_total;
       if (!amountTotal || amountTotal <= 0) {
         logStep("No valid amount, skipping", { amountTotal });
         return new Response(JSON.stringify({ received: true, processed: false }), {
@@ -128,184 +150,214 @@ serve(async (req) => {
         });
       }
 
-      // Determine purchase type from metadata
-      const purchaseType = getPurchaseType(session.metadata || {});
-      if (!purchaseType) {
-        logStep("Could not determine purchase type from metadata", { metadata: session.metadata });
-        return new Response(JSON.stringify({ received: true, processed: false }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        });
-      }
+      // Convert cents to base currency
+      const purchaseAmount = amountTotal / 100;
+      const currency = session.currency?.toUpperCase() || 'EUR';
+      const purchaseType = getPurchaseType(session.metadata || {}) || 'other';
+      const productName = getProductName(session.metadata);
+      const customerEmail = session.customer_email || (session.customer_details as { email?: string })?.email;
+      const stripePaymentId = session.id;
 
-      // Convert cents to dollars for the commission calculation
-      const purchaseAmountUsd = amountTotal / 100;
-      const purchaseId = `stripe_${session.id}`;
-
-      logStep("Processing affiliate commission", { userId, purchaseType, purchaseAmountUsd, purchaseId });
-
-      // Check if commission already processed
-      const { data: existing } = await supabaseAdmin
-        .from('affiliate_earnings')
+      // Record revenue (check for duplicate first)
+      const { data: existingRevenue } = await supabaseAdmin
+        .from('revenue_records')
         .select('id')
-        .eq('purchase_id', purchaseId)
+        .eq('stripe_payment_id', stripePaymentId)
         .maybeSingle();
 
-      if (existing) {
-        logStep("Commission already processed for this purchase", { purchaseId });
-        return new Response(JSON.stringify({ received: true, processed: false, reason: "duplicate" }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        });
-      }
-
-      // Get user's profile to check if they were referred
-      const { data: profile, error: profileError } = await supabaseAdmin
-        .from('profiles')
-        .select('referred_by')
-        .eq('user_id', userId)
-        .single();
-
-      if (profileError || !profile?.referred_by) {
-        logStep("User has no referrer, skipping commission", { userId });
-        return new Response(JSON.stringify({ received: true, processed: false, reason: "no_referrer" }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        });
-      }
-
-      const referrerId = profile.referred_by;
-      logStep("Found referrer", { referrerId });
-
-      // Calculate commission (30% - same as existing logic)
-      const commissionRate = 0.30;
-      const commissionSHC = Math.floor(purchaseAmountUsd * commissionRate);
-
-      logStep("Calculated commission", { commissionRate, commissionSHC, purchaseAmountUsd });
-
-      // Create affiliate earning record
-      const { error: earningError } = await supabaseAdmin
-        .from('affiliate_earnings')
-        .insert({
-          affiliate_user_id: referrerId,
-          referred_user_id: userId,
-          purchase_type: purchaseType,
-          purchase_amount: purchaseAmountUsd,
-          purchase_id: purchaseId,
-          commission_rate: commissionRate,
-          commission_shc: commissionSHC,
-          status: 'pending',
-        });
-
-      if (earningError) {
-        logStep("Error creating earning record", earningError);
-        throw earningError;
-      }
-
-      // Update referrer's total affiliate earnings in profile
-      const { data: referrerProfile } = await supabaseAdmin
-        .from('profiles')
-        .select('total_affiliate_earnings')
-        .eq('user_id', referrerId)
-        .single();
-
-      if (referrerProfile) {
-        await supabaseAdmin
-          .from('profiles')
-          .update({
-            total_affiliate_earnings: Number(referrerProfile.total_affiliate_earnings || 0) + commissionSHC
-          })
-          .eq('user_id', referrerId);
-      }
-
-      // Credit the SHC to the referrer's balance
-      const { data: referrerBalance } = await supabaseAdmin
-        .from('user_balances')
-        .select('balance, total_earned')
-        .eq('user_id', referrerId)
-        .single();
-
-      if (referrerBalance) {
-        await supabaseAdmin
-          .from('user_balances')
-          .update({
-            balance: Number(referrerBalance.balance) + commissionSHC,
-            total_earned: Number(referrerBalance.total_earned) + commissionSHC
-          })
-          .eq('user_id', referrerId);
-
-        // Record the transaction
-        await supabaseAdmin
-          .from('shc_transactions')
+      if (!existingRevenue) {
+        const { error: revenueError } = await supabaseAdmin
+          .from('revenue_records')
           .insert({
-            user_id: referrerId,
-            type: 'earned',
-            amount: commissionSHC,
-            description: `Affiliate commission from ${purchaseType} (Stripe)`,
-            status: 'completed'
+            product_type: purchaseType,
+            product_name: productName,
+            amount_usd: purchaseAmount,
+            payment_method: 'stripe',
+            customer_email: customerEmail,
+            stripe_payment_id: stripePaymentId,
+            notes: `Initial payment (${currency})`
           });
 
-        // Mark the earning as paid
-        await supabaseAdmin
-          .from('affiliate_earnings')
-          .update({ status: 'paid', paid_at: new Date().toISOString() })
-          .eq('purchase_id', purchaseId)
-          .eq('status', 'pending');
-
-        logStep("Commission processed successfully", { referrerId, commissionSHC, purchaseType });
+        if (revenueError) {
+          logStep("Error recording revenue", revenueError);
+        } else {
+          logStep("Revenue recorded", { amount: purchaseAmount, currency, type: purchaseType, product: productName });
+        }
       } else {
-        logStep("Referrer has no balance record, creating one");
-        await supabaseAdmin
-          .from('user_balances')
-          .insert({
-            user_id: referrerId,
-            balance: commissionSHC,
-            total_earned: commissionSHC,
-            total_spent: 0
-          });
-
-        await supabaseAdmin
-          .from('shc_transactions')
-          .insert({
-            user_id: referrerId,
-            type: 'earned',
-            amount: commissionSHC,
-            description: `Affiliate commission from ${purchaseType} (Stripe)`,
-            status: 'completed'
-          });
-
-        await supabaseAdmin
-          .from('affiliate_earnings')
-          .update({ status: 'paid', paid_at: new Date().toISOString() })
-          .eq('purchase_id', purchaseId)
-          .eq('status', 'pending');
-
-        logStep("Commission processed successfully (new balance created)", { referrerId, commissionSHC });
+        logStep("Revenue already recorded for this payment", { stripePaymentId });
       }
 
-      return new Response(JSON.stringify({ 
-        received: true, 
-        processed: true,
-        commissionSHC,
-        referrerId
-      }), {
+      // Process affiliate commission if user was referred
+      const userId = session.metadata?.user_id;
+      if (userId) {
+        const purchaseId = `stripe_${session.id}`;
+
+        // Check if commission already processed
+        const { data: existingCommission } = await supabaseAdmin
+          .from('affiliate_earnings')
+          .select('id')
+          .eq('purchase_id', purchaseId)
+          .maybeSingle();
+
+        if (!existingCommission) {
+          // Get user's profile to check if they were referred
+          const { data: profile } = await supabaseAdmin
+            .from('profiles')
+            .select('referred_by')
+            .eq('user_id', userId)
+            .single();
+
+          if (profile?.referred_by) {
+            const referrerId = profile.referred_by;
+            const commissionRate = 0.30;
+            const commissionSHC = Math.floor(purchaseAmount * commissionRate);
+
+            logStep("Processing affiliate commission", { referrerId, commissionSHC, purchaseType });
+
+            // Create affiliate earning record
+            await supabaseAdmin
+              .from('affiliate_earnings')
+              .insert({
+                affiliate_user_id: referrerId,
+                referred_user_id: userId,
+                purchase_type: purchaseType,
+                purchase_amount: purchaseAmount,
+                purchase_id: purchaseId,
+                commission_rate: commissionRate,
+                commission_shc: commissionSHC,
+                status: 'pending',
+              });
+
+            // Update referrer's total affiliate earnings
+            const { data: referrerProfile } = await supabaseAdmin
+              .from('profiles')
+              .select('total_affiliate_earnings')
+              .eq('user_id', referrerId)
+              .single();
+
+            if (referrerProfile) {
+              await supabaseAdmin
+                .from('profiles')
+                .update({
+                  total_affiliate_earnings: Number(referrerProfile.total_affiliate_earnings || 0) + commissionSHC
+                })
+                .eq('user_id', referrerId);
+            }
+
+            // Credit SHC to referrer's balance
+            const { data: referrerBalance } = await supabaseAdmin
+              .from('user_balances')
+              .select('balance, total_earned')
+              .eq('user_id', referrerId)
+              .single();
+
+            if (referrerBalance) {
+              await supabaseAdmin
+                .from('user_balances')
+                .update({
+                  balance: Number(referrerBalance.balance) + commissionSHC,
+                  total_earned: Number(referrerBalance.total_earned) + commissionSHC
+                })
+                .eq('user_id', referrerId);
+            } else {
+              await supabaseAdmin
+                .from('user_balances')
+                .insert({
+                  user_id: referrerId,
+                  balance: commissionSHC,
+                  total_earned: commissionSHC,
+                  total_spent: 0
+                });
+            }
+
+            // Record transaction and mark earning as paid
+            await supabaseAdmin
+              .from('shc_transactions')
+              .insert({
+                user_id: referrerId,
+                type: 'earned',
+                amount: commissionSHC,
+                description: `Affiliate commission from ${purchaseType} (Stripe)`,
+                status: 'completed'
+              });
+
+            await supabaseAdmin
+              .from('affiliate_earnings')
+              .update({ status: 'paid', paid_at: new Date().toISOString() })
+              .eq('purchase_id', purchaseId)
+              .eq('status', 'pending');
+
+            logStep("Commission processed", { referrerId, commissionSHC });
+          }
+        }
+      }
+
+      return new Response(JSON.stringify({ received: true, processed: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
     }
 
-    // Handle subscription payments (for recurring commissions if needed)
+    // Handle recurring subscription payments
     if (event.type === "invoice.payment_succeeded") {
       const invoice = event.data.object as Stripe.Invoice;
       
-      // Only process subscription invoices (not the first payment which is handled by checkout.session.completed)
+      // Only process subscription renewals (not initial payments)
       if (invoice.billing_reason === "subscription_cycle") {
-        logStep("Recurring subscription payment", { 
+        const amountPaid = invoice.amount_paid / 100;
+        const currency = invoice.currency?.toUpperCase() || 'EUR';
+        const stripePaymentId = invoice.id;
+        const customerEmail = invoice.customer_email;
+
+        // Get price info from line items
+        const lineItem = invoice.lines?.data?.[0];
+        const priceId = (lineItem?.price as { id?: string })?.id;
+        const productInfo = priceId && PRICE_TO_PRODUCT[priceId] 
+          ? PRICE_TO_PRODUCT[priceId] 
+          : { type: 'subscription', name: lineItem?.description || 'Subscription Renewal' };
+
+        logStep("Processing recurring payment", { 
           invoiceId: invoice.id, 
-          customerId: invoice.customer,
-          amountPaid: invoice.amount_paid
+          amount: amountPaid,
+          currency,
+          priceId,
+          productType: productInfo.type,
+          productName: productInfo.name
         });
-        // Future: implement recurring commission logic here if needed
+
+        // Check for duplicate
+        const { data: existingRevenue } = await supabaseAdmin
+          .from('revenue_records')
+          .select('id')
+          .eq('stripe_payment_id', stripePaymentId)
+          .maybeSingle();
+
+        if (!existingRevenue) {
+          const { error: revenueError } = await supabaseAdmin
+            .from('revenue_records')
+            .insert({
+              product_type: productInfo.type,
+              product_name: productInfo.name,
+              amount_usd: amountPaid,
+              payment_method: 'stripe',
+              customer_email: customerEmail,
+              stripe_payment_id: stripePaymentId,
+              notes: `Recurring payment (${currency})`
+            });
+
+          if (revenueError) {
+            logStep("Error recording recurring revenue", revenueError);
+          } else {
+            logStep("Recurring revenue recorded", { 
+              amount: amountPaid, 
+              currency, 
+              type: productInfo.type,
+              product: productInfo.name 
+            });
+          }
+        } else {
+          logStep("Recurring revenue already recorded", { stripePaymentId });
+        }
       }
     }
 
