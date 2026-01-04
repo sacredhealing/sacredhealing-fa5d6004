@@ -2542,14 +2542,24 @@ export type Database = {
       music_tracks: {
         Row: {
           affirmation: string | null
+          analysis_completed_at: string | null
+          analysis_status: string | null
+          approved_at: string | null
+          approved_by: string | null
           artist: string
           artist_id: string | null
+          auto_analysis_data: Json | null
+          auto_generated_affirmation: string | null
+          auto_generated_description: string | null
+          best_time_of_day: string | null
           bpm: number | null
           cover_image_url: string | null
           created_at: string
           creator_notes: string | null
           description: string | null
           duration_seconds: number
+          energy_level: string | null
+          frequency_band: string | null
           full_audio_url: string
           genre: string
           id: string
@@ -2561,20 +2571,33 @@ export type Database = {
           price_usd: number
           purchase_count: number
           release_date: string | null
+          rhythm_type: string | null
           shc_reward: number
+          spiritual_description: string | null
           spiritual_path: string | null
           title: string
+          vocal_type: string | null
         }
         Insert: {
           affirmation?: string | null
+          analysis_completed_at?: string | null
+          analysis_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           artist?: string
           artist_id?: string | null
+          auto_analysis_data?: Json | null
+          auto_generated_affirmation?: string | null
+          auto_generated_description?: string | null
+          best_time_of_day?: string | null
           bpm?: number | null
           cover_image_url?: string | null
           created_at?: string
           creator_notes?: string | null
           description?: string | null
           duration_seconds?: number
+          energy_level?: string | null
+          frequency_band?: string | null
           full_audio_url: string
           genre?: string
           id?: string
@@ -2586,20 +2609,33 @@ export type Database = {
           price_usd?: number
           purchase_count?: number
           release_date?: string | null
+          rhythm_type?: string | null
           shc_reward?: number
+          spiritual_description?: string | null
           spiritual_path?: string | null
           title: string
+          vocal_type?: string | null
         }
         Update: {
           affirmation?: string | null
+          analysis_completed_at?: string | null
+          analysis_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           artist?: string
           artist_id?: string | null
+          auto_analysis_data?: Json | null
+          auto_generated_affirmation?: string | null
+          auto_generated_description?: string | null
+          best_time_of_day?: string | null
           bpm?: number | null
           cover_image_url?: string | null
           created_at?: string
           creator_notes?: string | null
           description?: string | null
           duration_seconds?: number
+          energy_level?: string | null
+          frequency_band?: string | null
           full_audio_url?: string
           genre?: string
           id?: string
@@ -2611,9 +2647,12 @@ export type Database = {
           price_usd?: number
           purchase_count?: number
           release_date?: string | null
+          rhythm_type?: string | null
           shc_reward?: number
+          spiritual_description?: string | null
           spiritual_path?: string | null
           title?: string
+          vocal_type?: string | null
         }
         Relationships: [
           {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Play, Pause, Heart, Share2, Plus, Clock, Users, Music2, Sparkles, Moon, Zap, Leaf, Brain, Quote } from 'lucide-react';
+import { ArrowLeft, Play, Pause, Heart, Share2, Plus, Clock, Users, Music2, Sparkles, Moon, Zap, Leaf, Brain, Quote, Sun, Sunset, CloudMoon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
@@ -67,7 +67,18 @@ const TrackDetail: React.FC = () => {
       case 'healing': return <Sparkles size={14} />;
       case 'meditative': return <Brain size={14} />;
       case 'grounding': return <Leaf size={14} />;
+      case 'focused': return <Brain size={14} />;
       default: return <Sparkles size={14} />;
+    }
+  };
+
+  const getTimeIcon = (time: string) => {
+    switch (time) {
+      case 'morning': return <Sun size={14} />;
+      case 'midday': return <Sun size={14} />;
+      case 'evening': return <Sunset size={14} />;
+      case 'sleep': return <CloudMoon size={14} />;
+      default: return <Clock size={14} />;
     }
   };
 
@@ -209,6 +220,63 @@ const TrackDetail: React.FC = () => {
           </Card>
         )}
       </div>
+
+      {/* Spiritual Context Section - shows before play */}
+      {(track.spiritual_description || track.auto_generated_description || track.best_time_of_day || track.energy_level) && (
+        <Card className="bg-gradient-to-br from-indigo-900/30 via-purple-900/20 to-violet-900/30 border-purple-500/20 p-5 mb-6">
+          <h3 className="text-sm font-semibold text-purple-200 mb-4 flex items-center gap-2">
+            <Sparkles size={16} />
+            Spiritual Context
+          </h3>
+          
+          {/* Spiritual Description */}
+          {(track.spiritual_description || track.auto_generated_description) && (
+            <p className="text-foreground leading-relaxed mb-4">
+              {track.spiritual_description || track.auto_generated_description}
+            </p>
+          )}
+          
+          {/* Quick Info Grid */}
+          <div className="grid grid-cols-2 gap-3">
+            {track.best_time_of_day && (
+              <div className="flex items-center gap-2 bg-white/5 rounded-lg p-3">
+                {getTimeIcon(track.best_time_of_day)}
+                <div>
+                  <p className="text-xs text-muted-foreground">Best Time</p>
+                  <p className="text-sm font-medium capitalize">{track.best_time_of_day}</p>
+                </div>
+              </div>
+            )}
+            {track.energy_level && (
+              <div className="flex items-center gap-2 bg-white/5 rounded-lg p-3">
+                <Zap size={14} className={track.energy_level === 'high' ? 'text-yellow-400' : track.energy_level === 'low' ? 'text-blue-400' : 'text-green-400'} />
+                <div>
+                  <p className="text-xs text-muted-foreground">Energy</p>
+                  <p className="text-sm font-medium capitalize">{track.energy_level}</p>
+                </div>
+              </div>
+            )}
+            {track.rhythm_type && (
+              <div className="flex items-center gap-2 bg-white/5 rounded-lg p-3">
+                <Music2 size={14} />
+                <div>
+                  <p className="text-xs text-muted-foreground">Rhythm</p>
+                  <p className="text-sm font-medium capitalize">{track.rhythm_type}</p>
+                </div>
+              </div>
+            )}
+            {track.vocal_type && (
+              <div className="flex items-center gap-2 bg-white/5 rounded-lg p-3">
+                <Music2 size={14} />
+                <div>
+                  <p className="text-xs text-muted-foreground">Style</p>
+                  <p className="text-sm font-medium capitalize">{track.vocal_type}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
 
       {/* Affirmation Section */}
       {track.affirmation && (
