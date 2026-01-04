@@ -17,6 +17,8 @@ import Dashboard from "./pages/Dashboard";
 import Meditations from "./pages/Meditations";
 import Courses from "./pages/Courses";
 import Music from "./pages/Music";
+import TrackDetail from "./pages/TrackDetail";
+import ArtistProfile from "./pages/ArtistProfile";
 import Mastering from "./pages/Mastering";
 import Wallet from "./pages/Wallet";
 import Profile from "./pages/Profile";
@@ -66,6 +68,7 @@ import EducationDetail from "./pages/income-streams/EducationDetail";
 import AdminSystem from "./pages/AdminSystem";
 import AdminBreathing from "./pages/AdminBreathing";
 import AdminAffirmation from "./pages/AdminAffirmation";
+import AdminMusicAnalytics from "./pages/AdminMusicAnalytics";
 import AdminAnalytics from "./pages/AdminAnalytics";
 import Explore from "./pages/Explore";
 import Onboarding from "./pages/Onboarding";
@@ -99,6 +102,8 @@ const App = () => (
                   <Route path="/meditations" element={<Meditations />} />
                   <Route path="/courses" element={<Courses />} />
                   <Route path="/music" element={<Music />} />
+                  <Route path="/music/track/:trackId" element={<TrackDetail />} />
+                  <Route path="/music/artist/:artistId" element={<ArtistProfile />} />
                   <Route path="/mastering" element={<Mastering />} />
                   <Route path="/wallet" element={<Wallet />} />
                   <Route path="/profile" element={<Profile />} />
@@ -154,6 +159,7 @@ const App = () => (
                 <Route path="/admin/affirmation" element={<AdminAffirmation />} />
                 <Route path="/admin/analytics" element={<AdminAnalytics />} />
                 <Route path="/admin/paths" element={<AdminPaths />} />
+                <Route path="/admin/music-analytics" element={<AdminMusicAnalytics />} />
               </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>

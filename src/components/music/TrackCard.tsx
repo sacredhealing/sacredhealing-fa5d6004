@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Play, Pause, Heart, Plus, Clock, Music2, Users, Sparkles, Moon, Zap, Leaf, Brain } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Play, Pause, Heart, Plus, Clock, Music2, Users, Sparkles, Moon, Zap, Leaf, Brain, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useMusicPlayer, Track } from '@/contexts/MusicPlayerContext';
 
@@ -23,6 +24,7 @@ export const TrackCard: React.FC<TrackCardProps> = ({
   onPurchase,
   allTracks,
 }) => {
+  const navigate = useNavigate();
   const { currentTrack, isPlaying, playTrack, hasAccess, likedIds, toggleLike, isSubscribed } = useMusicPlayer();
   const [showPlaylistMenu, setShowPlaylistMenu] = useState(false);
 
@@ -40,8 +42,12 @@ export const TrackCard: React.FC<TrackCardProps> = ({
     playTrack(track, allTracks || [track]);
   };
 
+  const handleNavigateToDetail = () => {
+    navigate(`/music/track/${track.id}`);
+  };
+
   return (
-    <div className="group bg-muted/20 hover:bg-muted/40 rounded-xl p-3 transition-colors">
+    <div className="group bg-muted/20 hover:bg-muted/40 rounded-xl p-3 transition-colors cursor-pointer" onClick={handleNavigateToDetail}>
       <div className="flex items-start gap-3">
         {/* Cover / Play button */}
         <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-muted shrink-0">
@@ -53,7 +59,7 @@ export const TrackCard: React.FC<TrackCardProps> = ({
             </div>
           )}
           <button 
-            onClick={handlePlay}
+            onClick={(e) => { e.stopPropagation(); handlePlay(); }}
             className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
           >
             {isCurrentTrack && isPlaying ? (
@@ -114,10 +120,18 @@ export const TrackCard: React.FC<TrackCardProps> = ({
         <div className="flex flex-col items-end gap-1 shrink-0">
           {/* Like button */}
           <button 
-            onClick={() => toggleLike(track.id)}
+            onClick={(e) => { e.stopPropagation(); toggleLike(track.id); }}
             className={`p-1.5 rounded-full hover:bg-muted/50 ${isLiked ? 'text-red-500' : 'text-muted-foreground'}`}
           >
             <Heart size={14} fill={isLiked ? 'currentColor' : 'none'} />
+          </button>
+
+          {/* Share button */}
+          <button 
+            onClick={(e) => { e.stopPropagation(); navigate(`/music/track/${track.id}`); }}
+            className="p-1.5 rounded-full hover:bg-muted/50 text-muted-foreground"
+          >
+            <Share2 size={14} />
           </button>
 
           {/* Price / Access */}
@@ -128,7 +142,7 @@ export const TrackCard: React.FC<TrackCardProps> = ({
               size="sm" 
               variant="outline" 
               className="h-6 text-xs px-2"
-              onClick={() => onPurchase?.(track)}
+              onClick={(e) => { e.stopPropagation(); onPurchase?.(track); }}
             >
               €{track.price_usd}
             </Button>
@@ -138,7 +152,7 @@ export const TrackCard: React.FC<TrackCardProps> = ({
           {playlists && playlists.length > 0 && (
             <div className="relative">
               <button 
-                onClick={() => setShowPlaylistMenu(!showPlaylistMenu)}
+                onClick={(e) => { e.stopPropagation(); setShowPlaylistMenu(!showPlaylistMenu); }}
                 className="p-1.5 rounded-full hover:bg-muted/50 text-muted-foreground"
               >
                 <Plus size={14} />

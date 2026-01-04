@@ -624,6 +624,42 @@ export type Database = {
         }
         Relationships: []
       }
+      artists: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          id: string
+          name: string
+          signature_style: string | null
+          social_links: Json | null
+          total_plays: number | null
+          website: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          signature_style?: string | null
+          social_links?: Json | null
+          total_plays?: number | null
+          website?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          signature_style?: string | null
+          social_links?: Json | null
+          total_plays?: number | null
+          website?: string | null
+        }
+        Relationships: []
+      }
       breathing_patterns: {
         Row: {
           audio_url: string | null
@@ -674,6 +710,74 @@ export type Database = {
           youtube_url?: string | null
         }
         Relationships: []
+      }
+      bundle_purchases: {
+        Row: {
+          bundle_id: string
+          id: string
+          purchased_at: string
+          stripe_session_id: string | null
+          user_id: string
+        }
+        Insert: {
+          bundle_id: string
+          id?: string
+          purchased_at?: string
+          stripe_session_id?: string | null
+          user_id: string
+        }
+        Update: {
+          bundle_id?: string
+          id?: string
+          purchased_at?: string
+          stripe_session_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bundle_purchases_bundle_id_fkey"
+            columns: ["bundle_id"]
+            isOneToOne: false
+            referencedRelation: "music_bundles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bundle_tracks: {
+        Row: {
+          bundle_id: string
+          id: string
+          order_index: number | null
+          track_id: string
+        }
+        Insert: {
+          bundle_id: string
+          id?: string
+          order_index?: number | null
+          track_id: string
+        }
+        Update: {
+          bundle_id?: string
+          id?: string
+          order_index?: number | null
+          track_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bundle_tracks_bundle_id_fkey"
+            columns: ["bundle_id"]
+            isOneToOne: false
+            referencedRelation: "music_bundles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bundle_tracks_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "music_tracks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       chat_messages: {
         Row: {
@@ -2217,6 +2321,39 @@ export type Database = {
         }
         Relationships: []
       }
+      music_bundles: {
+        Row: {
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          discount_percent: number | null
+          id: string
+          is_active: boolean | null
+          price_usd: number
+          title: string
+        }
+        Insert: {
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          discount_percent?: number | null
+          id?: string
+          is_active?: boolean | null
+          price_usd?: number
+          title: string
+        }
+        Update: {
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          discount_percent?: number | null
+          id?: string
+          is_active?: boolean | null
+          price_usd?: number
+          title?: string
+        }
+        Relationships: []
+      }
       music_completions: {
         Row: {
           completed_at: string
@@ -2406,6 +2543,7 @@ export type Database = {
         Row: {
           affirmation: string | null
           artist: string
+          artist_id: string | null
           bpm: number | null
           cover_image_url: string | null
           created_at: string
@@ -2430,6 +2568,7 @@ export type Database = {
         Insert: {
           affirmation?: string | null
           artist?: string
+          artist_id?: string | null
           bpm?: number | null
           cover_image_url?: string | null
           created_at?: string
@@ -2454,6 +2593,7 @@ export type Database = {
         Update: {
           affirmation?: string | null
           artist?: string
+          artist_id?: string | null
           bpm?: number | null
           cover_image_url?: string | null
           created_at?: string
@@ -2475,7 +2615,15 @@ export type Database = {
           spiritual_path?: string | null
           title?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "music_tracks_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "artists"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       path_days: {
         Row: {
@@ -3505,6 +3653,41 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      track_ratings: {
+        Row: {
+          created_at: string
+          id: string
+          rating: number | null
+          reflection: string | null
+          track_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          rating?: number | null
+          reflection?: string | null
+          track_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          rating?: number | null
+          reflection?: string | null
+          track_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "track_ratings_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "music_tracks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       transformation_enrollments: {
         Row: {
