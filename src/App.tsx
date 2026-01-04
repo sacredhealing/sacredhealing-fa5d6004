@@ -65,6 +65,7 @@ import EducationDetail from "./pages/income-streams/EducationDetail";
 import AdminSystem from "./pages/AdminSystem";
 import AdminBreathing from "./pages/AdminBreathing";
 import AdminAffirmation from "./pages/AdminAffirmation";
+import Explore from "./pages/Explore";
 import "@/lib/performance"; // Initialize performance monitoring
 
 const App = () => (
@@ -83,6 +84,7 @@ const App = () => (
               <Route element={<ProtectedRoute />}>
                 <Route element={<AppLayout />}>
                   <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/explore" element={<Explore />} />
                   <Route path="/meditations" element={<Meditations />} />
                   <Route path="/courses" element={<Courses />} />
                   <Route path="/music" element={<Music />} />
