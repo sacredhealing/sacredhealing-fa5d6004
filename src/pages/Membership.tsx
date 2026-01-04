@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Crown, Check, Sparkles, Star, Zap, Settings, Loader2 } from 'lucide-react';
+import { Crown, Check, Sparkles, Star, Zap, Settings, Loader2, Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
+import { useFreeTrial } from '@/hooks/useFreeTrial';
+import { TrialBanner } from '@/components/offers/TrialBanner';
+import { PromoCodeInput } from '@/components/offers/PromoCodeInput';
 import { toast } from 'sonner';
 
 interface MembershipTier {
@@ -43,10 +46,18 @@ const Membership = () => {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { tier: currentTier, isPremium, refresh: refreshMembership } = useMembership();
+  const { isTrialActive, daysRemaining, canStartTrial, refetch: refetchTrial } = useFreeTrial();
   const [tiers, setTiers] = useState<MembershipTier[]>([]);
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
+  const [appliedPromo, setAppliedPromo] = useState<{
+    id: string;
+    name: string;
+    code: string;
+    discount_type: string;
+    discount_value: number;
+  } | null>(null);
 
   // Handle success/cancel from Stripe
   useEffect(() => {
@@ -178,6 +189,53 @@ const Membership = () => {
           </Button>
         )}
       </div>
+
+      {/* Trial Banner - show if user can start trial */}
+      {canStartTrial && !isPremium && (
+        <div className="px-4 py-4">
+          <TrialBanner onTrialStarted={() => {
+            refetchTrial();
+            refreshMembership();
+          }} />
+        </div>
+      )}
+
+      {/* Active Trial Banner */}
+      {isTrialActive && (
+        <div className="px-4 py-4">
+          <Card className="p-4 bg-gradient-to-r from-primary/20 to-accent/20 border-primary/30">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-primary/20">
+                <Gift className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-foreground">Free Trial Active</p>
+                <p className="text-sm text-muted-foreground">
+                  {daysRemaining} days remaining - Enjoying full Premium access!
+                </p>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Promo Code Input */}
+      {!isPremium && !isTrialActive && (
+        <div className="px-4 pb-4">
+          <PromoCodeInput
+            onPromoApplied={setAppliedPromo}
+            onPromoRemoved={() => setAppliedPromo(null)}
+          />
+          {appliedPromo && (
+            <p className="text-sm text-primary mt-2 text-center">
+              {appliedPromo.discount_type === 'percent' 
+                ? `${appliedPromo.discount_value}% off will be applied at checkout`
+                : `€${appliedPromo.discount_value} off will be applied at checkout`
+              }
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Tiers */}
       <div className="px-4 py-6 space-y-4">

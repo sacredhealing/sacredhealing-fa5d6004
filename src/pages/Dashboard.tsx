@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Play, BookOpen, Gift, Wallet, Flame, Sparkles, DollarSign, Youtube, ShoppingBag, Crown, Music, Heart, Trophy, Star, Calendar, Headphones, Wind } from 'lucide-react';
+import { Play, BookOpen, Gift, Wallet, Flame, Sparkles, DollarSign, Youtube, ShoppingBag, Crown, Music, Heart, Trophy, Star, Calendar, Headphones, Wind, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LotusIcon } from '@/components/icons/LotusIcon';
 import { SocialShare } from '@/components/SocialShare';
@@ -12,12 +12,28 @@ import { AnimatedCounter } from '@/components/ui/animated-counter';
 import { useDailyQuote } from '@/hooks/useDailyQuote';
 import { useDailyMeditation } from '@/hooks/useDailyMeditation';
 import { HealingProgressCard } from '@/components/healing/HealingProgressCard';
+import { useAchievements } from '@/hooks/useAchievements';
+import { AchievementBadge } from '@/components/achievements/AchievementBadge';
+import { AchievementPopup } from '@/components/achievements/AchievementPopup';
 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
   const { balance, profile, isLoading } = useSHC();
   const { quote, isVisible } = useDailyQuote();
   const { meditation: dailyMeditation, isLoading: meditationLoading } = useDailyMeditation();
+  const { 
+    achievements, 
+    userAchievements, 
+    newlyUnlocked, 
+    checkAchievements, 
+    dismissNewlyUnlocked,
+    getAchievementProgress 
+  } = useAchievements();
+
+  // Check achievements when dashboard loads
+  useEffect(() => {
+    checkAchievements();
+  }, [checkAchievements]);
 
   const quickActions = [
     { icon: Play, labelKey: 'quickActions.meditate', to: '/meditations', color: 'primary' },
@@ -29,6 +45,11 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen px-4 pt-6">
+      {/* Achievement Popup */}
+      <AchievementPopup 
+        achievement={newlyUnlocked}
+        onClose={dismissNewlyUnlocked}
+      />
       {/* Header */}
       <header className="flex items-center justify-between mb-8 animate-fade-in">
         <div>
@@ -315,6 +336,43 @@ const Dashboard: React.FC = () => {
           </Link>
         </div>
       </div>
+
+      {/* Achievements Section */}
+      {achievements.length > 0 && (
+        <div className="mt-6 animate-slide-up" style={{ animationDelay: '0.35s' }}>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Award className="w-5 h-5 text-primary" />
+              <h2 className="text-lg font-heading font-semibold text-foreground">
+                Achievements
+              </h2>
+            </div>
+            <Badge variant="outline" className="text-xs">
+              {userAchievements.length}/{achievements.length}
+            </Badge>
+          </div>
+          
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            {achievements.slice(0, 6).map((achievement) => {
+              const progress = getAchievementProgress(achievement);
+              return (
+                <div key={achievement.id} className="flex-shrink-0">
+                  <AchievementBadge
+                    name={achievement.name}
+                    description={achievement.description || ''}
+                    iconName={achievement.icon_name}
+                    badgeColor={achievement.badge_color}
+                    unlocked={progress.unlocked}
+                    unlockedAt={progress.unlockedAt}
+                    shcReward={achievement.shc_reward}
+                    size="sm"
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Social Share */}
       <div className="mt-8 rounded-2xl bg-muted/30 border border-border/30 p-5 animate-slide-up" style={{ animationDelay: '0.4s' }}>

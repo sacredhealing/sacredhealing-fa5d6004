@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          badge_color: string | null
+          category: string
+          created_at: string
+          description: string | null
+          icon_name: string
+          id: string
+          is_active: boolean
+          name: string
+          order_index: number
+          requirement_type: string
+          requirement_value: number
+          shc_reward: number
+          slug: string
+        }
+        Insert: {
+          badge_color?: string | null
+          category?: string
+          created_at?: string
+          description?: string | null
+          icon_name?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          order_index?: number
+          requirement_type: string
+          requirement_value?: number
+          shc_reward?: number
+          slug: string
+        }
+        Update: {
+          badge_color?: string | null
+          category?: string
+          created_at?: string
+          description?: string | null
+          icon_name?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          order_index?: number
+          requirement_type?: string
+          requirement_value?: number
+          shc_reward?: number
+          slug?: string
+        }
+        Relationships: []
+      }
       admin_content: {
         Row: {
           content_type: string
@@ -1111,6 +1159,48 @@ export type Database = {
         }
         Relationships: []
       }
+      free_trials: {
+        Row: {
+          conversion_date: string | null
+          converted: boolean
+          created_at: string
+          ends_at: string
+          id: string
+          reminder_sent_day_12: boolean
+          reminder_sent_day_14: boolean
+          reminder_sent_day_7: boolean
+          started_at: string
+          trial_tier: string
+          user_id: string
+        }
+        Insert: {
+          conversion_date?: string | null
+          converted?: boolean
+          created_at?: string
+          ends_at: string
+          id?: string
+          reminder_sent_day_12?: boolean
+          reminder_sent_day_14?: boolean
+          reminder_sent_day_7?: boolean
+          started_at?: string
+          trial_tier?: string
+          user_id: string
+        }
+        Update: {
+          conversion_date?: string | null
+          converted?: boolean
+          created_at?: string
+          ends_at?: string
+          id?: string
+          reminder_sent_day_12?: boolean
+          reminder_sent_day_14?: boolean
+          reminder_sent_day_7?: boolean
+          started_at?: string
+          trial_tier?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       healing_audio: {
         Row: {
           audio_url: string
@@ -1781,6 +1871,45 @@ export type Database = {
         }
         Relationships: []
       }
+      milestones: {
+        Row: {
+          created_at: string
+          description: string | null
+          icon_name: string
+          id: string
+          is_active: boolean
+          name: string
+          order_index: number
+          requirement_type: string
+          requirement_value: number
+          shc_reward: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          icon_name?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          order_index?: number
+          requirement_type: string
+          requirement_value: number
+          shc_reward?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          icon_name?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          order_index?: number
+          requirement_type?: string
+          requirement_value?: number
+          shc_reward?: number
+        }
+        Relationships: []
+      }
       monthly_costs: {
         Row: {
           amount: number
@@ -2328,6 +2457,51 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
         ]
+      }
+      promotional_offers: {
+        Row: {
+          applicable_tiers: string[] | null
+          code: string
+          created_at: string
+          current_uses: number
+          discount_type: string
+          discount_value: number
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          name: string
+          valid_from: string
+          valid_until: string | null
+        }
+        Insert: {
+          applicable_tiers?: string[] | null
+          code: string
+          created_at?: string
+          current_uses?: number
+          discount_type?: string
+          discount_value: number
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          name: string
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Update: {
+          applicable_tiers?: string[] | null
+          code?: string
+          created_at?: string
+          current_uses?: number
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          name?: string
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Relationships: []
       }
       referral_signups: {
         Row: {
@@ -3082,6 +3256,41 @@ export type Database = {
           },
         ]
       }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          id: string
+          shared: boolean
+          shared_at: string | null
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          id?: string
+          shared?: boolean
+          shared_at?: string | null
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          id?: string
+          shared?: boolean
+          shared_at?: string | null
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_balances: {
         Row: {
           balance: number
@@ -3268,6 +3477,70 @@ export type Database = {
             columns: ["tier_id"]
             isOneToOne: false
             referencedRelation: "membership_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_milestones: {
+        Row: {
+          id: string
+          milestone_id: string
+          reached_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          milestone_id: string
+          reached_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          milestone_id?: string
+          reached_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_milestones_milestone_id_fkey"
+            columns: ["milestone_id"]
+            isOneToOne: false
+            referencedRelation: "milestones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_offers: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          offer_id: string
+          redeemed_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          offer_id: string
+          redeemed_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          offer_id?: string
+          redeemed_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_offers_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "promotional_offers"
             referencedColumns: ["id"]
           },
         ]
