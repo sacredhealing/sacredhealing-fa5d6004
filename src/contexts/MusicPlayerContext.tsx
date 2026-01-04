@@ -19,6 +19,12 @@ export interface Track {
   bpm: number | null;
   release_date: string | null;
   created_at: string;
+  // New metadata fields
+  mood: string | null;
+  spiritual_path: string | null;
+  intended_use: string | null;
+  affirmation: string | null;
+  creator_notes: string | null;
 }
 
 interface MusicPlayerContextType {

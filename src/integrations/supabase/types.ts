@@ -2404,15 +2404,19 @@ export type Database = {
       }
       music_tracks: {
         Row: {
+          affirmation: string | null
           artist: string
           bpm: number | null
           cover_image_url: string | null
           created_at: string
+          creator_notes: string | null
           description: string | null
           duration_seconds: number
           full_audio_url: string
           genre: string
           id: string
+          intended_use: string | null
+          mood: string | null
           play_count: number
           preview_url: string
           price_shc: number
@@ -2420,18 +2424,23 @@ export type Database = {
           purchase_count: number
           release_date: string | null
           shc_reward: number
+          spiritual_path: string | null
           title: string
         }
         Insert: {
+          affirmation?: string | null
           artist?: string
           bpm?: number | null
           cover_image_url?: string | null
           created_at?: string
+          creator_notes?: string | null
           description?: string | null
           duration_seconds?: number
           full_audio_url: string
           genre?: string
           id?: string
+          intended_use?: string | null
+          mood?: string | null
           play_count?: number
           preview_url: string
           price_shc?: number
@@ -2439,18 +2448,23 @@ export type Database = {
           purchase_count?: number
           release_date?: string | null
           shc_reward?: number
+          spiritual_path?: string | null
           title: string
         }
         Update: {
+          affirmation?: string | null
           artist?: string
           bpm?: number | null
           cover_image_url?: string | null
           created_at?: string
+          creator_notes?: string | null
           description?: string | null
           duration_seconds?: number
           full_audio_url?: string
           genre?: string
           id?: string
+          intended_use?: string | null
+          mood?: string | null
           play_count?: number
           preview_url?: string
           price_shc?: number
@@ -2458,6 +2472,7 @@ export type Database = {
           purchase_count?: number
           release_date?: string | null
           shc_reward?: number
+          spiritual_path?: string | null
           title?: string
         }
         Relationships: []
