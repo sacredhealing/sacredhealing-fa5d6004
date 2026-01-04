@@ -1126,6 +1126,77 @@ export type Database = {
         }
         Relationships: []
       }
+      email_sequence_steps: {
+        Row: {
+          created_at: string
+          delay_hours: number
+          html_template: string
+          id: string
+          sequence_id: string
+          step_order: number
+          subject: string
+          text_content: string | null
+        }
+        Insert: {
+          created_at?: string
+          delay_hours?: number
+          html_template: string
+          id?: string
+          sequence_id: string
+          step_order?: number
+          subject: string
+          text_content?: string | null
+        }
+        Update: {
+          created_at?: string
+          delay_hours?: number
+          html_template?: string
+          id?: string
+          sequence_id?: string
+          step_order?: number
+          subject?: string
+          text_content?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_sequence_steps_sequence_id_fkey"
+            columns: ["sequence_id"]
+            isOneToOne: false
+            referencedRelation: "email_sequences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_sequences: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          trigger_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          trigger_type?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          trigger_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_subscribers: {
         Row: {
           created_at: string
@@ -1430,6 +1501,51 @@ export type Database = {
           title_es?: string | null
           title_no?: string | null
           title_sv?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      influencer_partners: {
+        Row: {
+          commission_rate: number
+          created_at: string
+          email: string | null
+          id: string
+          is_active: boolean
+          name: string
+          notes: string | null
+          platform: string
+          referral_code: string
+          total_referrals: number
+          total_revenue: number
+          updated_at: string
+        }
+        Insert: {
+          commission_rate?: number
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          notes?: string | null
+          platform?: string
+          referral_code: string
+          total_referrals?: number
+          total_revenue?: number
+          updated_at?: string
+        }
+        Update: {
+          commission_rate?: number
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          notes?: string | null
+          platform?: string
+          referral_code?: string
+          total_referrals?: number
+          total_revenue?: number
           updated_at?: string
         }
         Relationships: []
@@ -2937,6 +3053,45 @@ export type Database = {
         }
         Relationships: []
       }
+      social_shares: {
+        Row: {
+          content_id: string | null
+          content_type: string | null
+          created_at: string
+          id: string
+          platform: string
+          share_type: string
+          user_id: string
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          content_id?: string | null
+          content_type?: string | null
+          created_at?: string
+          id?: string
+          platform: string
+          share_type: string
+          user_id: string
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          content_id?: string | null
+          content_type?: string | null
+          created_at?: string
+          id?: string
+          platform?: string
+          share_type?: string
+          user_id?: string
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Relationships: []
+      }
       spiritual_path_days: {
         Row: {
           affirmation: string | null
@@ -3386,6 +3541,57 @@ export type Database = {
             columns: ["morning_meditation_id"]
             isOneToOne: false
             referencedRelation: "meditations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_email_queue: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          scheduled_for: string
+          sent_at: string | null
+          sequence_id: string
+          status: string
+          step_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          scheduled_for: string
+          sent_at?: string | null
+          sequence_id: string
+          status?: string
+          step_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          scheduled_for?: string
+          sent_at?: string | null
+          sequence_id?: string
+          status?: string
+          step_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_email_queue_sequence_id_fkey"
+            columns: ["sequence_id"]
+            isOneToOne: false
+            referencedRelation: "email_sequences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_email_queue_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "email_sequence_steps"
             referencedColumns: ["id"]
           },
         ]

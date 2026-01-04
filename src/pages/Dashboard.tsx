@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Play, BookOpen, Gift, Wallet, Flame, Sparkles, DollarSign, Youtube, ShoppingBag, Crown, Music, Heart, Trophy, Star, Calendar, Headphones, Wind, Award } from 'lucide-react';
+import { Play, BookOpen, Gift, Wallet, Flame, Sparkles, DollarSign, Youtube, ShoppingBag, Crown, Music, Heart, Trophy, Star, Calendar, Headphones, Wind, Award, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LotusIcon } from '@/components/icons/LotusIcon';
 import { SocialShare } from '@/components/SocialShare';
@@ -15,6 +15,9 @@ import { HealingProgressCard } from '@/components/healing/HealingProgressCard';
 import { useAchievements } from '@/hooks/useAchievements';
 import { AchievementBadge } from '@/components/achievements/AchievementBadge';
 import { AchievementPopup } from '@/components/achievements/AchievementPopup';
+import { ShareableProgressCard } from '@/components/achievements/ShareableProgressCard';
+import { ShareableQuoteCard } from '@/components/social/ShareableQuoteCard';
+import { useSocialShare } from '@/hooks/useSocialShare';
 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
@@ -29,7 +32,7 @@ const Dashboard: React.FC = () => {
     dismissNewlyUnlocked,
     getAchievementProgress 
   } = useAchievements();
-
+  const { trackShare } = useSocialShare();
   // Check achievements when dashboard loads
   useEffect(() => {
     checkAchievements();
@@ -374,8 +377,33 @@ const Dashboard: React.FC = () => {
         </div>
       )}
 
+      {/* Shareable Progress Card */}
+      <div className="mt-6 animate-slide-up" style={{ animationDelay: '0.4s' }}>
+        <div className="flex items-center gap-2 mb-4">
+          <Share2 className="w-5 h-5 text-primary" />
+          <h2 className="text-lg font-heading font-semibold text-foreground">
+            Share Your Journey
+          </h2>
+        </div>
+        <ShareableProgressCard 
+          onShare={() => trackShare({ shareType: 'progress_card', platform: 'native' })} 
+        />
+      </div>
+
+      {/* Daily Wisdom Shareable */}
+      {quote && (
+        <div className="mt-6 animate-slide-up" style={{ animationDelay: '0.45s' }}>
+          <ShareableQuoteCard 
+            quote={quote}
+            author="Paramahamsa Vishwananda"
+            category="Daily Wisdom"
+            onShare={() => trackShare({ shareType: 'quote', platform: 'native' })}
+          />
+        </div>
+      )}
+
       {/* Social Share */}
-      <div className="mt-8 rounded-2xl bg-muted/30 border border-border/30 p-5 animate-slide-up" style={{ animationDelay: '0.4s' }}>
+      <div className="mt-8 rounded-2xl bg-muted/30 border border-border/30 p-5 animate-slide-up" style={{ animationDelay: '0.5s' }}>
         <h2 className="text-lg font-heading font-semibold text-foreground mb-3">{t('dashboard.inviteFriends')}</h2>
         <p className="text-sm text-muted-foreground mb-4">{t('dashboard.inviteDescription')}</p>
         <SocialShare 
