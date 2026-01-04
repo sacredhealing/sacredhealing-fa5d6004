@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Upload, Plus, Trash2, Music, Loader2, ArrowLeft, Edit2, X, Image, Check, Disc } from 'lucide-react';
+import { Upload, Plus, Trash2, Music, Loader2, ArrowLeft, Edit2, X, Image, Check, Disc, Sparkles, AlertCircle, Clock, RefreshCw } from 'lucide-react';
 import AlbumManager from '@/components/admin/AlbumManager';
+import { TrackAnalysisSection } from '@/components/admin/TrackAnalysisSection';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -23,6 +25,22 @@ interface MusicTrack {
   cover_image_url: string | null;
   preview_url: string;
   full_audio_url: string;
+  // Analysis fields
+  mood?: string | null;
+  spiritual_path?: string | null;
+  intended_use?: string | null;
+  affirmation?: string | null;
+  creator_notes?: string | null;
+  energy_level?: string | null;
+  rhythm_type?: string | null;
+  vocal_type?: string | null;
+  frequency_band?: string | null;
+  best_time_of_day?: string | null;
+  spiritual_description?: string | null;
+  auto_generated_description?: string | null;
+  auto_generated_affirmation?: string | null;
+  analysis_status?: string | null;
+  analysis_completed_at?: string | null;
 }
 
 const GENRES = ['beats', 'meditation', 'mystic', 'reggae', 'hip-hop', 'reggaeton', 'indian', 'shamanic'];
@@ -657,7 +675,13 @@ const AdminMusic: React.FC = () => {
                         )}
                       </div>
                       
-                      <div className="flex gap-2">
+                      {/* Spiritual Context Analysis Section */}
+                      <TrackAnalysisSection 
+                        track={track} 
+                        onUpdate={fetchTracks} 
+                      />
+                      
+                      <div className="flex gap-2 mt-4">
                         <Button onClick={saveEdit} disabled={isSaving} className="flex-1">
                           {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check size={16} />}
                           Save Changes
@@ -685,6 +709,23 @@ const AdminMusic: React.FC = () => {
                         <p className="text-xs text-accent">
                           ${track.price_usd} • {track.purchase_count} sales • {track.play_count || 0} plays
                         </p>
+                        {/* Analysis status badge */}
+                        {track.analysis_status && (
+                          <div className="mt-1">
+                            {track.analysis_status === 'approved' && (
+                              <Badge className="bg-green-500/20 text-green-400 text-xs"><Check className="w-3 h-3 mr-1" />Approved</Badge>
+                            )}
+                            {track.analysis_status === 'completed' && (
+                              <Badge className="bg-amber-500/20 text-amber-400 text-xs"><AlertCircle className="w-3 h-3 mr-1" />Needs Review</Badge>
+                            )}
+                            {track.analysis_status === 'analyzing' && (
+                              <Badge className="bg-blue-500/20 text-blue-400 text-xs"><RefreshCw className="w-3 h-3 mr-1 animate-spin" />Analyzing</Badge>
+                            )}
+                            {track.analysis_status === 'pending' && (
+                              <Badge className="bg-muted text-muted-foreground text-xs"><Clock className="w-3 h-3 mr-1" />Pending</Badge>
+                            )}
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center gap-1">
                         <Button

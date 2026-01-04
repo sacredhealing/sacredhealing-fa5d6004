@@ -89,3 +89,6 @@ verify_jwt = true
 
 [functions.notify-course-release]
 verify_jwt = true
+
+[functions.analyze-music-track]
+verify_jwt = true

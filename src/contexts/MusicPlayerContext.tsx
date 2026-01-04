@@ -19,12 +19,22 @@ export interface Track {
   bpm: number | null;
   release_date: string | null;
   created_at: string;
-  // New metadata fields
+  // Spiritual metadata fields
   mood: string | null;
   spiritual_path: string | null;
   intended_use: string | null;
   affirmation: string | null;
   creator_notes: string | null;
+  // Audio analysis fields
+  energy_level: string | null;
+  rhythm_type: string | null;
+  vocal_type: string | null;
+  frequency_band: string | null;
+  best_time_of_day: string | null;
+  spiritual_description: string | null;
+  auto_generated_description: string | null;
+  auto_generated_affirmation: string | null;
+  analysis_status: string | null;
 }
 
 interface MusicPlayerContextType {
