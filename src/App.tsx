@@ -66,6 +66,7 @@ import EducationDetail from "./pages/income-streams/EducationDetail";
 import AdminSystem from "./pages/AdminSystem";
 import AdminBreathing from "./pages/AdminBreathing";
 import AdminAffirmation from "./pages/AdminAffirmation";
+import AdminAnalytics from "./pages/AdminAnalytics";
 import Explore from "./pages/Explore";
 import Onboarding from "./pages/Onboarding";
 import SpiritualPaths from "./pages/SpiritualPaths";
@@ -150,6 +151,7 @@ const App = () => (
                 <Route path="/admin/system" element={<AdminSystem />} />
                 <Route path="/admin/breathing" element={<AdminBreathing />} />
                 <Route path="/admin/affirmation" element={<AdminAffirmation />} />
+                <Route path="/admin/analytics" element={<AdminAnalytics />} />
               </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>

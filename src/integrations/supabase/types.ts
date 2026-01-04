@@ -788,6 +788,42 @@ export type Database = {
         }
         Relationships: []
       }
+      content_analytics: {
+        Row: {
+          activity_date: string
+          completed: boolean | null
+          content_id: string
+          content_name: string | null
+          content_type: string
+          created_at: string
+          duration_seconds: number | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          activity_date?: string
+          completed?: boolean | null
+          content_id: string
+          content_name?: string | null
+          content_type: string
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          activity_date?: string
+          completed?: boolean | null
+          content_id?: string
+          content_name?: string | null
+          content_type?: string
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       course_enrollments: {
         Row: {
           amount_paid: number | null
@@ -1123,6 +1159,33 @@ export type Database = {
           updated_at?: string
           user_id?: string
           voice_file_url?: string | null
+        }
+        Relationships: []
+      }
+      daily_active_users: {
+        Row: {
+          activity_count: number
+          activity_date: string
+          activity_type: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          activity_count?: number
+          activity_date?: string
+          activity_type: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          activity_count?: number
+          activity_date?: string
+          activity_type?: string
+          created_at?: string
+          id?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -2678,6 +2741,39 @@ export type Database = {
           },
         ]
       }
+      revenue_events: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string | null
+          event_type: string
+          id: string
+          stripe_payment_id: string | null
+          tier_slug: string | null
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          currency?: string | null
+          event_type: string
+          id?: string
+          stripe_payment_id?: string | null
+          tier_slug?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string | null
+          event_type?: string
+          id?: string
+          stripe_payment_id?: string | null
+          tier_slug?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       revenue_records: {
         Row: {
           amount_shc: number | null
@@ -3472,6 +3568,66 @@ export type Database = {
           total_earned?: number
           total_spent?: number
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_cohorts: {
+        Row: {
+          churned_at: string | null
+          conversion_stage: string | null
+          converted_to_paid_at: string | null
+          converted_to_trial_at: string | null
+          created_at: string
+          current_tier: string | null
+          d1_retained: boolean | null
+          d30_retained: boolean | null
+          d7_retained: boolean | null
+          first_activity_date: string | null
+          id: string
+          last_activity_date: string | null
+          lifetime_revenue: number | null
+          signup_date: string
+          updated_at: string
+          upgraded_at: string | null
+          user_id: string
+        }
+        Insert: {
+          churned_at?: string | null
+          conversion_stage?: string | null
+          converted_to_paid_at?: string | null
+          converted_to_trial_at?: string | null
+          created_at?: string
+          current_tier?: string | null
+          d1_retained?: boolean | null
+          d30_retained?: boolean | null
+          d7_retained?: boolean | null
+          first_activity_date?: string | null
+          id?: string
+          last_activity_date?: string | null
+          lifetime_revenue?: number | null
+          signup_date: string
+          updated_at?: string
+          upgraded_at?: string | null
+          user_id: string
+        }
+        Update: {
+          churned_at?: string | null
+          conversion_stage?: string | null
+          converted_to_paid_at?: string | null
+          converted_to_trial_at?: string | null
+          created_at?: string
+          current_tier?: string | null
+          d1_retained?: boolean | null
+          d30_retained?: boolean | null
+          d7_retained?: boolean | null
+          first_activity_date?: string | null
+          id?: string
+          last_activity_date?: string | null
+          lifetime_revenue?: number | null
+          signup_date?: string
+          updated_at?: string
+          upgraded_at?: string | null
           user_id?: string
         }
         Relationships: []
