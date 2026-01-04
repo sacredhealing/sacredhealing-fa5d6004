@@ -10,6 +10,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { AppLayout } from "./components/layout/AppLayout";
 import { ProtectedRoute } from "./components/layout/ProtectedRoute";
+import { AuthOnlyRoute } from "./components/layout/AuthOnlyRoute";
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -66,6 +67,11 @@ import AdminSystem from "./pages/AdminSystem";
 import AdminBreathing from "./pages/AdminBreathing";
 import AdminAffirmation from "./pages/AdminAffirmation";
 import Explore from "./pages/Explore";
+import Onboarding from "./pages/Onboarding";
+import SpiritualPaths from "./pages/SpiritualPaths";
+import PathDetail from "./pages/PathDetail";
+import DailyRitual from "./pages/DailyRitual";
+import Journal from "./pages/Journal";
 import "@/lib/performance"; // Initialize performance monitoring
 
 const App = () => (
@@ -81,6 +87,9 @@ const App = () => (
               <Route path="/" element={<Auth />} />
               <Route path="/about" element={<About />} />
               <Route path="/auth" element={<Auth />} />
+              <Route element={<AuthOnlyRoute />}>
+                <Route path="/onboarding" element={<Onboarding />} />
+              </Route>
               <Route element={<ProtectedRoute />}>
                 <Route element={<AppLayout />}>
                   <Route path="/dashboard" element={<Dashboard />} />
@@ -119,6 +128,10 @@ const App = () => (
                   <Route path="/podcast" element={<Podcast />} />
                   <Route path="/live-recordings" element={<LiveRecordings />} />
                   <Route path="/ai-income" element={<AIIncomeEngine />} />
+                  <Route path="/paths" element={<SpiritualPaths />} />
+                  <Route path="/paths/:slug" element={<PathDetail />} />
+                  <Route path="/ritual" element={<DailyRitual />} />
+                  <Route path="/journal" element={<Journal />} />
                 </Route>
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/meditations" element={<Admin />} />
