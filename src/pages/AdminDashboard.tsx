@@ -19,7 +19,8 @@ import {
   Mail,
   FolderKanban,
   Wind,
-  AudioLines
+  AudioLines,
+  BarChart3
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -137,6 +138,13 @@ const adminSections = [
     icon: AudioLines,
     href: '/admin/affirmation',
     color: 'text-purple-500',
+  },
+  {
+    title: 'Analytics & KPIs',
+    description: 'View conversion, retention, ARPU and churn metrics',
+    icon: BarChart3,
+    href: '/admin/analytics',
+    color: 'text-emerald-500',
   },
 ];
 
