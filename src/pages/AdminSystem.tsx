@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, FolderKanban, CheckSquare, FileText, Calendar, Settings, Users, LayoutDashboard, Music, GraduationCap, Workflow } from 'lucide-react';
+import { ArrowLeft, FolderKanban, CheckSquare, FileText, Calendar, Settings, Users, LayoutDashboard, Music, GraduationCap, Workflow, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -16,6 +16,7 @@ import AdminUsersTab from '@/components/admin-system/AdminUsersTab';
 import MusicProjectsSection from '@/components/admin-system/MusicProjectsSection';
 import CoursesProjectsSection from '@/components/admin-system/CoursesProjectsSection';
 import WorkflowTemplateManager from '@/components/admin-system/WorkflowTemplateManager';
+import AdminMonthlyCostsTab from '@/components/admin-system/AdminMonthlyCostsTab';
 
 const AdminSystem = () => {
   const navigate = useNavigate();
@@ -58,6 +59,7 @@ const AdminSystem = () => {
     { id: 'tasks', label: 'Tasks', icon: CheckSquare },
     { id: 'content', label: 'Content', icon: FileText },
     { id: 'events', label: 'Events', icon: Calendar },
+    { id: 'costs', label: 'Costs', icon: DollarSign },
     { id: 'users', label: 'Users', icon: Users },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
@@ -78,7 +80,7 @@ const AdminSystem = () => {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid grid-cols-4 md:grid-cols-11 gap-2 h-auto p-1">
+          <TabsList className="grid grid-cols-4 md:grid-cols-12 gap-2 h-auto p-1">
             {tabs.map((tab) => (
               <TabsTrigger
                 key={tab.id}
@@ -121,6 +123,10 @@ const AdminSystem = () => {
 
           <TabsContent value="events">
             <AdminEventsTab />
+          </TabsContent>
+
+          <TabsContent value="costs">
+            <AdminMonthlyCostsTab />
           </TabsContent>
 
           <TabsContent value="users">

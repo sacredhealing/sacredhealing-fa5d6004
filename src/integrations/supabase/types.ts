@@ -1775,6 +1775,39 @@ export type Database = {
         }
         Relationships: []
       }
+      monthly_costs: {
+        Row: {
+          amount: number
+          category: string | null
+          created_at: string
+          id: string
+          is_recurring: boolean | null
+          name: string
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_recurring?: boolean | null
+          name: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_recurring?: boolean | null
+          name?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       music_albums: {
         Row: {
           artist: string
