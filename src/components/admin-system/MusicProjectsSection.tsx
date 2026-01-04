@@ -14,6 +14,7 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import FileUpload from '@/components/admin/FileUpload';
 import { useWorkflowTemplates, WorkflowStage } from '@/hooks/useWorkflowTemplates';
+import ItemWorkflowEditor from './ItemWorkflowEditor';
 
 interface Song {
   id: string;
@@ -142,15 +143,57 @@ const MusicProjectsSection = () => {
   };
 
   const calculateSongProgress = (song: Song): number => {
-    const stages = song.workflow_stages;
-    const stageKeys = songStages.map(s => s.key);
-    const completedStages = stageKeys.filter(key => stages[key]).length;
-    return stageKeys.length > 0 ? Math.round((completedStages / stageKeys.length) * 100) : 0;
+    // Include both template and custom stages
+    const allStageKeys = Object.keys(song.workflow_stages);
+    const completedStages = allStageKeys.filter(key => song.workflow_stages[key]).length;
+    return allStageKeys.length > 0 ? Math.round((completedStages / allStageKeys.length) * 100) : 0;
   };
 
   const isSongFinished = (song: Song): boolean => {
-    const stageKeys = songStages.map(s => s.key);
-    return stageKeys.every(key => song.workflow_stages[key]);
+    const allStageKeys = Object.keys(song.workflow_stages);
+    return allStageKeys.length > 0 && allStageKeys.every(key => song.workflow_stages[key]);
+  };
+
+  // Get custom stages for a song (keys not in template)
+  const getSongCustomStages = (song: Song): { key: string; label: string }[] => {
+    const templateKeys = songStages.map(s => s.key);
+    return Object.keys(song.workflow_stages)
+      .filter(key => !templateKeys.includes(key))
+      .map(key => ({
+        key,
+        label: key.replace(/^custom_/, '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+      }));
+  };
+
+  // Get custom stages for a project (keys not in template)
+  const getProjectCustomStages = (project: MusicProject): { key: string; label: string }[] => {
+    const templateKeys = musicStages.map(s => s.key);
+    return Object.keys(project.workflow_stages)
+      .filter(key => !templateKeys.includes(key))
+      .map(key => ({
+        key,
+        label: key.replace(/^custom_/, '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+      }));
+  };
+
+  const handleSongWorkflowUpdate = async (songId: string, updatedWorkflow: Record<string, boolean>) => {
+    const { error } = await supabase
+      .from('music_project_songs')
+      .update({ workflow_stages: updatedWorkflow })
+      .eq('id', songId);
+    
+    if (error) throw error;
+    fetchProjects();
+  };
+
+  const handleProjectWorkflowUpdate = async (projectId: string, updatedWorkflow: Record<string, boolean>) => {
+    const { error } = await supabase
+      .from('admin_projects')
+      .update({ workflow_stages: updatedWorkflow })
+      .eq('id', projectId);
+    
+    if (error) throw error;
+    fetchProjects();
   };
 
   const calculateProjectProgress = (project: MusicProject): number => {
@@ -703,6 +746,40 @@ const MusicProjectsSection = () => {
                                         </div>
                                       );
                                     })}
+                                    {/* Custom stages for this song */}
+                                    {getSongCustomStages(song).map((stage) => {
+                                      const isChecked = song.workflow_stages[stage.key];
+
+                                      return (
+                                        <div
+                                          key={stage.key}
+                                          className={`flex flex-col items-center p-2 rounded border cursor-pointer transition-all text-xs ${
+                                            isChecked
+                                              ? 'bg-primary/10 border-primary/30'
+                                              : 'bg-muted/50 hover:bg-muted'
+                                          }`}
+                                          onClick={() => handleSongStageToggle(song, stage.key)}
+                                        >
+                                          {isChecked ? (
+                                            <Check className="h-3 w-3 mb-0.5 text-primary" />
+                                          ) : (
+                                            <Circle className="h-3 w-3 mb-0.5 text-muted-foreground" />
+                                          )}
+                                          <span className="text-center truncate w-full">{stage.label}</span>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                  {/* Edit Song Workflow Button */}
+                                  <div className="mt-2 flex justify-end">
+                                    <ItemWorkflowEditor
+                                      itemId={song.id}
+                                      itemType="song"
+                                      currentWorkflow={song.workflow_stages}
+                                      templateStages={songStages}
+                                      onWorkflowUpdate={(workflow) => handleSongWorkflowUpdate(song.id, workflow)}
+                                      onRefresh={fetchProjects}
+                                    />
                                   </div>
                                 </div>
                               );
@@ -716,7 +793,17 @@ const MusicProjectsSection = () => {
                       {/* Project Workflow for single tracks without songs */}
                       {!hasSongs && (
                         <div>
-                          <h4 className="text-sm font-medium mb-3">Workflow Stages</h4>
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="text-sm font-medium">Workflow Stages</h4>
+                            <ItemWorkflowEditor
+                              itemId={project.id}
+                              itemType="music"
+                              currentWorkflow={project.workflow_stages}
+                              templateStages={musicStages}
+                              onWorkflowUpdate={(workflow) => handleProjectWorkflowUpdate(project.id, workflow)}
+                              onRefresh={fetchProjects}
+                            />
+                          </div>
                           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
                             {musicStages.map((stage) => {
                               const isChecked = project.workflow_stages[stage.key];
@@ -733,6 +820,29 @@ const MusicProjectsSection = () => {
                                 >
                                   {isChecked ? (
                                     <Check className="h-5 w-5 mb-1 text-green-500" />
+                                  ) : (
+                                    <Circle className="h-5 w-5 mb-1 text-muted-foreground" />
+                                  )}
+                                  <span className="text-xs text-center">{stage.label}</span>
+                                </div>
+                              );
+                            })}
+                            {/* Custom stages for this project */}
+                            {getProjectCustomStages(project).map((stage) => {
+                              const isChecked = project.workflow_stages[stage.key];
+
+                              return (
+                                <div
+                                  key={stage.key}
+                                  className={`flex flex-col items-center p-3 rounded-lg border cursor-pointer transition-all ${
+                                    isChecked
+                                      ? 'bg-primary/10 border-primary/30'
+                                      : 'bg-background hover:bg-muted/50'
+                                  }`}
+                                  onClick={() => handleStageToggle(project.id, stage.key)}
+                                >
+                                  {isChecked ? (
+                                    <Check className="h-5 w-5 mb-1 text-primary" />
                                   ) : (
                                     <Circle className="h-5 w-5 mb-1 text-muted-foreground" />
                                   )}
