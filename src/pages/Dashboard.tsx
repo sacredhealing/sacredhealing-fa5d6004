@@ -18,6 +18,9 @@ import { AchievementPopup } from '@/components/achievements/AchievementPopup';
 import { ShareableProgressCard } from '@/components/achievements/ShareableProgressCard';
 import { ShareableQuoteCard } from '@/components/social/ShareableQuoteCard';
 import { useSocialShare } from '@/hooks/useSocialShare';
+import { FeaturedPlaylistsCarousel } from '@/components/dashboard/FeaturedPlaylistsCarousel';
+import { DailyRitualCard } from '@/components/dashboard/DailyRitualCard';
+import { SpiritualPathCard } from '@/components/dashboard/SpiritualPathCard';
 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
@@ -192,6 +195,21 @@ const Dashboard: React.FC = () => {
             </Link>
           ))}
         </div>
+      </div>
+
+      {/* Daily Ritual Card */}
+      <div className="mt-6 animate-slide-up" style={{ animationDelay: '0.32s' }}>
+        <DailyRitualCard />
+      </div>
+
+      {/* Spiritual Path Card */}
+      <div className="mt-4 animate-slide-up" style={{ animationDelay: '0.33s' }}>
+        <SpiritualPathCard />
+      </div>
+
+      {/* Featured Playlists Carousel */}
+      <div className="mt-6 animate-slide-up" style={{ animationDelay: '0.34s' }}>
+        <FeaturedPlaylistsCarousel contentType="meditation" />
       </div>
 
       {/* Featured Sections - Explore */}
