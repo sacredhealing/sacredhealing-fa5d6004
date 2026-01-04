@@ -1748,6 +1748,8 @@ export type Database = {
           order_index: number
           price_eur: number
           slug: string
+          stripe_price_id: string | null
+          stripe_product_id: string | null
         }
         Insert: {
           billing_interval?: string | null
@@ -1760,6 +1762,8 @@ export type Database = {
           order_index?: number
           price_eur?: number
           slug: string
+          stripe_price_id?: string | null
+          stripe_product_id?: string | null
         }
         Update: {
           billing_interval?: string | null
@@ -1772,6 +1776,8 @@ export type Database = {
           order_index?: number
           price_eur?: number
           slug?: string
+          stripe_price_id?: string | null
+          stripe_product_id?: string | null
         }
         Relationships: []
       }
