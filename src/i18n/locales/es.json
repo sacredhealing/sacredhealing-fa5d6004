@@ -1173,5 +1173,24 @@
     "benefit3": "Promueve un mejor sueño",
     "benefit4": "Reduce la presión arterial",
     "benefit5": "Aumenta los niveles de energía"
+  },
+  "explore": {
+    "title": "Explorar",
+    "subtitle": "Descubre tu viaje espiritual",
+    "featuredPlaylists": "Listas Destacadas",
+    "searchPlaceholder": "Buscar contenido...",
+    "categories": "Categorías",
+    "all": "Todos",
+    "healing": "Sanación",
+    "meditation": "Meditación",
+    "music": "Música",
+    "courses": "Cursos",
+    "community": "Comunidad",
+    "yourProgress": "Tu Progreso",
+    "totalListeningTime": "Tiempo Total de Escucha",
+    "meditationsCompleted": "Meditaciones Completadas",
+    "coursesEnrolled": "Cursos Inscritos",
+    "featuredPrograms": "Programas Destacados",
+    "viewAll": "Ver Todo"
   }
 }
