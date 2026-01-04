@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, Pause, Heart, Plus, Clock, Music2, Users, DollarSign } from 'lucide-react';
+import { Play, Pause, Heart, Plus, Clock, Music2, Users, Sparkles, Moon, Zap, Leaf, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useMusicPlayer, Track } from '@/contexts/MusicPlayerContext';
 
@@ -67,7 +67,31 @@ export const TrackCard: React.FC<TrackCardProps> = ({
         {/* Track info */}
         <div className="flex-1 min-w-0">
           <p className="font-medium text-sm truncate">{track.title}</p>
-          <p className="text-xs text-muted-foreground truncate mb-2">{track.artist}</p>
+          <p className="text-xs text-muted-foreground truncate mb-1">{track.artist}</p>
+          
+          {/* Mood & Path badges */}
+          <div className="flex flex-wrap items-center gap-1 mb-1.5">
+            {track.mood && (
+              <span className="inline-flex items-center gap-0.5 bg-amber-500/15 text-amber-400 px-1.5 py-0.5 rounded text-[10px] font-medium">
+                {track.mood === 'calm' && <Moon size={9} />}
+                {track.mood === 'energizing' && <Zap size={9} />}
+                {track.mood === 'healing' && <Sparkles size={9} />}
+                {track.mood === 'meditative' && <Brain size={9} />}
+                {track.mood === 'grounding' && <Leaf size={9} />}
+                {track.mood.charAt(0).toUpperCase() + track.mood.slice(1)}
+              </span>
+            )}
+            {track.spiritual_path && (
+              <span className="bg-purple-500/15 text-purple-400 px-1.5 py-0.5 rounded text-[10px] font-medium capitalize">
+                {track.spiritual_path.replace('_', ' ')}
+              </span>
+            )}
+            {track.intended_use && (
+              <span className="bg-muted/50 text-muted-foreground px-1.5 py-0.5 rounded text-[10px] capitalize">
+                {track.intended_use.replace(/_/g, ' ')}
+              </span>
+            )}
+          </div>
           
           {/* Stats row */}
           <div className="flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">

@@ -31,6 +31,24 @@ interface Album {
 
 const GENRES = ['all', 'beats', 'meditation', 'mystic', 'reggae', 'hip-hop', 'reggaeton', 'indian', 'shamanic'];
 
+const MOODS = [
+  { value: 'all', label: 'All Moods' },
+  { value: 'calm', label: 'Calm' },
+  { value: 'energizing', label: 'Energizing' },
+  { value: 'healing', label: 'Healing' },
+  { value: 'meditative', label: 'Meditative' },
+  { value: 'grounding', label: 'Grounding' },
+];
+
+const SPIRITUAL_PATHS = [
+  { value: 'all', label: 'All Paths' },
+  { value: 'inner_peace', label: 'Inner Peace' },
+  { value: 'focus', label: 'Focus' },
+  { value: 'sleep', label: 'Sleep Sanctuary' },
+  { value: 'healing', label: 'Deep Healing' },
+  { value: 'awakening', label: 'Awakening' },
+];
+
 const Music: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -44,6 +62,8 @@ const Music: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'browse' | 'albums' | 'playlists' | 'history'>('browse');
   const [selectedGenre, setSelectedGenre] = useState('all');
+  const [selectedMood, setSelectedMood] = useState('all');
+  const [selectedPath, setSelectedPath] = useState('all');
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
   
   // Curated playlists
@@ -206,7 +226,12 @@ const Music: React.FC = () => {
     fetchPlaylistTracks(playlistId);
   };
 
-  const filteredTracks = selectedGenre === 'all' ? tracks : tracks.filter(t => t.genre === selectedGenre);
+  const filteredTracks = tracks.filter(t => {
+    if (selectedGenre !== 'all' && t.genre !== selectedGenre) return false;
+    if (selectedMood !== 'all' && t.mood !== selectedMood) return false;
+    if (selectedPath !== 'all' && t.spiritual_path !== selectedPath) return false;
+    return true;
+  });
   const newReleases = [...tracks].sort((a, b) => new Date(b.release_date || b.created_at).getTime() - new Date(a.release_date || a.created_at).getTime()).slice(0, 5);
   const historyTracks = playHistory.map(h => tracks.find(t => t.id === h.track_id)).filter(Boolean) as Track[];
   const playlistTracksList = playlistTracks.map(id => tracks.find(t => t.id === id)).filter(Boolean) as Track[];
@@ -450,22 +475,67 @@ const Music: React.FC = () => {
                 </div>
               )}
 
-              {/* Genres Filter */}
+              {/* Filters Section */}
               <h2 className="text-lg font-semibold mb-3">All Tracks</h2>
-              <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide">
-                {GENRES.map(g => (
-                  <button
-                    key={g}
-                    onClick={() => setSelectedGenre(g)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
-                      selectedGenre === g 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'bg-muted/50 text-muted-foreground hover:bg-muted'
-                    }`}
-                  >
-                    {g === 'all' ? 'All' : g.charAt(0).toUpperCase() + g.slice(1).replace('-', ' ')}
-                  </button>
-                ))}
+              
+              {/* Genre Filter */}
+              <div className="mb-3">
+                <p className="text-xs text-muted-foreground mb-2">Genre</p>
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                  {GENRES.map(g => (
+                    <button
+                      key={g}
+                      onClick={() => setSelectedGenre(g)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+                        selectedGenre === g 
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                      }`}
+                    >
+                      {g === 'all' ? 'All' : g.charAt(0).toUpperCase() + g.slice(1).replace('-', ' ')}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Mood Filter */}
+              <div className="mb-3">
+                <p className="text-xs text-muted-foreground mb-2">Mood</p>
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                  {MOODS.map(m => (
+                    <button
+                      key={m.value}
+                      onClick={() => setSelectedMood(m.value)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+                        selectedMood === m.value 
+                          ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' 
+                          : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                      }`}
+                    >
+                      {m.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Spiritual Path Filter */}
+              <div className="mb-4">
+                <p className="text-xs text-muted-foreground mb-2">Spiritual Path</p>
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                  {SPIRITUAL_PATHS.map(p => (
+                    <button
+                      key={p.value}
+                      onClick={() => setSelectedPath(p.value)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+                        selectedPath === p.value 
+                          ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' 
+                          : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Tracks */}
