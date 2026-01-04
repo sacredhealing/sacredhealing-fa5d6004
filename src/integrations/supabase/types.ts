@@ -3320,6 +3320,7 @@ export type Database = {
       spiritual_path_days: {
         Row: {
           affirmation: string | null
+          breathing_description: string | null
           breathing_pattern_id: string | null
           created_at: string
           day_number: number
@@ -3328,6 +3329,7 @@ export type Database = {
           id: string
           journal_prompt: string | null
           mantra_id: string | null
+          mantra_text: string | null
           morning_meditation_id: string | null
           path_id: string
           shc_reward: number
@@ -3335,6 +3337,7 @@ export type Database = {
         }
         Insert: {
           affirmation?: string | null
+          breathing_description?: string | null
           breathing_pattern_id?: string | null
           created_at?: string
           day_number: number
@@ -3343,6 +3346,7 @@ export type Database = {
           id?: string
           journal_prompt?: string | null
           mantra_id?: string | null
+          mantra_text?: string | null
           morning_meditation_id?: string | null
           path_id: string
           shc_reward?: number
@@ -3350,6 +3354,7 @@ export type Database = {
         }
         Update: {
           affirmation?: string | null
+          breathing_description?: string | null
           breathing_pattern_id?: string | null
           created_at?: string
           day_number?: number
@@ -3358,6 +3363,7 @@ export type Database = {
           id?: string
           journal_prompt?: string | null
           mantra_id?: string | null
+          mantra_text?: string | null
           morning_meditation_id?: string | null
           path_id?: string
           shc_reward?: number
