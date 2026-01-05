@@ -21,7 +21,8 @@ import {
   Wind,
   AudioLines,
   BarChart3,
-  Map
+  Map,
+  MessageCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -153,6 +154,13 @@ const adminSections = [
     icon: Map,
     href: '/admin/paths',
     color: 'text-teal-500',
+  },
+  {
+    title: 'Sacred Circles',
+    description: 'Manage chat rooms, moderation, and community circles',
+    icon: MessageCircle,
+    href: '/admin/circles',
+    color: 'text-pink-500',
   },
 ];
 

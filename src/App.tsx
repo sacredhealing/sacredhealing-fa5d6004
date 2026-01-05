@@ -77,6 +77,7 @@ import PathDetail from "./pages/PathDetail";
 import DailyRitual from "./pages/DailyRitual";
 import Journal from "./pages/Journal";
 import AdminPaths from "./pages/AdminPaths";
+import AdminCircles from "./pages/AdminCircles";
 import "@/lib/performance"; // Initialize performance monitoring
 
 const App = () => (
@@ -159,6 +160,7 @@ const App = () => (
                 <Route path="/admin/affirmation" element={<AdminAffirmation />} />
                 <Route path="/admin/analytics" element={<AdminAnalytics />} />
                 <Route path="/admin/paths" element={<AdminPaths />} />
+                <Route path="/admin/circles" element={<AdminCircles />} />
                 <Route path="/admin/music-analytics" element={<AdminMusicAnalytics />} />
               </Route>
                 <Route path="*" element={<NotFound />} />

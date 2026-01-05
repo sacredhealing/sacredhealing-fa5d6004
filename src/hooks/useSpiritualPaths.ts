@@ -117,10 +117,24 @@ export const useSpiritualPaths = () => {
           current_day: 1,
           is_active: true,
         })
-        .select()
+        .select('*, spiritual_paths(*)')
         .single();
 
       if (error) throw error;
+      
+      // Auto-join the path's Sacred Circle
+      const pathSlug = (data.spiritual_paths as any)?.slug;
+      if (pathSlug) {
+        try {
+          await supabase.functions.invoke('join-path-circle', {
+            body: { user_id: user.id, path_slug: pathSlug }
+          });
+        } catch (circleError) {
+          console.log('Could not auto-join circle:', circleError);
+          // Non-blocking - path still started successfully
+        }
+      }
+      
       return data;
     },
     onSuccess: () => {
