@@ -779,11 +779,44 @@ export type Database = {
           },
         ]
       }
+      chat_members: {
+        Row: {
+          id: string
+          joined_at: string | null
+          role: string | null
+          room_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string | null
+          role?: string | null
+          room_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string | null
+          role?: string | null
+          room_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_members_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "chat_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_messages: {
         Row: {
           content: string
           created_at: string
           id: string
+          is_pinned: boolean | null
           room_id: string
           user_id: string
         }
@@ -791,6 +824,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          is_pinned?: boolean | null
           room_id: string
           user_id: string
         }
@@ -798,6 +832,7 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          is_pinned?: boolean | null
           room_id?: string
           user_id?: string
         }
@@ -817,24 +852,39 @@ export type Database = {
           created_by: string
           description: string | null
           id: string
+          intention: string | null
           is_active: boolean
+          is_locked: boolean | null
+          is_premium: boolean | null
           name: string
+          path_slug: string | null
+          type: string | null
         }
         Insert: {
           created_at?: string
           created_by: string
           description?: string | null
           id?: string
+          intention?: string | null
           is_active?: boolean
+          is_locked?: boolean | null
+          is_premium?: boolean | null
           name: string
+          path_slug?: string | null
+          type?: string | null
         }
         Update: {
           created_at?: string
           created_by?: string
           description?: string | null
           id?: string
+          intention?: string | null
           is_active?: boolean
+          is_locked?: boolean | null
+          is_premium?: boolean | null
           name?: string
+          path_slug?: string | null
+          type?: string | null
         }
         Relationships: []
       }
