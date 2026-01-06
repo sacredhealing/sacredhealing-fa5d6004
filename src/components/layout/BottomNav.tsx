@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Home, Play, Music2, User, Sparkles, Compass } from 'lucide-react';
+import { Home, Play, Music2, Users, Sparkles, Compass } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const getNavItems = (t: (key: string) => string) => [
@@ -10,7 +10,7 @@ const getNavItems = (t: (key: string) => string) => [
   { to: '/meditations', icon: Play, label: t('nav.meditate') },
   { to: '/music', icon: Music2, label: t('nav.music') },
   { to: '/healing', icon: Sparkles, label: t('nav.healing') },
-  { to: '/profile', icon: User, label: t('nav.profile') },
+  { to: '/community', icon: Users, label: t('nav.community') },
 ];
 
 const NAV_LABELS: Record<string, string> = {
@@ -19,7 +19,7 @@ const NAV_LABELS: Record<string, string> = {
   '/meditations': 'Meditate',
   '/music': 'Music',
   '/healing': 'Healing',
-  '/profile': 'Profile',
+  '/community': 'Community',
 };
 
 export const BottomNav: React.FC = () => {
