@@ -7,6 +7,7 @@ interface MembershipStatus {
   tier: string;
   subscriptionEnd: string | null;
   loading: boolean;
+  adminGranted?: boolean;
 }
 
 export const useMembership = () => {
@@ -16,6 +17,7 @@ export const useMembership = () => {
     tier: 'free',
     subscriptionEnd: null,
     loading: true,
+    adminGranted: false,
   });
 
   const checkSubscription = useCallback(async () => {
@@ -25,6 +27,7 @@ export const useMembership = () => {
         tier: 'free',
         subscriptionEnd: null,
         loading: false,
+        adminGranted: false,
       });
       return;
     }
@@ -43,6 +46,7 @@ export const useMembership = () => {
         tier: data.tier || 'free',
         subscriptionEnd: data.subscription_end,
         loading: false,
+        adminGranted: data.admin_granted || false,
       });
     } catch (error) {
       console.error('Error checking membership:', error);

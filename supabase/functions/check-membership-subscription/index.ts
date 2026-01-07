@@ -19,6 +19,13 @@ const PRODUCT_TO_TIER: Record<string, string> = {
   'prod_TjLb4aw139HcPU': 'lifetime',
 };
 
+// Map admin-granted tier names to tier slugs
+const ADMIN_TIER_MAP: Record<string, string> = {
+  'premium_monthly': 'premium-monthly',
+  'premium_annual': 'premium-annual',
+  'lifetime': 'lifetime',
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -47,6 +54,32 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     
     logStep("User authenticated", { userId: user.id, email: user.email });
+
+    // FIRST: Check for admin-granted membership access (bypasses Stripe entirely)
+    const { data: adminAccess } = await supabaseClient
+      .from('admin_granted_access')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('access_type', 'membership')
+      .eq('is_active', true)
+      .or('expires_at.is.null,expires_at.gt.now()')
+      .limit(1)
+      .single();
+
+    if (adminAccess) {
+      const adminTier = ADMIN_TIER_MAP[adminAccess.tier || ''] || adminAccess.tier || 'premium-monthly';
+      logStep("Admin-granted access found", { tier: adminTier, expiresAt: adminAccess.expires_at });
+      
+      return new Response(JSON.stringify({
+        subscribed: true,
+        tier: adminTier,
+        subscription_end: adminAccess.expires_at,
+        admin_granted: true
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     
