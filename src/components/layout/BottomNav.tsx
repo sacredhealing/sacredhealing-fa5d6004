@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Home, Play, Music2, Users, Sparkles, Compass } from 'lucide-react';
+import { Home, Play, Music2, Users, Sparkles, Compass, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const getNavItems = (t: (key: string) => string) => [
@@ -11,6 +11,7 @@ const getNavItems = (t: (key: string) => string) => [
   { to: '/music', icon: Music2, label: t('nav.music') },
   { to: '/healing', icon: Sparkles, label: t('nav.healing') },
   { to: '/community', icon: Users, label: t('nav.community') },
+  { to: '/profile', icon: User, label: t('nav.profile') },
 ];
 
 const NAV_LABELS: Record<string, string> = {
@@ -20,6 +21,7 @@ const NAV_LABELS: Record<string, string> = {
   '/music': 'Music',
   '/healing': 'Healing',
   '/community': 'Community',
+  '/profile': 'Profile',
 };
 
 export const BottomNav: React.FC = () => {
@@ -29,7 +31,7 @@ export const BottomNav: React.FC = () => {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-t border-border/50 safe-area-bottom">
       <div 
-        className="grid grid-cols-6 w-full px-1 py-1"
+        className="grid grid-cols-7 w-full px-1 py-1"
         style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}
       >
         {navItems.map((item) => (
