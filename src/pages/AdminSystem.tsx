@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, FolderKanban, CheckSquare, FileText, Calendar, Settings, Users, LayoutDashboard, Music, GraduationCap, Workflow, DollarSign, TrendingUp } from 'lucide-react';
+import { ArrowLeft, FolderKanban, CheckSquare, FileText, Calendar, Settings, Users, LayoutDashboard, Music, GraduationCap, Workflow, DollarSign, TrendingUp, Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -18,6 +18,7 @@ import CoursesProjectsSection from '@/components/admin-system/CoursesProjectsSec
 import WorkflowTemplateManager from '@/components/admin-system/WorkflowTemplateManager';
 import AdminMonthlyCostsTab from '@/components/admin-system/AdminMonthlyCostsTab';
 import AdminRevenueTab from '@/components/admin-system/AdminRevenueTab';
+import AdminAccessGrantTab from '@/components/admin-system/AdminAccessGrantTab';
 
 const AdminSystem = () => {
   const navigate = useNavigate();
@@ -62,6 +63,7 @@ const AdminSystem = () => {
     { id: 'events', label: 'Events', icon: Calendar },
     { id: 'costs', label: 'Costs', icon: DollarSign },
     { id: 'revenue', label: 'Revenue', icon: TrendingUp },
+    { id: 'access', label: 'Access', icon: Gift },
     { id: 'users', label: 'Users', icon: Users },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
@@ -82,12 +84,12 @@ const AdminSystem = () => {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid grid-cols-4 md:grid-cols-12 gap-2 h-auto p-1">
+          <TabsList className="flex flex-wrap gap-1 h-auto p-1">
             {tabs.map((tab) => (
               <TabsTrigger
                 key={tab.id}
                 value={tab.id}
-                className="flex items-center gap-2 py-2"
+                className="flex items-center gap-2 py-2 px-3"
               >
                 <tab.icon className="h-4 w-4" />
                 <span className="hidden sm:inline">{tab.label}</span>
@@ -133,6 +135,10 @@ const AdminSystem = () => {
 
           <TabsContent value="revenue">
             <AdminRevenueTab />
+          </TabsContent>
+
+          <TabsContent value="access">
+            <AdminAccessGrantTab />
           </TabsContent>
 
           <TabsContent value="users">
