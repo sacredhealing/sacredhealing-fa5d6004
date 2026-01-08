@@ -22,6 +22,7 @@ const PRICE_TO_PRODUCT: Record<string, { type: string; name: string }> = {
 
 // Maps checkout metadata types to affiliate purchase types
 const getPurchaseType = (metadata: Record<string, string>): string | null => {
+  if (metadata.purchase_type === 'bot_deposit' || metadata.purchase_type === 'bot_premium' || metadata.purchase_type === 'bot_feature') return 'bot';
   if (metadata.type === 'meditation_membership') return 'meditation';
   if (metadata.type === 'music_membership') return 'music';
   if (metadata.type === 'stargate_membership') return 'stargate';
@@ -44,6 +45,9 @@ const getPurchaseType = (metadata: Record<string, string>): string | null => {
 const getProductName = (metadata: Record<string, string> | null): string => {
   if (!metadata) return 'Stripe Purchase';
   
+  if (metadata.purchase_type === 'bot_deposit') return `Bot Deposit - $${metadata.amount || '0'}`;
+  if (metadata.purchase_type === 'bot_premium') return `Bot Premium - ${metadata.feature || 'monthly'}`;
+  if (metadata.purchase_type === 'bot_feature') return `Bot Feature - ${metadata.feature || 'unlock'}`;
   if (metadata.type === 'meditation_membership') return 'Meditation Membership';
   if (metadata.type === 'music_membership') return 'Music Membership';
   if (metadata.type === 'stargate_membership') return 'Stargate Membership';

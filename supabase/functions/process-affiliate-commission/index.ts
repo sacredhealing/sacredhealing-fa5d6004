@@ -35,7 +35,7 @@ serve(async (req) => {
     if (purchaseAmount > 100000) {
       throw new Error('Purchase amount exceeds maximum');
     }
-    const allowedTypes = ['course', 'membership', 'healing', 'music', 'healing_audio', 'meditation', 'transformation', 'session'];
+    const allowedTypes = ['course', 'membership', 'healing', 'music', 'healing_audio', 'meditation', 'transformation', 'session', 'bot'];
     if (!allowedTypes.includes(purchaseType)) {
       throw new Error('Invalid purchase type');
     }
