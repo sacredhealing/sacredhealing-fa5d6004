@@ -20,7 +20,13 @@ const Auth: React.FC = () => {
   const { toast } = useToast();
   
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(() => {
+    // Load saved email from localStorage
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('saved_email') || '';
+    }
+    return '';
+  });
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -31,6 +37,13 @@ const Auth: React.FC = () => {
       setIsLogin(false);
     }
   }, [referralCode]);
+
+  // Save email to localStorage when it changes
+  useEffect(() => {
+    if (email && typeof window !== 'undefined') {
+      localStorage.setItem('saved_email', email);
+    }
+  }, [email]);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -63,6 +76,10 @@ const Auth: React.FC = () => {
             variant: "destructive"
           });
         } else {
+          // Save email for next time
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('saved_email', email);
+          }
           toast({
             title: t('auth.welcomeBackMessage'),
             description: t('auth.welcomeBackMessage')

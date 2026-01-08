@@ -128,10 +128,23 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const checkSubscription = async () => {
     try {
-      const { data } = await supabase.functions.invoke('check-music-membership');
-      setIsSubscribed(data?.hasAccess || false);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setIsSubscribed(false);
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('check-music-membership', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+      
+      if (error) throw error;
+      setIsSubscribed(data?.hasMembership || false);
     } catch (error) {
       console.error('Error checking subscription:', error);
+      setIsSubscribed(false);
     }
   };
 

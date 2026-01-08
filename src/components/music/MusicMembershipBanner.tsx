@@ -34,7 +34,18 @@ const MusicMembershipBanner: React.FC = () => {
 
   const checkMembership = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('check-music-membership');
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('check-music-membership', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+      
       if (error) throw error;
       setMembership(data);
     } catch (error) {
