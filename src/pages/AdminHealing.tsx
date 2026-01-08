@@ -32,6 +32,7 @@ const AdminHealing: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [editingScript, setEditingScript] = useState<{ id: string; script: string } | null>(null);
   const [scriptDialogOpen, setScriptDialogOpen] = useState(false);
+  const [isRunningMigration, setIsRunningMigration] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -86,8 +87,9 @@ const AdminHealing: React.FC = () => {
             })) as HealingAudio[]);
             toast({ 
               title: 'Migration Required', 
-              description: 'Please run migration: 20260109000001_add_script_text_to_healing_audio.sql to enable script features', 
-              variant: 'default' 
+              description: 'The script_text column is missing. Click "Run Migration" button above to fix this automatically.', 
+              variant: 'default',
+              duration: 10000
             });
           }
           return;
@@ -337,20 +339,79 @@ Rest in this cleared, purified state. When you're ready, gently return to the pr
     toast({ title: 'Script Generated', description: 'A template script has been generated based on your title and category' });
   };
 
+  const handleRunMigration = async () => {
+    if (!confirm('This will run the database migration to add the script_text column. Continue?')) {
+      return;
+    }
+
+    setIsRunningMigration(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('run-script-text-migration');
+
+      if (error) {
+        throw error;
+      }
+
+      if (data?.success) {
+        toast({ 
+          title: 'Migration Successful!', 
+          description: 'The script_text column has been added. Refreshing...', 
+          variant: 'default' 
+        });
+        
+        // Wait a moment for the database to update, then refresh
+        setTimeout(() => {
+          fetchAudios();
+        }, 2000);
+      } else {
+        throw new Error(data?.error || 'Migration failed');
+      }
+    } catch (error: any) {
+      console.error('Migration error:', error);
+      toast({ 
+        title: 'Migration Failed', 
+        description: error.message || 'Failed to run migration. Please run the SQL manually in Supabase Dashboard.', 
+        variant: 'destructive' 
+      });
+    } finally {
+      setIsRunningMigration(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-4">
-          <Link to="/admin">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Healing Audio Manager</h1>
-            <p className="text-muted-foreground">Add and manage healing audio tracks</p>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <Link to="/admin">
+              <Button variant="ghost" size="icon">
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+            </Link>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Healing Audio Manager</h1>
+              <p className="text-muted-foreground">Add and manage healing audio tracks</p>
+            </div>
           </div>
+          <Button
+            onClick={handleRunMigration}
+            disabled={isRunningMigration}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            {isRunningMigration ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Running Migration...
+              </>
+            ) : (
+              <>
+                <FileText className="w-4 h-4" />
+                Run Migration
+              </>
+            )}
+          </Button>
         </div>
 
         {/* Add Audio Form */}

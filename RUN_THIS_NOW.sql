@@ -1,6 +1,6 @@
 -- ============================================================================
--- COMPLETE MIGRATION: Add script_text column to healing_audio table
--- This migration ensures scripts can be added and saved 100%
+-- COPY AND PASTE THIS ENTIRE FILE INTO SUPABASE SQL EDITOR AND CLICK "RUN"
+-- This will add script_text column and enable saving scripts 100%
 -- ============================================================================
 
 -- Step 1: Add script_text column to healing_audio for pre-written meditation scripts
@@ -39,7 +39,17 @@ ON public.healing_audio
 FOR DELETE
 USING (public.has_role(auth.uid(), 'admin'));
 
--- Step 8: Verify the column was added (this query should return 1 row if successful)
--- Uncomment the line below to verify after running the migration:
--- SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'healing_audio' AND column_name = 'script_text';
+-- ============================================================================
+-- VERIFICATION: Run this query to confirm the column was added successfully
+-- ============================================================================
+SELECT 
+    column_name, 
+    data_type,
+    is_nullable
+FROM information_schema.columns 
+WHERE table_name = 'healing_audio' 
+AND column_name = 'script_text';
+
+-- If the above query returns 1 row with column_name = 'script_text', 
+-- then the migration was successful! ✅
 
