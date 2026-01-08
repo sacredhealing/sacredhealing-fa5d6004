@@ -339,8 +339,6 @@ Rest in this cleared, purified state. When you're ready, gently return to the pr
     toast({ title: 'Script Generated', description: 'A template script has been generated based on your title and category' });
   };
 
-  const [showMigrationDialog, setShowMigrationDialog] = useState(false);
-
   const migrationSQL = `-- Add script_text column to healing_audio table
 -- Copy this entire SQL and run it in Supabase SQL Editor
 
