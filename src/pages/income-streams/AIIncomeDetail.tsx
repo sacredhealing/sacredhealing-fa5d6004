@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Bot } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +29,12 @@ const BOT_DASHBOARD_URL = isLocalDev ? LOCAL_BOT_DASHBOARD_URL : PRODUCTION_BOT_
 
 const AIIncomeDetail: React.FC = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+
+  // Redirect to localhost:5174/auth
+  useEffect(() => {
+    window.location.href = 'http://localhost:5174/auth';
+  }, []);
 
   return (
     <div className="min-h-screen pb-24 bg-background">
