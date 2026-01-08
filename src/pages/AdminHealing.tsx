@@ -50,17 +50,36 @@ const AdminHealing: React.FC = () => {
   }, []);
 
   const fetchAudios = async () => {
-    const { data, error } = await supabase
-      .from('healing_audio')
-      .select('*, script_text')
-      .order('created_at', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('healing_audio')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-    if (data) {
-      setAudios(data as HealingAudio[]);
-    }
-    if (error) {
-      console.error('Error fetching audios:', error);
-      toast({ title: 'Error', description: 'Failed to load healing audio', variant: 'destructive' });
+      if (error) {
+        console.error('Error fetching audios:', error);
+        toast({ 
+          title: 'Error', 
+          description: `Failed to load healing audio: ${error.message}`, 
+          variant: 'destructive' 
+        });
+        return;
+      }
+
+      if (data) {
+        console.log('Fetched healing audios:', data.length);
+        setAudios(data as HealingAudio[]);
+      } else {
+        console.log('No healing audio data returned');
+        setAudios([]);
+      }
+    } catch (err: any) {
+      console.error('Unexpected error fetching audios:', err);
+      toast({ 
+        title: 'Error', 
+        description: `Unexpected error: ${err.message}`, 
+        variant: 'destructive' 
+      });
     }
   };
 
