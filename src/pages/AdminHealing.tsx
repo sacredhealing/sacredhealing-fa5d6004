@@ -22,7 +22,7 @@ interface HealingAudio {
   price_usd: number;
   price_shc: number;
   category: string;
-  script_text: string | null;
+  script_text?: string | null;
   created_at: string;
 }
 
@@ -52,11 +52,16 @@ const AdminHealing: React.FC = () => {
   const fetchAudios = async () => {
     const { data, error } = await supabase
       .from('healing_audio')
-      .select('*')
+      .select('*, script_text')
       .order('created_at', { ascending: false });
 
-    if (data) setAudios(data);
-    if (error) console.error('Error fetching audios:', error);
+    if (data) {
+      setAudios(data as HealingAudio[]);
+    }
+    if (error) {
+      console.error('Error fetching audios:', error);
+      toast({ title: 'Error', description: 'Failed to load healing audio', variant: 'destructive' });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -445,12 +450,13 @@ Rest in this cleared, purified state. When you're ready, gently return to the pr
                     </div>
                     <div className="flex items-center gap-2">
                       <Button
-                        variant="outline"
+                        variant={audio.script_text ? "default" : "outline"}
                         size="sm"
                         onClick={() => handleEditScript(audio)}
+                        className={audio.script_text ? "bg-primary" : ""}
                       >
                         <FileText className="w-4 h-4 mr-1" />
-                        {audio.script_text ? 'Edit Script' : 'Add Script'}
+                        {audio.script_text ? 'View/Edit Script' : 'Add Script'}
                       </Button>
                       <Button
                         variant="ghost"
@@ -462,12 +468,32 @@ Rest in this cleared, purified state. When you're ready, gently return to the pr
                       </Button>
                     </div>
                   </div>
-                  {audio.script_text && (
-                    <div className="mt-3 p-3 bg-background rounded border border-border/30">
-                      <p className="text-xs text-muted-foreground mb-1">Script Preview:</p>
-                      <p className="text-sm text-foreground line-clamp-3">{audio.script_text}</p>
-                    </div>
-                  )}
+                  <div className="mt-3">
+                    {audio.script_text ? (
+                      <div className="p-3 bg-background rounded border border-border/30">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-xs font-semibold text-primary">✓ Script Available</p>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditScript(audio)}
+                            className="text-xs"
+                          >
+                            <FileText className="w-3 h-3 mr-1" />
+                            View Full Script
+                          </Button>
+                        </div>
+                        <p className="text-sm text-foreground line-clamp-3 whitespace-pre-wrap">{audio.script_text}</p>
+                      </div>
+                    ) : (
+                      <div className="p-3 bg-muted/20 rounded border border-dashed border-muted-foreground/30">
+                        <p className="text-xs text-muted-foreground flex items-center gap-2">
+                          <FileText className="w-3 h-3" />
+                          No script yet - Click "Add Script" to create one
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -478,22 +504,46 @@ Rest in this cleared, purified state. When you're ready, gently return to the pr
         <Dialog open={scriptDialogOpen} onOpenChange={setScriptDialogOpen}>
           <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Edit Meditation Script</DialogTitle>
+              <DialogTitle>
+                {editingScript && audios.find(a => a.id === editingScript.id)?.title}
+              </DialogTitle>
               <DialogDescription>
-                Write or edit the meditation script for recording. This will be used as your guide during recording.
+                Meditation Script - Write or edit the script for recording. This will be used as your guide during recording.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="script">Script Text</Label>
+                <div className="flex items-center justify-between mb-2">
+                  <Label htmlFor="script">Script Text</Label>
+                  {editingScript && !editingScript.script && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const audio = audios.find(a => a.id === editingScript.id);
+                        if (audio) {
+                          const template = getScriptTemplate(audio.category, audio.title);
+                          setEditingScript({ ...editingScript, script: template });
+                        }
+                      }}
+                    >
+                      <FileText className="w-3 h-3 mr-1" />
+                      Generate Template
+                    </Button>
+                  )}
+                </div>
                 <Textarea
                   id="script"
                   value={editingScript?.script || ''}
                   onChange={(e) => setEditingScript(editingScript ? { ...editingScript, script: e.target.value } : null)}
                   rows={20}
-                  className="font-mono text-sm"
-                  placeholder="Enter your meditation script here..."
+                  className="font-mono text-sm whitespace-pre-wrap"
+                  placeholder="Enter your meditation script here, or click 'Generate Template' to create one based on the title and category..."
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {editingScript?.script ? `${editingScript.script.length} characters` : 'No script yet'}
+                </p>
               </div>
               <div className="flex justify-end gap-2">
                 <Button
