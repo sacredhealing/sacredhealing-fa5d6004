@@ -183,35 +183,125 @@ serve(async (req) => {
       const customerEmail = session.customer_email || (session.customer_details as { email?: string })?.email;
       const stripePaymentId = session.id;
 
-      // Record revenue (check for duplicate first)
+      // Record revenue with retry logic and proper error handling
       const { data: existingRevenue } = await supabaseAdmin
         .from('revenue_records')
         .select('id')
         .eq('stripe_payment_id', stripePaymentId)
         .maybeSingle();
 
-      if (!existingRevenue) {
-        const { error: revenueError } = await supabaseAdmin
-          .from('revenue_records')
-          .insert({
-            product_type: purchaseType,
-            product_name: productName,
-            amount_usd: purchaseAmount,
-            payment_method: 'stripe',
-            customer_email: customerEmail,
-            stripe_payment_id: stripePaymentId,
-            source: 'webhook',
-            notes: `Initial payment (${currency})`
-          });
-
-        if (revenueError) {
-          logStep("Error recording revenue", revenueError);
-          await logWebhookEvent(supabaseAdmin, event.id, event.type, session, 'error', `Revenue insert failed: ${revenueError.message}`);
-        } else {
-          logStep("Revenue recorded", { amount: purchaseAmount, currency, type: purchaseType, product: productName });
-        }
+      if (existingRevenue) {
+        logStep("Revenue already recorded for this payment", { stripePaymentId, existingId: existingRevenue.id });
+        await logWebhookEvent(supabaseAdmin, event.id, event.type, session, 'skipped', 'Revenue already exists');
       } else {
-        logStep("Revenue already recorded for this payment", { stripePaymentId });
+        // Get user_id from metadata or customer email lookup
+        let userId: string | null = session.metadata?.user_id || null;
+        
+        // If no user_id in metadata, try to find by email
+        if (!userId && customerEmail) {
+          const { data: userData } = await supabaseAdmin.auth.admin.listUsers();
+          const matchingUser = userData?.users?.find(u => u.email === customerEmail);
+          if (matchingUser) {
+            userId = matchingUser.id;
+            logStep("Found user by email", { email: customerEmail, userId });
+          }
+        }
+
+        // Retry logic for revenue insert
+        let revenueInserted = false;
+        let lastError: Error | null = null;
+        const maxRetries = 3;
+        
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+          try {
+            const { data: insertData, error: revenueError } = await supabaseAdmin
+              .from('revenue_records')
+              .insert({
+                product_type: purchaseType,
+                product_name: productName,
+                amount_usd: purchaseAmount,
+                payment_method: 'stripe',
+                customer_id: userId,
+                customer_email: customerEmail,
+                stripe_payment_id: stripePaymentId,
+                source: 'webhook',
+                notes: `Initial payment (${currency})`
+              })
+              .select('id')
+              .single();
+
+            if (revenueError) {
+              // Check if it's a duplicate constraint error
+              if (revenueError.code === '23505' || revenueError.message?.includes('unique') || revenueError.message?.includes('duplicate')) {
+                logStep("Revenue already exists (duplicate constraint)", { stripePaymentId, attempt });
+                revenueInserted = true; // Consider it successful since it already exists
+                break;
+              }
+              
+              lastError = new Error(revenueError.message);
+              logStep(`Revenue insert attempt ${attempt} failed`, { 
+                error: revenueError.message, 
+                code: revenueError.code,
+                attempt 
+              });
+              
+              if (attempt < maxRetries) {
+                // Wait before retry (exponential backoff)
+                await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+                continue;
+              }
+            } else {
+              revenueInserted = true;
+              logStep("Revenue recorded successfully", { 
+                id: insertData?.id,
+                amount: purchaseAmount, 
+                currency, 
+                type: purchaseType, 
+                product: productName,
+                attempt
+              });
+              break;
+            }
+          } catch (err) {
+            lastError = err instanceof Error ? err : new Error(String(err));
+            logStep(`Revenue insert exception on attempt ${attempt}`, { 
+              error: lastError.message,
+              attempt 
+            });
+            
+            if (attempt < maxRetries) {
+              await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            }
+          }
+        }
+
+        if (!revenueInserted) {
+          // CRITICAL: Log error but don't fail webhook - Stripe will retry
+          const errorMsg = lastError?.message || 'Unknown error after retries';
+          logStep("CRITICAL: Failed to record revenue after all retries", { 
+            stripePaymentId,
+            amount: purchaseAmount,
+            error: errorMsg
+          });
+          await logWebhookEvent(supabaseAdmin, event.id, event.type, session, 'error', `Revenue insert failed after ${maxRetries} attempts: ${errorMsg}`);
+          
+          // Return error so Stripe knows to retry
+          return new Response(JSON.stringify({ 
+            received: true, 
+            processed: false,
+            error: 'Failed to record revenue',
+            retry: true
+          }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 500,
+          });
+        } else {
+          await logWebhookEvent(supabaseAdmin, event.id, event.type, { 
+            sessionId: session.id, 
+            amount: purchaseAmount,
+            revenueRecorded: true
+          }, 'processed');
+        }
       }
 
       // Process affiliate commission if user was referred
@@ -361,37 +451,118 @@ serve(async (req) => {
         .eq('stripe_payment_id', stripePaymentId)
         .maybeSingle();
 
-      if (!existingRevenue && amountPaid > 0) {
-        const isRecurring = invoice.billing_reason === "subscription_cycle";
-        const { error: revenueError } = await supabaseAdmin
-          .from('revenue_records')
-          .insert({
-            product_type: productInfo.type,
-            product_name: productInfo.name,
-            amount_usd: amountPaid,
-            payment_method: 'stripe',
-            customer_email: customerEmail,
-            stripe_payment_id: stripePaymentId,
-            source: 'webhook',
-            notes: isRecurring ? `Recurring payment (${currency})` : `Initial subscription (${currency})`
-          });
-
-        if (revenueError) {
-          logStep("Error recording invoice revenue", revenueError);
-          await logWebhookEvent(supabaseAdmin, event.id, event.type, invoice, 'error', `Revenue insert failed: ${revenueError.message}`);
-        } else {
-          logStep("Invoice revenue recorded", { 
-            amount: amountPaid, 
-            currency, 
-            type: productInfo.type,
-            product: productInfo.name,
-            isRecurring
-          });
-          await logWebhookEvent(supabaseAdmin, event.id, event.type, { invoiceId: invoice.id, amount: amountPaid }, 'processed');
-        }
-      } else if (existingRevenue) {
-        logStep("Invoice revenue already recorded", { stripePaymentId });
+      if (existingRevenue) {
+        logStep("Invoice revenue already recorded", { stripePaymentId, existingId: existingRevenue.id });
         await logWebhookEvent(supabaseAdmin, event.id, event.type, invoice, 'skipped', 'Already recorded');
+      } else if (amountPaid > 0) {
+        const isRecurring = invoice.billing_reason === "subscription_cycle";
+        
+        // Get user_id from customer if available
+        let userId: string | null = null;
+        if (invoice.customer && typeof invoice.customer === 'string') {
+          // Try to find user by Stripe customer ID
+          const { data: membershipData } = await supabaseAdmin
+            .from('user_memberships')
+            .select('user_id')
+            .eq('stripe_customer_id', invoice.customer)
+            .maybeSingle();
+          if (membershipData) {
+            userId = membershipData.user_id;
+          }
+        }
+        
+        // Retry logic for revenue insert
+        let revenueInserted = false;
+        let lastError: Error | null = null;
+        const maxRetries = 3;
+        
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+          try {
+            const { data: insertData, error: revenueError } = await supabaseAdmin
+              .from('revenue_records')
+              .insert({
+                product_type: productInfo.type,
+                product_name: productInfo.name,
+                amount_usd: amountPaid,
+                payment_method: 'stripe',
+                customer_id: userId,
+                customer_email: customerEmail,
+                stripe_payment_id: stripePaymentId,
+                source: 'webhook',
+                notes: isRecurring ? `Recurring payment (${currency})` : `Initial subscription (${currency})`
+              })
+              .select('id')
+              .single();
+
+            if (revenueError) {
+              // Check if it's a duplicate constraint error
+              if (revenueError.code === '23505' || revenueError.message?.includes('unique') || revenueError.message?.includes('duplicate')) {
+                logStep("Invoice revenue already exists (duplicate constraint)", { stripePaymentId, attempt });
+                revenueInserted = true;
+                break;
+              }
+              
+              lastError = new Error(revenueError.message);
+              logStep(`Invoice revenue insert attempt ${attempt} failed`, { 
+                error: revenueError.message, 
+                code: revenueError.code,
+                attempt 
+              });
+              
+              if (attempt < maxRetries) {
+                await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+                continue;
+              }
+            } else {
+              revenueInserted = true;
+              logStep("Invoice revenue recorded successfully", { 
+                id: insertData?.id,
+                amount: amountPaid, 
+                currency, 
+                type: productInfo.type,
+                product: productInfo.name,
+                isRecurring,
+                attempt
+              });
+              await logWebhookEvent(supabaseAdmin, event.id, event.type, { 
+                invoiceId: invoice.id, 
+                amount: amountPaid,
+                revenueRecorded: true
+              }, 'processed');
+              break;
+            }
+          } catch (err) {
+            lastError = err instanceof Error ? err : new Error(String(err));
+            logStep(`Invoice revenue insert exception on attempt ${attempt}`, { 
+              error: lastError.message,
+              attempt 
+            });
+            
+            if (attempt < maxRetries) {
+              await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            }
+          }
+        }
+
+        if (!revenueInserted) {
+          const errorMsg = lastError?.message || 'Unknown error after retries';
+          logStep("CRITICAL: Failed to record invoice revenue after all retries", { 
+            stripePaymentId,
+            amount: amountPaid,
+            error: errorMsg
+          });
+          await logWebhookEvent(supabaseAdmin, event.id, event.type, invoice, 'error', `Revenue insert failed after ${maxRetries} attempts: ${errorMsg}`);
+          
+          return new Response(JSON.stringify({ 
+            received: true, 
+            processed: false,
+            error: 'Failed to record revenue',
+            retry: true
+          }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 500,
+          });
+        }
       }
     }
 
