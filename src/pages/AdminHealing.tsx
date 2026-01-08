@@ -346,7 +346,17 @@ Rest in this cleared, purified state. When you're ready, gently return to the pr
 
     setIsRunningMigration(true);
     try {
-      const { data, error } = await supabase.functions.invoke('run-script-text-migration');
+      // Get session token for authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Please sign in to run migrations');
+      }
+
+      const { data, error } = await supabase.functions.invoke('run-script-text-migration', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
 
       if (error) {
         throw error;
@@ -368,11 +378,24 @@ Rest in this cleared, purified state. When you're ready, gently return to the pr
       }
     } catch (error: any) {
       console.error('Migration error:', error);
-      toast({ 
-        title: 'Migration Failed', 
-        description: error.message || 'Failed to run migration. Please run the SQL manually in Supabase Dashboard.', 
-        variant: 'destructive' 
-      });
+      const errorMessage = error.message || 'Failed to run migration';
+      
+      // Check if it's a network/function not found error
+      if (errorMessage.includes('Failed to send') || errorMessage.includes('404') || errorMessage.includes('not found')) {
+        toast({ 
+          title: 'Edge Function Not Deployed', 
+          description: 'The migration function needs to be deployed first. Use the manual SQL option: Open RUN_THIS_NOW.sql and copy-paste into Supabase SQL Editor.', 
+          variant: 'destructive',
+          duration: 10000
+        });
+      } else {
+        toast({ 
+          title: 'Migration Failed', 
+          description: `${errorMessage}. You can also run the SQL manually: Open RUN_THIS_NOW.sql and copy-paste into Supabase SQL Editor.`, 
+          variant: 'destructive',
+          duration: 10000
+        });
+      }
     } finally {
       setIsRunningMigration(false);
     }
