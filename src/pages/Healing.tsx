@@ -12,6 +12,7 @@ import { ReviewSection } from '@/components/reviews/ReviewSection';
 import { TranslatedContent } from '@/components/TranslatedContent';
 import { usePhantomWallet } from '@/hooks/usePhantomWallet';
 import { HealingProgressCard } from '@/components/healing/HealingProgressCard';
+import HealingMeditationsList from '@/components/healing/HealingMeditationsList';
 
 interface HealingAudio {
   id: string;
@@ -789,6 +790,9 @@ const Healing: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Healing Meditations List */}
+      <HealingMeditationsList />
 
       {/* Reviews Section */}
       <ReviewSection contentType="healing" contentId="general" />

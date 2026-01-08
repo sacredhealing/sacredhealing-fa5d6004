@@ -389,6 +389,80 @@ const Meditations: React.FC = () => {
             ))}
           </div>
 
+          {/* Premium Meditations Section */}
+          {filteredMeditations.filter(m => m.is_premium).length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-primary" />
+                Premium Meditations ({filteredMeditations.filter(m => m.is_premium).length})
+              </h3>
+              <div className="space-y-4 mb-6">
+                {filteredMeditations
+                  .filter(m => m.is_premium)
+                  .map((meditation, index) => {
+                    const isPlaying = playingId === meditation.id;
+                    const currentProgress = progress[meditation.id] || 0;
+
+                    return (
+                      <div
+                        key={meditation.id}
+                        className="relative overflow-hidden rounded-2xl bg-gradient-card border border-primary/30 p-5 animate-slide-up hover:scale-[1.02] transition-transform duration-300"
+                        style={{ animationDelay: `${index * 0.05}s` }}
+                      >
+                        <div className="absolute top-3 right-3 px-2 py-1 bg-primary/20 rounded-full">
+                          <span className="text-xs font-medium text-primary">Premium</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-4">
+                          <button 
+                            onClick={() => handlePlay(meditation)}
+                            className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center glow-purple hover:scale-110 transition-transform"
+                          >
+                            {isPlaying ? (
+                              <Pause size={24} className="text-primary" />
+                            ) : (
+                              <Play size={24} className="text-primary ml-1" />
+                            )}
+                          </button>
+                          
+                          <div className="flex-1">
+                            <h3 className="font-heading font-semibold text-foreground">
+                              <TranslatedText>{meditation.title}</TranslatedText>
+                            </h3>
+                            <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <Clock size={14} />
+                                {meditation.duration_minutes} min
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Sparkles size={14} className="text-accent" />
+                                +{meditation.shc_reward} SHC
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {isPlaying && (
+                          <div className="mt-4">
+                            <Progress value={currentProgress} className="h-1" />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
+
+          {/* Free Meditations Section */}
+          {filteredMeditations.filter(m => !m.is_premium).length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-foreground mb-3">
+                Free Meditations ({filteredMeditations.filter(m => !m.is_premium).length})
+              </h3>
+            </div>
+          )}
+
           {/* Meditation List */}
           <div className="space-y-4">
             {filteredMeditations.length === 0 ? (
@@ -400,7 +474,9 @@ const Meditations: React.FC = () => {
                 </p>
               </div>
             ) : (
-              filteredMeditations.map((meditation, index) => {
+              filteredMeditations
+                .filter(m => !m.is_premium) // Show free meditations in main list
+                .map((meditation, index) => {
                 const isPlaying = playingId === meditation.id;
                 const currentProgress = progress[meditation.id] || 0;
 

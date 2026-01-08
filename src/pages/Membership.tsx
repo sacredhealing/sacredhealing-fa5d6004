@@ -11,6 +11,7 @@ import { useMembership } from '@/hooks/useMembership';
 import { useFreeTrial } from '@/hooks/useFreeTrial';
 import { TrialBanner } from '@/components/offers/TrialBanner';
 import { PromoCodeInput } from '@/components/offers/PromoCodeInput';
+import PremiumMeditationsList from '@/components/membership/PremiumMeditationsList';
 import { toast } from 'sonner';
 
 interface MembershipTier {
@@ -323,6 +324,11 @@ const Membership = () => {
             </Card>
           );
         })}
+      </div>
+
+      {/* Premium Meditations List */}
+      <div className="px-4 py-6">
+        <PremiumMeditationsList />
       </div>
 
       {/* Transformation Program CTA */}

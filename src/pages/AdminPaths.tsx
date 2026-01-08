@@ -185,6 +185,39 @@ const AdminPaths: React.FC = () => {
                 </div>
               </Card>
 
+              {/* Meditations Summary */}
+              <Card className="p-4 mb-6 bg-muted/30">
+                <h3 className="text-sm font-semibold text-foreground mb-3">Path Meditations</h3>
+                <div className="space-y-2">
+                  {(() => {
+                    const pathDays = getPathDays(path.id);
+                    const morningMeds = pathDays
+                      .filter(d => d.morning_meditation_id)
+                      .map(d => meditations.find(m => m.id === d.morning_meditation_id))
+                      .filter(Boolean);
+                    const eveningMeds = pathDays
+                      .filter(d => d.evening_meditation_id)
+                      .map(d => meditations.find(m => m.id === d.evening_meditation_id))
+                      .filter(Boolean);
+                    const allMeds = [...new Set([...morningMeds, ...eveningMeds])];
+                    
+                    return allMeds.length > 0 ? (
+                      <div className="space-y-1">
+                        {allMeds.map((med) => (
+                          <div key={med?.id} className="text-xs text-muted-foreground flex items-center gap-2">
+                            <span>🧘</span>
+                            <span>{med?.title}</span>
+                            <Badge variant="outline" className="text-xs">{med?.category}</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">No meditations assigned yet</p>
+                    );
+                  })()}
+                </div>
+              </Card>
+
               {/* Days Grid */}
               <div className="space-y-2">
                 {getPathDays(path.id).map((day) => {
@@ -216,6 +249,19 @@ const AdminPaths: React.FC = () => {
                               )}
                               {day.mantra_text && <Badge variant="outline" className="text-xs">Mantra</Badge>}
                               {day.breathing_description && <Badge variant="outline" className="text-xs">Breathing</Badge>}
+                            </div>
+                            {/* Show meditation titles if assigned */}
+                            <div className="mt-2 space-y-1">
+                              {day.morning_meditation_id && (
+                                <div className="text-xs text-muted-foreground">
+                                  🌅 {meditations.find(m => m.id === day.morning_meditation_id)?.title || 'Morning Meditation'}
+                                </div>
+                              )}
+                              {day.evening_meditation_id && (
+                                <div className="text-xs text-muted-foreground">
+                                  🌙 {meditations.find(m => m.id === day.evening_meditation_id)?.title || 'Evening Meditation'}
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
