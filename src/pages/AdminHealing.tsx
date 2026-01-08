@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Upload, Trash2, Music, Check, Loader2 } from 'lucide-react';
+import { ArrowLeft, Upload, Trash2, Music, Check, Loader2, FileText, Edit2, Save, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -21,6 +22,7 @@ interface HealingAudio {
   price_usd: number;
   price_shc: number;
   category: string;
+  script_text: string | null;
   created_at: string;
 }
 
@@ -28,6 +30,8 @@ const AdminHealing: React.FC = () => {
   const { toast } = useToast();
   const [audios, setAudios] = useState<HealingAudio[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [editingScript, setEditingScript] = useState<{ id: string; script: string } | null>(null);
+  const [scriptDialogOpen, setScriptDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -38,6 +42,7 @@ const AdminHealing: React.FC = () => {
     priceUsd: 4.99,
     priceShc: 50,
     category: 'healing',
+    scriptText: '',
   });
 
   useEffect(() => {
@@ -69,6 +74,7 @@ const AdminHealing: React.FC = () => {
         price_usd: formData.priceUsd,
         price_shc: formData.priceShc,
         category: formData.category,
+        script_text: formData.scriptText || null,
       });
 
       if (error) throw error;
@@ -84,6 +90,7 @@ const AdminHealing: React.FC = () => {
         priceUsd: 4.99,
         priceShc: 50,
         category: 'healing',
+        scriptText: '',
       });
       fetchAudios();
     } catch (error: any) {
@@ -104,6 +111,144 @@ const AdminHealing: React.FC = () => {
       toast({ title: 'Deleted', description: 'Audio removed successfully' });
       fetchAudios();
     }
+  };
+
+  const handleEditScript = (audio: HealingAudio) => {
+    setEditingScript({ id: audio.id, script: audio.script_text || '' });
+    setScriptDialogOpen(true);
+  };
+
+  const handleSaveScript = async () => {
+    if (!editingScript) return;
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('healing_audio')
+        .update({ script_text: editingScript.script || null })
+        .eq('id', editingScript.id);
+
+      if (error) throw error;
+
+      toast({ title: 'Success', description: 'Script saved successfully!' });
+      setScriptDialogOpen(false);
+      setEditingScript(null);
+      fetchAudios();
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getScriptTemplate = (category: string, title: string): string => {
+    const templates: Record<string, string> = {
+      'chakra': `Chakra Healing Meditation: ${title}
+
+Welcome to this sacred healing space. Find a comfortable position where you won't be disturbed. Close your eyes gently. Take three deep breaths, inhaling peace and exhaling any tension.
+
+Bring your awareness to your energy centers. Visualize a beautiful, spinning wheel of light at your [chakra location]. This is your [chakra name] chakra, the center of [chakra purpose].
+
+As you breathe, imagine a warm, [color] light flowing into this chakra. Feel it expanding, clearing, and balancing. Any blockages or stored emotions begin to dissolve in this healing light.
+
+With each breath, this chakra becomes more vibrant, more open, more aligned. Feel the energy flowing freely, connecting you to your highest self.
+
+Rest in this healing energy. Allow the frequency to work on all levels - physical, emotional, mental, and spiritual. You are safe. You are healing. You are whole.
+
+When you are ready, gently bring your awareness back to your body. Take a deep breath, and open your eyes, feeling refreshed and balanced.`,
+
+      'emotional': `Emotional Healing Meditation: ${title}
+
+Welcome to a safe space for deep emotional healing. Find a comfortable position. Close your eyes. Take several deep, cleansing breaths.
+
+Bring your awareness to your heart center. Notice any emotions that are present - sadness, anger, fear, or pain. Acknowledge them without judgment. They are valid. They are part of your journey.
+
+Now, imagine a warm, golden light surrounding your heart. This is the light of unconditional love and acceptance. As you breathe, this light gently penetrates any emotional wounds, any stored pain, any old patterns.
+
+Feel the light dissolving layers of hurt, releasing what no longer serves you. With each breath, you are creating space for new emotions - peace, joy, love, compassion.
+
+Visualize any difficult emotions being transformed into wisdom, into strength, into understanding. You are not your pain. You are the awareness that observes it. You are the light that heals it.
+
+Rest in this healing space. Allow yourself to feel whatever needs to be felt. You are safe. You are supported. You are loved.
+
+When you are ready, gently return to the present moment, carrying this healing energy with you.`,
+
+      'sleep': `Sleep Healing Meditation: ${title}
+
+Welcome to your sleep sanctuary. Lie down comfortably. Close your eyes. Let go of the day.
+
+Take a deep breath in through your nose... hold for a moment... and release slowly through your mouth. Repeat this three times, feeling your body begin to relax.
+
+Starting from your toes, consciously relax each part of your body. Your feet... your legs... your hips... your stomach... your chest... your arms... your shoulders... your neck... your face. Let all tension melt away.
+
+Now, imagine yourself in a peaceful, safe place - perhaps a quiet beach at sunset, or a serene forest, or a cozy room. Feel the peace of this place. You are completely safe here.
+
+As you rest, feel healing energy flowing through your entire being. Your nervous system is calming. Your mind is quieting. Your body is preparing for deep, restorative sleep.
+
+With each breath, you sink deeper into relaxation. Any worries or thoughts gently drift away like clouds in the sky. You are letting go. You are surrendering to rest.
+
+You are safe. You are loved. You are ready for peaceful sleep. Allow yourself to drift into deep, healing slumber.`,
+
+      'frequency': `Frequency Healing: ${title}
+
+Welcome to this frequency healing session. Find a comfortable position. Close your eyes. Take a few deep breaths to center yourself.
+
+The healing frequency you are about to receive works on a cellular level, harmonizing your energy field and promoting natural healing. Simply allow yourself to receive.
+
+As the frequency plays, feel it resonating through your body. Notice any areas that respond - perhaps a gentle vibration, a sense of warmth, or a feeling of release.
+
+This frequency is designed to [specific healing purpose]. Trust the process. Your body knows how to heal. Your energy knows how to balance.
+
+Breathe naturally. There's nothing you need to do. Just be present. Just receive. The frequency is doing the work.
+
+Rest in this healing space. Allow the vibrations to penetrate every cell, every tissue, every energy center. You are being harmonized. You are being healed.
+
+When the session ends, take a moment to notice how you feel. Gently open your eyes when you're ready, carrying this healing energy with you.`,
+
+      'energy_clearing': `Energy Clearing Meditation: ${title}
+
+Welcome to this powerful energy clearing session. Sit or lie comfortably. Close your eyes. Take three deep, cleansing breaths.
+
+Visualize yourself surrounded by a beautiful, protective bubble of white light. This is your sacred space. Nothing can harm you here.
+
+Now, imagine roots growing from your feet deep into the earth. You are grounded. You are connected to the earth's healing energy.
+
+As you breathe, visualize any negative energy, any attachments, any lower vibrations being drawn down through your body, through your roots, and into the earth, where it is transformed into pure light.
+
+Feel your energy field becoming lighter, clearer, brighter. Any energetic cords or attachments are being released. Any heavy emotions are being cleared.
+
+Now, imagine a beautiful waterfall of white light flowing from above, through the crown of your head, washing through your entire being, clearing and purifying every cell, every chakra, every energy center.
+
+Feel yourself becoming lighter, more aligned, more connected to your highest self. You are clear. You are protected. You are free.
+
+Rest in this cleared, purified state. When you're ready, gently return to the present moment, feeling refreshed and energetically clean.`,
+    };
+
+    // Match category to template
+    const lowerTitle = title.toLowerCase();
+    const lowerCategory = category.toLowerCase();
+
+    if (lowerTitle.includes('chakra') || lowerCategory.includes('chakra')) {
+      return templates['chakra'];
+    } else if (lowerTitle.includes('sleep') || lowerTitle.includes('rest') || lowerCategory.includes('sleep')) {
+      return templates['sleep'];
+    } else if (lowerTitle.includes('frequency') || lowerTitle.includes('hz') || lowerCategory.includes('frequency')) {
+      return templates['frequency'];
+    } else if (lowerTitle.includes('clear') || lowerTitle.includes('energy') || lowerCategory.includes('clearing')) {
+      return templates['energy_clearing'];
+    } else {
+      return templates['emotional']; // Default to emotional healing
+    }
+  };
+
+  const handleGenerateScript = () => {
+    if (!formData.title) {
+      toast({ title: 'Error', description: 'Please enter a title first', variant: 'destructive' });
+      return;
+    }
+    const template = getScriptTemplate(formData.category, formData.title);
+    setFormData({ ...formData, scriptText: template });
+    toast({ title: 'Script Generated', description: 'A template script has been generated based on your title and category' });
   };
 
   return (
@@ -213,8 +358,35 @@ const AdminHealing: React.FC = () => {
                 id="category"
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                placeholder="healing, chakra, frequency, etc."
+                placeholder="healing, chakra, frequency, sleep, emotional, etc."
               />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <Label htmlFor="scriptText">Meditation Script</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleGenerateScript}
+                  disabled={!formData.title}
+                >
+                  <FileText className="w-4 h-4 mr-1" />
+                  Generate Template
+                </Button>
+              </div>
+              <Textarea
+                id="scriptText"
+                value={formData.scriptText}
+                onChange={(e) => setFormData({ ...formData, scriptText: e.target.value })}
+                placeholder="Enter the meditation script here, or click 'Generate Template' to create a template based on title and category..."
+                rows={12}
+                className="font-mono text-sm"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                This script will be used for recording. Generate a template or write your own.
+              </p>
             </div>
 
             <div className="flex items-center gap-2">
@@ -256,33 +428,101 @@ const AdminHealing: React.FC = () => {
               {audios.map((audio) => (
                 <div
                   key={audio.id}
-                  className="flex items-center justify-between p-4 bg-muted/30 rounded-lg"
+                  className="p-4 bg-muted/30 rounded-lg border border-border/50"
                 >
-                  <div>
-                    <h3 className="font-medium text-foreground">{audio.title}</h3>
-                    <div className="text-sm text-muted-foreground">
-                      {Math.floor(audio.duration_seconds / 60)}:{(audio.duration_seconds % 60).toString().padStart(2, '0')} •{' '}
-                      {audio.is_free ? (
-                        <span className="text-green-500">FREE</span>
-                      ) : (
-                        <span>{audio.price_shc} SHC / ${audio.price_usd}</span>
-                      )}
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex-1">
+                      <h3 className="font-medium text-foreground">{audio.title}</h3>
+                      <div className="text-sm text-muted-foreground">
+                        {Math.floor(audio.duration_seconds / 60)}:{(audio.duration_seconds % 60).toString().padStart(2, '0')} •{' '}
+                        {audio.category} •{' '}
+                        {audio.is_free ? (
+                          <span className="text-green-500">FREE</span>
+                        ) : (
+                          <span>{audio.price_shc} SHC / ${audio.price_usd}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditScript(audio)}
+                      >
+                        <FileText className="w-4 h-4 mr-1" />
+                        {audio.script_text ? 'Edit Script' : 'Add Script'}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(audio.id)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </div>
                   </div>
-
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDelete(audio.id)}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                  {audio.script_text && (
+                    <div className="mt-3 p-3 bg-background rounded border border-border/30">
+                      <p className="text-xs text-muted-foreground mb-1">Script Preview:</p>
+                      <p className="text-sm text-foreground line-clamp-3">{audio.script_text}</p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           )}
         </Card>
+
+        {/* Script Editor Dialog */}
+        <Dialog open={scriptDialogOpen} onOpenChange={setScriptDialogOpen}>
+          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Meditation Script</DialogTitle>
+              <DialogDescription>
+                Write or edit the meditation script for recording. This will be used as your guide during recording.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="script">Script Text</Label>
+                <Textarea
+                  id="script"
+                  value={editingScript?.script || ''}
+                  onChange={(e) => setEditingScript(editingScript ? { ...editingScript, script: e.target.value } : null)}
+                  rows={20}
+                  className="font-mono text-sm"
+                  placeholder="Enter your meditation script here..."
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setScriptDialogOpen(false);
+                    setEditingScript(null);
+                  }}
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  Cancel
+                </Button>
+                <Button onClick={handleSaveScript} disabled={isLoading}>
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Script
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
