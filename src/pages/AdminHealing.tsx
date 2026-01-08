@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Upload, Trash2, Music, Check, Loader2, FileText, Edit2, Save, X } from 'lucide-react';
+import { ArrowLeft, Upload, Trash2, Music, Check, Loader2, FileText, Edit2, Save, X, Copy, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,7 +32,7 @@ const AdminHealing: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [editingScript, setEditingScript] = useState<{ id: string; script: string } | null>(null);
   const [scriptDialogOpen, setScriptDialogOpen] = useState(false);
-  const [isRunningMigration, setIsRunningMigration] = useState(false);
+  const [showMigrationDialog, setShowMigrationDialog] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -339,65 +339,54 @@ Rest in this cleared, purified state. When you're ready, gently return to the pr
     toast({ title: 'Script Generated', description: 'A template script has been generated based on your title and category' });
   };
 
-  const handleRunMigration = async () => {
-    if (!confirm('This will run the database migration to add the script_text column. Continue?')) {
-      return;
-    }
+  const [showMigrationDialog, setShowMigrationDialog] = useState(false);
 
-    setIsRunningMigration(true);
+  const migrationSQL = `-- Add script_text column to healing_audio table
+-- Copy this entire SQL and run it in Supabase SQL Editor
+
+ALTER TABLE public.healing_audio 
+ADD COLUMN IF NOT EXISTS script_text TEXT;
+
+CREATE INDEX IF NOT EXISTS idx_healing_audio_script_text 
+ON public.healing_audio(script_text) 
+WHERE script_text IS NOT NULL;
+
+ALTER TABLE public.healing_audio ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Admins can update healing audio" ON public.healing_audio;
+DROP POLICY IF EXISTS "Admins can insert healing audio" ON public.healing_audio;
+DROP POLICY IF EXISTS "Admins can delete healing audio" ON public.healing_audio;
+
+CREATE POLICY "Admins can update healing audio"
+ON public.healing_audio
+FOR UPDATE
+USING (public.has_role(auth.uid(), 'admin'))
+WITH CHECK (public.has_role(auth.uid(), 'admin'));
+
+CREATE POLICY "Admins can insert healing audio"
+ON public.healing_audio
+FOR INSERT
+WITH CHECK (public.has_role(auth.uid(), 'admin'));
+
+CREATE POLICY "Admins can delete healing audio"
+ON public.healing_audio
+FOR DELETE
+USING (public.has_role(auth.uid(), 'admin'));`;
+
+  const handleCopyMigrationSQL = async () => {
     try {
-      // Get session token for authentication
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('Please sign in to run migrations');
-      }
-
-      const { data, error } = await supabase.functions.invoke('run-script-text-migration', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
+      await navigator.clipboard.writeText(migrationSQL);
+      toast({ 
+        title: 'SQL Copied!', 
+        description: 'Paste it into Supabase SQL Editor and click Run. Then refresh this page.', 
+        variant: 'default' 
       });
-
-      if (error) {
-        throw error;
-      }
-
-      if (data?.success) {
-        toast({ 
-          title: 'Migration Successful!', 
-          description: 'The script_text column has been added. Refreshing...', 
-          variant: 'default' 
-        });
-        
-        // Wait a moment for the database to update, then refresh
-        setTimeout(() => {
-          fetchAudios();
-        }, 2000);
-      } else {
-        throw new Error(data?.error || 'Migration failed');
-      }
-    } catch (error: any) {
-      console.error('Migration error:', error);
-      const errorMessage = error.message || 'Failed to run migration';
-      
-      // Check if it's a network/function not found error
-      if (errorMessage.includes('Failed to send') || errorMessage.includes('404') || errorMessage.includes('not found')) {
-        toast({ 
-          title: 'Edge Function Not Deployed', 
-          description: 'The migration function needs to be deployed first. Use the manual SQL option: Open RUN_THIS_NOW.sql and copy-paste into Supabase SQL Editor.', 
-          variant: 'destructive',
-          duration: 10000
-        });
-      } else {
-        toast({ 
-          title: 'Migration Failed', 
-          description: `${errorMessage}. You can also run the SQL manually: Open RUN_THIS_NOW.sql and copy-paste into Supabase SQL Editor.`, 
-          variant: 'destructive',
-          duration: 10000
-        });
-      }
-    } finally {
-      setIsRunningMigration(false);
+    } catch (error) {
+      toast({ 
+        title: 'Copy Failed', 
+        description: 'Please manually copy the SQL below', 
+        variant: 'destructive' 
+      });
     }
   };
 
@@ -418,22 +407,12 @@ Rest in this cleared, purified state. When you're ready, gently return to the pr
             </div>
           </div>
           <Button
-            onClick={handleRunMigration}
-            disabled={isRunningMigration}
+            onClick={() => setShowMigrationDialog(true)}
             variant="outline"
             className="flex items-center gap-2"
           >
-            {isRunningMigration ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Running Migration...
-              </>
-            ) : (
-              <>
-                <FileText className="w-4 h-4" />
-                Run Migration
-              </>
-            )}
+            <FileText className="w-4 h-4" />
+            Migration SQL
           </Button>
         </div>
 
@@ -733,6 +712,83 @@ Rest in this cleared, purified state. When you're ready, gently return to the pr
                       Save Script
                     </>
                   )}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Migration SQL Dialog */}
+        <Dialog open={showMigrationDialog} onOpenChange={setShowMigrationDialog}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Database Migration SQL</DialogTitle>
+              <DialogDescription>
+                Copy this SQL and run it in Supabase SQL Editor to add the script_text column
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm text-muted-foreground">
+                  Steps: 1) Copy SQL below → 2) Go to Supabase Dashboard → SQL Editor → 3) Paste & Run → 4) Refresh this page
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(migrationSQL);
+                        toast({ 
+                          title: 'SQL Copied!', 
+                          description: 'Now paste it into Supabase SQL Editor', 
+                          variant: 'default' 
+                        });
+                      } catch (error) {
+                        toast({ 
+                          title: 'Copy Failed', 
+                          description: 'Please manually select and copy the SQL', 
+                          variant: 'destructive' 
+                        });
+                      }
+                    }}
+                  >
+                    <Copy className="w-4 h-4 mr-2" />
+                    Copy SQL
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open('https://supabase.com/dashboard/project/_/sql', '_blank')}
+                  >
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Open SQL Editor
+                  </Button>
+                </div>
+              </div>
+              <div className="relative">
+                <Textarea
+                  value={migrationSQL}
+                  readOnly
+                  className="font-mono text-xs h-[400px] bg-muted"
+                  onClick={(e) => (e.target as HTMLTextAreaElement).select()}
+                />
+              </div>
+              <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <p className="text-sm text-blue-900 dark:text-blue-100">
+                  <strong>After running the SQL:</strong> Refresh this page and the script_text column will be available. 
+                  You'll be able to add and save scripts for your healing audio entries.
+                </p>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowMigrationDialog(false);
+                    setTimeout(() => fetchAudios(), 1000);
+                  }}
+                >
+                  Done - Refresh Page
                 </Button>
               </div>
             </div>
