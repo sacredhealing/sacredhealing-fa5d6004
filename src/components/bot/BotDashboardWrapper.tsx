@@ -108,10 +108,10 @@ const BotDashboardWrapper: React.FC<BotDashboardWrapperProps> = ({
               border: 'none'
             }}
             title="Shreem Brzee Freedom Bot Dashboard"
-            allow="clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            allow="clipboard-write; encrypted-media; fullscreen; picture-in-picture; autoplay"
             onLoad={handleIframeLoad}
             onError={handleIframeError}
-            sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
+            sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation allow-modals"
           />
         </div>
       )}
