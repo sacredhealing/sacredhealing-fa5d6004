@@ -31,10 +31,52 @@ const AIIncomeDetail: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  // Redirect to localhost:5174/auth
+  // Only redirect to localhost if we're already on localhost (local development)
   useEffect(() => {
-    window.location.href = 'http://localhost:5174/auth';
+    const isLocalhost = window.location.hostname === 'localhost' || 
+                       window.location.hostname === '127.0.0.1' ||
+                       window.location.hostname === '';
+    
+    if (isLocalhost) {
+      // Only redirect if we're in local development
+      window.location.href = 'http://localhost:5174/auth';
+    }
   }, []);
+
+  // Check if we're in local development
+  const isLocalhost = typeof window !== 'undefined' && (
+    window.location.hostname === 'localhost' || 
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname === ''
+  );
+
+  // If not localhost, show a link instead
+  if (!isLocalhost) {
+    return (
+      <div className="min-h-screen pb-24 bg-background flex items-center justify-center p-6">
+        <div className="max-w-md text-center space-y-4">
+          <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center mx-auto">
+            <Bot className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-2xl font-bold text-foreground">Shreem Brzee Freedom Bot</h1>
+          <p className="text-muted-foreground">
+            To access the bot authentication, please visit:
+          </p>
+          <a 
+            href="http://localhost:5174/auth" 
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            Open Bot Auth Page
+          </a>
+          <p className="text-xs text-muted-foreground">
+            Note: This link only works when running the bot server locally on port 5174
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pb-24 bg-background">
