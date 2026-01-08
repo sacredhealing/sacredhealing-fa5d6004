@@ -51,24 +51,38 @@ const AdminHealing: React.FC = () => {
 
   const fetchAudios = async () => {
     try {
+      // Explicitly select script_text to ensure it's included even if types are outdated
       const { data, error } = await supabase
         .from('healing_audio')
-        .select('*')
+        .select('id, title, description, audio_url, preview_url, duration_seconds, is_free, price_usd, price_shc, category, created_at, script_text')
         .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching audios:', error);
-        toast({ 
-          title: 'Error', 
-          description: `Failed to load healing audio: ${error.message}`, 
-          variant: 'destructive' 
-        });
+        // Check if error is about missing column
+        if (error.message.includes('script_text') || error.message.includes('schema cache')) {
+          toast({ 
+            title: 'Migration Required', 
+            description: 'Please run the migration to add script_text column. See migration: 20260109000001_add_script_text_to_healing_audio.sql', 
+            variant: 'destructive' 
+          });
+        } else {
+          toast({ 
+            title: 'Error', 
+            description: `Failed to load healing audio: ${error.message}`, 
+            variant: 'destructive' 
+          });
+        }
         return;
       }
 
       if (data) {
         console.log('Fetched healing audios:', data.length);
-        setAudios(data as HealingAudio[]);
+        // Cast to our interface which includes script_text
+        setAudios(data.map(item => ({
+          ...item,
+          script_text: (item as any).script_text || null
+        })) as HealingAudio[]);
       } else {
         console.log('No healing audio data returned');
         setAudios([]);
@@ -88,6 +102,7 @@ const AdminHealing: React.FC = () => {
     setIsLoading(true);
 
     try {
+      // Use type assertion to include script_text even if types are outdated
       const { error } = await supabase.from('healing_audio').insert({
         title: formData.title,
         description: formData.description || null,
@@ -99,7 +114,7 @@ const AdminHealing: React.FC = () => {
         price_shc: formData.priceShc,
         category: formData.category,
         script_text: formData.scriptText || null,
-      });
+      } as any);
 
       if (error) throw error;
 
@@ -150,14 +165,20 @@ const AdminHealing: React.FC = () => {
       // Trim the script text to remove extra whitespace
       const scriptText = editingScript.script.trim() || null;
       
+      // Use type assertion to bypass TypeScript type checking for script_text
+      // This allows us to update the column even if types haven't been regenerated
       const { data, error } = await supabase
         .from('healing_audio')
-        .update({ script_text: scriptText })
+        .update({ script_text: scriptText } as any)
         .eq('id', editingScript.id)
-        .select();
+        .select('id, script_text');
 
       if (error) {
         console.error('Error saving script:', error);
+        // Check if error is about missing column
+        if (error.message.includes('script_text') || error.message.includes('schema cache')) {
+          throw new Error('The script_text column does not exist. Please run migration: 20260109000001_add_script_text_to_healing_audio.sql');
+        }
         throw error;
       }
 
@@ -173,7 +194,7 @@ const AdminHealing: React.FC = () => {
       console.error('Failed to save script:', error);
       toast({ 
         title: 'Error', 
-        description: error.message || 'Failed to save script. Please check your admin permissions.', 
+        description: error.message || 'Failed to save script. Please check your admin permissions and ensure the migration has been run.', 
         variant: 'destructive' 
       });
     } finally {

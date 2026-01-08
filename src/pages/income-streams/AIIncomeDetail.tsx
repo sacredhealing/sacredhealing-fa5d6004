@@ -10,8 +10,19 @@ import GifDisplay from '@/components/ui/GifDisplay';
 // Common hosting options: Imgur, Giphy, or upload to your own CDN
 const MAHA_LAKSHMI_GIF = 'https://i.imgur.com/your-gif-id.gif'; // Replace with actual GIF URL
 
-// Bot dashboard URL from Railway
-const BOT_DASHBOARD_URL = 'https://sacredhealing-solana-copy-trading-bot-production.up.railway.app/dashboard';
+// Bot dashboard URLs
+const PRODUCTION_BOT_URL = 'https://sacredhealing-solana-copy-trading-bot-production.up.railway.app/dashboard';
+const LOCAL_BOT_URL = 'http://localhost:5174/dashboard'; // Vite dev server port (configured in vite.config.js)
+
+// Detect if we're in local development
+const isLocalDev = typeof window !== 'undefined' && (
+  window.location.hostname === 'localhost' || 
+  window.location.hostname === '127.0.0.1' ||
+  window.location.hostname === ''
+);
+
+// Use local server if in development, otherwise use production
+const BOT_DASHBOARD_URL = isLocalDev ? LOCAL_BOT_URL : PRODUCTION_BOT_URL;
 
 const AIIncomeDetail: React.FC = () => {
   const { t } = useTranslation();
@@ -46,7 +57,14 @@ const AIIncomeDetail: React.FC = () => {
 
         {/* Bot Dashboard */}
         <div className="pt-2">
-          <h2 className="text-lg font-semibold text-foreground mb-3">Bot Dashboard</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold text-foreground">Bot Dashboard</h2>
+            {isLocalDev && (
+              <Badge variant="outline" className="text-xs">
+                🏠 Local Server (localhost:5174)
+              </Badge>
+            )}
+          </div>
           <BotDashboardWrapper 
             botUrl={BOT_DASHBOARD_URL}
           />
