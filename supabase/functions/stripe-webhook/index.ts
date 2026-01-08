@@ -14,13 +14,9 @@ const logStep = (step: string, details?: unknown) => {
 
 // Price ID to product info mapping for revenue tracking
 const PRICE_TO_PRODUCT: Record<string, { type: string; name: string }> = {
-  // Stargate Transformation Online - €25/month
   'price_1Os1suAPsnbrivP0PxsynQAO': { type: 'stargate', name: 'Stargate Transformation Online' },
-  // Stargate Membership - $25/month
   'price_1SZqNuAPsnbrivP0ZygF4M88': { type: 'stargate', name: 'Stargate Membership' },
-  // Meditation Membership Monthly - €4.99/month
   'price_1SaGNbAPsnbrivP0DBsBGh9V': { type: 'meditation', name: 'Meditation Membership Monthly' },
-  // Music Membership Monthly - €4.99/month
   'price_1SaGG4APsnbrivP0nnavK58y': { type: 'music', name: 'Music Membership Monthly' },
 };
 
@@ -63,6 +59,30 @@ const getProductName = (metadata: Record<string, string> | null): string => {
     return `Affirmation - ${metadata.package_type}`;
   }
   return 'Stripe Purchase';
+};
+
+// Log webhook event to database - use any to bypass strict typing for new table
+// deno-lint-ignore no-explicit-any
+const logWebhookEvent = async (
+  supabaseAdmin: any,
+  eventId: string,
+  eventType: string,
+  payload: unknown,
+  status: string,
+  errorMessage?: string
+) => {
+  try {
+    await supabaseAdmin.from('stripe_webhook_logs').insert({
+      event_id: eventId,
+      event_type: eventType,
+      payload: payload,
+      status,
+      error_message: errorMessage || null,
+      processed_at: status === 'processed' ? new Date().toISOString() : null,
+    });
+  } catch (err) {
+    logStep("Failed to log webhook event to DB", { error: err instanceof Error ? err.message : err });
+  }
 };
 
 serve(async (req) => {
@@ -119,6 +139,9 @@ serve(async (req) => {
     }
 
     logStep("Received event", { type: event.type, id: event.id });
+    
+    // Log event received
+    await logWebhookEvent(supabaseAdmin, event.id, event.type, { id: event.id, type: event.type }, 'received');
 
     // Handle checkout.session.completed events
     if (event.type === "checkout.session.completed") {
@@ -135,6 +158,7 @@ serve(async (req) => {
       // Only process paid sessions
       if (session.payment_status !== "paid") {
         logStep("Session not paid, skipping", { paymentStatus: session.payment_status });
+        await logWebhookEvent(supabaseAdmin, event.id, event.type, session, 'skipped', 'Session not paid');
         return new Response(JSON.stringify({ received: true, processed: false }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 200,
@@ -144,6 +168,7 @@ serve(async (req) => {
       const amountTotal = session.amount_total;
       if (!amountTotal || amountTotal <= 0) {
         logStep("No valid amount, skipping", { amountTotal });
+        await logWebhookEvent(supabaseAdmin, event.id, event.type, session, 'skipped', 'No valid amount');
         return new Response(JSON.stringify({ received: true, processed: false }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 200,
@@ -175,11 +200,13 @@ serve(async (req) => {
             payment_method: 'stripe',
             customer_email: customerEmail,
             stripe_payment_id: stripePaymentId,
+            source: 'webhook',
             notes: `Initial payment (${currency})`
           });
 
         if (revenueError) {
           logStep("Error recording revenue", revenueError);
+          await logWebhookEvent(supabaseAdmin, event.id, event.type, session, 'error', `Revenue insert failed: ${revenueError.message}`);
         } else {
           logStep("Revenue recorded", { amount: purchaseAmount, currency, type: purchaseType, product: productName });
         }
@@ -292,6 +319,8 @@ serve(async (req) => {
         }
       }
 
+      await logWebhookEvent(supabaseAdmin, event.id, event.type, { sessionId: session.id, amount: purchaseAmount }, 'processed');
+
       return new Response(JSON.stringify({ received: true, processed: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -302,63 +331,134 @@ serve(async (req) => {
     if (event.type === "invoice.payment_succeeded") {
       const invoice = event.data.object as Stripe.Invoice;
       
-      // Only process subscription renewals (not initial payments)
-      if (invoice.billing_reason === "subscription_cycle") {
-        const amountPaid = invoice.amount_paid / 100;
-        const currency = invoice.currency?.toUpperCase() || 'EUR';
-        const stripePaymentId = invoice.id;
-        const customerEmail = invoice.customer_email;
+      // Process both initial and recurring payments
+      const amountPaid = invoice.amount_paid / 100;
+      const currency = invoice.currency?.toUpperCase() || 'EUR';
+      const stripePaymentId = invoice.id;
+      const customerEmail = invoice.customer_email;
 
-        // Get price info from line items
-        const lineItem = invoice.lines?.data?.[0];
-        const priceId = (lineItem?.price as { id?: string })?.id;
-        const productInfo = priceId && PRICE_TO_PRODUCT[priceId] 
-          ? PRICE_TO_PRODUCT[priceId] 
-          : { type: 'subscription', name: lineItem?.description || 'Subscription Renewal' };
+      // Get price info from line items
+      const lineItem = invoice.lines?.data?.[0];
+      const priceId = (lineItem?.price as { id?: string })?.id;
+      const productInfo = priceId && PRICE_TO_PRODUCT[priceId] 
+        ? PRICE_TO_PRODUCT[priceId] 
+        : { type: 'subscription', name: lineItem?.description || 'Subscription Payment' };
 
-        logStep("Processing recurring payment", { 
-          invoiceId: invoice.id, 
-          amount: amountPaid,
-          currency,
-          priceId,
-          productType: productInfo.type,
-          productName: productInfo.name
-        });
+      logStep("Processing invoice payment", { 
+        invoiceId: invoice.id, 
+        billingReason: invoice.billing_reason,
+        amount: amountPaid,
+        currency,
+        priceId,
+        productType: productInfo.type,
+        productName: productInfo.name
+      });
 
-        // Check for duplicate
-        const { data: existingRevenue } = await supabaseAdmin
+      // Check for duplicate
+      const { data: existingRevenue } = await supabaseAdmin
+        .from('revenue_records')
+        .select('id')
+        .eq('stripe_payment_id', stripePaymentId)
+        .maybeSingle();
+
+      if (!existingRevenue && amountPaid > 0) {
+        const isRecurring = invoice.billing_reason === "subscription_cycle";
+        const { error: revenueError } = await supabaseAdmin
           .from('revenue_records')
-          .select('id')
-          .eq('stripe_payment_id', stripePaymentId)
-          .maybeSingle();
+          .insert({
+            product_type: productInfo.type,
+            product_name: productInfo.name,
+            amount_usd: amountPaid,
+            payment_method: 'stripe',
+            customer_email: customerEmail,
+            stripe_payment_id: stripePaymentId,
+            source: 'webhook',
+            notes: isRecurring ? `Recurring payment (${currency})` : `Initial subscription (${currency})`
+          });
 
-        if (!existingRevenue) {
-          const { error: revenueError } = await supabaseAdmin
-            .from('revenue_records')
-            .insert({
-              product_type: productInfo.type,
-              product_name: productInfo.name,
-              amount_usd: amountPaid,
-              payment_method: 'stripe',
-              customer_email: customerEmail,
-              stripe_payment_id: stripePaymentId,
-              notes: `Recurring payment (${currency})`
-            });
-
-          if (revenueError) {
-            logStep("Error recording recurring revenue", revenueError);
-          } else {
-            logStep("Recurring revenue recorded", { 
-              amount: amountPaid, 
-              currency, 
-              type: productInfo.type,
-              product: productInfo.name 
-            });
-          }
+        if (revenueError) {
+          logStep("Error recording invoice revenue", revenueError);
+          await logWebhookEvent(supabaseAdmin, event.id, event.type, invoice, 'error', `Revenue insert failed: ${revenueError.message}`);
         } else {
-          logStep("Recurring revenue already recorded", { stripePaymentId });
+          logStep("Invoice revenue recorded", { 
+            amount: amountPaid, 
+            currency, 
+            type: productInfo.type,
+            product: productInfo.name,
+            isRecurring
+          });
+          await logWebhookEvent(supabaseAdmin, event.id, event.type, { invoiceId: invoice.id, amount: amountPaid }, 'processed');
         }
+      } else if (existingRevenue) {
+        logStep("Invoice revenue already recorded", { stripePaymentId });
+        await logWebhookEvent(supabaseAdmin, event.id, event.type, invoice, 'skipped', 'Already recorded');
       }
+    }
+
+    // Handle payment_intent.succeeded for direct payments
+    if (event.type === "payment_intent.succeeded") {
+      const paymentIntent = event.data.object as Stripe.PaymentIntent;
+      
+      const amountReceived = paymentIntent.amount_received / 100;
+      const currency = paymentIntent.currency?.toUpperCase() || 'EUR';
+      const stripePaymentId = paymentIntent.id;
+      
+      logStep("Processing payment intent", {
+        paymentIntentId: paymentIntent.id,
+        amount: amountReceived,
+        currency,
+        metadata: paymentIntent.metadata
+      });
+
+      // Check for duplicate
+      const { data: existingRevenue } = await supabaseAdmin
+        .from('revenue_records')
+        .select('id')
+        .eq('stripe_payment_id', stripePaymentId)
+        .maybeSingle();
+
+      if (!existingRevenue && amountReceived > 0) {
+        const purchaseType = getPurchaseType(paymentIntent.metadata || {}) || 'other';
+        const productName = getProductName(paymentIntent.metadata);
+        
+        const { error: revenueError } = await supabaseAdmin
+          .from('revenue_records')
+          .insert({
+            product_type: purchaseType,
+            product_name: productName,
+            amount_usd: amountReceived,
+            payment_method: 'stripe',
+            stripe_payment_id: stripePaymentId,
+            source: 'webhook',
+            notes: `Direct payment (${currency})`
+          });
+
+        if (revenueError) {
+          logStep("Error recording payment intent revenue", revenueError);
+          await logWebhookEvent(supabaseAdmin, event.id, event.type, paymentIntent, 'error', `Revenue insert failed: ${revenueError.message}`);
+        } else {
+          logStep("Payment intent revenue recorded", { amount: amountReceived, currency, type: purchaseType });
+          await logWebhookEvent(supabaseAdmin, event.id, event.type, { paymentIntentId: paymentIntent.id, amount: amountReceived }, 'processed');
+        }
+      } else if (existingRevenue) {
+        logStep("Payment intent revenue already recorded", { stripePaymentId });
+      }
+    }
+
+    // Handle subscription created/updated for tracking
+    if (event.type === "customer.subscription.created" || event.type === "customer.subscription.updated") {
+      const subscription = event.data.object as Stripe.Subscription;
+      
+      logStep(`Subscription ${event.type === 'customer.subscription.created' ? 'created' : 'updated'}`, {
+        subscriptionId: subscription.id,
+        status: subscription.status,
+        customerId: subscription.customer
+      });
+      
+      await logWebhookEvent(supabaseAdmin, event.id, event.type, {
+        subscriptionId: subscription.id,
+        status: subscription.status
+      }, 'processed');
     }
 
     return new Response(JSON.stringify({ received: true }), {

@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, TrendingUp, TrendingDown, DollarSign, CreditCard, Coins, RefreshCw } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, DollarSign, CreditCard, RefreshCw, CloudDownload, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -70,6 +70,7 @@ const AdminRevenueTab = () => {
   const [records, setRecords] = useState<RevenueRecord[]>([]);
   const [costs, setCosts] = useState<MonthlyCost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [dateRange, setDateRange] = useState('30');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   
@@ -83,6 +84,31 @@ const AdminRevenueTab = () => {
     customer_email: '',
     notes: ''
   });
+
+  const handleStripeSync = async () => {
+    setIsSyncing(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error('You must be logged in to sync');
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('backfill-stripe-revenue', {
+        headers: { Authorization: `Bearer ${session.access_token}` }
+      });
+
+      if (error) throw error;
+
+      toast.success(data.message || 'Stripe sync complete');
+      fetchData();
+    } catch (error) {
+      console.error('Sync error:', error);
+      toast.error('Failed to sync with Stripe');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -277,9 +303,14 @@ const AdminRevenueTab = () => {
           </SelectContent>
         </Select>
 
-        <Button variant="outline" size="sm" onClick={fetchData}>
-          <RefreshCw className="h-4 w-4 mr-2" />
+        <Button variant="outline" size="sm" onClick={fetchData} disabled={isLoading}>
+          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
           Refresh
+        </Button>
+
+        <Button variant="secondary" size="sm" onClick={handleStripeSync} disabled={isSyncing}>
+          <CloudDownload className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-pulse' : ''}`} />
+          {isSyncing ? 'Syncing...' : 'Sync Stripe'}
         </Button>
 
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>

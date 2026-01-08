@@ -3212,6 +3212,7 @@ export type Database = {
           payment_method: string | null
           product_name: string | null
           product_type: string
+          source: string | null
           stripe_payment_id: string | null
         }
         Insert: {
@@ -3225,6 +3226,7 @@ export type Database = {
           payment_method?: string | null
           product_name?: string | null
           product_type: string
+          source?: string | null
           stripe_payment_id?: string | null
         }
         Update: {
@@ -3238,6 +3240,7 @@ export type Database = {
           payment_method?: string | null
           product_name?: string | null
           product_type?: string
+          source?: string | null
           stripe_payment_id?: string | null
         }
         Relationships: []
@@ -3749,6 +3752,39 @@ export type Database = {
           slug?: string
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      stripe_webhook_logs: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          event_id: string
+          event_type: string
+          id: string
+          payload: Json | null
+          processed_at: string | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          event_id: string
+          event_type: string
+          id?: string
+          payload?: Json | null
+          processed_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          event_id?: string
+          event_type?: string
+          id?: string
+          payload?: Json | null
+          processed_at?: string | null
+          status?: string | null
         }
         Relationships: []
       }
