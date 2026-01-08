@@ -588,31 +588,107 @@ serve(async (req) => {
         .eq('stripe_payment_id', stripePaymentId)
         .maybeSingle();
 
-      if (!existingRevenue && amountReceived > 0) {
+      if (existingRevenue) {
+        logStep("Payment intent revenue already recorded", { stripePaymentId, existingId: existingRevenue.id });
+        await logWebhookEvent(supabaseAdmin, event.id, event.type, paymentIntent, 'skipped', 'Already recorded');
+      } else if (amountReceived > 0) {
         const purchaseType = getPurchaseType(paymentIntent.metadata || {}) || 'other';
         const productName = getProductName(paymentIntent.metadata);
         
-        const { error: revenueError } = await supabaseAdmin
-          .from('revenue_records')
-          .insert({
-            product_type: purchaseType,
-            product_name: productName,
-            amount_usd: amountReceived,
-            payment_method: 'stripe',
-            stripe_payment_id: stripePaymentId,
-            source: 'webhook',
-            notes: `Direct payment (${currency})`
-          });
+        // Get user_id from metadata if available
+        const userId = paymentIntent.metadata?.user_id || null;
+        const customerEmail = paymentIntent.metadata?.customer_email || null;
+        
+        // Retry logic for revenue insert
+        let revenueInserted = false;
+        let lastError: Error | null = null;
+        const maxRetries = 3;
+        
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+          try {
+            const { data: insertData, error: revenueError } = await supabaseAdmin
+              .from('revenue_records')
+              .insert({
+                product_type: purchaseType,
+                product_name: productName,
+                amount_usd: amountReceived,
+                payment_method: 'stripe',
+                customer_id: userId,
+                customer_email: customerEmail,
+                stripe_payment_id: stripePaymentId,
+                source: 'webhook',
+                notes: `Direct payment (${currency})`
+              })
+              .select('id')
+              .single();
 
-        if (revenueError) {
-          logStep("Error recording payment intent revenue", revenueError);
-          await logWebhookEvent(supabaseAdmin, event.id, event.type, paymentIntent, 'error', `Revenue insert failed: ${revenueError.message}`);
-        } else {
-          logStep("Payment intent revenue recorded", { amount: amountReceived, currency, type: purchaseType });
-          await logWebhookEvent(supabaseAdmin, event.id, event.type, { paymentIntentId: paymentIntent.id, amount: amountReceived }, 'processed');
+            if (revenueError) {
+              // Check if it's a duplicate constraint error
+              if (revenueError.code === '23505' || revenueError.message?.includes('unique') || revenueError.message?.includes('duplicate')) {
+                logStep("Payment intent revenue already exists (duplicate constraint)", { stripePaymentId, attempt });
+                revenueInserted = true;
+                break;
+              }
+              
+              lastError = new Error(revenueError.message);
+              logStep(`Payment intent revenue insert attempt ${attempt} failed`, { 
+                error: revenueError.message, 
+                code: revenueError.code,
+                attempt 
+              });
+              
+              if (attempt < maxRetries) {
+                await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+                continue;
+              }
+            } else {
+              revenueInserted = true;
+              logStep("Payment intent revenue recorded successfully", { 
+                id: insertData?.id,
+                amount: amountReceived, 
+                currency, 
+                type: purchaseType,
+                attempt
+              });
+              await logWebhookEvent(supabaseAdmin, event.id, event.type, { 
+                paymentIntentId: paymentIntent.id, 
+                amount: amountReceived,
+                revenueRecorded: true
+              }, 'processed');
+              break;
+            }
+          } catch (err) {
+            lastError = err instanceof Error ? err : new Error(String(err));
+            logStep(`Payment intent revenue insert exception on attempt ${attempt}`, { 
+              error: lastError.message,
+              attempt 
+            });
+            
+            if (attempt < maxRetries) {
+              await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            }
+          }
         }
-      } else if (existingRevenue) {
-        logStep("Payment intent revenue already recorded", { stripePaymentId });
+
+        if (!revenueInserted) {
+          const errorMsg = lastError?.message || 'Unknown error after retries';
+          logStep("CRITICAL: Failed to record payment intent revenue after all retries", { 
+            stripePaymentId,
+            amount: amountReceived,
+            error: errorMsg
+          });
+          await logWebhookEvent(supabaseAdmin, event.id, event.type, paymentIntent, 'error', `Revenue insert failed after ${maxRetries} attempts: ${errorMsg}`);
+          
+          return new Response(JSON.stringify({ 
+            received: true, 
+            processed: false,
+            error: 'Failed to record revenue',
+            retry: true
+          }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 500,
+          });
+        }
       }
     }
 
