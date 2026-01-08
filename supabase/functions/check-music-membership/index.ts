@@ -34,24 +34,27 @@ serve(async (req) => {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
-    // Use anon key for user authentication (service role bypasses RLS but causes JWT issues)
+    // Extract token from Bearer format
+    const token = authHeader.replace("Bearer ", "");
+    if (!token) {
+      throw new Error("Invalid authorization token format");
+    }
+
+    // Use service role key for database access, but validate user token separately
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { 
-        global: { 
-          headers: { Authorization: authHeader } 
-        },
-        auth: { persistSession: false } 
-      }
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
     );
 
-    // Authenticate user using the auth header
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-    if (userError || !user) {
+    // Authenticate user by validating the JWT token
+    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+    if (userError || !userData.user) {
       logStep("Authentication failed", { error: userError?.message });
       throw new Error(`Authentication error: ${userError?.message || 'User not authenticated'}`);
     }
+    
+    const user = userData.user;
     if (!user.email) {
       throw new Error("User email not available");
     }
