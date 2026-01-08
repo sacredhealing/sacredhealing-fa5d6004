@@ -147,19 +147,35 @@ const AdminHealing: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase
+      // Trim the script text to remove extra whitespace
+      const scriptText = editingScript.script.trim() || null;
+      
+      const { data, error } = await supabase
         .from('healing_audio')
-        .update({ script_text: editingScript.script || null })
-        .eq('id', editingScript.id);
+        .update({ script_text: scriptText })
+        .eq('id', editingScript.id)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error saving script:', error);
+        throw error;
+      }
+
+      if (!data || data.length === 0) {
+        throw new Error('No data returned from update. You may not have permission to update healing audio.');
+      }
 
       toast({ title: 'Success', description: 'Script saved successfully!' });
       setScriptDialogOpen(false);
       setEditingScript(null);
       fetchAudios();
     } catch (error: any) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      console.error('Failed to save script:', error);
+      toast({ 
+        title: 'Error', 
+        description: error.message || 'Failed to save script. Please check your admin permissions.', 
+        variant: 'destructive' 
+      });
     } finally {
       setIsLoading(false);
     }
