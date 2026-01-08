@@ -51,34 +51,59 @@ const AdminHealing: React.FC = () => {
 
   const fetchAudios = async () => {
     try {
-      // Explicitly select script_text to ensure it's included even if types are outdated
-      const { data, error } = await supabase
+      // Try to fetch with script_text first, fallback to * if column doesn't exist
+      let query = supabase
         .from('healing_audio')
-        .select('id, title, description, audio_url, preview_url, duration_seconds, is_free, price_usd, price_shc, category, created_at, script_text')
+        .select('*')
         .order('created_at', { ascending: false });
+
+      const { data, error } = await query;
 
       if (error) {
         console.error('Error fetching audios:', error);
-        // Check if error is about missing column
+        // Check if error is about missing column - try without script_text
         if (error.message.includes('script_text') || error.message.includes('schema cache')) {
-          toast({ 
-            title: 'Migration Required', 
-            description: 'Please run the migration to add script_text column. See migration: 20260109000001_add_script_text_to_healing_audio.sql', 
-            variant: 'destructive' 
-          });
+          console.log('script_text column not found, fetching without it...');
+          // Try again without script_text
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from('healing_audio')
+            .select('id, title, description, audio_url, preview_url, duration_seconds, is_free, price_usd, price_shc, category, created_at')
+            .order('created_at', { ascending: false });
+          
+          if (fallbackError) {
+            toast({ 
+              title: 'Error', 
+              description: `Failed to load healing audio: ${fallbackError.message}`, 
+              variant: 'destructive' 
+            });
+            return;
+          }
+          
+          if (fallbackData) {
+            setAudios(fallbackData.map(item => ({
+              ...item,
+              script_text: null // Set to null if column doesn't exist
+            })) as HealingAudio[]);
+            toast({ 
+              title: 'Migration Required', 
+              description: 'Please run migration: 20260109000001_add_script_text_to_healing_audio.sql to enable script features', 
+              variant: 'default' 
+            });
+          }
+          return;
         } else {
           toast({ 
             title: 'Error', 
             description: `Failed to load healing audio: ${error.message}`, 
             variant: 'destructive' 
           });
+          return;
         }
-        return;
       }
 
       if (data) {
         console.log('Fetched healing audios:', data.length);
-        // Cast to our interface which includes script_text
+        // Ensure script_text is included even if types are outdated
         setAudios(data.map(item => ({
           ...item,
           script_text: (item as any).script_text || null
