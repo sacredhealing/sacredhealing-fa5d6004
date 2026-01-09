@@ -26,7 +26,6 @@ import { useChallenges } from '@/hooks/useChallenges';
 import { useLiveEvents } from '@/hooks/useLiveEvents';
 import { ChallengeCard } from '@/components/challenges/ChallengeCard';
 import { LiveEventCard } from '@/components/events/LiveEventCard';
-import { Radio, ArrowRight } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
