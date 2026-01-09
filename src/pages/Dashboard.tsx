@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Play, BookOpen, Gift, Wallet, Flame, Sparkles, DollarSign, Youtube, ShoppingBag, Crown, Music, Heart, Trophy, Star, Calendar, Headphones, Wind, Award, Share2 } from 'lucide-react';
+import { Play, BookOpen, Gift, Wallet, Flame, Sparkles, DollarSign, Youtube, ShoppingBag, Crown, Music, Heart, Trophy, Star, Calendar, Headphones, Wind, Award, Share2, Radio, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LotusIcon } from '@/components/icons/LotusIcon';
 import { SocialShare } from '@/components/SocialShare';
@@ -26,8 +26,7 @@ import { useChallenges } from '@/hooks/useChallenges';
 import { useLiveEvents } from '@/hooks/useLiveEvents';
 import { ChallengeCard } from '@/components/challenges/ChallengeCard';
 import { LiveEventCard } from '@/components/events/LiveEventCard';
-import { Link } from 'react-router-dom';
-import { Trophy, Radio, ArrowRight } from 'lucide-react';
+import { Radio, ArrowRight } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
