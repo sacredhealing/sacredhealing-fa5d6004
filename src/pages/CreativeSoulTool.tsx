@@ -7,12 +7,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useCreativeTools } from '@/hooks/useCreativeTools';
 import { toast } from 'sonner';
 
 export default function CreativeSoulTool() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
+  const { hasAccess, refetch } = useCreativeTools();
   const [transcribedText, setTranscribedText] = useState('');
   const [ideas, setIdeas] = useState('');
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
@@ -23,9 +25,11 @@ export default function CreativeSoulTool() {
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
   const [demoActive, setDemoActive] = useState(false);
-  const [paymentActive, setPaymentActive] = useState(false);
   const [loading, setLoading] = useState(false);
   const [affiliateId, setAffiliateId] = useState<string | null>(null);
+
+  // Check access from database (not URL params)
+  const hasToolAccess = user && hasAccess('creative-soul-studio');
 
   // Demo data
   const demoText = "This is a demo transcription of your voice.";
@@ -33,7 +37,7 @@ export default function CreativeSoulTool() {
   const demoImage = "https://via.placeholder.com/400x400.png?text=Demo+Image";
   const demoPDF = "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf";
 
-  // Check for payment success and affiliate code
+  // Check for affiliate code and verify access from database
   useEffect(() => {
     const ref = searchParams.get("ref");
     if (ref) {
@@ -44,11 +48,19 @@ export default function CreativeSoulTool() {
       if (stored) setAffiliateId(stored);
     }
 
-    if (searchParams.get("success") === "true") {
-      setPaymentActive(true);
-      toast.success('Payment successful! Full access activated.');
+    // Poll for access updates (webhook may have just processed payment)
+    if (user) {
+      refetch();
+      const interval = setInterval(() => {
+        refetch();
+      }, 5000);
+      
+      // Stop polling after 2 minutes
+      setTimeout(() => clearInterval(interval), 120000);
+      
+      return () => clearInterval(interval);
     }
-  }, [searchParams]);
+  }, [searchParams, user, refetch]);
 
   // Demo/Admin Access
   const handleDemoAccess = () => setDemoActive(true);
@@ -66,7 +78,7 @@ export default function CreativeSoulTool() {
       const { data, error } = await supabase.functions.invoke('create-creative-tool-checkout', {
         body: { 
           toolSlug: 'creative-soul-studio',
-          affiliateId: affiliateId || undefined
+          ...(affiliateId && { affiliateId })
         }
       });
 
@@ -98,8 +110,8 @@ export default function CreativeSoulTool() {
 
       recorder.onstop = async () => {
         const blob = new Blob(chunks, { type: 'audio/webm' });
-        // Use demo data if in demo mode, otherwise transcribe
-        if (demoActive || (!paymentActive && !user)) {
+        // Use demo data if in demo mode or user doesn't have access, otherwise transcribe
+        if (demoActive || !hasToolAccess) {
           setTranscribedText(demoText);
           toast.info('Demo mode: Using sample transcription');
         } else {
@@ -165,8 +177,8 @@ export default function CreativeSoulTool() {
       return;
     }
 
-    // Use demo data if in demo mode
-    if (demoActive || (!paymentActive && !user)) {
+    // Use demo data if in demo mode or user doesn't have access
+    if (demoActive || !hasToolAccess) {
       setIdeas(demoIdeas);
       toast.info('Demo mode: Using sample ideas');
       return;
@@ -203,8 +215,8 @@ export default function CreativeSoulTool() {
       return;
     }
 
-    // Use demo data if in demo mode
-    if (demoActive || (!paymentActive && !user)) {
+    // Use demo data if in demo mode or user doesn't have access
+    if (demoActive || !hasToolAccess) {
       setGeneratedImages([demoImage]);
       toast.info('Demo mode: Using sample image');
       return;
@@ -284,17 +296,19 @@ export default function CreativeSoulTool() {
               Back to Creative Soul
             </Button>
             
-            {!paymentActive && !user && (
+            {!hasToolAccess && (
               <div className="flex gap-2">
-                <Button
-                  onClick={handleDemoAccess}
-                  variant="outline"
-                  size="sm"
-                  className="border-purple-600 text-purple-600"
-                >
-                  <Play className="w-4 h-4 mr-2" />
-                  Try Demo
-                </Button>
+                {!user && (
+                  <Button
+                    onClick={handleDemoAccess}
+                    variant="outline"
+                    size="sm"
+                    className="border-purple-600 text-purple-600"
+                  >
+                    <Play className="w-4 h-4 mr-2" />
+                    Try Demo
+                  </Button>
+                )}
                 <Button
                   onClick={handlePurchase}
                   size="sm"

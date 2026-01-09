@@ -37,15 +37,18 @@ serve(async (req) => {
     }
 
     // Check user has access to Creative Soul tool
-    const { data: toolAccess } = await supabaseClient
-      .from('user_creative_tools')
-      .select('*')
+    const { data: toolAccess, error: accessError } = await supabaseClient
+      .from('creative_tool_access')
+      .select(`
+        *,
+        tool:creative_tools!inner(slug)
+      `)
       .eq('user_id', user.id)
-      .eq('status', 'active')
+      .eq('tool.slug', 'creative-soul-studio')
       .limit(1);
 
-    if (!toolAccess || toolAccess.length === 0) {
-      throw new Error("You don't have access to Creative Soul. Please purchase it first.");
+    if (accessError || !toolAccess || toolAccess.length === 0) {
+      throw new Error("You don't have access to Creative Soul Studio. Please purchase it first.");
     }
 
     // Create PDF

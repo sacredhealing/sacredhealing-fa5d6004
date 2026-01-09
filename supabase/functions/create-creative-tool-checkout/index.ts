@@ -30,7 +30,7 @@ serve(async (req) => {
       throw new Error("User not authenticated");
     }
 
-    const { toolSlug } = await req.json();
+    const { toolSlug, affiliateId } = await req.json();
 
     if (!toolSlug) {
       throw new Error("Missing required field: toolSlug");
@@ -106,7 +106,7 @@ serve(async (req) => {
         },
       ],
       mode: "payment",
-      success_url: `${origin}/creative-soul?success=true&tool=${toolSlug}`,
+      success_url: `${origin}/creative-soul-tool/${toolSlug}`,
       cancel_url: `${origin}/creative-soul?canceled=true`,
       metadata: {
         user_id: user.id,
@@ -114,6 +114,7 @@ serve(async (req) => {
         tool_slug: tool.slug,
         tool_name: toolName,
         purchase_type: "creative_tool",
+        ...(affiliateId && { affiliate_id: affiliateId }),
       },
       payment_intent_data: {
         metadata: {

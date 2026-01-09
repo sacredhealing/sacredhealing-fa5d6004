@@ -12,11 +12,26 @@ export default function CreativeSoulLanding() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  const { hasAccess, isLoading: toolsLoading } = useCreativeTools();
+  const { hasAccess, isLoading: toolsLoading, refetch } = useCreativeTools();
   const [demoActive, setDemoActive] = useState(false);
-  const [paymentActive, setPaymentActive] = useState(false);
   const [loading, setLoading] = useState(false);
   const [affiliateId, setAffiliateId] = useState<string | null>(null);
+
+  // Check access from database (refetch on mount and periodically)
+  useEffect(() => {
+    if (user) {
+      refetch();
+      // Poll every 5 seconds for access update (in case webhook just processed)
+      const interval = setInterval(() => {
+        refetch();
+      }, 5000);
+      
+      // Stop polling after 2 minutes
+      setTimeout(() => clearInterval(interval), 120000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [user, refetch]);
 
   // Mock demo data for admin/demo access
   const demoText = "This is a demo transcription of your voice. Imagine speaking about your creative vision, and AI transforms it into actionable ideas.";
@@ -37,11 +52,8 @@ export default function CreativeSoulLanding() {
       if (stored) setAffiliateId(stored);
     }
 
-    // Check if payment was successful
-    if (searchParams.get("success") === "true") {
-      setPaymentActive(true);
-      toast.success('Payment successful! Your creative tool is ready to use.');
-    }
+    // Note: Payment verification is now handled via webhook and database check
+  // Users will be automatically granted access when webhook processes payment
   }, [searchParams]);
 
   const handleDemoAccess = () => setDemoActive(true);
@@ -70,7 +82,7 @@ export default function CreativeSoulLanding() {
       const { data, error } = await supabase.functions.invoke('create-creative-tool-checkout', {
         body: { 
           toolSlug: 'creative-soul-studio',
-          affiliateId: affiliateId || undefined
+          ...(affiliateId && { affiliateId })
         }
       });
 
@@ -281,7 +293,7 @@ export default function CreativeSoulLanding() {
                 </div>
               </div>
 
-              {paymentActive && (
+              {user && hasAccess('creative-soul-studio') && (
                 <div className="mt-8 pt-6 border-t border-gray-200">
                   <Button
                     onClick={() => navigate('/creative-soul-tool/creative-soul-studio')}
