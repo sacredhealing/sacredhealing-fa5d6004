@@ -20,6 +20,7 @@ import { ShareableQuoteCard } from '@/components/social/ShareableQuoteCard';
 import { useSocialShare } from '@/hooks/useSocialShare';
 import { FeaturedPlaylistsCarousel } from '@/components/dashboard/FeaturedPlaylistsCarousel';
 import { DailyRitualCard } from '@/components/dashboard/DailyRitualCard';
+import { DailyPracticeCard } from '@/components/dashboard/DailyPracticeCard';
 import { SpiritualPathCard } from '@/components/dashboard/SpiritualPathCard';
 
 const Dashboard: React.FC = () => {
@@ -96,6 +97,10 @@ const Dashboard: React.FC = () => {
         </Link>
       </div>
 
+      {/* Personalized Daily Practice */}
+      <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.15s' }}>
+        <DailyPracticeCard />
+      </div>
 
       {/* Today's Meditation */}
       <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.2s' }}>
