@@ -23,7 +23,7 @@ export const DailyVedicInsight: React.FC<DailyVedicInsightProps> = ({ tier }) =>
       }
 
       try {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('profiles')
           .select('birth_name, birth_date, birth_time, birth_place')
           .eq('id', user.id)

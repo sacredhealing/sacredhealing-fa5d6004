@@ -21,18 +21,18 @@ interface Channel {
 const CommunityChannels: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { hasActiveMembership } = useMembership();
+  const { isPremium } = useMembership();
   const [channels, setChannels] = useState<Channel[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchChannels();
-  }, [user, hasActiveMembership]);
+  }, [user, isPremium]);
 
   const fetchChannels = async () => {
     setLoading(true);
     try {
-      const { data: channelsData, error } = await supabase
+      const { data: channelsData, error } = await (supabase as any)
         .from('community_channels')
         .select('*')
         .eq('is_active', true)
@@ -48,7 +48,7 @@ const CommunityChannels: React.FC = () => {
 
       // Check which channels user is a member of
       const channelIds = channelsData.map(c => c.id);
-      const { data: memberships } = await supabase
+      const { data: memberships } = await (supabase as any)
         .from('channel_members')
         .select('channel_id')
         .eq('user_id', user.id)
@@ -57,7 +57,7 @@ const CommunityChannels: React.FC = () => {
       const joinedChannelIds = new Set(memberships?.map(m => m.channel_id) || []);
 
       // Get member counts
-      const { data: memberCounts } = await supabase
+      const { data: memberCounts } = await (supabase as any)
         .from('channel_members')
         .select('channel_id')
         .in('channel_id', channelIds);
@@ -92,7 +92,7 @@ const CommunityChannels: React.FC = () => {
     }
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('channel_members')
         .insert({
           channel_id: channelId,
@@ -139,7 +139,7 @@ const CommunityChannels: React.FC = () => {
   return (
     <div className="space-y-3">
       {channels.map((channel) => {
-        const canAccess = !channel.is_premium || hasActiveMembership;
+        const canAccess = !channel.is_premium || isPremium;
         const canJoin = !channel.user_joined && canAccess;
 
         return (

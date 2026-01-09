@@ -195,17 +195,17 @@ export function usePersonalizedDailyPractice() {
 
         // Fetch available content
         const [meditationsResult, pathsResult, healingResult] = await Promise.all([
-          supabase
+          (supabase as any)
             .from('meditations')
             .select('id, title, description, duration_minutes, shc_reward, category')
             .eq('is_active', true)
             .limit(50),
-          supabase
+          (supabase as any)
             .from('spiritual_paths')
             .select('id, title, description, goal_types')
             .eq('is_active', true)
             .limit(20),
-          supabase
+          (supabase as any)
             .from('healing_audio')
             .select('id, title, description, duration_seconds, shc_reward, category')
             .eq('is_active', true)

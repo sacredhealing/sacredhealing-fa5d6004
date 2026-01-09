@@ -28,7 +28,7 @@ export const useCertificates = () => {
 
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('certificates')
         .select('*')
         .eq('user_id', user.id)
@@ -66,7 +66,7 @@ export const useCertificates = () => {
 
   const shareCertificate = useCallback(async (certificateId: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('certificates')
         .update({
           is_shared: true,

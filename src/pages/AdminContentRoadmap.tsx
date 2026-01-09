@@ -68,7 +68,7 @@ const AdminContentRoadmap: React.FC = () => {
   const fetchTasks = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('content_tasks')
         .select('*')
         .order('created_at', { ascending: false });
@@ -89,7 +89,7 @@ const AdminContentRoadmap: React.FC = () => {
 
   const fetchProgress = async () => {
     try {
-      const { data, error } = await supabase.rpc('get_content_roadmap_progress');
+      const { data, error } = await (supabase as any).rpc('get_content_roadmap_progress');
       if (error) throw error;
       setProgressStats(data || []);
     } catch (error: any) {
@@ -138,7 +138,7 @@ const AdminContentRoadmap: React.FC = () => {
 
   const handleUpdateStatus = async (taskId: string, newStatus: 'not_recorded' | 'recorded' | 'uploaded') => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('content_tasks')
         .update({
           status: newStatus,
@@ -168,7 +168,7 @@ const AdminContentRoadmap: React.FC = () => {
     if (!editingTask) return;
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('content_tasks')
         .update({ recording_notes: notes })
         .eq('id', editingTask.id);

@@ -29,7 +29,7 @@ export const useChallenges = () => {
     setIsLoading(true);
     try {
       // Fetch active challenges
-      const { data: challengesData, error } = await supabase
+      const { data: challengesData, error } = await (supabase as any)
         .from('challenges')
         .select('*')
         .eq('is_active', true)
@@ -68,7 +68,7 @@ export const useChallenges = () => {
       let participantCounts: Array<{ challenge_id: string }> = [];
 
       try {
-        const { data: participationData, error: participationError } = await supabase
+        const { data: participationData, error: participationError } = await (supabase as any)
           .from('challenge_participants')
           .select('challenge_id, progress, completed')
           .eq('user_id', user.id);
@@ -84,7 +84,7 @@ export const useChallenges = () => {
       try {
         const challengeIds = challengesData.map(c => c.id);
         if (challengeIds.length > 0) {
-          const { data: countData, error: countError } = await supabase
+          const { data: countData, error: countError } = await (supabase as any)
             .from('challenge_participants')
             .select('challenge_id')
             .in('challenge_id', challengeIds);
@@ -142,7 +142,7 @@ export const useChallenges = () => {
     }
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('challenge_participants')
         .insert({
           challenge_id: challengeId,

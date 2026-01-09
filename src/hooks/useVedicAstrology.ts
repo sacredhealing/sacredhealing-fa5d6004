@@ -31,7 +31,7 @@ export const useVedicAstrology = () => {
 
   const fetchTiers = useCallback(async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('vedic_astrology_tiers')
         .select('*')
         .eq('is_active', true)
@@ -58,7 +58,7 @@ export const useVedicAstrology = () => {
     }
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('user_vedic_astrology_access')
         .select('tier_level, granted_at, expires_at, granted_via_membership')
         .eq('user_id', user.id);

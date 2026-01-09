@@ -57,7 +57,7 @@ const HealingMeditationsList: React.FC = () => {
         .order('created_at', { ascending: false });
 
       // Fetch premium healing tasks
-      const { data: tasksData, error: tasksError } = await supabase
+      const { data: tasksData, error: tasksError } = await (supabase as any)
         .from('content_tasks')
         .select('*')
         .eq('category', 'premium_healing')

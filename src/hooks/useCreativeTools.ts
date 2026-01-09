@@ -94,8 +94,8 @@ export const useCreativeTools = () => {
       );
 
       const { data, error } = await query
-        .order('featured_order', { ascending: true, nullsLast: true })
-        .order('featured_start_date', { ascending: false, nullsLast: true })
+        .order('featured_order', { ascending: true })
+        .order('featured_start_date', { ascending: false })
         .limit(1)
         .maybeSingle();
 
@@ -113,7 +113,7 @@ export const useCreativeTools = () => {
     }
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('creative_tool_access')
         .select(`
           *,
