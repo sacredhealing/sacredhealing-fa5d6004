@@ -263,8 +263,6 @@ const Dashboard: React.FC = () => {
         <SpiritualPathCard />
       </div>
 
-      {/* Creative Soul Tools Section */}
-
       {/* Featured Playlists Carousel */}
       <div className="mt-6 animate-slide-up" style={{ animationDelay: '0.34s' }}>
         <FeaturedPlaylistsCarousel contentType="meditation" />
