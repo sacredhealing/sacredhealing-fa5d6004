@@ -4,14 +4,15 @@ import { useTranslation } from 'react-i18next';
 import { Home, Play, Music2, Users, Sparkles, Compass, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+// Simplified navigation - Step 8: UI Simplification
 const getNavItems = (t: (key: string) => string) => [
-  { to: '/dashboard', icon: Home, label: t('nav.home') },
-  { to: '/explore', icon: Compass, label: t('dashboard.explore') },
-  { to: '/meditations', icon: Play, label: t('nav.meditate') },
-  { to: '/music', icon: Music2, label: t('nav.music') },
-  { to: '/healing', icon: Sparkles, label: t('nav.healing') },
-  { to: '/community', icon: Users, label: t('nav.community') },
-  { to: '/profile', icon: User, label: t('nav.profile') },
+  { to: '/dashboard', icon: Home, label: 'Home' },
+  { to: '/explore', icon: Compass, label: 'Explore' },
+  { to: '/meditations', icon: Play, label: 'Meditate' },
+  { to: '/music', icon: Music2, label: 'Music' },
+  { to: '/healing', icon: Sparkles, label: 'Healing' },
+  { to: '/community', icon: Users, label: 'Community' },
+  { to: '/profile', icon: User, label: 'Profile' },
 ];
 
 const NAV_LABELS: Record<string, string> = {
