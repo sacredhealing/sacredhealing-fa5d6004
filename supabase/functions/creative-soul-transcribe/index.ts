@@ -52,25 +52,19 @@ serve(async (req) => {
       apiKey: Deno.env.get("OPENAI_API_KEY"),
     });
 
-    // Convert base64 to File for OpenAI
+    // Convert base64 to Uint8Array
     const audioBytes = Uint8Array.from(atob(audioBase64), c => c.charCodeAt(0));
     
-    // Create a temporary file for OpenAI API
-    const tempFile = await Deno.makeTempFile({ suffix: '.webm' });
-    await Deno.writeFile(tempFile, audioBytes);
+    // Create a Blob and File for OpenAI API
+    const audioBlob = new Blob([audioBytes], { type: mimeType || 'audio/webm' });
+    const audioFile = new File([audioBlob], "audio.webm", { type: mimeType || 'audio/webm' });
 
     // Transcribe using Whisper
     const transcription = await openai.audio.transcriptions.create({
-      file: new File([audioBytes], "audio.webm", { type: mimeType || 'audio/webm' }),
+      file: audioFile,
       model: "whisper-1",
+      language: "en", // Optional: specify language for better accuracy
     });
-
-    // Clean up temp file
-    try {
-      await Deno.remove(tempFile);
-    } catch (e) {
-      // Ignore cleanup errors
-    }
 
     console.log(`[CREATIVE-SOUL-TRANSCRIBE] Transcribed audio for user: ${user.id}`);
 
