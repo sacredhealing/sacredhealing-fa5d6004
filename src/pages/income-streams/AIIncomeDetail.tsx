@@ -1,10 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Bot, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Bot, ExternalLink, Settings, Play, BarChart3 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BotDashboardWrapper from '@/components/bot/BotDashboardWrapper';
+import BotConnectionsManager from '@/components/bot/BotConnectionsManager';
+import StrategySubscriptions from '@/components/bot/StrategySubscriptions';
+import TradingDashboard from '@/components/bot/TradingDashboard';
 import GifDisplay from '@/components/ui/GifDisplay';
 
 // Maha Lakshmi GIF URL - Update this with the actual GIF URL
@@ -80,86 +84,121 @@ const AIIncomeDetail: React.FC = () => {
           className="rounded-lg"
         />
 
-        {/* Bot Auth / Dashboard */}
-        <div className="pt-2">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold text-foreground">
-              {isLocalDev ? 'Bot Authentication' : 'Bot Dashboard'}
-            </h2>
-            {isLocalDev && (
-              <Badge variant="outline" className="text-xs">
-                🏠 Local Server (localhost:5174)
-              </Badge>
-            )}
-          </div>
-          
-          {isLocalDev ? (
-            // Local development: Show auth page or dashboard in iframe
-            <div className="w-full rounded-lg border border-border overflow-hidden bg-card" style={{ minHeight: '600px', height: 'calc(100vh - 300px)' }}>
-              {showDashboard ? (
-                <>
-                  <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
-                    <p className="text-sm text-muted-foreground">Bot Dashboard</p>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setShowDashboard(false)}
-                        className="text-xs"
-                      >
-                        Back to Auth
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => window.open(BOT_DASHBOARD_URL, '_blank')}
-                        className="text-xs"
-                      >
-                        <ExternalLink className="w-3 h-3 mr-1" />
-                        Open in New Tab
-                      </Button>
-                    </div>
-                  </div>
-                  <iframe
-                    ref={iframeRef}
-                    src={BOT_DASHBOARD_URL}
-                    style={{ width: '100%', height: 'calc(100% - 48px)', border: 'none' }}
-                    title="Copy Trading Bot Dashboard"
-                    allow="clipboard-read; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                    sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation allow-modals"
-                  />
-                </>
+        {/* Tabs for different sections */}
+        <Tabs defaultValue="dashboard" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="dashboard" className="flex items-center gap-2">
+              <Bot className="w-4 h-4" />
+              <span className="hidden sm:inline">Dashboard</span>
+            </TabsTrigger>
+            <TabsTrigger value="connections" className="flex items-center gap-2">
+              <Settings className="w-4 h-4" />
+              <span className="hidden sm:inline">Connections</span>
+            </TabsTrigger>
+            <TabsTrigger value="strategies" className="flex items-center gap-2">
+              <Play className="w-4 h-4" />
+              <span className="hidden sm:inline">Strategies</span>
+            </TabsTrigger>
+            <TabsTrigger value="trades" className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              <span className="hidden sm:inline">Trades</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="dashboard" className="mt-4">
+            <div className="pt-2">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-lg font-semibold text-foreground">
+                  {isLocalDev ? 'Bot Authentication' : 'Bot Dashboard'}
+                </h2>
+                {isLocalDev && (
+                  <Badge variant="outline" className="text-xs">
+                    🏠 Local Server (localhost:5174)
+                  </Badge>
+                )}
+              </div>
+              
+              {isLocalDev ? (
+                // Local development: Show auth page or dashboard in iframe
+                <div className="w-full rounded-lg border border-border overflow-hidden bg-card" style={{ minHeight: '600px', height: 'calc(100vh - 300px)' }}>
+                  {showDashboard ? (
+                    <>
+                      <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
+                        <p className="text-sm text-muted-foreground">Bot Dashboard</p>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowDashboard(false)}
+                            className="text-xs"
+                          >
+                            Back to Auth
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.open(BOT_DASHBOARD_URL, '_blank')}
+                            className="text-xs"
+                          >
+                            <ExternalLink className="w-3 h-3 mr-1" />
+                            Open in New Tab
+                          </Button>
+                        </div>
+                      </div>
+                      <iframe
+                        ref={iframeRef}
+                        src={BOT_DASHBOARD_URL}
+                        style={{ width: '100%', height: 'calc(100% - 48px)', border: 'none' }}
+                        title="Copy Trading Bot Dashboard"
+                        allow="clipboard-read; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                        sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation allow-modals"
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
+                        <p className="text-sm text-muted-foreground">Bot Authentication</p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowDashboard(true)}
+                          className="text-xs"
+                        >
+                          Already logged in? Go to Dashboard
+                        </Button>
+                      </div>
+                      <iframe
+                        ref={iframeRef}
+                        src={BOT_AUTH_URL}
+                        style={{ width: '100%', height: 'calc(100% - 48px)', border: 'none' }}
+                        title="Copy Trading Bot Authentication"
+                        allow="clipboard-read; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                        sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation allow-modals"
+                      />
+                    </>
+                  )}
+                </div>
               ) : (
-                <>
-                  <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
-                    <p className="text-sm text-muted-foreground">Bot Authentication</p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowDashboard(true)}
-                      className="text-xs"
-                    >
-                      Already logged in? Go to Dashboard
-                    </Button>
-                  </div>
-                  <iframe
-                    ref={iframeRef}
-                    src={BOT_AUTH_URL}
-                    style={{ width: '100%', height: 'calc(100% - 48px)', border: 'none' }}
-                    title="Copy Trading Bot Authentication"
-                    allow="clipboard-read; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                    sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation allow-modals"
-                  />
-                </>
+                // Production: Show dashboard
+                <BotDashboardWrapper 
+                  botUrl={BOT_DASHBOARD_URL}
+                />
               )}
             </div>
-          ) : (
-            // Production: Show dashboard
-            <BotDashboardWrapper 
-              botUrl={BOT_DASHBOARD_URL}
-            />
-          )}
-        </div>
+          </TabsContent>
+
+          <TabsContent value="connections" className="mt-4">
+            <BotConnectionsManager />
+          </TabsContent>
+
+          <TabsContent value="strategies" className="mt-4">
+            <StrategySubscriptions />
+          </TabsContent>
+
+          <TabsContent value="trades" className="mt-4">
+            <TradingDashboard />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
