@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Sparkles, Mic, Lightbulb, Image as ImageIcon, FileText, ArrowRight, Play, Loader2 } from "lucide-react";
+import { Sparkles, Mic, Lightbulb, Image as ImageIcon, FileText, ArrowRight, Play, Loader2, Check, Zap, Globe, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useCreativeTools } from "@/hooks/useCreativeTools";
 import { useAdminRole } from "@/hooks/useAdminRole";
@@ -109,49 +110,38 @@ export default function CreativeSoulLanding() {
     }
   };
 
+
   const features = [
-    {
-      icon: Mic,
-      title: "Voice Recording",
-      description: "Record your voice directly in the browser, no app needed."
-    },
-    {
-      icon: Sparkles,
-      title: "AI Transcription",
-      description: "Convert your voice to text in any language with Whisper AI."
-    },
-    {
-      icon: Lightbulb,
-      title: "Idea Generation",
-      description: "Generate creative ideas based on your words using GPT-4."
-    },
-    {
-      icon: ImageIcon,
-      title: "Image Creation",
-      description: "Create high-quality images with DALL-E 3 from your ideas."
-    },
-    {
-      icon: FileText,
-      title: "PDF Export",
-      description: "Export your creations as professional PDF documents."
-    }
+    { icon: Mic, title: "Voice Recording", description: "Record your voice directly in the browser, no app needed.", color: "text-purple-500" },
+    { icon: Sparkles, title: "AI Transcription", description: "Convert your voice to text in any language with Whisper AI.", color: "text-blue-500" },
+    { icon: Lightbulb, title: "Idea Generation", description: "Generate creative ideas based on your words using GPT-4.", color: "text-yellow-500" },
+    { icon: ImageIcon, title: "Image Creation", description: "Create high-quality images with DALL-E 3 from your ideas.", color: "text-pink-500" },
+    { icon: FileText, title: "PDF Export", description: "Export your creations as professional PDF documents.", color: "text-green-500" },
+    { icon: Globe, title: "Multi-language", description: "Works with any language for transcription and translation.", color: "text-indigo-500" },
   ];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 via-white to-purple-50 flex flex-col">
       {/* Hero Section */}
-      <div className="flex flex-col items-center px-6 py-12 md:py-20">
-        <div className="flex items-center gap-2 mb-4">
-          <Sparkles className="w-8 h-8 text-purple-600" />
-          <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent text-center">
-            Creative Soul Studio
-          </h1>
-        </div>
+      <div className="flex flex-col items-center px-6 py-12 md:py-20 relative overflow-hidden">
+        {/* Background effects */}
+        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-96 h-96 bg-purple-200 rounded-full blur-3xl opacity-30" />
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-pink-200 rounded-full blur-3xl opacity-20" />
         
-        <p className="text-lg md:text-xl text-gray-700 text-center max-w-3xl mb-8 leading-relaxed">
-          Transform your voice into <strong className="text-purple-600">creative ideas</strong>, <strong className="text-purple-600">images</strong>, and <strong className="text-purple-600">documents</strong>.  
-          Voice-to-text transcription, AI idea generation, image creation, and PDF export—all in one powerful tool.
-        </p>
+        <div className="relative z-10 flex flex-col items-center">
+          <div className="flex items-center gap-2 mb-4 animate-fade-in">
+            <Sparkles className="w-8 h-8 text-purple-600 animate-pulse" />
+            <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-clip-text text-transparent text-center animate-gradient">
+              Creative Soul Studio
+            </h1>
+          </div>
+          
+          <p className="text-lg md:text-xl text-gray-700 text-center max-w-3xl mb-4 leading-relaxed">
+            Transform your voice into <strong className="text-purple-600">creative ideas</strong>, <strong className="text-purple-600">images</strong>, and <strong className="text-purple-600">documents</strong>.
+          </p>
+          <p className="text-base md:text-lg text-gray-600 text-center max-w-2xl mb-8">
+            Voice-to-text transcription, AI idea generation, image creation, and PDF export—all in one powerful tool.
+          </p>
 
         {/* Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 mb-12">
@@ -214,49 +204,87 @@ export default function CreativeSoulLanding() {
         </div>
       </div>
 
-      {/* How It Works Section */}
+      {/* Features Grid Section */}
       <div className="container mx-auto px-6 mb-12 max-w-6xl">
-        <Card className="shadow-xl border-2 border-purple-100">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-bold text-gray-800 mb-4">Powerful Features</h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Everything you need to transform your voice into creative content
+          </p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          {features.map((feature, index) => {
+            const Icon = feature.icon;
+            return (
+              <Card 
+                key={index} 
+                className="border-2 border-purple-100 hover:border-purple-300 hover:shadow-lg transition-all duration-300 cursor-pointer group"
+              >
+                <CardContent className="p-6">
+                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                    <Icon className={`w-6 h-6 ${feature.color}`} />
+                  </div>
+                  <h3 className="font-bold text-lg mb-2 text-gray-800">{feature.title}</h3>
+                  <p className="text-sm text-gray-600">{feature.description}</p>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        {/* How It Works Section */}
+        <Card className="shadow-xl border-2 border-purple-100 bg-gradient-to-br from-white to-purple-50/30">
           <CardContent className="p-8">
             <h2 className="text-3xl font-bold text-center mb-8 text-gray-800">How It Works</h2>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
-              {features.map((feature, index) => {
-                const Icon = feature.icon;
-                return (
-                  <div key={index} className="text-center">
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-purple-100 flex items-center justify-center">
-                      <Icon className="w-8 h-8 text-purple-600" />
-                    </div>
-                    <h3 className="font-semibold text-lg mb-2">{feature.title}</h3>
-                    <p className="text-sm text-gray-600">{feature.description}</p>
-                  </div>
-                );
-              })}
-            </div>
             
-            <div className="p-6 bg-purple-50 rounded-xl">
-              <ol className="list-decimal list-inside space-y-3 text-gray-700 max-w-2xl mx-auto">
-                <li className="font-medium">Record your voice directly in the browser</li>
-                <li className="font-medium">AI converts your voice into text in any language</li>
-                <li className="font-medium">Generate creative ideas based on your words</li>
-                <li className="font-medium">Create high-quality images and export PDFs</li>
-                <li className="font-medium">Pay once (€19.99) and get full lifetime access</li>
+            <div className="p-6 bg-white/80 rounded-xl backdrop-blur-sm">
+              <ol className="space-y-4 text-gray-700 max-w-2xl mx-auto">
+                <li className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold flex-shrink-0">1</div>
+                  <div>
+                    <span className="font-semibold">Record your voice</span> directly in the browser—no app needed
+                  </div>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold flex-shrink-0">2</div>
+                  <div>
+                    <span className="font-semibold">AI converts your voice</span> into text in any language using Whisper AI
+                  </div>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-yellow-600 text-white flex items-center justify-center font-bold flex-shrink-0">3</div>
+                  <div>
+                    <span className="font-semibold">Generate creative ideas</span> based on your words using GPT-4
+                  </div>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-pink-600 text-white flex items-center justify-center font-bold flex-shrink-0">4</div>
+                  <div>
+                    <span className="font-semibold">Create high-quality images</span> with DALL-E 3 and export as PDFs
+                  </div>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center font-bold flex-shrink-0">5</div>
+                  <div>
+                    <span className="font-semibold">Pay once (€19.99)</span> and get full lifetime access with all updates
+                  </div>
+                </li>
               </ol>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Demo/Payment Success Section */}
-      {(demoActive || paymentActive) && (
+      {/* Demo Section */}
+      {demoActive && (
         <div className="container mx-auto px-6 mb-12 max-w-4xl">
           <Card className="shadow-lg border-2 border-purple-200">
             <CardContent className="p-8">
               <div className="flex items-center gap-2 mb-6">
                 <Play className="w-6 h-6 text-purple-600" />
-                <h3 className="text-2xl font-bold text-gray-800">
-                  {demoActive ? "Demo Preview" : "Full Access Activated"}
-                </h3>
+                <h3 className="text-2xl font-bold text-gray-800">Demo Preview</h3>
+                <Badge className="ml-auto bg-green-500 text-white">Free Trial</Badge>
               </div>
               
               <div className="space-y-6">
@@ -301,39 +329,40 @@ export default function CreativeSoulLanding() {
                 </div>
               </div>
 
-              {hasToolAccess && (
-                <div className="mt-8 pt-6 border-t border-gray-200">
-                  <Button
-                    onClick={() => navigate('/creative-soul-tool/creative-soul-studio')}
-                    className="w-full bg-purple-600 hover:bg-purple-700 text-white"
-                    size="lg"
-                  >
-                    Open Creative Studio
-                    <ArrowRight className="w-5 h-5 ml-2" />
-                  </Button>
-                </div>
-              )}
-
-              {demoActive && !user && (
-                <div className="mt-8 pt-6 border-t border-gray-200">
-                  <Button
-                    onClick={handlePurchase}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white"
-                    size="lg"
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                        Redirecting...
-                      </>
-                    ) : (
-                      <>
-                        Get Full Access (€19.99)
-                        <ArrowRight className="w-5 h-5 ml-2" />
-                      </>
-                    )}
-                  </Button>
+              {demoActive && (
+                <div className="mt-8 pt-6 border-t border-gray-200 space-y-3">
+                  {!user && (
+                    <Button
+                      onClick={handlePurchase}
+                      className="w-full bg-green-600 hover:bg-green-700 text-white"
+                      size="lg"
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                          Redirecting...
+                        </>
+                      ) : (
+                        <>
+                          <Zap className="w-5 h-5 mr-2" />
+                          Get Full Access (€19.99)
+                          <ArrowRight className="w-5 h-5 ml-2" />
+                        </>
+                      )}
+                    </Button>
+                  )}
+                  {hasToolAccess && (
+                    <Button
+                      onClick={() => navigate('/creative-soul-tool/creative-soul-studio')}
+                      className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                      size="lg"
+                    >
+                      <Sparkles className="w-5 h-5 mr-2" />
+                      Open Creative Studio
+                      <ArrowRight className="w-5 h-5 ml-2" />
+                    </Button>
+                  )}
                 </div>
               )}
             </CardContent>
@@ -341,32 +370,87 @@ export default function CreativeSoulLanding() {
         </div>
       )}
 
+      {/* Features List Section */}
+      <div className="container mx-auto px-6 mb-12 max-w-4xl">
+        <Card className="bg-white shadow-lg border-2 border-purple-100">
+          <CardContent className="p-8">
+            <h2 className="text-3xl font-bold text-center mb-8 text-gray-800">What's Included</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[
+                "✅ Demo access without paying",
+                "✅ Stripe one-time payment (€19.99)",
+                "✅ Affiliate tracking via ?ref=ID",
+                "✅ AI idea generation (GPT-powered)",
+                "✅ AI image generation (DALL·E)",
+                "✅ PDF export ready",
+                "✅ Fully responsive Tailwind UI",
+                "✅ Multi-language support",
+                "✅ Voice-to-text transcription",
+                "✅ Lifetime access & updates"
+              ].map((feature, index) => (
+                <div key={index} className="flex items-center gap-2 text-gray-700 hover:text-purple-600 transition-colors cursor-pointer">
+                  <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
+                  <span className="text-sm md:text-base">{feature.replace('✅ ', '')}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* CTA Section */}
       <div className="container mx-auto px-6 mb-12 max-w-4xl">
-        <Card className="bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-xl">
-          <CardContent className="p-12 text-center">
-            <h2 className="text-3xl font-bold mb-4">Ready to Create?</h2>
-            <p className="text-lg mb-8 text-purple-100">
-              Start transforming your voice into beautiful creations today. One-time purchase, lifetime access.
+        <Card className="bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 text-white shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full blur-2xl" />
+          <CardContent className="p-12 text-center relative z-10">
+            <h2 className="text-4xl font-bold mb-4">Ready to Create?</h2>
+            <p className="text-lg mb-8 text-purple-100 max-w-2xl mx-auto">
+              Start transforming your voice into beautiful creations today. One-time purchase, lifetime access with all future updates included.
             </p>
-            <Button
-              onClick={handleGetStarted}
-              size="lg"
-              className="bg-white text-purple-600 hover:bg-purple-50 px-8 py-6 text-lg font-semibold"
-              disabled={loading || toolsLoading}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Loading...
-                </>
-              ) : (
-                <>
-                  Get Started Now
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button
+                onClick={handleGetStarted}
+                size="lg"
+                className="bg-white text-purple-600 hover:bg-purple-50 px-8 py-6 text-lg font-semibold shadow-lg hover:shadow-xl transition-all"
+                disabled={loading || toolsLoading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Loading...
+                  </>
+                ) : hasToolAccess ? (
+                  <>
+                    <Sparkles className="w-5 h-5 mr-2" />
+                    Open Studio
+                    <ArrowRight className="w-5 h-5 ml-2" />
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-5 h-5 mr-2" />
+                    Get Started Now
+                    <ArrowRight className="w-5 h-5 ml-2" />
+                  </>
+                )}
+              </Button>
+              {!user && (
+                <Button
+                  onClick={handleDemoAccess}
+                  size="lg"
+                  variant="outline"
+                  className="border-2 border-white text-white hover:bg-white/10 px-8 py-6 text-lg font-semibold"
+                >
+                  <Play className="w-5 h-5 mr-2" />
+                  Try Demo First
+                </Button>
               )}
-            </Button>
+            </div>
+            {affiliateId && (
+              <p className="mt-6 text-sm text-purple-200">
+                Affiliate tracking active: {affiliateId}
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
