@@ -157,7 +157,7 @@ serve(async (req) => {
       console.log('[MIGRATION] Connected to database');
 
       // Execute all statements in a transaction
-      await client.query("BEGIN");
+      await client.queryArray("BEGIN");
       console.log('[MIGRATION] Transaction started');
       
       for (let i = 0; i < statements.length; i++) {
@@ -166,21 +166,22 @@ serve(async (req) => {
         
         try {
           console.log(`[MIGRATION] Executing statement ${i + 1}/${statements.length}`);
-          await client.query(statement);
+          await client.queryArray(statement);
           results.push({ statement: i + 1, success: true });
           console.log(`[MIGRATION] Statement ${i + 1} executed successfully`);
-        } catch (error) {
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
           console.error(`[MIGRATION] Error executing statement ${i + 1}:`, error);
-          errors.push({ statement: i + 1, error: error.message });
+          errors.push({ statement: i + 1, error: errorMessage });
           // Continue with other statements even if one fails (IF NOT EXISTS clauses should handle this)
         }
       }
       
       if (errors.length === 0 || errors.every(e => e.error.includes('already exists') || e.error.includes('does not exist'))) {
-        await client.query("COMMIT");
+        await client.queryArray("COMMIT");
         console.log('[MIGRATION] Transaction committed');
       } else {
-        await client.query("ROLLBACK");
+        await client.queryArray("ROLLBACK");
         console.log('[MIGRATION] Transaction rolled back due to errors');
         throw new Error(`Migration failed: ${errors.map(e => e.error).join('; ')}`);
       }
@@ -215,12 +216,13 @@ serve(async (req) => {
         status: 200,
       }
     );
-  } catch (error) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     console.error("[MIGRATION] Error:", error);
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: errorMessage,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

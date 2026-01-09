@@ -55,12 +55,12 @@ const AdminMQLStrategiesTab: React.FC = () => {
     name: '',
     description: '',
     version: '1.0',
-    mql_version: 'MQL5' as const,
+    mql_version: 'MQL5' as 'MQL4' | 'MQL5',
     mql_code: '',
     mql_file_url: '',
     author: '',
     category: 'copy_trading',
-    risk_level: 'medium' as const,
+    risk_level: 'medium' as 'low' | 'medium' | 'high' | 'very_high',
     is_active: true,
     is_public: false,
     is_premium: false,
@@ -76,13 +76,13 @@ const AdminMQLStrategiesTab: React.FC = () => {
   const fetchStrategies = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('mql_strategies')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setStrategies(data || []);
+      setStrategies((data || []) as MQLStrategy[]);
     } catch (error) {
       console.error('Error fetching strategies:', error);
       toast({
@@ -127,7 +127,7 @@ const AdminMQLStrategiesTab: React.FC = () => {
       };
 
       if (editingStrategy) {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('mql_strategies')
           .update(strategyData)
           .eq('id', editingStrategy.id);
@@ -138,7 +138,7 @@ const AdminMQLStrategiesTab: React.FC = () => {
           description: 'Strategy updated successfully',
         });
       } else {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('mql_strategies')
           .insert(strategyData);
 
@@ -169,12 +169,12 @@ const AdminMQLStrategiesTab: React.FC = () => {
       name: strategy.name,
       description: strategy.description || '',
       version: strategy.version,
-      mql_version: strategy.mql_version,
+      mql_version: strategy.mql_version as 'MQL4' | 'MQL5',
       mql_code: strategy.mql_code || '',
       mql_file_url: strategy.mql_file_url || '',
       author: strategy.author || '',
       category: strategy.category,
-      risk_level: strategy.risk_level,
+      risk_level: strategy.risk_level as 'low' | 'medium' | 'high' | 'very_high',
       is_active: strategy.is_active,
       is_public: strategy.is_public,
       is_premium: strategy.is_premium,
@@ -189,7 +189,7 @@ const AdminMQLStrategiesTab: React.FC = () => {
     if (!confirm('Are you sure you want to delete this strategy? This action cannot be undone.')) return;
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('mql_strategies')
         .delete()
         .eq('id', id);

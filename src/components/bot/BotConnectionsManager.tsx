@@ -38,10 +38,10 @@ const BotConnectionsManager: React.FC = () => {
   
   const [formData, setFormData] = useState({
     connection_name: '',
-    platform: 'MT5' as const,
+    platform: 'MT5' as 'MT4' | 'MT5' | 'cTrader' | 'solana' | 'other',
     broker_name: '',
     account_number: '',
-    account_type: 'demo' as const,
+    account_type: 'demo' as 'demo' | 'live' | 'cent',
     api_key: '',
     api_secret: '',
     server_name: '',
@@ -62,14 +62,14 @@ const BotConnectionsManager: React.FC = () => {
     
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('user_bot_connections')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setConnections(data || []);
+      setConnections((data || []) as BotConnection[]);
     } catch (error) {
       console.error('Error fetching connections:', error);
       toast({
@@ -104,7 +104,7 @@ const BotConnectionsManager: React.FC = () => {
       };
 
       if (editingConnection) {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('user_bot_connections')
           .update(connectionData)
           .eq('id', editingConnection.id);
@@ -115,7 +115,7 @@ const BotConnectionsManager: React.FC = () => {
           description: 'Connection updated successfully',
         });
       } else {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('user_bot_connections')
           .insert(connectionData);
 
@@ -144,10 +144,10 @@ const BotConnectionsManager: React.FC = () => {
     setEditingConnection(connection);
     setFormData({
       connection_name: connection.connection_name,
-      platform: connection.platform,
+      platform: connection.platform as 'MT4' | 'MT5' | 'cTrader' | 'solana' | 'other',
       broker_name: connection.broker_name || '',
       account_number: connection.account_number || '',
-      account_type: connection.account_type || 'demo',
+      account_type: (connection.account_type || 'demo') as 'demo' | 'live' | 'cent',
       api_key: '', // Don't show existing API keys for security
       api_secret: '',
       server_name: '',
@@ -163,7 +163,7 @@ const BotConnectionsManager: React.FC = () => {
     if (!confirm('Are you sure you want to delete this connection?')) return;
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('user_bot_connections')
         .delete()
         .eq('id', id);
@@ -186,7 +186,7 @@ const BotConnectionsManager: React.FC = () => {
 
   const toggleActive = async (connection: BotConnection) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('user_bot_connections')
         .update({ is_active: !connection.is_active })
         .eq('id', connection.id);
@@ -314,7 +314,7 @@ const BotConnectionsManager: React.FC = () => {
                 />
               </div>
 
-              {(formData.platform === 'MT4' || formData.platform === 'MT5') && (
+              {(formData.platform === 'MT4' || formData.platform === 'MT5' as any) && (
                 <div>
                   <Label>Server Name</Label>
                   <Input
