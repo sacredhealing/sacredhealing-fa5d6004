@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, FolderKanban, CheckSquare, FileText, Calendar, Settings, Users, LayoutDashboard, Music, GraduationCap, Workflow, DollarSign, TrendingUp, Gift, Mic } from 'lucide-react';
+import { ArrowLeft, FolderKanban, CheckSquare, FileText, Calendar, Settings, Users, LayoutDashboard, Music, GraduationCap, Workflow, DollarSign, TrendingUp, Gift, Mic, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -20,6 +20,7 @@ import AdminMonthlyCostsTab from '@/components/admin-system/AdminMonthlyCostsTab
 import AdminRevenueTab from '@/components/admin-system/AdminRevenueTab';
 import AdminAccessGrantTab from '@/components/admin-system/AdminAccessGrantTab';
 import RecordingStudioTab from '@/components/admin-system/RecordingStudioTab';
+import AdminMQLStrategiesTab from '@/components/admin-system/AdminMQLStrategiesTab';
 
 const AdminSystem = () => {
   const navigate = useNavigate();
@@ -63,6 +64,7 @@ const AdminSystem = () => {
     { id: 'tasks', label: 'Tasks', icon: CheckSquare },
     { id: 'content', label: 'Content', icon: FileText },
     { id: 'events', label: 'Events', icon: Calendar },
+    { id: 'mql', label: 'MQL Strategies', icon: Bot },
     { id: 'costs', label: 'Costs', icon: DollarSign },
     { id: 'revenue', label: 'Revenue', icon: TrendingUp },
     { id: 'access', label: 'Access', icon: Gift },
@@ -133,6 +135,10 @@ const AdminSystem = () => {
 
           <TabsContent value="events">
             <AdminEventsTab />
+          </TabsContent>
+
+          <TabsContent value="mql">
+            <AdminMQLStrategiesTab />
           </TabsContent>
 
           <TabsContent value="costs">

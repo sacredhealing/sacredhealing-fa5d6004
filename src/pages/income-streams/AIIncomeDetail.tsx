@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Bot } from 'lucide-react';
+import { ArrowLeft, Bot, ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import BotDashboardWrapper from '@/components/bot/BotDashboardWrapper';
 import GifDisplay from '@/components/ui/GifDisplay';
 
@@ -29,6 +30,27 @@ const BOT_DASHBOARD_URL = isLocalDev ? LOCAL_BOT_DASHBOARD_URL : PRODUCTION_BOT_
 
 const AIIncomeDetail: React.FC = () => {
   const { t } = useTranslation();
+  const [showDashboard, setShowDashboard] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  // Listen for postMessage from iframe (when bot auth succeeds)
+  useEffect(() => {
+    if (!isLocalDev) return;
+
+    const handleMessage = (event: MessageEvent) => {
+      // Verify message is from the bot origin
+      const botOrigin = isLocalDev ? 'http://localhost:5174' : 'https://sacredhealing-solana-copy-trading-bot-production.up.railway.app';
+      if (event.origin !== botOrigin) return;
+
+      // Handle auth success message
+      if (event.data?.type === 'BOT_AUTH_SUCCESS' || event.data?.type === 'BOT_LOGIN_SUCCESS') {
+        setShowDashboard(true);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [isLocalDev]);
 
   return (
     <div className="min-h-screen pb-24 bg-background">
@@ -72,15 +94,64 @@ const AIIncomeDetail: React.FC = () => {
           </div>
           
           {isLocalDev ? (
-            // Local development: Show auth page in iframe
+            // Local development: Show auth page or dashboard in iframe
             <div className="w-full rounded-lg border border-border overflow-hidden bg-card" style={{ minHeight: '600px', height: 'calc(100vh - 300px)' }}>
-              <iframe
-                src={BOT_AUTH_URL}
-                style={{ width: '100%', height: '100%', border: 'none' }}
-                title="Copy Trading Bot Authentication"
-                allow="clipboard-read; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation allow-modals"
-              />
+              {showDashboard ? (
+                <>
+                  <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
+                    <p className="text-sm text-muted-foreground">Bot Dashboard</p>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowDashboard(false)}
+                        className="text-xs"
+                      >
+                        Back to Auth
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open(BOT_DASHBOARD_URL, '_blank')}
+                        className="text-xs"
+                      >
+                        <ExternalLink className="w-3 h-3 mr-1" />
+                        Open in New Tab
+                      </Button>
+                    </div>
+                  </div>
+                  <iframe
+                    ref={iframeRef}
+                    src={BOT_DASHBOARD_URL}
+                    style={{ width: '100%', height: 'calc(100% - 48px)', border: 'none' }}
+                    title="Copy Trading Bot Dashboard"
+                    allow="clipboard-read; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                    sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation allow-modals"
+                  />
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
+                    <p className="text-sm text-muted-foreground">Bot Authentication</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowDashboard(true)}
+                      className="text-xs"
+                    >
+                      Already logged in? Go to Dashboard
+                    </Button>
+                  </div>
+                  <iframe
+                    ref={iframeRef}
+                    src={BOT_AUTH_URL}
+                    style={{ width: '100%', height: 'calc(100% - 48px)', border: 'none' }}
+                    title="Copy Trading Bot Authentication"
+                    allow="clipboard-read; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                    sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation allow-modals"
+                  />
+                </>
+              )}
             </div>
           ) : (
             // Production: Show dashboard
