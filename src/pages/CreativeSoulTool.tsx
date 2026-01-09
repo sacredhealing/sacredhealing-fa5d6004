@@ -82,16 +82,20 @@ export default function CreativeSoulTool() {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Checkout function error:', error);
+        throw new Error(error.message || 'Failed to create checkout session');
+      }
 
       if (data?.url) {
         window.location.href = data.url;
       } else {
-        throw new Error('No checkout URL returned');
+        throw new Error('No checkout URL returned from server');
       }
     } catch (err: any) {
       console.error('Checkout error:', err);
-      toast.error(err.message || 'Failed to initiate payment. Please try again.');
+      const errorMessage = err.message || err.error?.message || 'Failed to initiate payment. Please ensure you are signed in and try again.';
+      toast.error(errorMessage);
       setLoading(false);
     }
   };
@@ -155,7 +159,10 @@ export default function CreativeSoulTool() {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Transcribe function error:', error);
+        throw new Error(error.message || 'Failed to transcribe audio');
+      }
 
       if (data?.text) {
         setTranscribedText(data.text);
@@ -192,7 +199,10 @@ export default function CreativeSoulTool() {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Ideas function error:', error);
+        throw new Error(error.message || 'Failed to generate ideas');
+      }
 
       if (data?.ideas) {
         setIdeas(data.ideas);
@@ -230,7 +240,10 @@ export default function CreativeSoulTool() {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Image function error:', error);
+        throw new Error(error.message || 'Failed to generate image');
+      }
 
       if (data?.imageUrl) {
         setGeneratedImages([...generatedImages, data.imageUrl]);
@@ -260,7 +273,10 @@ export default function CreativeSoulTool() {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('PDF function error:', error);
+        throw new Error(error.message || 'Failed to generate PDF');
+      }
 
       if (data?.pdfUrl || data?.pdfBase64) {
         // Download PDF

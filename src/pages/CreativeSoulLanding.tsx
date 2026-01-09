@@ -89,17 +89,21 @@ export default function CreativeSoulLanding() {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Checkout function error:', error);
+        throw new Error(error.message || 'Failed to create checkout session. Please ensure you are signed in.');
+      }
 
       if (data?.url) {
         // Redirect to Stripe Checkout
         window.location.href = data.url;
       } else {
-        throw new Error('No checkout URL returned');
+        throw new Error('No checkout URL returned from server');
       }
     } catch (err: any) {
       console.error('Checkout error:', err);
-      toast.error(err.message || 'Failed to initiate payment. Please try again.');
+      const errorMessage = err.message || err.error?.message || 'Failed to initiate payment. Please ensure you are signed in and try again.';
+      toast.error(errorMessage);
       setLoading(false);
     }
   };
