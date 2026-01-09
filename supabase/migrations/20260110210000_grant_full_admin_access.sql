@@ -34,9 +34,9 @@ WITH CHECK (public.has_role(auth.uid(), 'admin'));
 -- ============================================
 
 -- Creative tools access - Admins can view all
-DROP POLICY IF EXISTS "Admins can view all tool access" ON public.user_creative_tools;
+DROP POLICY IF EXISTS "Admins can view all tool access" ON public.creative_tool_access;
 CREATE POLICY "Admins can view all tool access"
-ON public.user_creative_tools FOR SELECT
+ON public.creative_tool_access FOR SELECT
 USING (public.has_role(auth.uid(), 'admin'));
 
 -- User Vedic astrology access - Admins can manage all
