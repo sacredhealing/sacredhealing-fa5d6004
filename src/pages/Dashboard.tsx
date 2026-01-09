@@ -241,7 +241,7 @@ const Dashboard: React.FC = () => {
       )}
 
       {/* Live Events Section */}
-      {events.filter(e => new Date(e.scheduled_at) > new Date()).length > 0 && (
+      {!eventsLoading && events && events.length > 0 && events.filter(e => new Date(e.scheduled_at) > new Date()).length > 0 && (
         <div className="mt-6 animate-slide-up" style={{ animationDelay: '0.34s' }}>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-heading font-semibold text-foreground flex items-center gap-2">

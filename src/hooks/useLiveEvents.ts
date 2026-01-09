@@ -34,36 +34,75 @@ export const useLiveEvents = () => {
         .eq('is_active', true)
         .order('scheduled_at', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching live events:', error);
+        // If table doesn't exist or permission issue, return empty array
+        if (error.code === '42P01' || error.code === '42501') {
+          setEvents([]);
+          setIsLoading(false);
+          return;
+        }
+        throw error;
+      }
 
-      if (!user || !eventsData) {
-        setEvents(eventsData || []);
+      if (!eventsData || eventsData.length === 0) {
+        setEvents([]);
+        setIsLoading(false);
+        return;
+      }
+
+      if (!user) {
+        setEvents(eventsData.map(event => ({
+          ...event,
+          rsvp_count: 0,
+          user_rsvp: null,
+        })));
         setIsLoading(false);
         return;
       }
 
       // Fetch user's RSVPs
-      const { data: rsvps } = await supabase
-        .from('live_event_rsvps')
-        .select('event_id, rsvp_status')
-        .eq('user_id', user.id);
+      let rsvps: Array<{ event_id: string; rsvp_status: string }> = [];
+      try {
+        const { data: rsvpData, error: rsvpError } = await supabase
+          .from('live_event_rsvps')
+          .select('event_id, rsvp_status')
+          .eq('user_id', user.id);
+
+        if (!rsvpError && rsvpData) {
+          rsvps = rsvpData;
+        }
+      } catch (err) {
+        console.warn('Error fetching user RSVPs:', err);
+      }
 
       // Fetch RSVP counts
-      const eventIds = eventsData.map(e => e.id);
-      const { data: rsvpCounts } = await supabase
-        .from('live_event_rsvps')
-        .select('event_id')
-        .in('event_id', eventIds)
-        .eq('rsvp_status', 'going');
+      let rsvpCounts: Array<{ event_id: string }> = [];
+      try {
+        const eventIds = eventsData.map(e => e.id);
+        if (eventIds.length > 0) {
+          const { data: countData, error: countError } = await supabase
+            .from('live_event_rsvps')
+            .select('event_id')
+            .in('event_id', eventIds)
+            .eq('rsvp_status', 'going');
+
+          if (!countError && countData) {
+            rsvpCounts = countData;
+          }
+        }
+      } catch (err) {
+        console.warn('Error fetching RSVP counts:', err);
+      }
 
       const countsMap = new Map<string, number>();
-      rsvpCounts?.forEach(r => {
+      rsvpCounts.forEach(r => {
         countsMap.set(r.event_id, (countsMap.get(r.event_id) || 0) + 1);
       });
 
       // Combine data
       const eventsWithRSVP = eventsData.map(event => {
-        const rsvp = rsvps?.find(r => r.event_id === event.id);
+        const rsvp = rsvps.find(r => r.event_id === event.id);
         return {
           ...event,
           rsvp_count: countsMap.get(event.id) || 0,
@@ -72,13 +111,18 @@ export const useLiveEvents = () => {
       });
 
       setEvents(eventsWithRSVP);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching live events:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load events',
-        variant: 'destructive',
-      });
+      // Only show toast for actual errors, not missing tables
+      if (error?.code !== '42P01' && error?.code !== '42501') {
+        toast({
+          title: 'Error',
+          description: 'Failed to load events',
+          variant: 'destructive',
+        });
+      }
+      // Set empty array on any error to prevent rendering issues
+      setEvents([]);
     } finally {
       setIsLoading(false);
     }
