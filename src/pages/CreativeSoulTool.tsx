@@ -462,15 +462,18 @@ export default function CreativeSoulTool() {
                   )}
                 </Button>
 
-                <Button
-                  onClick={generatePDF}
-                  variant="outline"
-                  size="lg"
-                  className="w-full"
-                >
-                  <FileText className="w-4 h-4 mr-2" />
-                  Download PDF
-                </Button>
+                {hasToolAccess && (
+                  <Button
+                    onClick={generatePDF}
+                    variant="outline"
+                    size="lg"
+                    className="w-full"
+                    disabled={!ideas && !transcribedText}
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    Export as PDF
+                  </Button>
+                )}
               </div>
 
               {/* Generated Images */}

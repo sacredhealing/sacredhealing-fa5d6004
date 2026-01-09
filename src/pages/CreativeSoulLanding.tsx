@@ -15,6 +15,9 @@ export default function CreativeSoulLanding() {
   const { hasAccess, isLoading: toolsLoading, refetch } = useCreativeTools();
   const [demoActive, setDemoActive] = useState(false);
   const [loading, setLoading] = useState(false);
+  
+  // Remove unused state
+  // const [paymentActive, setPaymentActive] = useState(false);
   const [affiliateId, setAffiliateId] = useState<string | null>(null);
 
   // Check access from database (refetch on mount and periodically)
