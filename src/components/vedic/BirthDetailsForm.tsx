@@ -60,7 +60,7 @@ export const BirthDetailsForm: React.FC<BirthDetailsFormProps> = ({ onSaved, ini
     setIsLoading(true);
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('profiles')
         .update({
           birth_name: formData.birth_name.trim(),

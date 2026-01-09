@@ -49,7 +49,7 @@ const PremiumMeditationsList: React.FC = () => {
       setMeditations(medsData || []);
 
       // Fetch all premium meditation tasks (unrecorded)
-      const { data: tasksData, error: tasksError } = await supabase
+      const { data: tasksData, error: tasksError } = await (supabase as any)
         .from('content_tasks')
         .select('*')
         .eq('access_level', 'premium')

@@ -28,7 +28,7 @@ export const useLiveEvents = () => {
     setIsLoading(true);
     try {
       // Fetch active events (upcoming and recent)
-      const { data: eventsData, error } = await supabase
+      const { data: eventsData, error } = await (supabase as any)
         .from('live_events')
         .select('*')
         .eq('is_active', true)
@@ -64,7 +64,7 @@ export const useLiveEvents = () => {
       // Fetch user's RSVPs
       let rsvps: Array<{ event_id: string; rsvp_status: string }> = [];
       try {
-        const { data: rsvpData, error: rsvpError } = await supabase
+        const { data: rsvpData, error: rsvpError } = await (supabase as any)
           .from('live_event_rsvps')
           .select('event_id, rsvp_status')
           .eq('user_id', user.id);
@@ -81,7 +81,7 @@ export const useLiveEvents = () => {
       try {
         const eventIds = eventsData.map(e => e.id);
         if (eventIds.length > 0) {
-          const { data: countData, error: countError } = await supabase
+          const { data: countData, error: countError } = await (supabase as any)
             .from('live_event_rsvps')
             .select('event_id')
             .in('event_id', eventIds)
@@ -139,7 +139,7 @@ export const useLiveEvents = () => {
     }
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('live_event_rsvps')
         .upsert({
           event_id: eventId,

@@ -22,7 +22,7 @@ export async function autoCompleteRoadmapTask(options: AutoCompleteOptions): Pro
   try {
     // If targetLocation is provided, use it directly
     if (targetLocation) {
-      const { error } = await supabase.rpc('auto_complete_roadmap_task', {
+      const { error } = await (supabase as any).rpc('auto_complete_roadmap_task', {
         p_target_location: targetLocation,
         p_content_type: contentType,
       });
@@ -35,7 +35,7 @@ export async function autoCompleteRoadmapTask(options: AutoCompleteOptions): Pro
 
     // Otherwise, try to infer target location from title/category
     if (title) {
-      const { data: inferredLocation, error: inferError } = await supabase.rpc(
+      const { data: inferredLocation, error: inferError } = await (supabase as any).rpc(
         'get_target_location_for_content',
         {
           p_title: title,
@@ -50,7 +50,7 @@ export async function autoCompleteRoadmapTask(options: AutoCompleteOptions): Pro
       }
 
       if (inferredLocation) {
-        const { error } = await supabase.rpc('auto_complete_roadmap_task', {
+        const { error } = await (supabase as any).rpc('auto_complete_roadmap_task', {
           p_target_location: inferredLocation,
           p_content_type: contentType,
         });

@@ -50,7 +50,7 @@ export const VedicAstrologySection: React.FC = () => {
       if (!user) return;
 
       try {
-        const { data } = await supabase
+        const { data } = await (supabase as any)
           .from('profiles')
           .select('birth_name, birth_date, birth_time, birth_place')
           .eq('id', user.id)
