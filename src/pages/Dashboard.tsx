@@ -22,6 +22,12 @@ import { FeaturedPlaylistsCarousel } from '@/components/dashboard/FeaturedPlayli
 import { DailyRitualCard } from '@/components/dashboard/DailyRitualCard';
 import { DailyPracticeCard } from '@/components/dashboard/DailyPracticeCard';
 import { SpiritualPathCard } from '@/components/dashboard/SpiritualPathCard';
+import { useChallenges } from '@/hooks/useChallenges';
+import { useLiveEvents } from '@/hooks/useLiveEvents';
+import { ChallengeCard } from '@/components/challenges/ChallengeCard';
+import { LiveEventCard } from '@/components/events/LiveEventCard';
+import { Link } from 'react-router-dom';
+import { Trophy, Radio, ArrowRight } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
@@ -37,6 +43,8 @@ const Dashboard: React.FC = () => {
     getAchievementProgress 
   } = useAchievements();
   const { trackShare } = useSocialShare();
+  const { challenges, isLoading: challengesLoading, joinChallenge } = useChallenges();
+  const { events, isLoading: eventsLoading, rsvpToEvent } = useLiveEvents();
   // Check achievements when dashboard loads
   useEffect(() => {
     checkAchievements();
@@ -191,8 +199,59 @@ const Dashboard: React.FC = () => {
         <DailyRitualCard />
       </div>
 
+      {/* Challenges Section */}
+      {challenges.length > 0 && (
+        <div className="mt-6 animate-slide-up" style={{ animationDelay: '0.33s' }}>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-heading font-semibold text-foreground flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-primary" />
+              Challenges
+            </h2>
+            <Link to="/challenges" className="text-sm text-primary hover:text-primary/80 transition-colors flex items-center gap-1">
+              View All <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+          <div className="space-y-3">
+            {challenges.slice(0, 2).map(challenge => (
+              <ChallengeCard
+                key={challenge.id}
+                challenge={challenge}
+                onJoin={joinChallenge}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Live Events Section */}
+      {events.filter(e => new Date(e.scheduled_at) > new Date()).length > 0 && (
+        <div className="mt-6 animate-slide-up" style={{ animationDelay: '0.34s' }}>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-heading font-semibold text-foreground flex items-center gap-2">
+              <Radio className="w-5 h-5 text-primary" />
+              Upcoming Events
+            </h2>
+            <Link to="/live-events" className="text-sm text-primary hover:text-primary/80 transition-colors flex items-center gap-1">
+              View All <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+          <div className="space-y-3">
+            {events
+              .filter(e => new Date(e.scheduled_at) > new Date())
+              .slice(0, 2)
+              .map(event => (
+                <LiveEventCard
+                  key={event.id}
+                  event={event}
+                  onRSVP={rsvpToEvent}
+                />
+              ))}
+          </div>
+        </div>
+      )}
+
       {/* Spiritual Path Card */}
-      <div className="mt-4 animate-slide-up" style={{ animationDelay: '0.33s' }}>
+      <div className="mt-4 animate-slide-up" style={{ animationDelay: '0.35s' }}>
         <SpiritualPathCard />
       </div>
 

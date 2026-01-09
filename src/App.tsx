@@ -57,6 +57,8 @@ import Install from "./pages/Install";
 import SpiritualTransformation from "./pages/SpiritualTransformation";
 import Podcast from "./pages/Podcast";
 import LiveRecordings from "./pages/LiveRecordings";
+import LiveEvents from "./pages/LiveEvents";
+import Challenges from "./pages/Challenges";
 import AIIncomeEngine from "./pages/AIIncomeEngine";
 import NotFound from "./pages/NotFound";
 import AffiliateDetail from "./pages/income-streams/AffiliateDetail";
@@ -136,6 +138,8 @@ const App = () => (
                   <Route path="/spiritual-transformation" element={<SpiritualTransformation />} />
                   <Route path="/podcast" element={<Podcast />} />
                   <Route path="/live-recordings" element={<LiveRecordings />} />
+                  <Route path="/live-events" element={<LiveEvents />} />
+                  <Route path="/challenges" element={<Challenges />} />
                   <Route path="/ai-income" element={<AIIncomeEngine />} />
                   <Route path="/paths" element={<SpiritualPaths />} />
                   <Route path="/paths/:slug" element={<PathDetail />} />
