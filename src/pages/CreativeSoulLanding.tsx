@@ -14,13 +14,14 @@ export default function CreativeSoulLanding() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  const { isAdmin } = useAdminRole();
   const { hasAccess, isLoading: toolsLoading, refetch } = useCreativeTools();
   const [demoActive, setDemoActive] = useState(false);
   const [loading, setLoading] = useState(false);
-  
-  // Remove unused state
-  // const [paymentActive, setPaymentActive] = useState(false);
   const [affiliateId, setAffiliateId] = useState<string | null>(null);
+  
+  // Admins have full access
+  const hasToolAccess = user && (isAdmin || hasAccess('creative-soul-studio'));
 
   // Check access from database (refetch on mount and periodically)
   useEffect(() => {
