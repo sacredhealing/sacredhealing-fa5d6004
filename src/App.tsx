@@ -83,6 +83,7 @@ import AdminCircles from "./pages/AdminCircles";
 import AdminContentRoadmap from "./pages/AdminContentRoadmap";
 import CreativeSoulSales from "./pages/CreativeSoulSales";
 import CreativeSoulTool from "./pages/CreativeSoulTool";
+import CreativeSoulLanding from "./pages/CreativeSoulLanding";
 import "@/lib/performance"; // Initialize performance monitoring
 
 const App = () => (
@@ -147,7 +148,8 @@ const App = () => (
                   <Route path="/paths/:slug" element={<PathDetail />} />
                   <Route path="/ritual" element={<DailyRitual />} />
                   <Route path="/journal" element={<Journal />} />
-                  <Route path="/creative-soul" element={<CreativeSoulSales />} />
+                  <Route path="/creative-soul" element={<CreativeSoulLanding />} />
+                  <Route path="/creative-soul/store" element={<CreativeSoulSales />} />
                   <Route path="/creative-soul-tool" element={<CreativeSoulTool />} />
                 </Route>
                 <Route path="/admin" element={<AdminDashboard />} />
