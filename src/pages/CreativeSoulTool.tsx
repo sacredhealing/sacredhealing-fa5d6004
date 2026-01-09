@@ -584,11 +584,16 @@ export default function CreativeSoulTool() {
             </div>
 
             <Textarea
-              placeholder="Or type your creative idea here..."
+              placeholder="Or type your creative idea here... (or paste transcription from YouTube conversion above)"
               value={transcribedText}
               onChange={(e) => setTranscribedText(e.target.value)}
               className="min-h-[120px]"
             />
+              {!hasToolAccess && !demoActive && (
+                <div className="text-xs text-muted-foreground bg-yellow-50 p-2 rounded border border-yellow-200">
+                  💡 Purchase full access to unlock YouTube conversion, translation, and all features
+                </div>
+              )}
           </CardContent>
         </Card>
 
