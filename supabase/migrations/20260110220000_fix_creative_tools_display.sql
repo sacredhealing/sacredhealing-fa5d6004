@@ -6,8 +6,10 @@
 -- Update RLS policy to allow unauthenticated users to view tools
 DROP POLICY IF EXISTS "Anyone can view active creative tools" ON public.creative_tools;
 
+-- Allow anyone (authenticated or not) to view active tools
 CREATE POLICY "Anyone can view active creative tools"
 ON public.creative_tools FOR SELECT
+TO public
 USING (is_active = true);
 
 -- Ensure Creative Soul Studio tool exists and is active

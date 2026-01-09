@@ -44,6 +44,9 @@ export const useCreativeTools = () => {
 
   const fetchAvailableTools = useCallback(async () => {
     try {
+      console.log('[useCreativeTools] Fetching tools...');
+      
+      // First, try without auth to see if RLS is the issue
       const { data, error } = await supabase
         .from('creative_tools')
         .select('*')
@@ -51,16 +54,21 @@ export const useCreativeTools = () => {
         .order('price_eur', { ascending: true });
 
       if (error) {
-        console.error('Error fetching available tools:', error);
+        console.error('[useCreativeTools] Error fetching available tools:', error);
+        console.error('[useCreativeTools] Error details:', JSON.stringify(error, null, 2));
         // Set empty array on error so UI can handle it gracefully
         setAvailableTools([]);
         return;
       }
       
-      console.log('[useCreativeTools] Fetched tools:', data?.length || 0);
+      console.log('[useCreativeTools] Fetched tools:', data?.length || 0, data);
       setAvailableTools(data || []);
+      
+      if (!data || data.length === 0) {
+        console.warn('[useCreativeTools] No tools found in database. Make sure migrations have been run.');
+      }
     } catch (error) {
-      console.error('Error fetching available tools:', error);
+      console.error('[useCreativeTools] Exception fetching available tools:', error);
       setAvailableTools([]);
     }
   }, []);
