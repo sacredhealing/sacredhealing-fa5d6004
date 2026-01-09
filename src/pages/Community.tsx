@@ -8,6 +8,7 @@ import SacredCircles from '@/components/community/SacredCircles';
 import PrivateMessages from '@/components/community/PrivateMessages';
 import SupportCircle from '@/components/community/SupportCircle';
 import GuideChat from '@/components/community/GuideChat';
+import CommunityChannels from '@/components/community/CommunityChannels';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -59,6 +60,10 @@ const Community = () => {
             <MessageCircle className="h-4 w-4" />
             <span className="hidden sm:inline text-xs">Guide</span>
           </TabsTrigger>
+          <TabsTrigger value="channels" className="flex items-center gap-1 px-2">
+            <Users className="h-4 w-4" />
+            <span className="hidden sm:inline text-xs">Channels</span>
+          </TabsTrigger>
           <TabsTrigger value="feed" className="flex items-center gap-1 px-2">
             <Megaphone className="h-4 w-4" />
             <span className="hidden sm:inline text-xs">Feed</span>
@@ -66,10 +71,6 @@ const Community = () => {
           <TabsTrigger value="circles" className="flex items-center gap-1 px-2">
             <Sparkles className="h-4 w-4" />
             <span className="hidden sm:inline text-xs">Circles</span>
-          </TabsTrigger>
-          <TabsTrigger value="support" className="flex items-center gap-1 px-2">
-            <Heart className="h-4 w-4" />
-            <span className="hidden sm:inline text-xs">Support</span>
           </TabsTrigger>
           <TabsTrigger value="messages" className="flex items-center gap-1 px-2">
             <Mail className="h-4 w-4" />
@@ -79,6 +80,16 @@ const Community = () => {
 
         <TabsContent value="guide">
           <GuideChat />
+        </TabsContent>
+
+        <TabsContent value="channels">
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-lg font-semibold text-foreground mb-2">Community Channels</h2>
+              <p className="text-sm text-muted-foreground">Join channels to connect with like-minded souls</p>
+            </div>
+            <CommunityChannels />
+          </div>
         </TabsContent>
 
         <TabsContent value="feed">
