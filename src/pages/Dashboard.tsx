@@ -26,7 +26,6 @@ import { useChallenges } from '@/hooks/useChallenges';
 import { useLiveEvents } from '@/hooks/useLiveEvents';
 import { ChallengeCard } from '@/components/challenges/ChallengeCard';
 import { LiveEventCard } from '@/components/events/LiveEventCard';
-import { CreativeSoulSection } from '@/components/dashboard/CreativeSoulSection';
 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
@@ -192,15 +191,7 @@ const Dashboard: React.FC = () => {
             </Link>
           ))}
           <button
-            onClick={() => {
-              // Check if Creative Soul section exists on this page (for future scroll feature)
-              const section = document.getElementById('creative-soul-section');
-              if (section) {
-                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              } else {
-                navigate("/creative-soul");
-              }
-            }}
+            onClick={() => navigate("/creative-soul")}
             className="flex flex-col items-center gap-2 p-3 rounded-xl bg-muted/30 border border-border/30 hover:bg-muted/50 transition-all duration-300 cursor-pointer"
           >
             <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-purple-500/20 to-pink-500/20">
@@ -273,7 +264,6 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Creative Soul Tools Section */}
-      <CreativeSoulSection />
 
       {/* Featured Playlists Carousel */}
       <div className="mt-6 animate-slide-up" style={{ animationDelay: '0.34s' }}>

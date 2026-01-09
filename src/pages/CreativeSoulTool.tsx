@@ -8,11 +8,13 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useCreativeTools } from '@/hooks/useCreativeTools';
+import { useAdminRole } from '@/hooks/useAdminRole';
 import { toast } from 'sonner';
 
 export default function CreativeSoulTool() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isAdmin } = useAdminRole();
   const [searchParams] = useSearchParams();
   const { hasAccess, refetch } = useCreativeTools();
   const [transcribedText, setTranscribedText] = useState('');
@@ -28,8 +30,8 @@ export default function CreativeSoulTool() {
   const [loading, setLoading] = useState(false);
   const [affiliateId, setAffiliateId] = useState<string | null>(null);
 
-  // Check access from database (not URL params)
-  const hasToolAccess = user && hasAccess('creative-soul-studio');
+  // Check access from database (not URL params) - Admins have full access
+  const hasToolAccess = user && (isAdmin || hasAccess('creative-soul-studio'));
 
   // Demo data
   const demoText = "This is a demo transcription of your voice.";
@@ -114,12 +116,15 @@ export default function CreativeSoulTool() {
 
       recorder.onstop = async () => {
         const blob = new Blob(chunks, { type: 'audio/webm' });
-        // Use demo data if in demo mode or user doesn't have access, otherwise transcribe
-        if (demoActive || !hasToolAccess) {
+        // Use demo data if in demo mode, otherwise transcribe (admins and paid users)
+        if (demoActive) {
           setTranscribedText(demoText);
           toast.info('Demo mode: Using sample transcription');
-        } else {
+        } else if (hasToolAccess) {
           await transcribeAudio(blob);
+        } else {
+          setTranscribedText(demoText);
+          toast.info('Demo mode: Using sample transcription. Purchase to unlock full features.');
         }
         stream.getTracks().forEach(track => track.stop());
       };
@@ -184,10 +189,17 @@ export default function CreativeSoulTool() {
       return;
     }
 
-    // Use demo data if in demo mode or user doesn't have access
-    if (demoActive || !hasToolAccess) {
+    // Use demo data if in demo mode
+    if (demoActive) {
       setIdeas(demoIdeas);
       toast.info('Demo mode: Using sample ideas');
+      return;
+    }
+    
+    // Check access for real generation
+    if (!hasToolAccess) {
+      setIdeas(demoIdeas);
+      toast.info('Demo mode: Using sample ideas. Purchase to unlock full features.');
       return;
     }
 
@@ -225,10 +237,17 @@ export default function CreativeSoulTool() {
       return;
     }
 
-    // Use demo data if in demo mode or user doesn't have access
-    if (demoActive || !hasToolAccess) {
+    // Use demo data if in demo mode
+    if (demoActive) {
       setGeneratedImages([demoImage]);
       toast.info('Demo mode: Using sample image');
+      return;
+    }
+    
+    // Check access for real generation
+    if (!hasToolAccess) {
+      setGeneratedImages([demoImage]);
+      toast.info('Demo mode: Using sample image. Purchase to unlock full features.');
       return;
     }
 
@@ -312,7 +331,7 @@ export default function CreativeSoulTool() {
               Back to Creative Soul
             </Button>
             
-            {!hasToolAccess && (
+            {!hasToolAccess && !isAdmin && (
               <div className="flex gap-2">
                 {!user && (
                   <Button

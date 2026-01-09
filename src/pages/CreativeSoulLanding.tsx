@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { useCreativeTools } from "@/hooks/useCreativeTools";
+import { useAdminRole } from "@/hooks/useAdminRole";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -62,7 +63,7 @@ export default function CreativeSoulLanding() {
   const handleDemoAccess = () => setDemoActive(true);
 
   const handleGetStarted = () => {
-    if (user && hasAccess('creative-soul-studio')) {
+    if (hasToolAccess) {
       navigate('/creative-soul-tool/creative-soul-studio');
     } else if (user) {
       navigate('/creative-soul/store');
@@ -165,7 +166,7 @@ export default function CreativeSoulLanding() {
                 <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                 Loading...
               </>
-            ) : user && hasAccess('creative-soul-studio') ? (
+            ) : hasToolAccess ? (
               <>
                 Open Studio
                 <ArrowRight className="w-5 h-5 ml-2" />
@@ -190,7 +191,7 @@ export default function CreativeSoulLanding() {
             </Button>
           )}
 
-          {user && !hasAccess('creative-soul-studio') && (
+          {user && !hasToolAccess && (
             <Button
               onClick={handlePurchase}
               size="lg"
@@ -300,7 +301,7 @@ export default function CreativeSoulLanding() {
                 </div>
               </div>
 
-              {user && hasAccess('creative-soul-studio') && (
+              {hasToolAccess && (
                 <div className="mt-8 pt-6 border-t border-gray-200">
                   <Button
                     onClick={() => navigate('/creative-soul-tool/creative-soul-studio')}
