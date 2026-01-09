@@ -275,14 +275,44 @@ export default function CreativeSoulTool() {
       {/* Header */}
       <div className="bg-gradient-to-br from-purple-500/20 via-background to-pink-500/10 px-4 py-6">
         <div className="max-w-4xl mx-auto">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/creative-soul')}
-            className="mb-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Creative Soul
-          </Button>
+          <div className="flex items-center justify-between mb-4">
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/creative-soul')}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Creative Soul
+            </Button>
+            
+            {!paymentActive && !user && (
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleDemoAccess}
+                  variant="outline"
+                  size="sm"
+                  className="border-purple-600 text-purple-600"
+                >
+                  <Play className="w-4 h-4 mr-2" />
+                  Try Demo
+                </Button>
+                <Button
+                  onClick={handlePurchase}
+                  size="sm"
+                  disabled={loading}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    'Unlock (€19.99)'
+                  )}
+                </Button>
+              </div>
+            )}
+          </div>
           <div className="flex items-center gap-3 mb-2">
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
               <Sparkles className="w-6 h-6 text-purple-400" />
