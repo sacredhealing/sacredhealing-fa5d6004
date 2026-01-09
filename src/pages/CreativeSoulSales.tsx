@@ -22,6 +22,13 @@ export default function CreativeSoulSales() {
   const { user } = useAuth();
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const { availableTools, userTools, hasAccess, refetch, isLoading } = useCreativeTools();
+  
+  // Debug: Log tools state
+  useEffect(() => {
+    console.log('[CreativeSoulSales] availableTools:', availableTools);
+    console.log('[CreativeSoulSales] isLoading:', isLoading);
+    console.log('[CreativeSoulSales] userTools:', userTools);
+  }, [availableTools, isLoading, userTools]);
 
   useEffect(() => {
     // Handle success/cancel from Stripe redirect
