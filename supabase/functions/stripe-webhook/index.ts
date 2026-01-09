@@ -22,6 +22,7 @@ const PRICE_TO_PRODUCT: Record<string, { type: string; name: string }> = {
 
 // Maps checkout metadata types to affiliate purchase types
 const getPurchaseType = (metadata: Record<string, string>): string | null => {
+  if (metadata.purchase_type === 'creative_tool' || metadata.tool_id) return 'creative_tool';
   if (metadata.purchase_type === 'bot_deposit' || metadata.purchase_type === 'bot_premium' || metadata.purchase_type === 'bot_feature') return 'bot';
   if (metadata.type === 'meditation_membership') return 'meditation';
   if (metadata.type === 'music_membership') return 'music';
@@ -45,6 +46,7 @@ const getPurchaseType = (metadata: Record<string, string>): string | null => {
 const getProductName = (metadata: Record<string, string> | null): string => {
   if (!metadata) return 'Stripe Purchase';
   
+  if (metadata.purchase_type === 'creative_tool' || metadata.tool_name) return metadata.tool_name || 'Creative Soul Tool';
   if (metadata.purchase_type === 'bot_deposit') return `Bot Deposit - $${metadata.amount || '0'}`;
   if (metadata.purchase_type === 'bot_premium') return `Bot Premium - ${metadata.feature || 'monthly'}`;
   if (metadata.purchase_type === 'bot_feature') return `Bot Feature - ${metadata.feature || 'unlock'}`;
@@ -409,6 +411,57 @@ serve(async (req) => {
               .eq('status', 'pending');
 
             logStep("Commission processed", { referrerId, commissionSHC });
+          }
+        }
+
+        // Grant creative tool access if this is a creative tool purchase
+        if (purchaseType === 'creative_tool' && (session.metadata?.tool_id || session.metadata?.tool_slug)) {
+          const toolSlug = session.metadata?.tool_slug;
+          const toolId = session.metadata?.tool_id;
+          
+          logStep("Granting creative tool access", { userId, toolSlug, toolId });
+
+          // Find the tool by slug (preferred) or ID
+          let tool;
+          if (toolSlug) {
+            const { data } = await supabaseAdmin
+              .from('creative_tools')
+              .select('id')
+              .eq('slug', toolSlug)
+              .eq('is_active', true)
+              .maybeSingle();
+            tool = data;
+          } else if (toolId) {
+            const { data } = await supabaseAdmin
+              .from('creative_tools')
+              .select('id')
+              .eq('id', toolId)
+              .eq('is_active', true)
+              .maybeSingle();
+            tool = data;
+          }
+
+          if (tool && userId) {
+            // Grant access (use upsert to handle duplicates gracefully)
+            const { error: accessError } = await supabaseAdmin
+              .from('creative_tool_access')
+              .upsert({
+                user_id: userId,
+                tool_id: tool.id,
+                stripe_payment_id: stripePaymentId,
+                stripe_session_id: session.id,
+                access_granted_at: new Date().toISOString(),
+              }, {
+                onConflict: 'user_id,tool_id',
+              });
+
+            if (accessError) {
+              logStep("Error granting tool access", { error: accessError.message, userId, toolId: tool.id });
+            } else {
+              logStep("Creative tool access granted successfully", { userId, toolId: tool.id, toolSlug });
+            }
+          } else {
+            logStep("Tool not found or user missing", { toolSlug, toolId, hasTool: !!tool, hasUserId: !!userId });
           }
         }
       }
