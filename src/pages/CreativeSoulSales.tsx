@@ -270,6 +270,16 @@ export default function CreativeSoulSales() {
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
+        ) : availableTools.length === 0 ? (
+          <Card className="border-2 border-border/50">
+            <CardContent className="p-8 text-center">
+              <Sparkles className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+              <h3 className="text-lg font-semibold text-foreground mb-2">No Tools Available</h3>
+              <p className="text-muted-foreground">
+                Creative tools are being set up. Please check back soon!
+              </p>
+            </CardContent>
+          </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {availableTools

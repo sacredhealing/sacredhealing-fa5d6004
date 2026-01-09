@@ -50,10 +50,18 @@ export const useCreativeTools = () => {
         .eq('is_active', true)
         .order('price_eur', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching available tools:', error);
+        // Set empty array on error so UI can handle it gracefully
+        setAvailableTools([]);
+        return;
+      }
+      
+      console.log('[useCreativeTools] Fetched tools:', data?.length || 0);
       setAvailableTools(data || []);
     } catch (error) {
       console.error('Error fetching available tools:', error);
+      setAvailableTools([]);
     }
   }, []);
 
