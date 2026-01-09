@@ -12,6 +12,7 @@ import { useFreeTrial } from '@/hooks/useFreeTrial';
 import { TrialBanner } from '@/components/offers/TrialBanner';
 import { PromoCodeInput } from '@/components/offers/PromoCodeInput';
 import PremiumMeditationsList from '@/components/membership/PremiumMeditationsList';
+import { VedicAstrologySection } from '@/components/membership/VedicAstrologySection';
 import { toast } from 'sonner';
 
 interface MembershipTier {
@@ -324,6 +325,11 @@ const Membership = () => {
             </Card>
           );
         })}
+      </div>
+
+      {/* Vedic Astrology Section */}
+      <div className="px-4 py-6">
+        <VedicAstrologySection />
       </div>
 
       {/* Premium Meditations List */}
