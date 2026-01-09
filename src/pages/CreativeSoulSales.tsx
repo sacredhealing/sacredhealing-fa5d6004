@@ -128,14 +128,21 @@ export default function CreativeSoulSales() {
           <p className="text-base text-muted-foreground max-w-2xl mx-auto">
             Express yourself, get guidance, and create with intention. These tools support your creativity, not replace it.
           </p>
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/dashboard')}
-            className="mt-6"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
-          </Button>
+          <div className="flex gap-2 justify-center mt-6">
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/creative-soul')}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Landing
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/dashboard')}
+            >
+              Dashboard
+            </Button>
+          </div>
         </div>
       </header>
 
