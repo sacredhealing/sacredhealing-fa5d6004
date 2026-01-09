@@ -54,25 +54,27 @@ export const OnboardingStep: React.FC<OnboardingStepProps> = ({
       </div>
 
       {/* Content */}
-      <div className="flex-1 px-4 pb-24 overflow-auto">
+      <div className="flex-1 px-6 pb-24 overflow-auto flex items-center justify-center">
         <motion.div
           key={currentStep}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.3 }}
-          className="space-y-6"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          className="w-full max-w-md space-y-8"
         >
-          <div className="text-center pt-4 pb-2">
-            <h1 className="text-2xl font-heading font-bold text-foreground mb-2">
+          <div className="text-center pt-8 pb-4">
+            <h1 className="text-3xl font-heading font-semibold text-foreground mb-3">
               {title}
             </h1>
             {subtitle && (
-              <p className="text-muted-foreground">{subtitle}</p>
+              <p className="text-muted-foreground text-base">{subtitle}</p>
             )}
           </div>
           
-          {children}
+          <div className="flex-1">
+            {children}
+          </div>
         </motion.div>
       </div>
 

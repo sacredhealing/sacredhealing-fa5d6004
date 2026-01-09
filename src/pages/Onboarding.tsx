@@ -98,12 +98,12 @@ const Onboarding: React.FC = () => {
     );
   }
 
-  // Step 1: Goals
+  // Step 1: Goals - Transformational Onboarding
   if (currentStep === 1) {
     return (
       <OnboardingStep
-        title="What brings you here?"
-        subtitle="Select all that resonate with you"
+        title="Why are you here?"
+        subtitle="Choose what calls to you"
         currentStep={currentStep}
         totalSteps={TOTAL_STEPS}
         onBack={prevStep}
@@ -114,6 +114,15 @@ const Onboarding: React.FC = () => {
           selectedGoals={data.goals}
           onToggle={toggleGoal}
         />
+        {data.goals.length > 0 && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center text-sm text-muted-foreground mt-4"
+          >
+            {data.goals.length} selected
+          </motion.p>
+        )}
       </OnboardingStep>
     );
   }

@@ -1,6 +1,5 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Moon, Brain, Heart, Sparkles, Sun, Leaf } from 'lucide-react';
 import { GoalType } from '@/hooks/useOnboarding';
 import { cn } from '@/lib/utils';
 
@@ -9,86 +8,72 @@ interface GoalSelectorProps {
   onToggle: (goal: GoalType) => void;
 }
 
-const goals: { type: GoalType; label: string; description: string; icon: React.ElementType; color: string }[] = [
+// Simplified, transformational goals - Mindvalley style
+const goals: { 
+  type: GoalType; 
+  label: string; 
+  color: string;
+  bgGradient: string;
+}[] = [
   { 
-    type: 'stress', 
-    label: 'Reduce Stress', 
-    description: 'Find calm in chaos',
-    icon: Leaf, 
-    color: 'from-green-500/20 to-emerald-500/10 border-green-500/30 hover:border-green-500/50' 
+    type: 'peace', 
+    label: 'Calm', 
+    color: 'text-indigo-600',
+    bgGradient: 'bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200 hover:border-indigo-400'
   },
   { 
     type: 'sleep', 
-    label: 'Better Sleep', 
-    description: 'Rest deeply each night',
-    icon: Moon, 
-    color: 'from-indigo-500/20 to-blue-500/10 border-indigo-500/30 hover:border-indigo-500/50' 
-  },
-  { 
-    type: 'focus', 
-    label: 'Improve Focus', 
-    description: 'Sharpen your mind',
-    icon: Brain, 
-    color: 'from-amber-500/20 to-orange-500/10 border-amber-500/30 hover:border-amber-500/50' 
+    label: 'Sleep', 
+    color: 'text-blue-600',
+    bgGradient: 'bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200 hover:border-blue-400'
   },
   { 
     type: 'healing', 
-    label: 'Emotional Healing', 
-    description: 'Release & transform',
-    icon: Heart, 
-    color: 'from-rose-500/20 to-pink-500/10 border-rose-500/30 hover:border-rose-500/50' 
+    label: 'Healing', 
+    color: 'text-rose-600',
+    bgGradient: 'bg-gradient-to-br from-rose-50 to-pink-50 border-rose-200 hover:border-rose-400'
+  },
+  { 
+    type: 'focus', 
+    label: 'Focus', 
+    color: 'text-amber-600',
+    bgGradient: 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200 hover:border-amber-400'
   },
   { 
     type: 'awakening', 
-    label: 'Spiritual Awakening', 
-    description: 'Expand consciousness',
-    icon: Sparkles, 
-    color: 'from-purple-500/20 to-violet-500/10 border-purple-500/30 hover:border-purple-500/50' 
-  },
-  { 
-    type: 'peace', 
-    label: 'Inner Peace', 
-    description: 'Cultivate tranquility',
-    icon: Sun, 
-    color: 'from-cyan-500/20 to-teal-500/10 border-cyan-500/30 hover:border-cyan-500/50' 
+    label: 'Awakening', 
+    color: 'text-violet-600',
+    bgGradient: 'bg-gradient-to-br from-violet-50 to-purple-50 border-violet-200 hover:border-violet-400'
   },
 ];
 
 export const GoalSelector: React.FC<GoalSelectorProps> = ({ selectedGoals, onToggle }) => {
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="space-y-3 max-w-md mx-auto">
       {goals.map((goal, index) => {
-        const Icon = goal.icon;
         const isSelected = selectedGoals.includes(goal.type);
         
         return (
           <motion.button
             key={goal.type}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
+            transition={{ delay: index * 0.08, duration: 0.3 }}
             onClick={() => onToggle(goal.type)}
             className={cn(
-              'p-4 rounded-xl border bg-gradient-to-br transition-all duration-300 text-left',
-              goal.color,
-              isSelected && 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-[1.02]'
+              'w-full p-4 rounded-xl border-2 transition-all duration-200 text-center font-medium text-lg',
+              goal.bgGradient,
+              isSelected 
+                ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-[1.02] shadow-md border-primary' 
+                : 'hover:scale-[1.01] hover:shadow-sm'
             )}
           >
-            <div className="flex items-start gap-3">
-              <div className={cn(
-                'p-2 rounded-lg shrink-0',
-                isSelected ? 'bg-primary/30' : 'bg-foreground/10'
-              )}>
-                <Icon className={cn(
-                  'w-5 h-5',
-                  isSelected ? 'text-primary' : 'text-foreground/70'
-                )} />
-              </div>
-              <div className="min-w-0">
-                <h3 className="font-semibold text-foreground text-sm">{goal.label}</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">{goal.description}</p>
-              </div>
-            </div>
+            <span className={cn(
+              'transition-colors',
+              isSelected ? goal.color : 'text-foreground/70'
+            )}>
+              {goal.label}
+            </span>
           </motion.button>
         );
       })}
