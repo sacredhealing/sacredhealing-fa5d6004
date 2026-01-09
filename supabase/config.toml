@@ -93,6 +93,18 @@ verify_jwt = true
 [functions.analyze-music-track]
 verify_jwt = true
 
+[functions.creative-soul-transcribe]
+verify_jwt = true
+
+[functions.creative-soul-ideas]
+verify_jwt = true
+
+[functions.creative-soul-image]
+verify_jwt = true
+
+[functions.creative-soul-pdf]
+verify_jwt = true
+
 [functions.process-mql-signal]
 verify_jwt = false
 

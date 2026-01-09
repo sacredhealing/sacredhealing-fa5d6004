@@ -314,13 +314,24 @@ export default function CreativeSoulSales() {
                     </p>
 
                     {owned && userAccess ? (
-                      <Button
-                        onClick={() => window.open(userAccess.tool.workspace_url, '_blank')}
-                        className={`w-full bg-green-600 hover:bg-green-700 text-white font-semibold`}
-                        size="lg"
-                      >
-                        Open Tool
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => navigate('/creative-soul-tool')}
+                          className={`flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold`}
+                          size="lg"
+                        >
+                          Use Tool
+                        </Button>
+                        {userAccess.tool.workspace_url && (
+                          <Button
+                            onClick={() => window.open(userAccess.tool.workspace_url, '_blank')}
+                            variant="outline"
+                            size="lg"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
                     ) : (
                       <Button
                         onClick={() => handleBuy(tool.slug)}

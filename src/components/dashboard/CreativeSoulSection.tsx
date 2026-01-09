@@ -22,8 +22,13 @@ export const CreativeSoulSection: React.FC = () => {
   const { featuredTool, userTools, isLoading, hasAccess } = useCreativeTools();
   const [purchasingFeatured, setPurchasingFeatured] = useState(false);
 
-  const handleOpenTool = (workspaceUrl: string) => {
-    window.open(workspaceUrl, '_blank', 'noopener,noreferrer');
+  const handleOpenTool = (workspaceUrl: string, slug?: string) => {
+    // If it's the main Creative Soul tool, use the app route
+    if (slug === 'creative-soul-studio' || slug?.includes('creative-soul')) {
+      navigate('/creative-soul-tool');
+    } else if (workspaceUrl) {
+      window.open(workspaceUrl, '_blank', 'noopener,noreferrer');
+    }
   };
 
   const handleBuyFeatured = async () => {
@@ -265,7 +270,7 @@ export const CreativeSoulSection: React.FC = () => {
                 )}
 
                 <Button
-                  onClick={() => handleOpenTool(access.tool.workspace_url)}
+                  onClick={() => handleOpenTool(access.tool.workspace_url, access.tool.slug)}
                   className={`w-full ${colors.bg.replace('/10', '')} ${colors.text} hover:opacity-90 font-semibold`}
                   size="lg"
                 >
