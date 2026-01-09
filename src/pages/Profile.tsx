@@ -12,6 +12,8 @@ import { useProfile } from '@/hooks/useProfile';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
+import { useCertificates } from '@/hooks/useCertificates';
+import { CertificateCard } from '@/components/certificates/CertificateCard';
 import { NotificationsDialog } from '@/components/profile/NotificationsDialog';
 import { AppearanceDialog } from '@/components/profile/AppearanceDialog';
 import { PrivacyDialog } from '@/components/profile/PrivacyDialog';
@@ -27,6 +29,7 @@ const Profile: React.FC = () => {
   const { profile } = useProfile();
   const { toast } = useToast();
   const { isAdmin } = useAdminRole();
+  const { certificates, isLoading: certificatesLoading, downloadCertificate, shareCertificate } = useCertificates();
   
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [appearanceOpen, setAppearanceOpen] = useState(false);
@@ -144,6 +147,25 @@ const Profile: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {/* Certificates */}
+      {certificates.length > 0 && (
+        <div className="mb-8 animate-slide-up" style={{ animationDelay: '0.05s' }}>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-heading font-semibold text-foreground">Certificates</h2>
+          </div>
+          <div className="space-y-3">
+            {certificates.map((certificate) => (
+              <CertificateCard
+                key={certificate.id}
+                certificate={certificate}
+                onDownload={downloadCertificate}
+                onShare={shareCertificate}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Language Selector */}
       <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>

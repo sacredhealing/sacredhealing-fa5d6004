@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, FolderKanban, CheckSquare, FileText, Calendar, Settings, Users, LayoutDashboard, Music, GraduationCap, Workflow, DollarSign, TrendingUp, Gift, Mic, Bot } from 'lucide-react';
+import { ArrowLeft, FolderKanban, CheckSquare, FileText, Calendar, Settings, Users, LayoutDashboard, Music, GraduationCap, Workflow, DollarSign, TrendingUp, Gift, Mic, Bot, Trophy, Radio } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -21,6 +21,8 @@ import AdminRevenueTab from '@/components/admin-system/AdminRevenueTab';
 import AdminAccessGrantTab from '@/components/admin-system/AdminAccessGrantTab';
 import RecordingStudioTab from '@/components/admin-system/RecordingStudioTab';
 import AdminMQLStrategiesTab from '@/components/admin-system/AdminMQLStrategiesTab';
+import AdminChallengesTab from '@/components/admin-system/AdminChallengesTab';
+import AdminLiveEventsTab from '@/components/admin-system/AdminLiveEventsTab';
 
 const AdminSystem = () => {
   const navigate = useNavigate();
@@ -64,6 +66,8 @@ const AdminSystem = () => {
     { id: 'tasks', label: 'Tasks', icon: CheckSquare },
     { id: 'content', label: 'Content', icon: FileText },
     { id: 'events', label: 'Events', icon: Calendar },
+    { id: 'challenges', label: 'Challenges', icon: Trophy },
+    { id: 'live-events', label: 'Live Events', icon: Radio },
     { id: 'mql', label: 'MQL Strategies', icon: Bot },
     { id: 'costs', label: 'Costs', icon: DollarSign },
     { id: 'revenue', label: 'Revenue', icon: TrendingUp },
@@ -135,6 +139,14 @@ const AdminSystem = () => {
 
           <TabsContent value="events">
             <AdminEventsTab />
+          </TabsContent>
+
+          <TabsContent value="challenges">
+            <AdminChallengesTab />
+          </TabsContent>
+
+          <TabsContent value="live-events">
+            <AdminLiveEventsTab />
           </TabsContent>
 
           <TabsContent value="mql">
