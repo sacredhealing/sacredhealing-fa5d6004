@@ -1,11 +1,16 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, Star, Crown, ExternalLink, Lock, CheckCircle } from 'lucide-react';
+import { Sparkles, Star, Crown, ExternalLink, Lock, CheckCircle, User, Calendar } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useVedicAstrology } from '@/hooks/useVedicAstrology';
 import { useMembership } from '@/hooks/useMembership';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { BirthDetailsForm } from '@/components/vedic/BirthDetailsForm';
+import { DailyVedicInsight } from '@/components/vedic/DailyVedicInsight';
 
 const tierIcons: Record<string, React.ElementType> = {
   basic: Star,
@@ -33,8 +38,35 @@ const tierColors: Record<string, { bg: string; border: string; text: string }> =
 
 export const VedicAstrologySection: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { tiers, isLoading, hasAccess, getHighestAccessLevel } = useVedicAstrology();
   const { tier: membershipTier, isPremium } = useMembership();
+  const [birthDetailsDialogOpen, setBirthDetailsDialogOpen] = useState(false);
+  const [hasBirthDetails, setHasBirthDetails] = useState(false);
+  const [birthDetails, setBirthDetails] = useState<any>(null);
+
+  useEffect(() => {
+    const checkBirthDetails = async () => {
+      if (!user) return;
+
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('birth_name, birth_date, birth_time, birth_place')
+          .eq('id', user.id)
+          .single();
+
+        if (data?.birth_name && data?.birth_date && data?.birth_time && data?.birth_place) {
+          setHasBirthDetails(true);
+          setBirthDetails(data);
+        }
+      } catch (error) {
+        console.error('Error checking birth details:', error);
+      }
+    };
+
+    checkBirthDetails();
+  }, [user]);
 
   const handleAccessTool = (workspaceUrl: string | null, tierLevel: string) => {
     if (!workspaceUrl) {
@@ -84,10 +116,92 @@ export const VedicAstrologySection: React.FC = () => {
           </div>
         </div>
 
-        {highestAccess && (
+        {/* Birth Details Section */}
+        {!hasBirthDetails ? (
+          <Card className="mb-6 border-2 border-primary/30 bg-gradient-to-br from-blue-500/5 to-purple-500/5">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-full bg-primary/20">
+                    <Calendar className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground mb-1">Add Your Birth Details</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Enter your birth information to receive personalized daily Vedic guidance
+                    </p>
+                  </div>
+                </div>
+                <Dialog open={birthDetailsDialogOpen} onOpenChange={setBirthDetailsDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="default" size="lg">
+                      <User className="w-4 h-4 mr-2" />
+                      Add Birth Details
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Enter Your Birth Details</DialogTitle>
+                    </DialogHeader>
+                    <BirthDetailsForm
+                      onSaved={() => {
+                        setBirthDetailsDialogOpen(false);
+                        setHasBirthDetails(true);
+                        // Refresh birth details
+                        window.location.reload();
+                      }}
+                    />
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
           <div className="mb-6 p-4 rounded-lg bg-green-500/10 border border-green-500/30">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <p className="font-semibold text-foreground">Birth Details Saved</p>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {birthDetails?.birth_name} • {birthDetails?.birth_place}
+                </p>
+              </div>
+              <Dialog open={birthDetailsDialogOpen} onOpenChange={setBirthDetailsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    Edit Details
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Update Birth Details</DialogTitle>
+                  </DialogHeader>
+                  <BirthDetailsForm
+                    initialData={birthDetails}
+                    onSaved={() => {
+                      setBirthDetailsDialogOpen(false);
+                      window.location.reload();
+                    }}
+                  />
+                </DialogContent>
+              </Dialog>
+            </div>
+          </div>
+        )}
+
+        {/* Daily Vedic Insight */}
+        {highestAccess && (
+          <div className="mb-6">
+            <DailyVedicInsight tier={highestAccess} />
+          </div>
+        )}
+
+        {highestAccess && (
+          <div className="mb-6 p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
             <div className="flex items-center gap-2 mb-2">
-              <CheckCircle className="w-5 h-5 text-green-500" />
+              <Star className="w-5 h-5 text-blue-500" />
               <p className="font-semibold text-foreground">
                 Your Current Access: {tiers.find(t => t.tier_level === highestAccess)?.name}
               </p>
