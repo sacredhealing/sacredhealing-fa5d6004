@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, FolderKanban, CheckSquare, FileText, Calendar, Settings, Users, LayoutDashboard, Music, GraduationCap, Workflow, DollarSign, TrendingUp, Gift, Mic, Bot, Trophy, Radio, Map } from 'lucide-react';
+import { ArrowLeft, FolderKanban, CheckSquare, FileText, Calendar, Settings, Users, LayoutDashboard, Music, GraduationCap, Workflow, DollarSign, TrendingUp, Gift, Mic, Bot, Trophy, Radio, Map, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -24,6 +24,7 @@ import AdminMQLStrategiesTab from '@/components/admin-system/AdminMQLStrategiesT
 import AdminChallengesTab from '@/components/admin-system/AdminChallengesTab';
 import AdminLiveEventsTab from '@/components/admin-system/AdminLiveEventsTab';
 import AdminRoadmapTab from '@/components/admin-system/AdminRoadmapTab';
+import AdminCreativeSoulTab from '@/components/admin-system/AdminCreativeSoulTab';
 
 const AdminSystem = () => {
   const navigate = useNavigate();
@@ -70,6 +71,7 @@ const AdminSystem = () => {
     { id: 'events', label: 'Events', icon: Calendar },
     { id: 'challenges', label: 'Challenges', icon: Trophy },
     { id: 'live-events', label: 'Live Events', icon: Radio },
+    { id: 'creative-soul', label: 'Creative Soul', icon: Sparkles },
     { id: 'mql', label: 'MQL Strategies', icon: Bot },
     { id: 'costs', label: 'Costs', icon: DollarSign },
     { id: 'revenue', label: 'Revenue', icon: TrendingUp },
@@ -153,6 +155,10 @@ const AdminSystem = () => {
 
           <TabsContent value="live-events">
             <AdminLiveEventsTab />
+          </TabsContent>
+
+          <TabsContent value="creative-soul">
+            <AdminCreativeSoulTab />
           </TabsContent>
 
           <TabsContent value="mql">

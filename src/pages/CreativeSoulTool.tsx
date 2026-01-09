@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Mic, MicOff, Sparkles, Download, FileText, Image as ImageIcon, Loader2, ArrowLeft, Wand2, Play } from 'lucide-react';
+import { Mic, MicOff, Sparkles, Download, FileText, Image as ImageIcon, Loader2, ArrowLeft, Wand2, Play, Youtube, Languages, Music } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useCreativeTools } from '@/hooks/useCreativeTools';
@@ -29,6 +31,14 @@ export default function CreativeSoulTool() {
   const [demoActive, setDemoActive] = useState(false);
   const [loading, setLoading] = useState(false);
   const [affiliateId, setAffiliateId] = useState<string | null>(null);
+  
+  // YouTube processing states
+  const [youtubeUrl, setYoutubeUrl] = useState('');
+  const [isProcessingYoutube, setIsProcessingYoutube] = useState(false);
+  const [mp3Url, setMp3Url] = useState<string | null>(null);
+  const [translationLanguage, setTranslationLanguage] = useState('es'); // Default: Spanish
+  const [translatedText, setTranslatedText] = useState('');
+  const [isTranslating, setIsTranslating] = useState(false);
 
   // Check access from database (not URL params) - Admins have full access
   const hasToolAccess = user && (isAdmin || hasAccess('creative-soul-studio'));
@@ -317,6 +327,103 @@ export default function CreativeSoulTool() {
     }
   };
 
+  // YouTube to MP3 conversion
+  const handleYoutubeConvert = async () => {
+    if (!youtubeUrl.trim()) {
+      toast.error('Please enter a YouTube URL');
+      return;
+    }
+
+    if (demoActive || !hasToolAccess) {
+      toast.info('Demo mode: Using sample data. Purchase to unlock full YouTube conversion.');
+      // Simulate demo conversion
+      setTimeout(() => {
+        setMp3Url('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3');
+        setTranscribedText('Demo transcription from YouTube video...');
+        toast.success('Demo conversion complete!');
+      }, 2000);
+      return;
+    }
+
+    setIsProcessingYoutube(true);
+    try {
+      // Step 1: Convert YouTube to MP3
+      const { data: convertData, error: convertError } = await supabase.functions.invoke('creative-soul-youtube', {
+        body: {
+          youtubeUrl,
+        },
+      });
+
+      if (convertError) throw convertError;
+
+      if (convertData?.mp3Url) {
+        setMp3Url(convertData.mp3Url);
+        toast.success('YouTube video converted to MP3!');
+        
+        // Step 2: Auto-transcribe the audio
+        if (convertData.audioBase64) {
+          const { data: transcribeData, error: transcribeError } = await supabase.functions.invoke('creative-soul-transcribe', {
+            body: {
+              audioBase64: convertData.audioBase64,
+              mimeType: 'audio/mpeg',
+            },
+          });
+
+          if (!transcribeError && transcribeData?.text) {
+            setTranscribedText(transcribeData.text);
+            toast.success('Audio transcribed successfully!');
+          }
+        }
+      } else {
+        throw new Error('No MP3 URL returned');
+      }
+    } catch (error: any) {
+      console.error('YouTube conversion error:', error);
+      toast.error(error?.message || 'Failed to convert YouTube video. Please try again.');
+    } finally {
+      setIsProcessingYoutube(false);
+    }
+  };
+
+  // Translate text
+  const handleTranslate = async () => {
+    const textToTranslate = translatedText || transcribedText;
+    if (!textToTranslate.trim()) {
+      toast.error('Please transcribe or enter text first');
+      return;
+    }
+
+    if (demoActive || !hasToolAccess) {
+      setTranslatedText(`[Demo Translation to ${translationLanguage}] ${textToTranslate}`);
+      toast.info('Demo mode: Using sample translation. Purchase to unlock full translation.');
+      return;
+    }
+
+    setIsTranslating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('creative-soul-translate', {
+        body: {
+          text: textToTranslate,
+          targetLanguage: translationLanguage,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.translatedText) {
+        setTranslatedText(data.translatedText);
+        toast.success(`Text translated to ${translationLanguage.toUpperCase()}!`);
+      } else {
+        throw new Error('No translation returned');
+      }
+    } catch (error: any) {
+      console.error('Translation error:', error);
+      toast.error(error?.message || 'Failed to translate text. Please try again.');
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
@@ -379,6 +486,60 @@ export default function CreativeSoulTool() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+        {/* YouTube Video Converter */}
+        <Card className="border-2 border-red-500/30">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Youtube className="w-5 h-5 text-red-500" />
+              YouTube Video Converter
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Input
+                placeholder="Paste YouTube video URL here..."
+                value={youtubeUrl}
+                onChange={(e) => setYoutubeUrl(e.target.value)}
+                className="w-full"
+                disabled={isProcessingYoutube || !hasToolAccess}
+              />
+              <Button
+                onClick={handleYoutubeConvert}
+                disabled={isProcessingYoutube || !youtubeUrl.trim() || !hasToolAccess}
+                size="lg"
+                className="w-full bg-red-500 hover:bg-red-600 text-white"
+              >
+                {isProcessingYoutube ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Processing Video...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4 mr-2" />
+                    Convert to MP3 & Process
+                  </>
+                )}
+              </Button>
+              {mp3Url && (
+                <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                  <p className="text-sm font-semibold text-green-800 mb-2">MP3 Ready!</p>
+                  <audio controls src={mp3Url} className="w-full" />
+                  <Button
+                    onClick={() => window.open(mp3Url, '_blank')}
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download MP3
+                  </Button>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Voice Recorder */}
         <Card className="border-2 border-primary/30">
           <CardHeader>
@@ -430,6 +591,62 @@ export default function CreativeSoulTool() {
             />
           </CardContent>
         </Card>
+
+        {/* Translation */}
+        {(transcribedText || translatedText) && (
+          <Card className="border-2 border-indigo-500/30">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Languages className="w-5 h-5 text-indigo-500" />
+                Translation
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-2">
+                <Select value={translationLanguage} onValueChange={setTranslationLanguage}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select target language" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="es">Spanish</SelectItem>
+                    <SelectItem value="fr">French</SelectItem>
+                    <SelectItem value="de">German</SelectItem>
+                    <SelectItem value="it">Italian</SelectItem>
+                    <SelectItem value="pt">Portuguese</SelectItem>
+                    <SelectItem value="ru">Russian</SelectItem>
+                    <SelectItem value="ja">Japanese</SelectItem>
+                    <SelectItem value="zh">Chinese</SelectItem>
+                    <SelectItem value="ar">Arabic</SelectItem>
+                    <SelectItem value="hi">Hindi</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  onClick={handleTranslate}
+                  disabled={isTranslating || !transcribedText.trim() || !hasToolAccess}
+                  className="bg-indigo-500 hover:bg-indigo-600 text-white"
+                >
+                  {isTranslating ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Translating...
+                    </>
+                  ) : (
+                    <>
+                      <Languages className="w-4 h-4 mr-2" />
+                      Translate
+                    </>
+                  )}
+                </Button>
+              </div>
+              {translatedText && (
+                <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+                  <p className="text-sm font-semibold text-indigo-800 mb-2">Translated Text ({translationLanguage.toUpperCase()}):</p>
+                  <p className="text-gray-700 whitespace-pre-wrap">{translatedText}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Idea Generator */}
         {transcribedText && (
@@ -498,16 +715,23 @@ export default function CreativeSoulTool() {
                 </Button>
 
                 {hasToolAccess && (
-                  <Button
-                    onClick={generatePDF}
-                    variant="outline"
-                    size="lg"
-                    className="w-full"
-                    disabled={!ideas && !transcribedText}
-                  >
-                    <FileText className="w-4 h-4 mr-2" />
-                    Export as PDF
-                  </Button>
+                  <>
+                    <Button
+                      onClick={generatePDF}
+                      variant="outline"
+                      size="lg"
+                      className="w-full"
+                      disabled={!ideas && !transcribedText && !translatedText}
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      Export as PDF
+                    </Button>
+                    {(mp3Url || transcribedText) && (
+                      <div className="text-xs text-muted-foreground text-center">
+                        💡 PDF will include: {transcribedText && 'Transcription'} {translatedText && 'Translation'} {ideas && 'Ideas'}
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 

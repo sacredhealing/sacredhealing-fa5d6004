@@ -105,6 +105,12 @@ verify_jwt = true
 [functions.creative-soul-pdf]
 verify_jwt = true
 
+[functions.creative-soul-youtube]
+verify_jwt = true
+
+[functions.creative-soul-translate]
+verify_jwt = true
+
 [functions.create-creative-tool-checkout]
 verify_jwt = true
 
