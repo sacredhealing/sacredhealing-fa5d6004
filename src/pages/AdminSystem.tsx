@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, FolderKanban, CheckSquare, FileText, Calendar, Settings, Users, LayoutDashboard, Music, GraduationCap, Workflow, DollarSign, TrendingUp, Gift, Mic, Bot, Trophy, Radio } from 'lucide-react';
+import { ArrowLeft, FolderKanban, CheckSquare, FileText, Calendar, Settings, Users, LayoutDashboard, Music, GraduationCap, Workflow, DollarSign, TrendingUp, Gift, Mic, Bot, Trophy, Radio, Map } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -23,6 +23,7 @@ import RecordingStudioTab from '@/components/admin-system/RecordingStudioTab';
 import AdminMQLStrategiesTab from '@/components/admin-system/AdminMQLStrategiesTab';
 import AdminChallengesTab from '@/components/admin-system/AdminChallengesTab';
 import AdminLiveEventsTab from '@/components/admin-system/AdminLiveEventsTab';
+import AdminRoadmapTab from '@/components/admin-system/AdminRoadmapTab';
 
 const AdminSystem = () => {
   const navigate = useNavigate();
@@ -58,6 +59,7 @@ const AdminSystem = () => {
 
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'roadmap', label: '90-Day Roadmap', icon: Map },
     { id: 'recording', label: 'Recording Studio', icon: Mic },
     { id: 'projects', label: 'Projects', icon: FolderKanban },
     { id: 'music', label: 'Music', icon: Music },
@@ -107,6 +109,10 @@ const AdminSystem = () => {
 
           <TabsContent value="dashboard">
             <AdminDashboardTab />
+          </TabsContent>
+
+          <TabsContent value="roadmap">
+            <AdminRoadmapTab />
           </TabsContent>
 
           <TabsContent value="recording">
