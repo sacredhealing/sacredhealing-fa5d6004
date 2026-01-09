@@ -54,7 +54,7 @@ const AdminChallengesTab: React.FC = () => {
   const fetchChallenges = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('challenges')
         .select(`
           *,
@@ -64,12 +64,12 @@ const AdminChallengesTab: React.FC = () => {
 
       if (error) throw error;
 
-      const challengesWithCounts = (data || []).map(challenge => ({
+      const challengesWithCounts = (data || []).map((challenge: any) => ({
         ...challenge,
         participant_count: challenge.challenge_participants?.[0]?.count || 0,
       }));
 
-      setChallenges(challengesWithCounts);
+      setChallenges(challengesWithCounts as Challenge[]);
     } catch (error) {
       console.error('Error fetching challenges:', error);
       toast({
@@ -101,7 +101,7 @@ const AdminChallengesTab: React.FC = () => {
       };
 
       if (editingChallenge) {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('challenges')
           .update(challengeData)
           .eq('id', editingChallenge.id);
@@ -112,7 +112,7 @@ const AdminChallengesTab: React.FC = () => {
           description: 'Challenge updated successfully',
         });
       } else {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('challenges')
           .insert(challengeData);
 
@@ -157,7 +157,7 @@ const AdminChallengesTab: React.FC = () => {
     if (!confirm('Are you sure you want to delete this challenge?')) return;
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('challenges')
         .delete()
         .eq('id', id);

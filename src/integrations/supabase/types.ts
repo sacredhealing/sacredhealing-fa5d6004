@@ -1204,6 +1204,69 @@ export type Database = {
           },
         ]
       }
+      creative_tools: {
+        Row: {
+          created_at: string
+          description: string | null
+          featured_action_text: string | null
+          featured_end_date: string | null
+          featured_order: number | null
+          featured_start_date: string | null
+          icon_name: string | null
+          id: string
+          is_active: boolean
+          is_featured: boolean
+          name: string
+          price_eur: number
+          promo_discount_percent: number | null
+          promo_text: string | null
+          slug: string
+          tool_type: string
+          updated_at: string
+          workspace_url: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          featured_action_text?: string | null
+          featured_end_date?: string | null
+          featured_order?: number | null
+          featured_start_date?: string | null
+          icon_name?: string | null
+          id?: string
+          is_active?: boolean
+          is_featured?: boolean
+          name: string
+          price_eur?: number
+          promo_discount_percent?: number | null
+          promo_text?: string | null
+          slug: string
+          tool_type: string
+          updated_at?: string
+          workspace_url: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          featured_action_text?: string | null
+          featured_end_date?: string | null
+          featured_order?: number | null
+          featured_start_date?: string | null
+          icon_name?: string | null
+          id?: string
+          is_active?: boolean
+          is_featured?: boolean
+          name?: string
+          price_eur?: number
+          promo_discount_percent?: number | null
+          promo_text?: string | null
+          slug?: string
+          tool_type?: string
+          updated_at?: string
+          workspace_url?: string
+        }
+        Relationships: []
+      }
       curated_playlist_items: {
         Row: {
           created_at: string

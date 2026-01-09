@@ -36,7 +36,7 @@ const AdminRoadmapTab: React.FC = () => {
   const fetchTasks = async () => {
     setLoading(true);
     try {
-      let query = supabase
+      let query = (supabase as any)
         .from('admin_system_tasks')
         .select('*')
         .eq('phase', phase)
@@ -49,7 +49,7 @@ const AdminRoadmapTab: React.FC = () => {
       const { data, error } = await query;
 
       if (error) throw error;
-      setTasks(data || []);
+      setTasks((data || []) as RoadmapTask[]);
     } catch (error) {
       console.error('Error fetching tasks:', error);
       toast({
@@ -76,7 +76,7 @@ const AdminRoadmapTab: React.FC = () => {
         updateData.completed_at = new Date().toISOString();
       }
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('admin_system_tasks')
         .update(updateData)
         .eq('id', taskId);

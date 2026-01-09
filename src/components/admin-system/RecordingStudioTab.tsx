@@ -54,7 +54,7 @@ const RecordingStudioTab: React.FC = () => {
   const fetchTasks = async () => {
     setIsLoading(true);
     try {
-      let query = supabase
+      let query = (supabase as any)
         .from('content_tasks')
         .select('*')
         .eq('status', 'not_recorded')
@@ -78,11 +78,11 @@ const RecordingStudioTab: React.FC = () => {
         meditation: 5,
       };
 
-      const sortedTasks = (data || []).sort((a, b) => {
+      const sortedTasks = (data || []).sort((a: any, b: any) => {
         return (priority[a.category] || 99) - (priority[b.category] || 99);
       });
 
-      setTasks(sortedTasks);
+      setTasks(sortedTasks as ContentTask[]);
       if (sortedTasks.length > 0 && currentTaskIndex >= sortedTasks.length) {
         setCurrentTaskIndex(0);
       }
@@ -235,7 +235,7 @@ Take your time returning.`;
 
     setIsSaving(true);
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('content_tasks')
         .update({ script_text: scriptText })
         .eq('id', currentTask.id);
@@ -267,7 +267,7 @@ Take your time returning.`;
 
     setIsSaving(true);
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('content_tasks')
         .update({ status: 'recorded' })
         .eq('id', currentTask.id);
@@ -306,7 +306,7 @@ Take your time returning.`;
 
     setIsSaving(true);
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('content_tasks')
         .update({ 
           status: 'uploaded',

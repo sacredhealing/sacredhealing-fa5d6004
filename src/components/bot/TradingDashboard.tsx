@@ -69,7 +69,7 @@ const TradingDashboard: React.FC = () => {
 
     setLoading(true);
     try {
-      let query = supabase
+      let query = (supabase as any)
         .from('mql_trades')
         .select(`
           *,
@@ -102,7 +102,7 @@ const TradingDashboard: React.FC = () => {
       const { data, error } = await query;
 
       if (error) throw error;
-      setTrades(data || []);
+      setTrades((data || []) as Trade[]);
     } catch (error) {
       console.error('Error fetching trades:', error);
       toast({
@@ -119,7 +119,7 @@ const TradingDashboard: React.FC = () => {
     if (!user) return;
 
     try {
-      const { data: tradesData, error } = await supabase
+      const { data: tradesData, error } = await (supabase as any)
         .from('mql_trades')
         .select('profit_loss, profit_loss_usd, status')
         .eq('user_id', user.id)
@@ -127,12 +127,12 @@ const TradingDashboard: React.FC = () => {
 
       if (error) throw error;
 
-      const closedTrades = tradesData || [];
-      const winningTrades = closedTrades.filter(t => t.profit_loss > 0);
-      const losingTrades = closedTrades.filter(t => t.profit_loss < 0);
+      const closedTrades = (tradesData || []) as any[];
+      const winningTrades = closedTrades.filter((t: any) => t.profit_loss > 0);
+      const losingTrades = closedTrades.filter((t: any) => t.profit_loss < 0);
 
-      const totalProfit = winningTrades.reduce((sum, t) => sum + (t.profit_loss_usd || 0), 0);
-      const totalLoss = Math.abs(losingTrades.reduce((sum, t) => sum + (t.profit_loss_usd || 0), 0));
+      const totalProfit = winningTrades.reduce((sum: number, t: any) => sum + (t.profit_loss_usd || 0), 0);
+      const totalLoss = Math.abs(losingTrades.reduce((sum: number, t: any) => sum + (t.profit_loss_usd || 0), 0));
       const profitFactor = totalLoss > 0 ? totalProfit / totalLoss : totalProfit;
 
       const averageWin = winningTrades.length > 0
@@ -149,7 +149,7 @@ const TradingDashboard: React.FC = () => {
         win_rate: closedTrades.length > 0
           ? (winningTrades.length / closedTrades.length) * 100
           : 0,
-        total_profit_loss: closedTrades.reduce((sum, t) => sum + (t.profit_loss_usd || 0), 0),
+        total_profit_loss: closedTrades.reduce((sum: number, t: any) => sum + (t.profit_loss_usd || 0), 0),
         total_profit: totalProfit,
         total_loss: totalLoss,
         profit_factor: profitFactor,

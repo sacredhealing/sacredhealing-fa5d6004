@@ -76,7 +76,7 @@ const StrategySubscriptions: React.FC = () => {
     setLoading(true);
     try {
       // Fetch available strategies (public or user's own)
-      const { data: strategiesData, error: strategiesError } = await supabase
+      const { data: strategiesData, error: strategiesError } = await (supabase as any)
         .from('mql_strategies')
         .select('*')
         .or(`is_public.eq.true,created_by.eq.${user.id}`)
@@ -84,10 +84,10 @@ const StrategySubscriptions: React.FC = () => {
         .order('created_at', { ascending: false });
 
       if (strategiesError) throw strategiesError;
-      setStrategies(strategiesData || []);
+      setStrategies((strategiesData || []) as Strategy[]);
 
       // Fetch user's subscriptions
-      const { data: subsData, error: subsError } = await supabase
+      const { data: subsData, error: subsError } = await (supabase as any)
         .from('user_strategy_subscriptions')
         .select(`
           *,
@@ -98,10 +98,10 @@ const StrategySubscriptions: React.FC = () => {
         .order('subscribed_at', { ascending: false });
 
       if (subsError) throw subsError;
-      setSubscriptions(subsData || []);
+      setSubscriptions((subsData || []) as Subscription[]);
 
       // Fetch user's connections
-      const { data: connData, error: connError } = await supabase
+      const { data: connData, error: connError } = await (supabase as any)
         .from('user_bot_connections')
         .select('*')
         .eq('user_id', user.id)
@@ -143,7 +143,7 @@ const StrategySubscriptions: React.FC = () => {
         return;
       }
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('user_strategy_subscriptions')
         .insert({
           user_id: user.id,
@@ -187,7 +187,7 @@ const StrategySubscriptions: React.FC = () => {
     const newStatus = subscription.status === 'active' ? 'paused' : 'active';
     
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('user_strategy_subscriptions')
         .update({ status: newStatus })
         .eq('id', subscription.id);
@@ -214,7 +214,7 @@ const StrategySubscriptions: React.FC = () => {
     if (!confirm('Are you sure you want to cancel this subscription?')) return;
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('user_strategy_subscriptions')
         .update({ 
           status: 'cancelled',

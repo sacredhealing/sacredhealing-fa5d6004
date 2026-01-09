@@ -56,7 +56,7 @@ const AdminLiveEventsTab: React.FC = () => {
   const fetchEvents = async () => {
     setLoading(true);
     try {
-      const { data: eventsData, error } = await supabase
+      const { data: eventsData, error } = await (supabase as any)
         .from('live_events')
         .select('*')
         .order('scheduled_at', { ascending: false });
@@ -64,24 +64,24 @@ const AdminLiveEventsTab: React.FC = () => {
       if (error) throw error;
 
       // Fetch RSVP counts
-      const eventIds = eventsData?.map(e => e.id) || [];
-      const { data: rsvps } = await supabase
+      const eventIds = eventsData?.map((e: any) => e.id) || [];
+      const { data: rsvps } = await (supabase as any)
         .from('live_event_rsvps')
         .select('event_id')
         .in('event_id', eventIds)
         .eq('rsvp_status', 'going');
 
       const countsMap = new Map<string, number>();
-      rsvps?.forEach(r => {
+      rsvps?.forEach((r: any) => {
         countsMap.set(r.event_id, (countsMap.get(r.event_id) || 0) + 1);
       });
 
-      const eventsWithCounts = (eventsData || []).map(event => ({
+      const eventsWithCounts = (eventsData || []).map((event: any) => ({
         ...event,
         rsvp_count: countsMap.get(event.id) || 0,
       }));
 
-      setEvents(eventsWithCounts);
+      setEvents(eventsWithCounts as LiveEvent[]);
     } catch (error) {
       console.error('Error fetching events:', error);
       toast({
@@ -114,7 +114,7 @@ const AdminLiveEventsTab: React.FC = () => {
       };
 
       if (editingEvent) {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('live_events')
           .update(eventData)
           .eq('id', editingEvent.id);
@@ -125,7 +125,7 @@ const AdminLiveEventsTab: React.FC = () => {
           description: 'Event updated successfully',
         });
       } else {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('live_events')
           .insert(eventData);
 
@@ -171,7 +171,7 @@ const AdminLiveEventsTab: React.FC = () => {
     if (!confirm('Are you sure you want to delete this event?')) return;
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('live_events')
         .delete()
         .eq('id', id);
