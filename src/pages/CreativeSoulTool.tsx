@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Mic, MicOff, Sparkles, Download, FileText, Image as ImageIcon, Loader2, ArrowLeft, Wand2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Mic, MicOff, Sparkles, Download, FileText, Image as ImageIcon, Loader2, ArrowLeft, Wand2, Play } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 export default function CreativeSoulTool() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const [transcribedText, setTranscribedText] = useState('');
   const [ideas, setIdeas] = useState('');
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
@@ -21,6 +22,67 @@ export default function CreativeSoulTool() {
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
+  const [demoActive, setDemoActive] = useState(false);
+  const [paymentActive, setPaymentActive] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [affiliateId, setAffiliateId] = useState<string | null>(null);
+
+  // Demo data
+  const demoText = "This is a demo transcription of your voice.";
+  const demoIdeas = "1. Write a self-healing journal\n2. Create a digital vision board\n3. Design a meditation poster";
+  const demoImage = "https://via.placeholder.com/400x400.png?text=Demo+Image";
+  const demoPDF = "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf";
+
+  // Check for payment success and affiliate code
+  useEffect(() => {
+    const ref = searchParams.get("ref");
+    if (ref) {
+      setAffiliateId(ref);
+      localStorage.setItem('creative_soul_affiliate', ref);
+    } else {
+      const stored = localStorage.getItem('creative_soul_affiliate');
+      if (stored) setAffiliateId(stored);
+    }
+
+    if (searchParams.get("success") === "true") {
+      setPaymentActive(true);
+      toast.success('Payment successful! Full access activated.');
+    }
+  }, [searchParams]);
+
+  // Demo/Admin Access
+  const handleDemoAccess = () => setDemoActive(true);
+
+  // Stripe Checkout
+  const handlePurchase = async () => {
+    if (!user) {
+      toast.info('Please sign in to purchase creative tools');
+      navigate('/auth');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-creative-tool-checkout', {
+        body: { 
+          toolSlug: 'creative-soul-studio',
+          affiliateId: affiliateId || undefined
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL returned');
+      }
+    } catch (err: any) {
+      console.error('Checkout error:', err);
+      toast.error(err.message || 'Failed to initiate payment. Please try again.');
+      setLoading(false);
+    }
+  };
 
   const startRecording = async () => {
     try {
@@ -36,7 +98,13 @@ export default function CreativeSoulTool() {
 
       recorder.onstop = async () => {
         const blob = new Blob(chunks, { type: 'audio/webm' });
-        await transcribeAudio(blob);
+        // Use demo data if in demo mode, otherwise transcribe
+        if (demoActive || (!paymentActive && !user)) {
+          setTranscribedText(demoText);
+          toast.info('Demo mode: Using sample transcription');
+        } else {
+          await transcribeAudio(blob);
+        }
         stream.getTracks().forEach(track => track.stop());
       };
 
@@ -97,6 +165,13 @@ export default function CreativeSoulTool() {
       return;
     }
 
+    // Use demo data if in demo mode
+    if (demoActive || (!paymentActive && !user)) {
+      setIdeas(demoIdeas);
+      toast.info('Demo mode: Using sample ideas');
+      return;
+    }
+
     setIsGeneratingIdeas(true);
     try {
       const { data, error } = await supabase.functions.invoke('creative-soul-ideas', {
@@ -125,6 +200,13 @@ export default function CreativeSoulTool() {
     const promptText = ideas || transcribedText;
     if (!promptText.trim()) {
       toast.error('Please generate ideas or enter text first');
+      return;
+    }
+
+    // Use demo data if in demo mode
+    if (demoActive || (!paymentActive && !user)) {
+      setGeneratedImages([demoImage]);
+      toast.info('Demo mode: Using sample image');
       return;
     }
 

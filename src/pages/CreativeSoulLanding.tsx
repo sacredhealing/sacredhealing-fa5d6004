@@ -1,16 +1,22 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Sparkles, Mic, Lightbulb, Image as ImageIcon, FileText, ArrowRight, Play } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Sparkles, Mic, Lightbulb, Image as ImageIcon, FileText, ArrowRight, Play, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { useCreativeTools } from "@/hooks/useCreativeTools";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export default function CreativeSoulLanding() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  const { hasAccess } = useCreativeTools();
+  const { hasAccess, isLoading: toolsLoading } = useCreativeTools();
   const [demoActive, setDemoActive] = useState(false);
+  const [paymentActive, setPaymentActive] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [affiliateId, setAffiliateId] = useState<string | null>(null);
 
   // Mock demo data for admin/demo access
   const demoText = "This is a demo transcription of your voice. Imagine speaking about your creative vision, and AI transforms it into actionable ideas.";
@@ -18,12 +24,68 @@ export default function CreativeSoulLanding() {
   const demoImage = "https://via.placeholder.com/400x400/9333EA/FFFFFF?text=Creative+Idea+Image";
   const demoPDF = "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf";
 
+  // Detect affiliate code from URL
+  useEffect(() => {
+    const ref = searchParams.get("ref");
+    if (ref) {
+      setAffiliateId(ref);
+      // Store in localStorage for persistence
+      localStorage.setItem('creative_soul_affiliate', ref);
+    } else {
+      // Check localStorage for existing affiliate
+      const stored = localStorage.getItem('creative_soul_affiliate');
+      if (stored) setAffiliateId(stored);
+    }
+
+    // Check if payment was successful
+    if (searchParams.get("success") === "true") {
+      setPaymentActive(true);
+      toast.success('Payment successful! Your creative tool is ready to use.');
+    }
+  }, [searchParams]);
+
   const handleDemoAccess = () => setDemoActive(true);
+
   const handleGetStarted = () => {
     if (user && hasAccess('creative-soul-studio')) {
       navigate('/creative-soul-tool/creative-soul-studio');
+    } else if (user) {
+      navigate('/creative-soul/store');
     } else {
-      navigate('/creative-soul');
+      navigate('/auth');
+    }
+  };
+
+  // Stripe Checkout with affiliate tracking
+  const handlePurchase = async () => {
+    if (!user) {
+      toast.info('Please sign in to purchase creative tools');
+      navigate('/auth');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Use Supabase Edge Function for checkout
+      const { data, error } = await supabase.functions.invoke('create-creative-tool-checkout', {
+        body: { 
+          toolSlug: 'creative-soul-studio',
+          affiliateId: affiliateId || undefined
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        // Redirect to Stripe Checkout
+        window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL returned');
+      }
+    } catch (err: any) {
+      console.error('Checkout error:', err);
+      toast.error(err.message || 'Failed to initiate payment. Please try again.');
+      setLoading(false);
     }
   };
 
@@ -71,14 +133,30 @@ export default function CreativeSoulLanding() {
           Voice-to-text transcription, AI idea generation, image creation, and PDF export—all in one powerful tool.
         </p>
 
+        {/* Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 mb-12">
           <Button
             onClick={handleGetStarted}
             size="lg"
             className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-6 text-lg"
+            disabled={toolsLoading}
           >
-            Get Started
-            <ArrowRight className="w-5 h-5 ml-2" />
+            {toolsLoading ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                Loading...
+              </>
+            ) : user && hasAccess('creative-soul-studio') ? (
+              <>
+                Open Studio
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </>
+            ) : (
+              <>
+                Get Started
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </>
+            )}
           </Button>
           
           {!user && (
@@ -92,6 +170,27 @@ export default function CreativeSoulLanding() {
               Try Demo
             </Button>
           )}
+
+          {user && !hasAccess('creative-soul-studio') && (
+            <Button
+              onClick={handlePurchase}
+              size="lg"
+              disabled={loading}
+              className="bg-green-600 hover:bg-green-700 text-white px-8 py-6 text-lg"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Redirecting...
+                </>
+              ) : (
+                <>
+                  Unlock Full Access (€19.99)
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </>
+              )}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -100,7 +199,7 @@ export default function CreativeSoulLanding() {
         <Card className="shadow-xl border-2 border-purple-100">
           <CardContent className="p-8">
             <h2 className="text-3xl font-bold text-center mb-8 text-gray-800">How It Works</h2>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
               {features.map((feature, index) => {
                 const Icon = feature.icon;
                 return (
@@ -115,26 +214,29 @@ export default function CreativeSoulLanding() {
               })}
             </div>
             
-            <div className="mt-8 p-6 bg-purple-50 rounded-xl">
+            <div className="p-6 bg-purple-50 rounded-xl">
               <ol className="list-decimal list-inside space-y-3 text-gray-700 max-w-2xl mx-auto">
                 <li className="font-medium">Record your voice directly in the browser</li>
                 <li className="font-medium">AI converts your voice into text in any language</li>
                 <li className="font-medium">Generate creative ideas based on your words</li>
                 <li className="font-medium">Create high-quality images and export PDFs</li>
+                <li className="font-medium">Pay once (€19.99) and get full lifetime access</li>
               </ol>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Demo Section */}
-      {demoActive && (
+      {/* Demo/Payment Success Section */}
+      {(demoActive || paymentActive) && (
         <div className="container mx-auto px-6 mb-12 max-w-4xl">
           <Card className="shadow-lg border-2 border-purple-200">
             <CardContent className="p-8">
               <div className="flex items-center gap-2 mb-6">
                 <Play className="w-6 h-6 text-purple-600" />
-                <h3 className="text-2xl font-bold text-gray-800">Demo Preview</h3>
+                <h3 className="text-2xl font-bold text-gray-800">
+                  {demoActive ? "Demo Preview" : "Full Access Activated"}
+                </h3>
               </div>
               
               <div className="space-y-6">
@@ -179,16 +281,41 @@ export default function CreativeSoulLanding() {
                 </div>
               </div>
 
-              <div className="mt-8 pt-6 border-t border-gray-200">
-                <Button
-                  onClick={handleGetStarted}
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white"
-                  size="lg"
-                >
-                  Get Full Access
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </Button>
-              </div>
+              {paymentActive && (
+                <div className="mt-8 pt-6 border-t border-gray-200">
+                  <Button
+                    onClick={() => navigate('/creative-soul-tool/creative-soul-studio')}
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                    size="lg"
+                  >
+                    Open Creative Studio
+                    <ArrowRight className="w-5 h-5 ml-2" />
+                  </Button>
+                </div>
+              )}
+
+              {demoActive && !user && (
+                <div className="mt-8 pt-6 border-t border-gray-200">
+                  <Button
+                    onClick={handlePurchase}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white"
+                    size="lg"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Redirecting...
+                      </>
+                    ) : (
+                      <>
+                        Get Full Access (€19.99)
+                        <ArrowRight className="w-5 h-5 ml-2" />
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -206,9 +333,19 @@ export default function CreativeSoulLanding() {
               onClick={handleGetStarted}
               size="lg"
               className="bg-white text-purple-600 hover:bg-purple-50 px-8 py-6 text-lg font-semibold"
+              disabled={loading || toolsLoading}
             >
-              Get Started Now
-              <ArrowRight className="w-5 h-5 ml-2" />
+              {loading ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                <>
+                  Get Started Now
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </>
+              )}
             </Button>
           </CardContent>
         </Card>
@@ -221,4 +358,3 @@ export default function CreativeSoulLanding() {
     </div>
   );
 }
-
