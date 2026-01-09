@@ -35,35 +35,76 @@ export const useChallenges = () => {
         .eq('is_active', true)
         .order('start_date', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching challenges:', error);
+        // If table doesn't exist or permission issue, return empty array
+        if (error.code === '42P01' || error.code === '42501') {
+          setChallenges([]);
+          setIsLoading(false);
+          return;
+        }
+        throw error;
+      }
 
-      if (!user || !challengesData) {
-        setChallenges(challengesData || []);
+      if (!challengesData || challengesData.length === 0) {
+        setChallenges([]);
+        setIsLoading(false);
+        return;
+      }
+
+      if (!user) {
+        setChallenges(challengesData.map(challenge => ({
+          ...challenge,
+          participant_count: 0,
+          user_progress: 0,
+          user_joined: false,
+        })));
         setIsLoading(false);
         return;
       }
 
       // Fetch user's participation and progress
-      const { data: participations } = await supabase
-        .from('challenge_participants')
-        .select('challenge_id, progress, completed')
-        .eq('user_id', user.id);
+      let participations: Array<{ challenge_id: string; progress: number; completed: boolean }> = [];
+      let participantCounts: Array<{ challenge_id: string }> = [];
+
+      try {
+        const { data: participationData, error: participationError } = await supabase
+          .from('challenge_participants')
+          .select('challenge_id, progress, completed')
+          .eq('user_id', user.id);
+
+        if (!participationError && participationData) {
+          participations = participationData;
+        }
+      } catch (err) {
+        console.warn('Error fetching user participations:', err);
+      }
 
       // Fetch participant counts
-      const challengeIds = challengesData.map(c => c.id);
-      const { data: participantCounts } = await supabase
-        .from('challenge_participants')
-        .select('challenge_id')
-        .in('challenge_id', challengeIds);
+      try {
+        const challengeIds = challengesData.map(c => c.id);
+        if (challengeIds.length > 0) {
+          const { data: countData, error: countError } = await supabase
+            .from('challenge_participants')
+            .select('challenge_id')
+            .in('challenge_id', challengeIds);
+
+          if (!countError && countData) {
+            participantCounts = countData;
+          }
+        }
+      } catch (err) {
+        console.warn('Error fetching participant counts:', err);
+      }
 
       const countsMap = new Map<string, number>();
-      participantCounts?.forEach(p => {
+      participantCounts.forEach(p => {
         countsMap.set(p.challenge_id, (countsMap.get(p.challenge_id) || 0) + 1);
       });
 
       // Combine data
       const challengesWithProgress = challengesData.map(challenge => {
-        const participation = participations?.find(p => p.challenge_id === challenge.id);
+        const participation = participations.find(p => p.challenge_id === challenge.id);
         return {
           ...challenge,
           participant_count: countsMap.get(challenge.id) || 0,
@@ -73,13 +114,18 @@ export const useChallenges = () => {
       });
 
       setChallenges(challengesWithProgress);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching challenges:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load challenges',
-        variant: 'destructive',
-      });
+      // Only show toast for actual errors, not missing tables
+      if (error?.code !== '42P01' && error?.code !== '42501') {
+        toast({
+          title: 'Error',
+          description: 'Failed to load challenges',
+          variant: 'destructive',
+        });
+      }
+      // Set empty array on any error to prevent rendering issues
+      setChallenges([]);
     } finally {
       setIsLoading(false);
     }
