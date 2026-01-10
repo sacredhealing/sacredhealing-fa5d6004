@@ -116,14 +116,6 @@ export const useChallenges = () => {
       setChallenges(challengesWithProgress);
     } catch (error: any) {
       console.error('Error fetching challenges:', error);
-      // Only show toast for actual errors, not missing tables
-      if (error?.code !== '42P01' && error?.code !== '42501') {
-        toast({
-          title: 'Error',
-          description: 'Failed to load challenges',
-          variant: 'destructive',
-        });
-      }
       // Set empty array on any error to prevent rendering issues
       setChallenges([]);
     } finally {

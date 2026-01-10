@@ -56,7 +56,6 @@ const AdminBreathing: React.FC = () => {
 
     if (error) {
       console.error('Error fetching patterns:', error);
-      toast.error('Failed to load patterns');
     } else {
       setPatterns(data || []);
     }

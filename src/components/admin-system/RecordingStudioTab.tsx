@@ -88,11 +88,6 @@ const RecordingStudioTab: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Error fetching tasks:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load tasks',
-        variant: 'destructive',
-      });
     } finally {
       setIsLoading(false);
     }

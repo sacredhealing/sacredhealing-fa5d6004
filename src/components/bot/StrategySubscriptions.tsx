@@ -111,11 +111,6 @@ const StrategySubscriptions: React.FC = () => {
       setConnections(connData || []);
     } catch (error) {
       console.error('Error fetching data:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load strategies',
-        variant: 'destructive',
-      });
     } finally {
       setLoading(false);
     }

@@ -77,11 +77,6 @@ const AdminContentRoadmap: React.FC = () => {
       setTasks(data || []);
     } catch (error: any) {
       console.error('Error fetching tasks:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load content tasks',
-        variant: 'destructive',
-      });
     } finally {
       setIsLoading(false);
     }

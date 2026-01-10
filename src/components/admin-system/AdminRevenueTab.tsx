@@ -131,7 +131,6 @@ const AdminRevenueTab = () => {
       setCosts(costsData || []);
     } catch (error) {
       console.error('Error fetching data:', error);
-      toast.error('Failed to load revenue data');
     } finally {
       setIsLoading(false);
     }

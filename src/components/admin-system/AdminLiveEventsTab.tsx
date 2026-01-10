@@ -84,11 +84,6 @@ const AdminLiveEventsTab: React.FC = () => {
       setEvents(eventsWithCounts as LiveEvent[]);
     } catch (error) {
       console.error('Error fetching events:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load events',
-        variant: 'destructive',
-      });
     } finally {
       setLoading(false);
     }

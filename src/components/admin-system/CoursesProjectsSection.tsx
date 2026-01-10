@@ -75,7 +75,6 @@ const CoursesProjectsSection = () => {
       setProjects(formattedProjects);
     } catch (error) {
       console.error('Error fetching course projects:', error);
-      toast.error('Failed to load course projects');
     } finally {
       setIsLoading(false);
     }

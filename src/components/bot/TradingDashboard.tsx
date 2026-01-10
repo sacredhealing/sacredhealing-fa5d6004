@@ -105,11 +105,6 @@ const TradingDashboard: React.FC = () => {
       setTrades((data || []) as Trade[]);
     } catch (error) {
       console.error('Error fetching trades:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load trades',
-        variant: 'destructive',
-      });
     } finally {
       setLoading(false);
     }

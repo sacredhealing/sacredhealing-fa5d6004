@@ -38,11 +38,6 @@ export const useCertificates = () => {
       setCertificates(data || []);
     } catch (error) {
       console.error('Error fetching certificates:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load certificates',
-        variant: 'destructive',
-      });
     } finally {
       setIsLoading(false);
     }

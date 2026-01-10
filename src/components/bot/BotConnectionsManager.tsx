@@ -72,11 +72,6 @@ const BotConnectionsManager: React.FC = () => {
       setConnections((data || []) as BotConnection[]);
     } catch (error) {
       console.error('Error fetching connections:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load bot connections',
-        variant: 'destructive',
-      });
     } finally {
       setLoading(false);
     }
