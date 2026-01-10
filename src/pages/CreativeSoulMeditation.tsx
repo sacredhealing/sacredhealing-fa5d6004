@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Music, Upload, Youtube, Link as LinkIcon, Download, Loader2, Sparkles, ArrowLeft, Play, Wand2, Radio, Headphones, Zap, Crown, XCircle, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,167 +35,6 @@ interface JobStatus {
   completed_at: string | null;
 }
 
-/**
- * RULES:
- * - If freq < 20 => Brainwave frequency (binaural beats / amplitude modulation), NOT pitch-tuning.
- * - If freq >= 20 => Audible tone tuning target (pitch-shift / retune / tone layer), NOT binaural.
- * - Frequency selection should auto-pick a style + sound palette that fits conversion & meditation expectations.
- */
-
-type ProcessingMode = "BINAURAL" | "TONE_TUNING";
-
-type SoundLayer =
-  | "ocean_waves"
-  | "forest_ambience"
-  | "rain_soft"
-  | "wind_soft"
-  | "tibetan_bowls"
-  | "handpan"
-  | "shaman_drums_soft"
-  | "indian_flute_soft"
-  | "choir_pad"
-  | "brown_noise_soft"
-  | "pink_noise_soft"
-  | "silence";
-
-type FrequencyPreset = {
-  value: number;
-  label: string;
-  intentTags: string[];
-  mode: ProcessingMode;
-  defaultStyle: string;
-  soundLayers: SoundLayer[];
-};
-
-const FREQUENCY_PRESETS: FrequencyPreset[] = [
-  // Solfeggio / audible tone tuning
-  {
-    value: 174,
-    label: "174 Hz – Deep Relaxation & Grounding",
-    intentTags: ["grounding", "safety", "relaxation"],
-    mode: "TONE_TUNING",
-    defaultStyle: "nature-healing",
-    soundLayers: ["forest_ambience", "wind_soft", "tibetan_bowls"],
-  },
-  {
-    value: 285,
-    label: "285 Hz – Physical Healing Support",
-    intentTags: ["healing", "restoration", "body"],
-    mode: "TONE_TUNING",
-    defaultStyle: "ocean-water",
-    soundLayers: ["pink_noise_soft", "handpan", "tibetan_bowls"],
-  },
-  {
-    value: 396,
-    label: "396 Hz – Emotional Release",
-    intentTags: ["release", "fear", "emotions"],
-    mode: "TONE_TUNING",
-    defaultStyle: "shamanic",
-    soundLayers: ["shaman_drums_soft", "forest_ambience", "tibetan_bowls"],
-  },
-  {
-    value: 417,
-    label: "417 Hz – Transformation & Change",
-    intentTags: ["change", "transformation", "reset"],
-    mode: "TONE_TUNING",
-    defaultStyle: "mystic",
-    soundLayers: ["choir_pad", "wind_soft", "tibetan_bowls"],
-  },
-  {
-    value: 432,
-    label: "432 Hz – Natural Harmony",
-    intentTags: ["balance", "harmony", "calm"],
-    mode: "TONE_TUNING",
-    defaultStyle: "ocean-water",
-    soundLayers: ["ocean_waves", "rain_soft", "handpan"],
-  },
-  {
-    value: 444,
-    label: "444 Hz – Heart Coherence",
-    intentTags: ["heart", "compassion", "coherence"],
-    mode: "TONE_TUNING",
-    defaultStyle: "ocean-water",
-    soundLayers: ["handpan", "ocean_waves", "tibetan_bowls"],
-  },
-  {
-    value: 528,
-    label: "528 Hz – Love & Renewal",
-    intentTags: ["love", "renewal", "uplift"],
-    mode: "TONE_TUNING",
-    defaultStyle: "mystic",
-    soundLayers: ["choir_pad", "handpan", "rain_soft"],
-  },
-  {
-    value: 639,
-    label: "639 Hz – Connection & Balance",
-    intentTags: ["relationships", "connection", "balance"],
-    mode: "TONE_TUNING",
-    defaultStyle: "indian-vedic",
-    soundLayers: ["indian_flute_soft", "forest_ambience", "tibetan_bowls"],
-  },
-  {
-    value: 741,
-    label: "741 Hz – Clarity & Intuition",
-    intentTags: ["clarity", "intuition", "focus"],
-    mode: "TONE_TUNING",
-    defaultStyle: "nature-healing",
-    soundLayers: ["forest_ambience", "wind_soft", "handpan"],
-  },
-  {
-    value: 852,
-    label: "852 Hz – Spiritual Awakening",
-    intentTags: ["spiritual", "awakening", "insight"],
-    mode: "TONE_TUNING",
-    defaultStyle: "mystic",
-    soundLayers: ["choir_pad", "wind_soft", "tibetan_bowls"],
-  },
-  {
-    value: 963,
-    label: "963 Hz – Higher Consciousness",
-    intentTags: ["higher", "consciousness", "transcend"],
-    mode: "TONE_TUNING",
-    defaultStyle: "higher-consciousness",
-    soundLayers: ["choir_pad", "brown_noise_soft", "tibetan_bowls"],
-  },
-  // Brainwave / binaural (inaudible as tone; use binaural beat / modulation)
-  {
-    value: 4,
-    label: "4 Hz – Deep Sleep (Delta)",
-    intentTags: ["sleep", "deep sleep", "delta"],
-    mode: "BINAURAL",
-    defaultStyle: "sleep-delta",
-    soundLayers: ["ocean_waves", "brown_noise_soft", "rain_soft"],
-  },
-  {
-    value: 6,
-    label: "6 Hz – Theta Meditation",
-    intentTags: ["theta", "meditation", "dreamy"],
-    mode: "BINAURAL",
-    defaultStyle: "mystic",
-    soundLayers: ["choir_pad", "pink_noise_soft", "tibetan_bowls"],
-  },
-  {
-    value: 8,
-    label: "8 Hz – Alpha Calm",
-    intentTags: ["calm", "alpha", "relax"],
-    mode: "BINAURAL",
-    defaultStyle: "nature-healing",
-    soundLayers: ["forest_ambience", "wind_soft", "pink_noise_soft"],
-  },
-  {
-    value: 10,
-    label: "10 Hz – Focus & Presence",
-    intentTags: ["focus", "presence", "clarity"],
-    mode: "BINAURAL",
-    defaultStyle: "ocean-water",
-    soundLayers: ["pink_noise_soft", "handpan", "wind_soft"],
-  },
-];
-
-function getPreset(freq: number): FrequencyPreset {
-  return FREQUENCY_PRESETS.find((p) => p.value === freq) ?? FREQUENCY_PRESETS.find((p) => p.value === 432)!;
-}
-
 export default function CreativeSoulMeditation() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -210,27 +49,12 @@ export default function CreativeSoulMeditation() {
   const [urls, setUrls] = useState('');
   
   // Generation options
-  const [freq, setFreq] = useState<number>(432);
-  const [style, setStyle] = useState('ocean-water');
-  const [soundLayers, setSoundLayers] = useState<SoundLayer[]>(['ocean_waves', 'rain_soft', 'handpan']);
-  const [overrideStyle, setOverrideStyle] = useState(false);
-  const [overrideLayers, setOverrideLayers] = useState(false);
+  const [style, setStyle] = useState('nature-healing');
+  const [freq, setFreq] = useState('432');
+  const [binaural, setBinaural] = useState(true);
   const [bpmMatch, setBpmMatch] = useState(true);
   const [variants, setVariants] = useState(3);
   const [keepMusicStem, setKeepMusicStem] = useState(true);
-
-  // Get frequency preset
-  const preset = useMemo(() => getPreset(freq), [freq]);
-
-  // Auto-update style and layers when frequency changes (unless overridden)
-  useEffect(() => {
-    if (!overrideStyle) {
-      setStyle(preset.defaultStyle);
-    }
-    if (!overrideLayers) {
-      setSoundLayers(preset.soundLayers);
-    }
-  }, [preset, overrideStyle, overrideLayers]);
   
   // State management
   const [generatedFiles, setGeneratedFiles] = useState<GeneratedFile[]>([]);
@@ -402,10 +226,9 @@ export default function CreativeSoulMeditation() {
       const { data, error } = await supabase.functions.invoke('convert-meditation-audio', {
         body: {
           mode: 'demo',
-          frequency_hz: preset.value,
-          processing_mode: preset.mode, // "BINAURAL" or "TONE_TUNING"
-          meditation_style: style,
-          sound_layers: soundLayers,
+          style,
+          frequency: freq,
+          binaural: binaural ? 'theta' : 'none',
           duration: 10,
           variants: 1,
         },
@@ -503,15 +326,12 @@ export default function CreativeSoulMeditation() {
       const { data, error } = await supabase.functions.invoke('convert-meditation-audio', {
         body: {
           mode: 'paid',
-          frequency_hz: preset.value,
-          processing_mode: preset.mode, // "BINAURAL" or "TONE_TUNING"
-          meditation_style: style,
-          sound_layers: soundLayers,
+          style,
+          frequency: freq,
+          binaural: binaural ? 'theta' : 'none',
           duration: 30,
-          audioUrl: uploadedFileUrls[0] || uploadedMusicUrls[0] || youtubeLinks?.split(',')[0] || urls?.split(',')[0],
+          audioUrl: uploadedFileUrls[0] || uploadedMusicUrls[0],
           variants,
-          bpm_match: bpmMatch,
-          keep_music_stem: keepMusicStem,
         },
       });
 
@@ -684,82 +504,55 @@ export default function CreativeSoulMeditation() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <Label htmlFor="style" className="cursor-pointer">🧘‍♂️ Meditation / Healing Audio Type</Label>
-                  <label className="text-xs flex items-center gap-2 cursor-pointer text-muted-foreground">
-                    <input
-                      type="checkbox"
-                      checked={overrideStyle}
-                      onChange={(e) => setOverrideStyle(e.target.checked)}
-                      className="cursor-pointer"
-                    />
-                    Override auto-style
-                  </label>
-                </div>
-                <Select 
-                  value={style} 
-                  onValueChange={(val) => {
-                    setStyle(val);
-                    setOverrideStyle(true);
-                  }}
-                  disabled={!overrideStyle}
-                >
+                <Label htmlFor="style" className="cursor-pointer">Meditation / Healing Audio Type</Label>
+                <Select value={style} onValueChange={setStyle}>
                   <SelectTrigger id="style" className="cursor-pointer">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="indian-vedic">Indian (Vedic) - Mantras, tanpura drones, temple bells, ancient resonance</SelectItem>
-                    <SelectItem value="shamanic">Shamanic - Frame drums, rattles, tribal rhythms, journeying soundscapes</SelectItem>
-                    <SelectItem value="mystic">Mystic - Etheric pads, choirs, cosmic textures, deep spiritual tones</SelectItem>
+                    <SelectItem value="indian-vedic">Indian (Vedic) - Mantras, tanpura drones, temple bells</SelectItem>
+                    <SelectItem value="shamanic">Shamanic - Frame drums, rattles, tribal rhythms</SelectItem>
+                    <SelectItem value="mystic">Mystic - Etheric pads, choirs, cosmic textures</SelectItem>
                     <SelectItem value="tibetan">Tibetan - Singing bowls, long horns, overtone chanting</SelectItem>
                     <SelectItem value="sufi">Sufi - Whirling rhythms, ney flute, heart-centered devotion</SelectItem>
-                    <SelectItem value="zen">Zen (Japanese) - Minimal ambience, breath awareness, temple bells</SelectItem>
-                    <SelectItem value="nature-healing">Nature Healing - Forest, birds, wind, water, grounding soundscapes</SelectItem>
-                    <SelectItem value="ocean-water">Ocean / Water - Waves, flowing water, deep calming rhythms</SelectItem>
+                    <SelectItem value="zen">Zen (Japanese) - Minimal ambience, breath awareness</SelectItem>
+                    <SelectItem value="nature-healing">Nature Healing - Forest, birds, wind, water</SelectItem>
+                    <SelectItem value="ocean-water">Ocean / Water - Waves, flowing water, deep calming</SelectItem>
                     <SelectItem value="sound-bath">Sound Bath - Gongs, crystal bowls, harmonic overtones</SelectItem>
-                    <SelectItem value="chakra-balancing">Chakra Balancing - Layered tones aligned to each chakra center</SelectItem>
-                    <SelectItem value="breathwork">Breathwork - Pulsing rhythms guiding inhale/exhale cycles</SelectItem>
-                    <SelectItem value="sleep-delta">Sleep / Delta Healing - Ultra-calm textures, slow binaural pulses</SelectItem>
-                    <SelectItem value="affirmation-healing">Affirmation Healing - Clean voice-forward mixes with supportive music</SelectItem>
-                    <SelectItem value="plant-medicine">Plant Medicine (Ceremonial) - Deep tribal ambience, ceremonial pacing</SelectItem>
-                    <SelectItem value="higher-consciousness">Higher Consciousness / Cosmic - Galactic drones, expansive frequencies, awakening themes</SelectItem>
+                    <SelectItem value="chakra-balancing">Chakra Balancing - Layered tones for each chakra</SelectItem>
+                    <SelectItem value="higher-consciousness">Higher Consciousness - Cosmic tones, transcendence</SelectItem>
+                    <SelectItem value="relaxing">Relaxing - Gentle ambient, stress relief</SelectItem>
+                    <SelectItem value="forest">Forest - Birdsong, rustling leaves, natural grounding</SelectItem>
+                    <SelectItem value="breath-focus">Breath Focus - Minimal, breath-guiding cues</SelectItem>
+                    <SelectItem value="kundalini-energy">Kundalini Energy - Rising energy, activation tones</SelectItem>
                   </SelectContent>
                 </Select>
-                {!overrideStyle && (
-                  <p className="text-xs mt-2 text-muted-foreground">
-                    Auto-selected from frequency: <b>{preset.defaultStyle}</b>
-                  </p>
-                )}
               </div>
 
               <div>
                 <Label htmlFor="freq" className="cursor-pointer">Frequency (Hz) - Healing & Meditation</Label>
-                <Select 
-                  value={freq.toString()} 
-                  onValueChange={(val) => {
-                    const newFreq = Number(val);
-                    setFreq(newFreq);
-                    // Reset overrides when frequency changes
-                    setOverrideStyle(false);
-                    setOverrideLayers(false);
-                  }}
-                >
+                <Select value={freq} onValueChange={setFreq}>
                   <SelectTrigger id="freq" className="cursor-pointer">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {FREQUENCY_PRESETS.map((p) => (
-                      <SelectItem key={p.value} value={p.value.toString()}>
-                        {p.label}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="174">174 Hz - Deep Relaxation & Grounding</SelectItem>
+                    <SelectItem value="285">285 Hz - Physical Healing Support</SelectItem>
+                    <SelectItem value="396">396 Hz - Emotional Release & Liberation</SelectItem>
+                    <SelectItem value="417">417 Hz - Transformation & Change</SelectItem>
+                    <SelectItem value="432">432 Hz - Universal Harmony & DNA Repair</SelectItem>
+                    <SelectItem value="444">444 Hz - Love Frequency & Heart Coherence</SelectItem>
+                    <SelectItem value="528">528 Hz - Miracle Tone & DNA Activation</SelectItem>
+                    <SelectItem value="639">639 Hz - Connection & Relationships</SelectItem>
+                    <SelectItem value="741">741 Hz - Intuition & Problem Solving</SelectItem>
+                    <SelectItem value="777">777 Hz - Spiritual Awakening & Luck</SelectItem>
+                    <SelectItem value="852">852 Hz - Third Eye Activation</SelectItem>
+                    <SelectItem value="888">888 Hz - Abundance & Prosperity</SelectItem>
+                    <SelectItem value="936">936 Hz - Pineal Gland Activation</SelectItem>
+                    <SelectItem value="963">963 Hz - Crown Chakra & Divine Connection</SelectItem>
+                    <SelectItem value="999">999 Hz - Highest Consciousness & Completion</SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="text-xs mt-2 text-muted-foreground">
-                  {preset.mode === "BINAURAL"
-                    ? "⚡ This frequency will be applied as binaural beats (brainwave), not pitch tuning."
-                    : "🎵 This frequency will tune the audio tone (pitch/tuning), not binaural beats."}
-                </p>
               </div>
 
               <div>
@@ -780,81 +573,16 @@ export default function CreativeSoulMeditation() {
               </div>
             </div>
 
-            {/* Sound Layers Section */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <Label className="cursor-pointer">Sound Matching Layers</Label>
-                <label className="text-xs flex items-center gap-2 cursor-pointer text-muted-foreground">
-                  <input
-                    type="checkbox"
-                    checked={overrideLayers}
-                    onChange={(e) => setOverrideLayers(e.target.checked)}
-                    className="cursor-pointer"
-                  />
-                  Override auto-layers
-                </label>
-              </div>
-              <div className="border rounded p-3 space-y-2 max-h-48 overflow-y-auto">
-                {(() => {
-                  const allLayers: SoundLayer[] = [
-                    "ocean_waves", "forest_ambience", "rain_soft", "wind_soft",
-                    "tibetan_bowls", "handpan", "shaman_drums_soft", "indian_flute_soft",
-                    "choir_pad", "brown_noise_soft", "pink_noise_soft", "silence"
-                  ];
-                  const displayLayers = overrideLayers ? allLayers : soundLayers;
-                  
-                  return displayLayers.map((layer) => {
-                    const checked = soundLayers.includes(layer);
-                    const labels: Record<SoundLayer, string> = {
-                      ocean_waves: "Ocean Waves",
-                      forest_ambience: "Forest Ambience",
-                      rain_soft: "Soft Rain",
-                      wind_soft: "Soft Wind",
-                      tibetan_bowls: "Tibetan Bowls",
-                      handpan: "Handpan",
-                      shaman_drums_soft: "Shamanic Drums (Soft)",
-                      indian_flute_soft: "Indian Flute (Soft)",
-                      choir_pad: "Choir Pad",
-                      brown_noise_soft: "Brown Noise (Soft)",
-                      pink_noise_soft: "Pink Noise (Soft)",
-                      silence: "Silence"
-                    };
-
-                    if (!overrideLayers) {
-                      return (
-                        <div key={layer} className="text-sm py-1 text-muted-foreground">
-                          ✓ {labels[layer]}
-                        </div>
-                      );
-                    }
-
-                    return (
-                      <label key={layer} className="flex items-center gap-2 py-1 cursor-pointer text-sm">
-                        <Checkbox
-                          checked={checked}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setSoundLayers([...soundLayers, layer]);
-                            } else {
-                              setSoundLayers(soundLayers.filter((l) => l !== layer));
-                            }
-                            setOverrideLayers(true);
-                          }}
-                        />
-                        {labels[layer]}
-                      </label>
-                    );
-                  });
-                })()}
-              </div>
-              {!overrideLayers && (
-                <p className="text-xs mt-2 text-muted-foreground">
-                  Layers are matched to the chosen frequency for best meditation feel.
-                </p>
-              )}
-            </div>
-
             <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="binaural"
+                  checked={binaural}
+                  onCheckedChange={(checked) => setBinaural(checked === true)}
+                  className="cursor-pointer"
+                />
+                <Label htmlFor="binaural" className="cursor-pointer">Binaural Beats</Label>
+              </div>
 
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -1052,4 +780,3 @@ export default function CreativeSoulMeditation() {
     </div>
   );
 }
-
