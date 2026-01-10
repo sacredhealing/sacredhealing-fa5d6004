@@ -9,7 +9,7 @@ const corsHeaders = {
 
 function json(payload: unknown) {
   return new Response(JSON.stringify(payload), {
-    status: 200, // ALWAYS return 200 - errors are in JSON body
+    status: 200,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 }
@@ -22,6 +22,8 @@ serve(async (req) => {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const AUDIO_WORKER_URL = Deno.env.get("AUDIO_WORKER_URL");
+    const AUDIO_WORKER_API_KEY = Deno.env.get("AUDIO_WORKER_API_KEY");
 
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_ROLE_KEY) {
       return json({ success: false, error: "Server configuration error", details: "Missing environment variables" });
@@ -41,14 +43,22 @@ serve(async (req) => {
 
     const user = auth.user;
 
-    let body: any = {};
+    let body: {
+      mode?: string;
+      style?: string;
+      frequency?: string;
+      binaural?: string;
+      duration?: number;
+      audioUrl?: string;
+      variants?: number;
+    } = {};
     try {
       body = await req.json();
     } catch {
       return json({ success: false, error: "Invalid JSON body" });
     }
 
-    const mode = body?.mode === "paid" ? "paid" : "demo"; // default demo
+    const mode = body?.mode === "paid" ? "paid" : "demo";
 
     // Check if user is admin (admins bypass all access checks)
     const { data: adminRole } = await supabaseAdmin
@@ -89,55 +99,127 @@ serve(async (req) => {
           return json({ success: false, error: "Failed to mark demo used", details: markErr.message });
         }
       }
+    } else {
+      // PAID: admins have full access, otherwise check tool access
+      if (!isAdmin) {
+        const { data: toolAccess, error: accessErr } = await supabaseAdmin
+          .from('creative_tool_access')
+          .select(`
+            *,
+            tool:creative_tools!inner(slug)
+          `)
+          .eq('user_id', user.id)
+          .eq('tool.slug', 'creative-soul-meditation')
+          .limit(1);
 
-      // IMPORTANT: Do not process audio here. Just return a job id.
-      return json({
-        success: true,
-        mode: "demo",
-        job_id: crypto.randomUUID(),
-        message: "Demo generation queued. Processing will begin shortly.",
+        if (accessErr) {
+          console.error('[CONVERT-MEDITATION] Access check error:', accessErr);
+          return json({ success: false, error: "Access check failed", details: accessErr.message });
+        }
+
+        if (!toolAccess || toolAccess.length === 0) {
+          return json({ success: false, error: "Full access required. Please purchase to unlock all features." });
+        }
+      }
+    }
+
+    // Generate job ID
+    const jobId = crypto.randomUUID();
+
+    // Build payload for the worker
+    const payload = {
+      style: body.style || "ocean",
+      frequency: body.frequency || "432",
+      binaural: body.binaural || "theta",
+      duration: body.duration || 10,
+      audioUrl: body.audioUrl,
+      variants: body.variants || 1,
+      mode,
+    };
+
+    // Create job record in database
+    const { error: insertErr } = await supabaseAdmin
+      .from("creative_soul_jobs")
+      .insert({
+        user_id: user.id,
+        job_id: jobId,
+        action: "meditation_generate",
+        status: "queued",
+        progress: 0,
+        payload,
       });
+
+    if (insertErr) {
+      console.error('[CONVERT-MEDITATION] Failed to create job:', insertErr);
+      return json({ success: false, error: "Failed to create job", details: insertErr.message });
     }
 
-    // PAID: admins have full access
-    if (isAdmin) {
-      return json({
-        success: true,
-        mode: "paid",
-        plan: "admin",
-        job_id: crypto.randomUUID(),
-        message: "Generation queued. Processing will begin shortly.",
-      });
-    }
+    // If worker is configured, dispatch the job
+    if (AUDIO_WORKER_URL && AUDIO_WORKER_API_KEY) {
+      try {
+        const callbackUrl = `${SUPABASE_URL}/functions/v1/worker-callback`;
+        
+        const workerResponse = await fetch(`${AUDIO_WORKER_URL}/process-audio`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": AUDIO_WORKER_API_KEY,
+          },
+          body: JSON.stringify({
+            job_id: jobId,
+            callback_url: callbackUrl,
+            callback_api_key: AUDIO_WORKER_API_KEY,
+            ...payload,
+          }),
+        });
 
-    // PAID: check creative_tool_access for creative-soul-meditation slug
-    const { data: toolAccess, error: accessErr } = await supabaseAdmin
-      .from('creative_tool_access')
-      .select(`
-        *,
-        tool:creative_tools!inner(slug)
-      `)
-      .eq('user_id', user.id)
-      .eq('tool.slug', 'creative-soul-meditation')
-      .limit(1);
+        if (!workerResponse.ok) {
+          const errorText = await workerResponse.text();
+          console.error('[CONVERT-MEDITATION] Worker dispatch failed:', errorText);
+          
+          // Update job to failed
+          await supabaseAdmin
+            .from("creative_soul_jobs")
+            .update({ 
+              status: "failed", 
+              error_message: `Worker error: ${errorText}`,
+              completed_at: new Date().toISOString(),
+            })
+            .eq("job_id", jobId);
 
-    if (accessErr) {
-      console.error('[CONVERT-MEDITATION] Access check error:', accessErr);
-      return json({ success: false, error: "Access check failed", details: accessErr.message });
-    }
+          return json({ 
+            success: false, 
+            error: "Failed to dispatch job to worker", 
+            job_id: jobId 
+          });
+        }
 
-    if (!toolAccess || toolAccess.length === 0) {
-      return json({ success: false, error: "Full access required. Please purchase to unlock all features." });
+        console.log(`[CONVERT-MEDITATION] Job ${jobId} dispatched to worker`);
+      } catch (workerErr) {
+        console.error('[CONVERT-MEDITATION] Worker connection error:', workerErr);
+        
+        // Update job status but don't fail - worker might pick it up later
+        await supabaseAdmin
+          .from("creative_soul_jobs")
+          .update({ 
+            status: "queued",
+            error_message: `Worker temporarily unavailable: ${String(workerErr)}`,
+          })
+          .eq("job_id", jobId);
+      }
+    } else {
+      console.log(`[CONVERT-MEDITATION] No worker configured - job ${jobId} will wait for manual processing`);
     }
 
     return json({
       success: true,
-      mode: "paid",
-      plan: "purchased",
-      job_id: crypto.randomUUID(),
+      mode,
+      plan: isAdmin ? "admin" : (mode === "demo" ? "demo" : "purchased"),
+      job_id: jobId,
       message: "Generation queued. Processing will begin shortly.",
     });
   } catch (err) {
+    console.error('[CONVERT-MEDITATION] Runtime error:', err);
     return json({ success: false, error: "RUNTIME_ERROR", details: String(err) });
   }
 });
