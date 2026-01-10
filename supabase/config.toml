@@ -126,6 +126,18 @@ verify_jwt = true
 [functions.worker-callback]
 verify_jwt = false
 
+[functions.stem-separation]
+verify_jwt = true
+
+[functions.audio-analysis]
+verify_jwt = true
+
+[functions.landr-mastering]
+verify_jwt = true
+
+[functions.noise-removal]
+verify_jwt = true
+
 [functions.process-mql-signal]
 verify_jwt = false
 

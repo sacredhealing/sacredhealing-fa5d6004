@@ -54,6 +54,16 @@ serve(async (req) => {
       variants?: number;
       bpm_match?: boolean;
       keep_music_stem?: boolean;
+      // Stem separation options
+      enable_stem_separation?: boolean;
+      stem_separation_type?: "2stems" | "4stems" | "5stems";
+      keep_stems?: string[];
+      remove_stems?: string[];
+      // Audio processing options
+      enable_noise_removal?: boolean;
+      noise_reduction_level?: "light" | "medium" | "aggressive";
+      enable_mastering?: boolean;
+      mastering_preset?: "balanced" | "loud" | "warm" | "bright" | "punchy";
     } = {};
     try {
       body = await req.json();
@@ -140,6 +150,16 @@ serve(async (req) => {
       variants: body.variants || (mode === "demo" ? 1 : 3),
       bpm_match: body.bpm_match ?? true,
       keep_music_stem: body.keep_music_stem ?? true,
+      // Stem separation options
+      enable_stem_separation: body.enable_stem_separation ?? false,
+      stem_separation_type: body.stem_separation_type || "5stems",
+      keep_stems: body.keep_stems || [],
+      remove_stems: body.remove_stems || [],
+      // Audio processing options
+      enable_noise_removal: body.enable_noise_removal ?? false,
+      noise_reduction_level: body.noise_reduction_level || "medium",
+      enable_mastering: body.enable_mastering ?? false,
+      mastering_preset: body.mastering_preset || "balanced",
       mode,
     };
 
