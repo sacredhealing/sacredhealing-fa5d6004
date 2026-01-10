@@ -1,0 +1,67 @@
+🚀 CREATIVE SOUL STRIPE INTEGRATION - DEPLOYMENT CHECKLIST
+
+========================================
+STEP 1: DATABASE (5 minutes)
+========================================
+[ ] Open Supabase Dashboard → SQL Editor
+[ ] Copy entire content from: DEPLOY_NOW.sql
+[ ] Paste into SQL Editor
+[ ] Click "Run"
+[ ] Verify: Should see "✅ Creative Soul Stripe Integration tables created successfully"
+
+========================================
+STEP 2: STRIPE PRICES (3 minutes)
+========================================
+[ ] Open Stripe Dashboard → Products
+[ ] Create Price 1: €149.00 (One-time) → Copy Price ID
+[ ] Create Price 2: €14.99/month (Recurring) → Copy Price ID
+[ ] Create Price 3: €9.99 (One-time) → Copy Price ID
+
+========================================
+STEP 3: SUPABASE SECRETS (2 minutes)
+========================================
+[ ] Open Supabase Dashboard → Project Settings → Edge Functions → Secrets
+[ ] Add SUPABASE_URL=https://ssygukfdbtehvtndandn.supabase.co
+[ ] Add SUPABASE_SERVICE_ROLE_KEY=<your-key>
+[ ] Add STRIPE_SECRET_KEY=<your-stripe-key>
+[ ] Add STRIPE_WEBHOOK_SECRET=<from-stripe-webhook>
+[ ] Add SITE_URL=<your-domain>
+[ ] Add STRIPE_PRICE_LIFETIME_149=<price-id-from-step-2>
+[ ] Add STRIPE_PRICE_MONTHLY_1499=<price-id-from-step-2>
+[ ] Add STRIPE_PRICE_SINGLE_999=<price-id-from-step-2>
+
+========================================
+STEP 4: EDGE FUNCTIONS (3 minutes)
+========================================
+[ ] Deploy creative-soul-create-checkout (see DEPLOY_EDGE_FUNCTIONS.md)
+[ ] Update stripe-webhook (see DEPLOY_EDGE_FUNCTIONS.md)
+
+========================================
+STEP 5: STRIPE WEBHOOK (3 minutes)
+========================================
+[ ] Open Stripe Dashboard → Webhooks → Add endpoint
+[ ] URL: https://ssygukfdbtehvtndandn.supabase.co/functions/v1/stripe-webhook
+[ ] Enable events:
+    - checkout.session.completed
+    - customer.subscription.created
+    - customer.subscription.updated
+    - customer.subscription.deleted
+    - invoice.payment_failed
+[ ] Copy signing secret → Add to Supabase secrets as STRIPE_WEBHOOK_SECRET
+
+========================================
+STEP 6: TEST (2 minutes)
+========================================
+[ ] Go to /creative-soul/store
+[ ] Click "Creative Soul Meditation" → Should redirect to landing
+[ ] Click pricing button → Should redirect to Stripe checkout
+[ ] Complete test payment
+[ ] Verify: Should redirect to /creative-soul-meditation-tool
+[ ] Check creative_soul_entitlements table → has_access = true
+[ ] Check user_wallet table → coins = 1000
+
+========================================
+TOTAL TIME: ~18 minutes
+========================================
+
+✅ All code is ready and committed!
