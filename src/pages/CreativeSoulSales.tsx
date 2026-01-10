@@ -221,7 +221,7 @@ export default function CreativeSoulSales() {
       {/* BUILD MARKER - PROOF OF DEPLOY */}
       <div className="bg-yellow-500/20 border-b border-yellow-500/50 px-4 py-2 text-center">
         <span className="text-xs font-mono text-yellow-600 dark:text-yellow-400">
-          PATCH_MED_BANNER_001
+          PATCH_MED_BANNER_002
         </span>
       </div>
       {/* Header */}
@@ -336,80 +336,66 @@ export default function CreativeSoulSales() {
           </div>
         </section>
 
-        {/* Creative Soul Meditation Banner */}
+        {/* Creative Soul Meditation Banner - Hardcoded */}
         <section>
           <div className="max-w-2xl mx-auto">
-            <Card className="relative overflow-hidden border-2 border-purple-500/30 hover:border-purple-500/50 transition-all duration-300 bg-gradient-to-br from-purple-950/80 via-purple-900/60 to-purple-950/80 rounded-lg">
+            <Card className="relative overflow-hidden border-2 border-purple-500/30 hover:border-purple-500/50 transition-all duration-300">
               <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl opacity-50" />
               <div className="absolute bottom-0 left-0 w-32 h-32 bg-pink-500/10 rounded-full blur-2xl opacity-40" />
               
               <div className="relative p-8 flex flex-col">
                 <div className="flex items-start justify-between mb-6">
-                  <div className="p-4 rounded-xl bg-purple-500/20 border border-purple-500/40">
-                    <Headphones className="w-8 h-8 text-purple-300" />
+                  <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/30">
+                    <Headphones className="w-8 h-8 text-purple-400" />
                   </div>
                   <div className="flex flex-col items-end gap-2">
-                    <div className="flex flex-col items-end gap-1">
-                      <Badge variant="outline" className="text-sm font-bold px-2 py-1 text-white border-white/20 bg-white/5">
-                        €149 rent to buy
-                      </Badge>
-                      <Badge variant="outline" className="text-xs font-semibold px-2 py-0.5 text-white border-white/20 bg-white/5">
-                        €9.99/month or €9.99/meditation
-                      </Badge>
-                    </div>
+                    <Badge variant="outline" className="text-lg font-bold px-3 py-1">
+                      €19.99
+                    </Badge>
                     {isAdmin && (
-                      <Badge variant="outline" className="text-sm font-semibold bg-green-500/20 text-green-300 border-green-500/40">
+                      <Badge variant="outline" className="text-sm font-semibold bg-green-500/10 text-green-400 border-green-500/30">
                         <Check className="w-3 h-3 mr-1" />
                         Free Access
                       </Badge>
                     )}
-                    <Badge variant="outline" className="text-xs bg-purple-500/20 text-purple-300 border-purple-500/40">
+                    <Badge variant="outline" className="text-xs bg-purple-500/10 text-purple-400 border-purple-500/30">
                       AI-Powered
                     </Badge>
                   </div>
                 </div>
 
-                <h3 className="text-3xl font-heading font-bold text-white mb-4">
+                <h3 className="text-3xl font-heading font-bold text-foreground mb-4">
                   Creative Soul Meditation
                 </h3>
                 
-                <p className="text-gray-300 mb-6 text-lg leading-relaxed">
-                  Transform any audio or YouTube video into high-quality meditation, affirmation, and healing tracks. 
-                  Use real music, binaural beats, frequency tuning, and full stem separation to create professional-quality audio.
+                <p className="text-muted-foreground mb-6 text-lg leading-relaxed">
+                  Transform any audio into high-quality meditation tracks. Apply healing frequencies, 
+                  choose from 15 meditation styles, add binaural beats, and use stem separation for professional-quality audio.
                 </p>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-8">
                   {[
-                    { icon: Heart, label: 'Healing Frequencies (432Hz, 528Hz, etc.)' },
+                    { icon: Heart, label: 'Healing Frequencies' },
                     { icon: Crown, label: '15 Meditation Styles' },
                     { icon: Radio, label: 'Binaural Beats' },
-                    { icon: Zap, label: 'Stem Separation (Demucs)' },
-                    { icon: Sparkles, label: 'Multi-Variant Generation' },
-                    { icon: Music, label: 'High-Quality Downloads' },
+                    { icon: Zap, label: 'Stem Separation' },
+                    { icon: Sparkles, label: 'Multi-Variant' },
+                    { icon: Music, label: 'High-Quality' },
                   ].map(({ icon: FeatureIcon, label }) => (
-                    <div key={label} className="flex items-center gap-2 text-sm text-white">
-                      <FeatureIcon className="w-4 h-4 text-purple-300 flex-shrink-0" />
-                      <span className="text-xs">{label}</span>
+                    <div key={label} className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <FeatureIcon className="w-4 h-4 text-purple-400" />
+                      <span>{label}</span>
                     </div>
                   ))}
                 </div>
 
                 <Button
-                  onClick={() => navigate(isAdmin ? '/creative-soul-meditation-tool' : '/creative-soul-meditation-landing')}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold"
+                  onClick={() => navigate('/creative-soul-meditation-landing')}
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold"
                   size="lg"
                 >
-                  {isAdmin ? (
-                    <>
-                      <Check className="w-4 h-4 mr-2" />
-                      Open Tool (Admin Access)
-                    </>
-                  ) : (
-                    <>
-                      <Check className="w-4 h-4 mr-2" />
-                      Get This Tool
-                    </>
-                  )}
+                  Get This Tool
+                  <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </div>
             </Card>
