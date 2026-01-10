@@ -52,7 +52,7 @@ export default function CreativeSoulSales() {
       try {
         // Load directly from creative_soul_items table
         // Admins see ALL items (including admin_only), regular users see active non-admin items
-        const query = supabase
+        const query = (supabase as any)
           .from('creative_soul_items')
           .select('*')
           .order('order_index', { ascending: true })
