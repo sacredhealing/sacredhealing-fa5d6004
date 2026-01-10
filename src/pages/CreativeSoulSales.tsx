@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { Sparkles, Music, PenTool, Heart, Zap, ArrowLeft, Check, ExternalLink, ArrowRight, TrendingUp, Globe, Crown } from 'lucide-react';
+import { Sparkles, Music, PenTool, Heart, Zap, ArrowLeft, Check, ExternalLink, ArrowRight, TrendingUp, Globe, Crown, Radio, Headphones, Wand2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -44,7 +44,7 @@ export default function CreativeSoulSales() {
   const [items, setItems] = useState<CreativeSoulItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [purchasing, setPurchasing] = useState<string | null>(null);
-
+  
   // Load items from registry - NO edge functions, NO blocking
   useEffect(() => {
     const loadItems = async () => {
@@ -203,6 +203,12 @@ export default function CreativeSoulSales() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* BUILD MARKER - PROOF OF DEPLOY */}
+      <div className="bg-yellow-500/20 border-b border-yellow-500/50 px-4 py-2 text-center">
+        <span className="text-xs font-mono text-yellow-600 dark:text-yellow-400">
+          BUILD_MARKER: CS_MED_BANNER_V1
+        </span>
+      </div>
       {/* Header */}
       <header className="relative overflow-hidden bg-gradient-to-br from-purple-500/20 via-pink-500/10 to-background px-4 py-12">
         <div className="max-w-6xl mx-auto text-center">
@@ -231,10 +237,10 @@ export default function CreativeSoulSales() {
       <div className="max-w-6xl mx-auto px-4 py-12 space-y-12">
         {/* Creative Soul Studio Banner - Always visible */}
         <section>
-          <h2 className="text-3xl font-heading font-semibold text-foreground mb-2 text-center">
-            Creative Tools
-          </h2>
-          <p className="text-muted-foreground text-center mb-8">
+        <h2 className="text-3xl font-heading font-semibold text-foreground mb-2 text-center">
+          Creative Tools
+        </h2>
+        <p className="text-muted-foreground text-center mb-8">
             AI-powered tools for your creative journey
           </p>
           
@@ -261,7 +267,7 @@ export default function CreativeSoulSales() {
                     )}
                     <Badge variant="outline" className="text-xs bg-purple-500/10 text-purple-400 border-purple-500/30">
                       AI-Powered
-                    </Badge>
+                        </Badge>
                   </div>
                 </div>
 
@@ -289,27 +295,103 @@ export default function CreativeSoulSales() {
                       <span>{label}</span>
                     </div>
                   ))}
-                </div>
-
+                  </div>
+                  
                 {isAdmin ? (
-                  <Button
+                    <Button
                     onClick={() => navigate('/creative-soul-tool')}
                     className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold"
-                    size="lg"
-                  >
+                      size="lg"
+                    >
                     <Check className="w-4 h-4 mr-2" />
                     Open Studio (Admin Access)
-                  </Button>
-                ) : (
-                  <Button
+                    </Button>
+                  ) : (
+                    <Button
                     onClick={() => navigate('/creative-soul')}
                     className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold"
-                    size="lg"
-                  >
+                      size="lg"
+                    >
                     Get This Tool
                     <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                )}
+                    </Button>
+                  )}
+                </div>
+            </Card>
+          </div>
+        </section>
+
+        {/* Creative Soul Meditation Banner */}
+        <section>
+          <div className="max-w-2xl mx-auto">
+            <Card className="relative overflow-hidden border-2 border-purple-500/30 hover:border-purple-500/50 transition-all duration-300 bg-gradient-to-br from-purple-950/80 via-purple-900/60 to-purple-950/80 rounded-lg">
+              <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl opacity-50" />
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-pink-500/10 rounded-full blur-2xl opacity-40" />
+              
+              <div className="relative p-8 flex flex-col">
+                <div className="flex items-start justify-between mb-6">
+                  <div className="p-4 rounded-xl bg-purple-500/20 border border-purple-500/40">
+                    <Radio className="w-8 h-8 text-purple-300" />
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <Badge variant="outline" className="text-lg font-bold px-3 py-1 text-white border-white/20 bg-white/5">
+                      €19.99
+                    </Badge>
+                    {isAdmin && (
+                      <Badge variant="outline" className="text-sm font-semibold bg-green-500/20 text-green-300 border-green-500/40">
+                        <Check className="w-3 h-3 mr-1" />
+                        Free Access
+                      </Badge>
+                    )}
+                    <Badge variant="outline" className="text-xs bg-purple-500/20 text-purple-300 border-purple-500/40">
+                      AI-Powered
+                    </Badge>
+                  </div>
+                </div>
+
+                <h3 className="text-3xl font-heading font-bold text-white mb-4">
+                  Creative Soul Meditation
+                </h3>
+                
+                <p className="text-gray-300 mb-6 text-lg leading-relaxed">
+                  Transform any audio into high-quality meditation tracks. Apply healing frequencies (15 Hz options), 
+                  use stem separation, analyze BPM/key, master with LANDR, remove noise, and choose from 15 meditation 
+                  styles. Everything you need to create professional meditation audio.
+                </p>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-8">
+                  {[
+                    { icon: Radio, label: 'Stem Separation' },
+                    { icon: Music, label: 'BPM/Key Analysis' },
+                    { icon: Headphones, label: 'LANDR Mastering' },
+                    { icon: Wand2, label: 'Noise Removal' },
+                    { icon: Heart, label: 'Frequency Tuning' },
+                    { icon: Crown, label: '15 Meditation Styles' },
+                  ].map(({ icon: FeatureIcon, label }) => (
+                    <div key={label} className="flex items-center gap-2 text-sm text-white">
+                      <FeatureIcon className="w-4 h-4 text-purple-300" />
+                      <span>{label}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <Button
+                  onClick={() => navigate('/creative-soul-meditation-tool')}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold"
+                  size="lg"
+                >
+                  {isAdmin ? (
+                    <>
+                      <Check className="w-4 h-4 mr-2" />
+                      Open Meditation Tool (Admin Access)
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4 mr-2" />
+                      Get This Tool
+                    </>
+                  )}
+                </Button>
               </div>
             </Card>
           </div>
@@ -333,40 +415,40 @@ export default function CreativeSoulSales() {
                     const colors = getColorClasses(item.type, item.icon_name);
                     const Icon = iconMap[item.icon_name || 'Sparkles'] || Sparkles;
 
-                    return (
-                      <Card
+              return (
+                <Card
                         key={item.id}
                         className={`relative overflow-hidden border-2 ${colors.border} hover:border-opacity-60 transition-all duration-300`}
-                      >
-                        <div className={`absolute top-0 right-0 w-32 h-32 ${colors.bg} rounded-full blur-3xl opacity-50`} />
-                        <div className="relative p-6 flex flex-col h-full">
-                          <div className="flex items-start justify-between mb-4">
-                            <div className={`p-3 rounded-xl ${colors.bg} ${colors.border} border`}>
-                              <Icon className={`w-6 h-6 ${colors.text}`} />
-                            </div>
+                >
+                  <div className={`absolute top-0 right-0 w-32 h-32 ${colors.bg} rounded-full blur-3xl opacity-50`} />
+                  <div className="relative p-6 flex flex-col h-full">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className={`p-3 rounded-xl ${colors.bg} ${colors.border} border`}>
+                        <Icon className={`w-6 h-6 ${colors.text}`} />
+                      </div>
                             {item.price_eur > 0 && (
                               <Badge variant="outline" className="text-sm font-semibold">
                                 €{item.price_eur.toFixed(2)}
-                              </Badge>
-                            )}
-                          </div>
+                          </Badge>
+                        )}
+                    </div>
 
-                          <h3 className="text-2xl font-heading font-bold text-foreground mb-3">
+                    <h3 className="text-2xl font-heading font-bold text-foreground mb-3">
                             {item.title}
-                          </h3>
-                          
-                          <p className="text-muted-foreground mb-6 flex-grow">
+                    </h3>
+                    
+                    <p className="text-muted-foreground mb-6 flex-grow">
                             {item.description || 'Creative tool for your spiritual journey'}
-                          </p>
+                    </p>
 
-                          <Button
+                        <Button
                             onClick={() => navigate('/creative-soul')}
                             className={`w-full ${colors.button} text-white font-semibold`}
-                            size="lg"
-                          >
+                          size="lg"
+                        >
                             Get This Tool
                             <ArrowRight className="w-4 h-4 ml-2" />
-                          </Button>
+                        </Button>
                         </div>
                       </Card>
                     );
@@ -458,8 +540,8 @@ export default function CreativeSoulSales() {
                               <Badge variant="outline" className="text-sm font-semibold">
                                 €{item.price_eur.toFixed(2)}
                               </Badge>
-                            )}
-                          </div>
+                        )}
+                      </div>
 
                           <h3 className="text-2xl font-heading font-bold text-foreground mb-3">
                             {item.title}
@@ -469,19 +551,19 @@ export default function CreativeSoulSales() {
                             {item.description || 'Course description'}
                           </p>
 
-                          <Button
+                      <Button
                             onClick={() => handleView(item)}
-                            className={`w-full ${colors.button} text-white font-semibold`}
-                            size="lg"
-                          >
+                        className={`w-full ${colors.button} text-white font-semibold`}
+                        size="lg"
+                      >
                             {item.price_eur > 0 ? 'Enroll' : 'View'}
                             <ArrowRight className="w-4 h-4 ml-2" />
-                          </Button>
-                        </div>
-                      </Card>
-                    );
-                  })}
-                </div>
+                      </Button>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
               </section>
             )}
           </>
