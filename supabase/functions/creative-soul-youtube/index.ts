@@ -1,7 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-import ytdl from "https://esm.sh/@distube/ytdl-core@4.16.2";
-import OpenAI from "https://esm.sh/openai@4.28.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -24,45 +22,34 @@ function extractVideoId(url: string): string | null {
   return null;
 }
 
-// Download YouTube audio as buffer
-async function downloadYouTubeAudio(videoId: string): Promise<Uint8Array> {
-  console.log(`[YOUTUBE] Starting download for video: ${videoId}`);
-  
-  const audioStream = ytdl(videoId, {
-    quality: "lowestaudio",
-    filter: "audioonly",
-  });
+// Poll for conversion status
+async function pollForResult(jobId: string, apiKey: string, apiHost: string, maxAttempts = 30): Promise<{ downloadUrl: string; title: string } | null> {
+  for (let i = 0; i < maxAttempts; i++) {
+    console.log(`[YOUTUBE] Polling attempt ${i + 1}/${maxAttempts} for job ${jobId}`);
+    
+    const response = await fetch(`https://${apiHost}/status/${jobId}`, {
+      headers: {
+        "X-RapidAPI-Key": apiKey,
+        "X-RapidAPI-Host": apiHost,
+      },
+    });
 
-  const chunks: Uint8Array[] = [];
-  for await (const chunk of audioStream) {
-    chunks.push(new Uint8Array(chunk));
+    const data = await response.json();
+    console.log(`[YOUTUBE] Poll status: ${data.status}`);
+
+    if (data.status === "AVAILABLE" && data.downloadUrl) {
+      return { downloadUrl: data.downloadUrl, title: data.title || "YouTube Audio" };
+    }
+
+    if (data.status === "CONVERSION_ERROR" || data.status === "EXPIRED") {
+      throw new Error(`Conversion failed: ${data.status}`);
+    }
+
+    // Wait 2 seconds before next poll
+    await new Promise(resolve => setTimeout(resolve, 2000));
   }
 
-  // Combine all chunks into a single Uint8Array
-  const totalLength = chunks.reduce((total, chunk) => total + chunk.length, 0);
-  const audioBuffer = new Uint8Array(totalLength);
-  let offset = 0;
-  for (const chunk of chunks) {
-    audioBuffer.set(chunk, offset);
-    offset += chunk.length;
-  }
-
-  console.log(`[YOUTUBE] Downloaded ${totalLength} bytes of audio`);
-  return audioBuffer;
-}
-
-// Get video info (title, duration, etc.)
-async function getVideoInfo(videoId: string): Promise<{ title: string; duration: number }> {
-  try {
-    const info = await ytdl.getInfo(videoId);
-    return {
-      title: info.videoDetails.title,
-      duration: parseInt(info.videoDetails.lengthSeconds) || 0,
-    };
-  } catch (error) {
-    console.error("[YOUTUBE] Error getting video info:", error);
-    return { title: "Unknown", duration: 0 };
-  }
+  throw new Error("Conversion timed out. Please try a shorter video.");
 }
 
 serve(async (req) => {
@@ -142,7 +129,7 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({ 
             error: "You don't have access to Creative Soul Studio. Please purchase it first.",
-            status: 403
+            success: false
           }),
           {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -200,15 +187,12 @@ serve(async (req) => {
 
     console.log(`[CREATIVE-SOUL-YOUTUBE] Processing video ${videoId} for user: ${user.id}`);
 
-    // Get video info
-    const videoInfo = await getVideoInfo(videoId);
-    console.log(`[YOUTUBE] Video title: ${videoInfo.title}, duration: ${videoInfo.duration}s`);
-
-    // Check video duration (limit to 30 minutes to avoid timeout)
-    if (videoInfo.duration > 1800) {
+    // Check for RapidAPI key
+    const rapidApiKey = Deno.env.get("RAPIDAPI_KEY");
+    if (!rapidApiKey) {
       return new Response(
         JSON.stringify({ 
-          error: "Video too long. Please use videos under 30 minutes.",
+          error: "YouTube conversion service not configured. Please contact support.",
           success: false 
         }),
         {
@@ -218,52 +202,84 @@ serve(async (req) => {
       );
     }
 
-    // Download audio
-    const audioBuffer = await downloadYouTubeAudio(videoId);
+    const apiHost = "youtube-to-mp315.p.rapidapi.com";
 
-    // Convert to base64 for transcription and storage
-    const audioBase64 = btoa(String.fromCharCode(...audioBuffer));
+    // Step 1: Start the conversion
+    console.log(`[YOUTUBE] Starting conversion for: ${youtubeUrl}`);
+    const startResponse = await fetch(`https://${apiHost}/download`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-RapidAPI-Key": rapidApiKey,
+        "X-RapidAPI-Host": apiHost,
+      },
+      body: JSON.stringify({
+        url: youtubeUrl,
+        format: "mp3",
+        quality: 0,
+      }),
+    });
 
-    // Upload to Supabase Storage
-    const fileName = `creative-soul/${user.id}/${Date.now()}-${videoId}.mp3`;
-    const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
-      .from('audio')
-      .upload(fileName, audioBuffer, {
-        contentType: 'audio/mpeg',
-        upsert: false,
-      });
+    const startData = await startResponse.json();
+    console.log(`[YOUTUBE] Start response:`, JSON.stringify(startData));
 
-    if (uploadError) {
-      console.error('[YOUTUBE] Upload error:', uploadError);
-      throw new Error("Failed to save audio file. Please try again.");
+    if (!startData.id) {
+      throw new Error(startData.message || "Failed to start YouTube conversion");
     }
 
-    // Get public URL
-    const { data: { publicUrl } } = supabaseAdmin.storage
-      .from('audio')
-      .getPublicUrl(fileName);
+    // Step 2: Poll for result
+    const result = await pollForResult(startData.id, rapidApiKey, apiHost);
+    
+    if (!result) {
+      throw new Error("Conversion failed - no result received");
+    }
 
-    console.log(`[YOUTUBE] Audio uploaded to: ${publicUrl}`);
+    console.log(`[YOUTUBE] Conversion complete: ${result.downloadUrl}`);
 
-    // Optionally transcribe the audio
+    // Step 3: Optionally transcribe the audio using OpenAI
     let transcription: string | null = null;
     if (transcribe) {
       const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
       if (openaiApiKey) {
         try {
-          const openai = new OpenAI({ apiKey: openaiApiKey });
+          console.log(`[YOUTUBE] Downloading audio for transcription...`);
           
-          // Create a File object for OpenAI - use spread to avoid ArrayBuffer type issues
-          const audioFile = new File([new Uint8Array(audioBuffer)], "audio.mp3", { type: "audio/mpeg" });
+          // Download the MP3 file
+          const audioResponse = await fetch(result.downloadUrl);
+          if (!audioResponse.ok) {
+            throw new Error("Failed to download audio for transcription");
+          }
           
-          const transcriptionResult = await openai.audio.transcriptions.create({
-            file: audioFile,
-            model: "whisper-1",
-            response_format: "text",
-          });
+          const audioBlob = await audioResponse.blob();
+          console.log(`[YOUTUBE] Audio downloaded: ${audioBlob.size} bytes`);
           
-          transcription = String(transcriptionResult);
-          console.log(`[YOUTUBE] Transcription completed: ${transcription.substring(0, 100)}...`);
+          // Check size limit (25MB for Whisper)
+          if (audioBlob.size > 25 * 1024 * 1024) {
+            console.log(`[YOUTUBE] Audio too large for transcription (${audioBlob.size} bytes), skipping`);
+          } else {
+            // Create form data for OpenAI
+            const formData = new FormData();
+            formData.append("file", audioBlob, "audio.mp3");
+            formData.append("model", "whisper-1");
+            formData.append("response_format", "text");
+            
+            console.log(`[YOUTUBE] Sending to OpenAI Whisper...`);
+            const transcribeResponse = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+              method: "POST",
+              headers: {
+                "Authorization": `Bearer ${openaiApiKey}`,
+              },
+              body: formData,
+            });
+            
+            if (transcribeResponse.ok) {
+              transcription = await transcribeResponse.text();
+              console.log(`[YOUTUBE] Transcription completed: ${transcription.substring(0, 100)}...`);
+            } else {
+              const errorText = await transcribeResponse.text();
+              console.error(`[YOUTUBE] Transcription failed: ${errorText}`);
+            }
+          }
         } catch (transcribeError) {
           console.error('[YOUTUBE] Transcription error:', transcribeError);
           // Continue without transcription - not a fatal error
@@ -276,11 +292,9 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        mp3Url: publicUrl,
-        audioBase64: audioBase64.length > 1000000 ? null : audioBase64, // Only include if under 1MB
+        mp3Url: result.downloadUrl,
         transcription: transcription,
-        videoTitle: videoInfo.title,
-        videoDuration: videoInfo.duration,
+        videoTitle: result.title,
         message: transcription 
           ? "YouTube video converted and transcribed successfully!" 
           : "YouTube video converted to MP3 successfully!",
@@ -297,12 +311,10 @@ serve(async (req) => {
     
     // Provide more helpful error messages
     let userMessage = message;
-    if (message.includes("Could not extract") || message.includes("No video id found")) {
-      userMessage = "Could not process this YouTube video. It may be private, age-restricted, or unavailable.";
-    } else if (message.includes("410")) {
-      userMessage = "This video is not available for download. It may be restricted or removed.";
-    } else if (message.includes("timeout") || message.includes("ETIMEDOUT")) {
+    if (message.includes("timeout") || message.includes("timed out")) {
       userMessage = "Request timed out. Please try a shorter video.";
+    } else if (message.includes("rate limit")) {
+      userMessage = "Too many requests. Please wait a moment and try again.";
     }
     
     return new Response(
