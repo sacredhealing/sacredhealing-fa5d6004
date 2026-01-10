@@ -192,25 +192,14 @@ export default function CreativeSoulSales() {
                   ))}
                 </div>
 
-                {isAdmin ? (
-                  <Button
-                    onClick={() => navigate('/creative-soul-meditation-tool')}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold"
-                    size="lg"
-                  >
-                    <Check className="w-4 h-4 mr-2" />
-                    Open Tool (Admin Access)
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={() => navigate('/creative-soul-meditation-landing')}
-                    className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold"
-                    size="lg"
-                  >
-                    Get This Tool
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                )}
+                <Button
+                  onClick={() => navigate('/creative-soul-meditation-landing')}
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold"
+                  size="lg"
+                >
+                  Get This Tool
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
               </div>
             </Card>
           </div>
