@@ -34,24 +34,36 @@ serve(async (req) => {
       throw new Error("User not authenticated");
     }
 
-    // Check user has access to Creative Soul tool
+    // Check if user is admin (admins bypass access checks)
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const { data: toolAccess } = await supabaseAdmin
-      .from('creative_tool_access')
-      .select(`
-        *,
-        tool:creative_tools!inner(slug)
-      `)
+    const { data: adminRole } = await supabaseAdmin
+      .from('user_roles')
+      .select('role')
       .eq('user_id', user.id)
-      .eq('tool.slug', 'creative-soul-studio')
-      .limit(1);
+      .eq('role', 'admin')
+      .maybeSingle();
 
-    if (!toolAccess || toolAccess.length === 0) {
-      throw new Error("You don't have access to Creative Soul Studio. Please purchase it first.");
+    const isAdmin = !!adminRole;
+
+    // Only check access if user is not admin
+    if (!isAdmin) {
+      const { data: toolAccess } = await supabaseAdmin
+        .from('creative_tool_access')
+        .select(`
+          *,
+          tool:creative_tools!inner(slug)
+        `)
+        .eq('user_id', user.id)
+        .eq('tool.slug', 'creative-soul-studio')
+        .limit(1);
+
+      if (!toolAccess || toolAccess.length === 0) {
+        throw new Error("You don't have access to Creative Soul Studio. Please purchase it first.");
+      }
     }
 
     const { text, targetLanguage } = await req.json();

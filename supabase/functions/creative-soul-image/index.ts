@@ -36,16 +36,33 @@ serve(async (req) => {
       throw new Error("Missing prompt");
     }
 
-    // Check user has access to Creative Soul tool
-    const { data: toolAccess } = await supabaseClient
-      .from('user_creative_tools')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('status', 'active')
-      .limit(1);
+    // Check if user is admin (admins bypass access checks)
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
 
-    if (!toolAccess || toolAccess.length === 0) {
-      throw new Error("You don't have access to Creative Soul. Please purchase it first.");
+    const { data: adminRole } = await supabaseAdmin
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .maybeSingle();
+
+    const isAdmin = !!adminRole;
+
+    // Only check access if user is not admin
+    if (!isAdmin) {
+      const { data: toolAccess } = await supabaseAdmin
+        .from('user_creative_tools')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .limit(1);
+
+      if (!toolAccess || toolAccess.length === 0) {
+        throw new Error("You don't have access to Creative Soul. Please purchase it first.");
+      }
     }
 
     const openai = new OpenAI({
