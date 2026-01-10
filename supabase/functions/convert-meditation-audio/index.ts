@@ -17,7 +17,16 @@ serve(async (req) => {
   try {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      throw new Error('Missing authorization header');
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: 'Missing authorization header. Please sign in.' 
+        }),
+        { 
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
     const supabaseClient = createClient(
@@ -29,8 +38,31 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
 
     if (userError || !user) {
-      throw new Error('Unauthorized');
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: 'User not authenticated. Please sign in.' 
+        }),
+        { 
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
+
+    // Check if user is admin (admins bypass access checks)
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('role')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    const isAdmin = profile?.role === 'admin';
 
     const {
       files = [],
@@ -46,40 +78,76 @@ serve(async (req) => {
       demo = false,
     } = await req.json();
 
-    // Check access for non-demo generations
-    if (!demo) {
-      const supabaseAdmin = createClient(
-        Deno.env.get('SUPABASE_URL') ?? '',
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-      );
-
-      const { data: access } = await supabaseAdmin
+    // Check access for non-demo generations (admins bypass)
+    if (!demo && !isAdmin) {
+      const { data: access, error: accessError } = await supabaseAdmin
         .from('creative_tool_access')
         .select('*, tool:creative_tools!inner(slug)')
         .eq('user_id', user.id)
         .eq('tool.slug', 'creative-soul-meditation')
         .maybeSingle();
 
+      if (accessError) {
+        console.error('[CONVERT-MEDITATION-AUDIO] Access check error:', accessError);
+        return new Response(
+          JSON.stringify({ 
+            success: false,
+            error: 'Failed to check access. Please try again.' 
+          }),
+          { 
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
+      }
+
       if (!access) {
-        throw new Error('Full access required. Please purchase to unlock all features.');
+        return new Response(
+          JSON.stringify({ 
+            success: false,
+            error: 'Full access required. Please purchase to unlock all features.' 
+          }),
+          { 
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
       }
     }
 
-    // Check demo usage
-    if (demo) {
-      const supabaseAdmin = createClient(
-        Deno.env.get('SUPABASE_URL') ?? '',
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-      );
-
-      const { data: existingDemo } = await supabaseAdmin
+    // Check demo usage (admins bypass)
+    if (demo && !isAdmin) {
+      const { data: existingDemo, error: demoError } = await supabaseAdmin
         .from('meditation_audio_demos')
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
 
+      if (demoError) {
+        console.error('[CONVERT-MEDITATION-AUDIO] Demo check error:', demoError);
+        return new Response(
+          JSON.stringify({ 
+            success: false,
+            error: 'Failed to check demo status. Please try again.' 
+          }),
+          { 
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
+      }
+
       if (existingDemo) {
-        throw new Error('Demo already used. Please purchase full access.');
+        return new Response(
+          JSON.stringify({ 
+            success: false,
+            error: 'Demo already used. Please purchase full access.' 
+          }),
+          { 
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
       }
     }
 
@@ -110,7 +178,16 @@ serve(async (req) => {
     const allAudioSources = [...files, ...processedUrls, ...(urls ? urls.split(',').map((u: string) => u.trim()) : [])];
 
     if (allAudioSources.length === 0 && user_music.length === 0) {
-      throw new Error('No audio sources provided');
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: 'No audio sources provided. Please upload files, provide YouTube links, or URLs.' 
+        }),
+        { 
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
     // Process audio files with stem separation
@@ -229,8 +306,14 @@ serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('[CONVERT-MEDITATION-AUDIO] Error:', errorMessage);
     return new Response(
-      JSON.stringify({ error: errorMessage }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ 
+        success: false,
+        error: errorMessage 
+      }),
+      { 
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
     );
   }
 });

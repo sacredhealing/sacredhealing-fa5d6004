@@ -87,6 +87,7 @@ import CreativeSoulLanding from "./pages/CreativeSoulLanding";
 import CreativeSoulMeditationLanding from "./pages/CreativeSoulMeditationLanding";
 import CreativeSoulMeditation from "./pages/CreativeSoulMeditation";
 import CreativeSoulHub from "./pages/CreativeSoulHub";
+import { DebugBanner } from "./components/DebugBanner";
 import "@/lib/performance"; // Initialize performance monitoring
 
 const App = () => (
@@ -97,6 +98,7 @@ const App = () => (
           <MusicPlayerProvider>
             <Toaster />
             <Sonner />
+            <DebugBanner />
             <BrowserRouter>
               <Routes>
               <Route path="/" element={<Auth />} />

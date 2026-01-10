@@ -138,11 +138,24 @@ export default function CreativeSoulMeditation() {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Demo generation error:', error);
+        toast.error(error.message || 'Failed to generate demo. Please try again.');
+        return;
+      }
 
-      if (data.files) {
+      // Check for success: false in response body
+      if (data && data.success === false) {
+        console.error('Demo generation failed:', data.error);
+        toast.error(data.error || 'Failed to generate demo. Please try again.');
+        return;
+      }
+
+      if (data && data.success && data.files) {
         setGeneratedFiles(data.files);
         setDemoUsed(true);
+        toast.success('Demo generation complete! Purchase to unlock full features.');
+      } else if (data && data.success) {
         toast.success('Demo generation complete! Purchase to unlock full features.');
       }
     } catch (error: any) {
@@ -221,10 +234,23 @@ export default function CreativeSoulMeditation() {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Generation error:', error);
+        toast.error(error.message || 'Failed to generate audio. Please try again.');
+        return;
+      }
 
-      if (data.files) {
+      // Check for success: false in response body
+      if (data && data.success === false) {
+        console.error('Generation failed:', data.error);
+        toast.error(data.error || 'Failed to generate audio. Please try again.');
+        return;
+      }
+
+      if (data && data.success && data.files) {
         setGeneratedFiles(data.files);
+        toast.success('Audio generation complete!');
+      } else if (data && data.success) {
         toast.success('Audio generation complete!');
       }
     } catch (error: any) {
@@ -239,6 +265,12 @@ export default function CreativeSoulMeditation() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 via-white to-indigo-50 pb-24">
+      {/* BUILD MARKER - PROOF OF DEPLOY */}
+      <div className="bg-yellow-500/20 border-b border-yellow-500/50 px-4 py-2 text-center">
+        <span className="text-xs font-mono text-yellow-600 dark:text-yellow-400">
+          BUILD_MARKER: MED7F8K2M
+        </span>
+      </div>
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-8">
         <div className="max-w-6xl mx-auto">
