@@ -75,7 +75,7 @@ export default function CreativeSoulMeditationLanding() {
     }
   };
 
-  const handlePurchase = async () => {
+  const handlePurchase = async (option: 'one_time' | 'subscription' | 'per_track' = 'one_time') => {
     if (!user) {
       toast.info('Please sign in to purchase');
       navigate('/auth');
@@ -86,6 +86,7 @@ export default function CreativeSoulMeditationLanding() {
     try {
       const { data, error } = await supabase.functions.invoke('create-meditation-audio-checkout', {
         body: {
+          option: option,
           ...(affiliateId && { affiliateId }),
         },
       });
@@ -240,66 +241,93 @@ export default function CreativeSoulMeditationLanding() {
           </CardContent>
         </Card>
 
-        {/* Pricing CTA */}
-        <Card className="bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 text-white shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full blur-2xl"></div>
-          <CardContent className="p-12 text-center relative z-10">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <Gift className="w-8 h-8" />
-              <h2 className="text-4xl font-bold">One-Time Purchase</h2>
-            </div>
-            <p className="text-2xl font-bold mb-2">€19.99</p>
-            <p className="text-lg mb-6 text-purple-100">+ 1000 Sacred Healing Coins instantly credited</p>
-            <p className="text-lg mb-8 max-w-2xl mx-auto">
-              Lifetime access with all features, updates, and unlimited generations included
-            </p>
-            <div className="space-y-4">
+        {/* Pricing Options */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          {/* One-Time Purchase */}
+          <Card className="border-2 border-purple-300 hover:border-purple-500 hover:shadow-xl transition-all cursor-pointer group">
+            <CardContent className="p-6 text-center">
+              <Crown className="w-12 h-12 mx-auto mb-4 text-purple-600 group-hover:scale-110 transition-transform" />
+              <h3 className="text-2xl font-bold mb-2">One-Time</h3>
+              <p className="text-3xl font-bold text-purple-600 mb-2">€149</p>
+              <p className="text-sm text-muted-foreground mb-4">+ 1000 SHC Coins</p>
+              <p className="text-sm mb-4">Lifetime access with all features</p>
               {!hasAccess && (
                 <Button
-                  onClick={handlePurchase}
-                  size="lg"
+                  onClick={() => handlePurchase('one_time')}
                   disabled={loading}
-                  className="bg-white text-purple-600 hover:bg-purple-50 px-8 py-6 text-lg font-semibold shadow-lg hover:shadow-xl transition-all cursor-pointer hover:scale-105"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <Crown className="w-5 h-5 mr-2" />
-                      Unlock Full Features Now
-                      <ArrowRight className="w-5 h-5 ml-2" />
-                    </>
-                  )}
-                </Button>
-              )}
-              {hasAccess && (
-                <Button
-                  onClick={() => navigate('/creative-soul-meditation-tool')}
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white cursor-pointer"
                   size="lg"
-                  className="bg-white text-purple-600 hover:bg-purple-50 px-8 py-6 text-lg font-semibold shadow-lg hover:shadow-xl transition-all cursor-pointer hover:scale-105"
                 >
-                  <Music className="w-5 h-5 mr-2" />
-                  Access Your Tool
-                  <ArrowRight className="w-5 h-5 ml-2" />
+                  {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : 'Purchase Now'}
                 </Button>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Subscription */}
+          <Card className="border-2 border-blue-300 hover:border-blue-500 hover:shadow-xl transition-all cursor-pointer group">
+            <CardContent className="p-6 text-center">
+              <Radio className="w-12 h-12 mx-auto mb-4 text-blue-600 group-hover:scale-110 transition-transform" />
+              <h3 className="text-2xl font-bold mb-2">Monthly</h3>
+              <p className="text-3xl font-bold text-blue-600 mb-2">€9.99/mo</p>
+              <p className="text-sm text-muted-foreground mb-4">+ 200 SHC Coins/month</p>
+              <p className="text-sm mb-4">Cancel anytime</p>
+              {!hasAccess && (
+                <Button
+                  onClick={() => handlePurchase('subscription')}
+                  disabled={loading}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+                  size="lg"
+                >
+                  {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : 'Subscribe Now'}
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Per-Track */}
+          <Card className="border-2 border-green-300 hover:border-green-500 hover:shadow-xl transition-all cursor-pointer group">
+            <CardContent className="p-6 text-center">
+              <Download className="w-12 h-12 mx-auto mb-4 text-green-600 group-hover:scale-110 transition-transform" />
+              <h3 className="text-2xl font-bold mb-2">Per-Track</h3>
+              <p className="text-3xl font-bold text-green-600 mb-2">€9.99</p>
+              <p className="text-sm text-muted-foreground mb-4">+ 100 SHC Coins</p>
+              <p className="text-sm mb-4">Pay as you go</p>
+              {!hasAccess && (
+                <Button
+                  onClick={() => handlePurchase('per_track')}
+                  disabled={loading}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white cursor-pointer"
+                  size="lg"
+                >
+                  {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : 'Buy Track'}
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Access Button for Users with Access */}
+        {hasAccess && (
+          <Card className="bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 text-white shadow-2xl mb-12">
+            <CardContent className="p-8 text-center">
+              <Button
+                onClick={() => navigate('/creative-soul-meditation-tool')}
+                size="lg"
+                className="bg-white text-purple-600 hover:bg-purple-50 px-8 py-6 text-lg font-semibold shadow-lg hover:shadow-xl transition-all cursor-pointer hover:scale-105"
+              >
+                <Music className="w-5 h-5 mr-2" />
+                Access Your Tool
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
               {balance && (
                 <p className="text-sm text-purple-200 mt-4">
                   Your current balance: <strong>{balance.balance || 0} SHC</strong>
                 </p>
               )}
-            </div>
-            {affiliateId && (
-              <p className="mt-6 text-sm text-purple-200">
-                Affiliate tracking active: {affiliateId}
-              </p>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
         {/* What's Included */}
         <Card className="bg-white shadow-lg border-2 border-purple-100">

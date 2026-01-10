@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Music, Upload, Youtube, Link as LinkIcon, Download, Loader2, Sparkles, ArrowLeft, Play, Wand2, Radio, Headphones, Zap } from 'lucide-react';
+import { Music, Upload, Youtube, Link as LinkIcon, Download, Loader2, Sparkles, ArrowLeft, Play, Wand2, Radio, Headphones, Zap, Crown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -236,7 +236,7 @@ export default function CreativeSoulMeditation() {
   };
 
   // Handle purchase
-  const handlePurchase = async () => {
+  const handlePurchase = async (option: 'one_time' | 'subscription' | 'per_track' = 'one_time') => {
     if (!user) {
       toast.info('Please sign in to purchase');
       navigate('/auth');
@@ -247,6 +247,7 @@ export default function CreativeSoulMeditation() {
     try {
       const { data, error } = await supabase.functions.invoke('create-meditation-audio-checkout', {
         body: {
+          option: option,
           ...(affiliateId && { affiliateId }),
         },
       });
@@ -518,24 +519,62 @@ export default function CreativeSoulMeditation() {
           )}
 
           {!hasAccess && (
-            <Button
-              onClick={handlePurchase}
-              disabled={loading}
-              className="bg-amber-500 hover:bg-amber-600 text-white cursor-pointer"
-              size="lg"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Loading...
-                </>
-              ) : (
-                <>
-                  <Zap className="w-4 h-4 mr-2" />
-                  Unlock Full Features (€19.99 + 1000 Coins)
-                </>
-              )}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                onClick={() => handlePurchase('one_time')}
+                disabled={loading}
+                className="bg-purple-600 hover:bg-purple-700 text-white cursor-pointer"
+                size="lg"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    <Crown className="w-4 h-4 mr-2" />
+                    One-Time (€149 + 1000 Coins)
+                  </>
+                )}
+              </Button>
+              <Button
+                onClick={() => handlePurchase('subscription')}
+                disabled={loading}
+                className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+                size="lg"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    <Radio className="w-4 h-4 mr-2" />
+                    Subscribe (€9.99/mo + 200 Coins)
+                  </>
+                )}
+              </Button>
+              <Button
+                onClick={() => handlePurchase('per_track')}
+                disabled={loading}
+                className="bg-green-600 hover:bg-green-700 text-white cursor-pointer"
+                size="lg"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4 mr-2" />
+                    Per-Track (€9.99 + 100 Coins)
+                  </>
+                )}
+              </Button>
+            </div>
           )}
         </div>
 

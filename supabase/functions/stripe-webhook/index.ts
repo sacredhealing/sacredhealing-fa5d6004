@@ -418,10 +418,17 @@ serve(async (req) => {
 
         // Handle meditation audio purchase - credit coins and grant access
         if (purchaseType === 'meditation_audio' && userId) {
-          const shcCoinsToCredit = 1000; // Credit 1000 SHC coins
+          const option = session.metadata?.option || 'one_time';
+          // Credit coins based on option: one_time=1000, subscription=200, per_track=100
+          const coinCredits: Record<string, number> = {
+            one_time: 1000,
+            subscription: 200,
+            per_track: 100,
+          };
+          const shcCoinsToCredit = coinCredits[option] || coinCredits.one_time;
           const toolSlug = session.metadata?.tool_slug || 'creative-soul-meditation';
           
-          logStep("Processing meditation audio purchase", { userId, toolSlug, shcCoinsToCredit });
+          logStep("Processing meditation audio purchase", { userId, toolSlug, option, shcCoinsToCredit });
 
           // Credit 1000 SHC coins
           const { data: balance } = await supabaseAdmin
