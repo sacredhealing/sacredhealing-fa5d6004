@@ -41,6 +41,8 @@ export default function CreativeSoulMeditation() {
   const { isAdmin } = useAdminRole();
   const { balance, refreshBalance } = useSHCBalance();
   const [searchParams] = useSearchParams();
+  const [isCheckingAccess, setIsCheckingAccess] = useState(true);
+  const [hasAccess, setHasAccess] = useState(false);
   
   // File inputs
   const [files, setFiles] = useState<File[]>([]);
@@ -60,7 +62,6 @@ export default function CreativeSoulMeditation() {
   const [generatedFiles, setGeneratedFiles] = useState<GeneratedFile[]>([]);
   const [demoUsed, setDemoUsed] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [hasAccess, setHasAccess] = useState(false);
   const [affiliateId, setAffiliateId] = useState<string | null>(null);
 
   // Job polling state
@@ -80,49 +81,74 @@ export default function CreativeSoulMeditation() {
     }
   }, [searchParams]);
 
-  // Check access and demo status
+  // Enforce access: redirect non-admins without access to landing page
   useEffect(() => {
-    const checkAccess = async () => {
-      if (!user) {
-        setHasAccess(false);
-        return;
+    const enforceAccess = async () => {
+      setIsCheckingAccess(true);
+
+      // Allow demo mode without access check (demo is handled in generation)
+      const mode = searchParams.get('mode');
+      if (mode === 'demo') {
+        setIsCheckingAccess(false);
+        return; // Allow demo mode to proceed (no redirect)
       }
 
-      // Admins have full access
+      // Admins bypass access check
       if (isAdmin) {
         setHasAccess(true);
+        setIsCheckingAccess(false);
         return;
       }
 
-      try {
-        // Check if user has purchased access
-        const { data: access } = await (supabase as any)
-          .from('creative_tool_access')
-          .select('*, tool:creative_tools!inner(slug)')
-          .eq('user_id', user.id)
-          .eq('tool.slug', 'creative-soul-meditation')
-          .maybeSingle();
+      // If not logged in, redirect to landing
+      if (!user) {
+        navigate('/creative-soul-meditation-landing');
+        return;
+      }
 
-        if (access) {
-          setHasAccess(true);
-        } else {
-          // Check if demo was used
-          const { data: demo } = await (supabase as any)
-            .from('meditation_audio_demos')
-            .select('id')
-            .eq('user_id', user.id)
-            .maybeSingle();
+      // Check Creative Soul Meditation entitlement
+      const { data: ent } = await supabase
+        .from('creative_soul_entitlements')
+        .select('has_access, subscription_status, plan')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-          if (demo) {
-            setDemoUsed(true);
-          }
-        }
-      } catch (error) {
-        console.error('Error checking access:', error);
+      if (ent?.has_access === true) {
+        setHasAccess(true);
+        setIsCheckingAccess(false);
+      } else {
+        // No access - redirect to landing page
+        toast.info('Please purchase access to use this tool');
+        navigate('/creative-soul-meditation-landing');
+        return;
       }
     };
 
-    checkAccess();
+    enforceAccess();
+  }, [user, isAdmin, navigate, searchParams]);
+
+  // Check demo status (for generation buttons)
+  useEffect(() => {
+    const checkDemoStatus = async () => {
+      if (!user || isAdmin) return;
+
+      try {
+        // Check if demo was used (using new creative_soul_usage table)
+        const { data: demoUsage } = await supabase
+          .from('creative_soul_usage')
+          .select('demo_used, demo_used_at')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (demoUsage?.demo_used) {
+          setDemoUsed(true);
+        }
+      } catch (error) {
+        console.error('Error checking demo status:', error);
+      }
+    };
+
+    checkDemoStatus();
   }, [user, isAdmin]);
 
   // Poll for job status
@@ -407,8 +433,18 @@ export default function CreativeSoulMeditation() {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+        {/* Loading State */}
+        {isCheckingAccess && (
+          <Card className="border-purple-300 bg-purple-50">
+            <CardContent className="p-6 text-center">
+              <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-purple-600" />
+              <p className="text-purple-900">Checking access...</p>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Demo Notice */}
-        {!hasAccess && (
+        {!isCheckingAccess && !hasAccess && (
           <Card className="border-amber-300 bg-amber-50">
             <CardContent className="p-4">
               <p className="text-center text-amber-800">

@@ -1,14 +1,68 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Sparkles, Music, PenTool, Heart, Zap, ArrowLeft, Check, ArrowRight, Globe, Crown, Radio, Headphones } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAdminRole } from '@/hooks/useAdminRole';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function CreativeSoulSales() {
   const navigate = useNavigate();
   const { isAdmin } = useAdminRole();
+  const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const [hasMeditationAccess, setHasMeditationAccess] = useState<boolean | null>(null);
+  const [isCheckingAccess, setIsCheckingAccess] = useState(true);
+  
+  // Check access on mount and handle affiliate attribution
+  useEffect(() => {
+    const checkAccess = async () => {
+      setIsCheckingAccess(true);
+      const ref = searchParams.get('ref'); // affiliate ref
+
+      // If not logged in, allow viewing store (affiliate ref will be handled by landing page)
+    if (!user) {
+        setIsCheckingAccess(false);
+        setHasMeditationAccess(false);
+      return;
+    }
+
+      // Save affiliate attribution (best effort)
+      if (ref) {
+        await supabase.from('affiliate_attribution').upsert(
+          { user_id: user.id, ref_code: ref, last_seen_at: new Date().toISOString() },
+          { onConflict: 'user_id' }
+        );
+        await supabase.from('affiliate_events').insert({
+          ref_code: ref,
+          user_id: user.id,
+          tool_slug: 'creative-soul',
+          event_type: 'visit',
+        });
+      }
+
+      // Check admin status
+      if (isAdmin) {
+        setHasMeditationAccess(true);
+        setIsCheckingAccess(false);
+        return;
+      }
+
+      // Check Creative Soul Meditation entitlement
+      const { data: ent } = await supabase
+        .from('creative_soul_entitlements')
+        .select('has_access, subscription_status, plan')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      setHasMeditationAccess(ent?.has_access === true);
+      setIsCheckingAccess(false);
+    };
+
+    checkAccess();
+  }, [user, isAdmin, searchParams]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -135,24 +189,24 @@ export default function CreativeSoulSales() {
                 <div className="flex items-start justify-between mb-6">
                   <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/30">
                     <Headphones className="w-8 h-8 text-purple-400" />
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
                     {isAdmin && (
                       <Badge variant="outline" className="text-sm font-semibold bg-green-500/10 text-green-400 border-green-500/30">
-                        <Check className="w-3 h-3 mr-1" />
+                            <Check className="w-3 h-3 mr-1" />
                         Free Access
-                      </Badge>
-                    )}
+                          </Badge>
+                        )}
                     <Badge variant="outline" className="text-xs bg-purple-500/10 text-purple-400 border-purple-500/30">
                       AI-Powered
-                    </Badge>
-                  </div>
-                </div>
+                        </Badge>
+                      </div>
+                    </div>
 
                 <h3 className="text-3xl font-heading font-bold text-foreground mb-4">
                   Creative Soul Meditation
-                </h3>
-                
+                    </h3>
+                    
                 <p className="text-muted-foreground mb-6 text-lg leading-relaxed">
                   Transform any audio into high-quality meditation tracks. Apply healing frequencies, 
                   choose from 15 meditation styles, add binaural beats, and use stem separation for professional-quality audio.
@@ -190,20 +244,43 @@ export default function CreativeSoulSales() {
                       <span>{label}</span>
                     </div>
                   ))}
-                </div>
+                      </div>
 
-                <Button
-                  onClick={() => navigate('/creative-soul-meditation-landing')}
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold"
-                  size="lg"
-                >
-                  Get This Tool
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </div>
-            </Card>
+                {isCheckingAccess ? (
+                        <Button
+                    disabled
+                    className="w-full bg-purple-600/50 text-white font-semibold"
+                          size="lg"
+                        >
+                    Loading...
+                        </Button>
+                ) : (isAdmin || hasMeditationAccess) ? (
+                          <Button
+                    onClick={() => navigate('/creative-soul-meditation-tool')}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold"
+                            size="lg"
+                          >
+                    <Check className="w-4 h-4 mr-2" />
+                    {isAdmin ? 'Open Tool (Admin Access)' : 'Open Tool'}
+                          </Button>
+                    ) : (
+                      <Button
+                    onClick={() => {
+                      const ref = searchParams.get('ref');
+                      const qs = ref ? `?ref=${encodeURIComponent(ref)}` : '';
+                      navigate(`/creative-soul-meditation-landing${qs}`);
+                    }}
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold"
+                        size="lg"
+                      >
+                    Get This Tool
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    )}
+                  </div>
+                </Card>
           </div>
-        </section>
+      </section>
       </div>
 
       {/* Footer */}

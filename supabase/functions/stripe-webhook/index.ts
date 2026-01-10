@@ -416,8 +416,110 @@ serve(async (req) => {
           }
         }
 
-        // Handle meditation audio purchase - credit coins and grant access
-        if (purchaseType === 'meditation_audio' && userId) {
+        // Handle Creative Soul Meditation purchase (new structure with plan types)
+        const toolSlug = session.metadata?.tool_slug;
+        const plan = session.metadata?.plan; // 'lifetime' | 'monthly' | 'single'
+        const ref = session.metadata?.ref || null;
+
+        // Check if this is a Creative Soul purchase
+        if ((toolSlug === 'creative-soul' || purchaseType === 'meditation_audio') && userId && plan) {
+          logStep("Processing Creative Soul Meditation purchase", { userId, toolSlug, plan, ref });
+
+          // Store affiliate purchase event if ref exists
+          if (ref) {
+            await supabaseAdmin.from("affiliate_events").insert({
+              ref_code: ref,
+              user_id: userId,
+              tool_slug: toolSlug || 'creative-soul',
+              event_type: "purchase",
+              stripe_object_id: session.id,
+            });
+          }
+
+          // Helper: Credit coins once per purchase object id (idempotent)
+          async function creditCoinsOnce(userId: string, stripeObjectId: string) {
+            const coins = 1000; // 1000 coins per purchased tool
+
+            // Try to insert coin award (will fail if duplicate)
+            const { error: awardErr } = await supabaseAdmin.from("coin_awards").insert({
+              user_id: userId,
+              source: "creative_soul_purchase",
+              stripe_object_id: stripeObjectId,
+              coins,
+            });
+
+            // If duplicate, ignore (already credited)
+            if (awardErr && !String(awardErr.message).includes("duplicate") && !String(awardErr.message).includes("unique")) {
+              logStep("Error recording coin award", { error: awardErr.message, userId, stripeObjectId });
+              return;
+            }
+
+            // If not duplicate, credit to wallet
+            if (!awardErr) {
+              const { data: wallet } = await supabaseAdmin
+                .from("user_wallet")
+                .select("coins")
+                .eq("user_id", userId)
+                .maybeSingle();
+
+              const current = wallet?.coins ?? 0;
+              const next = current + coins;
+
+              await supabaseAdmin.from("user_wallet").upsert(
+                { user_id: userId, coins: next, updated_at: new Date().toISOString() },
+                { onConflict: "user_id" }
+              );
+
+              logStep("Credited coins to wallet", { userId, coins, previous: current, new: next });
+            } else {
+              logStep("Coins already credited for this purchase", { userId, stripeObjectId });
+            }
+          }
+
+          // For lifetime/single: grant access immediately and credit coins
+          if (plan === "lifetime" || plan === "single") {
+            await supabaseAdmin.from("creative_soul_entitlements").upsert(
+              {
+                user_id: userId,
+                has_access: true,
+                plan,
+                stripe_customer_id: session.customer?.toString() ?? null,
+                subscription_status: "active",
+                updated_at: new Date().toISOString(),
+              },
+              { onConflict: "user_id" }
+            );
+
+            // Credit 1000 coins once per successful purchased tool
+            await creditCoinsOnce(userId, session.id);
+
+            logStep("Creative Soul entitlement granted (lifetime/single)", { userId, plan });
+          } else if (plan === "monthly") {
+            // For monthly subscription: we'll handle access via subscription.created/updated events
+            // But store the customer ID for subscription lifecycle tracking
+            if (session.customer) {
+              await supabaseAdmin.from("creative_soul_entitlements").upsert(
+                {
+                  user_id: userId,
+                  has_access: true, // Will be updated by subscription events
+                  plan: "monthly",
+                  stripe_customer_id: session.customer.toString(),
+                  subscription_status: "active",
+                  updated_at: new Date().toISOString(),
+                },
+                { onConflict: "user_id" }
+              );
+
+              // Credit coins for initial subscription setup
+              await creditCoinsOnce(userId, session.id);
+
+              logStep("Creative Soul subscription setup (monthly)", { userId, customerId: session.customer.toString() });
+            }
+          }
+        }
+
+        // Handle legacy meditation_audio purchase format (backward compatibility)
+        if (purchaseType === 'meditation_audio' && userId && !plan) {
           const option = session.metadata?.option || 'one_time';
           // Credit coins based on option: one_time=1000, subscription=200, per_track=100
           const coinCredits: Record<string, number> = {
@@ -426,11 +528,11 @@ serve(async (req) => {
             per_track: 100,
           };
           const shcCoinsToCredit = coinCredits[option] || coinCredits.one_time;
-          const toolSlug = session.metadata?.tool_slug || 'creative-soul-meditation';
+          const legacyToolSlug = session.metadata?.tool_slug || 'creative-soul-meditation';
           
-          logStep("Processing meditation audio purchase", { userId, toolSlug, option, shcCoinsToCredit });
+          logStep("Processing legacy meditation audio purchase", { userId, legacyToolSlug, option, shcCoinsToCredit });
 
-          // Credit 1000 SHC coins
+          // Credit SHC coins (legacy user_balances table)
           const { data: balance } = await supabaseAdmin
             .from('user_balances')
             .select('balance, total_earned')
@@ -467,27 +569,26 @@ serve(async (req) => {
               status: 'completed',
             });
 
-          logStep("Credited SHC coins", { userId, amount: shcCoinsToCredit });
+          logStep("Credited SHC coins (legacy)", { userId, amount: shcCoinsToCredit });
 
-          // Grant entitlement for Creative Soul Meditation (uses creative_soul_entitlements table)
+          // Grant entitlement for Creative Soul Meditation (legacy format)
           const { error: entitlementError } = await supabaseAdmin
             .from('creative_soul_entitlements')
             .upsert({
               user_id: userId,
               has_access: true,
-              plan: option === 'one_time' ? 'one_time_149' : (option === 'subscription' ? 'subscription_monthly' : 'per_track'),
+              plan: option === 'one_time' ? 'lifetime' : (option === 'subscription' ? 'monthly' : 'single'),
               stripe_payment_id: stripePaymentId,
-              stripe_session_id: session.id,
-              purchased_at: new Date().toISOString(),
+              subscription_status: "active",
               updated_at: new Date().toISOString(),
             }, {
               onConflict: 'user_id',
             });
 
           if (entitlementError) {
-            logStep("Error granting meditation audio entitlement", { error: entitlementError.message, userId });
+            logStep("Error granting meditation audio entitlement (legacy)", { error: entitlementError.message, userId });
           } else {
-            logStep("Meditation audio entitlement granted successfully", { userId, toolSlug, plan: option });
+            logStep("Meditation audio entitlement granted successfully (legacy)", { userId, legacyToolSlug, plan: option });
           }
         }
 
@@ -826,19 +927,133 @@ serve(async (req) => {
       }
     }
 
-    // Handle subscription created/updated for tracking
-    if (event.type === "customer.subscription.created" || event.type === "customer.subscription.updated") {
+    // Handle subscription lifecycle: grant/revoke Creative Soul access based on payment status
+    if (
+      event.type === "customer.subscription.created" ||
+      event.type === "customer.subscription.updated" ||
+      event.type === "customer.subscription.deleted"
+    ) {
       const subscription = event.data.object as Stripe.Subscription;
       
-      logStep(`Subscription ${event.type === 'customer.subscription.created' ? 'created' : 'updated'}`, {
-        subscriptionId: subscription.id,
-        status: subscription.status,
-        customerId: subscription.customer
+      const customerId = subscription.customer.toString();
+      const status = subscription.status; // active, canceled, past_due, unpaid, incomplete...
+      const currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
+      const subscriptionId = subscription.id;
+
+      logStep(`Subscription ${event.type.replace('customer.subscription.', '')}`, {
+        subscriptionId,
+        status,
+        customerId,
+        currentPeriodEnd
       });
-      
+
+      // Find user by stripe_customer_id in creative_soul_entitlements
+      const { data: ent } = await supabaseAdmin
+        .from("creative_soul_entitlements")
+        .select("user_id")
+        .eq("stripe_customer_id", customerId)
+        .maybeSingle();
+
+      // If no entitlement row exists yet for that customer, just log and continue
+      if (!ent?.user_id) {
+        logStep("No Creative Soul entitlement found for subscription customer", { customerId });
       await logWebhookEvent(supabaseAdmin, event.id, event.type, {
-        subscriptionId: subscription.id,
-        status: subscription.status
+          subscriptionId,
+          status,
+          note: "No user for customer yet"
+        }, 'processed');
+      } else {
+        const userId = ent.user_id as string;
+
+        // Access allowed only for active/trialing; remove otherwise
+        const hasAccess = status === "active" || status === "trialing";
+
+        await supabaseAdmin.from("creative_soul_entitlements").upsert(
+          {
+            user_id: userId,
+            has_access: hasAccess,
+            plan: "monthly",
+            stripe_customer_id: customerId,
+            stripe_subscription_id: subscriptionId,
+            subscription_status: status,
+            current_period_end: currentPeriodEnd,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id" }
+        );
+
+        // Coins: credit once per purchased tool (first time subscription becomes active)
+        // We credit on "subscription.created" or first time becomes active.
+        if (event.type === "customer.subscription.created" && (status === "active" || status === "trialing")) {
+          // Credit coins using idempotent coin_awards table
+          const coins = 1000;
+          const { error: awardErr } = await supabaseAdmin.from("coin_awards").insert({
+            user_id: userId,
+            source: "creative_soul_purchase",
+            stripe_object_id: subscriptionId,
+            coins,
+          });
+
+          if (!awardErr || String(awardErr.message).includes("duplicate") || String(awardErr.message).includes("unique")) {
+            if (!awardErr) {
+              const { data: wallet } = await supabaseAdmin
+                .from("user_wallet")
+                .select("coins")
+                .eq("user_id", userId)
+                .maybeSingle();
+
+              const current = wallet?.coins ?? 0;
+              const next = current + coins;
+
+              await supabaseAdmin.from("user_wallet").upsert(
+                { user_id: userId, coins: next, updated_at: new Date().toISOString() },
+                { onConflict: "user_id" }
+              );
+
+              logStep("Credited coins for new subscription", { userId, coins, subscriptionId });
+            }
+          }
+        }
+
+        logStep("Creative Soul subscription access updated", { userId, hasAccess, status });
+
+        await logWebhookEvent(supabaseAdmin, event.id, event.type, {
+          subscriptionId,
+          status,
+          userId,
+          hasAccess
+        }, 'processed');
+      }
+    }
+
+    // Handle payment failed -> revoke Creative Soul access
+    if (event.type === "invoice.payment_failed") {
+      const invoice = event.data.object as Stripe.Invoice;
+      const customerId = invoice.customer?.toString() || "";
+      const status = invoice.status || "payment_failed";
+
+      logStep("Invoice payment failed", { invoiceId: invoice.id, customerId, status });
+
+      const { data: ent } = await supabaseAdmin
+        .from("creative_soul_entitlements")
+        .select("user_id")
+        .eq("stripe_customer_id", customerId)
+        .maybeSingle();
+
+      if (ent?.user_id) {
+        await supabaseAdmin.from("creative_soul_entitlements").update({
+          has_access: false,
+          subscription_status: status,
+          updated_at: new Date().toISOString(),
+        }).eq("user_id", ent.user_id);
+
+        logStep("Creative Soul access revoked due to payment failure", { userId: ent.user_id, status });
+      }
+
+      await logWebhookEvent(supabaseAdmin, event.id, event.type, {
+        invoiceId: invoice.id,
+        customerId,
+        status
       }, 'processed');
     }
 

@@ -138,6 +138,9 @@ verify_jwt = true
 [functions.noise-removal]
 verify_jwt = true
 
+[functions.creative-soul-create-checkout]
+verify_jwt = true
+
 [functions.process-mql-signal]
 verify_jwt = false
 

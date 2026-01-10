@@ -1,4 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 const plans = [
   {
@@ -93,6 +97,62 @@ const addons = [
 ];
 
 export default function CreativeSoulMeditationLanding() {
+  const navigate = useNavigate();
+  const { user, session } = useAuth();
+  const [searchParams] = useSearchParams();
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+
+  // Get affiliate ref from URL
+  const ref = searchParams.get("ref");
+
+  // Store affiliate attribution on mount (if logged in)
+  useEffect(() => {
+    const storeAffiliate = async () => {
+      if (user && ref) {
+        await supabase.from("affiliate_attribution").upsert(
+          { user_id: user.id, ref_code: ref, last_seen_at: new Date().toISOString() },
+          { onConflict: "user_id" }
+        );
+        await supabase.from("affiliate_events").insert({
+          ref_code: ref,
+          user_id: user.id,
+          tool_slug: "creative-soul",
+          event_type: "visit",
+        });
+      }
+    };
+    storeAffiliate();
+  }, [user, ref]);
+
+  const startCheckout = async (plan: "lifetime" | "monthly" | "single") => {
+    // Check if user is logged in
+    if (!user || !session) {
+      toast.info("Please sign in to purchase");
+      navigate("/auth");
+      return;
+    }
+
+    setLoadingPlan(plan);
+    try {
+      const { data, error } = await supabase.functions.invoke("creative-soul-create-checkout", {
+        body: { plan, ref: ref ?? null },
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        // Redirect to Stripe Checkout
+        window.location.href = data.url;
+      } else {
+        throw new Error("No checkout URL returned");
+      }
+    } catch (error: any) {
+      console.error("Checkout error:", error);
+      toast.error(error?.message || "Failed to start checkout. Please try again.");
+      setLoadingPlan(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-50 via-purple-50 to-emerald-50 text-slate-800">
       {/* HERO */}
@@ -182,23 +242,26 @@ export default function CreativeSoulMeditationLanding() {
                 </ul>
 
                 <div className="mt-6">
-                  <a
-                    href={
-                      p.title === "Lifetime License"
-                        ? "/checkout?plan=lifetime"
-                        : p.title === "Monthly Creator Subscription"
-                        ? "/checkout?plan=monthly"
-                        : "/checkout?plan=single"
-                    }
+                  <button
+                    onClick={() => {
+                      if (p.title === "Lifetime License") startCheckout("lifetime");
+                      else if (p.title === "Monthly Creator Subscription") startCheckout("monthly");
+                      else startCheckout("single");
+                    }}
+                    disabled={loadingPlan !== null}
                     className={[
-                      "cursor-fancy inline-flex w-full justify-center rounded-xl px-5 py-3 font-semibold shadow-sm transition",
-                      p.highlight
+                      "cursor-fancy inline-flex w-full justify-center rounded-xl px-5 py-3 font-semibold shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed",
+                      loadingPlan === (p.title === "Lifetime License" ? "lifetime" : p.title === "Monthly Creator Subscription" ? "monthly" : "single")
+                        ? "bg-slate-400 text-white"
+                        : p.highlight
                         ? "bg-indigo-700 text-white hover:bg-indigo-600"
                         : "bg-slate-900 text-white hover:bg-slate-800",
                     ].join(" ")}
                   >
-                    {p.cta}
-                  </a>
+                    {loadingPlan === (p.title === "Lifetime License" ? "lifetime" : p.title === "Monthly Creator Subscription" ? "monthly" : "single")
+                      ? "Loading..."
+                      : p.cta}
+                  </button>
                   <p className="mt-2 text-xs text-slate-600 text-center">
                     You can upgrade anytime. Demo available before purchase.
                   </p>
