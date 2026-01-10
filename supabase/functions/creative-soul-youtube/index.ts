@@ -176,72 +176,90 @@ serve(async (req) => {
     const videoInfo = await getVideoInfo(videoId);
     const videoTitle = videoInfo?.title || "YouTube Video";
 
-    // Use cobalt.tools API for YouTube to MP3 conversion (no API key needed, generous free tier)
-    console.log(`[YOUTUBE] Starting conversion with cobalt.tools for: ${youtubeUrl}`);
-    
-    const cobaltResponse = await fetch("https://co.wuk.sh/api/json", {
-      method: "POST",
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        url: youtubeUrl,
-        vCodec: "h264",
-        vQuality: "720",
-        aFormat: "mp3",
-        isAudioOnly: true,
-        isNoTTWatermark: true,
-        isTTFullAudio: true,
-        disableMetadata: false,
-      }),
-    });
+    // Try multiple YouTube conversion services
+    let mp3Url: string | null = null;
+    let conversionError: string | null = null;
 
-    const cobaltData = await cobaltResponse.json();
-    console.log(`[YOUTUBE] Cobalt response status: ${cobaltData.status}`);
-
-    if (cobaltData.status === "error") {
-      // Try alternative service if cobalt fails
-      console.log(`[YOUTUBE] Cobalt error: ${cobaltData.text}, trying alternative...`);
+    // Service 1: loader.to API
+    try {
+      console.log(`[YOUTUBE] Trying loader.to service...`);
+      const loaderResponse = await fetch(`https://loader.to/ajax/download.php?format=mp3&url=${encodeURIComponent(youtubeUrl)}`);
       
-      // Try y2mate alternative
-      const y2mateResponse = await fetch(`https://api.vevioz.com/api/button/mp3/${videoId}`);
-      
-      if (!y2mateResponse.ok) {
-        throw new Error(cobaltData.text || "YouTube conversion failed. The video may be restricted or unavailable.");
-      }
-      
-      const y2mateHtml = await y2mateResponse.text();
-      
-      // Extract download URL from response
-      const urlMatch = y2mateHtml.match(/href="(https:\/\/[^"]+\.mp3[^"]*)"/);
-      if (urlMatch && urlMatch[1]) {
-        const mp3Url = urlMatch[1];
-        console.log(`[YOUTUBE] Y2mate conversion successful`);
+      if (loaderResponse.ok) {
+        const loaderData = await loaderResponse.json();
+        console.log(`[YOUTUBE] Loader.to response:`, JSON.stringify(loaderData));
         
-        return new Response(
-          JSON.stringify({
-            success: true,
-            mp3Url: mp3Url,
-            transcription: null,
-            videoTitle: videoTitle,
-            message: "YouTube video converted to MP3 successfully! Use the voice recording feature to transcribe the downloaded audio.",
-          }),
-          {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 200,
+        if (loaderData.success && loaderData.download_url) {
+          mp3Url = loaderData.download_url;
+          console.log(`[YOUTUBE] Loader.to success!`);
+        } else if (loaderData.id) {
+          // Need to poll for result
+          const pollId = loaderData.id;
+          for (let i = 0; i < 20; i++) {
+            await new Promise(r => setTimeout(r, 2000));
+            const progressResponse = await fetch(`https://loader.to/ajax/progress.php?id=${pollId}`);
+            if (progressResponse.ok) {
+              const progressData = await progressResponse.json();
+              console.log(`[YOUTUBE] Poll ${i + 1}: ${progressData.progress || 0}%`);
+              if (progressData.success === 1 && progressData.download_url) {
+                mp3Url = progressData.download_url;
+                break;
+              }
+            }
           }
-        );
+        }
       }
+    } catch (e) {
+      console.error("[YOUTUBE] Loader.to error:", e);
+      conversionError = e instanceof Error ? e.message : "Loader.to failed";
+    }
+
+    // Service 2: savetube.pro if first failed
+    if (!mp3Url) {
+      try {
+        console.log(`[YOUTUBE] Trying savetube.pro service...`);
+        const savetubeResponse = await fetch("https://api.savetube.pro/download", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            url: youtubeUrl,
+            format: "mp3"
+          }),
+        });
+        
+        if (savetubeResponse.ok) {
+          const savetubeData = await savetubeResponse.json();
+          if (savetubeData.url) {
+            mp3Url = savetubeData.url;
+            console.log(`[YOUTUBE] savetube.pro success!`);
+          }
+        }
+      } catch (e) {
+        console.error("[YOUTUBE] savetube.pro error:", e);
+      }
+    }
+
+    // If all services fail, return helpful message
+    if (!mp3Url) {
+      console.log(`[YOUTUBE] All conversion services failed`);
       
-      throw new Error("Unable to convert this YouTube video. Please try a different video or use the voice recording feature.");
+      // Return info about the video at least, suggest manual approach
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "YouTube conversion services are currently unavailable. Please try one of these alternatives:\n\n1. Use the Voice Recording feature to speak your content\n2. Download the YouTube video manually using a site like y2mate.com\n3. Try again in a few minutes",
+          videoTitle: videoTitle,
+          videoId: videoId,
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
     }
 
-    if (cobaltData.status !== "stream" && cobaltData.status !== "redirect" && cobaltData.status !== "tunnel") {
-      throw new Error(`Unexpected response: ${cobaltData.status}. ${cobaltData.text || ""}`);
-    }
-
-    const mp3Url = cobaltData.url;
     console.log(`[YOUTUBE] Conversion successful, MP3 URL obtained`);
 
     // Optionally transcribe the audio using OpenAI
