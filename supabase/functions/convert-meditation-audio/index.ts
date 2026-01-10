@@ -45,12 +45,15 @@ serve(async (req) => {
 
     let body: {
       mode?: string;
-      style?: string;
-      frequency?: string;
-      binaural?: string;
+      frequency_hz?: number;
+      processing_mode?: "BINAURAL" | "TONE_TUNING";
+      meditation_style?: string;
+      sound_layers?: string[];
       duration?: number;
       audioUrl?: string;
       variants?: number;
+      bpm_match?: boolean;
+      keep_music_stem?: boolean;
     } = {};
     try {
       body = await req.json();
@@ -128,12 +131,15 @@ serve(async (req) => {
 
     // Build payload for the worker
     const payload = {
-      style: body.style || "ocean",
-      frequency: body.frequency || "432",
-      binaural: body.binaural || "theta",
-      duration: body.duration || 10,
+      frequency_hz: body.frequency_hz ?? 432,
+      processing_mode: body.processing_mode ?? "TONE_TUNING", // "BINAURAL" or "TONE_TUNING"
+      meditation_style: body.meditation_style || "ocean-water",
+      sound_layers: body.sound_layers || ["ocean_waves", "rain_soft", "handpan"],
+      duration: body.duration || (mode === "demo" ? 10 : 30),
       audioUrl: body.audioUrl,
-      variants: body.variants || 1,
+      variants: body.variants || (mode === "demo" ? 1 : 3),
+      bpm_match: body.bpm_match ?? true,
+      keep_music_stem: body.keep_music_stem ?? true,
       mode,
     };
 
