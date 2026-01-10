@@ -1673,6 +1673,7 @@ export type Database = {
           preview_url: string | null
           price_shc: number
           price_usd: number
+          script_text: string | null
           title: string
         }
         Insert: {
@@ -1688,6 +1689,7 @@ export type Database = {
           preview_url?: string | null
           price_shc?: number
           price_usd?: number
+          script_text?: string | null
           title: string
         }
         Update: {
@@ -1703,6 +1705,7 @@ export type Database = {
           preview_url?: string | null
           price_shc?: number
           price_usd?: number
+          script_text?: string | null
           title?: string
         }
         Relationships: []
