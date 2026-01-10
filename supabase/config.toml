@@ -120,6 +120,12 @@ verify_jwt = true
 [functions.convert-meditation-audio]
 verify_jwt = true
 
+[functions.get-job-status]
+verify_jwt = true
+
+[functions.worker-callback]
+verify_jwt = false
+
 [functions.process-mql-signal]
 verify_jwt = false
 
