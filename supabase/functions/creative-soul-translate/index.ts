@@ -104,15 +104,18 @@ serve(async (req) => {
     }
 
     // Track translation usage (optional)
-    await supabaseAdmin
-      .from('creative_tool_usage')
-      .insert({
-        user_id: user.id,
-        tool_slug: 'creative-soul-studio',
-        action_type: 'translate',
-        metadata: { target_language: targetLanguage },
-      })
-      .catch(err => console.error('Failed to track usage:', err));
+    try {
+      await supabaseAdmin
+        .from('creative_tool_usage')
+        .insert({
+          user_id: user.id,
+          tool_slug: 'creative-soul-studio',
+          action_type: 'translate',
+          metadata: { target_language: targetLanguage },
+        });
+    } catch (err: unknown) {
+      console.error('Failed to track usage:', err);
+    }
 
     console.log(`[CREATIVE-SOUL-TRANSLATE] Translation complete for user: ${user.id}`);
 

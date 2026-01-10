@@ -202,6 +202,7 @@ export default function CreativeSoulLanding() {
               )}
             </Button>
           )}
+          </div>
         </div>
       </div>
 
