@@ -342,8 +342,14 @@ export default function CreativeSoulSales() {
           </div>
         </section>
 
+        {/* RENDER PROOF BLOCK - MUST BE VISIBLE */}
+        <div style={{ padding: 16, border: '6px solid red', marginTop: 16, background: 'yellow', color: 'black', fontSize: 22, fontWeight: 800 }}>
+          RENDER_PROOF_MEDITATION_BLOCK_999 — if you can read this, CreativeSoulSales.tsx is rendering this section.
+        </div>
+
         {/* Creative Soul Meditation Banner - Hardcoded */}
         <section>
+          <h2 style={{ fontSize: 28, fontWeight: 900, textAlign: 'center', marginBottom: 16, marginTop: 16 }}>Creative Soul Meditation</h2>
           <div className="max-w-2xl mx-auto">
             <Card className="relative overflow-hidden border-2 border-purple-500/30 hover:border-purple-500/50 transition-all duration-300">
               <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl opacity-50" />
