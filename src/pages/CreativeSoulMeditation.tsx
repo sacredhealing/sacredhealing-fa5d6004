@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Music, Upload, Youtube, Link as LinkIcon, Download, Loader2, Sparkles, ArrowLeft, Play, Wand2, Radio, Headphones, Zap, Crown } from 'lucide-react';
+import { Music, Upload, Youtube, Link as LinkIcon, Download, Loader2, Sparkles, ArrowLeft, Play, Wand2, Radio, Headphones, Zap, Crown, XCircle, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { PaymentOptions } from '@/components/creative-soul/PaymentOptions';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -21,6 +22,17 @@ interface GeneratedFile {
   url: string;
   type: 'final' | 'stem' | 'variant';
   variantNumber?: number;
+}
+
+interface JobStatus {
+  job_id: string;
+  action: string;
+  status: 'queued' | 'processing' | 'completed' | 'failed';
+  progress: number;
+  result_url: string | null;
+  error_message: string | null;
+  created_at: string;
+  completed_at: string | null;
 }
 
 export default function CreativeSoulMeditation() {
@@ -50,6 +62,11 @@ export default function CreativeSoulMeditation() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [hasAccess, setHasAccess] = useState(false);
   const [affiliateId, setAffiliateId] = useState<string | null>(null);
+
+  // Job polling state
+  const [activeJobId, setActiveJobId] = useState<string | null>(null);
+  const [jobStatus, setJobStatus] = useState<JobStatus | null>(null);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Check for affiliate code
   useEffect(() => {
@@ -108,6 +125,87 @@ export default function CreativeSoulMeditation() {
     checkAccess();
   }, [user, isAdmin]);
 
+  // Poll for job status
+  const pollJobStatus = useCallback(async (jobId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('get-job-status', {
+        body: { job_id: jobId },
+      });
+
+      if (error) {
+        console.error('Job status poll error:', error);
+        return;
+      }
+
+      if (data?.success && data?.job) {
+        const job = data.job as JobStatus;
+        setJobStatus(job);
+
+        if (job.status === 'completed') {
+          // Stop polling
+          if (pollingIntervalRef.current) {
+            clearInterval(pollingIntervalRef.current);
+            pollingIntervalRef.current = null;
+          }
+          setIsGenerating(false);
+          toast.success('Audio generation complete!');
+          
+          // If we have a result URL, add it to generated files
+          if (job.result_url) {
+            setGeneratedFiles([{
+              id: jobId,
+              name: `Meditation Audio - ${style}`,
+              url: job.result_url,
+              type: 'final',
+            }]);
+          }
+        } else if (job.status === 'failed') {
+          // Stop polling
+          if (pollingIntervalRef.current) {
+            clearInterval(pollingIntervalRef.current);
+            pollingIntervalRef.current = null;
+          }
+          setIsGenerating(false);
+          toast.error(job.error_message || 'Generation failed. Please try again.');
+        }
+      }
+    } catch (err) {
+      console.error('Job status poll error:', err);
+    }
+  }, [style]);
+
+  // Start polling when we have an active job
+  useEffect(() => {
+    if (activeJobId && isGenerating) {
+      // Initial poll
+      pollJobStatus(activeJobId);
+      
+      // Set up interval (every 3 seconds)
+      pollingIntervalRef.current = setInterval(() => {
+        pollJobStatus(activeJobId);
+      }, 3000);
+    }
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    };
+  }, [activeJobId, isGenerating, pollJobStatus]);
+
+  // Cancel job polling
+  const cancelPolling = () => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+    setActiveJobId(null);
+    setJobStatus(null);
+    setIsGenerating(false);
+    toast.info('Stopped monitoring job. Processing may continue in background.');
+  };
+
   // Handle demo generation
   const handleGenerateDemo = async () => {
     if (demoUsed && !hasAccess) {
@@ -122,56 +220,51 @@ export default function CreativeSoulMeditation() {
     }
 
     setIsGenerating(true);
+    setJobStatus(null);
+    
     try {
       const { data, error } = await supabase.functions.invoke('convert-meditation-audio', {
         body: {
-          mode: 'demo', // Use mode: "demo" for demo generation
-          payload: {
-            files: [], // Demo doesn't process files
-            youtube_links: youtubeLinks || undefined,
-            urls: urls || undefined,
-            style,
-            freq: parseInt(freq),
-            binaural,
-            bpm_match: bpmMatch,
-            variants: 1, // Demo: only 1 variant
-            keep_music_stem: keepMusicStem,
-          },
+          mode: 'demo',
+          style,
+          frequency: freq,
+          binaural: binaural ? 'theta' : 'none',
+          duration: 10,
+          variants: 1,
         },
       });
 
       if (error) {
         console.error('Demo generation error:', error);
         toast.error(error.message || 'Failed to generate demo. Please try again.');
+        setIsGenerating(false);
         return;
       }
 
-      // Check for success: false in response body
       if (data && data.success === false) {
         console.error('Demo generation failed:', data.error);
         toast.error(data.error || 'Failed to generate demo. Please try again.');
         if (data.error?.includes('Demo already used')) {
           setDemoUsed(true);
         }
+        setIsGenerating(false);
         return;
       }
 
       if (data && data.success) {
         setDemoUsed(true);
         if (data.job_id) {
-          toast.success(`Demo generation queued! Job ID: ${data.job_id.substring(0, 8)}...`);
+          toast.success(`Demo generation started! Tracking job...`);
+          setActiveJobId(data.job_id);
+          // isGenerating stays true while polling
         } else {
-          toast.success('Demo generation complete! Purchase to unlock full features.');
-        }
-        // Store job_id if provided (for future polling)
-        if (data.job_id) {
-          console.log('Demo job_id:', data.job_id);
+          toast.success('Demo generation complete!');
+          setIsGenerating(false);
         }
       }
     } catch (error: any) {
       console.error('Demo generation error:', error);
       toast.error(error.message || 'Failed to generate demo. Please try again.');
-    } finally {
       setIsGenerating(false);
     }
   };
@@ -189,6 +282,8 @@ export default function CreativeSoulMeditation() {
     }
 
     setIsGenerating(true);
+    setJobStatus(null);
+    
     try {
       // Upload files if any
       const uploadedFileUrls: string[] = [];
@@ -230,54 +325,49 @@ export default function CreativeSoulMeditation() {
 
       const { data, error } = await supabase.functions.invoke('convert-meditation-audio', {
         body: {
-          mode: 'paid', // Use mode: "paid" for full generation
-          payload: {
-            files: uploadedFileUrls,
-            user_music: uploadedMusicUrls,
-            youtube_links: youtubeLinks || undefined,
-            urls: urls || undefined,
-            style,
-            freq: parseInt(freq),
-            binaural,
-            bpm_match: bpmMatch,
-            variants,
-            keep_music_stem: keepMusicStem,
-          },
+          mode: 'paid',
+          style,
+          frequency: freq,
+          binaural: binaural ? 'theta' : 'none',
+          duration: 30,
+          audioUrl: uploadedFileUrls[0] || uploadedMusicUrls[0],
+          variants,
         },
       });
 
       if (error) {
         console.error('Generation error:', error);
         toast.error(error.message || 'Failed to generate audio. Please try again.');
+        setIsGenerating(false);
         return;
       }
 
-      // Check for success: false in response body
       if (data && data.success === false) {
         console.error('Generation failed:', data.error);
         toast.error(data.error || 'Failed to generate audio. Please try again.');
+        setIsGenerating(false);
         return;
       }
 
       if (data && data.success) {
         if (data.job_id) {
-          toast.success(`Generation queued! Job ID: ${data.job_id.substring(0, 8)}... Processing will begin shortly.`);
+          toast.success(`Generation started! Tracking job...`);
+          setActiveJobId(data.job_id);
+          // isGenerating stays true while polling
         } else {
           toast.success('Audio generation complete!');
+          setIsGenerating(false);
         }
-        // Store job_id if provided (for future polling)
-        if (data.job_id) {
-          console.log('Paid job_id:', data.job_id);
-        }
+        
         // If files are returned directly (not queued), set them
         if (data.files && Array.isArray(data.files)) {
           setGeneratedFiles(data.files);
+          setIsGenerating(false);
         }
       }
     } catch (error: any) {
       console.error('Generation error:', error);
       toast.error(error.message || 'Failed to generate audio. Please try again.');
-    } finally {
       setIsGenerating(false);
     }
   };
@@ -556,6 +646,68 @@ export default function CreativeSoulMeditation() {
             <PaymentOptions affiliateId={affiliateId} />
           )}
         </div>
+
+        {/* Job Progress Card */}
+        {(isGenerating || jobStatus) && activeJobId && (
+          <Card className="border-purple-300 bg-purple-50/50">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center justify-between text-lg">
+                <div className="flex items-center gap-2">
+                  {jobStatus?.status === 'completed' ? (
+                    <CheckCircle2 className="w-5 h-5 text-green-600" />
+                  ) : jobStatus?.status === 'failed' ? (
+                    <XCircle className="w-5 h-5 text-red-600" />
+                  ) : (
+                    <Loader2 className="w-5 h-5 text-purple-600 animate-spin" />
+                  )}
+                  <span>
+                    {jobStatus?.status === 'queued' && 'Queued...'}
+                    {jobStatus?.status === 'processing' && 'Processing Audio...'}
+                    {jobStatus?.status === 'completed' && 'Generation Complete!'}
+                    {jobStatus?.status === 'failed' && 'Generation Failed'}
+                    {!jobStatus && 'Initializing...'}
+                  </span>
+                </div>
+                {jobStatus?.status !== 'completed' && jobStatus?.status !== 'failed' && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={cancelPolling}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <XCircle className="w-4 h-4 mr-1" />
+                    Stop Tracking
+                  </Button>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Progress 
+                value={jobStatus?.progress ?? 0} 
+                className="h-2"
+              />
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <span>Job: {activeJobId.substring(0, 8)}...</span>
+                <span>{jobStatus?.progress ?? 0}%</span>
+              </div>
+              {jobStatus?.error_message && (
+                <p className="text-sm text-red-600 bg-red-50 p-2 rounded">
+                  {jobStatus.error_message}
+                </p>
+              )}
+              {jobStatus?.status === 'queued' && (
+                <p className="text-sm text-muted-foreground">
+                  Your job is in the queue. Processing will begin shortly...
+                </p>
+              )}
+              {jobStatus?.status === 'processing' && (
+                <p className="text-sm text-muted-foreground">
+                  Applying {style} style with {freq}Hz frequency tuning...
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Generated Files */}
         {generatedFiles.length > 0 && (
