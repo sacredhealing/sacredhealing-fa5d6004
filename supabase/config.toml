@@ -117,6 +117,9 @@ verify_jwt = true
 [functions.creative-soul-tool]
 verify_jwt = true
 
+[functions.convert-meditation-audio]
+verify_jwt = true
+
 [functions.process-mql-signal]
 verify_jwt = false
 

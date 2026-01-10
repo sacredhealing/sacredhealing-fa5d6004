@@ -92,8 +92,8 @@ serve(async (req) => {
       );
     }
 
-    // mode: "demo" | "paid" (default to "demo" for backwards compatibility)
-    const mode = body?.mode ?? (body?.demo === true ? "demo" : "paid");
+    // mode: "demo" | "paid" (require explicit mode, default to "demo" for safety)
+    const mode = body?.mode || (body?.demo === true ? "demo" : "demo"); // Default to demo for safety
 
     // 1) DEMO path (allow once per user, admins bypass)
     if (mode === "demo") {
@@ -177,11 +177,35 @@ serve(async (req) => {
 
     // 2) PAID path (requires entitlement, admins bypass)
     if (!isAdmin) {
+      // First, find the tool by slug
+      const { data: tool, error: toolError } = await supabaseAdmin
+        .from("creative_tools")
+        .select("id, slug, name")
+        .eq("slug", "creative-soul-meditation")
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if (toolError || !tool) {
+        console.error('[CONVERT-MEDITATION-AUDIO] Tool lookup error:', toolError);
+        // If tool doesn't exist, treat as no access
+        return new Response(
+          JSON.stringify({ 
+            success: false,
+            error: "Full access required. Please purchase to unlock all features." 
+          }),
+          {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      // Then check if user has access to this tool
       const { data: access, error: accessError } = await supabaseAdmin
         .from("creative_tool_access")
-        .select("*, tool:creative_tools!inner(slug, name)")
+        .select("id, tool_id, user_id")
         .eq("user_id", user.id)
-        .eq("tool.slug", "creative-soul-meditation")
+        .eq("tool_id", tool.id)
         .maybeSingle();
 
       if (accessError) {
