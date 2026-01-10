@@ -79,7 +79,7 @@ export default function CreativeSoulMeditation() {
 
       try {
         // Check if user has purchased access
-        const { data: access } = await supabase
+        const { data: access } = await (supabase as any)
           .from('creative_tool_access')
           .select('*, tool:creative_tools!inner(slug)')
           .eq('user_id', user.id)
@@ -90,7 +90,7 @@ export default function CreativeSoulMeditation() {
           setHasAccess(true);
         } else {
           // Check if demo was used
-          const { data: demo } = await supabase
+          const { data: demo } = await (supabase as any)
             .from('meditation_audio_demos')
             .select('id')
             .eq('user_id', user.id)

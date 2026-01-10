@@ -144,7 +144,7 @@ serve(async (req) => {
           style,
           frequency: freq,
           binaural,
-          bpmMatch,
+          bpmMatch: bpm_match,
           stems: keep_music_stem ? stems : undefined,
           userMusic: user_music,
           variant,

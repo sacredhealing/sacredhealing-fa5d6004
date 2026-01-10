@@ -30,13 +30,13 @@ export default function AdminCreativeSoulTab() {
     setIsLoading(true);
     try {
       // Get total users with access
-      const { data: usersWithAccess, error: usersError } = await supabase
+      const { data: usersWithAccess, error: usersError } = await (supabase as any)
         .from('creative_tool_access')
         .select('user_id', { count: 'exact' })
         .eq('tool.slug', 'creative-soul-studio');
 
       // Get total usage
-      const { data: allUsage, error: usageError } = await supabase
+      const { data: allUsage, error: usageError } = await (supabase as any)
         .from('creative_tool_usage')
         .select('*')
         .order('created_at', { ascending: false })
@@ -45,7 +45,7 @@ export default function AdminCreativeSoulTab() {
       if (usageError) throw usageError;
 
       // Get total revenue (from Stripe revenue tracking)
-      const { data: revenue, error: revenueError } = await supabase
+      const { data: revenue, error: revenueError } = await (supabase as any)
         .from('stripe_revenue')
         .select('amount')
         .eq('purchase_type', 'creative_tool');

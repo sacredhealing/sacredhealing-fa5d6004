@@ -47,7 +47,7 @@ export default function CreativeSoulMeditationLanding() {
       }
 
       try {
-        const { data: access } = await supabase
+        const { data: access } = await (supabase as any)
           .from('creative_tool_access')
           .select('*, tool:creative_tools!inner(slug)')
           .eq('user_id', user.id)
