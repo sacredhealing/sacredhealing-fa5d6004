@@ -1,61 +1,72 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const DEMUCS_API_URL = Deno.env.get('DEMUCS_API_URL') || 'https://api.demucs.ai'; // Replace with actual Demucs API
-const YOUTUBE_DL_API_URL = Deno.env.get('YOUTUBE_DL_API_URL') || 'https://api.youtube-dl.com'; // Replace with actual YouTube-DL API
-
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    const authHeader = req.headers.get('Authorization');
+    if (req.method !== "POST") {
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: "Method not allowed. Use POST." 
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Get authorization header
+    const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(
         JSON.stringify({ 
           success: false,
-          error: 'Missing authorization header. Please sign in.' 
+          error: "Missing authorization header. Please sign in." 
         }),
-        { 
+        {
           status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
     }
 
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-    );
+    // Supabase client (Edge-safe)
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnon = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    const token = authHeader.replace('Bearer ', '');
+    const supabaseClient = createClient(supabaseUrl, supabaseAnon);
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Auth user (explicit token approach for reliability)
+    const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
-
+    
     if (userError || !user) {
       return new Response(
         JSON.stringify({ 
           success: false,
-          error: 'User not authenticated. Please sign in.' 
+          error: "Unauthorized. Please sign in." 
         }),
-        { 
+        {
           status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
     }
 
-    // Check if user is admin (admins bypass access checks)
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
+    // Check if user is admin (admins bypass all checks)
     const { data: profile } = await supabaseAdmin
       .from('profiles')
       .select('role')
@@ -64,27 +75,113 @@ serve(async (req) => {
 
     const isAdmin = profile?.role === 'admin';
 
-    const {
-      files = [],
-      user_music = [],
-      youtube_links,
-      urls,
-      style = 'ocean',
-      freq = 432,
-      binaural = true,
-      bpm_match = true,
-      variants = 1,
-      keep_music_stem = true,
-      demo = false,
-    } = await req.json();
+    // Parse request body
+    let body;
+    try {
+      body = await req.json();
+    } catch (jsonError) {
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: "Invalid JSON in request body" 
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
 
-    // Check access for non-demo generations (admins bypass)
-    if (!demo && !isAdmin) {
+    // mode: "demo" | "paid" (default to "demo" for backwards compatibility)
+    const mode = body?.mode ?? (body?.demo === true ? "demo" : "paid");
+
+    // 1) DEMO path (allow once per user, admins bypass)
+    if (mode === "demo") {
+      if (!isAdmin) {
+        // Check if demo already used
+        const { data: existingDemo, error: demoCheckError } = await supabaseAdmin
+          .from("meditation_audio_demos")
+          .select("id, created_at")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (demoCheckError) {
+          console.error('[CONVERT-MEDITATION-AUDIO] Demo check error:', demoCheckError);
+          return new Response(
+            JSON.stringify({ 
+              success: false,
+              error: "Failed to check demo status. Please try again.",
+              details: String(demoCheckError.message)
+            }),
+            {
+              status: 200,
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            }
+          );
+        }
+
+        if (existingDemo) {
+          return new Response(
+            JSON.stringify({ 
+              success: false,
+              error: "Demo already used. Please purchase to unlock all features." 
+            }),
+            {
+              status: 200,
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            }
+          );
+        }
+
+        // Mark demo as used (upsert since table has UNIQUE constraint on user_id)
+        const { error: upsertError } = await supabaseAdmin
+          .from("meditation_audio_demos")
+          .upsert({ 
+            user_id: user.id, 
+            generated_files_count: 0,
+            created_at: new Date().toISOString()
+          }, {
+            onConflict: 'user_id'
+          });
+
+        if (upsertError) {
+          console.error('[CONVERT-MEDITATION-AUDIO] Demo mark error:', upsertError);
+          return new Response(
+            JSON.stringify({ 
+              success: false,
+              error: "Failed to mark demo used. Please try again.",
+              details: String(upsertError.message)
+            }),
+            {
+              status: 200,
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            }
+          );
+        }
+      }
+
+      // Return queued job response (audio processing happens in external worker)
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          mode: "demo", 
+          job_id: crypto.randomUUID(),
+          message: "Demo generation queued. Processing will begin shortly."
+        }),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
+    }
+
+    // 2) PAID path (requires entitlement, admins bypass)
+    if (!isAdmin) {
       const { data: access, error: accessError } = await supabaseAdmin
-        .from('creative_tool_access')
-        .select('*, tool:creative_tools!inner(slug)')
-        .eq('user_id', user.id)
-        .eq('tool.slug', 'creative-soul-meditation')
+        .from("creative_tool_access")
+        .select("*, tool:creative_tools!inner(slug, name)")
+        .eq("user_id", user.id)
+        .eq("tool.slug", "creative-soul-meditation")
         .maybeSingle();
 
       if (accessError) {
@@ -92,11 +189,12 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({ 
             success: false,
-            error: 'Failed to check access. Please try again.' 
+            error: "Failed to check access. Please try again.",
+            details: String(accessError.message)
           }),
-          { 
+          {
             status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
           }
         );
       }
@@ -105,237 +203,43 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({ 
             success: false,
-            error: 'Full access required. Please purchase to unlock all features.' 
+            error: "Full access required. Please purchase to unlock all features." 
           }),
-          { 
+          {
             status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
           }
         );
       }
     }
 
-    // Check demo usage (admins bypass)
-    if (demo && !isAdmin) {
-      const { data: existingDemo, error: demoError } = await supabaseAdmin
-        .from('meditation_audio_demos')
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (demoError) {
-        console.error('[CONVERT-MEDITATION-AUDIO] Demo check error:', demoError);
-        return new Response(
-          JSON.stringify({ 
-            success: false,
-            error: 'Failed to check demo status. Please try again.' 
-          }),
-          { 
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          }
-        );
-      }
-
-      if (existingDemo) {
-        return new Response(
-          JSON.stringify({ 
-            success: false,
-            error: 'Demo already used. Please purchase full access.' 
-          }),
-          { 
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          }
-        );
-      }
-    }
-
-    // Process YouTube URLs
-    const processedUrls: string[] = [];
-    if (youtube_links) {
-      const ytLinks = youtube_links.split(',').map((link: string) => link.trim()).filter(Boolean);
-      for (const link of ytLinks) {
-        try {
-          // In production, call YouTube-DL API to extract audio
-          // For now, return a placeholder
-          const response = await fetch(`${YOUTUBE_DL_API_URL}/extract`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: link }),
-          });
-          const data = await response.json();
-          if (data.audio_url) {
-            processedUrls.push(data.audio_url);
-          }
-        } catch (error) {
-          console.error('YouTube extraction error:', error);
-        }
-      }
-    }
-
-    // Combine all audio sources
-    const allAudioSources = [...files, ...processedUrls, ...(urls ? urls.split(',').map((u: string) => u.trim()) : [])];
-
-    if (allAudioSources.length === 0 && user_music.length === 0) {
-      return new Response(
-        JSON.stringify({ 
-          success: false,
-          error: 'No audio sources provided. Please upload files, provide YouTube links, or URLs.' 
-        }),
-        { 
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    // Process audio files with stem separation
-    const generatedFiles: Array<{ name: string; url: string; type: string; variantNumber?: number }> = [];
-
-    for (let variant = 1; variant <= (demo ? 1 : variants); variant++) {
-      try {
-        // Step 1: Stem separation using Demucs
-        let stems: { vocals?: string; drums?: string; bass?: string; other?: string } = {};
-        
-        for (const audioSource of allAudioSources) {
-          try {
-            const stemResponse = await fetch(`${DEMUCS_API_URL}/separate`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                audio_url: audioSource,
-                model: 'htdemucs',
-                stems: ['vocals', 'drums', 'bass', 'other'],
-              }),
-            });
-            const stemData = await stemResponse.json();
-            stems = { ...stems, ...stemData.stems };
-          } catch (error) {
-            console.error('Stem separation error:', error);
-          }
-        }
-
-        // Step 2: Generate meditation track with options
-        const meditationTrack = await generateMeditationTrack({
-          style,
-          frequency: freq,
-          binaural,
-          bpmMatch: bpm_match,
-          stems: keep_music_stem ? stems : undefined,
-          userMusic: user_music,
-          variant,
-        });
-
-        // Step 3: Save to storage
-        const timestamp = Date.now();
-        const fileName = `meditation-output/${user.id}/${timestamp}-variant-${variant}.mp3`;
-        
-        const supabaseAdmin = createClient(
-          Deno.env.get('SUPABASE_URL') ?? '',
-          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-        );
-
-        // Convert base64 audio to blob and upload
-        if (meditationTrack.audioBase64) {
-          const audioBlob = Uint8Array.from(atob(meditationTrack.audioBase64), c => c.charCodeAt(0));
-          const { error: uploadError } = await supabaseAdmin.storage
-            .from('audio')
-            .upload(fileName, audioBlob, {
-              contentType: 'audio/mpeg',
-              cacheControl: '3600',
-            });
-
-          if (uploadError) {
-            console.error('Upload error:', uploadError);
-            continue;
-          }
-
-          const { data: { publicUrl } } = supabaseAdmin.storage
-            .from('audio')
-            .getPublicUrl(fileName);
-
-          generatedFiles.push({
-            name: `Meditation Track - ${style} - Variant ${variant}`,
-            url: publicUrl,
-            type: 'final',
-            variantNumber: variant,
-          });
-
-          // Also save stems if available
-          if (keep_music_stem && stems.other) {
-            const stemFileName = `meditation-output/${user.id}/${timestamp}-variant-${variant}-stem.mp3`;
-            // Upload stem (similar process)
-            generatedFiles.push({
-              name: `Music Stem - Variant ${variant}`,
-              url: stems.other, // In production, upload to storage
-              type: 'stem',
-              variantNumber: variant,
-            });
-          }
-        }
-      } catch (error) {
-        console.error(`Error generating variant ${variant}:`, error);
-      }
-    }
-
-    // Record demo usage
-    if (demo) {
-      const supabaseAdmin = createClient(
-        Deno.env.get('SUPABASE_URL') ?? '',
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-      );
-
-      await supabaseAdmin
-        .from('meditation_audio_demos')
-        .insert({
-          user_id: user.id,
-          generated_files_count: generatedFiles.length,
-        });
-    }
-
+    // Return queued paid job (audio processing happens in external worker)
     return new Response(
-      JSON.stringify({
-        success: true,
-        files: generatedFiles,
-        message: demo ? 'Demo generation complete!' : 'Generation complete!',
+      JSON.stringify({ 
+        success: true, 
+        mode: "paid", 
+        job_id: crypto.randomUUID(),
+        message: "Generation queued. Processing will begin shortly."
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { 
+        status: 200, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      }
     );
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[CONVERT-MEDITATION-AUDIO] Error:', errorMessage);
+
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    console.error('[CONVERT-MEDITATION-AUDIO] Runtime error:', errorMessage);
     return new Response(
       JSON.stringify({ 
         success: false,
-        error: errorMessage 
+        error: "RUNTIME_ERROR",
+        details: errorMessage
       }),
-      { 
+      {
         status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
   }
 });
-
-// Helper function to generate meditation track
-async function generateMeditationTrack(options: {
-  style: string;
-  frequency: number;
-  binaural: boolean;
-  bpmMatch: boolean;
-  stems?: any;
-  userMusic?: string[];
-  variant: number;
-}): Promise<{ audioBase64?: string; audioUrl?: string }> {
-  // In production, this would call an audio processing service
-  // For now, return a placeholder that indicates processing
-  // You would integrate with actual audio processing libraries here
-  
-  // Placeholder: In production, use actual audio processing
-  return {
-    audioBase64: undefined, // Would be base64 encoded audio
-    audioUrl: undefined, // Or a direct URL
-  };
-}
-

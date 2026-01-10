@@ -125,16 +125,18 @@ export default function CreativeSoulMeditation() {
     try {
       const { data, error } = await supabase.functions.invoke('convert-meditation-audio', {
         body: {
-          files: [], // Demo doesn't process files
-          youtube_links: youtubeLinks || undefined,
-          urls: urls || undefined,
-          style,
-          freq: parseInt(freq),
-          binaural,
-          bpm_match: bpmMatch,
-          variants: 1, // Demo: only 1 variant
-          keep_music_stem: keepMusicStem,
-          demo: true,
+          mode: 'demo', // Use mode: "demo" for demo generation
+          payload: {
+            files: [], // Demo doesn't process files
+            youtube_links: youtubeLinks || undefined,
+            urls: urls || undefined,
+            style,
+            freq: parseInt(freq),
+            binaural,
+            bpm_match: bpmMatch,
+            variants: 1, // Demo: only 1 variant
+            keep_music_stem: keepMusicStem,
+          },
         },
       });
 
@@ -148,15 +150,23 @@ export default function CreativeSoulMeditation() {
       if (data && data.success === false) {
         console.error('Demo generation failed:', data.error);
         toast.error(data.error || 'Failed to generate demo. Please try again.');
+        if (data.error?.includes('Demo already used')) {
+          setDemoUsed(true);
+        }
         return;
       }
 
-      if (data && data.success && data.files) {
-        setGeneratedFiles(data.files);
+      if (data && data.success) {
         setDemoUsed(true);
-        toast.success('Demo generation complete! Purchase to unlock full features.');
-      } else if (data && data.success) {
-        toast.success('Demo generation complete! Purchase to unlock full features.');
+        if (data.job_id) {
+          toast.success(`Demo generation queued! Job ID: ${data.job_id.substring(0, 8)}...`);
+        } else {
+          toast.success('Demo generation complete! Purchase to unlock full features.');
+        }
+        // Store job_id if provided (for future polling)
+        if (data.job_id) {
+          console.log('Demo job_id:', data.job_id);
+        }
       }
     } catch (error: any) {
       console.error('Demo generation error:', error);
@@ -220,17 +230,19 @@ export default function CreativeSoulMeditation() {
 
       const { data, error } = await supabase.functions.invoke('convert-meditation-audio', {
         body: {
-          files: uploadedFileUrls,
-          user_music: uploadedMusicUrls,
-          youtube_links: youtubeLinks || undefined,
-          urls: urls || undefined,
-          style,
-          freq: parseInt(freq),
-          binaural,
-          bpm_match: bpmMatch,
-          variants,
-          keep_music_stem: keepMusicStem,
-          demo: false,
+          mode: 'paid', // Use mode: "paid" for full generation
+          payload: {
+            files: uploadedFileUrls,
+            user_music: uploadedMusicUrls,
+            youtube_links: youtubeLinks || undefined,
+            urls: urls || undefined,
+            style,
+            freq: parseInt(freq),
+            binaural,
+            bpm_match: bpmMatch,
+            variants,
+            keep_music_stem: keepMusicStem,
+          },
         },
       });
 
@@ -247,11 +259,20 @@ export default function CreativeSoulMeditation() {
         return;
       }
 
-      if (data && data.success && data.files) {
-        setGeneratedFiles(data.files);
-        toast.success('Audio generation complete!');
-      } else if (data && data.success) {
-        toast.success('Audio generation complete!');
+      if (data && data.success) {
+        if (data.job_id) {
+          toast.success(`Generation queued! Job ID: ${data.job_id.substring(0, 8)}... Processing will begin shortly.`);
+        } else {
+          toast.success('Audio generation complete!');
+        }
+        // Store job_id if provided (for future polling)
+        if (data.job_id) {
+          console.log('Paid job_id:', data.job_id);
+        }
+        // If files are returned directly (not queued), set them
+        if (data.files && Array.isArray(data.files)) {
+          setGeneratedFiles(data.files);
+        }
       }
     } catch (error: any) {
       console.error('Generation error:', error);
@@ -268,7 +289,7 @@ export default function CreativeSoulMeditation() {
       {/* BUILD MARKER - PROOF OF DEPLOY */}
       <div className="bg-yellow-500/20 border-b border-yellow-500/50 px-4 py-2 text-center">
         <span className="text-xs font-mono text-yellow-600 dark:text-yellow-400">
-          BUILD_MARKER: MED7F8K2M
+          BUILD_MARKER: MED9K3M2X
         </span>
       </div>
       {/* Header */}
