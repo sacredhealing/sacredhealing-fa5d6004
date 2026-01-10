@@ -1,235 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { Sparkles, Music, PenTool, Heart, Zap, ArrowLeft, Check, ExternalLink, ArrowRight, TrendingUp, Globe, Crown, Radio, Headphones, Wand2 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Sparkles, Music, PenTool, Heart, Zap, ArrowLeft, Check, ArrowRight, Globe, Crown, Radio, Headphones } from 'lucide-react';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
 import { useAdminRole } from '@/hooks/useAdminRole';
-import { toast } from 'sonner';
-
-interface CreativeSoulItem {
-  id: string;
-  slug: string;
-  title: string;
-  description: string | null;
-  price_eur: number;
-  type: 'tool' | 'income' | 'course';
-  is_active: boolean;
-  requires_membership: boolean;
-  admin_only: boolean;
-  icon_name: string | null;
-  workspace_url: string | null;
-  internal_url: string | null;
-  order_index: number;
-}
-
-const iconMap: Record<string, React.ElementType> = {
-  Music,
-  PenTool,
-  Heart,
-  Zap,
-  Sparkles,
-  TrendingUp,
-  Globe,
-  Crown,
-};
 
 export default function CreativeSoulSales() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const { user } = useAuth();
   const { isAdmin } = useAdminRole();
-  const [items, setItems] = useState<CreativeSoulItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [purchasing, setPurchasing] = useState<string | null>(null);
-  
-  // Load items from registry - NO edge functions, NO blocking
-  // PATCH: Safe query handling - page renders even if table is missing
-  useEffect(() => {
-    const loadItems = async () => {
-      setIsLoading(true);
-      try {
-        // Load directly from creative_soul_items table
-        // PATCH: Wrap in try/catch to handle table not found errors gracefully
-        const query = (supabase as any)
-          .from('creative_soul_items')
-          .select('*')
-          .order('order_index', { ascending: true })
-          .order('type', { ascending: true });
-
-        // RLS policy handles filtering - admins see all, others see active only
-        const { data, error } = await query;
-
-        if (error) {
-          // PATCH: Handle table not found or schema errors gracefully
-          const errorMessage = error?.message || String(error);
-          if (errorMessage.includes('table') || errorMessage.includes('schema') || errorMessage.includes('not found')) {
-            console.warn('[CreativeSoulSales] Table creative_soul_items not found - using empty items. This is OK.');
-          } else {
-            console.error('[CreativeSoulSales] Error loading items:', error);
-          }
-          // Don't block rendering on error - show empty state
-          setItems([]);
-          setIsLoading(false);
-          return;
-        }
-
-        // If admin, show all. Otherwise filter by is_active and admin_only
-        let filteredItems = isAdmin 
-          ? (data || []) 
-          : (data || []).filter(item => item.is_active && !item.admin_only);
-
-        // HARD REQUIREMENT: Show ONLY Creative Soul Studio
-        // Remove ALL other items (tools, income streams, courses)
-        // Keep only: slug === 'creative-soul-studio' OR title === 'Creative Soul Studio'
-        filteredItems = filteredItems.filter(item => {
-          return item.slug === 'creative-soul-studio' || item.title === 'Creative Soul Studio';
-        });
-
-        setItems(filteredItems as CreativeSoulItem[]);
-      } catch (err: any) {
-        // PATCH: Enhanced error handling - ensure page always renders
-        const errorMessage = err?.message || String(err);
-        if (errorMessage.includes('table') || errorMessage.includes('schema') || errorMessage.includes('not found')) {
-          console.warn('[CreativeSoulSales] Table creative_soul_items not found - using empty items. This is OK.');
-        } else {
-          console.error('[CreativeSoulSales] Exception loading items:', err);
-        }
-        setItems([]);
-      } finally {
-        // PATCH: Always set loading to false so page renders
-        setIsLoading(false);
-      }
-    };
-
-    loadItems();
-  }, [isAdmin]);
-
-  // Handle success/cancel from Stripe redirect
-  useEffect(() => {
-    const success = searchParams.get('success');
-    const canceled = searchParams.get('canceled');
-    
-    if (success === 'true') {
-      toast.success('Payment successful! Your creative tool is ready to use.');
-    } else if (canceled === 'true') {
-      toast.info('Payment was canceled. You can try again anytime.');
-    }
-  }, [searchParams]);
-
-  // Handle purchase - ONLY called when button clicked, NOT on render
-  const handleBuy = async (slug: string, type: string) => {
-    if (!user) {
-      toast.info('Please sign in to purchase');
-      navigate('/auth');
-      return;
-    }
-
-    // Admins bypass purchase
-    if (isAdmin) {
-      toast.info('Admin access: You have full access to all tools.');
-      return;
-    }
-
-    // Income streams redirect to their internal URL
-    if (type === 'income') {
-      const item = items.find(i => i.slug === slug);
-      if (item?.internal_url) {
-        navigate(item.internal_url);
-      }
-      return;
-    }
-
-    // For tools, initiate checkout
-    setPurchasing(slug);
-
-    try {
-      const { data, error } = await supabase.functions.invoke('create-creative-tool-checkout', {
-        body: { toolSlug: slug },
-      });
-
-      if (error) throw error;
-
-      if (data?.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error('No checkout URL returned');
-      }
-    } catch (error: any) {
-      console.error('Checkout error:', error);
-      toast.error(error?.message || 'Failed to start checkout. Please try again.');
-      setPurchasing(null);
-    }
-  };
-
-  const handleView = (item: CreativeSoulItem) => {
-    if (item.type === 'income' && item.internal_url) {
-      navigate(item.internal_url);
-    } else if (item.type === 'tool' && item.workspace_url) {
-      // If workspace_url is /creative-soul-tool, redirect to store instead
-      if (item.workspace_url === '/creative-soul-tool' || item.workspace_url.includes('/creative-soul-tool')) {
-        navigate('/creative-soul/store');
-      } else {
-        window.open(item.workspace_url, '_blank');
-      }
-    } else if (item.type === 'tool') {
-      navigate('/creative-soul/store');
-    }
-  };
-
-  const getColorClasses = (type: string, iconName: string | null) => {
-    const defaultColors = {
-      bg: 'bg-purple-500/10',
-      text: 'text-purple-400',
-      border: 'border-purple-500/30',
-      button: 'bg-purple-600 hover:bg-purple-700',
-    };
-
-    const typeColors: Record<string, any> = {
-      tool: {
-        bg: 'bg-purple-500/10',
-        text: 'text-purple-400',
-        border: 'border-purple-500/30',
-        button: 'bg-purple-600 hover:bg-purple-700',
-      },
-      income: {
-        bg: 'bg-green-500/10',
-        text: 'text-green-400',
-        border: 'border-green-500/30',
-        button: 'bg-green-600 hover:bg-green-700',
-      },
-      course: {
-        bg: 'bg-blue-500/10',
-        text: 'text-blue-400',
-        border: 'border-blue-500/30',
-        button: 'bg-blue-600 hover:bg-blue-700',
-      },
-    };
-
-    return typeColors[type] || defaultColors;
-  };
-
-  // Group items by type
-  const tools = items.filter(i => i.type === 'tool');
-  const incomeStreams = items.filter(i => i.type === 'income');
-  const courses = items.filter(i => i.type === 'course');
 
   return (
     <div className="min-h-screen bg-background">
-      {/* STORE FINGERPRINT MARKER - MUST RENDER */}
-      <div className="bg-red-500/30 border-b-2 border-red-500 px-4 py-3 text-center">
-        <span className="text-sm font-mono text-red-700 dark:text-red-400 font-bold">
-          STORE_FINGERPRINT_CreativeSoulSales_tsx_AAA
-        </span>
-      </div>
-      {/* DEPLOY PROOF MARKER - MUST RENDER */}
-      <div className="bg-yellow-500/20 border-b border-yellow-500/50 px-4 py-2 text-center">
-        <span className="text-xs font-mono text-yellow-600 dark:text-yellow-400 font-bold">
-          DEPLOY_PROOF_MED_BANNER_777
-        </span>
-      </div>
       {/* Header */}
       <header className="relative overflow-hidden bg-gradient-to-br from-purple-500/20 via-pink-500/10 to-background px-4 py-12">
         <div className="max-w-6xl mx-auto text-center">
@@ -342,14 +124,8 @@ export default function CreativeSoulSales() {
           </div>
         </section>
 
-        {/* RENDER PROOF BLOCK - MUST BE VISIBLE */}
-        <div style={{ padding: 16, border: '6px solid red', marginTop: 16, background: 'yellow', color: 'black', fontSize: 22, fontWeight: 800 }}>
-          RENDER_PROOF_MEDITATION_BLOCK_999 — if you can read this, CreativeSoulSales.tsx is rendering this section.
-        </div>
-
         {/* Creative Soul Meditation Banner - Hardcoded */}
         <section>
-          <h2 style={{ fontSize: 28, fontWeight: 900, textAlign: 'center', marginBottom: 16, marginTop: 16 }}>Creative Soul Meditation</h2>
           <div className="max-w-2xl mx-auto">
             <Card className="relative overflow-hidden border-2 border-purple-500/30 hover:border-purple-500/50 transition-all duration-300">
               <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl opacity-50" />
@@ -401,190 +177,29 @@ export default function CreativeSoulSales() {
                   ))}
                 </div>
 
-                <Button
-                  onClick={() => navigate('/creative-soul-meditation-landing')}
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold"
-                  size="lg"
-                >
-                  Get This Tool
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
+                {isAdmin ? (
+                  <Button
+                    onClick={() => navigate('/creative-soul-meditation-tool')}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold"
+                    size="lg"
+                  >
+                    <Check className="w-4 h-4 mr-2" />
+                    Open Tool (Admin Access)
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => navigate('/creative-soul-meditation-landing')}
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold"
+                    size="lg"
+                  >
+                    Get This Tool
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                )}
               </div>
             </Card>
           </div>
         </section>
-
-        {/* Dynamic items from database */}
-        {isLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-        ) : (
-          <>
-            {/* Additional Tools from database */}
-            {tools.length > 0 && (
-              <section>
-                <h2 className="text-2xl font-heading font-semibold text-foreground mb-6 text-center">
-                  More Tools
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {tools.map((item) => {
-                    const colors = getColorClasses(item.type, item.icon_name);
-                    const Icon = iconMap[item.icon_name || 'Sparkles'] || Sparkles;
-
-              return (
-                <Card
-                        key={item.id}
-                        className={`relative overflow-hidden border-2 ${colors.border} hover:border-opacity-60 transition-all duration-300`}
-                >
-                  <div className={`absolute top-0 right-0 w-32 h-32 ${colors.bg} rounded-full blur-3xl opacity-50`} />
-                  <div className="relative p-6 flex flex-col h-full">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className={`p-3 rounded-xl ${colors.bg} ${colors.border} border`}>
-                        <Icon className={`w-6 h-6 ${colors.text}`} />
-                      </div>
-                            {item.price_eur > 0 && (
-                              <Badge variant="outline" className="text-sm font-semibold">
-                                €{item.price_eur.toFixed(2)}
-                          </Badge>
-                        )}
-                    </div>
-
-                    <h3 className="text-2xl font-heading font-bold text-foreground mb-3">
-                            {item.title}
-                    </h3>
-                    
-                    <p className="text-muted-foreground mb-6 flex-grow">
-                            {item.description || 'Creative tool for your spiritual journey'}
-                    </p>
-
-                        <Button
-                            onClick={() => navigate('/creative-soul')}
-                            className={`w-full ${colors.button} text-white font-semibold`}
-                          size="lg"
-                        >
-                            Get This Tool
-                            <ArrowRight className="w-4 h-4 ml-2" />
-                        </Button>
-                        </div>
-                      </Card>
-                    );
-                  })}
-                </div>
-              </section>
-            )}
-
-            {/* Income Streams Section */}
-            {incomeStreams.length > 0 && (
-              <section>
-                <h2 className="text-3xl font-heading font-semibold text-foreground mb-2 text-center">
-                  Income Streams
-                </h2>
-                <p className="text-muted-foreground text-center mb-8">
-                  Opportunities to earn while you learn and grow
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {incomeStreams.map((item) => {
-                    const colors = getColorClasses(item.type, item.icon_name);
-                    const Icon = iconMap[item.icon_name || 'TrendingUp'] || TrendingUp;
-
-                    return (
-                      <Card
-                        key={item.id}
-                        className={`relative overflow-hidden border-2 ${colors.border} hover:border-opacity-60 transition-all duration-300`}
-                      >
-                        <div className={`absolute top-0 right-0 w-32 h-32 ${colors.bg} rounded-full blur-3xl opacity-50`} />
-                        <div className="relative p-6 flex flex-col h-full">
-                          <div className="flex items-start justify-between mb-4">
-                            <div className={`p-3 rounded-xl ${colors.bg} ${colors.border} border`}>
-                              <Icon className={`w-6 h-6 ${colors.text}`} />
-                            </div>
-                            <Badge variant="outline" className="text-sm font-semibold bg-green-500/10 text-green-600 border-green-500/30">
-                              Income
-                            </Badge>
-                          </div>
-
-                          <h3 className="text-2xl font-heading font-bold text-foreground mb-3">
-                            {item.title}
-                          </h3>
-                          
-                          <p className="text-muted-foreground mb-6 flex-grow">
-                            {item.description || 'Income opportunity'}
-                          </p>
-
-                          <Button
-                            onClick={() => handleView(item)}
-                            className={`w-full ${colors.button} text-white font-semibold`}
-                            size="lg"
-                          >
-                            Learn More
-                            <ArrowRight className="w-4 h-4 ml-2" />
-                          </Button>
-                        </div>
-                      </Card>
-                    );
-                  })}
-                </div>
-              </section>
-            )}
-
-            {/* Courses Section */}
-            {courses.length > 0 && (
-              <section>
-                <h2 className="text-3xl font-heading font-semibold text-foreground mb-2 text-center">
-                  Courses
-                </h2>
-                <p className="text-muted-foreground text-center mb-8">
-                  Learn and grow with structured courses
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {courses.map((item) => {
-                    const colors = getColorClasses(item.type, item.icon_name);
-                    const Icon = iconMap[item.icon_name || 'Heart'] || Heart;
-
-                    return (
-                      <Card
-                        key={item.id}
-                        className={`relative overflow-hidden border-2 ${colors.border} hover:border-opacity-60 transition-all duration-300`}
-                      >
-                        <div className={`absolute top-0 right-0 w-32 h-32 ${colors.bg} rounded-full blur-3xl opacity-50`} />
-                        <div className="relative p-6 flex flex-col h-full">
-                          <div className="flex items-start justify-between mb-4">
-                            <div className={`p-3 rounded-xl ${colors.bg} ${colors.border} border`}>
-                              <Icon className={`w-6 h-6 ${colors.text}`} />
-                            </div>
-                            {item.price_eur > 0 && (
-                              <Badge variant="outline" className="text-sm font-semibold">
-                                €{item.price_eur.toFixed(2)}
-                              </Badge>
-                        )}
-                      </div>
-
-                          <h3 className="text-2xl font-heading font-bold text-foreground mb-3">
-                            {item.title}
-                          </h3>
-                          
-                          <p className="text-muted-foreground mb-6 flex-grow">
-                            {item.description || 'Course description'}
-                          </p>
-
-                      <Button
-                            onClick={() => handleView(item)}
-                        className={`w-full ${colors.button} text-white font-semibold`}
-                        size="lg"
-                      >
-                            {item.price_eur > 0 ? 'Enroll' : 'View'}
-                            <ArrowRight className="w-4 h-4 ml-2" />
-                      </Button>
-                  </div>
-                </Card>
-              );
-            })}
-          </div>
-              </section>
-            )}
-          </>
-        )}
       </div>
 
       {/* Footer */}
