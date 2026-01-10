@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
 import { X, Bug } from 'lucide-react';
 
 // Enable/disable debug banner via localStorage or env var
@@ -7,12 +6,15 @@ const DEBUG_BANNER_ENABLED = import.meta.env.VITE_DEBUG_BANNER === 'true' ||
   localStorage.getItem('debug_banner_enabled') === 'true';
 
 export const DebugBanner: React.FC = () => {
-  const location = useLocation();
   const [isVisible, setIsVisible] = useState(DEBUG_BANNER_ENABLED);
   const [buildId, setBuildId] = useState<string>('');
   const [commitHash, setCommitHash] = useState<string>('');
+  const [currentRoute, setCurrentRoute] = useState<string>('');
 
   useEffect(() => {
+    // Get current route from window.location (works without Router context)
+    setCurrentRoute(window.location.pathname);
+    
     // Try to get build ID from meta tag or env
     const buildMeta = document.querySelector('meta[name="build-id"]');
     const buildFromMeta = buildMeta?.getAttribute('content');
@@ -31,7 +33,6 @@ export const DebugBanner: React.FC = () => {
   if (!isVisible) return null;
 
   const env = import.meta.env.MODE || 'development';
-  const currentRoute = location.pathname;
 
   return (
     <div className="fixed top-0 left-0 right-0 z-[9999] bg-yellow-500/95 dark:bg-yellow-600/95 border-b border-yellow-600 dark:border-yellow-700 px-4 py-1.5 text-xs font-mono">
