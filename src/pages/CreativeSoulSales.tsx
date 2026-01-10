@@ -203,12 +203,6 @@ export default function CreativeSoulSales() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* BUILD MARKER - PROOF OF DEPLOY */}
-      <div className="bg-yellow-500/20 border-b border-yellow-500/50 px-4 py-2 text-center">
-        <span className="text-xs font-mono text-yellow-600 dark:text-yellow-400">
-          BUILD_MARKER: CS7X9K2M
-        </span>
-      </div>
       {/* Header */}
       <header className="relative overflow-hidden bg-gradient-to-br from-purple-500/20 via-pink-500/10 to-background px-4 py-12">
         <div className="max-w-6xl mx-auto text-center">
@@ -235,21 +229,83 @@ export default function CreativeSoulSales() {
 
       {/* Content */}
       <div className="max-w-6xl mx-auto px-4 py-12 space-y-12">
+        {/* Creative Soul Studio Banner - Always visible */}
+        <section>
+          <h2 className="text-3xl font-heading font-semibold text-foreground mb-2 text-center">
+            Creative Tools
+          </h2>
+          <p className="text-muted-foreground text-center mb-8">
+            AI-powered tools for your creative journey
+          </p>
+          
+          {/* Creative Soul Studio Card */}
+          <div className="max-w-2xl mx-auto">
+            <Card className="relative overflow-hidden border-2 border-purple-500/30 hover:border-purple-500/50 transition-all duration-300">
+              <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl opacity-50" />
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-pink-500/10 rounded-full blur-2xl opacity-40" />
+              
+              <div className="relative p-8 flex flex-col">
+                <div className="flex items-start justify-between mb-6">
+                  <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/30">
+                    <Sparkles className="w-8 h-8 text-purple-400" />
+                  </div>
+                  <Badge variant="outline" className="text-sm font-semibold bg-purple-500/10 text-purple-400 border-purple-500/30">
+                    AI-Powered
+                  </Badge>
+                </div>
+
+                <h3 className="text-3xl font-heading font-bold text-foreground mb-4">
+                  Creative Soul Studio
+                </h3>
+                
+                <p className="text-muted-foreground mb-6 text-lg leading-relaxed">
+                  Your AI-powered creative companion. Generate ideas, translate content between languages, 
+                  extract insights from PDFs, transcribe audio, analyze YouTube videos, and more. 
+                  Everything you need to bring your creative visions to life.
+                </p>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-8">
+                  {[
+                    { icon: PenTool, label: 'Generate Ideas' },
+                    { icon: Globe, label: 'Translate Content' },
+                    { icon: Music, label: 'Transcribe Audio' },
+                    { icon: Zap, label: 'Analyze PDFs' },
+                    { icon: Heart, label: 'YouTube Insights' },
+                    { icon: Crown, label: 'Creative AI' },
+                  ].map(({ icon: FeatureIcon, label }) => (
+                    <div key={label} className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <FeatureIcon className="w-4 h-4 text-purple-400" />
+                      <span>{label}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <Button
+                  onClick={() => navigate('/creative-soul')}
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold"
+                  size="lg"
+                >
+                  Get This Tool
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            </Card>
+          </div>
+        </section>
+
+        {/* Dynamic items from database */}
         {isLoading ? (
-          <div className="flex items-center justify-center py-12">
+          <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         ) : (
           <>
-            {/* Tools Section */}
+            {/* Additional Tools from database */}
             {tools.length > 0 && (
               <section>
-                <h2 className="text-3xl font-heading font-semibold text-foreground mb-2 text-center">
-                  Creative Tools
+                <h2 className="text-2xl font-heading font-semibold text-foreground mb-6 text-center">
+                  More Tools
                 </h2>
-                <p className="text-muted-foreground text-center mb-8">
-                  AI-powered tools for your creative journey
-                </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {tools.map((item) => {
                     const colors = getColorClasses(item.type, item.icon_name);
@@ -281,31 +337,14 @@ export default function CreativeSoulSales() {
                             {item.description || 'Creative tool for your spiritual journey'}
                           </p>
 
-                          {isAdmin ? (
-            <Button
-              onClick={() => {
-                console.log("CREATIVE_SOUL_CLICK_V1");
-                handleView(item);
-              }}
-              className={`w-full ${colors.button} text-white font-semibold`}
-              size="lg"
-            >
-              Open Tool
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          ) : (
-            <Button
-              onClick={() => {
-                console.log("CREATIVE_SOUL_CLICK_V1");
-                navigate('/creative-soul');
-              }}
-              className={`w-full ${colors.button} text-white font-semibold`}
-              size="lg"
-            >
-              Get This Tool
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          )}
+                          <Button
+                            onClick={() => navigate('/creative-soul')}
+                            className={`w-full ${colors.button} text-white font-semibold`}
+                            size="lg"
+                          >
+                            Get This Tool
+                            <ArrowRight className="w-4 h-4 ml-2" />
+                          </Button>
                         </div>
                       </Card>
                     );
@@ -357,7 +396,7 @@ export default function CreativeSoulSales() {
                             className={`w-full ${colors.button} text-white font-semibold`}
                             size="lg"
                           >
-                            {isAdmin ? 'View' : 'Learn More'}
+                            Learn More
                             <ArrowRight className="w-4 h-4 ml-2" />
                           </Button>
                         </div>
@@ -413,7 +452,7 @@ export default function CreativeSoulSales() {
                             className={`w-full ${colors.button} text-white font-semibold`}
                             size="lg"
                           >
-                            {isAdmin ? 'View Course' : item.price_eur > 0 ? 'Enroll' : 'View'}
+                            {item.price_eur > 0 ? 'Enroll' : 'View'}
                             <ArrowRight className="w-4 h-4 ml-2" />
                           </Button>
                         </div>
@@ -422,19 +461,6 @@ export default function CreativeSoulSales() {
                   })}
                 </div>
               </section>
-            )}
-
-            {/* Empty State */}
-            {items.length === 0 && !isLoading && (
-              <Card className="border-2 border-border/50">
-                <CardContent className="p-8 text-center">
-                  <Sparkles className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-                  <h3 className="text-lg font-semibold text-foreground mb-2">No Items Available</h3>
-                  <p className="text-muted-foreground">
-                    Creative Soul items are being set up. Please check back soon!
-                  </p>
-                </CardContent>
-              </Card>
             )}
           </>
         )}
