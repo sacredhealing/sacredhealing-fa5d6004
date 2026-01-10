@@ -11,6 +11,9 @@ export interface ConversionResponse {
   text?: string;
   error?: string;
   message?: string;
+  transcription?: string;
+  videoTitle?: string;
+  videoDuration?: number;
 }
 
 /**
@@ -69,6 +72,9 @@ export async function convertYouTubeToMP3(videoUrl: string): Promise<ConversionR
         status: 200,
         url: data.mp3Url,
         message: data.message || 'YouTube video converted to MP3 successfully',
+        transcription: data.transcription || undefined,
+        videoTitle: data.videoTitle || undefined,
+        videoDuration: data.videoDuration || undefined,
       };
     }
 

@@ -337,18 +337,20 @@ export default function CreativeSoulTool() {
 
     setIsProcessingYoutube(true);
     try {
-      // Step 1: Convert YouTube to MP3 using utility function with proper status codes
+      // Convert YouTube to MP3 using utility function - now includes auto-transcription
       const conversionResult = await convertYouTubeToMP3(youtubeUrl);
 
       // Check if conversion was successful (status 200 and has URL)
       if (conversionResult.status === 200 && conversionResult.url) {
         setMp3Url(conversionResult.url);
-        toast.success(conversionResult.message || 'YouTube video converted to MP3!');
         
-        // Step 2: Auto-transcribe if audio base64 is available
-        // Note: This would require the Edge Function to return audioBase64
-        // For now, we'll skip auto-transcription from YouTube conversion
-        // Users can manually transcribe after downloading the MP3
+        // If transcription is included, set it automatically
+        if (conversionResult.transcription) {
+          setTranscribedText(conversionResult.transcription);
+          toast.success(`"${conversionResult.videoTitle || 'Video'}" converted and transcribed!`);
+        } else {
+          toast.success(conversionResult.message || 'YouTube video converted to MP3!');
+        }
       } else {
         // Handle error - edge function now returns 200 with error in body
         const errorMessage = conversionResult.error || conversionResult.message || 'Failed to convert YouTube video';
