@@ -24,8 +24,8 @@ serve(async (req) => {
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const AUDIO_WORKER_URL = Deno.env.get("AUDIO_WORKER_URL");
     const AUDIO_WORKER_API_KEY = Deno.env.get("AUDIO_WORKER_API_KEY");
-    const NOISE_REMOVAL_API_URL = Deno.env.get("NOISE_REMOVAL_API_URL"); // Optional: external noise removal API
-    const NOISE_REMOVAL_API_KEY = Deno.env.get("NOISE_REMOVAL_API_KEY");
+    const RAPIDAPI_KEY = Deno.env.get("RAPIDAPI_NOISE_CANCELLER_KEY");
+    const RAPIDAPI_HOST = "noise-canceller.p.rapidapi.com";
 
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_ROLE_KEY) {
       return json({ success: false, error: "Server configuration error" });
@@ -90,27 +90,32 @@ serve(async (req) => {
       return json({ success: false, error: "Failed to create job", details: insertErr.message });
     }
 
-    // If external noise removal API is configured, use it directly
-    if (NOISE_REMOVAL_API_URL && NOISE_REMOVAL_API_KEY) {
+    // Use RapidAPI Noise Canceller if configured
+    if (RAPIDAPI_KEY) {
       try {
-        const response = await fetch(`${NOISE_REMOVAL_API_URL}/denoise`, {
+        // RapidAPI expects form-data with audio file URL or base64
+        const response = await fetch("https://noise-canceller.p.rapidapi.com/api/noiseCanceller", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${NOISE_REMOVAL_API_KEY}`,
+            "X-RapidAPI-Key": RAPIDAPI_KEY,
+            "X-RapidAPI-Host": RAPIDAPI_HOST,
           },
           body: JSON.stringify({
-            audio_url: body.audioUrl,
-            noise_reduction_level: body.noiseReductionLevel || "medium",
-            remove_hiss: body.removeHiss ?? true,
-            remove_hum: body.removeHum ?? true,
-            remove_clicks: body.removeClicks ?? true,
-            preserve_voice: body.preserveVoice ?? true,
+            url: body.audioUrl,
           }),
         });
 
         if (response.ok) {
           const result = await response.json();
+          
+          // RapidAPI may return different field names - handle both
+          const outputUrl = result.outputUrl || result.output_url || result.url || result.downloadUrl || result.download_url;
+          
+          if (!outputUrl) {
+            console.error('[NOISE-REMOVAL] RapidAPI response missing output URL:', result);
+            throw new Error("No output URL in RapidAPI response");
+          }
           
           // Update job as completed
           await supabaseAdmin
@@ -118,7 +123,7 @@ serve(async (req) => {
             .update({
               status: "completed",
               progress: 100,
-              result_url: result.output_url,
+              result_url: outputUrl,
               completed_at: new Date().toISOString(),
             })
             .eq("job_id", jobId);
@@ -126,12 +131,46 @@ serve(async (req) => {
           return json({
             success: true,
             job_id: jobId,
-            output_url: result.output_url,
-            noise_reduction_applied: result.noise_reduction_applied,
+            output_url: outputUrl,
+            noise_reduction_applied: true,
           });
+        } else {
+          const errorText = await response.text();
+          console.error('[NOISE-REMOVAL] RapidAPI error:', response.status, errorText);
+          
+          // For 4xx errors (client errors like invalid API key), don't fall back to worker
+          if (response.status >= 400 && response.status < 500) {
+            await supabaseAdmin
+              .from("creative_soul_jobs")
+              .update({
+                status: "failed",
+                error_message: `RapidAPI error (${response.status}): ${errorText.substring(0, 200)}`,
+                completed_at: new Date().toISOString(),
+              })
+              .eq("job_id", jobId);
+            
+            return json({
+              success: false,
+              error: `RapidAPI request failed (${response.status})`,
+              job_id: jobId,
+              details: errorText.substring(0, 200),
+            });
+          }
+          
+          // For 5xx errors or other server errors, update job and fall through to worker
+          await supabaseAdmin
+            .from("creative_soul_jobs")
+            .update({
+              status: "queued", // Reset to queued for worker fallback
+              error_message: `RapidAPI server error (${response.status}), trying worker fallback`,
+            })
+            .eq("job_id", jobId);
+          
+          // Fall through to worker for server errors
         }
       } catch (apiErr) {
-        console.error('[NOISE-REMOVAL] External API error:', apiErr);
+        console.error('[NOISE-REMOVAL] RapidAPI exception:', apiErr);
+        // Fall through to worker if RapidAPI fails
       }
     }
 
