@@ -1,8 +1,18 @@
-# Welcome to your Lovable project
+# Sacred Healing App
+
+## 🚀 Quick Deploy to Supabase (No Lovable Credits Required)
+
+**Quick Start**: See [`QUICK_DEPLOY.md`](./QUICK_DEPLOY.md) for 2-step deployment.
+
+**Full Instructions**: See [`DEPLOY_INSTRUCTIONS.md`](./DEPLOY_INSTRUCTIONS.md) for detailed guide.
+
+**Project ID**: `ssygukfdbtehvtndandn`
+
+---
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/bb0fb892-6577-43b2-b15b-21c9d0423f17
+**Lovable URL**: https://lovable.dev/projects/bb0fb892-6577-43b2-b15b-21c9d0423f17
 
 ## How can I edit this code?
 
