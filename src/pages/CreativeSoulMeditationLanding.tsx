@@ -1,278 +1,265 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Music, Sparkles, ArrowRight, Play, Download, Headphones, Check, Youtube, Upload, Link as LinkIcon, Wand2, Gift, Radio } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { PaymentOptions } from '@/components/creative-soul/PaymentOptions';
-import { useAuth } from '@/hooks/useAuth';
-import { useSHCBalance } from '@/hooks/useSHCBalance';
-import { useAdminRole } from '@/hooks/useAdminRole';
-import { supabase } from '@/integrations/supabase/client';
+import React from "react";
+
+const plans = [
+  {
+    badge: "Main Offer",
+    title: "Lifetime License",
+    price: "€149",
+    subtitle: "Unlimited professional meditation creation",
+    accent: "from-indigo-100 via-purple-100 to-emerald-100",
+    cta: "Get Lifetime Access",
+    features: [
+      "Meditations: Unlimited",
+      "Length per meditation: up to 90 minutes",
+      "Input sources: YouTube URLs, Any URL, Audio uploads",
+      "Stem separation: Unlimited",
+      "Noise removal: High quality",
+      "BPM & key analysis: Included",
+      "Frequency options: All 15 frequencies",
+      "Binaural beats: Included",
+      "Music matching: Real music + ambience",
+      "Variants per meditation: up to 5",
+      "Downloads: Final mix, Instrumental, Stems (vocals/music/instruments)",
+      "Commercial use: Allowed",
+      "Storage retention: 12 months (can regenerate anytime)",
+    ],
+    highlight: true,
+  },
+  {
+    badge: "Best Value Monthly",
+    title: "Monthly Creator Subscription",
+    price: "€14.99 / month",
+    subtitle: "Create meditations regularly without committing",
+    accent: "from-sky-100 via-indigo-50 to-purple-100",
+    cta: "Start Monthly",
+    features: [
+      "Meditations: 10 per month (no rollover)",
+      "Length per meditation: up to 45 minutes",
+      "Input sources: YouTube URLs, Audio uploads",
+      "Stem separation: Included",
+      "Noise removal: Medium–high quality",
+      "BPM & key analysis: Included",
+      "Frequency options: All 15 frequencies",
+      "Variants per meditation: up to 3",
+      "Downloads: Final mix, Instrumental",
+      "Stems: Not included (optional add-on)",
+      "Commercial use: Allowed",
+      "Storage retention: 30 days",
+    ],
+    highlight: false,
+  },
+  {
+    badge: "Impulse Buy",
+    title: "One Meditation",
+    price: "€9.99",
+    subtitle: "Create one powerful meditation, no commitment",
+    accent: "from-amber-100 via-rose-50 to-purple-50",
+    cta: "Buy One Meditation",
+    features: [
+      "Meditations: 1",
+      "Length: up to 30 minutes",
+      "Input sources: Audio upload, YouTube URL",
+      "Stem separation: Not included (voice-only cleanup)",
+      "Noise removal: Included",
+      "BPM analysis: Not included (auto default BPM)",
+      "Frequency options: 5 core frequencies (432, 528, 396, 6 Hz, 8 Hz)",
+      "Variants: 1",
+      "Downloads: Final mixed meditation",
+      "Instrumentals: Not included",
+      "Stems: Not included",
+      "Commercial use: Personal use only",
+      "Storage retention: 7 days",
+    ],
+    highlight: false,
+  },
+];
+
+const addons = [
+  {
+    title: "Stem Download Unlock",
+    price: "€4.99 per meditation",
+    desc: "Unlocks vocal + music stems for deeper remixing and rebuilding around the voice.",
+  },
+  {
+    title: "Extended Length Pack",
+    price: "€6.99",
+    desc: "Extends one meditation to 90 minutes (ideal for sleep and long sessions).",
+  },
+  {
+    title: "Credit Packs",
+    price: "From €39",
+    desc: "5 meditations → €39 • 10 meditations → €69",
+  },
+];
 
 export default function CreativeSoulMeditationLanding() {
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const { isAdmin } = useAdminRole();
-  const { balance } = useSHCBalance();
-  const [searchParams] = useSearchParams();
-  const [hasAccess, setHasAccess] = useState(false);
-  const [affiliateId, setAffiliateId] = useState<string | null>(null);
-
-  // Check for affiliate code
-  useEffect(() => {
-    const ref = searchParams.get('ref');
-    if (ref) {
-      setAffiliateId(ref);
-      localStorage.setItem('creative_soul_meditation_affiliate', ref);
-    } else {
-      const stored = localStorage.getItem('creative_soul_meditation_affiliate');
-      if (stored) setAffiliateId(stored);
-    }
-  }, [searchParams]);
-
-  // Check access
-  useEffect(() => {
-    const checkAccess = async () => {
-      if (!user) {
-        setHasAccess(false);
-        return;
-      }
-
-      if (isAdmin) {
-        setHasAccess(true);
-        return;
-      }
-
-      try {
-        const { data: access } = await (supabase as any)
-          .from('creative_tool_access')
-          .select('*, tool:creative_tools!inner(slug)')
-          .eq('user_id', user.id)
-          .eq('tool.slug', 'creative-soul-meditation')
-          .maybeSingle();
-
-        if (access) {
-          setHasAccess(true);
-        }
-      } catch (error) {
-        console.error('Error checking access:', error);
-      }
-    };
-
-    checkAccess();
-  }, [user, isAdmin]);
-
-  const handleGetStarted = () => {
-    if (hasAccess) {
-      navigate('/creative-soul-meditation-tool');
-    } else if (user) {
-      navigate('/creative-soul-meditation-tool');
-    } else {
-      navigate('/auth');
-    }
-  };
-
-  const features = [
-    { icon: Youtube, title: 'YouTube Support', description: 'Convert any YouTube video into meditation audio', color: 'text-red-500' },
-    { icon: Upload, title: 'Audio Upload', description: 'Upload your own audio files (MP3, WAV, M4A)', color: 'text-blue-500' },
-    { icon: LinkIcon, title: 'URL Support', description: 'Process audio from direct URLs', color: 'text-green-500' },
-    { icon: Radio, title: 'Stem Separation', description: 'High-quality Demucs stem separation with keep/delete options', color: 'text-purple-500' },
-    { icon: Wand2, title: 'Multi-Variant Generation', description: 'Generate 1-5 unique meditation track variants', color: 'text-pink-500' },
-    { icon: Headphones, title: 'Binaural Beats', description: 'Add binaural beats for deeper meditation', color: 'text-indigo-500' },
-    { icon: Music, title: 'Frequency Tuning', description: '432Hz, 528Hz, or 440Hz frequency options', color: 'text-amber-500' },
-    { icon: Download, title: 'High-Quality Downloads', description: 'Download final audio and stems in studio quality', color: 'text-teal-500' },
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-50 via-white to-indigo-50">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-purple-700 to-indigo-600 text-white text-center py-20 px-4 rounded-xl mb-12 relative overflow-hidden">
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="relative z-10 max-w-4xl mx-auto">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Sparkles className="w-10 h-10 animate-pulse" />
-            <h1 className="text-5xl md:text-6xl font-bold cursor-pointer hover:scale-105 transition-transform">
+    <div className="min-h-screen bg-gradient-to-b from-indigo-50 via-purple-50 to-emerald-50 text-slate-800">
+      {/* HERO */}
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-indigo-100/70 via-purple-100/70 to-emerald-100/70" />
+        <div className="relative max-w-6xl mx-auto px-6 py-16 md:py-24">
+          <div className="max-w-2xl">
+            <p className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-sm font-medium text-indigo-700 border border-indigo-100 cursor-fancy">
               Creative Soul Meditation
+            </p>
+
+            <h1 className="mt-6 text-4xl md:text-5xl font-semibold tracking-tight text-slate-900 leading-tight">
+              Create calm, healing meditations with real music, frequency matching, and stem control.
             </h1>
-          </div>
-          <p className="text-xl md:text-2xl mb-6 leading-relaxed">
-            Transform any audio or YouTube video into high-quality meditation, affirmation, and healing tracks
-          </p>
-          <p className="text-lg mb-8 text-purple-100">
-            Use real music, binaural beats, frequency tuning, and full stem separation to create professional-quality audio
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              onClick={handleGetStarted}
-              size="lg"
-              className="bg-amber-400 hover:bg-amber-500 text-gray-900 font-bold py-6 px-8 rounded-lg text-xl cursor-pointer hover:scale-105 transition-transform shadow-xl"
-            >
-              {hasAccess ? (
-                <>
-                  <Music className="w-5 h-5 mr-2" />
-                  Open Tool
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </>
-              ) : (
-                <>
-                  <Play className="w-5 h-5 mr-2" />
-                  Try Creative Soul Now
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </>
-              )}
-            </Button>
+
+            <p className="mt-5 text-lg md:text-xl text-slate-700 leading-relaxed">
+              Upload audio or paste a YouTube link. Clean the voice, choose a healing frequency, match the right meditation style,
+              and export a professional mix — with optional stems for advanced creation.
+            </p>
+
+            <div className="mt-8 flex flex-col sm:flex-row gap-3">
+              <a
+                href="/creative-soul-meditation-tool?mode=demo"
+                className="cursor-fancy inline-flex justify-center rounded-xl bg-amber-300 px-6 py-3 font-semibold text-slate-900 shadow-sm hover:bg-amber-200 transition"
+              >
+                Try One Free Demo
+              </a>
+              <a
+                href="#pricing"
+                className="cursor-fancy inline-flex justify-center rounded-xl bg-indigo-700 px-6 py-3 font-semibold text-white shadow-sm hover:bg-indigo-600 transition"
+              >
+                See Pricing & Limits
+              </a>
+            </div>
+
+            <p className="mt-4 text-sm text-slate-600 leading-relaxed">
+              Designed for meditations, affirmations, and healing audio — with compassionate sound palettes and clear export options.
+            </p>
           </div>
         </div>
       </section>
 
-      <div className="max-w-6xl mx-auto px-4 pb-12 space-y-12">
-        {/* Demo Notice */}
-        <Card className="border-2 border-amber-300 bg-gradient-to-r from-amber-50 to-yellow-50">
-          <CardContent className="p-6 text-center">
-            <p className="text-lg font-semibold text-amber-900 cursor-pointer hover:scale-105 transition-transform inline-block">
-              Try the <strong className="text-amber-700">one free demo</strong> before purchase. Upload audio or paste a YouTube link!
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Features Grid */}
-        <div className="text-center mb-8">
-          <h2 className="text-4xl font-bold text-gray-800 mb-4">Powerful Features</h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Everything you need to create professional meditation audio tracks
+      {/* PRICING + LIMITS */}
+      <section id="pricing" className="max-w-6xl mx-auto px-6 py-14">
+        <div className="rounded-2xl border border-white/70 bg-white/60 backdrop-blur p-8 shadow-sm">
+          <h2 className="text-2xl md:text-3xl font-semibold text-slate-900">
+            Pricing & exact limits (simple and transparent)
+          </h2>
+          <p className="mt-2 text-slate-700 leading-relaxed max-w-2xl">
+            Start with one free demo. Choose a plan that matches your creation rhythm — from a single meditation to unlimited
+            professional production.
           </p>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {features.map((feature, index) => {
-            const Icon = feature.icon;
-            return (
-              <Card
-                key={index}
-                className="border-2 border-purple-100 hover:border-purple-300 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:scale-105"
+          <div className="mt-8 grid gap-5 lg:grid-cols-3">
+            {plans.map((p) => (
+              <div
+                key={p.title}
+                className={[
+                  "rounded-2xl border p-6 shadow-sm bg-white/70",
+                  p.highlight ? "border-indigo-200 ring-2 ring-indigo-200" : "border-white/80",
+                ].join(" ")}
               >
-                <CardContent className="p-6 text-center">
-                  <div className={`w-16 h-16 rounded-xl bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform ${feature.color}`}>
-                    <Icon className="w-8 h-8" />
+                <div className={`rounded-xl p-4 bg-gradient-to-r ${p.accent} border border-white/60`}>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-xs font-semibold text-indigo-700 bg-white/70 border border-indigo-100 rounded-full px-3 py-1">
+                      {p.badge}
+                    </span>
+                    {p.highlight && (
+                      <span className="text-xs font-semibold text-slate-700 bg-white/70 border border-white/80 rounded-full px-3 py-1">
+                        No-compromise
+                      </span>
+                    )}
                   </div>
-                  <h3 className="font-bold text-lg mb-2 text-gray-800 cursor-pointer">{feature.title}</h3>
-                  <p className="text-sm text-gray-600">{feature.description}</p>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
 
-        {/* How It Works */}
-        <Card className="shadow-xl border-2 border-purple-100 bg-gradient-to-br from-white to-purple-50/30">
-          <CardContent className="p-8">
-            <h2 className="text-3xl font-bold text-center mb-8 text-gray-800">How It Works</h2>
-            <div className="space-y-6 max-w-3xl mx-auto">
-              <div className="flex items-start gap-4 p-4 bg-white/80 rounded-xl backdrop-blur-sm hover:bg-white transition-colors cursor-pointer">
-                <div className="w-10 h-10 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold flex-shrink-0 hover:scale-110 transition-transform">
-                  1
+                  <h3 className="mt-3 text-xl font-semibold text-slate-900">{p.title}</h3>
+                  <p className="mt-1 text-3xl font-semibold text-slate-900">{p.price}</p>
+                  <p className="mt-2 text-slate-700 leading-relaxed">{p.subtitle}</p>
                 </div>
-                <div>
-                  <span className="font-semibold text-lg">Upload or Link Audio</span>
-                  <p className="text-gray-600 mt-1">Upload files, paste YouTube URLs, or provide direct audio links</p>
+
+                <ul className="mt-5 space-y-2 text-sm text-slate-700 leading-relaxed">
+                  {p.features.map((f) => (
+                    <li key={f} className="flex gap-2">
+                      <span className="mt-[2px] text-emerald-600">✓</span>
+                      <span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="mt-6">
+                  <a
+                    href={
+                      p.title === "Lifetime License"
+                        ? "/checkout?plan=lifetime"
+                        : p.title === "Monthly Creator Subscription"
+                        ? "/checkout?plan=monthly"
+                        : "/checkout?plan=single"
+                    }
+                    className={[
+                      "cursor-fancy inline-flex w-full justify-center rounded-xl px-5 py-3 font-semibold shadow-sm transition",
+                      p.highlight
+                        ? "bg-indigo-700 text-white hover:bg-indigo-600"
+                        : "bg-slate-900 text-white hover:bg-slate-800",
+                    ].join(" ")}
+                  >
+                    {p.cta}
+                  </a>
+                  <p className="mt-2 text-xs text-slate-600 text-center">
+                    You can upgrade anytime. Demo available before purchase.
+                  </p>
                 </div>
               </div>
-              <div className="flex items-start gap-4 p-4 bg-white/80 rounded-xl backdrop-blur-sm hover:bg-white transition-colors cursor-pointer">
-                <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold flex-shrink-0 hover:scale-110 transition-transform">
-                  2
-                </div>
-                <div>
-                  <span className="font-semibold text-lg">Configure Options</span>
-                  <p className="text-gray-600 mt-1">Choose style, frequency, binaural beats, BPM matching, and stem separation options</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4 p-4 bg-white/80 rounded-xl backdrop-blur-sm hover:bg-white transition-colors cursor-pointer">
-                <div className="w-10 h-10 rounded-full bg-green-600 text-white flex items-center justify-center font-bold flex-shrink-0 hover:scale-110 transition-transform">
-                  3
-                </div>
-                <div>
-                  <span className="font-semibold text-lg">Generate Variants</span>
-                  <p className="text-gray-600 mt-1">Create 1-5 unique meditation track variants with professional quality</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4 p-4 bg-white/80 rounded-xl backdrop-blur-sm hover:bg-white transition-colors cursor-pointer">
-                <div className="w-10 h-10 rounded-full bg-amber-600 text-white flex items-center justify-center font-bold flex-shrink-0 hover:scale-110 transition-transform">
-                  4
-                </div>
-                <div>
-                  <span className="font-semibold text-lg">Download & Enjoy</span>
-                  <p className="text-gray-600 mt-1">Download high-quality final audio and stems for your meditation practice</p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            ))}
+          </div>
 
-        {/* Payment Options Component */}
-        {!hasAccess && (
-          <PaymentOptions affiliateId={affiliateId} />
-        )}
+          {/* ADD-ONS */}
+          <div className="mt-10">
+            <h3 className="text-xl font-semibold text-slate-900">Optional add-ons</h3>
+            <p className="mt-2 text-slate-700 leading-relaxed max-w-2xl">
+              Add-ons are designed to keep the base plans simple while letting creators unlock extra power when needed.
+            </p>
 
-        {/* Access Button for Users with Access */}
-        {hasAccess && (
-          <Card className="bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 text-white shadow-2xl mb-12">
-            <CardContent className="p-8 text-center">
-              <Button
-                onClick={() => navigate('/creative-soul-meditation-tool')}
-                size="lg"
-                className="bg-white text-purple-600 hover:bg-purple-50 px-8 py-6 text-lg font-semibold shadow-lg hover:shadow-xl transition-all cursor-pointer hover:scale-105"
-              >
-                <Music className="w-5 h-5 mr-2" />
-                Access Your Tool
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-              {balance && (
-                <p className="text-sm text-purple-200 mt-4">
-                  Your current balance: <strong>{balance.balance || 0} SHC</strong>
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* What's Included */}
-        <Card className="bg-white shadow-lg border-2 border-purple-100">
-          <CardContent className="p-8">
-            <h2 className="text-3xl font-bold text-center mb-8 text-gray-800">What's Included</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {[
-                '✅ One free demo generation',
-                '✅ YouTube / URL / Upload support',
-                '✅ High-quality stem separation (Demucs)',
-                '✅ Keep/delete stem options',
-                '✅ Multi-variant generation (1-5 variants)',
-                '✅ BPM/frequency/binaural options',
-                '✅ Curated library + user music uploads',
-                '✅ High-quality final audio + stems download',
-                '✅ Stripe payment (€19.99)',
-                '✅ 1000 Sacred Healing Coins on purchase',
-                '✅ Affiliate tracking (?ref=AFFILIATEID)',
-                '✅ Lifetime access & updates',
-              ].map((feature, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-2 text-gray-700 hover:text-purple-600 transition-colors cursor-pointer hover:scale-105 transform"
-                >
-                  <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                  <span className="text-base">{feature.replace('✅ ', '')}</span>
+            <div className="mt-5 grid gap-4 md:grid-cols-3">
+              {addons.map((a) => (
+                <div key={a.title} className="rounded-xl bg-white/70 border border-white/80 p-6 shadow-sm">
+                  <p className="text-sm font-semibold text-indigo-700">{a.title}</p>
+                  <p className="mt-2 text-2xl font-semibold text-slate-900">{a.price}</p>
+                  <p className="mt-2 text-slate-700 leading-relaxed">{a.desc}</p>
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Footer */}
-        <footer className="text-center text-gray-500 text-sm py-8">
-          &copy; {new Date().getFullYear()} Creative Soul Meditation. All rights reserved.
-        </footer>
-      </div>
+          {/* NOTE: remove rent-to-buy wording */}
+          <div className="mt-10 rounded-xl border border-white/70 bg-white/60 p-5">
+            <p className="text-sm text-slate-700 leading-relaxed">
+              <span className="font-semibold text-slate-900">Note:</span> The monthly plan is a standard subscription (cancel anytime) —
+              not rent-to-buy. Lifetime access is the best option if you plan to create regularly.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* FOOTER CTA */}
+      <section className="max-w-6xl mx-auto px-6 pb-16">
+        <div className="rounded-2xl border border-white/70 bg-white/60 backdrop-blur p-8 shadow-sm text-center">
+          <h3 className="text-2xl md:text-3xl font-semibold text-slate-900">
+            Start with one free demo
+          </h3>
+          <p className="mt-2 text-slate-700 leading-relaxed max-w-2xl mx-auto">
+            Upload audio or paste a YouTube link. You'll see exactly how the frequency + style matching feels before you pay.
+          </p>
+          <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+            <a
+              href="/creative-soul-meditation-tool?mode=demo"
+              className="cursor-fancy inline-flex justify-center rounded-xl bg-amber-300 px-6 py-3 font-semibold text-slate-900 shadow-sm hover:bg-amber-200 transition"
+            >
+              Try One Free Demo
+            </a>
+            <a
+              href="#pricing"
+              className="cursor-fancy inline-flex justify-center rounded-xl bg-indigo-700 px-6 py-3 font-semibold text-white shadow-sm hover:bg-indigo-600 transition"
+            >
+              Compare Plans
+            </a>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
-
