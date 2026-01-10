@@ -137,9 +137,6 @@ export default function CreativeSoulSales() {
                     <Headphones className="w-8 h-8 text-purple-400" />
                   </div>
                   <div className="flex flex-col items-end gap-2">
-                    <Badge variant="outline" className="text-lg font-bold px-3 py-1">
-                      €19.99
-                    </Badge>
                     {isAdmin && (
                       <Badge variant="outline" className="text-sm font-semibold bg-green-500/10 text-green-400 border-green-500/30">
                         <Check className="w-3 h-3 mr-1" />
@@ -160,6 +157,24 @@ export default function CreativeSoulSales() {
                   Transform any audio into high-quality meditation tracks. Apply healing frequencies, 
                   choose from 15 meditation styles, add binaural beats, and use stem separation for professional-quality audio.
                 </p>
+
+                {/* Pricing Options */}
+                <div className="flex flex-col md:flex-row justify-center gap-4 mb-8">
+                  <div className="bg-purple-500/10 rounded-lg px-6 py-4 border border-purple-500/30 cursor-fancy">
+                    <p className="text-2xl font-bold text-foreground">€149</p>
+                    <p className="text-sm text-muted-foreground opacity-80">Lifetime Access</p>
+                  </div>
+
+                  <div className="bg-purple-500/10 rounded-lg px-6 py-4 border border-purple-500/30 cursor-fancy">
+                    <p className="text-2xl font-bold text-foreground">€14.99 / month</p>
+                    <p className="text-sm text-muted-foreground opacity-80">Monthly Creator Subscription</p>
+                  </div>
+
+                  <div className="bg-purple-500/10 rounded-lg px-6 py-4 border border-purple-500/30 cursor-fancy">
+                    <p className="text-2xl font-bold text-foreground">€9.99</p>
+                    <p className="text-sm text-muted-foreground opacity-80">One Meditation</p>
+                  </div>
+                </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-8">
                   {[
