@@ -249,9 +249,21 @@ export default function CreativeSoulSales() {
                   <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/30">
                     <Sparkles className="w-8 h-8 text-purple-400" />
                   </div>
-                  <Badge variant="outline" className="text-sm font-semibold bg-purple-500/10 text-purple-400 border-purple-500/30">
-                    AI-Powered
-                  </Badge>
+                  <div className="flex flex-col items-end gap-2">
+                    {isAdmin ? (
+                      <Badge variant="outline" className="text-sm font-semibold bg-green-500/10 text-green-400 border-green-500/30">
+                        <Check className="w-3 h-3 mr-1" />
+                        Admin Access
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-lg font-bold px-3 py-1">
+                        €19.99
+                      </Badge>
+                    )}
+                    <Badge variant="outline" className="text-xs bg-purple-500/10 text-purple-400 border-purple-500/30">
+                      AI-Powered
+                    </Badge>
+                  </div>
                 </div>
 
                 <h3 className="text-3xl font-heading font-bold text-foreground mb-4">
@@ -280,14 +292,25 @@ export default function CreativeSoulSales() {
                   ))}
                 </div>
 
-                <Button
-                  onClick={() => navigate('/creative-soul')}
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold"
-                  size="lg"
-                >
-                  Get This Tool
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
+                {isAdmin ? (
+                  <Button
+                    onClick={() => navigate('/creative-soul-hub')}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold"
+                    size="lg"
+                  >
+                    <Check className="w-4 h-4 mr-2" />
+                    Open Studio (Admin Access)
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => navigate('/creative-soul')}
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold"
+                    size="lg"
+                  >
+                    Get This Tool
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                )}
               </div>
             </Card>
           </div>
