@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Music, Sparkles, ArrowRight, Play, Download, Headphones, Radio, Zap, Check, Youtube, Upload, Link as LinkIcon, Wand2, Crown, Gift } from 'lucide-react';
+import { Music, Sparkles, ArrowRight, Play, Download, Headphones, Check, Youtube, Upload, Link as LinkIcon, Wand2, Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { PaymentOptions } from '@/components/creative-soul/PaymentOptions';
 import { useAuth } from '@/hooks/useAuth';
 import { useSHCBalance } from '@/hooks/useSHCBalance';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
 
 export default function CreativeSoulMeditationLanding() {
   const navigate = useNavigate();
@@ -17,7 +16,6 @@ export default function CreativeSoulMeditationLanding() {
   const { isAdmin } = useAdminRole();
   const { balance } = useSHCBalance();
   const [searchParams] = useSearchParams();
-  const [loading, setLoading] = useState(false);
   const [hasAccess, setHasAccess] = useState(false);
   const [affiliateId, setAffiliateId] = useState<string | null>(null);
 
@@ -72,36 +70,6 @@ export default function CreativeSoulMeditationLanding() {
       navigate('/creative-soul-meditation-tool');
     } else {
       navigate('/auth');
-    }
-  };
-
-  const handlePurchase = async (option: 'one_time' | 'subscription' | 'per_track' = 'one_time') => {
-    if (!user) {
-      toast.info('Please sign in to purchase');
-      navigate('/auth');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-meditation-audio-checkout', {
-        body: {
-          option: option,
-          ...(affiliateId && { affiliateId }),
-        },
-      });
-
-      if (error) throw error;
-
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error('No checkout URL returned');
-      }
-    } catch (error: any) {
-      console.error('Checkout error:', error);
-      toast.error(error.message || 'Failed to initiate payment. Please try again.');
-      setLoading(false);
     }
   };
 
@@ -241,71 +209,10 @@ export default function CreativeSoulMeditationLanding() {
           </CardContent>
         </Card>
 
-        {/* Pricing Options */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          {/* One-Time Purchase */}
-          <Card className="border-2 border-purple-300 hover:border-purple-500 hover:shadow-xl transition-all cursor-pointer group">
-            <CardContent className="p-6 text-center">
-              <Crown className="w-12 h-12 mx-auto mb-4 text-purple-600 group-hover:scale-110 transition-transform" />
-              <h3 className="text-2xl font-bold mb-2">One-Time</h3>
-              <p className="text-3xl font-bold text-purple-600 mb-2">€149</p>
-              <p className="text-sm text-muted-foreground mb-4">+ 1000 SHC Coins</p>
-              <p className="text-sm mb-4">Lifetime access with all features</p>
-              {!hasAccess && (
-                <Button
-                  onClick={() => handlePurchase('one_time')}
-                  disabled={loading}
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white cursor-pointer"
-                  size="lg"
-                >
-                  {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : 'Purchase Now'}
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Subscription */}
-          <Card className="border-2 border-blue-300 hover:border-blue-500 hover:shadow-xl transition-all cursor-pointer group">
-            <CardContent className="p-6 text-center">
-              <Radio className="w-12 h-12 mx-auto mb-4 text-blue-600 group-hover:scale-110 transition-transform" />
-              <h3 className="text-2xl font-bold mb-2">Monthly</h3>
-              <p className="text-3xl font-bold text-blue-600 mb-2">€9.99/mo</p>
-              <p className="text-sm text-muted-foreground mb-4">+ 200 SHC Coins/month</p>
-              <p className="text-sm mb-4">Cancel anytime</p>
-              {!hasAccess && (
-                <Button
-                  onClick={() => handlePurchase('subscription')}
-                  disabled={loading}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
-                  size="lg"
-                >
-                  {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : 'Subscribe Now'}
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Per-Track */}
-          <Card className="border-2 border-green-300 hover:border-green-500 hover:shadow-xl transition-all cursor-pointer group">
-            <CardContent className="p-6 text-center">
-              <Download className="w-12 h-12 mx-auto mb-4 text-green-600 group-hover:scale-110 transition-transform" />
-              <h3 className="text-2xl font-bold mb-2">Per-Track</h3>
-              <p className="text-3xl font-bold text-green-600 mb-2">€9.99</p>
-              <p className="text-sm text-muted-foreground mb-4">+ 100 SHC Coins</p>
-              <p className="text-sm mb-4">Pay as you go</p>
-              {!hasAccess && (
-                <Button
-                  onClick={() => handlePurchase('per_track')}
-                  disabled={loading}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white cursor-pointer"
-                  size="lg"
-                >
-                  {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : 'Buy Track'}
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+        {/* Payment Options Component */}
+        {!hasAccess && (
+          <PaymentOptions affiliateId={affiliateId} />
+        )}
 
         {/* Access Button for Users with Access */}
         {hasAccess && (

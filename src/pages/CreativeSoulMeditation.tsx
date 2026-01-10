@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import { PaymentOptions } from '@/components/creative-soul/PaymentOptions';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSHCBalance } from '@/hooks/useSHCBalance';
@@ -47,7 +48,6 @@ export default function CreativeSoulMeditation() {
   const [generatedFiles, setGeneratedFiles] = useState<GeneratedFile[]>([]);
   const [demoUsed, setDemoUsed] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [hasAccess, setHasAccess] = useState(false);
   const [affiliateId, setAffiliateId] = useState<string | null>(null);
 
@@ -232,37 +232,6 @@ export default function CreativeSoulMeditation() {
       toast.error(error.message || 'Failed to generate audio. Please try again.');
     } finally {
       setIsGenerating(false);
-    }
-  };
-
-  // Handle purchase
-  const handlePurchase = async (option: 'one_time' | 'subscription' | 'per_track' = 'one_time') => {
-    if (!user) {
-      toast.info('Please sign in to purchase');
-      navigate('/auth');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-meditation-audio-checkout', {
-        body: {
-          option: option,
-          ...(affiliateId && { affiliateId }),
-        },
-      });
-
-      if (error) throw error;
-
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error('No checkout URL returned');
-      }
-    } catch (error: any) {
-      console.error('Checkout error:', error);
-      toast.error(error.message || 'Failed to initiate payment. Please try again.');
-      setLoading(false);
     }
   };
 
@@ -519,62 +488,7 @@ export default function CreativeSoulMeditation() {
           )}
 
           {!hasAccess && (
-            <div className="flex flex-wrap gap-2">
-              <Button
-                onClick={() => handlePurchase('one_time')}
-                disabled={loading}
-                className="bg-purple-600 hover:bg-purple-700 text-white cursor-pointer"
-                size="lg"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Loading...
-                  </>
-                ) : (
-                  <>
-                    <Crown className="w-4 h-4 mr-2" />
-                    One-Time (€149 + 1000 Coins)
-                  </>
-                )}
-              </Button>
-              <Button
-                onClick={() => handlePurchase('subscription')}
-                disabled={loading}
-                className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
-                size="lg"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Loading...
-                  </>
-                ) : (
-                  <>
-                    <Radio className="w-4 h-4 mr-2" />
-                    Subscribe (€9.99/mo + 200 Coins)
-                  </>
-                )}
-              </Button>
-              <Button
-                onClick={() => handlePurchase('per_track')}
-                disabled={loading}
-                className="bg-green-600 hover:bg-green-700 text-white cursor-pointer"
-                size="lg"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Loading...
-                  </>
-                ) : (
-                  <>
-                    <Download className="w-4 h-4 mr-2" />
-                    Per-Track (€9.99 + 100 Coins)
-                  </>
-                )}
-              </Button>
-            </div>
+            <PaymentOptions affiliateId={affiliateId} />
           )}
         </div>
 
