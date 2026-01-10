@@ -431,15 +431,27 @@ export default function CreativeSoulMeditation() {
               </div>
 
               <div>
-                <Label htmlFor="freq" className="cursor-pointer">Frequency (Hz)</Label>
+                <Label htmlFor="freq" className="cursor-pointer">Frequency (Hz) - Healing & Meditation</Label>
                 <Select value={freq} onValueChange={setFreq}>
                   <SelectTrigger id="freq" className="cursor-pointer">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="432">432Hz (Nature's Frequency)</SelectItem>
-                    <SelectItem value="528">528Hz (Love Frequency)</SelectItem>
-                    <SelectItem value="440">440Hz (Standard)</SelectItem>
+                    <SelectItem value="174">174 Hz - Deep relaxation / grounding</SelectItem>
+                    <SelectItem value="285">285 Hz - Pain relief / safety</SelectItem>
+                    <SelectItem value="396">396 Hz - Emotional healing</SelectItem>
+                    <SelectItem value="417">417 Hz - Fear release</SelectItem>
+                    <SelectItem value="432">432 Hz - DNA repair / harmony</SelectItem>
+                    <SelectItem value="444">444 Hz - Love / heart</SelectItem>
+                    <SelectItem value="528">528 Hz - Transformation</SelectItem>
+                    <SelectItem value="639">639 Hz - Stress relief</SelectItem>
+                    <SelectItem value="741">741 Hz - Intuition</SelectItem>
+                    <SelectItem value="852">852 Hz - Spiritual awakening</SelectItem>
+                    <SelectItem value="963">963 Hz - Higher consciousness</SelectItem>
+                    <SelectItem value="4">4 Hz - Deep sleep (binaural)</SelectItem>
+                    <SelectItem value="6">6 Hz - Theta meditation</SelectItem>
+                    <SelectItem value="8">8 Hz - Alpha calm</SelectItem>
+                    <SelectItem value="10">10 Hz - Focus / presence</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
