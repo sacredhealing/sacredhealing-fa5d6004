@@ -47,19 +47,20 @@ serve(async (req) => {
       );
     }
 
-    // Check if user is admin (admins bypass access checks)
+    // Check if user is admin using user_roles table (admins bypass access checks)
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const { data: profile } = await supabaseAdmin
-      .from('profiles')
+    const { data: adminRole } = await supabaseAdmin
+      .from('user_roles')
       .select('role')
       .eq('user_id', user.id)
+      .eq('role', 'admin')
       .maybeSingle();
 
-    const isAdmin = profile?.role === 'admin';
+    const isAdmin = !!adminRole;
 
     // Only check access if user is not admin
     if (!isAdmin) {
