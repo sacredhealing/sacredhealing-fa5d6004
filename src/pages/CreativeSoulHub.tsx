@@ -98,6 +98,12 @@ export default function CreativeSoulHub() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 via-white to-indigo-50 p-8">
+      {/* STORE FINGERPRINT MARKER - MUST RENDER */}
+      <div className="bg-blue-500/30 border-b-2 border-blue-500 px-4 py-3 text-center mb-4">
+        <span className="text-sm font-mono text-blue-700 dark:text-blue-400 font-bold">
+          STORE_FINGERPRINT_CreativeSoulHub_tsx_AAA
+        </span>
+      </div>
       {/* Header */}
       <div className="max-w-7xl mx-auto mb-12">
         <div className="flex items-center gap-3 mb-4">

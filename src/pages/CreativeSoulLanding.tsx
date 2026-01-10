@@ -130,6 +130,12 @@ export default function CreativeSoulLanding() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 via-white to-purple-50 flex flex-col">
+      {/* STORE FINGERPRINT MARKER - MUST RENDER */}
+      <div className="bg-green-500/30 border-b-2 border-green-500 px-4 py-3 text-center">
+        <span className="text-sm font-mono text-green-700 dark:text-green-400 font-bold">
+          STORE_FINGERPRINT_CreativeSoulLanding_tsx_AAA
+        </span>
+      </div>
       {/* Hero Section */}
       <div className="flex flex-col items-center px-6 py-12 md:py-20 relative overflow-hidden">
         {/* Background effects */}

@@ -155,6 +155,7 @@ const App = () => (
                   <Route path="/journal" element={<Journal />} />
                   <Route path="/creative-soul" element={<CreativeSoulLanding />} />
                   <Route path="/creative-soul-hub" element={<CreativeSoulHub />} />
+                  {/* ROUTE DEFINITION: /creative-soul/store renders CreativeSoulSales.tsx */}
                   <Route path="/creative-soul/store" element={<CreativeSoulSales />} />
                   <Route path="/creative-soul-tool" element={<CreativeSoulTool />} />
                   <Route path="/creative-soul-meditation-landing" element={<CreativeSoulMeditationLanding />} />

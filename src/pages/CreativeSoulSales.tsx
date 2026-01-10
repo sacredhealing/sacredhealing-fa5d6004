@@ -218,6 +218,12 @@ export default function CreativeSoulSales() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* STORE FINGERPRINT MARKER - MUST RENDER */}
+      <div className="bg-red-500/30 border-b-2 border-red-500 px-4 py-3 text-center">
+        <span className="text-sm font-mono text-red-700 dark:text-red-400 font-bold">
+          STORE_FINGERPRINT_CreativeSoulSales_tsx_AAA
+        </span>
+      </div>
       {/* DEPLOY PROOF MARKER - MUST RENDER */}
       <div className="bg-yellow-500/20 border-b border-yellow-500/50 px-4 py-2 text-center">
         <span className="text-xs font-mono text-yellow-600 dark:text-yellow-400 font-bold">
