@@ -22,6 +22,7 @@ const PRICE_TO_PRODUCT: Record<string, { type: string; name: string }> = {
 
 // Maps checkout metadata types to affiliate purchase types
 const getPurchaseType = (metadata: Record<string, string>): string | null => {
+  if (metadata.purchase_type === 'meditation_audio') return 'meditation_audio';
   if (metadata.purchase_type === 'creative_tool' || metadata.tool_id) return 'creative_tool';
   if (metadata.purchase_type === 'bot_deposit' || metadata.purchase_type === 'bot_premium' || metadata.purchase_type === 'bot_feature') return 'bot';
   if (metadata.type === 'meditation_membership') return 'meditation';
@@ -46,6 +47,7 @@ const getPurchaseType = (metadata: Record<string, string>): string | null => {
 const getProductName = (metadata: Record<string, string> | null): string => {
   if (!metadata) return 'Stripe Purchase';
   
+  if (metadata.purchase_type === 'meditation_audio') return 'Creative Soul Meditation';
   if (metadata.purchase_type === 'creative_tool' || metadata.tool_name) return metadata.tool_name || 'Creative Soul Tool';
   if (metadata.purchase_type === 'bot_deposit') return `Bot Deposit - $${metadata.amount || '0'}`;
   if (metadata.purchase_type === 'bot_premium') return `Bot Premium - ${metadata.feature || 'monthly'}`;
@@ -414,7 +416,82 @@ serve(async (req) => {
           }
         }
 
-        // Grant creative tool access if this is a creative tool purchase
+        // Handle meditation audio purchase - credit coins and grant access
+        if (purchaseType === 'meditation_audio' && userId) {
+          const shcCoinsToCredit = 1000; // Credit 1000 SHC coins
+          const toolSlug = session.metadata?.tool_slug || 'creative-soul-meditation';
+          
+          logStep("Processing meditation audio purchase", { userId, toolSlug, shcCoinsToCredit });
+
+          // Credit 1000 SHC coins
+          const { data: balance } = await supabaseAdmin
+            .from('user_balances')
+            .select('balance, total_earned')
+            .eq('user_id', userId)
+            .single();
+
+          if (balance) {
+            await supabaseAdmin
+              .from('user_balances')
+              .update({
+                balance: Number(balance.balance) + shcCoinsToCredit,
+                total_earned: Number(balance.total_earned) + shcCoinsToCredit,
+              })
+              .eq('user_id', userId);
+          } else {
+            await supabaseAdmin
+              .from('user_balances')
+              .insert({
+                user_id: userId,
+                balance: shcCoinsToCredit,
+                total_earned: shcCoinsToCredit,
+                total_spent: 0,
+              });
+          }
+
+          // Record SHC transaction
+          await supabaseAdmin
+            .from('shc_transactions')
+            .insert({
+              user_id: userId,
+              type: 'earned',
+              amount: shcCoinsToCredit,
+              description: 'Creative Soul Meditation purchase bonus',
+              status: 'completed',
+            });
+
+          logStep("Credited SHC coins", { userId, amount: shcCoinsToCredit });
+
+          // Grant access to the tool
+          const { data: tool } = await supabaseAdmin
+            .from('creative_tools')
+            .select('id')
+            .eq('slug', toolSlug)
+            .eq('is_active', true)
+            .maybeSingle();
+
+          if (tool) {
+            const { error: accessError } = await supabaseAdmin
+              .from('creative_tool_access')
+              .upsert({
+                user_id: userId,
+                tool_id: tool.id,
+                stripe_payment_id: stripePaymentId,
+                stripe_session_id: session.id,
+                access_granted_at: new Date().toISOString(),
+              }, {
+                onConflict: 'user_id,tool_id',
+              });
+
+            if (accessError) {
+              logStep("Error granting tool access", { error: accessError.message, userId, toolId: tool.id });
+            } else {
+              logStep("Meditation audio tool access granted successfully", { userId, toolId: tool.id, toolSlug });
+            }
+          }
+        }
+
+        // Grant creative tool access if this is a creative tool purchase (non-meditation-audio)
         if (purchaseType === 'creative_tool' && (session.metadata?.tool_id || session.metadata?.tool_slug)) {
           const toolSlug = session.metadata?.tool_slug;
           const toolId = session.metadata?.tool_id;
