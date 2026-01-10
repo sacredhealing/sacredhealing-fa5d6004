@@ -469,32 +469,25 @@ serve(async (req) => {
 
           logStep("Credited SHC coins", { userId, amount: shcCoinsToCredit });
 
-          // Grant access to the tool
-          const { data: tool } = await supabaseAdmin
-            .from('creative_tools')
-            .select('id')
-            .eq('slug', toolSlug)
-            .eq('is_active', true)
-            .maybeSingle();
+          // Grant entitlement for Creative Soul Meditation (uses creative_soul_entitlements table)
+          const { error: entitlementError } = await supabaseAdmin
+            .from('creative_soul_entitlements')
+            .upsert({
+              user_id: userId,
+              has_access: true,
+              plan: option === 'one_time' ? 'one_time_149' : (option === 'subscription' ? 'subscription_monthly' : 'per_track'),
+              stripe_payment_id: stripePaymentId,
+              stripe_session_id: session.id,
+              purchased_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            }, {
+              onConflict: 'user_id',
+            });
 
-          if (tool) {
-            const { error: accessError } = await supabaseAdmin
-              .from('creative_tool_access')
-              .upsert({
-                user_id: userId,
-                tool_id: tool.id,
-                stripe_payment_id: stripePaymentId,
-                stripe_session_id: session.id,
-                access_granted_at: new Date().toISOString(),
-              }, {
-                onConflict: 'user_id,tool_id',
-              });
-
-            if (accessError) {
-              logStep("Error granting tool access", { error: accessError.message, userId, toolId: tool.id });
-            } else {
-              logStep("Meditation audio tool access granted successfully", { userId, toolId: tool.id, toolSlug });
-            }
+          if (entitlementError) {
+            logStep("Error granting meditation audio entitlement", { error: entitlementError.message, userId });
+          } else {
+            logStep("Meditation audio entitlement granted successfully", { userId, toolSlug, plan: option });
           }
         }
 
