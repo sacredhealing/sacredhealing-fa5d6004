@@ -218,10 +218,10 @@ export default function CreativeSoulSales() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* BUILD MARKER - PROOF OF DEPLOY */}
+      {/* DEPLOY PROOF MARKER - MUST RENDER */}
       <div className="bg-yellow-500/20 border-b border-yellow-500/50 px-4 py-2 text-center">
-        <span className="text-xs font-mono text-yellow-600 dark:text-yellow-400">
-          PATCH_MED_BANNER_002
+        <span className="text-xs font-mono text-yellow-600 dark:text-yellow-400 font-bold">
+          DEPLOY_PROOF_MED_BANNER_777
         </span>
       </div>
       {/* Header */}
