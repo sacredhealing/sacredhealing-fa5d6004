@@ -331,12 +331,17 @@ export default function CreativeSoulSales() {
               <div className="relative p-8 flex flex-col">
                 <div className="flex items-start justify-between mb-6">
                   <div className="p-4 rounded-xl bg-purple-500/20 border border-purple-500/40">
-                    <Radio className="w-8 h-8 text-purple-300" />
+                    <Headphones className="w-8 h-8 text-purple-300" />
                   </div>
                   <div className="flex flex-col items-end gap-2">
-                    <Badge variant="outline" className="text-lg font-bold px-3 py-1 text-white border-white/20 bg-white/5">
-                      €19.99
-                    </Badge>
+                    <div className="flex flex-col items-end gap-1">
+                      <Badge variant="outline" className="text-sm font-bold px-2 py-1 text-white border-white/20 bg-white/5">
+                        €149 rent to buy
+                      </Badge>
+                      <Badge variant="outline" className="text-xs font-semibold px-2 py-0.5 text-white border-white/20 bg-white/5">
+                        €9.99/month or €9.99/meditation
+                      </Badge>
+                    </div>
                     {isAdmin && (
                       <Badge variant="outline" className="text-sm font-semibold bg-green-500/20 text-green-300 border-green-500/40">
                         <Check className="w-3 h-3 mr-1" />
@@ -354,36 +359,35 @@ export default function CreativeSoulSales() {
                 </h3>
                 
                 <p className="text-gray-300 mb-6 text-lg leading-relaxed">
-                  Transform any audio into high-quality meditation tracks. Apply healing frequencies (15 Hz options), 
-                  use stem separation, analyze BPM/key, master with LANDR, remove noise, and choose from 15 meditation 
-                  styles. Everything you need to create professional meditation audio.
+                  Transform any audio or YouTube video into high-quality meditation, affirmation, and healing tracks. 
+                  Use real music, binaural beats, frequency tuning, and full stem separation to create professional-quality audio.
                 </p>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-8">
                   {[
-                    { icon: Radio, label: 'Stem Separation' },
-                    { icon: Music, label: 'BPM/Key Analysis' },
-                    { icon: Headphones, label: 'LANDR Mastering' },
-                    { icon: Wand2, label: 'Noise Removal' },
-                    { icon: Heart, label: 'Frequency Tuning' },
+                    { icon: Heart, label: 'Healing Frequencies (432Hz, 528Hz, etc.)' },
                     { icon: Crown, label: '15 Meditation Styles' },
+                    { icon: Radio, label: 'Binaural Beats' },
+                    { icon: Zap, label: 'Stem Separation (Demucs)' },
+                    { icon: Sparkles, label: 'Multi-Variant Generation' },
+                    { icon: Music, label: 'High-Quality Downloads' },
                   ].map(({ icon: FeatureIcon, label }) => (
                     <div key={label} className="flex items-center gap-2 text-sm text-white">
-                      <FeatureIcon className="w-4 h-4 text-purple-300" />
-                      <span>{label}</span>
+                      <FeatureIcon className="w-4 h-4 text-purple-300 flex-shrink-0" />
+                      <span className="text-xs">{label}</span>
                     </div>
                   ))}
                 </div>
 
                 <Button
-                  onClick={() => navigate('/creative-soul-meditation-tool')}
+                  onClick={() => navigate(isAdmin ? '/creative-soul-meditation-tool' : '/creative-soul-meditation-landing')}
                   className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold"
                   size="lg"
                 >
                   {isAdmin ? (
                     <>
                       <Check className="w-4 h-4 mr-2" />
-                      Open Meditation Tool (Admin Access)
+                      Open Tool (Admin Access)
                     </>
                   ) : (
                     <>
