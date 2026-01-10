@@ -22,34 +22,19 @@ function extractVideoId(url: string): string | null {
   return null;
 }
 
-// Poll for conversion status
-async function pollForResult(jobId: string, apiKey: string, apiHost: string, maxAttempts = 30): Promise<{ downloadUrl: string; title: string } | null> {
-  for (let i = 0; i < maxAttempts; i++) {
-    console.log(`[YOUTUBE] Polling attempt ${i + 1}/${maxAttempts} for job ${jobId}`);
-    
-    const response = await fetch(`https://${apiHost}/status/${jobId}`, {
-      headers: {
-        "X-RapidAPI-Key": apiKey,
-        "X-RapidAPI-Host": apiHost,
-      },
-    });
-
-    const data = await response.json();
-    console.log(`[YOUTUBE] Poll status: ${data.status}`);
-
-    if (data.status === "AVAILABLE" && data.downloadUrl) {
-      return { downloadUrl: data.downloadUrl, title: data.title || "YouTube Audio" };
+// Get video info using YouTube oEmbed API (no API key needed)
+async function getVideoInfo(videoId: string): Promise<{ title: string } | null> {
+  try {
+    const oEmbedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`;
+    const response = await fetch(oEmbedUrl);
+    if (response.ok) {
+      const data = await response.json();
+      return { title: data.title || "YouTube Video" };
     }
-
-    if (data.status === "CONVERSION_ERROR" || data.status === "EXPIRED") {
-      throw new Error(`Conversion failed: ${data.status}`);
-    }
-
-    // Wait 2 seconds before next poll
-    await new Promise(resolve => setTimeout(resolve, 2000));
+  } catch (e) {
+    console.error("[YOUTUBE] oEmbed error:", e);
   }
-
-  throw new Error("Conversion timed out. Please try a shorter video.");
+  return { title: "YouTube Video" };
 }
 
 serve(async (req) => {
@@ -187,56 +172,79 @@ serve(async (req) => {
 
     console.log(`[CREATIVE-SOUL-YOUTUBE] Processing video ${videoId} for user: ${user.id}`);
 
-    // Check for RapidAPI key
-    const rapidApiKey = Deno.env.get("RAPIDAPI_KEY");
-    if (!rapidApiKey) {
-      return new Response(
-        JSON.stringify({ 
-          error: "YouTube conversion service not configured. Please contact support.",
-          success: false 
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        }
-      );
-    }
+    // Get video info
+    const videoInfo = await getVideoInfo(videoId);
+    const videoTitle = videoInfo?.title || "YouTube Video";
 
-    const apiHost = "youtube-to-mp315.p.rapidapi.com";
-
-    // Step 1: Start the conversion
-    console.log(`[YOUTUBE] Starting conversion for: ${youtubeUrl}`);
-    const startResponse = await fetch(`https://${apiHost}/download`, {
+    // Use cobalt.tools API for YouTube to MP3 conversion (no API key needed, generous free tier)
+    console.log(`[YOUTUBE] Starting conversion with cobalt.tools for: ${youtubeUrl}`);
+    
+    const cobaltResponse = await fetch("https://co.wuk.sh/api/json", {
       method: "POST",
       headers: {
+        "Accept": "application/json",
         "Content-Type": "application/json",
-        "X-RapidAPI-Key": rapidApiKey,
-        "X-RapidAPI-Host": apiHost,
       },
       body: JSON.stringify({
         url: youtubeUrl,
-        format: "mp3",
-        quality: 0,
+        vCodec: "h264",
+        vQuality: "720",
+        aFormat: "mp3",
+        isAudioOnly: true,
+        isNoTTWatermark: true,
+        isTTFullAudio: true,
+        disableMetadata: false,
       }),
     });
 
-    const startData = await startResponse.json();
-    console.log(`[YOUTUBE] Start response:`, JSON.stringify(startData));
+    const cobaltData = await cobaltResponse.json();
+    console.log(`[YOUTUBE] Cobalt response status: ${cobaltData.status}`);
 
-    if (!startData.id) {
-      throw new Error(startData.message || "Failed to start YouTube conversion");
+    if (cobaltData.status === "error") {
+      // Try alternative service if cobalt fails
+      console.log(`[YOUTUBE] Cobalt error: ${cobaltData.text}, trying alternative...`);
+      
+      // Try y2mate alternative
+      const y2mateResponse = await fetch(`https://api.vevioz.com/api/button/mp3/${videoId}`);
+      
+      if (!y2mateResponse.ok) {
+        throw new Error(cobaltData.text || "YouTube conversion failed. The video may be restricted or unavailable.");
+      }
+      
+      const y2mateHtml = await y2mateResponse.text();
+      
+      // Extract download URL from response
+      const urlMatch = y2mateHtml.match(/href="(https:\/\/[^"]+\.mp3[^"]*)"/);
+      if (urlMatch && urlMatch[1]) {
+        const mp3Url = urlMatch[1];
+        console.log(`[YOUTUBE] Y2mate conversion successful`);
+        
+        return new Response(
+          JSON.stringify({
+            success: true,
+            mp3Url: mp3Url,
+            transcription: null,
+            videoTitle: videoTitle,
+            message: "YouTube video converted to MP3 successfully! Use the voice recording feature to transcribe the downloaded audio.",
+          }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+          }
+        );
+      }
+      
+      throw new Error("Unable to convert this YouTube video. Please try a different video or use the voice recording feature.");
     }
 
-    // Step 2: Poll for result
-    const result = await pollForResult(startData.id, rapidApiKey, apiHost);
-    
-    if (!result) {
-      throw new Error("Conversion failed - no result received");
+    if (cobaltData.status !== "stream" && cobaltData.status !== "redirect" && cobaltData.status !== "tunnel") {
+      throw new Error(`Unexpected response: ${cobaltData.status}. ${cobaltData.text || ""}`);
     }
 
-    console.log(`[YOUTUBE] Conversion complete: ${result.downloadUrl}`);
+    const mp3Url = cobaltData.url;
+    console.log(`[YOUTUBE] Conversion successful, MP3 URL obtained`);
 
-    // Step 3: Optionally transcribe the audio using OpenAI
+    // Optionally transcribe the audio using OpenAI
     let transcription: string | null = null;
     if (transcribe) {
       const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
@@ -245,7 +253,7 @@ serve(async (req) => {
           console.log(`[YOUTUBE] Downloading audio for transcription...`);
           
           // Download the MP3 file
-          const audioResponse = await fetch(result.downloadUrl);
+          const audioResponse = await fetch(mp3Url);
           if (!audioResponse.ok) {
             throw new Error("Failed to download audio for transcription");
           }
@@ -292,9 +300,9 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        mp3Url: result.downloadUrl,
+        mp3Url: mp3Url,
         transcription: transcription,
-        videoTitle: result.title,
+        videoTitle: videoTitle,
         message: transcription 
           ? "YouTube video converted and transcribed successfully!" 
           : "YouTube video converted to MP3 successfully!",
@@ -315,6 +323,8 @@ serve(async (req) => {
       userMessage = "Request timed out. Please try a shorter video.";
     } else if (message.includes("rate limit")) {
       userMessage = "Too many requests. Please wait a moment and try again.";
+    } else if (message.includes("restricted") || message.includes("unavailable")) {
+      userMessage = "This video cannot be converted. It may be private, age-restricted, or region-locked.";
     }
     
     return new Response(
