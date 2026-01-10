@@ -22,12 +22,12 @@ const toolIcons: Record<string, any> = {
 
 // Tool route mapping
 const toolRoutes: Record<string, string> = {
-  'creative-soul-studio': '/creative-soul-tool',
+  'creative-soul-studio': '/creative-soul/store',
   'creative-soul-meditation': '/creative-soul-meditation-tool',
-  'music-beat-companion': '/creative-soul-tool',
-  'soul-writing': '/creative-soul-tool',
-  'meditation-creator': '/creative-soul-tool',
-  'energy-translator': '/creative-soul-tool',
+  'music-beat-companion': '/creative-soul/store',
+  'soul-writing': '/creative-soul/store',
+  'meditation-creator': '/creative-soul/store',
+  'energy-translator': '/creative-soul/store',
 };
 
 export default function CreativeSoulHub() {
@@ -54,7 +54,8 @@ export default function CreativeSoulHub() {
   const handleToolClick = async (tool: CreativeTool) => {
     // Admins have direct access to all tools
     if (isAdmin) {
-      const route = toolRoutes[tool.slug] || tool.workspace_url || '/creative-soul-tool';
+      // Redirect /creative-soul-tool URLs to store
+      const route = toolRoutes[tool.slug] || (tool.workspace_url && tool.workspace_url !== '/creative-soul-tool' && !tool.workspace_url.includes('/creative-soul-tool') ? tool.workspace_url : null) || '/creative-soul/store';
       navigate(route);
       return;
     }
@@ -64,17 +65,21 @@ export default function CreativeSoulHub() {
     
     if (userHasAccess) {
       // User has access, go directly to tool
-      const route = toolRoutes[tool.slug] || tool.workspace_url || '/creative-soul-tool';
+      // Redirect /creative-soul-tool URLs to store
+      const route = toolRoutes[tool.slug] || (tool.workspace_url && tool.workspace_url !== '/creative-soul-tool' && !tool.workspace_url.includes('/creative-soul-tool') ? tool.workspace_url : null) || '/creative-soul/store';
       navigate(route);
     } else {
       // User doesn't have access - show purchase/landing page
       if (tool.slug === 'creative-soul-meditation') {
         navigate(`/creative-soul-meditation-landing${affiliateId ? `?ref=${affiliateId}` : ''}`);
       } else if (tool.slug === 'creative-soul-studio') {
-        navigate(`/creative-soul${affiliateId ? `?ref=${affiliateId}` : ''}`);
+        navigate(`/creative-soul/store${affiliateId ? `?ref=${affiliateId}` : ''}`);
       } else {
-        // For other tools, navigate to their specific landing or tool page
-        navigate(tool.workspace_url || `/creative-soul-tool?tool=${tool.slug}`);
+        // For other tools, navigate to store instead of /creative-soul-tool
+        const route = tool.workspace_url && tool.workspace_url !== '/creative-soul-tool' && !tool.workspace_url.includes('/creative-soul-tool') 
+          ? tool.workspace_url 
+          : '/creative-soul/store';
+        navigate(route);
       }
     }
   };

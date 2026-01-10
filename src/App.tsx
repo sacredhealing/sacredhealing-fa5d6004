@@ -6,7 +6,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { SHCProvider } from "@/contexts/SHCContext";
 import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { AppLayout } from "./components/layout/AppLayout";
 import { ProtectedRoute } from "./components/layout/ProtectedRoute";
@@ -154,7 +154,7 @@ const App = () => (
                   <Route path="/creative-soul" element={<CreativeSoulLanding />} />
                   <Route path="/creative-soul-hub" element={<CreativeSoulHub />} />
                   <Route path="/creative-soul/store" element={<CreativeSoulSales />} />
-                  <Route path="/creative-soul-tool" element={<CreativeSoulTool />} />
+                  <Route path="/creative-soul-tool" element={<Navigate to="/creative-soul/store" replace />} />
                   <Route path="/creative-soul-meditation-landing" element={<CreativeSoulMeditationLanding />} />
                   <Route path="/creative-soul-meditation-tool" element={<CreativeSoulMeditation />} />
                 </Route>

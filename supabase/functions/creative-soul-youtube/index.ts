@@ -14,7 +14,16 @@ serve(async (req) => {
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      throw new Error("Missing authorization header");
+      return new Response(
+        JSON.stringify({ 
+          error: "Missing authorization header. Please sign in and try again.",
+          success: false 
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
     }
 
     const supabaseClient = createClient(
@@ -26,33 +35,92 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
 
     if (userError || !user?.email) {
-      throw new Error("User not authenticated");
+      return new Response(
+        JSON.stringify({ 
+          error: "User not authenticated. Please sign in and try again.",
+          success: false 
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
     }
 
-    // Check user has access to Creative Soul tool
+    // Check if user is admin (admins bypass access checks)
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const { data: toolAccess } = await supabaseAdmin
-      .from('creative_tool_access')
-      .select(`
-        *,
-        tool:creative_tools!inner(slug)
-      `)
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('role')
       .eq('user_id', user.id)
-      .eq('tool.slug', 'creative-soul-studio')
-      .limit(1);
+      .maybeSingle();
 
-    if (!toolAccess || toolAccess.length === 0) {
-      throw new Error("You don't have access to Creative Soul Studio. Please purchase it first.");
+    const isAdmin = profile?.role === 'admin';
+
+    // Only check access if user is not admin
+    if (!isAdmin) {
+      const { data: toolAccess, error: accessError } = await supabaseAdmin
+        .from('creative_tool_access')
+        .select(`
+          *,
+          tool:creative_tools!inner(slug)
+        `)
+        .eq('user_id', user.id)
+        .eq('tool.slug', 'creative-soul-studio')
+        .limit(1);
+
+      if (accessError) {
+        console.error('[CREATIVE-SOUL-YOUTUBE] Access check error:', accessError);
+        throw new Error("Failed to check access. Please try again.");
+      }
+
+      if (!toolAccess || toolAccess.length === 0) {
+        return new Response(
+          JSON.stringify({ 
+            error: "You don't have access to Creative Soul Studio. Please purchase it first.",
+            status: 403
+          }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200, // Return 200 with error in body for proper frontend handling
+          }
+        );
+      }
     }
 
-    const { youtubeUrl } = await req.json();
+    let requestBody;
+    try {
+      requestBody = await req.json();
+    } catch (jsonError) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Invalid JSON in request body",
+          success: false 
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
+    }
+
+    const { youtubeUrl } = requestBody;
 
     if (!youtubeUrl || !youtubeUrl.trim()) {
-      throw new Error("Missing YouTube URL");
+      return new Response(
+        JSON.stringify({ 
+          error: "Missing YouTube URL",
+          success: false 
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
     }
 
     // Validate YouTube URL
@@ -84,7 +152,7 @@ serve(async (req) => {
     // TODO: Replace with actual YouTube processing logic
     return new Response(
       JSON.stringify({
-        success: true,
+        success: false,
         message: "YouTube processing requires backend service integration. Please use voice recording for now.",
         mp3Url: null,
         audioBase64: null,
@@ -92,7 +160,7 @@ serve(async (req) => {
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 501, // Not Implemented
+        status: 200, // Return 200 with error message for proper frontend handling
       }
     );
 
@@ -149,10 +217,13 @@ serve(async (req) => {
     const message = error instanceof Error ? error.message : "Unknown error";
     console.error("[CREATIVE-SOUL-YOUTUBE] Error:", message);
     return new Response(
-      JSON.stringify({ error: message }),
+      JSON.stringify({ 
+        error: message,
+        success: false 
+      }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
+        status: 200, // Return 200 with error in body for proper frontend handling
       }
     );
   }

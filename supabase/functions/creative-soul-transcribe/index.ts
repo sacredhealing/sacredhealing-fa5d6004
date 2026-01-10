@@ -15,7 +15,16 @@ serve(async (req) => {
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      throw new Error("Missing authorization header");
+      return new Response(
+        JSON.stringify({ 
+          error: "Missing authorization header. Please sign in and try again.",
+          success: false 
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
     }
 
     const supabaseClient = createClient(
@@ -27,62 +36,179 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
 
     if (userError || !user?.email) {
-      throw new Error("User not authenticated");
+      return new Response(
+        JSON.stringify({ 
+          error: "User not authenticated. Please sign in and try again.",
+          success: false 
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200, // Return 200 with error in body
+        }
+      );
     }
 
-    const { audioBase64, mimeType } = await req.json();
+    let requestBody;
+    try {
+      requestBody = await req.json();
+    } catch (jsonError) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Invalid JSON in request body",
+          success: false 
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
+    }
+
+    const { audioBase64, mimeType } = requestBody;
 
     if (!audioBase64) {
-      throw new Error("Missing audioBase64");
+      return new Response(
+        JSON.stringify({ 
+          error: "Missing audioBase64",
+          success: false 
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200, // Return 200 with error in body
+        }
+      );
     }
 
-    // Check user has access to Creative Soul tool
-    const { data: toolAccess } = await supabaseClient
-      .from('user_creative_tools')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('status', 'active')
-      .limit(1);
+    // Check if user is admin (admins bypass access checks)
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
 
-    if (!toolAccess || toolAccess.length === 0) {
-      throw new Error("You don't have access to Creative Soul. Please purchase it first.");
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('role')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    const isAdmin = profile?.role === 'admin';
+
+    // Only check access if user is not admin
+    if (!isAdmin) {
+      const { data: toolAccess, error: accessError } = await supabaseAdmin
+        .from('creative_tool_access')
+        .select(`
+          *,
+          tool:creative_tools!inner(slug)
+        `)
+        .eq('user_id', user.id)
+        .eq('tool.slug', 'creative-soul-studio')
+        .limit(1);
+
+      if (accessError) {
+        console.error('[CREATIVE-SOUL-TRANSCRIBE] Access check error:', accessError);
+        return new Response(
+          JSON.stringify({ 
+            error: "Failed to check access. Please try again.",
+            success: false 
+          }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+          }
+        );
+      }
+
+      if (!toolAccess || toolAccess.length === 0) {
+        return new Response(
+          JSON.stringify({ 
+            error: "You don't have access to Creative Soul Studio. Please purchase it first.",
+            success: false 
+          }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200, // Return 200 with error in body
+          }
+        );
+      }
     }
 
     const openai = new OpenAI({
       apiKey: Deno.env.get("OPENAI_API_KEY"),
     });
 
-    // Convert base64 to Uint8Array
-    const audioBytes = Uint8Array.from(atob(audioBase64), c => c.charCodeAt(0));
-    
-    // Create a Blob and File for OpenAI API
-    const audioBlob = new Blob([audioBytes], { type: mimeType || 'audio/webm' });
-    const audioFile = new File([audioBlob], "audio.webm", { type: mimeType || 'audio/webm' });
+    // Check OpenAI API key
+    const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!openaiApiKey) {
+      console.error('[CREATIVE-SOUL-TRANSCRIBE] OpenAI API key not configured');
+      return new Response(
+        JSON.stringify({ 
+          error: "Transcription service is not configured. Please contact support.",
+          success: false 
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
+    }
 
-    // Transcribe using Whisper
-    const transcription = await openai.audio.transcriptions.create({
-      file: audioFile,
-      model: "whisper-1",
-      language: "en", // Optional: specify language for better accuracy
+    const openai = new OpenAI({
+      apiKey: openaiApiKey,
     });
 
-    console.log(`[CREATIVE-SOUL-TRANSCRIBE] Transcribed audio for user: ${user.id}`);
+    try {
+      // Convert base64 to Uint8Array
+      const audioBytes = Uint8Array.from(atob(audioBase64), c => c.charCodeAt(0));
+      
+      // Create a Blob and File for OpenAI API
+      const audioBlob = new Blob([audioBytes], { type: mimeType || 'audio/webm' });
+      const audioFile = new File([audioBlob], "audio.webm", { type: mimeType || 'audio/webm' });
 
-    return new Response(
-      JSON.stringify({ text: transcription.text }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      }
-    );
+      // Transcribe using Whisper
+      const transcription = await openai.audio.transcriptions.create({
+        file: audioFile,
+        model: "whisper-1",
+        language: "en", // Optional: specify language for better accuracy
+      });
+
+      console.log(`[CREATIVE-SOUL-TRANSCRIBE] Transcribed audio for user: ${user.id}`);
+
+      return new Response(
+        JSON.stringify({ 
+          text: transcription.text,
+          success: true 
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
+    } catch (openaiError: unknown) {
+      const openaiMessage = openaiError instanceof Error ? openaiError.message : "OpenAI transcription failed";
+      console.error("[CREATIVE-SOUL-TRANSCRIBE] OpenAI error:", openaiMessage);
+      return new Response(
+        JSON.stringify({ 
+          error: `Transcription failed: ${openaiMessage}`,
+          success: false 
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
+    }
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";
     console.error("[CREATIVE-SOUL-TRANSCRIBE] Error:", message);
     return new Response(
-      JSON.stringify({ error: message }),
+      JSON.stringify({ 
+        error: message,
+        success: false 
+      }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
+        status: 200, // Return 200 with error in body
       }
     );
   }

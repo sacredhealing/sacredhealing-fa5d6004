@@ -23,11 +23,16 @@ export const CreativeSoulSection: React.FC = () => {
   const [purchasingFeatured, setPurchasingFeatured] = useState(false);
 
   const handleOpenTool = (workspaceUrl: string, slug?: string) => {
-    // If it's the main Creative Soul tool, use the app route
+    // If it's the main Creative Soul tool, redirect to store
     if (slug === 'creative-soul-studio' || slug?.includes('creative-soul')) {
-      navigate('/creative-soul-tool');
+      navigate('/creative-soul/store');
     } else if (workspaceUrl) {
-      window.open(workspaceUrl, '_blank', 'noopener,noreferrer');
+      // If workspace_url points to /creative-soul-tool, redirect to store
+      if (workspaceUrl === '/creative-soul-tool' || workspaceUrl.includes('/creative-soul-tool')) {
+        navigate('/creative-soul/store');
+      } else {
+        window.open(workspaceUrl, '_blank', 'noopener,noreferrer');
+      }
     }
   };
 

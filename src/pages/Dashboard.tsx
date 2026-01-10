@@ -192,6 +192,9 @@ const Dashboard: React.FC = () => {
           ))}
           <Link
             to="/creative-soul/store"
+            onClick={() => {
+              console.log("CREATIVE_SOUL_CLICK_V1");
+            }}
             className="flex flex-col items-center gap-2 p-3 rounded-xl bg-muted/30 border border-border/30 hover:bg-muted/50 transition-all duration-300 cursor-pointer"
           >
             <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-purple-500/20 to-pink-500/20">

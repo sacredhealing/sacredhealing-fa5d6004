@@ -58,24 +58,26 @@ export async function convertYouTubeToMP3(videoUrl: string): Promise<ConversionR
     // Check if we got a valid response
     if (!data) {
       return {
-        status: 500,
+        status: 400,
         error: 'No response from conversion service',
       };
     }
 
-    // Handle different response formats
-    if (data.mp3Url) {
+    // Edge functions now return 200 with success flag and error in body
+    if (data.success === true && data.mp3Url) {
       return {
         status: 200,
         url: data.mp3Url,
-        message: 'YouTube video converted to MP3 successfully',
+        message: data.message || 'YouTube video converted to MP3 successfully',
       };
     }
 
-    if (data.error) {
+    // Handle error responses (200 status with error in body)
+    if (data.error || data.success === false) {
       return {
-        status: data.status || 500,
-        error: data.error,
+        status: 400, // Convert to 400 for frontend error handling
+        error: data.error || 'Conversion failed',
+        message: data.message || 'YouTube processing not yet implemented. Please use voice recording feature.',
       };
     }
 
@@ -145,13 +147,13 @@ export async function convertVoiceToText(audioBlob: Blob): Promise<ConversionRes
     // Check if we got a valid response
     if (!data) {
       return {
-        status: 500,
+        status: 400,
         error: 'No response from transcription service',
       };
     }
 
-    // Handle different response formats
-    if (data.text) {
+    // Edge functions now return 200 with success flag and error in body
+    if (data.success === true && data.text) {
       return {
         status: 200,
         text: data.text,
@@ -159,10 +161,12 @@ export async function convertVoiceToText(audioBlob: Blob): Promise<ConversionRes
       };
     }
 
-    if (data.error) {
+    // Handle error responses (200 status with error in body)
+    if (data.error || data.success === false) {
       return {
-        status: data.status || 500,
-        error: data.error,
+        status: 400, // Convert to 400 for frontend error handling
+        error: data.error || 'Transcription failed',
+        message: data.message || 'Failed to transcribe audio. Please check your access and try again.',
       };
     }
 

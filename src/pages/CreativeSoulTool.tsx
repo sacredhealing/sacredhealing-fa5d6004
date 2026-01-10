@@ -340,7 +340,7 @@ export default function CreativeSoulTool() {
       // Step 1: Convert YouTube to MP3 using utility function with proper status codes
       const conversionResult = await convertYouTubeToMP3(youtubeUrl);
 
-      // Check status code - only 200 is success
+      // Check if conversion was successful (status 200 and has URL)
       if (conversionResult.status === 200 && conversionResult.url) {
         setMp3Url(conversionResult.url);
         toast.success(conversionResult.message || 'YouTube video converted to MP3!');
@@ -350,8 +350,8 @@ export default function CreativeSoulTool() {
         // For now, we'll skip auto-transcription from YouTube conversion
         // Users can manually transcribe after downloading the MP3
       } else {
-        // Handle error with proper status code
-        const errorMessage = conversionResult.error || 'Failed to convert YouTube video';
+        // Handle error - edge function now returns 200 with error in body
+        const errorMessage = conversionResult.error || conversionResult.message || 'Failed to convert YouTube video';
         toast.error(errorMessage);
         console.error('[handleYoutubeConvert] Error:', conversionResult.status, errorMessage);
       }

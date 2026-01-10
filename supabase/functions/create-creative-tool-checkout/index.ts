@@ -106,8 +106,8 @@ serve(async (req) => {
         },
       ],
       mode: "payment",
-      success_url: `${origin}/creative-soul-tool/${toolSlug}`,
-      cancel_url: `${origin}/creative-soul?canceled=true`,
+      success_url: `${origin}/creative-soul/store?success=true&tool=${toolSlug}`,
+      cancel_url: `${origin}/creative-soul/store?canceled=true`,
       metadata: {
         user_id: user.id,
         tool_id: toolId,

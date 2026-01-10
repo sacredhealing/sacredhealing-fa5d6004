@@ -114,6 +114,9 @@ verify_jwt = true
 [functions.create-creative-tool-checkout]
 verify_jwt = true
 
+[functions.creative-soul-tool]
+verify_jwt = true
+
 [functions.process-mql-signal]
 verify_jwt = false
 

@@ -23,6 +23,13 @@ export default function CreativeSoulLanding() {
   // Admins have full access
   const hasToolAccess = user && (isAdmin || hasAccess('creative-soul-studio'));
 
+  // Admin bypass: Redirect admins directly to store
+  useEffect(() => {
+    if (user && isAdmin && !toolsLoading) {
+      navigate('/creative-soul/store', { replace: true });
+    }
+  }, [user, isAdmin, toolsLoading, navigate]);
+
   // Check access from database (refetch on mount and periodically)
   useEffect(() => {
     if (user) {
@@ -66,7 +73,7 @@ export default function CreativeSoulLanding() {
 
   const handleGetStarted = () => {
     if (hasToolAccess) {
-      navigate('/creative-soul-tool/creative-soul-studio');
+      navigate('/creative-soul/store');
     } else if (user) {
       navigate('/creative-soul/store');
     } else {
@@ -356,7 +363,10 @@ export default function CreativeSoulLanding() {
                   )}
                   {hasToolAccess && (
                     <Button
-                      onClick={() => navigate('/creative-soul-tool/creative-soul-studio')}
+                      onClick={() => {
+                        console.log("CREATIVE_SOUL_CLICK_V1");
+                        navigate('/creative-soul/store');
+                      }}
                       className="w-full bg-purple-600 hover:bg-purple-700 text-white"
                       size="lg"
                     >
