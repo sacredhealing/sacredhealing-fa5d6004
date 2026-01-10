@@ -113,14 +113,6 @@ export const useLiveEvents = () => {
       setEvents(eventsWithRSVP);
     } catch (error: any) {
       console.error('Error fetching live events:', error);
-      // Only show toast for actual errors, not missing tables
-      if (error?.code !== '42P01' && error?.code !== '42501') {
-        toast({
-          title: 'Error',
-          description: 'Failed to load events',
-          variant: 'destructive',
-        });
-      }
       // Set empty array on any error to prevent rendering issues
       setEvents([]);
     } finally {

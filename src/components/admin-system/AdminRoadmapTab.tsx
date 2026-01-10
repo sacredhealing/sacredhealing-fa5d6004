@@ -52,11 +52,6 @@ const AdminRoadmapTab: React.FC = () => {
       setTasks((data || []) as RoadmapTask[]);
     } catch (error) {
       console.error('Error fetching tasks:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load roadmap tasks',
-        variant: 'destructive',
-      });
     } finally {
       setLoading(false);
     }

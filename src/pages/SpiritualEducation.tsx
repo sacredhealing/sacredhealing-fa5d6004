@@ -142,7 +142,6 @@ const SpiritualEducation: React.FC = () => {
       setFilteredVideos(fetchedVideos);
     } catch (err) {
       console.error('Error fetching videos:', err);
-      toast.error('Failed to load videos');
     } finally {
       setIsLoading(false);
     }
