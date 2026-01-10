@@ -293,7 +293,7 @@ export default function CreativeSoulSales() {
 
                 {isAdmin ? (
                   <Button
-                    onClick={() => navigate('/creative-soul-hub')}
+                    onClick={() => navigate('/creative-soul-tool')}
                     className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold"
                     size="lg"
                   >

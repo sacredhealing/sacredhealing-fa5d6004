@@ -156,7 +156,7 @@ const App = () => (
                   <Route path="/creative-soul" element={<CreativeSoulLanding />} />
                   <Route path="/creative-soul-hub" element={<CreativeSoulHub />} />
                   <Route path="/creative-soul/store" element={<CreativeSoulSales />} />
-                  <Route path="/creative-soul-tool" element={<Navigate to="/creative-soul/store" replace />} />
+                  <Route path="/creative-soul-tool" element={<CreativeSoulTool />} />
                   <Route path="/creative-soul-meditation-landing" element={<CreativeSoulMeditationLanding />} />
                   <Route path="/creative-soul-meditation-tool" element={<CreativeSoulMeditation />} />
                 </Route>
