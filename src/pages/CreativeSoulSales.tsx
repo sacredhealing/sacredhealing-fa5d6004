@@ -46,12 +46,13 @@ export default function CreativeSoulSales() {
   const [purchasing, setPurchasing] = useState<string | null>(null);
   
   // Load items from registry - NO edge functions, NO blocking
+  // PATCH: Safe query handling - page renders even if table is missing
   useEffect(() => {
     const loadItems = async () => {
       setIsLoading(true);
       try {
         // Load directly from creative_soul_items table
-        // Admins see ALL items (including admin_only), regular users see active non-admin items
+        // PATCH: Wrap in try/catch to handle table not found errors gracefully
         const query = (supabase as any)
           .from('creative_soul_items')
           .select('*')
@@ -62,9 +63,16 @@ export default function CreativeSoulSales() {
         const { data, error } = await query;
 
         if (error) {
-          console.error('[CreativeSoulSales] Error loading items:', error);
+          // PATCH: Handle table not found or schema errors gracefully
+          const errorMessage = error?.message || String(error);
+          if (errorMessage.includes('table') || errorMessage.includes('schema') || errorMessage.includes('not found')) {
+            console.warn('[CreativeSoulSales] Table creative_soul_items not found - using empty items. This is OK.');
+          } else {
+            console.error('[CreativeSoulSales] Error loading items:', error);
+          }
           // Don't block rendering on error - show empty state
           setItems([]);
+          setIsLoading(false);
           return;
         }
 
@@ -81,10 +89,17 @@ export default function CreativeSoulSales() {
         });
 
         setItems(filteredItems as CreativeSoulItem[]);
-      } catch (err) {
-        console.error('[CreativeSoulSales] Exception loading items:', err);
+      } catch (err: any) {
+        // PATCH: Enhanced error handling - ensure page always renders
+        const errorMessage = err?.message || String(err);
+        if (errorMessage.includes('table') || errorMessage.includes('schema') || errorMessage.includes('not found')) {
+          console.warn('[CreativeSoulSales] Table creative_soul_items not found - using empty items. This is OK.');
+        } else {
+          console.error('[CreativeSoulSales] Exception loading items:', err);
+        }
         setItems([]);
       } finally {
+        // PATCH: Always set loading to false so page renders
         setIsLoading(false);
       }
     };
@@ -206,7 +221,7 @@ export default function CreativeSoulSales() {
       {/* BUILD MARKER - PROOF OF DEPLOY */}
       <div className="bg-yellow-500/20 border-b border-yellow-500/50 px-4 py-2 text-center">
         <span className="text-xs font-mono text-yellow-600 dark:text-yellow-400">
-          BUILD_MARKER: CS_MED_BANNER_V2_PRICE_UPDATE
+          PATCH_MED_BANNER_001
         </span>
       </div>
       {/* Header */}
