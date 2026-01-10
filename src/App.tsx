@@ -86,6 +86,7 @@ import CreativeSoulTool from "./pages/CreativeSoulTool";
 import CreativeSoulLanding from "./pages/CreativeSoulLanding";
 import CreativeSoulMeditationLanding from "./pages/CreativeSoulMeditationLanding";
 import CreativeSoulMeditation from "./pages/CreativeSoulMeditation";
+import CreativeSoulHub from "./pages/CreativeSoulHub";
 import "@/lib/performance"; // Initialize performance monitoring
 
 const App = () => (
@@ -151,6 +152,7 @@ const App = () => (
                   <Route path="/ritual" element={<DailyRitual />} />
                   <Route path="/journal" element={<Journal />} />
                   <Route path="/creative-soul" element={<CreativeSoulLanding />} />
+                  <Route path="/creative-soul-hub" element={<CreativeSoulHub />} />
                   <Route path="/creative-soul/store" element={<CreativeSoulSales />} />
                   <Route path="/creative-soul-tool" element={<CreativeSoulTool />} />
                   <Route path="/creative-soul-meditation-landing" element={<CreativeSoulMeditationLanding />} />
