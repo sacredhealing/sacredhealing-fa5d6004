@@ -21,15 +21,18 @@ serve(async (req) => {
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-      return json({ success: false, error: "Server configuration error", details: "SUPABASE_URL or SUPABASE_ANON_KEY not set" });
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_ROLE_KEY) {
+      return json({ success: false, error: "Server configuration error", details: "Missing environment variables" });
     }
 
     const authHeader = req.headers.get("Authorization") || "";
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       global: { headers: { Authorization: authHeader } },
     });
+
+    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     const { data: auth, error: authErr } = await supabase.auth.getUser();
     if (authErr || !auth?.user) {
@@ -47,32 +50,44 @@ serve(async (req) => {
 
     const mode = body?.mode === "paid" ? "paid" : "demo"; // default demo
 
+    // Check if user is admin (admins bypass all access checks)
+    const { data: adminRole } = await supabaseAdmin
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .maybeSingle();
+
+    const isAdmin = !!adminRole;
+
     // Ensure usage row exists
-    await supabase.from("creative_soul_usage").upsert({ user_id: user.id }, { onConflict: "user_id" });
+    await supabaseAdmin.from("creative_soul_usage").upsert({ user_id: user.id }, { onConflict: "user_id" });
 
-    // DEMO: allow exactly once
+    // DEMO: allow exactly once (unless admin)
     if (mode === "demo") {
-      const { data: usage, error: usageErr } = await supabase
-        .from("creative_soul_usage")
-        .select("demo_used")
-        .eq("user_id", user.id)
-        .single();
+      if (!isAdmin) {
+        const { data: usage, error: usageErr } = await supabaseAdmin
+          .from("creative_soul_usage")
+          .select("demo_used")
+          .eq("user_id", user.id)
+          .single();
 
-      if (usageErr) {
-        return json({ success: false, error: "Usage lookup failed", details: usageErr.message });
-      }
+        if (usageErr) {
+          return json({ success: false, error: "Usage lookup failed", details: usageErr.message });
+        }
 
-      if (usage?.demo_used) {
-        return json({ success: false, error: "Demo already used. Please purchase to unlock all features." });
-      }
+        if (usage?.demo_used) {
+          return json({ success: false, error: "Demo already used. Please purchase to unlock all features." });
+        }
 
-      const { error: markErr } = await supabase
-        .from("creative_soul_usage")
-        .update({ demo_used: true, demo_used_at: new Date().toISOString() })
-        .eq("user_id", user.id);
+        const { error: markErr } = await supabaseAdmin
+          .from("creative_soul_usage")
+          .update({ demo_used: true, demo_used_at: new Date().toISOString() })
+          .eq("user_id", user.id);
 
-      if (markErr) {
-        return json({ success: false, error: "Failed to mark demo used", details: markErr.message });
+        if (markErr) {
+          return json({ success: false, error: "Failed to mark demo used", details: markErr.message });
+        }
       }
 
       // IMPORTANT: Do not process audio here. Just return a job id.
@@ -84,25 +99,41 @@ serve(async (req) => {
       });
     }
 
-    // PAID: must have entitlement
-    const { data: ent, error: entErr } = await supabase
-      .from("creative_soul_entitlements")
-      .select("has_access, plan")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    if (entErr) {
-      return json({ success: false, error: "Entitlement lookup failed", details: entErr.message });
+    // PAID: admins have full access
+    if (isAdmin) {
+      return json({
+        success: true,
+        mode: "paid",
+        plan: "admin",
+        job_id: crypto.randomUUID(),
+        message: "Generation queued. Processing will begin shortly.",
+      });
     }
 
-    if (!ent?.has_access) {
+    // PAID: check creative_tool_access for creative-soul-meditation slug
+    const { data: toolAccess, error: accessErr } = await supabaseAdmin
+      .from('creative_tool_access')
+      .select(`
+        *,
+        tool:creative_tools!inner(slug)
+      `)
+      .eq('user_id', user.id)
+      .eq('tool.slug', 'creative-soul-meditation')
+      .limit(1);
+
+    if (accessErr) {
+      console.error('[CONVERT-MEDITATION] Access check error:', accessErr);
+      return json({ success: false, error: "Access check failed", details: accessErr.message });
+    }
+
+    if (!toolAccess || toolAccess.length === 0) {
       return json({ success: false, error: "Full access required. Please purchase to unlock all features." });
     }
 
     return json({
       success: true,
       mode: "paid",
-      plan: ent.plan ?? "unknown",
+      plan: "purchased",
       job_id: crypto.randomUUID(),
       message: "Generation queued. Processing will begin shortly.",
     });
