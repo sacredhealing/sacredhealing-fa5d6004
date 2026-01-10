@@ -49,7 +49,7 @@ export default function CreativeSoulMeditation() {
   const [urls, setUrls] = useState('');
   
   // Generation options
-  const [style, setStyle] = useState('ocean');
+  const [style, setStyle] = useState('ocean-water');
   const [freq, setFreq] = useState('432');
   const [binaural, setBinaural] = useState(true);
   const [bpmMatch, setBpmMatch] = useState(true);
@@ -504,18 +504,27 @@ export default function CreativeSoulMeditation() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="style" className="cursor-pointer">Meditation Style</Label>
+                <Label htmlFor="style" className="cursor-pointer">🧘‍♂️ Meditation / Healing Audio Type</Label>
                 <Select value={style} onValueChange={setStyle}>
                   <SelectTrigger id="style" className="cursor-pointer">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ocean">Ocean</SelectItem>
-                    <SelectItem value="forest">Forest</SelectItem>
-                    <SelectItem value="shaman">Shamanic</SelectItem>
-                    <SelectItem value="indian">Indian</SelectItem>
-                    <SelectItem value="relaxing">Relaxing</SelectItem>
-                    <SelectItem value="mystic">Mystic</SelectItem>
+                    <SelectItem value="indian-vedic">Indian (Vedic) - Mantras, tanpura drones, temple bells, ancient resonance</SelectItem>
+                    <SelectItem value="shamanic">Shamanic - Frame drums, rattles, tribal rhythms, journeying soundscapes</SelectItem>
+                    <SelectItem value="mystic">Mystic - Etheric pads, choirs, cosmic textures, deep spiritual tones</SelectItem>
+                    <SelectItem value="tibetan">Tibetan - Singing bowls, long horns, overtone chanting</SelectItem>
+                    <SelectItem value="sufi">Sufi - Whirling rhythms, ney flute, heart-centered devotion</SelectItem>
+                    <SelectItem value="zen">Zen (Japanese) - Minimal ambience, breath awareness, temple bells</SelectItem>
+                    <SelectItem value="nature-healing">Nature Healing - Forest, birds, wind, water, grounding soundscapes</SelectItem>
+                    <SelectItem value="ocean-water">Ocean / Water - Waves, flowing water, deep calming rhythms</SelectItem>
+                    <SelectItem value="sound-bath">Sound Bath - Gongs, crystal bowls, harmonic overtones</SelectItem>
+                    <SelectItem value="chakra-balancing">Chakra Balancing - Layered tones aligned to each chakra center</SelectItem>
+                    <SelectItem value="breathwork">Breathwork - Pulsing rhythms guiding inhale/exhale cycles</SelectItem>
+                    <SelectItem value="sleep-delta">Sleep / Delta Healing - Ultra-calm textures, slow binaural pulses</SelectItem>
+                    <SelectItem value="affirmation-healing">Affirmation Healing - Clean voice-forward mixes with supportive music</SelectItem>
+                    <SelectItem value="plant-medicine">Plant Medicine (Ceremonial) - Deep tribal ambience, ceremonial pacing</SelectItem>
+                    <SelectItem value="higher-consciousness">Higher Consciousness / Cosmic - Galactic drones, expansive frequencies, awakening themes</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
