@@ -1,10 +1,69 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import ytdl from "https://esm.sh/@distube/ytdl-core@4.16.2";
+import OpenAI from "https://esm.sh/openai@4.28.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// Extract video ID from YouTube URL
+function extractVideoId(url: string): string | null {
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([^&\n?#]+)/,
+    /youtube\.com\/shorts\/([^&\n?#]+)/,
+  ];
+  
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match && match[1]) {
+      return match[1];
+    }
+  }
+  return null;
+}
+
+// Download YouTube audio as buffer
+async function downloadYouTubeAudio(videoId: string): Promise<Uint8Array> {
+  console.log(`[YOUTUBE] Starting download for video: ${videoId}`);
+  
+  const audioStream = ytdl(videoId, {
+    quality: "lowestaudio",
+    filter: "audioonly",
+  });
+
+  const chunks: Uint8Array[] = [];
+  for await (const chunk of audioStream) {
+    chunks.push(new Uint8Array(chunk));
+  }
+
+  // Combine all chunks into a single Uint8Array
+  const totalLength = chunks.reduce((total, chunk) => total + chunk.length, 0);
+  const audioBuffer = new Uint8Array(totalLength);
+  let offset = 0;
+  for (const chunk of chunks) {
+    audioBuffer.set(chunk, offset);
+    offset += chunk.length;
+  }
+
+  console.log(`[YOUTUBE] Downloaded ${totalLength} bytes of audio`);
+  return audioBuffer;
+}
+
+// Get video info (title, duration, etc.)
+async function getVideoInfo(videoId: string): Promise<{ title: string; duration: number }> {
+  try {
+    const info = await ytdl.getInfo(videoId);
+    return {
+      title: info.videoDetails.title,
+      duration: parseInt(info.videoDetails.lengthSeconds) || 0,
+    };
+  } catch (error) {
+    console.error("[YOUTUBE] Error getting video info:", error);
+    return { title: "Unknown", duration: 0 };
+  }
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -87,7 +146,7 @@ serve(async (req) => {
           }),
           {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 200, // Return 200 with error in body for proper frontend handling
+            status: 200,
           }
         );
       }
@@ -109,7 +168,7 @@ serve(async (req) => {
       );
     }
 
-    const { youtubeUrl } = requestBody;
+    const { youtubeUrl, transcribe = true } = requestBody;
 
     if (!youtubeUrl || !youtubeUrl.trim()) {
       return new Response(
@@ -124,109 +183,137 @@ serve(async (req) => {
       );
     }
 
-    // Validate YouTube URL
-    const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
-    if (!youtubeRegex.test(youtubeUrl)) {
-      throw new Error("Invalid YouTube URL format");
+    // Validate YouTube URL and extract video ID
+    const videoId = extractVideoId(youtubeUrl);
+    if (!videoId) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Invalid YouTube URL format. Please provide a valid YouTube video link.",
+          success: false 
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
     }
 
-    // NOTE: Actual YouTube to MP3 conversion requires a backend service
-    // This is a placeholder that returns a demo URL
-    // In production, you would:
-    // 1. Use yt-dlp or similar service (requires server-side processing)
-    // 2. Download video, extract audio, convert to MP3
-    // 3. Upload to Supabase Storage
-    // 4. Return the public URL
+    console.log(`[CREATIVE-SOUL-YOUTUBE] Processing video ${videoId} for user: ${user.id}`);
 
-    // For now, return a placeholder that simulates the process
-    // In production, integrate with:
-    // - A serverless function that has yt-dlp installed
-    // - Or use a third-party API like RapidAPI YouTube Downloader
-    // - Or process via a dedicated backend service
+    // Get video info
+    const videoInfo = await getVideoInfo(videoId);
+    console.log(`[YOUTUBE] Video title: ${videoInfo.title}, duration: ${videoInfo.duration}s`);
 
-    console.log(`[CREATIVE-SOUL-YOUTUBE] Processing YouTube URL for user: ${user.id}`, youtubeUrl);
+    // Check video duration (limit to 30 minutes to avoid timeout)
+    if (videoInfo.duration > 1800) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Video too long. Please use videos under 30 minutes.",
+          success: false 
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
+    }
 
-    // Simulate processing delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Download audio
+    const audioBuffer = await downloadYouTubeAudio(videoId);
 
-    // Return placeholder response
-    // TODO: Replace with actual YouTube processing logic
-    return new Response(
-      JSON.stringify({
-        success: false,
-        message: "YouTube processing requires backend service integration. Please use voice recording for now.",
-        mp3Url: null,
-        audioBase64: null,
-        error: "YouTube processing not yet implemented. Please use voice recording feature."
-      }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200, // Return 200 with error message for proper frontend handling
-      }
-    );
+    // Convert to base64 for transcription and storage
+    const audioBase64 = btoa(String.fromCharCode(...audioBuffer));
 
-    /* Example of what the actual implementation would look like:
-    
-    // 1. Download video using yt-dlp (would need server with yt-dlp installed)
-    const videoPath = await downloadYouTubeVideo(youtubeUrl);
-    
-    // 2. Extract audio to MP3
-    const mp3Path = await extractAudioToMP3(videoPath);
-    
-    // 3. Enhance audio (optional)
-    const enhancedPath = await enhanceAudio(mp3Path);
-    
-    // 4. Upload to Supabase Storage
-    const fileName = `creative-soul/${user.id}/${Date.now()}.mp3`;
+    // Upload to Supabase Storage
+    const fileName = `creative-soul/${user.id}/${Date.now()}-${videoId}.mp3`;
     const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
-      .from('creative-soul-audio')
-      .upload(fileName, Deno.readFileSync(enhancedPath), {
+      .from('audio')
+      .upload(fileName, audioBuffer, {
         contentType: 'audio/mpeg',
         upsert: false,
       });
-    
-    if (uploadError) throw uploadError;
-    
-    // 5. Get public URL
+
+    if (uploadError) {
+      console.error('[YOUTUBE] Upload error:', uploadError);
+      throw new Error("Failed to save audio file. Please try again.");
+    }
+
+    // Get public URL
     const { data: { publicUrl } } = supabaseAdmin.storage
-      .from('creative-soul-audio')
+      .from('audio')
       .getPublicUrl(fileName);
-    
-    // 6. Read audio for transcription
-    const audioBytes = Deno.readFileSync(enhancedPath);
-    const audioBase64 = btoa(String.fromCharCode(...new Uint8Array(audioBytes)));
-    
-    // 7. Clean up temp files
-    Deno.remove(videoPath);
-    Deno.remove(mp3Path);
-    Deno.remove(enhancedPath);
-    
+
+    console.log(`[YOUTUBE] Audio uploaded to: ${publicUrl}`);
+
+    // Optionally transcribe the audio
+    let transcription: string | null = null;
+    if (transcribe) {
+      const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
+      if (openaiApiKey) {
+        try {
+          const openai = new OpenAI({ apiKey: openaiApiKey });
+          
+          // Create a File object for OpenAI - use spread to avoid ArrayBuffer type issues
+          const audioFile = new File([new Uint8Array(audioBuffer)], "audio.mp3", { type: "audio/mpeg" });
+          
+          const transcriptionResult = await openai.audio.transcriptions.create({
+            file: audioFile,
+            model: "whisper-1",
+            response_format: "text",
+          });
+          
+          transcription = String(transcriptionResult);
+          console.log(`[YOUTUBE] Transcription completed: ${transcription.substring(0, 100)}...`);
+        } catch (transcribeError) {
+          console.error('[YOUTUBE] Transcription error:', transcribeError);
+          // Continue without transcription - not a fatal error
+        }
+      } else {
+        console.log('[YOUTUBE] OpenAI API key not configured, skipping transcription');
+      }
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         mp3Url: publicUrl,
-        audioBase64: audioBase64,
+        audioBase64: audioBase64.length > 1000000 ? null : audioBase64, // Only include if under 1MB
+        transcription: transcription,
+        videoTitle: videoInfo.title,
+        videoDuration: videoInfo.duration,
+        message: transcription 
+          ? "YouTube video converted and transcribed successfully!" 
+          : "YouTube video converted to MP3 successfully!",
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       }
     );
-    */
 
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";
     console.error("[CREATIVE-SOUL-YOUTUBE] Error:", message);
+    
+    // Provide more helpful error messages
+    let userMessage = message;
+    if (message.includes("Could not extract") || message.includes("No video id found")) {
+      userMessage = "Could not process this YouTube video. It may be private, age-restricted, or unavailable.";
+    } else if (message.includes("410")) {
+      userMessage = "This video is not available for download. It may be restricted or removed.";
+    } else if (message.includes("timeout") || message.includes("ETIMEDOUT")) {
+      userMessage = "Request timed out. Please try a shorter video.";
+    }
+    
     return new Response(
       JSON.stringify({ 
-        error: message,
+        error: userMessage,
         success: false 
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200, // Return 200 with error in body for proper frontend handling
+        status: 200,
       }
     );
   }
 });
-
