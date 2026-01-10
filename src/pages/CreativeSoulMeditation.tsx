@@ -379,7 +379,7 @@ export default function CreativeSoulMeditation() {
       {/* BUILD MARKER - PROOF OF DEPLOY */}
       <div className="bg-yellow-500/20 border-b border-yellow-500/50 px-4 py-2 text-center">
         <span className="text-xs font-mono text-yellow-600 dark:text-yellow-400">
-          BUILD_MARKER: MED9K3M2X
+          BUILD_MARKER: MED15TYPES_15FREQS_V2
         </span>
       </div>
       {/* Header */}

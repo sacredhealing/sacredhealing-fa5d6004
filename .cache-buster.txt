@@ -1,0 +1,7 @@
+# Cache Buster - Updated: $(date)
+# If you see old UI, clear browser cache:
+# Chrome/Edge: Ctrl+Shift+R (Windows) or Cmd+Shift+R (Mac)
+# Firefox: Ctrl+F5 (Windows) or Cmd+Shift+R (Mac)
+# Safari: Cmd+Option+R (Mac)
+# 
+# Or open DevTools → Application → Clear Storage → Clear site data
