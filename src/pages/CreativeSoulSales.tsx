@@ -250,14 +250,13 @@ export default function CreativeSoulSales() {
                     <Sparkles className="w-8 h-8 text-purple-400" />
                   </div>
                   <div className="flex flex-col items-end gap-2">
-                    {isAdmin ? (
+                    <Badge variant="outline" className="text-lg font-bold px-3 py-1">
+                      €19.99
+                    </Badge>
+                    {isAdmin && (
                       <Badge variant="outline" className="text-sm font-semibold bg-green-500/10 text-green-400 border-green-500/30">
                         <Check className="w-3 h-3 mr-1" />
-                        Admin Access
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-lg font-bold px-3 py-1">
-                        €19.99
+                        Free Access
                       </Badge>
                     )}
                     <Badge variant="outline" className="text-xs bg-purple-500/10 text-purple-400 border-purple-500/30">
