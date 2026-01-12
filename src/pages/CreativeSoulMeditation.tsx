@@ -109,7 +109,7 @@ export default function CreativeSoulMeditation() {
       // Check Creative Soul Meditation entitlement
       const { data: ent } = await supabase
         .from('creative_soul_entitlements')
-        .select('has_access, subscription_status, plan')
+        .select('has_access, plan')
         .eq('user_id', user.id)
         .maybeSingle();
 
