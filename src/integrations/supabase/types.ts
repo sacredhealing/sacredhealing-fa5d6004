@@ -320,6 +320,30 @@ export type Database = {
           },
         ]
       }
+      affiliate_attribution: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_seen_at: string | null
+          ref_code: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_seen_at?: string | null
+          ref_code: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_seen_at?: string | null
+          ref_code?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       affiliate_earnings: {
         Row: {
           affiliate_user_id: string
@@ -359,6 +383,33 @@ export type Database = {
           purchase_type?: string
           referred_user_id?: string
           status?: string
+        }
+        Relationships: []
+      }
+      affiliate_events: {
+        Row: {
+          created_at: string | null
+          event_type: string
+          id: string
+          ref_code: string
+          tool_slug: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_type: string
+          id?: string
+          ref_code: string
+          tool_slug: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          ref_code?: string
+          tool_slug?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -705,6 +756,48 @@ export type Database = {
         }
         Relationships: []
       }
+      bot_entitlements: {
+        Row: {
+          bot_type: string
+          coins_credited: number
+          created_at: string
+          has_access: boolean
+          id: string
+          plan: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bot_type?: string
+          coins_credited?: number
+          created_at?: string
+          has_access?: boolean
+          id?: string
+          plan?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bot_type?: string
+          coins_credited?: number
+          created_at?: string
+          has_access?: boolean
+          id?: string
+          plan?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       breathing_patterns: {
         Row: {
           audio_url: string | null
@@ -824,6 +917,92 @@ export type Database = {
           },
         ]
       }
+      challenge_participants: {
+        Row: {
+          challenge_id: string
+          completed: boolean
+          completed_at: string | null
+          id: string
+          joined_at: string
+          progress: number
+          user_id: string
+        }
+        Insert: {
+          challenge_id: string
+          completed?: boolean
+          completed_at?: string | null
+          id?: string
+          joined_at?: string
+          progress?: number
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string
+          completed?: boolean
+          completed_at?: string | null
+          id?: string
+          joined_at?: string
+          progress?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_participants_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      challenges: {
+        Row: {
+          challenge_type: string
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          duration_days: number
+          end_date: string
+          id: string
+          is_active: boolean
+          is_premium: boolean
+          shc_reward: number
+          start_date: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          challenge_type?: string
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_days?: number
+          end_date?: string
+          id?: string
+          is_active?: boolean
+          is_premium?: boolean
+          shc_reward?: number
+          start_date?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          challenge_type?: string
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_days?: number
+          end_date?: string
+          id?: string
+          is_active?: boolean
+          is_premium?: boolean
+          shc_reward?: number
+          start_date?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       chat_members: {
         Row: {
           id: string
@@ -930,6 +1109,33 @@ export type Database = {
           name?: string
           path_slug?: string | null
           type?: string | null
+        }
+        Relationships: []
+      }
+      coin_awards: {
+        Row: {
+          coins: number
+          created_at: string | null
+          id: string
+          reason: string | null
+          stripe_session_id: string
+          user_id: string
+        }
+        Insert: {
+          coins: number
+          created_at?: string | null
+          id?: string
+          reason?: string | null
+          stripe_session_id: string
+          user_id: string
+        }
+        Update: {
+          coins?: number
+          created_at?: string | null
+          id?: string
+          reason?: string | null
+          stripe_session_id?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -1204,6 +1410,42 @@ export type Database = {
           },
         ]
       }
+      creative_soul_entitlements: {
+        Row: {
+          coins_credited: number | null
+          created_at: string | null
+          has_access: boolean | null
+          id: string
+          plan: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          coins_credited?: number | null
+          created_at?: string | null
+          has_access?: boolean | null
+          id?: string
+          plan?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          coins_credited?: number | null
+          created_at?: string | null
+          has_access?: boolean | null
+          id?: string
+          plan?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       creative_soul_jobs: {
         Row: {
           action: string
@@ -1245,6 +1487,33 @@ export type Database = {
           result_url?: string | null
           status?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      creative_soul_usage: {
+        Row: {
+          created_at: string | null
+          demo_used: boolean | null
+          demo_used_at: string | null
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          demo_used?: boolean | null
+          demo_used_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          demo_used?: boolean | null
+          demo_used_at?: string | null
+          id?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -2073,6 +2342,86 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      live_event_rsvps: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          rsvp_status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          rsvp_status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          rsvp_status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_event_rsvps_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "live_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_events: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration_minutes: number
+          event_type: string
+          external_link: string | null
+          id: string
+          is_active: boolean
+          is_premium: boolean
+          max_participants: number | null
+          scheduled_at: string
+          title: string
+          updated_at: string
+          zoom_link: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          event_type?: string
+          external_link?: string | null
+          id?: string
+          is_active?: boolean
+          is_premium?: boolean
+          max_participants?: number | null
+          scheduled_at: string
+          title: string
+          updated_at?: string
+          zoom_link?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          event_type?: string
+          external_link?: string | null
+          id?: string
+          is_active?: boolean
+          is_premium?: boolean
+          max_participants?: number | null
+          scheduled_at?: string
+          title?: string
+          updated_at?: string
+          zoom_link?: string | null
+        }
+        Relationships: []
       }
       live_stream_messages: {
         Row: {
@@ -3170,6 +3519,13 @@ export type Database = {
             columns: ["referred_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "profiles_referred_by_fkey"
+            columns: ["referred_by"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["user_id"]
           },
         ]
@@ -4684,6 +5040,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_wallet: {
+        Row: {
+          coins: number | null
+          created_at: string | null
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          coins?: number | null
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          coins?: number | null
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_wallets: {
         Row: {
           created_at: string
@@ -4820,7 +5200,33 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       generate_referral_code: { Args: never; Returns: string }
@@ -4830,6 +5236,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      subscribe_to_newsletter: {
+        Args: { email_input: string; name_input?: string }
+        Returns: Json
       }
     }
     Enums: {
