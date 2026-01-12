@@ -104,6 +104,8 @@ const App = () => (
               <Route path="/" element={<Auth />} />
               <Route path="/about" element={<About />} />
               <Route path="/auth" element={<Auth />} />
+              {/* Public landing pages */}
+              <Route path="/creative-soul-meditation-landing" element={<CreativeSoulMeditationLanding />} />
               <Route element={<AuthOnlyRoute />}>
                 <Route path="/onboarding" element={<Onboarding />} />
               </Route>
@@ -158,7 +160,6 @@ const App = () => (
                   {/* ROUTE DEFINITION: /creative-soul/store renders CreativeSoulSales.tsx */}
                   <Route path="/creative-soul/store" element={<CreativeSoulSales />} />
                   <Route path="/creative-soul-tool" element={<CreativeSoulTool />} />
-                  <Route path="/creative-soul-meditation-landing" element={<CreativeSoulMeditationLanding />} />
                   <Route path="/creative-soul-meditation-tool" element={<CreativeSoulMeditation />} />
                 </Route>
                 <Route path="/admin" element={<AdminDashboard />} />
