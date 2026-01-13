@@ -16,7 +16,7 @@ const buttonVariants = cva(
         ghost: "hover:bg-muted hover:text-foreground",
         link: "text-primary underline-offset-4 hover:underline",
         gold: "bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-semibold shadow-[0_0_20px_hsl(var(--accent)/0.4)] hover:scale-105",
-        spiritual: "bg-gradient-to-r from-secondary to-primary text-primary-foreground shadow-[0_0_20px_hsl(var(--primary)/0.4)] hover:scale-105",
+        spiritual: "bg-gradient-to-r from-[#2DD4BF] to-[#14B8A6] text-black font-semibold shadow-[0_0_20px_rgba(45,212,191,0.4)] hover:scale-105",
         glass: "bg-muted/30 backdrop-blur-md border border-border/50 text-foreground hover:bg-muted/50",
       },
       size: {
