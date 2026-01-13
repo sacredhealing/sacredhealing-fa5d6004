@@ -98,7 +98,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
         <Link to="/wallet">
-          <Button size="sm" className="mt-4 bg-yellow-500 hover:bg-yellow-400 text-black font-semibold shadow-[0_0_20px_rgba(234,179,8,0.4)] hover:scale-105 transition-all duration-300">
+          <Button size="sm" className="mt-4 bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-black font-semibold shadow-[0_0_20px_rgba(251,191,36,0.5)] hover:scale-105 transition-all duration-300">
             {t('dashboard.claimRewards')}
           </Button>
         </Link>
