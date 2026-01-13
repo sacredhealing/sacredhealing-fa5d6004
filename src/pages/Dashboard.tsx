@@ -98,7 +98,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
         <Link to="/wallet">
-          <Button variant="gold" size="sm" className="mt-4">
+          <Button size="sm" className="mt-4 bg-yellow-500 hover:bg-yellow-400 text-black font-semibold shadow-[0_0_20px_rgba(234,179,8,0.4)] hover:scale-105 transition-all duration-300">
             {t('dashboard.claimRewards')}
           </Button>
         </Link>
@@ -175,15 +175,15 @@ const Dashboard: React.FC = () => {
         <h2 className="text-lg font-heading font-semibold text-foreground mb-4">{t('dashboard.quickActions')}</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-2">
           {quickActions.map((action) => {
-            // Special styling for Wallet card
+            // Special styling for Wallet card - same size as others but with purple theme
             if (action.labelKey === 'quickActions.wallet') {
               return (
                 <Link key={action.labelKey} to={action.to}>
-                  <div className="flex flex-col items-center gap-3 p-4 rounded-xl bg-card/80 border border-purple-500/30 hover:border-purple-500/50 hover:bg-card transition-all duration-300">
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-purple-600/30 to-purple-400/20 border border-purple-500/20">
-                      <action.icon className="text-purple-400" size={22} />
+                  <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-card/60 border border-purple-800/50 hover:border-purple-600/60 hover:bg-card/80 transition-all duration-300">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-purple-900/60 border border-purple-700/40">
+                      <action.icon className="text-purple-400" size={20} />
                     </div>
-                    <span className="text-sm font-medium text-foreground text-center">{t(action.labelKey)}</span>
+                    <span className="text-xs font-medium text-foreground text-center">{t(action.labelKey)}</span>
                   </div>
                 </Link>
               );
@@ -205,18 +205,18 @@ const Dashboard: React.FC = () => {
               </Link>
             );
           })}
-          {/* Creative Soul card with matching design */}
+          {/* Creative Soul card - same size as others but with purple theme */}
           <Link
             to="/creative-soul/store"
             onClick={() => {
               console.log("CREATIVE_SOUL_CLICK_V1");
             }}
           >
-            <div className="flex flex-col items-center gap-3 p-4 rounded-xl bg-card/80 border border-purple-500/30 hover:border-purple-500/50 hover:bg-card transition-all duration-300">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-purple-600/30 to-purple-400/20 border border-purple-500/20">
-                <Sparkles className="text-purple-400" size={22} />
+            <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-card/60 border border-purple-800/50 hover:border-purple-600/60 hover:bg-card/80 transition-all duration-300">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-purple-900/60 border border-purple-700/40">
+                <Sparkles className="text-purple-400" size={20} />
               </div>
-              <span className="text-sm font-medium text-foreground text-center">Creative Soul</span>
+              <span className="text-xs font-medium text-foreground text-center">Creative Soul</span>
             </div>
           </Link>
         </div>
