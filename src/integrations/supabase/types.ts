@@ -1459,7 +1459,7 @@ export type Database = {
           result_url: string | null
           status: string
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           action: string
@@ -1473,7 +1473,7 @@ export type Database = {
           result_url?: string | null
           status?: string
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           action?: string
@@ -1487,7 +1487,7 @@ export type Database = {
           result_url?: string | null
           status?: string
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
