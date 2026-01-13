@@ -23,7 +23,7 @@ const toolIcons: Record<string, any> = {
 // Tool route mapping
 const toolRoutes: Record<string, string> = {
   'creative-soul-studio': '/creative-soul/store',
-  'creative-soul-meditation': '/creative-soul-meditation-tool',
+  'creative-soul-meditation': '/creative-soul/store',
   'music-beat-companion': '/creative-soul/store',
   'soul-writing': '/creative-soul/store',
   'meditation-creator': '/creative-soul/store',
@@ -70,17 +70,8 @@ export default function CreativeSoulHub() {
       navigate(route);
     } else {
       // User doesn't have access - show purchase/landing page
-      if (tool.slug === 'creative-soul-meditation') {
-        navigate(`/creative-soul-meditation-landing${affiliateId ? `?ref=${affiliateId}` : ''}`);
-      } else if (tool.slug === 'creative-soul-studio') {
-        navigate(`/creative-soul/store${affiliateId ? `?ref=${affiliateId}` : ''}`);
-      } else {
-        // For other tools, navigate to store instead of /creative-soul-tool
-        const route = tool.workspace_url && tool.workspace_url !== '/creative-soul-tool' && !tool.workspace_url.includes('/creative-soul-tool') 
-          ? tool.workspace_url 
-          : '/creative-soul/store';
-        navigate(route);
-      }
+      // All tools now navigate to store
+      navigate(`/creative-soul/store${affiliateId ? `?ref=${affiliateId}` : ''}`);
     }
   };
 

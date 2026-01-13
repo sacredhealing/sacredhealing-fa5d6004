@@ -84,8 +84,6 @@ import AdminContentRoadmap from "./pages/AdminContentRoadmap";
 import CreativeSoulSales from "./pages/CreativeSoulSales";
 import CreativeSoulTool from "./pages/CreativeSoulTool";
 import CreativeSoulLanding from "./pages/CreativeSoulLanding";
-import CreativeSoulMeditationLanding from "./pages/CreativeSoulMeditationLanding";
-import CreativeSoulMeditation from "./pages/CreativeSoulMeditation";
 import CreativeSoulHub from "./pages/CreativeSoulHub";
 import { DebugBanner } from "./components/DebugBanner";
 import "@/lib/performance"; // Initialize performance monitoring
@@ -105,7 +103,6 @@ const App = () => (
               <Route path="/about" element={<About />} />
               <Route path="/auth" element={<Auth />} />
               {/* Public landing pages */}
-              <Route path="/creative-soul-meditation-landing" element={<CreativeSoulMeditationLanding />} />
               <Route element={<AuthOnlyRoute />}>
                 <Route path="/onboarding" element={<Onboarding />} />
               </Route>
@@ -160,7 +157,6 @@ const App = () => (
                   {/* ROUTE DEFINITION: /creative-soul/store renders CreativeSoulSales.tsx */}
                   <Route path="/creative-soul/store" element={<CreativeSoulSales />} />
                   <Route path="/creative-soul-tool" element={<CreativeSoulTool />} />
-                  <Route path="/creative-soul-meditation-tool" element={<CreativeSoulMeditation />} />
                 </Route>
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/meditations" element={<Admin />} />
