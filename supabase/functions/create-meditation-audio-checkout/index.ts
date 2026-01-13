@@ -139,8 +139,8 @@ serve(async (req) => {
       line_items: lineItems,
       mode: mode,
       payment_method_types: ["card"],
-      success_url: `${origin}/creative-soul-meditation-tool?success=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/creative-soul-meditation-landing?canceled=true`,
+      success_url: `${origin}/creative-soul/store?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/creative-soul/store?canceled=true`,
       metadata: {
         user_id: user.id,
         tool_id: toolId,

@@ -80,8 +80,8 @@ serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       mode,
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${SITE_URL}/creative-soul-meditation-tool?payment=success`,
-      cancel_url: `${SITE_URL}/creative-soul-meditation-landing?payment=cancel`,
+      success_url: `${SITE_URL}/creative-soul-tool?payment=success`,
+      cancel_url: `${SITE_URL}/creative-soul/store?payment=cancel`,
       customer_email: user.email ?? undefined,
       metadata: {
         user_id: user.id,
