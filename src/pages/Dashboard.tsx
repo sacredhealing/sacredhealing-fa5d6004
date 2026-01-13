@@ -174,33 +174,50 @@ const Dashboard: React.FC = () => {
       <div className="animate-slide-up" style={{ animationDelay: '0.3s' }}>
         <h2 className="text-lg font-heading font-semibold text-foreground mb-4">{t('dashboard.quickActions')}</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-2">
-          {quickActions.map((action) => (
-            <Link key={action.labelKey} to={action.to}>
-              <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-muted/30 border border-border/30 hover:bg-muted/50 transition-all duration-300">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                  action.color === 'primary' ? 'bg-primary/20 text-primary' :
-                  action.color === 'secondary' ? 'bg-secondary/20 text-secondary' :
-                  action.color === 'accent' ? 'bg-accent/20 text-accent' :
-                  action.color === 'red' ? 'bg-red-500/20 text-red-500' :
-                  'bg-purple/20 text-purple'
-                }`}>
-                  <action.icon size={20} />
+          {quickActions.map((action) => {
+            // Special styling for Wallet card
+            if (action.labelKey === 'quickActions.wallet') {
+              return (
+                <Link key={action.labelKey} to={action.to}>
+                  <div className="flex flex-col items-center gap-3 p-4 rounded-xl bg-card/80 border border-purple-500/30 hover:border-purple-500/50 hover:bg-card transition-all duration-300">
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-purple-600/30 to-purple-400/20 border border-purple-500/20">
+                      <action.icon className="text-purple-400" size={22} />
+                    </div>
+                    <span className="text-sm font-medium text-foreground text-center">{t(action.labelKey)}</span>
+                  </div>
+                </Link>
+              );
+            }
+            return (
+              <Link key={action.labelKey} to={action.to}>
+                <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-muted/30 border border-border/30 hover:bg-muted/50 transition-all duration-300">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                    action.color === 'primary' ? 'bg-primary/20 text-primary' :
+                    action.color === 'secondary' ? 'bg-secondary/20 text-secondary' :
+                    action.color === 'accent' ? 'bg-accent/20 text-accent' :
+                    action.color === 'red' ? 'bg-red-500/20 text-red-500' :
+                    'bg-purple/20 text-purple'
+                  }`}>
+                    <action.icon size={20} />
+                  </div>
+                  <span className="text-xs font-medium text-foreground text-center">{t(action.labelKey)}</span>
                 </div>
-                <span className="text-xs font-medium text-foreground text-center">{t(action.labelKey)}</span>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
+          {/* Creative Soul card with matching design */}
           <Link
             to="/creative-soul/store"
             onClick={() => {
               console.log("CREATIVE_SOUL_CLICK_V1");
             }}
-            className="flex flex-col items-center gap-2 p-3 rounded-xl bg-muted/30 border border-border/30 hover:bg-muted/50 transition-all duration-300 cursor-pointer"
           >
-            <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-purple-500/20 to-pink-500/20">
-              <Sparkles className="text-purple-500" size={20} />
+            <div className="flex flex-col items-center gap-3 p-4 rounded-xl bg-card/80 border border-purple-500/30 hover:border-purple-500/50 hover:bg-card transition-all duration-300">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-purple-600/30 to-purple-400/20 border border-purple-500/20">
+                <Sparkles className="text-purple-400" size={22} />
+              </div>
+              <span className="text-sm font-medium text-foreground text-center">Creative Soul</span>
             </div>
-            <span className="text-xs font-medium text-foreground text-center">Creative Soul</span>
           </Link>
         </div>
       </div>
