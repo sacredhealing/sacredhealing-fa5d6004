@@ -796,6 +796,9 @@ export default function CreativeSoulMeditationTool() {
                       ))}
                     </SelectContent>
                   </Select>
+                  <p className="text-[10px] text-muted-foreground">
+                    The frequency difference your brain will perceive
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -809,8 +812,16 @@ export default function CreativeSoulMeditationTool() {
                     min={100}
                     max={500}
                   />
+                  <p className="text-[10px] text-muted-foreground">
+                    Base tone pitch: 100-200 = deep/warm, 200-300 = balanced, 300+ = bright
+                  </p>
                 </div>
               </div>
+
+              <p className="text-xs text-muted-foreground bg-primary/5 p-2 rounded-lg">
+                🎧 <strong>How it works:</strong> Left ear hears {binauralCarrierHz} Hz, right ear hears {binauralCarrierHz + binauralBeatHz} Hz. 
+                Your brain perceives the {binauralBeatHz} Hz difference, entraining brainwaves. Use headphones!
+              </p>
             </CardContent>
           </Card>
         </div>
