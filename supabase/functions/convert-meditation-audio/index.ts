@@ -309,7 +309,39 @@ serve(async (req) => {
 
     // --- Dispatch to worker (robust) ---
     if (AUDIO_WORKER_URL && AUDIO_WORKER_API_KEY) {
-      const workerEndpoint = `${AUDIO_WORKER_URL.replace(/\/$/, "")}/process`;
+      const base = AUDIO_WORKER_URL.trim().replace(/\/$/, "");
+      let workerEndpoint = base;
+
+      // If AUDIO_WORKER_URL is a base URL, default to our worker contract endpoint.
+      // If it already points to an endpoint (/jobs, /process, /process-audio), keep it.
+      try {
+        const u = new URL(base);
+        const p = u.pathname.replace(/\/$/, "");
+        const alreadyEndpoint = ["/jobs", "/process", "/process-audio"].some((s) => p.endsWith(s));
+        if (!alreadyEndpoint) workerEndpoint = `${base}/process-audio`;
+      } catch {
+        // If URL parsing fails, fall back to /process-audio
+        workerEndpoint = `${base}/process-audio`;
+      }
+
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        // Custom worker headers
+        "X-Worker-Key": AUDIO_WORKER_API_KEY,
+        "x-api-key": AUDIO_WORKER_API_KEY,
+        "Authorization": `Bearer ${AUDIO_WORKER_API_KEY}`,
+      };
+
+      // RapidAPI headers (if URL is a RapidAPI gateway)
+      try {
+        const u = new URL(workerEndpoint);
+        if (u.hostname.endsWith("rapidapi.com")) {
+          headers["X-RapidAPI-Key"] = AUDIO_WORKER_API_KEY;
+          headers["X-RapidAPI-Host"] = u.hostname;
+        }
+      } catch {
+        // ignore
+      }
 
       // Retry helper with timeout
       async function fetchWithRetry(url: string, init: RequestInit, retries = 3): Promise<Response> {
@@ -340,10 +372,7 @@ serve(async (req) => {
       try {
         workerRes = await fetchWithRetry(workerEndpoint, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Worker-Key": AUDIO_WORKER_API_KEY,
-          },
+          headers,
           body: JSON.stringify({
             job_id: jobId,
             user_id: user.id,
