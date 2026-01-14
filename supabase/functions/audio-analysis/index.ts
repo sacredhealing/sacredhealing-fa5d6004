@@ -24,6 +24,7 @@ serve(async (req) => {
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const AUDIO_WORKER_URL = Deno.env.get("AUDIO_WORKER_URL");
     const AUDIO_WORKER_API_KEY = Deno.env.get("AUDIO_WORKER_API_KEY");
+    const RAPIDAPI_TRACK_ANALYSIS_KEY = Deno.env.get("RAPIDAPI_TRACK_ANALYSIS_KEY");
     const AUDIO_ANALYSIS_API_URL = Deno.env.get("AUDIO_ANALYSIS_API_URL"); // Optional: external analysis API
     const AUDIO_ANALYSIS_API_KEY = Deno.env.get("AUDIO_ANALYSIS_API_KEY");
 
@@ -48,6 +49,8 @@ serve(async (req) => {
     let body: {
       audioUrl?: string;
       trackId?: string; // Optional: if analyzing existing track
+      songName?: string; // For RapidAPI search
+      artistName?: string; // For RapidAPI search
       analyzeBPM?: boolean;
       analyzeKey?: boolean;
       analyzeTempo?: boolean;
@@ -60,8 +63,8 @@ serve(async (req) => {
       return json({ success: false, error: "Invalid JSON body" });
     }
 
-    if (!body.audioUrl && !body.trackId) {
-      return json({ success: false, error: "audioUrl or trackId is required" });
+    if (!body.audioUrl && !body.trackId && !body.songName) {
+      return json({ success: false, error: "audioUrl, trackId, or songName is required" });
     }
 
     const jobId = crypto.randomUUID();
@@ -78,6 +81,8 @@ serve(async (req) => {
         payload: {
           audioUrl: body.audioUrl,
           trackId: body.trackId,
+          songName: body.songName,
+          artistName: body.artistName,
           analyzeBPM: body.analyzeBPM ?? true,
           analyzeKey: body.analyzeKey ?? true,
           analyzeTempo: body.analyzeTempo ?? true,
@@ -90,7 +95,88 @@ serve(async (req) => {
       return json({ success: false, error: "Failed to create job", details: insertErr.message });
     }
 
-    // If external analysis API is configured, use it directly
+    // Priority 1: RapidAPI Track Analysis (if song/artist provided)
+    if (RAPIDAPI_TRACK_ANALYSIS_KEY && body.songName) {
+      try {
+        console.log(`[AUDIO-ANALYSIS] Using RapidAPI Track Analysis for: ${body.songName}`);
+        
+        const songParam = encodeURIComponent(body.songName);
+        const artistParam = body.artistName ? encodeURIComponent(body.artistName) : "";
+        const url = `https://track-analysis.p.rapidapi.com/pktx/analysis?song=${songParam}${artistParam ? `&artist=${artistParam}` : ""}`;
+        
+        const response = await fetch(url, {
+          method: "GET",
+          headers: {
+            "x-rapidapi-host": "track-analysis.p.rapidapi.com",
+            "x-rapidapi-key": RAPIDAPI_TRACK_ANALYSIS_KEY,
+          },
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log('[AUDIO-ANALYSIS] RapidAPI response:', JSON.stringify(result));
+          
+          // Extract analysis data from RapidAPI response
+          const analysisData = {
+            bpm: result.tempo || result.bpm,
+            key: result.key,
+            tempo: result.tempo,
+            loudness: result.loudness,
+            energy: result.energy,
+            danceability: result.danceability,
+            valence: result.valence,
+            acousticness: result.acousticness,
+            instrumentalness: result.instrumentalness,
+            liveness: result.liveness,
+            speechiness: result.speechiness,
+            duration_ms: result.duration_ms,
+            time_signature: result.time_signature,
+            mode: result.mode,
+            provider: "rapidapi_track_analysis",
+            raw_response: result,
+          };
+          
+          // Update job as completed
+          await supabaseAdmin
+            .from("creative_soul_jobs")
+            .update({
+              status: "completed",
+              progress: 100,
+              result_url: JSON.stringify(analysisData),
+              completed_at: new Date().toISOString(),
+            })
+            .eq("job_id", jobId);
+
+          // If trackId provided, update the track
+          if (body.trackId) {
+            await supabaseAdmin
+              .from("music_tracks")
+              .update({
+                bpm: analysisData.bpm,
+                key: analysisData.key,
+                analysis_data: analysisData,
+              })
+              .eq("id", body.trackId);
+          }
+
+          return json({
+            success: true,
+            job_id: jobId,
+            analysis: analysisData,
+            provider: "rapidapi_track_analysis",
+          });
+        } else {
+          const errorText = await response.text();
+          console.error('[AUDIO-ANALYSIS] RapidAPI error:', response.status, errorText);
+          // Fall through to other methods
+        }
+      } catch (rapidApiErr) {
+        console.error('[AUDIO-ANALYSIS] RapidAPI exception:', rapidApiErr);
+        // Fall through to other methods
+      }
+    }
+
+    // Priority 2: External analysis API (if configured)
     if (AUDIO_ANALYSIS_API_URL && AUDIO_ANALYSIS_API_KEY && body.audioUrl) {
       try {
         const response = await fetch(`${AUDIO_ANALYSIS_API_URL}/analyze`, {
@@ -140,6 +226,7 @@ serve(async (req) => {
             success: true,
             job_id: jobId,
             analysis: result,
+            provider: "external_api",
           });
         }
       } catch (apiErr) {
