@@ -85,6 +85,7 @@ import CreativeSoulSales from "./pages/CreativeSoulSales";
 import CreativeSoulTool from "./pages/CreativeSoulTool";
 import CreativeSoulLanding from "./pages/CreativeSoulLanding";
 import CreativeSoulHub from "./pages/CreativeSoulHub";
+import CreativeSoulMeditationTool from "./pages/CreativeSoulMeditationTool";
 import { DebugBanner } from "./components/DebugBanner";
 import "@/lib/performance"; // Initialize performance monitoring
 
@@ -157,6 +158,7 @@ const App = () => (
                   {/* ROUTE DEFINITION: /creative-soul/store renders CreativeSoulSales.tsx */}
                   <Route path="/creative-soul/store" element={<CreativeSoulSales />} />
                   <Route path="/creative-soul-tool" element={<CreativeSoulTool />} />
+                  <Route path="/creative-soul-meditation-tool" element={<CreativeSoulMeditationTool />} />
                 </Route>
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/meditations" element={<Admin />} />
