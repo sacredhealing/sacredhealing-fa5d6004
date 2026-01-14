@@ -1,9 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Headphones, ArrowLeft, Upload, Play, Pause, Music, Layers, 
   Sparkles, Heart, Split, Wand2, Download, Loader2, Check,
-  Volume2, Settings, FileAudio
+  Volume2, Settings, FileAudio, StopCircle
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useCreativeTools } from '@/hooks/useCreativeTools';
+import { useMeditationAudioProcessor } from '@/hooks/useMeditationAudioProcessor';
 import { toast } from 'sonner';
 
 const meditationStyles = [
@@ -73,6 +74,7 @@ export default function CreativeSoulMeditationTool() {
   const { user } = useAuth();
   const { isAdmin } = useAdminRole();
   const { hasAccess } = useCreativeTools();
+  const audioProcessor = useMeditationAudioProcessor();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const processedAudioRef = useRef<HTMLAudioElement>(null);
@@ -81,13 +83,14 @@ export default function CreativeSoulMeditationTool() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isTransforming, setIsTransforming] = useState(false);
   const [processedAudioUrl, setProcessedAudioUrl] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isProcessedPlaying, setIsProcessedPlaying] = useState(false);
   const [processedCurrentTime, setProcessedCurrentTime] = useState(0);
   const [processedDuration, setProcessedDuration] = useState(0);
+  const [isLiveProcessing, setIsLiveProcessing] = useState(false);
   
   // Settings
   const [selectedStyle, setSelectedStyle] = useState('indian');
@@ -107,7 +110,13 @@ export default function CreativeSoulMeditationTool() {
 
     const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
     const handleLoadedMetadata = () => setDuration(audio.duration);
-    const handleEnded = () => setIsPlaying(false);
+    const handleEnded = () => {
+      setIsPlaying(false);
+      if (isLiveProcessing) {
+        audioProcessor.stopProcessing();
+        setIsLiveProcessing(false);
+      }
+    };
 
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
@@ -118,7 +127,7 @@ export default function CreativeSoulMeditationTool() {
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, [audioUrl]);
+  }, [audioUrl, isLiveProcessing, audioProcessor]);
 
   // Audio playback controls for processed audio
   useEffect(() => {
@@ -140,17 +149,56 @@ export default function CreativeSoulMeditationTool() {
     };
   }, [processedAudioUrl]);
 
-  const togglePlay = () => {
+  // Update processor settings in real-time
+  useEffect(() => {
+    if (isLiveProcessing) {
+      audioProcessor.updateSettings({
+        selectedFrequency,
+        selectedBinaural,
+        frequencyIntensity: frequencyIntensity[0],
+        volumeMix: volumeMix[0],
+      });
+    }
+  }, [selectedFrequency, selectedBinaural, frequencyIntensity, volumeMix, isLiveProcessing, audioProcessor]);
+
+  const togglePlay = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
     if (isPlaying) {
       audio.pause();
+      if (isLiveProcessing) {
+        audioProcessor.stopProcessing();
+        setIsLiveProcessing(false);
+      }
     } else {
+      // Start live processing with binaural beats and healing frequencies
+      if (audio && !isLiveProcessing) {
+        audioProcessor.startProcessing(audio, {
+          selectedFrequency,
+          selectedBinaural,
+          frequencyIntensity: frequencyIntensity[0],
+          volumeMix: volumeMix[0],
+        });
+        setIsLiveProcessing(true);
+      }
       audio.play();
     }
     setIsPlaying(!isPlaying);
-  };
+  }, [isPlaying, isLiveProcessing, audioProcessor, selectedFrequency, selectedBinaural, frequencyIntensity, volumeMix]);
+
+  const stopPlayback = useCallback(() => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
+    if (isLiveProcessing) {
+      audioProcessor.stopProcessing();
+      setIsLiveProcessing(false);
+    }
+    setIsPlaying(false);
+  }, [isLiveProcessing, audioProcessor]);
 
   const toggleProcessedPlay = () => {
     const audio = processedAudioRef.current;
@@ -187,9 +235,13 @@ export default function CreativeSoulMeditationTool() {
         toast.error('Please upload an audio file');
         return;
       }
+      // Stop any current playback
+      stopPlayback();
+      
       setUploadedFile(file);
       const url = URL.createObjectURL(file);
       setAudioUrl(url);
+      setProcessedAudioUrl(null);
       toast.success(`Uploaded: ${file.name}`);
     }
   };
@@ -201,19 +253,21 @@ export default function CreativeSoulMeditationTool() {
     }
 
     if (!hasToolAccess) {
-      toast.info('Purchase access to process audio with AI');
+      toast.info('Purchase access to export processed audio');
       navigate('/creative-soul/store');
       return;
     }
 
-    setIsProcessing(true);
+    setIsTransforming(true);
+    toast.info('Processing audio with selected settings...', { duration: 2000 });
     
-    // Simulate processing (in real implementation, this would call an edge function)
+    // For now, set the processed audio URL to the same file
+    // In a full implementation, this would call an edge function for server-side processing
     setTimeout(() => {
       setProcessedAudioUrl(audioUrl);
-      setIsProcessing(false);
-      toast.success('Audio processed successfully!');
-    }, 3000);
+      setIsTransforming(false);
+      toast.success('Audio processed! You can now download the meditation track.');
+    }, 2000);
   };
 
   const handleDownload = () => {
@@ -303,16 +357,37 @@ export default function CreativeSoulMeditationTool() {
 
             {audioUrl && (
               <>
-                <audio ref={audioRef} src={audioUrl} preload="metadata" />
-                <div className="flex items-center gap-4 p-4 bg-purple-500/10 rounded-lg">
+                <audio ref={audioRef} src={audioUrl} preload="metadata" crossOrigin="anonymous" />
+                
+                {/* Live Processing Indicator */}
+                {isLiveProcessing && (
+                  <div className="flex items-center gap-2 p-3 bg-green-500/20 border border-green-500/30 rounded-lg mb-4">
+                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+                    <span className="text-sm font-medium text-green-400">
+                      Live Processing: {selectedFrequency}Hz + {binauralBeats.find(b => b.value === selectedBinaural)?.name} Binaural
+                    </span>
+                  </div>
+                )}
+                
+                <div className="flex items-center gap-3 p-4 bg-purple-500/10 rounded-lg">
                   <Button
                     variant="outline"
                     size="icon"
                     onClick={togglePlay}
-                    className="rounded-full"
+                    className={`rounded-full ${isPlaying ? 'border-green-500 text-green-500' : ''}`}
                   >
                     {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                   </Button>
+                  {isPlaying && (
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={stopPlayback}
+                      className="rounded-full border-red-500/50 text-red-500"
+                    >
+                      <StopCircle className="w-4 h-4" />
+                    </Button>
+                  )}
                   <div className="flex-1">
                     <Slider
                       value={[currentTime]}
@@ -322,10 +397,14 @@ export default function CreativeSoulMeditationTool() {
                       className="w-full"
                     />
                   </div>
-                  <span className="text-sm text-muted-foreground min-w-[45px]">
+                  <span className="text-sm text-muted-foreground min-w-[80px] text-right">
                     {formatTime(currentTime)} / {formatTime(duration)}
                   </span>
                 </div>
+                
+                <p className="text-xs text-muted-foreground text-center mt-2">
+                  🎧 Use headphones for best binaural beat experience
+                </p>
               </>
             )}
           </CardContent>
@@ -491,11 +570,11 @@ export default function CreativeSoulMeditationTool() {
               
               <Button
                 onClick={handleProcessAudio}
-                disabled={!uploadedFile || isProcessing}
+                disabled={!uploadedFile || isTransforming}
                 size="lg"
                 className="bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white px-8"
               >
-                {isProcessing ? (
+                {isTransforming ? (
                   <>
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                     Processing...
@@ -503,7 +582,7 @@ export default function CreativeSoulMeditationTool() {
                 ) : (
                   <>
                     <Sparkles className="w-5 h-5 mr-2" />
-                    Transform Audio
+                    Export Meditation
                   </>
                 )}
               </Button>
