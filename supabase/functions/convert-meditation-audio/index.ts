@@ -307,88 +307,132 @@ serve(async (req) => {
       return json({ success: false, error: "Failed to create job", details: insertErr.message });
     }
 
-    // If worker is configured, dispatch the job
+    // --- Dispatch to worker (robust) ---
     if (AUDIO_WORKER_URL && AUDIO_WORKER_API_KEY) {
-      try {
-        const callbackUrl = `${SUPABASE_URL}/functions/v1/worker-callback`;
+      const workerEndpoint = `${AUDIO_WORKER_URL.replace(/\/$/, "")}/process`;
 
-        const trimmedBase = AUDIO_WORKER_URL.replace(/\/$/, "");
-        let workerEndpoint = `${trimmedBase}/process-audio`;
-
-        // If the configured URL already points to the endpoint, don't double-append.
-        try {
-          const u = new URL(trimmedBase);
-          if (u.pathname.endsWith("/process-audio")) workerEndpoint = trimmedBase;
-        } catch {
-          // ignore URL parsing; use string fallback
-        }
-
-        const headers: Record<string, string> = {
-          "Content-Type": "application/json",
-          // Our custom worker uses this
-          "x-api-key": AUDIO_WORKER_API_KEY,
-          // Some workers expect Authorization Bearer
-          "Authorization": `Bearer ${AUDIO_WORKER_API_KEY}`,
-          // RapidAPI gateways commonly expect this
-          "X-RapidAPI-Key": AUDIO_WORKER_API_KEY,
-        };
-
-        // RapidAPI also requires X-RapidAPI-Host
-        try {
-          const u = new URL(workerEndpoint);
-          if (u.hostname.endsWith("rapidapi.com")) {
-            headers["X-RapidAPI-Host"] = u.hostname;
+      // Retry helper with timeout
+      async function fetchWithRetry(url: string, init: RequestInit, retries = 3): Promise<Response> {
+        let lastErr: Error | null = null;
+        for (let i = 0; i < retries; i++) {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 12000);
+          try {
+            const res = await fetch(url, { ...init, signal: controller.signal });
+            clearTimeout(timeout);
+            // Treat 502/503/504 as retryable
+            if ([502, 503, 504].includes(res.status)) {
+              lastErr = new Error(`Worker returned ${res.status}`);
+              await new Promise((r) => setTimeout(r, 700 * (i + 1)));
+              continue;
+            }
+            return res;
+          } catch (e) {
+            clearTimeout(timeout);
+            lastErr = e instanceof Error ? e : new Error(String(e));
+            await new Promise((r) => setTimeout(r, 700 * (i + 1)));
           }
-        } catch {
-          // ignore
         }
+        throw lastErr ?? new Error("Worker dispatch failed");
+      }
 
-        const workerResponse = await fetch(workerEndpoint, {
+      let workerRes: Response;
+      try {
+        workerRes = await fetchWithRetry(workerEndpoint, {
           method: "POST",
-          headers,
+          headers: {
+            "Content-Type": "application/json",
+            "X-Worker-Key": AUDIO_WORKER_API_KEY,
+          },
           body: JSON.stringify({
             job_id: jobId,
-            callback_url: callbackUrl,
-            callback_api_key: AUDIO_WORKER_API_KEY,
-            ...payload,
+            user_id: user.id,
+            mode,
+            payload,
+            respond_immediately: true,
           }),
-        });
-
-        if (!workerResponse.ok) {
-          const errorText = await workerResponse.text();
-          console.error('[CONVERT-MEDITATION] Worker dispatch failed:', errorText);
-
-          // Update job to failed
-          await supabaseAdmin
-            .from("creative_soul_jobs")
-            .update({
-              status: "failed",
-              error_message: `Worker error: ${errorText}`,
-              completed_at: new Date().toISOString(),
-            })
-            .eq("job_id", jobId);
-
-          return json({
-            success: false,
-            error: "Failed to dispatch job to worker",
-            details: errorText,
-            job_id: jobId,
-          });
-        }
-
-        console.log(`[CONVERT-MEDITATION] Job ${jobId} dispatched to worker`);
-      } catch (workerErr) {
-        console.error('[CONVERT-MEDITATION] Worker connection error:', workerErr);
-
-        // Update job status but don't fail - worker might pick it up later
+        }, 3);
+      } catch (e) {
+        const errStr = e instanceof Error ? e.message : String(e);
+        console.error('[CONVERT-MEDITATION] Worker unreachable:', errStr);
         await supabaseAdmin
           .from("creative_soul_jobs")
           .update({
-            status: "queued",
-            error_message: `Worker temporarily unavailable: ${String(workerErr)}`,
+            status: "failed",
+            error_message: `Worker unreachable: ${errStr.slice(0, 800)}`,
+            completed_at: new Date().toISOString(),
           })
           .eq("job_id", jobId);
+
+        return json({
+          success: false,
+          error: "Failed to dispatch job to worker",
+          job_id: jobId,
+          details: errStr,
+          worker_endpoint: workerEndpoint,
+        }, 502);
       }
+
+      const workerText = await workerRes.text().catch(() => "");
+      let workerJson: Record<string, unknown> = {};
+      try { workerJson = workerText ? JSON.parse(workerText) : {}; } catch { /* ignore */ }
+
+      if (!workerRes.ok) {
+        console.error('[CONVERT-MEDITATION] Worker dispatch failed:', workerRes.status, workerText);
+        await supabaseAdmin
+          .from("creative_soul_jobs")
+          .update({
+            status: "failed",
+            error_message: `Worker error (${workerRes.status}): ${workerText.slice(0, 800)}`,
+            completed_at: new Date().toISOString(),
+          })
+          .eq("job_id", jobId);
+
+        return json({
+          success: false,
+          error: "Failed to dispatch job to worker",
+          job_id: jobId,
+          worker_status: workerRes.status,
+          worker_body: workerText.slice(0, 800),
+          worker_endpoint: workerEndpoint,
+        }, 502);
+      }
+
+      // If async accepted
+      if (workerJson?.accepted || workerJson?.status === "accepted") {
+        console.log(`[CONVERT-MEDITATION] Job ${jobId} accepted by worker`);
+        return json({
+          success: true,
+          mode,
+          plan: isAdmin ? "admin" : (mode === "demo" ? "demo" : "purchased"),
+          job_id: jobId,
+          status: "processing",
+          message: "Worker accepted job. Poll job status.",
+        });
+      }
+
+      // If worker returns outputs immediately
+      if (workerJson?.outputs) {
+        await supabaseAdmin
+          .from("creative_soul_jobs")
+          .update({ 
+            status: "completed", 
+            result_url: typeof workerJson.outputs === "string" ? workerJson.outputs : JSON.stringify(workerJson.outputs),
+            completed_at: new Date().toISOString(),
+          })
+          .eq("job_id", jobId);
+
+        return json({
+          success: true,
+          mode,
+          plan: isAdmin ? "admin" : (mode === "demo" ? "demo" : "purchased"),
+          job_id: jobId,
+          status: "completed",
+          outputs: workerJson.outputs,
+        });
+      }
+
+      console.log(`[CONVERT-MEDITATION] Job ${jobId} dispatched to worker`);
     } else {
       console.log(`[CONVERT-MEDITATION] No worker configured - job ${jobId} will wait for manual processing`);
     }
