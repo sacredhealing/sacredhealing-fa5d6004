@@ -4154,6 +4154,60 @@ export type Database = {
         }
         Relationships: []
       }
+      sound_library: {
+        Row: {
+          category: string
+          created_at: string
+          duration_seconds: number | null
+          file_path: string
+          file_url: string
+          id: string
+          is_active: boolean | null
+          is_loopable: boolean | null
+          metadata: Json | null
+          name: string
+          order_index: number | null
+          slug: string
+          style: string
+          subcategory: string | null
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          duration_seconds?: number | null
+          file_path: string
+          file_url: string
+          id?: string
+          is_active?: boolean | null
+          is_loopable?: boolean | null
+          metadata?: Json | null
+          name: string
+          order_index?: number | null
+          slug: string
+          style: string
+          subcategory?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          duration_seconds?: number | null
+          file_path?: string
+          file_url?: string
+          id?: string
+          is_active?: boolean | null
+          is_loopable?: boolean | null
+          metadata?: Json | null
+          name?: string
+          order_index?: number | null
+          slug?: string
+          style?: string
+          subcategory?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       spiritual_path_days: {
         Row: {
           affirmation: string | null
