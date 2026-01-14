@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,8 +27,39 @@ import {
   CheckCircle,
   AlertCircle,
   ArrowLeft,
-  Headphones
+  Headphones,
+  Upload,
+  FileAudio,
+  X,
+  Trash2
 } from "lucide-react";
+
+// Accepted audio formats
+const ACCEPTED_AUDIO_FORMATS = [
+  "audio/mpeg",       // MP3
+  "audio/mp3",
+  "audio/wav",        // WAV
+  "audio/wave",
+  "audio/x-wav",
+  "audio/flac",       // FLAC
+  "audio/x-flac",
+  "audio/m4a",        // M4A
+  "audio/x-m4a",
+  "audio/mp4",        // M4A (alternate)
+  "audio/aac",        // AAC
+  "audio/ogg",        // OGG
+  "audio/webm",       // WebM audio
+  "audio/aiff",       // AIFF
+  "audio/x-aiff",
+].join(",");
+
+const formatFileSize = (bytes: number) => {
+  if (bytes === 0) return "0 Bytes";
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+};
 
 // ---------- Types ----------
 type MeditationStyle =
@@ -239,10 +270,17 @@ export default function CreativeSoulMeditationTool() {
   const { user } = useAuth();
   const { isAdmin } = useAdminRole();
   const { hasAccess, isLoading: accessLoading } = useCreativeTools();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Inputs
   const [youtubeUrls, setYoutubeUrls] = useState("");
   const [directUrls, setDirectUrls] = useState("");
+  
+  // File uploads
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [uploadedFileUrls, setUploadedFileUrls] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Style selection
   const [style, setStyle] = useState<MeditationStyle>("indian");
@@ -288,14 +326,109 @@ export default function CreativeSoulMeditationTool() {
     if (stylePreset.recommendedTuningHz) setTuningHz(stylePreset.recommendedTuningHz);
   }, [style, stylePreset.defaultBpm, stylePreset.recommendedTuningHz]);
 
+  // Handle file selection
+  const handleFileSelect = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    
+    const newFiles: File[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file.type.startsWith("audio/") || 
+          file.name.endsWith(".mp3") || 
+          file.name.endsWith(".wav") || 
+          file.name.endsWith(".m4a") || 
+          file.name.endsWith(".flac") ||
+          file.name.endsWith(".aac") ||
+          file.name.endsWith(".ogg") ||
+          file.name.endsWith(".aiff")) {
+        newFiles.push(file);
+      } else {
+        toast.error(`"${file.name}" is not a supported audio format`);
+      }
+    }
+
+    if (newFiles.length === 0) return;
+
+    // Add to state
+    setUploadedFiles(prev => [...prev, ...newFiles]);
+
+    // Upload to Supabase storage
+    if (user) {
+      setIsUploading(true);
+      try {
+        const urls: string[] = [];
+        for (const file of newFiles) {
+          const fileName = `${user.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+          const { data, error } = await supabase.storage
+            .from("audio")
+            .upload(fileName, file, { upsert: true });
+          
+          if (error) {
+            console.error("Upload error:", error);
+            toast.error(`Failed to upload ${file.name}`);
+            continue;
+          }
+
+          const { data: urlData } = supabase.storage
+            .from("audio")
+            .getPublicUrl(data.path);
+          
+          urls.push(urlData.publicUrl);
+        }
+        
+        setUploadedFileUrls(prev => [...prev, ...urls]);
+        toast.success(`Uploaded ${newFiles.length} file${newFiles.length > 1 ? 's' : ''}`);
+      } catch (err) {
+        console.error("Upload error:", err);
+        toast.error("Failed to upload files");
+      } finally {
+        setIsUploading(false);
+      }
+    } else {
+      toast.info("Sign in to upload files to cloud storage");
+    }
+  };
+
+  // Remove uploaded file
+  const removeFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+    setUploadedFileUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Drag and drop handlers
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    handleFileSelect(e.dataTransfer.files);
+  };
+
+  // Sync BPM/tuning to style
+  useEffect(() => {
+    setTargetBpm(stylePreset.defaultBpm);
+    if (stylePreset.recommendedTuningHz) setTuningHz(stylePreset.recommendedTuningHz);
+  }, [style, stylePreset.defaultBpm, stylePreset.recommendedTuningHz]);
+
   // Build payload
   const buildPayload = () => {
     const yt = youtubeUrls.split(",").map((s) => s.trim()).filter(Boolean);
     const direct = directUrls.split(",").map((s) => s.trim()).filter(Boolean);
+    // Combine direct URLs with uploaded file URLs
+    const allDirectUrls = [...direct, ...uploadedFileUrls];
 
     return {
       youtube_urls: yt,
-      direct_urls: direct,
+      direct_urls: allDirectUrls,
+      uploaded_files: uploadedFileUrls,
       meditation_style: style,
       music_tags: stylePreset.musicTags,
       sound_layers: stylePreset.soundLayers,
@@ -438,7 +571,95 @@ export default function CreativeSoulMeditationTool() {
               Audio Sources
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
+            {/* File Upload Section */}
+            <div className="space-y-3">
+              <Label className="flex items-center gap-2">
+                <Upload className="h-4 w-4" />
+                Upload from Device
+              </Label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={ACCEPTED_AUDIO_FORMATS}
+                multiple
+                onChange={(e) => handleFileSelect(e.target.files)}
+                className="hidden"
+              />
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
+                  isDragging
+                    ? "border-primary bg-primary/10"
+                    : "border-border/50 hover:border-primary/50 hover:bg-primary/5"
+                }`}
+              >
+                {isUploading ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                    <p className="text-sm text-muted-foreground">Uploading...</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2">
+                    <Upload className="w-10 h-10 text-primary/60" />
+                    <p className="font-medium text-foreground">
+                      Drop audio files here or click to browse
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Supports MP3, WAV, M4A, FLAC, AAC, OGG, AIFF
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Uploaded Files List */}
+              {uploadedFiles.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-sm text-muted-foreground">
+                    Uploaded Files ({uploadedFiles.length})
+                  </Label>
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {uploadedFiles.map((file, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-3 bg-background/50 rounded-lg border border-border/30"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <FileAudio className="w-5 h-5 text-primary flex-shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium truncate">{file.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {formatFileSize(file.size)}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {uploadedFileUrls[index] && (
+                            <CheckCircle className="w-4 h-4 text-green-500" />
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeFile(index);
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* URL Inputs */}
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>YouTube URLs (comma separated)</Label>
