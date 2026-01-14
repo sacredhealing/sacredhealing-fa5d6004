@@ -76,27 +76,73 @@ const MEDITATION_STYLES = {
   },
 };
 
+// New payload structure (v2)
+interface PayloadV2 {
+  input?: {
+    youtube_urls?: string[];
+    direct_urls?: string[];
+    upload_storage_path?: string;
+  };
+  style_slug?: string;
+  frequency_hz?: number;
+  binaural?: {
+    enabled?: boolean;
+    beat_hz?: number;
+    carrier_hz?: number;
+  };
+  noise_reduction?: {
+    enabled?: boolean;
+    mode?: string;
+    strength?: string;
+  };
+  bpm?: {
+    enabled?: boolean;
+    target_bpm?: number;
+  };
+  mastering?: {
+    enabled?: boolean;
+    provider?: string;
+    preset?: string;
+  };
+  stem?: {
+    pre?: {
+      enabled?: boolean;
+      action?: "keep_both" | "voice_only" | "remove_music";
+    };
+    post?: {
+      enabled?: boolean;
+      stems?: string[];
+    };
+  };
+  // Legacy fields
+  meditation_style?: string;
+  music_tags?: string[];
+  sound_layers?: string[];
+  auto_music_enabled?: boolean;
+  music_source?: string;
+  keep_original_music?: boolean;
+  variants?: number;
+}
+
 interface RequestBody {
   mode?: string;
-  // Binaural beats
+  user_id?: string;
+  payload?: PayloadV2;
+  // Legacy fields for backward compatibility
   binaural_type?: "delta" | "theta" | "alpha" | "beta" | "gamma";
   binaural_enabled?: boolean;
   binaural_volume?: number;
-  // Healing frequencies
   frequency_hz?: number;
   frequency_enabled?: boolean;
   frequency_volume?: number;
   processing_mode?: "BINAURAL" | "TONE_TUNING" | "BOTH";
-  // Meditation style
   meditation_style?: string;
   sound_layers?: string[];
   ambient_volume?: number;
-  // Audio source
   audioUrl?: string;
   source_volume?: number;
   duration?: number;
   target_bpm?: number;
-  // Processing options
   enable_stem_separation?: boolean;
   stem_separation_type?: "2stems" | "4stems" | "5stems";
   keep_stems?: string[];
@@ -105,7 +151,6 @@ interface RequestBody {
   noise_reduction_level?: "light" | "medium" | "aggressive";
   enable_mastering?: boolean;
   mastering_preset?: "balanced" | "loud" | "warm" | "bright" | "punchy";
-  // Output options
   variants?: number;
   output_format?: "mp3" | "wav" | "flac";
   output_quality?: "standard" | "high" | "lossless";
@@ -215,27 +260,69 @@ serve(async (req) => {
     // Generate job ID
     const jobId = crypto.randomUUID();
 
-    // Get binaural config if enabled
+    // Extract from nested payload or use flat body (backward compat)
+    const payloadData = (body.payload || {}) as PayloadV2;
+    
+    // Get binaural config
+    const binauralEnabled = payloadData.binaural?.enabled ?? body.binaural_enabled ?? true;
+    const binauralBeatHz = payloadData.binaural?.beat_hz || 6;
+    const binauralCarrierHz = payloadData.binaural?.carrier_hz || 200;
     const binauralType = body.binaural_type || "theta";
     const binauralConfig = BINAURAL_CONFIGS[binauralType] || BINAURAL_CONFIGS.theta;
     
     // Get healing frequency config
-    const frequencyHz = body.frequency_hz || 432;
+    const frequencyHz = payloadData.frequency_hz || body.frequency_hz || 432;
     const frequencyKey = String(frequencyHz);
     const frequencyConfig = HEALING_FREQUENCIES[frequencyKey as keyof typeof HEALING_FREQUENCIES] || { hz: frequencyHz, description: "Custom frequency" };
     
     // Get meditation style config
-    const meditationStyle = body.meditation_style || "ocean-water";
-    const styleConfig = MEDITATION_STYLES[meditationStyle as keyof typeof MEDITATION_STYLES] || MEDITATION_STYLES["ocean-water"];
+    const styleSlug = payloadData.style_slug || payloadData.meditation_style || body.meditation_style || "ocean-water";
+    const styleConfig = MEDITATION_STYLES[styleSlug as keyof typeof MEDITATION_STYLES] || MEDITATION_STYLES["ocean-water"];
+
+    // Get input sources
+    const inputSources = payloadData.input || {};
+    const hasYoutubeUrls = inputSources.youtube_urls && inputSources.youtube_urls.length > 0;
+    const hasDirectUrls = inputSources.direct_urls && inputSources.direct_urls.length > 0;
+    const hasUpload = !!inputSources.upload_storage_path;
+
+    // Get stem separation config
+    const preStemConfig = payloadData.stem?.pre || {};
+    const postStemConfig = payloadData.stem?.post || {};
+
+    // Get noise reduction config
+    const noiseConfig = payloadData.noise_reduction || {};
+    const noiseEnabled = noiseConfig.enabled ?? body.enable_noise_removal ?? false;
+    const noiseMode = noiseConfig.mode || body.noise_reduction_level || "voice_clean";
+    const noiseStrength = noiseConfig.strength || "medium";
+
+    // Get BPM config
+    const bpmConfig = payloadData.bpm || {};
+    const bpmEnabled = bpmConfig.enabled ?? true;
+    const targetBpm = bpmConfig.target_bpm || body.target_bpm || 60;
+
+    // Get mastering config
+    const masteringConfig = payloadData.mastering || {};
+    const masteringEnabled = masteringConfig.enabled ?? body.enable_mastering ?? false;
+    const masteringProvider = masteringConfig.provider || "landr";
+    const masteringPreset = masteringConfig.preset || body.mastering_preset || "meditation_warm";
 
     // Build comprehensive payload for the worker
     const payload = {
+      // Input sources
+      input: {
+        youtube_urls: inputSources.youtube_urls || [],
+        direct_urls: inputSources.direct_urls || [],
+        upload_storage_path: inputSources.upload_storage_path,
+      },
+      // Style configuration
+      style_slug: styleSlug,
+      frequency_hz: frequencyHz,
       // Binaural beats configuration
       binaural: {
-        enabled: body.binaural_enabled ?? true,
+        enabled: binauralEnabled,
+        beat_hz: binauralBeatHz,
+        carrier_hz: binauralCarrierHz,
         type: binauralType,
-        carrier_frequency: binauralConfig.carrier,
-        beat_frequency: binauralConfig.beat,
         volume: body.binaural_volume ?? 0.3,
         description: binauralConfig.description,
       },
@@ -246,12 +333,40 @@ serve(async (req) => {
         volume: body.frequency_volume ?? 0.2,
         description: frequencyConfig.description,
       },
+      // Noise reduction
+      noise_reduction: {
+        enabled: noiseEnabled,
+        mode: noiseMode,
+        strength: noiseStrength,
+      },
+      // BPM matching
+      bpm: {
+        enabled: bpmEnabled,
+        target_bpm: targetBpm,
+      },
+      // Mastering
+      mastering: {
+        enabled: masteringEnabled,
+        provider: masteringProvider,
+        preset: masteringPreset,
+      },
+      // Stem separation
+      stem: {
+        pre: {
+          enabled: preStemConfig.enabled ?? false,
+          action: preStemConfig.action || "voice_only",
+        },
+        post: {
+          enabled: postStemConfig.enabled ?? false,
+          stems: postStemConfig.stems || ["vocals", "music"],
+        },
+      },
       // Processing mode
-      processing_mode: body.processing_mode ?? "BOTH", // "BINAURAL", "TONE_TUNING", or "BOTH"
+      processing_mode: body.processing_mode ?? "BOTH",
       // Meditation style and ambient sounds
-      meditation_style: meditationStyle,
+      meditation_style: styleSlug,
       ambient: {
-        sounds: body.sound_layers || styleConfig.ambient,
+        sounds: payloadData.sound_layers || body.sound_layers || styleConfig.ambient,
         intensity: styleConfig.intensity,
         volume: body.ambient_volume ?? 0.5,
       },
@@ -259,27 +374,11 @@ serve(async (req) => {
       source: {
         url: body.audioUrl,
         volume: body.source_volume ?? 0.7,
-        target_bpm: body.target_bpm,
+        target_bpm: targetBpm,
       },
       // Duration and variants
-      duration: body.duration || (mode === "demo" ? 60 : 300), // 1 min demo, 5 min paid
-      variants: body.variants || (mode === "demo" ? 1 : 3),
-      // Stem separation options
-      stem_separation: {
-        enabled: body.enable_stem_separation ?? false,
-        type: body.stem_separation_type || "5stems",
-        keep_stems: body.keep_stems || ["vocals", "other"],
-        remove_stems: body.remove_stems || [],
-      },
-      // Audio processing options
-      noise_removal: {
-        enabled: body.enable_noise_removal ?? false,
-        level: body.noise_reduction_level || "medium",
-      },
-      mastering: {
-        enabled: body.enable_mastering ?? false,
-        preset: body.mastering_preset || "balanced",
-      },
+      duration: body.duration || (mode === "demo" ? 60 : 300),
+      variants: payloadData.variants || body.variants || (mode === "demo" ? 1 : 3),
       // Output configuration
       output: {
         format: body.output_format || "mp3",
@@ -288,6 +387,11 @@ serve(async (req) => {
       // Mode info
       mode,
       is_demo: mode === "demo",
+      // Music settings
+      auto_music_enabled: payloadData.auto_music_enabled ?? true,
+      music_source: payloadData.music_source || "library",
+      keep_original_music: payloadData.keep_original_music ?? false,
+      music_tags: payloadData.music_tags || [],
     };
 
     // Create job record in database

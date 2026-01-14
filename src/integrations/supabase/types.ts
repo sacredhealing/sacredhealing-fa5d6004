@@ -1446,6 +1446,38 @@ export type Database = {
         }
         Relationships: []
       }
+      creative_soul_job_events: {
+        Row: {
+          created_at: string
+          event: string
+          id: string
+          job_id: string
+          meta: Json
+        }
+        Insert: {
+          created_at?: string
+          event: string
+          id?: string
+          job_id: string
+          meta?: Json
+        }
+        Update: {
+          created_at?: string
+          event?: string
+          id?: string
+          job_id?: string
+          meta?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creative_soul_job_events_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "creative_soul_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       creative_soul_jobs: {
         Row: {
           action: string
@@ -1456,6 +1488,8 @@ export type Database = {
           job_id: string
           payload: Json | null
           progress: number | null
+          progress_percent: number | null
+          progress_step: string | null
           result_url: string | null
           status: string
           updated_at: string
@@ -1470,6 +1504,8 @@ export type Database = {
           job_id?: string
           payload?: Json | null
           progress?: number | null
+          progress_percent?: number | null
+          progress_step?: string | null
           result_url?: string | null
           status?: string
           updated_at?: string
@@ -1484,12 +1520,46 @@ export type Database = {
           job_id?: string
           payload?: Json | null
           progress?: number | null
+          progress_percent?: number | null
+          progress_step?: string | null
           result_url?: string | null
           status?: string
           updated_at?: string
           user_id?: string | null
         }
         Relationships: []
+      }
+      creative_soul_outputs: {
+        Row: {
+          created_at: string
+          id: string
+          job_id: string
+          output: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          job_id: string
+          output?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          job_id?: string
+          output?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creative_soul_outputs_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "creative_soul_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       creative_soul_usage: {
         Row: {
