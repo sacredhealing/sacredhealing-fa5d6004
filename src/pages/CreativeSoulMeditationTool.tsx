@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Headphones, ArrowLeft, Upload, Play, Pause, Music, Layers, 
@@ -62,12 +62,20 @@ const binauralBeats = [
   { name: 'Gamma (30-100 Hz)', description: 'Peak awareness, insight', value: 'gamma' },
 ];
 
+const formatTime = (seconds: number) => {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
+
 export default function CreativeSoulMeditationTool() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isAdmin } = useAdminRole();
   const { hasAccess } = useCreativeTools();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const processedAudioRef = useRef<HTMLAudioElement>(null);
   
   // State
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -75,9 +83,14 @@ export default function CreativeSoulMeditationTool() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processedAudioUrl, setProcessedAudioUrl] = useState<string | null>(null);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [isProcessedPlaying, setIsProcessedPlaying] = useState(false);
+  const [processedCurrentTime, setProcessedCurrentTime] = useState(0);
+  const [processedDuration, setProcessedDuration] = useState(0);
   
   // Settings
-  const [selectedStyle, setSelectedStyle] = useState('peaceful');
+  const [selectedStyle, setSelectedStyle] = useState('indian');
   const [selectedFrequency, setSelectedFrequency] = useState<number | null>(528);
   const [selectedBinaural, setSelectedBinaural] = useState('theta');
   const [enableStemSeparation, setEnableStemSeparation] = useState(false);
@@ -86,6 +99,86 @@ export default function CreativeSoulMeditationTool() {
   const [frequencyIntensity, setFrequencyIntensity] = useState([50]);
   
   const hasToolAccess = user && (isAdmin || hasAccess('creative-soul-meditation'));
+
+  // Audio playback controls for original audio
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
+    const handleLoadedMetadata = () => setDuration(audio.duration);
+    const handleEnded = () => setIsPlaying(false);
+
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('ended', handleEnded);
+
+    return () => {
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('ended', handleEnded);
+    };
+  }, [audioUrl]);
+
+  // Audio playback controls for processed audio
+  useEffect(() => {
+    const audio = processedAudioRef.current;
+    if (!audio) return;
+
+    const handleTimeUpdate = () => setProcessedCurrentTime(audio.currentTime);
+    const handleLoadedMetadata = () => setProcessedDuration(audio.duration);
+    const handleEnded = () => setIsProcessedPlaying(false);
+
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('ended', handleEnded);
+
+    return () => {
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('ended', handleEnded);
+    };
+  }, [processedAudioUrl]);
+
+  const togglePlay = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (isPlaying) {
+      audio.pause();
+    } else {
+      audio.play();
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  const toggleProcessedPlay = () => {
+    const audio = processedAudioRef.current;
+    if (!audio) return;
+
+    if (isProcessedPlaying) {
+      audio.pause();
+    } else {
+      audio.play();
+    }
+    setIsProcessedPlaying(!isProcessedPlaying);
+  };
+
+  const handleSeek = (value: number[]) => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.currentTime = value[0];
+      setCurrentTime(value[0]);
+    }
+  };
+
+  const handleProcessedSeek = (value: number[]) => {
+    const audio = processedAudioRef.current;
+    if (audio) {
+      audio.currentTime = value[0];
+      setProcessedCurrentTime(value[0]);
+    }
+  };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -209,22 +302,31 @@ export default function CreativeSoulMeditationTool() {
             </div>
 
             {audioUrl && (
-              <div className="flex items-center gap-4 p-4 bg-purple-500/10 rounded-lg">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setIsPlaying(!isPlaying)}
-                  className="rounded-full"
-                >
-                  {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                </Button>
-                <div className="flex-1">
-                  <div className="h-2 bg-purple-500/20 rounded-full overflow-hidden">
-                    <div className="h-full w-1/3 bg-gradient-to-r from-purple-500 to-violet-500 rounded-full" />
+              <>
+                <audio ref={audioRef} src={audioUrl} preload="metadata" />
+                <div className="flex items-center gap-4 p-4 bg-purple-500/10 rounded-lg">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={togglePlay}
+                    className="rounded-full"
+                  >
+                    {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                  </Button>
+                  <div className="flex-1">
+                    <Slider
+                      value={[currentTime]}
+                      max={duration || 100}
+                      step={0.1}
+                      onValueChange={handleSeek}
+                      className="w-full"
+                    />
                   </div>
+                  <span className="text-sm text-muted-foreground min-w-[45px]">
+                    {formatTime(currentTime)} / {formatTime(duration)}
+                  </span>
                 </div>
-                <Volume2 className="w-4 h-4 text-muted-foreground" />
-              </div>
+              </>
             )}
           </CardContent>
         </Card>
@@ -419,20 +521,28 @@ export default function CreativeSoulMeditationTool() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <audio ref={processedAudioRef} src={processedAudioUrl} preload="metadata" />
               <div className="flex items-center gap-4 p-4 bg-green-500/10 rounded-lg">
                 <Button
                   variant="outline"
                   size="icon"
+                  onClick={toggleProcessedPlay}
                   className="rounded-full border-green-500 text-green-500"
                 >
-                  <Play className="w-4 h-4" />
+                  {isProcessedPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                 </Button>
                 <div className="flex-1">
-                  <div className="h-2 bg-green-500/20 rounded-full overflow-hidden">
-                    <div className="h-full w-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full" />
-                  </div>
+                  <Slider
+                    value={[processedCurrentTime]}
+                    max={processedDuration || 100}
+                    step={0.1}
+                    onValueChange={handleProcessedSeek}
+                    className="w-full"
+                  />
                 </div>
-                <span className="text-sm text-muted-foreground">3:45</span>
+                <span className="text-sm text-muted-foreground min-w-[45px]">
+                  {formatTime(processedCurrentTime)} / {formatTime(processedDuration)}
+                </span>
               </div>
               
               <Button
