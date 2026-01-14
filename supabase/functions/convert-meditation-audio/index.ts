@@ -307,26 +307,24 @@ serve(async (req) => {
       return json({ success: false, error: "Failed to create job", details: insertErr.message });
     }
 
-    // --- Dispatch to worker (robust) ---
+    // --- Dispatch to worker (optional) ---
+    // If no worker is configured or worker fails, the browser-based player handles audio generation
     if (AUDIO_WORKER_URL && AUDIO_WORKER_API_KEY) {
       const base = AUDIO_WORKER_URL.trim().replace(/\/$/, "");
       let workerEndpoint = base;
 
       // If AUDIO_WORKER_URL is a base URL, default to our worker contract endpoint.
-      // If it already points to an endpoint (/jobs, /process, /process-audio), keep it.
       try {
         const u = new URL(base);
         const p = u.pathname.replace(/\/$/, "");
         const alreadyEndpoint = ["/jobs", "/process", "/process-audio"].some((s) => p.endsWith(s));
         if (!alreadyEndpoint) workerEndpoint = `${base}/process-audio`;
       } catch {
-        // If URL parsing fails, fall back to /process-audio
         workerEndpoint = `${base}/process-audio`;
       }
 
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
-        // Custom worker headers
         "X-Worker-Key": AUDIO_WORKER_API_KEY,
         "x-api-key": AUDIO_WORKER_API_KEY,
         "Authorization": `Bearer ${AUDIO_WORKER_API_KEY}`,
@@ -343,34 +341,12 @@ serve(async (req) => {
         // ignore
       }
 
-      // Retry helper with timeout
-      async function fetchWithRetry(url: string, init: RequestInit, retries = 3): Promise<Response> {
-        let lastErr: Error | null = null;
-        for (let i = 0; i < retries; i++) {
-          const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 12000);
-          try {
-            const res = await fetch(url, { ...init, signal: controller.signal });
-            clearTimeout(timeout);
-            // Treat 502/503/504 as retryable
-            if ([502, 503, 504].includes(res.status)) {
-              lastErr = new Error(`Worker returned ${res.status}`);
-              await new Promise((r) => setTimeout(r, 700 * (i + 1)));
-              continue;
-            }
-            return res;
-          } catch (e) {
-            clearTimeout(timeout);
-            lastErr = e instanceof Error ? e : new Error(String(e));
-            await new Promise((r) => setTimeout(r, 700 * (i + 1)));
-          }
-        }
-        throw lastErr ?? new Error("Worker dispatch failed");
-      }
-
-      let workerRes: Response;
+      // Try to dispatch to worker, but don't fail if unavailable
       try {
-        workerRes = await fetchWithRetry(workerEndpoint, {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+        
+        const workerRes = await fetch(workerEndpoint, {
           method: "POST",
           headers,
           body: JSON.stringify({
@@ -380,98 +356,77 @@ serve(async (req) => {
             payload,
             respond_immediately: true,
           }),
-        }, 3);
+          signal: controller.signal,
+        });
+        
+        clearTimeout(timeout);
+
+        if (workerRes.ok) {
+          const workerJson = await workerRes.json().catch(() => ({}));
+          
+          if (workerJson?.accepted || workerJson?.status === "accepted") {
+            console.log(`[CONVERT-MEDITATION] Job ${jobId} accepted by worker`);
+            return json({
+              success: true,
+              mode,
+              plan: isAdmin ? "admin" : (mode === "demo" ? "demo" : "purchased"),
+              job_id: jobId,
+              status: "processing",
+              message: "Worker accepted job. Poll job status.",
+            });
+          }
+
+          if (workerJson?.outputs) {
+            await supabaseAdmin
+              .from("creative_soul_jobs")
+              .update({ 
+                status: "completed", 
+                result_url: typeof workerJson.outputs === "string" ? workerJson.outputs : JSON.stringify(workerJson.outputs),
+                completed_at: new Date().toISOString(),
+              })
+              .eq("job_id", jobId);
+
+            return json({
+              success: true,
+              mode,
+              plan: isAdmin ? "admin" : (mode === "demo" ? "demo" : "purchased"),
+              job_id: jobId,
+              status: "completed",
+              outputs: workerJson.outputs,
+            });
+          }
+        } else {
+          // Worker returned error - log but continue with browser fallback
+          const errorText = await workerRes.text().catch(() => "");
+          console.log(`[CONVERT-MEDITATION] Worker unavailable (${workerRes.status}): ${errorText.slice(0, 200)}`);
+        }
       } catch (e) {
+        // Worker timeout or network error - log and continue
         const errStr = e instanceof Error ? e.message : String(e);
-        console.error('[CONVERT-MEDITATION] Worker unreachable:', errStr);
-        await supabaseAdmin
-          .from("creative_soul_jobs")
-          .update({
-            status: "failed",
-            error_message: `Worker unreachable: ${errStr.slice(0, 800)}`,
-            completed_at: new Date().toISOString(),
-          })
-          .eq("job_id", jobId);
-
-        return json({
-          success: false,
-          error: "Failed to dispatch job to worker",
-          job_id: jobId,
-          details: errStr,
-          worker_endpoint: workerEndpoint,
-        }, 502);
+        console.log(`[CONVERT-MEDITATION] Worker dispatch failed: ${errStr.slice(0, 200)}`);
       }
-
-      const workerText = await workerRes.text().catch(() => "");
-      let workerJson: Record<string, unknown> = {};
-      try { workerJson = workerText ? JSON.parse(workerText) : {}; } catch { /* ignore */ }
-
-      if (!workerRes.ok) {
-        console.error('[CONVERT-MEDITATION] Worker dispatch failed:', workerRes.status, workerText);
-        await supabaseAdmin
-          .from("creative_soul_jobs")
-          .update({
-            status: "failed",
-            error_message: `Worker error (${workerRes.status}): ${workerText.slice(0, 800)}`,
-            completed_at: new Date().toISOString(),
-          })
-          .eq("job_id", jobId);
-
-        return json({
-          success: false,
-          error: "Failed to dispatch job to worker",
-          job_id: jobId,
-          worker_status: workerRes.status,
-          worker_body: workerText.slice(0, 800),
-          worker_endpoint: workerEndpoint,
-        }, 502);
-      }
-
-      // If async accepted
-      if (workerJson?.accepted || workerJson?.status === "accepted") {
-        console.log(`[CONVERT-MEDITATION] Job ${jobId} accepted by worker`);
-        return json({
-          success: true,
-          mode,
-          plan: isAdmin ? "admin" : (mode === "demo" ? "demo" : "purchased"),
-          job_id: jobId,
-          status: "processing",
-          message: "Worker accepted job. Poll job status.",
-        });
-      }
-
-      // If worker returns outputs immediately
-      if (workerJson?.outputs) {
-        await supabaseAdmin
-          .from("creative_soul_jobs")
-          .update({ 
-            status: "completed", 
-            result_url: typeof workerJson.outputs === "string" ? workerJson.outputs : JSON.stringify(workerJson.outputs),
-            completed_at: new Date().toISOString(),
-          })
-          .eq("job_id", jobId);
-
-        return json({
-          success: true,
-          mode,
-          plan: isAdmin ? "admin" : (mode === "demo" ? "demo" : "purchased"),
-          job_id: jobId,
-          status: "completed",
-          outputs: workerJson.outputs,
-        });
-      }
-
-      console.log(`[CONVERT-MEDITATION] Job ${jobId} dispatched to worker`);
     } else {
-      console.log(`[CONVERT-MEDITATION] No worker configured - job ${jobId} will wait for manual processing`);
+      console.log(`[CONVERT-MEDITATION] No worker configured`);
     }
 
+    // Update job to indicate browser-based processing should be used
+    await supabaseAdmin
+      .from("creative_soul_jobs")
+      .update({ 
+        status: "browser_processing",
+        progress: 100,
+      })
+      .eq("job_id", jobId);
+
+    // Return success - browser player handles actual audio generation
     return json({
       success: true,
       mode,
       plan: isAdmin ? "admin" : (mode === "demo" ? "demo" : "purchased"),
       job_id: jobId,
-      message: "Generation queued. Processing will begin shortly.",
+      status: "browser_processing",
+      message: "Settings saved. Use the Real-Time Meditation Player for instant audio generation.",
+      browser_fallback: true,
     });
   } catch (err) {
     console.error('[CONVERT-MEDITATION] Runtime error:', err);
