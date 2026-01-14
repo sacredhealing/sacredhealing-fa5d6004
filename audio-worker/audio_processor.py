@@ -515,6 +515,292 @@ class AudioProcessor:
         
         return variant
     
+    def download_sound_file(self, url, timeout=120):
+        """Download a sound file from URL and return as pydub AudioSegment"""
+        logger.info(f"Downloading sound file from {url}")
+        
+        if not PYDUB_AVAILABLE:
+            logger.warning("pydub not available for sound file download")
+            return None
+        
+        try:
+            response = requests.get(url, timeout=timeout)
+            response.raise_for_status()
+            
+            # Determine format from URL or content
+            temp_suffix = ".mp3"
+            if ".wav" in url.lower():
+                temp_suffix = ".wav"
+            elif ".ogg" in url.lower():
+                temp_suffix = ".ogg"
+            elif ".flac" in url.lower():
+                temp_suffix = ".flac"
+            
+            temp_path = tempfile.mktemp(suffix=temp_suffix)
+            with open(temp_path, "wb") as f:
+                f.write(response.content)
+            
+            # Load with pydub
+            sound = AudioSegment.from_file(temp_path)
+            
+            # Cleanup
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+            
+            return sound
+        except Exception as e:
+            logger.error(f"Failed to download sound file: {e}")
+            return None
+    
+    def loop_sound_to_duration(self, sound, target_duration_ms, crossfade_ms=2000):
+        """Loop a sound to match target duration with crossfades"""
+        if sound is None:
+            return None
+        
+        if len(sound) >= target_duration_ms:
+            # Trim to target duration with fade out
+            return sound[:target_duration_ms].fade_out(crossfade_ms)
+        
+        # Loop the sound
+        loops_needed = int(np.ceil(target_duration_ms / len(sound)))
+        looped = sound
+        
+        for _ in range(loops_needed - 1):
+            # Crossfade each loop
+            fade_duration = min(crossfade_ms, len(sound) // 4, len(looped) // 4)
+            if fade_duration > 0:
+                looped = looped.append(sound, crossfade=fade_duration)
+            else:
+                looped = looped + sound
+        
+        # Trim to exact duration and fade out
+        result = looped[:target_duration_ms]
+        if len(result) > crossfade_ms:
+            result = result.fade_out(crossfade_ms)
+        
+        return result
+    
+    def duck_audio(self, sound_bed, voice, duck_db=7.5, attack_ms=100, release_ms=300):
+        """Duck the sound bed under the voice (sidechain compression style)"""
+        if sound_bed is None or voice is None:
+            return sound_bed
+        
+        # Match lengths
+        target_len = max(len(sound_bed), len(voice))
+        
+        if len(sound_bed) < target_len:
+            sound_bed = sound_bed + AudioSegment.silent(duration=target_len - len(sound_bed))
+        if len(voice) < target_len:
+            voice = voice + AudioSegment.silent(duration=target_len - len(voice))
+        
+        # Get voice samples for envelope detection
+        voice_samples = np.array(voice.get_array_of_samples(), dtype=np.float32)
+        if voice.channels == 2:
+            voice_samples = voice_samples.reshape((-1, 2)).mean(axis=1)
+        
+        # Normalize voice samples
+        voice_samples = np.abs(voice_samples) / (np.max(np.abs(voice_samples)) + 1e-8)
+        
+        # Create envelope follower
+        envelope = np.zeros_like(voice_samples)
+        attack_coef = np.exp(-1.0 / (attack_ms * voice.frame_rate / 1000))
+        release_coef = np.exp(-1.0 / (release_ms * voice.frame_rate / 1000))
+        
+        for i in range(1, len(voice_samples)):
+            if voice_samples[i] > envelope[i-1]:
+                envelope[i] = attack_coef * envelope[i-1] + (1 - attack_coef) * voice_samples[i]
+            else:
+                envelope[i] = release_coef * envelope[i-1]
+        
+        # Normalize envelope
+        envelope = envelope / (np.max(envelope) + 1e-8)
+        
+        # Calculate ducking amount (reduce when voice is present)
+        duck_linear = 10 ** (-duck_db / 20)
+        gain = 1.0 - envelope * (1.0 - duck_linear)
+        
+        # Apply gain to sound bed
+        bed_samples = np.array(sound_bed.get_array_of_samples(), dtype=np.float32)
+        
+        if sound_bed.channels == 2:
+            bed_samples = bed_samples.reshape((-1, 2))
+            # Resample gain to match bed samples
+            gain_resampled = np.interp(
+                np.linspace(0, len(gain), len(bed_samples)),
+                np.arange(len(gain)),
+                gain
+            )
+            bed_samples[:, 0] = bed_samples[:, 0] * gain_resampled
+            bed_samples[:, 1] = bed_samples[:, 1] * gain_resampled
+            bed_samples = bed_samples.flatten()
+        else:
+            gain_resampled = np.interp(
+                np.linspace(0, len(gain), len(bed_samples)),
+                np.arange(len(gain)),
+                gain
+            )
+            bed_samples = bed_samples * gain_resampled
+        
+        # Clip to valid range
+        bed_samples = np.clip(bed_samples, -32768, 32767).astype(np.int16)
+        
+        # Create new AudioSegment
+        ducked = sound_bed._spawn(bed_samples.tobytes())
+        
+        return ducked
+    
+    def produce_meditation_mix(self, voice_path, sound_files, style_slug="relaxing", 
+                                seed=None, bed_duck_db=7.5, ambient_volume_db=-6,
+                                binaural_config=None, healing_freq=None):
+        """
+        Produce a professional meditation mix with voice, sound bed, binaural beats, and healing frequencies.
+        
+        Args:
+            voice_path: Path or URL to the voice/narration audio (already cleaned)
+            sound_files: List of dicts with 'slug', 'url', 'volume' (0-1), 'loop' (bool)
+            style_slug: Meditation style for processing
+            seed: Random seed for reproducibility
+            bed_duck_db: How much to duck the sound bed under voice
+            ambient_volume_db: Overall ambient/bed volume adjustment
+            binaural_config: Dict with 'type' (delta/theta/alpha/beta/gamma) and 'intensity'
+            healing_freq: Dict with 'frequency' (Hz) and 'intensity'
+        
+        Returns:
+            AudioSegment: The final mixed meditation audio
+        """
+        logger.info(f"Producing meditation mix with {len(sound_files)} sound files")
+        
+        if not PYDUB_AVAILABLE:
+            logger.error("pydub required for meditation mix production")
+            return None
+        
+        if seed is not None:
+            np.random.seed(seed)
+        
+        # Load voice audio
+        if voice_path.startswith("http"):
+            voice = self.download_sound_file(voice_path)
+        else:
+            voice = AudioSegment.from_file(voice_path)
+        
+        if voice is None:
+            logger.error("Failed to load voice audio")
+            return None
+        
+        voice_duration_ms = len(voice)
+        logger.info(f"Voice duration: {voice_duration_ms / 1000:.1f}s")
+        
+        # Add intro/outro padding
+        intro_ms = 5000  # 5 second intro
+        outro_ms = 10000  # 10 second outro
+        total_duration_ms = voice_duration_ms + intro_ms + outro_ms
+        
+        # Download and prepare all sound layers
+        sound_layers = []
+        for sf_info in sound_files:
+            url = sf_info.get('url')
+            volume = sf_info.get('volume', 0.5)
+            loop = sf_info.get('loop', True)
+            
+            if not url:
+                continue
+            
+            sound = self.download_sound_file(url)
+            if sound is None:
+                continue
+            
+            # Loop to match duration
+            if loop:
+                sound = self.loop_sound_to_duration(sound, total_duration_ms)
+            else:
+                # Just pad with silence if not looping
+                if len(sound) < total_duration_ms:
+                    sound = sound + AudioSegment.silent(duration=total_duration_ms - len(sound))
+                else:
+                    sound = sound[:total_duration_ms]
+            
+            # Apply volume
+            volume_db = 20 * np.log10(max(volume, 0.01))
+            sound = sound + volume_db
+            
+            sound_layers.append(sound)
+        
+        # Mix all sound layers into bed
+        if sound_layers:
+            sound_bed = sound_layers[0]
+            for layer in sound_layers[1:]:
+                sound_bed = sound_bed.overlay(layer)
+            
+            # Apply overall ambient volume
+            sound_bed = sound_bed + ambient_volume_db
+        else:
+            # Create silent bed if no sounds
+            sound_bed = AudioSegment.silent(duration=total_duration_ms)
+        
+        # Pad voice with intro silence
+        padded_voice = AudioSegment.silent(duration=intro_ms) + voice + AudioSegment.silent(duration=outro_ms)
+        
+        # Duck sound bed under voice
+        ducked_bed = self.duck_audio(sound_bed, padded_voice, duck_db=bed_duck_db)
+        
+        # Mix voice over ducked bed
+        mixed = ducked_bed.overlay(padded_voice)
+        
+        # Convert to numpy for binaural/healing processing
+        mixed_samples = np.array(mixed.get_array_of_samples(), dtype=np.float32)
+        if mixed.channels == 2:
+            mixed_samples = mixed_samples.reshape((-1, 2)).T
+        else:
+            mixed_samples = np.stack([mixed_samples, mixed_samples])
+        
+        # Normalize to -1 to 1 range
+        mixed_samples = mixed_samples / 32768.0
+        sr = mixed.frame_rate
+        
+        # Apply binaural beats (always welcome in meditation!)
+        if binaural_config:
+            binaural_type = binaural_config.get('type', 'theta')
+            intensity = binaural_config.get('intensity', 0.15)
+            
+            if binaural_type in self.binaural_presets:
+                preset = self.binaural_presets[binaural_type]
+                mixed_samples = self.apply_binaural_beats(
+                    mixed_samples, sr,
+                    carrier_freq=preset['carrier'],
+                    beat_freq=preset['beat'],
+                    intensity=intensity
+                )
+        
+        # Apply healing frequency (always beneficial!)
+        if healing_freq:
+            freq = healing_freq.get('frequency', 528)
+            intensity = healing_freq.get('intensity', 0.1)
+            mixed_samples = self.apply_healing_frequency(mixed_samples, sr, freq, intensity)
+        
+        # Apply meditation style processing
+        mixed_samples = self.apply_meditation_style(mixed_samples, sr, style_slug)
+        
+        # Apply mastering
+        mixed_samples = self.apply_mastering(mixed_samples, sr, "meditation_warm")
+        
+        # Convert back to pydub AudioSegment
+        mixed_samples = mixed_samples.T  # Back to (samples, channels)
+        mixed_samples = np.clip(mixed_samples * 32767, -32768, 32767).astype(np.int16)
+        
+        final_audio = AudioSegment(
+            mixed_samples.tobytes(),
+            frame_rate=sr,
+            sample_width=2,
+            channels=2
+        )
+        
+        # Final fade in/out
+        final_audio = final_audio.fade_in(3000).fade_out(5000)
+        
+        logger.info(f"Meditation mix complete: {len(final_audio) / 1000:.1f}s")
+        
+        return final_audio
+    
     def save_audio(self, audio, sr, output_path, format="mp3"):
         """Save audio to file"""
         logger.info(f"Saving audio to {output_path}")
@@ -544,7 +830,7 @@ class AudioProcessor:
         if PYDUB_AVAILABLE and format == "mp3":
             try:
                 sound = AudioSegment.from_wav(wav_path)
-                sound.export(output_path, format="mp3", bitrate="192k")
+                sound.export(output_path, format="mp3", bitrate="320k")
                 os.remove(wav_path)
             except Exception as e:
                 logger.warning(f"Failed to convert to MP3: {e}")
@@ -555,4 +841,15 @@ class AudioProcessor:
             if wav_path != output_path:
                 os.rename(wav_path, output_path)
         
+        return output_path
+    
+    def save_audio_segment(self, audio_segment, output_path, format="mp3", bitrate="320k"):
+        """Save pydub AudioSegment to file"""
+        logger.info(f"Saving AudioSegment to {output_path}")
+        
+        if not PYDUB_AVAILABLE:
+            logger.error("pydub required for AudioSegment export")
+            return None
+        
+        audio_segment.export(output_path, format=format, bitrate=bitrate)
         return output_path
