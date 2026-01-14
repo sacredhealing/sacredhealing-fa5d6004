@@ -1,302 +1,397 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useMemo, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Badge } from "@/components/ui/badge";
+import { Slider } from "@/components/ui/slider";
+import { useAuth } from "@/hooks/useAuth";
+import { useAdminRole } from "@/hooks/useAdminRole";
+import { useCreativeTools } from "@/hooks/useCreativeTools";
+import { toast } from "sonner";
 import { 
-  Headphones, ArrowLeft, Upload, Play, Pause, Music, Layers, 
-  Sparkles, Heart, Split, Wand2, Download, Loader2, Check,
-  Volume2, Settings, FileAudio, StopCircle
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAuth } from '@/hooks/useAuth';
-import { useAdminRole } from '@/hooks/useAdminRole';
-import { useCreativeTools } from '@/hooks/useCreativeTools';
-import { useMeditationAudioProcessor } from '@/hooks/useMeditationAudioProcessor';
-import { toast } from 'sonner';
+  Music, 
+  Waves, 
+  Volume2, 
+  Sparkles, 
+  Settings, 
+  Play, 
+  ChevronDown,
+  Loader2,
+  CheckCircle,
+  AlertCircle,
+  ArrowLeft,
+  Headphones
+} from "lucide-react";
 
-const meditationStyles = [
-  { id: 'indian', name: 'Indian (Vedic)', description: 'Mantras, tanpura drones, temple bells' },
-  { id: 'shamanic', name: 'Shamanic', description: 'Frame drums, rattles, tribal rhythms' },
-  { id: 'mystic', name: 'Mystic', description: 'Etheric pads, choirs, cosmic textures' },
-  { id: 'tibetan', name: 'Tibetan', description: 'Singing bowls, long horns, overtone chanting' },
-  { id: 'sufi', name: 'Sufi', description: 'Whirling rhythms, ney flute, heart-centered devotion' },
-  { id: 'zen', name: 'Zen (Japanese)', description: 'Minimal ambience, breath awareness' },
-  { id: 'nature', name: 'Nature Healing', description: 'Forest, birds, wind, water' },
-  { id: 'ocean', name: 'Ocean / Water', description: 'Waves, flowing water, deep calming' },
-  { id: 'sound-bath', name: 'Sound Bath', description: 'Gongs, crystal bowls, harmonic overtones' },
-  { id: 'chakra', name: 'Chakra Balancing', description: 'Layered tones for each chakra' },
-  { id: 'higher', name: 'Higher Consciousness', description: 'Cosmic tones, transcendence' },
-  { id: 'relaxing', name: 'Relaxing', description: 'Gentle ambient, stress relief' },
-  { id: 'forest', name: 'Forest', description: 'Birdsong, rustling leaves, natural grounding' },
-  { id: 'breath', name: 'Breath Focus', description: 'Minimal, breath-guiding cues' },
-  { id: 'kundalini', name: 'Kundalini Energy', description: 'Rising energy, activation tones' },
-];
+// ---------- Types ----------
+type MeditationStyle =
+  | "indian"
+  | "shamanic"
+  | "mystic"
+  | "tibetan"
+  | "sufi"
+  | "zen"
+  | "nature"
+  | "ocean"
+  | "sound_bath"
+  | "chakra"
+  | "higher_consciousness"
+  | "relaxing"
+  | "forest"
+  | "breath_focus"
+  | "kundalini";
 
-const healingFrequencies = [
-  { hz: 174, name: 'Deep Relaxation & Grounding', color: 'from-red-500 to-red-600' },
-  { hz: 285, name: 'Physical Healing Support', color: 'from-orange-500 to-orange-600' },
-  { hz: 396, name: 'Emotional Release & Liberation', color: 'from-yellow-500 to-yellow-600' },
-  { hz: 417, name: 'Transformation & Change', color: 'from-lime-500 to-lime-600' },
-  { hz: 432, name: 'Universal Harmony & DNA Repair', color: 'from-green-500 to-green-600' },
-  { hz: 444, name: 'Love Frequency & Heart Coherence', color: 'from-emerald-500 to-emerald-600' },
-  { hz: 528, name: 'Miracle Tone & DNA Activation', color: 'from-teal-500 to-teal-600' },
-  { hz: 639, name: 'Connection & Relationships', color: 'from-cyan-500 to-cyan-600' },
-  { hz: 741, name: 'Intuition & Problem Solving', color: 'from-blue-500 to-blue-600' },
-  { hz: 777, name: 'Spiritual Awakening & Luck', color: 'from-indigo-500 to-indigo-600' },
-  { hz: 852, name: 'Third Eye Activation', color: 'from-purple-500 to-purple-600' },
-  { hz: 888, name: 'Abundance & Prosperity', color: 'from-violet-500 to-violet-600' },
-  { hz: 936, name: 'Pineal Gland Activation', color: 'from-fuchsia-500 to-fuchsia-600' },
-  { hz: 963, name: 'Crown Chakra & Divine Connection', color: 'from-pink-500 to-pink-600' },
-  { hz: 999, name: 'Highest Consciousness & Completion', color: 'from-rose-500 to-rose-600' },
-];
+type NoiseMode = "voice_clean" | "aggressive";
+type ProcessingMode = "BINAURAL" | "TONE_TUNING";
 
-const binauralBeats = [
-  { name: 'Delta (0.5-4 Hz)', description: 'Deep sleep, healing', value: 'delta' },
-  { name: 'Theta (4-8 Hz)', description: 'Meditation, creativity', value: 'theta' },
-  { name: 'Alpha (8-12 Hz)', description: 'Relaxation, calm focus', value: 'alpha' },
-  { name: 'Beta (12-30 Hz)', description: 'Alertness, concentration', value: 'beta' },
-  { name: 'Gamma (30-100 Hz)', description: 'Peak awareness, insight', value: 'gamma' },
-];
-
-const formatTime = (seconds: number) => {
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
+// ---------- Style mapping ----------
+const STYLE_PRESETS: Record<
+  MeditationStyle,
+  {
+    label: string;
+    description: string;
+    defaultBpm: number;
+    bpmRange: [number, number];
+    musicTags: string[];
+    soundLayers: string[];
+    recommendedTuningHz?: number;
+    icon: string;
+  }
+> = {
+  indian: {
+    label: "Indian (Vedic)",
+    description: "Mantras, tanpura drones, temple bells",
+    defaultBpm: 60,
+    bpmRange: [52, 68],
+    musicTags: ["tanpura", "indian drone", "temple bells", "vedic", "harmonium"],
+    soundLayers: ["tanpura_drone", "temple_bells", "soft_air"],
+    recommendedTuningHz: 432,
+    icon: "🕉️",
+  },
+  shamanic: {
+    label: "Shamanic",
+    description: "Frame drums, rattles, tribal rhythms",
+    defaultBpm: 72,
+    bpmRange: [65, 85],
+    musicTags: ["shaman drum", "frame drum", "rattle", "tribal", "earth"],
+    soundLayers: ["shaman_drums_soft", "rattles_soft", "forest_ambience"],
+    icon: "🪘",
+  },
+  mystic: {
+    label: "Mystic",
+    description: "Etheric pads, choirs, cosmic textures",
+    defaultBpm: 58,
+    bpmRange: [45, 70],
+    musicTags: ["ethereal pad", "choir pad", "cosmic", "ambient", "mystic"],
+    soundLayers: ["choir_pad", "wind_soft", "space_texture"],
+    recommendedTuningHz: 528,
+    icon: "✨",
+  },
+  tibetan: {
+    label: "Tibetan",
+    description: "Singing bowls, long horns, overtone chanting",
+    defaultBpm: 55,
+    bpmRange: [40, 65],
+    musicTags: ["tibetan bowl", "singing bowl", "overtone", "gong"],
+    soundLayers: ["tibetan_bowls", "overtone_pad", "soft_air"],
+    recommendedTuningHz: 432,
+    icon: "🔔",
+  },
+  sufi: {
+    label: "Sufi",
+    description: "Whirling rhythms, ney flute, heart devotion",
+    defaultBpm: 70,
+    bpmRange: [60, 90],
+    musicTags: ["ney flute", "sufi", "frame drum", "devotional"],
+    soundLayers: ["ney_flute_soft", "frame_drums_soft", "warm_room"],
+    icon: "💫",
+  },
+  zen: {
+    label: "Zen (Japanese)",
+    description: "Minimal ambience, breath awareness",
+    defaultBpm: 50,
+    bpmRange: [40, 60],
+    musicTags: ["zen", "minimal ambient", "shakuhachi", "temple"],
+    soundLayers: ["minimal_air", "soft_room", "gentle_wind"],
+    icon: "🎋",
+  },
+  nature: {
+    label: "Nature Healing",
+    description: "Forest, birds, wind, water",
+    defaultBpm: 54,
+    bpmRange: [45, 65],
+    musicTags: ["nature ambient", "soft pad", "healing"],
+    soundLayers: ["forest_ambience", "birds_soft", "wind_soft"],
+    icon: "🌿",
+  },
+  ocean: {
+    label: "Ocean / Water",
+    description: "Waves, flowing water, deep calming",
+    defaultBpm: 52,
+    bpmRange: [42, 62],
+    musicTags: ["ocean waves", "water", "calm pad"],
+    soundLayers: ["ocean_waves", "rain_soft", "sub_pad"],
+    recommendedTuningHz: 432,
+    icon: "🌊",
+  },
+  sound_bath: {
+    label: "Sound Bath",
+    description: "Gongs, crystal bowls, harmonic overtones",
+    defaultBpm: 48,
+    bpmRange: [35, 58],
+    musicTags: ["crystal bowl", "gong", "sound bath", "overtone"],
+    soundLayers: ["crystal_bowls", "gong_soft", "overtone_pad"],
+    recommendedTuningHz: 528,
+    icon: "🎵",
+  },
+  chakra: {
+    label: "Chakra Balancing",
+    description: "Layered tones for each chakra",
+    defaultBpm: 56,
+    bpmRange: [45, 70],
+    musicTags: ["chakra", "healing tones", "ambient pad"],
+    soundLayers: ["chakra_tones", "soft_air", "warm_pad"],
+    recommendedTuningHz: 528,
+    icon: "🔮",
+  },
+  higher_consciousness: {
+    label: "Higher Consciousness",
+    description: "Cosmic tones, transcendence",
+    defaultBpm: 46,
+    bpmRange: [35, 55],
+    musicTags: ["cosmic", "transcend", "space ambient", "choir"],
+    soundLayers: ["space_texture", "choir_pad", "deep_sub"],
+    recommendedTuningHz: 963,
+    icon: "🌌",
+  },
+  relaxing: {
+    label: "Relaxing",
+    description: "Gentle ambient, stress relief",
+    defaultBpm: 58,
+    bpmRange: [50, 75],
+    musicTags: ["relax", "ambient", "soft pad", "calm"],
+    soundLayers: ["pink_noise_soft", "warm_pad", "soft_wind"],
+    recommendedTuningHz: 432,
+    icon: "😌",
+  },
+  forest: {
+    label: "Forest",
+    description: "Birdsong, rustling leaves, natural calm",
+    defaultBpm: 54,
+    bpmRange: [45, 65],
+    musicTags: ["forest ambient", "handpan", "soft pad"],
+    soundLayers: ["forest_ambience", "handpan_soft", "wind_soft"],
+    icon: "🌲",
+  },
+  breath_focus: {
+    label: "Breath Focus",
+    description: "Breath cues, minimal ambience",
+    defaultBpm: 60,
+    bpmRange: [50, 70],
+    musicTags: ["minimal ambient", "breath", "calm"],
+    soundLayers: ["soft_room", "gentle_air", "breath_cue_soft"],
+    icon: "🌬️",
+  },
+  kundalini: {
+    label: "Kundalini Energy",
+    description: "Rising energy, drone + subtle pulses",
+    defaultBpm: 66,
+    bpmRange: [55, 80],
+    musicTags: ["kundalini", "drone", "pulse", "tanpura"],
+    soundLayers: ["tanpura_drone", "pulse_soft", "warm_pad"],
+    recommendedTuningHz: 528,
+    icon: "🐍",
+  },
 };
+
+// ---------- Frequency presets ----------
+const FREQUENCIES = [
+  { hz: 174, label: "174 Hz – Deep Relaxation", color: "bg-red-500" },
+  { hz: 285, label: "285 Hz – Physical Healing", color: "bg-orange-500" },
+  { hz: 396, label: "396 Hz – Emotional Release", color: "bg-yellow-500" },
+  { hz: 417, label: "417 Hz – Transformation", color: "bg-green-500" },
+  { hz: 432, label: "432 Hz – Natural Harmony", color: "bg-teal-500" },
+  { hz: 444, label: "444 Hz – Heart Coherence", color: "bg-emerald-500" },
+  { hz: 528, label: "528 Hz – Love & Renewal", color: "bg-cyan-500" },
+  { hz: 639, label: "639 Hz – Connection", color: "bg-blue-500" },
+  { hz: 741, label: "741 Hz – Clarity", color: "bg-indigo-500" },
+  { hz: 852, label: "852 Hz – Awakening", color: "bg-violet-500" },
+  { hz: 963, label: "963 Hz – Higher Consciousness", color: "bg-purple-500" },
+];
+
+// Brainwave/Binaural beat Hz
+const BINAURAL_BEATS = [
+  { hz: 4, label: "4 Hz – Delta (Deep Sleep)", description: "Deep restorative sleep" },
+  { hz: 6, label: "6 Hz – Theta (Meditation)", description: "Deep meditation & creativity" },
+  { hz: 8, label: "8 Hz – Alpha (Calm)", description: "Relaxed alertness" },
+  { hz: 10, label: "10 Hz – Focus (Presence)", description: "Enhanced focus & presence" },
+];
 
 export default function CreativeSoulMeditationTool() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isAdmin } = useAdminRole();
-  const { hasAccess } = useCreativeTools();
-  const audioProcessor = useMeditationAudioProcessor();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const processedAudioRef = useRef<HTMLAudioElement>(null);
-  
-  // State
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isTransforming, setIsTransforming] = useState(false);
-  const [processedAudioUrl, setProcessedAudioUrl] = useState<string | null>(null);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [isProcessedPlaying, setIsProcessedPlaying] = useState(false);
-  const [processedCurrentTime, setProcessedCurrentTime] = useState(0);
-  const [processedDuration, setProcessedDuration] = useState(0);
-  const [isLiveProcessing, setIsLiveProcessing] = useState(false);
-  
-  // Settings
-  const [selectedStyle, setSelectedStyle] = useState('indian');
-  const [selectedFrequency, setSelectedFrequency] = useState<number | null>(528);
-  const [selectedBinaural, setSelectedBinaural] = useState('theta');
-  const [enableStemSeparation, setEnableStemSeparation] = useState(false);
-  const [enableMultiVariant, setEnableMultiVariant] = useState(false);
-  const [volumeMix, setVolumeMix] = useState([70]); // Original audio volume
-  const [frequencyIntensity, setFrequencyIntensity] = useState([50]);
-  
-  const hasToolAccess = user && (isAdmin || hasAccess('creative-soul-meditation'));
+  const { hasAccess, isLoading: accessLoading } = useCreativeTools();
 
-  // Audio playback controls for original audio
+  // Inputs
+  const [youtubeUrls, setYoutubeUrls] = useState("");
+  const [directUrls, setDirectUrls] = useState("");
+
+  // Style selection
+  const [style, setStyle] = useState<MeditationStyle>("indian");
+  const stylePreset = useMemo(() => STYLE_PRESETS[style], [style]);
+
+  // Frequency tuning
+  const [tuningHz, setTuningHz] = useState(stylePreset.recommendedTuningHz ?? 432);
+
+  // Binaural
+  const [binauralEnabled, setBinauralEnabled] = useState(true);
+  const [binauralBeatHz, setBinauralBeatHz] = useState(6);
+  const [binauralCarrierHz, setBinauralCarrierHz] = useState(200);
+
+  // BPM match
+  const [bpmMatchEnabled, setBpmMatchEnabled] = useState(true);
+  const [targetBpm, setTargetBpm] = useState(stylePreset.defaultBpm);
+
+  // Noise reduction
+  const [noiseReductionEnabled, setNoiseReductionEnabled] = useState(true);
+  const [noiseMode, setNoiseMode] = useState<NoiseMode>("voice_clean");
+  const [noiseStrength, setNoiseStrength] = useState<"low" | "medium" | "high">("medium");
+
+  // Mastering
+  const [masteringEnabled, setMasteringEnabled] = useState(true);
+  const [masteringPreset, setMasteringPreset] = useState("meditation_warm");
+
+  // Auto music selection
+  const [autoMusicEnabled, setAutoMusicEnabled] = useState(true);
+  const [musicSource, setMusicSource] = useState<"splice" | "library" | "none">("splice");
+
+  // Misc
+  const [keepOriginalMusic, setKeepOriginalMusic] = useState(false);
+  const [variants, setVariants] = useState(3);
+
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<any>(null);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
+  // Sync BPM/tuning to style
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
+    setTargetBpm(stylePreset.defaultBpm);
+    if (stylePreset.recommendedTuningHz) setTuningHz(stylePreset.recommendedTuningHz);
+  }, [style, stylePreset.defaultBpm, stylePreset.recommendedTuningHz]);
 
-    const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
-    const handleLoadedMetadata = () => setDuration(audio.duration);
-    const handleEnded = () => {
-      setIsPlaying(false);
-      if (isLiveProcessing) {
-        audioProcessor.stopProcessing();
-        setIsLiveProcessing(false);
-      }
+  // Build payload
+  const buildPayload = () => {
+    const yt = youtubeUrls.split(",").map((s) => s.trim()).filter(Boolean);
+    const direct = directUrls.split(",").map((s) => s.trim()).filter(Boolean);
+
+    return {
+      youtube_urls: yt,
+      direct_urls: direct,
+      meditation_style: style,
+      music_tags: stylePreset.musicTags,
+      sound_layers: stylePreset.soundLayers,
+      frequency_hz: tuningHz,
+      processing_mode: "TONE_TUNING" as ProcessingMode,
+      binaural_enabled: binauralEnabled,
+      binaural_beat_hz: binauralBeatHz,
+      binaural_carrier_hz: binauralCarrierHz,
+      bpm_match_enabled: bpmMatchEnabled,
+      target_bpm: targetBpm,
+      bpm_range: stylePreset.bpmRange,
+      noise_reduction_enabled: noiseReductionEnabled,
+      noise_reduction_mode: noiseMode,
+      noise_reduction_strength: noiseStrength,
+      mastering_enabled: masteringEnabled,
+      mastering_preset: masteringPreset,
+      auto_music_enabled: autoMusicEnabled,
+      music_source: musicSource,
+      keep_original_music: keepOriginalMusic,
+      variants: Math.max(1, Math.min(5, variants)),
     };
-
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-    audio.addEventListener('ended', handleEnded);
-
-    return () => {
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      audio.removeEventListener('ended', handleEnded);
-    };
-  }, [audioUrl, isLiveProcessing, audioProcessor]);
-
-  // Audio playback controls for processed audio
-  useEffect(() => {
-    const audio = processedAudioRef.current;
-    if (!audio) return;
-
-    const handleTimeUpdate = () => setProcessedCurrentTime(audio.currentTime);
-    const handleLoadedMetadata = () => setProcessedDuration(audio.duration);
-    const handleEnded = () => setIsProcessedPlaying(false);
-
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-    audio.addEventListener('ended', handleEnded);
-
-    return () => {
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      audio.removeEventListener('ended', handleEnded);
-    };
-  }, [processedAudioUrl]);
-
-  // Update processor settings in real-time
-  useEffect(() => {
-    if (isLiveProcessing) {
-      audioProcessor.updateSettings({
-        selectedFrequency,
-        selectedBinaural,
-        frequencyIntensity: frequencyIntensity[0],
-        volumeMix: volumeMix[0],
-      });
-    }
-  }, [selectedFrequency, selectedBinaural, frequencyIntensity, volumeMix, isLiveProcessing, audioProcessor]);
-
-  const togglePlay = useCallback(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    if (isPlaying) {
-      audio.pause();
-      if (isLiveProcessing) {
-        audioProcessor.stopProcessing();
-        setIsLiveProcessing(false);
-      }
-    } else {
-      // Start live processing with binaural beats and healing frequencies
-      if (audio && !isLiveProcessing) {
-        audioProcessor.startProcessing(audio, {
-          selectedFrequency,
-          selectedBinaural,
-          frequencyIntensity: frequencyIntensity[0],
-          volumeMix: volumeMix[0],
-        });
-        setIsLiveProcessing(true);
-      }
-      audio.play();
-    }
-    setIsPlaying(!isPlaying);
-  }, [isPlaying, isLiveProcessing, audioProcessor, selectedFrequency, selectedBinaural, frequencyIntensity, volumeMix]);
-
-  const stopPlayback = useCallback(() => {
-    const audio = audioRef.current;
-    if (audio) {
-      audio.pause();
-      audio.currentTime = 0;
-    }
-    if (isLiveProcessing) {
-      audioProcessor.stopProcessing();
-      setIsLiveProcessing(false);
-    }
-    setIsPlaying(false);
-  }, [isLiveProcessing, audioProcessor]);
-
-  const toggleProcessedPlay = () => {
-    const audio = processedAudioRef.current;
-    if (!audio) return;
-
-    if (isProcessedPlaying) {
-      audio.pause();
-    } else {
-      audio.play();
-    }
-    setIsProcessedPlaying(!isProcessedPlaying);
   };
 
-  const handleSeek = (value: number[]) => {
-    const audio = audioRef.current;
-    if (audio) {
-      audio.currentTime = value[0];
-      setCurrentTime(value[0]);
-    }
-  };
+  // Call Edge Function
+  const handleGenerate = async (mode: "demo" | "paid") => {
+    setBusy(true);
+    setErrorMsg("");
+    setResult(null);
 
-  const handleProcessedSeek = (value: number[]) => {
-    const audio = processedAudioRef.current;
-    if (audio) {
-      audio.currentTime = value[0];
-      setProcessedCurrentTime(value[0]);
-    }
-  };
+    try {
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess.session?.access_token;
+      const uid = sess.session?.user?.id;
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      if (!file.type.startsWith('audio/')) {
-        toast.error('Please upload an audio file');
+      if (!token || !uid) {
+        toast.error("Please sign in first");
+        setErrorMsg("Please sign in first.");
+        setBusy(false);
         return;
       }
-      // Stop any current playback
-      stopPlayback();
-      
-      setUploadedFile(file);
-      const url = URL.createObjectURL(file);
-      setAudioUrl(url);
-      setProcessedAudioUrl(null);
-      toast.success(`Uploaded: ${file.name}`);
+
+      const payload = buildPayload();
+
+      const { data, error } = await supabase.functions.invoke("convert-meditation-audio", {
+        body: {
+          mode,
+          user_id: uid,
+          payload,
+        },
+      });
+
+      if (error) {
+        setErrorMsg(error.message || "Failed to process");
+        toast.error(error.message || "Failed to process");
+        return;
+      }
+
+      if (data?.error) {
+        setErrorMsg(data.error);
+        toast.error(data.error);
+        return;
+      }
+
+      setResult(data);
+      toast.success(mode === "demo" ? "Demo generation started!" : "Processing started!");
+    } catch (e: any) {
+      setErrorMsg(e?.message || String(e));
+      toast.error(e?.message || "An error occurred");
+    } finally {
+      setBusy(false);
     }
   };
 
-  const handleProcessAudio = async () => {
-    if (!uploadedFile) {
-      toast.error('Please upload an audio file first');
-      return;
-    }
+  const canAccess = isAdmin || hasAccess;
 
-    if (!hasToolAccess) {
-      toast.info('Purchase access to export processed audio');
-      navigate('/creative-soul/store');
-      return;
-    }
-
-    setIsTransforming(true);
-    toast.info('Processing audio with selected settings...', { duration: 2000 });
-    
-    // For now, set the processed audio URL to the same file
-    // In a full implementation, this would call an edge function for server-side processing
-    setTimeout(() => {
-      setProcessedAudioUrl(audioUrl);
-      setIsTransforming(false);
-      toast.success('Audio processed! You can now download the meditation track.');
-    }, 2000);
-  };
-
-  const handleDownload = () => {
-    if (processedAudioUrl) {
-      const link = document.createElement('a');
-      link.href = processedAudioUrl;
-      link.download = `meditation-${selectedStyle}-${Date.now()}.mp3`;
-      link.click();
-      toast.success('Download started!');
-    }
-  };
+  if (accessLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 pb-24">
       {/* Header */}
       <div className="bg-gradient-to-br from-purple-600/20 via-background to-violet-500/10 px-4 py-6">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-4">
-            <Button
-              variant="ghost"
-              onClick={() => navigate('/creative-soul/store')}
-            >
+            <Button variant="ghost" onClick={() => navigate('/creative-soul/store')}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Store
             </Button>
-            
-            {hasToolAccess && (
+            {canAccess && (
               <Badge className="bg-green-600 text-white">
-                <Check className="w-3 h-3 mr-1" />
+                <CheckCircle className="w-3 h-3 mr-1" />
                 Full Access
               </Badge>
             )}
@@ -308,330 +403,448 @@ export default function CreativeSoulMeditationTool() {
             </div>
             <div>
               <h1 className="text-3xl font-heading font-bold text-foreground">
-                Creative Soul Meditation
+                Creative Soul Meditation Tool
               </h1>
               <p className="text-muted-foreground">
-                Transform any audio into high-quality meditation tracks
+                Transform audio into sacred meditation experiences with AI-powered processing
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
-        {/* Upload Section */}
-        <Card className="border-2 border-purple-500/30 bg-card/50 backdrop-blur">
+      <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
+        {/* Access Status */}
+        {!canAccess && (
+          <Card className="border-amber-500/50 bg-amber-500/10">
+            <CardContent className="p-4 flex items-center gap-3">
+              <AlertCircle className="h-5 w-5 text-amber-500" />
+              <div>
+                <p className="font-medium text-amber-200">Premium Feature</p>
+                <p className="text-sm text-muted-foreground">
+                  Purchase Creative Soul Studio to unlock full generation capabilities.
+                  Demo mode available for testing.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Audio Input */}
+        <Card className="border-border/50 bg-card/50 backdrop-blur">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Upload className="w-5 h-5 text-purple-400" />
-              Upload Audio
+              <Music className="h-5 w-5 text-primary" />
+              Audio Sources
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <input
-              type="file"
-              ref={fileInputRef}
-              accept="audio/*"
-              onChange={handleFileUpload}
-              className="hidden"
-            />
-            
-            <div 
-              onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-purple-500/40 rounded-xl p-8 text-center cursor-pointer hover:border-purple-500/60 hover:bg-purple-500/5 transition-all"
-            >
-              {uploadedFile ? (
-                <div className="flex flex-col items-center gap-2">
-                  <FileAudio className="w-12 h-12 text-purple-400" />
-                  <p className="font-medium text-foreground">{uploadedFile.name}</p>
-                  <p className="text-sm text-muted-foreground">Click to change file</p>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center gap-2">
-                  <Upload className="w-12 h-12 text-purple-400/60" />
-                  <p className="font-medium text-muted-foreground">Drop audio file here or click to upload</p>
-                  <p className="text-sm text-muted-foreground">Supports MP3, WAV, FLAC, OGG</p>
-                </div>
-              )}
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>YouTube URLs (comma separated)</Label>
+                <Textarea
+                  value={youtubeUrls}
+                  onChange={(e) => setYoutubeUrls(e.target.value)}
+                  placeholder="https://youtube.com/watch?v=... , https://youtu.be/..."
+                  className="bg-background/50 min-h-[80px]"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Direct Audio URLs (comma separated)</Label>
+                <Textarea
+                  value={directUrls}
+                  onChange={(e) => setDirectUrls(e.target.value)}
+                  placeholder="https://example.com/audio.mp3 , https://..."
+                  className="bg-background/50 min-h-[80px]"
+                />
+              </div>
             </div>
+          </CardContent>
+        </Card>
 
-            {audioUrl && (
-              <>
-                <audio ref={audioRef} src={audioUrl} preload="metadata" crossOrigin="anonymous" />
-                
-                {/* Live Processing Indicator */}
-                {isLiveProcessing && (
-                  <div className="flex items-center gap-2 p-3 bg-green-500/20 border border-green-500/30 rounded-lg mb-4">
-                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
-                    <span className="text-sm font-medium text-green-400">
-                      Live Processing: {selectedFrequency}Hz + {binauralBeats.find(b => b.value === selectedBinaural)?.name} Binaural
-                    </span>
-                  </div>
-                )}
-                
-                <div className="flex items-center gap-3 p-4 bg-purple-500/10 rounded-lg">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={togglePlay}
-                    className={`rounded-full ${isPlaying ? 'border-green-500 text-green-500' : ''}`}
+        {/* Meditation Style Selection */}
+        <Card className="border-border/50 bg-card/50 backdrop-blur">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              Meditation Style
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              {(Object.keys(STYLE_PRESETS) as MeditationStyle[]).map((key) => {
+                const preset = STYLE_PRESETS[key];
+                const isSelected = style === key;
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setStyle(key)}
+                    className={`text-left p-3 rounded-xl border transition-all duration-200 hover:scale-[1.02] ${
+                      isSelected
+                        ? "border-primary bg-primary/20 shadow-lg shadow-primary/20"
+                        : "border-border/50 bg-background/30 hover:border-primary/50"
+                    }`}
                   >
-                    {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                  </Button>
-                  {isPlaying && (
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={stopPlayback}
-                      className="rounded-full border-red-500/50 text-red-500"
-                    >
-                      <StopCircle className="w-4 h-4" />
-                    </Button>
-                  )}
-                  <div className="flex-1">
-                    <Slider
-                      value={[currentTime]}
-                      max={duration || 100}
-                      step={0.1}
-                      onValueChange={handleSeek}
-                      className="w-full"
+                    <div className="text-2xl mb-1">{preset.icon}</div>
+                    <div className="font-medium text-sm">{preset.label}</div>
+                    <div className="text-xs text-muted-foreground line-clamp-2">
+                      {preset.description}
+                    </div>
+                    {isSelected && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {preset.musicTags.slice(0, 2).map((tag) => (
+                          <Badge key={tag} variant="secondary" className="text-[10px] px-1.5 py-0">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Frequency & Binaural Settings */}
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* Frequency Tuning */}
+          <Card className="border-border/50 bg-card/50 backdrop-blur">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Waves className="h-5 w-5 text-primary" />
+                Healing Frequency
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Select value={tuningHz.toString()} onValueChange={(v) => setTuningHz(Number(v))}>
+                <SelectTrigger className="bg-background/50">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {FREQUENCIES.map((f) => (
+                    <SelectItem key={f.hz} value={f.hz.toString()}>
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${f.color}`} />
+                        {f.label}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Audio will be retuned to resonate with the selected healing frequency.
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Binaural Beats */}
+          <Card className="border-border/50 bg-card/50 backdrop-blur">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Volume2 className="h-5 w-5 text-primary" />
+                Binaural Beats
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="binaural-enabled"
+                  checked={binauralEnabled}
+                  onCheckedChange={(c) => setBinauralEnabled(c === true)}
+                />
+                <Label htmlFor="binaural-enabled">Enable binaural beats</Label>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label className="text-xs">Brainwave Target</Label>
+                  <Select
+                    value={binauralBeatHz.toString()}
+                    onValueChange={(v) => setBinauralBeatHz(Number(v))}
+                    disabled={!binauralEnabled}
+                  >
+                    <SelectTrigger className="bg-background/50">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {BINAURAL_BEATS.map((b) => (
+                        <SelectItem key={b.hz} value={b.hz.toString()}>
+                          {b.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs">Carrier Frequency (Hz)</Label>
+                  <Input
+                    type="number"
+                    value={binauralCarrierHz}
+                    onChange={(e) => setBinauralCarrierHz(Number(e.target.value))}
+                    disabled={!binauralEnabled}
+                    className="bg-background/50"
+                    min={100}
+                    max={500}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Advanced Settings */}
+        <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
+          <Card className="border-border/50 bg-card/50 backdrop-blur">
+            <CardHeader>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full justify-between p-0 h-auto hover:bg-transparent">
+                  <CardTitle className="flex items-center gap-2">
+                    <Settings className="h-5 w-5 text-primary" />
+                    Advanced Settings
+                  </CardTitle>
+                  <ChevronDown className={`h-5 w-5 transition-transform ${showAdvanced ? "rotate-180" : ""}`} />
+                </Button>
+              </CollapsibleTrigger>
+            </CardHeader>
+            <CollapsibleContent>
+              <CardContent className="space-y-6 pt-0">
+                {/* Noise Reduction */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="noise-enabled"
+                      checked={noiseReductionEnabled}
+                      onCheckedChange={(c) => setNoiseReductionEnabled(c === true)}
+                    />
+                    <Label htmlFor="noise-enabled" className="font-medium">Noise Reduction</Label>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 pl-6">
+                    <div className="space-y-2">
+                      <Label className="text-xs">Mode</Label>
+                      <Select
+                        value={noiseMode}
+                        onValueChange={(v) => setNoiseMode(v as NoiseMode)}
+                        disabled={!noiseReductionEnabled}
+                      >
+                        <SelectTrigger className="bg-background/50">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="voice_clean">Voice Clean (Safe)</SelectItem>
+                          <SelectItem value="aggressive">Aggressive</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Strength</Label>
+                      <Select
+                        value={noiseStrength}
+                        onValueChange={(v) => setNoiseStrength(v as "low" | "medium" | "high")}
+                        disabled={!noiseReductionEnabled}
+                      >
+                        <SelectTrigger className="bg-background/50">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">Low</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* BPM Matching */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="bpm-enabled"
+                      checked={bpmMatchEnabled}
+                      onCheckedChange={(c) => setBpmMatchEnabled(c === true)}
+                    />
+                    <Label htmlFor="bpm-enabled" className="font-medium">BPM Matching</Label>
+                  </div>
+                  <div className="pl-6 space-y-2">
+                    <div className="flex items-center gap-4">
+                      <Label className="text-xs w-24">Target: {targetBpm} BPM</Label>
+                      <Slider
+                        value={[targetBpm]}
+                        onValueChange={([v]) => setTargetBpm(v)}
+                        min={stylePreset.bpmRange[0]}
+                        max={stylePreset.bpmRange[1]}
+                        step={1}
+                        disabled={!bpmMatchEnabled}
+                        className="flex-1"
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Style range: {stylePreset.bpmRange[0]}–{stylePreset.bpmRange[1]} BPM
+                    </p>
+                  </div>
+                </div>
+
+                {/* Music Source */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="music-enabled"
+                      checked={autoMusicEnabled}
+                      onCheckedChange={(c) => setAutoMusicEnabled(c === true)}
+                    />
+                    <Label htmlFor="music-enabled" className="font-medium">Auto Music Selection</Label>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 pl-6">
+                    <div className="space-y-2">
+                      <Label className="text-xs">Source</Label>
+                      <Select
+                        value={musicSource}
+                        onValueChange={(v) => setMusicSource(v as "splice" | "library" | "none")}
+                        disabled={!autoMusicEnabled}
+                      >
+                        <SelectTrigger className="bg-background/50">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="splice">Splice</SelectItem>
+                          <SelectItem value="library">Internal Library</SelectItem>
+                          <SelectItem value="none">None</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-end pb-1">
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id="keep-original"
+                          checked={keepOriginalMusic}
+                          onCheckedChange={(c) => setKeepOriginalMusic(c === true)}
+                        />
+                        <Label htmlFor="keep-original" className="text-xs">Keep original music</Label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mastering */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="mastering-enabled"
+                      checked={masteringEnabled}
+                      onCheckedChange={(c) => setMasteringEnabled(c === true)}
+                    />
+                    <Label htmlFor="mastering-enabled" className="font-medium">LANDR Mastering</Label>
+                  </div>
+                  <div className="pl-6 space-y-2">
+                    <Label className="text-xs">Preset</Label>
+                    <Input
+                      value={masteringPreset}
+                      onChange={(e) => setMasteringPreset(e.target.value)}
+                      disabled={!masteringEnabled}
+                      className="bg-background/50"
+                      placeholder="meditation_warm"
                     />
                   </div>
-                  <span className="text-sm text-muted-foreground min-w-[80px] text-right">
-                    {formatTime(currentTime)} / {formatTime(duration)}
-                  </span>
                 </div>
-                
-                <p className="text-xs text-muted-foreground text-center mt-2">
-                  🎧 Use headphones for best binaural beat experience
-                </p>
-              </>
+
+                {/* Variants */}
+                <div className="space-y-2">
+                  <Label className="font-medium">Output Variants</Label>
+                  <div className="flex items-center gap-4">
+                    <Slider
+                      value={[variants]}
+                      onValueChange={([v]) => setVariants(v)}
+                      min={1}
+                      max={5}
+                      step={1}
+                      className="flex-1"
+                    />
+                    <span className="text-sm font-medium w-8">{variants}</span>
+                  </div>
+                </div>
+
+                {/* Payload Preview */}
+                <Collapsible>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="outline" size="sm" className="w-full">
+                      Show Worker Payload
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <pre className="mt-2 p-3 bg-background/80 rounded-lg text-xs overflow-auto max-h-64">
+                      {JSON.stringify(buildPayload(), null, 2)}
+                    </pre>
+                  </CollapsibleContent>
+                </Collapsible>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
+
+        {/* Action Buttons */}
+        <Card className="border-border/50 bg-card/50 backdrop-blur">
+          <CardContent className="p-6">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={() => handleGenerate("demo")}
+                disabled={busy || !user}
+                className="min-w-[160px]"
+              >
+                {busy ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <Play className="h-4 w-4 mr-2" />
+                )}
+                Demo (1x Free)
+              </Button>
+              <Button
+                size="lg"
+                onClick={() => handleGenerate("paid")}
+                disabled={busy || !canAccess || !user}
+                className="min-w-[160px] bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90"
+              >
+                {busy ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <Sparkles className="h-4 w-4 mr-2" />
+                )}
+                Generate Full
+              </Button>
+            </div>
+            {!user && (
+              <p className="text-center text-sm text-muted-foreground mt-3">
+                Please sign in to use the meditation tool
+              </p>
             )}
           </CardContent>
         </Card>
 
-        {/* Settings Tabs */}
-        <Card className="border-purple-500/20 bg-card/50 backdrop-blur">
-          <CardContent className="p-0">
-            <Tabs defaultValue="style" className="w-full">
-              <TabsList className="w-full justify-start rounded-none border-b bg-transparent h-auto p-0">
-                <TabsTrigger value="style" className="rounded-none border-b-2 border-transparent data-[state=active]:border-purple-500 data-[state=active]:bg-transparent px-6 py-3">
-                  <Layers className="w-4 h-4 mr-2" />
-                  Style
-                </TabsTrigger>
-                <TabsTrigger value="frequency" className="rounded-none border-b-2 border-transparent data-[state=active]:border-purple-500 data-[state=active]:bg-transparent px-6 py-3">
-                  <Heart className="w-4 h-4 mr-2" />
-                  Frequency
-                </TabsTrigger>
-                <TabsTrigger value="binaural" className="rounded-none border-b-2 border-transparent data-[state=active]:border-purple-500 data-[state=active]:bg-transparent px-6 py-3">
-                  <Headphones className="w-4 h-4 mr-2" />
-                  Binaural
-                </TabsTrigger>
-                <TabsTrigger value="advanced" className="rounded-none border-b-2 border-transparent data-[state=active]:border-purple-500 data-[state=active]:bg-transparent px-6 py-3">
-                  <Settings className="w-4 h-4 mr-2" />
-                  Advanced
-                </TabsTrigger>
-              </TabsList>
+        {/* Results */}
+        {errorMsg && (
+          <Card className="border-destructive/50 bg-destructive/10">
+            <CardContent className="p-4 flex items-center gap-3">
+              <AlertCircle className="h-5 w-5 text-destructive" />
+              <p className="text-destructive">{errorMsg}</p>
+            </CardContent>
+          </Card>
+        )}
 
-              <TabsContent value="style" className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Choose Meditation Style</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {meditationStyles.map((style) => (
-                    <button
-                      key={style.id}
-                      onClick={() => setSelectedStyle(style.id)}
-                      className={`p-4 rounded-xl border-2 text-left transition-all ${
-                        selectedStyle === style.id
-                          ? 'border-purple-500 bg-purple-500/10'
-                          : 'border-border hover:border-purple-500/50 hover:bg-purple-500/5'
-                      }`}
-                    >
-                      <p className="font-medium text-foreground">{style.name}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{style.description}</p>
-                    </button>
-                  ))}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="frequency" className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Healing Frequencies (Solfeggio)</h3>
-                <div className="grid grid-cols-3 gap-3">
-                  {healingFrequencies.map((freq) => (
-                    <button
-                      key={freq.hz}
-                      onClick={() => setSelectedFrequency(freq.hz)}
-                      className={`p-4 rounded-xl border-2 text-center transition-all ${
-                        selectedFrequency === freq.hz
-                          ? 'border-purple-500 bg-purple-500/10'
-                          : 'border-border hover:border-purple-500/50 hover:bg-purple-500/5'
-                      }`}
-                    >
-                      <div className={`w-10 h-10 mx-auto mb-2 rounded-full bg-gradient-to-br ${freq.color} flex items-center justify-center`}>
-                        <span className="text-xs font-bold text-white">{freq.hz}</span>
-                      </div>
-                      <p className="text-sm font-medium text-foreground">{freq.name}</p>
-                      <p className="text-xs text-muted-foreground">{freq.hz} Hz</p>
-                    </button>
-                  ))}
-                </div>
-                
-                <div className="mt-6 space-y-4">
-                  <Label>Frequency Intensity</Label>
-                  <Slider
-                    value={frequencyIntensity}
-                    onValueChange={setFrequencyIntensity}
-                    max={100}
-                    step={5}
-                    className="w-full"
-                  />
-                  <p className="text-sm text-muted-foreground text-right">{frequencyIntensity[0]}%</p>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="binaural" className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Binaural Beats</h3>
-                <div className="space-y-3">
-                  {binauralBeats.map((beat) => (
-                    <button
-                      key={beat.value}
-                      onClick={() => setSelectedBinaural(beat.value)}
-                      className={`w-full p-4 rounded-xl border-2 text-left transition-all flex items-center justify-between ${
-                        selectedBinaural === beat.value
-                          ? 'border-purple-500 bg-purple-500/10'
-                          : 'border-border hover:border-purple-500/50 hover:bg-purple-500/5'
-                      }`}
-                    >
-                      <div>
-                        <p className="font-medium text-foreground">{beat.name}</p>
-                        <p className="text-sm text-muted-foreground">{beat.description}</p>
-                      </div>
-                      {selectedBinaural === beat.value && (
-                        <Check className="w-5 h-5 text-purple-500" />
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="advanced" className="p-6 space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-base">Stem Separation</Label>
-                    <p className="text-sm text-muted-foreground">Isolate vocals, drums, bass, and other instruments</p>
-                  </div>
-                  <Switch
-                    checked={enableStemSeparation}
-                    onCheckedChange={setEnableStemSeparation}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-base">Multi-Variant Output</Label>
-                    <p className="text-sm text-muted-foreground">Generate multiple versions with different settings</p>
-                  </div>
-                  <Switch
-                    checked={enableMultiVariant}
-                    onCheckedChange={setEnableMultiVariant}
-                  />
-                </div>
-                
-                <div className="space-y-4">
-                  <Label>Original Audio Mix Level</Label>
-                  <Slider
-                    value={volumeMix}
-                    onValueChange={setVolumeMix}
-                    max={100}
-                    step={5}
-                    className="w-full"
-                  />
-                  <p className="text-sm text-muted-foreground text-right">{volumeMix[0]}% original / {100 - volumeMix[0]}% meditation layer</p>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-
-        {/* Process Button */}
-        <Card className="border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-violet-500/10">
-          <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <div>
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <Wand2 className="w-5 h-5 text-purple-400" />
-                  Ready to Transform
-                </h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Style: {meditationStyles.find(s => s.id === selectedStyle)?.name} • 
-                  Frequency: {selectedFrequency} Hz • 
-                  Binaural: {binauralBeats.find(b => b.value === selectedBinaural)?.name}
-                </p>
-              </div>
-              
-              <Button
-                onClick={handleProcessAudio}
-                disabled={!uploadedFile || isTransforming}
-                size="lg"
-                className="bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white px-8"
-              >
-                {isTransforming ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-5 h-5 mr-2" />
-                    Export Meditation
-                  </>
-                )}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Output Section */}
-        {processedAudioUrl && (
-          <Card className="border-2 border-green-500/30 bg-green-500/5">
+        {result && (
+          <Card className="border-green-500/50 bg-green-500/10">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-green-400">
-                <Check className="w-5 h-5" />
-                Meditation Track Ready
+                <CheckCircle className="h-5 w-5" />
+                Processing Started
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <audio ref={processedAudioRef} src={processedAudioUrl} preload="metadata" />
-              <div className="flex items-center gap-4 p-4 bg-green-500/10 rounded-lg">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={toggleProcessedPlay}
-                  className="rounded-full border-green-500 text-green-500"
-                >
-                  {isProcessedPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                </Button>
-                <div className="flex-1">
-                  <Slider
-                    value={[processedCurrentTime]}
-                    max={processedDuration || 100}
-                    step={0.1}
-                    onValueChange={handleProcessedSeek}
-                    className="w-full"
-                  />
-                </div>
-                <span className="text-sm text-muted-foreground min-w-[45px]">
-                  {formatTime(processedCurrentTime)} / {formatTime(processedDuration)}
-                </span>
-              </div>
-              
-              <Button
-                onClick={handleDownload}
-                className="w-full bg-green-600 hover:bg-green-700"
-                size="lg"
-              >
-                <Download className="w-5 h-5 mr-2" />
-                Download Meditation Track
-              </Button>
+            <CardContent>
+              <pre className="p-3 bg-background/80 rounded-lg text-xs overflow-auto max-h-64">
+                {JSON.stringify(result, null, 2)}
+              </pre>
             </CardContent>
           </Card>
         )}
@@ -639,11 +852,11 @@ export default function CreativeSoulMeditationTool() {
         {/* Features Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           <div className="p-4 rounded-xl bg-card/50 border border-border flex items-center gap-3">
-            <Heart className="w-5 h-5 text-pink-400" />
-            <span className="text-sm font-medium">Healing Frequencies</span>
+            <Waves className="w-5 h-5 text-pink-400" />
+            <span className="text-sm font-medium">11 Healing Frequencies</span>
           </div>
           <div className="p-4 rounded-xl bg-card/50 border border-border flex items-center gap-3">
-            <Layers className="w-5 h-5 text-purple-400" />
+            <Sparkles className="w-5 h-5 text-purple-400" />
             <span className="text-sm font-medium">15 Meditation Styles</span>
           </div>
           <div className="p-4 rounded-xl bg-card/50 border border-border flex items-center gap-3">
@@ -651,16 +864,16 @@ export default function CreativeSoulMeditationTool() {
             <span className="text-sm font-medium">Binaural Beats</span>
           </div>
           <div className="p-4 rounded-xl bg-card/50 border border-border flex items-center gap-3">
-            <Split className="w-5 h-5 text-orange-400" />
-            <span className="text-sm font-medium">Stem Separation</span>
+            <Volume2 className="w-5 h-5 text-orange-400" />
+            <span className="text-sm font-medium">Noise Reduction</span>
           </div>
           <div className="p-4 rounded-xl bg-card/50 border border-border flex items-center gap-3">
-            <Sparkles className="w-5 h-5 text-yellow-400" />
-            <span className="text-sm font-medium">Multi-Variant</span>
+            <Settings className="w-5 h-5 text-yellow-400" />
+            <span className="text-sm font-medium">BPM Matching</span>
           </div>
           <div className="p-4 rounded-xl bg-card/50 border border-border flex items-center gap-3">
             <Music className="w-5 h-5 text-green-400" />
-            <span className="text-sm font-medium">High-Quality Output</span>
+            <span className="text-sm font-medium">LANDR Mastering</span>
           </div>
         </div>
       </div>
