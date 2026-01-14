@@ -311,13 +311,41 @@ serve(async (req) => {
     if (AUDIO_WORKER_URL && AUDIO_WORKER_API_KEY) {
       try {
         const callbackUrl = `${SUPABASE_URL}/functions/v1/worker-callback`;
-        
-        const workerResponse = await fetch(`${AUDIO_WORKER_URL}/process-audio`, {
+
+        const trimmedBase = AUDIO_WORKER_URL.replace(/\/$/, "");
+        let workerEndpoint = `${trimmedBase}/process-audio`;
+
+        // If the configured URL already points to the endpoint, don't double-append.
+        try {
+          const u = new URL(trimmedBase);
+          if (u.pathname.endsWith("/process-audio")) workerEndpoint = trimmedBase;
+        } catch {
+          // ignore URL parsing; use string fallback
+        }
+
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+          // Our custom worker uses this
+          "x-api-key": AUDIO_WORKER_API_KEY,
+          // Some workers expect Authorization Bearer
+          "Authorization": `Bearer ${AUDIO_WORKER_API_KEY}`,
+          // RapidAPI gateways commonly expect this
+          "X-RapidAPI-Key": AUDIO_WORKER_API_KEY,
+        };
+
+        // RapidAPI also requires X-RapidAPI-Host
+        try {
+          const u = new URL(workerEndpoint);
+          if (u.hostname.endsWith("rapidapi.com")) {
+            headers["X-RapidAPI-Host"] = u.hostname;
+          }
+        } catch {
+          // ignore
+        }
+
+        const workerResponse = await fetch(workerEndpoint, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-api-key": AUDIO_WORKER_API_KEY,
-          },
+          headers,
           body: JSON.stringify({
             job_id: jobId,
             callback_url: callbackUrl,
@@ -329,32 +357,33 @@ serve(async (req) => {
         if (!workerResponse.ok) {
           const errorText = await workerResponse.text();
           console.error('[CONVERT-MEDITATION] Worker dispatch failed:', errorText);
-          
+
           // Update job to failed
           await supabaseAdmin
             .from("creative_soul_jobs")
-            .update({ 
-              status: "failed", 
+            .update({
+              status: "failed",
               error_message: `Worker error: ${errorText}`,
               completed_at: new Date().toISOString(),
             })
             .eq("job_id", jobId);
 
-          return json({ 
-            success: false, 
-            error: "Failed to dispatch job to worker", 
-            job_id: jobId 
+          return json({
+            success: false,
+            error: "Failed to dispatch job to worker",
+            details: errorText,
+            job_id: jobId,
           });
         }
 
         console.log(`[CONVERT-MEDITATION] Job ${jobId} dispatched to worker`);
       } catch (workerErr) {
         console.error('[CONVERT-MEDITATION] Worker connection error:', workerErr);
-        
+
         // Update job status but don't fail - worker might pick it up later
         await supabaseAdmin
           .from("creative_soul_jobs")
-          .update({ 
+          .update({
             status: "queued",
             error_message: `Worker temporarily unavailable: ${String(workerErr)}`,
           })
