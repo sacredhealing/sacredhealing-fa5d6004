@@ -22,6 +22,7 @@ serve(async (req) => {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const RAPIDAPI_LANDR_KEY = Deno.env.get("RAPIDAPI_LANDR_KEY");
     const LANDR_API_KEY = Deno.env.get("LANDR_API_KEY");
     const LANDR_API_SECRET = Deno.env.get("LANDR_API_SECRET");
     const AUDIO_WORKER_URL = Deno.env.get("AUDIO_WORKER_URL");
@@ -50,6 +51,7 @@ serve(async (req) => {
       preset?: "balanced" | "loud" | "warm" | "bright" | "punchy";
       format?: "wav" | "mp3";
       sampleRate?: 44100 | 48000 | 96000;
+      intensity?: "low" | "medium" | "high";
     } = {};
 
     try {
@@ -78,6 +80,7 @@ serve(async (req) => {
           preset: body.preset || "balanced",
           format: body.format || "wav",
           sampleRate: body.sampleRate || 44100,
+          intensity: body.intensity || "medium",
         },
       });
 
@@ -86,10 +89,62 @@ serve(async (req) => {
       return json({ success: false, error: "Failed to create job", details: insertErr.message });
     }
 
-    // If LANDR API is configured, use it directly
+    // Try RapidAPI LANDR first (preferred)
+    if (RAPIDAPI_LANDR_KEY) {
+      try {
+        console.log(`[LANDR-MASTERING] Using RapidAPI LANDR for job ${jobId}`);
+        
+        const response = await fetch("https://landr-mastering-v1.p.rapidapi.com/master", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-rapidapi-host": "landr-mastering-v1.p.rapidapi.com",
+            "x-rapidapi-key": RAPIDAPI_LANDR_KEY,
+          },
+          body: JSON.stringify({
+            audio_url: body.audioUrl,
+            preset: body.preset || "balanced",
+            format: body.format || "wav",
+            intensity: body.intensity || "medium",
+          }),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log(`[LANDR-MASTERING] RapidAPI job created:`, result);
+
+          await supabaseAdmin
+            .from("creative_soul_jobs")
+            .update({
+              status: "processing",
+              progress: 20,
+              payload: {
+                ...body,
+                rapidApiJobId: result.jobId || result.id || result.job_id,
+                provider: "rapidapi_landr",
+              },
+            })
+            .eq("job_id", jobId);
+
+          return json({
+            success: true,
+            job_id: jobId,
+            external_job_id: result.jobId || result.id || result.job_id,
+            provider: "rapidapi_landr",
+            message: "Mastering started with LANDR. Processing...",
+          });
+        } else {
+          const errorText = await response.text();
+          console.error(`[LANDR-MASTERING] RapidAPI error: ${response.status}`, errorText);
+        }
+      } catch (apiErr) {
+        console.error('[LANDR-MASTERING] RapidAPI exception:', apiErr);
+      }
+    }
+
+    // Fallback to direct LANDR API if configured
     if (LANDR_API_KEY && LANDR_API_SECRET) {
       try {
-        // LANDR API authentication (OAuth 2.0)
         const authResponse = await fetch("https://api.landr.com/oauth/token", {
           method: "POST",
           headers: {
@@ -102,52 +157,49 @@ serve(async (req) => {
           }),
         });
 
-        if (!authResponse.ok) {
-          throw new Error("LANDR authentication failed");
-        }
+        if (authResponse.ok) {
+          const authData = await authResponse.json();
+          const accessToken = authData.access_token;
 
-        const authData = await authResponse.json();
-        const accessToken = authData.access_token;
-
-        // Submit mastering job to LANDR
-        const masteringResponse = await fetch("https://api.landr.com/v1/mastering", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            audio_url: body.audioUrl,
-            preset: body.preset || "balanced",
-            format: body.format || "wav",
-            sample_rate: body.sampleRate || 44100,
-          }),
-        });
-
-        if (masteringResponse.ok) {
-          const result = await masteringResponse.json();
-          
-          // Update job as processing (LANDR processes asynchronously)
-          await supabaseAdmin
-            .from("creative_soul_jobs")
-            .update({
-              status: "processing",
-              progress: 50,
-              payload: {
-                ...body,
-                landr_job_id: result.job_id,
-                landr_status_url: result.status_url,
-              },
-            })
-            .eq("job_id", jobId);
-
-          return json({
-            success: true,
-            job_id: jobId,
-            landr_job_id: result.job_id,
-            status_url: result.status_url,
-            message: "Mastering job submitted to LANDR. Processing...",
+          const masteringResponse = await fetch("https://api.landr.com/v1/mastering", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              audio_url: body.audioUrl,
+              preset: body.preset || "balanced",
+              format: body.format || "wav",
+              sample_rate: body.sampleRate || 44100,
+            }),
           });
+
+          if (masteringResponse.ok) {
+            const result = await masteringResponse.json();
+            
+            await supabaseAdmin
+              .from("creative_soul_jobs")
+              .update({
+                status: "processing",
+                progress: 50,
+                payload: {
+                  ...body,
+                  landr_job_id: result.job_id,
+                  landr_status_url: result.status_url,
+                  provider: "landr_direct",
+                },
+              })
+              .eq("job_id", jobId);
+
+            return json({
+              success: true,
+              job_id: jobId,
+              landr_job_id: result.job_id,
+              provider: "landr_direct",
+              message: "Mastering job submitted to LANDR. Processing...",
+            });
+          }
         }
       } catch (apiErr) {
         console.error('[LANDR-MASTERING] LANDR API error:', apiErr);
