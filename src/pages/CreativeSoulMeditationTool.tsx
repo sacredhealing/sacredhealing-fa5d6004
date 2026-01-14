@@ -15,6 +15,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useCreativeTools } from "@/hooks/useCreativeTools";
 import { toast } from "sonner";
+import BrowserMeditationPlayer from "@/components/meditation/BrowserMeditationPlayer";
 import { 
   Music, 
   Waves, 
@@ -825,6 +826,15 @@ export default function CreativeSoulMeditationTool() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Real-Time Browser Meditation Player */}
+        <BrowserMeditationPlayer
+          selectedStyle={style}
+          selectedFrequency={tuningHz}
+          binauralEnabled={binauralEnabled}
+          binauralBeatHz={binauralBeatHz}
+          binauralCarrierHz={binauralCarrierHz}
+        />
 
         {/* Advanced Settings */}
         <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
