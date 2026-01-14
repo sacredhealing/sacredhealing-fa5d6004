@@ -1,0 +1,21 @@
+# Render Blueprint for Sacred Healing Audio Worker
+# Deploy at: https://dashboard.render.com/blueprints
+
+services:
+  - type: web
+    name: sacred-healing-audio-worker
+    env: docker
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: WORKER_API_KEY
+        generateValue: true
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+    scaling:
+      minInstances: 1
+      maxInstances: 3
+      targetMemoryPercent: 80
+      targetCPUPercent: 80
