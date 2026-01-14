@@ -7,16 +7,113 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-function json(payload: unknown) {
+function json(payload: unknown, status = 200) {
   return new Response(JSON.stringify(payload), {
-    status: 200,
+    status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 }
 
+// Binaural beats frequency configurations
+const BINAURAL_CONFIGS = {
+  delta: { carrier: 100, beat: 2, description: "Deep sleep, healing (0.5-4 Hz)" },
+  theta: { carrier: 200, beat: 6, description: "Deep meditation, creativity (4-8 Hz)" },
+  alpha: { carrier: 300, beat: 10, description: "Relaxation, light meditation (8-13 Hz)" },
+  beta: { carrier: 400, beat: 20, description: "Focus, alertness (13-30 Hz)" },
+  gamma: { carrier: 500, beat: 40, description: "Higher cognition, insight (30-100 Hz)" },
+};
+
+// Healing frequency configurations
+const HEALING_FREQUENCIES = {
+  "174": { hz: 174, description: "Pain relief, grounding" },
+  "285": { hz: 285, description: "Tissue healing, safety" },
+  "396": { hz: 396, description: "Liberation from fear" },
+  "417": { hz: 417, description: "Facilitating change" },
+  "432": { hz: 432, description: "Universal harmony" },
+  "528": { hz: 528, description: "DNA repair, miracles" },
+  "639": { hz: 639, description: "Harmonious relationships" },
+  "741": { hz: 741, description: "Awakening intuition" },
+  "852": { hz: 852, description: "Spiritual order" },
+  "963": { hz: 963, description: "Divine consciousness" },
+};
+
+// Meditation style audio configurations
+const MEDITATION_STYLES = {
+  "ocean-water": { 
+    ambient: ["ocean_waves", "water_flow"], 
+    intensity: 0.6,
+    description: "Calming ocean and water sounds" 
+  },
+  "forest-nature": { 
+    ambient: ["birds", "wind_leaves", "stream"], 
+    intensity: 0.5,
+    description: "Immersive forest atmosphere" 
+  },
+  "tibetan": { 
+    ambient: ["singing_bowls", "temple_bells", "chanting"], 
+    intensity: 0.7,
+    description: "Traditional Tibetan meditation sounds" 
+  },
+  "space-cosmic": { 
+    ambient: ["space_drone", "cosmic_pad", "stars"], 
+    intensity: 0.4,
+    description: "Ethereal cosmic soundscape" 
+  },
+  "rain-thunder": { 
+    ambient: ["rain_heavy", "thunder_distant", "rain_on_leaves"], 
+    intensity: 0.65,
+    description: "Stormy rain atmosphere" 
+  },
+  "crystal-bowls": { 
+    ambient: ["crystal_singing", "harmonic_resonance"], 
+    intensity: 0.55,
+    description: "Crystal bowl healing tones" 
+  },
+  "zen-garden": { 
+    ambient: ["bamboo_fountain", "wind_chimes", "koto"], 
+    intensity: 0.45,
+    description: "Japanese zen garden ambiance" 
+  },
+};
+
+interface RequestBody {
+  mode?: string;
+  // Binaural beats
+  binaural_type?: "delta" | "theta" | "alpha" | "beta" | "gamma";
+  binaural_enabled?: boolean;
+  binaural_volume?: number;
+  // Healing frequencies
+  frequency_hz?: number;
+  frequency_enabled?: boolean;
+  frequency_volume?: number;
+  processing_mode?: "BINAURAL" | "TONE_TUNING" | "BOTH";
+  // Meditation style
+  meditation_style?: string;
+  sound_layers?: string[];
+  ambient_volume?: number;
+  // Audio source
+  audioUrl?: string;
+  source_volume?: number;
+  duration?: number;
+  target_bpm?: number;
+  // Processing options
+  enable_stem_separation?: boolean;
+  stem_separation_type?: "2stems" | "4stems" | "5stems";
+  keep_stems?: string[];
+  remove_stems?: string[];
+  enable_noise_removal?: boolean;
+  noise_reduction_level?: "light" | "medium" | "aggressive";
+  enable_mastering?: boolean;
+  mastering_preset?: "balanced" | "loud" | "warm" | "bright" | "punchy";
+  // Output options
+  variants?: number;
+  output_format?: "mp3" | "wav" | "flac";
+  output_quality?: "standard" | "high" | "lossless";
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return json({ success: false, error: "Method not allowed. Use POST." });
+  if (req.method !== "POST") return json({ success: false, error: "Method not allowed. Use POST." }, 405);
 
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
@@ -26,7 +123,7 @@ serve(async (req) => {
     const AUDIO_WORKER_API_KEY = Deno.env.get("AUDIO_WORKER_API_KEY");
 
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_ROLE_KEY) {
-      return json({ success: false, error: "Server configuration error", details: "Missing environment variables" });
+      return json({ success: false, error: "Server configuration error", details: "Missing environment variables" }, 500);
     }
 
     const authHeader = req.headers.get("Authorization") || "";
@@ -38,37 +135,16 @@ serve(async (req) => {
 
     const { data: auth, error: authErr } = await supabase.auth.getUser();
     if (authErr || !auth?.user) {
-      return json({ success: false, error: "Unauthorized. Please sign in.", details: authErr?.message ?? "" });
+      return json({ success: false, error: "Unauthorized. Please sign in.", details: authErr?.message ?? "" }, 401);
     }
 
     const user = auth.user;
 
-    let body: {
-      mode?: string;
-      frequency_hz?: number;
-      processing_mode?: "BINAURAL" | "TONE_TUNING";
-      meditation_style?: string;
-      sound_layers?: string[];
-      duration?: number;
-      audioUrl?: string;
-      variants?: number;
-      bpm_match?: boolean;
-      keep_music_stem?: boolean;
-      // Stem separation options
-      enable_stem_separation?: boolean;
-      stem_separation_type?: "2stems" | "4stems" | "5stems";
-      keep_stems?: string[];
-      remove_stems?: string[];
-      // Audio processing options
-      enable_noise_removal?: boolean;
-      noise_reduction_level?: "light" | "medium" | "aggressive";
-      enable_mastering?: boolean;
-      mastering_preset?: "balanced" | "loud" | "warm" | "bright" | "punchy";
-    } = {};
+    let body: RequestBody = {};
     try {
       body = await req.json();
     } catch {
-      return json({ success: false, error: "Invalid JSON body" });
+      return json({ success: false, error: "Invalid JSON body" }, 400);
     }
 
     const mode = body?.mode === "paid" ? "paid" : "demo";
@@ -139,28 +215,79 @@ serve(async (req) => {
     // Generate job ID
     const jobId = crypto.randomUUID();
 
-    // Build payload for the worker
+    // Get binaural config if enabled
+    const binauralType = body.binaural_type || "theta";
+    const binauralConfig = BINAURAL_CONFIGS[binauralType] || BINAURAL_CONFIGS.theta;
+    
+    // Get healing frequency config
+    const frequencyHz = body.frequency_hz || 432;
+    const frequencyKey = String(frequencyHz);
+    const frequencyConfig = HEALING_FREQUENCIES[frequencyKey as keyof typeof HEALING_FREQUENCIES] || { hz: frequencyHz, description: "Custom frequency" };
+    
+    // Get meditation style config
+    const meditationStyle = body.meditation_style || "ocean-water";
+    const styleConfig = MEDITATION_STYLES[meditationStyle as keyof typeof MEDITATION_STYLES] || MEDITATION_STYLES["ocean-water"];
+
+    // Build comprehensive payload for the worker
     const payload = {
-      frequency_hz: body.frequency_hz ?? 432,
-      processing_mode: body.processing_mode ?? "TONE_TUNING", // "BINAURAL" or "TONE_TUNING"
-      meditation_style: body.meditation_style || "ocean-water",
-      sound_layers: body.sound_layers || ["ocean_waves", "rain_soft", "handpan"],
-      duration: body.duration || (mode === "demo" ? 10 : 30),
-      audioUrl: body.audioUrl,
+      // Binaural beats configuration
+      binaural: {
+        enabled: body.binaural_enabled ?? true,
+        type: binauralType,
+        carrier_frequency: binauralConfig.carrier,
+        beat_frequency: binauralConfig.beat,
+        volume: body.binaural_volume ?? 0.3,
+        description: binauralConfig.description,
+      },
+      // Healing frequency configuration
+      healing_frequency: {
+        enabled: body.frequency_enabled ?? true,
+        hz: frequencyConfig.hz,
+        volume: body.frequency_volume ?? 0.2,
+        description: frequencyConfig.description,
+      },
+      // Processing mode
+      processing_mode: body.processing_mode ?? "BOTH", // "BINAURAL", "TONE_TUNING", or "BOTH"
+      // Meditation style and ambient sounds
+      meditation_style: meditationStyle,
+      ambient: {
+        sounds: body.sound_layers || styleConfig.ambient,
+        intensity: styleConfig.intensity,
+        volume: body.ambient_volume ?? 0.5,
+      },
+      // Source audio configuration
+      source: {
+        url: body.audioUrl,
+        volume: body.source_volume ?? 0.7,
+        target_bpm: body.target_bpm,
+      },
+      // Duration and variants
+      duration: body.duration || (mode === "demo" ? 60 : 300), // 1 min demo, 5 min paid
       variants: body.variants || (mode === "demo" ? 1 : 3),
-      bpm_match: body.bpm_match ?? true,
-      keep_music_stem: body.keep_music_stem ?? true,
       // Stem separation options
-      enable_stem_separation: body.enable_stem_separation ?? false,
-      stem_separation_type: body.stem_separation_type || "5stems",
-      keep_stems: body.keep_stems || [],
-      remove_stems: body.remove_stems || [],
+      stem_separation: {
+        enabled: body.enable_stem_separation ?? false,
+        type: body.stem_separation_type || "5stems",
+        keep_stems: body.keep_stems || ["vocals", "other"],
+        remove_stems: body.remove_stems || [],
+      },
       // Audio processing options
-      enable_noise_removal: body.enable_noise_removal ?? false,
-      noise_reduction_level: body.noise_reduction_level || "medium",
-      enable_mastering: body.enable_mastering ?? false,
-      mastering_preset: body.mastering_preset || "balanced",
+      noise_removal: {
+        enabled: body.enable_noise_removal ?? false,
+        level: body.noise_reduction_level || "medium",
+      },
+      mastering: {
+        enabled: body.enable_mastering ?? false,
+        preset: body.mastering_preset || "balanced",
+      },
+      // Output configuration
+      output: {
+        format: body.output_format || "mp3",
+        quality: body.output_quality || "high",
+      },
+      // Mode info
       mode,
+      is_demo: mode === "demo",
     };
 
     // Create job record in database
