@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useRef } from "react";
+import React, { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +16,7 @@ import { useAdminRole } from "@/hooks/useAdminRole";
 import { useCreativeTools } from "@/hooks/useCreativeTools";
 import { toast } from "sonner";
 import BrowserMeditationPlayer from "@/components/meditation/BrowserMeditationPlayer";
+import JobProgressPanel from "@/components/creative-soul/JobProgressPanel";
 import { 
   Music, 
   Waves, 
@@ -32,7 +33,8 @@ import {
   Upload,
   FileAudio,
   X,
-  Trash2
+  Trash2,
+  Scissors
 } from "lucide-react";
 
 // Accepted audio formats
@@ -316,8 +318,14 @@ export default function CreativeSoulMeditationTool() {
   const [keepOriginalMusic, setKeepOriginalMusic] = useState(false);
   const [variants, setVariants] = useState(3);
 
+  // Stem separation options
+  const [preStemEnabled, setPreStemEnabled] = useState(false);
+  const [preStemAction, setPreStemAction] = useState<"keep_both" | "voice_only" | "remove_music">("voice_only");
+  const [postStemEnabled, setPostStemEnabled] = useState(true);
+  const [postStemTypes, setPostStemTypes] = useState<string[]>(["vocals", "music"]);
+
   const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -419,33 +427,53 @@ export default function CreativeSoulMeditationTool() {
     if (stylePreset.recommendedTuningHz) setTuningHz(stylePreset.recommendedTuningHz);
   }, [style, stylePreset.defaultBpm, stylePreset.recommendedTuningHz]);
 
-  // Build payload
+  // Build payload with full pipeline contract
   const buildPayload = () => {
     const yt = youtubeUrls.split(",").map((s) => s.trim()).filter(Boolean);
     const direct = directUrls.split(",").map((s) => s.trim()).filter(Boolean);
-    // Combine direct URLs with uploaded file URLs
     const allDirectUrls = [...direct, ...uploadedFileUrls];
 
     return {
-      youtube_urls: yt,
-      direct_urls: allDirectUrls,
-      uploaded_files: uploadedFileUrls,
+      input: {
+        youtube_urls: yt,
+        direct_urls: allDirectUrls,
+        upload_storage_path: uploadedFileUrls.length > 0 ? uploadedFileUrls[0] : undefined,
+      },
+      style_slug: style,
+      frequency_hz: tuningHz,
+      binaural: {
+        enabled: binauralEnabled,
+        beat_hz: binauralBeatHz,
+        carrier_hz: binauralCarrierHz,
+      },
+      noise_reduction: {
+        enabled: noiseReductionEnabled,
+        mode: noiseMode,
+        strength: noiseStrength,
+      },
+      bpm: {
+        enabled: bpmMatchEnabled,
+        target_bpm: targetBpm,
+      },
+      mastering: {
+        enabled: masteringEnabled,
+        provider: "landr",
+        preset: masteringPreset,
+      },
+      stem: {
+        pre: {
+          enabled: preStemEnabled,
+          action: preStemAction,
+        },
+        post: {
+          enabled: postStemEnabled,
+          stems: postStemTypes,
+        },
+      },
+      // Legacy fields for backward compatibility
       meditation_style: style,
       music_tags: stylePreset.musicTags,
       sound_layers: stylePreset.soundLayers,
-      frequency_hz: tuningHz,
-      processing_mode: "TONE_TUNING" as ProcessingMode,
-      binaural_enabled: binauralEnabled,
-      binaural_beat_hz: binauralBeatHz,
-      binaural_carrier_hz: binauralCarrierHz,
-      bpm_match_enabled: bpmMatchEnabled,
-      target_bpm: targetBpm,
-      bpm_range: stylePreset.bpmRange,
-      noise_reduction_enabled: noiseReductionEnabled,
-      noise_reduction_mode: noiseMode,
-      noise_reduction_strength: noiseStrength,
-      mastering_enabled: masteringEnabled,
-      mastering_preset: masteringPreset,
       auto_music_enabled: autoMusicEnabled,
       music_source: musicSource,
       keep_original_music: keepOriginalMusic,
@@ -457,7 +485,7 @@ export default function CreativeSoulMeditationTool() {
   const handleGenerate = async (mode: "demo" | "paid") => {
     setBusy(true);
     setErrorMsg("");
-    setResult(null);
+    setActiveJobId(null);
 
     try {
       const { data: sess } = await supabase.auth.getSession();
@@ -493,8 +521,13 @@ export default function CreativeSoulMeditationTool() {
         return;
       }
 
-      setResult(data);
-      toast.success(mode === "demo" ? "Demo generation started!" : "Processing started!");
+      // Set the job ID to show progress panel
+      if (data?.job_id) {
+        setActiveJobId(data.job_id);
+        toast.success(mode === "demo" ? "Demo generation started!" : "Processing started!");
+      } else {
+        toast.success("Processing started!");
+      }
     } catch (e: any) {
       setErrorMsg(e?.message || String(e));
       toast.error(e?.message || "An error occurred");
@@ -502,6 +535,13 @@ export default function CreativeSoulMeditationTool() {
       setBusy(false);
     }
   };
+
+  // Handle regeneration
+  const handleRegenerate = useCallback(() => {
+    setActiveJobId(null);
+    // Scroll to top of form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
   const canAccess = isAdmin || hasAccess;
 
@@ -991,6 +1031,96 @@ export default function CreativeSoulMeditationTool() {
                   </div>
                 </div>
 
+                {/* Stem Separation */}
+                <div className="space-y-4 pt-2 border-t border-border/30">
+                  <h4 className="font-medium flex items-center gap-2">
+                    <Scissors className="h-4 w-4 text-primary" />
+                    Stem Separation
+                  </h4>
+                  
+                  {/* Pre-processing stem separation */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="pre-stem-enabled"
+                        checked={preStemEnabled}
+                        onCheckedChange={(c) => setPreStemEnabled(c === true)}
+                      />
+                      <Label htmlFor="pre-stem-enabled" className="text-sm">
+                        Pre-process input audio (separate stems before mixing)
+                      </Label>
+                    </div>
+                    {preStemEnabled && (
+                      <div className="pl-6 space-y-2">
+                        <Label className="text-xs">Action</Label>
+                        <Select
+                          value={preStemAction}
+                          onValueChange={(v) => setPreStemAction(v as typeof preStemAction)}
+                        >
+                          <SelectTrigger className="bg-background/50">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="voice_only">Extract voice only (remove original music)</SelectItem>
+                            <SelectItem value="remove_music">Remove music, keep other sounds</SelectItem>
+                            <SelectItem value="keep_both">Keep both voice and music separated</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">
+                          Use this to clean source audio before adding new meditation soundscapes
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Post-processing stem separation */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="post-stem-enabled"
+                        checked={postStemEnabled}
+                        onCheckedChange={(c) => setPostStemEnabled(c === true)}
+                      />
+                      <Label htmlFor="post-stem-enabled" className="text-sm">
+                        Generate stems from final mix (for remixing)
+                      </Label>
+                    </div>
+                    {postStemEnabled && (
+                      <div className="pl-6 space-y-2">
+                        <Label className="text-xs">Stems to generate</Label>
+                        <div className="flex flex-wrap gap-2">
+                          {["vocals", "music", "drums", "bass", "other"].map((stem) => (
+                            <label
+                              key={stem}
+                              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border cursor-pointer transition-colors ${
+                                postStemTypes.includes(stem)
+                                  ? "border-primary bg-primary/20"
+                                  : "border-border bg-background/50 hover:border-primary/50"
+                              }`}
+                            >
+                              <Checkbox
+                                checked={postStemTypes.includes(stem)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setPostStemTypes([...postStemTypes, stem]);
+                                  } else {
+                                    setPostStemTypes(postStemTypes.filter((s) => s !== stem));
+                                  }
+                                }}
+                                className="sr-only"
+                              />
+                              <span className="text-sm capitalize">{stem}</span>
+                            </label>
+                          ))}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Download individual stems to remix or layer with other content
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 {/* Variants */}
                 <div className="space-y-2">
                   <Label className="font-medium">Output Variants</Label>
@@ -1075,20 +1205,12 @@ export default function CreativeSoulMeditationTool() {
           </Card>
         )}
 
-        {result && (
-          <Card className="border-green-500/50 bg-green-500/10">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-green-400">
-                <CheckCircle className="h-5 w-5" />
-                Processing Started
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <pre className="p-3 bg-background/80 rounded-lg text-xs overflow-auto max-h-64">
-                {JSON.stringify(result, null, 2)}
-              </pre>
-            </CardContent>
-          </Card>
+        {/* Job Progress Panel */}
+        {activeJobId && (
+          <JobProgressPanel
+            jobId={activeJobId}
+            onRegenerate={handleRegenerate}
+          />
         )}
 
         {/* Features Grid */}
@@ -1116,6 +1238,10 @@ export default function CreativeSoulMeditationTool() {
           <div className="p-4 rounded-xl bg-card/50 border border-border flex items-center gap-3">
             <Music className="w-5 h-5 text-green-400" />
             <span className="text-sm font-medium">LANDR Mastering</span>
+          </div>
+          <div className="p-4 rounded-xl bg-card/50 border border-border flex items-center gap-3">
+            <Scissors className="w-5 h-5 text-cyan-400" />
+            <span className="text-sm font-medium">Stem Separation</span>
           </div>
         </div>
       </div>
