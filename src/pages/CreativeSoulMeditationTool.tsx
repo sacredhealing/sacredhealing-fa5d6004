@@ -63,6 +63,10 @@ export default function CreativeSoulMeditationTool() {
     user: 80
   });
 
+  // Frequency volumes (0-1 range)
+  const [healingVolume, setHealingVolume] = useState(0.15);
+  const [brainwaveVolume, setBrainwaveVolume] = useState(0.15);
+
   // Initialize engine on mount
   const handleInitialize = useCallback(async () => {
     await engine.initialize();
@@ -381,11 +385,15 @@ export default function CreativeSoulMeditationTool() {
               <CardContent className="space-y-6">
                 <HealingFrequencySelector 
                   activeFrequency={healingFreq} 
-                  onSelect={setHealingFreq} 
+                  volume={healingVolume}
+                  onSelect={setHealingFreq}
+                  onVolumeChange={setHealingVolume}
                 />
                 <BrainwaveSelector 
                   activeFrequency={brainwaveFreq} 
-                  onSelect={setBrainwaveFreq} 
+                  volume={brainwaveVolume}
+                  onSelect={setBrainwaveFreq}
+                  onVolumeChange={setBrainwaveVolume}
                 />
               </CardContent>
             </Card>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Radio, Zap } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
+import { Radio, Volume2 } from 'lucide-react';
 
 interface HealingFrequency {
   freq: number;
@@ -24,10 +25,17 @@ const HEALING_FREQUENCIES: HealingFrequency[] = [
 
 interface HealingFrequencySelectorProps {
   activeFrequency: number;
+  volume: number;
   onSelect: (freq: number) => void;
+  onVolumeChange: (volume: number) => void;
 }
 
-export default function HealingFrequencySelector({ activeFrequency, onSelect }: HealingFrequencySelectorProps) {
+export default function HealingFrequencySelector({ 
+  activeFrequency, 
+  volume,
+  onSelect,
+  onVolumeChange 
+}: HealingFrequencySelectorProps) {
   return (
     <Card className="bg-black/40 backdrop-blur-xl border-white/10">
       <CardHeader className="pb-3">
@@ -36,7 +44,27 @@ export default function HealingFrequencySelector({ activeFrequency, onSelect }: 
           Healing Fundamental (Hz)
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
+        {/* Volume Control */}
+        <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
+          <Volume2 className="w-4 h-4 text-cyan-400 shrink-0" />
+          <div className="flex-1 space-y-1">
+            <div className="flex justify-between text-xs">
+              <span className="text-white/60">Frequency Volume</span>
+              <span className="text-cyan-400 font-mono">{Math.round(volume * 100)}%</span>
+            </div>
+            <Slider
+              value={[volume]}
+              min={0}
+              max={1}
+              step={0.01}
+              onValueChange={([v]) => onVolumeChange(v)}
+              className="[&_[role=slider]]:bg-cyan-500"
+            />
+          </div>
+        </div>
+
+        {/* Frequency Grid */}
         <div className="grid grid-cols-2 gap-2">
           {HEALING_FREQUENCIES.map((freq) => {
             const isActive = activeFrequency === freq.freq;
