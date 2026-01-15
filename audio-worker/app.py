@@ -2,6 +2,11 @@
 Sacred Healing Audio Worker
 Complete audio processing service for meditation audio generation.
 Deploy to Railway, Render, or Fly.io
+
+SIMPLIFIED ARCHITECTURE:
+- Only requires WORKER_API_KEY environment variable
+- Returns processed audio as base64 (no Supabase upload)
+- Edge function handles storage upload
 """
 
 import os
@@ -10,6 +15,7 @@ import json
 import logging
 import tempfile
 import threading
+import base64
 from datetime import datetime
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -23,11 +29,8 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 CORS(app)
 
-# Configuration
+# Configuration - Only API key required!
 API_KEY = os.environ.get("WORKER_API_KEY", "your-secret-key")
-CALLBACK_URL = os.environ.get("CALLBACK_URL", "")
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
-SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
 
 # Job storage (in production, use Redis or database)
 jobs = {}
@@ -54,7 +57,8 @@ def root():
     """Root endpoint"""
     return jsonify({
         "service": "Sacred Healing Audio Worker",
-        "version": "1.0.0",
+        "version": "2.0.0",
+        "mode": "direct-response",
         "endpoints": ["/health", "/process", "/process-audio", "/jobs/<job_id>"]
     })
 
@@ -78,6 +82,8 @@ def process_audio():
         mode = data.get("mode", "generate")
         payload = data.get("payload", {})
         respond_immediately = data.get("respond_immediately", True)
+        callback_url = data.get("callback_url")
+        callback_api_key = data.get("callback_api_key")
         
         logger.info(f"Received job {job_id} for user {user_id}, mode: {mode}")
         
@@ -89,14 +95,16 @@ def process_audio():
             "created_at": datetime.utcnow().isoformat(),
             "user_id": user_id,
             "mode": mode,
-            "payload": payload
+            "payload": payload,
+            "callback_url": callback_url,
+            "callback_api_key": callback_api_key
         }
         
         if respond_immediately:
             # Process async in background thread
             thread = threading.Thread(
                 target=process_job_async,
-                args=(job_id, user_id, mode, payload)
+                args=(job_id, user_id, mode, payload, callback_url, callback_api_key)
             )
             thread.start()
             
@@ -107,7 +115,7 @@ def process_audio():
                 "message": "Job accepted for processing"
             })
         else:
-            # Process synchronously
+            # Process synchronously and return audio data directly
             result = process_job_sync(job_id, user_id, mode, payload)
             return jsonify(result)
             
@@ -129,30 +137,29 @@ def get_job_status(job_id):
     return jsonify(job)
 
 
-def process_job_async(job_id, user_id, mode, payload):
-    """Process job asynchronously and update status"""
+def process_job_async(job_id, user_id, mode, payload, callback_url=None, callback_api_key=None):
+    """Process job asynchronously and send callback when done"""
     try:
         result = process_job_sync(job_id, user_id, mode, payload)
         jobs[job_id]["status"] = "done"
         jobs[job_id]["progress"] = 100
         jobs[job_id]["outputs"] = result.get("outputs", {})
         
-        # Send callback if configured
-        send_callback(job_id, "completed", result.get("outputs", {}))
-        
-        # Update Supabase if configured
-        update_supabase_job(job_id, "done", result.get("outputs", {}))
+        # Send callback with audio data
+        if callback_url:
+            send_callback(callback_url, callback_api_key, job_id, "completed", result.get("outputs", {}))
         
     except Exception as e:
         logger.error(f"Error processing job {job_id}: {str(e)}")
         jobs[job_id]["status"] = "error"
         jobs[job_id]["error"] = str(e)
-        send_callback(job_id, "failed", error=str(e))
-        update_supabase_job(job_id, "error", error=str(e))
+        
+        if callback_url:
+            send_callback(callback_url, callback_api_key, job_id, "failed", error=str(e))
 
 
 def process_job_sync(job_id, user_id, mode, payload):
-    """Process job synchronously"""
+    """Process job synchronously and return audio as base64"""
     logger.info(f"Processing job {job_id}")
     
     outputs = {}
@@ -173,7 +180,7 @@ def process_job_sync(job_id, user_id, mode, payload):
             audio_data, sr = processor.download_audio(source_url)
         else:
             update_progress(job_id, 20, "Generating base audio...")
-            duration = payload.get("duration_seconds", 600)
+            duration = payload.get("duration_seconds", payload.get("duration", 600))
             audio_data, sr = processor.generate_base_audio(duration)
         
         # Apply binaural beats if requested
@@ -184,7 +191,7 @@ def process_job_sync(job_id, user_id, mode, payload):
                 audio_data, sr,
                 carrier_freq=binaural.get("carrier_hz", 200),
                 beat_freq=binaural.get("beat_hz", 7),
-                intensity=binaural.get("intensity", 0.3)
+                intensity=binaural.get("volume", 0.3)
             )
         
         # Apply healing frequency if requested
@@ -194,19 +201,20 @@ def process_job_sync(job_id, user_id, mode, payload):
             audio_data = processor.apply_healing_frequency(
                 audio_data, sr,
                 frequency=healing_freq.get("hz", 528),
-                intensity=healing_freq.get("intensity", 0.2)
+                intensity=healing_freq.get("volume", 0.2)
             )
         
         # Apply noise removal if requested
-        if payload.get("noise_removal", {}).get("enabled"):
+        if payload.get("noise_reduction", {}).get("enabled"):
             update_progress(job_id, 50, "Removing noise...")
             audio_data = processor.remove_noise(audio_data, sr)
         
         # Apply meditation style effects
-        style = payload.get("meditation_style") or payload.get("ambient")
+        style = payload.get("meditation_style") or payload.get("ambient", {}).get("sounds")
         if style:
-            update_progress(job_id, 60, f"Applying {style} style...")
-            audio_data = processor.apply_meditation_style(audio_data, sr, style)
+            update_progress(job_id, 60, f"Applying meditation style...")
+            style_name = style if isinstance(style, str) else "ambient"
+            audio_data = processor.apply_meditation_style(audio_data, sr, style_name)
         
         # Apply mastering if requested
         mastering = payload.get("mastering")
@@ -227,12 +235,17 @@ def process_job_sync(job_id, user_id, mode, payload):
             temp_path = tempfile.mktemp(suffix=".mp3")
             processor.save_audio(variant_audio, sr, temp_path)
             
-            # Upload to storage (implement based on your storage)
-            url = upload_to_storage(temp_path, job_id, f"variant_{i}")
+            # Read file and encode as base64
+            with open(temp_path, "rb") as f:
+                audio_bytes = f.read()
+            
+            audio_base64 = base64.b64encode(audio_bytes).decode("utf-8")
+            
             variants.append({
                 "variant_index": i,
-                "url": url,
-                "duration_seconds": len(variant_audio) / sr
+                "audio_base64": audio_base64,
+                "duration_seconds": len(variant_audio) / sr,
+                "content_type": "audio/mpeg"
             })
             
             # Clean up temp file
@@ -243,15 +256,16 @@ def process_job_sync(job_id, user_id, mode, payload):
         
         outputs = {
             "variants": variants,
-            "primary_url": variants[0]["url"] if variants else None,
+            "primary_audio_base64": variants[0]["audio_base64"] if variants else None,
             "duration_seconds": len(audio_data) / sr,
             "sample_rate": sr,
+            "content_type": "audio/mpeg",
             "processing_applied": {
                 "binaural_beats": binaural.get("enabled", False) if binaural else False,
                 "healing_frequency": healing_freq.get("enabled", False) if healing_freq else False,
-                "noise_removal": payload.get("noise_removal", {}).get("enabled", False),
+                "noise_removal": payload.get("noise_reduction", {}).get("enabled", False),
                 "mastering": mastering.get("enabled", False) if mastering else False,
-                "meditation_style": style
+                "meditation_style": style if isinstance(style, str) else None
             }
         }
         
@@ -270,22 +284,28 @@ def process_job_sync(job_id, user_id, mode, payload):
 
 def generate_mock_outputs(payload):
     """Generate mock outputs for testing when audio libraries aren't available"""
-    duration = payload.get("duration_seconds", 600)
+    duration = payload.get("duration_seconds", payload.get("duration", 600))
     num_variants = payload.get("variants", 1)
+    
+    # Generate a tiny silent MP3 for testing (minimal base64)
+    # This is a valid 1-second silent MP3
+    mock_mp3_base64 = "//uQxAAAAAANIAAAAAExBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ=="
     
     variants = []
     for i in range(num_variants):
         variants.append({
             "variant_index": i,
-            "url": f"https://example.com/mock-audio-{i}.mp3",
-            "duration_seconds": duration
+            "audio_base64": mock_mp3_base64,
+            "duration_seconds": duration,
+            "content_type": "audio/mpeg"
         })
     
     return {
         "variants": variants,
-        "primary_url": variants[0]["url"] if variants else None,
+        "primary_audio_base64": mock_mp3_base64,
         "duration_seconds": duration,
         "sample_rate": 44100,
+        "content_type": "audio/mpeg",
         "mock": True,
         "message": "Mock output - install audio libraries for real processing"
     }
@@ -299,88 +319,28 @@ def update_progress(job_id, progress, message=""):
         logger.info(f"Job {job_id}: {progress}% - {message}")
 
 
-def send_callback(job_id, status, outputs=None, error=None):
-    """Send callback to notify job completion"""
-    if not CALLBACK_URL:
+def send_callback(callback_url, callback_api_key, job_id, status, outputs=None, error=None):
+    """Send callback to notify job completion with audio data"""
+    if not callback_url:
         return
     
     try:
+        headers = {
+            "Content-Type": "application/json",
+            "x-worker-api-key": callback_api_key or API_KEY
+        }
+        
         data = {
             "job_id": job_id,
             "status": status,
             "outputs": outputs,
             "error": error
         }
-        requests.post(CALLBACK_URL, json=data, timeout=10)
+        
+        response = requests.post(callback_url, json=data, headers=headers, timeout=30)
+        logger.info(f"Callback sent for job {job_id}: {response.status_code}")
     except Exception as e:
         logger.error(f"Failed to send callback: {e}")
-
-
-def update_supabase_job(job_id, status, outputs=None, error=None):
-    """Update job status in Supabase"""
-    if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
-        return
-    
-    try:
-        url = f"{SUPABASE_URL}/rest/v1/creative_soul_jobs"
-        headers = {
-            "apikey": SUPABASE_SERVICE_KEY,
-            "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
-            "Content-Type": "application/json",
-            "Prefer": "return=minimal"
-        }
-        
-        data = {
-            "status": status,
-            "updated_at": datetime.utcnow().isoformat()
-        }
-        
-        if outputs:
-            data["result_url"] = outputs.get("primary_url")
-            data["payload"] = {"outputs": outputs}
-        
-        if error:
-            data["error_message"] = error
-        
-        requests.patch(
-            f"{url}?job_id=eq.{job_id}",
-            headers=headers,
-            json=data,
-            timeout=10
-        )
-    except Exception as e:
-        logger.error(f"Failed to update Supabase: {e}")
-
-
-def upload_to_storage(file_path, job_id, filename):
-    """Upload file to storage and return URL"""
-    # For now, return a placeholder URL
-    # In production, upload to S3, Supabase Storage, or other cloud storage
-    
-    if SUPABASE_URL and SUPABASE_SERVICE_KEY:
-        try:
-            # Upload to Supabase Storage
-            with open(file_path, "rb") as f:
-                file_data = f.read()
-            
-            storage_path = f"meditation-outputs/{job_id}/{filename}.mp3"
-            url = f"{SUPABASE_URL}/storage/v1/object/audio/{storage_path}"
-            
-            headers = {
-                "apikey": SUPABASE_SERVICE_KEY,
-                "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
-                "Content-Type": "audio/mpeg"
-            }
-            
-            response = requests.post(url, headers=headers, data=file_data, timeout=60)
-            
-            if response.status_code in [200, 201]:
-                return f"{SUPABASE_URL}/storage/v1/object/public/audio/{storage_path}"
-        except Exception as e:
-            logger.error(f"Failed to upload to Supabase Storage: {e}")
-    
-    # Return placeholder if upload fails
-    return f"https://placeholder.com/audio/{job_id}/{filename}.mp3"
 
 
 if __name__ == "__main__":
