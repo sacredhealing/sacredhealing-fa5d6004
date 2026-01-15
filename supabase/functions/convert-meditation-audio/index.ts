@@ -424,44 +424,46 @@ serve(async (req) => {
       return json({ success: false, error: "Failed to create job", details: insertErr.message });
     }
 
-    // --- Dispatch to worker (optional) ---
-    // If no worker is configured or worker fails, the browser-based player handles audio generation
+// --- Dispatch to Audio Worker ---
+    // Supports self-hosted worker (Railway/Fly.io) or RapidAPI
     if (AUDIO_WORKER_URL && AUDIO_WORKER_API_KEY) {
       const base = AUDIO_WORKER_URL.trim().replace(/\/$/, "");
       let workerEndpoint = base;
 
-      // If AUDIO_WORKER_URL is a base URL, default to our worker contract endpoint.
+      // Determine the correct endpoint path
       try {
         const u = new URL(base);
         const p = u.pathname.replace(/\/$/, "");
         const alreadyEndpoint = ["/jobs", "/process", "/process-audio"].some((s) => p.endsWith(s));
-        if (!alreadyEndpoint) workerEndpoint = `${base}/process-audio`;
+        if (!alreadyEndpoint) workerEndpoint = `${base}/process`;
       } catch {
-        workerEndpoint = `${base}/process-audio`;
+        workerEndpoint = `${base}/process`;
       }
 
+      // Build headers - supports both self-hosted worker and RapidAPI
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
         "X-Worker-Key": AUDIO_WORKER_API_KEY,
-        "x-api-key": AUDIO_WORKER_API_KEY,
-        "Authorization": `Bearer ${AUDIO_WORKER_API_KEY}`,
       };
 
-      // RapidAPI headers (if URL is a RapidAPI gateway)
+      // Add RapidAPI headers if URL is a RapidAPI gateway
+      let isRapidApi = false;
       try {
         const u = new URL(workerEndpoint);
         if (u.hostname.endsWith("rapidapi.com")) {
+          isRapidApi = true;
           headers["X-RapidAPI-Key"] = AUDIO_WORKER_API_KEY;
           headers["X-RapidAPI-Host"] = u.hostname;
         }
       } catch {
-        // ignore
+        // ignore URL parse errors
       }
 
-      // Try to dispatch to worker, but don't fail if unavailable
+      console.log(`[CONVERT-MEDITATION] Dispatching job ${jobId} to worker at ${workerEndpoint.split('?')[0]}`);
+
       try {
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 10000);
+        const timeout = setTimeout(() => controller.abort(), 30000); // 30s timeout
         
         const workerRes = await fetch(workerEndpoint, {
           method: "POST",
@@ -472,6 +474,8 @@ serve(async (req) => {
             mode,
             payload,
             respond_immediately: true,
+            callback_url: `${SUPABASE_URL}/functions/v1/worker-callback`,
+            callback_api_key: SUPABASE_SERVICE_ROLE_KEY,
           }),
           signal: controller.signal,
         });
@@ -481,24 +485,36 @@ serve(async (req) => {
         if (workerRes.ok) {
           const workerJson = await workerRes.json().catch(() => ({}));
           
-          if (workerJson?.accepted || workerJson?.status === "accepted") {
+          // Worker accepted job for async processing
+          if (workerJson?.accepted || workerJson?.status === "accepted" || workerJson?.success) {
             console.log(`[CONVERT-MEDITATION] Job ${jobId} accepted by worker`);
+            
+            await supabaseAdmin
+              .from("creative_soul_jobs")
+              .update({ status: "processing", progress: 5 })
+              .eq("job_id", jobId);
+            
             return json({
               success: true,
               mode,
               plan: isAdmin ? "admin" : (mode === "demo" ? "demo" : "purchased"),
               job_id: jobId,
               status: "processing",
-              message: "Worker accepted job. Poll job status.",
+              message: "Audio generation started. This may take a few minutes.",
             });
           }
 
-          if (workerJson?.outputs) {
+          // Worker completed immediately (unlikely but handle it)
+          if (workerJson?.outputs || workerJson?.result_url) {
+            const resultUrl = workerJson.result_url || 
+              (typeof workerJson.outputs === "string" ? workerJson.outputs : JSON.stringify(workerJson.outputs));
+            
             await supabaseAdmin
               .from("creative_soul_jobs")
               .update({ 
                 status: "completed", 
-                result_url: typeof workerJson.outputs === "string" ? workerJson.outputs : JSON.stringify(workerJson.outputs),
+                result_url: resultUrl,
+                progress: 100,
                 completed_at: new Date().toISOString(),
               })
               .eq("job_id", jobId);
@@ -509,60 +525,118 @@ serve(async (req) => {
               plan: isAdmin ? "admin" : (mode === "demo" ? "demo" : "purchased"),
               job_id: jobId,
               status: "completed",
+              result_url: resultUrl,
               outputs: workerJson.outputs,
             });
           }
-        } else {
-          // Worker returned error - check for subscription issues
-          const errorText = await workerRes.text().catch(() => "");
-          console.log(`[CONVERT-MEDITATION] Worker error (${workerRes.status}): ${errorText.slice(0, 200)}`);
           
-          // Check for RapidAPI subscription error
-          if (isRapidApiSubscriptionError(workerRes.status, errorText)) {
+          // Worker returned success but no clear status - assume processing
+          console.log(`[CONVERT-MEDITATION] Worker response unclear, assuming processing: ${JSON.stringify(workerJson).slice(0, 200)}`);
+          return json({
+            success: true,
+            mode,
+            plan: isAdmin ? "admin" : (mode === "demo" ? "demo" : "purchased"),
+            job_id: jobId,
+            status: "processing",
+            message: "Audio generation started.",
+          });
+        } else {
+          // Worker returned error
+          const errorText = await workerRes.text().catch(() => "Unknown error");
+          console.error(`[CONVERT-MEDITATION] Worker error (${workerRes.status}): ${errorText.slice(0, 500)}`);
+          
+          // Check for subscription/auth issues
+          if (isRapidApi && isRapidApiSubscriptionError(workerRes.status, errorText)) {
             await supabaseAdmin
               .from("creative_soul_jobs")
               .update({ 
                 status: "failed",
-                error_message: "Audio processing service unavailable. RapidAPI subscription may be inactive or quota exceeded.",
+                error_message: "Audio processing service unavailable. RapidAPI subscription may be inactive.",
               })
               .eq("job_id", jobId);
             
             return json({
               success: false,
-              error: "RAPIDAPI_SUBSCRIPTION_INACTIVE",
-              message: "Audio processing API subscription is inactive. Please check your RapidAPI subscriptions.",
+              error: "WORKER_SUBSCRIPTION_ERROR",
+              message: "Audio processing API subscription is inactive. Please check your API subscriptions.",
               job_id: jobId,
             });
           }
+          
+          // Self-hosted worker error - provide useful error message
+          await supabaseAdmin
+            .from("creative_soul_jobs")
+            .update({ 
+              status: "failed",
+              error_message: `Worker error: ${errorText.slice(0, 200)}`,
+            })
+            .eq("job_id", jobId);
+          
+          return json({
+            success: false,
+            error: "WORKER_ERROR",
+            message: `Audio worker returned error: ${errorText.slice(0, 100)}`,
+            job_id: jobId,
+          });
         }
       } catch (e) {
-        // Worker timeout or network error - log and continue
         const errStr = e instanceof Error ? e.message : String(e);
-        console.log(`[CONVERT-MEDITATION] Worker dispatch failed: ${errStr.slice(0, 200)}`);
+        console.error(`[CONVERT-MEDITATION] Worker dispatch failed: ${errStr}`);
+        
+        // Check if it's a timeout
+        if (errStr.includes("abort")) {
+          await supabaseAdmin
+            .from("creative_soul_jobs")
+            .update({ 
+              status: "failed",
+              error_message: "Audio worker connection timed out. The worker may be starting up - please try again.",
+            })
+            .eq("job_id", jobId);
+          
+          return json({
+            success: false,
+            error: "WORKER_TIMEOUT",
+            message: "Audio worker connection timed out. Please try again in a moment.",
+            job_id: jobId,
+          });
+        }
+        
+        // Network error - worker not reachable
+        await supabaseAdmin
+          .from("creative_soul_jobs")
+          .update({ 
+            status: "failed",
+            error_message: `Could not reach audio worker: ${errStr.slice(0, 100)}`,
+          })
+          .eq("job_id", jobId);
+        
+        return json({
+          success: false,
+          error: "WORKER_UNREACHABLE",
+          message: "Could not connect to audio processing service. Please check your worker configuration.",
+          job_id: jobId,
+        });
       }
-    } else {
-      console.log(`[CONVERT-MEDITATION] No worker configured`);
     }
 
-    // Update job to indicate browser-based processing should be used
+    // No worker configured - return error with setup instructions
+    console.log(`[CONVERT-MEDITATION] No audio worker configured (AUDIO_WORKER_URL or AUDIO_WORKER_API_KEY missing)`);
+    
     await supabaseAdmin
       .from("creative_soul_jobs")
       .update({ 
-        status: "browser_processing",
-        progress: 100,
+        status: "failed",
+        error_message: "Audio processing service not configured. Please set up the audio worker.",
       })
       .eq("job_id", jobId);
-
-    // Return success - browser player handles actual audio generation
+    
     return json({
-      success: true,
-      mode,
-      plan: isAdmin ? "admin" : (mode === "demo" ? "demo" : "purchased"),
+      success: false,
+      error: "WORKER_NOT_CONFIGURED",
+      message: "Audio processing service is not configured. Please deploy the audio-worker and configure AUDIO_WORKER_URL.",
       job_id: jobId,
-      status: "browser_processing",
-      message: "Settings saved. Use the Real-Time Meditation Player for instant audio generation.",
-      browser_fallback: true,
     });
+
   } catch (err) {
     console.error('[CONVERT-MEDITATION] Runtime error:', err);
     return json({ success: false, error: "RUNTIME_ERROR", details: String(err) });
