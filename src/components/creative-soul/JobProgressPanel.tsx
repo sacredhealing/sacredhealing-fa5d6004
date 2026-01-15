@@ -71,10 +71,12 @@ export default function JobProgressPanel({ jobId, onRegenerate }: JobProgressPan
   const [audioRef, setAudioRef] = useState<HTMLAudioElement | null>(null);
 
   const percent = useMemo(() => {
-    if (typeof job?.progress_percent === "number") return job.progress_percent;
+    // Browser fallback should always show 100%
+    if (job?.status === "browser_processing") return 100;
+    if (job?.status === "completed" || job?.status === "done") return 100;
+    if (typeof job?.progress_percent === "number" && job.progress_percent > 0) return job.progress_percent;
     const idx = STEP_ORDER.indexOf(job?.progress_step as typeof STEP_ORDER[number]);
     if (idx >= 0) return Math.round((idx / (STEP_ORDER.length - 1)) * 100);
-    if (job?.status === "completed" || job?.status === "done" || job?.status === "browser_processing") return 100;
     if (job?.status === "processing") return 10;
     return 5;
   }, [job]);
