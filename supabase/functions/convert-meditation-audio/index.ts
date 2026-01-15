@@ -319,7 +319,7 @@ serve(async (req) => {
     const masteringProvider = masteringConfig.provider || "landr";
     const masteringPreset = masteringConfig.preset || body.mastering_preset || "meditation_warm";
 
-    // Build comprehensive payload for the worker
+    // Build comprehensive payload for the worker (compatible with Railway worker)
     const payload = {
       // Input sources
       input: {
@@ -329,9 +329,11 @@ serve(async (req) => {
       },
       // Style configuration
       style_slug: styleSlug,
+      style: styleSlug, // Railway worker expects 'style'
       frequency_hz: frequencyHz,
-      // Binaural beats configuration
-      binaural: {
+      // Binaural beats configuration (Railway worker format)
+      binaural: binauralEnabled ? binauralType : "none",
+      binaural_config: {
         enabled: binauralEnabled,
         beat_hz: binauralBeatHz,
         carrier_hz: binauralCarrierHz,
@@ -346,7 +348,8 @@ serve(async (req) => {
         volume: body.frequency_volume ?? 0.2,
         description: frequencyConfig.description,
       },
-      // Noise reduction
+      // Noise reduction (Railway worker format)
+      noise_reduction_level: noiseEnabled ? noiseStrength : null,
       noise_reduction: {
         enabled: noiseEnabled,
         mode: noiseMode,
@@ -357,7 +360,9 @@ serve(async (req) => {
         enabled: bpmEnabled,
         target_bpm: targetBpm,
       },
-      // Mastering
+      // Mastering (Railway worker format)
+      mastering_enabled: masteringEnabled,
+      mastering_preset: masteringPreset,
       mastering: {
         enabled: masteringEnabled,
         provider: masteringProvider,
@@ -389,6 +394,9 @@ serve(async (req) => {
         volume: body.source_volume ?? 0.7,
         target_bpm: targetBpm,
       },
+      audioUrl: body.audioUrl, // Railway worker expects this
+      youtube_urls: inputSources.youtube_urls || [],
+      direct_urls: inputSources.direct_urls || [],
       // Duration and variants
       duration: body.duration || (mode === "demo" ? 60 : 300),
       variants: payloadData.variants || body.variants || (mode === "demo" ? 1 : 3),
@@ -416,7 +424,7 @@ serve(async (req) => {
         action: "meditation_generate",
         status: "queued",
         progress: 0,
-        payload,
+        payload: payload,
       });
 
     if (insertErr) {
@@ -465,6 +473,8 @@ serve(async (req) => {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 30000); // 30s timeout
         
+        const callbackUrl = `${SUPABASE_URL}/functions/v1/worker-callback`;
+        
         const workerRes = await fetch(workerEndpoint, {
           method: "POST",
           headers,
@@ -474,8 +484,8 @@ serve(async (req) => {
             mode,
             payload,
             respond_immediately: true,
-            callback_url: `${SUPABASE_URL}/functions/v1/worker-callback`,
-            callback_api_key: SUPABASE_SERVICE_ROLE_KEY,
+            callback_url: callbackUrl,
+            callback_api_key: AUDIO_WORKER_API_KEY || SUPABASE_SERVICE_ROLE_KEY,
           }),
           signal: controller.signal,
         });
