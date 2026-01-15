@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
     ffmpeg \
     libsndfile1 \
     libsndfile1-dev \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
@@ -23,11 +24,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Expose port
+# Expose default port (Railway may override via PORT env var)
 EXPOSE 8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+# Health check using curl (now installed)
+HEALTHCHECK --interval=30s --timeout=30s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
 
-# Run with gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "--timeout", "300", "app:app"]
+# Run with gunicorn - bind to PORT env var (Railway sets this), fallback to 8000
+CMD gunicorn --bind 0.0.0.0:${PORT:-8000} --workers 2 --timeout 300 app:app
