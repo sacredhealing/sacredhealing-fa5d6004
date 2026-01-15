@@ -524,7 +524,20 @@ export default function CreativeSoulMeditationTool() {
       // Set the job ID to show progress panel
       if (data?.job_id) {
         setActiveJobId(data.job_id);
-        toast.success(mode === "demo" ? "Demo generation started!" : "Processing started!");
+        
+        // Check for browser fallback
+        if (data?.browser_fallback) {
+          toast.info("Cloud processing unavailable - use the Real-Time Player below!", {
+            duration: 5000,
+          });
+          // Auto-scroll to browser player after a short delay
+          setTimeout(() => {
+            const player = document.getElementById('browser-meditation-player');
+            player?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 500);
+        } else {
+          toast.success(mode === "demo" ? "Demo generation started!" : "Processing started!");
+        }
       } else {
         toast.success("Processing started!");
       }
@@ -868,13 +881,15 @@ export default function CreativeSoulMeditationTool() {
         </div>
 
         {/* Real-Time Browser Meditation Player */}
-        <BrowserMeditationPlayer
-          selectedStyle={style}
-          selectedFrequency={tuningHz}
-          binauralEnabled={binauralEnabled}
-          binauralBeatHz={binauralBeatHz}
-          binauralCarrierHz={binauralCarrierHz}
-        />
+        <div id="browser-meditation-player">
+          <BrowserMeditationPlayer
+            selectedStyle={style}
+            selectedFrequency={tuningHz}
+            binauralEnabled={binauralEnabled}
+            binauralBeatHz={binauralBeatHz}
+            binauralCarrierHz={binauralCarrierHz}
+          />
+        </div>
 
         {/* Advanced Settings */}
         <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>

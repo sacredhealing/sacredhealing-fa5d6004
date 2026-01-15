@@ -52,6 +52,7 @@ const STEP_LABELS: Record<string, string> = {
   done: "Complete!",
   queued: "Queued for processing",
   processing: "Processing...",
+  browser_processing: "Ready! Use the Real-Time Player below",
 };
 
 const STEM_ICONS: Record<string, React.ReactNode> = {
@@ -73,7 +74,7 @@ export default function JobProgressPanel({ jobId, onRegenerate }: JobProgressPan
     if (typeof job?.progress_percent === "number") return job.progress_percent;
     const idx = STEP_ORDER.indexOf(job?.progress_step as typeof STEP_ORDER[number]);
     if (idx >= 0) return Math.round((idx / (STEP_ORDER.length - 1)) * 100);
-    if (job?.status === "completed" || job?.status === "done") return 100;
+    if (job?.status === "completed" || job?.status === "done" || job?.status === "browser_processing") return 100;
     if (job?.status === "processing") return 10;
     return 5;
   }, [job]);
@@ -187,28 +188,63 @@ export default function JobProgressPanel({ jobId, onRegenerate }: JobProgressPan
     );
   }
 
-  const isComplete = job.status === "completed" || job.status === "done";
+  const isComplete = ["completed", "done", "browser_processing"].includes(job.status);
+  const isBrowserFallback = job.status === "browser_processing";
 
   return (
     <Card className={cn(
       "transition-all",
-      isComplete && "border-primary/50 bg-primary/5"
+      isComplete && !isBrowserFallback && "border-primary/50 bg-primary/5",
+      isBrowserFallback && "border-green-500/50 bg-green-500/10"
     )}>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <span>{isComplete ? "✨ Meditation Ready!" : "Generating Meditation..."}</span>
+          <span>
+            {isBrowserFallback 
+              ? "🎧 Real-Time Player Ready!" 
+              : isComplete 
+                ? "✨ Meditation Ready!" 
+                : "Generating Meditation..."}
+          </span>
           <span className="text-2xl font-bold text-primary">{percent}%</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Progress bar */}
-        <div className="space-y-2">
-          <Progress value={percent} className="h-3" />
-          <p className="text-sm text-muted-foreground flex items-center gap-2">
-            {!isComplete && <Loader2 className="h-4 w-4 animate-spin" />}
-            {stepLabel}
-          </p>
-        </div>
+        {/* Browser fallback message */}
+        {isBrowserFallback && (
+          <div className="space-y-4">
+            <div className="p-4 rounded-lg bg-green-500/20 border border-green-500/30">
+              <p className="text-green-200 font-medium mb-2">
+                ✅ Cloud processing unavailable – use the Real-Time Player below!
+              </p>
+              <p className="text-sm text-muted-foreground">
+                The browser-based meditation generator creates beautiful ambient soundscapes 
+                in real-time. Scroll down to find the Real-Time Meditation Player and start generating.
+              </p>
+            </div>
+            <Button 
+              onClick={() => {
+                const player = document.getElementById('browser-meditation-player');
+                player?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }}
+              className="w-full gap-2"
+            >
+              <Play className="h-4 w-4" />
+              Scroll to Real-Time Player
+            </Button>
+          </div>
+        )}
+
+        {/* Progress bar - only show when not browser fallback */}
+        {!isBrowserFallback && (
+          <div className="space-y-2">
+            <Progress value={percent} className="h-3" />
+            <p className="text-sm text-muted-foreground flex items-center gap-2">
+              {!isComplete && <Loader2 className="h-4 w-4 animate-spin" />}
+              {stepLabel}
+            </p>
+          </div>
+        )}
 
         {/* Step indicators */}
         {!isComplete && (
@@ -235,8 +271,8 @@ export default function JobProgressPanel({ jobId, onRegenerate }: JobProgressPan
           </div>
         )}
 
-        {/* Audio preview and downloads */}
-        {isComplete && outputs && (
+        {/* Audio preview and downloads - only for cloud processing */}
+        {isComplete && !isBrowserFallback && outputs && (
           <div className="space-y-4">
             {/* Audio player */}
             {audioUrl && (
