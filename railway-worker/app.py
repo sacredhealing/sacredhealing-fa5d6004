@@ -162,7 +162,8 @@ def verify_api_key():
     """Verify API key from request headers"""
     if not API_KEY:
         return True  # Allow if no key configured (development)
-    api_key = request.headers.get('x-api-key', '')
+    # Check both header names for compatibility
+    api_key = request.headers.get('X-Worker-Key', '') or request.headers.get('x-api-key', '')
     return api_key == API_KEY
 
 

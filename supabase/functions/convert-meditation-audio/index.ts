@@ -443,9 +443,9 @@ serve(async (req) => {
         const u = new URL(base);
         const p = u.pathname.replace(/\/$/, "");
         const alreadyEndpoint = ["/jobs", "/process", "/process-audio"].some((s) => p.endsWith(s));
-        if (!alreadyEndpoint) workerEndpoint = `${base}/process`;
+        if (!alreadyEndpoint) workerEndpoint = `${base}/process-audio`;
       } catch {
-        workerEndpoint = `${base}/process`;
+        workerEndpoint = `${base}/process-audio`;
       }
 
       // Build headers - supports both self-hosted worker and RapidAPI
