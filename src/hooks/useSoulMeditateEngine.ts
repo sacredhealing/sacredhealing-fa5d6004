@@ -285,7 +285,7 @@ export function useSoulMeditateEngine() {
     
     // Meditation style to audio file mapping
     const styleToFile: Record<string, string> = {
-      indian: 'atmospheres/indian-vedic.mp3',
+      indian: 'indian',
       shamanic: 'atmospheres/shamanic.mp3',
       mystic: 'atmospheres/mystic.mp3',
       tibetan: 'atmospheres/tibetan.mp3',
