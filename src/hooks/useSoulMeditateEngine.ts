@@ -92,12 +92,12 @@ export function useSoulMeditateEngine() {
   // State
   const [isInitialized, setIsInitialized] = useState(false);
   const [neuralLayer, setNeuralLayer] = useState<LayerState>({ isPlaying: false, volume: 0.7, source: null });
-  const [atmosphereLayer, setAtmosphereLayer] = useState<LayerState>({ isPlaying: false, volume: 0.4, source: null });
+  const [atmosphereLayer, setAtmosphereLayer] = useState<LayerState>({ isPlaying: false, volume: 0.85, source: null });
   const [frequencies, setFrequencies] = useState<FrequencyState>({
     solfeggio: { enabled: false, hz: 528 },
     binaural: { enabled: false, carrierHz: 200, beatHz: 6 },
   });
-  const [frequencyVolume, setFrequencyVolume] = useState(0.15);
+  const [frequencyVolume, setFrequencyVolume] = useState(0.35);
   const [dsp, setDSP] = useState<DSPSettings>({
     reverb: { enabled: true, decay: 2.5, wet: 0.3 },
     delay: { enabled: false, time: 0.4, feedback: 0.3, wet: 0.2 },
@@ -382,8 +382,9 @@ export function useSoulMeditateEngine() {
     osc.connect(solfeggioGainRef.current);
     osc.start();
 
-    // Fade in
-    solfeggioGainRef.current.gain.setTargetAtTime(frequencyVolume, audioContextRef.current.currentTime, 0.5);
+    // Set volume immediately for audible tone
+    solfeggioGainRef.current.gain.cancelScheduledValues(audioContextRef.current.currentTime);
+    solfeggioGainRef.current.gain.setValueAtTime(frequencyVolume, audioContextRef.current.currentTime);
 
     solfeggioOscRef.current = osc;
     setFrequencies(prev => ({ ...prev, solfeggio: { enabled: true, hz } }));
@@ -438,8 +439,9 @@ export function useSoulMeditateEngine() {
     leftOsc.start();
     rightOsc.start();
 
-    // Fade in
-    binauralGainRef.current.gain.setTargetAtTime(frequencyVolume, ctx.currentTime, 0.5);
+    // Set volume immediately for audible tone
+    binauralGainRef.current.gain.cancelScheduledValues(ctx.currentTime);
+    binauralGainRef.current.gain.setValueAtTime(frequencyVolume, ctx.currentTime);
 
     binauralLeftOscRef.current = leftOsc;
     binauralRightOscRef.current = rightOsc;
