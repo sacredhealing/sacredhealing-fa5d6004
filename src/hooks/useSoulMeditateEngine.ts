@@ -225,12 +225,25 @@ export function useSoulMeditateEngine() {
 
   // Load neural source (user uploaded audio)
   const loadNeuralSource = useCallback(async (file: File | string) => {
-    if (!audioContextRef.current || !neuralGainRef.current) return;
+    // Auto-initialize if needed
+    if (!audioContextRef.current) {
+      await initialize();
+    }
+    
+    // Wait for refs to be available after initialization
+    if (!audioContextRef.current || !neuralGainRef.current) {
+      console.error('Failed to initialize audio context');
+      return false;
+    }
 
     // Clean up previous
     if (neuralAudioRef.current) {
       neuralAudioRef.current.pause();
       neuralAudioRef.current.src = '';
+    }
+    if (neuralSourceRef.current) {
+      neuralSourceRef.current.disconnect();
+      neuralSourceRef.current = null;
     }
 
     const audio = new Audio();
@@ -246,18 +259,25 @@ export function useSoulMeditateEngine() {
     neuralAudioRef.current = audio;
 
     // Create source node
-    if (!neuralSourceRef.current) {
-      const source = audioContextRef.current.createMediaElementSource(audio);
-      source.connect(neuralGainRef.current);
-      neuralSourceRef.current = source;
-    }
+    const source = audioContextRef.current.createMediaElementSource(audio);
+    source.connect(neuralGainRef.current);
+    neuralSourceRef.current = source;
 
     setNeuralLayer(prev => ({ ...prev, source: typeof file === 'string' ? file : file.name }));
-  }, []);
+    return true;
+  }, [initialize]);
 
   // Load atmosphere
   const loadAtmosphere = useCallback(async (atmosphereId: string) => {
-    if (!audioContextRef.current || !atmosphereGainRef.current) return;
+    // Auto-initialize if needed
+    if (!audioContextRef.current) {
+      await initialize();
+    }
+    
+    if (!audioContextRef.current || !atmosphereGainRef.current) {
+      console.error('Failed to initialize audio context');
+      return false;
+    }
 
     // For demo, we use placeholder - in production, load from storage
     const atmosphereUrls: Record<string, string> = {
@@ -274,6 +294,10 @@ export function useSoulMeditateEngine() {
     if (atmosphereAudioRef.current) {
       atmosphereAudioRef.current.pause();
     }
+    if (atmosphereSourceRef.current) {
+      atmosphereSourceRef.current.disconnect();
+      atmosphereSourceRef.current = null;
+    }
 
     const audio = new Audio();
     audio.crossOrigin = 'anonymous';
@@ -282,7 +306,7 @@ export function useSoulMeditateEngine() {
     
     atmosphereAudioRef.current = audio;
 
-    if (!atmosphereSourceRef.current && audio.src) {
+    if (audio.src) {
       try {
         const source = audioContextRef.current.createMediaElementSource(audio);
         source.connect(atmosphereGainRef.current);
@@ -293,7 +317,8 @@ export function useSoulMeditateEngine() {
     }
 
     setAtmosphereLayer(prev => ({ ...prev, source: atmosphereId }));
-  }, []);
+    return true;
+  }, [initialize]);
 
   // Play/pause neural layer
   const toggleNeuralPlay = useCallback(() => {

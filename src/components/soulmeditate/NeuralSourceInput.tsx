@@ -40,11 +40,18 @@ export default function NeuralSourceInput({
   const [isLoading, setIsLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      onLoadFile(file);
-      toast.success(`Loaded: ${file.name}`);
+      setIsLoading(true);
+      try {
+        await onLoadFile(file);
+        toast.success(`Neural source loaded: ${file.name}`);
+      } catch (err) {
+        toast.error('Failed to load audio file');
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -57,12 +64,11 @@ export default function NeuralSourceInput({
       const isYoutube = urlInput.includes('youtube.com') || urlInput.includes('youtu.be');
       
       if (isYoutube) {
-        // For YouTube, we'd need a backend proxy - show info
         toast.info('YouTube extraction requires backend processing. Using URL directly for demo.');
       }
       
-      onLoadUrl(urlInput.trim());
-      toast.success('Audio URL loaded');
+      await onLoadUrl(urlInput.trim());
+      toast.success('Neural source connected');
       setUrlInput('');
     } catch (err) {
       toast.error('Failed to load URL');
@@ -71,14 +77,21 @@ export default function NeuralSourceInput({
     }
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
     
     const file = e.dataTransfer.files?.[0];
     if (file && file.type.startsWith('audio/')) {
-      onLoadFile(file);
-      toast.success(`Loaded: ${file.name}`);
+      setIsLoading(true);
+      try {
+        await onLoadFile(file);
+        toast.success(`Neural source loaded: ${file.name}`);
+      } catch (err) {
+        toast.error('Failed to load audio file');
+      } finally {
+        setIsLoading(false);
+      }
     } else {
       toast.error('Please drop an audio file');
     }
