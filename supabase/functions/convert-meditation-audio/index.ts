@@ -14,6 +14,19 @@ function json(payload: unknown, status = 200) {
   });
 }
 
+// Helper to detect RapidAPI subscription errors
+function isRapidApiSubscriptionError(status: number, text: string): boolean {
+  const lowerText = text.toLowerCase();
+  return (
+    status === 403 || 
+    status === 401 ||
+    lowerText.includes("not subscribed") ||
+    lowerText.includes("subscription") ||
+    lowerText.includes("exceeded the rate limit") ||
+    lowerText.includes("quota")
+  );
+}
+
 // Binaural beats frequency configurations
 const BINAURAL_CONFIGS = {
   delta: { carrier: 100, beat: 2, description: "Deep sleep, healing (0.5-4 Hz)" },
@@ -500,9 +513,27 @@ serve(async (req) => {
             });
           }
         } else {
-          // Worker returned error - log but continue with browser fallback
+          // Worker returned error - check for subscription issues
           const errorText = await workerRes.text().catch(() => "");
-          console.log(`[CONVERT-MEDITATION] Worker unavailable (${workerRes.status}): ${errorText.slice(0, 200)}`);
+          console.log(`[CONVERT-MEDITATION] Worker error (${workerRes.status}): ${errorText.slice(0, 200)}`);
+          
+          // Check for RapidAPI subscription error
+          if (isRapidApiSubscriptionError(workerRes.status, errorText)) {
+            await supabaseAdmin
+              .from("creative_soul_jobs")
+              .update({ 
+                status: "failed",
+                error_message: "Audio processing service unavailable. RapidAPI subscription may be inactive or quota exceeded.",
+              })
+              .eq("job_id", jobId);
+            
+            return json({
+              success: false,
+              error: "RAPIDAPI_SUBSCRIPTION_INACTIVE",
+              message: "Audio processing API subscription is inactive. Please check your RapidAPI subscriptions.",
+              job_id: jobId,
+            });
+          }
         }
       } catch (e) {
         // Worker timeout or network error - log and continue
