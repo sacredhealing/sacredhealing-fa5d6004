@@ -1,27 +1,167 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Volume2, Headphones, Power, Eye, Waves, Activity } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
+import { 
+  ArrowLeft, 
+  Volume2, 
+  Power, 
+  Eye, 
+  Waves, 
+  Activity,
+  Play,
+  Pause,
+  Download,
+  Loader2,
+  Layers,
+  Scissors
+} from 'lucide-react';
 import { useSoulMeditateEngine } from '@/hooks/useSoulMeditateEngine';
 import SpectralVisualizer from '@/components/soulmeditate/SpectralVisualizer';
 import NeuralSourceInput from '@/components/soulmeditate/NeuralSourceInput';
 import AtmosphereSelector from '@/components/soulmeditate/AtmosphereSelector';
-import FrequencyPanel from '@/components/soulmeditate/FrequencyPanel';
 import DSPMasteringRack from '@/components/soulmeditate/DSPMasteringRack';
 import SpectralInsights from '@/components/soulmeditate/SpectralInsights';
+import StyleGrid, { MeditationStyle } from '@/components/soulmeditate/StyleGrid';
+import HealingFrequencySelector from '@/components/soulmeditate/HealingFrequencySelector';
+import BrainwaveSelector from '@/components/soulmeditate/BrainwaveSelector';
+import YouTubeLinker from '@/components/soulmeditate/YouTubeLinker';
+import ProcessingTerminal from '@/components/soulmeditate/ProcessingTerminal';
 
 type VisualizerMode = 'bars' | 'wave' | 'radial';
+type StemMode = 'full_mix' | 'vocals_only' | 'music_only' | 'stems_all';
+
+const STEM_OPTIONS = [
+  { value: 'full_mix', label: 'Full Mix' },
+  { value: 'vocals_only', label: 'Vocals Only' },
+  { value: 'music_only', label: 'Music Only' },
+  { value: 'stems_all', label: 'All Stems' },
+];
 
 export default function CreativeSoulMeditationTool() {
   const navigate = useNavigate();
   const engine = useSoulMeditateEngine();
+  
+  // UI State
   const [visualizerMode, setVisualizerMode] = useState<VisualizerMode>('bars');
+  const [activeStyle, setActiveStyle] = useState<MeditationStyle>('indian');
+  const [healingFreq, setHealingFreq] = useState(432);
+  const [brainwaveFreq, setBrainwaveFreq] = useState(10);
+  const [stemMode, setStemMode] = useState<StemMode>('full_mix');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  
+  // Volume controls
+  const [volumes, setVolumes] = useState({
+    ambient: 50,
+    binaural: 40,
+    healing: 20,
+    user: 80
+  });
 
-  const handleInitialize = async () => {
+  // Initialize engine on mount
+  const handleInitialize = useCallback(async () => {
     await engine.initialize();
+    toast.success('Neural Engine initialized');
+  }, [engine]);
+
+  // Start neural process
+  const startNeuralProcess = useCallback(async () => {
+    if (!engine.neuralLayer.source && !engine.atmosphereLayer.source) {
+      toast.error('Neural Source missing. Upload audio or link YouTube stream.');
+      return;
+    }
+
+    setIsProcessing(true);
+    
+    try {
+      if (!engine.isInitialized) {
+        await engine.initialize();
+      }
+
+      // Start solfeggio frequency
+      engine.startSolfeggio(healingFreq);
+      
+      // Start binaural if enabled
+      engine.startBinaural(200, brainwaveFreq);
+      
+      // Toggle play on layers
+      if (engine.neuralLayer.source && !engine.neuralLayer.isPlaying) {
+        engine.toggleNeuralPlay();
+      }
+      if (engine.atmosphereLayer.source && !engine.atmosphereLayer.isPlaying) {
+        engine.toggleAtmospherePlay();
+      }
+
+      toast.success('DSP Mastering Rack Online');
+    } catch (err) {
+      toast.error('Audio engine ignition failure');
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [engine, healingFreq, brainwaveFreq]);
+
+  // Stop all
+  const stopAll = useCallback(() => {
+    if (engine.neuralLayer.isPlaying) engine.toggleNeuralPlay();
+    if (engine.atmosphereLayer.isPlaying) engine.toggleAtmospherePlay();
+    engine.stopSolfeggio();
+    engine.stopBinaural();
+  }, [engine]);
+
+  // Toggle play/stop
+  const togglePlay = useCallback(() => {
+    const isAnythingPlaying = 
+      engine.neuralLayer.isPlaying || 
+      engine.atmosphereLayer.isPlaying || 
+      engine.frequencies.solfeggio.enabled ||
+      engine.frequencies.binaural.enabled;
+
+    if (isAnythingPlaying) {
+      stopAll();
+    } else {
+      startNeuralProcess();
+    }
+  }, [engine, stopAll, startNeuralProcess]);
+
+  // Handle download (placeholder)
+  const handleDownload = async () => {
+    setIsDownloading(true);
+    toast.info('Export feature requires backend audio rendering');
+    await new Promise(r => setTimeout(r, 2000));
+    setIsDownloading(false);
   };
+
+  // Handle YouTube extracted audio
+  const handleYouTubeAudio = useCallback((url: string, title: string) => {
+    engine.loadNeuralSource(url);
+    toast.success(`Loaded: ${title}`);
+  }, [engine]);
+
+  // Sync frequencies when changed
+  useEffect(() => {
+    if (engine.frequencies.solfeggio.enabled && engine.frequencies.solfeggio.hz !== healingFreq) {
+      engine.stopSolfeggio();
+      engine.startSolfeggio(healingFreq);
+    }
+  }, [healingFreq, engine]);
+
+  useEffect(() => {
+    if (engine.frequencies.binaural.enabled && engine.frequencies.binaural.beatHz !== brainwaveFreq) {
+      engine.stopBinaural();
+      engine.startBinaural(200, brainwaveFreq);
+    }
+  }, [brainwaveFreq, engine]);
+
+  const isPlaying = 
+    engine.neuralLayer.isPlaying || 
+    engine.atmosphereLayer.isPlaying || 
+    engine.frequencies.solfeggio.enabled ||
+    engine.frequencies.binaural.enabled;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950/20 to-slate-950">
@@ -32,9 +172,12 @@ export default function CreativeSoulMeditationTool() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-violet-500/5 rounded-full blur-3xl" />
       </div>
 
+      {/* Processing Terminal Overlay */}
+      <ProcessingTerminal isProcessing={isProcessing} />
+
       <div className="relative z-10 container mx-auto px-4 py-6 max-w-7xl">
         {/* Header */}
-        <header className="flex items-center justify-between mb-8">
+        <header className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
@@ -45,21 +188,36 @@ export default function CreativeSoulMeditationTool() {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
-                SoulMeditate
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                Spectral Alchemy
               </h1>
-              <p className="text-sm text-white/50">Neural Healing & Frequency Engine</p>
+              <p className="text-xs text-white/50">Neural Production Mastering Suite</p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Stem Mode Selector */}
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+              <Scissors className="w-4 h-4 text-cyan-400" />
+              <Select value={stemMode} onValueChange={(v) => setStemMode(v as StemMode)}>
+                <SelectTrigger className="w-[120px] h-7 text-xs bg-transparent border-0 text-cyan-400">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {STEM_OPTIONS.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             {!engine.isInitialized ? (
               <Button
                 onClick={handleInitialize}
                 className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
               >
                 <Power className="w-4 h-4 mr-2" />
-                Initialize Engine
+                Initialize
               </Button>
             ) : (
               <>
@@ -74,7 +232,7 @@ export default function CreativeSoulMeditationTool() {
                     max={1}
                     step={0.01}
                     onValueChange={([v]) => engine.updateMasterVolume(v)}
-                    className="w-24 [&_[role=slider]]:bg-white"
+                    className="w-20 [&_[role=slider]]:bg-white"
                   />
                   <span className="text-xs text-white/60 w-8">
                     {Math.round(engine.masterVolume * 100)}%
@@ -94,7 +252,7 @@ export default function CreativeSoulMeditationTool() {
                 <span className="text-sm text-white/70">Spectral Visualizer</span>
                 <Badge variant="outline" className="text-xs border-white/20">2048 FFT</Badge>
               </div>
-              <div className="flex gap-1">
+              <div className="flex items-center gap-1">
                 {(['bars', 'wave', 'radial'] as VisualizerMode[]).map((mode) => (
                   <Button
                     key={mode}
@@ -119,71 +277,139 @@ export default function CreativeSoulMeditationTool() {
               frequencyData={engine.analyserData?.frequencyData || null}
               timeData={engine.analyserData?.timeData || null}
               mode={visualizerMode}
-              height={180}
+              height={160}
             />
           </div>
         </div>
 
-        {/* Main Grid */}
+        {/* Main Controls */}
+        <div className="flex items-center justify-center gap-4 mb-6">
+          <Button
+            size="lg"
+            onClick={togglePlay}
+            disabled={!engine.isInitialized}
+            className={`px-8 ${
+              isPlaying
+                ? 'bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600'
+                : 'bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600'
+            }`}
+          >
+            {isPlaying ? (
+              <>
+                <Pause className="w-5 h-5 mr-2" />
+                Stop Session
+              </>
+            ) : (
+              <>
+                <Play className="w-5 h-5 mr-2" />
+                Begin Session
+              </>
+            )}
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={handleDownload}
+            disabled={!engine.isInitialized || isDownloading}
+            className="bg-white/5 border-white/20 text-white hover:bg-white/10"
+          >
+            {isDownloading ? (
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+            ) : (
+              <Download className="w-5 h-5 mr-2" />
+            )}
+            Export Master
+          </Button>
+        </div>
+
+        {/* Style Grid */}
+        <div className="mb-6">
+          <StyleGrid activeStyle={activeStyle} onStyleSelect={setActiveStyle} />
+        </div>
+
+        {/* Main Grid Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Sources */}
           <div className="space-y-6">
-            <NeuralSourceInput
-              layer={engine.neuralLayer}
-              onLoadFile={engine.loadNeuralSource}
-              onLoadUrl={engine.loadNeuralSource}
-              onTogglePlay={engine.toggleNeuralPlay}
-              onVolumeChange={engine.updateNeuralVolume}
-            />
-            <AtmosphereSelector
-              layer={engine.atmosphereLayer}
-              atmosphereLibrary={engine.ATMOSPHERE_LIBRARY}
-              onSelect={engine.loadAtmosphere}
-              onTogglePlay={engine.toggleAtmospherePlay}
-              onVolumeChange={engine.updateAtmosphereVolume}
-            />
+            <Card className="bg-black/40 backdrop-blur-xl border-white/10">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2 text-white/90">
+                  <Layers className="w-4 h-4 text-pink-400" />
+                  I. Neural Source Intake
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <NeuralSourceInput
+                  layer={engine.neuralLayer}
+                  onLoadFile={engine.loadNeuralSource}
+                  onLoadUrl={engine.loadNeuralSource}
+                  onTogglePlay={engine.toggleNeuralPlay}
+                  onVolumeChange={engine.updateNeuralVolume}
+                />
+              </CardContent>
+            </Card>
+
+            <YouTubeLinker onAudioExtracted={handleYouTubeAudio} />
+
+            <Card className="bg-black/40 backdrop-blur-xl border-white/10">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2 text-white/90">
+                  II. Atmospheric Synthesis
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <AtmosphereSelector
+                  layer={engine.atmosphereLayer}
+                  atmosphereLibrary={engine.ATMOSPHERE_LIBRARY}
+                  onSelect={engine.loadAtmosphere}
+                  onTogglePlay={engine.toggleAtmospherePlay}
+                  onVolumeChange={engine.updateAtmosphereVolume}
+                />
+              </CardContent>
+            </Card>
           </div>
 
-          {/* Center Column - Frequencies & DSP */}
+          {/* Center Column - Frequencies */}
           <div className="space-y-6">
-            <FrequencyPanel
-              frequencies={engine.frequencies}
-              volume={engine.frequencyVolume}
-              solfeggioList={engine.SOLFEGGIO_FREQUENCIES}
-              binauralList={engine.BINAURAL_PRESETS}
-              onStartSolfeggio={engine.startSolfeggio}
-              onStopSolfeggio={engine.stopSolfeggio}
-              onStartBinaural={engine.startBinaural}
-              onStopBinaural={engine.stopBinaural}
-              onVolumeChange={engine.updateFrequencyVolume}
-            />
-            <DSPMasteringRack
-              dsp={engine.dsp}
-              onUpdate={engine.updateDSP}
-            />
+            <Card className="bg-black/40 backdrop-blur-xl border-white/10">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base text-white/90">
+                  III. Quantum Calibration
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <HealingFrequencySelector 
+                  activeFrequency={healingFreq} 
+                  onSelect={setHealingFreq} 
+                />
+                <BrainwaveSelector 
+                  activeFrequency={brainwaveFreq} 
+                  onSelect={setBrainwaveFreq} 
+                />
+              </CardContent>
+            </Card>
           </div>
 
-          {/* Right Column - Insights */}
+          {/* Right Column - DSP & Insights */}
           <div className="space-y-6">
+            <Card className="bg-black/40 backdrop-blur-xl border-white/10">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base text-white/90">
+                  IV. DSP Mastering Rack
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DSPMasteringRack dsp={engine.dsp} onUpdate={engine.updateDSP} />
+              </CardContent>
+            </Card>
+
             <SpectralInsights
               frequencies={engine.frequencies}
               dsp={engine.dsp}
               atmosphereId={engine.atmosphereLayer.source}
               neuralSource={engine.neuralLayer.source}
             />
-
-            {/* Headphone notice */}
-            {engine.frequencies.binaural.enabled && (
-              <div className="p-4 rounded-xl bg-gradient-to-r from-cyan-500/10 to-teal-500/10 border border-cyan-500/30">
-                <div className="flex items-center gap-3">
-                  <Headphones className="w-8 h-8 text-cyan-400" />
-                  <div>
-                    <p className="text-sm font-medium text-white/90">Stereo Headphones Required</p>
-                    <p className="text-xs text-white/60">Binaural beats require left/right ear separation</p>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>

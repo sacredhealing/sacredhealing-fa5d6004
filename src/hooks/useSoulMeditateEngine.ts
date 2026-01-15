@@ -165,7 +165,7 @@ export function useSoulMeditateEngine() {
 
     // Create warmth (waveshaper)
     waveShaperRef.current = ctx.createWaveShaper();
-    waveShaperRef.current.curve = createWarmthCurve(dsp.warmth.drive);
+    (waveShaperRef.current as any).curve = createWarmthCurve(dsp.warmth.drive);
     waveShaperRef.current.oversample = '4x';
 
     warmthGainRef.current = ctx.createGain();
@@ -211,16 +211,16 @@ export function useSoulMeditateEngine() {
   }
 
   // Create warmth curve (soft saturation)
-  function createWarmthCurve(drive: number): Float32Array {
+  function createWarmthCurve(drive: number): Float32Array | null {
     const samples = 44100;
-    const curve = new Float32Array(samples) as Float32Array<ArrayBuffer>;
+    const curve = new Float32Array(samples);
     const amount = drive * 50;
     
     for (let i = 0; i < samples; i++) {
       const x = (i * 2) / samples - 1;
       curve[i] = ((3 + amount) * x * 20 * (Math.PI / 180)) / (Math.PI + amount * Math.abs(x));
     }
-    return curve;
+    return curve as Float32Array | null;
   }
 
   // Load neural source (user uploaded audio)
@@ -474,14 +474,14 @@ export function useSoulMeditateEngine() {
       // Apply warmth changes
       if (newDsp.warmth && waveShaperRef.current) {
         if (updated.warmth.enabled) {
-          waveShaperRef.current.curve = createWarmthCurve(updated.warmth.drive);
+          (waveShaperRef.current as any).curve = createWarmthCurve(updated.warmth.drive);
         } else {
           // Bypass - linear curve
-          const curve = new Float32Array(44100) as Float32Array<ArrayBuffer>;
+          const bypassCurve = new Float32Array(44100);
           for (let i = 0; i < 44100; i++) {
-            curve[i] = (i * 2) / 44100 - 1;
+            bypassCurve[i] = (i * 2) / 44100 - 1;
           }
-          waveShaperRef.current.curve = curve;
+          (waveShaperRef.current as any).curve = bypassCurve;
         }
       }
 
