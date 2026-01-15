@@ -14,6 +14,19 @@ function json(payload: unknown) {
   });
 }
 
+// Helper to detect RapidAPI subscription errors
+function isRapidApiSubscriptionError(status: number, text: string): boolean {
+  const lowerText = text.toLowerCase();
+  return (
+    status === 403 || 
+    status === 401 ||
+    lowerText.includes("not subscribed") ||
+    lowerText.includes("subscription") ||
+    lowerText.includes("exceeded the rate limit") ||
+    lowerText.includes("quota")
+  );
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ success: false, error: "Method not allowed. Use POST." });
@@ -136,6 +149,25 @@ serve(async (req) => {
         } else {
           const errorText = await response.text();
           console.error(`[LANDR-MASTERING] RapidAPI error: ${response.status}`, errorText);
+          
+          // Check for subscription errors specifically
+          if (isRapidApiSubscriptionError(response.status, errorText)) {
+            await supabaseAdmin
+              .from("creative_soul_jobs")
+              .update({
+                status: "failed",
+                error_message: "Mastering service unavailable. RapidAPI subscription may be inactive or quota exceeded.",
+                completed_at: new Date().toISOString(),
+              })
+              .eq("job_id", jobId);
+            
+            return json({
+              success: false,
+              error: "RAPIDAPI_SUBSCRIPTION_INACTIVE",
+              message: "LANDR Mastering API subscription is inactive. Please check your RapidAPI subscriptions.",
+              job_id: jobId,
+            });
+          }
         }
       } catch (apiErr) {
         console.error('[LANDR-MASTERING] RapidAPI exception:', apiErr);

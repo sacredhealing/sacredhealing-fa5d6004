@@ -82,6 +82,12 @@ export default function JobProgressPanel({ jobId, onRegenerate }: JobProgressPan
   }, [job]);
 
   const stepLabel = useMemo(() => {
+    // Check for RapidAPI subscription error in error_message
+    if (job?.error_message?.includes("RapidAPI") || 
+        job?.error_message?.includes("subscription") ||
+        job?.error_message?.includes("quota")) {
+      return "⚠️ Audio processing service unavailable. Check RapidAPI subscription.";
+    }
     if (job?.progress_step && STEP_LABELS[job.progress_step]) {
       return STEP_LABELS[job.progress_step];
     }

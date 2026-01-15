@@ -14,6 +14,19 @@ function json(payload: unknown, status = 200) {
   });
 }
 
+// Helper to detect RapidAPI subscription errors
+function isRapidApiSubscriptionError(status: number, text: string): boolean {
+  const lowerText = text.toLowerCase();
+  return (
+    status === 403 || 
+    status === 401 ||
+    lowerText.includes("not subscribed") ||
+    lowerText.includes("subscription") ||
+    lowerText.includes("exceeded the rate limit") ||
+    lowerText.includes("quota")
+  );
+}
+
 // Map stem types to RapidAPI output types
 const STEM_OUTPUT_MAP: Record<string, string> = {
   vocals: "VOCALS",
@@ -158,7 +171,26 @@ serve(async (req) => {
         } else {
           const errorText = await response.text();
           console.error(`[STEM-SEPARATION] RapidAPI error: ${response.status}`, errorText);
-          // Fall through to audio worker
+          
+          // Check for subscription errors specifically
+          if (isRapidApiSubscriptionError(response.status, errorText)) {
+            await supabaseAdmin
+              .from("creative_soul_jobs")
+              .update({
+                status: "failed",
+                error_message: "Stem separation service unavailable. RapidAPI subscription may be inactive or quota exceeded.",
+                completed_at: new Date().toISOString(),
+              })
+              .eq("job_id", jobId);
+            
+            return json({
+              success: false,
+              error: "RAPIDAPI_SUBSCRIPTION_INACTIVE",
+              message: "Stem separation API subscription is inactive. Please check your RapidAPI subscriptions.",
+              job_id: jobId,
+            });
+          }
+          // Fall through to audio worker for other errors
         }
       } catch (apiErr) {
         console.error('[STEM-SEPARATION] RapidAPI exception:', apiErr);

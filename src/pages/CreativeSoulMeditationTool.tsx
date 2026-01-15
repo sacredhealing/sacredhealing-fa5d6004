@@ -516,6 +516,15 @@ export default function CreativeSoulMeditationTool() {
       }
 
       if (data?.error) {
+        // Check for RapidAPI subscription error
+        if (data.error === "RAPIDAPI_SUBSCRIPTION_INACTIVE") {
+          toast.error("Audio processing unavailable", {
+            description: "The audio processing API subscription is inactive. Please contact support or check RapidAPI subscriptions.",
+            duration: 8000,
+          });
+          setErrorMsg("Audio processing service unavailable. RapidAPI subscription may need to be activated.");
+          return;
+        }
         setErrorMsg(data.error);
         toast.error(data.error);
         return;
