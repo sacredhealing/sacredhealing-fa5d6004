@@ -57,9 +57,9 @@ def root():
     """Root endpoint"""
     return jsonify({
         "service": "Sacred Healing Audio Worker",
-        "version": "2.0.0",
+        "version": "2.1.0",
         "mode": "direct-response",
-        "endpoints": ["/health", "/process", "/process-audio", "/jobs/<job_id>"]
+        "endpoints": ["/health", "/process", "/process-audio", "/render", "/jobs/<job_id>"]
     })
 
 
@@ -121,6 +121,102 @@ def process_audio():
             
     except Exception as e:
         logger.error(f"Error processing request: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/render", methods=["POST", "OPTIONS"])
+def render_to_mp3():
+    """
+    Convert WAV to MP3 endpoint.
+    Accepts: JSON with { audio_base64: string, format: 'wav', output_format: 'mp3', bitrate: 320 }
+    Returns: { audio_base64: string (MP3 data) }
+    """
+    # Handle CORS preflight
+    if request.method == "OPTIONS":
+        return jsonify({}), 200
+    
+    # Validate API key
+    if not validate_api_key(request):
+        return jsonify({"message": "Invalid API key"}), 401
+    
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No JSON data provided"}), 400
+        
+        audio_base64 = data.get("audio_base64")
+        input_format = data.get("format", "wav")
+        output_format = data.get("output_format", "mp3")
+        bitrate = data.get("bitrate", 320)
+        
+        if not audio_base64:
+            return jsonify({"error": "No audio_base64 provided"}), 400
+        
+        logger.info(f"Render request: {input_format} -> {output_format} at {bitrate}kbps")
+        
+        # Decode base64 input
+        try:
+            audio_bytes = base64.b64decode(audio_base64)
+        except Exception as e:
+            return jsonify({"error": f"Invalid base64 data: {str(e)}"}), 400
+        
+        # Save to temp file
+        with tempfile.NamedTemporaryFile(suffix=f".{input_format}", delete=False) as input_file:
+            input_file.write(audio_bytes)
+            input_path = input_file.name
+        
+        output_path = tempfile.mktemp(suffix=f".{output_format}")
+        
+        try:
+            # Try using pydub for conversion (requires ffmpeg)
+            try:
+                from pydub import AudioSegment
+                
+                logger.info(f"Converting with pydub: {input_path} -> {output_path}")
+                audio = AudioSegment.from_file(input_path, format=input_format)
+                
+                # Export as MP3
+                audio.export(output_path, format=output_format, bitrate=f"{bitrate}k")
+                
+            except ImportError:
+                # Fallback: try using ffmpeg directly
+                import subprocess
+                
+                logger.info(f"Converting with ffmpeg: {input_path} -> {output_path}")
+                result = subprocess.run([
+                    "ffmpeg", "-y", "-i", input_path,
+                    "-acodec", "libmp3lame",
+                    "-b:a", f"{bitrate}k",
+                    output_path
+                ], capture_output=True, text=True)
+                
+                if result.returncode != 0:
+                    raise Exception(f"FFmpeg error: {result.stderr}")
+            
+            # Read the converted file
+            with open(output_path, "rb") as f:
+                mp3_bytes = f.read()
+            
+            mp3_base64 = base64.b64encode(mp3_bytes).decode("utf-8")
+            
+            logger.info(f"Conversion successful: {len(audio_bytes)} bytes -> {len(mp3_bytes)} bytes")
+            
+            return jsonify({
+                "success": True,
+                "audio_base64": mp3_base64,
+                "format": output_format,
+                "size_bytes": len(mp3_bytes)
+            })
+            
+        finally:
+            # Clean up temp files
+            if os.path.exists(input_path):
+                os.remove(input_path)
+            if os.path.exists(output_path):
+                os.remove(output_path)
+                
+    except Exception as e:
+        logger.error(f"Render error: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 
