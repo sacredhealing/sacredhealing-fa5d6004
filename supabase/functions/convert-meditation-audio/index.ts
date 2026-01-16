@@ -435,7 +435,14 @@ serve(async (req) => {
 // --- Dispatch to Audio Worker ---
     // Supports self-hosted worker (Railway/Fly.io) or RapidAPI
     if (AUDIO_WORKER_URL && AUDIO_WORKER_API_KEY) {
-      const base = AUDIO_WORKER_URL.trim().replace(/\/$/, "");
+      const normalizeWorkerBaseUrl = (raw: string) => {
+        const trimmed = raw.trim();
+        if (!trimmed) return trimmed;
+        if (/^https?:\/\//i.test(trimmed)) return trimmed;
+        return `https://${trimmed}`;
+      };
+
+      const base = normalizeWorkerBaseUrl(AUDIO_WORKER_URL).replace(/\/$/, "");
       let workerEndpoint = base;
 
       // Determine the correct endpoint path
@@ -445,6 +452,7 @@ serve(async (req) => {
         const alreadyEndpoint = ["/jobs", "/process", "/process-audio"].some((s) => p.endsWith(s));
         if (!alreadyEndpoint) workerEndpoint = `${base}/process-audio`;
       } catch {
+        // If URL parsing fails, fall back to best-effort.
         workerEndpoint = `${base}/process-audio`;
       }
 

@@ -1,10 +1,22 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 // Types
+export interface LayerExportInput {
+  /** URL the backend worker can fetch (preferred when available) */
+  directUrl?: string;
+  /** Storage path (optional) for backend-side signing/lookup */
+  uploadPath?: string;
+  /** Friendly label for UI */
+  displayName?: string;
+}
+
 export interface LayerState {
   isPlaying: boolean;
   volume: number;
+  /** UI/engine identifier (may be a URL or filename) */
   source: string | null;
+  /** Backend-safe source info for exports */
+  exportInput?: LayerExportInput;
 }
 
 export interface DSPSettings {
@@ -292,10 +304,15 @@ export function useSoulMeditateEngine() {
 
     // Create source node and connect through noise cleanup chain
     const source = audioContextRef.current.createMediaElementSource(audio);
-    
+
     // Connect through noise cleanup chain: source -> highpass -> lowpass -> compressor -> gate -> gain
-    if (noiseHighPassRef.current && noiseLowPassRef.current && 
-        noiseCompressorRef.current && noiseGateRef.current && neuralGainRef.current) {
+    if (
+      noiseHighPassRef.current &&
+      noiseLowPassRef.current &&
+      noiseCompressorRef.current &&
+      noiseGateRef.current &&
+      neuralGainRef.current
+    ) {
       source.connect(noiseHighPassRef.current);
       noiseHighPassRef.current.connect(noiseLowPassRef.current);
       noiseLowPassRef.current.connect(noiseCompressorRef.current);
@@ -304,12 +321,62 @@ export function useSoulMeditateEngine() {
       console.log('Noise cleanup chain connected: highpass(80Hz) -> lowpass(12kHz) -> compressor -> gain');
     } else {
       // Fallback: direct connection
-      source.connect(neuralGainRef.current!);
+      source.connect(neuralGainRef.current);
     }
-    
+
     neuralSourceRef.current = source;
 
-    setNeuralLayer(prev => ({ ...prev, source: typeof file === 'string' ? file : file.name }));
+    // Set UI source + export metadata
+    if (typeof file === 'string') {
+      setNeuralLayer((prev) => ({
+        ...prev,
+        source: file,
+        exportInput: {
+          directUrl: file,
+          displayName: file.split('/').pop() || file,
+        },
+      }));
+      return true;
+    }
+
+    // Local file: upload to storage so backend can fetch it for mastering
+    setNeuralLayer((prev) => ({
+      ...prev,
+      source: file.name,
+      exportInput: { displayName: file.name },
+    }));
+
+    try {
+      const { data: auth, error: authError } = await supabase.auth.getUser();
+      if (authError || !auth?.user) throw authError || new Error('Not signed in');
+
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const storagePath = `creative-soul-uploads/${auth.user.id}/${Date.now()}-${safeName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('creative-soul-library')
+        .upload(storagePath, file, {
+          upsert: true,
+          contentType: file.type || 'audio/mpeg',
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from('creative-soul-library').getPublicUrl(storagePath);
+
+      setNeuralLayer((prev) => ({
+        ...prev,
+        exportInput: {
+          ...(prev.exportInput || {}),
+          uploadPath: storagePath,
+          directUrl: data.publicUrl,
+          displayName: file.name,
+        },
+      }));
+    } catch (e) {
+      console.error('Failed to upload neural source for export:', e);
+    }
+
     return true;
   }, [initialize]);
 

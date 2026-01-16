@@ -20,7 +20,13 @@ export interface ExportPayload {
     pre?: { enabled: boolean; action: string };
     post?: { enabled: boolean; stems: string[] };
   };
+  /** Backend-fetchable URL (preferred when available) */
   source_audio_url?: string;
+  /** Optional storage path for backend-side lookup/signing */
+  upload_storage_path?: string;
+  /** Mix levels */
+  source_volume?: number;
+  ambient_volume?: number;
   duration?: number;
 }
 
@@ -97,22 +103,38 @@ export function useBackendExport() {
         return null;
       }
 
-      // Build payload for edge function
+      // Build payload for backend function
+      // NOTE: The backend function supports both the new nested payload and legacy top-level fields.
+      // We send both so volumes/mix settings are honored.
       const requestPayload = {
         mode: 'paid', // Use paid mode for full export
         payload: {
           style_slug: payload.style_slug,
           frequency_hz: payload.frequency_hz,
-          binaural: payload.binaural,
-          healing_frequency: payload.healing_frequency,
+          binaural: {
+            enabled: payload.binaural.enabled,
+            beat_hz: payload.binaural.beat_hz,
+            carrier_hz: payload.binaural.carrier_hz,
+          },
           stem: payload.stem,
           input: {
             direct_urls: payload.source_audio_url ? [payload.source_audio_url] : [],
+            upload_storage_path: payload.upload_storage_path,
           },
           duration_seconds: payload.duration || 300,
           variants: 1,
           mastering: { enabled: true, preset: 'meditation_warm' },
         },
+        // Legacy fields used by current backend mapping (mix levels)
+        binaural_enabled: payload.binaural.enabled,
+        binaural_volume: payload.binaural.volume,
+        frequency_hz: payload.frequency_hz,
+        frequency_enabled: payload.healing_frequency.enabled,
+        frequency_volume: payload.healing_frequency.volume,
+        ambient_volume: payload.ambient_volume,
+        source_volume: payload.source_volume,
+        duration: payload.duration || 300,
+        enable_mastering: true,
       };
 
       toast.info('Starting backend rendering...');
