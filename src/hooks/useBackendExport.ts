@@ -45,6 +45,33 @@ export function useBackendExport() {
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
   const jobIdRef = useRef<string | null>(null);
 
+  // When workers cold-start, dispatch can fail transiently (e.g. 502). We auto-retry dispatch.
+  const dispatchRetryRef = useRef<{
+    jobId: string;
+    attempts: number;
+    nextAttemptAt: number;
+  } | null>(null);
+
+  const retryDispatch = useCallback(async (jobId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('dispatch-creative-soul-job', {
+        body: { job_id: jobId },
+      });
+
+      if (error) {
+        console.warn('[useBackendExport] Dispatch retry failed:', error);
+        return;
+      }
+
+      if (data?.dispatched) {
+        // Nice to know, but don't spam users with toasts.
+        console.log('[useBackendExport] Worker dispatch retry succeeded', { jobId });
+      }
+    } catch (err) {
+      console.warn('[useBackendExport] Dispatch retry exception:', err);
+    }
+  }, []);
+
   // Poll job status
   const pollJobStatus = useCallback(async (jobId: string) => {
     try {
@@ -70,6 +97,28 @@ export function useBackendExport() {
 
       setCurrentJob(job);
 
+      // Auto re-dispatch if worker didn't accept (cold-start 502, timeouts, etc.)
+      if (job.status === 'queued') {
+        const now = Date.now();
+        const state = dispatchRetryRef.current;
+
+        if (!state || state.jobId !== jobId) {
+          // First time seeing this job
+          dispatchRetryRef.current = {
+            jobId,
+            attempts: 0,
+            nextAttemptAt: now + 8000,
+          };
+        } else if (state.attempts < 3 && now >= state.nextAttemptAt) {
+          dispatchRetryRef.current = {
+            ...state,
+            attempts: state.attempts + 1,
+            nextAttemptAt: now + (state.attempts + 1) * 12000,
+          };
+          retryDispatch(jobId);
+        }
+      }
+
       // Stop polling if completed or failed
       if (job.status === 'completed' || job.status === 'failed') {
         if (pollingRef.current) {
@@ -77,6 +126,7 @@ export function useBackendExport() {
           pollingRef.current = null;
         }
         setIsExporting(false);
+        dispatchRetryRef.current = null;
 
         if (job.status === 'completed' && job.resultUrl) {
           toast.success('Export complete! Ready to download.');
@@ -87,7 +137,7 @@ export function useBackendExport() {
     } catch (err) {
       console.error('Polling error:', err);
     }
-  }, []);
+  }, [retryDispatch]);
 
   // Start export job
   const startExport = useCallback(async (payload: ExportPayload): Promise<string | null> => {
@@ -139,7 +189,7 @@ export function useBackendExport() {
 
       toast.info('Starting backend rendering...');
 
-      // Call edge function
+      // Call backend function
       const { data, error } = await supabase.functions.invoke('convert-meditation-audio', {
         body: requestPayload,
       });
@@ -148,18 +198,24 @@ export function useBackendExport() {
         throw new Error(error.message || 'Failed to start export');
       }
 
-      if (!data?.success) {
+      // convert-meditation-audio can now return success:true even if the worker is cold-starting.
+      if (!data?.success || !data?.job_id) {
         throw new Error(data?.error || 'Export request failed');
       }
 
-      const jobId = data.job_id;
+      const jobId = data.job_id as string;
       jobIdRef.current = jobId;
+      dispatchRetryRef.current = {
+        jobId,
+        attempts: 0,
+        nextAttemptAt: Date.now() + 8000,
+      };
 
       setCurrentJob({
         id: jobId,
-        status: 'queued',
+        status: (data.status as ExportJob['status']) || 'queued',
         progress: 0,
-        progressStep: 'Job queued...',
+        progressStep: data.dispatched === false ? 'Warming up renderer…' : 'Job queued…',
         resultUrl: null,
         error: null,
       });
@@ -179,6 +235,7 @@ export function useBackendExport() {
       console.error('Export error:', err);
       toast.error(err instanceof Error ? err.message : 'Failed to start export');
       setIsExporting(false);
+      dispatchRetryRef.current = null;
       return null;
     }
   }, [pollJobStatus]);
@@ -192,6 +249,7 @@ export function useBackendExport() {
     setIsExporting(false);
     setCurrentJob(null);
     jobIdRef.current = null;
+    dispatchRetryRef.current = null;
     toast.info('Export cancelled');
   }, []);
 
@@ -205,7 +263,7 @@ export function useBackendExport() {
     try {
       // If it's a storage path, get public URL
       let downloadUrl = currentJob.resultUrl;
-      
+
       if (downloadUrl.startsWith('creative-soul-outputs/')) {
         const { data } = supabase.storage
           .from('creative-soul-library')
@@ -245,3 +303,4 @@ export function useBackendExport() {
     downloadResult,
   };
 }
+

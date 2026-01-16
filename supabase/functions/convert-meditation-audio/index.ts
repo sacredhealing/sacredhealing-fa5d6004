@@ -477,162 +477,214 @@ serve(async (req) => {
 
       console.log(`[CONVERT-MEDITATION] Dispatching job ${jobId} to worker at ${workerEndpoint.split('?')[0]}`);
 
-      try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 30000); // 30s timeout
-        
-        const callbackUrl = `${SUPABASE_URL}/functions/v1/worker-callback`;
-        
-        const workerRes = await fetch(workerEndpoint, {
-          method: "POST",
-          headers,
-          body: JSON.stringify({
-            job_id: jobId,
-            user_id: user.id,
-            mode,
-            payload,
-            respond_immediately: true,
-            callback_url: callbackUrl,
-            callback_api_key: AUDIO_WORKER_API_KEY || SUPABASE_SERVICE_ROLE_KEY,
-          }),
-          signal: controller.signal,
-        });
-        
-        clearTimeout(timeout);
+      const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-        if (workerRes.ok) {
-          const workerJson = await workerRes.json().catch(() => ({}));
-          
-          // Worker accepted job for async processing
-          if (workerJson?.accepted || workerJson?.status === "accepted" || workerJson?.success) {
-            console.log(`[CONVERT-MEDITATION] Job ${jobId} accepted by worker`);
-            
-            await supabaseAdmin
-              .from("creative_soul_jobs")
-              .update({ status: "processing", progress: 5 })
-              .eq("job_id", jobId);
-            
-            return json({
-              success: true,
-              mode,
-              plan: isAdmin ? "admin" : (mode === "demo" ? "demo" : "purchased"),
-              job_id: jobId,
-              status: "processing",
-              message: "Audio generation started. This may take a few minutes.",
-            });
-          }
-
-          // Worker completed immediately (unlikely but handle it)
-          if (workerJson?.outputs || workerJson?.result_url) {
-            const resultUrl = workerJson.result_url || 
-              (typeof workerJson.outputs === "string" ? workerJson.outputs : JSON.stringify(workerJson.outputs));
-            
-            await supabaseAdmin
-              .from("creative_soul_jobs")
-              .update({ 
-                status: "completed", 
-                result_url: resultUrl,
-                progress: 100,
-                completed_at: new Date().toISOString(),
-              })
-              .eq("job_id", jobId);
-
-            return json({
-              success: true,
-              mode,
-              plan: isAdmin ? "admin" : (mode === "demo" ? "demo" : "purchased"),
-              job_id: jobId,
-              status: "completed",
-              result_url: resultUrl,
-              outputs: workerJson.outputs,
-            });
-          }
-          
-          // Worker returned success but no clear status - assume processing
-          console.log(`[CONVERT-MEDITATION] Worker response unclear, assuming processing: ${JSON.stringify(workerJson).slice(0, 200)}`);
-          return json({
-            success: true,
-            mode,
-            plan: isAdmin ? "admin" : (mode === "demo" ? "demo" : "purchased"),
-            job_id: jobId,
-            status: "processing",
-            message: "Audio generation started.",
-          });
-        } else {
-          // Worker returned error
-          const errorText = await workerRes.text().catch(() => "Unknown error");
-          console.error(`[CONVERT-MEDITATION] Worker error (${workerRes.status}): ${errorText.slice(0, 500)}`);
-          
-          // Check for subscription/auth issues
-          if (isRapidApi && isRapidApiSubscriptionError(workerRes.status, errorText)) {
-            await supabaseAdmin
-              .from("creative_soul_jobs")
-              .update({ 
-                status: "failed",
-                error_message: "Audio processing service unavailable. RapidAPI subscription may be inactive.",
-              })
-              .eq("job_id", jobId);
-            
-            return json({
-              success: false,
-              error: "WORKER_SUBSCRIPTION_ERROR",
-              message: "Audio processing API subscription is inactive. Please check your API subscriptions.",
-              job_id: jobId,
-            });
-          }
-          
-          // Self-hosted worker error - provide useful error message
-          await supabaseAdmin
-            .from("creative_soul_jobs")
-            .update({ 
-              status: "failed",
-              error_message: `Worker error: ${errorText.slice(0, 200)}`,
-            })
-            .eq("job_id", jobId);
-          
-          return json({
-            success: false,
-            error: "WORKER_ERROR",
-            message: `Audio worker returned error: ${errorText.slice(0, 100)}`,
-            job_id: jobId,
-          });
-        }
-      } catch (e) {
-        const errStr = e instanceof Error ? e.message : String(e);
-        console.error(`[CONVERT-MEDITATION] Worker dispatch failed: ${errStr}`);
-        
-        // Check if it's a timeout
-        if (errStr.includes("abort")) {
-          await supabaseAdmin
-            .from("creative_soul_jobs")
-            .update({ 
-              status: "failed",
-              error_message: "Audio worker connection timed out. The worker may be starting up - please try again.",
-            })
-            .eq("job_id", jobId);
-          
-          return json({
-            success: false,
-            error: "WORKER_TIMEOUT",
-            message: "Audio worker connection timed out. Please try again in a moment.",
-            job_id: jobId,
-          });
-        }
-        
-        // Network error - worker not reachable
+      const markQueuedPending = async (message: string) => {
+        // Keep the job queued so the frontend can continue polling and we can re-dispatch.
         await supabaseAdmin
           .from("creative_soul_jobs")
-          .update({ 
-            status: "failed",
-            error_message: `Could not reach audio worker: ${errStr.slice(0, 100)}`,
+          .update({
+            status: "queued",
+            progress: 0,
+            error_message: message.slice(0, 250),
           })
           .eq("job_id", jobId);
-        
+      };
+
+      try {
+        const callbackUrl = `${SUPABASE_URL}/functions/v1/worker-callback`;
+
+        // Retries help a lot with cold-starting workers (e.g. Railway) that briefly return 502.
+        const maxAttempts = 4;
+        let lastErrorText = "";
+
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+          try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 45000); // 45s timeout
+
+            const workerRes = await fetch(workerEndpoint, {
+              method: "POST",
+              headers,
+              body: JSON.stringify({
+                job_id: jobId,
+                user_id: user.id,
+                mode,
+                payload,
+                respond_immediately: true,
+                callback_url: callbackUrl,
+                callback_api_key: AUDIO_WORKER_API_KEY,
+              }),
+              signal: controller.signal,
+            });
+
+            clearTimeout(timeout);
+
+            const rawText = await workerRes.text().catch(() => "");
+            let workerJson: any = {};
+            try {
+              workerJson = rawText ? JSON.parse(rawText) : {};
+            } catch {
+              // ignore parse errors
+            }
+
+            if (workerRes.ok) {
+              // Worker accepted job for async processing
+              if (workerJson?.accepted || workerJson?.status === "accepted" || workerJson?.success) {
+                console.log(`[CONVERT-MEDITATION] Job ${jobId} accepted by worker`);
+
+                await supabaseAdmin
+                  .from("creative_soul_jobs")
+                  .update({ status: "processing", progress: 5, error_message: null })
+                  .eq("job_id", jobId);
+
+                return json({
+                  success: true,
+                  mode,
+                  plan: isAdmin ? "admin" : (mode === "demo" ? "demo" : "purchased"),
+                  job_id: jobId,
+                  status: "processing",
+                  message: "Audio generation started. This may take a few minutes.",
+                });
+              }
+
+              // Worker completed immediately (unlikely but handle it)
+              if (workerJson?.outputs || workerJson?.result_url) {
+                const resultUrl = workerJson.result_url ||
+                  (typeof workerJson.outputs === "string" ? workerJson.outputs : JSON.stringify(workerJson.outputs));
+
+                await supabaseAdmin
+                  .from("creative_soul_jobs")
+                  .update({
+                    status: "completed",
+                    result_url: resultUrl,
+                    progress: 100,
+                    completed_at: new Date().toISOString(),
+                    error_message: null,
+                  })
+                  .eq("job_id", jobId);
+
+                return json({
+                  success: true,
+                  mode,
+                  plan: isAdmin ? "admin" : (mode === "demo" ? "demo" : "purchased"),
+                  job_id: jobId,
+                  status: "completed",
+                  result_url: resultUrl,
+                  outputs: workerJson.outputs,
+                });
+              }
+
+              // Worker returned success but no clear status - assume processing
+              console.log(
+                `[CONVERT-MEDITATION] Worker response unclear, assuming processing: ${JSON.stringify(workerJson).slice(0, 200)}`,
+              );
+
+              await supabaseAdmin
+                .from("creative_soul_jobs")
+                .update({ status: "processing", progress: 5, error_message: null })
+                .eq("job_id", jobId);
+
+              return json({
+                success: true,
+                mode,
+                plan: isAdmin ? "admin" : (mode === "demo" ? "demo" : "purchased"),
+                job_id: jobId,
+                status: "processing",
+                message: "Audio generation started.",
+              });
+            }
+
+            // Worker returned error
+            const errorText = rawText || "Unknown error";
+            console.error(`[CONVERT-MEDITATION] Worker error (${workerRes.status}): ${errorText.slice(0, 500)}`);
+
+            // Check for subscription/auth issues
+            if (isRapidApi && isRapidApiSubscriptionError(workerRes.status, errorText)) {
+              await supabaseAdmin
+                .from("creative_soul_jobs")
+                .update({
+                  status: "failed",
+                  error_message: "Audio processing service unavailable. RapidAPI subscription may be inactive.",
+                })
+                .eq("job_id", jobId);
+
+              return json({
+                success: false,
+                error: "WORKER_SUBSCRIPTION_ERROR",
+                message: "Audio processing API subscription is inactive. Please check your API subscriptions.",
+                job_id: jobId,
+              });
+            }
+
+            // Treat 5xx/timeout-like errors as transient (cold starts, proxy timeouts)
+            const transient = workerRes.status >= 500 || workerRes.status === 429 || workerRes.status === 408;
+            lastErrorText = `Worker error (${workerRes.status}): ${errorText.slice(0, 200)}`;
+
+            if (transient && attempt < maxAttempts) {
+              await sleep(800 * attempt * attempt);
+              continue;
+            }
+
+            // Non-transient worker error: keep queued (so UI can retry) but surface message.
+            await markQueuedPending(`Dispatch pending: ${lastErrorText}`);
+            return json({
+              success: true,
+              mode,
+              plan: isAdmin ? "admin" : (mode === "demo" ? "demo" : "purchased"),
+              job_id: jobId,
+              status: "queued",
+              dispatched: false,
+              message: "Renderer is warming up. Retrying automatically...",
+            });
+          } catch (e) {
+            const errStr = e instanceof Error ? e.message : String(e);
+            console.error(`[CONVERT-MEDITATION] Worker dispatch attempt ${attempt} failed: ${errStr}`);
+            lastErrorText = errStr;
+
+            if (attempt < maxAttempts) {
+              await sleep(800 * attempt * attempt);
+              continue;
+            }
+
+            await markQueuedPending(`Dispatch pending: ${lastErrorText}`);
+            return json({
+              success: true,
+              mode,
+              plan: isAdmin ? "admin" : (mode === "demo" ? "demo" : "purchased"),
+              job_id: jobId,
+              status: "queued",
+              dispatched: false,
+              message: "Renderer is warming up. Retrying automatically...",
+            });
+          }
+        }
+
+        // Fallback (shouldn't hit)
+        await markQueuedPending(`Dispatch pending: ${lastErrorText || "Unknown dispatch error"}`);
         return json({
-          success: false,
-          error: "WORKER_UNREACHABLE",
-          message: "Could not connect to audio processing service. Please check your worker configuration.",
+          success: true,
+          mode,
+          plan: isAdmin ? "admin" : (mode === "demo" ? "demo" : "purchased"),
           job_id: jobId,
+          status: "queued",
+          dispatched: false,
+          message: "Renderer is warming up. Retrying automatically...",
+        });
+      } catch (err) {
+        const errStr = err instanceof Error ? err.message : String(err);
+        console.error(`[CONVERT-MEDITATION] Dispatch runtime error: ${errStr}`);
+
+        await markQueuedPending(`Dispatch pending: ${errStr}`);
+
+        return json({
+          success: true,
+          mode,
+          plan: isAdmin ? "admin" : (mode === "demo" ? "demo" : "purchased"),
+          job_id: jobId,
+          status: "queued",
+          dispatched: false,
+          message: "Renderer is warming up. Retrying automatically...",
         });
       }
     }
