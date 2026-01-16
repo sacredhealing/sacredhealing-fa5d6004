@@ -2754,6 +2754,39 @@ export type Database = {
         }
         Relationships: []
       }
+      meditation_style_sounds: {
+        Row: {
+          created_at: string
+          description: string | null
+          file_path: string
+          id: string
+          is_active: boolean | null
+          name: string
+          style_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          file_path: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          style_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          file_path?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          style_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       meditations: {
         Row: {
           audio_url: string
