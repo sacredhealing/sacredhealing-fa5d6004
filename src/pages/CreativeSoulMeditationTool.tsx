@@ -164,8 +164,8 @@ export default function CreativeSoulMeditationTool() {
 
     setExportResult(null);
     
-    // Get atmosphere URL for the active style
-    const atmosphereUrl = engine.atmosphereLayer.source;
+    // Get atmosphere URL for the active style (use exportInput.directUrl for actual URL)
+    const atmosphereUrl = engine.atmosphereLayer.exportInput?.directUrl;
     const neuralUrl = engine.neuralLayer.exportInput?.directUrl || engine.neuralLayer.source;
 
     // Convert engine DSP to offline renderer format

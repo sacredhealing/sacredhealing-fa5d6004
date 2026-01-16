@@ -443,7 +443,11 @@ export function useSoulMeditateEngine() {
 
     setAtmosphereLayer(prev => ({ 
       ...prev, 
-      source: selectedSound ? `${styleId}:${selectedSound.name}` : styleId 
+      source: selectedSound ? `${styleId}:${selectedSound.name}` : styleId,
+      exportInput: audioUrl ? {
+        directUrl: audioUrl,
+        displayName: selectedSound?.name || styleId
+      } : undefined
     }));
     return true;
   }, [initialize]);
