@@ -336,6 +336,28 @@ export default function CreativeSoulMeditationTool() {
           </Button>
         </div>
 
+        {/* Neural Source Intake - Above Style Grid */}
+        <div className="mb-6">
+          <Card className="bg-black/40 backdrop-blur-xl border-white/10">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2 text-white/90">
+                <Layers className="w-4 h-4 text-pink-400" />
+                I. Neural Source Intake
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <NeuralSourceInput
+                layer={engine.neuralLayer}
+                onLoadFile={engine.loadNeuralSource}
+                onLoadUrl={engine.loadNeuralSource}
+                onTogglePlay={engine.toggleNeuralPlay}
+                onVolumeChange={engine.updateNeuralVolume}
+              />
+              <YouTubeLinker onAudioExtracted={handleYouTubeAudio} />
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Style Grid */}
         <div className="mb-6">
           <StyleGrid activeStyle={activeStyle} onStyleSelect={setActiveStyle} />
@@ -343,28 +365,8 @@ export default function CreativeSoulMeditationTool() {
 
         {/* Main Grid Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Sources */}
+          {/* Left Column - Atmosphere */}
           <div className="space-y-6">
-            <Card className="bg-black/40 backdrop-blur-xl border-white/10">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2 text-white/90">
-                  <Layers className="w-4 h-4 text-pink-400" />
-                  I. Neural Source Intake
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <NeuralSourceInput
-                  layer={engine.neuralLayer}
-                  onLoadFile={engine.loadNeuralSource}
-                  onLoadUrl={engine.loadNeuralSource}
-                  onTogglePlay={engine.toggleNeuralPlay}
-                  onVolumeChange={engine.updateNeuralVolume}
-                />
-              </CardContent>
-            </Card>
-
-            <YouTubeLinker onAudioExtracted={handleYouTubeAudio} />
-
             <Card className="bg-black/40 backdrop-blur-xl border-white/10">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2 text-white/90">
