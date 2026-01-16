@@ -192,6 +192,15 @@ async function checkWorkerHealth(workerBaseUrl: string, apiKey: string): Promise
 }
 
 // ============ DIRECT LANDR MASTERING ============
+function normalizeLandrPreset(raw?: string | null): "balanced" | "loud" | "warm" | "bright" | "punchy" {
+  const p = (raw || "").toLowerCase();
+  if (p.includes("loud")) return "loud";
+  if (p.includes("bright")) return "bright";
+  if (p.includes("punch")) return "punchy";
+  if (p.includes("warm")) return "warm";
+  return "balanced";
+}
+
 async function masterWithLandr(
   audioUrl: string,
   preset: string,
@@ -208,6 +217,8 @@ async function masterWithLandr(
     .eq("job_id", jobId);
 
   try {
+    const landrPreset = normalizeLandrPreset(preset);
+
     // Submit to LANDR RapidAPI
     const submitRes = await fetch("https://landr-mastering-v1.p.rapidapi.com/master", {
       method: "POST",
@@ -218,7 +229,7 @@ async function masterWithLandr(
       },
       body: JSON.stringify({
         audio_url: audioUrl,
-        preset: preset || "balanced",
+        preset: landrPreset,
         format: "mp3",
         intensity: "medium",
       }),
