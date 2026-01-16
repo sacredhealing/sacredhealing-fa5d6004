@@ -462,32 +462,18 @@ export default function CreativeSoulMeditationTool() {
           </Card>
         </div>
 
-        {/* Style Grid */}
+        {/* Style Grid + Atmosphere Volume */}
         <div className="mb-6">
-          <StyleGrid activeStyle={activeStyle} onStyleSelect={setActiveStyle} />
+          <StyleGrid
+            activeStyle={activeStyle}
+            onStyleSelect={setActiveStyle}
+            atmosphereVolume={engine.atmosphereLayer.volume}
+            onAtmosphereVolumeChange={engine.updateAtmosphereVolume}
+          />
         </div>
 
         {/* Main Grid Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Atmosphere */}
-          <div className="space-y-6">
-            <Card className="bg-black/40 backdrop-blur-xl border-white/10">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2 text-white/90">
-                  II. Atmospheric Synthesis
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <AtmosphereSelector
-                  layer={engine.atmosphereLayer}
-                  atmosphereLibrary={engine.ATMOSPHERE_LIBRARY}
-                  onSelect={engine.loadAtmosphere}
-                  onTogglePlay={engine.toggleAtmospherePlay}
-                  onVolumeChange={engine.updateAtmosphereVolume}
-                />
-              </CardContent>
-            </Card>
-          </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
           {/* Center Column - Frequencies */}
           <div className="space-y-6">

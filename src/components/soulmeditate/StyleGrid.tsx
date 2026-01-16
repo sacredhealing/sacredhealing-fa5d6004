@@ -1,9 +1,9 @@
-import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
+import { Sparkles, Volume2 } from 'lucide-react';
 
-export type MeditationStyle = 
+export type MeditationStyle =
   | 'indian'
   | 'shamanic'
   | 'mystic'
@@ -50,18 +50,44 @@ const STYLE_CONFIGS: StyleConfig[] = [
 interface StyleGridProps {
   activeStyle: MeditationStyle;
   onStyleSelect: (style: MeditationStyle) => void;
+  /** Atmosphere (ambient) volume 0-1 */
+  atmosphereVolume?: number;
+  onAtmosphereVolumeChange?: (vol: number) => void;
 }
 
-export default function StyleGrid({ activeStyle, onStyleSelect }: StyleGridProps) {
+export default function StyleGrid({
+  activeStyle,
+  onStyleSelect,
+  atmosphereVolume = 0.85,
+  onAtmosphereVolumeChange,
+}: StyleGridProps) {
   return (
     <Card className="bg-black/40 backdrop-blur-xl border-white/10">
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2 text-white/90">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20">
-            <Sparkles className="w-5 h-5 text-purple-400" />
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <CardTitle className="text-lg flex items-center gap-2 text-white/90">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20">
+              <Sparkles className="w-5 h-5 text-purple-400" />
+            </div>
+            II. Meditation Style & Atmosphere
+          </CardTitle>
+
+          {/* Atmosphere Volume Slider */}
+          <div className="flex items-center gap-3 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+            <Volume2 className="w-4 h-4 text-cyan-400" />
+            <Slider
+              value={[atmosphereVolume]}
+              min={0}
+              max={1}
+              step={0.01}
+              onValueChange={([v]) => onAtmosphereVolumeChange?.(v)}
+              className="w-24 [&_[role=slider]]:bg-cyan-400"
+            />
+            <span className="text-xs text-white/60 w-9 tabular-nums">
+              {Math.round(atmosphereVolume * 100)}%
+            </span>
           </div>
-          Meditation Style
-        </CardTitle>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
@@ -85,9 +111,9 @@ export default function StyleGrid({ activeStyle, onStyleSelect }: StyleGridProps
                 {style.tags && isActive && (
                   <div className="flex flex-wrap gap-1 mt-2">
                     {style.tags.map((tag) => (
-                      <Badge 
-                        key={tag} 
-                        variant="outline" 
+                      <Badge
+                        key={tag}
+                        variant="outline"
                         className="text-[9px] px-1.5 py-0 border-cyan-500/50 text-cyan-400"
                       >
                         {tag}
