@@ -68,6 +68,12 @@ export function useSoulMeditateEngine() {
   const neuralAudioRef = useRef<HTMLAudioElement | null>(null);
   const neuralGainRef = useRef<GainNode | null>(null);
   
+  // Noise cleanup chain for neural source
+  const noiseHighPassRef = useRef<BiquadFilterNode | null>(null);
+  const noiseLowPassRef = useRef<BiquadFilterNode | null>(null);
+  const noiseCompressorRef = useRef<DynamicsCompressorNode | null>(null);
+  const noiseGateRef = useRef<GainNode | null>(null);
+  
   const atmosphereSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const atmosphereAudioRef = useRef<HTMLAudioElement | null>(null);
   const atmosphereGainRef = useRef<GainNode | null>(null);
@@ -129,6 +135,31 @@ export function useSoulMeditateEngine() {
     // Create layer gains
     neuralGainRef.current = ctx.createGain();
     neuralGainRef.current.gain.value = neuralLayer.volume;
+
+    // Create noise cleanup chain for neural source
+    // High-pass filter: removes low-frequency rumble/hum (below 80Hz)
+    noiseHighPassRef.current = ctx.createBiquadFilter();
+    noiseHighPassRef.current.type = 'highpass';
+    noiseHighPassRef.current.frequency.value = 80;
+    noiseHighPassRef.current.Q.value = 0.7;
+
+    // Low-pass filter: removes high-frequency hiss (above 12kHz)
+    noiseLowPassRef.current = ctx.createBiquadFilter();
+    noiseLowPassRef.current.type = 'lowpass';
+    noiseLowPassRef.current.frequency.value = 12000;
+    noiseLowPassRef.current.Q.value = 0.7;
+
+    // Dynamics compressor: reduces dynamic range and acts as noise gate
+    noiseCompressorRef.current = ctx.createDynamicsCompressor();
+    noiseCompressorRef.current.threshold.value = -50; // Threshold in dB
+    noiseCompressorRef.current.knee.value = 40; // Smooth knee
+    noiseCompressorRef.current.ratio.value = 4; // Compression ratio
+    noiseCompressorRef.current.attack.value = 0.003; // Fast attack
+    noiseCompressorRef.current.release.value = 0.25; // Smooth release
+
+    // Noise gate gain (for very quiet sections)
+    noiseGateRef.current = ctx.createGain();
+    noiseGateRef.current.gain.value = 1;
 
     atmosphereGainRef.current = ctx.createGain();
     atmosphereGainRef.current.gain.value = atmosphereLayer.volume;
@@ -259,9 +290,23 @@ export function useSoulMeditateEngine() {
 
     neuralAudioRef.current = audio;
 
-    // Create source node
+    // Create source node and connect through noise cleanup chain
     const source = audioContextRef.current.createMediaElementSource(audio);
-    source.connect(neuralGainRef.current);
+    
+    // Connect through noise cleanup chain: source -> highpass -> lowpass -> compressor -> gate -> gain
+    if (noiseHighPassRef.current && noiseLowPassRef.current && 
+        noiseCompressorRef.current && noiseGateRef.current && neuralGainRef.current) {
+      source.connect(noiseHighPassRef.current);
+      noiseHighPassRef.current.connect(noiseLowPassRef.current);
+      noiseLowPassRef.current.connect(noiseCompressorRef.current);
+      noiseCompressorRef.current.connect(noiseGateRef.current);
+      noiseGateRef.current.connect(neuralGainRef.current);
+      console.log('Noise cleanup chain connected: highpass(80Hz) -> lowpass(12kHz) -> compressor -> gain');
+    } else {
+      // Fallback: direct connection
+      source.connect(neuralGainRef.current!);
+    }
+    
     neuralSourceRef.current = source;
 
     setNeuralLayer(prev => ({ ...prev, source: typeof file === 'string' ? file : file.name }));
