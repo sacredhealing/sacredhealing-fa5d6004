@@ -27,6 +27,8 @@ function isRapidApiSubscriptionError(status: number, text: string): boolean {
   );
 }
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 // Binaural beats frequency configurations
 const BINAURAL_CONFIGS = {
   delta: { carrier: 100, beat: 2, description: "Deep sleep, healing (0.5-4 Hz)" },
@@ -169,6 +171,131 @@ interface RequestBody {
   output_quality?: "standard" | "high" | "lossless";
 }
 
+// ============ WORKER HEALTH CHECK ============
+async function checkWorkerHealth(workerBaseUrl: string, apiKey: string): Promise<boolean> {
+  try {
+    const healthUrl = workerBaseUrl.replace(/\/process-audio$/, "") + "/health";
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    
+    const res = await fetch(healthUrl, {
+      method: "GET",
+      headers: { "X-Worker-Key": apiKey },
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+// ============ DIRECT LANDR MASTERING ============
+async function masterWithLandr(
+  audioUrl: string,
+  preset: string,
+  rapidApiKey: string,
+  supabaseAdmin: any,
+  jobId: string,
+): Promise<{ success: boolean; resultUrl?: string; error?: string }> {
+  console.log(`[LANDR] Starting mastering for job ${jobId}`);
+
+  // Update progress
+  await supabaseAdmin
+    .from("creative_soul_jobs")
+    .update({ progress: 70, progress_step: "Mastering with LANDR…" })
+    .eq("job_id", jobId);
+
+  try {
+    // Submit to LANDR RapidAPI
+    const submitRes = await fetch("https://landr-mastering-v1.p.rapidapi.com/master", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-rapidapi-host": "landr-mastering-v1.p.rapidapi.com",
+        "x-rapidapi-key": rapidApiKey,
+      },
+      body: JSON.stringify({
+        audio_url: audioUrl,
+        preset: preset || "balanced",
+        format: "mp3",
+        intensity: "medium",
+      }),
+    });
+
+    if (!submitRes.ok) {
+      const errText = await submitRes.text();
+      console.error(`[LANDR] Submit failed (${submitRes.status}): ${errText}`);
+      
+      if (isRapidApiSubscriptionError(submitRes.status, errText)) {
+        return { success: false, error: "LANDR subscription inactive" };
+      }
+      return { success: false, error: `LANDR error: ${submitRes.status}` };
+    }
+
+    const submitData = await submitRes.json();
+    const externalJobId = submitData.jobId || submitData.id || submitData.job_id;
+    console.log(`[LANDR] Job submitted: ${externalJobId}`);
+
+    // Poll for completion (max 3 minutes)
+    const pollUrl = `https://landr-mastering-v1.p.rapidapi.com/status/${externalJobId}`;
+    const maxPollTime = 180000; // 3 minutes
+    const pollInterval = 5000; // 5 seconds
+    const startTime = Date.now();
+
+    while (Date.now() - startTime < maxPollTime) {
+      await sleep(pollInterval);
+
+      try {
+        const statusRes = await fetch(pollUrl, {
+          method: "GET",
+          headers: {
+            "x-rapidapi-host": "landr-mastering-v1.p.rapidapi.com",
+            "x-rapidapi-key": rapidApiKey,
+          },
+        });
+
+        if (!statusRes.ok) {
+          console.log(`[LANDR] Status check failed, retrying...`);
+          continue;
+        }
+
+        const statusData = await statusRes.json();
+        console.log(`[LANDR] Status: ${statusData.status}`);
+
+        if (statusData.status === "completed" || statusData.status === "done") {
+          const resultUrl = statusData.download_url || statusData.result_url || statusData.url;
+          if (resultUrl) {
+            console.log(`[LANDR] Mastering complete: ${resultUrl}`);
+            return { success: true, resultUrl };
+          }
+        }
+
+        if (statusData.status === "failed" || statusData.status === "error") {
+          return { success: false, error: statusData.error || "LANDR mastering failed" };
+        }
+
+        // Update progress based on time elapsed
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(95, 70 + Math.floor((elapsed / maxPollTime) * 25));
+        await supabaseAdmin
+          .from("creative_soul_jobs")
+          .update({ progress, progress_step: "Mastering in progress…" })
+          .eq("job_id", jobId);
+
+      } catch (pollErr) {
+        console.error(`[LANDR] Poll error:`, pollErr);
+      }
+    }
+
+    return { success: false, error: "LANDR mastering timed out" };
+  } catch (err) {
+    console.error(`[LANDR] Exception:`, err);
+    return { success: false, error: String(err) };
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ success: false, error: "Method not allowed. Use POST." }, 405);
@@ -179,6 +306,7 @@ serve(async (req) => {
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const AUDIO_WORKER_URL = Deno.env.get("AUDIO_WORKER_URL");
     const AUDIO_WORKER_API_KEY = Deno.env.get("AUDIO_WORKER_API_KEY");
+    const RAPIDAPI_LANDR_KEY = Deno.env.get("RAPIDAPI_LANDR_KEY");
 
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_ROLE_KEY) {
       return json({ success: false, error: "Server configuration error", details: "Missing environment variables" }, 500);
@@ -360,11 +488,11 @@ serve(async (req) => {
         enabled: bpmEnabled,
         target_bpm: targetBpm,
       },
-      // Mastering (Railway worker format)
-      mastering_enabled: masteringEnabled,
+      // Mastering (Railway worker format) - SKIP if we'll do it in-edge
+      mastering_enabled: false, // We'll handle mastering in edge function
       mastering_preset: masteringPreset,
       mastering: {
-        enabled: masteringEnabled,
+        enabled: false, // Disable worker mastering
         provider: masteringProvider,
         preset: masteringPreset,
       },
@@ -413,6 +541,9 @@ serve(async (req) => {
       music_source: payloadData.music_source || "library",
       keep_original_music: payloadData.keep_original_music ?? false,
       music_tags: payloadData.music_tags || [],
+      // Edge-function mastering flag
+      _edge_mastering: masteringEnabled && RAPIDAPI_LANDR_KEY,
+      _mastering_preset: masteringPreset,
     };
 
     // Create job record in database
@@ -424,6 +555,7 @@ serve(async (req) => {
         action: "meditation_generate",
         status: "queued",
         progress: 0,
+        progress_step: "Initializing…",
         payload: payload,
       });
 
@@ -432,8 +564,7 @@ serve(async (req) => {
       return json({ success: false, error: "Failed to create job", details: insertErr.message });
     }
 
-// --- Dispatch to Audio Worker ---
-    // Supports self-hosted worker (Railway/Fly.io) or RapidAPI
+    // ============ DISPATCH TO AUDIO WORKER ============
     if (AUDIO_WORKER_URL && AUDIO_WORKER_API_KEY) {
       const normalizeWorkerBaseUrl = (raw: string) => {
         const trimmed = raw.trim();
@@ -452,9 +583,12 @@ serve(async (req) => {
         const alreadyEndpoint = ["/jobs", "/process", "/process-audio"].some((s) => p.endsWith(s));
         if (!alreadyEndpoint) workerEndpoint = `${base}/process-audio`;
       } catch {
-        // If URL parsing fails, fall back to best-effort.
         workerEndpoint = `${base}/process-audio`;
       }
+
+      // Check worker health first
+      const workerHealthy = await checkWorkerHealth(base, AUDIO_WORKER_API_KEY);
+      console.log(`[CONVERT-MEDITATION] Worker health: ${workerHealthy ? "healthy" : "unhealthy"}`);
 
       // Build headers - supports both self-hosted worker and RapidAPI
       const headers: Record<string, string> = {
@@ -477,10 +611,7 @@ serve(async (req) => {
 
       console.log(`[CONVERT-MEDITATION] Dispatching job ${jobId} to worker at ${workerEndpoint.split('?')[0]}`);
 
-      const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
       const markQueuedPending = async (message: string) => {
-        // Keep the job queued so the frontend can continue polling and we can re-dispatch.
         await supabaseAdmin
           .from("creative_soul_jobs")
           .update({
@@ -492,17 +623,39 @@ serve(async (req) => {
           .eq("job_id", jobId);
       };
 
+      // If worker is unhealthy, skip dispatch and queue for later
+      if (!workerHealthy) {
+        console.log(`[CONVERT-MEDITATION] Worker unhealthy, queueing job for auto-retry`);
+        await markQueuedPending("Worker warming up...");
+        
+        return json({
+          success: true,
+          mode,
+          plan: isAdmin ? "admin" : (mode === "demo" ? "demo" : "purchased"),
+          job_id: jobId,
+          status: "queued",
+          dispatched: false,
+          worker_healthy: false,
+          message: "Renderer is warming up. Processing will start automatically.",
+        });
+      }
+
       try {
         const callbackUrl = `${SUPABASE_URL}/functions/v1/worker-callback`;
 
-        // Retries help a lot with cold-starting workers (e.g. Railway) that briefly return 502.
+        // Retries help with cold-starting workers
         const maxAttempts = 4;
         let lastErrorText = "";
 
         for (let attempt = 1; attempt <= maxAttempts; attempt++) {
           try {
             const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 45000); // 45s timeout
+            const timeout = setTimeout(() => controller.abort(), 45000);
+
+            await supabaseAdmin
+              .from("creative_soul_jobs")
+              .update({ progress_step: attempt > 1 ? `Connecting to renderer (attempt ${attempt})…` : "Connecting to renderer…" })
+              .eq("job_id", jobId);
 
             const workerRes = await fetch(workerEndpoint, {
               method: "POST",
@@ -536,7 +689,7 @@ serve(async (req) => {
 
                 await supabaseAdmin
                   .from("creative_soul_jobs")
-                  .update({ status: "processing", progress: 5, progress_step: "Processing…", error_message: null })
+                  .update({ status: "processing", progress: 5, progress_step: "Processing audio…", error_message: null })
                   .eq("job_id", jobId);
 
                 return json({
@@ -545,14 +698,26 @@ serve(async (req) => {
                   plan: isAdmin ? "admin" : (mode === "demo" ? "demo" : "purchased"),
                   job_id: jobId,
                   status: "processing",
+                  worker_healthy: true,
                   message: "Audio generation started. This may take a few minutes.",
                 });
               }
 
-              // Worker completed immediately (unlikely but handle it)
+              // Worker completed immediately (rare but handle it)
               if (workerJson?.outputs || workerJson?.result_url) {
-                const resultUrl = workerJson.result_url ||
+                let resultUrl = workerJson.result_url ||
                   (typeof workerJson.outputs === "string" ? workerJson.outputs : JSON.stringify(workerJson.outputs));
+
+                // Apply LANDR mastering if enabled and we have a result
+                if (masteringEnabled && RAPIDAPI_LANDR_KEY && resultUrl && !resultUrl.startsWith("{")) {
+                  const landrResult = await masterWithLandr(resultUrl, masteringPreset, RAPIDAPI_LANDR_KEY, supabaseAdmin, jobId);
+                  if (landrResult.success && landrResult.resultUrl) {
+                    resultUrl = landrResult.resultUrl;
+                    console.log(`[CONVERT-MEDITATION] LANDR mastering applied: ${resultUrl}`);
+                  } else {
+                    console.log(`[CONVERT-MEDITATION] LANDR mastering skipped/failed: ${landrResult.error}`);
+                  }
+                }
 
                 await supabaseAdmin
                   .from("creative_soul_jobs")
@@ -560,6 +725,7 @@ serve(async (req) => {
                     status: "completed",
                     result_url: resultUrl,
                     progress: 100,
+                    progress_step: "Complete!",
                     completed_at: new Date().toISOString(),
                     error_message: null,
                   })
@@ -577,13 +743,11 @@ serve(async (req) => {
               }
 
               // Worker returned success but no clear status - assume processing
-              console.log(
-                `[CONVERT-MEDITATION] Worker response unclear, assuming processing: ${JSON.stringify(workerJson).slice(0, 200)}`,
-              );
+              console.log(`[CONVERT-MEDITATION] Worker response unclear, assuming processing`);
 
               await supabaseAdmin
                 .from("creative_soul_jobs")
-                .update({ status: "processing", progress: 5, progress_step: "Processing…", error_message: null })
+                .update({ status: "processing", progress: 5, progress_step: "Processing audio…", error_message: null })
                 .eq("job_id", jobId);
 
               return json({
@@ -606,6 +770,7 @@ serve(async (req) => {
                 .from("creative_soul_jobs")
                 .update({
                   status: "failed",
+                  progress_step: "Service unavailable",
                   error_message: "Audio processing service unavailable. RapidAPI subscription may be inactive.",
                 })
                 .eq("job_id", jobId);
@@ -618,7 +783,7 @@ serve(async (req) => {
               });
             }
 
-            // Treat 5xx/timeout-like errors as transient (cold starts, proxy timeouts)
+            // Treat 5xx/timeout-like errors as transient
             const transient = workerRes.status >= 500 || workerRes.status === 429 || workerRes.status === 408;
             lastErrorText = `Worker error (${workerRes.status}): ${errorText.slice(0, 200)}`;
 
@@ -627,7 +792,7 @@ serve(async (req) => {
               continue;
             }
 
-            // Non-transient worker error: keep queued (so UI can retry) but surface message.
+            // Non-transient error: keep queued for auto-retry
             await markQueuedPending(`Dispatch pending: ${lastErrorText}`);
             return json({
               success: true,
@@ -661,7 +826,7 @@ serve(async (req) => {
           }
         }
 
-        // Fallback (shouldn't hit)
+        // Fallback
         await markQueuedPending(`Dispatch pending: ${lastErrorText || "Unknown dispatch error"}`);
         return json({
           success: true,
@@ -697,6 +862,7 @@ serve(async (req) => {
       .from("creative_soul_jobs")
       .update({ 
         status: "failed",
+        progress_step: "Configuration error",
         error_message: "Audio processing service not configured. Please set up the audio worker.",
       })
       .eq("job_id", jobId);
