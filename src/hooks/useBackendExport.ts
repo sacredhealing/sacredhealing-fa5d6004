@@ -73,7 +73,7 @@ export function useBackendExport() {
     }
   }, []);
 
-  // Poll job status
+  // Poll job status with improved status mapping
   const pollJobStatus = useCallback(async (jobId: string) => {
     try {
       const { data, error } = await supabase
@@ -87,13 +87,35 @@ export function useBackendExport() {
         return;
       }
 
+      // Map backend progress_step to user-friendly messages
+      const mapProgressStep = (step: string | null, status: string, progress: number): string => {
+        if (!step) {
+          if (status === 'queued') return 'Connecting to renderer…';
+          if (status === 'processing' && progress < 20) return 'Analyzing audio…';
+          if (status === 'processing' && progress < 50) return 'Applying effects…';
+          if (status === 'processing' && progress < 80) return 'Mixing layers…';
+          if (status === 'processing') return 'Finalizing…';
+          return 'Processing…';
+        }
+        
+        // Backend sends these steps, map to friendlier messages
+        const stepLower = step.toLowerCase();
+        if (stepLower.includes('warming up') || stepLower.includes('initializ')) return 'Warming up renderer…';
+        if (stepLower.includes('connecting')) return 'Connecting to renderer…';
+        if (stepLower.includes('mastering') || stepLower.includes('landr')) return 'Mastering with LANDR…';
+        if (stepLower.includes('complete')) return 'Complete!';
+        if (stepLower.includes('processing audio')) return 'Processing audio…';
+        if (stepLower.includes('offline')) return 'Renderer offline';
+        if (stepLower.includes('configuration')) return 'Configuration error';
+        
+        return step;
+      };
+
       const job: ExportJob = {
         id: jobId,
         status: data.status as ExportJob['status'],
         progress: data.progress || 0,
-        progressStep:
-          data.progress_step ||
-          (data.status === 'queued' ? 'Warming up renderer…' : 'Processing…'),
+        progressStep: mapProgressStep(data.progress_step, data.status, data.progress || 0),
         resultUrl: data.result_url,
         error: data.error_message,
       };
@@ -106,25 +128,28 @@ export function useBackendExport() {
         const state = dispatchRetryRef.current;
 
         if (!state || state.jobId !== jobId) {
-          // First time seeing this job
+          // First time seeing this job queued
           dispatchRetryRef.current = {
             jobId,
             attempts: 0,
-            nextAttemptAt: now + 8000,
+            nextAttemptAt: now + 6000, // Try sooner
           };
-        } else if (state.attempts < 3 && now >= state.nextAttemptAt) {
+        } else if (state.attempts < 5 && now >= state.nextAttemptAt) {
+          // Retry dispatch with exponential backoff
+          const backoff = Math.min(30000, 5000 * Math.pow(1.5, state.attempts));
           dispatchRetryRef.current = {
             ...state,
             attempts: state.attempts + 1,
-            nextAttemptAt: now + (state.attempts + 1) * 12000,
+            nextAttemptAt: now + backoff,
           };
+          console.log(`[useBackendExport] Retrying dispatch (attempt ${state.attempts + 1})`);
           retryDispatch(jobId);
         }
 
-        // Hard stop: avoid "stuck forever" when worker is actually down.
+        // Hard stop: avoid "stuck forever" when worker is actually down (2 minutes)
         const startedAt = startedAtRef.current;
-        const gaveUp = (dispatchRetryRef.current?.attempts ?? 0) >= 3;
-        if (startedAt && gaveUp && now - startedAt > 90000) {
+        const gaveUp = (dispatchRetryRef.current?.attempts ?? 0) >= 5;
+        if (startedAt && gaveUp && now - startedAt > 120000) {
           if (pollingRef.current) {
             clearInterval(pollingRef.current);
             pollingRef.current = null;
@@ -135,9 +160,9 @@ export function useBackendExport() {
             ...job,
             status: 'failed',
             progressStep: 'Renderer offline',
-            error: job.error || 'Renderer did not respond. Please try again in a minute.',
+            error: 'Renderer did not respond after multiple attempts. Please try again in a minute.',
           });
-          toast.error('Renderer offline. Please try again shortly.');
+          toast.error('Renderer temporarily unavailable. Please try again shortly.');
           return;
         }
       }
@@ -152,7 +177,7 @@ export function useBackendExport() {
         dispatchRetryRef.current = null;
 
         if (job.status === 'completed' && job.resultUrl) {
-          toast.success('Export complete! Ready to download.');
+          toast.success('🎵 Export complete! Ready to download.');
         } else if (job.status === 'failed') {
           toast.error(job.error || 'Export failed. Please try again.');
         }

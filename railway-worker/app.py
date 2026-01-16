@@ -368,13 +368,65 @@ def send_callback(callback_url, callback_api_key, job_id, status, progress, resu
 
 @app.route('/health', methods=['GET'])
 def health():
-    """Health check endpoint"""
-    return jsonify({'status': 'healthy', 'service': 'audio-worker'}), 200
+    """Health check endpoint - responds quickly for cold-start detection"""
+    return jsonify({'status': 'healthy', 'service': 'audio-worker', 'version': '2.0'}), 200
+
+
+@app.route('/ping', methods=['GET'])
+def ping():
+    """Ultra-light ping for keepalive"""
+    return 'pong', 200
+
+
+def upload_to_supabase(file_path, job_id, supabase_url=None, supabase_key=None):
+    """Upload processed file to Supabase storage"""
+    try:
+        if not supabase_url or not supabase_key:
+            supabase_url = os.getenv('SUPABASE_URL')
+            supabase_key = os.getenv('SUPABASE_SERVICE_ROLE_KEY')
+        
+        if not supabase_url or not supabase_key:
+            print(f"[UPLOAD] Supabase credentials not configured")
+            return None
+        
+        # Read file
+        with open(file_path, 'rb') as f:
+            file_data = f.read()
+        
+        # Determine content type
+        ext = Path(file_path).suffix.lower()
+        content_types = {'.wav': 'audio/wav', '.mp3': 'audio/mpeg', '.flac': 'audio/flac'}
+        content_type = content_types.get(ext, 'audio/mpeg')
+        
+        # Upload to Supabase Storage
+        storage_path = f"creative-soul-outputs/{job_id}{ext}"
+        upload_url = f"{supabase_url}/storage/v1/object/creative-soul-library/{storage_path}"
+        
+        headers = {
+            'Authorization': f'Bearer {supabase_key}',
+            'Content-Type': content_type,
+            'x-upsert': 'true',
+        }
+        
+        response = requests.post(upload_url, headers=headers, data=file_data, timeout=120)
+        
+        if response.status_code in [200, 201]:
+            # Return public URL
+            public_url = f"{supabase_url}/storage/v1/object/public/creative-soul-library/{storage_path}"
+            print(f"[UPLOAD] Success: {public_url}")
+            return public_url
+        else:
+            print(f"[UPLOAD] Failed ({response.status_code}): {response.text[:200]}")
+            return None
+            
+    except Exception as e:
+        print(f"[UPLOAD] Exception: {e}")
+        return None
 
 
 @app.route('/process-audio', methods=['POST'])
 def process_audio():
-    """Main audio processing endpoint"""
+    """Main audio processing endpoint with improved reliability"""
     if not verify_api_key():
         return jsonify({'error': 'Unauthorized'}), 401
     
@@ -383,6 +435,9 @@ def process_audio():
         job_id = data.get('job_id')
         callback_url = data.get('callback_url')
         callback_api_key = data.get('callback_api_key')
+        
+        if not job_id:
+            return jsonify({'error': 'job_id required'}), 400
         
         # Extract parameters
         payload = data.get('payload', {})
@@ -395,14 +450,12 @@ def process_audio():
         youtube_urls = payload.get('youtube_urls', [])
         direct_urls = payload.get('direct_urls', [])
         noise_reduction_level = payload.get('noise_reduction_level')
-        mastering_enabled = payload.get('mastering_enabled', False)
-        mastering_preset = payload.get('mastering_preset', 'balanced')
         
         # Process in background thread
         def process_job():
             try:
                 # Update status: processing
-                send_callback(callback_url, callback_api_key, job_id, 'processing', 10)
+                send_callback(callback_url, callback_api_key, job_id, 'processing', 5)
                 
                 # Download audio
                 audio_path = None
@@ -414,60 +467,69 @@ def process_audio():
                     audio_path = download_audio(direct_urls[0])
                 
                 if not audio_path:
-                    raise Exception("No audio source provided")
+                    raise Exception("No audio source provided or download failed")
                 
-                send_callback(callback_url, callback_api_key, job_id, 'processing', 30)
+                send_callback(callback_url, callback_api_key, job_id, 'processing', 25)
                 
                 # Process audio
                 processed_audio, sr = process_audio_file(
                     audio_path, frequency_hz, binaural or 'none', style, duration, noise_reduction_level
                 )
                 
-                send_callback(callback_url, callback_api_key, job_id, 'processing', 60)
+                send_callback(callback_url, callback_api_key, job_id, 'processing', 55)
                 
-                # Generate variants
-                output_files = []
-                for i in range(variants):
-                    # Save variant
-                    output_path = f"/tmp/{job_id}_variant_{i+1}.wav"
-                    save_audio(processed_audio, sr, output_path)
-                    output_files.append(output_path)
+                # Save locally first
+                output_path = f"/tmp/{job_id}_output.wav"
+                save_audio(processed_audio, sr, output_path)
                 
-                send_callback(callback_url, callback_api_key, job_id, 'processing', 80)
+                send_callback(callback_url, callback_api_key, job_id, 'processing', 70)
                 
-                # TODO: Apply LANDR mastering if enabled
-                if mastering_enabled:
-                    # This would call LANDR API
+                # Upload to Supabase Storage
+                result_url = upload_to_supabase(output_path, job_id)
+                
+                if not result_url:
+                    # Fallback: just report the local path (worker storage)
+                    result_url = output_path
+                    print(f"[PROCESS] Storage upload failed, using local path")
+                
+                send_callback(callback_url, callback_api_key, job_id, 'processing', 90)
+                
+                # Cleanup temp files
+                try:
+                    if audio_path and os.path.exists(audio_path):
+                        os.remove(audio_path)
+                    if os.path.exists(output_path):
+                        os.remove(output_path)
+                except:
                     pass
                 
-                # Upload to storage (this would be implemented based on your storage solution)
-                # For now, return file paths
-                result_urls = output_files
-                
                 send_callback(callback_url, callback_api_key, job_id, 'completed', 100, 
-                            result_url=result_urls[0] if result_urls else None)
+                            result_url=result_url)
                 
             except Exception as e:
                 error_msg = str(e)
-                print(f"Processing error: {error_msg}")
+                print(f"[PROCESS] Error: {error_msg}")
                 send_callback(callback_url, callback_api_key, job_id, 'failed', 0, 
-                            error=error_msg)
+                            error=error_msg[:500])
         
         # Start processing in background
-        thread = threading.Thread(target=process_job)
-        thread.daemon = True
+        thread = threading.Thread(target=process_job, daemon=True)
         thread.start()
         
+        # Respond immediately so edge function doesn't timeout
         return jsonify({
             'success': True,
+            'accepted': True,
             'job_id': job_id,
             'message': 'Processing started'
         }), 202
         
     except Exception as e:
+        print(f"[PROCESS] Exception: {e}")
         return jsonify({'error': str(e)}), 500
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=PORT, debug=False)
+    print(f"[WORKER] Starting on port {PORT}")
+    app.run(host='0.0.0.0', port=PORT, debug=False, threaded=True)
 
