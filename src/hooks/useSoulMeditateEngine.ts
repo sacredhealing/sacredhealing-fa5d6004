@@ -1,5 +1,5 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
-
+import { supabase } from '@/integrations/supabase/client';
 // Types
 export interface LayerState {
   isPlaying: boolean;
@@ -268,7 +268,7 @@ export function useSoulMeditateEngine() {
     return true;
   }, [initialize]);
 
-  // Load atmosphere from Supabase storage
+  // Load atmosphere from Supabase - randomly select from available sounds for style
   const loadAtmosphere = useCallback(async (styleId: string) => {
     // Auto-initialize if needed
     if (!audioContextRef.current) {
@@ -280,38 +280,30 @@ export function useSoulMeditateEngine() {
       return false;
     }
 
-    // Map meditation styles to Supabase storage paths in creative-soul-library bucket
     const SUPABASE_URL = 'https://ssygukfdbtehvtndandn.supabase.co';
     const BUCKET = 'creative-soul-library';
     
-    // Meditation style to audio file mapping
-    const styleToFile: Record<string, string> = {
-      indian: 'indian/sitar/001_Sitar_-_100bpm_Egyptian_D_-_SITARFX_Zenhiser.wav',
-      shamanic: 'atmospheres/shamanic.mp3',
-      mystic: 'atmospheres/mystic.mp3',
-      tibetan: 'atmospheres/tibetan.mp3',
-      sufi: 'atmospheres/sufi.mp3',
-      zen: 'atmospheres/zen.mp3',
-      nature: 'atmospheres/nature-healing.mp3',
-      ocean: 'atmospheres/ocean.mp3',
-      sound_bath: 'atmospheres/sound-bath.mp3',
-      chakra: 'atmospheres/chakra.mp3',
-      higher_consciousness: 'atmospheres/higher-consciousness.mp3',
-      relaxing: 'atmospheres/relaxing.mp3',
-      forest: 'atmospheres/forest.mp3',
-      breath_focus: 'atmospheres/breath-focus.mp3',
-      kundalini: 'atmospheres/kundalini.mp3',
-      // Legacy atmosphere IDs (from AtmosphereSelector)
-      vedic: 'atmospheres/indian-vedic.mp3',
-      cosmic: 'atmospheres/higher-consciousness.mp3',
-      crystal: 'atmospheres/sound-bath.mp3',
-    };
+    // Fetch available sounds for this style from database
+    const { data: sounds, error } = await supabase
+      .from('meditation_style_sounds')
+      .select('*')
+      .eq('style_id', styleId)
+      .eq('is_active', true);
 
-    const filePath = styleToFile[styleId];
-    const audioUrl = filePath 
-      ? `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${filePath}`
-      : '';
+    let audioUrl = '';
+    let selectedSound = null;
 
+    if (sounds && sounds.length > 0) {
+      // Randomly select one sound from available options
+      const randomIndex = Math.floor(Math.random() * sounds.length);
+      selectedSound = sounds[randomIndex];
+      audioUrl = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${selectedSound.file_path}`;
+      console.log(`Selected sound for ${styleId}:`, selectedSound.name);
+    } else {
+      console.log(`No active sounds found for style: ${styleId}`);
+    }
+
+    // Clean up previous audio
     if (atmosphereAudioRef.current) {
       atmosphereAudioRef.current.pause();
     }
@@ -337,7 +329,10 @@ export function useSoulMeditateEngine() {
       }
     }
 
-    setAtmosphereLayer(prev => ({ ...prev, source: styleId }));
+    setAtmosphereLayer(prev => ({ 
+      ...prev, 
+      source: selectedSound ? `${styleId}:${selectedSound.name}` : styleId 
+    }));
     return true;
   }, [initialize]);
 

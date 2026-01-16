@@ -155,6 +155,13 @@ export default function CreativeSoulMeditationTool() {
     toast.success(`Loaded: ${title}`);
   }, [engine]);
 
+  // Auto-load atmosphere when style changes (random sound from database)
+  useEffect(() => {
+    if (engine.isInitialized) {
+      engine.loadAtmosphere(activeStyle);
+    }
+  }, [activeStyle, engine.isInitialized]);
+
   // Sync frequencies when changed
   useEffect(() => {
     if (engine.frequencies.solfeggio.enabled && engine.frequencies.solfeggio.hz !== healingFreq) {
