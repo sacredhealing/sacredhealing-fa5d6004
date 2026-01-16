@@ -141,7 +141,12 @@ serve(async (req) => {
         if (res.ok) {
           await supabaseAdmin
             .from("creative_soul_jobs")
-            .update({ status: "processing", progress: Math.max(5, (job as any).progress ?? 0), error_message: null })
+            .update({
+              status: "processing",
+              progress: Math.max(5, (job as any).progress ?? 0),
+              progress_step: "Processing…",
+              error_message: null,
+            })
             .eq("job_id", jobId);
 
           return json({
@@ -175,7 +180,12 @@ serve(async (req) => {
     // Leave job queued so the client can keep polling and retry later.
     await supabaseAdmin
       .from("creative_soul_jobs")
-      .update({ status: "queued", progress: 0, error_message: `Dispatch pending: ${lastErr.slice(0, 180)}` })
+      .update({
+        status: "queued",
+        progress: 0,
+        progress_step: "Warming up renderer…",
+        error_message: `Dispatch pending: ${lastErr.slice(0, 180)}`,
+      })
       .eq("job_id", jobId);
 
     return json({
