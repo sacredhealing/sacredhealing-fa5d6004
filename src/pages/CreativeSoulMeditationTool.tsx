@@ -148,6 +148,11 @@ export default function CreativeSoulMeditationTool() {
 
   // Handle backend export
   const handleExport = useCallback(async () => {
+    const directUrl = engine.neuralLayer.exportInput?.directUrl;
+    const uploadPath = engine.neuralLayer.exportInput?.uploadPath;
+
+    const looksLikeUrl = (v?: string | null) => !!v && /^https?:\/\//i.test(v);
+
     await backendExport.startExport({
       style_slug: activeStyle,
       frequency_hz: healingFreq,
@@ -165,10 +170,20 @@ export default function CreativeSoulMeditationTool() {
       stem: {
         pre: {
           enabled: stemMode !== 'full_mix',
-          action: stemMode === 'vocals_only' ? 'voice_only' : stemMode === 'music_only' ? 'remove_music' : 'keep_both',
+          action:
+            stemMode === 'vocals_only'
+              ? 'voice_only'
+              : stemMode === 'music_only'
+                ? 'remove_music'
+                : 'keep_both',
         },
       },
-      source_audio_url: engine.neuralLayer.source || undefined,
+      // Prefer export-safe inputs (uploaded/public URL). Fallback to layer.source if it's already a URL.
+      source_audio_url: directUrl || (looksLikeUrl(engine.neuralLayer.source) ? engine.neuralLayer.source! : undefined),
+      upload_storage_path: uploadPath,
+      // Mix levels
+      source_volume: engine.neuralLayer.volume,
+      ambient_volume: engine.atmosphereLayer.volume,
       duration: 300, // 5 minutes
     });
   }, [activeStyle, healingFreq, brainwaveFreq, stemMode, engine, backendExport]);
@@ -382,24 +397,30 @@ export default function CreativeSoulMeditationTool() {
                       <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />
                     )}
                     <span className="text-sm text-white/80">
-                      {backendExport.currentJob.status === 'completed' 
-                        ? 'Export Complete' 
+                      {backendExport.currentJob.status === 'completed'
+                        ? 'Export Complete'
                         : backendExport.currentJob.status === 'failed'
-                        ? 'Export Failed'
-                        : backendExport.currentJob.progressStep}
+                          ? 'Export Failed'
+                          : backendExport.currentJob.progressStep}
                     </span>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={backendExport.cancelExport}
-                    className="text-white/50 hover:text-white"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
+
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-white/60 tabular-nums">
+                      {Math.round(backendExport.currentJob.progress)}%
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={backendExport.cancelExport}
+                      className="text-white/50 hover:text-white"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
-                <Progress 
-                  value={backendExport.currentJob.progress} 
+                <Progress
+                  value={backendExport.currentJob.progress}
                   className="h-2 mb-3"
                 />
                 {backendExport.currentJob.status === 'completed' && backendExport.currentJob.resultUrl && (
