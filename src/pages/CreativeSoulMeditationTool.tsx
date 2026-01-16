@@ -23,11 +23,10 @@ import {
   X,
   CheckCircle2,
   AlertCircle,
-  Mic
+  Zap
 } from 'lucide-react';
 import { useSoulMeditateEngine } from '@/hooks/useSoulMeditateEngine';
-import { useBackendExport } from '@/hooks/useBackendExport';
-import { useBrowserRecording } from '@/hooks/useBrowserRecording';
+import { useOfflineExport } from '@/hooks/useOfflineExport';
 import SpectralVisualizer from '@/components/soulmeditate/SpectralVisualizer';
 import NeuralSourceInput from '@/components/soulmeditate/NeuralSourceInput';
 import AtmosphereSelector from '@/components/soulmeditate/AtmosphereSelector';
@@ -38,7 +37,6 @@ import HealingFrequencySelector from '@/components/soulmeditate/HealingFrequency
 import BrainwaveSelector from '@/components/soulmeditate/BrainwaveSelector';
 import YouTubeLinker from '@/components/soulmeditate/YouTubeLinker';
 import ProcessingTerminal from '@/components/soulmeditate/ProcessingTerminal';
-import { supabase } from '@/integrations/supabase/client';
 
 type VisualizerMode = 'bars' | 'wave' | 'radial';
 type StemMode = 'full_mix' | 'vocals_only' | 'music_only' | 'stems_all';
@@ -59,8 +57,7 @@ function formatTime(seconds: number): string {
 export default function CreativeSoulMeditationTool() {
   const navigate = useNavigate();
   const engine = useSoulMeditateEngine();
-  const backendExport = useBackendExport();
-  const browserRecording = useBrowserRecording();
+  const offlineExport = useOfflineExport();
   
   // UI State
   const [visualizerMode, setVisualizerMode] = useState<VisualizerMode>('bars');
@@ -70,10 +67,7 @@ export default function CreativeSoulMeditationTool() {
   const [stemMode, setStemMode] = useState<StemMode>('full_mix');
   const [isProcessing, setIsProcessing] = useState(false);
   const [exportDuration, setExportDuration] = useState(300); // 5 minutes default
-  
-  // Browser recording state
-  const [isBrowserRecording, setIsBrowserRecording] = useState(false);
-  const browserRecordingJobIdRef = useRef<string | null>(null);
+  const [exportResult, setExportResult] = useState<{ blob: Blob; format: 'wav' | 'mp3'; url: string } | null>(null);
   
   // Volume controls
   const [volumes, setVolumes] = useState({
@@ -161,165 +155,61 @@ export default function CreativeSoulMeditationTool() {
     }
   }, [engine, stopAll, startNeuralProcess]);
 
-  // Handle backend export
+  // Handle offline export - fast rendering using OfflineAudioContext
   const handleExport = useCallback(async () => {
-    const directUrl = engine.neuralLayer.exportInput?.directUrl;
-    const uploadPath = engine.neuralLayer.exportInput?.uploadPath;
-
-    const looksLikeUrl = (v?: string | null) => !!v && /^https?:\/\//i.test(v);
-
-    const jobId = await backendExport.startExport({
-      style_slug: activeStyle,
-      frequency_hz: healingFreq,
-      binaural: {
-        enabled: engine.frequencies.binaural.enabled,
-        beat_hz: brainwaveFreq,
-        carrier_hz: 200,
-        volume: engine.binauralVolume,
-      },
-      healing_frequency: {
-        enabled: engine.frequencies.solfeggio.enabled,
-        hz: healingFreq,
-        volume: engine.solfeggioVolume,
-      },
-      stem: {
-        pre: {
-          enabled: stemMode !== 'full_mix',
-          action:
-            stemMode === 'vocals_only'
-              ? 'voice_only'
-              : stemMode === 'music_only'
-                ? 'remove_music'
-                : 'keep_both',
-        },
-      },
-      // Prefer export-safe inputs (uploaded/public URL). Fallback to layer.source if it's already a URL.
-      source_audio_url: directUrl || (looksLikeUrl(engine.neuralLayer.source) ? engine.neuralLayer.source! : undefined),
-      upload_storage_path: uploadPath,
-      // Mix levels
-      source_volume: engine.neuralLayer.volume,
-      ambient_volume: engine.atmosphereLayer.volume,
-      duration: exportDuration,
-    });
-
-    // Check if we need browser fallback
-    if (jobId && backendExport.currentJob?.useBrowserFallback) {
-      browserRecordingJobIdRef.current = jobId;
-      startBrowserRecording(jobId);
-    }
-  }, [activeStyle, healingFreq, brainwaveFreq, stemMode, engine, backendExport, exportDuration]);
-
-  // Browser recording fallback
-  const startBrowserRecording = useCallback(async (jobId: string) => {
     if (!engine.isInitialized) {
-      await engine.initialize();
-    }
-
-    const ctx = engine.getAudioContext();
-    const masterNode = engine.getMasterNode();
-
-    if (!ctx || !masterNode) {
-      toast.error('Audio engine not ready');
-      backendExport.updateJobStatus({
-        status: 'failed',
-        error: 'Audio engine not initialized',
-        progressStep: 'Failed',
-      });
+      toast.error('Please initialize the engine first');
       return;
     }
 
-    setIsBrowserRecording(true);
-    toast.info(`Recording ${Math.round(exportDuration / 60)} min meditation. Keep this tab open.`);
+    setExportResult(null);
+    
+    // Get atmosphere URL for the active style
+    const atmosphereUrl = engine.atmosphereLayer.source;
+    const neuralUrl = engine.neuralLayer.exportInput?.directUrl || engine.neuralLayer.source;
 
-    // Start playback if not already playing
-    if (!engine.neuralLayer.isPlaying && engine.neuralLayer.source) {
-      engine.toggleNeuralPlay();
-    }
-    if (!engine.atmosphereLayer.isPlaying && engine.atmosphereLayer.source) {
-      engine.toggleAtmospherePlay();
-    }
-    if (!engine.frequencies.solfeggio.enabled) {
-      engine.startSolfeggio(healingFreq);
-    }
-    if (!engine.frequencies.binaural.enabled) {
-      engine.startBinaural(200, brainwaveFreq);
-    }
+    // Convert engine DSP to offline renderer format
+    const dspSettings = {
+      reverb: engine.dsp.reverb.enabled ? engine.dsp.reverb.wet : 0,
+      delay: engine.dsp.delay.enabled ? engine.dsp.delay.time : 0,
+      warmth: engine.dsp.warmth.enabled ? engine.dsp.warmth.drive : 0
+    };
 
-    // Start recording
-    const destination = browserRecording.startRecording(ctx, masterNode, {
+    const result = await offlineExport.exportMeditation({
       durationSeconds: exportDuration,
-      onProgress: (progress, elapsed) => {
-        backendExport.updateJobStatus({
-          progress,
-          progressStep: `Recording: ${formatTime(elapsed)} / ${formatTime(exportDuration)}`,
-        });
-      },
+      neuralAudioUrl: neuralUrl && /^https?:\/\//i.test(neuralUrl) ? neuralUrl : undefined,
+      atmosphereAudioUrl: atmosphereUrl && /^https?:\/\//i.test(atmosphereUrl) ? atmosphereUrl : undefined,
+      solfeggioHz: engine.frequencies.solfeggio.enabled ? healingFreq : undefined,
+      solfeggioVolume: engine.solfeggioVolume,
+      binauralCarrierHz: 200,
+      binauralBeatHz: engine.frequencies.binaural.enabled ? brainwaveFreq : undefined,
+      binauralVolume: engine.binauralVolume,
+      dsp: dspSettings,
+      masterVolume: engine.masterVolume
     });
 
-    if (!destination) {
-      setIsBrowserRecording(false);
-      backendExport.updateJobStatus({
-        status: 'failed',
-        error: 'Failed to start browser recording',
-        progressStep: 'Recording failed',
+    if (result) {
+      setExportResult({
+        blob: result.blob,
+        format: result.format,
+        url: result.url
       });
-      return;
+      toast.success(`Meditation rendered as ${result.format.toUpperCase()}`);
     }
+  }, [engine, offlineExport, exportDuration, healingFreq, brainwaveFreq]);
 
-    // Wait for recording to complete
-    const checkComplete = setInterval(async () => {
-      if (browserRecording.state.status === 'idle' || browserRecording.state.elapsedSeconds >= exportDuration) {
-        clearInterval(checkComplete);
+  // Cancel export
+  const cancelExport = useCallback(() => {
+    offlineExport.cancelExport();
+    setExportResult(null);
+  }, [offlineExport]);
 
-        // Stop recording and get blob
-        const blob = await browserRecording.stopRecording();
-        if (!blob) {
-          setIsBrowserRecording(false);
-          backendExport.updateJobStatus({
-            status: 'failed',
-            error: 'No audio recorded',
-            progressStep: 'Recording failed',
-          });
-          return;
-        }
-
-        // Upload
-        backendExport.updateJobStatus({
-          progress: 60,
-          progressStep: 'Uploading audio…',
-        });
-
-        const uploadedUrl = await browserRecording.uploadRecording(blob, jobId);
-        if (!uploadedUrl) {
-          setIsBrowserRecording(false);
-          backendExport.updateJobStatus({
-            status: 'failed',
-            error: 'Upload failed',
-            progressStep: 'Upload failed',
-          });
-          return;
-        }
-
-        // Try LANDR mastering
-        backendExport.updateJobStatus({
-          progress: 70,
-          progressStep: 'Mastering with LANDR…',
-        });
-
-        const finalUrl = await browserRecording.masterWithLandr(jobId, uploadedUrl, 'meditation_warm');
-        
-        setIsBrowserRecording(false);
-        backendExport.markCompleted(finalUrl || uploadedUrl);
-      }
-    }, 1000);
-  }, [engine, browserRecording, backendExport, exportDuration, healingFreq, brainwaveFreq]);
-
-  // Cancel browser recording
-  const cancelBrowserRecording = useCallback(() => {
-    browserRecording.cancelRecording();
-    setIsBrowserRecording(false);
-    backendExport.cancelExport();
-  }, [browserRecording, backendExport]);
+  // Download the result
+  const handleDownload = useCallback(() => {
+    if (exportResult) {
+      offlineExport.downloadResult({ ...exportResult, durationSeconds: exportDuration }, `meditation-${Date.now()}.${exportResult.format}`);
+    }
+  }, [exportResult, offlineExport, exportDuration]);
 
   // Handle YouTube extracted audio
   const handleYouTubeAudio = useCallback((url: string, title: string) => {
@@ -503,85 +393,85 @@ export default function CreativeSoulMeditationTool() {
             variant="outline"
             size="lg"
             onClick={handleExport}
-            disabled={!engine.isInitialized || backendExport.isExporting || isBrowserRecording}
+            disabled={!engine.isInitialized || offlineExport.progress.isExporting}
             className="bg-white/5 border-white/20 text-white hover:bg-white/10"
           >
-            {backendExport.isExporting || isBrowserRecording ? (
+            {offlineExport.progress.isExporting ? (
               <Loader2 className="w-5 h-5 mr-2 animate-spin" />
             ) : (
-              <Download className="w-5 h-5 mr-2" />
+              <Zap className="w-5 h-5 mr-2" />
             )}
             Export Master
           </Button>
         </div>
 
         {/* Export Progress Panel */}
-        {(backendExport.currentJob || isBrowserRecording) && (
+        {(offlineExport.progress.isExporting || exportResult) && (
           <div className="mb-6">
             <Card className="bg-black/40 backdrop-blur-xl border-cyan-500/30">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    {backendExport.currentJob?.status === 'completed' ? (
+                    {exportResult ? (
                       <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                    ) : backendExport.currentJob?.status === 'failed' ? (
-                      <AlertCircle className="w-5 h-5 text-red-400" />
-                    ) : isBrowserRecording || backendExport.currentJob?.status === 'browser_recording' ? (
-                      <Mic className="w-5 h-5 text-pink-400 animate-pulse" />
                     ) : (
                       <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />
                     )}
                     <span className="text-sm text-white/80">
-                      {backendExport.currentJob?.status === 'completed'
-                        ? 'Export Complete'
-                        : backendExport.currentJob?.status === 'failed'
-                          ? 'Export Failed'
-                          : isBrowserRecording
-                            ? browserRecording.state.statusMessage || 'Recording in browser…'
-                            : backendExport.currentJob?.progressStep || 'Processing…'}
+                      {exportResult 
+                        ? `Export Complete (${exportResult.format.toUpperCase()})`
+                        : offlineExport.progress.step || 'Rendering...'}
                     </span>
+                    {exportResult && (
+                      <Badge variant="outline" className={`text-xs ${
+                        exportResult.format === 'mp3' 
+                          ? 'border-emerald-500/50 text-emerald-400' 
+                          : 'border-amber-500/50 text-amber-400'
+                      }`}>
+                        {exportResult.format.toUpperCase()}
+                      </Badge>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-3">
                     <span className="text-xs text-white/60 tabular-nums">
-                      {Math.round(isBrowserRecording ? browserRecording.state.progress : (backendExport.currentJob?.progress || 0))}%
+                      {exportResult ? '100' : Math.round(offlineExport.progress.percent)}%
                     </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={isBrowserRecording ? cancelBrowserRecording : backendExport.cancelExport}
-                      className="text-white/50 hover:text-white"
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
+                    {!exportResult && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={cancelExport}
+                        className="text-white/50 hover:text-white"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
                 <Progress
-                  value={isBrowserRecording ? browserRecording.state.progress : (backendExport.currentJob?.progress || 0)}
+                  value={exportResult ? 100 : offlineExport.progress.percent}
                   className="h-2 mb-3"
                 />
                 
-                {/* Browser recording indicator */}
-                {isBrowserRecording && (
-                  <div className="flex items-center gap-2 mb-3 p-2 rounded bg-pink-500/10 border border-pink-500/20">
-                    <Mic className="w-4 h-4 text-pink-400" />
-                    <span className="text-xs text-pink-300">
-                      Recording in browser • Keep this tab open • {formatTime(browserRecording.state.elapsedSeconds)} elapsed
+                {/* Fast render indicator */}
+                {offlineExport.progress.isExporting && (
+                  <div className="flex items-center gap-2 mb-3 p-2 rounded bg-cyan-500/10 border border-cyan-500/20">
+                    <Zap className="w-4 h-4 text-cyan-400" />
+                    <span className="text-xs text-cyan-300">
+                      Offline render: Full meditation in seconds, not real-time
                     </span>
                   </div>
                 )}
                 
-                {backendExport.currentJob?.status === 'completed' && backendExport.currentJob.resultUrl && (
+                {exportResult && (
                   <Button
-                    onClick={backendExport.downloadResult}
+                    onClick={handleDownload}
                     className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600"
                   >
                     <Download className="w-4 h-4 mr-2" />
-                    Download Meditation Audio
+                    Download Meditation ({exportResult.format.toUpperCase()})
                   </Button>
-                )}
-                {backendExport.currentJob?.status === 'failed' && backendExport.currentJob.error && (
-                  <p className="text-sm text-red-400">{backendExport.currentJob.error}</p>
                 )}
               </CardContent>
             </Card>
