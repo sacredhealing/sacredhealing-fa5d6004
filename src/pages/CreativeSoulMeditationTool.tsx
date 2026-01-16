@@ -5,6 +5,7 @@ import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { 
   ArrowLeft, 
@@ -18,9 +19,13 @@ import {
   Download,
   Loader2,
   Layers,
-  Scissors
+  Scissors,
+  X,
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
 import { useSoulMeditateEngine } from '@/hooks/useSoulMeditateEngine';
+import { useBackendExport } from '@/hooks/useBackendExport';
 import SpectralVisualizer from '@/components/soulmeditate/SpectralVisualizer';
 import NeuralSourceInput from '@/components/soulmeditate/NeuralSourceInput';
 import AtmosphereSelector from '@/components/soulmeditate/AtmosphereSelector';
@@ -45,6 +50,7 @@ const STEM_OPTIONS = [
 export default function CreativeSoulMeditationTool() {
   const navigate = useNavigate();
   const engine = useSoulMeditateEngine();
+  const backendExport = useBackendExport();
   
   // UI State
   const [visualizerMode, setVisualizerMode] = useState<VisualizerMode>('bars');
@@ -53,7 +59,6 @@ export default function CreativeSoulMeditationTool() {
   const [brainwaveFreq, setBrainwaveFreq] = useState(10);
   const [stemMode, setStemMode] = useState<StemMode>('full_mix');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
   
   // Volume controls
   const [volumes, setVolumes] = useState({
@@ -141,13 +146,32 @@ export default function CreativeSoulMeditationTool() {
     }
   }, [engine, stopAll, startNeuralProcess]);
 
-  // Handle download (placeholder)
-  const handleDownload = async () => {
-    setIsDownloading(true);
-    toast.info('Export feature requires backend audio rendering');
-    await new Promise(r => setTimeout(r, 2000));
-    setIsDownloading(false);
-  };
+  // Handle backend export
+  const handleExport = useCallback(async () => {
+    await backendExport.startExport({
+      style_slug: activeStyle,
+      frequency_hz: healingFreq,
+      binaural: {
+        enabled: engine.frequencies.binaural.enabled,
+        beat_hz: brainwaveFreq,
+        carrier_hz: 200,
+        volume: engine.binauralVolume,
+      },
+      healing_frequency: {
+        enabled: engine.frequencies.solfeggio.enabled,
+        hz: healingFreq,
+        volume: engine.solfeggioVolume,
+      },
+      stem: {
+        pre: {
+          enabled: stemMode !== 'full_mix',
+          action: stemMode === 'vocals_only' ? 'voice_only' : stemMode === 'music_only' ? 'remove_music' : 'keep_both',
+        },
+      },
+      source_audio_url: engine.neuralLayer.source || undefined,
+      duration: 300, // 5 minutes
+    });
+  }, [activeStyle, healingFreq, brainwaveFreq, stemMode, engine, backendExport]);
 
   // Handle YouTube extracted audio
   const handleYouTubeAudio = useCallback((url: string, title: string) => {
@@ -330,11 +354,11 @@ export default function CreativeSoulMeditationTool() {
           <Button
             variant="outline"
             size="lg"
-            onClick={handleDownload}
-            disabled={!engine.isInitialized || isDownloading}
+            onClick={handleExport}
+            disabled={!engine.isInitialized || backendExport.isExporting}
             className="bg-white/5 border-white/20 text-white hover:bg-white/10"
           >
-            {isDownloading ? (
+            {backendExport.isExporting ? (
               <Loader2 className="w-5 h-5 mr-2 animate-spin" />
             ) : (
               <Download className="w-5 h-5 mr-2" />
@@ -342,6 +366,58 @@ export default function CreativeSoulMeditationTool() {
             Export Master
           </Button>
         </div>
+
+        {/* Export Progress Panel */}
+        {backendExport.currentJob && (
+          <div className="mb-6">
+            <Card className="bg-black/40 backdrop-blur-xl border-cyan-500/30">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    {backendExport.currentJob.status === 'completed' ? (
+                      <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                    ) : backendExport.currentJob.status === 'failed' ? (
+                      <AlertCircle className="w-5 h-5 text-red-400" />
+                    ) : (
+                      <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />
+                    )}
+                    <span className="text-sm text-white/80">
+                      {backendExport.currentJob.status === 'completed' 
+                        ? 'Export Complete' 
+                        : backendExport.currentJob.status === 'failed'
+                        ? 'Export Failed'
+                        : backendExport.currentJob.progressStep}
+                    </span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={backendExport.cancelExport}
+                    className="text-white/50 hover:text-white"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+                <Progress 
+                  value={backendExport.currentJob.progress} 
+                  className="h-2 mb-3"
+                />
+                {backendExport.currentJob.status === 'completed' && backendExport.currentJob.resultUrl && (
+                  <Button
+                    onClick={backendExport.downloadResult}
+                    className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download Meditation Audio
+                  </Button>
+                )}
+                {backendExport.currentJob.status === 'failed' && backendExport.currentJob.error && (
+                  <p className="text-sm text-red-400">{backendExport.currentJob.error}</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Neural Source Intake - Above Style Grid */}
         <div className="mb-6">
