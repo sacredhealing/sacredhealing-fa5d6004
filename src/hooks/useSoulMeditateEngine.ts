@@ -682,6 +682,24 @@ export function useSoulMeditateEngine() {
     };
   }, []);
 
+  // ============ RECORDING CAPABILITY ============
+  const recordingDestinationRef = useRef<MediaStreamAudioDestinationNode | null>(null);
+
+  /**
+   * Get the master gain node for connecting a recording destination.
+   * This allows external recording hooks to tap into the audio output.
+   */
+  const getMasterNode = useCallback((): AudioNode | null => {
+    return masterGainRef.current;
+  }, []);
+
+  /**
+   * Get the audio context for recording purposes.
+   */
+  const getAudioContext = useCallback((): AudioContext | null => {
+    return audioContextRef.current;
+  }, []);
+
   return {
     // State
     isInitialized,
@@ -715,5 +733,9 @@ export function useSoulMeditateEngine() {
     updateBinauralVolume,
     updateMasterVolume,
     updateDSP,
+    
+    // Recording support
+    getMasterNode,
+    getAudioContext,
   };
 }

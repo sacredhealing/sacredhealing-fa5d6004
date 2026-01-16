@@ -32,11 +32,13 @@ export interface ExportPayload {
 
 export interface ExportJob {
   id: string;
-  status: 'queued' | 'processing' | 'completed' | 'failed';
+  status: 'queued' | 'processing' | 'completed' | 'failed' | 'browser_recording';
   progress: number;
   progressStep: string;
   resultUrl: string | null;
   error: string | null;
+  /** When true, backend is unavailable - use browser recording fallback */
+  useBrowserFallback?: boolean;
 }
 
 export function useBackendExport() {
@@ -254,6 +256,29 @@ export function useBackendExport() {
 
       const jobId = data.job_id as string;
       jobIdRef.current = jobId;
+
+      // Check if backend says to use browser fallback
+      const workerHealthy = data.worker_healthy !== false;
+      const dispatched = data.dispatched !== false;
+
+      // If worker is unhealthy after multiple attempts, trigger browser fallback
+      if (!workerHealthy && !dispatched) {
+        console.log('[useBackendExport] Worker unhealthy, signaling browser fallback');
+        
+        setCurrentJob({
+          id: jobId,
+          status: 'browser_recording',
+          progress: 0,
+          progressStep: 'Renderer unavailable – switching to browser recording…',
+          resultUrl: null,
+          error: null,
+          useBrowserFallback: true,
+        });
+
+        setIsExporting(false);
+        return jobId;
+      }
+
       dispatchRetryRef.current = {
         jobId,
         attempts: 0,
@@ -264,9 +289,10 @@ export function useBackendExport() {
         id: jobId,
         status: (data.status as ExportJob['status']) || 'queued',
         progress: 0,
-        progressStep: data.dispatched === false ? 'Warming up renderer…' : 'Job queued…',
+        progressStep: dispatched === false ? 'Warming up renderer…' : 'Job queued…',
         resultUrl: null,
         error: null,
+        useBrowserFallback: false,
       });
 
       toast.success('Export job started! Processing in background...');
@@ -345,12 +371,33 @@ export function useBackendExport() {
     };
   }, []);
 
+  /** Update job status from browser recording flow */
+  const updateJobStatus = useCallback((updates: Partial<ExportJob>) => {
+    setCurrentJob(prev => prev ? { ...prev, ...updates } : null);
+  }, []);
+
+  /** Mark job as completed with result URL */
+  const markCompleted = useCallback((resultUrl: string) => {
+    setCurrentJob(prev => prev ? {
+      ...prev,
+      status: 'completed',
+      progress: 100,
+      progressStep: 'Complete!',
+      resultUrl,
+      error: null,
+    } : null);
+    setIsExporting(false);
+    toast.success('🎵 Export complete! Ready to download.');
+  }, []);
+
   return {
     isExporting,
     currentJob,
     startExport,
     cancelExport,
     downloadResult,
+    updateJobStatus,
+    markCompleted,
   };
 }
 

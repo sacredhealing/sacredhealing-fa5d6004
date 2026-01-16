@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -22,10 +22,12 @@ import {
   Scissors,
   X,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Mic
 } from 'lucide-react';
 import { useSoulMeditateEngine } from '@/hooks/useSoulMeditateEngine';
 import { useBackendExport } from '@/hooks/useBackendExport';
+import { useBrowserRecording } from '@/hooks/useBrowserRecording';
 import SpectralVisualizer from '@/components/soulmeditate/SpectralVisualizer';
 import NeuralSourceInput from '@/components/soulmeditate/NeuralSourceInput';
 import AtmosphereSelector from '@/components/soulmeditate/AtmosphereSelector';
@@ -36,6 +38,7 @@ import HealingFrequencySelector from '@/components/soulmeditate/HealingFrequency
 import BrainwaveSelector from '@/components/soulmeditate/BrainwaveSelector';
 import YouTubeLinker from '@/components/soulmeditate/YouTubeLinker';
 import ProcessingTerminal from '@/components/soulmeditate/ProcessingTerminal';
+import { supabase } from '@/integrations/supabase/client';
 
 type VisualizerMode = 'bars' | 'wave' | 'radial';
 type StemMode = 'full_mix' | 'vocals_only' | 'music_only' | 'stems_all';
@@ -47,10 +50,17 @@ const STEM_OPTIONS = [
   { value: 'stems_all', label: 'All Stems' },
 ];
 
+function formatTime(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
 export default function CreativeSoulMeditationTool() {
   const navigate = useNavigate();
   const engine = useSoulMeditateEngine();
   const backendExport = useBackendExport();
+  const browserRecording = useBrowserRecording();
   
   // UI State
   const [visualizerMode, setVisualizerMode] = useState<VisualizerMode>('bars');
@@ -59,6 +69,11 @@ export default function CreativeSoulMeditationTool() {
   const [brainwaveFreq, setBrainwaveFreq] = useState(10);
   const [stemMode, setStemMode] = useState<StemMode>('full_mix');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [exportDuration, setExportDuration] = useState(300); // 5 minutes default
+  
+  // Browser recording state
+  const [isBrowserRecording, setIsBrowserRecording] = useState(false);
+  const browserRecordingJobIdRef = useRef<string | null>(null);
   
   // Volume controls
   const [volumes, setVolumes] = useState({
@@ -153,7 +168,7 @@ export default function CreativeSoulMeditationTool() {
 
     const looksLikeUrl = (v?: string | null) => !!v && /^https?:\/\//i.test(v);
 
-    await backendExport.startExport({
+    const jobId = await backendExport.startExport({
       style_slug: activeStyle,
       frequency_hz: healingFreq,
       binaural: {
@@ -184,9 +199,127 @@ export default function CreativeSoulMeditationTool() {
       // Mix levels
       source_volume: engine.neuralLayer.volume,
       ambient_volume: engine.atmosphereLayer.volume,
-      duration: 300, // 5 minutes
+      duration: exportDuration,
     });
-  }, [activeStyle, healingFreq, brainwaveFreq, stemMode, engine, backendExport]);
+
+    // Check if we need browser fallback
+    if (jobId && backendExport.currentJob?.useBrowserFallback) {
+      browserRecordingJobIdRef.current = jobId;
+      startBrowserRecording(jobId);
+    }
+  }, [activeStyle, healingFreq, brainwaveFreq, stemMode, engine, backendExport, exportDuration]);
+
+  // Browser recording fallback
+  const startBrowserRecording = useCallback(async (jobId: string) => {
+    if (!engine.isInitialized) {
+      await engine.initialize();
+    }
+
+    const ctx = engine.getAudioContext();
+    const masterNode = engine.getMasterNode();
+
+    if (!ctx || !masterNode) {
+      toast.error('Audio engine not ready');
+      backendExport.updateJobStatus({
+        status: 'failed',
+        error: 'Audio engine not initialized',
+        progressStep: 'Failed',
+      });
+      return;
+    }
+
+    setIsBrowserRecording(true);
+    toast.info(`Recording ${Math.round(exportDuration / 60)} min meditation. Keep this tab open.`);
+
+    // Start playback if not already playing
+    if (!engine.neuralLayer.isPlaying && engine.neuralLayer.source) {
+      engine.toggleNeuralPlay();
+    }
+    if (!engine.atmosphereLayer.isPlaying && engine.atmosphereLayer.source) {
+      engine.toggleAtmospherePlay();
+    }
+    if (!engine.frequencies.solfeggio.enabled) {
+      engine.startSolfeggio(healingFreq);
+    }
+    if (!engine.frequencies.binaural.enabled) {
+      engine.startBinaural(200, brainwaveFreq);
+    }
+
+    // Start recording
+    const destination = browserRecording.startRecording(ctx, masterNode, {
+      durationSeconds: exportDuration,
+      onProgress: (progress, elapsed) => {
+        backendExport.updateJobStatus({
+          progress,
+          progressStep: `Recording: ${formatTime(elapsed)} / ${formatTime(exportDuration)}`,
+        });
+      },
+    });
+
+    if (!destination) {
+      setIsBrowserRecording(false);
+      backendExport.updateJobStatus({
+        status: 'failed',
+        error: 'Failed to start browser recording',
+        progressStep: 'Recording failed',
+      });
+      return;
+    }
+
+    // Wait for recording to complete
+    const checkComplete = setInterval(async () => {
+      if (browserRecording.state.status === 'idle' || browserRecording.state.elapsedSeconds >= exportDuration) {
+        clearInterval(checkComplete);
+
+        // Stop recording and get blob
+        const blob = await browserRecording.stopRecording();
+        if (!blob) {
+          setIsBrowserRecording(false);
+          backendExport.updateJobStatus({
+            status: 'failed',
+            error: 'No audio recorded',
+            progressStep: 'Recording failed',
+          });
+          return;
+        }
+
+        // Upload
+        backendExport.updateJobStatus({
+          progress: 60,
+          progressStep: 'Uploading audio…',
+        });
+
+        const uploadedUrl = await browserRecording.uploadRecording(blob, jobId);
+        if (!uploadedUrl) {
+          setIsBrowserRecording(false);
+          backendExport.updateJobStatus({
+            status: 'failed',
+            error: 'Upload failed',
+            progressStep: 'Upload failed',
+          });
+          return;
+        }
+
+        // Try LANDR mastering
+        backendExport.updateJobStatus({
+          progress: 70,
+          progressStep: 'Mastering with LANDR…',
+        });
+
+        const finalUrl = await browserRecording.masterWithLandr(jobId, uploadedUrl, 'meditation_warm');
+        
+        setIsBrowserRecording(false);
+        backendExport.markCompleted(finalUrl || uploadedUrl);
+      }
+    }, 1000);
+  }, [engine, browserRecording, backendExport, exportDuration, healingFreq, brainwaveFreq]);
+
+  // Cancel browser recording
+  const cancelBrowserRecording = useCallback(() => {
+    browserRecording.cancelRecording();
+    setIsBrowserRecording(false);
+    backendExport.cancelExport();
+  }, [browserRecording, backendExport]);
 
   // Handle YouTube extracted audio
   const handleYouTubeAudio = useCallback((url: string, title: string) => {
@@ -370,10 +503,10 @@ export default function CreativeSoulMeditationTool() {
             variant="outline"
             size="lg"
             onClick={handleExport}
-            disabled={!engine.isInitialized || backendExport.isExporting}
+            disabled={!engine.isInitialized || backendExport.isExporting || isBrowserRecording}
             className="bg-white/5 border-white/20 text-white hover:bg-white/10"
           >
-            {backendExport.isExporting ? (
+            {backendExport.isExporting || isBrowserRecording ? (
               <Loader2 className="w-5 h-5 mr-2 animate-spin" />
             ) : (
               <Download className="w-5 h-5 mr-2" />
@@ -383,36 +516,40 @@ export default function CreativeSoulMeditationTool() {
         </div>
 
         {/* Export Progress Panel */}
-        {backendExport.currentJob && (
+        {(backendExport.currentJob || isBrowserRecording) && (
           <div className="mb-6">
             <Card className="bg-black/40 backdrop-blur-xl border-cyan-500/30">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    {backendExport.currentJob.status === 'completed' ? (
+                    {backendExport.currentJob?.status === 'completed' ? (
                       <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                    ) : backendExport.currentJob.status === 'failed' ? (
+                    ) : backendExport.currentJob?.status === 'failed' ? (
                       <AlertCircle className="w-5 h-5 text-red-400" />
+                    ) : isBrowserRecording || backendExport.currentJob?.status === 'browser_recording' ? (
+                      <Mic className="w-5 h-5 text-pink-400 animate-pulse" />
                     ) : (
                       <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />
                     )}
                     <span className="text-sm text-white/80">
-                      {backendExport.currentJob.status === 'completed'
+                      {backendExport.currentJob?.status === 'completed'
                         ? 'Export Complete'
-                        : backendExport.currentJob.status === 'failed'
+                        : backendExport.currentJob?.status === 'failed'
                           ? 'Export Failed'
-                          : backendExport.currentJob.progressStep}
+                          : isBrowserRecording
+                            ? browserRecording.state.statusMessage || 'Recording in browser…'
+                            : backendExport.currentJob?.progressStep || 'Processing…'}
                     </span>
                   </div>
 
                   <div className="flex items-center gap-3">
                     <span className="text-xs text-white/60 tabular-nums">
-                      {Math.round(backendExport.currentJob.progress)}%
+                      {Math.round(isBrowserRecording ? browserRecording.state.progress : (backendExport.currentJob?.progress || 0))}%
                     </span>
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={backendExport.cancelExport}
+                      onClick={isBrowserRecording ? cancelBrowserRecording : backendExport.cancelExport}
                       className="text-white/50 hover:text-white"
                     >
                       <X className="w-4 h-4" />
@@ -420,10 +557,21 @@ export default function CreativeSoulMeditationTool() {
                   </div>
                 </div>
                 <Progress
-                  value={backendExport.currentJob.progress}
+                  value={isBrowserRecording ? browserRecording.state.progress : (backendExport.currentJob?.progress || 0)}
                   className="h-2 mb-3"
                 />
-                {backendExport.currentJob.status === 'completed' && backendExport.currentJob.resultUrl && (
+                
+                {/* Browser recording indicator */}
+                {isBrowserRecording && (
+                  <div className="flex items-center gap-2 mb-3 p-2 rounded bg-pink-500/10 border border-pink-500/20">
+                    <Mic className="w-4 h-4 text-pink-400" />
+                    <span className="text-xs text-pink-300">
+                      Recording in browser • Keep this tab open • {formatTime(browserRecording.state.elapsedSeconds)} elapsed
+                    </span>
+                  </div>
+                )}
+                
+                {backendExport.currentJob?.status === 'completed' && backendExport.currentJob.resultUrl && (
                   <Button
                     onClick={backendExport.downloadResult}
                     className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600"
@@ -432,7 +580,7 @@ export default function CreativeSoulMeditationTool() {
                     Download Meditation Audio
                   </Button>
                 )}
-                {backendExport.currentJob.status === 'failed' && backendExport.currentJob.error && (
+                {backendExport.currentJob?.status === 'failed' && backendExport.currentJob.error && (
                   <p className="text-sm text-red-400">{backendExport.currentJob.error}</p>
                 )}
               </CardContent>
