@@ -486,6 +486,7 @@ serve(async (req) => {
           .update({
             status: "queued",
             progress: 0,
+            progress_step: "Warming up renderer…",
             error_message: message.slice(0, 250),
           })
           .eq("job_id", jobId);
@@ -535,7 +536,7 @@ serve(async (req) => {
 
                 await supabaseAdmin
                   .from("creative_soul_jobs")
-                  .update({ status: "processing", progress: 5, error_message: null })
+                  .update({ status: "processing", progress: 5, progress_step: "Processing…", error_message: null })
                   .eq("job_id", jobId);
 
                 return json({
@@ -582,7 +583,7 @@ serve(async (req) => {
 
               await supabaseAdmin
                 .from("creative_soul_jobs")
-                .update({ status: "processing", progress: 5, error_message: null })
+                .update({ status: "processing", progress: 5, progress_step: "Processing…", error_message: null })
                 .eq("job_id", jobId);
 
               return json({

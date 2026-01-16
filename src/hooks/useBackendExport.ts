@@ -44,6 +44,7 @@ export function useBackendExport() {
   const [currentJob, setCurrentJob] = useState<ExportJob | null>(null);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
   const jobIdRef = useRef<string | null>(null);
+  const startedAtRef = useRef<number | null>(null);
 
   // When workers cold-start, dispatch can fail transiently (e.g. 502). We auto-retry dispatch.
   const dispatchRetryRef = useRef<{
@@ -90,7 +91,9 @@ export function useBackendExport() {
         id: jobId,
         status: data.status as ExportJob['status'],
         progress: data.progress || 0,
-        progressStep: data.progress_step || 'Processing...',
+        progressStep:
+          data.progress_step ||
+          (data.status === 'queued' ? 'Warming up renderer…' : 'Processing…'),
         resultUrl: data.result_url,
         error: data.error_message,
       };
@@ -116,6 +119,26 @@ export function useBackendExport() {
             nextAttemptAt: now + (state.attempts + 1) * 12000,
           };
           retryDispatch(jobId);
+        }
+
+        // Hard stop: avoid "stuck forever" when worker is actually down.
+        const startedAt = startedAtRef.current;
+        const gaveUp = (dispatchRetryRef.current?.attempts ?? 0) >= 3;
+        if (startedAt && gaveUp && now - startedAt > 90000) {
+          if (pollingRef.current) {
+            clearInterval(pollingRef.current);
+            pollingRef.current = null;
+          }
+          setIsExporting(false);
+          dispatchRetryRef.current = null;
+          setCurrentJob({
+            ...job,
+            status: 'failed',
+            progressStep: 'Renderer offline',
+            error: job.error || 'Renderer did not respond. Please try again in a minute.',
+          });
+          toast.error('Renderer offline. Please try again shortly.');
+          return;
         }
       }
 
@@ -144,6 +167,7 @@ export function useBackendExport() {
     try {
       setIsExporting(true);
       setCurrentJob(null);
+      startedAtRef.current = Date.now();
 
       // Get auth token
       const { data: { session } } = await supabase.auth.getSession();
@@ -249,6 +273,7 @@ export function useBackendExport() {
     setIsExporting(false);
     setCurrentJob(null);
     jobIdRef.current = null;
+    startedAtRef.current = null;
     dispatchRetryRef.current = null;
     toast.info('Export cancelled');
   }, []);
