@@ -97,7 +97,8 @@ export function useSoulMeditateEngine() {
     solfeggio: { enabled: false, hz: 528 },
     binaural: { enabled: false, carrierHz: 200, beatHz: 6 },
   });
-  const [frequencyVolume, setFrequencyVolume] = useState(0.35);
+  const [solfeggioVolume, setSolfeggioVolume] = useState(0.5);
+  const [binauralVolume, setBinauralVolume] = useState(0.5);
   const [dsp, setDSP] = useState<DSPSettings>({
     reverb: { enabled: true, decay: 2.5, wet: 0.3 },
     delay: { enabled: false, time: 0.4, feedback: 0.3, wet: 0.2 },
@@ -285,7 +286,7 @@ export function useSoulMeditateEngine() {
     
     // Meditation style to audio file mapping
     const styleToFile: Record<string, string> = {
-      indian: 'indian',
+      indian: 'indian/sitar/001_Sitar_-_100bpm_Egyptian_D_-_SITARFX_Zenhiser.wav',
       shamanic: 'atmospheres/shamanic.mp3',
       mystic: 'atmospheres/mystic.mp3',
       tibetan: 'atmospheres/tibetan.mp3',
@@ -384,11 +385,11 @@ export function useSoulMeditateEngine() {
 
     // Set volume immediately for audible tone
     solfeggioGainRef.current.gain.cancelScheduledValues(audioContextRef.current.currentTime);
-    solfeggioGainRef.current.gain.setValueAtTime(frequencyVolume, audioContextRef.current.currentTime);
+    solfeggioGainRef.current.gain.setValueAtTime(solfeggioVolume, audioContextRef.current.currentTime);
 
     solfeggioOscRef.current = osc;
     setFrequencies(prev => ({ ...prev, solfeggio: { enabled: true, hz } }));
-  }, [frequencyVolume]);
+  }, [solfeggioVolume]);
 
   // Stop solfeggio
   const stopSolfeggio = useCallback(() => {
@@ -441,13 +442,13 @@ export function useSoulMeditateEngine() {
 
     // Set volume immediately for audible tone
     binauralGainRef.current.gain.cancelScheduledValues(ctx.currentTime);
-    binauralGainRef.current.gain.setValueAtTime(frequencyVolume, ctx.currentTime);
+    binauralGainRef.current.gain.setValueAtTime(binauralVolume, ctx.currentTime);
 
     binauralLeftOscRef.current = leftOsc;
     binauralRightOscRef.current = rightOsc;
 
     setFrequencies(prev => ({ ...prev, binaural: { enabled: true, carrierHz, beatHz } }));
-  }, [frequencyVolume]);
+  }, [binauralVolume]);
 
   // Stop binaural
   const stopBinaural = useCallback(() => {
@@ -478,15 +479,19 @@ export function useSoulMeditateEngine() {
     setAtmosphereLayer(prev => ({ ...prev, volume: vol }));
   }, []);
 
-  const updateFrequencyVolume = useCallback((vol: number) => {
+  const updateSolfeggioVolume = useCallback((vol: number) => {
     if (solfeggioGainRef.current && frequencies.solfeggio.enabled) {
       solfeggioGainRef.current.gain.value = vol;
     }
+    setSolfeggioVolume(vol);
+  }, [frequencies.solfeggio.enabled]);
+
+  const updateBinauralVolume = useCallback((vol: number) => {
     if (binauralGainRef.current && frequencies.binaural.enabled) {
       binauralGainRef.current.gain.value = vol;
     }
-    setFrequencyVolume(vol);
-  }, [frequencies.solfeggio.enabled, frequencies.binaural.enabled]);
+    setBinauralVolume(vol);
+  }, [frequencies.binaural.enabled]);
 
   const updateMasterVolume = useCallback((vol: number) => {
     if (masterGainRef.current) {
@@ -576,7 +581,8 @@ export function useSoulMeditateEngine() {
     neuralLayer,
     atmosphereLayer,
     frequencies,
-    frequencyVolume,
+    solfeggioVolume,
+    binauralVolume,
     dsp,
     masterVolume,
     analyserData,
@@ -598,7 +604,8 @@ export function useSoulMeditateEngine() {
     stopBinaural,
     updateNeuralVolume,
     updateAtmosphereVolume,
-    updateFrequencyVolume,
+    updateSolfeggioVolume,
+    updateBinauralVolume,
     updateMasterVolume,
     updateDSP,
   };
