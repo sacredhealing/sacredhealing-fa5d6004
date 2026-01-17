@@ -90,22 +90,22 @@ export function useTimelineEditor(audioRef: React.RefObject<HTMLAudioElement | n
     ));
   }, []);
 
-  // Add clip to timeline with waveform extraction
+  // Add clip to timeline with high-resolution waveform extraction (500 points)
   const addClip = useCallback((name: string, clipDuration: number, audioSource?: File | string) => {
     saveForUndo();
     const newClip = createClipFromSource(name, clipDuration);
     setClips(prev => [...prev, newClip]);
     setDuration(prev => Math.max(prev, clipDuration + 30)); // Add padding
     
-    // Extract waveform asynchronously if audio source provided
+    // Extract high-resolution waveform asynchronously (500 points for precision)
     if (audioSource) {
       pendingWaveformsRef.current.set(newClip.id, audioSource);
-      extractWaveform(audioSource, 128).then(waveformData => {
-        // Resample to reasonable size for display (max 500 peaks)
-        const resampled = resampleWaveform(waveformData.peaks, Math.min(500, waveformData.peaks.length));
+      extractWaveform(audioSource, 500).then(waveformData => {
+        // Use full 500-point resolution for maximum detail
+        const resampled = resampleWaveform(waveformData.peaks, 500);
         updateClipWaveform(newClip.id, resampled);
         pendingWaveformsRef.current.delete(newClip.id);
-        console.log(`🎵 Waveform extracted for ${name}: ${resampled.length} peaks`);
+        console.log(`🎵 High-res waveform extracted for ${name}: ${resampled.length} peaks`);
       }).catch(err => {
         console.error('Waveform extraction failed:', err);
         pendingWaveformsRef.current.delete(newClip.id);
