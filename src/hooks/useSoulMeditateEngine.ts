@@ -452,6 +452,80 @@ export function useSoulMeditateEngine() {
     return true;
   }, [initialize]);
 
+  // Helper: Sanitize URL to ensure protocol is present
+  const sanitizeUrl = (url: string): string => {
+    if (!url) return '';
+    const trimmed = url.trim();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return trimmed;
+    }
+    return `https://${trimmed}`;
+  };
+
+  // Helper: Retry wrapper for async operations
+  const withRetry = async <T>(
+    operation: () => Promise<T>,
+    maxAttempts: number = 3,
+    delayMs: number = 1000
+  ): Promise<T> => {
+    let lastError: Error | null = null;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        return await operation();
+      } catch (error) {
+        lastError = error as Error;
+        console.warn(`⚠️ Attempt ${attempt}/${maxAttempts} failed:`, error);
+        if (attempt < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, delayMs * attempt));
+        }
+      }
+    }
+    throw lastError;
+  };
+
+  // Generate a safety drone oscillator as fallback
+  const startSafetyDrone = useCallback(() => {
+    if (!audioContextRef.current || !atmosphereGainRef.current) return false;
+    
+    console.log('🛡️ Starting safety drone fallback...');
+    
+    try {
+      // Create a gentle drone with oscillators
+      const osc1 = audioContextRef.current.createOscillator();
+      const osc2 = audioContextRef.current.createOscillator();
+      const droneGain = audioContextRef.current.createGain();
+      
+      osc1.type = 'sine';
+      osc1.frequency.value = 136.1; // Om frequency
+      osc2.type = 'sine';
+      osc2.frequency.value = 272.2; // Octave
+      
+      droneGain.gain.value = 0.15;
+      
+      osc1.connect(droneGain);
+      osc2.connect(droneGain);
+      droneGain.connect(atmosphereGainRef.current);
+      
+      osc1.start();
+      osc2.start();
+      
+      // Store reference for cleanup
+      (atmosphereAudioRef as any).droneOscillators = [osc1, osc2, droneGain];
+      
+      setAtmosphereLayer(prev => ({ 
+        ...prev, 
+        source: 'safety-drone',
+        isPlaying: true,
+        exportInput: { directUrl: '', displayName: 'Safety Drone (Fallback)' }
+      }));
+      
+      return true;
+    } catch (e) {
+      console.error('Failed to start safety drone:', e);
+      return false;
+    }
+  }, []);
+
   // Load atmosphere from Supabase - randomly select from available sounds for style
   const loadAtmosphere = useCallback(async (styleId: string) => {
     // Auto-initialize if needed
@@ -474,64 +548,95 @@ export function useSoulMeditateEngine() {
     const isAudioFile = (name: string) => 
       name.endsWith('.wav') || name.endsWith('.mp3') || name.endsWith('.m4a') || name.endsWith('.ogg');
 
-    // List files directly from storage bucket for this style folder (NO search param - it breaks the query)
-    const { data: storageFiles, error: storageError } = await supabase
-      .storage
-      .from(BUCKET)
-      .list(styleId, { limit: 100 });
-
-    if (storageError) {
-      console.error('Storage list error:', storageError);
-    }
-
-    // Collect all audio files including from subfolders
-    let allAudioFiles: { name: string; path: string }[] = [];
-    
-    if (storageFiles && storageFiles.length > 0) {
-      console.log(`📂 Found ${storageFiles.length} items in ${styleId}:`, storageFiles.map(f => f.name));
-      
-      for (const item of storageFiles) {
-        if (isAudioFile(item.name)) {
-          allAudioFiles.push({ name: item.name, path: `${styleId}/${item.name}` });
-        } else if (!item.name.includes('.')) {
-          // This is a subfolder (no extension), list its contents
-          const { data: subfolderFiles, error: subError } = await supabase
-            .storage
-            .from(BUCKET)
-            .list(`${styleId}/${item.name}`, { limit: 100 });
-          
-          if (subError) {
-            console.error(`Subfolder ${item.name} error:`, subError);
-            continue;
+    // Retry wrapper for storage list operations
+    const listWithRetry = async (path: string) => {
+      return withRetry(async () => {
+        const { data, error } = await supabase
+          .storage
+          .from(BUCKET)
+          .list(path, { limit: 100 });
+        
+        if (error) {
+          // Check for 403/404 errors - trigger safety drone
+          if (error.message?.includes('403') || error.message?.includes('404')) {
+            console.error(`🚫 Storage access denied (${error.message}) - will fallback to drone`);
+            throw new Error(`Access denied: ${error.message}`);
           }
-          
-          if (subfolderFiles && subfolderFiles.length > 0) {
-            console.log(`📂 Found ${subfolderFiles.length} items in ${styleId}/${item.name}`);
-            for (const subFile of subfolderFiles) {
-              if (isAudioFile(subFile.name)) {
-                allAudioFiles.push({ 
-                  name: subFile.name, 
-                  path: `${styleId}/${item.name}/${subFile.name}` 
-                });
+          throw error;
+        }
+        return data;
+      }, 3, 800);
+    };
+
+    try {
+      // List files directly from storage bucket for this style folder with retry
+      const storageFiles = await listWithRetry(styleId);
+
+      // Collect all audio files including from subfolders
+      let allAudioFiles: { name: string; path: string }[] = [];
+      
+      if (storageFiles && storageFiles.length > 0) {
+        console.log(`📂 Found ${storageFiles.length} items in ${styleId}:`, storageFiles.map(f => f.name));
+        
+        for (const item of storageFiles) {
+          if (isAudioFile(item.name)) {
+            allAudioFiles.push({ name: item.name, path: `${styleId}/${item.name}` });
+          } else if (!item.name.includes('.')) {
+            // This is a subfolder (no extension), list its contents
+            try {
+              const subfolderFiles = await listWithRetry(`${styleId}/${item.name}`);
+              
+              if (subfolderFiles && subfolderFiles.length > 0) {
+                console.log(`📂 Found ${subfolderFiles.length} items in ${styleId}/${item.name}`);
+                for (const subFile of subfolderFiles) {
+                  if (isAudioFile(subFile.name)) {
+                    allAudioFiles.push({ 
+                      name: subFile.name, 
+                      path: `${styleId}/${item.name}/${subFile.name}` 
+                    });
+                  }
+                }
               }
+            } catch (subError) {
+              console.error(`Subfolder ${item.name} error:`, subError);
             }
           }
         }
       }
+
+      if (allAudioFiles.length > 0) {
+        // Randomly select one audio file
+        const randomIndex = Math.floor(Math.random() * allAudioFiles.length);
+        const selectedFile = allAudioFiles[randomIndex];
+        selectedFileName = selectedFile.name;
+        
+        // Build URL with proper encoding and sanitize
+        const rawUrl = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${encodeURIComponent(selectedFile.path).replace(/%2F/g, '/')}`;
+        audioUrl = sanitizeUrl(rawUrl);
+        
+        console.log(`🎲 Selected atmosphere for ${styleId}:`, selectedFile.name, `(from ${allAudioFiles.length} files)`);
+      } else {
+        console.log(`⚠️ No audio files found in storage for style: ${styleId}`);
+      }
+    } catch (listError) {
+      console.error('Storage list failed after retries:', listError);
+      // Fallback to safety drone
+      return startSafetyDrone();
     }
 
-    if (allAudioFiles.length > 0) {
-      // Randomly select one audio file
-      const randomIndex = Math.floor(Math.random() * allAudioFiles.length);
-      const selectedFile = allAudioFiles[randomIndex];
-      selectedFileName = selectedFile.name;
-      audioUrl = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${encodeURIComponent(selectedFile.path).replace(/%2F/g, '/')}`;
-      console.log(`🎲 Selected atmosphere for ${styleId}:`, selectedFile.name, `(from ${allAudioFiles.length} files)`);
-    } else {
-      console.log(`⚠️ No audio files found in storage for style: ${styleId}`);
+    // Clean up previous audio and drone oscillators
+    if ((atmosphereAudioRef as any).droneOscillators) {
+      const [osc1, osc2, gain] = (atmosphereAudioRef as any).droneOscillators;
+      try {
+        osc1.stop();
+        osc2.stop();
+        osc1.disconnect();
+        osc2.disconnect();
+        gain.disconnect();
+      } catch (e) {}
+      (atmosphereAudioRef as any).droneOscillators = null;
     }
-
-    // Clean up previous audio
+    
     if (atmosphereAudioRef.current) {
       atmosphereAudioRef.current.pause();
       atmosphereAudioRef.current.src = '';
@@ -545,7 +650,26 @@ export function useSoulMeditateEngine() {
 
     if (!audioUrl) {
       setAtmosphereLayer(prev => ({ ...prev, source: null, isPlaying: false }));
-      return false;
+      // No files found - fallback to safety drone
+      console.log('🛡️ No audio URL, starting safety drone...');
+      return startSafetyDrone();
+    }
+
+    // Pre-flight URL verification with retry
+    try {
+      await withRetry(async () => {
+        const response = await fetch(audioUrl, { method: 'HEAD' });
+        if (response.status === 403 || response.status === 404) {
+          throw new Error(`Audio file not accessible: ${response.status}`);
+        }
+        if (!response.ok) {
+          throw new Error(`Pre-flight check failed: ${response.status}`);
+        }
+        console.log('✅ Pre-flight URL check passed');
+      }, 3, 500);
+    } catch (preflightError) {
+      console.error('Pre-flight check failed:', preflightError);
+      return startSafetyDrone();
     }
 
     const audio = new Audio();
@@ -556,24 +680,29 @@ export function useSoulMeditateEngine() {
     
     atmosphereAudioRef.current = audio;
 
-    // Wait for audio to be ready before connecting
-    await new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(new Error('Audio load timeout'));
-      }, 10000);
-      
-      audio.addEventListener('canplaythrough', () => {
-        clearTimeout(timeout);
-        resolve();
-      }, { once: true });
-      
-      audio.addEventListener('error', (e) => {
-        clearTimeout(timeout);
-        reject(e);
-      }, { once: true });
-      
-      audio.load();
-    });
+    // Wait for audio to be ready before connecting with extended timeout
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Audio load timeout'));
+        }, 15000); // Extended timeout
+        
+        audio.addEventListener('canplaythrough', () => {
+          clearTimeout(timeout);
+          resolve();
+        }, { once: true });
+        
+        audio.addEventListener('error', (e) => {
+          clearTimeout(timeout);
+          reject(e);
+        }, { once: true });
+        
+        audio.load();
+      });
+    } catch (loadError) {
+      console.error('Audio load failed:', loadError);
+      return startSafetyDrone();
+    }
 
     try {
       const source = audioContextRef.current.createMediaElementSource(audio);
@@ -586,7 +715,7 @@ export function useSoulMeditateEngine() {
       console.log(`✅ Atmosphere audio ready & connected: ${selectedFileName} (vol: ${atmosphereLayer.volume})`);
     } catch (e) {
       console.error('Failed to connect atmosphere audio:', e);
-      return false;
+      return startSafetyDrone();
     }
 
     setAtmosphereLayer(prev => ({ 
