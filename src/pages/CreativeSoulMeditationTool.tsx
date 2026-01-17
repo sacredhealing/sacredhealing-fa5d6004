@@ -179,24 +179,24 @@ export default function CreativeSoulMeditationTool() {
     const atmosphereUrl = engine.atmosphereLayer.exportInput?.directUrl;
     const neuralUrl = engine.neuralLayer.exportInput?.directUrl || engine.neuralLayer.source;
 
-    // Convert engine DSP to offline renderer format
+    // Convert engine DSP to offline renderer format (with null safety)
     const dspSettings = {
-      reverb: engine.dsp.reverb.enabled ? engine.dsp.reverb.wet : 0,
-      delay: engine.dsp.delay.enabled ? engine.dsp.delay.time : 0,
-      warmth: engine.dsp.warmth.enabled ? engine.dsp.warmth.drive : 0
+      reverb: engine.dsp?.reverb?.enabled ? engine.dsp.reverb.wet : 0,
+      delay: engine.dsp?.delay?.enabled ? engine.dsp.delay.time : 0,
+      warmth: engine.dsp?.warmth?.enabled ? engine.dsp.warmth.drive : 0
     };
 
     const result = await offlineExport.exportMeditation({
       durationSeconds: exportDuration,
       neuralAudioUrl: neuralUrl && /^https?:\/\//i.test(neuralUrl) ? neuralUrl : undefined,
       atmosphereAudioUrl: atmosphereUrl && /^https?:\/\//i.test(atmosphereUrl) ? atmosphereUrl : undefined,
-      solfeggioHz: engine.frequencies.solfeggio.enabled ? healingFreq : undefined,
-      solfeggioVolume: engine.solfeggioVolume,
+      solfeggioHz: engine.frequencies?.solfeggio?.enabled ? healingFreq : undefined,
+      solfeggioVolume: engine.solfeggioVolume ?? 0.5,
       binauralCarrierHz: 200,
-      binauralBeatHz: engine.frequencies.binaural.enabled ? brainwaveFreq : undefined,
-      binauralVolume: engine.binauralVolume,
+      binauralBeatHz: engine.frequencies?.binaural?.enabled ? brainwaveFreq : undefined,
+      binauralVolume: engine.binauralVolume ?? 0.5,
       dsp: dspSettings,
-      masterVolume: engine.masterVolume
+      masterVolume: engine.masterVolume ?? 0.8
     });
 
     if (result) {
