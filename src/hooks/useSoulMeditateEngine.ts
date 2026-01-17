@@ -467,55 +467,24 @@ export function useSoulMeditateEngine() {
     const SUPABASE_URL = 'https://ssygukfdbtehvtndandn.supabase.co';
     const BUCKET = 'creative-soul-library';
     
+    // Fetch available sounds for this style from database
+    const { data: sounds, error } = await supabase
+      .from('meditation_style_sounds')
+      .select('*')
+      .eq('style_id', styleId)
+      .eq('is_active', true);
+
     let audioUrl = '';
-    let selectedFileName = '';
+    let selectedSound = null;
 
-    // List files directly from storage bucket for this style folder
-    const { data: storageFiles, error: storageError } = await supabase
-      .storage
-      .from(BUCKET)
-      .list(styleId, {
-        limit: 100,
-        search: '.wav'
-      });
-
-    // Also check subfolders (e.g., indian/sitar/)
-    let allWavFiles: { name: string; path: string }[] = [];
-    
-    if (storageFiles && storageFiles.length > 0) {
-      for (const item of storageFiles) {
-        if (item.name.endsWith('.wav')) {
-          allWavFiles.push({ name: item.name, path: `${styleId}/${item.name}` });
-        } else if (!item.name.includes('.')) {
-          // This might be a subfolder, list its contents
-          const { data: subfolderFiles } = await supabase
-            .storage
-            .from(BUCKET)
-            .list(`${styleId}/${item.name}`, { limit: 100 });
-          
-          if (subfolderFiles) {
-            for (const subFile of subfolderFiles) {
-              if (subFile.name.endsWith('.wav')) {
-                allWavFiles.push({ 
-                  name: subFile.name, 
-                  path: `${styleId}/${item.name}/${subFile.name}` 
-                });
-              }
-            }
-          }
-        }
-      }
-    }
-
-    if (allWavFiles.length > 0) {
-      // Randomly select one WAV file
-      const randomIndex = Math.floor(Math.random() * allWavFiles.length);
-      const selectedFile = allWavFiles[randomIndex];
-      selectedFileName = selectedFile.name;
-      audioUrl = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${selectedFile.path}`;
-      console.log(`🎲 Randomly selected atmosphere for ${styleId}:`, selectedFile.name, `(from ${allWavFiles.length} files)`);
+    if (sounds && sounds.length > 0) {
+      // Randomly select one sound from available options
+      const randomIndex = Math.floor(Math.random() * sounds.length);
+      selectedSound = sounds[randomIndex];
+      audioUrl = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${selectedSound.file_path}`;
+      console.log(`Selected sound for ${styleId}:`, selectedSound.name);
     } else {
-      console.log(`No WAV files found in storage for style: ${styleId}`);
+      console.log(`No active sounds found for style: ${styleId}`);
     }
 
     // Clean up previous audio
@@ -546,10 +515,10 @@ export function useSoulMeditateEngine() {
 
     setAtmosphereLayer(prev => ({ 
       ...prev, 
-      source: selectedFileName ? `${styleId}:${selectedFileName.replace('.wav', '')}` : styleId,
+      source: selectedSound ? `${styleId}:${selectedSound.name}` : styleId,
       exportInput: audioUrl ? {
         directUrl: audioUrl,
-        displayName: selectedFileName?.replace('.wav', '') || styleId
+        displayName: selectedSound?.name || styleId
       } : undefined
     }));
     return true;

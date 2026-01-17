@@ -27,8 +27,6 @@ import {
 } from 'lucide-react';
 import { useSoulMeditateEngine } from '@/hooks/useSoulMeditateEngine';
 import { useOfflineExport } from '@/hooks/useOfflineExport';
-import { useTimelineEditor } from '@/hooks/useTimelineEditor';
-import { useDAWPlaybackEngine } from '@/hooks/useDAWPlaybackEngine';
 import SpectralVisualizer from '@/components/soulmeditate/SpectralVisualizer';
 import NeuralSourceInput from '@/components/soulmeditate/NeuralSourceInput';
 import AtmosphereSelector from '@/components/soulmeditate/AtmosphereSelector';
@@ -40,8 +38,6 @@ import BrainwaveSelector from '@/components/soulmeditate/BrainwaveSelector';
 import YouTubeLinker from '@/components/soulmeditate/YouTubeLinker';
 import ProcessingTerminal from '@/components/soulmeditate/ProcessingTerminal';
 import VirtualChannelStrip from '@/components/soulmeditate/VirtualChannelStrip';
-import DAWTransportBar from '@/components/soulmeditate/DAWTransportBar';
-import ClipTimeline from '@/components/soulmeditate/ClipTimeline';
 
 type VisualizerMode = 'bars' | 'wave' | 'radial';
 type StemMode = 'full_mix' | 'vocals_only' | 'music_only' | 'stems_all';
@@ -63,16 +59,6 @@ export default function CreativeSoulMeditationTool() {
   const navigate = useNavigate();
   const engine = useSoulMeditateEngine();
   const offlineExport = useOfflineExport();
-  const dawEngine = useDAWPlaybackEngine();
-  
-  // Create a ref for the neural audio element (used by timeline)
-  const neuralAudioRef = useRef<HTMLAudioElement | null>(null);
-  
-  // Initialize timeline editor
-  const timeline = useTimelineEditor(neuralAudioRef);
-  
-  // Ref to track if DAW sync is active
-  const dawSyncActiveRef = useRef(false);
   
   // UI State
   const [visualizerMode, setVisualizerMode] = useState<VisualizerMode>('bars');
@@ -83,7 +69,6 @@ export default function CreativeSoulMeditationTool() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [exportDuration, setExportDuration] = useState(300); // 5 minutes default
   const [exportResult, setExportResult] = useState<{ blob: Blob; format: 'wav' | 'mp3'; url: string } | null>(null);
-  const [showTimeline, setShowTimeline] = useState(true);
   
   // Volume controls
   const [volumes, setVolumes] = useState({
@@ -154,9 +139,7 @@ export default function CreativeSoulMeditationTool() {
     if (engine.atmosphereLayer.isPlaying) engine.toggleAtmospherePlay();
     engine.stopSolfeggio();
     engine.stopBinaural();
-    dawEngine.stopPlayback();
-    dawSyncActiveRef.current = false;
-  }, [engine, dawEngine]);
+  }, [engine]);
 
   // Toggle play/stop
   const togglePlay = useCallback(() => {
@@ -164,71 +147,14 @@ export default function CreativeSoulMeditationTool() {
       engine.neuralLayer.isPlaying || 
       engine.atmosphereLayer.isPlaying || 
       engine.frequencies.solfeggio.enabled ||
-      engine.frequencies.binaural.enabled ||
-      dawEngine.isPlaying;
+      engine.frequencies.binaural.enabled;
 
     if (isAnythingPlaying) {
       stopAll();
     } else {
       startNeuralProcess();
     }
-  }, [engine, dawEngine, stopAll, startNeuralProcess]);
-
-  // Sync DAW engine with timeline clips when they change
-  useEffect(() => {
-    if (!dawEngine.isPlaying || !dawSyncActiveRef.current) return;
-    
-    // Get clip URLs and sync with DAW engine
-    const clipUrlMap = timeline.getClipUrlMap();
-    const eqSettings = {
-      lowCut: engine.eqSettings?.lowCutEnabled ?? true,
-      boxyGain: engine.eqSettings?.weight ?? -0.5,
-      presenceGain: engine.eqSettings?.presence ?? 3,
-      airGain: engine.eqSettings?.air ?? 1
-    };
-    
-    dawEngine.syncClips(timeline.clips, clipUrlMap, timeline.currentTime, eqSettings);
-  }, [timeline.clips, dawEngine, engine.eqSettings]);
-
-  // Start DAW playback with timeline sync
-  const startDAWPlayback = useCallback(async () => {
-    if (timeline.clips.length === 0) {
-      toast.info('No clips to play. Add audio first.');
-      return;
-    }
-
-    await dawEngine.initialize();
-    
-    const clipUrlMap = timeline.getClipUrlMap();
-    const eqSettings = {
-      lowCut: engine.eqSettings?.lowCutEnabled ?? true,
-      boxyGain: engine.eqSettings?.weight ?? -0.5,
-      presenceGain: engine.eqSettings?.presence ?? 3,
-      airGain: engine.eqSettings?.air ?? 1
-    };
-    
-    await dawEngine.startPlayback(timeline.clips, clipUrlMap, timeline.currentTime, eqSettings);
-    dawSyncActiveRef.current = true;
-    timeline.setIsPlaying(true);
-    
-    // Also start atmosphere and frequencies
-    if (!engine.isInitialized) await engine.initialize();
-    engine.startSolfeggio(healingFreq);
-    engine.startBinaural(200, brainwaveFreq);
-    if (engine.atmosphereLayer.source && !engine.atmosphereLayer.isPlaying) {
-      engine.toggleAtmospherePlay();
-    }
-    
-    toast.success('DAW Playback: Quantum Sync Active');
-  }, [dawEngine, engine, timeline, healingFreq, brainwaveFreq]);
-
-  // Stop DAW playback
-  const stopDAWPlayback = useCallback(() => {
-    dawEngine.stopPlayback();
-    dawSyncActiveRef.current = false;
-    timeline.setIsPlaying(false);
-    stopAll();
-  }, [dawEngine, timeline, stopAll]);
+  }, [engine, stopAll, startNeuralProcess]);
 
   // Handle offline export - fast rendering using OfflineAudioContext
   const handleExport = useCallback(async () => {
@@ -243,24 +169,24 @@ export default function CreativeSoulMeditationTool() {
     const atmosphereUrl = engine.atmosphereLayer.exportInput?.directUrl;
     const neuralUrl = engine.neuralLayer.exportInput?.directUrl || engine.neuralLayer.source;
 
-    // Convert engine DSP to offline renderer format (with null safety)
+    // Convert engine DSP to offline renderer format
     const dspSettings = {
-      reverb: engine.dsp?.reverb?.enabled ? engine.dsp.reverb.wet : 0,
-      delay: engine.dsp?.delay?.enabled ? engine.dsp.delay.time : 0,
-      warmth: engine.dsp?.warmth?.enabled ? engine.dsp.warmth.drive : 0
+      reverb: engine.dsp.reverb.enabled ? engine.dsp.reverb.wet : 0,
+      delay: engine.dsp.delay.enabled ? engine.dsp.delay.time : 0,
+      warmth: engine.dsp.warmth.enabled ? engine.dsp.warmth.drive : 0
     };
 
     const result = await offlineExport.exportMeditation({
       durationSeconds: exportDuration,
       neuralAudioUrl: neuralUrl && /^https?:\/\//i.test(neuralUrl) ? neuralUrl : undefined,
       atmosphereAudioUrl: atmosphereUrl && /^https?:\/\//i.test(atmosphereUrl) ? atmosphereUrl : undefined,
-      solfeggioHz: engine.frequencies?.solfeggio?.enabled ? healingFreq : undefined,
-      solfeggioVolume: engine.solfeggioVolume ?? 0.5,
+      solfeggioHz: engine.frequencies.solfeggio.enabled ? healingFreq : undefined,
+      solfeggioVolume: engine.solfeggioVolume,
       binauralCarrierHz: 200,
-      binauralBeatHz: engine.frequencies?.binaural?.enabled ? brainwaveFreq : undefined,
-      binauralVolume: engine.binauralVolume ?? 0.5,
+      binauralBeatHz: engine.frequencies.binaural.enabled ? brainwaveFreq : undefined,
+      binauralVolume: engine.binauralVolume,
       dsp: dspSettings,
-      masterVolume: engine.masterVolume ?? 0.8
+      masterVolume: engine.masterVolume
     });
 
     if (result) {
@@ -289,35 +215,8 @@ export default function CreativeSoulMeditationTool() {
   // Handle YouTube extracted audio
   const handleYouTubeAudio = useCallback((url: string, title: string) => {
     engine.loadNeuralSource(url);
-    // Add clip to timeline
-    const audio = new Audio(url);
-    audio.crossOrigin = 'anonymous';
-    audio.addEventListener('loadedmetadata', () => {
-      timeline.addClip(title, audio.duration);
-      timeline.setDuration(Math.max(audio.duration + 30, 300));
-    });
-    audio.load();
     toast.success(`Loaded: ${title}`);
-  }, [engine, timeline]);
-
-  // Add clip to timeline when neural source is loaded
-  const handleNeuralSourceLoad = useCallback(async (file: File): Promise<boolean> => {
-    const result = await engine.loadNeuralSource(file);
-    
-    // Get audio duration and add to timeline with waveform extraction
-    const audio = new Audio();
-    audio.src = URL.createObjectURL(file);
-    
-    audio.addEventListener('loadedmetadata', () => {
-      // Pass the file for waveform extraction
-      timeline.addClip(file.name, audio.duration, file);
-      timeline.setDuration(Math.max(audio.duration + 30, 300));
-      neuralAudioRef.current = audio;
-    });
-    
-    audio.load();
-    return result;
-  }, [engine, timeline]);
+  }, [engine]);
 
   // Auto-load atmosphere when style changes (random sound from database)
   useEffect(() => {
@@ -466,75 +365,6 @@ export default function CreativeSoulMeditationTool() {
           </div>
         </div>
 
-        {/* DAW Transport Bar */}
-        <div className="mb-4">
-          <DAWTransportBar
-            isPlaying={timeline.isPlaying || dawEngine.isPlaying}
-            currentTime={timeline.currentTime}
-            duration={timeline.duration}
-            onPlayPause={() => {
-              if (timeline.isPlaying || dawEngine.isPlaying) {
-                stopDAWPlayback();
-              } else {
-                startDAWPlayback();
-              }
-            }}
-            onStop={() => {
-              stopDAWPlayback();
-              timeline.stop();
-            }}
-            onSeek={(time) => {
-              timeline.seek(time);
-              // Re-sync clips at new position if playing
-              if (dawEngine.isPlaying) {
-                const clipUrlMap = timeline.getClipUrlMap();
-                const eqSettings = {
-                  lowCut: engine.eqSettings?.lowCutEnabled ?? true,
-                  boxyGain: engine.eqSettings?.weight ?? -0.5,
-                  presenceGain: engine.eqSettings?.presence ?? 3,
-                  airGain: engine.eqSettings?.air ?? 1
-                };
-                dawEngine.syncClips(timeline.clips, clipUrlMap, time, eqSettings, true);
-              }
-            }}
-            onRewind={timeline.rewind}
-            onForward={timeline.forward}
-            onSkipStart={timeline.skipStart}
-            onSkipEnd={timeline.skipEnd}
-            isLooping={timeline.isLooping}
-            onLoopToggle={timeline.toggleLoop}
-            zoom={timeline.zoom}
-            onZoomChange={timeline.setZoom}
-            isScissorMode={timeline.isScissorMode}
-            onScissorToggle={timeline.toggleScissorMode}
-            hasUnsavedChanges={timeline.hasUnsavedChanges}
-            onUndo={timeline.undo}
-          />
-        </div>
-
-        {/* Clip Timeline / Quantum Scissor Editor */}
-        {showTimeline && timeline.clips.length > 0 && (
-          <div className="mb-6">
-            <ClipTimeline
-              clips={timeline.clips}
-              currentTime={timeline.currentTime}
-              duration={timeline.duration}
-              zoom={timeline.zoom}
-              isScissorMode={timeline.isScissorMode}
-              selectedClipId={timeline.selectedClipId}
-              onClipSelect={timeline.selectClip}
-              onClipDelete={timeline.deleteClip}
-              onClipCut={timeline.cutClip}
-              onClipMove={timeline.moveClip}
-              onClipTrim={timeline.trimClip}
-              onClipMute={timeline.muteClip}
-              onClipLock={timeline.lockClip}
-              onClipDuplicate={timeline.duplicateClip}
-              onSeek={timeline.seek}
-            />
-          </div>
-        )}
-
         {/* Main Controls */}
         <div className="flex items-center justify-center gap-4 mb-6">
           <Button
@@ -661,8 +491,8 @@ export default function CreativeSoulMeditationTool() {
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <NeuralSourceInput
                 layer={engine.neuralLayer}
-                onLoadFile={handleNeuralSourceLoad}
-                onLoadUrl={(url) => engine.loadNeuralSource(url)}
+                onLoadFile={engine.loadNeuralSource}
+                onLoadUrl={engine.loadNeuralSource}
                 onTogglePlay={engine.toggleNeuralPlay}
                 onVolumeChange={engine.updateNeuralVolume}
               />
