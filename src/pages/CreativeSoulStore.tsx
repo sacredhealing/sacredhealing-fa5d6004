@@ -86,7 +86,35 @@ const CreativeSoulStore = () => {
     if (isAdmin || hasMeditationAccess) {
       navigate('/creative-soul/meditation');
     } else {
-      handlePurchase('creative-soul-meditation');
+      // Show pricing options instead of direct purchase
+      navigate('/creative-soul-meditation-landing');
+    }
+  };
+
+  const handleMeditationPurchase = async (plan: 'lifetime' | 'monthly' | 'single') => {
+    if (!user) {
+      toast.error('Please sign in to purchase');
+      navigate('/auth');
+      return;
+    }
+
+    setPurchaseLoading(`meditation-${plan}`);
+    try {
+      const { data, error } = await supabase.functions.invoke('creative-soul-create-checkout', {
+        body: { 
+          plan,
+          ...(affiliateId && { ref: affiliateId })
+        }
+      });
+
+      if (error) throw error;
+      if (data?.url) {
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      toast.error('Failed to start checkout');
+      setPurchaseLoading(null);
     }
   };
 
@@ -252,20 +280,53 @@ const CreativeSoulStore = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Pricing Options */}
+              {/* Pricing Options - Clickable */}
               <div className="grid grid-cols-3 gap-3">
-                <div className="bg-background/50 rounded-lg p-3 text-center border border-border/50">
-                  <div className="text-xl font-bold text-white">€149</div>
+                <button 
+                  onClick={() => handleMeditationPurchase('lifetime')}
+                  disabled={loading || purchaseLoading?.startsWith('meditation-') || isAdmin || hasMeditationAccess}
+                  className="bg-background/50 rounded-lg p-3 text-center border border-border/50 hover:border-purple-500/50 hover:bg-purple-500/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {purchaseLoading === 'meditation-lifetime' ? (
+                    <Loader2 className="w-5 h-5 animate-spin mx-auto mb-1" />
+                  ) : (
+                    <div className="text-xl font-bold text-white">€149</div>
+                  )}
                   <div className="text-xs text-muted-foreground">Lifetime Access</div>
-                </div>
-                <div className="bg-background/50 rounded-lg p-3 text-center border border-border/50">
-                  <div className="text-xl font-bold text-white">€14.99</div>
+                  <Badge className="mt-2 bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs">
+                    +1000 SHC
+                  </Badge>
+                </button>
+                <button 
+                  onClick={() => handleMeditationPurchase('monthly')}
+                  disabled={loading || purchaseLoading?.startsWith('meditation-') || isAdmin || hasMeditationAccess}
+                  className="bg-background/50 rounded-lg p-3 text-center border border-purple-500/50 hover:bg-purple-500/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed ring-2 ring-purple-500/30"
+                >
+                  {purchaseLoading === 'meditation-monthly' ? (
+                    <Loader2 className="w-5 h-5 animate-spin mx-auto mb-1" />
+                  ) : (
+                    <div className="text-xl font-bold text-white">€14.99</div>
+                  )}
                   <div className="text-xs text-muted-foreground">/ month</div>
-                </div>
-                <div className="bg-background/50 rounded-lg p-3 text-center border border-border/50">
-                  <div className="text-xl font-bold text-white">€9.99</div>
+                  <Badge className="mt-2 bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs">
+                    +1000 SHC
+                  </Badge>
+                </button>
+                <button 
+                  onClick={() => handleMeditationPurchase('single')}
+                  disabled={loading || purchaseLoading?.startsWith('meditation-') || isAdmin || hasMeditationAccess}
+                  className="bg-background/50 rounded-lg p-3 text-center border border-border/50 hover:border-purple-500/50 hover:bg-purple-500/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {purchaseLoading === 'meditation-single' ? (
+                    <Loader2 className="w-5 h-5 animate-spin mx-auto mb-1" />
+                  ) : (
+                    <div className="text-xl font-bold text-white">€9.99</div>
+                  )}
                   <div className="text-xs text-muted-foreground">One Meditation</div>
-                </div>
+                  <Badge className="mt-2 bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs">
+                    +1000 SHC
+                  </Badge>
+                </button>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -277,18 +338,21 @@ const CreativeSoulStore = () => {
                 ))}
               </div>
 
-              <Button 
-                onClick={handleMeditationAccess}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
-                disabled={loading || purchaseLoading === 'creative-soul-meditation'}
-              >
-                {purchaseLoading === 'creative-soul-meditation' ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
+              {(isAdmin || hasMeditationAccess) && (
+                <Button 
+                  onClick={handleMeditationAccess}
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                >
                   <Check className="w-4 h-4 mr-2" />
-                )}
-                {isAdmin || hasMeditationAccess ? 'Open Tool (Admin Access)' : 'Get Access'}
-              </Button>
+                  Open Tool (Access Granted)
+                </Button>
+              )}
+
+              {affiliateId && (
+                <p className="text-xs text-center text-muted-foreground">
+                  🎁 Affiliate referral applied • Your referrer earns 30% commission
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>
