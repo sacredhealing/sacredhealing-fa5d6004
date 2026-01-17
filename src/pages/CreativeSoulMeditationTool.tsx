@@ -112,9 +112,9 @@ export default function CreativeSoulMeditationTool() {
     toast.success('Neural Engine initialized');
   }, [engine]);
 
-  // Start neural process - now synced with DAW transport
+  // Start neural process
   const startNeuralProcess = useCallback(async () => {
-    if (!engine.neuralLayer.source && !engine.atmosphereLayer.source && timeline.clips.length === 0) {
+    if (!engine.neuralLayer.source && !engine.atmosphereLayer.source) {
       toast.error('Neural Source missing. Upload audio or link YouTube stream.');
       return;
     }
@@ -139,21 +139,6 @@ export default function CreativeSoulMeditationTool() {
       if (engine.atmosphereLayer.source && !engine.atmosphereLayer.isPlaying) {
         engine.toggleAtmospherePlay();
       }
-      
-      // Also start DAW playback if there are clips on the timeline
-      if (timeline.clips.length > 0) {
-        await dawEngine.initialize();
-        const clipUrlMap = timeline.getClipUrlMap();
-        const eqSettings = {
-          lowCut: engine.eqSettings?.lowCutEnabled ?? true,
-          boxyGain: engine.eqSettings?.weight ?? -0.5,
-          presenceGain: engine.eqSettings?.presence ?? 3,
-          airGain: engine.eqSettings?.air ?? 1
-        };
-        await dawEngine.startPlayback(timeline.clips, clipUrlMap, timeline.currentTime, eqSettings);
-        dawSyncActiveRef.current = true;
-        timeline.setIsPlaying(true);
-      }
 
       toast.success('DSP Mastering Rack Online');
     } catch (err) {
@@ -161,7 +146,7 @@ export default function CreativeSoulMeditationTool() {
     } finally {
       setIsProcessing(false);
     }
-  }, [engine, dawEngine, timeline, healingFreq, brainwaveFreq]);
+  }, [engine, healingFreq, brainwaveFreq]);
 
   // Stop all
   const stopAll = useCallback(() => {
@@ -334,53 +319,12 @@ export default function CreativeSoulMeditationTool() {
     return result;
   }, [engine, timeline]);
 
-  // Auto-load AND auto-play atmosphere when style changes
+  // Auto-load atmosphere when style changes (random sound from database)
   useEffect(() => {
-    let cancelled = false;
-    
-    const loadAndPlayAtmosphere = async () => {
-      try {
-        // Always initialize engine first
-        if (!engine.isInitialized) {
-          await engine.initialize();
-        }
-        
-        if (cancelled) return;
-        
-        // Load the atmosphere for this style (now waits for canplaythrough)
-        const loaded = await engine.loadAtmosphere(activeStyle);
-        
-        if (cancelled) return;
-        
-        if (loaded) {
-          // Auto-play the atmosphere - audio is now ready
-          if (!engine.atmosphereLayer.isPlaying) {
-            try {
-              engine.toggleAtmospherePlay();
-              const displayName = engine.atmosphereLayer.exportInput?.displayName || activeStyle;
-              toast.success(`🎵 Playing: ${displayName}`);
-            } catch (playError) {
-              console.warn('Autoplay blocked, user interaction required:', playError);
-              toast.info(`🎵 ${activeStyle} loaded - tap play to start`);
-            }
-          }
-        } else {
-          toast.error(`No audio files found for ${activeStyle}`);
-        }
-      } catch (err) {
-        console.error('Failed to load atmosphere:', err);
-        if (!cancelled) {
-          toast.error(`Failed to load ${activeStyle} atmosphere`);
-        }
-      }
-    };
-    
-    loadAndPlayAtmosphere();
-    
-    return () => {
-      cancelled = true;
-    };
-  }, [activeStyle, engine]);
+    if (engine.isInitialized) {
+      engine.loadAtmosphere(activeStyle);
+    }
+  }, [activeStyle, engine.isInitialized]);
 
   // Sync frequencies when changed
   useEffect(() => {
@@ -401,8 +345,7 @@ export default function CreativeSoulMeditationTool() {
     engine.neuralLayer.isPlaying || 
     engine.atmosphereLayer.isPlaying || 
     engine.frequencies.solfeggio.enabled ||
-    engine.frequencies.binaural.enabled ||
-    dawEngine.isPlaying;
+    engine.frequencies.binaural.enabled;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950/20 to-slate-950">

@@ -148,13 +148,9 @@ export function useTimelineEditor(audioRef: React.RefObject<HTMLAudioElement | n
     }
   }, [selectedClipId, saveForUndo]);
 
-  // Cut clip at specific time - splits waveform data too AND preserves URL mapping
+  // Cut clip at specific time - splits waveform data too
   const cutClip = useCallback((clipId: string, cutTime: number) => {
     saveForUndo();
-    
-    // Get the original clip's URL before cutting
-    const originalUrl = clipUrlMapRef.current.get(clipId);
-    
     setClips(prev => {
       const clipIndex = prev.findIndex(c => c.id === clipId);
       if (clipIndex === -1) return prev;
@@ -181,12 +177,9 @@ export function useTimelineEditor(audioRef: React.RefObject<HTMLAudioElement | n
       }
       
       // Create two new clips from the cut
-      const leftClipId = generateId();
-      const rightClipId = generateId();
-      
       const leftClip: AudioClip = {
         ...clip,
-        id: leftClipId,
+        id: generateId(),
         name: `${clip.name} (L)`,
         trimEnd: clip.trimEnd + (clipDuration - cutOffset),
         waveformData: leftWaveform,
@@ -194,22 +187,13 @@ export function useTimelineEditor(audioRef: React.RefObject<HTMLAudioElement | n
       
       const rightClip: AudioClip = {
         ...clip,
-        id: rightClipId,
+        id: generateId(),
         name: `${clip.name} (R)`,
         startTime: cutTime,
         trimStart: clip.trimStart + cutOffset,
         color: getRandomColor(),
         waveformData: rightWaveform,
       };
-      
-      // CRITICAL: Copy URL mapping to both new clips so audio plays correctly
-      if (originalUrl) {
-        clipUrlMapRef.current.set(leftClipId, originalUrl);
-        clipUrlMapRef.current.set(rightClipId, originalUrl);
-        // Remove old clip URL mapping
-        clipUrlMapRef.current.delete(clipId);
-        console.log(`✂️ Cut clip ${clipId} -> ${leftClipId}, ${rightClipId} (URL preserved)`);
-      }
       
       // Replace original with two new clips
       const newClips = [...prev];
