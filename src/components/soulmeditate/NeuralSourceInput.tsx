@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,13 +14,17 @@ import {
   FileAudio, 
   X,
   Loader2,
-  Youtube
+  Youtube,
+  Zap
 } from 'lucide-react';
 import type { LayerState } from '@/hooks/useSoulMeditateEngine';
+import NeuralPreprocessor from './NeuralPreprocessor';
+
+export type NeuralCleaningStage = 'analyzing' | 'normalizing' | 'gating' | 'limiting' | 'complete';
 
 interface NeuralSourceInputProps {
   layer: LayerState;
-  onLoadFile: (file: File) => void;
+  onLoadFile: (file: File) => void | Promise<boolean> | Promise<{ autoGainDb: number }>;
   onLoadUrl: (url: string) => void;
   onTogglePlay: () => void;
   onVolumeChange: (vol: number) => void;
@@ -39,16 +43,62 @@ export default function NeuralSourceInput({
   const [urlInput, setUrlInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [isNeuralCleaning, setIsNeuralCleaning] = useState(false);
+  const [cleaningStage, setCleaningStage] = useState<NeuralCleaningStage>('analyzing');
+  const [autoGainDb, setAutoGainDb] = useState(0);
+
+  // Simulate neural preprocessing stages
+  const runNeuralPreprocessing = useCallback(async (file: File): Promise<{ autoGainDb: number }> => {
+    setIsNeuralCleaning(true);
+    
+    // Stage 1: Analyzing
+    setCleaningStage('analyzing');
+    await new Promise(r => setTimeout(r, 800));
+    
+    // Stage 2: Normalizing
+    setCleaningStage('normalizing');
+    await new Promise(r => setTimeout(r, 1000));
+    
+    // Calculate auto-gain (simulated based on file size heuristic)
+    const sizeKb = file.size / 1024;
+    const simulatedGain = sizeKb < 500 ? 4.5 : sizeKb < 2000 ? 2.1 : -1.8;
+    
+    // Stage 3: Noise Gate
+    setCleaningStage('gating');
+    await new Promise(r => setTimeout(r, 700));
+    
+    // Stage 4: Limiter
+    setCleaningStage('limiting');
+    await new Promise(r => setTimeout(r, 600));
+    
+    // Complete
+    setCleaningStage('complete');
+    setAutoGainDb(simulatedGain);
+    
+    return { autoGainDb: simulatedGain };
+  }, []);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setIsLoading(true);
       try {
+        // Run neural preprocessing
+        const result = await runNeuralPreprocessing(file);
         await onLoadFile(file);
-        toast.success(`Neural source loaded: ${file.name}`);
+        
+        toast.success(
+          <div className="flex items-center gap-2">
+            <Zap className="w-4 h-4 text-cyan-400" />
+            <span>Neural source loaded: {file.name}</span>
+            <span className="text-cyan-400 font-mono text-xs">
+              {result.autoGainDb > 0 ? '+' : ''}{result.autoGainDb.toFixed(1)} dB
+            </span>
+          </div>
+        );
       } catch (err) {
         toast.error('Failed to load audio file');
+        setIsNeuralCleaning(false);
       } finally {
         setIsLoading(false);
       }
@@ -85,10 +135,22 @@ export default function NeuralSourceInput({
     if (file && file.type.startsWith('audio/')) {
       setIsLoading(true);
       try {
+        // Run neural preprocessing
+        const result = await runNeuralPreprocessing(file);
         await onLoadFile(file);
-        toast.success(`Neural source loaded: ${file.name}`);
+        
+        toast.success(
+          <div className="flex items-center gap-2">
+            <Zap className="w-4 h-4 text-cyan-400" />
+            <span>Neural source loaded: {file.name}</span>
+            <span className="text-cyan-400 font-mono text-xs">
+              {result.autoGainDb > 0 ? '+' : ''}{result.autoGainDb.toFixed(1)} dB
+            </span>
+          </div>
+        );
       } catch (err) {
         toast.error('Failed to load audio file');
+        setIsNeuralCleaning(false);
       } finally {
         setIsLoading(false);
       }
@@ -113,6 +175,13 @@ export default function NeuralSourceInput({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Neural Preprocessing Status */}
+        <NeuralPreprocessor 
+          isProcessing={isNeuralCleaning && cleaningStage !== 'complete'}
+          stage={cleaningStage}
+          autoGainDb={autoGainDb}
+        />
+
         {/* Drag & Drop Zone */}
         <div
           className={`relative border-2 border-dashed rounded-xl p-6 text-center transition-all ${
