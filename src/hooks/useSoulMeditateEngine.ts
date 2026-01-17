@@ -131,6 +131,7 @@ export function useSoulMeditateEngine() {
   const [dsp, setDSP] = useState<DSPSettings>({
     reverb: { enabled: true, decay: 2.5, wet: 0.3 },
     delay: { enabled: false, time: 0.4, feedback: 0.3, wet: 0.2 },
+    warmth: { enabled: false, drive: 0.3, tone: 0.5 },
   });
   const [masterVolume, setMasterVolume] = useState(0.8);
   const [analyserData, setAnalyserData] = useState<AnalyserData | null>(null);
