@@ -1,7 +1,11 @@
 /**
  * Waveform Extraction Utility
  * Extracts audio peak data for DAW-style waveform visualization
+ * High-resolution 500-point extraction for professional quality
  */
+
+// Default resolution for waveform extraction
+export const WAVEFORM_RESOLUTION = 500;
 
 export interface WaveformData {
   peaks: number[];        // Normalized peak values (0-1)
@@ -13,12 +17,12 @@ export interface WaveformData {
 /**
  * Extract waveform peaks from an audio file
  * @param file - Audio file (File object or URL string)
- * @param samplesPerPeak - How many samples to combine into one peak (higher = less detail)
+ * @param targetPeaks - Target number of peaks (default 500 for high resolution)
  * @returns Promise<WaveformData>
  */
 export async function extractWaveform(
   file: File | string,
-  samplesPerPeak: number = 256
+  targetPeaks: number = WAVEFORM_RESOLUTION
 ): Promise<WaveformData> {
   // Create offline audio context for analysis
   const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -41,7 +45,10 @@ export async function extractWaveform(
     
     const channelData = audioBuffer.getChannelData(0); // Use first channel
     const totalSamples = channelData.length;
-    const numPeaks = Math.ceil(totalSamples / samplesPerPeak);
+    
+    // Calculate samples per peak to achieve target resolution
+    const samplesPerPeak = Math.floor(totalSamples / targetPeaks);
+    const numPeaks = Math.min(targetPeaks, Math.ceil(totalSamples / Math.max(1, samplesPerPeak)));
     const peaks: number[] = new Array(numPeaks);
     
     // Extract peaks by finding max absolute value in each chunk
@@ -78,7 +85,7 @@ export async function extractWaveform(
     
     // Return placeholder waveform on error
     return {
-      peaks: generatePlaceholderWaveform(100),
+      peaks: generatePlaceholderWaveform(WAVEFORM_RESOLUTION),
       duration: 0,
       sampleRate: 44100,
       channelCount: 2
@@ -157,7 +164,7 @@ export async function extractStereoWaveform(
 /**
  * Generate a placeholder waveform for fallback
  */
-export function generatePlaceholderWaveform(numPeaks: number): number[] {
+export function generatePlaceholderWaveform(numPeaks: number = WAVEFORM_RESOLUTION): number[] {
   const peaks: number[] = [];
   for (let i = 0; i < numPeaks; i++) {
     // Create a realistic-looking random waveform
@@ -190,4 +197,34 @@ export function resampleWaveform(peaks: number[], targetLength: number): number[
   }
   
   return resampled;
+}
+
+/**
+ * Spectral Slicing: Extract a visible portion of the waveform based on trim percentages
+ * Used when clips are cut with the Quantum Scissor to show only the visible audio
+ * 
+ * @param waveformData - Full waveform peak data array
+ * @param trimStartPercent - Percentage of audio trimmed from the start (0-1)
+ * @param trimEndPercent - Percentage of audio trimmed from the end (0-1)
+ * @param targetLength - Target number of peaks for the sliced portion
+ * @returns Sliced and resampled waveform data
+ */
+export function sliceWaveform(
+  waveformData: number[],
+  trimStartPercent: number,
+  trimEndPercent: number,
+  targetLength: number = WAVEFORM_RESOLUTION
+): number[] {
+  if (!waveformData.length) return [];
+  
+  // Calculate slice indices
+  const totalPeaks = waveformData.length;
+  const startIndex = Math.floor(trimStartPercent * totalPeaks);
+  const endIndex = Math.ceil((1 - trimEndPercent) * totalPeaks);
+  
+  // Extract the visible slice
+  const slicedPeaks = waveformData.slice(startIndex, endIndex);
+  
+  // Resample to target length for consistent display
+  return resampleWaveform(slicedPeaks, targetLength);
 }
