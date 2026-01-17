@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -45,6 +45,93 @@ interface ClipTimelineProps {
   onClipLock: (clipId: string) => void;
   onClipDuplicate: (clipId: string) => void;
   onSeek: (time: number) => void;
+}
+
+// Canvas-based waveform component for Logic Pro style rendering
+interface WaveformCanvasProps {
+  waveformData: number[];
+  color: string;
+  width: number;
+  height: number;
+}
+
+function WaveformCanvas({ waveformData, color, width, height }: WaveformCanvasProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !waveformData.length) return;
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    // Set canvas size (account for device pixel ratio for crisp rendering)
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    ctx.scale(dpr, dpr);
+    
+    // Clear canvas
+    ctx.clearRect(0, 0, width, height);
+    
+    // Draw background gradient
+    const bgGradient = ctx.createLinearGradient(0, 0, 0, height);
+    bgGradient.addColorStop(0, 'rgba(30, 41, 59, 0.5)');
+    bgGradient.addColorStop(0.5, 'rgba(15, 23, 42, 0.8)');
+    bgGradient.addColorStop(1, 'rgba(30, 41, 59, 0.5)');
+    ctx.fillStyle = bgGradient;
+    ctx.fillRect(0, 0, width, height);
+    
+    // Center line
+    const centerY = height / 2;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, centerY);
+    ctx.lineTo(width, centerY);
+    ctx.stroke();
+    
+    // Calculate bar width based on data length and canvas width
+    const barWidth = Math.max(1, width / waveformData.length);
+    const maxHeight = (height / 2) - 4; // Leave some padding
+    
+    // Draw waveform - mirrored style like Logic Pro
+    waveformData.forEach((peak, i) => {
+      const x = i * barWidth;
+      const barHeight = peak * maxHeight;
+      
+      // Top waveform (positive)
+      const topGradient = ctx.createLinearGradient(x, centerY - barHeight, x, centerY);
+      topGradient.addColorStop(0, color);
+      topGradient.addColorStop(1, color + '80');
+      ctx.fillStyle = topGradient;
+      ctx.fillRect(x, centerY - barHeight, Math.max(1, barWidth - 0.5), barHeight);
+      
+      // Bottom waveform (mirrored/negative)
+      const bottomGradient = ctx.createLinearGradient(x, centerY, x, centerY + barHeight);
+      bottomGradient.addColorStop(0, color + '80');
+      bottomGradient.addColorStop(1, color + '40');
+      ctx.fillStyle = bottomGradient;
+      ctx.fillRect(x, centerY, Math.max(1, barWidth - 0.5), barHeight);
+    });
+    
+    // Add subtle glow effect at edges
+    const edgeGlow = ctx.createLinearGradient(0, 0, 0, height);
+    edgeGlow.addColorStop(0, 'rgba(255, 255, 255, 0.05)');
+    edgeGlow.addColorStop(0.5, 'transparent');
+    edgeGlow.addColorStop(1, 'rgba(255, 255, 255, 0.05)');
+    ctx.fillStyle = edgeGlow;
+    ctx.fillRect(0, 0, width, height);
+    
+  }, [waveformData, color, width, height]);
+  
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{ width: `${width}px`, height: `${height}px` }}
+      className="absolute inset-0"
+    />
+  );
 }
 
 function formatTimeShort(seconds: number): string {
@@ -334,80 +421,34 @@ export default function ClipTimeline({
                     {clip.isMuted && <VolumeX className="w-3 h-3" />}
                   </div>
 
-                  {/* Waveform Visualization - Real DAW Style */}
-                  <div className="flex-1 relative overflow-hidden bg-black/20">
-                    {/* Center line */}
-                    <div className="absolute inset-y-0 left-0 right-0 flex items-center pointer-events-none">
-                      <div className="w-full h-px bg-white/10" />
-                    </div>
-                    
-                    {/* Waveform bars - mirrored style like real DAW */}
-                    <div className="absolute inset-0 flex items-center px-0.5">
-                      {clip.waveformData && clip.waveformData.length > 0 ? (
-                        // Real waveform data
-                        clip.waveformData.map((val, i) => (
-                          <div
-                            key={i}
-                            className="flex-1 flex flex-col items-center justify-center min-w-[1px]"
-                            style={{ height: '100%' }}
-                          >
-                            {/* Top half (positive) */}
-                            <div 
-                              className="w-full rounded-t-sm"
-                              style={{
-                                height: `${val * 48}%`,
-                                backgroundColor: clip.color,
-                                opacity: 0.9,
-                              }}
-                            />
-                            {/* Bottom half (mirrored/negative) */}
-                            <div 
-                              className="w-full rounded-b-sm"
-                              style={{
-                                height: `${val * 48}%`,
-                                backgroundColor: clip.color,
-                                opacity: 0.6,
-                              }}
-                            />
-                          </div>
-                        ))
-                      ) : (
-                        // Loading placeholder with animated shimmer
-                        <div className="w-full h-full flex items-center justify-center">
-                          <div className="flex items-center gap-0.5 animate-pulse">
-                            {Array.from({ length: Math.min(80, Math.floor(clipWidth / 6)) }).map((_, i) => {
-                              const height = 15 + Math.sin(i * 0.2) * 25 + Math.random() * 20;
-                              return (
-                                <div
-                                  key={i}
-                                  className="flex flex-col items-center justify-center"
-                                  style={{ width: '3px' }}
-                                >
-                                  <div 
-                                    className="w-full rounded-t-sm bg-white/20"
-                                    style={{ height: `${height}%` }}
-                                  />
-                                  <div 
-                                    className="w-full rounded-b-sm bg-white/10"
-                                    style={{ height: `${height * 0.7}%` }}
-                                  />
-                                </div>
-                              );
-                            })}
-                          </div>
-                          <span className="absolute text-[10px] text-white/40 font-mono">
-                            Loading waveform...
+                  {/* Waveform Visualization - Logic Pro Style with Canvas */}
+                  <div className="flex-1 relative overflow-hidden" style={{ backgroundColor: '#1a2332' }}>
+                    {clip.waveformData && clip.waveformData.length > 0 ? (
+                      <WaveformCanvas 
+                        waveformData={clip.waveformData} 
+                        color={clip.color}
+                        width={clipWidth}
+                        height={90}
+                      />
+                    ) : (
+                      // Loading placeholder
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="flex items-center gap-1">
+                          <Waves className="w-4 h-4 text-white/30 animate-pulse" />
+                          <span className="text-[10px] text-white/30 font-mono">
+                            Analyzing audio...
                           </span>
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
                     
                     {/* Playhead position indicator within clip */}
                     {currentTime >= clip.startTime && currentTime <= clip.startTime + clipDuration && (
                       <div
-                        className="absolute top-0 bottom-0 w-0.5 bg-white/80 pointer-events-none z-5"
+                        className="absolute top-0 bottom-0 w-0.5 bg-red-500 pointer-events-none z-5"
                         style={{
-                          left: `${((currentTime - clip.startTime) / clipDuration) * 100}%`
+                          left: `${((currentTime - clip.startTime) / clipDuration) * 100}%`,
+                          boxShadow: '0 0 4px rgba(239, 68, 68, 0.8)'
                         }}
                       />
                     )}
