@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { AudioClip } from '@/components/soulmeditate/ClipTimeline';
+import { extractWaveform, resampleWaveform } from '@/utils/waveformExtractor';
 
 // Generate unique ID
 function generateId(): string {
@@ -47,6 +48,9 @@ export function useTimelineEditor(audioRef: React.RefObject<HTMLAudioElement | n
   
   const playIntervalRef = useRef<number | null>(null);
   const lastUpdateRef = useRef<number>(Date.now());
+  
+  // Store pending waveform extractions
+  const pendingWaveformsRef = useRef<Map<string, File | string>>(new Map());
 
   // Save state for undo
   const saveForUndo = useCallback(() => {
@@ -62,8 +66,8 @@ export function useTimelineEditor(audioRef: React.RefObject<HTMLAudioElement | n
     }
   }, [undoStack]);
 
-  // Create clip from audio source
-  const createClipFromSource = useCallback((name: string, audioDuration: number): AudioClip => {
+  // Create clip from audio source (without waveform initially)
+  const createClipFromSource = useCallback((name: string, audioDuration: number, waveformData?: number[]): AudioClip => {
     return {
       id: generateId(),
       name: name || 'Audio Clip',
@@ -75,17 +79,41 @@ export function useTimelineEditor(audioRef: React.RefObject<HTMLAudioElement | n
       isMuted: false,
       isLocked: false,
       color: getRandomColor(),
+      waveformData,
     };
   }, []);
 
-  // Add clip to timeline
-  const addClip = useCallback((name: string, clipDuration: number) => {
+  // Update clip waveform data
+  const updateClipWaveform = useCallback((clipId: string, waveformData: number[]) => {
+    setClips(prev => prev.map(clip => 
+      clip.id === clipId ? { ...clip, waveformData } : clip
+    ));
+  }, []);
+
+  // Add clip to timeline with waveform extraction
+  const addClip = useCallback((name: string, clipDuration: number, audioSource?: File | string) => {
     saveForUndo();
     const newClip = createClipFromSource(name, clipDuration);
     setClips(prev => [...prev, newClip]);
     setDuration(prev => Math.max(prev, clipDuration + 30)); // Add padding
+    
+    // Extract waveform asynchronously if audio source provided
+    if (audioSource) {
+      pendingWaveformsRef.current.set(newClip.id, audioSource);
+      extractWaveform(audioSource, 128).then(waveformData => {
+        // Resample to reasonable size for display (max 500 peaks)
+        const resampled = resampleWaveform(waveformData.peaks, Math.min(500, waveformData.peaks.length));
+        updateClipWaveform(newClip.id, resampled);
+        pendingWaveformsRef.current.delete(newClip.id);
+        console.log(`🎵 Waveform extracted for ${name}: ${resampled.length} peaks`);
+      }).catch(err => {
+        console.error('Waveform extraction failed:', err);
+        pendingWaveformsRef.current.delete(newClip.id);
+      });
+    }
+    
     return newClip;
-  }, [createClipFromSource, saveForUndo]);
+  }, [createClipFromSource, saveForUndo, updateClipWaveform]);
 
   // Select clip
   const selectClip = useCallback((clipId: string | null) => {
@@ -101,7 +129,7 @@ export function useTimelineEditor(audioRef: React.RefObject<HTMLAudioElement | n
     }
   }, [selectedClipId, saveForUndo]);
 
-  // Cut clip at specific time
+  // Cut clip at specific time - splits waveform data too
   const cutClip = useCallback((clipId: string, cutTime: number) => {
     saveForUndo();
     setClips(prev => {
@@ -109,20 +137,33 @@ export function useTimelineEditor(audioRef: React.RefObject<HTMLAudioElement | n
       if (clipIndex === -1) return prev;
       
       const clip = prev[clipIndex];
+      const clipDuration = clip.duration - clip.trimStart - clip.trimEnd;
       const clipStart = clip.startTime;
-      const clipEnd = clip.startTime + clip.duration - clip.trimStart - clip.trimEnd;
+      const clipEnd = clip.startTime + clipDuration;
       
       // Ensure cut is within clip bounds
       if (cutTime <= clipStart || cutTime >= clipEnd) return prev;
       
       const cutOffset = cutTime - clipStart;
+      const cutRatio = cutOffset / clipDuration;
+      
+      // Split waveform data if available
+      let leftWaveform: number[] | undefined;
+      let rightWaveform: number[] | undefined;
+      
+      if (clip.waveformData && clip.waveformData.length > 0) {
+        const cutIndex = Math.floor(clip.waveformData.length * cutRatio);
+        leftWaveform = clip.waveformData.slice(0, cutIndex);
+        rightWaveform = clip.waveformData.slice(cutIndex);
+      }
       
       // Create two new clips from the cut
       const leftClip: AudioClip = {
         ...clip,
         id: generateId(),
         name: `${clip.name} (L)`,
-        trimEnd: clip.trimEnd + (clip.duration - clip.trimStart - clip.trimEnd - cutOffset),
+        trimEnd: clip.trimEnd + (clipDuration - cutOffset),
+        waveformData: leftWaveform,
       };
       
       const rightClip: AudioClip = {
@@ -132,6 +173,7 @@ export function useTimelineEditor(audioRef: React.RefObject<HTMLAudioElement | n
         startTime: cutTime,
         trimStart: clip.trimStart + cutOffset,
         color: getRandomColor(),
+        waveformData: rightWaveform,
       };
       
       // Replace original with two new clips

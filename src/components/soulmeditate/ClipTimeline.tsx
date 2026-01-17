@@ -334,31 +334,82 @@ export default function ClipTimeline({
                     {clip.isMuted && <VolumeX className="w-3 h-3" />}
                   </div>
 
-                  {/* Waveform Visualization */}
-                  <div className="flex-1 px-1 flex items-end gap-px overflow-hidden">
-                    {clip.waveformData ? (
-                      clip.waveformData.map((val, i) => (
-                        <div
-                          key={i}
-                          className="flex-1 min-w-[2px] rounded-t"
-                          style={{
-                            height: `${val * 80}%`,
-                            backgroundColor: clip.color + '80'
-                          }}
-                        />
-                      ))
-                    ) : (
-                      // Placeholder waveform
-                      Array.from({ length: Math.min(100, Math.floor(clipWidth / 4)) }).map((_, i) => (
-                        <div
-                          key={i}
-                          className="flex-1 min-w-[2px] rounded-t"
-                          style={{
-                            height: `${20 + Math.sin(i * 0.3) * 30 + Math.random() * 30}%`,
-                            backgroundColor: clip.color + '60'
-                          }}
-                        />
-                      ))
+                  {/* Waveform Visualization - Real DAW Style */}
+                  <div className="flex-1 relative overflow-hidden bg-black/20">
+                    {/* Center line */}
+                    <div className="absolute inset-y-0 left-0 right-0 flex items-center pointer-events-none">
+                      <div className="w-full h-px bg-white/10" />
+                    </div>
+                    
+                    {/* Waveform bars - mirrored style like real DAW */}
+                    <div className="absolute inset-0 flex items-center px-0.5">
+                      {clip.waveformData && clip.waveformData.length > 0 ? (
+                        // Real waveform data
+                        clip.waveformData.map((val, i) => (
+                          <div
+                            key={i}
+                            className="flex-1 flex flex-col items-center justify-center min-w-[1px]"
+                            style={{ height: '100%' }}
+                          >
+                            {/* Top half (positive) */}
+                            <div 
+                              className="w-full rounded-t-sm"
+                              style={{
+                                height: `${val * 48}%`,
+                                backgroundColor: clip.color,
+                                opacity: 0.9,
+                              }}
+                            />
+                            {/* Bottom half (mirrored/negative) */}
+                            <div 
+                              className="w-full rounded-b-sm"
+                              style={{
+                                height: `${val * 48}%`,
+                                backgroundColor: clip.color,
+                                opacity: 0.6,
+                              }}
+                            />
+                          </div>
+                        ))
+                      ) : (
+                        // Loading placeholder with animated shimmer
+                        <div className="w-full h-full flex items-center justify-center">
+                          <div className="flex items-center gap-0.5 animate-pulse">
+                            {Array.from({ length: Math.min(80, Math.floor(clipWidth / 6)) }).map((_, i) => {
+                              const height = 15 + Math.sin(i * 0.2) * 25 + Math.random() * 20;
+                              return (
+                                <div
+                                  key={i}
+                                  className="flex flex-col items-center justify-center"
+                                  style={{ width: '3px' }}
+                                >
+                                  <div 
+                                    className="w-full rounded-t-sm bg-white/20"
+                                    style={{ height: `${height}%` }}
+                                  />
+                                  <div 
+                                    className="w-full rounded-b-sm bg-white/10"
+                                    style={{ height: `${height * 0.7}%` }}
+                                  />
+                                </div>
+                              );
+                            })}
+                          </div>
+                          <span className="absolute text-[10px] text-white/40 font-mono">
+                            Loading waveform...
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Playhead position indicator within clip */}
+                    {currentTime >= clip.startTime && currentTime <= clip.startTime + clipDuration && (
+                      <div
+                        className="absolute top-0 bottom-0 w-0.5 bg-white/80 pointer-events-none z-5"
+                        style={{
+                          left: `${((currentTime - clip.startTime) / clipDuration) * 100}%`
+                        }}
+                      />
                     )}
                   </div>
 

@@ -240,12 +240,13 @@ export default function CreativeSoulMeditationTool() {
   const handleNeuralSourceLoad = useCallback(async (file: File): Promise<boolean> => {
     const result = await engine.loadNeuralSource(file);
     
-    // Get audio duration and add to timeline
+    // Get audio duration and add to timeline with waveform extraction
     const audio = new Audio();
     audio.src = URL.createObjectURL(file);
     
     audio.addEventListener('loadedmetadata', () => {
-      timeline.addClip(file.name, audio.duration);
+      // Pass the file for waveform extraction
+      timeline.addClip(file.name, audio.duration, file);
       timeline.setDuration(Math.max(audio.duration + 30, 300));
       neuralAudioRef.current = audio;
     });
