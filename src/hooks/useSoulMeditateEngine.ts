@@ -107,6 +107,9 @@ export function useSoulMeditateEngine() {
   const waveShaperRef = useRef<WaveShaperNode | null>(null);
   const warmthGainRef = useRef<GainNode | null>(null);
   
+  // Soft-knee limiter for final stage
+  const limiterRef = useRef<DynamicsCompressorNode | null>(null);
+  
   // State
   const [isInitialized, setIsInitialized] = useState(false);
   const [neuralLayer, setNeuralLayer] = useState<LayerState>({ isPlaying: false, volume: 0.7, source: null });
@@ -206,13 +209,26 @@ export function useSoulMeditateEngine() {
     delayNodeRef.current.connect(delayFeedbackRef.current);
     delayFeedbackRef.current.connect(delayNodeRef.current);
 
-    // Create warmth (waveshaper)
+    // Create warmth (waveshaper) - optional, check if enabled
     waveShaperRef.current = ctx.createWaveShaper();
-    (waveShaperRef.current as any).curve = createWarmthCurve(dsp.warmth.drive);
+    if (dsp.warmth?.enabled) {
+      (waveShaperRef.current as any).curve = createWarmthCurve(dsp.warmth.drive);
+    } else {
+      // Linear pass-through when warmth is disabled
+      (waveShaperRef.current as any).curve = null;
+    }
     waveShaperRef.current.oversample = '4x';
 
     warmthGainRef.current = ctx.createGain();
     warmthGainRef.current.gain.value = 1;
+
+    // Create soft-knee limiter as final stage for glassy professional finish
+    limiterRef.current = ctx.createDynamicsCompressor();
+    limiterRef.current.threshold.value = -1;  // -1 dB threshold
+    limiterRef.current.knee.value = 6;        // 6 dB soft knee
+    limiterRef.current.ratio.value = 20;      // High ratio for limiting
+    limiterRef.current.attack.value = 0.001;  // 1ms attack
+    limiterRef.current.release.value = 0.1;   // 100ms release
 
     // Connect DSP chain
     // Dry signals -> analyser
@@ -221,19 +237,22 @@ export function useSoulMeditateEngine() {
     solfeggioGainRef.current.connect(analyser);
     binauralGainRef.current.connect(analyser);
 
-    // Analyser -> warmth -> master
+    // Analyser -> warmth -> limiter -> master
     analyser.connect(waveShaperRef.current);
-    waveShaperRef.current.connect(masterGain);
+    waveShaperRef.current.connect(limiterRef.current);
+    limiterRef.current.connect(masterGain);
 
-    // Parallel reverb
+    // Parallel reverb (connects to limiter)
     analyser.connect(convolver);
     convolver.connect(reverbGainRef.current);
-    reverbGainRef.current.connect(masterGain);
+    reverbGainRef.current.connect(limiterRef.current);
 
-    // Parallel delay
+    // Parallel delay (connects to limiter)
     analyser.connect(delayNodeRef.current);
     delayNodeRef.current.connect(delayGainRef.current);
-    delayGainRef.current.connect(masterGain);
+    delayGainRef.current.connect(limiterRef.current);
+    
+    console.log('Audio chain initialized with soft-knee limiter');
 
     setIsInitialized(true);
   }, [masterVolume, neuralLayer.volume, atmosphereLayer.volume, dsp]);

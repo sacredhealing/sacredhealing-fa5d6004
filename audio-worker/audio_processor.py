@@ -314,6 +314,233 @@ class AudioProcessor:
             )
         
         return audio
+
+    def calculate_rms(self, audio):
+        """Calculate Root Mean Square of audio signal"""
+        if audio.ndim == 2:
+            return np.sqrt(np.mean(audio ** 2))
+        return np.sqrt(np.mean(audio ** 2))
+    
+    def calculate_lufs(self, audio, sr):
+        """
+        Calculate approximate LUFS (Loudness Units relative to Full Scale)
+        Using simplified K-weighting approximation
+        """
+        # K-weighting filter coefficients (simplified)
+        # High shelf at 1500 Hz (+4dB) and high-pass at 60 Hz
+        if audio.ndim == 2:
+            # Use left channel or mono mix
+            mono = np.mean(audio, axis=0)
+        else:
+            mono = audio
+        
+        # Calculate mean square with K-weighting approximation
+        # Apply high-pass filter to remove DC and low rumble
+        nyq = sr / 2
+        low_cutoff = 60 / nyq
+        if low_cutoff < 1:
+            b, a = signal.butter(2, low_cutoff, btype='high')
+            mono = signal.filtfilt(b, a, mono)
+        
+        # Calculate gated loudness (simplified)
+        block_size = int(sr * 0.4)  # 400ms blocks
+        blocks = len(mono) // block_size
+        
+        if blocks == 0:
+            rms = np.sqrt(np.mean(mono ** 2))
+        else:
+            block_loudness = []
+            for i in range(blocks):
+                block = mono[i * block_size:(i + 1) * block_size]
+                block_rms = np.sqrt(np.mean(block ** 2))
+                if block_rms > 1e-10:  # Gate very quiet blocks
+                    block_loudness.append(block_rms)
+            
+            if block_loudness:
+                rms = np.mean(block_loudness)
+            else:
+                rms = np.sqrt(np.mean(mono ** 2))
+        
+        # Convert to LUFS (dB scale, relative to digital full scale)
+        if rms > 1e-10:
+            lufs = 20 * np.log10(rms) - 0.691  # K-weighting offset
+        else:
+            lufs = -70  # Silence
+        
+        return lufs
+    
+    def normalize_to_lufs(self, audio, sr, target_lufs=-14):
+        """
+        Normalize audio to target LUFS using two-pass analysis
+        Returns (normalized_audio, gain_applied_db)
+        """
+        logger.info(f"Normalizing to {target_lufs} LUFS...")
+        
+        # Pass 1: Calculate current LUFS
+        current_lufs = self.calculate_lufs(audio, sr)
+        logger.info(f"Current LUFS: {current_lufs:.1f}")
+        
+        # Calculate required gain
+        gain_db = target_lufs - current_lufs
+        
+        # Limit gain range to prevent excessive amplification
+        gain_db = np.clip(gain_db, -20, 20)
+        
+        # Pass 2: Apply gain
+        gain_linear = 10 ** (gain_db / 20)
+        normalized = audio * gain_linear
+        
+        # Ensure we don't clip
+        max_val = np.max(np.abs(normalized))
+        if max_val > 0.99:
+            normalized = normalized / max_val * 0.99
+            # Recalculate actual gain applied
+            gain_db = 20 * np.log10(0.99 / max_val) + gain_db
+        
+        logger.info(f"Applied gain: {gain_db:+.1f} dB")
+        return normalized, gain_db
+    
+    def apply_intelligent_noise_gate(self, audio, sr, threshold_db=-45, ratio=10, 
+                                      attack_ms=5, release_ms=50):
+        """
+        Frequency-aware expander/noise gate that blackens silence
+        without cutting off vocal tails
+        """
+        logger.info(f"Applying intelligent noise gate (threshold: {threshold_db} dB)...")
+        
+        threshold_linear = 10 ** (threshold_db / 20)
+        attack_samples = int(sr * attack_ms / 1000)
+        release_samples = int(sr * release_ms / 1000)
+        
+        def process_channel(channel):
+            # Calculate envelope using RMS in small windows
+            window_size = int(sr * 0.01)  # 10ms windows
+            envelope = np.zeros_like(channel)
+            
+            for i in range(0, len(channel), window_size):
+                end = min(i + window_size, len(channel))
+                window_rms = np.sqrt(np.mean(channel[i:end] ** 2))
+                envelope[i:end] = window_rms
+            
+            # Smooth envelope
+            kernel = np.ones(window_size) / window_size
+            envelope = np.convolve(envelope, kernel, mode='same')
+            
+            # Calculate gain reduction
+            gain = np.ones_like(channel)
+            below_threshold = envelope < threshold_linear
+            
+            if np.any(below_threshold):
+                # Apply gentle expansion (10:1 ratio) below threshold
+                db_below = 20 * np.log10(np.maximum(envelope[below_threshold], 1e-10) / threshold_linear)
+                gain_reduction_db = db_below * (1 - 1/ratio)
+                gain[below_threshold] = 10 ** (gain_reduction_db / 20)
+            
+            # Smooth gain changes (attack/release)
+            smoothed_gain = np.zeros_like(gain)
+            smoothed_gain[0] = gain[0]
+            
+            for i in range(1, len(gain)):
+                if gain[i] < smoothed_gain[i-1]:
+                    # Attack (gain decreasing)
+                    alpha = 1 - np.exp(-1 / attack_samples)
+                else:
+                    # Release (gain increasing)
+                    alpha = 1 - np.exp(-1 / release_samples)
+                smoothed_gain[i] = alpha * gain[i] + (1 - alpha) * smoothed_gain[i-1]
+            
+            return channel * smoothed_gain
+        
+        if audio.ndim == 2:
+            result = np.zeros_like(audio)
+            for i in range(audio.shape[0]):
+                result[i] = process_channel(audio[i])
+            return result
+        else:
+            return process_channel(audio)
+    
+    def apply_soft_knee_limiter(self, audio, threshold_db=-1, knee_db=6, makeup_gain_db=0):
+        """
+        Apply soft-knee limiter for glassy professional finish
+        Prevents clipping while maintaining transparency
+        """
+        logger.info(f"Applying soft-knee limiter (threshold: {threshold_db} dB, knee: {knee_db} dB)...")
+        
+        threshold = 10 ** (threshold_db / 20)
+        knee = 10 ** (knee_db / 20)
+        makeup = 10 ** (makeup_gain_db / 20)
+        
+        def soft_limit(x):
+            abs_x = np.abs(x)
+            sign_x = np.sign(x)
+            
+            # Calculate knee region
+            knee_start = threshold / knee
+            knee_end = threshold
+            
+            result = np.zeros_like(x)
+            
+            # Below knee: pass through
+            below_knee = abs_x <= knee_start
+            result[below_knee] = x[below_knee]
+            
+            # In knee region: smooth transition
+            in_knee = (abs_x > knee_start) & (abs_x <= knee_end)
+            if np.any(in_knee):
+                t = (abs_x[in_knee] - knee_start) / (knee_end - knee_start)
+                # Quadratic interpolation for smooth knee
+                compressed = knee_start + t * t * (knee_end - knee_start) * 0.5
+                result[in_knee] = sign_x[in_knee] * compressed
+            
+            # Above knee: soft clip with tanh
+            above_knee = abs_x > knee_end
+            if np.any(above_knee):
+                # Soft saturation above threshold
+                excess = abs_x[above_knee] - threshold
+                limited = threshold + np.tanh(excess / threshold) * threshold * 0.5
+                result[above_knee] = sign_x[above_knee] * np.minimum(limited, 0.99)
+            
+            return result * makeup
+        
+        if audio.ndim == 2:
+            result = np.zeros_like(audio)
+            for i in range(audio.shape[0]):
+                result[i] = soft_limit(audio[i])
+            return result
+        else:
+            return soft_limit(audio)
+    
+    def neural_preprocess(self, audio, sr, target_lufs=-14):
+        """
+        Complete Neural Pre-processing Pipeline
+        1. Automatic Normalization to target LUFS
+        2. Intelligent Noise Gate
+        3. Soft-Knee Limiter
+        
+        Returns (processed_audio, metadata_dict)
+        """
+        logger.info("Starting Neural Pre-processing Pipeline...")
+        
+        metadata = {
+            "original_lufs": self.calculate_lufs(audio, sr),
+            "target_lufs": target_lufs,
+        }
+        
+        # Stage 1: Normalize to target LUFS
+        audio, gain_db = self.normalize_to_lufs(audio, sr, target_lufs)
+        metadata["auto_gain_db"] = gain_db
+        metadata["normalized_lufs"] = self.calculate_lufs(audio, sr)
+        
+        # Stage 2: Intelligent Noise Gate
+        audio = self.apply_intelligent_noise_gate(audio, sr)
+        
+        # Stage 3: Soft-Knee Limiter
+        audio = self.apply_soft_knee_limiter(audio)
+        
+        metadata["final_lufs"] = self.calculate_lufs(audio, sr)
+        logger.info(f"Neural preprocessing complete. Gain applied: {gain_db:+.1f} dB")
+        
+        return audio, metadata
     
     def apply_meditation_style(self, audio, sr, style="vedic"):
         """Apply meditation style effects"""
