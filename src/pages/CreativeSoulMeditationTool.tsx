@@ -347,25 +347,31 @@ export default function CreativeSoulMeditationTool() {
         
         if (cancelled) return;
         
-        // Load the atmosphere for this style
+        // Load the atmosphere for this style (now waits for canplaythrough)
         const loaded = await engine.loadAtmosphere(activeStyle);
         
         if (cancelled) return;
         
         if (loaded) {
-          // Small delay to ensure audio element is ready
-          await new Promise(resolve => setTimeout(resolve, 100));
-          
-          if (cancelled) return;
-          
-          // Auto-play the atmosphere for immediate feedback
+          // Auto-play the atmosphere - audio is now ready
           if (!engine.atmosphereLayer.isPlaying) {
-            engine.toggleAtmospherePlay();
+            try {
+              engine.toggleAtmospherePlay();
+              const displayName = engine.atmosphereLayer.exportInput?.displayName || activeStyle;
+              toast.success(`🎵 Playing: ${displayName}`);
+            } catch (playError) {
+              console.warn('Autoplay blocked, user interaction required:', playError);
+              toast.info(`🎵 ${activeStyle} loaded - tap play to start`);
+            }
           }
-          toast.success(`🎵 ${activeStyle} atmosphere loaded`);
+        } else {
+          toast.error(`No audio files found for ${activeStyle}`);
         }
       } catch (err) {
         console.error('Failed to load atmosphere:', err);
+        if (!cancelled) {
+          toast.error(`Failed to load ${activeStyle} atmosphere`);
+        }
       }
     };
     
