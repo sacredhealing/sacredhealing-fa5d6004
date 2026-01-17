@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { useSoulMeditateEngine } from '@/hooks/useSoulMeditateEngine';
 import { useOfflineExport } from '@/hooks/useOfflineExport';
+import { useTimelineEditor } from '@/hooks/useTimelineEditor';
 import SpectralVisualizer from '@/components/soulmeditate/SpectralVisualizer';
 import NeuralSourceInput from '@/components/soulmeditate/NeuralSourceInput';
 import AtmosphereSelector from '@/components/soulmeditate/AtmosphereSelector';
@@ -38,6 +39,8 @@ import BrainwaveSelector from '@/components/soulmeditate/BrainwaveSelector';
 import YouTubeLinker from '@/components/soulmeditate/YouTubeLinker';
 import ProcessingTerminal from '@/components/soulmeditate/ProcessingTerminal';
 import VirtualChannelStrip from '@/components/soulmeditate/VirtualChannelStrip';
+import DAWTransportBar from '@/components/soulmeditate/DAWTransportBar';
+import ClipTimeline from '@/components/soulmeditate/ClipTimeline';
 
 type VisualizerMode = 'bars' | 'wave' | 'radial';
 type StemMode = 'full_mix' | 'vocals_only' | 'music_only' | 'stems_all';
@@ -60,6 +63,12 @@ export default function CreativeSoulMeditationTool() {
   const engine = useSoulMeditateEngine();
   const offlineExport = useOfflineExport();
   
+  // Create a ref for the neural audio element (used by timeline)
+  const neuralAudioRef = useRef<HTMLAudioElement | null>(null);
+  
+  // Initialize timeline editor
+  const timeline = useTimelineEditor(neuralAudioRef);
+  
   // UI State
   const [visualizerMode, setVisualizerMode] = useState<VisualizerMode>('bars');
   const [activeStyle, setActiveStyle] = useState<MeditationStyle>('indian');
@@ -69,6 +78,7 @@ export default function CreativeSoulMeditationTool() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [exportDuration, setExportDuration] = useState(300); // 5 minutes default
   const [exportResult, setExportResult] = useState<{ blob: Blob; format: 'wav' | 'mp3'; url: string } | null>(null);
+  const [showTimeline, setShowTimeline] = useState(true);
   
   // Volume controls
   const [volumes, setVolumes] = useState({
@@ -215,8 +225,34 @@ export default function CreativeSoulMeditationTool() {
   // Handle YouTube extracted audio
   const handleYouTubeAudio = useCallback((url: string, title: string) => {
     engine.loadNeuralSource(url);
+    // Add clip to timeline
+    const audio = new Audio(url);
+    audio.crossOrigin = 'anonymous';
+    audio.addEventListener('loadedmetadata', () => {
+      timeline.addClip(title, audio.duration);
+      timeline.setDuration(Math.max(audio.duration + 30, 300));
+    });
+    audio.load();
     toast.success(`Loaded: ${title}`);
-  }, [engine]);
+  }, [engine, timeline]);
+
+  // Add clip to timeline when neural source is loaded
+  const handleNeuralSourceLoad = useCallback(async (file: File): Promise<boolean> => {
+    const result = await engine.loadNeuralSource(file);
+    
+    // Get audio duration and add to timeline
+    const audio = new Audio();
+    audio.src = URL.createObjectURL(file);
+    
+    audio.addEventListener('loadedmetadata', () => {
+      timeline.addClip(file.name, audio.duration);
+      timeline.setDuration(Math.max(audio.duration + 30, 300));
+      neuralAudioRef.current = audio;
+    });
+    
+    audio.load();
+    return result;
+  }, [engine, timeline]);
 
   // Auto-load atmosphere when style changes (random sound from database)
   useEffect(() => {
@@ -365,6 +401,64 @@ export default function CreativeSoulMeditationTool() {
           </div>
         </div>
 
+        {/* DAW Transport Bar */}
+        <div className="mb-4">
+          <DAWTransportBar
+            isPlaying={timeline.isPlaying}
+            currentTime={timeline.currentTime}
+            duration={timeline.duration}
+            onPlayPause={() => {
+              timeline.playPause();
+              // Sync with engine playback
+              if (!timeline.isPlaying) {
+                startNeuralProcess();
+              } else {
+                stopAll();
+              }
+            }}
+            onStop={() => {
+              timeline.stop();
+              stopAll();
+            }}
+            onSeek={timeline.seek}
+            onRewind={timeline.rewind}
+            onForward={timeline.forward}
+            onSkipStart={timeline.skipStart}
+            onSkipEnd={timeline.skipEnd}
+            isLooping={timeline.isLooping}
+            onLoopToggle={timeline.toggleLoop}
+            zoom={timeline.zoom}
+            onZoomChange={timeline.setZoom}
+            isScissorMode={timeline.isScissorMode}
+            onScissorToggle={timeline.toggleScissorMode}
+            hasUnsavedChanges={timeline.hasUnsavedChanges}
+            onUndo={timeline.undo}
+          />
+        </div>
+
+        {/* Clip Timeline / Quantum Scissor Editor */}
+        {showTimeline && timeline.clips.length > 0 && (
+          <div className="mb-6">
+            <ClipTimeline
+              clips={timeline.clips}
+              currentTime={timeline.currentTime}
+              duration={timeline.duration}
+              zoom={timeline.zoom}
+              isScissorMode={timeline.isScissorMode}
+              selectedClipId={timeline.selectedClipId}
+              onClipSelect={timeline.selectClip}
+              onClipDelete={timeline.deleteClip}
+              onClipCut={timeline.cutClip}
+              onClipMove={timeline.moveClip}
+              onClipTrim={timeline.trimClip}
+              onClipMute={timeline.muteClip}
+              onClipLock={timeline.lockClip}
+              onClipDuplicate={timeline.duplicateClip}
+              onSeek={timeline.seek}
+            />
+          </div>
+        )}
+
         {/* Main Controls */}
         <div className="flex items-center justify-center gap-4 mb-6">
           <Button
@@ -491,8 +585,8 @@ export default function CreativeSoulMeditationTool() {
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <NeuralSourceInput
                 layer={engine.neuralLayer}
-                onLoadFile={engine.loadNeuralSource}
-                onLoadUrl={engine.loadNeuralSource}
+                onLoadFile={handleNeuralSourceLoad}
+                onLoadUrl={(url) => engine.loadNeuralSource(url)}
                 onTogglePlay={engine.toggleNeuralPlay}
                 onVolumeChange={engine.updateNeuralVolume}
               />
