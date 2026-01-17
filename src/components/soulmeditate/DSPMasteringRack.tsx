@@ -4,7 +4,7 @@ import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Waves, Timer, Flame } from 'lucide-react';
+import { Waves, Timer } from 'lucide-react';
 import type { DSPSettings } from '@/hooks/useSoulMeditateEngine';
 
 interface DSPMasteringRackProps {
@@ -150,65 +150,6 @@ export default function DSPMasteringRack({ dsp, onUpdate }: DSPMasteringRackProp
                   step={0.01}
                   onValueChange={([wet]) => onUpdate({ delay: { ...dsp.delay, wet } })}
                   className="[&_[role=slider]]:bg-cyan-500"
-                />
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Warmth */}
-        <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500/20 to-red-500/20 flex items-center justify-center">
-                <Flame className="w-5 h-5 text-orange-400" />
-              </div>
-              <div>
-                <Label className="text-white/90 font-medium">Harmonic Warmth</Label>
-                <p className="text-xs text-white/50">Analog tube saturation</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              {dsp.warmth.enabled && (
-                <Badge variant="outline" className="text-xs border-orange-500/50 text-orange-400">
-                  Active
-                </Badge>
-              )}
-              <Switch
-                checked={dsp.warmth.enabled}
-                onCheckedChange={(enabled) => onUpdate({ warmth: { ...dsp.warmth, enabled } })}
-              />
-            </div>
-          </div>
-          
-          {dsp.warmth.enabled && (
-            <div className="grid grid-cols-2 gap-4 pt-2">
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs">
-                  <span className="text-white/60">Drive</span>
-                  <span className="text-white/80">{Math.round(dsp.warmth.drive * 100)}%</span>
-                </div>
-                <Slider
-                  value={[dsp.warmth.drive]}
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  onValueChange={([drive]) => onUpdate({ warmth: { ...dsp.warmth, drive } })}
-                  className="[&_[role=slider]]:bg-orange-500"
-                />
-              </div>
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs">
-                  <span className="text-white/60">Tone</span>
-                  <span className="text-white/80">{Math.round(dsp.warmth.tone * 100)}%</span>
-                </div>
-                <Slider
-                  value={[dsp.warmth.tone]}
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  onValueChange={([tone]) => onUpdate({ warmth: { ...dsp.warmth, tone } })}
-                  className="[&_[role=slider]]:bg-orange-500"
                 />
               </div>
             </div>
