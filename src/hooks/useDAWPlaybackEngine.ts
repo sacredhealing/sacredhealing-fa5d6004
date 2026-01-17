@@ -70,6 +70,7 @@ export interface DAWSettings {
     targetFrequency: number;
   };
   eq: EQSettings;
+  isPreviewMode?: boolean; // When true, mutes atmosphere/binaural/healing for solo vocal preview
 }
 
 export function useDAWPlaybackEngine() {
@@ -105,6 +106,7 @@ export function useDAWPlaybackEngine() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [currentClipHash, setCurrentClipHash] = useState<string>('');
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
   
   // Playback timeline refs
   const playbackStartTimeRef = useRef<number>(0);
@@ -228,13 +230,20 @@ export function useDAWPlaybackEngine() {
     const delayGain = ctx.createGain();
     delayGainRef.current = delayGain;
 
-    // Layer gains
+    // Layer gains - CRITICAL: Initialize ALL gains at 0 to prevent loud bursts
     styleGainRef.current = ctx.createGain();
+    styleGainRef.current.gain.value = 0; // Start silent
+    
     userAudioGainRef.current = ctx.createGain();
+    userAudioGainRef.current.gain.value = 0; // Start silent
+    
     quantumToneGainRef.current = ctx.createGain();
+    quantumToneGainRef.current.gain.value = 0; // Start silent - prevents healing frequency burst
+    
     binauralGainRef.current = ctx.createGain();
+    binauralGainRef.current.gain.value = 0; // Start silent - prevents binaural burst
 
-    // Quantum oscillator (healing frequency)
+    // Quantum oscillator (healing frequency) - gain already at 0
     const quantumOsc = ctx.createOscillator();
     quantumOsc.type = 'sine';
     quantumOsc.start();
@@ -406,7 +415,8 @@ export function useDAWPlaybackEngine() {
     clips: AudioClip[],
     clipUrlMap: Map<string, string>,
     timelinePosition: number,
-    eqSettings: EQSettings
+    eqSettings: EQSettings,
+    previewMode: boolean = false
   ) => {
     if (!ctxRef.current) await initialize();
 
@@ -416,11 +426,33 @@ export function useDAWPlaybackEngine() {
 
     playbackStartTimeRef.current = ctxRef.current!.currentTime;
     timelineOffsetRef.current = timelinePosition;
+    
+    // Set preview mode
+    setIsPreviewMode(previewMode);
 
     await syncClips(clips, clipUrlMap, timelinePosition, eqSettings, true);
     setIsPlaying(true);
-    console.log('▶️ DAW Playback started');
+    console.log(`▶️ DAW Playback started ${previewMode ? '(Solo Vocal Preview)' : ''}`);
   }, [initialize, syncClips]);
+  
+  // Start solo vocal preview (resets playhead to 0, mutes all layers except vocals)
+  const startVocalPreview = useCallback(async (
+    clips: AudioClip[],
+    clipUrlMap: Map<string, string>,
+    eqSettings: EQSettings
+  ) => {
+    // Reset playhead to 0 for preview
+    await startPlayback(clips, clipUrlMap, 0, eqSettings, true);
+    
+    // Ensure only vocal layer is audible
+    const now = ctxRef.current?.currentTime ?? 0;
+    styleGainRef.current?.gain.setTargetAtTime(0, now, 0.05);
+    quantumToneGainRef.current?.gain.setTargetAtTime(0, now, 0.05);
+    binauralGainRef.current?.gain.setTargetAtTime(0, now, 0.05);
+    userAudioGainRef.current?.gain.setTargetAtTime(ENGINE_CONFIG.COEFFS.VOCAL, now, 0.05);
+    
+    console.log('🎤 Solo Vocal Preview started from 0:00');
+  }, [startPlayback]);
 
   // Stop playback
   const stopPlayback = useCallback(() => {
@@ -434,18 +466,34 @@ export function useDAWPlaybackEngine() {
     if (!ctxRef.current) return;
     const now = ctxRef.current.currentTime;
 
+    // Handle preview mode flag
+    if (settings.isPreviewMode !== undefined) {
+      setIsPreviewMode(settings.isPreviewMode);
+    }
+    
+    const previewActive = settings.isPreviewMode ?? isPreviewMode;
+
     if (settings.volumes) {
-      styleGainRef.current?.gain.setTargetAtTime(
-        (settings.volumes.ambient / 100) * ENGINE_CONFIG.COEFFS.AMBIENT, now, 0.1
-      );
+      // In preview mode, mute atmosphere/binaural/healing - only play vocals
+      if (previewActive) {
+        styleGainRef.current?.gain.setTargetAtTime(0, now, 0.1); // Mute atmosphere
+        quantumToneGainRef.current?.gain.setTargetAtTime(0, now, 0.1); // Mute healing
+        binauralGainRef.current?.gain.setTargetAtTime(0, now, 0.1); // Mute binaural
+      } else {
+        styleGainRef.current?.gain.setTargetAtTime(
+          (settings.volumes.ambient / 100) * ENGINE_CONFIG.COEFFS.AMBIENT, now, 0.1
+        );
+        quantumToneGainRef.current?.gain.setTargetAtTime(
+          (settings.volumes.healing / 100) * ENGINE_CONFIG.COEFFS.HEALING, now, 0.1
+        );
+        binauralGainRef.current?.gain.setTargetAtTime(
+          (settings.volumes.binaural / 100) * ENGINE_CONFIG.COEFFS.BINAURAL, now, 0.1
+        );
+      }
+      
+      // Vocal gain is always active (even in preview mode)
       userAudioGainRef.current?.gain.setTargetAtTime(
         (settings.volumes.user / 100) * ENGINE_CONFIG.COEFFS.VOCAL, now, 0.1
-      );
-      quantumToneGainRef.current?.gain.setTargetAtTime(
-        (settings.volumes.healing / 100) * ENGINE_CONFIG.COEFFS.HEALING, now, 0.1
-      );
-      binauralGainRef.current?.gain.setTargetAtTime(
-        (settings.volumes.binaural / 100) * ENGINE_CONFIG.COEFFS.BINAURAL, now, 0.1
       );
       masterGainRef.current?.gain.setTargetAtTime(
         settings.volumes.master / 100, now, 0.1
@@ -464,14 +512,14 @@ export function useDAWPlaybackEngine() {
       );
     }
 
-    if (settings.healingFreq !== undefined) {
+    if (settings.healingFreq !== undefined && !previewActive) {
       quantumOscRef.current?.frequency.setTargetAtTime(settings.healingFreq, now, 0.2);
     }
 
-    if (settings.binaural) {
+    if (settings.binaural && !previewActive) {
       const { enabled, carrierFrequency, targetFrequency } = settings.binaural;
       if (enabled && !binauralOscLeftRef.current && ctxRef.current) {
-        // Create binaural oscillators
+        // Create binaural oscillators with gain at 0 to prevent burst
         const ctx = ctxRef.current;
         const leftOsc = ctx.createOscillator();
         const rightOsc = ctx.createOscillator();
@@ -491,7 +539,7 @@ export function useDAWPlaybackEngine() {
       binauralOscLeftRef.current?.frequency.setTargetAtTime(carrierFrequency, now, 0.2);
       binauralOscRightRef.current?.frequency.setTargetAtTime(carrierFrequency + targetFrequency, now, 0.2);
     }
-  }, []);
+  }, [isPreviewMode]);
 
   // Get analyzer data for visualization
   const getAnalyzerData = useCallback((array: Uint8Array<ArrayBuffer>) => {
@@ -643,10 +691,12 @@ export function useDAWPlaybackEngine() {
     // State
     isInitialized,
     isPlaying,
+    isPreviewMode,
 
     // Engine lifecycle
     initialize,
     startPlayback,
+    startVocalPreview,
     stopPlayback,
 
     // Clip synchronization
@@ -655,6 +705,7 @@ export function useDAWPlaybackEngine() {
 
     // Settings
     updateSettings,
+    setIsPreviewMode,
 
     // Visualization
     getAnalyzerData,
