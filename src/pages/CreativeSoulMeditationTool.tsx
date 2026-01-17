@@ -334,22 +334,47 @@ export default function CreativeSoulMeditationTool() {
     return result;
   }, [engine, timeline]);
 
-  // Auto-load atmosphere when style changes (plays sound immediately for feedback)
+  // Auto-load AND auto-play atmosphere when style changes
   useEffect(() => {
+    let cancelled = false;
+    
     const loadAndPlayAtmosphere = async () => {
-      if (!engine.isInitialized) {
-        await engine.initialize();
-      }
-      await engine.loadAtmosphere(activeStyle);
-      // Auto-play the atmosphere briefly to give audio feedback
-      if (!engine.atmosphereLayer.isPlaying && engine.atmosphereLayer.source) {
-        engine.toggleAtmospherePlay();
-        toast.success(`Loaded: ${activeStyle} atmosphere`);
+      try {
+        // Always initialize engine first
+        if (!engine.isInitialized) {
+          await engine.initialize();
+        }
+        
+        if (cancelled) return;
+        
+        // Load the atmosphere for this style
+        const loaded = await engine.loadAtmosphere(activeStyle);
+        
+        if (cancelled) return;
+        
+        if (loaded) {
+          // Small delay to ensure audio element is ready
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
+          if (cancelled) return;
+          
+          // Auto-play the atmosphere for immediate feedback
+          if (!engine.atmosphereLayer.isPlaying) {
+            engine.toggleAtmospherePlay();
+          }
+          toast.success(`🎵 ${activeStyle} atmosphere loaded`);
+        }
+      } catch (err) {
+        console.error('Failed to load atmosphere:', err);
       }
     };
     
     loadAndPlayAtmosphere();
-  }, [activeStyle]);
+    
+    return () => {
+      cancelled = true;
+    };
+  }, [activeStyle, engine]);
 
   // Sync frequencies when changed
   useEffect(() => {
