@@ -86,6 +86,14 @@ export function useSoulMeditateEngine() {
   const noiseCompressorRef = useRef<DynamicsCompressorNode | null>(null);
   const noiseGateRef = useRef<GainNode | null>(null);
   
+  // 3-Band Parametric EQ for neural source (Weight, Presence, Air)
+  const eqWeightRef = useRef<BiquadFilterNode | null>(null);     // 400Hz - Boxy control
+  const eqPresenceRef = useRef<BiquadFilterNode | null>(null);   // 4kHz - Clarity
+  const eqAirRef = useRef<BiquadFilterNode | null>(null);        // 10kHz+ - Sheen/Sibilance
+  
+  // Low cut filter (100Hz high-pass)
+  const lowCutFilterRef = useRef<BiquadFilterNode | null>(null);
+  
   const atmosphereSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const atmosphereAudioRef = useRef<HTMLAudioElement | null>(null);
   const atmosphereGainRef = useRef<GainNode | null>(null);
@@ -126,6 +134,14 @@ export function useSoulMeditateEngine() {
   });
   const [masterVolume, setMasterVolume] = useState(0.8);
   const [analyserData, setAnalyserData] = useState<AnalyserData | null>(null);
+  
+  // EQ state for UI sync
+  const [eqSettings, setEqSettings] = useState({
+    weight: -0.5,    // dB gain at 400Hz
+    presence: 3,     // dB gain at 4kHz
+    air: 1,          // dB gain at 10kHz+
+    lowCutEnabled: true
+  });
 
   // Initialize audio context
   const initialize = useCallback(async () => {
@@ -174,6 +190,35 @@ export function useSoulMeditateEngine() {
     // Noise gate gain (for very quiet sections)
     noiseGateRef.current = ctx.createGain();
     noiseGateRef.current.gain.value = 1;
+    
+    // Create 100Hz low-cut filter
+    lowCutFilterRef.current = ctx.createBiquadFilter();
+    lowCutFilterRef.current.type = 'highpass';
+    lowCutFilterRef.current.frequency.value = 100;
+    lowCutFilterRef.current.Q.value = 0.7;
+    
+    // Create 3-Band Parametric EQ
+    // Weight (400Hz) - Peaking filter for boxy control
+    eqWeightRef.current = ctx.createBiquadFilter();
+    eqWeightRef.current.type = 'peaking';
+    eqWeightRef.current.frequency.value = 400;
+    eqWeightRef.current.Q.value = 1.5;
+    eqWeightRef.current.gain.value = eqSettings.weight;
+    
+    // Presence (4kHz) - Peaking filter for clarity
+    eqPresenceRef.current = ctx.createBiquadFilter();
+    eqPresenceRef.current.type = 'peaking';
+    eqPresenceRef.current.frequency.value = 4000;
+    eqPresenceRef.current.Q.value = 1.2;
+    eqPresenceRef.current.gain.value = eqSettings.presence;
+    
+    // Air (10kHz+) - High shelf for sheen/sibilance
+    eqAirRef.current = ctx.createBiquadFilter();
+    eqAirRef.current.type = 'highshelf';
+    eqAirRef.current.frequency.value = 10000;
+    eqAirRef.current.gain.value = eqSettings.air;
+    
+    console.log('3-Band Parametric EQ initialized: Weight(400Hz), Presence(4kHz), Air(10kHz+)');
 
     atmosphereGainRef.current = ctx.createGain();
     atmosphereGainRef.current.gain.value = atmosphereLayer.volume;
@@ -323,20 +368,29 @@ export function useSoulMeditateEngine() {
     // Create source node and connect through noise cleanup chain
     const source = audioContextRef.current.createMediaElementSource(audio);
 
-    // Connect through noise cleanup chain: source -> highpass -> lowpass -> compressor -> gate -> gain
+    // Connect through full chain: source -> noise cleanup -> EQ -> low cut -> gain
+    // Chain: source -> highpass -> lowpass -> compressor -> gate -> lowCut -> weight -> presence -> air -> gain
     if (
       noiseHighPassRef.current &&
       noiseLowPassRef.current &&
       noiseCompressorRef.current &&
       noiseGateRef.current &&
+      lowCutFilterRef.current &&
+      eqWeightRef.current &&
+      eqPresenceRef.current &&
+      eqAirRef.current &&
       neuralGainRef.current
     ) {
       source.connect(noiseHighPassRef.current);
       noiseHighPassRef.current.connect(noiseLowPassRef.current);
       noiseLowPassRef.current.connect(noiseCompressorRef.current);
       noiseCompressorRef.current.connect(noiseGateRef.current);
-      noiseGateRef.current.connect(neuralGainRef.current);
-      console.log('Noise cleanup chain connected: highpass(80Hz) -> lowpass(12kHz) -> compressor -> gain');
+      noiseGateRef.current.connect(lowCutFilterRef.current);
+      lowCutFilterRef.current.connect(eqWeightRef.current);
+      eqWeightRef.current.connect(eqPresenceRef.current);
+      eqPresenceRef.current.connect(eqAirRef.current);
+      eqAirRef.current.connect(neuralGainRef.current);
+      console.log('Full audio chain connected: noise cleanup -> low cut(100Hz) -> EQ(Weight/Presence/Air) -> gain');
     } else {
       // Fallback: direct connection
       source.connect(neuralGainRef.current);
@@ -629,6 +683,56 @@ export function useSoulMeditateEngine() {
     setMasterVolume(vol);
   }, []);
 
+  // Update EQ band
+  const updateEQ = useCallback((bandId: string, value: number) => {
+    const ctx = audioContextRef.current;
+    if (!ctx) return;
+    
+    // Clamp value to reasonable range (-12 to +12 dB)
+    const clampedValue = Math.max(-12, Math.min(12, value));
+    
+    switch (bandId) {
+      case 'weight':
+        if (eqWeightRef.current) {
+          eqWeightRef.current.gain.setValueAtTime(clampedValue, ctx.currentTime);
+        }
+        setEqSettings(prev => ({ ...prev, weight: clampedValue }));
+        break;
+      case 'presence':
+        if (eqPresenceRef.current) {
+          eqPresenceRef.current.gain.setValueAtTime(clampedValue, ctx.currentTime);
+        }
+        setEqSettings(prev => ({ ...prev, presence: clampedValue }));
+        break;
+      case 'air':
+        if (eqAirRef.current) {
+          eqAirRef.current.gain.setValueAtTime(clampedValue, ctx.currentTime);
+        }
+        setEqSettings(prev => ({ ...prev, air: clampedValue }));
+        break;
+    }
+    console.log(`EQ ${bandId} set to ${clampedValue}dB`);
+  }, []);
+  
+  // Toggle low cut filter (100Hz high-pass)
+  const toggleLowCut = useCallback(() => {
+    const ctx = audioContextRef.current;
+    if (!ctx || !lowCutFilterRef.current) return;
+    
+    setEqSettings(prev => {
+      const newEnabled = !prev.lowCutEnabled;
+      if (lowCutFilterRef.current) {
+        // When disabled, set frequency very low to effectively bypass
+        lowCutFilterRef.current.frequency.setValueAtTime(
+          newEnabled ? 100 : 10, 
+          ctx.currentTime
+        );
+      }
+      console.log(`Low cut filter ${newEnabled ? 'enabled' : 'disabled'}`);
+      return { ...prev, lowCutEnabled: newEnabled };
+    });
+  }, []);
+
   // Update DSP settings
   const updateDSP = useCallback((newDsp: Partial<DSPSettings>) => {
     setDSP(prev => {
@@ -731,6 +835,7 @@ export function useSoulMeditateEngine() {
     solfeggioVolume,
     binauralVolume,
     dsp,
+    eqSettings,
     masterVolume,
     analyserData,
     
@@ -755,6 +860,8 @@ export function useSoulMeditateEngine() {
     updateBinauralVolume,
     updateMasterVolume,
     updateDSP,
+    updateEQ,
+    toggleLowCut,
     
     // Recording support
     getMasterNode,

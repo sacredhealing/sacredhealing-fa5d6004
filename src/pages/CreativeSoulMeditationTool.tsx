@@ -507,9 +507,14 @@ export default function CreativeSoulMeditationTool() {
             <VirtualChannelStrip
               sourceName={engine.neuralLayer.source || 'AUDIO SOURCE'}
               autoGainDb={8.7}
-              lowCutEnabled={true}
-              onLowCutToggle={() => console.log('Toggle low cut')}
-              onEqChange={(bandId, value) => console.log('EQ change:', bandId, value)}
+              lowCutEnabled={engine.eqSettings.lowCutEnabled}
+              onLowCutToggle={engine.toggleLowCut}
+              onEqChange={engine.updateEQ}
+              eqValues={{
+                weight: engine.eqSettings.weight,
+                presence: engine.eqSettings.presence,
+                air: engine.eqSettings.air
+              }}
             />
           </div>
         )}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,11 @@ interface VirtualChannelStripProps {
   lowCutEnabled?: boolean;
   onLowCutToggle?: () => void;
   onEqChange?: (bandId: string, value: number) => void;
+  eqValues?: {
+    weight: number;
+    presence: number;
+    air: number;
+  };
 }
 
 const DEFAULT_BANDS: EQBand[] = [
@@ -55,14 +60,39 @@ export default function VirtualChannelStrip({
   lowCutEnabled = true,
   onLowCutToggle,
   onEqChange,
+  eqValues,
 }: VirtualChannelStripProps) {
-  const [bands, setBands] = useState<EQBand[]>(DEFAULT_BANDS);
+  // Initialize bands with external values or defaults
+  const [bands, setBands] = useState<EQBand[]>(() => {
+    const initial = [...DEFAULT_BANDS];
+    if (eqValues) {
+      initial[0].value = eqValues.weight;
+      initial[1].value = eqValues.presence;
+      initial[2].value = eqValues.air;
+    }
+    return initial;
+  });
   const [selectedBand, setSelectedBand] = useState<string | null>('weight');
+
+  // Sync with external EQ values when they change
+  useEffect(() => {
+    if (eqValues) {
+      setBands(prev => prev.map(band => {
+        switch (band.id) {
+          case 'weight': return { ...band, value: eqValues.weight };
+          case 'presence': return { ...band, value: eqValues.presence };
+          case 'air': return { ...band, value: eqValues.air };
+          default: return band;
+        }
+      }));
+    }
+  }, [eqValues?.weight, eqValues?.presence, eqValues?.air]);
 
   const handleBandChange = (bandId: string, value: number) => {
     setBands(prev => prev.map(band => 
       band.id === bandId ? { ...band, value } : band
     ));
+    // Call the engine's EQ update function
     onEqChange?.(bandId, value);
   };
 
