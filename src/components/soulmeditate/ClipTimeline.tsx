@@ -47,16 +47,23 @@ interface ClipTimelineProps {
   onSeek: (time: number) => void;
 }
 
-// Canvas-based waveform component for Logic Pro style rendering
+// Neon color palette for waveforms
+const NEON_CYAN = '#22d3ee';    // cyan-400
+const NEON_MAGENTA = '#ec4899'; // magenta-500 (pink-500)
+
+// Canvas-based waveform component with neon glow rendering
 interface WaveformCanvasProps {
   waveformData: number[];
-  color: string;
+  isSelected: boolean;
   width: number;
   height: number;
 }
 
-function WaveformCanvas({ waveformData, color, width, height }: WaveformCanvasProps) {
+function WaveformCanvas({ waveformData, isSelected, width, height }: WaveformCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  
+  // Select neon color based on selection state
+  const neonColor = isSelected ? NEON_CYAN : NEON_MAGENTA;
   
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -74,61 +81,75 @@ function WaveformCanvas({ waveformData, color, width, height }: WaveformCanvasPr
     // Clear canvas
     ctx.clearRect(0, 0, width, height);
     
-    // Draw background gradient
-    const bgGradient = ctx.createLinearGradient(0, 0, 0, height);
-    bgGradient.addColorStop(0, 'rgba(30, 41, 59, 0.5)');
-    bgGradient.addColorStop(0.5, 'rgba(15, 23, 42, 0.8)');
-    bgGradient.addColorStop(1, 'rgba(30, 41, 59, 0.5)');
-    ctx.fillStyle = bgGradient;
+    // Draw dark background
+    ctx.fillStyle = 'rgba(5, 10, 20, 0.95)';
     ctx.fillRect(0, 0, width, height);
     
-    // Center line
+    // Center line with neon glow
     const centerY = height / 2;
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.strokeStyle = neonColor + '40';
     ctx.lineWidth = 1;
+    ctx.shadowColor = neonColor;
+    ctx.shadowBlur = 4;
     ctx.beginPath();
     ctx.moveTo(0, centerY);
     ctx.lineTo(width, centerY);
     ctx.stroke();
+    ctx.shadowBlur = 0;
     
     // Calculate bar width based on data length and canvas width
-    const barWidth = Math.max(1, width / waveformData.length);
-    const maxHeight = (height / 2) - 4; // Leave some padding
+    const barWidth = Math.max(1.5, width / waveformData.length);
+    // 80% of half-height for better visibility
+    const maxHeight = (height / 2) * 0.80;
     
-    // Draw waveform - mirrored style like Logic Pro
+    // Apply glow effect for all bars
+    ctx.shadowColor = neonColor;
+    ctx.shadowBlur = 8;
+    
+    // Draw waveform - mirrored neon style
     waveformData.forEach((peak, i) => {
       const x = i * barWidth;
-      const barHeight = peak * maxHeight;
+      // Scale to 80% opacity (0xCC = 204 = ~80%)
+      const barHeight = Math.max(2, peak * maxHeight);
       
-      // Top waveform (positive)
+      // Top waveform (positive) with high opacity gradient
       const topGradient = ctx.createLinearGradient(x, centerY - barHeight, x, centerY);
-      topGradient.addColorStop(0, color);
-      topGradient.addColorStop(1, color + '80');
+      topGradient.addColorStop(0, neonColor + 'FF'); // 100% at peak
+      topGradient.addColorStop(0.5, neonColor + 'CC'); // 80% mid
+      topGradient.addColorStop(1, neonColor + '99'); // 60% at center
       ctx.fillStyle = topGradient;
       ctx.fillRect(x, centerY - barHeight, Math.max(1, barWidth - 0.5), barHeight);
       
-      // Bottom waveform (mirrored/negative)
+      // Bottom waveform (mirrored/negative) with high opacity gradient
       const bottomGradient = ctx.createLinearGradient(x, centerY, x, centerY + barHeight);
-      bottomGradient.addColorStop(0, color + '80');
-      bottomGradient.addColorStop(1, color + '40');
+      bottomGradient.addColorStop(0, neonColor + '99'); // 60% at center
+      bottomGradient.addColorStop(0.5, neonColor + 'CC'); // 80% mid
+      bottomGradient.addColorStop(1, neonColor + 'FF'); // 100% at peak
       ctx.fillStyle = bottomGradient;
       ctx.fillRect(x, centerY, Math.max(1, barWidth - 0.5), barHeight);
     });
     
-    // Add subtle glow effect at edges
+    // Reset shadow for edges
+    ctx.shadowBlur = 0;
+    
+    // Add neon edge glow overlay
     const edgeGlow = ctx.createLinearGradient(0, 0, 0, height);
-    edgeGlow.addColorStop(0, 'rgba(255, 255, 255, 0.05)');
+    edgeGlow.addColorStop(0, neonColor + '15');
     edgeGlow.addColorStop(0.5, 'transparent');
-    edgeGlow.addColorStop(1, 'rgba(255, 255, 255, 0.05)');
+    edgeGlow.addColorStop(1, neonColor + '15');
     ctx.fillStyle = edgeGlow;
     ctx.fillRect(0, 0, width, height);
     
-  }, [waveformData, color, width, height]);
+  }, [waveformData, neonColor, width, height]);
   
   return (
     <canvas
       ref={canvasRef}
-      style={{ width: `${width}px`, height: `${height}px` }}
+      style={{ 
+        width: `${width}px`, 
+        height: `${height}px`,
+        filter: `drop-shadow(0 0 6px ${neonColor}80)`
+      }}
       className="absolute inset-0"
     />
   );
@@ -421,22 +442,22 @@ export default function ClipTimeline({
                     {clip.isMuted && <VolumeX className="w-3 h-3" />}
                   </div>
 
-                  {/* Waveform Visualization - Logic Pro Style with Canvas */}
-                  <div className="flex-1 relative overflow-hidden" style={{ backgroundColor: '#1a2332' }}>
+                  {/* Waveform Visualization - Neon Style with Canvas */}
+                  <div className="flex-1 relative overflow-hidden" style={{ backgroundColor: '#050a14' }}>
                     {clip.waveformData && clip.waveformData.length > 0 ? (
                       <WaveformCanvas 
                         waveformData={clip.waveformData} 
-                        color={clip.color}
+                        isSelected={isSelected}
                         width={clipWidth}
-                        height={90}
+                        height={96}
                       />
                     ) : (
-                      // Loading placeholder
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="flex items-center gap-1">
-                          <Waves className="w-4 h-4 text-white/30 animate-pulse" />
-                          <span className="text-[10px] text-white/30 font-mono">
-                            Analyzing audio...
+                      // Loading placeholder with neon pulse
+                      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-r from-cyan-500/10 via-transparent to-pink-500/10">
+                        <div className="flex items-center gap-2">
+                          <Waves className="w-5 h-5 text-cyan-400 animate-pulse" style={{ filter: 'drop-shadow(0 0 4px #22d3ee)' }} />
+                          <span className="text-xs text-cyan-300 font-mono animate-pulse">
+                            Analyzing waveform...
                           </span>
                         </div>
                       </div>
