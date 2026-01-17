@@ -112,9 +112,9 @@ export default function CreativeSoulMeditationTool() {
     toast.success('Neural Engine initialized');
   }, [engine]);
 
-  // Start neural process
+  // Start neural process - now synced with DAW transport
   const startNeuralProcess = useCallback(async () => {
-    if (!engine.neuralLayer.source && !engine.atmosphereLayer.source) {
+    if (!engine.neuralLayer.source && !engine.atmosphereLayer.source && timeline.clips.length === 0) {
       toast.error('Neural Source missing. Upload audio or link YouTube stream.');
       return;
     }
@@ -139,6 +139,21 @@ export default function CreativeSoulMeditationTool() {
       if (engine.atmosphereLayer.source && !engine.atmosphereLayer.isPlaying) {
         engine.toggleAtmospherePlay();
       }
+      
+      // Also start DAW playback if there are clips on the timeline
+      if (timeline.clips.length > 0) {
+        await dawEngine.initialize();
+        const clipUrlMap = timeline.getClipUrlMap();
+        const eqSettings = {
+          lowCut: engine.eqSettings?.lowCutEnabled ?? true,
+          boxyGain: engine.eqSettings?.weight ?? -0.5,
+          presenceGain: engine.eqSettings?.presence ?? 3,
+          airGain: engine.eqSettings?.air ?? 1
+        };
+        await dawEngine.startPlayback(timeline.clips, clipUrlMap, timeline.currentTime, eqSettings);
+        dawSyncActiveRef.current = true;
+        timeline.setIsPlaying(true);
+      }
 
       toast.success('DSP Mastering Rack Online');
     } catch (err) {
@@ -146,7 +161,7 @@ export default function CreativeSoulMeditationTool() {
     } finally {
       setIsProcessing(false);
     }
-  }, [engine, healingFreq, brainwaveFreq]);
+  }, [engine, dawEngine, timeline, healingFreq, brainwaveFreq]);
 
   // Stop all
   const stopAll = useCallback(() => {
@@ -319,12 +334,22 @@ export default function CreativeSoulMeditationTool() {
     return result;
   }, [engine, timeline]);
 
-  // Auto-load atmosphere when style changes (random sound from database)
+  // Auto-load atmosphere when style changes (plays sound immediately for feedback)
   useEffect(() => {
-    if (engine.isInitialized) {
-      engine.loadAtmosphere(activeStyle);
-    }
-  }, [activeStyle, engine.isInitialized]);
+    const loadAndPlayAtmosphere = async () => {
+      if (!engine.isInitialized) {
+        await engine.initialize();
+      }
+      await engine.loadAtmosphere(activeStyle);
+      // Auto-play the atmosphere briefly to give audio feedback
+      if (!engine.atmosphereLayer.isPlaying && engine.atmosphereLayer.source) {
+        engine.toggleAtmospherePlay();
+        toast.success(`Loaded: ${activeStyle} atmosphere`);
+      }
+    };
+    
+    loadAndPlayAtmosphere();
+  }, [activeStyle]);
 
   // Sync frequencies when changed
   useEffect(() => {
@@ -345,7 +370,8 @@ export default function CreativeSoulMeditationTool() {
     engine.neuralLayer.isPlaying || 
     engine.atmosphereLayer.isPlaying || 
     engine.frequencies.solfeggio.enabled ||
-    engine.frequencies.binaural.enabled;
+    engine.frequencies.binaural.enabled ||
+    dawEngine.isPlaying;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950/20 to-slate-950">
