@@ -51,23 +51,68 @@ interface ClipTimelineProps {
 const NEON_CYAN = '#22d3ee';    // cyan-400
 const NEON_MAGENTA = '#ec4899'; // magenta-500 (pink-500)
 
+/**
+ * Spectral Slicing: Get visible waveform portion based on trim values
+ * This ensures the waveform matches the audio exactly after a scissor cut
+ */
+function getVisibleWaveform(
+  waveformData: number[],
+  trimStart: number,
+  trimEnd: number,
+  totalDuration: number
+): number[] {
+  if (!waveformData.length || totalDuration <= 0) return waveformData;
+  
+  // Calculate trim percentages
+  const trimStartPercent = trimStart / totalDuration;
+  const trimEndPercent = trimEnd / totalDuration;
+  
+  // Calculate slice indices
+  const totalPeaks = waveformData.length;
+  const startIndex = Math.floor(trimStartPercent * totalPeaks);
+  const endIndex = Math.ceil((1 - trimEndPercent) * totalPeaks);
+  
+  // Return the visible slice
+  return waveformData.slice(
+    Math.max(0, startIndex),
+    Math.min(totalPeaks, endIndex)
+  );
+}
+
 // Canvas-based waveform component with neon glow rendering
 interface WaveformCanvasProps {
   waveformData: number[];
   isSelected: boolean;
   width: number;
   height: number;
+  trimStart: number;
+  trimEnd: number;
+  totalDuration: number;
 }
 
-function WaveformCanvas({ waveformData, isSelected, width, height }: WaveformCanvasProps) {
+function WaveformCanvas({ 
+  waveformData, 
+  isSelected, 
+  width, 
+  height,
+  trimStart,
+  trimEnd,
+  totalDuration
+}: WaveformCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
   // Select neon color based on selection state
   const neonColor = isSelected ? NEON_CYAN : NEON_MAGENTA;
   
+  // Apply spectral slicing to get visible portion
+  const visibleWaveform = useMemo(() => 
+    getVisibleWaveform(waveformData, trimStart, trimEnd, totalDuration),
+    [waveformData, trimStart, trimEnd, totalDuration]
+  );
+  
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !waveformData.length) return;
+    if (!canvas || !visibleWaveform.length) return;
     
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -82,15 +127,15 @@ function WaveformCanvas({ waveformData, isSelected, width, height }: WaveformCan
     ctx.clearRect(0, 0, width, height);
     
     // Draw dark background
-    ctx.fillStyle = 'rgba(5, 10, 20, 0.95)';
+    ctx.fillStyle = 'rgba(2, 6, 14, 1)';
     ctx.fillRect(0, 0, width, height);
     
     // Center line with neon glow
     const centerY = height / 2;
-    ctx.strokeStyle = neonColor + '40';
+    ctx.strokeStyle = neonColor + '60';
     ctx.lineWidth = 1;
     ctx.shadowColor = neonColor;
-    ctx.shadowBlur = 4;
+    ctx.shadowBlur = 6;
     ctx.beginPath();
     ctx.moveTo(0, centerY);
     ctx.lineTo(width, centerY);
@@ -98,49 +143,51 @@ function WaveformCanvas({ waveformData, isSelected, width, height }: WaveformCan
     ctx.shadowBlur = 0;
     
     // Calculate bar width based on data length and canvas width
-    const barWidth = Math.max(1.5, width / waveformData.length);
-    // 80% of half-height for better visibility
-    const maxHeight = (height / 2) * 0.80;
+    const barWidth = Math.max(2, width / visibleWaveform.length);
+    // 95% of half-height for maximum visibility
+    const maxHeight = (height / 2) * 0.95;
     
-    // Apply glow effect for all bars
+    // Apply strong glow effect for all bars - opacity 100%
     ctx.shadowColor = neonColor;
-    ctx.shadowBlur = 8;
+    ctx.shadowBlur = 12;
     
-    // Draw waveform - mirrored neon style
-    waveformData.forEach((peak, i) => {
+    // Draw waveform - mirrored neon style with sqrt scaling for visual energy
+    visibleWaveform.forEach((peak, i) => {
       const x = i * barWidth;
-      // Scale to 80% opacity (0xCC = 204 = ~80%)
-      const barHeight = Math.max(2, peak * maxHeight);
+      // Non-linear sqrt scaling for better visual energy on quieter parts
+      const scaledPeak = Math.sqrt(peak);
+      // Minimum 2px height, scale to 95% of available space
+      const barHeight = Math.max(2, scaledPeak * maxHeight);
       
-      // Top waveform (positive) with high opacity gradient
+      // Top waveform (positive) with full opacity gradient
       const topGradient = ctx.createLinearGradient(x, centerY - barHeight, x, centerY);
-      topGradient.addColorStop(0, neonColor + 'FF'); // 100% at peak
-      topGradient.addColorStop(0.5, neonColor + 'CC'); // 80% mid
-      topGradient.addColorStop(1, neonColor + '99'); // 60% at center
+      topGradient.addColorStop(0, neonColor); // 100% at peak
+      topGradient.addColorStop(0.4, neonColor + 'F0'); // 94% 
+      topGradient.addColorStop(1, neonColor + 'CC'); // 80% at center
       ctx.fillStyle = topGradient;
-      ctx.fillRect(x, centerY - barHeight, Math.max(1, barWidth - 0.5), barHeight);
+      ctx.fillRect(x, centerY - barHeight, Math.max(1.5, barWidth - 0.5), barHeight);
       
-      // Bottom waveform (mirrored/negative) with high opacity gradient
+      // Bottom waveform (mirrored/negative) with full opacity gradient
       const bottomGradient = ctx.createLinearGradient(x, centerY, x, centerY + barHeight);
-      bottomGradient.addColorStop(0, neonColor + '99'); // 60% at center
-      bottomGradient.addColorStop(0.5, neonColor + 'CC'); // 80% mid
-      bottomGradient.addColorStop(1, neonColor + 'FF'); // 100% at peak
+      bottomGradient.addColorStop(0, neonColor + 'CC'); // 80% at center
+      bottomGradient.addColorStop(0.6, neonColor + 'F0'); // 94%
+      bottomGradient.addColorStop(1, neonColor); // 100% at peak
       ctx.fillStyle = bottomGradient;
-      ctx.fillRect(x, centerY, Math.max(1, barWidth - 0.5), barHeight);
+      ctx.fillRect(x, centerY, Math.max(1.5, barWidth - 0.5), barHeight);
     });
     
     // Reset shadow for edges
     ctx.shadowBlur = 0;
     
-    // Add neon edge glow overlay
+    // Add intense neon edge glow overlay
     const edgeGlow = ctx.createLinearGradient(0, 0, 0, height);
-    edgeGlow.addColorStop(0, neonColor + '15');
+    edgeGlow.addColorStop(0, neonColor + '30');
     edgeGlow.addColorStop(0.5, 'transparent');
-    edgeGlow.addColorStop(1, neonColor + '15');
+    edgeGlow.addColorStop(1, neonColor + '30');
     ctx.fillStyle = edgeGlow;
     ctx.fillRect(0, 0, width, height);
     
-  }, [waveformData, neonColor, width, height]);
+  }, [visibleWaveform, neonColor, width, height]);
   
   return (
     <canvas
@@ -148,9 +195,9 @@ function WaveformCanvas({ waveformData, isSelected, width, height }: WaveformCan
       style={{ 
         width: `${width}px`, 
         height: `${height}px`,
-        filter: `drop-shadow(0 0 6px ${neonColor}80)`
+        filter: `drop-shadow(0 0 8px ${neonColor}CC)`
       }}
-      className="absolute inset-0"
+      className="absolute inset-0 opacity-100"
     />
   );
 }
@@ -442,21 +489,35 @@ export default function ClipTimeline({
                     {clip.isMuted && <VolumeX className="w-3 h-3" />}
                   </div>
 
-                  {/* Waveform Visualization - Neon Style with Canvas */}
-                  <div className="flex-1 relative overflow-hidden" style={{ backgroundColor: '#050a14' }}>
+                  {/* Waveform Visualization - Neon Style with Spectral Slicing */}
+                  <div className="flex-1 relative overflow-hidden" style={{ backgroundColor: '#020610' }}>
                     {clip.waveformData && clip.waveformData.length > 0 ? (
                       <WaveformCanvas 
                         waveformData={clip.waveformData} 
                         isSelected={isSelected}
                         width={clipWidth}
-                        height={96}
+                        height={100}
+                        trimStart={clip.trimStart}
+                        trimEnd={clip.trimEnd}
+                        totalDuration={clip.duration}
                       />
                     ) : (
-                      // Loading placeholder with neon pulse
-                      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-r from-cyan-500/10 via-transparent to-pink-500/10">
+                      // Loading placeholder with intense neon pulse
+                      <div 
+                        className="absolute inset-0 flex items-center justify-center"
+                        style={{ 
+                          background: 'linear-gradient(90deg, rgba(34,211,238,0.15) 0%, transparent 50%, rgba(236,72,153,0.15) 100%)'
+                        }}
+                      >
                         <div className="flex items-center gap-2">
-                          <Waves className="w-5 h-5 text-cyan-400 animate-pulse" style={{ filter: 'drop-shadow(0 0 4px #22d3ee)' }} />
-                          <span className="text-xs text-cyan-300 font-mono animate-pulse">
+                          <Waves 
+                            className="w-6 h-6 text-cyan-400 animate-pulse" 
+                            style={{ filter: 'drop-shadow(0 0 8px rgba(34,211,238,0.8))' }} 
+                          />
+                          <span 
+                            className="text-sm text-cyan-300 font-mono animate-pulse font-semibold"
+                            style={{ textShadow: '0 0 8px rgba(34,211,238,0.8)' }}
+                          >
                             Analyzing waveform...
                           </span>
                         </div>
