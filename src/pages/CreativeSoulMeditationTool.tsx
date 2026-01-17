@@ -37,6 +37,7 @@ import HealingFrequencySelector from '@/components/soulmeditate/HealingFrequency
 import BrainwaveSelector from '@/components/soulmeditate/BrainwaveSelector';
 import YouTubeLinker from '@/components/soulmeditate/YouTubeLinker';
 import ProcessingTerminal from '@/components/soulmeditate/ProcessingTerminal';
+import VirtualChannelStrip from '@/components/soulmeditate/VirtualChannelStrip';
 
 type VisualizerMode = 'bars' | 'wave' | 'radial';
 type StemMode = 'full_mix' | 'vocals_only' | 'music_only' | 'stems_all';
@@ -499,6 +500,19 @@ export default function CreativeSoulMeditationTool() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Virtual Channel Strip - Vocal Editor */}
+        {engine.neuralLayer.source && (
+          <div className="mb-6">
+            <VirtualChannelStrip
+              sourceName={engine.neuralLayer.source || 'AUDIO SOURCE'}
+              autoGainDb={8.7}
+              lowCutEnabled={true}
+              onLowCutToggle={() => console.log('Toggle low cut')}
+              onEqChange={(bandId, value) => console.log('EQ change:', bandId, value)}
+            />
+          </div>
+        )}
 
         {/* Style Grid + Atmosphere Volume */}
         <div className="mb-6">
