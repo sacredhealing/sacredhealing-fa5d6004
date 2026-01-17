@@ -469,34 +469,47 @@ export function useSoulMeditateEngine() {
     
     let audioUrl = '';
     let selectedFileName = '';
+    
+    // Helper to check if file is audio
+    const isAudioFile = (name: string) => 
+      name.endsWith('.wav') || name.endsWith('.mp3') || name.endsWith('.m4a') || name.endsWith('.ogg');
 
-    // List files directly from storage bucket for this style folder
+    // List files directly from storage bucket for this style folder (NO search param - it breaks the query)
     const { data: storageFiles, error: storageError } = await supabase
       .storage
       .from(BUCKET)
-      .list(styleId, {
-        limit: 100,
-        search: '.wav'
-      });
+      .list(styleId, { limit: 100 });
 
-    // Also check subfolders (e.g., indian/sitar/)
-    let allWavFiles: { name: string; path: string }[] = [];
+    if (storageError) {
+      console.error('Storage list error:', storageError);
+    }
+
+    // Collect all audio files including from subfolders
+    let allAudioFiles: { name: string; path: string }[] = [];
     
     if (storageFiles && storageFiles.length > 0) {
+      console.log(`📂 Found ${storageFiles.length} items in ${styleId}:`, storageFiles.map(f => f.name));
+      
       for (const item of storageFiles) {
-        if (item.name.endsWith('.wav')) {
-          allWavFiles.push({ name: item.name, path: `${styleId}/${item.name}` });
+        if (isAudioFile(item.name)) {
+          allAudioFiles.push({ name: item.name, path: `${styleId}/${item.name}` });
         } else if (!item.name.includes('.')) {
-          // This might be a subfolder, list its contents
-          const { data: subfolderFiles } = await supabase
+          // This is a subfolder (no extension), list its contents
+          const { data: subfolderFiles, error: subError } = await supabase
             .storage
             .from(BUCKET)
             .list(`${styleId}/${item.name}`, { limit: 100 });
           
-          if (subfolderFiles) {
+          if (subError) {
+            console.error(`Subfolder ${item.name} error:`, subError);
+            continue;
+          }
+          
+          if (subfolderFiles && subfolderFiles.length > 0) {
+            console.log(`📂 Found ${subfolderFiles.length} items in ${styleId}/${item.name}`);
             for (const subFile of subfolderFiles) {
-              if (subFile.name.endsWith('.wav')) {
-                allWavFiles.push({ 
+              if (isAudioFile(subFile.name)) {
+                allAudioFiles.push({ 
                   name: subFile.name, 
                   path: `${styleId}/${item.name}/${subFile.name}` 
                 });
@@ -507,24 +520,32 @@ export function useSoulMeditateEngine() {
       }
     }
 
-    if (allWavFiles.length > 0) {
-      // Randomly select one WAV file
-      const randomIndex = Math.floor(Math.random() * allWavFiles.length);
-      const selectedFile = allWavFiles[randomIndex];
+    if (allAudioFiles.length > 0) {
+      // Randomly select one audio file
+      const randomIndex = Math.floor(Math.random() * allAudioFiles.length);
+      const selectedFile = allAudioFiles[randomIndex];
       selectedFileName = selectedFile.name;
-      audioUrl = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${selectedFile.path}`;
-      console.log(`🎲 Randomly selected atmosphere for ${styleId}:`, selectedFile.name, `(from ${allWavFiles.length} files)`);
+      audioUrl = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${encodeURIComponent(selectedFile.path).replace(/%2F/g, '/')}`;
+      console.log(`🎲 Selected atmosphere for ${styleId}:`, selectedFile.name, `(from ${allAudioFiles.length} files)`);
     } else {
-      console.log(`No WAV files found in storage for style: ${styleId}`);
+      console.log(`⚠️ No audio files found in storage for style: ${styleId}`);
     }
 
     // Clean up previous audio
     if (atmosphereAudioRef.current) {
       atmosphereAudioRef.current.pause();
+      atmosphereAudioRef.current.src = '';
     }
     if (atmosphereSourceRef.current) {
-      atmosphereSourceRef.current.disconnect();
+      try {
+        atmosphereSourceRef.current.disconnect();
+      } catch (e) {}
       atmosphereSourceRef.current = null;
+    }
+
+    if (!audioUrl) {
+      setAtmosphereLayer(prev => ({ ...prev, source: null, isPlaying: false }));
+      return false;
     }
 
     const audio = new Audio();
@@ -534,23 +555,23 @@ export function useSoulMeditateEngine() {
     
     atmosphereAudioRef.current = audio;
 
-    if (audioUrl) {
-      try {
-        const source = audioContextRef.current.createMediaElementSource(audio);
-        source.connect(atmosphereGainRef.current);
-        atmosphereSourceRef.current = source;
-      } catch (e) {
-        console.log('Atmosphere audio not available:', styleId);
-      }
+    try {
+      const source = audioContextRef.current.createMediaElementSource(audio);
+      source.connect(atmosphereGainRef.current);
+      atmosphereSourceRef.current = source;
+      console.log(`✅ Atmosphere audio connected: ${selectedFileName}`);
+    } catch (e) {
+      console.error('Failed to connect atmosphere audio:', e);
+      return false;
     }
 
     setAtmosphereLayer(prev => ({ 
       ...prev, 
-      source: selectedFileName ? `${styleId}:${selectedFileName.replace('.wav', '')}` : styleId,
-      exportInput: audioUrl ? {
+      source: selectedFileName ? `${styleId}:${selectedFileName.replace(/\.(wav|mp3|m4a|ogg)$/i, '')}` : styleId,
+      exportInput: {
         directUrl: audioUrl,
-        displayName: selectedFileName?.replace('.wav', '') || styleId
-      } : undefined
+        displayName: selectedFileName?.replace(/\.(wav|mp3|m4a|ogg)$/i, '') || styleId
+      }
     }));
     return true;
   }, [initialize]);
