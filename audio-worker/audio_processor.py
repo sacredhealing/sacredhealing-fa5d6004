@@ -71,37 +71,31 @@ class AudioProcessor:
             "vedic": {
                 "reverb": 0.6,
                 "low_pass": 8000,
-                "warmth": 0.3,
                 "ambient_type": "temple"
             },
             "shamanic": {
                 "reverb": 0.7,
                 "low_pass": 6000,
-                "warmth": 0.4,
                 "ambient_type": "nature"
             },
             "tibetan": {
                 "reverb": 0.8,
                 "low_pass": 7000,
-                "warmth": 0.35,
                 "ambient_type": "singing_bowls"
             },
             "nature": {
                 "reverb": 0.4,
                 "low_pass": 10000,
-                "warmth": 0.2,
                 "ambient_type": "forest"
             },
             "ocean": {
                 "reverb": 0.5,
                 "low_pass": 9000,
-                "warmth": 0.25,
                 "ambient_type": "waves"
             },
             "forest": {
                 "reverb": 0.45,
                 "low_pass": 9500,
-                "warmth": 0.22,
                 "ambient_type": "birds"
             },
         }
@@ -112,36 +106,31 @@ class AudioProcessor:
                 "compression_ratio": 2.0,
                 "eq_low_boost": 2,
                 "eq_high_cut": -3,
-                "limiter_threshold": -3,
-                "warmth": 0.3
+                "limiter_threshold": -3
             },
             "balanced": {
                 "compression_ratio": 3.0,
                 "eq_low_boost": 0,
                 "eq_high_cut": 0,
-                "limiter_threshold": -1,
-                "warmth": 0.1
+                "limiter_threshold": -1
             },
             "warm": {
                 "compression_ratio": 2.5,
                 "eq_low_boost": 3,
                 "eq_high_cut": -2,
-                "limiter_threshold": -2,
-                "warmth": 0.4
+                "limiter_threshold": -2
             },
             "bright": {
                 "compression_ratio": 2.5,
                 "eq_low_boost": -1,
                 "eq_high_cut": 3,
-                "limiter_threshold": -2,
-                "warmth": 0.05
+                "limiter_threshold": -2
             },
             "loud": {
                 "compression_ratio": 4.0,
                 "eq_low_boost": 1,
                 "eq_high_cut": 1,
-                "limiter_threshold": -0.5,
-                "warmth": 0.15
+                "limiter_threshold": -0.5
             },
         }
     
@@ -345,10 +334,6 @@ class AudioProcessor:
         # Apply reverb (simplified convolution reverb)
         audio = self._apply_reverb(audio, sr, config["reverb"])
         
-        # Apply warmth (subtle low frequency boost)
-        if config["warmth"] > 0:
-            audio = self._apply_warmth(audio, sr, config["warmth"])
-        
         return audio
     
     def _apply_reverb(self, audio, sr, amount=0.5):
@@ -416,10 +401,6 @@ class AudioProcessor:
         
         # Apply EQ
         audio = self._apply_eq(audio, sr, config["eq_low_boost"], config["eq_high_cut"])
-        
-        # Apply warmth
-        if config["warmth"] > 0:
-            audio = self._apply_warmth(audio, sr, config["warmth"])
         
         # Apply limiter
         audio = self._apply_limiter(audio, config["limiter_threshold"])
