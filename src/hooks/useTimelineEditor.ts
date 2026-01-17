@@ -51,6 +51,9 @@ export function useTimelineEditor(audioRef: React.RefObject<HTMLAudioElement | n
   
   // Store pending waveform extractions
   const pendingWaveformsRef = useRef<Map<string, File | string>>(new Map());
+  
+  // Store clip URL mapping for DAW engine sync
+  const clipUrlMapRef = useRef<Map<string, string>>(new Map());
 
   // Save state for undo
   const saveForUndo = useCallback(() => {
@@ -97,6 +100,17 @@ export function useTimelineEditor(audioRef: React.RefObject<HTMLAudioElement | n
     setClips(prev => [...prev, newClip]);
     setDuration(prev => Math.max(prev, clipDuration + 30)); // Add padding
     
+    // Store URL mapping for DAW engine
+    if (audioSource) {
+      if (typeof audioSource === 'string') {
+        clipUrlMapRef.current.set(newClip.id, audioSource);
+      } else {
+        // For File objects, create object URL
+        const objectUrl = URL.createObjectURL(audioSource);
+        clipUrlMapRef.current.set(newClip.id, objectUrl);
+      }
+    }
+    
     // Extract high-resolution waveform asynchronously (500 points for precision)
     if (audioSource) {
       pendingWaveformsRef.current.set(newClip.id, audioSource);
@@ -114,6 +128,11 @@ export function useTimelineEditor(audioRef: React.RefObject<HTMLAudioElement | n
     
     return newClip;
   }, [createClipFromSource, saveForUndo, updateClipWaveform]);
+
+  // Get clip URL map for DAW engine sync
+  const getClipUrlMap = useCallback((): Map<string, string> => {
+    return new Map(clipUrlMapRef.current);
+  }, []);
 
   // Select clip
   const selectClip = useCallback((clipId: string | null) => {
@@ -412,5 +431,9 @@ export function useTimelineEditor(audioRef: React.RefObject<HTMLAudioElement | n
 
     // Setters
     setDuration,
+    
+    // DAW engine integration
+    getClipUrlMap,
+    setIsPlaying,
   };
 }

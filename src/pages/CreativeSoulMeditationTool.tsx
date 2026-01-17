@@ -28,6 +28,7 @@ import {
 import { useSoulMeditateEngine } from '@/hooks/useSoulMeditateEngine';
 import { useOfflineExport } from '@/hooks/useOfflineExport';
 import { useTimelineEditor } from '@/hooks/useTimelineEditor';
+import { useDAWPlaybackEngine } from '@/hooks/useDAWPlaybackEngine';
 import SpectralVisualizer from '@/components/soulmeditate/SpectralVisualizer';
 import NeuralSourceInput from '@/components/soulmeditate/NeuralSourceInput';
 import AtmosphereSelector from '@/components/soulmeditate/AtmosphereSelector';
@@ -62,12 +63,16 @@ export default function CreativeSoulMeditationTool() {
   const navigate = useNavigate();
   const engine = useSoulMeditateEngine();
   const offlineExport = useOfflineExport();
+  const dawEngine = useDAWPlaybackEngine();
   
   // Create a ref for the neural audio element (used by timeline)
   const neuralAudioRef = useRef<HTMLAudioElement | null>(null);
   
   // Initialize timeline editor
   const timeline = useTimelineEditor(neuralAudioRef);
+  
+  // Ref to track if DAW sync is active
+  const dawSyncActiveRef = useRef(false);
   
   // UI State
   const [visualizerMode, setVisualizerMode] = useState<VisualizerMode>('bars');
@@ -149,7 +154,9 @@ export default function CreativeSoulMeditationTool() {
     if (engine.atmosphereLayer.isPlaying) engine.toggleAtmospherePlay();
     engine.stopSolfeggio();
     engine.stopBinaural();
-  }, [engine]);
+    dawEngine.stopPlayback();
+    dawSyncActiveRef.current = false;
+  }, [engine, dawEngine]);
 
   // Toggle play/stop
   const togglePlay = useCallback(() => {
@@ -157,14 +164,71 @@ export default function CreativeSoulMeditationTool() {
       engine.neuralLayer.isPlaying || 
       engine.atmosphereLayer.isPlaying || 
       engine.frequencies.solfeggio.enabled ||
-      engine.frequencies.binaural.enabled;
+      engine.frequencies.binaural.enabled ||
+      dawEngine.isPlaying;
 
     if (isAnythingPlaying) {
       stopAll();
     } else {
       startNeuralProcess();
     }
-  }, [engine, stopAll, startNeuralProcess]);
+  }, [engine, dawEngine, stopAll, startNeuralProcess]);
+
+  // Sync DAW engine with timeline clips when they change
+  useEffect(() => {
+    if (!dawEngine.isPlaying || !dawSyncActiveRef.current) return;
+    
+    // Get clip URLs and sync with DAW engine
+    const clipUrlMap = timeline.getClipUrlMap();
+    const eqSettings = {
+      lowCut: engine.eqSettings?.lowCutEnabled ?? true,
+      boxyGain: engine.eqSettings?.weight ?? -0.5,
+      presenceGain: engine.eqSettings?.presence ?? 3,
+      airGain: engine.eqSettings?.air ?? 1
+    };
+    
+    dawEngine.syncClips(timeline.clips, clipUrlMap, timeline.currentTime, eqSettings);
+  }, [timeline.clips, dawEngine, engine.eqSettings]);
+
+  // Start DAW playback with timeline sync
+  const startDAWPlayback = useCallback(async () => {
+    if (timeline.clips.length === 0) {
+      toast.info('No clips to play. Add audio first.');
+      return;
+    }
+
+    await dawEngine.initialize();
+    
+    const clipUrlMap = timeline.getClipUrlMap();
+    const eqSettings = {
+      lowCut: engine.eqSettings?.lowCutEnabled ?? true,
+      boxyGain: engine.eqSettings?.weight ?? -0.5,
+      presenceGain: engine.eqSettings?.presence ?? 3,
+      airGain: engine.eqSettings?.air ?? 1
+    };
+    
+    await dawEngine.startPlayback(timeline.clips, clipUrlMap, timeline.currentTime, eqSettings);
+    dawSyncActiveRef.current = true;
+    timeline.setIsPlaying(true);
+    
+    // Also start atmosphere and frequencies
+    if (!engine.isInitialized) await engine.initialize();
+    engine.startSolfeggio(healingFreq);
+    engine.startBinaural(200, brainwaveFreq);
+    if (engine.atmosphereLayer.source && !engine.atmosphereLayer.isPlaying) {
+      engine.toggleAtmospherePlay();
+    }
+    
+    toast.success('DAW Playback: Quantum Sync Active');
+  }, [dawEngine, engine, timeline, healingFreq, brainwaveFreq]);
+
+  // Stop DAW playback
+  const stopDAWPlayback = useCallback(() => {
+    dawEngine.stopPlayback();
+    dawSyncActiveRef.current = false;
+    timeline.setIsPlaying(false);
+    stopAll();
+  }, [dawEngine, timeline, stopAll]);
 
   // Handle offline export - fast rendering using OfflineAudioContext
   const handleExport = useCallback(async () => {
@@ -405,23 +469,34 @@ export default function CreativeSoulMeditationTool() {
         {/* DAW Transport Bar */}
         <div className="mb-4">
           <DAWTransportBar
-            isPlaying={timeline.isPlaying}
+            isPlaying={timeline.isPlaying || dawEngine.isPlaying}
             currentTime={timeline.currentTime}
             duration={timeline.duration}
             onPlayPause={() => {
-              timeline.playPause();
-              // Sync with engine playback
-              if (!timeline.isPlaying) {
-                startNeuralProcess();
+              if (timeline.isPlaying || dawEngine.isPlaying) {
+                stopDAWPlayback();
               } else {
-                stopAll();
+                startDAWPlayback();
               }
             }}
             onStop={() => {
+              stopDAWPlayback();
               timeline.stop();
-              stopAll();
             }}
-            onSeek={timeline.seek}
+            onSeek={(time) => {
+              timeline.seek(time);
+              // Re-sync clips at new position if playing
+              if (dawEngine.isPlaying) {
+                const clipUrlMap = timeline.getClipUrlMap();
+                const eqSettings = {
+                  lowCut: engine.eqSettings?.lowCutEnabled ?? true,
+                  boxyGain: engine.eqSettings?.weight ?? -0.5,
+                  presenceGain: engine.eqSettings?.presence ?? 3,
+                  airGain: engine.eqSettings?.air ?? 1
+                };
+                dawEngine.syncClips(timeline.clips, clipUrlMap, time, eqSettings, true);
+              }
+            }}
             onRewind={timeline.rewind}
             onForward={timeline.forward}
             onSkipStart={timeline.skipStart}
