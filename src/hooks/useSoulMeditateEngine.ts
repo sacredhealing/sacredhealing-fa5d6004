@@ -551,15 +551,39 @@ export function useSoulMeditateEngine() {
     const audio = new Audio();
     audio.crossOrigin = 'anonymous';
     audio.loop = true;
+    audio.preload = 'auto';
     audio.src = audioUrl;
     
     atmosphereAudioRef.current = audio;
+
+    // Wait for audio to be ready before connecting
+    await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('Audio load timeout'));
+      }, 10000);
+      
+      audio.addEventListener('canplaythrough', () => {
+        clearTimeout(timeout);
+        resolve();
+      }, { once: true });
+      
+      audio.addEventListener('error', (e) => {
+        clearTimeout(timeout);
+        reject(e);
+      }, { once: true });
+      
+      audio.load();
+    });
 
     try {
       const source = audioContextRef.current.createMediaElementSource(audio);
       source.connect(atmosphereGainRef.current);
       atmosphereSourceRef.current = source;
-      console.log(`✅ Atmosphere audio connected: ${selectedFileName}`);
+      
+      // Ensure gain is set to correct volume
+      atmosphereGainRef.current.gain.value = atmosphereLayer.volume;
+      
+      console.log(`✅ Atmosphere audio ready & connected: ${selectedFileName} (vol: ${atmosphereLayer.volume})`);
     } catch (e) {
       console.error('Failed to connect atmosphere audio:', e);
       return false;
