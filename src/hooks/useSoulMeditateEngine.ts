@@ -118,6 +118,17 @@ export function useSoulMeditateEngine() {
   // Soft-knee limiter for final stage
   const limiterRef = useRef<DynamicsCompressorNode | null>(null);
   
+  // DAW types
+  interface AudioRegion {
+    id: string;
+    startTime: number;
+    duration: number;
+    sourceStart: number;
+    sourceDuration: number;
+    color: string;
+    label?: string;
+  }
+
   // State
   const [isInitialized, setIsInitialized] = useState(false);
   const [neuralLayer, setNeuralLayer] = useState<LayerState>({ isPlaying: false, volume: 0.7, source: null });
@@ -135,6 +146,12 @@ export function useSoulMeditateEngine() {
   });
   const [masterVolume, setMasterVolume] = useState(0.8);
   const [analyserData, setAnalyserData] = useState<AnalyserData | null>(null);
+  
+  // DAW state
+  const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null);
+  const [dawRegions, setDawRegions] = useState<AudioRegion[]>([]);
+  const [dawCurrentTime, setDawCurrentTime] = useState(0);
+  const dawPlaybackRef = useRef<{ source: AudioBufferSourceNode; startedAt: number; offset: number } | null>(null);
   
   // EQ state for UI sync
   const [eqSettings, setEqSettings] = useState({
@@ -333,6 +350,11 @@ export function useSoulMeditateEngine() {
 
   // Load neural source (user uploaded audio)
   const loadNeuralSource = useCallback(async (file: File | string) => {
+    // Preserve file reference for later use (TypeScript narrowing workaround)
+    const isUrl = typeof file === 'string';
+    const fileUrl = isUrl ? file : URL.createObjectURL(file);
+    const fileName = isUrl ? file.split('/').pop() || 'Audio' : file.name;
+    
     // Auto-initialize if needed
     if (!audioContextRef.current) {
       await initialize();
@@ -448,6 +470,36 @@ export function useSoulMeditateEngine() {
       }));
     } catch (e) {
       console.error('Failed to upload neural source for export:', e);
+    }
+
+    // Load audio buffer for DAW editing
+    try {
+      let arrayBuffer: ArrayBuffer;
+      if (isUrl) {
+        const response = await fetch(fileUrl);
+        arrayBuffer = await response.arrayBuffer();
+      } else {
+        arrayBuffer = await (file as File).arrayBuffer();
+      }
+      
+      const decodedBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
+      setAudioBuffer(decodedBuffer);
+      
+      // Create initial region spanning the entire audio
+      const initialRegion: AudioRegion = {
+        id: `region-${Date.now()}`,
+        startTime: 0,
+        duration: decodedBuffer.duration,
+        sourceStart: 0,
+        sourceDuration: decodedBuffer.duration,
+        color: 'hsl(280, 70%, 50%)',
+        label: fileName
+      };
+      setDawRegions([initialRegion]);
+      setDawCurrentTime(0);
+      console.log('Audio buffer loaded for DAW:', decodedBuffer.duration, 'seconds');
+    } catch (e) {
+      console.error('Failed to decode audio for DAW:', e);
     }
 
     return true;
@@ -827,6 +879,105 @@ export function useSoulMeditateEngine() {
     return audioContextRef.current;
   }, []);
 
+  // ============ DAW FUNCTIONS ============
+  
+  // Update DAW regions
+  const updateDawRegions = useCallback((regions: AudioRegion[]) => {
+    setDawRegions(regions);
+  }, []);
+  
+  // Seek to specific time in DAW
+  const dawSeek = useCallback((time: number) => {
+    setDawCurrentTime(time);
+    
+    // If playing, restart from new position
+    if (dawPlaybackRef.current && audioContextRef.current && audioBuffer) {
+      dawPlaybackRef.current.source.stop();
+      dawPlaybackRef.current = null;
+      
+      // Restart playback from new position
+      const source = audioContextRef.current.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(neuralGainRef.current || audioContextRef.current.destination);
+      source.start(0, time);
+      
+      dawPlaybackRef.current = {
+        source,
+        startedAt: audioContextRef.current.currentTime,
+        offset: time
+      };
+    }
+  }, [audioBuffer]);
+  
+  // Toggle DAW playback (plays edited regions as one audio)
+  const dawTogglePlay = useCallback(() => {
+    if (!audioContextRef.current || !audioBuffer) return;
+    
+    if (dawPlaybackRef.current) {
+      // Stop
+      dawPlaybackRef.current.source.stop();
+      dawPlaybackRef.current = null;
+      setNeuralLayer(prev => ({ ...prev, isPlaying: false }));
+    } else {
+      // Play - for now just play from current time through the buffer
+      // Future: render regions to a composite buffer
+      const source = audioContextRef.current.createBufferSource();
+      source.buffer = audioBuffer;
+      source.loop = true;
+      
+      // Connect through the processing chain
+      if (noiseHighPassRef.current) {
+        source.connect(noiseHighPassRef.current);
+      } else if (neuralGainRef.current) {
+        source.connect(neuralGainRef.current);
+      } else {
+        source.connect(audioContextRef.current.destination);
+      }
+      
+      source.start(0, dawCurrentTime);
+      
+      dawPlaybackRef.current = {
+        source,
+        startedAt: audioContextRef.current.currentTime,
+        offset: dawCurrentTime
+      };
+      
+      setNeuralLayer(prev => ({ ...prev, isPlaying: true }));
+    }
+  }, [audioBuffer, dawCurrentTime]);
+  
+  // Stop DAW playback and reset to beginning
+  const dawStop = useCallback(() => {
+    if (dawPlaybackRef.current) {
+      dawPlaybackRef.current.source.stop();
+      dawPlaybackRef.current = null;
+    }
+    setDawCurrentTime(0);
+    setNeuralLayer(prev => ({ ...prev, isPlaying: false }));
+  }, []);
+  
+  // Update DAW current time during playback
+  useEffect(() => {
+    if (!dawPlaybackRef.current || !audioContextRef.current) return;
+    
+    const updateTime = () => {
+      if (dawPlaybackRef.current && audioContextRef.current) {
+        const elapsed = audioContextRef.current.currentTime - dawPlaybackRef.current.startedAt;
+        const newTime = dawPlaybackRef.current.offset + elapsed;
+        setDawCurrentTime(newTime % (audioBuffer?.duration || 1));
+      }
+    };
+    
+    const interval = setInterval(updateTime, 50);
+    return () => clearInterval(interval);
+  }, [audioBuffer?.duration]);
+  
+  // Get computed duration from regions for export
+  const getDawDuration = useCallback((): number => {
+    if (dawRegions.length === 0) return audioBuffer?.duration || 0;
+    return Math.max(...dawRegions.map(r => r.startTime + r.duration));
+  }, [dawRegions, audioBuffer]);
+
   return {
     // State
     isInitialized,
@@ -839,6 +990,11 @@ export function useSoulMeditateEngine() {
     eqSettings,
     masterVolume,
     analyserData,
+    
+    // DAW State
+    audioBuffer,
+    dawRegions,
+    dawCurrentTime,
     
     // Constants
     SOLFEGGIO_FREQUENCIES,
@@ -863,6 +1019,13 @@ export function useSoulMeditateEngine() {
     updateDSP,
     updateEQ,
     toggleLowCut,
+    
+    // DAW Actions
+    updateDawRegions,
+    dawSeek,
+    dawTogglePlay,
+    dawStop,
+    getDawDuration,
     
     // Recording support
     getMasterNode,

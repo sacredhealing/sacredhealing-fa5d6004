@@ -38,6 +38,7 @@ import BrainwaveSelector from '@/components/soulmeditate/BrainwaveSelector';
 import YouTubeLinker from '@/components/soulmeditate/YouTubeLinker';
 import ProcessingTerminal from '@/components/soulmeditate/ProcessingTerminal';
 import VirtualChannelStrip from '@/components/soulmeditate/VirtualChannelStrip';
+import AudioDAW from '@/components/soulmeditate/AudioDAW';
 
 type VisualizerMode = 'bars' | 'wave' | 'radial';
 type StemMode = 'full_mix' | 'vocals_only' | 'music_only' | 'stems_all';
@@ -515,6 +516,23 @@ export default function CreativeSoulMeditationTool() {
                 presence: engine.eqSettings.presence,
                 air: engine.eqSettings.air
               }}
+            />
+          </div>
+        )}
+
+        {/* DAW Timeline Editor */}
+        {engine.audioBuffer && (
+          <div className="mb-6">
+            <AudioDAW
+              audioBuffer={engine.audioBuffer}
+              regions={engine.dawRegions}
+              currentTime={engine.dawCurrentTime}
+              duration={engine.audioBuffer.duration}
+              isPlaying={engine.neuralLayer.isPlaying}
+              onRegionsChange={engine.updateDawRegions}
+              onSeek={engine.dawSeek}
+              onPlayPause={engine.dawTogglePlay}
+              onStop={engine.dawStop}
             />
           </div>
         )}
