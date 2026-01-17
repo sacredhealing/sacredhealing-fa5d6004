@@ -80,11 +80,10 @@ function getVisibleWaveform(
 }
 
 // Canvas-based waveform component with neon glow rendering
+// Now uses ResizeObserver for responsive sizing
 interface WaveformCanvasProps {
   waveformData: number[];
   isSelected: boolean;
-  width: number;
-  height: number;
   trimStart: number;
   trimEnd: number;
   totalDuration: number;
@@ -93,13 +92,13 @@ interface WaveformCanvasProps {
 function WaveformCanvas({ 
   waveformData, 
   isSelected, 
-  width, 
-  height,
   trimStart,
   trimEnd,
   totalDuration
 }: WaveformCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 200, height: 80 });
   
   // Select neon color based on selection state
   const neonColor = isSelected ? NEON_CYAN : NEON_MAGENTA;
@@ -110,12 +109,37 @@ function WaveformCanvas({
     [waveformData, trimStart, trimEnd, totalDuration]
   );
   
+  // Detect container size with ResizeObserver for responsive canvas
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    
+    const resizeObserver = new ResizeObserver(entries => {
+      const entry = entries[0];
+      if (entry) {
+        const { width, height } = entry.contentRect;
+        if (width > 0 && height > 0) {
+          setDimensions({ 
+            width: Math.floor(width), 
+            height: Math.floor(height) 
+          });
+        }
+      }
+    });
+    
+    resizeObserver.observe(container);
+    return () => resizeObserver.disconnect();
+  }, []);
+  
+  // Draw waveform when dimensions or data change
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !visibleWaveform.length) return;
+    if (!canvas || !visibleWaveform.length || dimensions.width <= 0) return;
     
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+    
+    const { width, height } = dimensions;
     
     // Set canvas size (account for device pixel ratio for crisp rendering)
     const dpr = window.devicePixelRatio || 1;
@@ -187,18 +211,20 @@ function WaveformCanvas({
     ctx.fillStyle = edgeGlow;
     ctx.fillRect(0, 0, width, height);
     
-  }, [visibleWaveform, neonColor, width, height]);
+  }, [visibleWaveform, neonColor, dimensions]);
   
   return (
-    <canvas
-      ref={canvasRef}
-      style={{ 
-        width: `${width}px`, 
-        height: `${height}px`,
-        filter: `drop-shadow(0 0 8px ${neonColor}CC)`
-      }}
-      className="absolute inset-0 opacity-100"
-    />
+    <div ref={containerRef} className="absolute inset-0 w-full h-full">
+      <canvas
+        ref={canvasRef}
+        style={{ 
+          width: `${dimensions.width}px`, 
+          height: `${dimensions.height}px`,
+          filter: `drop-shadow(0 0 8px ${neonColor}CC)`
+        }}
+        className="absolute inset-0"
+      />
+    </div>
   );
 }
 
@@ -490,13 +516,12 @@ export default function ClipTimeline({
                   </div>
 
                   {/* Waveform Visualization - Neon Style with Spectral Slicing */}
-                  <div className="flex-1 relative overflow-hidden" style={{ backgroundColor: '#020610' }}>
+                  {/* Explicit height container for waveform canvas */}
+                  <div className="absolute inset-x-0 top-6 bottom-0 overflow-hidden" style={{ backgroundColor: '#020610' }}>
                     {clip.waveformData && clip.waveformData.length > 0 ? (
                       <WaveformCanvas 
                         waveformData={clip.waveformData} 
                         isSelected={isSelected}
-                        width={clipWidth}
-                        height={100}
                         trimStart={clip.trimStart}
                         trimEnd={clip.trimEnd}
                         totalDuration={clip.duration}
