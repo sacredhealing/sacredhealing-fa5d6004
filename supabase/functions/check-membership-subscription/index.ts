@@ -55,6 +55,24 @@ serve(async (req) => {
     
     logStep("User authenticated", { userId: user.id, email: user.email });
 
+    // Check if user is admin - admins get full lifetime access to everything
+    const { data: isAdminData } = await supabaseClient
+      .rpc('has_role', { _user_id: user.id, _role: 'admin' });
+    
+    if (isAdminData === true) {
+      logStep("Admin user detected - granting full lifetime access");
+      return new Response(JSON.stringify({
+        subscribed: true,
+        tier: 'lifetime',
+        subscription_end: null,
+        admin_granted: true,
+        is_admin: true
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
     // FIRST: Check for admin-granted membership access (bypasses Stripe entirely)
     const { data: adminAccess } = await supabaseClient
       .from('admin_granted_access')

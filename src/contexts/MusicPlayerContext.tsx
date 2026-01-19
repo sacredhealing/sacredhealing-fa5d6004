@@ -134,6 +134,17 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         return;
       }
 
+      // First check if user is admin - admins get full access
+      const { data: isAdminData } = await supabase.rpc('has_role', { 
+        _user_id: session.user.id, 
+        _role: 'admin' 
+      });
+      
+      if (isAdminData === true) {
+        setIsSubscribed(true);
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('check-music-membership', {
         headers: {
           Authorization: `Bearer ${session.access_token}`,

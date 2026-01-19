@@ -8,6 +8,7 @@ interface MembershipStatus {
   subscriptionEnd: string | null;
   loading: boolean;
   adminGranted?: boolean;
+  isAdmin?: boolean;
 }
 
 export const useMembership = () => {
@@ -18,6 +19,7 @@ export const useMembership = () => {
     subscriptionEnd: null,
     loading: true,
     adminGranted: false,
+    isAdmin: false,
   });
 
   const checkSubscription = useCallback(async () => {
@@ -28,11 +30,28 @@ export const useMembership = () => {
         subscriptionEnd: null,
         loading: false,
         adminGranted: false,
+        isAdmin: false,
       });
       return;
     }
 
     try {
+      // First check if user is admin - admins get full access
+      const { data: isAdminData } = await supabase
+        .rpc('has_role', { _user_id: user.id, _role: 'admin' });
+      
+      if (isAdminData === true) {
+        setStatus({
+          subscribed: true,
+          tier: 'lifetime',
+          subscriptionEnd: null,
+          loading: false,
+          adminGranted: true,
+          isAdmin: true,
+        });
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('check-membership-subscription');
       
       if (error) {
@@ -47,6 +66,7 @@ export const useMembership = () => {
         subscriptionEnd: data.subscription_end,
         loading: false,
         adminGranted: data.admin_granted || false,
+        isAdmin: false,
       });
     } catch (error) {
       console.error('Error checking membership:', error);
@@ -66,7 +86,7 @@ export const useMembership = () => {
     return () => clearInterval(interval);
   }, [user, checkSubscription]);
 
-  const isPremium = status.tier !== 'free' && status.subscribed;
+  const isPremium = status.isAdmin || (status.tier !== 'free' && status.subscribed);
 
   return {
     ...status,

@@ -24,7 +24,7 @@ export interface UserVedicAccess {
 
 export const useVedicAstrology = () => {
   const { user } = useAuth();
-  const { tier: membershipTier } = useMembership();
+  const { tier: membershipTier, isAdmin } = useMembership();
   const [tiers, setTiers] = useState<VedicAstrologyTier[]>([]);
   const [userAccess, setUserAccess] = useState<UserVedicAccess[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -74,6 +74,9 @@ export const useVedicAstrology = () => {
   const hasAccess = useCallback((tierLevel: 'basic' | 'premium' | 'master'): boolean => {
     if (!user) return false;
 
+    // Admins have access to all tiers
+    if (isAdmin) return true;
+
     // Check explicit access
     const access = userAccess.find(a => a.tier_level === tierLevel);
     if (access) {
@@ -98,14 +101,16 @@ export const useVedicAstrology = () => {
 
     const eligibleTiers = membershipEligibility[membershipTier || 'free'] || [];
     return eligibleTiers.includes(tierLevel);
-  }, [user, userAccess, tiers, membershipTier]);
+  }, [user, userAccess, tiers, membershipTier, isAdmin]);
 
   const getHighestAccessLevel = useCallback((): 'basic' | 'premium' | 'master' | null => {
+    // Admins get master level
+    if (isAdmin) return 'master';
     if (hasAccess('master')) return 'master';
     if (hasAccess('premium')) return 'premium';
     if (hasAccess('basic')) return 'basic';
     return null;
-  }, [hasAccess]);
+  }, [hasAccess, isAdmin]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -123,6 +128,7 @@ export const useVedicAstrology = () => {
     isLoading,
     hasAccess,
     getHighestAccessLevel,
+    isAdmin,
     refetch: () => Promise.all([fetchTiers(), fetchUserAccess()]),
   };
 };

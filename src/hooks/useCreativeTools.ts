@@ -41,6 +41,20 @@ export const useCreativeTools = () => {
   const [featuredTool, setFeaturedTool] = useState<FeaturedTool | null>(null);
   const [userTools, setUserTools] = useState<UserToolAccess[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Check if user is admin
+  useEffect(() => {
+    const checkAdminRole = async () => {
+      if (!user) {
+        setIsAdmin(false);
+        return;
+      }
+      const { data } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' });
+      setIsAdmin(data === true);
+    };
+    checkAdminRole();
+  }, [user]);
 
   const fetchAvailableTools = useCallback(async () => {
     try {
@@ -147,8 +161,10 @@ export const useCreativeTools = () => {
   }, [fetchAvailableTools, fetchFeaturedTool, fetchUserTools]);
 
   const hasAccess = useCallback((toolSlug: string) => {
+    // Admins have access to all tools
+    if (isAdmin) return true;
     return userTools.some(access => access.tool.slug === toolSlug);
-  }, [userTools]);
+  }, [userTools, isAdmin]);
 
   const refetch = useCallback(() => {
     fetchUserTools();
@@ -161,6 +177,7 @@ export const useCreativeTools = () => {
     isLoading,
     hasAccess,
     refetch,
+    isAdmin,
   };
 };
 
