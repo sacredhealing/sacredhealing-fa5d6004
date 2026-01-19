@@ -4,9 +4,7 @@ import { Leaf, Sparkles, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
-import { AyurvedaTool } from '@/components/ayurveda/AyurvedaTool';
-import type { AyurvedaMembershipLevel } from '@/lib/ayurvedaTypes';
+import { useNavigate } from 'react-router-dom';
 
 interface AyurvedaSectionProps {
   isPremium?: boolean;
@@ -19,13 +17,7 @@ export const AyurvedaSection: React.FC<AyurvedaSectionProps> = ({
   membershipTier = 'free',
   isAdmin = false
 }) => {
-  // Map membership tiers to Ayurveda levels - Admins get LIFETIME access
-  const getAyurvedaLevel = (): AyurvedaMembershipLevel => {
-    if (isAdmin) return 'LIFETIME' as AyurvedaMembershipLevel;
-    if (membershipTier === 'lifetime') return 'LIFETIME' as AyurvedaMembershipLevel;
-    if (isPremium || membershipTier?.includes('premium')) return 'PREMIUM' as AyurvedaMembershipLevel;
-    return 'FREE' as AyurvedaMembershipLevel;
-  };
+  const navigate = useNavigate();
 
   return (
     <Card className="overflow-hidden border-2 border-emerald-500/20 bg-gradient-to-br from-emerald-50/50 to-background dark:from-emerald-950/20">
@@ -94,22 +86,14 @@ export const AyurvedaSection: React.FC<AyurvedaSectionProps> = ({
             </ul>
           </div>
 
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button 
-                size="lg"
-                className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-2xl py-6"
-              >
-                Begin Your Ayurvedic Journey
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto p-0">
-              <div className="p-6">
-                <AyurvedaTool membershipLevel={getAyurvedaLevel()} isAdmin={isAdmin} />
-              </div>
-            </DialogContent>
-          </Dialog>
+          <Button 
+            size="lg"
+            onClick={() => navigate('/ayurveda')}
+            className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-2xl py-6"
+          >
+            Begin Your Ayurvedic Journey
+            <ArrowRight className="ml-2 w-5 h-5" />
+          </Button>
 
           {!isPremium && !isAdmin && (
             <p className="text-center text-xs text-muted-foreground mt-4">
