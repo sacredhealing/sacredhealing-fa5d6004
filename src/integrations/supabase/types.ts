@@ -3550,6 +3550,10 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bio: string | null
+          birth_date: string | null
+          birth_name: string | null
+          birth_place: string | null
+          birth_time: string | null
           created_at: string
           daily_goal_minutes: number
           evening_reminder_time: string
@@ -3573,6 +3577,10 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           bio?: string | null
+          birth_date?: string | null
+          birth_name?: string | null
+          birth_place?: string | null
+          birth_time?: string | null
           created_at?: string
           daily_goal_minutes?: number
           evening_reminder_time?: string
@@ -3596,6 +3604,10 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           bio?: string | null
+          birth_date?: string | null
+          birth_name?: string | null
+          birth_place?: string | null
+          birth_time?: string | null
           created_at?: string
           daily_goal_minutes?: number
           evening_reminder_time?: string
@@ -5197,6 +5209,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_vedic_astrology_access: {
+        Row: {
+          expires_at: string | null
+          granted_at: string | null
+          granted_via_membership: boolean | null
+          id: string
+          tier_level: string
+          user_id: string
+        }
+        Insert: {
+          expires_at?: string | null
+          granted_at?: string | null
+          granted_via_membership?: boolean | null
+          id?: string
+          tier_level: string
+          user_id: string
+        }
+        Update: {
+          expires_at?: string | null
+          granted_at?: string | null
+          granted_via_membership?: boolean | null
+          id?: string
+          tier_level?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_wallet: {
         Row: {
           coins: number | null
@@ -5245,6 +5284,45 @@ export type Database = {
           user_id?: string
           wallet_address?: string
           wallet_type?: string
+        }
+        Relationships: []
+      }
+      vedic_astrology_tiers: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          features: Json
+          id: string
+          is_active: boolean | null
+          membership_required: string[]
+          name: string
+          order_index: number
+          tier_level: string
+          workspace_url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          features?: Json
+          id?: string
+          is_active?: boolean | null
+          membership_required?: string[]
+          name: string
+          order_index?: number
+          tier_level: string
+          workspace_url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          features?: Json
+          id?: string
+          is_active?: boolean | null
+          membership_required?: string[]
+          name?: string
+          order_index?: number
+          tier_level?: string
+          workspace_url?: string | null
         }
         Relationships: []
       }
