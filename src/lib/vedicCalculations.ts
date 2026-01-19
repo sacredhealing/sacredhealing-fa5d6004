@@ -286,9 +286,10 @@ export function getDailyVedicInfluence(
  * Generate detailed daily guidance for Premium tier
  */
 export function getPremiumDailyGuidance(
-  birthDetails: BirthDetails,
+  birthDetails?: BirthDetails,
   date: Date = new Date()
 ): {
+  personalizedMessage: string;
   career: string;
   relationships: string;
   health: string;
@@ -296,11 +297,16 @@ export function getPremiumDailyGuidance(
 } {
   const influence = getDailyVedicInfluence(birthDetails, 'premium');
   
+  const personalized = birthDetails 
+    ? `Based on your birth chart, today's ${influence.nakshatra} energy is particularly aligned with your personal dharma.`
+    : `Today's cosmic energies support ${influence.theme.toLowerCase()}. Add your birth details for personalized guidance.`;
+  
   return {
-    career: `Today's ${influence.nakshatra} energy supports ${influence.theme.toLowerCase()}. ${influence.do[0]} in your professional life.`,
-    relationships: `In relationships, focus on ${influence.do[1] || influence.do[0]}. Avoid ${influence.avoid[0] || 'conflict'}.`,
-    health: `For health, ${influence.do[0]?.toLowerCase() || 'maintain balance'}. Follow Ayurvedic principles aligned with today's planetary influence.`,
-    finances: `Financial matters are supported by ${influence.theme.toLowerCase()}. ${influence.do[2] || 'Plan wisely'}.`,
+    personalizedMessage: personalized,
+    career: `Today's ${influence.nakshatra} energy supports ${influence.theme.toLowerCase()}. ${influence.do[0]} in your professional life. Focus on meaningful work that aligns with your higher purpose.`,
+    relationships: `In relationships, focus on ${influence.do[1] || influence.do[0]}. The planetary alignment encourages open communication and deep connection. Avoid ${influence.avoid[0] || 'conflict'}.`,
+    health: `For health, ${influence.do[0]?.toLowerCase() || 'maintain balance'}. Follow Ayurvedic principles aligned with today's planetary influence. Practice grounding activities and mindful breathing.`,
+    finances: `Financial matters are supported by ${influence.theme.toLowerCase()}. ${influence.do[2] || 'Plan wisely'}. This is a good time for reviewing budgets and long-term planning.`,
   };
 }
 

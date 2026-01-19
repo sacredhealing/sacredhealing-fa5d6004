@@ -60,8 +60,8 @@ export const DailyVedicInsight: React.FC<DailyVedicInsightProps> = ({ tier }) =>
   }
 
   const dailyInfluence = getDailyVedicInfluence(birthDetails || undefined, tier);
-  const premiumGuidance = (tier === 'premium' || tier === 'master') && birthDetails
-    ? getPremiumDailyGuidance(birthDetails)
+  const premiumGuidance = (tier === 'premium' || tier === 'master')
+    ? getPremiumDailyGuidance(birthDetails || undefined)
     : null;
   const masterReading = tier === 'master' && birthDetails
     ? getMasterDeepReading(birthDetails)
@@ -156,32 +156,53 @@ export const DailyVedicInsight: React.FC<DailyVedicInsightProps> = ({ tier }) =>
         </CardContent>
       </Card>
 
-      {/* Premium Guidance */}
+      {/* Premium Guidance - Personal Vedic Compass */}
       {premiumGuidance && (
         <Card className="border-2 border-purple-500/30 bg-gradient-to-br from-purple-500/5 to-pink-500/5">
           <CardHeader>
-            <CardTitle className="text-lg">Personal Vedic Compass</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-purple-400" />
+              Personal Vedic Compass
+            </CardTitle>
             <p className="text-sm text-muted-foreground">
-              Detailed guidance for different areas of your life
+              {premiumGuidance.personalizedMessage}
             </p>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-              <h4 className="font-semibold text-sm mb-2 text-foreground">Career</h4>
-              <p className="text-xs text-muted-foreground">{premiumGuidance.career}</p>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                <h4 className="font-semibold text-sm mb-2 text-foreground flex items-center gap-2">
+                  💼 Career Insights
+                </h4>
+                <p className="text-sm text-muted-foreground">{premiumGuidance.career}</p>
+              </div>
+              <div className="p-4 rounded-lg bg-pink-500/10 border border-pink-500/20">
+                <h4 className="font-semibold text-sm mb-2 text-foreground flex items-center gap-2">
+                  💕 Relationship Harmony
+                </h4>
+                <p className="text-sm text-muted-foreground">{premiumGuidance.relationships}</p>
+              </div>
+              <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+                <h4 className="font-semibold text-sm mb-2 text-foreground flex items-center gap-2">
+                  🌿 Health Recommendations
+                </h4>
+                <p className="text-sm text-muted-foreground">{premiumGuidance.health}</p>
+              </div>
+              <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                <h4 className="font-semibold text-sm mb-2 text-foreground flex items-center gap-2">
+                  💰 Financial Timing
+                </h4>
+                <p className="text-sm text-muted-foreground">{premiumGuidance.finances}</p>
+              </div>
             </div>
-            <div className="p-3 rounded-lg bg-pink-500/10 border border-pink-500/20">
-              <h4 className="font-semibold text-sm mb-2 text-foreground">Relationships</h4>
-              <p className="text-xs text-muted-foreground">{premiumGuidance.relationships}</p>
-            </div>
-            <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-              <h4 className="font-semibold text-sm mb-2 text-foreground">Health</h4>
-              <p className="text-xs text-muted-foreground">{premiumGuidance.health}</p>
-            </div>
-            <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-              <h4 className="font-semibold text-sm mb-2 text-foreground">Finances</h4>
-              <p className="text-xs text-muted-foreground">{premiumGuidance.finances}</p>
-            </div>
+            
+            {!birthDetails && (
+              <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                <p className="text-xs text-muted-foreground text-center">
+                  ✨ <strong>Unlock personalized guidance:</strong> Add your birth details above for readings tailored specifically to your unique cosmic blueprint.
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
