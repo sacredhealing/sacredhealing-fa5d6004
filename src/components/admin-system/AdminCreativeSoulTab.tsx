@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Users, TrendingUp, DollarSign, FileText, Languages, Music, Sparkles } from 'lucide-react';
+import { Loader2, Users, TrendingUp, DollarSign, FileText, Languages, Music, Sparkles, Settings } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import MeditationStyleSoundsManager from './MeditationStyleSoundsManager';
 
 interface UsageStats {
   total_users: number;
@@ -102,111 +104,128 @@ export default function AdminCreativeSoulTab() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold mb-2">Creative Soul Analytics</h2>
-        <p className="text-muted-foreground">Monitor tool usage, revenue, and user activity</p>
-      </div>
+    <Tabs defaultValue="analytics" className="space-y-6">
+      <TabsList>
+        <TabsTrigger value="analytics" className="flex items-center gap-2">
+          <TrendingUp className="w-4 h-4" />
+          Analytics
+        </TabsTrigger>
+        <TabsTrigger value="sounds" className="flex items-center gap-2">
+          <Music className="w-4 h-4" />
+          Meditation Sounds
+        </TabsTrigger>
+      </TabsList>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <TabsContent value="analytics" className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold mb-2">Creative Soul Analytics</h2>
+          <p className="text-muted-foreground">Monitor tool usage, revenue, and user activity</p>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats?.total_users || 0}</div>
+              <p className="text-xs text-muted-foreground">Users with Creative Soul access</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Usage</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats?.total_usage || 0}</div>
+              <p className="text-xs text-muted-foreground">Total tool actions performed</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">€{stats?.total_revenue.toFixed(2) || '0.00'}</div>
+              <p className="text-xs text-muted-foreground">Revenue from Creative Soul</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Usage by Type */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+          <CardHeader>
+            <CardTitle>Usage by Action Type</CardTitle>
+            <CardDescription>Breakdown of tool features used</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.total_users || 0}</div>
-            <p className="text-xs text-muted-foreground">Users with Creative Soul access</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Usage</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.total_usage || 0}</div>
-            <p className="text-xs text-muted-foreground">Total tool actions performed</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">€{stats?.total_revenue.toFixed(2) || '0.00'}</div>
-            <p className="text-xs text-muted-foreground">Revenue from Creative Soul</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Usage by Type */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Usage by Action Type</CardTitle>
-          <CardDescription>Breakdown of tool features used</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {stats?.usage_by_type.map((item) => {
-              const Icon = actionIcons[item.action_type] || Sparkles;
-              return (
-                <div key={item.action_type} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Icon className="w-5 h-5 text-primary" />
-                    <span className="font-medium">{actionLabels[item.action_type] || item.action_type}</span>
-                  </div>
-                  <Badge variant="secondary">{item.count}</Badge>
-                </div>
-              );
-            })}
-            {(!stats?.usage_by_type || stats.usage_by_type.length === 0) && (
-              <p className="text-center text-muted-foreground py-4">No usage data yet</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Recent Usage */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-          <CardDescription>Latest tool usage across all users</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {stats?.recent_usage.map((usage) => {
-              const Icon = actionIcons[usage.action_type] || Sparkles;
-              return (
-                <div key={usage.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Icon className="w-4 h-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm font-medium">
-                        {actionLabels[usage.action_type] || usage.action_type}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(usage.created_at).toLocaleString()}
-                      </p>
+            <div className="space-y-3">
+              {stats?.usage_by_type.map((item) => {
+                const Icon = actionIcons[item.action_type] || Sparkles;
+                return (
+                  <div key={item.action_type} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Icon className="w-5 h-5 text-primary" />
+                      <span className="font-medium">{actionLabels[item.action_type] || item.action_type}</span>
                     </div>
+                    <Badge variant="secondary">{item.count}</Badge>
                   </div>
-                  {usage.metadata?.target_language && (
-                    <Badge variant="outline">{usage.metadata.target_language.toUpperCase()}</Badge>
-                  )}
-                </div>
-              );
-            })}
-            {(!stats?.recent_usage || stats.recent_usage.length === 0) && (
-              <p className="text-center text-muted-foreground py-4">No recent activity</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+                );
+              })}
+              {(!stats?.usage_by_type || stats.usage_by_type.length === 0) && (
+                <p className="text-center text-muted-foreground py-4">No usage data yet</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Recent Usage */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+            <CardDescription>Latest tool usage across all users</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {stats?.recent_usage.map((usage) => {
+                const Icon = actionIcons[usage.action_type] || Sparkles;
+                return (
+                  <div key={usage.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Icon className="w-4 h-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">
+                          {actionLabels[usage.action_type] || usage.action_type}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(usage.created_at).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                    {usage.metadata?.target_language && (
+                      <Badge variant="outline">{usage.metadata.target_language.toUpperCase()}</Badge>
+                    )}
+                  </div>
+                );
+              })}
+              {(!stats?.recent_usage || stats.recent_usage.length === 0) && (
+                <p className="text-center text-muted-foreground py-4">No recent activity</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="sounds">
+        <MeditationStyleSoundsManager />
+      </TabsContent>
+    </Tabs>
   );
 }
 
