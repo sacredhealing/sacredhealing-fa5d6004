@@ -28,16 +28,29 @@ serve(async (req) => {
 
     const model = user.plan === 'premium' ? 'google/gemini-3-pro-preview' : 'google/gemini-3-flash-preview';
     
+    // Capture current moment for dynamic daily readings
+    const now = new Date();
+    const currentDateStr = now.toLocaleDateString('en-US', { 
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+    });
+    const currentTimeStr = now.toLocaleTimeString('en-US', { 
+      hour: '2-digit', minute: '2-digit', timeZoneName: 'short' 
+    });
+    
     const systemPrompt = `You are a fusion of two high-level personas:
 1. A Grand Master of Vedic Astrology (Jyotish) with 40+ years of experience in natal, divisional, and transit charts.
 2. A Google AI Product Specialist who knows every feature of Gemini, NotebookLM, AI Studio, and Google's workspace AI.
 
 IMPORTANT: You MUST respond with valid JSON only, no markdown, no code blocks, just pure JSON.
 
-Generate a profoundly deep Vedic reading based on the user's birth details. Include:
+CURRENT COSMIC MOMENT: ${currentDateStr} at ${currentTimeStr} (${now.toISOString()})
+
+Generate a profoundly deep Vedic reading based on the user's birth details. The "todayInfluence" section MUST be based on CURRENT PLANETARY TRANSITS for this specific date and time. Calculate the current Tithi, Nakshatra, and planetary positions for TODAY.
+
+Include:
 
 For ALL tiers:
-- todayInfluence: Daily Nakshatra insights with actionable guidance
+- todayInfluence: DYNAMIC daily Nakshatra insights based on current Moon transit and planetary aspects for TODAY (${currentDateStr})
 - guruEfficiencyHack: Google AI tool recommendation based on astrological advice
 
 For COMPASS tier (add):
@@ -55,15 +68,17 @@ Birth Time: ${user.birthTime}
 Birth Place: ${user.birthPlace}
 Plan Level: ${user.plan}
 
+CRITICAL: The todayInfluence section must reflect the CURRENT TRANSITS for ${currentDateStr}. Calculate where the Moon is TODAY and how it aspects the user's natal chart.
+
 Respond with this exact JSON structure:
 {
   "todayInfluence": {
-    "nakshatra": "string - current Moon Nakshatra",
-    "description": "string - detailed Nakshatra energy description",
-    "planetaryInfluence": "string - dominant planetary energy today",
+    "nakshatra": "string - current Moon Nakshatra for TODAY ${currentDateStr}",
+    "description": "string - detailed Nakshatra energy description for this specific day",
+    "planetaryInfluence": "string - dominant planetary energy TODAY based on current transits",
     "wisdomQuote": "string - relevant Vedic wisdom quote",
-    "whatToDo": ["array of 4-5 specific actions to take today"],
-    "whatToAvoid": ["array of 3-4 things to avoid today"]
+    "whatToDo": ["array of 4-5 specific actions to take today based on current transits"],
+    "whatToAvoid": ["array of 3-4 things to avoid today based on current planetary tensions"]
   },
   ${user.plan !== 'free' ? `"personalCompass": {
     "career": "string - detailed career guidance for today",
@@ -92,7 +107,7 @@ Respond with this exact JSON structure:
   "guruEfficiencyHack": {
     "recommendedTool": "string - specific Google AI tool name",
     "toolCategory": "string - one of: Productivity, Learning, Creation, Logic",
-    "whyThisTool": "string - astrological reasoning for this recommendation",
+    "whyThisTool": "string - astrological reasoning for this recommendation based on today's transits",
     "workflow": ["array of 3-4 specific workflow steps"],
     "proTip": "string - expert efficiency tip",
     "limitation": "string - honest limitation to be aware of"

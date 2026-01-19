@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Zap, Star, Sparkles, CheckCircle, AlertCircle, Quote, Crown, Compass, Briefcase, Heart, Leaf, Coins, Clock, Gem, Target, Brain, Wand2 } from 'lucide-react';
+import { Zap, Star, Sparkles, CheckCircle, AlertCircle, Quote, Crown, Compass, Briefcase, Heart, Leaf, Coins, Clock, Gem, Target, Brain, Wand2, User, RefreshCw } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useAIVedicReading } from '@/hooks/useAIVedicReading';
 import type { UserProfile, MembershipTier } from '@/lib/vedicTypes';
 
@@ -66,10 +67,16 @@ const BlueprintMiniCard = ({ title, content, icon }: { title: string; content: s
 
 export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, onEditDetails }) => {
   const { reading, isLoading, error, generateReading } = useAIVedicReading();
+  const [lastSync, setLastSync] = useState<string>("");
 
   useEffect(() => {
     if (user.birthDate && user.birthTime && user.birthPlace) {
       generateReading(user);
+      setLastSync(new Date().toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        second: '2-digit'
+      }));
     }
   }, [user.plan, user.birthDate, user.birthTime, user.birthPlace, generateReading]);
 
@@ -113,6 +120,56 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, onEdit
 
   return (
     <div className="max-w-4xl mx-auto space-y-12">
+      {/* Cosmic Sync Status Header */}
+      <motion.div 
+        className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/50"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+          <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
+            Cosmic Sync Active: {lastSync || new Date().toLocaleTimeString()}
+          </p>
+          <Badge variant="outline" className="text-[8px] px-2 py-0.5">
+            {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+          </Badge>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+            <User className="w-3 h-3" />
+            <span className="font-medium">{user.name}</span>
+          </div>
+          {onEditDetails && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={onEditDetails}
+              className="text-[10px] text-primary hover:text-primary/80 font-bold uppercase h-6 px-2"
+            >
+              Change Details
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              generateReading(user);
+              setLastSync(new Date().toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit'
+              }));
+            }}
+            disabled={isLoading}
+            className="h-6 px-2"
+          >
+            <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
+      </motion.div>
+
       {/* Guru Efficiency Section */}
       <motion.section 
         className="relative group"
