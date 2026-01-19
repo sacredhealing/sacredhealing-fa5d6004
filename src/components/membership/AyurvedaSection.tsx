@@ -11,14 +11,17 @@ import type { AyurvedaMembershipLevel } from '@/lib/ayurvedaTypes';
 interface AyurvedaSectionProps {
   isPremium?: boolean;
   membershipTier?: string;
+  isAdmin?: boolean;
 }
 
 export const AyurvedaSection: React.FC<AyurvedaSectionProps> = ({ 
   isPremium = false,
-  membershipTier = 'free'
+  membershipTier = 'free',
+  isAdmin = false
 }) => {
-  // Map membership tiers to Ayurveda levels
+  // Map membership tiers to Ayurveda levels - Admins get LIFETIME access
   const getAyurvedaLevel = (): AyurvedaMembershipLevel => {
+    if (isAdmin) return 'LIFETIME' as AyurvedaMembershipLevel;
     if (membershipTier === 'lifetime') return 'LIFETIME' as AyurvedaMembershipLevel;
     if (isPremium || membershipTier?.includes('premium')) return 'PREMIUM' as AyurvedaMembershipLevel;
     return 'FREE' as AyurvedaMembershipLevel;
@@ -103,12 +106,12 @@ export const AyurvedaSection: React.FC<AyurvedaSectionProps> = ({
             </DialogTrigger>
             <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto p-0">
               <div className="p-6">
-                <AyurvedaTool membershipLevel={getAyurvedaLevel()} />
+                <AyurvedaTool membershipLevel={getAyurvedaLevel()} isAdmin={isAdmin} />
               </div>
             </DialogContent>
           </Dialog>
 
-          {!isPremium && (
+          {!isPremium && !isAdmin && (
             <p className="text-center text-xs text-muted-foreground mt-4">
               Free tier includes basic analysis. Upgrade for AI chat consultations and live audio sessions.
             </p>
