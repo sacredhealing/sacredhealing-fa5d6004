@@ -19,7 +19,7 @@ serve(async (req) => {
   }
 
   try {
-    const { user } = await req.json() as { user: UserProfile };
+    const { user, timeOffset = 0 } = await req.json() as { user: UserProfile; timeOffset?: number };
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
     if (!LOVABLE_API_KEY) {
@@ -28,13 +28,17 @@ serve(async (req) => {
 
     const model = user.plan === 'premium' ? 'google/gemini-3-pro-preview' : 'google/gemini-3-flash-preview';
     
-    // Capture current moment for dynamic daily readings
+    // Capture current moment with optional time offset for time-travel feature
     const now = new Date();
+    if (user.plan !== 'free' && timeOffset !== 0) {
+      now.setMinutes(now.getMinutes() + timeOffset);
+    }
+    
     const currentDateStr = now.toLocaleDateString('en-US', { 
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
     });
     const currentTimeStr = now.toLocaleTimeString('en-US', { 
-      hour: '2-digit', minute: '2-digit', timeZoneName: 'short' 
+      hour: '2-digit', minute: '2-digit', hour12: true
     });
     
     const systemPrompt = `You are a fusion of two high-level personas:
@@ -45,50 +49,77 @@ IMPORTANT: You MUST respond with valid JSON only, no markdown, no code blocks, j
 
 CURRENT COSMIC MOMENT: ${currentDateStr} at ${currentTimeStr} (${now.toISOString()})
 
-Generate a profoundly deep Vedic reading based on the user's birth details. The "todayInfluence" section MUST be based on CURRENT PLANETARY TRANSITS for this specific date and time. Calculate the current Tithi, Nakshatra, and planetary positions for TODAY.
+Generate a profoundly deep Vedic reading including the HORA WATCH feature inspired by Dr. Pillai's AstroVed approach.
 
-Include:
+HORA WATCH REQUIREMENTS:
+- Calculate the specific Planetary Hora (Hour) ruling this exact moment: ${currentTimeStr}
+- Each Hora lasts approximately 1 hour and follows the Chaldean order: Sun, Venus, Mercury, Moon, Saturn, Jupiter, Mars
+- Provide a SUCCESS RATING (0-100) based on how the ruling planet interacts with the user's natal chart
+- Include 4 upcoming Horas for planning purposes
+- Tag each Hora with its best activities and energy type
 
-For ALL tiers:
-- todayInfluence: DYNAMIC daily Nakshatra insights based on current Moon transit and planetary aspects for TODAY (${currentDateStr})
-- guruEfficiencyHack: Google AI tool recommendation based on astrological advice
+PLAN-BASED CONTENT:
+- FREE: todayInfluence + horaWatch (basic) + guruEfficiencyHack
+- COMPASS: Above + personalCompass + time-travel Hora analysis
+- PREMIUM: All above + masterBlueprint with full soul analysis
 
-For COMPASS tier (add):
-- personalCompass: Career, relationship, health, financial guidance with Vimshottari Dasha analysis
-
-For PREMIUM tier (add all above plus):
-- masterBlueprint: Complete soul analysis with Navamsha (D9), Rahu/Ketu (Karmic Nodes), 12-house mapping, Yogas, and divine remedies
+The guruEfficiencyHack should specifically recommend Google AI tools based on the CURRENT HORA energy.
 
 Style: Mystical yet precise. Authoritative and transformative.`;
 
-    const userPrompt = `Generate a complete Vedic reading for:
+    const userPrompt = `Generate a complete Vedic reading with HORA WATCH for:
 Name: ${user.name}
 Birth Date: ${user.birthDate}
 Birth Time: ${user.birthTime}
 Birth Place: ${user.birthPlace}
 Plan Level: ${user.plan}
+Target Time: ${currentTimeStr} on ${currentDateStr}
 
-CRITICAL: The todayInfluence section must reflect the CURRENT TRANSITS for ${currentDateStr}. Calculate where the Moon is TODAY and how it aspects the user's natal chart.
+CRITICAL: Calculate the PLANETARY HORA for exactly ${currentTimeStr}. The Hora sequence from sunrise follows: Sun→Venus→Mercury→Moon→Saturn→Jupiter→Mars (repeating).
 
 Respond with this exact JSON structure:
 {
   "todayInfluence": {
     "nakshatra": "string - current Moon Nakshatra for TODAY ${currentDateStr}",
-    "description": "string - detailed Nakshatra energy description for this specific day",
-    "planetaryInfluence": "string - dominant planetary energy TODAY based on current transits",
+    "description": "string - detailed Nakshatra energy description",
+    "planetaryInfluence": "string - dominant planetary energy TODAY",
     "wisdomQuote": "string - relevant Vedic wisdom quote",
-    "whatToDo": ["array of 4-5 specific actions to take today based on current transits"],
-    "whatToAvoid": ["array of 3-4 things to avoid today based on current planetary tensions"]
+    "whatToDo": ["array of 4-5 specific actions"],
+    "whatToAvoid": ["array of 3-4 things to avoid"]
+  },
+  "horaWatch": {
+    "currentHora": {
+      "planet": "string - ruling planet (e.g., 'Jupiter', 'Venus')",
+      "ruler": "string - planet's Sanskrit name and qualities",
+      "energyType": "Auspicious" | "Neutral" | "Inauspicious",
+      "successRating": number between 0-100 based on user's natal chart interaction,
+      "bestFor": ["array of 3-4 optimal activities for this hora"],
+      "description": "string - detailed description of this hora's influence on the user",
+      "startTime": "string - hora start time (e.g., '2:00 PM')",
+      "endTime": "string - hora end time (e.g., '3:00 PM')"
+    },
+    "upcomingHoras": [
+      {
+        "planet": "string",
+        "ruler": "string",
+        "energyType": "Auspicious" | "Neutral" | "Inauspicious",
+        "successRating": number 0-100,
+        "bestFor": ["activities"],
+        "description": "string",
+        "startTime": "string",
+        "endTime": "string"
+      }
+    ]
   },
   ${user.plan !== 'free' ? `"personalCompass": {
-    "career": "string - detailed career guidance for today",
+    "career": "string - detailed career guidance",
     "relationship": "string - relationship harmony advice",
-    "health": "string - health and prana recommendations",
+    "health": "string - health recommendations",
     "financial": "string - artha (wealth) guidance",
     "currentDasha": {
-      "period": "string - current Mahadasha period (e.g., 'Saturn Mahadasha')",
-      "meaning": "string - what this period means for life",
-      "focusArea": "string - primary focus during this period"
+      "period": "string - current Mahadasha period",
+      "meaning": "string - what this period means",
+      "focusArea": "string - primary focus"
     }
   },` : ''}
   ${user.plan === 'premium' ? `"masterBlueprint": {
@@ -97,22 +128,24 @@ Respond with this exact JSON structure:
     "navamshaAnalysis": "string - D9 soul strength analysis",
     "karmicNodes": "string - Rahu/Ketu placement and meaning",
     "significantYogas": [
-      {"name": "string - yoga name", "impact": "string - its effect on life"}
+      {"name": "string", "impact": "string"}
     ],
-    "sadeSatiStatus": "string - current Saturn Sade Sati status",
-    "timingPeaks": "string - optimal timing windows ahead",
+    "sadeSatiStatus": "string - Saturn Sade Sati status",
+    "timingPeaks": "string - optimal timing windows",
     "divineRemedies": ["array of 3-5 spiritual remedies"],
-    "soulMap12Houses": "string - brief analysis of key houses"
+    "soulMap12Houses": "string - key houses analysis"
   },` : ''}
   "guruEfficiencyHack": {
-    "recommendedTool": "string - specific Google AI tool name",
-    "toolCategory": "string - one of: Productivity, Learning, Creation, Logic",
-    "whyThisTool": "string - astrological reasoning for this recommendation based on today's transits",
+    "recommendedTool": "string - Google AI tool optimized for current ${currentTimeStr} Hora",
+    "toolCategory": "Productivity" | "Learning" | "Creation" | "Logic",
+    "whyThisTool": "string - explain why this tool matches current planetary hora energy",
     "workflow": ["array of 3-4 specific workflow steps"],
-    "proTip": "string - expert efficiency tip",
-    "limitation": "string - honest limitation to be aware of"
+    "proTip": "string - expert efficiency tip aligned with hora",
+    "limitation": "string - honest limitation"
   }
-}`;
+}
+
+Include 4 upcoming horas after the current one in the upcomingHoras array.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -127,7 +160,7 @@ Respond with this exact JSON structure:
           { role: "user", content: userPrompt },
         ],
         temperature: 0.7,
-        max_tokens: 4000,
+        max_tokens: 5000,
       }),
     });
 
