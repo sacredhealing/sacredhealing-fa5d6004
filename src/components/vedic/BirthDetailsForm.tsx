@@ -68,7 +68,7 @@ export const BirthDetailsForm: React.FC<BirthDetailsFormProps> = ({ onSaved, ini
           birth_time: formData.birth_time,
           birth_place: formData.birth_place.trim(),
         })
-        .eq('id', user.id);
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
