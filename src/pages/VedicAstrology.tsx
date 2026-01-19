@@ -220,23 +220,10 @@ const VedicAstrology: React.FC = () => {
         )}
 
         {/* Active Tier Reading */}
-        {activeTier && hasBirthDetails && (
+        {activeTier && (
           <Card className="mb-8 border-2 border-primary/30">
             <CardContent className="p-6">
               <DailyVedicInsight tier={activeTier} />
-            </CardContent>
-          </Card>
-        )}
-
-        {/* No Birth Details Message */}
-        {!hasBirthDetails && highestAccess && (
-          <Card className="mb-8 border border-amber-500/30 bg-amber-500/5">
-            <CardContent className="p-6 text-center">
-              <Calendar className="w-12 h-12 mx-auto text-amber-400 mb-4" />
-              <h3 className="font-semibold text-lg text-foreground mb-2">Birth Details Required</h3>
-              <p className="text-muted-foreground mb-4">
-                Please add your birth details above to receive personalized Vedic readings
-              </p>
             </CardContent>
           </Card>
         )}
