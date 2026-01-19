@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, Leaf, Moon, Sun, Crown, MessageCircle, Mic } from 'lucide-react';
+import { Sparkles, Leaf, Moon, Sun, Crown, MessageCircle, Mic, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -74,36 +74,45 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
   // Admins always get LIFETIME access
   const effectiveMembership = isAdmin ? 'LIFETIME' as AyurvedaMembershipLevel : membershipLevel;
   const [membership, setMembership] = useState<AyurvedaMembershipLevel>(effectiveMembership);
-  const [profile, setProfile] = useState<AyurvedaUserProfile | null>(null);
   const [activeTab, setActiveTab] = useState<'home' | 'assessment' | 'doctor' | 'chat'>('home');
   
   const { 
     doshaProfile, 
+    userProfile,
     dailyGuidance, 
     isLoading, 
-    isLoadingGuidance, 
+    isLoadingGuidance,
+    isLoadingSaved,
     analyzeDosha, 
     getDailyGuidance,
     reset 
   } = useAyurvedaAnalysis();
 
-  const handleAssessmentComplete = async (userProfile: AyurvedaUserProfile) => {
-    setProfile(userProfile);
-    await analyzeDosha(userProfile);
+  const handleAssessmentComplete = async (profile: AyurvedaUserProfile) => {
+    await analyzeDosha(profile);
     setActiveTab('home');
   };
 
   const handleFetchGuidance = useCallback(() => {
-    if (profile) {
-      getDailyGuidance(profile);
+    if (userProfile) {
+      getDailyGuidance(userProfile);
     }
-  }, [profile, getDailyGuidance]);
+  }, [userProfile, getDailyGuidance]);
 
-  const handleRestart = () => {
-    reset();
-    setProfile(null);
+  const handleRestart = async () => {
+    await reset();
     setActiveTab('home');
   };
+
+  // Show loading while checking for saved profile
+  if (isLoadingSaved) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[300px]">
+        <Loader2 className="w-10 h-10 text-emerald-600 animate-spin" />
+        <p className="mt-4 text-muted-foreground">Loading your Prakriti...</p>
+      </div>
+    );
+  }
 
   const renderContent = () => {
     switch (activeTab) {
@@ -167,7 +176,7 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
         }
         return (
           <DoshaDashboard 
-            profile={profile!} 
+            profile={userProfile!} 
             dosha={doshaProfile} 
             dailyGuidance={dailyGuidance}
             isLoadingGuidance={isLoadingGuidance}
@@ -200,7 +209,7 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
           );
         }
         return (
-          <AyurvedaChatConsultation profile={profile} dosha={doshaProfile} />
+          <AyurvedaChatConsultation profile={userProfile} dosha={doshaProfile} />
         );
 
       case 'doctor':
@@ -223,7 +232,7 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
           );
         }
         return (
-          <AyurvedaLiveDoctor profile={profile} dosha={doshaProfile} />
+          <AyurvedaLiveDoctor profile={userProfile} dosha={doshaProfile} />
         );
 
       default:

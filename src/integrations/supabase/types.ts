@@ -756,6 +756,33 @@ export type Database = {
         }
         Relationships: []
       }
+      ayurveda_profiles: {
+        Row: {
+          created_at: string
+          dosha_profile: Json
+          id: string
+          updated_at: string
+          user_id: string
+          user_profile: Json
+        }
+        Insert: {
+          created_at?: string
+          dosha_profile: Json
+          id?: string
+          updated_at?: string
+          user_id: string
+          user_profile: Json
+        }
+        Update: {
+          created_at?: string
+          dosha_profile?: Json
+          id?: string
+          updated_at?: string
+          user_id?: string
+          user_profile?: Json
+        }
+        Relationships: []
+      }
       bot_entitlements: {
         Row: {
           bot_type: string
