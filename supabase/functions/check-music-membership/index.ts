@@ -60,6 +60,23 @@ serve(async (req) => {
     }
     logStep("User authenticated", { userId: user.id, email: user.email });
 
+    // Check if user is admin - admins get full access to everything
+    const { data: isAdminData } = await supabaseClient
+      .rpc('has_role', { _user_id: user.id, _role: 'admin' });
+    
+    if (isAdminData === true) {
+      logStep("Admin user detected - granting full access");
+      return new Response(JSON.stringify({
+        hasMembership: true,
+        planType: 'admin',
+        subscriptionEnd: null,
+        isAdmin: true
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     // Find customer
