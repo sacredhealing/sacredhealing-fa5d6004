@@ -1,10 +1,9 @@
 import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Play, BookOpen, Gift, Wallet, Flame, Sparkles, DollarSign, Youtube, ShoppingBag, Crown, Music, Heart, Trophy, Star, Calendar, Headphones, Wind, Award, Share2, Radio, ArrowRight } from 'lucide-react';
+import { Play, BookOpen, Gift, Wallet, Flame, Sparkles, DollarSign, Youtube, ShoppingBag, Crown, Music, Heart, Trophy, Star, Calendar, Headphones, Wind, Award, Share2, Radio, ArrowRight, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LotusIcon } from '@/components/icons/LotusIcon';
-import { SocialShare } from '@/components/SocialShare';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useSHC } from '@/contexts/SHCContext';
@@ -496,14 +495,16 @@ const Dashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Social Share */}
+      {/* Invite Friends */}
       <div className="mt-8 rounded-2xl bg-muted/30 border border-border/30 p-5 animate-slide-up" style={{ animationDelay: '0.5s' }}>
         <h2 className="text-lg font-heading font-semibold text-foreground mb-3">{t('dashboard.inviteFriends')}</h2>
         <p className="text-sm text-muted-foreground mb-4">{t('dashboard.inviteDescription')}</p>
-        <SocialShare 
-          title="Sacred Healing App"
-          text="Join me on Sacred Healing - Transform your spiritual journey and earn SHC tokens! 🧘‍♀️✨"
-        />
+        <Link to="/invite-friends">
+          <Button className="w-full gap-2">
+            <Users className="w-4 h-4" />
+            {t('dashboard.inviteFriends')}
+          </Button>
+        </Link>
       </div>
     </div>
   );
