@@ -75,6 +75,12 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
   const effectiveMembership = isAdmin ? 'LIFETIME' as AyurvedaMembershipLevel : membershipLevel;
   const [membership, setMembership] = useState<AyurvedaMembershipLevel>(effectiveMembership);
   const [activeTab, setActiveTab] = useState<'home' | 'assessment' | 'doctor' | 'chat'>('home');
+
+  // Update membership when props change (e.g., when isAdmin loads)
+  React.useEffect(() => {
+    const newMembership = isAdmin ? 'LIFETIME' as AyurvedaMembershipLevel : membershipLevel;
+    setMembership(newMembership);
+  }, [isAdmin, membershipLevel]);
   
   const { 
     doshaProfile, 
