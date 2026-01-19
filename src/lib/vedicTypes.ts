@@ -1,5 +1,5 @@
 /**
- * Vedic Astrology Types - Deep Reading System
+ * Vedic Astrology Types - Deep Reading System with Hora Watch
  */
 
 export type MembershipTier = 'free' | 'compass' | 'premium';
@@ -61,8 +61,28 @@ export interface TodayInfluence {
   whatToAvoid: string[];
 }
 
+// Hora Watch Types (Dr. Pillai / AstroVed inspired)
+export type HoraEnergyType = 'Auspicious' | 'Neutral' | 'Inauspicious';
+
+export interface HoraInfo {
+  planet: string;
+  ruler: string;
+  energyType: HoraEnergyType;
+  successRating: number; // 0-100 based on user's birth chart
+  bestFor: string[];
+  description: string;
+  startTime: string;
+  endTime: string;
+}
+
+export interface HoraWatch {
+  currentHora: HoraInfo;
+  upcomingHoras: HoraInfo[];
+}
+
 export interface VedicReading {
   todayInfluence: TodayInfluence;
+  horaWatch?: HoraWatch;
   personalCompass?: PersonalCompass;
   masterBlueprint?: MasterBlueprint;
   guruEfficiencyHack: GuruEfficiencyHack;
@@ -79,4 +99,48 @@ export const TIER_ICONS: Record<MembershipTier, string> = {
   free: 'Star',
   compass: 'Compass',
   premium: 'Crown',
+};
+
+// Planet emoji mapping for Hora Watch
+export const PLANET_EMOJIS: Record<string, string> = {
+  sun: '☀️',
+  moon: '🌙',
+  mercury: '☿️',
+  venus: '♀️',
+  mars: '♂️',
+  jupiter: '♃',
+  saturn: '♄',
+  rahu: '🐉',
+  ketu: '🔮',
+};
+
+export const getPlanetEmoji = (planet: string): string => {
+  const p = planet.toLowerCase();
+  if (p.includes('sun')) return PLANET_EMOJIS.sun;
+  if (p.includes('moon')) return PLANET_EMOJIS.moon;
+  if (p.includes('mercury')) return PLANET_EMOJIS.mercury;
+  if (p.includes('venus')) return PLANET_EMOJIS.venus;
+  if (p.includes('mars')) return PLANET_EMOJIS.mars;
+  if (p.includes('jupiter')) return PLANET_EMOJIS.jupiter;
+  if (p.includes('saturn')) return PLANET_EMOJIS.saturn;
+  if (p.includes('rahu')) return PLANET_EMOJIS.rahu;
+  if (p.includes('ketu')) return PLANET_EMOJIS.ketu;
+  return '✨';
+};
+
+export const getEnergyGradient = (type: HoraEnergyType): string => {
+  switch (type) {
+    case 'Auspicious':
+      return 'from-emerald-500/20 to-teal-500/20';
+    case 'Neutral':
+      return 'from-amber-500/20 to-orange-500/20';
+    case 'Inauspicious':
+      return 'from-rose-500/20 to-indigo-600/20';
+  }
+};
+
+export const getSuccessColor = (rating: number): string => {
+  if (rating > 70) return 'text-emerald-400';
+  if (rating > 40) return 'text-amber-400';
+  return 'text-rose-400';
 };
