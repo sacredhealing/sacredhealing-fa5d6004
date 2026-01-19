@@ -48,7 +48,7 @@ const Membership = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  const { tier: currentTier, isPremium, refresh: refreshMembership } = useMembership();
+  const { tier: currentTier, isPremium, isAdmin, refresh: refreshMembership } = useMembership();
   const { isTrialActive, daysRemaining, canStartTrial, refetch: refetchTrial } = useFreeTrial();
   const [tiers, setTiers] = useState<MembershipTier[]>([]);
   const [loading, setLoading] = useState(true);
@@ -330,7 +330,7 @@ const Membership = () => {
 
       {/* Ayurveda Section */}
       <div className="px-4 py-6">
-        <AyurvedaSection isPremium={isPremium} membershipTier={currentTier || 'free'} />
+        <AyurvedaSection isPremium={isPremium} membershipTier={currentTier || 'free'} isAdmin={isAdmin} />
       </div>
 
       {/* Vedic Astrology Section */}

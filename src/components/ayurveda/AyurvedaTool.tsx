@@ -11,6 +11,7 @@ import type { AyurvedaUserProfile, AyurvedaMembershipLevel } from '@/lib/ayurved
 
 interface AyurvedaToolProps {
   membershipLevel?: AyurvedaMembershipLevel;
+  isAdmin?: boolean;
 }
 
 const MembershipCard = ({ 
@@ -65,9 +66,12 @@ const MembershipCard = ({
 };
 
 export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({ 
-  membershipLevel = 'FREE' as AyurvedaMembershipLevel 
+  membershipLevel = 'FREE' as AyurvedaMembershipLevel,
+  isAdmin = false
 }) => {
-  const [membership, setMembership] = useState<AyurvedaMembershipLevel>(membershipLevel);
+  // Admins always get LIFETIME access
+  const effectiveMembership = isAdmin ? 'LIFETIME' as AyurvedaMembershipLevel : membershipLevel;
+  const [membership, setMembership] = useState<AyurvedaMembershipLevel>(effectiveMembership);
   const [profile, setProfile] = useState<AyurvedaUserProfile | null>(null);
   const [activeTab, setActiveTab] = useState<'home' | 'assessment' | 'doctor' | 'chat'>('home');
   
@@ -124,26 +128,38 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
                 Reveal Your Prakriti <Sparkles className="ml-2 w-5 h-5" />
               </Button>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20 w-full max-w-4xl">
-                <MembershipCard 
-                  level={'FREE' as AyurvedaMembershipLevel}
-                  current={membership} 
-                  onSelect={setMembership}
-                  features={["Basic Dosha Analysis", "General Daily Routine", "Aura of Wellness"]}
-                />
-                <MembershipCard 
-                  level={'PREMIUM' as AyurvedaMembershipLevel}
-                  current={membership} 
-                  onSelect={setMembership}
-                  features={["Personality Matching", "Life Situation Advice", "AI Chat Consultations"]}
-                />
-                <MembershipCard 
-                  level={'LIFETIME' as AyurvedaMembershipLevel}
-                  current={membership} 
-                  onSelect={setMembership}
-                  features={["Live Audio AI Doctor", "Deep Vedic Astrology Sync", "Priority Healing Access"]}
-                />
-              </div>
+              {/* Only show membership selection if not admin (admins have full access) */}
+              {!isAdmin && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20 w-full max-w-4xl">
+                  <MembershipCard 
+                    level={'FREE' as AyurvedaMembershipLevel}
+                    current={membership} 
+                    onSelect={setMembership}
+                    features={["Basic Dosha Analysis", "General Daily Routine", "Aura of Wellness"]}
+                  />
+                  <MembershipCard 
+                    level={'PREMIUM' as AyurvedaMembershipLevel}
+                    current={membership} 
+                    onSelect={setMembership}
+                    features={["Personality Matching", "Life Situation Advice", "AI Chat Consultations"]}
+                  />
+                  <MembershipCard 
+                    level={'LIFETIME' as AyurvedaMembershipLevel}
+                    current={membership} 
+                    onSelect={setMembership}
+                    features={["Live Audio AI Doctor", "Deep Vedic Astrology Sync", "Priority Healing Access"]}
+                  />
+                </div>
+              )}
+              
+              {isAdmin && (
+                <div className="mt-10 p-4 rounded-2xl bg-amber-100 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/30 text-center">
+                  <Crown className="w-8 h-8 text-amber-600 dark:text-amber-400 mx-auto mb-2" />
+                  <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                    Admin Access: Full Lifetime features unlocked
+                  </p>
+                </div>
+              )}
             </div>
           );
         }
