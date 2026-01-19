@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Sparkles, Quote, Star, AlertCircle, CheckCircle } from 'lucide-react';
+import { Sparkles, Quote, Star, AlertCircle, CheckCircle, Crown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getDailyVedicInfluence, getPremiumDailyGuidance, getMasterDeepReading, type BirthDetails } from '@/lib/vedicCalculations';
@@ -63,8 +63,8 @@ export const DailyVedicInsight: React.FC<DailyVedicInsightProps> = ({ tier }) =>
   const premiumGuidance = (tier === 'premium' || tier === 'master')
     ? getPremiumDailyGuidance(birthDetails || undefined)
     : null;
-  const masterReading = tier === 'master' && birthDetails
-    ? getMasterDeepReading(birthDetails)
+  const masterReading = tier === 'master'
+    ? getMasterDeepReading(birthDetails || undefined)
     : null;
 
   return (
@@ -207,36 +207,74 @@ export const DailyVedicInsight: React.FC<DailyVedicInsightProps> = ({ tier }) =>
         </Card>
       )}
 
-      {/* Master Deep Reading */}
+      {/* Master Deep Reading - Master Vedic Blueprint */}
       {masterReading && (
         <Card className="border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-orange-500/5">
           <CardHeader>
-            <CardTitle className="text-lg">Deep Vedic Reading</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Crown className="w-5 h-5 text-amber-400" />
+              Master Vedic Blueprint
+            </CardTitle>
             <p className="text-sm text-muted-foreground">
-              Comprehensive insights into your life path and purpose
+              Comprehensive insights into your soul's journey and cosmic destiny
             </p>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <h4 className="font-semibold text-sm mb-2 text-foreground">Soul Purpose (Dharma)</h4>
-              <p className="text-sm text-muted-foreground">{masterReading.soulPurpose}</p>
+          <CardContent className="space-y-5">
+            {/* Soul Purpose */}
+            <div className="p-4 rounded-lg bg-purple-500/10 border border-purple-500/20">
+              <h4 className="font-semibold text-sm mb-2 text-foreground flex items-center gap-2">
+                🔮 Soul Purpose Analysis
+              </h4>
+              <p className="text-sm text-muted-foreground leading-relaxed">{masterReading.soulPurpose}</p>
             </div>
-            <div>
-              <h4 className="font-semibold text-sm mb-2 text-foreground">Karma Patterns</h4>
-              <p className="text-sm text-muted-foreground">{masterReading.karmaPatterns}</p>
+
+            {/* Karma Patterns */}
+            <div className="p-4 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
+              <h4 className="font-semibold text-sm mb-2 text-foreground flex items-center gap-2">
+                ⚖️ Karma Pattern Insights
+              </h4>
+              <p className="text-sm text-muted-foreground leading-relaxed">{masterReading.karmaPatterns}</p>
             </div>
-            <div>
-              <h4 className="font-semibold text-sm mb-2 text-foreground">Strengths</h4>
-              <p className="text-sm text-muted-foreground">{masterReading.strengths}</p>
+
+            {/* Strengths & Challenges Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+                <h4 className="font-semibold text-sm mb-2 text-foreground flex items-center gap-2">
+                  ⭐ Strengths Mapping
+                </h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">{masterReading.strengths}</p>
+              </div>
+              <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20">
+                <h4 className="font-semibold text-sm mb-2 text-foreground flex items-center gap-2">
+                  🎯 Challenge Mapping
+                </h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">{masterReading.challenges}</p>
+              </div>
             </div>
-            <div>
-              <h4 className="font-semibold text-sm mb-2 text-foreground">Challenges</h4>
-              <p className="text-sm text-muted-foreground">{masterReading.challenges}</p>
+
+            {/* Timing Peaks */}
+            <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+              <h4 className="font-semibold text-sm mb-2 text-foreground flex items-center gap-2">
+                📅 Timing Peak Predictions
+              </h4>
+              <p className="text-sm text-muted-foreground leading-relaxed">{masterReading.timingPeaks}</p>
             </div>
-            <div>
-              <h4 className="font-semibold text-sm mb-2 text-foreground">Timing Peaks</h4>
-              <p className="text-sm text-muted-foreground">{masterReading.timingPeaks}</p>
+
+            {/* Birth Chart Summary */}
+            <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
+              <h4 className="font-semibold text-sm mb-2 text-foreground flex items-center gap-2">
+                📜 Detailed Birth Chart Analysis
+              </h4>
+              <p className="text-sm text-muted-foreground leading-relaxed">{masterReading.birthChartSummary}</p>
             </div>
+
+            {!birthDetails && (
+              <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                <p className="text-xs text-muted-foreground text-center">
+                  👑 <strong>Unlock your full cosmic blueprint:</strong> Add your complete birth details above to receive your personalized Master reading with detailed chart analysis.
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
