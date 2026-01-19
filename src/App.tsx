@@ -88,6 +88,7 @@ import CreativeSoulHub from "./pages/CreativeSoulHub";
 import CreativeSoulMeditationTool from "./pages/CreativeSoulMeditationTool";
 import CreativeSoulStore from "./pages/CreativeSoulStore";
 import InviteFriends from "./pages/InviteFriends";
+import VedicAstrology from "./pages/VedicAstrology";
 import { DebugBanner } from "./components/DebugBanner";
 import "@/lib/performance"; // Initialize performance monitoring
 
@@ -156,6 +157,7 @@ const App = () => (
                   <Route path="/ritual" element={<DailyRitual />} />
                   <Route path="/journal" element={<Journal />} />
                   <Route path="/invite-friends" element={<InviteFriends />} />
+                  <Route path="/vedic-astrology" element={<VedicAstrology />} />
                   <Route path="/creative-soul" element={<CreativeSoulLanding />} />
                   <Route path="/creative-soul-hub" element={<CreativeSoulHub />} />
                   {/* ROUTE DEFINITION: /creative-soul/store renders CreativeSoulStore.tsx */}
