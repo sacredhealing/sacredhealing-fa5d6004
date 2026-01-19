@@ -77,7 +77,18 @@ export const useVedicAstrology = () => {
     // Admins have access to all tiers
     if (isAdmin) return true;
 
-    // Check explicit access
+    // Check membership-based eligibility FIRST (no database dependency)
+    const membershipEligibility: Record<string, string[]> = {
+      'free': ['basic'],
+      'premium-monthly': ['basic', 'premium'],
+      'premium-annual': ['basic', 'premium'],
+      'lifetime': ['basic', 'premium', 'master'],
+    };
+
+    const eligibleTiers = membershipEligibility[membershipTier || 'free'] || [];
+    if (eligibleTiers.includes(tierLevel)) return true;
+
+    // Then check explicit access grants from database
     const access = userAccess.find(a => a.tier_level === tierLevel);
     if (access) {
       // Check if expired
@@ -87,21 +98,8 @@ export const useVedicAstrology = () => {
       return true;
     }
 
-    // Check membership-based eligibility
-    const tier = tiers.find(t => t.tier_level === tierLevel);
-    if (!tier) return false;
-
-    // Map membership tier to eligibility
-    const membershipEligibility: Record<string, string[]> = {
-      'free': ['basic'],
-      'premium-monthly': ['basic', 'premium'],
-      'premium-annual': ['basic', 'premium'],
-      'lifetime': ['basic', 'premium', 'master'],
-    };
-
-    const eligibleTiers = membershipEligibility[membershipTier || 'free'] || [];
-    return eligibleTiers.includes(tierLevel);
-  }, [user, userAccess, tiers, membershipTier, isAdmin]);
+    return false;
+  }, [user, userAccess, membershipTier, isAdmin]);
 
   const getHighestAccessLevel = useCallback((): 'basic' | 'premium' | 'master' | null => {
     // Admins get master level
