@@ -108,7 +108,7 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
       case 'home':
         if (!doshaProfile) {
           return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+            <div className="flex flex-col items-center justify-center text-center px-4 py-8">
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -242,7 +242,7 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="w-full">
       {/* Navigation */}
       {doshaProfile && (
         <div className="flex justify-center gap-2 mb-8">
@@ -273,13 +273,13 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
       {renderContent()}
       
       {/* Footer */}
-      <div className="mt-20 text-center py-10 border-t border-border">
-        <div className="flex justify-center gap-6 mb-4 text-muted-foreground/30">
-          <Leaf className="w-5 h-5" />
-          <Moon className="w-5 h-5" />
-          <Sun className="w-5 h-5" />
+      <div className="mt-12 text-center py-6 border-t border-border">
+        <div className="flex justify-center gap-6 mb-3 text-muted-foreground/30">
+          <Leaf className="w-4 h-4" />
+          <Moon className="w-4 h-4" />
+          <Sun className="w-4 h-4" />
         </div>
-        <p className="font-serif italic text-lg text-muted-foreground mb-2">
+        <p className="font-serif italic text-sm text-muted-foreground mb-1">
           "Health is wealth, peace of mind is happiness, Yoga shows the way."
         </p>
         <p className="text-xs text-muted-foreground/50">Sacred Healing Ayurveda • Powered by AI</p>
