@@ -6,6 +6,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DoshaQuiz } from './DoshaQuiz';
 import { DoshaDashboard } from './DoshaDashboard';
+import { AyurvedaChatConsultation } from './AyurvedaChatConsultation';
+import { AyurvedaLiveDoctor } from './AyurvedaLiveDoctor';
 import { useAyurvedaAnalysis } from '@/hooks/useAyurvedaAnalysis';
 import type { AyurvedaUserProfile, AyurvedaMembershipLevel } from '@/lib/ayurvedaTypes';
 
@@ -198,13 +200,7 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
           );
         }
         return (
-          <Card className="max-w-2xl mx-auto">
-            <CardContent className="p-8 text-center">
-              <MessageCircle className="w-16 h-16 text-emerald-600 mx-auto mb-4" />
-              <h2 className="text-2xl font-serif text-foreground mb-4">AI Chat Consultation</h2>
-              <p className="text-muted-foreground">Chat feature coming soon...</p>
-            </CardContent>
-          </Card>
+          <AyurvedaChatConsultation profile={profile} dosha={doshaProfile} />
         );
 
       case 'doctor':
@@ -227,13 +223,7 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
           );
         }
         return (
-          <Card className="max-w-2xl mx-auto">
-            <CardContent className="p-8 text-center">
-              <Mic className="w-16 h-16 text-emerald-600 mx-auto mb-4" />
-              <h2 className="text-2xl font-serif text-foreground mb-4">Live Audio Doctor</h2>
-              <p className="text-muted-foreground">Audio consultation feature coming soon...</p>
-            </CardContent>
-          </Card>
+          <AyurvedaLiveDoctor profile={profile} dosha={doshaProfile} />
         );
 
       default:
