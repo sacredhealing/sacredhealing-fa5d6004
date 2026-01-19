@@ -45,27 +45,30 @@ export const VedicAstrologySection: React.FC = () => {
   const [hasBirthDetails, setHasBirthDetails] = useState(false);
   const [birthDetails, setBirthDetails] = useState<any>(null);
 
-  useEffect(() => {
-    const checkBirthDetails = async () => {
-      if (!user) return;
+  const fetchBirthDetails = async () => {
+    if (!user) return;
 
-      try {
-        const { data } = await (supabase as any)
-          .from('profiles')
-          .select('birth_name, birth_date, birth_time, birth_place')
-          .eq('id', user.id)
-          .single();
+    try {
+      const { data } = await (supabase as any)
+        .from('profiles')
+        .select('birth_name, birth_date, birth_time, birth_place')
+        .eq('id', user.id)
+        .single();
 
-        if (data?.birth_name && data?.birth_date && data?.birth_time && data?.birth_place) {
-          setHasBirthDetails(true);
-          setBirthDetails(data);
-        }
-      } catch (error) {
-        console.error('Error checking birth details:', error);
+      if (data?.birth_name && data?.birth_date && data?.birth_time && data?.birth_place) {
+        setHasBirthDetails(true);
+        setBirthDetails(data);
+      } else {
+        setHasBirthDetails(false);
+        setBirthDetails(null);
       }
-    };
+    } catch (error) {
+      console.error('Error checking birth details:', error);
+    }
+  };
 
-    checkBirthDetails();
+  useEffect(() => {
+    fetchBirthDetails();
   }, [user]);
 
   const handleAccessTool = (tierLevel: string) => {
@@ -143,9 +146,7 @@ export const VedicAstrologySection: React.FC = () => {
                     <BirthDetailsForm
                       onSaved={() => {
                         setBirthDetailsDialogOpen(false);
-                        setHasBirthDetails(true);
-                        // Refresh birth details
-                        window.location.reload();
+                        fetchBirthDetails();
                       }}
                     />
                   </DialogContent>
@@ -179,7 +180,7 @@ export const VedicAstrologySection: React.FC = () => {
                     initialData={birthDetails}
                     onSaved={() => {
                       setBirthDetailsDialogOpen(false);
-                      window.location.reload();
+                      fetchBirthDetails();
                     }}
                   />
                 </DialogContent>
