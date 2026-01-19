@@ -1,48 +1,316 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Mic, MicOff, Phone, PhoneOff, Shield, Sparkles, Volume2 } from 'lucide-react';
+import { Mic, MicOff, Phone, PhoneOff, Shield, Sparkles, Volume2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import type { AyurvedaUserProfile, DoshaProfile } from '@/lib/ayurvedaTypes';
+
+// Web Speech API type declarations
+interface SpeechRecognitionEvent extends Event {
+  resultIndex: number;
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onstart: ((this: SpeechRecognition, ev: Event) => void) | null;
+  onend: ((this: SpeechRecognition, ev: Event) => void) | null;
+  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => void) | null;
+  onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => void) | null;
+  start(): void;
+  stop(): void;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: new () => SpeechRecognition;
+    webkitSpeechRecognition: new () => SpeechRecognition;
+  }
+}
 
 interface AyurvedaLiveDoctorProps {
   profile: AyurvedaUserProfile | null;
   dosha: DoshaProfile | null;
 }
 
+const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ayurveda-chat`;
+
 export const AyurvedaLiveDoctor: React.FC<AyurvedaLiveDoctorProps> = ({ profile, dosha }) => {
   const [isActive, setIsActive] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [transcription, setTranscription] = useState<string[]>([]);
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [transcription, setTranscription] = useState<{ role: 'user' | 'doctor'; text: string }[]>([]);
+  const [currentUserText, setCurrentUserText] = useState('');
+  
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const synthRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const messagesRef = useRef<{ role: 'user' | 'assistant'; content: string }[]>([]);
 
-  const handleToggleSession = async () => {
-    if (isActive) {
-      // End session
-      setIsActive(false);
-      setTranscription([]);
-      toast.info('Session ended. Namaste 🙏');
-    } else {
-      // Start session
-      setIsConnecting(true);
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [transcription]);
+
+  const speakText = useCallback((text: string) => {
+    if ('speechSynthesis' in window) {
+      // Cancel any ongoing speech
+      window.speechSynthesis.cancel();
       
-      try {
-        // Request microphone permission
-        await navigator.mediaDevices.getUserMedia({ audio: true });
-        
-        // Simulate connection (real implementation would use WebRTC or similar)
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        setIsActive(true);
-        setTranscription(['Doctor: Namaste! I am your Ayurvedic consultant. How may I guide you today?']);
-        toast.success('Connected to Live Doctor');
-      } catch (error) {
-        console.error('Failed to start session:', error);
-        toast.error('Could not access microphone. Please grant permission and try again.');
-      } finally {
-        setIsConnecting(false);
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.9;
+      utterance.pitch = 1;
+      
+      // Try to find a calming voice
+      const voices = window.speechSynthesis.getVoices();
+      const preferredVoice = voices.find(v => 
+        v.name.includes('Samantha') || 
+        v.name.includes('Karen') || 
+        v.name.includes('Google UK English Female') ||
+        v.lang.includes('en')
+      );
+      if (preferredVoice) {
+        utterance.voice = preferredVoice;
       }
+      
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => {
+        setIsSpeaking(false);
+        // Resume listening after speaking
+        if (isActive && recognitionRef.current) {
+          try {
+            recognitionRef.current.start();
+            setIsListening(true);
+          } catch (e) {
+            // Already started
+          }
+        }
+      };
+      
+      synthRef.current = utterance;
+      window.speechSynthesis.speak(utterance);
+    }
+  }, [isActive]);
+
+  const sendToDoctor = useCallback(async (userText: string) => {
+    if (!userText.trim()) return;
+
+    // Add user message to transcription
+    setTranscription(prev => [...prev, { role: 'user', text: userText }]);
+    messagesRef.current = [...messagesRef.current, { role: 'user', content: userText }];
+
+    try {
+      const response = await fetch(CHAT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: messagesRef.current,
+          profile,
+          dosha,
+        }),
+      });
+
+      if (!response.ok || !response.body) {
+        throw new Error('Failed to connect');
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let textBuffer = '';
+      let doctorResponse = '';
+
+      // Add empty doctor message
+      setTranscription(prev => [...prev, { role: 'doctor', text: '' }]);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        textBuffer += decoder.decode(value, { stream: true });
+
+        let newlineIndex: number;
+        while ((newlineIndex = textBuffer.indexOf('\n')) !== -1) {
+          let line = textBuffer.slice(0, newlineIndex);
+          textBuffer = textBuffer.slice(newlineIndex + 1);
+
+          if (line.endsWith('\r')) line = line.slice(0, -1);
+          if (line.startsWith(':') || line.trim() === '') continue;
+          if (!line.startsWith('data: ')) continue;
+
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === '[DONE]') break;
+
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+            if (content) {
+              doctorResponse += content;
+              setTranscription(prev => {
+                const newTranscription = [...prev];
+                newTranscription[newTranscription.length - 1] = { role: 'doctor', text: doctorResponse };
+                return newTranscription;
+              });
+            }
+          } catch {
+            textBuffer = line + '\n' + textBuffer;
+            break;
+          }
+        }
+      }
+
+      // Store assistant message
+      messagesRef.current = [...messagesRef.current, { role: 'assistant', content: doctorResponse }];
+
+      // Speak the response
+      if (doctorResponse) {
+        speakText(doctorResponse);
+      }
+    } catch (error) {
+      console.error('Doctor error:', error);
+      const errorMsg = 'Forgive me, my connection was interrupted. Please speak again.';
+      setTranscription(prev => [...prev, { role: 'doctor', text: errorMsg }]);
+      speakText(errorMsg);
+    }
+  }, [profile, dosha, speakText]);
+
+  const startSession = useCallback(async () => {
+    setIsConnecting(true);
+    
+    try {
+      // Check for speech recognition support
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        toast.error('Speech recognition is not supported in this browser. Please use Chrome.');
+        setIsConnecting(false);
+        return;
+      }
+
+      // Load voices for speech synthesis
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.getVoices();
+      }
+
+      // Request microphone permission
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      // Create speech recognition instance
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+        // Restart if still active and not speaking
+        if (isActive && !isSpeaking) {
+          try {
+            recognition.start();
+          } catch (e) {
+            // Already started
+          }
+        }
+      };
+
+      recognition.onresult = (event) => {
+        let finalTranscript = '';
+        let interimTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript;
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+
+        setCurrentUserText(interimTranscript);
+
+        if (finalTranscript) {
+          setCurrentUserText('');
+          // Stop recognition while processing
+          recognition.stop();
+          setIsListening(false);
+          sendToDoctor(finalTranscript);
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        if (event.error === 'not-allowed') {
+          toast.error('Microphone access denied. Please allow microphone access.');
+        }
+      };
+
+      recognitionRef.current = recognition;
+      
+      // Start session
+      setIsActive(true);
+      setTranscription([]);
+      messagesRef.current = [];
+      
+      // Send initial greeting
+      const greeting = `Namaste ${profile?.name || 'dear seeker'}! I am your Ayurvedic doctor. ${
+        dosha?.primary ? `I see you have a ${dosha.primary} constitution. ` : ''
+      }How may I guide you on your healing journey today?`;
+      
+      setTranscription([{ role: 'doctor', text: greeting }]);
+      messagesRef.current = [{ role: 'assistant', content: greeting }];
+      
+      // Speak greeting and start listening after
+      speakText(greeting);
+      
+      toast.success('Connected to Live Doctor');
+    } catch (error) {
+      console.error('Failed to start session:', error);
+      toast.error('Could not start session. Please grant microphone permission and try again.');
+    } finally {
+      setIsConnecting(false);
+    }
+  }, [profile, dosha, speakText, sendToDoctor, isActive, isSpeaking]);
+
+  const endSession = useCallback(() => {
+    // Stop speech recognition
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
+    }
+    
+    // Stop speech synthesis
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    
+    setIsActive(false);
+    setIsListening(false);
+    setIsSpeaking(false);
+    setCurrentUserText('');
+    
+    toast.info('Session ended. Namaste 🙏');
+  }, []);
+
+  const handleToggleSession = () => {
+    if (isActive) {
+      endSession();
+    } else {
+      startSession();
     }
   };
 
@@ -74,12 +342,12 @@ export const AyurvedaLiveDoctor: React.FC<AyurvedaLiveDoctorProps> = ({ profile,
             {/* Pulsing Aura when active */}
             {isActive && (
               <motion.div
-                className="absolute inset-0 flex items-center justify-center"
+                className="absolute inset-0 flex items-center justify-center pointer-events-none"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
               >
-                <div className="w-48 h-48 rounded-full bg-amber-500/10 animate-ping" />
-                <div className="absolute w-40 h-40 rounded-full bg-amber-500/20 animate-pulse" />
+                <div className={`w-48 h-48 rounded-full ${isSpeaking ? 'bg-amber-500/10' : 'bg-emerald-500/10'} animate-ping`} />
+                <div className={`absolute w-40 h-40 rounded-full ${isSpeaking ? 'bg-amber-500/20' : 'bg-emerald-500/20'} animate-pulse`} />
               </motion.div>
             )}
 
@@ -99,9 +367,7 @@ export const AyurvedaLiveDoctor: React.FC<AyurvedaLiveDoctorProps> = ({ profile,
                 }`}
               >
                 {isConnecting ? (
-                  <div className="flex flex-col items-center">
-                    <div className="w-8 h-8 border-3 border-white/30 border-t-white rounded-full animate-spin" />
-                  </div>
+                  <Loader2 className="w-12 h-12 animate-spin" />
                 ) : isActive ? (
                   <PhoneOff className="w-12 h-12" />
                 ) : (
@@ -112,8 +378,19 @@ export const AyurvedaLiveDoctor: React.FC<AyurvedaLiveDoctorProps> = ({ profile,
 
             {/* Status Text */}
             <p className="mt-6 text-lg font-medium text-foreground">
-              {isConnecting ? 'Connecting...' : isActive ? 'Session Active' : 'Tap to Begin'}
+              {isConnecting ? 'Connecting...' : isActive ? (isSpeaking ? 'Doctor Speaking...' : 'Listening...') : 'Tap to Begin'}
             </p>
+
+            {/* Current User Speech */}
+            {currentUserText && (
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="mt-2 text-sm text-muted-foreground italic"
+              >
+                "{currentUserText}..."
+              </motion.p>
+            )}
 
             {/* Audio Indicators */}
             {isActive && (
@@ -122,13 +399,13 @@ export const AyurvedaLiveDoctor: React.FC<AyurvedaLiveDoctorProps> = ({ profile,
                 animate={{ opacity: 1, y: 0 }}
                 className="flex items-center gap-4 mt-4"
               >
-                <div className="flex items-center gap-2 text-emerald-600">
-                  <Mic className="w-4 h-4" />
-                  <span className="text-xs">Listening</span>
+                <div className={`flex items-center gap-2 ${isListening ? 'text-emerald-600' : 'text-muted-foreground'}`}>
+                  {isListening ? <Mic className="w-4 h-4 animate-pulse" /> : <MicOff className="w-4 h-4" />}
+                  <span className="text-xs">{isListening ? 'Listening' : 'Paused'}</span>
                 </div>
-                <div className="flex items-center gap-2 text-amber-600">
-                  <Volume2 className="w-4 h-4" />
-                  <span className="text-xs">Speaking</span>
+                <div className={`flex items-center gap-2 ${isSpeaking ? 'text-amber-600' : 'text-muted-foreground'}`}>
+                  <Volume2 className={`w-4 h-4 ${isSpeaking ? 'animate-pulse' : ''}`} />
+                  <span className="text-xs">{isSpeaking ? 'Speaking' : 'Silent'}</span>
                 </div>
               </motion.div>
             )}
@@ -139,30 +416,35 @@ export const AyurvedaLiveDoctor: React.FC<AyurvedaLiveDoctorProps> = ({ profile,
             <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-4 text-center">
               Live Transcription
             </h3>
-            <div className="bg-muted/50 rounded-2xl p-4 min-h-[120px] max-h-[200px] overflow-y-auto">
-              {transcription.length === 0 ? (
-                <p className="text-center text-muted-foreground/50 text-sm py-8">
-                  Session not started...
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {transcription.map((text, i) => (
-                    <motion.p
-                      key={i}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className={`text-sm ${
-                        text.startsWith('You:') 
-                          ? 'text-emerald-600' 
-                          : 'text-foreground'
-                      }`}
-                    >
-                      {text}
-                    </motion.p>
-                  ))}
-                </div>
-              )}
-            </div>
+            <ScrollArea className="h-[200px]">
+              <div ref={scrollRef} className="bg-muted/50 rounded-2xl p-4 min-h-[180px]">
+                {transcription.length === 0 ? (
+                  <p className="text-center text-muted-foreground/50 text-sm py-8">
+                    Session not started...
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {transcription.map((item, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, x: item.role === 'user' ? 10 : -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className={`text-sm ${
+                          item.role === 'user' 
+                            ? 'text-emerald-600 text-right' 
+                            : 'text-foreground'
+                        }`}
+                      >
+                        <span className="font-medium">
+                          {item.role === 'user' ? 'You: ' : 'Doctor: '}
+                        </span>
+                        {item.text}
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
           </div>
         </div>
 
