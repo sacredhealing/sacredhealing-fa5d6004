@@ -11,7 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { BirthDetailsForm } from '@/components/vedic/BirthDetailsForm';
 import { DailyVedicInsight } from '@/components/vedic/DailyVedicInsight';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const tierIcons: Record<string, React.ElementType> = {
   basic: Star,
@@ -39,6 +39,7 @@ const tierColors: Record<string, { bg: string; border: string; text: string }> =
 
 const VedicAstrology: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { tiers, isLoading, hasAccess, getHighestAccessLevel } = useVedicAstrology();
   const { tier: membershipTier } = useMembership();
@@ -54,8 +55,8 @@ const VedicAstrology: React.FC = () => {
       const { data } = await (supabase as any)
         .from('profiles')
         .select('birth_name, birth_date, birth_time, birth_place')
-        .eq('id', user.id)
-        .single();
+        .eq('user_id', user.id)
+        .maybeSingle();
 
       if (data?.birth_name && data?.birth_date && data?.birth_time && data?.birth_place) {
         setHasBirthDetails(true);
@@ -74,11 +75,13 @@ const VedicAstrology: React.FC = () => {
   }, [user]);
 
   useEffect(() => {
-    const highest = getHighestAccessLevel();
-    if (highest) {
-      setActiveTier(highest);
+    const urlTier = (searchParams.get('tier') as 'basic' | 'premium' | 'master' | null) || null;
+    const preferredTier = urlTier && hasAccess(urlTier) ? urlTier : getHighestAccessLevel();
+
+    if (preferredTier) {
+      setActiveTier(preferredTier);
     }
-  }, [getHighestAccessLevel]);
+  }, [getHighestAccessLevel, hasAccess, searchParams]);
 
   const membershipMap: Record<string, string> = {
     'free': 'Free',

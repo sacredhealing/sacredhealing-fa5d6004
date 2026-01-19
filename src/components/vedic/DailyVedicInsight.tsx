@@ -26,8 +26,8 @@ export const DailyVedicInsight: React.FC<DailyVedicInsightProps> = ({ tier }) =>
         const { data, error } = await (supabase as any)
           .from('profiles')
           .select('birth_name, birth_date, birth_time, birth_place')
-          .eq('id', user.id)
-          .single();
+          .eq('user_id', user.id)
+          .maybeSingle();
 
         if (error) throw error;
 

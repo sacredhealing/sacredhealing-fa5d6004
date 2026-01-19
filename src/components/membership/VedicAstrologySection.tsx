@@ -52,8 +52,8 @@ export const VedicAstrologySection: React.FC = () => {
       const { data } = await (supabase as any)
         .from('profiles')
         .select('birth_name, birth_date, birth_time, birth_place')
-        .eq('id', user.id)
-        .single();
+        .eq('user_id', user.id)
+        .maybeSingle();
 
       if (data?.birth_name && data?.birth_date && data?.birth_time && data?.birth_place) {
         setHasBirthDetails(true);
@@ -72,7 +72,7 @@ export const VedicAstrologySection: React.FC = () => {
   }, [user]);
 
   const handleAccessTool = (tierLevel: string) => {
-    navigate('/vedic-astrology');
+    navigate(`/vedic-astrology?tier=${tierLevel}`);
   };
 
   const handleUpgrade = () => {
