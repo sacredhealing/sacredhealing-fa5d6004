@@ -313,20 +313,40 @@ export function getPremiumDailyGuidance(
 /**
  * Generate Master tier deep reading (simplified - in production use full chart calculations)
  */
-export function getMasterDeepReading(birthDetails: BirthDetails): {
+export function getMasterDeepReading(birthDetails?: BirthDetails): {
   soulPurpose: string;
   karmaPatterns: string;
   strengths: string;
   challenges: string;
   timingPeaks: string;
+  birthChartSummary: string;
 } {
-  // Simplified - in production, calculate full Vedic chart
+  const today = new Date();
+  const nakshatra = calculateMoonNakshatra(today);
+  const planet = getDominantPlanet(today);
+  
+  const personalized = birthDetails?.name 
+    ? `${birthDetails.name}, your` 
+    : 'Your';
+  
+  const locationInfluence = birthDetails?.place 
+    ? `The energies of ${birthDetails.place} have shaped your early karmic imprints.` 
+    : 'Your birth location holds keys to understanding your karmic geography.';
+
   return {
-    soulPurpose: `Your birth chart reveals a path of ${birthDetails.name ? 'service and wisdom' : 'spiritual growth'}. Your dharma involves sharing knowledge and healing.`,
-    karmaPatterns: `Past life patterns show a need for ${birthDetails.date ? 'balancing relationships and career' : 'spiritual discipline'}. Focus on dharma to transform karma.`,
-    strengths: `Your chart shows natural abilities in leadership, compassion, and intuitive understanding. Use these to serve your purpose.`,
-    challenges: `Areas requiring attention include patience, detachment from outcomes, and balancing material and spiritual pursuits.`,
-    timingPeaks: `Current planetary cycles indicate a period of transformation. Major life changes are supported, especially in areas of ${birthDetails.place ? 'relationships and career' : 'spiritual growth'}.`,
+    soulPurpose: `${personalized} birth chart reveals a profound dharmic path centered on service, wisdom, and spiritual evolution. Your soul chose this incarnation to master the lessons of ${nakshatra}, bringing healing and transformation to those around you. The ${planet} influence in your chart suggests a natural ability to inspire others through authentic self-expression.`,
+    
+    karmaPatterns: `Past life patterns indicate significant work in spiritual traditions and leadership roles. ${locationInfluence} Current karmic themes involve balancing material responsibilities with spiritual aspirations. The nodes of the Moon (Rahu-Ketu axis) suggest a journey from worldly attachments toward inner liberation and selfless service.`,
+    
+    strengths: `Your chart reveals exceptional gifts in intuitive understanding, compassionate leadership, and the ability to see beyond surface appearances. Natural talents include deep listening, creative problem-solving, and the capacity to hold space for transformation. The ${planet} energy amplifies your ability to communicate wisdom effectively.`,
+    
+    challenges: `Areas requiring conscious attention include patience with slower processes, releasing attachment to specific outcomes, and balancing personal needs with service to others. The shadow side of ${nakshatra} may manifest as occasional restlessness or scattered focus. Regular grounding practices are recommended.`,
+    
+    timingPeaks: `Current planetary cycles indicate a significant period of transformation and growth through ${new Date().getFullYear() + 2}. Major life opportunities are supported in ${['January-March', 'April-June', 'July-September', 'October-December'][Math.floor(today.getMonth() / 3)]}. The ${planet} transit particularly favors new beginnings, spiritual practices, and meaningful connections.`,
+    
+    birthChartSummary: birthDetails 
+      ? `Birth Chart Analysis for ${birthDetails.name}: Born on ${birthDetails.date} at ${birthDetails.time} in ${birthDetails.place}. Your ascendant sign shapes your life approach, while the Moon sign in ${nakshatra} reveals your emotional nature. The planetary positions at your birth create a unique cosmic signature that influences your life path, relationships, and spiritual evolution.`
+      : `Add your complete birth details (date, time, and place) to receive your personalized birth chart analysis. This detailed reading will reveal your ascendant sign, Moon nakshatra, planetary positions, and the unique cosmic blueprint that guides your soul's journey.`,
   };
 }
 
