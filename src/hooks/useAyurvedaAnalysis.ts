@@ -1,24 +1,106 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './useAuth';
 import type { AyurvedaUserProfile, DoshaProfile } from '@/lib/ayurvedaTypes';
+import type { Json } from '@/integrations/supabase/types';
 
 interface UseAyurvedaAnalysisResult {
   doshaProfile: DoshaProfile | null;
+  userProfile: AyurvedaUserProfile | null;
   dailyGuidance: string;
   isLoading: boolean;
   isLoadingGuidance: boolean;
+  isLoadingSaved: boolean;
   error: string | null;
   analyzeDosha: (profile: AyurvedaUserProfile) => Promise<void>;
   getDailyGuidance: (profile: AyurvedaUserProfile) => Promise<void>;
-  reset: () => void;
+  reset: () => Promise<void>;
 }
 
 export function useAyurvedaAnalysis(): UseAyurvedaAnalysisResult {
+  const { user } = useAuth();
   const [doshaProfile, setDoshaProfile] = useState<DoshaProfile | null>(null);
+  const [userProfile, setUserProfile] = useState<AyurvedaUserProfile | null>(null);
   const [dailyGuidance, setDailyGuidance] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingGuidance, setIsLoadingGuidance] = useState(false);
+  const [isLoadingSaved, setIsLoadingSaved] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Load saved Prakriti on mount
+  useEffect(() => {
+    const loadSavedProfile = async () => {
+      if (!user) {
+        setIsLoadingSaved(false);
+        return;
+      }
+
+      try {
+        const { data, error: fetchError } = await supabase
+          .from('ayurveda_profiles')
+          .select('user_profile, dosha_profile')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (fetchError) {
+          console.error('Error loading saved Prakriti:', fetchError);
+        } else if (data) {
+          setUserProfile(data.user_profile as unknown as AyurvedaUserProfile);
+          setDoshaProfile(data.dosha_profile as unknown as DoshaProfile);
+        }
+      } catch (err) {
+        console.error('Failed to load saved Prakriti:', err);
+      } finally {
+        setIsLoadingSaved(false);
+      }
+    };
+
+    loadSavedProfile();
+  }, [user]);
+
+  const saveProfile = useCallback(async (userProf: AyurvedaUserProfile, doshaProf: DoshaProfile) => {
+    if (!user) return;
+
+    try {
+      // Check if profile exists
+      const { data: existing } = await supabase
+        .from('ayurveda_profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (existing) {
+        // Update existing
+        const { error: updateError } = await supabase
+          .from('ayurveda_profiles')
+          .update({
+            user_profile: userProf as unknown as Json,
+            dosha_profile: doshaProf as unknown as Json,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('user_id', user.id);
+
+        if (updateError) {
+          console.error('Error updating Prakriti:', updateError);
+        }
+      } else {
+        // Insert new
+        const { error: insertError } = await supabase
+          .from('ayurveda_profiles')
+          .insert({
+            user_id: user.id,
+            user_profile: userProf as unknown as Json,
+            dosha_profile: doshaProf as unknown as Json,
+          });
+
+        if (insertError) {
+          console.error('Error saving Prakriti:', insertError);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to save Prakriti:', err);
+    }
+  }, [user]);
 
   const analyzeDosha = useCallback(async (profile: AyurvedaUserProfile) => {
     setIsLoading(true);
@@ -37,14 +119,19 @@ export function useAyurvedaAnalysis(): UseAyurvedaAnalysisResult {
         throw new Error(data.error);
       }
 
-      setDoshaProfile(data as DoshaProfile);
+      const doshaData = data as DoshaProfile;
+      setDoshaProfile(doshaData);
+      setUserProfile(profile);
+      
+      // Save to database
+      await saveProfile(profile, doshaData);
     } catch (err) {
       console.error('Failed to analyze dosha:', err);
       setError(err instanceof Error ? err.message : 'Failed to analyze dosha');
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [saveProfile]);
 
   const getDailyGuidance = useCallback(async (profile: AyurvedaUserProfile) => {
     setIsLoadingGuidance(true);
@@ -67,17 +154,32 @@ export function useAyurvedaAnalysis(): UseAyurvedaAnalysisResult {
     }
   }, []);
 
-  const reset = useCallback(() => {
+  const reset = useCallback(async () => {
+    // Delete from database
+    if (user) {
+      try {
+        await supabase
+          .from('ayurveda_profiles')
+          .delete()
+          .eq('user_id', user.id);
+      } catch (err) {
+        console.error('Failed to delete Prakriti:', err);
+      }
+    }
+
     setDoshaProfile(null);
+    setUserProfile(null);
     setDailyGuidance('');
     setError(null);
-  }, []);
+  }, [user]);
 
   return {
     doshaProfile,
+    userProfile,
     dailyGuidance,
     isLoading,
     isLoadingGuidance,
+    isLoadingSaved,
     error,
     analyzeDosha,
     getDailyGuidance,
