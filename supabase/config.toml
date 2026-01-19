@@ -152,3 +152,6 @@ verify_jwt = true
 
 [functions.dispatch-creative-soul-job]
 verify_jwt = true
+
+[functions.generate-vedic-reading]
+verify_jwt = true

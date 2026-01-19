@@ -4,23 +4,33 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Sparkles, Star, Crown, Lock, CheckCircle, User, Calendar } from 'lucide-react';
+import { Sparkles, Star, Crown, Lock, CheckCircle, User, Calendar, Compass, Zap } from 'lucide-react';
 import { useVedicAstrology } from '@/hooks/useVedicAstrology';
 import { useMembership } from '@/hooks/useMembership';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { BirthDetailsForm } from '@/components/vedic/BirthDetailsForm';
+import { AIVedicDashboard } from '@/components/vedic/AIVedicDashboard';
 import { DailyVedicInsight } from '@/components/vedic/DailyVedicInsight';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import type { MembershipTier, UserProfile } from '@/lib/vedicTypes';
 
 const tierIcons: Record<string, React.ElementType> = {
   basic: Star,
   premium: Sparkles,
   master: Crown,
+  free: Star,
+  compass: Compass,
 };
 
 const tierColors: Record<string, { bg: string; border: string; text: string }> = {
   basic: {
+    bg: 'from-blue-500/10 to-blue-600/5',
+    border: 'border-blue-500/30',
+    text: 'text-blue-400',
+  },
+  free: {
     bg: 'from-blue-500/10 to-blue-600/5',
     border: 'border-blue-500/30',
     text: 'text-blue-400',
@@ -30,11 +40,26 @@ const tierColors: Record<string, { bg: string; border: string; text: string }> =
     border: 'border-purple-500/30',
     text: 'text-purple-400',
   },
+  compass: {
+    bg: 'from-indigo-500/10 to-indigo-600/5',
+    border: 'border-indigo-500/30',
+    text: 'text-indigo-400',
+  },
   master: {
     bg: 'from-amber-500/10 to-amber-600/5',
     border: 'border-amber-500/30',
     text: 'text-amber-400',
   },
+};
+
+// Map existing DB tiers to new AI tier system
+const mapToAITier = (dbTier: 'basic' | 'premium' | 'master'): MembershipTier => {
+  switch (dbTier) {
+    case 'basic': return 'free';
+    case 'premium': return 'compass';
+    case 'master': return 'premium';
+    default: return 'free';
+  }
 };
 
 const VedicAstrology: React.FC = () => {
@@ -47,6 +72,7 @@ const VedicAstrology: React.FC = () => {
   const [hasBirthDetails, setHasBirthDetails] = useState(false);
   const [birthDetails, setBirthDetails] = useState<any>(null);
   const [activeTier, setActiveTier] = useState<'basic' | 'premium' | 'master' | null>(null);
+  const [useAIMode, setUseAIMode] = useState(true);
 
   const fetchBirthDetails = async () => {
     if (!user) return;
@@ -90,6 +116,15 @@ const VedicAstrology: React.FC = () => {
     'lifetime': 'Lifetime',
   };
 
+  // Create UserProfile for AI Dashboard
+  const userProfile: UserProfile | null = hasBirthDetails && activeTier ? {
+    name: birthDetails?.birth_name || '',
+    birthDate: birthDetails?.birth_date || '',
+    birthTime: birthDetails?.birth_time || '',
+    birthPlace: birthDetails?.birth_place || '',
+    plan: mapToAITier(activeTier),
+  } : null;
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -101,138 +136,215 @@ const VedicAstrology: React.FC = () => {
   const highestAccess = getHighestAccessLevel();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-950/30 via-background to-blue-950/20">
+    <div className="min-h-screen bg-[#020617] relative overflow-hidden">
+      {/* Midnight Temple Background */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-purple-600/5 blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-600/5 blur-[100px]" />
+      </div>
+
       <div className="container max-w-4xl mx-auto py-6 px-4 pb-24">
         <BackButton />
         
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center mb-4">
+        <motion.header 
+          className="text-center mb-8 pt-8"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="inline-block p-4 rounded-2xl bg-gradient-to-br from-purple-600/10 to-indigo-600/10 border border-purple-500/20 mb-6 shadow-[0_0_30px_rgba(168,85,247,0.15)]">
             <Sparkles className="w-10 h-10 text-purple-400" />
           </div>
-          <h1 className="text-3xl font-heading font-bold text-foreground mb-2">
-            Vedic Astrology
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4 tracking-tight font-serif">
+            Akashic Vedic Guide
           </h1>
-          <p className="text-muted-foreground max-w-lg mx-auto">
-            Discover your cosmic blueprint with ancient Vedic wisdom and receive personalized guidance based on planetary alignments.
+          <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed text-lg font-light tracking-wide">
+            Merging the geometric precision of the stars with{' '}
+            <span className="text-blue-400 font-medium">AI-Powered Efficiency</span>.{' '}
+            Discover your soul's blueprint.
           </p>
-        </div>
+        </motion.header>
 
         {/* Birth Details Section */}
-        {!hasBirthDetails ? (
-          <Card className="mb-8 border-2 border-primary/30 bg-gradient-to-br from-blue-500/5 to-purple-500/5">
-            <CardContent className="p-6">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="p-4 rounded-full bg-primary/20">
-                    <Calendar className="w-6 h-6 text-primary" />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          {!hasBirthDetails ? (
+            <Card className="mb-8 border-2 border-primary/30 bg-gradient-to-br from-blue-500/5 to-purple-500/5 backdrop-blur-sm">
+              <CardContent className="p-6">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="p-4 rounded-full bg-primary/20">
+                      <Calendar className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-lg text-foreground mb-1">Identify Birth Coordinates</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Enter your birth information to receive AI-powered Vedic guidance
+                      </p>
+                    </div>
                   </div>
+                  <Dialog open={birthDetailsDialogOpen} onOpenChange={setBirthDetailsDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="default" size="lg" className="bg-gradient-to-r from-purple-600 to-indigo-600 shadow-lg shadow-purple-500/20">
+                        <User className="w-4 h-4 mr-2" />
+                        Sync with Cosmic Records
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card/95 backdrop-blur-xl">
+                      <DialogHeader>
+                        <DialogTitle>Enter Your Birth Details</DialogTitle>
+                      </DialogHeader>
+                      <BirthDetailsForm
+                        onSaved={() => {
+                          setBirthDetailsDialogOpen(false);
+                          fetchBirthDetails();
+                        }}
+                      />
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="mb-8 border border-green-500/30 bg-green-500/5 backdrop-blur-sm">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-semibold text-lg text-foreground mb-1">Add Your Birth Details</h3>
+                    <div className="flex items-center gap-2 mb-1">
+                      <CheckCircle className="w-5 h-5 text-green-500" />
+                      <p className="font-semibold text-foreground">Birth Coordinates Synced</p>
+                    </div>
                     <p className="text-sm text-muted-foreground">
-                      Enter your birth information to receive personalized daily Vedic guidance
+                      {birthDetails?.birth_name} • {birthDetails?.birth_place}
                     </p>
                   </div>
+                  <Dialog open={birthDetailsDialogOpen} onOpenChange={setBirthDetailsDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        Edit Details
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card/95 backdrop-blur-xl">
+                      <DialogHeader>
+                        <DialogTitle>Update Birth Details</DialogTitle>
+                      </DialogHeader>
+                      <BirthDetailsForm
+                        initialData={birthDetails}
+                        onSaved={() => {
+                          setBirthDetailsDialogOpen(false);
+                          fetchBirthDetails();
+                        }}
+                      />
+                    </DialogContent>
+                  </Dialog>
                 </div>
-                <Dialog open={birthDetailsDialogOpen} onOpenChange={setBirthDetailsDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="default" size="lg">
-                      <User className="w-4 h-4 mr-2" />
-                      Add Birth Details
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle>Enter Your Birth Details</DialogTitle>
-                    </DialogHeader>
-                    <BirthDetailsForm
-                      onSaved={() => {
-                        setBirthDetailsDialogOpen(false);
-                        fetchBirthDetails();
-                      }}
-                    />
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className="mb-8 border border-green-500/30 bg-green-500/5">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
-                    <p className="font-semibold text-foreground">Birth Details Saved</p>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {birthDetails?.birth_name} • {birthDetails?.birth_place}
-                  </p>
-                </div>
-                <Dialog open={birthDetailsDialogOpen} onOpenChange={setBirthDetailsDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      Edit Details
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle>Update Birth Details</DialogTitle>
-                    </DialogHeader>
-                    <BirthDetailsForm
-                      initialData={birthDetails}
-                      onSaved={() => {
-                        setBirthDetailsDialogOpen(false);
-                        fetchBirthDetails();
-                      }}
-                    />
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
+        </motion.div>
+
+        {/* Tier Navigation - Sticky */}
+        {highestAccess && (
+          <motion.div 
+            className="sticky top-4 z-50 mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <div className="flex bg-slate-950/80 backdrop-blur-xl border border-slate-800 p-1.5 rounded-2xl gap-1 shadow-2xl">
+              {tiers.map((tier) => {
+                const userHasAccess = hasAccess(tier.tier_level);
+                const Icon = tierIcons[tier.tier_level] || Star;
+                const isActive = activeTier === tier.tier_level;
+                
+                return (
+                  <button
+                    key={tier.id}
+                    onClick={() => userHasAccess && setActiveTier(tier.tier_level)}
+                    disabled={!userHasAccess}
+                    className={`flex-1 flex items-center justify-center py-3 px-4 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all duration-300 ${
+                      isActive 
+                        ? 'bg-purple-600 text-white shadow-lg' 
+                        : userHasAccess 
+                          ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800' 
+                          : 'text-slate-600 cursor-not-allowed'
+                    }`}
+                  >
+                    {!userHasAccess && <Lock className="w-3 h-3 mr-1" />}
+                    <Icon className="w-4 h-4 mr-2" />
+                    <span className="hidden sm:inline">{tier.name}</span>
+                    <span className="sm:hidden">
+                      {tier.tier_level === 'basic' ? 'Pulse' : tier.tier_level === 'premium' ? 'Compass' : 'Master'}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
         )}
 
-        {/* Tier Selection Tabs */}
-        {highestAccess && (
-          <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-            {tiers.map((tier) => {
-              const userHasAccess = hasAccess(tier.tier_level);
-              const Icon = tierIcons[tier.tier_level] || Star;
-              const colors = tierColors[tier.tier_level] || tierColors.basic;
-              
-              return (
-                <Button
-                  key={tier.id}
-                  variant={activeTier === tier.tier_level ? "default" : "outline"}
-                  className={`flex-shrink-0 ${
-                    activeTier === tier.tier_level 
-                      ? `bg-gradient-to-r ${colors.bg} border ${colors.border}` 
-                      : ''
-                  } ${!userHasAccess ? 'opacity-50' : ''}`}
-                  onClick={() => userHasAccess && setActiveTier(tier.tier_level)}
-                  disabled={!userHasAccess}
-                >
-                  {!userHasAccess && <Lock className="w-3 h-3 mr-1" />}
-                  <Icon className={`w-4 h-4 mr-2 ${colors.text}`} />
-                  {tier.name}
-                </Button>
-              );
-            })}
+        {/* Mode Toggle */}
+        {hasBirthDetails && activeTier && (
+          <div className="flex justify-center mb-6">
+            <div className="inline-flex bg-muted/30 rounded-lg p-1 border border-border">
+              <button
+                onClick={() => setUseAIMode(true)}
+                className={`px-4 py-2 rounded-md text-xs font-medium transition-all ${
+                  useAIMode 
+                    ? 'bg-primary text-primary-foreground shadow-sm' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Zap className="w-3 h-3 inline mr-1" />
+                AI-Powered
+              </button>
+              <button
+                onClick={() => setUseAIMode(false)}
+                className={`px-4 py-2 rounded-md text-xs font-medium transition-all ${
+                  !useAIMode 
+                    ? 'bg-primary text-primary-foreground shadow-sm' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Star className="w-3 h-3 inline mr-1" />
+                Classic
+              </button>
+            </div>
           </div>
         )}
 
         {/* Active Tier Reading */}
         {activeTier && (
-          <Card className="mb-8 border-2 border-primary/30">
-            <CardContent className="p-6">
-              <DailyVedicInsight tier={activeTier} />
-            </CardContent>
-          </Card>
+          <motion.div
+            key={`${activeTier}-${useAIMode}`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="mb-8"
+          >
+            {useAIMode && userProfile ? (
+              <AIVedicDashboard user={userProfile} onEditDetails={() => setBirthDetailsDialogOpen(true)} />
+            ) : (
+              <Card className="border-2 border-primary/30">
+                <CardContent className="p-6">
+                  <DailyVedicInsight tier={activeTier} />
+                </CardContent>
+              </Card>
+            )}
+          </motion.div>
         )}
 
         {/* Tier Overview Cards */}
-        <div className="space-y-4">
+        <motion.div 
+          className="space-y-4 pt-8 border-t border-border/30"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+        >
           <h2 className="text-xl font-heading font-semibold text-foreground">Available Tiers</h2>
           {tiers.map((tier) => {
             const Icon = tierIcons[tier.tier_level] || Star;
@@ -243,7 +355,7 @@ const VedicAstrology: React.FC = () => {
             return (
               <Card
                 key={tier.id}
-                className={`border-2 ${isLocked ? 'border-border/50 opacity-60' : colors.border} bg-gradient-to-br ${colors.bg}`}
+                className={`border-2 ${isLocked ? 'border-border/50 opacity-60' : colors.border} bg-gradient-to-br ${colors.bg} backdrop-blur-sm`}
               >
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between mb-4">
@@ -308,7 +420,7 @@ const VedicAstrology: React.FC = () => {
                         setActiveTier(tier.tier_level);
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
-                      className={`w-full bg-gradient-to-r ${colors.border.replace('border-', 'from-').replace('/30', '')} ${colors.text.replace('text-', 'to-')} text-white hover:opacity-90`}
+                      className={`w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:opacity-90`}
                       size="lg"
                     >
                       <Sparkles className="w-4 h-4 mr-2" />
@@ -328,7 +440,7 @@ const VedicAstrology: React.FC = () => {
               </Card>
             );
           })}
-        </div>
+        </motion.div>
       </div>
     </div>
   );
