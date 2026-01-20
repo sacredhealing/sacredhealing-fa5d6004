@@ -89,7 +89,7 @@ STYLE:
       });
     }
 
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`;
 
     const response = await fetch(apiUrl, {
       method: 'POST',

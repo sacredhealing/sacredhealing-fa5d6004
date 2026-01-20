@@ -41,14 +41,14 @@ serve(async (req) => {
 
     // Model selection based on feature or explicit model choice
     // flash-lite for translations (cheapest), flash for most, pro for premium features
-    let geminiModel = "gemini-1.5-flash";
+    let geminiModel = "gemini-2.0-flash";
     
     if (model === "pro" || feature === "vedic_reading" || feature === "guru_chat") {
-      geminiModel = "gemini-1.5-pro";
+      geminiModel = "gemini-1.5-pro-latest";
     } else if (model === "flash-lite" || feature === "translation") {
-      geminiModel = "gemini-2.0-flash-lite";
+      geminiModel = "gemini-2.0-flash-lite-preview-02-05";
     } else if (model === "flash") {
-      geminiModel = "gemini-1.5-flash";
+      geminiModel = "gemini-2.0-flash";
     }
 
     console.log(`Using model: ${geminiModel} for feature: ${feature || 'general'}`);
