@@ -33,21 +33,30 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const hasInitialized = useRef(false);
+  const prevMessagesLength = useRef(0);
 
-  // Auto-scroll to bottom when messages change
+  // Auto-scroll only when new messages are added (not on every render)
   useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    if (messages.length > prevMessagesLength.current) {
+      // Small delay to let DOM update
+      requestAnimationFrame(() => {
+        scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+      });
+    }
+    prevMessagesLength.current = messages.length;
+  }, [messages.length]);
 
-  // Initialize with welcome message for premium users
+  // Initialize with welcome message for premium users - only ONCE
   useEffect(() => {
-    if (user.plan === 'premium') {
+    if (user.plan === 'premium' && !hasInitialized.current && messages.length === 0) {
+      hasInitialized.current = true;
       setMessages([{
         role: 'assistant',
         content: `🙏 Namaste, ${user.name.split(' ')[0]}. The celestial gates are open. I am your Grand Master Jyotish, keeper of the ancient Vedic star wisdom.\n\nYour birth coordinates (${user.birthDate}, ${user.birthTime} in ${user.birthPlace}) have been imprinted upon the cosmic records. I can see the dance of the Navagrahas in your chart.\n\nWhat sacred inquiry brings you before the Oracle today?`
       }]);
     }
-  }, [user]);
+  }, [user.plan, user.name, user.birthDate, user.birthTime, user.birthPlace, messages.length]);
 
   const handleSendMessage = async (messageText?: string) => {
     const text = messageText || input;
