@@ -38,8 +38,8 @@ Deno.serve(async (req) => {
 
 Text to translate: ${text}`;
 
-    // Use gemini-2.0-flash-lite-preview for translations (cheapest and fastest)
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-preview-02-05:generateContent?key=${GEMINI_API_KEY}`;
+    // Use gemini-2.0-flash for translations (reliable and fast)
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 
     const response = await fetch(apiUrl, {
       method: 'POST',
