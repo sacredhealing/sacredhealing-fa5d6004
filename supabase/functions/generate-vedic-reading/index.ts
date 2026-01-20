@@ -27,7 +27,7 @@ serve(async (req) => {
     }
 
     // Use pro for premium, flash for others (flash has generous free tier)
-    const geminiModel = user.plan === 'premium' ? 'gemini-1.5-pro' : 'gemini-1.5-flash';
+    const geminiModel = user.plan === 'premium' ? 'gemini-1.5-pro-latest' : 'gemini-2.0-flash';
     
     // Capture current moment with optional time offset for time-travel feature
     const now = new Date();

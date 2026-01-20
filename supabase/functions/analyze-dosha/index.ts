@@ -35,7 +35,7 @@ serve(async (req) => {
       // Quick daily guidance
       const guidancePrompt = `You are a master Ayurvedic physician. Give a 2-sentence morning ritual blessing for someone in ${profile.location} currently facing: ${profile.currentChallenge}. Make it sound like a sacred blessing from an ancient tradition.`;
 
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 
       const response = await fetch(apiUrl, {
         method: "POST",
@@ -96,7 +96,7 @@ You must return a structured analysis with this exact JSON format:
 
 Ensure vata + pitta + kapha = 100. Be specific and personalized based on their actual life situation.`;
 
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 
     const response = await fetch(apiUrl, {
       method: "POST",
