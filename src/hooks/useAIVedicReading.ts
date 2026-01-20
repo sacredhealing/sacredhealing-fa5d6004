@@ -35,10 +35,25 @@ export function useAIVedicReading(): UseAIVedicReadingResult {
       console.log('Vedic reading response:', { data, fnError });
 
       if (fnError) {
-        throw new Error(fnError.message);
+        // Check for specific error types
+        const errorMessage = fnError.message || 'Failed to generate reading';
+        if (errorMessage.includes('402') || errorMessage.includes('Usage limit')) {
+          throw new Error('AI usage limit reached. Please try again later or contact support.');
+        }
+        if (errorMessage.includes('429') || errorMessage.includes('Rate limit')) {
+          throw new Error('Too many requests. Please wait a moment and try again.');
+        }
+        throw new Error(errorMessage);
       }
 
       if (data?.error) {
+        // Handle specific error messages from edge function
+        if (data.error.includes('Usage limit') || data.error.includes('credits')) {
+          throw new Error('AI usage limit reached. Please try again later or contact support.');
+        }
+        if (data.error.includes('Rate limit')) {
+          throw new Error('Too many requests. Please wait a moment and try again.');
+        }
         throw new Error(data.error);
       }
 
