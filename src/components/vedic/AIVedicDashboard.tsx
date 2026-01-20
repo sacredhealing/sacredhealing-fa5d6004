@@ -141,6 +141,7 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, onEdit
 
   useEffect(() => {
     if (user.birthDate && user.birthTime && user.birthPlace) {
+      console.log('Triggering Vedic reading generation for:', user.name);
       generateReading(user, timeOffset);
       const targetTime = new Date(Date.now() + timeOffset * 60000);
       setLastSync(targetTime.toLocaleTimeString('en-US', { 
@@ -148,7 +149,7 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, onEdit
         minute: '2-digit',
       }));
     }
-  }, [user.plan, user.birthDate, user.birthTime, user.birthPlace, timeOffset, generateReading]);
+  }, [user.plan, user.birthDate, user.birthTime, user.birthPlace, timeOffset]); // Remove generateReading from deps
 
   const handleTimeOffsetChange = (value: number[]) => {
     setTimeOffset(value[0]);
