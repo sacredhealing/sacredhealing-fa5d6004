@@ -17,6 +17,14 @@ Deno.serve(async (req) => {
       });
     }
 
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    if (!GEMINI_API_KEY) {
+      console.error('GEMINI_API_KEY not configured, returning original text');
+      return new Response(JSON.stringify({ translatedText: text }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const languageNames: Record<string, string> = {
       'en': 'English',
       'sv': 'Swedish',
@@ -26,38 +34,34 @@ Deno.serve(async (req) => {
 
     const langName = languageNames[targetLanguage] || 'English';
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const prompt = `You are a translator. Translate the following text to ${langName}. Only return the translated text, nothing else. Keep any HTML tags, emojis, numbers, or special characters intact. Do not add any explanations or quotes.
+
+Text to translate: ${text}`;
+
+    // Use gemini-2.0-flash-lite for translations (cheapest and fastest)
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${GEMINI_API_KEY}`;
+
+    const response = await fetch(apiUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`,
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-lite',
-        messages: [
-          {
-            role: 'system',
-            content: `You are a translator. Translate the following text to ${langName}. Only return the translated text, nothing else. Keep any HTML tags, emojis, numbers, or special characters intact. Do not add any explanations or quotes.`
-          },
-          {
-            role: 'user',
-            content: text
-          }
-        ],
-        max_tokens: 500,
-        temperature: 0.1
-      })
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.1,
+          maxOutputTokens: 500,
+        },
+      }),
     });
 
     if (!response.ok) {
-      console.error('AI Gateway error:', response.status);
+      console.error('Gemini API error:', response.status);
       return new Response(JSON.stringify({ translatedText: text }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     const data = await response.json();
-    const translatedText = data.choices?.[0]?.message?.content?.trim() || text;
+    const translatedText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || text;
 
     return new Response(JSON.stringify({ translatedText }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

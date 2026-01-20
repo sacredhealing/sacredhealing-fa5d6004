@@ -20,13 +20,14 @@ serve(async (req) => {
 
   try {
     const { user, timeOffset = 0 } = await req.json() as { user: UserProfile; timeOffset?: number };
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
     
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    if (!GEMINI_API_KEY) {
+      throw new Error("GEMINI_API_KEY is not configured");
     }
 
-    const model = user.plan === 'premium' ? 'google/gemini-3-pro-preview' : 'google/gemini-3-flash-preview';
+    // Use pro for premium, flash for others (flash has generous free tier)
+    const geminiModel = user.plan === 'premium' ? 'gemini-1.5-pro' : 'gemini-1.5-flash';
     
     // Capture current moment with optional time offset for time-travel feature
     const now = new Date();
@@ -147,20 +148,27 @@ Respond with this exact JSON structure:
 
 Include 4 upcoming horas after the current one in the upcomingHoras array.`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${GEMINI_API_KEY}`;
+
+    const response = await fetch(apiUrl, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
+        contents: [
+          { role: "user", parts: [{ text: systemPrompt + "\n\n" + userPrompt }] }
         ],
-        temperature: 0.7,
-        max_tokens: 5000,
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 5000,
+        },
+        safetySettings: [
+          { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+          { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+          { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+          { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
+        ],
       }),
     });
 
@@ -171,14 +179,8 @@ Include 4 upcoming horas after the current one in the upcomingHoras array.`;
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Usage limit reached, please add credits." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
       const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
+      console.error("Gemini API error:", response.status, errorText);
       return new Response(JSON.stringify({ error: "Failed to generate reading" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -186,7 +188,7 @@ Include 4 upcoming horas after the current one in the upcomingHoras array.`;
     }
 
     const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || "";
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
     
     // Parse the JSON response
     let reading;

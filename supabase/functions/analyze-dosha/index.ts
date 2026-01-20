@@ -25,29 +25,27 @@ serve(async (req) => {
       action: 'analyze' | 'daily-guidance';
     };
     
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
     
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    if (!GEMINI_API_KEY) {
+      throw new Error("GEMINI_API_KEY is not configured");
     }
 
     if (action === 'daily-guidance') {
       // Quick daily guidance
       const guidancePrompt = `You are a master Ayurvedic physician. Give a 2-sentence morning ritual blessing for someone in ${profile.location} currently facing: ${profile.currentChallenge}. Make it sound like a sacred blessing from an ancient tradition.`;
 
-      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+      const response = await fetch(apiUrl, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
-          messages: [
-            { role: "user", content: guidancePrompt },
-          ],
-          temperature: 0.8,
-          max_tokens: 200,
+          contents: [{ role: "user", parts: [{ text: guidancePrompt }] }],
+          generationConfig: {
+            temperature: 0.8,
+            maxOutputTokens: 200,
+          },
         }),
       });
 
@@ -56,7 +54,7 @@ serve(async (req) => {
       }
 
       const data = await response.json();
-      const guidance = data.choices?.[0]?.message?.content || "May your path be clear and your heart light.";
+      const guidance = data.candidates?.[0]?.content?.parts?.[0]?.text || "May your path be clear and your heart light.";
 
       return new Response(JSON.stringify({ guidance }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -98,20 +96,27 @@ You must return a structured analysis with this exact JSON format:
 
 Ensure vata + pitta + kapha = 100. Be specific and personalized based on their actual life situation.`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+    const response = await fetch(apiUrl, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
+        contents: [
+          { role: "user", parts: [{ text: systemPrompt + "\n\n" + userPrompt }] }
         ],
-        temperature: 0.7,
-        max_tokens: 2000,
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 2000,
+        },
+        safetySettings: [
+          { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+          { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+          { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+          { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
+        ],
       }),
     });
 
@@ -122,14 +127,8 @@ Ensure vata + pitta + kapha = 100. Be specific and personalized based on their a
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Usage limit reached, please add credits." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
       const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
+      console.error("Gemini API error:", response.status, errorText);
       return new Response(JSON.stringify({ error: "Failed to analyze dosha" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -137,7 +136,7 @@ Ensure vata + pitta + kapha = 100. Be specific and personalized based on their a
     }
 
     const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || "";
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
     
     // Parse the JSON response
     let doshaProfile;
