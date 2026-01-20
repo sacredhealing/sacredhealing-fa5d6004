@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { 
   Zap, Star, Sparkles, CheckCircle, AlertCircle, Quote, Crown, Compass, 
   Briefcase, Heart, Leaf, Coins, Clock, Gem, Target, Brain, Wand2, User, 
-  RefreshCw, Volume2, VolumeX, Timer
+  RefreshCw, Volume2, VolumeX, Timer, MessageCircle
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,10 +12,12 @@ import { Slider } from '@/components/ui/slider';
 import { useAIVedicReading } from '@/hooks/useAIVedicReading';
 import type { UserProfile, HoraInfo } from '@/lib/vedicTypes';
 import { getPlanetEmoji, getEnergyGradient, getSuccessColor } from '@/lib/vedicTypes';
+import { CosmicConsultation } from './CosmicConsultation';
 
 interface AIVedicDashboardProps {
   user: UserProfile;
   onEditDetails?: () => void;
+  onUpgrade?: () => void;
 }
 
 const LoadingSpinner = () => (
@@ -130,7 +132,7 @@ const UpcomingHoraCard = ({ hora }: { hora: HoraInfo }) => (
   </div>
 );
 
-export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, onEditDetails }) => {
+export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, onEditDetails, onUpgrade }) => {
   const { reading, isLoading, error, generateReading } = useAIVedicReading();
   const [lastSync, setLastSync] = useState<string>("");
   const [timeOffset, setTimeOffset] = useState<number>(0);
@@ -591,6 +593,28 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, onEdit
           </div>
         </motion.section>
       )}
+
+      {/* Consult Guru - Live Oracle Chat */}
+      <motion.section 
+        className="space-y-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.5 }}
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-1 h-8 bg-gradient-to-b from-amber-500 to-purple-500 rounded-full shadow-[0_0_15px_rgba(168,85,247,0.5)]" />
+          <h2 className="text-2xl font-bold text-foreground font-serif italic flex items-center gap-2">
+            <MessageCircle className="w-6 h-6 text-purple-400" />
+            Consult the Guru
+          </h2>
+          {user.plan === 'premium' && (
+            <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-[10px] uppercase tracking-widest">
+              Oracle Active
+            </Badge>
+          )}
+        </div>
+        <CosmicConsultation user={user} onUpgrade={onUpgrade} />
+      </motion.section>
     </div>
   );
 };

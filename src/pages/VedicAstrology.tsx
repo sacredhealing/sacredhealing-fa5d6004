@@ -327,7 +327,11 @@ const VedicAstrology: React.FC = () => {
             className="mb-8"
           >
             {useAIMode && userProfile ? (
-              <AIVedicDashboard user={userProfile} onEditDetails={() => setBirthDetailsDialogOpen(true)} />
+              <AIVedicDashboard 
+                user={userProfile} 
+                onEditDetails={() => setBirthDetailsDialogOpen(true)} 
+                onUpgrade={() => navigate('/membership')}
+              />
             ) : (
               <Card className="border-2 border-primary/30">
                 <CardContent className="p-6">
