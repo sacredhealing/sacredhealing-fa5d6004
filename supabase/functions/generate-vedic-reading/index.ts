@@ -26,8 +26,9 @@ serve(async (req) => {
       throw new Error("GEMINI_API_KEY is not configured");
     }
 
-    // Use pro for premium, flash for others (flash has generous free tier)
-    const geminiModel = user.plan === 'premium' ? 'gemini-1.5-pro-latest' : 'gemini-2.0-flash';
+    // Model fallback chain - try models in order until one works
+    // gemini-2.0-flash is most reliable, fallback to others if needed
+    const modelFallbackChain = ['gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-pro'];
     
     // Capture current moment with optional time offset for time-travel feature
     const now = new Date();
@@ -148,40 +149,67 @@ Respond with this exact JSON structure:
 
 Include 4 upcoming horas after the current one in the upcomingHoras array.`;
 
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${GEMINI_API_KEY}`;
-
-    const response = await fetch(apiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [
-          { role: "user", parts: [{ text: systemPrompt + "\n\n" + userPrompt }] }
-        ],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 5000,
-        },
-        safetySettings: [
-          { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-          { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-          { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-          { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded, please try again later." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+    // Try models in fallback chain until one succeeds
+    let response: Response | null = null;
+    let lastError = "";
+    let usedModel = "";
+    
+    for (const geminiModel of modelFallbackChain) {
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${GEMINI_API_KEY}`;
+      
+      console.log(`Trying model: ${geminiModel}`);
+      
+      try {
+        response = await fetch(apiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [
+              { role: "user", parts: [{ text: systemPrompt + "\n\n" + userPrompt }] }
+            ],
+            generationConfig: {
+              temperature: 0.7,
+              topK: 40,
+              topP: 0.95,
+              maxOutputTokens: 5000,
+            },
+            safetySettings: [
+              { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+              { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+              { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+              { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
+            ],
+          }),
         });
+        
+        if (response.ok) {
+          usedModel = geminiModel;
+          console.log(`Success with model: ${geminiModel}`);
+          break;
+        } else if (response.status === 429) {
+          return new Response(JSON.stringify({ error: "Rate limit exceeded, please try again later." }), {
+            status: 429,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        } else {
+          const errorText = await response.text();
+          console.log(`Model ${geminiModel} failed with ${response.status}: ${errorText.substring(0, 200)}`);
+          lastError = errorText;
+          response = null; // Reset for next attempt
+        }
+      } catch (fetchError) {
+        console.log(`Model ${geminiModel} fetch error:`, fetchError);
+        lastError = fetchError instanceof Error ? fetchError.message : "Fetch failed";
+        response = null;
       }
-      const errorText = await response.text();
-      console.error("Gemini API error:", response.status, errorText);
-      return new Response(JSON.stringify({ error: "Failed to generate reading" }), {
+    }
+
+    if (!response || !response.ok) {
+      console.error("All models failed. Last error:", lastError);
+      return new Response(JSON.stringify({ 
+        error: "Failed to generate reading", 
+        detail: "All AI models unavailable. Please try again later." 
+      }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

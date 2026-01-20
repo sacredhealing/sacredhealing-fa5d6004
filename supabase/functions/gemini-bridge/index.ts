@@ -43,12 +43,10 @@ serve(async (req) => {
     // flash-lite for translations (cheapest), flash for most, pro for premium features
     let geminiModel = "gemini-2.0-flash";
     
-    if (model === "pro" || feature === "vedic_reading" || feature === "guru_chat") {
-      geminiModel = "gemini-1.5-pro-latest";
-    } else if (model === "flash-lite" || feature === "translation") {
-      geminiModel = "gemini-2.0-flash-lite-preview-02-05";
-    } else if (model === "flash") {
-      geminiModel = "gemini-2.0-flash";
+    // All features now use gemini-2.0-flash which is reliable
+    // Pro models have availability issues, so we default to flash for stability
+    if (model === "flash-lite" || feature === "translation") {
+      geminiModel = "gemini-2.0-flash"; // flash-lite also unreliable, use flash
     }
 
     console.log(`Using model: ${geminiModel} for feature: ${feature || 'general'}`);
