@@ -14,8 +14,8 @@ export const BackButton: React.FC = () => {
 
   const handleBack = () => {
     // Check if there's meaningful history to go back to
-    // window.history.length > 1 means there's at least one previous page
-    if (window.history.length > 1 && document.referrer) {
+    // window.history.length > 2 accounts for initial page load
+    if (window.history.length > 2) {
       navigate(-1);
     } else {
       // Fallback to dashboard/home
