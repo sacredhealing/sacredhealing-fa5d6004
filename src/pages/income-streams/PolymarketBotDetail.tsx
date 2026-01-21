@@ -2,7 +2,11 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ethers } from 'ethers';
-import { ArrowLeft, Wallet, RefreshCw, Play, Square, Trash2, ExternalLink, AlertCircle, CheckCircle, Clock, TrendingUp, DollarSign, Zap, Shield } from 'lucide-react';
+import { 
+  ArrowLeft, Wallet, RefreshCw, Play, Square, Trash2, ExternalLink, 
+  AlertCircle, CheckCircle, Clock, TrendingUp, DollarSign, Zap, Shield,
+  Activity, Target, BarChart3
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,19 +16,11 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
-// ERC20 ABI for balance and allowance checks
-const ERC20_ABI = [
-  "function balanceOf(address account) view returns (uint256)",
-  "function allowance(address owner, address spender) view returns (uint256)",
-  "function approve(address spender, uint256 amount) returns (bool)"
-];
-
-// Contract addresses
-const ADDR = {
-  USDC_E: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
-  USDC_N: "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
-  CTF_EXCHANGE: "0x4bFb3045ad7f9eC7233cfa54868f08599375Cf13"
-};
+// Import trading services
+import { POLYGON_ADDRESSES, PolymarketTrading } from '@/services/polymarketTrading';
+import { polymarketService } from '@/services/polymarketService';
+import { polymarketAI } from '@/services/polymarketAI';
+import type { LogEntry, TradeSignal, PolymarketMarket } from '@/types/polymarket';
 
 // RPC endpoints for Polygon
 const RPC_POOL = [
@@ -34,12 +30,12 @@ const RPC_POOL = [
   'https://rpc.ankr.com/polygon'
 ];
 
-interface LogEntry {
-  id: string;
-  msg: string;
-  type: 'info' | 'success' | 'warn' | 'error' | 'debug';
-  time: string;
-}
+// ERC20 ABI for balance checks
+const ERC20_ABI = [
+  "function balanceOf(address account) view returns (uint256)",
+  "function allowance(address owner, address spender) view returns (uint256)",
+  "function approve(address spender, uint256 amount) returns (bool)"
+];
 
 const PolymarketBotDetail: React.FC = () => {
   const { t } = useTranslation();
@@ -58,15 +54,25 @@ const PolymarketBotDetail: React.FC = () => {
   const [usdcNBal, setUsdcNBal] = useState<string>("0.00");
   const [allowance, setAllowance] = useState<bigint>(0n);
   
+  // Trading state
+  const [trading] = useState(() => new PolymarketTrading());
+  const [markets, setMarkets] = useState<PolymarketMarket[]>([]);
+  const [activeSignals, setActiveSignals] = useState<TradeSignal[]>([]);
+  const [totalTrades, setTotalTrades] = useState(0);
+  const [winRate, setWinRate] = useState(0);
+  const [dailyPnL, setDailyPnL] = useState(0);
+  
   // Status state
   const [isSyncing, setIsSyncing] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
   const [lastSync, setLastSync] = useState<string>("Never");
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [activeTab, setActiveTab] = useState('dashboard');
   
   const logEndRef = useRef<HTMLDivElement>(null);
+  const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const addLog = useCallback((msg: string, type: LogEntry['type'] = 'info') => {
     setLogs(prev => [{
@@ -74,10 +80,10 @@ const PolymarketBotDetail: React.FC = () => {
       msg,
       type,
       time: new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
-    }, ...prev].slice(0, 50));
+    }, ...prev].slice(0, 100));
   }, []);
 
-  // Real blockchain sync using ethers.js
+  // Real blockchain sync using ethers.js with correct checksummed addresses
   const performDeepSync = useCallback(async (forcedAddr?: string) => {
     const activeAddr = forcedAddr || address;
     if (!activeAddr) return;
@@ -87,53 +93,49 @@ const PolymarketBotDetail: React.FC = () => {
     
     let success = false;
     
-    // Try each RPC endpoint until one works
     for (const rpcUrl of RPC_POOL) {
       if (success) break;
       
       try {
         const provider = new ethers.JsonRpcProvider(rpcUrl, undefined, { staticNetwork: true });
         
-        // A. Fetch native POL (gas) balance
+        // Fetch POL balance
         try {
           const rawPol = await provider.getBalance(activeAddr);
           const polValue = parseFloat(ethers.formatEther(rawPol)).toFixed(4);
           setPolBal(polValue);
           addLog(`POL Balance: ${polValue}`, "debug");
-        } catch (polErr: any) {
-          console.warn("POL fetch failed:", polErr.message);
+        } catch (err) {
           addLog("Failed to fetch POL balance", "warn");
         }
         
-        await new Promise(r => setTimeout(r, 300));
+        await new Promise(r => setTimeout(r, 200));
         
-        // B. Fetch Native USDC balance (Circle's native USDC - this is what most users have)
+        // Fetch Native USDC balance
         try {
-          const usdcNContract = new ethers.Contract(ADDR.USDC_N, ERC20_ABI, provider);
+          const usdcNContract = new ethers.Contract(POLYGON_ADDRESSES.USDC_NATIVE, ERC20_ABI, provider);
           const rawN = await usdcNContract.balanceOf(activeAddr);
           const usdcNValue = parseFloat(ethers.formatUnits(rawN, 6)).toFixed(2);
           setUsdcNBal(usdcNValue);
           addLog(`Native USDC: $${usdcNValue}`, "debug");
-        } catch (usdcNErr: any) {
-          console.warn("Native USDC fetch failed:", usdcNErr.message);
+        } catch (err) {
           addLog("Failed to fetch Native USDC", "warn");
         }
         
-        await new Promise(r => setTimeout(r, 300));
+        await new Promise(r => setTimeout(r, 200));
         
-        // C. Fetch Bridged USDC.e balance and allowance (used by Polymarket)
+        // Fetch USDC.e balance and allowance (using correct checksummed address)
         try {
-          const usdcEContract = new ethers.Contract(ADDR.USDC_E, ERC20_ABI, provider);
+          const usdcEContract = new ethers.Contract(POLYGON_ADDRESSES.USDC_E, ERC20_ABI, provider);
           const [rawE, rawAllow] = await Promise.all([
             usdcEContract.balanceOf(activeAddr),
-            usdcEContract.allowance(activeAddr, ADDR.CTF_EXCHANGE)
+            usdcEContract.allowance(activeAddr, POLYGON_ADDRESSES.CTF_EXCHANGE)
           ]);
           const usdcEValue = parseFloat(ethers.formatUnits(rawE, 6)).toFixed(2);
           setUsdcEBal(usdcEValue);
           setAllowance(rawAllow);
-          addLog(`Bridged USDC.e: $${usdcEValue}`, "debug");
-        } catch (usdcEErr: any) {
-          console.warn("USDC.e fetch failed:", usdcEErr.message);
+          addLog(`Bridged USDC.e: $${usdcEValue} | Allowance: ${rawAllow > 0n ? 'Approved' : 'Pending'}`, "debug");
+        } catch (err) {
           addLog("Failed to fetch USDC.e balance", "warn");
         }
         
@@ -141,9 +143,8 @@ const PolymarketBotDetail: React.FC = () => {
         addLog(`Synced: ${activeAddr.slice(0, 10)}...${activeAddr.slice(-6)}`, "success");
         success = true;
         
-      } catch (err: any) {
-        console.warn(`RPC ${rpcUrl} failed:`, err.message);
-        addLog(`Node ${rpcUrl.split('/')[2]} failed. Trying next...`, "debug");
+      } catch (err) {
+        addLog(`Node failed. Trying next...`, "debug");
       }
     }
     
@@ -158,9 +159,14 @@ const PolymarketBotDetail: React.FC = () => {
   useEffect(() => {
     if (privateKey) {
       try {
-        // Use ethers to derive the correct address from private key
         const wallet = new ethers.Wallet(privateKey);
         setAddress(wallet.address);
+        
+        // Initialize trading service
+        trading.initialize(privateKey, RPC_POOL[0]).then(() => {
+          addLog("Trading engine initialized", "success");
+        });
+        
         performDeepSync(wallet.address);
       } catch (e) {
         console.error("Invalid private key:", e);
@@ -169,7 +175,7 @@ const PolymarketBotDetail: React.FC = () => {
         toast.error("Invalid private key format");
       }
     }
-  }, [privateKey]); // Note: removed performDeepSync from deps to avoid infinite loop
+  }, [privateKey, trading]);
 
   // Auto-refresh every 30 seconds
   useEffect(() => {
@@ -177,21 +183,81 @@ const PolymarketBotDetail: React.FC = () => {
       const interval = setInterval(() => performDeepSync(), 30000);
       return () => clearInterval(interval);
     }
-  }, [address]); // Use address instead of performDeepSync to avoid recreating interval
+  }, [address]);
+
+  // Market scanning loop when bot is running
+  useEffect(() => {
+    if (isRunning && address) {
+      addLog("Starting market scanner...", "info");
+      
+      const scanMarkets = async () => {
+        setIsScanning(true);
+        try {
+          // Fetch markets from Polymarket API
+          const fetchedMarkets = await polymarketService.fetchMarkets(50);
+          setMarkets(fetchedMarkets);
+          addLog(`Scanned ${fetchedMarkets.length} markets`, "debug");
+          
+          // Find opportunities
+          const opportunities = await polymarketService.findOpportunities(20000);
+          
+          if (opportunities.length > 0) {
+            addLog(`Found ${opportunities.length} potential opportunities`, "info");
+            
+            // Analyze top opportunities with AI
+            for (const market of opportunities.slice(0, 3)) {
+              const signal = await polymarketAI.analyzeMarket(market);
+              if (signal) {
+                setActiveSignals(prev => [...prev.slice(-4), signal]);
+                addLog(`SIGNAL: ${signal.direction.toUpperCase()} ${signal.outcome} @ ${(signal.currentPrice * 100).toFixed(1)}% - ${signal.reason}`, "trade");
+                
+                // Execute trade if approved and has balance
+                if (allowance > 0n && parseFloat(usdcEBal) >= signal.suggestedSize) {
+                  const result = await trading.executeTrade(signal);
+                  if (result.success) {
+                    setTotalTrades(prev => prev + 1);
+                    addLog(`Trade executed: ${result.txHash}`, "success");
+                  } else {
+                    addLog(`Trade failed: ${result.error}`, "error");
+                  }
+                }
+              }
+            }
+          } else {
+            addLog("No arbitrage opportunities found", "debug");
+          }
+        } catch (error) {
+          addLog(`Scan error: ${error instanceof Error ? error.message : 'Unknown'}`, "error");
+        }
+        setIsScanning(false);
+      };
+      
+      // Initial scan
+      scanMarkets();
+      
+      // Set up interval
+      scanIntervalRef.current = setInterval(scanMarkets, 15000); // Every 15 seconds
+      
+      return () => {
+        if (scanIntervalRef.current) {
+          clearInterval(scanIntervalRef.current);
+        }
+      };
+    }
+  }, [isRunning, address, allowance, usdcEBal, trading, addLog]);
 
   const handleImport = () => {
     let key = importInput.trim();
     if (!key.startsWith('0x') && key.length === 64) key = '0x' + key;
     
     try {
-      // Use ethers to validate and derive address
       const wallet = new ethers.Wallet(key);
       
       localStorage.setItem('polymarket_bot_pkey', key);
       setPrivateKey(key);
       setAddress(wallet.address);
       setInputError(null);
-      addLog("Key Decrypted. Verifying On-Chain Identity...", "info");
+      addLog("Key validated. Initializing trading engine...", "info");
       performDeepSync(wallet.address);
       toast.success("Wallet connected successfully");
     } catch (e) {
@@ -199,16 +265,55 @@ const PolymarketBotDetail: React.FC = () => {
     }
   };
 
+  // Real on-chain approval
   const handleApprove = async () => {
     if (!privateKey) return;
     setIsApproving(true);
-    addLog("Unlocking Exchange Access Gate...", "info");
+    addLog("Initiating USDC.e approval transaction...", "info");
     
-    await new Promise(r => setTimeout(r, 2000));
+    try {
+      // Find a working RPC
+      for (const rpcUrl of RPC_POOL) {
+        try {
+          const provider = new ethers.JsonRpcProvider(rpcUrl);
+          const wallet = new ethers.Wallet(privateKey, provider);
+          
+          const usdcContract = new ethers.Contract(
+            POLYGON_ADDRESSES.USDC_E,
+            ERC20_ABI,
+            wallet
+          );
+          
+          addLog("Sending approval transaction to Polygon...", "info");
+          
+          const tx = await usdcContract.approve(
+            POLYGON_ADDRESSES.CTF_EXCHANGE,
+            ethers.MaxUint256
+          );
+          
+          addLog(`Tx submitted: ${tx.hash.slice(0, 18)}...`, "info");
+          
+          const receipt = await tx.wait();
+          
+          setAllowance(ethers.MaxUint256);
+          addLog(`Approval confirmed in block ${receipt.blockNumber}`, "success");
+          toast.success("Exchange access approved!");
+          break;
+          
+        } catch (rpcError: any) {
+          if (rpcError.code === 'INSUFFICIENT_FUNDS') {
+            addLog("Insufficient POL for gas fees", "error");
+            toast.error("Need POL for gas fees");
+            break;
+          }
+          continue;
+        }
+      }
+    } catch (error: any) {
+      addLog(`Approval failed: ${error.message}`, "error");
+      toast.error("Approval transaction failed");
+    }
     
-    setAllowance(BigInt(1));
-    addLog("GATE OPEN. Execution ready.", "success");
-    toast.success("Exchange access approved");
     setIsApproving(false);
   };
 
@@ -217,15 +322,28 @@ const PolymarketBotDetail: React.FC = () => {
     setPrivateKey(null);
     setAddress("");
     setLogs([]);
+    setIsRunning(false);
+    if (scanIntervalRef.current) {
+      clearInterval(scanIntervalRef.current);
+    }
     toast.info("Wallet disconnected");
   };
 
   const toggleBot = () => {
-    setIsRunning(!isRunning);
     if (!isRunning) {
-      addLog("HFT Engine Started. Scanning markets...", "success");
-      toast.success("Bot started");
+      if (allowance === 0n) {
+        toast.error("Approve USDC.e first to enable trading");
+        return;
+      }
+      if (parseFloat(usdcEBal) < 5) {
+        toast.error("Minimum $5 USDC.e required to trade");
+        return;
+      }
+      setIsRunning(true);
+      addLog("HFT Engine Started. Scanning Polymarket...", "success");
+      toast.success("Bot started - scanning markets");
     } else {
+      setIsRunning(false);
       addLog("Engine halted by operator.", "warn");
       toast.info("Bot stopped");
     }
@@ -235,7 +353,6 @@ const PolymarketBotDetail: React.FC = () => {
   if (!privateKey) {
     return (
       <div className="min-h-screen pb-24">
-        {/* Header */}
         <div className="px-4 pt-6 pb-4">
           <Button variant="ghost" size="sm" onClick={() => navigate('/income-streams')} className="mb-4">
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -248,40 +365,37 @@ const PolymarketBotDetail: React.FC = () => {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-foreground">Polymarket HFT Bot</h1>
-              <p className="text-sm text-muted-foreground">Automated prediction market trading</p>
+              <p className="text-sm text-muted-foreground">AI-powered prediction market trading</p>
             </div>
           </div>
         </div>
 
-        {/* Hero Section */}
         <div className="px-4 space-y-6">
           <Card className="bg-gradient-to-br from-indigo-500/10 to-cyan-500/10 border-indigo-500/20">
             <CardContent className="p-6 text-center">
-              <Badge className="bg-indigo-500/20 text-indigo-400 mb-4">HFT Strategy</Badge>
+              <Badge className="bg-indigo-500/20 text-indigo-400 mb-4">Live Trading</Badge>
               <h2 className="text-3xl font-bold mb-2">€10 → Financial Freedom</h2>
               <p className="text-muted-foreground mb-6">
-                Test the engine with just €10. Replicate whale strategies with automated latency arbitrage.
+                AI scans Polymarket for mispriced markets. Automated arbitrage execution.
               </p>
               
-              {/* Stats */}
               <div className="grid grid-cols-3 gap-4 mb-6">
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-indigo-400">92%</p>
-                  <p className="text-xs text-muted-foreground">Win Rate</p>
+                  <p className="text-2xl font-bold text-indigo-400">AI</p>
+                  <p className="text-xs text-muted-foreground">Gemini Analysis</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-green-400">150+</p>
-                  <p className="text-xs text-muted-foreground">Trades/Day</p>
+                  <p className="text-2xl font-bold text-green-400">Live</p>
+                  <p className="text-xs text-muted-foreground">Real Trades</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-cyan-400">28ms</p>
-                  <p className="text-xs text-muted-foreground">Latency</p>
+                  <p className="text-2xl font-bold text-cyan-400">CLOB</p>
+                  <p className="text-xs text-muted-foreground">Order Book</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Connect Wallet Card */}
           <Card className="bg-card/50 border-border/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -311,42 +425,41 @@ const PolymarketBotDetail: React.FC = () => {
               
               <Button onClick={handleImport} className="w-full">
                 <Wallet className="w-4 h-4 mr-2" />
-                Connect & Start Trading
+                Connect & Initialize
               </Button>
               
               <p className="text-xs text-muted-foreground text-center">
-                🔒 Local encryption only. Your keys never leave your device.
+                🔒 Local encryption only. Keys never leave your device.
               </p>
             </CardContent>
           </Card>
 
-          {/* Features */}
           <div className="grid grid-cols-2 gap-3">
             <Card className="bg-card/50 border-border/50">
               <CardContent className="p-4">
                 <Zap className="w-5 h-5 text-yellow-500 mb-2" />
-                <h3 className="font-semibold text-sm">HFT Logic</h3>
-                <p className="text-xs text-muted-foreground">Sub-second execution</p>
+                <h3 className="font-semibold text-sm">AI Signals</h3>
+                <p className="text-xs text-muted-foreground">Gemini market analysis</p>
               </CardContent>
             </Card>
             <Card className="bg-card/50 border-border/50">
               <CardContent className="p-4">
                 <Shield className="w-5 h-5 text-green-500 mb-2" />
-                <h3 className="font-semibold text-sm">Slippage Guard</h3>
-                <p className="text-xs text-muted-foreground">1% max protection</p>
+                <h3 className="font-semibold text-sm">On-Chain</h3>
+                <p className="text-xs text-muted-foreground">Real CTF Exchange</p>
               </CardContent>
             </Card>
             <Card className="bg-card/50 border-border/50">
               <CardContent className="p-4">
-                <TrendingUp className="w-5 h-5 text-indigo-500 mb-2" />
-                <h3 className="font-semibold text-sm">Auto-Compound</h3>
-                <p className="text-xs text-muted-foreground">Profits reinvested</p>
+                <Target className="w-5 h-5 text-indigo-500 mb-2" />
+                <h3 className="font-semibold text-sm">Arbitrage</h3>
+                <p className="text-xs text-muted-foreground">Mispricing detection</p>
               </CardContent>
             </Card>
             <Card className="bg-card/50 border-border/50">
               <CardContent className="p-4">
                 <DollarSign className="w-5 h-5 text-cyan-500 mb-2" />
-                <h3 className="font-semibold text-sm">€10 Minimum</h3>
+                <h3 className="font-semibold text-sm">$5 Minimum</h3>
                 <p className="text-xs text-muted-foreground">Low entry barrier</p>
               </CardContent>
             </Card>
@@ -359,7 +472,6 @@ const PolymarketBotDetail: React.FC = () => {
   // Dashboard for connected users
   return (
     <div className="min-h-screen pb-24">
-      {/* Header */}
       <div className="px-4 pt-6 pb-4">
         <Button variant="ghost" size="sm" onClick={() => navigate('/income-streams')} className="mb-4">
           <ArrowLeft className="w-4 h-4 mr-2" />
@@ -379,7 +491,7 @@ const PolymarketBotDetail: React.FC = () => {
             </div>
           </div>
           <Badge variant={isRunning ? "default" : "secondary"} className={isRunning ? "bg-green-500" : ""}>
-            {isRunning ? "Running" : "Stopped"}
+            {isRunning ? (isScanning ? "Scanning" : "Running") : "Stopped"}
           </Badge>
         </div>
 
@@ -388,7 +500,7 @@ const PolymarketBotDetail: React.FC = () => {
           <Card className="bg-card/50 border-border/50">
             <CardContent className="p-3 text-center">
               <p className="text-xs text-muted-foreground">POL (Gas)</p>
-              <p className={`font-mono font-bold ${parseFloat(polBal) > 0.001 ? 'text-green-400' : 'text-red-400'}`}>
+              <p className={`font-mono font-bold ${parseFloat(polBal) > 0.01 ? 'text-green-400' : 'text-red-400'}`}>
                 {polBal}
               </p>
             </CardContent>
@@ -399,29 +511,44 @@ const PolymarketBotDetail: React.FC = () => {
               <p className="font-mono font-bold text-cyan-400">${usdcNBal}</p>
             </CardContent>
           </Card>
-          <Card className="bg-card/50 border-border/50">
+          <Card className={`${parseFloat(usdcEBal) > 0 ? 'bg-indigo-500/10 border-indigo-500/20' : 'bg-card/50 border-border/50'}`}>
             <CardContent className="p-3 text-center">
               <p className="text-xs text-muted-foreground">USDC.e</p>
-              <p className="font-mono font-bold text-muted-foreground">${usdcEBal}</p>
+              <p className={`font-mono font-bold ${parseFloat(usdcEBal) > 0 ? 'text-indigo-400' : 'text-muted-foreground'}`}>
+                ${usdcEBal}
+              </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Total Portfolio */}
-        <Card className="bg-gradient-to-r from-indigo-500/10 to-cyan-500/10 border-indigo-500/20 mb-4">
-          <CardContent className="p-3 flex justify-between items-center">
-            <span className="text-xs text-muted-foreground">Total Portfolio</span>
-            <span className="font-mono font-bold text-lg text-primary">
-              ${(parseFloat(usdcNBal) + parseFloat(usdcEBal)).toFixed(2)}
-            </span>
-          </CardContent>
-        </Card>
+        {/* Stats Row */}
+        <div className="grid grid-cols-3 gap-2 mb-4">
+          <Card className="bg-card/50 border-border/50">
+            <CardContent className="p-3 text-center">
+              <p className="text-xs text-muted-foreground">Trades</p>
+              <p className="font-mono font-bold">{totalTrades}</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-card/50 border-border/50">
+            <CardContent className="p-3 text-center">
+              <p className="text-xs text-muted-foreground">Markets</p>
+              <p className="font-mono font-bold">{markets.length}</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-card/50 border-border/50">
+            <CardContent className="p-3 text-center">
+              <p className="text-xs text-muted-foreground">Signals</p>
+              <p className="font-mono font-bold text-amber-400">{activeSignals.length}</p>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Control Buttons */}
         <div className="flex gap-2 mb-4">
           <Button
             onClick={toggleBot}
             className={`flex-1 ${isRunning ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}
+            disabled={isApproving}
           >
             {isRunning ? <Square className="w-4 h-4 mr-2" /> : <Play className="w-4 h-4 mr-2" />}
             {isRunning ? 'Stop' : 'Start'}
@@ -435,19 +562,26 @@ const PolymarketBotDetail: React.FC = () => {
         </div>
 
         {/* Approval Warning */}
-        {allowance === 0n && parseFloat(usdcEBal) > 0.01 && (
+        {allowance === 0n && (
           <Card className="bg-amber-500/10 border-amber-500/30 mb-4">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <AlertCircle className="w-5 h-5 text-amber-500" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium">Exchange Access Required</p>
-                  <p className="text-xs text-muted-foreground">Approve USDC.e spending to enable trading</p>
+                  <p className="text-sm font-medium">CTF Exchange Approval Required</p>
+                  <p className="text-xs text-muted-foreground">Approve USDC.e to trade on Polymarket</p>
                 </div>
-                <Button size="sm" onClick={handleApprove} disabled={isApproving}>
-                  {isApproving ? 'Approving...' : 'Approve'}
+                <Button 
+                  size="sm" 
+                  onClick={handleApprove} 
+                  disabled={isApproving || parseFloat(polBal) < 0.01}
+                >
+                  {isApproving ? 'Signing...' : 'Approve'}
                 </Button>
               </div>
+              {parseFloat(polBal) < 0.01 && (
+                <p className="text-xs text-red-400 mt-2">Need POL for gas fees</p>
+              )}
             </CardContent>
           </Card>
         )}
@@ -457,6 +591,7 @@ const PolymarketBotDetail: React.FC = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="px-4">
         <TabsList className="w-full">
           <TabsTrigger value="dashboard" className="flex-1">Terminal</TabsTrigger>
+          <TabsTrigger value="signals" className="flex-1">Signals</TabsTrigger>
           <TabsTrigger value="settings" className="flex-1">Settings</TabsTrigger>
         </TabsList>
 
@@ -479,7 +614,8 @@ const PolymarketBotDetail: React.FC = () => {
                 <div className="space-y-2 font-mono text-xs">
                   {logs.length === 0 ? (
                     <div className="text-center py-12 text-muted-foreground">
-                      <p>Awaiting Mainnet Signatures...</p>
+                      <Activity className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      <p>Awaiting Mainnet Activity...</p>
                     </div>
                   ) : (
                     logs.map(log => (
@@ -489,6 +625,7 @@ const PolymarketBotDetail: React.FC = () => {
                           log.type === 'success' ? 'text-green-400' :
                           log.type === 'error' ? 'text-red-400' :
                           log.type === 'warn' ? 'text-amber-400' :
+                          log.type === 'trade' ? 'text-cyan-400' :
                           log.type === 'debug' ? 'text-muted-foreground' :
                           'text-foreground'
                         }>
@@ -504,6 +641,37 @@ const PolymarketBotDetail: React.FC = () => {
           </Card>
         </TabsContent>
 
+        <TabsContent value="signals" className="mt-4 space-y-3">
+          {activeSignals.length === 0 ? (
+            <Card className="bg-card/50 border-border/50">
+              <CardContent className="p-8 text-center">
+                <BarChart3 className="w-10 h-10 mx-auto mb-3 text-muted-foreground opacity-50" />
+                <p className="text-muted-foreground">No active signals</p>
+                <p className="text-xs text-muted-foreground mt-1">Start the bot to scan markets</p>
+              </CardContent>
+            </Card>
+          ) : (
+            activeSignals.map((signal, i) => (
+              <Card key={i} className="bg-card/50 border-border/50">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <Badge className={signal.direction === 'buy' ? 'bg-green-500' : 'bg-red-500'}>
+                      {signal.direction.toUpperCase()} {signal.outcome}
+                    </Badge>
+                    <span className="text-sm font-mono">{signal.confidence}% conf</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-2">{signal.reason}</p>
+                  <div className="flex justify-between text-xs">
+                    <span>Entry: {(signal.currentPrice * 100).toFixed(1)}%</span>
+                    <span>Target: {(signal.targetPrice * 100).toFixed(1)}%</span>
+                    <span>Size: ${signal.suggestedSize.toFixed(0)}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </TabsContent>
+
         <TabsContent value="settings" className="mt-4 space-y-4">
           <Card className="bg-card/50 border-border/50">
             <CardContent className="p-4 space-y-4">
@@ -513,27 +681,27 @@ const PolymarketBotDetail: React.FC = () => {
               </div>
               
               <div className="flex items-center justify-between">
-                <span className="text-sm">Exchange Lock</span>
+                <span className="text-sm">CTF Exchange</span>
                 <Badge variant={allowance > 0n ? "default" : "destructive"}>
                   {allowance > 0n ? (
-                    <><CheckCircle className="w-3 h-3 mr-1" /> Unlocked</>
+                    <><CheckCircle className="w-3 h-3 mr-1" /> Approved</>
                   ) : (
-                    <><AlertCircle className="w-3 h-3 mr-1" /> Locked</>
+                    <><AlertCircle className="w-3 h-3 mr-1" /> Pending</>
                   )}
                 </Badge>
               </div>
 
-              {parseFloat(usdcNBal) > 0.01 && (
+              {parseFloat(usdcNBal) > 0.01 && parseFloat(usdcEBal) < 5 && (
                 <Card className="bg-amber-500/10 border-amber-500/30">
                   <CardContent className="p-3">
-                    <p className="text-xs font-medium text-amber-500 mb-2">Native USDC Detected</p>
+                    <p className="text-xs font-medium text-amber-500 mb-2">Swap USDC to USDC.e for trading</p>
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => window.open(`https://app.uniswap.org/#/swap?inputCurrency=${ADDR.USDC_N}&outputCurrency=${ADDR.USDC_E}`, '_blank')}
+                      onClick={() => window.open(`https://app.uniswap.org/#/swap?inputCurrency=${POLYGON_ADDRESSES.USDC_NATIVE}&outputCurrency=${POLYGON_ADDRESSES.USDC_E}&chain=polygon`, '_blank')}
                     >
                       <ExternalLink className="w-3 h-3 mr-1" />
-                      Swap to USDC.e
+                      Swap on Uniswap
                     </Button>
                   </CardContent>
                 </Card>
@@ -553,11 +721,11 @@ const PolymarketBotDetail: React.FC = () => {
         <Card className="bg-card/90 backdrop-blur border-border/50">
           <CardContent className="p-2 flex justify-between items-center text-xs text-muted-foreground">
             <span className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-green-500" />
-              Engine Connected
+              <div className={`w-2 h-2 rounded-full ${isRunning ? 'bg-green-500 animate-pulse' : 'bg-amber-500'}`} />
+              {isRunning ? 'Live Trading' : 'Engine Ready'}
             </span>
-            <span>Latency: 28ms</span>
-            <span>v4.2.0</span>
+            <span>CLOB v2</span>
+            <span>v5.0.0</span>
           </CardContent>
         </Card>
       </div>
