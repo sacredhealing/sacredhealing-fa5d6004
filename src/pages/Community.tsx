@@ -39,16 +39,23 @@ const Community = () => {
     const fetchGuide = async () => {
       if (isAdmin) return;
       
-      // @ts-ignore
-      const { data } = await supabase
+      // First get admin user_ids from user_roles
+      const { data: adminRoles } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'admin')
+        .limit(1);
+      
+      if (!adminRoles || adminRoles.length === 0) return;
+      
+      const { data: profile } = await supabase
         .from('profiles')
         .select('user_id, full_name, avatar_url')
-        .eq('is_admin', true)
-        .limit(1)
+        .eq('user_id', adminRoles[0].user_id)
         .single();
       
-      if (data) {
-        setGuideInfo(data as GuideInfo);
+      if (profile) {
+        setGuideInfo(profile as GuideInfo);
       }
     };
     
@@ -60,15 +67,14 @@ const Community = () => {
     const fetchAdminConversations = async () => {
       if (!isAdmin) return;
 
-      // @ts-ignore
-      const { data: admins } = await supabase
-        .from('profiles')
+      // Get admin user_ids from user_roles table
+      const { data: adminRoles } = await supabase
+        .from('user_roles')
         .select('user_id')
-        .eq('is_admin', true);
+        .eq('role', 'admin');
       
-      const adminIds = new Set((admins || []).map((a: any) => a.user_id));
+      const adminIds = new Set((adminRoles || []).map((a) => a.user_id));
 
-      // @ts-ignore
       const { data: messages } = await supabase
         .from('private_messages')
         .select('sender_id, receiver_id, content, created_at, is_read')
@@ -102,7 +108,6 @@ const Community = () => {
         return;
       }
 
-      // @ts-ignore
       const { data: profiles } = await supabase
         .from('profiles')
         .select('user_id, full_name, avatar_url')
