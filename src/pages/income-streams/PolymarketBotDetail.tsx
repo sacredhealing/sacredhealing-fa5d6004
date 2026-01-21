@@ -178,12 +178,13 @@ const PolymarketBotDetail: React.FC = () => {
           addLog("Trading engine initialized", "success");
         });
         
-        // Initialize paper trading with user ID
+        // Initialize paper trading with user ID and sync mode from database
         if (user?.id) {
           paperTradingService.setUserId(user.id);
           paperTradingService.loadSettings().then(settings => {
             if (settings) {
               setIsPaperMode(settings.is_paper_mode);
+              paperTradingService.setMode(settings.is_paper_mode); // Sync service state
               addLog(`Mode: ${settings.is_paper_mode ? '📝 PAPER TRADING' : '💰 LIVE TRADING'}`, "info");
             }
           });
