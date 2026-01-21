@@ -1,10 +1,10 @@
 // Polymarket API Service
-// Fetches market data from Polymarket's public CLOB API
+// Fetches market data from Polymarket's public CLOB API via backend proxy
 
 import type { PolymarketMarket, PolymarketOutcome } from '@/types/polymarket';
 
-const POLYMARKET_API = 'https://clob.polymarket.com';
-const GAMMA_API = 'https://gamma-api.polymarket.com';
+// Use Edge Function proxy to avoid CORS issues
+const PROXY_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/polymarket-proxy`;
 
 interface CLOBMarket {
   condition_id: string;
@@ -40,11 +40,12 @@ export class PolymarketService {
   private markets: Map<string, PolymarketMarket> = new Map();
   private lastFetch: Date | null = null;
 
-  // Fetch all active markets from Gamma API (easier to parse)
+  // Fetch all active markets via proxy
   async fetchMarkets(limit = 100): Promise<PolymarketMarket[]> {
     try {
+      const params = `limit=${limit}&active=true&closed=false`;
       const response = await fetch(
-        `${GAMMA_API}/markets?limit=${limit}&active=true&closed=false`
+        `${PROXY_URL}?endpoint=markets&params=${encodeURIComponent(params)}`
       );
       
       if (!response.ok) {
@@ -90,10 +91,13 @@ export class PolymarketService {
     }
   }
 
-  // Get order book for a specific token
+  // Get order book for a specific token via proxy
   async getOrderBook(tokenId: string): Promise<{ bids: Array<{ price: number; size: number }>; asks: Array<{ price: number; size: number }> }> {
     try {
-      const response = await fetch(`${POLYMARKET_API}/book?token_id=${tokenId}`);
+      const params = `token_id=${tokenId}`;
+      const response = await fetch(
+        `${PROXY_URL}?endpoint=book&params=${encodeURIComponent(params)}`
+      );
       
       if (!response.ok) {
         throw new Error(`CLOB API error: ${response.status}`);
