@@ -24,6 +24,7 @@ import {
   whaleMirrorService, 
   latencyArbitrageService, 
   volatilityScalperService,
+  paperTradingService,
   STRATEGY_NAMES 
 } from '@/services/polymarket';
 import type { LogEntry, TradeSignal, PolymarketMarket } from '@/types/polymarket';
@@ -67,6 +68,10 @@ const PolymarketBotDetail: React.FC = () => {
   const [totalTrades, setTotalTrades] = useState(0);
   const [winRate, setWinRate] = useState(0);
   const [dailyPnL, setDailyPnL] = useState(0);
+  
+  // Paper trading state
+  const [isPaperMode, setIsPaperMode] = useState(true);
+  const [paperBalance, setPaperBalance] = useState(1000); // $1000 simulated
   
   // Status state
   const [isSyncing, setIsSyncing] = useState(false);
@@ -173,6 +178,23 @@ const PolymarketBotDetail: React.FC = () => {
           addLog("Trading engine initialized", "success");
         });
         
+        // Initialize paper trading with user ID
+        if (user?.id) {
+          paperTradingService.setUserId(user.id);
+          paperTradingService.loadSettings().then(settings => {
+            if (settings) {
+              setIsPaperMode(settings.is_paper_mode);
+              addLog(`Mode: ${settings.is_paper_mode ? '📝 PAPER TRADING' : '💰 LIVE TRADING'}`, "info");
+            }
+          });
+          // Load P&L summary
+          paperTradingService.getPnLSummary(true).then(summary => {
+            setTotalTrades(summary.totalTrades);
+            setWinRate(summary.winRate);
+            setDailyPnL(summary.todayPnL);
+          });
+        }
+        
         performDeepSync(wallet.address);
       } catch (e) {
         console.error("Invalid private key:", e);
@@ -181,7 +203,7 @@ const PolymarketBotDetail: React.FC = () => {
         toast.error("Invalid private key format");
       }
     }
-  }, [privateKey, trading]);
+  }, [privateKey, trading, user?.id]);
 
   // Auto-refresh every 30 seconds
   useEffect(() => {
@@ -206,10 +228,7 @@ const PolymarketBotDetail: React.FC = () => {
           whaleMirrorService.onMirrorSignal(async (signal, whale) => {
             addLog(`🐋 WHALE MIRROR: ${whale.whaleAddress.slice(0,10)}... ${signal.direction} ${signal.outcome}`, "trade");
             setActiveSignals(prev => [...prev.slice(-4), signal]);
-            if (allowance > 0n) {
-              const result = await trading.executeTrade(signal);
-              if (result.success) setTotalTrades(prev => prev + 1);
-            }
+            await executeTradeWithMode(signal, 'whale_mirror');
           });
           whaleMirrorService.startMonitoring();
         }
@@ -227,20 +246,14 @@ const PolymarketBotDetail: React.FC = () => {
           latencyArbitrageService.onLatencySignal(async (signal, event) => {
             addLog(`⚡ LATENCY ARB: ${event.headline?.slice(0,40)}...`, "trade");
             setActiveSignals(prev => [...prev.slice(-4), signal]);
-            if (allowance > 0n && parseFloat(usdcEBal) >= signal.suggestedSize) {
-              const result = await trading.executeTrade(signal);
-              if (result.success) setTotalTrades(prev => prev + 1);
-            }
+            await executeTradeWithMode(signal, 'latency_arb');
           });
           latencyArbitrageService.startMonitoring(fetchedMarkets);
           
           volatilityScalperService.onScalpSignal(async (signal, ctx) => {
             addLog(`📈 SCALP: ${ctx.ladder} vol=${(ctx.volatility*100).toFixed(2)}%`, "trade");
             setActiveSignals(prev => [...prev.slice(-4), signal]);
-            if (allowance > 0n && parseFloat(usdcEBal) >= signal.suggestedSize) {
-              const result = await trading.executeTrade(signal);
-              if (result.success) setTotalTrades(prev => prev + 1);
-            }
+            await executeTradeWithMode(signal, 'volatility_scalp');
           });
           volatilityScalperService.startScalping(fetchedMarkets);
           
@@ -253,13 +266,7 @@ const PolymarketBotDetail: React.FC = () => {
               if (signal) {
                 setActiveSignals(prev => [...prev.slice(-4), signal]);
                 addLog(`🤖 AI SIGNAL: ${signal.direction.toUpperCase()} ${signal.outcome} @ ${(signal.currentPrice * 100).toFixed(1)}%`, "trade");
-                if (allowance > 0n && parseFloat(usdcEBal) >= signal.suggestedSize) {
-                  const result = await trading.executeTrade(signal);
-                  if (result.success) {
-                    setTotalTrades(prev => prev + 1);
-                    addLog(`✅ Trade executed: ${result.txHash}`, "success");
-                  }
-                }
+                await executeTradeWithMode(signal, 'ai_signal');
               }
             }
           }
@@ -364,19 +371,59 @@ const PolymarketBotDetail: React.FC = () => {
     toast.info("Wallet disconnected");
   };
 
+  // Toggle paper/live mode
+  const toggleTradingMode = async () => {
+    const newMode = !isPaperMode;
+    setIsPaperMode(newMode);
+    paperTradingService.setMode(newMode);
+    await paperTradingService.saveSettings({ is_paper_mode: newMode });
+    addLog(`Switched to ${newMode ? '📝 PAPER TRADING' : '💰 LIVE TRADING'} mode`, "info");
+    toast.success(`${newMode ? 'Paper' : 'Live'} trading mode enabled`);
+  };
+
+  // Execute trade helper - routes to paper or live
+  const executeTradeWithMode = async (signal: TradeSignal, strategy?: string): Promise<boolean> => {
+    if (isPaperMode) {
+      const result = await paperTradingService.executePaperTrade(signal, strategy);
+      if (result.success) {
+        addLog(`📝 PAPER: ${signal.direction} ${signal.outcome} $${signal.suggestedSize.toFixed(2)}`, "success");
+        setTotalTrades(prev => prev + 1);
+        return true;
+      }
+      addLog(`📝 PAPER FAILED: ${result.error}`, "error");
+      return false;
+    } else {
+      if (allowance === 0n) {
+        addLog("Cannot trade: USDC.e not approved", "error");
+        return false;
+      }
+      const result = await trading.executeTrade(signal);
+      if (result.success) {
+        addLog(`💰 LIVE: ${signal.direction} ${signal.outcome} tx: ${result.txHash}`, "success");
+        setTotalTrades(prev => prev + 1);
+        return true;
+      }
+      addLog(`💰 LIVE FAILED: ${result.error}`, "error");
+      return false;
+    }
+  };
+
   const toggleBot = () => {
     if (!isRunning) {
-      if (allowance === 0n) {
-        toast.error("Approve USDC.e first to enable trading");
-        return;
-      }
-      if (parseFloat(usdcEBal) < 5) {
-        toast.error("Minimum $5 USDC.e required to trade");
-        return;
+      // Paper mode doesn't need approval
+      if (!isPaperMode) {
+        if (allowance === 0n) {
+          toast.error("Approve USDC.e first to enable live trading");
+          return;
+        }
+        if (parseFloat(usdcEBal) < 5) {
+          toast.error("Minimum $5 USDC.e required for live trading");
+          return;
+        }
       }
       setIsRunning(true);
-      addLog("HFT Engine Started. Scanning Polymarket...", "success");
-      toast.success("Bot started - scanning markets");
+      addLog(`HFT Engine Started in ${isPaperMode ? 'PAPER' : 'LIVE'} mode...`, "success");
+      toast.success(`Bot started - ${isPaperMode ? 'Paper' : 'Live'} trading active`);
     } else {
       setIsRunning(false);
       addLog("Engine halted by operator.", "warn");
@@ -708,6 +755,38 @@ const PolymarketBotDetail: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="settings" className="mt-4 space-y-4">
+          {/* Paper/Live Mode Toggle */}
+          <Card className={`border-2 ${isPaperMode ? 'bg-amber-500/10 border-amber-500/30' : 'bg-green-500/10 border-green-500/30'}`}>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">{isPaperMode ? '📝 Paper Trading' : '💰 Live Trading'}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {isPaperMode 
+                      ? 'Simulated trades, no real money at risk' 
+                      : 'Real trades with your USDC.e balance'}
+                  </p>
+                </div>
+                <Button 
+                  onClick={toggleTradingMode}
+                  variant={isPaperMode ? "default" : "destructive"}
+                  size="sm"
+                  disabled={isRunning}
+                >
+                  {isPaperMode ? 'Go Live' : 'Go Paper'}
+                </Button>
+              </div>
+              {isPaperMode && (
+                <div className="mt-3 pt-3 border-t border-border/50">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Paper Balance:</span>
+                    <span className="font-bold text-amber-400">$1,000.00</span>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           <Card className="bg-card/50 border-border/50">
             <CardContent className="p-4 space-y-4">
               <div>
@@ -757,10 +836,10 @@ const PolymarketBotDetail: React.FC = () => {
           <CardContent className="p-2 flex justify-between items-center text-xs text-muted-foreground">
             <span className="flex items-center gap-2">
               <div className={`w-2 h-2 rounded-full ${isRunning ? 'bg-green-500 animate-pulse' : 'bg-amber-500'}`} />
-              {isRunning ? 'Live Trading' : 'Engine Ready'}
+              {isRunning ? (isPaperMode ? '📝 Paper Trading' : '💰 Live Trading') : 'Engine Ready'}
             </span>
-            <span>CLOB v2</span>
-            <span>v5.0.0</span>
+            <span>{isPaperMode ? 'PAPER' : 'LIVE'} • CLOB v2</span>
+            <span>v5.1.0</span>
           </CardContent>
         </Card>
       </div>
