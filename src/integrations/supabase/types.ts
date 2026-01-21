@@ -3452,6 +3452,189 @@ export type Database = {
           },
         ]
       }
+      polymarket_bot_settings: {
+        Row: {
+          admin_profit_split: number | null
+          created_at: string
+          daily_loss_limit: number | null
+          id: string
+          is_paper_mode: boolean
+          max_trade_size: number | null
+          strategies_enabled: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_profit_split?: number | null
+          created_at?: string
+          daily_loss_limit?: number | null
+          id?: string
+          is_paper_mode?: boolean
+          max_trade_size?: number | null
+          strategies_enabled?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_profit_split?: number | null
+          created_at?: string
+          daily_loss_limit?: number | null
+          id?: string
+          is_paper_mode?: boolean
+          max_trade_size?: number | null
+          strategies_enabled?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      polymarket_pnl_daily: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          is_paper: boolean
+          realized_pnl: number | null
+          total_trades: number | null
+          unrealized_pnl: number | null
+          user_id: string
+          winning_trades: number | null
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          id?: string
+          is_paper?: boolean
+          realized_pnl?: number | null
+          total_trades?: number | null
+          unrealized_pnl?: number | null
+          user_id: string
+          winning_trades?: number | null
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          is_paper?: boolean
+          realized_pnl?: number | null
+          total_trades?: number | null
+          unrealized_pnl?: number | null
+          user_id?: string
+          winning_trades?: number | null
+        }
+        Relationships: []
+      }
+      polymarket_positions: {
+        Row: {
+          avg_entry_price: number
+          created_at: string
+          current_price: number | null
+          id: string
+          is_paper: boolean
+          market_id: string
+          market_question: string | null
+          outcome: string
+          token_id: string
+          total_shares: number
+          unrealized_pnl: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avg_entry_price: number
+          created_at?: string
+          current_price?: number | null
+          id?: string
+          is_paper?: boolean
+          market_id: string
+          market_question?: string | null
+          outcome: string
+          token_id: string
+          total_shares?: number
+          unrealized_pnl?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avg_entry_price?: number
+          created_at?: string
+          current_price?: number | null
+          id?: string
+          is_paper?: boolean
+          market_id?: string
+          market_question?: string | null
+          outcome?: string
+          token_id?: string
+          total_shares?: number
+          unrealized_pnl?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      polymarket_trades: {
+        Row: {
+          amount_usdc: number
+          closed_at: string | null
+          created_at: string
+          direction: string
+          entry_price: number
+          exit_price: number | null
+          id: string
+          is_paper: boolean
+          market_id: string
+          market_question: string | null
+          outcome: string
+          pnl: number | null
+          shares: number
+          status: string
+          strategy: string | null
+          token_id: string
+          tx_hash: string | null
+          user_id: string
+        }
+        Insert: {
+          amount_usdc: number
+          closed_at?: string | null
+          created_at?: string
+          direction: string
+          entry_price: number
+          exit_price?: number | null
+          id?: string
+          is_paper?: boolean
+          market_id: string
+          market_question?: string | null
+          outcome: string
+          pnl?: number | null
+          shares?: number
+          status?: string
+          strategy?: string | null
+          token_id: string
+          tx_hash?: string | null
+          user_id: string
+        }
+        Update: {
+          amount_usdc?: number
+          closed_at?: string | null
+          created_at?: string
+          direction?: string
+          entry_price?: number
+          exit_price?: number | null
+          id?: string
+          is_paper?: boolean
+          market_id?: string
+          market_question?: string | null
+          outcome?: string
+          pnl?: number | null
+          shares?: number
+          status?: string
+          strategy?: string | null
+          token_id?: string
+          tx_hash?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       post_comments: {
         Row: {
           content: string
