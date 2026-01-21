@@ -60,7 +60,6 @@ const ChatContainer = ({
       setIsLoading(true);
 
       try {
-        // @ts-ignore
         const { data, error } = await supabase
           .from('private_messages')
           .select('*')
