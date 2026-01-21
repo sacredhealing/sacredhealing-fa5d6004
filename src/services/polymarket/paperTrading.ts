@@ -50,12 +50,20 @@ export interface BotSettings {
     ai_signal: boolean;
   };
   admin_profit_split: number;
+  paper_balance: number;
+  total_fees_paid: number;
 }
+
+// Trading simulation constants
+const TAKER_FEE_RATE = 0.0005; // 0.05% taker fee
+const SLIPPAGE_BASE = 0.001; // 0.1% base slippage
+const SLIPPAGE_SIZE_FACTOR = 0.0001; // Additional slippage per $100 traded
+const ORDER_FAILURE_RATE = 0.03; // 3% chance of order rejection
+const PROXY_URL = 'https://asia-southeast1-stockgpt-438008.cloudfunctions.net/polymarketProxy';
 
 export class PaperTradingService {
   private userId: string | null = null;
   private isPaperMode = true;
-  private simulatedBalance = 1000; // Start with $1000 paper balance
 
   setUserId(userId: string): void {
     this.userId = userId;
@@ -69,20 +77,185 @@ export class PaperTradingService {
     return this.isPaperMode;
   }
 
-  // Execute a simulated trade
+  // Get current paper balance
+  async getPaperBalance(): Promise<number> {
+    if (!this.userId) return 1000;
+    
+    const settings = await this.loadSettings();
+    return settings?.paper_balance ?? 1000;
+  }
+
+  // Calculate realistic execution price with slippage
+  private async calculateExecutionPrice(
+    tokenId: string, 
+    size: number, 
+    direction: 'buy' | 'sell',
+    midPrice: number
+  ): Promise<{ executionPrice: number; slippage: number }> {
+    try {
+      // Fetch order book for realistic pricing
+      const response = await fetch(
+        `${PROXY_URL}?endpoint=book&params=token_id=${tokenId}`
+      );
+      
+      if (!response.ok) {
+        // Fall back to slippage estimation
+        const slippage = SLIPPAGE_BASE + (size / 100) * SLIPPAGE_SIZE_FACTOR;
+        const executionPrice = direction === 'buy' 
+          ? midPrice * (1 + slippage) 
+          : midPrice * (1 - slippage);
+        return { executionPrice, slippage };
+      }
+      
+      const book = await response.json();
+      
+      // For buys, we hit asks; for sells, we hit bids
+      const orders = direction === 'buy' ? book.asks : book.bids;
+      
+      if (!orders || orders.length === 0) {
+        const slippage = SLIPPAGE_BASE;
+        const executionPrice = direction === 'buy' 
+          ? midPrice * (1 + slippage) 
+          : midPrice * (1 - slippage);
+        return { executionPrice, slippage };
+      }
+      
+      // Calculate volume-weighted average price (VWAP) for our order size
+      let remainingSize = size;
+      let totalCost = 0;
+      
+      for (const order of orders) {
+        const orderPrice = parseFloat(order.price);
+        const orderSize = parseFloat(order.size) * orderPrice; // Convert shares to USD value
+        
+        if (remainingSize <= 0) break;
+        
+        const fillSize = Math.min(remainingSize, orderSize);
+        totalCost += fillSize * orderPrice;
+        remainingSize -= fillSize;
+      }
+      
+      // If we couldn't fill the entire order, add extra slippage
+      if (remainingSize > 0) {
+        const lastPrice = parseFloat(orders[orders.length - 1]?.price || midPrice.toString());
+        const extraSlippage = 0.02; // 2% extra for illiquid markets
+        totalCost += remainingSize * lastPrice * (direction === 'buy' ? (1 + extraSlippage) : (1 - extraSlippage));
+      }
+      
+      const executionPrice = totalCost / size;
+      const slippage = Math.abs(executionPrice - midPrice) / midPrice;
+      
+      return { executionPrice, slippage };
+    } catch (error) {
+      console.error('[PaperTrading] Price calculation error:', error);
+      const slippage = SLIPPAGE_BASE;
+      const executionPrice = direction === 'buy' 
+        ? midPrice * (1 + slippage) 
+        : midPrice * (1 - slippage);
+      return { executionPrice, slippage };
+    }
+  }
+
+  // Simulate order failure scenarios
+  private simulateOrderOutcome(): { success: boolean; failureReason?: string } {
+    const random = Math.random();
+    
+    if (random < ORDER_FAILURE_RATE) {
+      const failureReasons = [
+        'Order rejected: Insufficient liquidity',
+        'Order rejected: Price moved too fast',
+        'Order rejected: Market temporarily unavailable',
+        'Order rejected: Rate limit exceeded',
+      ];
+      return {
+        success: false,
+        failureReason: failureReasons[Math.floor(Math.random() * failureReasons.length)],
+      };
+    }
+    
+    return { success: true };
+  }
+
+  // Execute a realistic simulated trade
   async executePaperTrade(signal: TradeSignal, strategy?: string): Promise<TradeResult> {
     if (!this.userId) {
       return { success: false, error: 'User not authenticated' };
     }
 
     try {
-      // Calculate shares received
-      const shares = signal.suggestedSize / signal.currentPrice;
+      // Load current settings including balance
+      const settings = await this.loadSettings();
+      if (!settings) {
+        return { success: false, error: 'Failed to load trading settings' };
+      }
+
+      const currentBalance = settings.paper_balance ?? 1000;
+
+      // Check if we have enough balance for buy orders
+      if (signal.direction === 'buy' && signal.suggestedSize > currentBalance) {
+        console.log('[PaperTrading] Insufficient balance:', currentBalance, 'needed:', signal.suggestedSize);
+        return { 
+          success: false, 
+          error: `Insufficient paper balance: €${currentBalance.toFixed(2)} available, €${signal.suggestedSize.toFixed(2)} needed` 
+        };
+      }
+
+      // Simulate order outcome (random failures)
+      const orderOutcome = this.simulateOrderOutcome();
+      if (!orderOutcome.success) {
+        console.log('[PaperTrading] Simulated order failure:', orderOutcome.failureReason);
+        
+        // Record failed trade
+        await supabase
+          .from('polymarket_trades')
+          .insert({
+            user_id: this.userId,
+            market_id: signal.marketId,
+            market_question: signal.reason,
+            outcome: signal.outcome,
+            token_id: signal.tokenId,
+            direction: signal.direction,
+            shares: 0,
+            entry_price: signal.currentPrice,
+            amount_usdc: signal.suggestedSize,
+            tx_hash: `paper-failed-${Date.now()}`,
+            strategy: strategy || 'manual',
+            is_paper: true,
+            status: 'failed',
+          });
+
+        return { success: false, error: orderOutcome.failureReason };
+      }
+
+      // Calculate realistic execution price with slippage
+      const { executionPrice, slippage } = await this.calculateExecutionPrice(
+        signal.tokenId,
+        signal.suggestedSize,
+        signal.direction,
+        signal.currentPrice
+      );
+
+      // Calculate trading fee
+      const feeAmount = signal.suggestedSize * TAKER_FEE_RATE;
+      const totalCost = signal.direction === 'buy' 
+        ? signal.suggestedSize + feeAmount 
+        : feeAmount; // For sells, fee is deducted from proceeds
+
+      // Double-check balance after fees for buys
+      if (signal.direction === 'buy' && totalCost > currentBalance) {
+        return { 
+          success: false, 
+          error: `Insufficient balance after fees: €${currentBalance.toFixed(2)} available, €${totalCost.toFixed(2)} needed (includes €${feeAmount.toFixed(4)} fee)` 
+        };
+      }
+
+      // Calculate shares received (using realistic execution price, not mid-price)
+      const shares = signal.suggestedSize / executionPrice;
       
       // Generate fake tx hash for paper trades
       const fakeTxHash = `paper-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
-      // Insert trade record
+      // Insert trade record with realistic pricing
       const { data: trade, error: tradeError } = await supabase
         .from('polymarket_trades')
         .insert({
@@ -93,7 +266,7 @@ export class PaperTradingService {
           token_id: signal.tokenId,
           direction: signal.direction,
           shares,
-          entry_price: signal.currentPrice,
+          entry_price: executionPrice, // Use realistic execution price
           amount_usdc: signal.suggestedSize,
           tx_hash: fakeTxHash,
           strategy: strategy || 'manual',
@@ -108,19 +281,40 @@ export class PaperTradingService {
         return { success: false, error: tradeError.message };
       }
 
-      // Update or create position
-      await this.updatePosition(signal, shares);
+      // Update balance
+      const newBalance = signal.direction === 'buy'
+        ? currentBalance - totalCost
+        : currentBalance + (shares * executionPrice) - feeAmount;
+
+      await supabase
+        .from('polymarket_bot_settings')
+        .update({
+          paper_balance: newBalance,
+          total_fees_paid: (settings.total_fees_paid ?? 0) + feeAmount,
+        })
+        .eq('user_id', this.userId);
+
+      // Update or create position (using realistic execution price)
+      const adjustedSignal = { ...signal, currentPrice: executionPrice };
+      await this.updatePosition(adjustedSignal, shares);
 
       // Update daily P&L
       await this.updateDailyPnL(0, 1, false);
 
-      console.log('[PaperTrading] Paper trade executed:', trade);
+      console.log('[PaperTrading] Realistic paper trade executed:', {
+        midPrice: signal.currentPrice,
+        executionPrice,
+        slippage: `${(slippage * 100).toFixed(3)}%`,
+        fee: feeAmount,
+        shares,
+        newBalance,
+      });
 
       return {
         success: true,
         txHash: fakeTxHash,
         sharesReceived: BigInt(Math.floor(shares * 1e6)),
-        amountSpent: signal.suggestedSize,
+        amountSpent: totalCost,
       };
     } catch (err) {
       console.error('[PaperTrading] Execution error:', err);
@@ -431,6 +625,21 @@ export class PaperTradingService {
     };
   }
 
+  // Reset paper trading balance
+  async resetPaperBalance(amount: number = 1000): Promise<boolean> {
+    if (!this.userId) return false;
+
+    const { error } = await supabase
+      .from('polymarket_bot_settings')
+      .update({
+        paper_balance: amount,
+        total_fees_paid: 0,
+      })
+      .eq('user_id', this.userId);
+
+    return !error;
+  }
+
   // Load/save bot settings
   async loadSettings(): Promise<BotSettings | null> {
     if (!this.userId) return null;
@@ -454,6 +663,8 @@ export class PaperTradingService {
           ai_signal: true,
         },
         admin_profit_split: 0.1111,
+        paper_balance: 1000,
+        total_fees_paid: 0,
       };
 
       await supabase
@@ -472,6 +683,8 @@ export class PaperTradingService {
       daily_loss_limit: data.daily_loss_limit,
       strategies_enabled: data.strategies_enabled as BotSettings['strategies_enabled'],
       admin_profit_split: data.admin_profit_split,
+      paper_balance: data.paper_balance ?? 1000,
+      total_fees_paid: data.total_fees_paid ?? 0,
     };
   }
 

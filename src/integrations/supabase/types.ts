@@ -3460,7 +3460,9 @@ export type Database = {
           id: string
           is_paper_mode: boolean
           max_trade_size: number | null
+          paper_balance: number | null
           strategies_enabled: Json | null
+          total_fees_paid: number | null
           updated_at: string
           user_id: string
         }
@@ -3471,7 +3473,9 @@ export type Database = {
           id?: string
           is_paper_mode?: boolean
           max_trade_size?: number | null
+          paper_balance?: number | null
           strategies_enabled?: Json | null
+          total_fees_paid?: number | null
           updated_at?: string
           user_id: string
         }
@@ -3482,7 +3486,9 @@ export type Database = {
           id?: string
           is_paper_mode?: boolean
           max_trade_size?: number | null
+          paper_balance?: number | null
           strategies_enabled?: Json | null
+          total_fees_paid?: number | null
           updated_at?: string
           user_id?: string
         }

@@ -74,6 +74,7 @@ const PolymarketBotDetail: React.FC = () => {
   // Paper trading state
   const [isPaperMode, setIsPaperMode] = useState(true);
   const [paperBalance, setPaperBalance] = useState(1000); // $1000 simulated
+  const [totalFeesPaid, setTotalFeesPaid] = useState(0);
   
   // PnL tracking state
   const [pnlSummary, setPnlSummary] = useState({
@@ -123,15 +124,32 @@ const PolymarketBotDetail: React.FC = () => {
       paperTradingService.refreshPositionPrices(false)
     ]);
     
-    // Then get updated PnL summary
-    const [paperSummary, liveSummary] = await Promise.all([
+    // Then get updated PnL summary and settings
+    const [paperSummary, liveSummary, settings] = await Promise.all([
       paperTradingService.getPnLSummary(true),
-      paperTradingService.getPnLSummary(false)
+      paperTradingService.getPnLSummary(false),
+      paperTradingService.loadSettings()
     ]);
     setPnlSummary(paperSummary);
     setLivePnlSummary(liveSummary);
     setTotalTrades(paperSummary.totalTrades + liveSummary.totalTrades);
+    
+    // Update paper balance and fees from settings
+    if (settings) {
+      setPaperBalance(settings.paper_balance ?? 1000);
+      setTotalFeesPaid(settings.total_fees_paid ?? 0);
+    }
   }, [user?.id]);
+
+  // Reset paper balance handler
+  const handleResetPaperBalance = useCallback(async () => {
+    const success = await paperTradingService.resetPaperBalance(1000);
+    if (success) {
+      setPaperBalance(1000);
+      setTotalFeesPaid(0);
+      addLog('Paper balance reset to €1000', 'success');
+    }
+  }, [addLog]);
 
   // Auto-refresh PnL when bot is running
   useEffect(() => {
@@ -677,6 +695,9 @@ const PolymarketBotDetail: React.FC = () => {
             totalTrades={isPaperMode ? pnlSummary.totalTrades : livePnlSummary.totalTrades}
             winRate={isPaperMode ? pnlSummary.winRate : livePnlSummary.winRate}
             startingBalance={1000}
+            currentBalance={isPaperMode ? paperBalance : undefined}
+            totalFees={isPaperMode ? totalFeesPaid : undefined}
+            onResetBalance={isPaperMode ? handleResetPaperBalance : undefined}
           />
         </div>
 
