@@ -170,3 +170,6 @@ verify_jwt = false
 
 [functions.gemini-bridge]
 verify_jwt = false
+
+[functions.guide-chat]
+verify_jwt = true
