@@ -61,6 +61,7 @@ const PolymarketBotDetail: React.FC = () => {
   const [usdcEBal, setUsdcEBal] = useState<string>("0.00");
   const [usdcNBal, setUsdcNBal] = useState<string>("0.00");
   const [allowance, setAllowance] = useState<bigint>(0n);
+  const [ctAllowance, setCtAllowance] = useState<boolean>(false); // Conditional tokens approval
   
   // Trading state
   const [trading] = useState(() => new PolymarketTrading());
@@ -711,8 +712,8 @@ const PolymarketBotDetail: React.FC = () => {
           </Button>
         </div>
 
-        {/* Approval Warning */}
-        {allowance === 0n && (
+        {/* Approval Warning - only show if user has USDC.e and hasn't approved */}
+        {parseFloat(usdcEBal) > 0 && allowance === 0n && (
           <Card className="bg-amber-500/10 border-amber-500/30 mb-4">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
@@ -725,6 +726,7 @@ const PolymarketBotDetail: React.FC = () => {
                   size="sm" 
                   onClick={handleApprove} 
                   disabled={isApproving || parseFloat(polBal) < 0.01}
+                  className="bg-primary hover:bg-primary/90"
                 >
                   {isApproving ? 'Signing...' : 'Approve'}
                 </Button>
@@ -732,6 +734,23 @@ const PolymarketBotDetail: React.FC = () => {
               {parseFloat(polBal) < 0.01 && (
                 <p className="text-xs text-red-400 mt-2">Need POL for gas fees</p>
               )}
+            </CardContent>
+          </Card>
+        )}
+        
+        {/* No funds warning */}
+        {parseFloat(usdcEBal) === 0 && parseFloat(usdcNBal) === 0 && (
+          <Card className="bg-muted/50 border-border/50 mb-4">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <DollarSign className="w-5 h-5 text-muted-foreground" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">No Trading Funds</p>
+                  <p className="text-xs text-muted-foreground">
+                    Deposit USDC.e to your wallet to start trading. Paper trading works without funds.
+                  </p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         )}
