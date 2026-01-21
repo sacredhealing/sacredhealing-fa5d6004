@@ -6,8 +6,9 @@ import type { TradeSignal } from '@/types/polymarket';
 
 // Target whale wallets to monitor
 export const WHALE_TARGETS = {
-  '0x8dxd': '0x8dXd0fd6Fb4c7B1c5E3f5f6f8f9f0f1f2f3f4f5f6', // Placeholder - need real address
-  // Add more whales here
+  // 0x8dxd - High-frequency trader with ~98% win rate
+  // Profile: polymarket.com/profile/0x63ce342161250d705dc0b16df89036c8e5f9ba9a
+  '0x8dxd': '0x63ce342161250d705dc0b16df89036c8e5f9ba9a',
 };
 
 // Polymarket CTF contract events
