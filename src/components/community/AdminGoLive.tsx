@@ -45,7 +45,7 @@ const AdminGoLive = () => {
           Go Live
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-lg sm:max-w-xl md:max-w-2xl max-h-[85vh] overflow-y-auto mx-auto">
         <DialogHeader>
           <DialogTitle>
             {activeStream ? 'You are LIVE!' : 'Start a Live Stream'}
