@@ -109,6 +109,19 @@ export const useSpiritualPaths = () => {
     mutationFn: async (pathId: string) => {
       if (!user) throw new Error('Must be logged in');
 
+      // Check if user already has progress for this path
+      const { data: existingProgress } = await supabase
+        .from('user_path_progress')
+        .select('*, spiritual_paths(*)')
+        .eq('user_id', user.id)
+        .eq('path_id', pathId)
+        .maybeSingle();
+
+      if (existingProgress) {
+        // Already started - return existing progress
+        return existingProgress;
+      }
+
       const { data, error } = await supabase
         .from('user_path_progress')
         .insert({
@@ -137,9 +150,13 @@ export const useSpiritualPaths = () => {
       
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data, pathId) => {
       queryClient.invalidateQueries({ queryKey: ['user-path-progress'] });
-      toast.success('Your spiritual path has begun! 🌟');
+      // Only show "begun" message if this is truly a new start
+      const isNewStart = data.current_day === 1 && !data.completed_at;
+      if (isNewStart) {
+        toast.success('Your spiritual path has begun! 🌟');
+      }
     },
     onError: (error) => {
       console.error('Error starting path:', error);
@@ -212,6 +229,7 @@ export const useSpiritualPaths = () => {
   return {
     paths: pathsQuery.data || [],
     isLoading: pathsQuery.isLoading,
+    isProgressLoading: userProgressQuery.isLoading,
     userProgress: userProgressQuery.data || [],
     getPathBySlug,
     getPathDays,

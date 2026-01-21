@@ -22,7 +22,7 @@ const PATH_SLUG_MAP: Record<string, string> = {
 const PathDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const { getPathBySlug, getPathDays, getProgressForPath, startPath, completeDay } = useSpiritualPaths();
+  const { getPathBySlug, getPathDays, getProgressForPath, startPath, completeDay, isProgressLoading, userProgress } = useSpiritualPaths();
   
   // Fetch path-specific music tracks
   const pathTrackSlug = slug ? PATH_SLUG_MAP[slug] || slug.replace(/-/g, '_') : undefined;
@@ -44,7 +44,6 @@ const PathDetail: React.FC = () => {
           setPath(pathData);
           const daysData = await getPathDays(pathData.id);
           setDays(daysData);
-          setProgress(getProgressForPath(pathData.id));
         }
       } catch (error) {
         console.error('Error fetching path:', error);
@@ -56,7 +55,14 @@ const PathDetail: React.FC = () => {
     fetchPath();
   }, [slug]);
 
-  if (isLoading) {
+  // Update progress when userProgress data loads or path changes
+  useEffect(() => {
+    if (path && !isProgressLoading) {
+      setProgress(getProgressForPath(path.id));
+    }
+  }, [path, userProgress, isProgressLoading]);
+
+  if (isLoading || isProgressLoading) {
     return (
       <div className="min-h-screen px-4 pt-6 pb-24">
         <Skeleton className="h-48 w-full rounded-xl mb-6" />
