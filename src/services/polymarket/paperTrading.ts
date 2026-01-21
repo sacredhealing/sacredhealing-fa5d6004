@@ -270,6 +270,49 @@ export class PaperTradingService {
     })) as PaperTrade[];
   }
 
+  // Refresh position prices from market
+  async refreshPositionPrices(isPaper = true): Promise<void> {
+    if (!this.userId) return;
+
+    const positions = await this.getPositions(isPaper);
+    
+    // Limit to 5 positions per cycle to avoid rate limiting
+    for (const position of positions.slice(0, 5)) {
+      try {
+        // Fetch current market price via proxy
+        const response = await fetch(
+          `https://asia-southeast1-stockgpt-438008.cloudfunctions.net/polymarketProxy?endpoint=book&params=token_id=${position.token_id}`
+        );
+        
+        if (!response.ok) continue;
+        
+        const book = await response.json();
+        
+        // Get mid-price from order book
+        const bestBid = parseFloat(book.bids?.[0]?.price || '0') || position.avg_entry_price;
+        const bestAsk = parseFloat(book.asks?.[0]?.price || '0') || position.avg_entry_price;
+        const currentPrice = (bestBid + bestAsk) / 2 || position.avg_entry_price;
+        
+        // Calculate new unrealized PnL
+        const unrealizedPnL = (currentPrice - position.avg_entry_price) * position.total_shares;
+        
+        // Update position in database
+        await supabase
+          .from('polymarket_positions')
+          .update({
+            current_price: currentPrice,
+            unrealized_pnl: unrealizedPnL,
+          })
+          .eq('id', position.id);
+          
+        // Small delay between requests
+        await new Promise(r => setTimeout(r, 200));
+      } catch (error) {
+        console.error('[PaperTrading] Price refresh error:', error);
+      }
+    }
+  }
+
   // Get P&L summary including unrealized P&L from open positions
   async getPnLSummary(isPaper = true): Promise<{
     totalPnL: number;
