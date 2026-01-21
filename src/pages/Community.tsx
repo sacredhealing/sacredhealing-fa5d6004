@@ -63,7 +63,7 @@ const Community = () => {
     fetchGuide();
   }, [isAdmin]);
 
-  // For admins - fetch all user conversations
+  // For admins - fetch all users (not just those with conversations)
   useEffect(() => {
     const fetchAdminConversations = async () => {
       if (!isAdmin) return;
@@ -76,6 +76,7 @@ const Community = () => {
       
       const adminIds = new Set((adminRoles || []).map((a) => a.user_id));
 
+      // Get all messages for conversation info
       const { data: messages } = await supabase
         .from('private_messages')
         .select('sender_id, receiver_id, content, created_at, is_read')
@@ -103,34 +104,34 @@ const Community = () => {
         }
       });
 
-      const userIds = Array.from(userConvs.keys());
-      if (userIds.length === 0) {
-        setAdminConversations([]);
-        return;
-      }
-
-      const { data: profiles } = await supabase
+      // Fetch ALL non-admin profiles so admin can message anyone
+      const { data: allProfiles } = await supabase
         .from('profiles')
         .select('user_id, full_name, avatar_url')
-        .in('user_id', userIds);
+        .order('full_name', { ascending: true });
 
-      const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+      // Filter out admins and build the list
+      const convList = (allProfiles || [])
+        .filter((p: any) => !adminIds.has(p.user_id))
+        .map((profile: any) => {
+          const conv = userConvs.get(profile.user_id);
+          return {
+            id: profile.user_id,
+            name: profile.full_name || 'Anonymous User',
+            avatar: profile.avatar_url || null,
+            lastMessage: conv?.lastMessage || 'No messages yet',
+            lastMessageTime: conv?.lastTime ? formatDistanceToNow(new Date(conv.lastTime), { addSuffix: true }) : '',
+            unreadCount: conv?.unread || 0,
+            isOnline: true
+          };
+        });
 
-      const convList = userIds.map(uid => {
-        const conv = userConvs.get(uid)!;
-        const profile = profileMap.get(uid);
-        return {
-          id: uid,
-          name: profile?.full_name || 'Anonymous User',
-          avatar: profile?.avatar_url || null,
-          lastMessage: conv.lastMessage,
-          lastMessageTime: formatDistanceToNow(new Date(conv.lastTime), { addSuffix: true }),
-          unreadCount: conv.unread,
-          isOnline: true
-        };
+      // Sort by unread count first, then by name
+      convList.sort((a, b) => {
+        if (b.unreadCount !== a.unreadCount) return b.unreadCount - a.unreadCount;
+        return a.name.localeCompare(b.name);
       });
-
-      convList.sort((a, b) => b.unreadCount - a.unreadCount);
+      
       setAdminConversations(convList);
     };
 
