@@ -524,19 +524,26 @@ export const usePostComments = (postId: string) => {
 export const useAllUsers = () => {
   const { user } = useAuth();
   const [users, setUsers] = useState<{ user_id: string; full_name: string | null; avatar_url: string | null; bio: string | null }[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchUsers = async () => {
+      setIsLoading(true);
       const { data } = await supabase
         .from('profiles')
         .select('user_id, full_name, avatar_url, bio')
         .neq('user_id', user?.id || '');
 
       setUsers(data || []);
+      setIsLoading(false);
     };
 
-    if (user) fetchUsers();
+    if (user) {
+      fetchUsers();
+    } else {
+      setIsLoading(false);
+    }
   }, [user]);
 
-  return users;
+  return { users, isLoading };
 };

@@ -117,13 +117,15 @@ const PrivateMessages = () => {
 
 const UserSelector = ({ onSelect }: { onSelect: (userId: string) => void }) => {
   const { t } = useTranslation();
-  const users = useAllUsers();
+  const { users, isLoading } = useAllUsers();
   const [search, setSearch] = useState('');
 
-  const filteredUsers = users.filter(
-    (u) => u.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-           u.bio?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredUsers = search.trim() 
+    ? users.filter(
+        (u) => u.full_name?.toLowerCase().includes(search.toLowerCase()) ||
+               u.bio?.toLowerCase().includes(search.toLowerCase())
+      )
+    : users; // Show all users when no search term
 
   return (
     <div className="space-y-4 pt-4">
@@ -137,8 +139,14 @@ const UserSelector = ({ onSelect }: { onSelect: (userId: string) => void }) => {
         />
       </div>
       <ScrollArea className="h-64">
-        {filteredUsers.length === 0 ? (
-          <p className="text-center text-muted-foreground py-4">{t('community.noUsersFound')}</p>
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+        ) : filteredUsers.length === 0 ? (
+          <p className="text-center text-muted-foreground py-4">
+            {search.trim() ? t('community.noUsersFound') : t('community.noUsersAvailable', 'No other users available yet')}
+          </p>
         ) : (
           <div className="space-y-2">
             {filteredUsers.map((user) => (
