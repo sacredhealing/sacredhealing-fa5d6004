@@ -523,13 +523,13 @@ export const usePostComments = (postId: string) => {
 
 export const useAllUsers = () => {
   const { user } = useAuth();
-  const [users, setUsers] = useState<{ user_id: string; full_name: string | null; avatar_url: string | null }[]>([]);
+  const [users, setUsers] = useState<{ user_id: string; full_name: string | null; avatar_url: string | null; bio: string | null }[]>([]);
 
   useEffect(() => {
     const fetchUsers = async () => {
       const { data } = await supabase
         .from('profiles')
-        .select('user_id, full_name, avatar_url')
+        .select('user_id, full_name, avatar_url, bio')
         .neq('user_id', user?.id || '');
 
       setUsers(data || []);

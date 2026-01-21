@@ -121,7 +121,8 @@ const UserSelector = ({ onSelect }: { onSelect: (userId: string) => void }) => {
   const [search, setSearch] = useState('');
 
   const filteredUsers = users.filter(
-    (u) => u.full_name?.toLowerCase().includes(search.toLowerCase())
+    (u) => u.full_name?.toLowerCase().includes(search.toLowerCase()) ||
+           u.bio?.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
