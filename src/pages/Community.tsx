@@ -29,6 +29,7 @@ const Community = () => {
   
   const [activeTab, setActiveTab] = useState<ChatTab>('guide');
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
+  const [newChatUser, setNewChatUser] = useState<{ id: string; name: string; avatar: string | null } | null>(null);
   const [showMobileSidebar, setShowMobileSidebar] = useState(true);
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
   const [guideInfo, setGuideInfo] = useState<GuideInfo | null>(null);
@@ -192,7 +193,22 @@ const Community = () => {
     setShowMobileSidebar(true);
   };
 
-  const handleNewMessageSelect = (userId: string) => {
+  const handleNewMessageSelect = async (userId: string) => {
+    // Fetch the user's profile to get name and avatar
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('user_id, full_name, avatar_url')
+      .eq('user_id', userId)
+      .single();
+    
+    if (profile) {
+      setNewChatUser({
+        id: profile.user_id,
+        name: profile.full_name || 'Anonymous',
+        avatar: profile.avatar_url
+      });
+    }
+    
     setSelectedContactId(userId);
     setIsNewChatOpen(false);
     if (window.innerWidth < 768) {
@@ -200,8 +216,9 @@ const Community = () => {
     }
   };
 
-  // Find selected contact info
-  const selectedContact = contacts.find(c => c.id === selectedContactId);
+  // Find selected contact info - use newChatUser if contact not in list
+  const selectedContact = contacts.find(c => c.id === selectedContactId) || 
+    (newChatUser && newChatUser.id === selectedContactId ? { ...newChatUser, unreadCount: 0, isOnline: true } : null);
 
   // Render non-chat content for certain tabs
   const renderTabContent = () => {
