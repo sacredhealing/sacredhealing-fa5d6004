@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { ethers } from 'ethers';
 import { ArrowLeft, Wallet, RefreshCw, Play, Square, Trash2, ExternalLink, AlertCircle, CheckCircle, Clock, TrendingUp, DollarSign, Zap, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +11,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+
+// ERC20 ABI for balance and allowance checks
+const ERC20_ABI = [
+  "function balanceOf(address account) view returns (uint256)",
+  "function allowance(address owner, address spender) view returns (uint256)",
+  "function approve(address spender, uint256 amount) returns (bool)"
+];
 
 // Contract addresses
 const ADDR = {
@@ -69,7 +77,7 @@ const PolymarketBotDetail: React.FC = () => {
     }, ...prev].slice(0, 50));
   }, []);
 
-  // Simulated sync (in production, would use ethers.js)
+  // Real blockchain sync using ethers.js
   const performDeepSync = useCallback(async (forcedAddr?: string) => {
     const activeAddr = forcedAddr || address;
     if (!activeAddr) return;
@@ -77,62 +85,97 @@ const PolymarketBotDetail: React.FC = () => {
     setIsSyncing(true);
     addLog("Connecting to Polygon mainnet...", "info");
     
-    // Simulate network delay
-    await new Promise(r => setTimeout(r, 1500));
+    let success = false;
     
-    // Simulate balance fetch (in production use ethers.js)
-    setPolBal((Math.random() * 2).toFixed(4));
-    setUsdcEBal((Math.random() * 500).toFixed(2));
-    setUsdcNBal((Math.random() * 100).toFixed(2));
-    setAllowance(BigInt(Math.floor(Math.random() * 2)));
+    // Try each RPC endpoint until one works
+    for (const rpcUrl of RPC_POOL) {
+      if (success) break;
+      
+      try {
+        const provider = new ethers.JsonRpcProvider(rpcUrl, undefined, { staticNetwork: true });
+        
+        // A. Fetch native POL (gas) balance
+        const rawPol = await provider.getBalance(activeAddr);
+        setPolBal(parseFloat(ethers.formatEther(rawPol)).toFixed(4));
+        
+        await new Promise(r => setTimeout(r, 200)); // Small delay to avoid rate limiting
+        
+        // B. Fetch Bridged USDC.e balance and allowance
+        const usdcEContract = new ethers.Contract(ADDR.USDC_E, ERC20_ABI, provider);
+        const [rawE, rawAllow] = await Promise.all([
+          usdcEContract.balanceOf(activeAddr),
+          usdcEContract.allowance(activeAddr, ADDR.CTF_EXCHANGE)
+        ]);
+        setUsdcEBal(parseFloat(ethers.formatUnits(rawE, 6)).toFixed(2));
+        setAllowance(rawAllow);
+        
+        await new Promise(r => setTimeout(r, 200));
+        
+        // C. Fetch Native USDC balance
+        const usdcNContract = new ethers.Contract(ADDR.USDC_N, ERC20_ABI, provider);
+        const rawN = await usdcNContract.balanceOf(activeAddr);
+        setUsdcNBal(parseFloat(ethers.formatUnits(rawN, 6)).toFixed(2));
+        
+        setLastSync(new Date().toLocaleTimeString());
+        addLog(`Mainnet Link Established: ${activeAddr.slice(0, 10)}...`, "success");
+        success = true;
+        
+      } catch (err: any) {
+        console.warn(`RPC ${rpcUrl} failed, trying next...`, err.message);
+        addLog(`Node ${rpcUrl.split('/')[2]} degraded. Rotating...`, "debug");
+      }
+    }
     
-    setLastSync(new Date().toLocaleTimeString());
-    addLog(`Mainnet Link Established: ${activeAddr.slice(0, 10)}...`, "success");
+    if (!success) {
+      addLog("All nodes congested. Retrying in 10s...", "warn");
+    }
+    
     setIsSyncing(false);
   }, [address, addLog]);
 
-  // Initialize wallet from storage
+  // Initialize wallet from private key
   useEffect(() => {
     if (privateKey) {
       try {
-        // Validate key format (simplified check)
-        if (privateKey.length >= 64) {
-          const mockAddress = `0x${privateKey.slice(2, 42) || 'abcd1234'.repeat(5)}`;
-          setAddress(mockAddress);
-          performDeepSync(mockAddress);
-        }
+        // Use ethers to derive the correct address from private key
+        const wallet = new ethers.Wallet(privateKey);
+        setAddress(wallet.address);
+        performDeepSync(wallet.address);
       } catch (e) {
+        console.error("Invalid private key:", e);
         localStorage.removeItem('polymarket_bot_pkey');
         setPrivateKey(null);
+        toast.error("Invalid private key format");
       }
     }
-  }, [privateKey, performDeepSync]);
+  }, [privateKey]); // Note: removed performDeepSync from deps to avoid infinite loop
 
-  // Auto-refresh
+  // Auto-refresh every 30 seconds
   useEffect(() => {
     if (address) {
       const interval = setInterval(() => performDeepSync(), 30000);
       return () => clearInterval(interval);
     }
-  }, [performDeepSync, address]);
+  }, [address]); // Use address instead of performDeepSync to avoid recreating interval
 
   const handleImport = () => {
     let key = importInput.trim();
     if (!key.startsWith('0x') && key.length === 64) key = '0x' + key;
     
-    if (key.length < 64) {
-      setInputError("Invalid format. Use 64-character hex private key.");
-      return;
+    try {
+      // Use ethers to validate and derive address
+      const wallet = new ethers.Wallet(key);
+      
+      localStorage.setItem('polymarket_bot_pkey', key);
+      setPrivateKey(key);
+      setAddress(wallet.address);
+      setInputError(null);
+      addLog("Key Decrypted. Verifying On-Chain Identity...", "info");
+      performDeepSync(wallet.address);
+      toast.success("Wallet connected successfully");
+    } catch (e) {
+      setInputError("Invalid private key format. Use 64-character hex key.");
     }
-    
-    localStorage.setItem('polymarket_bot_pkey', key);
-    setPrivateKey(key);
-    const mockAddress = `0x${key.slice(2, 42)}`;
-    setAddress(mockAddress);
-    setInputError(null);
-    addLog("Key Decrypted. Verifying On-Chain Identity...", "info");
-    performDeepSync(mockAddress);
-    toast.success("Wallet connected successfully");
   };
 
   const handleApprove = async () => {
