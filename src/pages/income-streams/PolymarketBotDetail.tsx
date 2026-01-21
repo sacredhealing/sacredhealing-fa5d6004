@@ -113,9 +113,17 @@ const PolymarketBotDetail: React.FC = () => {
     }, ...prev].slice(0, 100));
   }, []);
 
-  // Refresh PnL data from database
+  // Refresh PnL data from database with live price updates
   const refreshPnL = useCallback(async () => {
     if (!user?.id) return;
+    
+    // First, refresh position prices from market
+    await Promise.all([
+      paperTradingService.refreshPositionPrices(true),
+      paperTradingService.refreshPositionPrices(false)
+    ]);
+    
+    // Then get updated PnL summary
     const [paperSummary, liveSummary] = await Promise.all([
       paperTradingService.getPnLSummary(true),
       paperTradingService.getPnLSummary(false)
