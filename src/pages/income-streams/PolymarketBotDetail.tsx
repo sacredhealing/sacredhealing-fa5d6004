@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { PnLCard } from '@/components/polymarket/PnLCard';
 
 // Import trading services
 import { POLYGON_ADDRESSES, PolymarketTrading } from '@/services/polymarketTrading';
@@ -73,6 +74,20 @@ const PolymarketBotDetail: React.FC = () => {
   const [isPaperMode, setIsPaperMode] = useState(true);
   const [paperBalance, setPaperBalance] = useState(1000); // $1000 simulated
   
+  // PnL tracking state
+  const [pnlSummary, setPnlSummary] = useState({
+    totalPnL: 0,
+    todayPnL: 0,
+    totalTrades: 0,
+    winRate: 0
+  });
+  const [livePnlSummary, setLivePnlSummary] = useState({
+    totalPnL: 0,
+    todayPnL: 0,
+    totalTrades: 0,
+    winRate: 0
+  });
+  
   // Status state
   const [isSyncing, setIsSyncing] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
@@ -84,6 +99,7 @@ const PolymarketBotDetail: React.FC = () => {
   
   const logEndRef = useRef<HTMLDivElement>(null);
   const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const pnlRefreshRef = useRef<NodeJS.Timeout | null>(null);
 
   const addLog = useCallback((msg: string, type: LogEntry['type'] = 'info') => {
     setLogs(prev => [{
@@ -93,6 +109,35 @@ const PolymarketBotDetail: React.FC = () => {
       time: new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
     }, ...prev].slice(0, 100));
   }, []);
+
+  // Refresh PnL data from database
+  const refreshPnL = useCallback(async () => {
+    if (!user?.id) return;
+    const [paperSummary, liveSummary] = await Promise.all([
+      paperTradingService.getPnLSummary(true),
+      paperTradingService.getPnLSummary(false)
+    ]);
+    setPnlSummary(paperSummary);
+    setLivePnlSummary(liveSummary);
+    setTotalTrades(paperSummary.totalTrades + liveSummary.totalTrades);
+  }, [user?.id]);
+
+  // Auto-refresh PnL when bot is running
+  useEffect(() => {
+    if (isRunning) {
+      pnlRefreshRef.current = setInterval(refreshPnL, 10000); // Every 10 seconds
+    } else {
+      if (pnlRefreshRef.current) {
+        clearInterval(pnlRefreshRef.current);
+        pnlRefreshRef.current = null;
+      }
+    }
+    return () => {
+      if (pnlRefreshRef.current) {
+        clearInterval(pnlRefreshRef.current);
+      }
+    };
+  }, [isRunning, refreshPnL]);
 
   // Real blockchain sync using ethers.js with correct checksummed addresses
   const performDeepSync = useCallback(async (forcedAddr?: string) => {
@@ -188,12 +233,17 @@ const PolymarketBotDetail: React.FC = () => {
               addLog(`Mode: ${settings.is_paper_mode ? '📝 PAPER TRADING' : '💰 LIVE TRADING'}`, "info");
             }
           });
-          // Load P&L summary
-          paperTradingService.getPnLSummary(true).then(summary => {
-            setTotalTrades(summary.totalTrades);
-            setWinRate(summary.winRate);
-            setDailyPnL(summary.todayPnL);
-          });
+          // Load P&L summary for both modes
+          const loadPnL = async () => {
+            const [paperSummary, liveSummary] = await Promise.all([
+              paperTradingService.getPnLSummary(true),
+              paperTradingService.getPnLSummary(false)
+            ]);
+            setPnlSummary(paperSummary);
+            setLivePnlSummary(liveSummary);
+            setTotalTrades(paperSummary.totalTrades + liveSummary.totalTrades);
+          };
+          loadPnL();
         }
         
         performDeepSync(wallet.address);
@@ -602,6 +652,18 @@ const PolymarketBotDetail: React.FC = () => {
               </p>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Live PnL Card */}
+        <div className="mb-4">
+          <PnLCard 
+            isPaperMode={isPaperMode}
+            totalPnL={isPaperMode ? pnlSummary.totalPnL : livePnlSummary.totalPnL}
+            todayPnL={isPaperMode ? pnlSummary.todayPnL : livePnlSummary.todayPnL}
+            totalTrades={isPaperMode ? pnlSummary.totalTrades : livePnlSummary.totalTrades}
+            winRate={isPaperMode ? pnlSummary.winRate : livePnlSummary.winRate}
+            startingBalance={1000}
+          />
         </div>
 
         {/* Stats Row */}
