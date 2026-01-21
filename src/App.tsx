@@ -67,6 +67,7 @@ import CopyTradingDetail from "./pages/income-streams/CopyTradingDetail";
 import BitcoinMiningDetail from "./pages/income-streams/BitcoinMiningDetail";
 import AIIncomeDetail from "./pages/income-streams/AIIncomeDetail";
 import EducationDetail from "./pages/income-streams/EducationDetail";
+import PolymarketBotDetail from "./pages/income-streams/PolymarketBotDetail";
 import AdminSystem from "./pages/AdminSystem";
 import AdminBreathing from "./pages/AdminBreathing";
 import AdminAffirmation from "./pages/AdminAffirmation";
@@ -132,6 +133,7 @@ const App = () => (
                   <Route path="/income-streams/bitcoin-mining" element={<BitcoinMiningDetail />} />
                   <Route path="/income-streams/ai-income" element={<AIIncomeDetail />} />
                   <Route path="/income-streams/education" element={<EducationDetail />} />
+                  <Route path="/income-streams/polymarket-bot" element={<PolymarketBotDetail />} />
                   <Route path="/spiritual-education" element={<SpiritualEducation />} />
                   <Route path="/community" element={<Community />} />
                   <Route path="/private-sessions" element={<PrivateSessions />} />
