@@ -6,8 +6,8 @@ export const BackButton: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Don't show on home/dashboard or splash/auth pages
-  const hideOnPaths = ['/', '/dashboard', '/splash', '/auth'];
+  // Don't show on home/dashboard, splash/auth pages, or community (has its own tabs)
+  const hideOnPaths = ['/', '/dashboard', '/splash', '/auth', '/community'];
   if (hideOnPaths.includes(location.pathname)) {
     return null;
   }
