@@ -293,6 +293,30 @@ const Community = () => {
         />
       </div>
 
+      {/* Mobile Tab Bar - visible when sidebar is showing on mobile */}
+      {showMobileSidebar && (
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border z-30">
+          <div className="flex justify-around py-2">
+            {(['guide', 'channels', 'feed', 'circles', 'messages'] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => handleTabChange(tab)}
+                className={`flex flex-col items-center px-3 py-1 text-xs ${
+                  activeTab === tab ? 'text-primary' : 'text-muted-foreground'
+                }`}
+              >
+                {tab === 'guide' && '🧘'}
+                {tab === 'channels' && '📢'}
+                {tab === 'feed' && '📝'}
+                {tab === 'circles' && '⭕'}
+                {tab === 'messages' && '💬'}
+                <span className="capitalize mt-1">{tab === 'messages' ? 'DMs' : tab}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Main Chat Area */}
       <div className={`${!showMobileSidebar ? 'flex' : 'hidden'} md:flex flex-col flex-1 h-full z-10`}>
         {selectedContact ? (
