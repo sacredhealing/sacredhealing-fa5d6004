@@ -79,13 +79,15 @@ const PolymarketBotDetail: React.FC = () => {
     totalPnL: 0,
     todayPnL: 0,
     totalTrades: 0,
-    winRate: 0
+    winRate: 0,
+    unrealizedPnL: 0
   });
   const [livePnlSummary, setLivePnlSummary] = useState({
     totalPnL: 0,
     todayPnL: 0,
     totalTrades: 0,
-    winRate: 0
+    winRate: 0,
+    unrealizedPnL: 0
   });
   
   // Status state
@@ -125,7 +127,10 @@ const PolymarketBotDetail: React.FC = () => {
   // Auto-refresh PnL when bot is running
   useEffect(() => {
     if (isRunning) {
-      pnlRefreshRef.current = setInterval(refreshPnL, 10000); // Every 10 seconds
+      // Refresh immediately when starting
+      refreshPnL();
+      // Then refresh every 5 seconds
+      pnlRefreshRef.current = setInterval(refreshPnL, 5000);
     } else {
       if (pnlRefreshRef.current) {
         clearInterval(pnlRefreshRef.current);

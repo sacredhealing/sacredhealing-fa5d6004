@@ -270,39 +270,61 @@ export class PaperTradingService {
     })) as PaperTrade[];
   }
 
-  // Get P&L summary
+  // Get P&L summary including unrealized P&L from open positions
   async getPnLSummary(isPaper = true): Promise<{
     totalPnL: number;
     todayPnL: number;
     totalTrades: number;
     winRate: number;
+    unrealizedPnL: number;
   }> {
     if (!this.userId) {
-      return { totalPnL: 0, todayPnL: 0, totalTrades: 0, winRate: 0 };
+      return { totalPnL: 0, todayPnL: 0, totalTrades: 0, winRate: 0, unrealizedPnL: 0 };
     }
 
-    const { data, error } = await supabase
+    // Get realized P&L from daily summary
+    const { data: dailyData, error: dailyError } = await supabase
       .from('polymarket_pnl_daily')
       .select('*')
       .eq('user_id', this.userId)
       .eq('is_paper', isPaper);
 
-    if (error || !data) {
-      return { totalPnL: 0, todayPnL: 0, totalTrades: 0, winRate: 0 };
+    // Get unrealized P&L from open positions
+    const { data: positions, error: posError } = await supabase
+      .from('polymarket_positions')
+      .select('unrealized_pnl')
+      .eq('user_id', this.userId)
+      .eq('is_paper', isPaper);
+
+    // Get total trade count from trades table
+    const { count: tradeCount } = await supabase
+      .from('polymarket_trades')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', this.userId)
+      .eq('is_paper', isPaper);
+
+    const unrealizedPnL = positions?.reduce((sum, p) => sum + (Number(p.unrealized_pnl) || 0), 0) || 0;
+
+    if (dailyError || !dailyData) {
+      return { totalPnL: unrealizedPnL, todayPnL: 0, totalTrades: tradeCount || 0, winRate: 0, unrealizedPnL };
     }
 
     const today = new Date().toISOString().split('T')[0];
-    const todayData = data.find(d => d.date === today);
+    const todayData = dailyData.find(d => d.date === today);
     
-    const totalPnL = data.reduce((sum, d) => sum + (d.realized_pnl || 0), 0);
-    const totalTrades = data.reduce((sum, d) => sum + (d.total_trades || 0), 0);
-    const winningTrades = data.reduce((sum, d) => sum + (d.winning_trades || 0), 0);
+    const realizedPnL = dailyData.reduce((sum, d) => sum + (d.realized_pnl || 0), 0);
+    const totalTrades = tradeCount || dailyData.reduce((sum, d) => sum + (d.total_trades || 0), 0);
+    const winningTrades = dailyData.reduce((sum, d) => sum + (d.winning_trades || 0), 0);
+
+    // Total P&L = realized + unrealized
+    const totalPnL = realizedPnL + unrealizedPnL;
 
     return {
       totalPnL,
-      todayPnL: todayData?.realized_pnl || 0,
+      todayPnL: (todayData?.realized_pnl || 0) + unrealizedPnL,
       totalTrades,
       winRate: totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0,
+      unrealizedPnL,
     };
   }
 
