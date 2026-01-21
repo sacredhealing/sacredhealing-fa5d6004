@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { PolymarketMarket, TradeSignal } from '@/types/polymarket';
 
 interface GeminiResponse {
-  result?: string;
+  response?: string; // gemini-bridge returns 'response' not 'result'
   error?: string;
 }
 
@@ -47,13 +47,13 @@ Only recommend trading if confidence > 70 and there's clear mispricing.`;
         },
       });
 
-      if (error || !data?.result) {
+      if (error || !data?.response) {
         console.error('Gemini analysis failed:', error);
         return null;
       }
 
-      // Parse JSON from response
-      const jsonMatch = data.result.match(/\{[\s\S]*\}/);
+      // Parse JSON from response (gemini-bridge returns 'response' not 'result')
+      const jsonMatch = data.response.match(/\{[\s\S]*\}/);
       if (!jsonMatch) return null;
 
       const analysis = JSON.parse(jsonMatch[0]);
@@ -129,11 +129,11 @@ Respond with JSON only:
         },
       });
 
-      if (error || !data?.result) {
+      if (error || !data?.response) {
         return { sentiment: 'neutral', confidence: 50 };
       }
 
-      const jsonMatch = data.result.match(/\{[\s\S]*\}/);
+      const jsonMatch = data.response.match(/\{[\s\S]*\}/);
       if (!jsonMatch) return { sentiment: 'neutral', confidence: 50 };
 
       const result = JSON.parse(jsonMatch[0]);

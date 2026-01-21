@@ -1,8 +1,10 @@
 // Polymarket Trading Service
 // Handles on-chain trading via FPMM contracts on Polygon
+// Now integrates with CLOB for real order execution
 
 import { ethers } from 'ethers';
 import type { TradeResult, BotConfig, Position, TradeSignal } from '@/types/polymarket';
+import { clobTradingService } from './polymarket/clobTrading';
 
 // Polygon Mainnet Addresses (pre-validated checksums)
 export const POLYGON_ADDRESSES = {
@@ -60,6 +62,10 @@ export class PolymarketTrading {
   async initialize(privateKey: string, rpcUrl: string): Promise<string> {
     this.provider = new ethers.JsonRpcProvider(rpcUrl);
     this.wallet = new ethers.Wallet(privateKey, this.provider);
+    
+    // Also initialize CLOB trading service
+    await clobTradingService.initialize(privateKey, rpcUrl);
+    
     return this.wallet.address;
   }
 
@@ -173,7 +179,7 @@ export class PolymarketTrading {
     }
   }
 
-  // Execute a market order (simplified - uses limit order infrastructure)
+  // Execute a market order via CLOB
   async executeTrade(signal: TradeSignal): Promise<TradeResult> {
     if (!this.wallet || !this.provider) {
       return { success: false, error: 'Wallet not initialized' };
@@ -185,22 +191,30 @@ export class PolymarketTrading {
     }
 
     try {
-      // For now, log the trade intent - full CLOB order execution requires
-      // EIP-712 signing and order matching which is complex
-      console.log('Trade signal received:', signal);
+      console.log('[Trading] Executing trade via CLOB:', signal);
 
-      // In production, this would:
-      // 1. Create an order struct
-      // 2. Sign it with EIP-712
-      // 3. Submit to CLOB API
-      // 4. Wait for fill confirmation
+      // Execute via CLOB trading service
+      const result = await clobTradingService.executeMarketOrder(signal);
 
-      return {
-        success: true,
-        txHash: 'pending-implementation',
-        amountSpent: signal.suggestedSize,
-      };
+      if (result.success) {
+        // Track position
+        const position: Position = {
+          marketId: signal.marketId,
+          marketQuestion: signal.reason,
+          outcome: signal.outcome,
+          tokenId: signal.tokenId,
+          shares: BigInt(Math.floor(signal.suggestedSize / signal.currentPrice * 1e6)),
+          avgEntryPrice: signal.currentPrice,
+          currentPrice: signal.currentPrice,
+          unrealizedPnL: 0,
+          entryTime: new Date(),
+        };
+        this.positions.push(position);
+      }
+
+      return result;
     } catch (error) {
+      console.error('[Trading] Trade execution error:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Trade failed',

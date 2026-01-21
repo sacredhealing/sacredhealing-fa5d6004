@@ -20,6 +20,12 @@ import { toast } from 'sonner';
 import { POLYGON_ADDRESSES, PolymarketTrading } from '@/services/polymarketTrading';
 import { polymarketService } from '@/services/polymarketService';
 import { polymarketAI } from '@/services/polymarketAI';
+import { 
+  whaleMirrorService, 
+  latencyArbitrageService, 
+  volatilityScalperService,
+  STRATEGY_NAMES 
+} from '@/services/polymarket';
 import type { LogEntry, TradeSignal, PolymarketMarket } from '@/types/polymarket';
 
 // RPC endpoints for Polygon
@@ -188,43 +194,74 @@ const PolymarketBotDetail: React.FC = () => {
   // Market scanning loop when bot is running
   useEffect(() => {
     if (isRunning && address) {
-      addLog("Starting market scanner...", "info");
+      addLog("🚀 Starting Sacred Healing HFT Engine...", "info");
+      addLog(`[1] ${STRATEGY_NAMES.WHALE_MIRROR} - Monitoring 0x8dxd`, "info");
+      addLog(`[2] ${STRATEGY_NAMES.LATENCY_ARB} - Gemini 3 Flash active`, "info");
+      addLog(`[3] ${STRATEGY_NAMES.VOLATILITY_SCALP} - Ladder orders ready`, "info");
       
+      // Initialize all three strategies (wrapped in async IIFE)
+      const initStrategies = async () => {
+        if (privateKey) {
+          await whaleMirrorService.initialize(privateKey, RPC_POOL[0]);
+          whaleMirrorService.onMirrorSignal(async (signal, whale) => {
+            addLog(`🐋 WHALE MIRROR: ${whale.whaleAddress.slice(0,10)}... ${signal.direction} ${signal.outcome}`, "trade");
+            setActiveSignals(prev => [...prev.slice(-4), signal]);
+            if (allowance > 0n) {
+              const result = await trading.executeTrade(signal);
+              if (result.success) setTotalTrades(prev => prev + 1);
+            }
+          });
+          whaleMirrorService.startMonitoring();
+        }
+      };
+      initStrategies();
+
       const scanMarkets = async () => {
         setIsScanning(true);
         try {
-          // Fetch markets from Polymarket API
           const fetchedMarkets = await polymarketService.fetchMarkets(50);
           setMarkets(fetchedMarkets);
           addLog(`Scanned ${fetchedMarkets.length} markets`, "debug");
           
-          // Find opportunities
-          const opportunities = await polymarketService.findOpportunities(20000);
+          // Start latency arbitrage & volatility scalping with markets
+          latencyArbitrageService.onLatencySignal(async (signal, event) => {
+            addLog(`⚡ LATENCY ARB: ${event.headline?.slice(0,40)}...`, "trade");
+            setActiveSignals(prev => [...prev.slice(-4), signal]);
+            if (allowance > 0n && parseFloat(usdcEBal) >= signal.suggestedSize) {
+              const result = await trading.executeTrade(signal);
+              if (result.success) setTotalTrades(prev => prev + 1);
+            }
+          });
+          latencyArbitrageService.startMonitoring(fetchedMarkets);
           
+          volatilityScalperService.onScalpSignal(async (signal, ctx) => {
+            addLog(`📈 SCALP: ${ctx.ladder} vol=${(ctx.volatility*100).toFixed(2)}%`, "trade");
+            setActiveSignals(prev => [...prev.slice(-4), signal]);
+            if (allowance > 0n && parseFloat(usdcEBal) >= signal.suggestedSize) {
+              const result = await trading.executeTrade(signal);
+              if (result.success) setTotalTrades(prev => prev + 1);
+            }
+          });
+          volatilityScalperService.startScalping(fetchedMarkets);
+          
+          // Also run AI analysis for opportunities
+          const opportunities = await polymarketService.findOpportunities(20000);
           if (opportunities.length > 0) {
             addLog(`Found ${opportunities.length} potential opportunities`, "info");
-            
-            // Analyze top opportunities with AI
             for (const market of opportunities.slice(0, 3)) {
               const signal = await polymarketAI.analyzeMarket(market);
               if (signal) {
                 setActiveSignals(prev => [...prev.slice(-4), signal]);
-                addLog(`SIGNAL: ${signal.direction.toUpperCase()} ${signal.outcome} @ ${(signal.currentPrice * 100).toFixed(1)}% - ${signal.reason}`, "trade");
-                
-                // Execute trade if approved and has balance
+                addLog(`🤖 AI SIGNAL: ${signal.direction.toUpperCase()} ${signal.outcome} @ ${(signal.currentPrice * 100).toFixed(1)}%`, "trade");
                 if (allowance > 0n && parseFloat(usdcEBal) >= signal.suggestedSize) {
                   const result = await trading.executeTrade(signal);
                   if (result.success) {
                     setTotalTrades(prev => prev + 1);
-                    addLog(`Trade executed: ${result.txHash}`, "success");
-                  } else {
-                    addLog(`Trade failed: ${result.error}`, "error");
+                    addLog(`✅ Trade executed: ${result.txHash}`, "success");
                   }
                 }
               }
             }
-          } else {
-            addLog("No arbitrage opportunities found", "debug");
           }
         } catch (error) {
           addLog(`Scan error: ${error instanceof Error ? error.message : 'Unknown'}`, "error");
@@ -232,16 +269,14 @@ const PolymarketBotDetail: React.FC = () => {
         setIsScanning(false);
       };
       
-      // Initial scan
       scanMarkets();
-      
-      // Set up interval
-      scanIntervalRef.current = setInterval(scanMarkets, 15000); // Every 15 seconds
+      scanIntervalRef.current = setInterval(scanMarkets, 15000);
       
       return () => {
-        if (scanIntervalRef.current) {
-          clearInterval(scanIntervalRef.current);
-        }
+        if (scanIntervalRef.current) clearInterval(scanIntervalRef.current);
+        whaleMirrorService.stopMonitoring();
+        latencyArbitrageService.stopMonitoring();
+        volatilityScalperService.stopScalping();
       };
     }
   }, [isRunning, address, allowance, usdcEBal, trading, addLog]);
