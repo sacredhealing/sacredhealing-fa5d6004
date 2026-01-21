@@ -95,39 +95,60 @@ const PolymarketBotDetail: React.FC = () => {
         const provider = new ethers.JsonRpcProvider(rpcUrl, undefined, { staticNetwork: true });
         
         // A. Fetch native POL (gas) balance
-        const rawPol = await provider.getBalance(activeAddr);
-        setPolBal(parseFloat(ethers.formatEther(rawPol)).toFixed(4));
+        try {
+          const rawPol = await provider.getBalance(activeAddr);
+          const polValue = parseFloat(ethers.formatEther(rawPol)).toFixed(4);
+          setPolBal(polValue);
+          addLog(`POL Balance: ${polValue}`, "debug");
+        } catch (polErr: any) {
+          console.warn("POL fetch failed:", polErr.message);
+          addLog("Failed to fetch POL balance", "warn");
+        }
         
-        await new Promise(r => setTimeout(r, 200)); // Small delay to avoid rate limiting
+        await new Promise(r => setTimeout(r, 300));
         
-        // B. Fetch Bridged USDC.e balance and allowance
-        const usdcEContract = new ethers.Contract(ADDR.USDC_E, ERC20_ABI, provider);
-        const [rawE, rawAllow] = await Promise.all([
-          usdcEContract.balanceOf(activeAddr),
-          usdcEContract.allowance(activeAddr, ADDR.CTF_EXCHANGE)
-        ]);
-        setUsdcEBal(parseFloat(ethers.formatUnits(rawE, 6)).toFixed(2));
-        setAllowance(rawAllow);
+        // B. Fetch Native USDC balance (Circle's native USDC - this is what most users have)
+        try {
+          const usdcNContract = new ethers.Contract(ADDR.USDC_N, ERC20_ABI, provider);
+          const rawN = await usdcNContract.balanceOf(activeAddr);
+          const usdcNValue = parseFloat(ethers.formatUnits(rawN, 6)).toFixed(2);
+          setUsdcNBal(usdcNValue);
+          addLog(`Native USDC: $${usdcNValue}`, "debug");
+        } catch (usdcNErr: any) {
+          console.warn("Native USDC fetch failed:", usdcNErr.message);
+          addLog("Failed to fetch Native USDC", "warn");
+        }
         
-        await new Promise(r => setTimeout(r, 200));
+        await new Promise(r => setTimeout(r, 300));
         
-        // C. Fetch Native USDC balance
-        const usdcNContract = new ethers.Contract(ADDR.USDC_N, ERC20_ABI, provider);
-        const rawN = await usdcNContract.balanceOf(activeAddr);
-        setUsdcNBal(parseFloat(ethers.formatUnits(rawN, 6)).toFixed(2));
+        // C. Fetch Bridged USDC.e balance and allowance (used by Polymarket)
+        try {
+          const usdcEContract = new ethers.Contract(ADDR.USDC_E, ERC20_ABI, provider);
+          const [rawE, rawAllow] = await Promise.all([
+            usdcEContract.balanceOf(activeAddr),
+            usdcEContract.allowance(activeAddr, ADDR.CTF_EXCHANGE)
+          ]);
+          const usdcEValue = parseFloat(ethers.formatUnits(rawE, 6)).toFixed(2);
+          setUsdcEBal(usdcEValue);
+          setAllowance(rawAllow);
+          addLog(`Bridged USDC.e: $${usdcEValue}`, "debug");
+        } catch (usdcEErr: any) {
+          console.warn("USDC.e fetch failed:", usdcEErr.message);
+          addLog("Failed to fetch USDC.e balance", "warn");
+        }
         
         setLastSync(new Date().toLocaleTimeString());
-        addLog(`Mainnet Link Established: ${activeAddr.slice(0, 10)}...`, "success");
+        addLog(`Synced: ${activeAddr.slice(0, 10)}...${activeAddr.slice(-6)}`, "success");
         success = true;
         
       } catch (err: any) {
-        console.warn(`RPC ${rpcUrl} failed, trying next...`, err.message);
-        addLog(`Node ${rpcUrl.split('/')[2]} degraded. Rotating...`, "debug");
+        console.warn(`RPC ${rpcUrl} failed:`, err.message);
+        addLog(`Node ${rpcUrl.split('/')[2]} failed. Trying next...`, "debug");
       }
     }
     
     if (!success) {
-      addLog("All nodes congested. Retrying in 10s...", "warn");
+      addLog("All RPC nodes failed. Check network.", "error");
     }
     
     setIsSyncing(false);
@@ -372,19 +393,29 @@ const PolymarketBotDetail: React.FC = () => {
               </p>
             </CardContent>
           </Card>
-          <Card className="bg-indigo-500/10 border-indigo-500/20">
+          <Card className="bg-cyan-500/10 border-cyan-500/20">
             <CardContent className="p-3 text-center">
-              <p className="text-xs text-indigo-400">USDC.e</p>
-              <p className="font-mono font-bold text-indigo-400">${usdcEBal}</p>
+              <p className="text-xs text-cyan-400">USDC</p>
+              <p className="font-mono font-bold text-cyan-400">${usdcNBal}</p>
             </CardContent>
           </Card>
           <Card className="bg-card/50 border-border/50">
             <CardContent className="p-3 text-center">
-              <p className="text-xs text-muted-foreground">USDC</p>
-              <p className="font-mono font-bold">${usdcNBal}</p>
+              <p className="text-xs text-muted-foreground">USDC.e</p>
+              <p className="font-mono font-bold text-muted-foreground">${usdcEBal}</p>
             </CardContent>
           </Card>
         </div>
+
+        {/* Total Portfolio */}
+        <Card className="bg-gradient-to-r from-indigo-500/10 to-cyan-500/10 border-indigo-500/20 mb-4">
+          <CardContent className="p-3 flex justify-between items-center">
+            <span className="text-xs text-muted-foreground">Total Portfolio</span>
+            <span className="font-mono font-bold text-lg text-primary">
+              ${(parseFloat(usdcNBal) + parseFloat(usdcEBal)).toFixed(2)}
+            </span>
+          </CardContent>
+        </Card>
 
         {/* Control Buttons */}
         <div className="flex gap-2 mb-4">
