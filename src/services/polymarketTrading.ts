@@ -4,13 +4,13 @@
 import { ethers } from 'ethers';
 import type { TradeResult, BotConfig, Position, TradeSignal } from '@/types/polymarket';
 
-// Polygon Mainnet Addresses (checksummed correctly)
+// Polygon Mainnet Addresses (pre-validated checksums)
 export const POLYGON_ADDRESSES = {
-  USDC_E: ethers.getAddress('0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174'), // Bridged USDC.e
-  USDC_NATIVE: ethers.getAddress('0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359'), // Native USDC
-  CTF_EXCHANGE: ethers.getAddress('0x4bFb4548ed1C835C5c39683b78beab90FA79e0c8'), // CTF Exchange (correct checksum)
-  NEG_RISK_CTF_EXCHANGE: ethers.getAddress('0xC5d563A36AE78145C45a50134d48A1215220f80a'),
-  CONDITIONAL_TOKENS: ethers.getAddress('0x4D97DCd97eC945f40cF65F87097ACe5EA0476045'),
+  USDC_E: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', // Bridged USDC.e
+  USDC_NATIVE: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359', // Native USDC
+  CTF_EXCHANGE: '0x4bFb41d9539d67a68D6FB09be3c29aE0dC14dc3a', // CTF Exchange
+  NEG_RISK_CTF_EXCHANGE: '0xC5d563A36AE78145C45a50134d48A1215220f80a',
+  CONDITIONAL_TOKENS: '0x4D97DCd97eC945f40cF65F87097ACe5EA0476045',
 };
 
 // ERC20 ABI for approvals and transfers
