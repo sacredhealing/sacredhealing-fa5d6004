@@ -13,6 +13,7 @@ import { TranslatedContent } from '@/components/TranslatedContent';
 import { usePhantomWallet } from '@/hooks/usePhantomWallet';
 import { HealingProgressCard } from '@/components/healing/HealingProgressCard';
 import HealingMeditationsList from '@/components/healing/HealingMeditationsList';
+import { useAdminRole } from '@/hooks/useAdminRole';
 
 interface HealingAudio {
   id: string;
@@ -235,6 +236,7 @@ const Healing: React.FC = () => {
   const { toast } = useToast();
   const { balance } = useSHCBalance();
   const { walletAddress, isPhantomInstalled, connectWallet, isConnecting } = usePhantomWallet();
+  const { isAdmin } = useAdminRole();
   
   const [audioTracks, setAudioTracks] = useState<HealingAudio[]>([]);
   const [ownedAudioIds, setOwnedAudioIds] = useState<Set<string>>(new Set());
@@ -465,7 +467,8 @@ const Healing: React.FC = () => {
   };
 
   const togglePlay = (audio: HealingAudio) => {
-    const canPlay = audio.is_free || ownedAudioIds.has(audio.id);
+    // Admins have full access to all audio
+    const canPlay = isAdmin || audio.is_free || ownedAudioIds.has(audio.id);
     const audioUrl = canPlay ? audio.audio_url : audio.preview_url;
 
     if (!audioUrl) return;
@@ -735,7 +738,8 @@ const Healing: React.FC = () => {
           
           <div className="grid gap-3">
             {paidAudios.map(audio => {
-              const owned = ownedAudioIds.has(audio.id);
+              const owned = isAdmin || ownedAudioIds.has(audio.id);
+              const hasAccess = isAdmin || owned || hasHealingAccess;
               
               return (
                 <Card key={audio.id} className="p-4">
@@ -744,7 +748,7 @@ const Healing: React.FC = () => {
                       onClick={() => togglePlay(audio)}
                       className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center hover:bg-primary/30 transition-colors relative"
                     >
-                      {!owned && !hasHealingAccess && (
+                      {!hasAccess && (
                         <Lock className="w-4 h-4 text-muted-foreground absolute -top-1 -right-1" />
                       )}
                       {playingId === audio.id ? (
@@ -759,7 +763,7 @@ const Healing: React.FC = () => {
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Clock className="w-3 h-3" />
                         <span>{formatDuration(audio.duration_seconds)}</span>
-                        {owned || hasHealingAccess ? (
+                        {hasAccess ? (
                           <span className="text-green-500 font-medium">• {t.owned}</span>
                         ) : (
                           <span className="text-primary font-medium">• ${audio.price_usd}</span>
@@ -767,7 +771,7 @@ const Healing: React.FC = () => {
                       </div>
                     </div>
                     
-                    {owned || hasHealingAccess ? (
+                    {hasAccess ? (
                       <Button variant="ghost" size="icon">
                         <Download className="w-4 h-4" />
                       </Button>
