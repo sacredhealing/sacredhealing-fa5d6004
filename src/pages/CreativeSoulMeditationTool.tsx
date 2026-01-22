@@ -180,7 +180,9 @@ export default function CreativeSoulMeditationTool() {
     const result = await offlineExport.exportMeditation({
       durationSeconds: exportDuration,
       neuralAudioUrl: neuralUrl && /^https?:\/\//i.test(neuralUrl) ? neuralUrl : undefined,
+      neuralSourceVolume: engine.neuralLayer.volume,
       atmosphereAudioUrl: atmosphereUrl && /^https?:\/\//i.test(atmosphereUrl) ? atmosphereUrl : undefined,
+      atmosphereVolume: engine.atmosphereLayer.volume,
       solfeggioHz: engine.frequencies.solfeggio.enabled ? healingFreq : undefined,
       solfeggioVolume: engine.solfeggioVolume,
       binauralCarrierHz: 200,

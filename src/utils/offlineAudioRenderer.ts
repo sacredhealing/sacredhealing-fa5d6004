@@ -14,7 +14,9 @@ export interface OfflineRenderConfig {
   durationSeconds: number;
   sampleRate?: number;
   neuralAudioUrl?: string;
+  neuralSourceVolume?: number;
   atmosphereAudioUrl?: string;
+  atmosphereVolume?: number;
   solfeggio?: { enabled: boolean; hz: number; volume: number };
   binaural?: { enabled: boolean; carrierHz: number; beatHz: number; volume: number };
   dsp: DSPSettings;
@@ -36,7 +38,9 @@ export async function renderOffline(config: OfflineRenderConfig): Promise<AudioB
     durationSeconds,
     sampleRate = 44100,
     neuralAudioUrl,
+    neuralSourceVolume = 1.0,
     atmosphereAudioUrl,
+    atmosphereVolume = 0.85,
     solfeggio,
     binaural,
     dsp,
@@ -65,7 +69,8 @@ export async function renderOffline(config: OfflineRenderConfig): Promise<AudioB
   if (neuralAudioUrl) {
     try {
       const buffer = await fetchAndDecode(offlineCtx, neuralAudioUrl);
-      layers.push({ buffer, volume: 0.8 });
+      layers.push({ buffer, volume: neuralSourceVolume });
+      console.log('[OfflineRender] Neural source volume:', neuralSourceVolume);
       onProgress?.(25, 'Neural source loaded...');
     } catch (e) {
       console.warn('Failed to load neural audio:', e);
@@ -75,7 +80,8 @@ export async function renderOffline(config: OfflineRenderConfig): Promise<AudioB
   if (atmosphereAudioUrl) {
     try {
       const buffer = await fetchAndDecode(offlineCtx, atmosphereAudioUrl);
-      layers.push({ buffer, volume: 0.5 });
+      layers.push({ buffer, volume: atmosphereVolume });
+      console.log('[OfflineRender] Atmosphere volume:', atmosphereVolume);
       onProgress?.(35, 'Atmosphere loaded...');
     } catch (e) {
       console.warn('Failed to load atmosphere:', e);
