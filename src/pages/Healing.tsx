@@ -707,7 +707,7 @@ const Healing: React.FC = () => {
                   </button>
                   
                   <div className="flex-1">
-                    <h3 className="font-medium text-foreground"><TranslatedContent text={audio.title} /></h3>
+                    <h3 className="font-medium text-foreground">{audio.title}</h3>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Clock className="w-3 h-3" />
                       <span>{formatDuration(audio.duration_seconds)}</span>
@@ -755,7 +755,7 @@ const Healing: React.FC = () => {
                     </button>
                     
                     <div className="flex-1">
-                      <h3 className="font-medium text-foreground"><TranslatedContent text={audio.title} /></h3>
+                      <h3 className="font-medium text-foreground">{audio.title}</h3>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Clock className="w-3 h-3" />
                         <span>{formatDuration(audio.duration_seconds)}</span>
