@@ -68,7 +68,7 @@ export default function CreativeSoulMeditationTool() {
   const [brainwaveFreq, setBrainwaveFreq] = useState(10);
   const [stemMode, setStemMode] = useState<StemMode>('full_mix');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [exportDuration, setExportDuration] = useState(300); // 5 minutes default
+  const [exportDuration, setExportDuration] = useState(300); // Default, will be overridden by neural source
   const [exportResult, setExportResult] = useState<{ blob: Blob; format: 'wav' | 'mp3'; url: string } | null>(null);
   
   // Volume controls
@@ -242,6 +242,15 @@ export default function CreativeSoulMeditationTool() {
       engine.startBinaural(200, brainwaveFreq);
     }
   }, [brainwaveFreq, engine]);
+
+  // Sync export duration with neural source audio length
+  useEffect(() => {
+    if (engine.audioBuffer && engine.audioBuffer.duration > 0) {
+      const audioDuration = Math.ceil(engine.audioBuffer.duration);
+      setExportDuration(audioDuration);
+      console.log('Export duration synced to neural source:', audioDuration, 'seconds');
+    }
+  }, [engine.audioBuffer]);
 
   const isPlaying = 
     engine.neuralLayer.isPlaying || 
