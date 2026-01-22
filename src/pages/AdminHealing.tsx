@@ -34,7 +34,20 @@ const AdminHealing: React.FC = () => {
   const [editingScript, setEditingScript] = useState<{ id: string; script: string } | null>(null);
   const [scriptDialogOpen, setScriptDialogOpen] = useState(false);
   const [showMigrationDialog, setShowMigrationDialog] = useState(false);
+  const [editingAudio, setEditingAudio] = useState<HealingAudio | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    audioUrl: '',
+    previewUrl: '',
+    durationMinutes: 3,
+    isFree: false,
+    priceUsd: 4.99,
+    category: 'healing',
+    scriptText: '',
+  });
+  const [editFormData, setEditFormData] = useState({
     title: '',
     description: '',
     audioUrl: '',
@@ -175,6 +188,56 @@ const AdminHealing: React.FC = () => {
     } else {
       toast({ title: 'Deleted', description: 'Audio removed successfully' });
       fetchAudios();
+    }
+  };
+
+  const handleEditAudio = (audio: HealingAudio) => {
+    setEditingAudio(audio);
+    setEditFormData({
+      title: audio.title,
+      description: audio.description || '',
+      audioUrl: audio.audio_url,
+      previewUrl: audio.preview_url || '',
+      durationMinutes: Math.floor(audio.duration_seconds / 60),
+      isFree: audio.is_free,
+      priceUsd: audio.price_usd,
+      category: audio.category,
+      scriptText: audio.script_text || '',
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleUpdateAudio = async () => {
+    if (!editingAudio) return;
+    setIsLoading(true);
+
+    try {
+      const { error } = await supabase
+        .from('healing_audio')
+        .update({
+          title: editFormData.title,
+          description: editFormData.description || null,
+          audio_url: editFormData.audioUrl,
+          preview_url: editFormData.previewUrl || null,
+          duration_seconds: editFormData.durationMinutes * 60,
+          is_free: editFormData.isFree,
+          price_usd: editFormData.priceUsd,
+          price_shc: 0,
+          category: editFormData.category,
+          script_text: editFormData.scriptText || null,
+        } as any)
+        .eq('id', editingAudio.id);
+
+      if (error) throw error;
+
+      toast({ title: 'Success', description: 'Healing audio updated successfully!' });
+      setEditDialogOpen(false);
+      setEditingAudio(null);
+      fetchAudios();
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -569,11 +632,22 @@ USING (public.has_role(auth.uid(), 'admin'));`;
                         {audio.is_free ? (
                           <span className="text-green-500">FREE</span>
                         ) : (
-                          <span>{audio.price_shc} SHC / ${audio.price_usd}</span>
+                          <span>${audio.price_usd}</span>
                         )}
                       </div>
+                      {audio.description && (
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{audio.description}</p>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditAudio(audio)}
+                      >
+                        <Edit2 className="w-4 h-4 mr-1" />
+                        Edit
+                      </Button>
                       <Button
                         variant={audio.script_text ? "default" : "outline"}
                         size="sm"
@@ -581,7 +655,7 @@ USING (public.has_role(auth.uid(), 'admin'));`;
                         className={audio.script_text ? "bg-primary" : ""}
                       >
                         <FileText className="w-4 h-4 mr-1" />
-                        {audio.script_text ? 'View/Edit Script' : 'Add Script'}
+                        {audio.script_text ? 'Script' : 'Add Script'}
                       </Button>
                       <Button
                         variant="ghost"
@@ -593,37 +667,130 @@ USING (public.has_role(auth.uid(), 'admin'));`;
                       </Button>
                     </div>
                   </div>
-                  <div className="mt-3">
-                    {audio.script_text ? (
-                      <div className="p-3 bg-background rounded border border-border/30">
-                        <div className="flex items-center justify-between mb-2">
-                          <p className="text-xs font-semibold text-primary">✓ Script Available</p>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditScript(audio)}
-                            className="text-xs"
-                          >
-                            <FileText className="w-3 h-3 mr-1" />
-                            View Full Script
-                          </Button>
-                        </div>
-                        <p className="text-sm text-foreground line-clamp-3 whitespace-pre-wrap">{audio.script_text}</p>
-                      </div>
-                    ) : (
-                      <div className="p-3 bg-muted/20 rounded border border-dashed border-muted-foreground/30">
-                        <p className="text-xs text-muted-foreground flex items-center gap-2">
-                          <FileText className="w-3 h-3" />
-                          No script yet - Click "Add Script" to create one
-                        </p>
-                      </div>
-                    )}
-                  </div>
                 </div>
               ))}
             </div>
           )}
         </Card>
+
+        {/* Edit Audio Dialog */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Healing Audio</DialogTitle>
+              <DialogDescription>
+                Update the details for this healing audio track
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="edit-title">Title *</Label>
+                <Input
+                  id="edit-title"
+                  value={editFormData.title}
+                  onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit-description">Description</Label>
+                <Textarea
+                  id="edit-description"
+                  value={editFormData.description}
+                  onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <AudioUpload
+                  value={editFormData.audioUrl}
+                  onChange={(url) => setEditFormData({ ...editFormData, audioUrl: url })}
+                  folder="healing"
+                  label="Full Audio File *"
+                />
+                <AudioUpload
+                  value={editFormData.previewUrl}
+                  onChange={(url) => setEditFormData({ ...editFormData, previewUrl: url })}
+                  folder="healing/previews"
+                  label="Preview Audio (30s)"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-duration">Duration (minutes)</Label>
+                  <Input
+                    id="edit-duration"
+                    type="number"
+                    min="1"
+                    value={editFormData.durationMinutes}
+                    onChange={(e) => setEditFormData({ ...editFormData, durationMinutes: parseInt(e.target.value) || 1 })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-priceUsd">Price (USD)</Label>
+                  <Input
+                    id="edit-priceUsd"
+                    type="number"
+                    step="0.01"
+                    value={editFormData.priceUsd}
+                    onChange={(e) => setEditFormData({ ...editFormData, priceUsd: parseFloat(e.target.value) })}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="edit-category">Category</Label>
+                <Input
+                  id="edit-category"
+                  value={editFormData.category}
+                  onChange={(e) => setEditFormData({ ...editFormData, category: e.target.value })}
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="edit-isFree"
+                  checked={editFormData.isFree}
+                  onCheckedChange={(checked) => setEditFormData({ ...editFormData, isFree: checked })}
+                />
+                <Label htmlFor="edit-isFree">Free audio (no purchase required)</Label>
+              </div>
+
+              <div>
+                <Label htmlFor="edit-scriptText">Meditation Script</Label>
+                <Textarea
+                  id="edit-scriptText"
+                  value={editFormData.scriptText}
+                  onChange={(e) => setEditFormData({ ...editFormData, scriptText: e.target.value })}
+                  rows={8}
+                  className="font-mono text-sm"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+                  <X className="w-4 h-4 mr-2" />
+                  Cancel
+                </Button>
+                <Button onClick={handleUpdateAudio} disabled={isLoading}>
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Changes
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Script Editor Dialog */}
         <Dialog open={scriptDialogOpen} onOpenChange={setScriptDialogOpen}>
