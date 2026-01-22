@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import AudioUpload from '@/components/admin/AudioUpload';
 
 interface HealingAudio {
   id: string;
@@ -443,27 +444,20 @@ USING (public.has_role(auth.uid(), 'admin'));`;
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="audioUrl">Full Audio URL *</Label>
-                <Input
-                  id="audioUrl"
-                  value={formData.audioUrl}
-                  onChange={(e) => setFormData({ ...formData, audioUrl: e.target.value })}
-                  placeholder="https://..."
-                  required
-                />
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <AudioUpload
+                value={formData.audioUrl}
+                onChange={(url) => setFormData({ ...formData, audioUrl: url })}
+                folder="healing"
+                label="Full Audio File *"
+              />
 
-              <div>
-                <Label htmlFor="previewUrl">Preview URL (30s)</Label>
-                <Input
-                  id="previewUrl"
-                  value={formData.previewUrl}
-                  onChange={(e) => setFormData({ ...formData, previewUrl: e.target.value })}
-                  placeholder="https://..."
-                />
-              </div>
+              <AudioUpload
+                value={formData.previewUrl}
+                onChange={(url) => setFormData({ ...formData, previewUrl: url })}
+                folder="healing/previews"
+                label="Preview Audio (30s)"
+              />
             </div>
 
             <div className="grid grid-cols-3 gap-4">
