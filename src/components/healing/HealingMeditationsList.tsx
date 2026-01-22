@@ -4,19 +4,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 
-interface Meditation {
+interface HealingAudio {
   id: string;
   title: string;
   description: string | null;
-  duration_minutes: number;
+  duration_seconds: number;
   category: string;
-  is_premium: boolean;
-  audio_url: string | null;
+  is_free: boolean;
+  audio_url: string;
   cover_image_url: string | null;
 }
 
 const HealingMeditationsList: React.FC = () => {
-  const [meditations, setMeditations] = useState<Meditation[]>([]);
+  const [meditations, setMeditations] = useState<HealingAudio[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,21 +26,24 @@ const HealingMeditationsList: React.FC = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch healing-related meditations that have audio uploaded
-      const { data: medsData, error: medsError } = await supabase
-        .from('meditations')
+      // Fetch healing audio from the healing_audio table (where admin uploads go)
+      const { data, error } = await supabase
+        .from('healing_audio')
         .select('*')
-        .in('category', ['healing', 'premium_healing'])
-        .not('audio_url', 'is', null)
         .order('created_at', { ascending: false });
 
-      if (medsError) throw medsError;
-      setMeditations(medsData || []);
+      if (error) throw error;
+      setMeditations(data || []);
     } catch (error) {
       console.error('Error fetching healing meditations:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    return `${mins} min`;
   };
 
   if (loading) {
@@ -94,9 +97,13 @@ const HealingMeditationsList: React.FC = () => {
                       </Badge>
                       <span className="text-xs text-muted-foreground flex items-center gap-1">
                         <Clock className="w-3 h-3" />
-                        {meditation.duration_minutes} min
+                        {formatDuration(meditation.duration_seconds)}
                       </span>
-                      {meditation.is_premium && (
+                      {meditation.is_free ? (
+                        <Badge variant="secondary" className="text-xs">
+                          Free
+                        </Badge>
+                      ) : (
                         <Badge variant="secondary" className="text-xs">
                           Premium
                         </Badge>
