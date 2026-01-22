@@ -27,6 +27,7 @@ export interface OfflineRenderConfig {
 interface AudioLayer {
   buffer: AudioBuffer;
   volume: number;
+  isNeuralSource?: boolean;
 }
 
 /**
@@ -69,7 +70,7 @@ export async function renderOffline(config: OfflineRenderConfig): Promise<AudioB
   if (neuralAudioUrl) {
     try {
       const buffer = await fetchAndDecode(offlineCtx, neuralAudioUrl);
-      layers.push({ buffer, volume: neuralSourceVolume });
+      layers.push({ buffer, volume: neuralSourceVolume, isNeuralSource: true });
       console.log('[OfflineRender] Neural source volume:', neuralSourceVolume);
       onProgress?.(25, 'Neural source loaded...');
     } catch (e) {
@@ -92,7 +93,7 @@ export async function renderOffline(config: OfflineRenderConfig): Promise<AudioB
 
   // Schedule all audio layers with looping
   for (const layer of layers) {
-    scheduleLoopingBuffer(offlineCtx, layer.buffer, layer.volume, durationSeconds, dspOutput);
+    scheduleLoopingBuffer(offlineCtx, layer.buffer, layer.volume, durationSeconds, dspOutput, layer.isNeuralSource ?? false);
   }
 
   onProgress?.(50, 'Generating healing frequencies...');
@@ -134,15 +135,48 @@ async function fetchAndDecode(ctx: OfflineAudioContext, url: string): Promise<Au
 /**
  * Schedule a buffer to play with looping to fill the duration
  */
+/**
+ * Schedule a buffer to play with looping to fill the duration
+ * Includes dynamics processing to match live preview chain
+ */
 function scheduleLoopingBuffer(
   ctx: OfflineAudioContext,
   buffer: AudioBuffer,
   volume: number,
   durationSeconds: number,
-  destination: AudioNode
+  destination: AudioNode,
+  isNeuralSource: boolean = false
 ): void {
   const bufferDuration = buffer.duration;
   let currentTime = 0;
+  
+  // Create dynamics chain for neural source (matches live engine)
+  let outputNode: AudioNode = destination;
+  
+  if (isNeuralSource) {
+    // Create compressor matching live engine settings
+    const compressor = ctx.createDynamicsCompressor();
+    compressor.threshold.value = -50; // Same as live engine
+    compressor.knee.value = 40;
+    compressor.ratio.value = 4;
+    compressor.attack.value = 0.003;
+    compressor.release.value = 0.25;
+    
+    // Create soft-knee limiter matching live engine
+    const limiter = ctx.createDynamicsCompressor();
+    limiter.threshold.value = -1;  // -1 dB threshold
+    limiter.knee.value = 6;        // 6 dB soft knee
+    limiter.ratio.value = 20;      // High ratio for limiting
+    limiter.attack.value = 0.001;  // 1ms attack
+    limiter.release.value = 0.1;   // 100ms release
+    
+    // Chain: source -> compressor -> limiter -> destination
+    compressor.connect(limiter);
+    limiter.connect(destination);
+    outputNode = compressor;
+    
+    console.log('[OfflineRender] Neural source dynamics chain applied (compressor + limiter)');
+  }
   
   while (currentTime < durationSeconds) {
     const source = ctx.createBufferSource();
@@ -161,7 +195,7 @@ function scheduleLoopingBuffer(
     gainNode.gain.linearRampToValueAtTime(0, currentTime + playDuration);
     
     source.connect(gainNode);
-    gainNode.connect(destination);
+    gainNode.connect(outputNode);
     
     source.start(currentTime);
     source.stop(currentTime + playDuration);
