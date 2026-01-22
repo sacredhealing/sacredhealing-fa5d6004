@@ -26,6 +26,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Admin from "./pages/Admin";
 import AdminMusic from "./pages/AdminMusic";
 import AdminHealing from "./pages/AdminHealing";
+import AdminHealingEdit from "./pages/AdminHealingEdit";
 import AdminContent from "./pages/AdminContent";
 import AdminCourses from "./pages/AdminCourses";
 import AdminAnnouncements from "./pages/AdminAnnouncements";
@@ -176,6 +177,7 @@ const App = () => (
                 <Route path="/admin/meditations" element={<Admin />} />
                 <Route path="/admin/music" element={<AdminMusic />} />
                 <Route path="/admin/healing" element={<AdminHealing />} />
+                <Route path="/admin/healing/:id" element={<AdminHealingEdit />} />
                 <Route path="/admin/content" element={<AdminContent />} />
                 <Route path="/admin/courses" element={<AdminCourses />} />
                 <Route path="/admin/announcements" element={<AdminAnnouncements />} />
