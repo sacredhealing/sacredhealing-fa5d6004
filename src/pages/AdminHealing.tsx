@@ -675,7 +675,7 @@ USING (public.has_role(auth.uid(), 'admin'));`;
 
         {/* Edit Audio Dialog */}
         <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="w-[95vw] max-w-2xl max-h-[85vh] overflow-y-auto fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] z-[100] bg-background border rounded-lg shadow-lg">
             <DialogHeader>
               <DialogTitle>Edit Healing Audio</DialogTitle>
               <DialogDescription>
@@ -794,7 +794,7 @@ USING (public.has_role(auth.uid(), 'admin'));`;
 
         {/* Script Editor Dialog */}
         <Dialog open={scriptDialogOpen} onOpenChange={setScriptDialogOpen}>
-          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogContent className="w-[95vw] max-w-3xl max-h-[85vh] overflow-y-auto fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] z-[100] bg-background border rounded-lg shadow-lg">
             <DialogHeader>
               <DialogTitle>
                 {editingScript && audios.find(a => a.id === editingScript.id)?.title}
@@ -868,7 +868,7 @@ USING (public.has_role(auth.uid(), 'admin'));`;
 
         {/* Migration SQL Dialog */}
         <Dialog open={showMigrationDialog} onOpenChange={setShowMigrationDialog}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="w-[95vw] max-w-4xl max-h-[85vh] overflow-y-auto fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] z-[100] bg-background border rounded-lg shadow-lg">
             <DialogHeader>
               <DialogTitle>Database Migration SQL</DialogTitle>
               <DialogDescription>
