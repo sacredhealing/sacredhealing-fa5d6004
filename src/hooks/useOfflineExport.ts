@@ -26,7 +26,9 @@ export interface ExportResult {
 export interface ExportConfig {
   durationSeconds: number;
   neuralAudioUrl?: string;
+  neuralSourceVolume?: number;
   atmosphereAudioUrl?: string;
+  atmosphereVolume?: number;
   solfeggioHz?: number;
   solfeggioVolume?: number;
   binauralCarrierHz?: number;
@@ -54,7 +56,9 @@ export function useOfflineExport() {
         durationSeconds: config.durationSeconds,
         sampleRate: 44100,
         neuralAudioUrl: config.neuralAudioUrl,
+        neuralSourceVolume: config.neuralSourceVolume ?? 1.0,
         atmosphereAudioUrl: config.atmosphereAudioUrl,
+        atmosphereVolume: config.atmosphereVolume ?? 0.85,
         solfeggio: config.solfeggioHz ? {
           enabled: true,
           hz: config.solfeggioHz,
