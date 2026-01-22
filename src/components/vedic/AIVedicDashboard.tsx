@@ -13,6 +13,7 @@ import { useAIVedicReading } from '@/hooks/useAIVedicReading';
 import type { UserProfile, HoraInfo } from '@/lib/vedicTypes';
 import { getPlanetEmoji, getEnergyGradient, getSuccessColor } from '@/lib/vedicTypes';
 import { CosmicConsultation } from './CosmicConsultation';
+import { TimezoneSelector, useUserTimezone } from './TimezoneSelector';
 
 interface AIVedicDashboardProps {
   user: UserProfile;
@@ -134,22 +135,51 @@ const UpcomingHoraCard = ({ hora }: { hora: HoraInfo }) => (
 
 export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, onEditDetails, onUpgrade }) => {
   const { reading, isLoading, error, generateReading } = useAIVedicReading();
+  const { timezone, setTimezone, loading: timezoneLoading } = useUserTimezone();
   const [lastSync, setLastSync] = useState<string>("");
   const [timeOffset, setTimeOffset] = useState<number>(0);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
 
+  // Generate reading when user details, time offset, or timezone changes
   useEffect(() => {
-    if (user.birthDate && user.birthTime && user.birthPlace) {
-      console.log('Triggering Vedic reading generation for:', user.name);
-      generateReading(user, timeOffset);
-      const targetTime = new Date(Date.now() + timeOffset * 60000);
-      setLastSync(targetTime.toLocaleTimeString('en-US', { 
-        hour: '2-digit', 
-        minute: '2-digit',
-      }));
+    if (user.birthDate && user.birthTime && user.birthPlace && !timezoneLoading) {
+      console.log('Triggering Vedic reading generation for:', user.name, 'timezone:', timezone);
+      generateReading(user, timeOffset, timezone);
+      
+      // Format sync time in user's timezone
+      try {
+        const targetTime = new Date(Date.now() + timeOffset * 60000);
+        setLastSync(targetTime.toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          timeZone: timezone,
+        }));
+      } catch {
+        setLastSync(new Date().toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+        }));
+      }
     }
-  }, [user.plan, user.birthDate, user.birthTime, user.birthPlace, timeOffset]); // Remove generateReading from deps
+  }, [user.plan, user.birthDate, user.birthTime, user.birthPlace, timeOffset, timezone, timezoneLoading]);
+
+  // Auto-refresh Hora Watch every hour to keep it accurate
+  useEffect(() => {
+    if (!user.birthDate || !user.birthTime || !user.birthPlace || timezoneLoading) return;
+    
+    // Calculate ms until next hour boundary (when hora changes)
+    const now = new Date();
+    const msUntilNextHour = (60 - now.getMinutes()) * 60 * 1000 - now.getSeconds() * 1000;
+    
+    // Set timeout to refresh at the next hour mark
+    const timeoutId = setTimeout(() => {
+      console.log('Auto-refreshing Hora Watch at hour boundary');
+      generateReading(user, timeOffset, timezone);
+    }, msUntilNextHour);
+    
+    return () => clearTimeout(timeoutId);
+  }, [user, timeOffset, timezone, timezoneLoading, reading]);
 
   const handleTimeOffsetChange = (value: number[]) => {
     setTimeOffset(value[0]);
@@ -240,7 +270,7 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, onEdit
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => generateReading(user, timeOffset)}
+            onClick={() => generateReading(user, timeOffset, timezone)}
             disabled={isLoading}
             className="h-8"
           >
@@ -257,18 +287,27 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, onEdit
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div className="space-y-1">
-              <h2 className="text-4xl font-bold text-foreground font-serif italic flex items-center gap-3">
-                <Timer className="w-8 h-8 text-amber-400" />
-                Hora Watch
-              </h2>
-              <p className="text-[10px] text-amber-500 font-bold uppercase tracking-[0.3em]">Planetary Success Timing</p>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+              <div className="space-y-1">
+                <h2 className="text-4xl font-bold text-foreground font-serif italic flex items-center gap-3">
+                  <Timer className="w-8 h-8 text-amber-400" />
+                  Hora Watch
+                </h2>
+                <p className="text-[10px] text-amber-500 font-bold uppercase tracking-[0.3em]">Planetary Success Timing</p>
+              </div>
+
+              {/* Timezone Selector - Compact version */}
+              <TimezoneSelector
+                currentTimezone={timezone}
+                onTimezoneChange={setTimezone}
+                compact
+              />
             </div>
 
             {/* Time Travel Scrubber (Subscribers only) */}
             {user.plan !== 'free' && (
-              <div className="bg-background/80 border border-border p-5 rounded-3xl flex-1 max-w-sm shadow-2xl">
+              <div className="bg-background/80 border border-border p-5 rounded-3xl shadow-2xl">
                 <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase mb-3">
                   <span className="text-indigo-400">Time-Travel Scrubber</span>
                   <span>{timeOffset === 0 ? 'Live Now' : `${timeOffset > 0 ? '+' : ''}${timeOffset}m`}</span>

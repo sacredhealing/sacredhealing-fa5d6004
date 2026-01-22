@@ -6,7 +6,7 @@ interface UseAIVedicReadingResult {
   reading: VedicReading | null;
   isLoading: boolean;
   error: string | null;
-  generateReading: (user: UserProfile, timeOffset?: number) => Promise<void>;
+  generateReading: (user: UserProfile, timeOffset?: number, timezone?: string) => Promise<void>;
 }
 
 export function useAIVedicReading(): UseAIVedicReadingResult {
@@ -15,7 +15,7 @@ export function useAIVedicReading(): UseAIVedicReadingResult {
   const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const generateReading = useCallback(async (user: UserProfile, timeOffset: number = 0) => {
+  const generateReading = useCallback(async (user: UserProfile, timeOffset: number = 0, timezone: string = 'Europe/Stockholm') => {
     // Abort any previous request
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -26,10 +26,10 @@ export function useAIVedicReading(): UseAIVedicReadingResult {
     setError(null);
 
     try {
-      console.log('Generating Vedic reading for:', user.name, 'timeOffset:', timeOffset);
+      console.log('Generating Vedic reading for:', user.name, 'timeOffset:', timeOffset, 'timezone:', timezone);
       
       const { data, error: fnError } = await supabase.functions.invoke('generate-vedic-reading', {
-        body: { user, timeOffset },
+        body: { user, timeOffset, timezone },
       });
 
       console.log('Vedic reading response:', { data, fnError });

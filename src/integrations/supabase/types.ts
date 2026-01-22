@@ -3789,6 +3789,7 @@ export type Database = {
           total_referrals: number | null
           updated_at: string
           user_id: string
+          user_timezone: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -3816,6 +3817,7 @@ export type Database = {
           total_referrals?: number | null
           updated_at?: string
           user_id: string
+          user_timezone?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -3843,6 +3845,7 @@ export type Database = {
           total_referrals?: number | null
           updated_at?: string
           user_id?: string
+          user_timezone?: string | null
         }
         Relationships: [
           {

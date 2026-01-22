@@ -13,21 +13,58 @@ interface UserProfile {
   plan: 'free' | 'compass' | 'premium';
 }
 
+interface RequestBody {
+  user: UserProfile;
+  timeOffset?: number;
+  timezone?: string;
+  timezoneOffsetMinutes?: number;
+}
+
+// Format time in specific timezone
+function formatTimeInTimezone(date: Date, timezone: string): { dateStr: string; timeStr: string } {
+  try {
+    const dateStr = date.toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      timeZone: timezone,
+    });
+    const timeStr = date.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      hour12: true,
+      timeZone: timezone,
+    });
+    return { dateStr, timeStr };
+  } catch (e) {
+    console.log(`Invalid timezone ${timezone}, falling back to UTC:`, e);
+    const dateStr = date.toLocaleDateString('en-US', { 
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+    });
+    const timeStr = date.toLocaleTimeString('en-US', { 
+      hour: '2-digit', minute: '2-digit', hour12: true
+    });
+    return { dateStr, timeStr };
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { user, timeOffset = 0 } = await req.json() as { user: UserProfile; timeOffset?: number };
+    const { user, timeOffset = 0, timezone = 'Europe/Stockholm' } = await req.json() as RequestBody;
     const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
     
     if (!GEMINI_API_KEY) {
       throw new Error("GEMINI_API_KEY is not configured");
     }
 
+    console.log(`Generating reading for timezone: ${timezone}, timeOffset: ${timeOffset}`);
+
     // Model fallback chain - try models in order until one works
-    // gemini-2.0-flash is most reliable, fallback to others if needed
     const modelFallbackChain = ['gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-pro'];
     
     // Capture current moment with optional time offset for time-travel feature
@@ -36,28 +73,26 @@ serve(async (req) => {
       now.setMinutes(now.getMinutes() + timeOffset);
     }
     
-    const currentDateStr = now.toLocaleDateString('en-US', { 
-      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
-    });
-    const currentTimeStr = now.toLocaleTimeString('en-US', { 
-      hour: '2-digit', minute: '2-digit', hour12: true
-    });
+    // Format time in user's timezone for accurate Hora calculation
+    const { dateStr: currentDateStr, timeStr: currentTimeStr } = formatTimeInTimezone(now, timezone);
     
+    console.log(`Hora Watch time: ${currentTimeStr} on ${currentDateStr} (${timezone})`);
     const systemPrompt = `You are a fusion of two high-level personas:
 1. A Grand Master of Vedic Astrology (Jyotish) with 40+ years of experience in natal, divisional, and transit charts.
 2. A Google AI Product Specialist who knows every feature of Gemini, NotebookLM, AI Studio, and Google's workspace AI.
 
 IMPORTANT: You MUST respond with valid JSON only, no markdown, no code blocks, just pure JSON.
 
-CURRENT COSMIC MOMENT: ${currentDateStr} at ${currentTimeStr} (${now.toISOString()})
+CURRENT COSMIC MOMENT: ${currentDateStr} at ${currentTimeStr} (Timezone: ${timezone}, ISO: ${now.toISOString()})
 
 Generate a profoundly deep Vedic reading including the HORA WATCH feature inspired by Dr. Pillai's AstroVed approach.
 
 HORA WATCH REQUIREMENTS:
-- Calculate the specific Planetary Hora (Hour) ruling this exact moment: ${currentTimeStr}
+- Calculate the specific Planetary Hora (Hour) ruling this exact moment: ${currentTimeStr} in ${timezone}
 - Each Hora lasts approximately 1 hour and follows the Chaldean order: Sun, Venus, Mercury, Moon, Saturn, Jupiter, Mars
+- The Hora sequence STARTS FROM SUNRISE in the user's location. Sunrise varies by location - estimate based on ${timezone}.
 - Provide a SUCCESS RATING (0-100) based on how the ruling planet interacts with the user's natal chart
-- Include 4 upcoming Horas for planning purposes
+- Include 4 upcoming Horas for planning purposes with ACCURATE start/end times based on current time ${currentTimeStr}
 - Tag each Hora with its best activities and energy type
 
 PLAN-BASED CONTENT:
