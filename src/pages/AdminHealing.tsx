@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Upload, Trash2, Music, Check, Loader2, FileText, Edit2, Save, X, Copy, ExternalLink } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { ArrowLeft, Upload, Trash2, Music, Check, Loader2, FileText, Copy, ExternalLink, Pencil } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -29,25 +29,11 @@ interface HealingAudio {
 
 const AdminHealing: React.FC = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [audios, setAudios] = useState<HealingAudio[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [editingScript, setEditingScript] = useState<{ id: string; script: string } | null>(null);
-  const [scriptDialogOpen, setScriptDialogOpen] = useState(false);
   const [showMigrationDialog, setShowMigrationDialog] = useState(false);
-  const [editingAudio, setEditingAudio] = useState<HealingAudio | null>(null);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    audioUrl: '',
-    previewUrl: '',
-    durationMinutes: 3,
-    isFree: false,
-    priceUsd: 4.99,
-    category: 'healing',
-    scriptText: '',
-  });
-  const [editFormData, setEditFormData] = useState({
     title: '',
     description: '',
     audioUrl: '',
@@ -192,103 +178,7 @@ const AdminHealing: React.FC = () => {
   };
 
   const handleEditAudio = (audio: HealingAudio) => {
-    setEditingAudio(audio);
-    setEditFormData({
-      title: audio.title,
-      description: audio.description || '',
-      audioUrl: audio.audio_url,
-      previewUrl: audio.preview_url || '',
-      durationMinutes: Math.floor(audio.duration_seconds / 60),
-      isFree: audio.is_free,
-      priceUsd: audio.price_usd,
-      category: audio.category,
-      scriptText: audio.script_text || '',
-    });
-    setEditDialogOpen(true);
-  };
-
-  const handleUpdateAudio = async () => {
-    if (!editingAudio) return;
-    setIsLoading(true);
-
-    try {
-      const { error } = await supabase
-        .from('healing_audio')
-        .update({
-          title: editFormData.title,
-          description: editFormData.description || null,
-          audio_url: editFormData.audioUrl,
-          preview_url: editFormData.previewUrl || null,
-          duration_seconds: editFormData.durationMinutes * 60,
-          is_free: editFormData.isFree,
-          price_usd: editFormData.priceUsd,
-          price_shc: 0,
-          category: editFormData.category,
-          script_text: editFormData.scriptText || null,
-        } as any)
-        .eq('id', editingAudio.id);
-
-      if (error) throw error;
-
-      toast({ title: 'Success', description: 'Healing audio updated successfully!' });
-      setEditDialogOpen(false);
-      setEditingAudio(null);
-      fetchAudios();
-    } catch (error: any) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleEditScript = (audio: HealingAudio) => {
-    setEditingScript({ id: audio.id, script: audio.script_text || '' });
-    setScriptDialogOpen(true);
-  };
-
-  const handleSaveScript = async () => {
-    if (!editingScript) return;
-
-    setIsLoading(true);
-    try {
-      // Trim the script text to remove extra whitespace
-      const scriptText = editingScript.script.trim() || null;
-      
-      // Use type assertion to bypass TypeScript type checking for script_text
-      // This allows us to update the column even if types haven't been regenerated
-      const { data, error } = await supabase
-        .from('healing_audio')
-        .update({ script_text: scriptText } as any)
-        .eq('id', editingScript.id)
-        .select('id, script_text');
-
-      if (error) {
-        console.error('Error saving script:', error);
-        // Check if error is about missing column
-        if (error.message.includes('script_text') || error.message.includes('schema cache')) {
-          throw new Error('The script_text column does not exist. Please run migration: 20260109000001_add_script_text_to_healing_audio.sql');
-        }
-        throw error;
-      }
-
-      if (!data || data.length === 0) {
-        throw new Error('No data returned from update. You may not have permission to update healing audio.');
-      }
-
-      toast({ title: 'Success', description: 'Script saved successfully!' });
-      setScriptDialogOpen(false);
-      setEditingScript(null);
-      fetchAudios();
-    } catch (error: any) {
-      console.error('Failed to save script:', error);
-      toast({ 
-        title: 'Error', 
-        description: error.message || 'Failed to save script. Please check your admin permissions and ensure the migration has been run.', 
-        variant: 'destructive' 
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    navigate(`/admin/healing/${audio.id}`);
   };
 
   const getScriptTemplate = (category: string, title: string): string => {
@@ -433,22 +323,6 @@ ON public.healing_audio
 FOR DELETE
 USING (public.has_role(auth.uid(), 'admin'));`;
 
-  const handleCopyMigrationSQL = async () => {
-    try {
-      await navigator.clipboard.writeText(migrationSQL);
-      toast({ 
-        title: 'SQL Copied!', 
-        description: 'Paste it into Supabase SQL Editor and click Run. Then refresh this page.', 
-        variant: 'default' 
-      });
-    } catch (error) {
-      toast({ 
-        title: 'Copy Failed', 
-        description: 'Please manually copy the SQL below', 
-        variant: 'destructive' 
-      });
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -645,17 +519,8 @@ USING (public.has_role(auth.uid(), 'admin'));`;
                         size="sm"
                         onClick={() => handleEditAudio(audio)}
                       >
-                        <Edit2 className="w-4 h-4 mr-1" />
+                        <Pencil className="w-4 h-4 mr-1" />
                         Edit
-                      </Button>
-                      <Button
-                        variant={audio.script_text ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => handleEditScript(audio)}
-                        className={audio.script_text ? "bg-primary" : ""}
-                      >
-                        <FileText className="w-4 h-4 mr-1" />
-                        {audio.script_text ? 'Script' : 'Add Script'}
                       </Button>
                       <Button
                         variant="ghost"
@@ -672,199 +537,6 @@ USING (public.has_role(auth.uid(), 'admin'));`;
             </div>
           )}
         </Card>
-
-        {/* Edit Audio Dialog */}
-        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-          <DialogContent className="w-[95vw] max-w-2xl max-h-[85vh] overflow-y-auto fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] z-[100] bg-background border rounded-lg shadow-lg">
-            <DialogHeader>
-              <DialogTitle>Edit Healing Audio</DialogTitle>
-              <DialogDescription>
-                Update the details for this healing audio track
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="edit-title">Title *</Label>
-                <Input
-                  id="edit-title"
-                  value={editFormData.title}
-                  onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="edit-description">Description</Label>
-                <Textarea
-                  id="edit-description"
-                  value={editFormData.description}
-                  onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <AudioUpload
-                  value={editFormData.audioUrl}
-                  onChange={(url) => setEditFormData({ ...editFormData, audioUrl: url })}
-                  folder="healing"
-                  label="Full Audio File *"
-                />
-                <AudioUpload
-                  value={editFormData.previewUrl}
-                  onChange={(url) => setEditFormData({ ...editFormData, previewUrl: url })}
-                  folder="healing/previews"
-                  label="Preview Audio (30s)"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="edit-duration">Duration (minutes)</Label>
-                  <Input
-                    id="edit-duration"
-                    type="number"
-                    min="1"
-                    value={editFormData.durationMinutes}
-                    onChange={(e) => setEditFormData({ ...editFormData, durationMinutes: parseInt(e.target.value) || 1 })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="edit-priceUsd">Price (USD)</Label>
-                  <Input
-                    id="edit-priceUsd"
-                    type="number"
-                    step="0.01"
-                    value={editFormData.priceUsd}
-                    onChange={(e) => setEditFormData({ ...editFormData, priceUsd: parseFloat(e.target.value) })}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="edit-category">Category</Label>
-                <Input
-                  id="edit-category"
-                  value={editFormData.category}
-                  onChange={(e) => setEditFormData({ ...editFormData, category: e.target.value })}
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Switch
-                  id="edit-isFree"
-                  checked={editFormData.isFree}
-                  onCheckedChange={(checked) => setEditFormData({ ...editFormData, isFree: checked })}
-                />
-                <Label htmlFor="edit-isFree">Free audio (no purchase required)</Label>
-              </div>
-
-              <div>
-                <Label htmlFor="edit-scriptText">Meditation Script</Label>
-                <Textarea
-                  id="edit-scriptText"
-                  value={editFormData.scriptText}
-                  onChange={(e) => setEditFormData({ ...editFormData, scriptText: e.target.value })}
-                  rows={8}
-                  className="font-mono text-sm"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
-                  <X className="w-4 h-4 mr-2" />
-                  Cancel
-                </Button>
-                <Button onClick={handleUpdateAudio} disabled={isLoading}>
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4 mr-2" />
-                      Save Changes
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Script Editor Dialog */}
-        <Dialog open={scriptDialogOpen} onOpenChange={setScriptDialogOpen}>
-          <DialogContent className="w-[95vw] max-w-3xl max-h-[85vh] overflow-y-auto fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] z-[100] bg-background border rounded-lg shadow-lg">
-            <DialogHeader>
-              <DialogTitle>
-                {editingScript && audios.find(a => a.id === editingScript.id)?.title}
-              </DialogTitle>
-              <DialogDescription>
-                Meditation Script - Write or edit the script for recording. This will be used as your guide during recording.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <Label htmlFor="script">Script Text</Label>
-                  {editingScript && !editingScript.script && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        const audio = audios.find(a => a.id === editingScript.id);
-                        if (audio) {
-                          const template = getScriptTemplate(audio.category, audio.title);
-                          setEditingScript({ ...editingScript, script: template });
-                        }
-                      }}
-                    >
-                      <FileText className="w-3 h-3 mr-1" />
-                      Generate Template
-                    </Button>
-                  )}
-                </div>
-                <Textarea
-                  id="script"
-                  value={editingScript?.script || ''}
-                  onChange={(e) => setEditingScript(editingScript ? { ...editingScript, script: e.target.value } : null)}
-                  rows={20}
-                  className="font-mono text-sm whitespace-pre-wrap"
-                  placeholder="Enter your meditation script here, or click 'Generate Template' to create one based on the title and category..."
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  {editingScript?.script ? `${editingScript.script.length} characters` : 'No script yet'}
-                </p>
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setScriptDialogOpen(false);
-                    setEditingScript(null);
-                  }}
-                >
-                  <X className="w-4 h-4 mr-2" />
-                  Cancel
-                </Button>
-                <Button onClick={handleSaveScript} disabled={isLoading}>
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4 mr-2" />
-                      Save Script
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
 
         {/* Migration SQL Dialog */}
         <Dialog open={showMigrationDialog} onOpenChange={setShowMigrationDialog}>
