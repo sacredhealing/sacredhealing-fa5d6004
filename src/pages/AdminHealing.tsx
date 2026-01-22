@@ -39,10 +39,9 @@ const AdminHealing: React.FC = () => {
     description: '',
     audioUrl: '',
     previewUrl: '',
-    durationSeconds: 180,
+    durationMinutes: 3,
     isFree: false,
     priceUsd: 4.99,
-    priceShc: 50,
     category: 'healing',
     scriptText: '',
   });
@@ -136,10 +135,10 @@ const AdminHealing: React.FC = () => {
         description: formData.description || null,
         audio_url: formData.audioUrl,
         preview_url: formData.previewUrl || null,
-        duration_seconds: formData.durationSeconds,
+        duration_seconds: formData.durationMinutes * 60,
         is_free: formData.isFree,
         price_usd: formData.priceUsd,
-        price_shc: formData.priceShc,
+        price_shc: 0,
         category: formData.category,
         script_text: formData.scriptText || null,
       } as any);
@@ -152,10 +151,9 @@ const AdminHealing: React.FC = () => {
         description: '',
         audioUrl: '',
         previewUrl: '',
-        durationSeconds: 180,
+        durationMinutes: 3,
         isFree: false,
         priceUsd: 4.99,
-        priceShc: 50,
         category: 'healing',
         scriptText: '',
       });
@@ -460,14 +458,15 @@ USING (public.has_role(auth.uid(), 'admin'));`;
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="duration">Duration (seconds)</Label>
+                <Label htmlFor="duration">Duration (minutes)</Label>
                 <Input
                   id="duration"
                   type="number"
-                  value={formData.durationSeconds}
-                  onChange={(e) => setFormData({ ...formData, durationSeconds: parseInt(e.target.value) })}
+                  min="1"
+                  value={formData.durationMinutes}
+                  onChange={(e) => setFormData({ ...formData, durationMinutes: parseInt(e.target.value) || 1 })}
                 />
               </div>
 
@@ -479,16 +478,6 @@ USING (public.has_role(auth.uid(), 'admin'));`;
                   step="0.01"
                   value={formData.priceUsd}
                   onChange={(e) => setFormData({ ...formData, priceUsd: parseFloat(e.target.value) })}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="priceShc">Price (SHC)</Label>
-                <Input
-                  id="priceShc"
-                  type="number"
-                  value={formData.priceShc}
-                  onChange={(e) => setFormData({ ...formData, priceShc: parseInt(e.target.value) })}
                 />
               </div>
             </div>
