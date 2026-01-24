@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 
-export type IntentionType = 'peace' | 'healing' | 'release';
+export type IntentionType = 'peace' | 'healing' | 'release' | 'focus' | 'anxiety';
 
 interface IntentionThresholdProps {
   isOpen: boolean;
@@ -31,6 +31,20 @@ const INTENTIONS: { id: IntentionType; label: string; color: string; gradient: s
     color: 'hsl(280, 70%, 60%)',
     gradient: 'from-purple-400 via-violet-500 to-fuchsia-600',
     glow: 'shadow-[0_0_40px_rgba(192,132,252,0.6)]'
+  },
+  { 
+    id: 'focus', 
+    label: 'Focus', 
+    color: 'hsl(45, 90%, 55%)',
+    gradient: 'from-amber-400 via-orange-500 to-yellow-500',
+    glow: 'shadow-[0_0_40px_rgba(251,191,36,0.6)]'
+  },
+  { 
+    id: 'anxiety', 
+    label: 'Calm Anxiety', 
+    color: 'hsl(220, 70%, 55%)',
+    gradient: 'from-blue-400 via-indigo-500 to-slate-600',
+    glow: 'shadow-[0_0_40px_rgba(99,102,241,0.6)]'
   },
 ];
 

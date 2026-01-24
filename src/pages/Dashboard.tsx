@@ -22,6 +22,7 @@ import { DailyRitualCard } from '@/components/dashboard/DailyRitualCard';
 import { DailyPracticeCard } from '@/components/dashboard/DailyPracticeCard';
 import { SpiritualPathCard } from '@/components/dashboard/SpiritualPathCard';
 import { SacredFlame } from '@/components/dashboard/SacredFlame';
+import { DailyPathCard } from '@/components/dashboard/DailyPathCard';
 import { useChallenges } from '@/hooks/useChallenges';
 import { useLiveEvents } from '@/hooks/useLiveEvents';
 import { ChallengeCard } from '@/components/challenges/ChallengeCard';
@@ -223,6 +224,11 @@ const Dashboard: React.FC = () => {
       {/* Daily Ritual Card */}
       <div className="mt-6 animate-slide-up" style={{ animationDelay: '0.32s' }}>
         <DailyRitualCard />
+      </div>
+
+      {/* Daily Path Suggestion Card */}
+      <div className="mt-4 animate-slide-up" style={{ animationDelay: '0.325s' }}>
+        <DailyPathCard />
       </div>
 
       {/* Challenges Section */}
