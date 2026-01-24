@@ -68,23 +68,25 @@
 
 @layer base {
   :root {
-    --background: 250 60% 4%;
+    /* Deep Indigo to Midnight Blue palette */
+    --background: 250 65% 4%;
     --foreground: 0 0% 98%;
 
-    --card: 260 45% 8%;
+    --card: 255 50% 8%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 255 50% 6%;
+    --popover: 250 55% 6%;
     --popover-foreground: 0 0% 98%;
 
     --primary: 271 76% 53%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 174 72% 56%;
-    --secondary-foreground: 250 60% 10%;
+    /* Vibrant Turquoise for buttons */
+    --secondary: 185 100% 50%;
+    --secondary-foreground: 250 60% 5%;
 
-    --muted: 260 35% 12%;
-    --muted-foreground: 260 15% 55%;
+    --muted: 255 30% 15%;
+    --muted-foreground: 260 20% 65%;
 
     --accent: 51 100% 50%;
     --accent-foreground: 250 60% 10%;
@@ -92,49 +94,52 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 260 30% 18%;
-    --input: 260 35% 12%;
-    --ring: 271 76% 53%;
+    --border: 255 35% 20%;
+    --input: 255 35% 12%;
+    --ring: 185 100% 50%;
 
     --radius: 1rem;
 
-    /* Custom tokens */
+    /* Custom tokens - Enhanced */
     --purple: 271 76% 53%;
     --purple-glow: 271 76% 70%;
     --gold: 51 100% 50%;
     --gold-glow: 51 100% 70%;
-    --turquoise: 174 72% 56%;
-    --turquoise-glow: 174 72% 70%;
+    --turquoise: 185 100% 50%;
+    --turquoise-glow: 185 100% 65%;
     --indigo: 245 60% 35%;
     --violet: 280 70% 40%;
+    --lavender: 270 30% 70%;
     
-    /* Sanctuary Gradients */
-    --gradient-sanctuary: linear-gradient(135deg, hsl(250 60% 4%) 0%, hsl(260 55% 8%) 30%, hsl(280 50% 12%) 70%, hsl(270 45% 8%) 100%);
+    /* Deep Indigo to Midnight Blue gradient */
+    --gradient-sanctuary: linear-gradient(135deg, hsl(258 100% 8%) 0%, hsl(250 50% 15%) 50%, hsl(258 100% 8%) 100%);
     --gradient-spiritual: linear-gradient(135deg, hsl(271 76% 53%) 0%, hsl(271 76% 30%) 50%, hsl(250 60% 10%) 100%);
     --gradient-gold: linear-gradient(135deg, hsl(51 100% 50%) 0%, hsl(51 100% 40%) 100%);
-    --gradient-healing: linear-gradient(135deg, hsl(174 72% 56%) 0%, hsl(271 76% 53%) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(260 45% 12% / 0.6) 0%, hsl(260 45% 6% / 0.4) 100%);
+    --gradient-healing: linear-gradient(135deg, hsl(185 100% 50%) 0%, hsl(271 76% 53%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(255 45% 12% / 0.7) 0%, hsl(255 45% 6% / 0.5) 100%);
     --gradient-glow: radial-gradient(circle at center, hsl(271 76% 53% / 0.3) 0%, transparent 70%);
+    --gradient-turquoise-glow: radial-gradient(circle at center, hsl(185 100% 50% / 0.4) 0%, transparent 70%);
 
-    /* Glassmorphism */
-    --glass-bg: hsl(260 45% 10% / 0.4);
-    --glass-border: hsl(260 30% 30% / 0.3);
-    --glass-blur: 16px;
+    /* Enhanced Glassmorphism */
+    --glass-bg: hsl(255 45% 10% / 0.5);
+    --glass-border: hsl(185 100% 50% / 0.15);
+    --glass-blur: 12px;
 
-    /* Shadows */
+    /* Enhanced Shadows */
     --shadow-purple: 0 0 30px hsl(271 76% 53% / 0.4);
     --shadow-gold: 0 0 30px hsl(51 100% 50% / 0.4);
-    --shadow-turquoise: 0 0 20px hsl(174 72% 56% / 0.3);
+    --shadow-turquoise: 0 0 25px hsl(185 100% 50% / 0.35);
     --shadow-glow-soft: 0 0 20px hsl(271 76% 53% / 0.25);
+    --shadow-float: 0 8px 40px hsl(255 60% 5% / 0.6), 0 0 30px hsl(185 100% 50% / 0.15);
 
     --sidebar-background: 255 50% 6%;
     --sidebar-foreground: 0 0% 98%;
     --sidebar-primary: 271 76% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 260 35% 12%;
+    --sidebar-accent: 255 35% 12%;
     --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 260 30% 18%;
-    --sidebar-ring: 271 76% 53%;
+    --sidebar-border: 255 30% 18%;
+    --sidebar-ring: 185 100% 50%;
   }
 }
 
@@ -192,29 +197,42 @@
     background: var(--gradient-healing);
   }
 
-  /* Glassmorphism utilities */
+  /* Enhanced Glassmorphism utilities */
   .glass {
     background: var(--glass-bg);
-    backdrop-filter: blur(var(--glass-blur));
-    -webkit-backdrop-filter: blur(var(--glass-blur));
-    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 0.5px solid hsl(185 100% 50% / 0.2);
+    box-shadow: var(--shadow-float);
   }
 
   .glass-card {
-    background: hsl(260 45% 10% / 0.5);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid hsl(260 30% 35% / 0.25);
+    background: hsl(255 45% 10% / 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 0.5px solid hsl(185 100% 50% / 0.2);
     box-shadow: 
-      0 8px 32px hsl(260 60% 5% / 0.4),
-      inset 0 1px 0 hsl(260 30% 50% / 0.1);
+      0 8px 40px hsl(255 60% 3% / 0.6),
+      0 0 30px hsl(185 100% 50% / 0.08),
+      inset 0 1px 0 hsl(185 100% 70% / 0.1);
+  }
+
+  .glass-card-floating {
+    background: hsl(255 45% 10% / 0.65);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 0.5px solid hsl(185 100% 50% / 0.25);
+    box-shadow: 
+      0 12px 50px hsl(255 60% 3% / 0.7),
+      0 0 40px hsl(185 100% 50% / 0.12),
+      inset 0 1px 0 hsl(185 100% 70% / 0.15);
   }
 
   .glass-subtle {
-    background: hsl(260 45% 8% / 0.3);
+    background: hsl(255 45% 8% / 0.4);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid hsl(260 30% 30% / 0.2);
+    border: 0.5px solid hsl(185 100% 50% / 0.1);
   }
 
   .glow-purple {
@@ -231,6 +249,35 @@
 
   .glow-soft {
     box-shadow: var(--shadow-glow-soft);
+  }
+
+  .glow-float {
+    box-shadow: var(--shadow-float);
+  }
+
+  /* Glowing turquoise button */
+  .btn-glow-turquoise {
+    background: hsl(185 100% 50%);
+    color: hsl(255 60% 5%);
+    box-shadow: 
+      0 0 25px hsl(185 100% 50% / 0.5),
+      0 0 50px hsl(185 100% 50% / 0.3),
+      0 0 75px hsl(185 100% 50% / 0.15);
+    border: none;
+    transition: all 0.3s ease;
+  }
+
+  .btn-glow-turquoise:hover {
+    background: hsl(185 100% 55%);
+    box-shadow: 
+      0 0 35px hsl(185 100% 50% / 0.6),
+      0 0 70px hsl(185 100% 50% / 0.4),
+      0 0 100px hsl(185 100% 50% / 0.2);
+  }
+
+  /* Secondary/lavender text */
+  .text-lavender {
+    color: hsl(var(--lavender));
   }
 
   /* Button glow effect */
