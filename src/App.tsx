@@ -6,6 +6,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { SHCProvider } from "@/contexts/SHCContext";
 import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
+import { AmbientAudioProvider } from "@/contexts/AmbientAudioContext";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { AppLayout } from "./components/layout/AppLayout";
@@ -71,6 +72,7 @@ import EducationDetail from "./pages/income-streams/EducationDetail";
 import PolymarketBotDetail from "./pages/income-streams/PolymarketBotDetail";
 import AdminSystem from "./pages/AdminSystem";
 import AdminBreathing from "./pages/AdminBreathing";
+import AdminAmbientSounds from "./pages/AdminAmbientSounds";
 import AdminAffirmation from "./pages/AdminAffirmation";
 import AdminMusicAnalytics from "./pages/AdminMusicAnalytics";
 import AdminAnalytics from "./pages/AdminAnalytics";
@@ -102,9 +104,10 @@ const App = () => (
       <TooltipProvider>
         <SHCProvider>
           <MusicPlayerProvider>
-            <Toaster />
-            <Sonner />
-            <DebugBanner />
+            <AmbientAudioProvider>
+              <Toaster />
+              <Sonner />
+              <DebugBanner />
             <BrowserRouter>
               <Routes>
               <Route path="/" element={<Auth />} />
@@ -192,6 +195,7 @@ const App = () => (
                 <Route path="/admin/email-list" element={<AdminEmailList />} />
                 <Route path="/admin/system" element={<AdminSystem />} />
                 <Route path="/admin/breathing" element={<AdminBreathing />} />
+                <Route path="/admin/ambient-sounds" element={<AdminAmbientSounds />} />
                 <Route path="/admin/affirmation" element={<AdminAffirmation />} />
                 <Route path="/admin/analytics" element={<AdminAnalytics />} />
                 <Route path="/admin/paths" element={<AdminPaths />} />
@@ -202,6 +206,7 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
+            </AmbientAudioProvider>
           </MusicPlayerProvider>
         </SHCProvider>
       </TooltipProvider>

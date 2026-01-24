@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { useSiteContent } from '@/hooks/useSiteContent';
 import { SacredBreathingGuide } from '@/components/breathing/SacredBreathingGuide';
+import { AmbientSoundToggle } from '@/components/audio/AmbientSoundToggle';
 
 import { supabase } from '@/integrations/supabase/client';
 
@@ -191,18 +192,23 @@ const Breathing: React.FC = () => {
           <span className="text-sm">{t('common.back', 'Back')}</span>
         </button>
         
-        <div className="flex items-center gap-3">
-          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
-            <Wind className="w-7 h-7 text-white" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+              <Wind className="w-7 h-7 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">
+                {content['breathing_title'] || t('breathing.title', 'Breathing Exercises')}
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                {content['breathing_subtitle'] || t('breathing.subtitle', 'Calm your mind, energize your body')}
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">
-              {content['breathing_title'] || t('breathing.title', 'Breathing Exercises')}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {content['breathing_subtitle'] || t('breathing.subtitle', 'Calm your mind, energize your body')}
-            </p>
-          </div>
+          
+          {/* Ambient Sound Toggle */}
+          <AmbientSoundToggle />
         </div>
       </div>
 

@@ -22,7 +22,8 @@ import {
   AudioLines,
   BarChart3,
   Map,
-  MessageCircle
+  MessageCircle,
+  Volume2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -133,6 +134,13 @@ const adminSections = [
     icon: Wind,
     href: '/admin/breathing',
     color: 'text-cyan-500',
+  },
+  {
+    title: 'Ambient Sounds',
+    description: 'Manage background audio loops for meditation',
+    icon: Volume2,
+    href: '/admin/ambient-sounds',
+    color: 'text-teal-500',
   },
   {
     title: 'Affirmation Soundtrack',
