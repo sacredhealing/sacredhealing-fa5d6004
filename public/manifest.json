@@ -1,0 +1,44 @@
+{
+  "name": "Sacred Healing - Awaken Your Inner Light",
+  "short_name": "Sacred Healing",
+  "description": "Transform your life with guided meditations, healing courses, and spiritual growth. Earn SHC tokens as you progress on your journey.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0D0D1A",
+  "theme_color": "#8A2BE2",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["health", "lifestyle", "wellness", "meditation"],
+  "icons": [
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Meditate",
+      "short_name": "Meditate",
+      "url": "/meditations",
+      "icons": [{ "src": "/icon-512x512.png", "sizes": "512x512" }]
+    },
+    {
+      "name": "Healing Audio",
+      "short_name": "Healing",
+      "url": "/healing",
+      "icons": [{ "src": "/icon-512x512.png", "sizes": "512x512" }]
+    },
+    {
+      "name": "Breathing",
+      "short_name": "Breathe",
+      "url": "/breathing",
+      "icons": [{ "src": "/icon-512x512.png", "sizes": "512x512" }]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
+}
