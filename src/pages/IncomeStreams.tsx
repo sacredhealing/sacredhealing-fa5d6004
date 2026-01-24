@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { 
   DollarSign, TrendingUp, Users, Sparkles, ArrowRight, Coins, 
   GraduationCap, Bot, Cpu, Heart, Star, Zap, Globe, Shield,
+  Wallet,
   type LucideIcon
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
-
+import { SHCBalanceCard } from '@/components/dashboard/SHCBalanceCard';
 interface IncomeStream {
   id: string;
   title: string;
@@ -120,8 +121,23 @@ const IncomeStreams: React.FC = () => {
 
   return (
     <div className="min-h-screen pb-24">
+      {/* SHC Balance Banner */}
+      <div className="px-4 pt-6 pb-4">
+        <SHCBalanceCard />
+      </div>
+
+      {/* Wallet Button */}
+      <div className="px-4 pb-4">
+        <Link to="/wallet">
+          <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-extrabold text-base py-6 shadow-[0_0_30px_rgba(0,242,254,0.4)]">
+            <Wallet className="w-5 h-5 mr-2" />
+            {t('nav.wallet', 'Wallet')}
+          </Button>
+        </Link>
+      </div>
+
       {/* Header */}
-      <div className="px-4 pt-6 pb-6">
+      <div className="px-4 pt-2 pb-6">
         <div className="flex items-center gap-3 mb-2">
           <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20">
             <DollarSign className="h-6 w-6 text-primary" />
