@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Play, BookOpen, Gift, Wallet, Flame, Sparkles, DollarSign, Youtube, ShoppingBag, Crown, Music, Heart, Trophy, Star, Calendar, Headphones, Wind, Award, Share2, Radio, ArrowRight, Users } from 'lucide-react';
+import { Play, BookOpen, Gift, Wallet, Sparkles, DollarSign, Youtube, ShoppingBag, Crown, Music, Heart, Trophy, Star, Calendar, Headphones, Wind, Award, Share2, Radio, ArrowRight, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LotusIcon } from '@/components/icons/LotusIcon';
 import { Card } from '@/components/ui/card';
@@ -21,6 +21,7 @@ import { FeaturedPlaylistsCarousel } from '@/components/dashboard/FeaturedPlayli
 import { DailyRitualCard } from '@/components/dashboard/DailyRitualCard';
 import { DailyPracticeCard } from '@/components/dashboard/DailyPracticeCard';
 import { SpiritualPathCard } from '@/components/dashboard/SpiritualPathCard';
+import { SacredFlame } from '@/components/dashboard/SacredFlame';
 import { useChallenges } from '@/hooks/useChallenges';
 import { useLiveEvents } from '@/hooks/useLiveEvents';
 import { ChallengeCard } from '@/components/challenges/ChallengeCard';
@@ -73,13 +74,7 @@ const Dashboard: React.FC = () => {
             {userProfile?.full_name || t('dashboard.sacredSoul')} ✨
           </h1>
         </div>
-        <div className="flex items-center gap-2 bg-muted/50 rounded-full px-4 py-2">
-          <Flame className="text-accent" size={18} />
-          <span className="font-heading font-semibold text-foreground">
-            {profile?.streak_days ?? 0}
-          </span>
-          <span className="text-sm text-muted-foreground">{t('dashboard.streak')}</span>
-        </div>
+        <SacredFlame />
       </header>
 
       {/* SHC Balance Card */}
