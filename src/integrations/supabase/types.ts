@@ -3775,6 +3775,7 @@ export type Database = {
           evening_reminder_time: string
           full_name: string | null
           id: string
+          last_activity_date: string | null
           last_login_date: string | null
           midday_reminder_time: string
           morning_reminder_time: string
@@ -3803,6 +3804,7 @@ export type Database = {
           evening_reminder_time?: string
           full_name?: string | null
           id?: string
+          last_activity_date?: string | null
           last_login_date?: string | null
           midday_reminder_time?: string
           morning_reminder_time?: string
@@ -3831,6 +3833,7 @@ export type Database = {
           evening_reminder_time?: string
           full_name?: string | null
           id?: string
+          last_activity_date?: string | null
           last_login_date?: string | null
           midday_reminder_time?: string
           morning_reminder_time?: string
