@@ -68,15 +68,15 @@
 
 @layer base {
   :root {
-    /* Deepest Midnight - #09090b */
-    --background: 240 10% 4%;
-    --foreground: 0 0% 98%;
+    /* Deep Midnight Indigo - #0B0A1A */
+    --background: 245 33% 7%;
+    --foreground: 0 0% 100%;
 
-    --card: 240 10% 6%;
-    --card-foreground: 0 0% 98%;
+    --card: 245 33% 9%;
+    --card-foreground: 0 0% 100%;
 
-    --popover: 240 10% 5%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 245 33% 8%;
+    --popover-foreground: 0 0% 100%;
 
     /* Glowing Turquoise - #00F2FE (active buttons + icons) */
     --primary: 186 100% 50%;
@@ -86,17 +86,18 @@
     --secondary: 271 76% 53%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 240 10% 10%;
-    --muted-foreground: 240 5% 50%;
+    --muted: 245 30% 12%;
+    /* Soft Lavender-Grey #A5B4FC for descriptions */
+    --muted-foreground: 229 84% 81%;
 
     --accent: 51 100% 50%;
-    --accent-foreground: 240 10% 4%;
+    --accent-foreground: 245 33% 7%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 10% 15%;
-    --input: 240 10% 10%;
+    --border: 245 30% 18%;
+    --input: 245 30% 12%;
     --ring: 186 100% 50%;
 
     --radius: 1.5rem;
@@ -112,16 +113,16 @@
     --indigo: 245 60% 35%;
     --violet: 280 70% 40%;
     
-    /* Deepest Midnight with subtle indigo radial (#09090b + #1e1b4b) */
-    --gradient-sanctuary: radial-gradient(ellipse at 50% 30%, hsl(245 58% 20% / 0.4) 0%, transparent 60%), 
-      linear-gradient(to bottom, hsl(240 10% 4%) 0%, hsl(240 10% 4%) 100%);
-    --gradient-spiritual: linear-gradient(135deg, hsl(271 76% 53%) 0%, hsl(271 76% 30%) 50%, hsl(240 10% 4%) 100%);
+    /* Deep Midnight Indigo #0B0A1A with subtle purple radial */
+    --gradient-sanctuary: radial-gradient(ellipse at 50% 30%, hsl(245 58% 20% / 0.25) 0%, transparent 60%), 
+      hsl(245 33% 7%);
+    --gradient-spiritual: linear-gradient(135deg, hsl(271 76% 53%) 0%, hsl(271 76% 30%) 50%, hsl(245 33% 7%) 100%);
     --gradient-gold: linear-gradient(135deg, hsl(51 100% 50%) 0%, hsl(51 100% 40%) 100%);
     --gradient-healing: linear-gradient(135deg, hsl(186 100% 50%) 0%, hsl(271 76% 53%) 100%);
-    --gradient-card: linear-gradient(145deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+    --gradient-card: linear-gradient(145deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%);
     --gradient-glow: radial-gradient(circle at center, hsl(186 100% 50% / 0.3) 0%, transparent 70%);
 
-    /* Glassmorphism - darker & more transparent */
+    /* Glassmorphism - refined */
     --glass-bg: rgba(255, 255, 255, 0.03);
     --glass-border: rgba(255, 255, 255, 0.1);
     --glass-blur: 12px;
@@ -151,10 +152,10 @@
   body {
     @apply text-foreground font-sans antialiased;
     font-family: 'Inter', sans-serif;
-    /* Deepest Midnight #09090b with subtle indigo radial glow */
+    /* Deep Midnight Indigo #0B0A1A with subtle purple radial glow */
     background: 
-      radial-gradient(ellipse at 50% 30%, rgba(30, 27, 75, 0.35) 0%, transparent 55%),
-      #09090b;
+      radial-gradient(ellipse at 50% 25%, rgba(88, 28, 135, 0.15) 0%, transparent 50%),
+      #0B0A1A;
     background-attachment: fixed;
     min-height: 100vh;
   }
@@ -200,20 +201,20 @@
     background: var(--gradient-healing);
   }
 
-  /* Glassmorphism utilities - darker, more transparent with turquoise glow border */
+  /* Glassmorphism utilities - refined per spec */
   .glass {
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(255, 255, 255, 0.03);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(0, 242, 254, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 24px;
   }
 
   .glass-card {
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(255, 255, 255, 0.03);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(0, 242, 254, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 24px;
   }
 

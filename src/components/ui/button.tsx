@@ -9,19 +9,19 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // Primary (Glowing Turquoise)
+        // Primary - Glowing Turquoise #00F2FE with strong glow
         default:
-          "bg-primary text-primary-foreground font-semibold hover:bg-primary/90 shadow-[0_0_20px_hsl(var(--primary)/0.5),0_0_40px_hsl(var(--primary)/0.25)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.6),0_0_60px_hsl(var(--primary)/0.35)]",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-[0_0_20px_hsl(0_84%_60%/0.3)]",
-        outline: "glass-card hover:bg-white/5 text-foreground shadow-[0_0_15px_hsl(var(--primary)/0.15)]",
+          "bg-[#00F2FE] text-[#0B0A1A] font-semibold hover:bg-[#00D4E0] shadow-[0_0_15px_rgba(0,242,254,0.6)] hover:shadow-[0_0_25px_rgba(0,242,254,0.7)]",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-[0_0_15px_hsl(0_84%_60%/0.3)]",
+        outline: "glass-card hover:bg-white/5 text-white shadow-[0_0_10px_rgba(0,242,254,0.1)]",
         secondary:
-          "bg-secondary text-secondary-foreground font-semibold hover:bg-secondary/90 shadow-[0_0_20px_hsl(var(--secondary)/0.35)]",
-        ghost: "hover:bg-white/5 hover:text-foreground hover:shadow-[0_0_15px_hsl(var(--primary)/0.15)]",
-        link: "text-primary underline-offset-4 hover:underline",
-        gold: "bg-gradient-to-r from-[hsl(51,100%,50%)] to-[hsl(45,100%,45%)] text-gray-900 font-semibold shadow-[0_0_25px_hsl(51_100%_50%/0.5),0_0_50px_hsl(51_100%_50%/0.25)] hover:shadow-[0_0_35px_hsl(51_100%_50%/0.6),0_0_70px_hsl(51_100%_50%/0.35)] hover:scale-105 rounded-full",
+          "bg-secondary text-secondary-foreground font-semibold hover:bg-secondary/90 shadow-[0_0_15px_hsl(var(--secondary)/0.4)]",
+        ghost: "hover:bg-white/5 hover:text-white hover:shadow-[0_0_10px_rgba(0,242,254,0.15)]",
+        link: "text-[#00F2FE] underline-offset-4 hover:underline",
+        gold: "bg-gradient-to-r from-[hsl(51,100%,50%)] to-[hsl(45,100%,45%)] text-gray-900 font-semibold shadow-[0_0_20px_hsl(51_100%_50%/0.5)] hover:shadow-[0_0_30px_hsl(51_100%_50%/0.6)] hover:scale-105 rounded-full",
         spiritual:
-          "bg-gradient-to-r from-primary to-secondary text-primary-foreground font-semibold shadow-[0_0_25px_hsl(var(--primary)/0.5),0_0_50px_hsl(var(--primary)/0.25)] hover:shadow-[0_0_35px_hsl(var(--primary)/0.6),0_0_70px_hsl(var(--primary)/0.35)] hover:scale-105",
-        glass: "glass-card hover:bg-white/5 text-foreground shadow-[0_0_20px_hsl(var(--primary)/0.15)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.25)]",
+          "bg-[#00F2FE] text-[#0B0A1A] font-semibold hover:bg-[#00D4E0] shadow-[0_0_15px_rgba(0,242,254,0.6)] hover:shadow-[0_0_25px_rgba(0,242,254,0.7)] hover:scale-105",
+        glass: "glass-card hover:bg-white/5 text-white shadow-[0_0_15px_rgba(0,242,254,0.15)] hover:shadow-[0_0_20px_rgba(0,242,254,0.25)]",
       },
       size: {
         default: "h-11 px-6 py-2",
