@@ -7,6 +7,8 @@ import { Loader2 } from 'lucide-react';
 export const ProtectedRoute: React.FC = () => {
   const { isAuthenticated, isLoading, user } = useAuth();
   const location = useLocation();
+  const publicPaths = ['/meditations', '/music', '/healing', '/membership'];
+  const isPublicPath = publicPaths.includes(location.pathname);
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
   const [checkingOnboarding, setCheckingOnboarding] = useState(true);
 
@@ -50,6 +52,9 @@ export const ProtectedRoute: React.FC = () => {
   }
 
   if (!isAuthenticated) {
+    // Allow marketing-style access to a small set of pages so membership banners
+    // can remain visible (no redirect flicker).
+    if (isPublicPath) return <Outlet />;
     return <Navigate to="/auth" replace />;
   }
 

@@ -101,13 +101,13 @@ export const VedicAstrologySection: React.FC = () => {
 
   return (
     <Card className="border-2 border-primary/30 bg-gradient-to-br from-purple-500/5 via-background to-blue-500/5">
-      <CardContent className="p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
-            <Sparkles className="w-6 h-6 text-purple-400" />
+      <CardContent className="p-4 sm:p-6">
+        <div className="flex items-start gap-3 mb-5 sm:mb-6">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center flex-shrink-0">
+            <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
           </div>
           <div className="flex-1">
-            <h2 className="text-2xl font-heading font-bold text-foreground">
+            <h2 className="text-xl sm:text-2xl font-heading font-bold text-foreground">
               Vedic Astrology
             </h2>
             <p className="text-sm text-muted-foreground">
@@ -119,9 +119,9 @@ export const VedicAstrologySection: React.FC = () => {
         {/* Birth Details Section */}
         {!hasBirthDetails ? (
           <Card className="mb-6 border-2 border-primary/30 bg-gradient-to-br from-blue-500/5 to-purple-500/5">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+            <CardContent className="p-4 sm:p-5">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-start gap-3">
                   <div className="p-3 rounded-full bg-primary/20">
                     <Calendar className="w-5 h-5 text-primary" />
                   </div>
@@ -134,7 +134,7 @@ export const VedicAstrologySection: React.FC = () => {
                 </div>
                 <Dialog open={birthDetailsDialogOpen} onOpenChange={setBirthDetailsDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="default" size="lg">
+                    <Button variant="default" size="lg" className="w-full sm:w-auto">
                       <User className="w-4 h-4 mr-2" />
                       Add Birth Details
                     </Button>
@@ -156,7 +156,7 @@ export const VedicAstrologySection: React.FC = () => {
           </Card>
         ) : (
           <div className="mb-6 p-4 rounded-lg bg-green-500/10 border border-green-500/30">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <CheckCircle className="w-5 h-5 text-green-500" />
@@ -168,7 +168,7 @@ export const VedicAstrologySection: React.FC = () => {
               </div>
               <Dialog open={birthDetailsDialogOpen} onOpenChange={setBirthDetailsDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" className="w-full sm:w-auto">
                     Edit Details
                   </Button>
                 </DialogTrigger>

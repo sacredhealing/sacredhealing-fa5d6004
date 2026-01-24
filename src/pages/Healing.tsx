@@ -17,6 +17,7 @@ import { HealingProgressCard } from '@/components/healing/HealingProgressCard';
 import HealingMeditationsList from '@/components/healing/HealingMeditationsList';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { IntentionThreshold, IntentionType } from '@/components/meditation/IntentionThreshold';
+import MeditationMembershipBanner from '@/components/meditation/MeditationMembershipBanner';
 
 interface HealingAudio {
   id: string;
@@ -577,6 +578,9 @@ const Healing: React.FC = () => {
       />
       
       <div className="min-h-screen p-6 space-y-12">
+      {/* Membership Banner */}
+      <MeditationMembershipBanner />
+
       {/* Hero Section */}
       <Card className="bg-gradient-to-r from-primary/30 to-pink-500/30 border-none text-center overflow-hidden">
         <CardContent className="py-10 px-6">
