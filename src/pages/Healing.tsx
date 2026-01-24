@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import { toast as sonnerToast } from 'sonner';
 import { Sparkles, Play, Pause, Lock, Download, Heart, Clock, Music, CheckCircle, Star, CreditCard, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -234,6 +236,7 @@ const testimonials = [
 
 const Healing: React.FC = () => {
   const { i18n } = useTranslation();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { balance } = useSHCBalance();
   const { walletAddress, isPhantomInstalled, connectWallet, isConnecting } = usePhantomWallet();
@@ -529,6 +532,17 @@ const Healing: React.FC = () => {
     audioRef.current.play();
     audioRef.current.onended = () => {
       setPlayingId(null);
+      
+      // Prompt to journal after healing session
+      sonnerToast.success('Session complete', {
+        description: 'Would you like to journal your reflection?',
+        action: {
+          label: 'Open Journal',
+          onClick: () => navigate(`/meditation-journal${currentIntention ? `?intention=${currentIntention}` : ''}`),
+        },
+        duration: 10000,
+      });
+      
       setCurrentIntention(null);
     };
     setPlayingId(audio.id);

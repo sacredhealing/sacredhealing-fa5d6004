@@ -80,6 +80,7 @@ import SpiritualPaths from "./pages/SpiritualPaths";
 import PathDetail from "./pages/PathDetail";
 import DailyRitual from "./pages/DailyRitual";
 import Journal from "./pages/Journal";
+import MeditationJournal from "./pages/MeditationJournal";
 import AdminPaths from "./pages/AdminPaths";
 import AdminCircles from "./pages/AdminCircles";
 import AdminContentRoadmap from "./pages/AdminContentRoadmap";
@@ -160,6 +161,7 @@ const App = () => (
                   <Route path="/paths/:slug" element={<PathDetail />} />
                   <Route path="/ritual" element={<DailyRitual />} />
                   <Route path="/journal" element={<Journal />} />
+                  <Route path="/meditation-journal" element={<MeditationJournal />} />
                   <Route path="/invite-friends" element={<InviteFriends />} />
                   <Route path="/vedic-astrology" element={<VedicAstrology />} />
                   <Route path="/ayurveda" element={<Ayurveda />} />
