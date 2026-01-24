@@ -30,7 +30,6 @@ import { BreathingJourneysCard } from '@/components/dashboard/BreathingJourneysC
 import { HealingJourneysCard } from '@/components/dashboard/HealingJourneysCard';
 import { JourneyTimeline } from '@/components/dashboard/JourneyTimeline';
 import { PositiveMeCard } from '@/components/dashboard/PositiveMeCard';
-import { QuickActionsCard } from '@/components/dashboard/QuickActionsCard';
 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
@@ -100,11 +99,6 @@ const Dashboard: React.FC = () => {
         
         {/* Healing Journeys */}
         <HealingJourneysCard />
-      </div>
-
-      {/* Quick Actions: Earn, Wallet, Rewards */}
-      <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.15s' }}>
-        <QuickActionsCard />
       </div>
 
       {/* Bottom Section: Positive Me + Timeline */}
