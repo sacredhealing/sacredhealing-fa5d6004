@@ -25,11 +25,13 @@ import { useChallenges } from '@/hooks/useChallenges';
 import { useLiveEvents } from '@/hooks/useLiveEvents';
 import { ChallengeCard } from '@/components/challenges/ChallengeCard';
 import { LiveEventCard } from '@/components/events/LiveEventCard';
+import { useProfile } from '@/hooks/useProfile';
 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { balance, profile, isLoading } = useSHC();
+  const { profile: userProfile } = useProfile();
   const { quote, isVisible } = useDailyQuote();
   const { meditation: dailyMeditation, isLoading: meditationLoading } = useDailyMeditation();
   const { 
@@ -67,7 +69,9 @@ const Dashboard: React.FC = () => {
       <header className="flex items-center justify-between mb-8 animate-fade-in">
         <div>
           <p className="text-muted-foreground text-sm">{t('dashboard.greeting')}</p>
-          <h1 className="text-2xl font-heading font-bold text-foreground">{t('dashboard.sacredSoul')} ✨</h1>
+          <h1 className="text-2xl font-heading font-bold text-foreground">
+            {userProfile?.full_name || t('dashboard.sacredSoul')} ✨
+          </h1>
         </div>
         <div className="flex items-center gap-2 bg-muted/50 rounded-full px-4 py-2">
           <Flame className="text-accent" size={18} />
