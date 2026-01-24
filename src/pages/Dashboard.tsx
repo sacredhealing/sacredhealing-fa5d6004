@@ -32,7 +32,6 @@ import { JourneyTimeline } from '@/components/dashboard/JourneyTimeline';
 import { PositiveMeCard } from '@/components/dashboard/PositiveMeCard';
 import { DailyRitualCard } from '@/components/dashboard/DailyRitualCard';
 import { SpiritualPathCard } from '@/components/dashboard/SpiritualPathCard';
-import { QuickActionsGrid } from '@/components/dashboard/QuickActionsGrid';
 import { SHCBalanceCard } from '@/components/dashboard/SHCBalanceCard';
 
 const Dashboard: React.FC = () => {
@@ -99,11 +98,6 @@ const Dashboard: React.FC = () => {
           greeting="Today's Sacred Practice"
           subtitle="Morning: Rise with Clarity"
         />
-      </div>
-
-      {/* Quick Actions Grid */}
-      <div className="mb-4 sm:mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-        <QuickActionsGrid />
       </div>
 
       {/* Daily Spiritual Practice */}
