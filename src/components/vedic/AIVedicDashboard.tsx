@@ -14,6 +14,7 @@ import type { UserProfile, HoraInfo } from '@/lib/vedicTypes';
 import { getPlanetEmoji, getEnergyGradient, getSuccessColor } from '@/lib/vedicTypes';
 import { CosmicConsultation } from './CosmicConsultation';
 import { TimezoneSelector, useUserTimezone } from './TimezoneSelector';
+import { AccurateHoraWatch } from './AccurateHoraWatch';
 
 interface AIVedicDashboardProps {
   user: UserProfile;
@@ -164,22 +165,8 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, onEdit
     }
   }, [user.plan, user.birthDate, user.birthTime, user.birthPlace, timeOffset, timezone, timezoneLoading]);
 
-  // Auto-refresh Hora Watch every hour to keep it accurate
-  useEffect(() => {
-    if (!user.birthDate || !user.birthTime || !user.birthPlace || timezoneLoading) return;
-    
-    // Calculate ms until next hour boundary (when hora changes)
-    const now = new Date();
-    const msUntilNextHour = (60 - now.getMinutes()) * 60 * 1000 - now.getSeconds() * 1000;
-    
-    // Set timeout to refresh at the next hour mark
-    const timeoutId = setTimeout(() => {
-      console.log('Auto-refreshing Hora Watch at hour boundary');
-      generateReading(user, timeOffset, timezone);
-    }, msUntilNextHour);
-    
-    return () => clearTimeout(timeoutId);
-  }, [user, timeOffset, timezone, timezoneLoading, reading]);
+  // Note: Hora Watch auto-refresh is now handled by the AccurateHoraWatch component
+  // which uses precise sunrise/sunset calculations and real-time countdown
 
   const handleTimeOffsetChange = (value: number[]) => {
     setTimeOffset(value[0]);
@@ -279,110 +266,64 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, onEdit
         </div>
       </motion.div>
 
-      {/* HORA WATCH - DR PILLAI EDITION */}
-      {reading.horaWatch && (
-        <motion.section 
-          className="space-y-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-              <div className="space-y-1">
-                <h2 className="text-4xl font-bold text-foreground font-serif italic flex items-center gap-3">
-                  <Timer className="w-8 h-8 text-amber-400" />
-                  Hora Watch
-                </h2>
-                <p className="text-[10px] text-amber-500 font-bold uppercase tracking-[0.3em]">Planetary Success Timing</p>
-              </div>
+      {/* HORA WATCH - DR PILLAI EDITION - Now with accurate sunrise/sunset-based calculations */}
+      <motion.section 
+        className="space-y-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div className="space-y-1">
+              <h2 className="text-4xl font-bold text-foreground font-serif italic flex items-center gap-3">
+                <Timer className="w-8 h-8 text-amber-400" />
+                Hora Watch
+              </h2>
+              <p className="text-[10px] text-amber-500 font-bold uppercase tracking-[0.3em]">Planetary Success Timing • Dr. Pillai Method</p>
+            </div>
 
-              {/* Timezone Selector - Compact version */}
-              <TimezoneSelector
-                currentTimezone={timezone}
-                onTimezoneChange={setTimezone}
-                compact
+            {/* Timezone Selector - Compact version */}
+            <TimezoneSelector
+              currentTimezone={timezone}
+              onTimezoneChange={setTimezone}
+              compact
+            />
+          </div>
+
+          {/* Time Travel Scrubber (Subscribers only) */}
+          {user.plan !== 'free' && (
+            <div className="bg-background/80 border border-border p-5 rounded-3xl shadow-2xl">
+              <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase mb-3">
+                <span className="text-indigo-400">Time-Travel Scrubber</span>
+                <span>{timeOffset === 0 ? 'Live Now' : `${timeOffset > 0 ? '+' : ''}${timeOffset}m`}</span>
+              </div>
+              <Slider
+                value={[timeOffset]}
+                min={-720}
+                max={720}
+                step={30}
+                onValueChange={handleTimeOffsetChange}
+                className="w-full"
               />
-            </div>
-
-            {/* Time Travel Scrubber (Subscribers only) */}
-            {user.plan !== 'free' && (
-              <div className="bg-background/80 border border-border p-5 rounded-3xl shadow-2xl">
-                <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase mb-3">
-                  <span className="text-indigo-400">Time-Travel Scrubber</span>
-                  <span>{timeOffset === 0 ? 'Live Now' : `${timeOffset > 0 ? '+' : ''}${timeOffset}m`}</span>
-                </div>
-                <Slider
-                  value={[timeOffset]}
-                  min={-720}
-                  max={720}
-                  step={30}
-                  onValueChange={handleTimeOffsetChange}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-[9px] text-muted-foreground mt-2">
-                  <span>-12h</span>
-                  <span>Now</span>
-                  <span>+12h</span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Main Watch Card */}
-            <div className="md:col-span-2 relative group">
-              <div className={`absolute -inset-0.5 bg-gradient-to-br ${getEnergyGradient(reading.horaWatch.currentHora.energyType)} rounded-[2.5rem] blur opacity-20 group-hover:opacity-30 transition duration-1000`}></div>
-              <div className="relative p-10 rounded-3xl bg-card/80 backdrop-blur-sm border border-border/50 h-full overflow-hidden">
-                <div className="flex flex-col md:flex-row gap-8">
-                  {/* Success Meter Circle */}
-                  <SuccessMeter rating={reading.horaWatch.currentHora.successRating} />
-
-                  <div className="flex-1 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-3xl font-bold text-foreground">{reading.horaWatch.currentHora.planet}</h3>
-                      <div className="text-4xl">{getPlanetEmoji(reading.horaWatch.currentHora.planet)}</div>
-                    </div>
-                    
-                    <Badge 
-                      variant="outline" 
-                      className={`text-[10px] ${
-                        reading.horaWatch.currentHora.energyType === 'Auspicious' 
-                          ? 'border-emerald-500/30 text-emerald-400' 
-                          : reading.horaWatch.currentHora.energyType === 'Neutral'
-                          ? 'border-amber-500/30 text-amber-400'
-                          : 'border-rose-500/30 text-rose-400'
-                      }`}
-                    >
-                      {reading.horaWatch.currentHora.energyType} • {reading.horaWatch.currentHora.startTime} - {reading.horaWatch.currentHora.endTime}
-                    </Badge>
-
-                    <p className="text-sm text-muted-foreground leading-relaxed italic">
-                      "{reading.horaWatch.currentHora.description}"
-                    </p>
-                    
-                    <div className="flex flex-wrap gap-2 pt-2">
-                      {reading.horaWatch.currentHora.bestFor.slice(0, 3).map((item, i) => (
-                        <span key={i} className="px-3 py-1 bg-primary/10 border border-primary/20 rounded-lg text-[10px] text-primary font-bold uppercase tracking-widest">
-                          {item}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+              <div className="flex justify-between text-[9px] text-muted-foreground mt-2">
+                <span>-12h</span>
+                <span>Now</span>
+                <span>+12h</span>
               </div>
             </div>
+          )}
+        </div>
 
-            {/* Upcoming Flux List */}
-            <div className="bg-card/50 border border-border/50 rounded-3xl p-6 space-y-3">
-              <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.3em] mb-4">Upcoming Flow</h4>
-              {reading.horaWatch.upcomingHoras?.map((hora, i) => (
-                <UpcomingHoraCard key={i} hora={hora} />
-              ))}
-            </div>
-          </div>
-        </motion.section>
-      )}
+        {/* Accurate Hora Watch with real sunrise/sunset calculations */}
+        <AccurateHoraWatch
+          timezone={timezone}
+          timeOffset={timeOffset}
+          userBirthChart={{
+            // Pass birth chart data if available for personalized success ratings
+          }}
+        />
+      </motion.section>
 
       {/* Today's Cosmic Pulse with Audio */}
       <motion.section 
