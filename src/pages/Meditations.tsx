@@ -10,6 +10,7 @@ import CustomMeditationCreation from '@/components/meditation/CustomMeditationCr
 import WealthMeditationService from '@/components/meditation/WealthMeditationService';
 import MeditationMembershipBanner from '@/components/meditation/MeditationMembershipBanner';
 import { CuratedMeditationCard } from '@/components/meditation/CuratedMeditationCard';
+import { IntentionThreshold, IntentionType } from '@/components/meditation/IntentionThreshold';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -41,6 +42,11 @@ const Meditations: React.FC = () => {
   const [progress, setProgress] = useState<Record<string, number>>({});
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const playStartTimeRef = useRef<number>(0);
+  
+  // Intention threshold state
+  const [showThreshold, setShowThreshold] = useState(false);
+  const [pendingMeditation, setPendingMeditation] = useState<Meditation | null>(null);
+  const [currentIntention, setCurrentIntention] = useState<IntentionType | null>(null);
 
   // Curated playlists
   const { playlists: curatedPlaylists, loading: curatedLoading, getPlaylistItems } = useCuratedPlaylists('meditation');
@@ -95,19 +101,48 @@ const Meditations: React.FC = () => {
     }
   }, [searchParams, t]);
 
-  const handlePlay = async (meditation: Meditation) => {
+  // Opens the intention threshold before starting a meditation
+  const initiatePlay = (meditation: Meditation) => {
     if (playingId === meditation.id) {
-      // Pause
+      // If already playing this one, just pause
       audioRef.current?.pause();
       setPlayingId(null);
       return;
     }
-
-    // Stop current audio
+    
+    // Stop any current audio first
     if (audioRef.current) {
       audioRef.current.pause();
+      setPlayingId(null);
     }
+    
+    // Store the pending meditation and show threshold
+    setPendingMeditation(meditation);
+    setShowThreshold(true);
+  };
 
+  // Handles intention selection and starts playback
+  const handleIntentionSelected = (intention: IntentionType) => {
+    setCurrentIntention(intention);
+    setShowThreshold(false);
+    
+    if (pendingMeditation) {
+      startPlayback(pendingMeditation);
+      setPendingMeditation(null);
+    }
+  };
+
+  // Skip threshold and start without intention
+  const handleThresholdClose = () => {
+    setShowThreshold(false);
+    if (pendingMeditation) {
+      startPlayback(pendingMeditation);
+      setPendingMeditation(null);
+    }
+  };
+
+  // Actual audio playback logic
+  const startPlayback = async (meditation: Meditation) => {
     // Create new audio
     const audio = new Audio(meditation.audio_url);
     audioRef.current = audio;
@@ -121,6 +156,7 @@ const Meditations: React.FC = () => {
     audio.addEventListener('ended', async () => {
       setPlayingId(null);
       setProgress(prev => ({ ...prev, [meditation.id]: 0 }));
+      setCurrentIntention(null);
       
       // Award SHC if logged in with anti-farming validation
       if (user) {
@@ -227,7 +263,15 @@ const Meditations: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen px-4 pt-6 pb-24">
+    <>
+      {/* Intention Threshold Screen */}
+      <IntentionThreshold
+        isOpen={showThreshold}
+        onSelectIntention={handleIntentionSelected}
+        onClose={handleThresholdClose}
+      />
+      
+      <div className="min-h-screen px-4 pt-6 pb-24">
       {/* Header */}
       <header className="mb-6 animate-fade-in">
         <h1 className="text-3xl font-heading font-bold text-foreground">{t('meditations.title', 'Meditations')}</h1>
@@ -305,7 +349,7 @@ const Meditations: React.FC = () => {
                     
                     <div className="flex items-center gap-4">
                       <button 
-                        onClick={() => handlePlay(meditation)}
+                        onClick={() => initiatePlay(meditation)}
                         className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center glow-purple hover:scale-110 transition-transform"
                       >
                         {isPlaying ? (
@@ -415,7 +459,7 @@ const Meditations: React.FC = () => {
                         
                         <div className="flex items-center gap-4">
                           <button 
-                            onClick={() => handlePlay(meditation)}
+                            onClick={() => initiatePlay(meditation)}
                             className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center glow-purple hover:scale-110 transition-transform"
                           >
                             {isPlaying ? (
@@ -494,7 +538,7 @@ const Meditations: React.FC = () => {
                     
                     <div className="flex items-center gap-4">
                       <button 
-                        onClick={() => handlePlay(meditation)}
+                        onClick={() => initiatePlay(meditation)}
                         className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center glow-purple hover:scale-110 transition-transform"
                       >
                         {isPlaying ? (
@@ -534,6 +578,7 @@ const Meditations: React.FC = () => {
         </>
       )}
     </div>
+    </>
   );
 };
 
