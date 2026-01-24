@@ -22,23 +22,23 @@ export const AyurvedaSection: React.FC<AyurvedaSectionProps> = ({
   return (
     <Card className="overflow-hidden border-2 border-emerald-500/20 bg-gradient-to-br from-emerald-50/50 to-background dark:from-emerald-950/20">
       <CardContent className="p-0">
-        <div className="p-6 md:p-8">
-          <div className="flex items-start gap-4 mb-6">
+        <div className="p-4 sm:p-6 md:p-8">
+          <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 mb-6">
             <motion.div 
-              className="p-4 rounded-2xl bg-emerald-100 dark:bg-emerald-900/30"
+              className="p-3 sm:p-4 rounded-2xl bg-emerald-100 dark:bg-emerald-900/30 self-start"
               whileHover={{ scale: 1.05, rotate: 5 }}
             >
-              <Leaf className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+              <Leaf className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-600 dark:text-emerald-400" />
             </motion.div>
             <div>
               <Badge className="bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 mb-2">
                 <Sparkles className="w-3 h-3 mr-1" />
                 AI-Powered Ayurveda
               </Badge>
-              <h2 className="text-2xl font-serif font-bold text-foreground">
+              <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground">
                 Discover Your Prakriti
               </h2>
-              <p className="text-muted-foreground mt-1">
+              <p className="text-sm sm:text-base text-muted-foreground mt-1">
                 Ancient Ayurvedic wisdom meets modern AI for personalized health guidance
               </p>
             </div>
@@ -89,7 +89,7 @@ export const AyurvedaSection: React.FC<AyurvedaSectionProps> = ({
           <Button 
             size="lg"
             onClick={() => navigate('/ayurveda')}
-            className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-2xl py-6"
+            className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-2xl py-5 sm:py-6"
           >
             Begin Your Ayurvedic Journey
             <ArrowRight className="ml-2 w-5 h-5" />
