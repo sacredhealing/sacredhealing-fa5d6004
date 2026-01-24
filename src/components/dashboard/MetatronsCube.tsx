@@ -9,19 +9,19 @@ interface MetatronsCubeProps {
 export const MetatronsCube: React.FC<MetatronsCubeProps> = ({ className }) => {
   return (
     <div className={cn("relative", className)}>
-      {/* Outer turquoise glow */}
+      {/* Outer cyan glow - larger and brighter */}
       <motion.div
-        className="absolute inset-[-20%] rounded-full"
+        className="absolute inset-[-25%] rounded-full"
         style={{
-          background: "radial-gradient(circle, rgba(0, 242, 254, 0.2) 0%, rgba(0, 242, 254, 0.05) 40%, transparent 70%)",
-          filter: "blur(15px)",
+          background: "radial-gradient(circle, rgba(0, 242, 254, 0.3) 0%, rgba(0, 242, 254, 0.1) 50%, transparent 70%)",
+          filter: "blur(20px)",
         }}
         animate={{
-          scale: [1, 1.1, 1],
-          opacity: [0.6, 0.9, 0.6],
+          scale: [1, 1.15, 1],
+          opacity: [0.7, 1, 0.7],
         }}
         transition={{
-          duration: 4,
+          duration: 3,
           repeat: Infinity,
           ease: "easeInOut",
         }}

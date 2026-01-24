@@ -36,11 +36,11 @@ export const AppLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen relative">
-      {/* Deep Midnight Indigo #0B0A1A with subtle purple radial glow */}
+      {/* Deep Midnight Black #050505 with subtle Deep Purple #1A1033 radial glow */}
       <div 
         className="fixed inset-0 -z-20"
         style={{
-          background: "radial-gradient(ellipse at 50% 25%, rgba(88, 28, 135, 0.15) 0%, transparent 50%), #0B0A1A",
+          background: "radial-gradient(ellipse at 50% 40%, rgba(26, 16, 51, 0.6) 0%, transparent 55%), #050505",
         }}
       />
       
