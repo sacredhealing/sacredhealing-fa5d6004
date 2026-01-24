@@ -25,17 +25,16 @@ const MusicMembershipBanner: React.FC = () => {
   const [subscribing, setSubscribing] = useState<'monthly' | 'yearly' | null>(null);
 
   useEffect(() => {
-    if (user) {
-      checkMembership();
-    } else {
-      setLoading(false);
-    }
+    // Always check membership - for logged out users, show the banner immediately
+    checkMembership();
   }, [user]);
 
   const checkMembership = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
+        // No session - show subscription options for non-logged-in users
+        setMembership({ hasMembership: false, planType: null, subscriptionEnd: null });
         setLoading(false);
         return;
       }
@@ -50,6 +49,8 @@ const MusicMembershipBanner: React.FC = () => {
       setMembership(data);
     } catch (error) {
       console.error('Error checking membership:', error);
+      // On error, still show the banner (non-member state)
+      setMembership({ hasMembership: false, planType: null, subscriptionEnd: null });
     } finally {
       setLoading(false);
     }
