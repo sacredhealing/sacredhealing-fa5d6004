@@ -30,6 +30,10 @@ import { BreathingJourneysCard } from '@/components/dashboard/BreathingJourneysC
 import { HealingJourneysCard } from '@/components/dashboard/HealingJourneysCard';
 import { JourneyTimeline } from '@/components/dashboard/JourneyTimeline';
 import { PositiveMeCard } from '@/components/dashboard/PositiveMeCard';
+import { DailyRitualCard } from '@/components/dashboard/DailyRitualCard';
+import { SpiritualPathCard } from '@/components/dashboard/SpiritualPathCard';
+import { QuickActionsGrid } from '@/components/dashboard/QuickActionsGrid';
+import { SHCBalanceCard } from '@/components/dashboard/SHCBalanceCard';
 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
@@ -84,16 +88,36 @@ const Dashboard: React.FC = () => {
         <AmbientSoundToggle />
       </header>
 
-      {/* Today's Sacred Practice - Hero Card */}
+      {/* SHC Balance Card */}
       <div className="mb-6 animate-slide-up">
+        <SHCBalanceCard />
+      </div>
+
+      {/* Today's Sacred Practice - Hero Card */}
+      <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.05s' }}>
         <TodaysPracticeCard 
           greeting="Today's Sacred Practice"
           subtitle="Morning: Rise with Clarity"
         />
       </div>
 
+      {/* Quick Actions Grid */}
+      <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+        <QuickActionsGrid />
+      </div>
+
+      {/* Daily Spiritual Practice */}
+      <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.15s' }}>
+        <DailyRitualCard />
+      </div>
+
+      {/* Your Path */}
+      <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+        <SpiritualPathCard />
+      </div>
+
       {/* Two-Column Journeys Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 animate-slide-up" style={{ animationDelay: '0.25s' }}>
         {/* Breathing Journeys */}
         <BreathingJourneysCard />
         
@@ -102,7 +126,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Bottom Section: Positive Me + Timeline */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 animate-slide-up" style={{ animationDelay: '0.3s' }}>
         {/* Positive Me Stats */}
         <PositiveMeCard />
         
