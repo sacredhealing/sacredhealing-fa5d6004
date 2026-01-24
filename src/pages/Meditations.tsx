@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Play, Pause, Clock, Sparkles, Leaf, Moon, Sun, Heart, Brain, ArrowLeft, Loader2 } from 'lucide-react';
 import { TranslatedText } from '@/components/TranslatedText';
@@ -32,6 +32,7 @@ interface Meditation {
 
 const Meditations: React.FC = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { refreshBalance } = useSHCBalance();
   const [activeCategory, setActiveCategory] = useState('all');
@@ -156,12 +157,23 @@ const Meditations: React.FC = () => {
     audio.addEventListener('ended', async () => {
       setPlayingId(null);
       setProgress(prev => ({ ...prev, [meditation.id]: 0 }));
-      setCurrentIntention(null);
       
       // Award SHC if logged in with anti-farming validation
       if (user) {
         await awardMeditationReward(meditation);
       }
+      
+      // Prompt to journal after meditation
+      toast.success('Meditation complete', {
+        description: 'Would you like to journal your reflection?',
+        action: {
+          label: 'Open Journal',
+          onClick: () => navigate(`/meditation-journal${currentIntention ? `?intention=${currentIntention}` : ''}`),
+        },
+        duration: 10000,
+      });
+      
+      setCurrentIntention(null);
     });
 
     try {
