@@ -4,11 +4,12 @@ import { cn } from "@/lib/utils";
 
 interface MetatronsCubeProps {
   className?: string;
+  style?: React.CSSProperties;
 }
 
-export const MetatronsCube: React.FC<MetatronsCubeProps> = ({ className }) => {
+export const MetatronsCube: React.FC<MetatronsCubeProps> = ({ className, style }) => {
   return (
-    <div className={cn("relative", className)}>
+    <div className={cn("relative", className)} style={style}>
       {/* Outer cyan glow - PORTAL effect with drop-shadow */}
       <motion.div
         className="absolute inset-[-40%] rounded-full"
