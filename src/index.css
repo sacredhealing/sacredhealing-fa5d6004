@@ -77,12 +77,13 @@
     --popover: 255 50% 6%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 271 76% 53%;
-    --primary-foreground: 0 0% 100%;
+    /* Glowing Turquoise (active buttons + icons) */
+    --primary: 186 100% 50%;
+    --primary-foreground: 246 55% 10%;
 
-    /* Glowing Turquoise - #00F2FE */
-    --secondary: 186 100% 50%;
-    --secondary-foreground: 250 60% 10%;
+    /* Spiritual Purple (supporting accent) */
+    --secondary: 271 76% 53%;
+    --secondary-foreground: 0 0% 100%;
 
     --muted: 260 35% 12%;
     --muted-foreground: 260 15% 55%;
@@ -110,8 +111,13 @@
     --indigo: 245 60% 35%;
     --violet: 280 70% 40%;
     
-    /* Sanctuary Gradient: #0F0C29 -> #302B63 -> #24243E */
-    --gradient-sanctuary: linear-gradient(to bottom right, #0F0C29 0%, #302B63 50%, #24243E 100%);
+    /* Sanctuary Gradient: #0F0C29 -> #302B63 -> #24243E (HSL equivalents) */
+    --gradient-sanctuary: linear-gradient(
+      to bottom right,
+      hsl(246 55% 10%) 0%,
+      hsl(245 39% 28%) 50%,
+      hsl(240 27% 19%) 100%
+    );
     --gradient-spiritual: linear-gradient(135deg, hsl(271 76% 53%) 0%, hsl(271 76% 30%) 50%, hsl(250 60% 10%) 100%);
     --gradient-gold: linear-gradient(135deg, hsl(51 100% 50%) 0%, hsl(51 100% 40%) 100%);
     --gradient-healing: linear-gradient(135deg, hsl(186 100% 50%) 0%, hsl(271 76% 53%) 100%);
@@ -148,8 +154,7 @@
   body {
     @apply text-foreground font-sans antialiased;
     font-family: 'Inter', sans-serif;
-    /* Sanctuary Gradient: #0F0C29 -> #302B63 -> #24243E */
-    background: linear-gradient(to bottom right, #0F0C29 0%, #302B63 50%, #24243E 100%);
+    background: var(--gradient-sanctuary);
     background-attachment: fixed;
     min-height: 100vh;
   }
@@ -210,9 +215,6 @@
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 24px;
-    box-shadow: 
-      0 8px 32px rgba(0, 0, 0, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.05);
   }
 
   .glass-subtle {
@@ -232,40 +234,40 @@
   }
 
   .glow-turquoise {
-    box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.4);
   }
 
   .glow-soft {
-    box-shadow: 0 0 20px rgba(0, 242, 254, 0.25);
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.25);
   }
 
-  /* Button glow effect - Turquoise #00F2FE */
+  /* Button glow effect - primary */
   .btn-glow {
     box-shadow: 
-      0 0 20px rgba(0, 242, 254, 0.4),
-      0 0 40px rgba(0, 242, 254, 0.2);
+      0 0 20px hsl(var(--primary) / 0.4),
+      0 0 40px hsl(var(--primary) / 0.2);
     border: none;
     transition: box-shadow 0.3s ease;
   }
 
   .btn-glow:hover {
     box-shadow: 
-      0 0 30px rgba(0, 242, 254, 0.6),
-      0 0 60px rgba(0, 242, 254, 0.3);
+      0 0 30px hsl(var(--primary) / 0.6),
+      0 0 60px hsl(var(--primary) / 0.3);
   }
 
   .btn-glow-turquoise {
     box-shadow: 
-      0 0 20px rgba(0, 242, 254, 0.4),
-      0 0 40px rgba(0, 242, 254, 0.2);
+      0 0 20px hsl(var(--primary) / 0.4),
+      0 0 40px hsl(var(--primary) / 0.2);
     border: none;
     transition: box-shadow 0.3s ease;
   }
 
   .btn-glow-turquoise:hover {
     box-shadow: 
-      0 0 30px rgba(0, 242, 254, 0.6),
-      0 0 60px rgba(0, 242, 254, 0.3);
+      0 0 30px hsl(var(--primary) / 0.6),
+      0 0 60px hsl(var(--primary) / 0.3);
   }
 
   .btn-glow-gold {
