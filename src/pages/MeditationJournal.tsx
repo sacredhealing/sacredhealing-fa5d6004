@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Feather, Sparkles, Send, BookOpen, Loader2 } from 'lucide-react';
+import { ArrowLeft, Feather, Sparkles, Send, BookOpen, Loader2, Heart, Wind, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useJournal } from '@/hooks/useJournal';
 import { useAuth } from '@/hooks/useAuth';
+import { useDailyPath } from '@/hooks/useDailyPath';
 import { toast } from 'sonner';
+import type { IntentionType } from '@/components/meditation/IntentionThreshold';
 
 const MEDITATION_PROMPT = "What did your soul hear in the silence?";
 
@@ -15,13 +17,17 @@ const MeditationJournal: React.FC = () => {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { createEntry, entries, isLoading: entriesLoading } = useJournal();
+  const { saveSuggestion, getSuggestionForIntention } = useDailyPath();
   
   const [reflection, setReflection] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   
   // Get intention from URL params if passed from meditation
-  const intention = searchParams.get('intention');
+  const intention = searchParams.get('intention') as IntentionType | null;
+  
+  // Get follow-up suggestion based on intention
+  const followUpSuggestion = intention ? getSuggestionForIntention(intention) : null;
 
   // Check if user already has an entry for today with this prompt
   const todaysMeditationEntry = entries.find(e => {
@@ -59,6 +65,11 @@ const MeditationJournal: React.FC = () => {
         prompt: MEDITATION_PROMPT,
       });
       setIsSaved(true);
+      
+      // Save the daily path suggestion if we have an intention
+      if (intention) {
+        saveSuggestion(intention);
+      }
     } catch (error) {
       console.error('Error saving reflection:', error);
     } finally {
@@ -251,6 +262,36 @@ const MeditationJournal: React.FC = () => {
                 >
                   <Sparkles size={14} />
                   <span>Your reflection has been preserved</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Follow-up suggestion based on intention */}
+            <AnimatePresence>
+              {isSaved && followUpSuggestion && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.5 }}
+                  className="mt-6 p-4 rounded-xl bg-amber-800/20 border border-amber-700/30"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-full bg-amber-600/30 shrink-0">
+                      <Heart className="w-4 h-4 text-amber-300" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-amber-900/80 text-sm leading-relaxed italic mb-3">
+                        "{followUpSuggestion.message}"
+                      </p>
+                      <Link to={followUpSuggestion.practiceRoute}>
+                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-700/30 hover:bg-amber-700/50 text-amber-900 text-sm font-medium transition-colors group">
+                          <Wind className="w-4 h-4" />
+                          <span>{followUpSuggestion.practiceTitle}</span>
+                          <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                        </div>
+                      </Link>
+                    </div>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
