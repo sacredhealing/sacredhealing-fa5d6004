@@ -25,9 +25,9 @@ export const TodaysPracticeCard: React.FC<TodaysPracticeCardProps> = ({
         {/* Subtle gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-r from-secondary/5 via-transparent to-primary/5 pointer-events-none" />
         
-        {/* Content with luxury spacing */}
-        <div className="relative flex items-center p-8 gap-8">
-          {/* Left: Metatron's Cube Sacred Geometry - LARGER portal with cyan glow */}
+        {/* Content - responsive padding and layout */}
+        <div className="relative flex items-center p-4 sm:p-8 gap-3 sm:gap-8">
+          {/* Left: Metatron's Cube Sacred Geometry - responsive sizing */}
           <div className="hidden sm:flex w-56 h-56 shrink-0 relative">
             {/* Large cyan outer glow - portal effect */}
             <div 
@@ -40,35 +40,35 @@ export const TodaysPracticeCard: React.FC<TodaysPracticeCardProps> = ({
             <MetatronsCube className="w-full h-full relative z-10" />
           </div>
 
-          {/* Mobile: Larger Portal */}
-          <div className="flex sm:hidden w-40 h-40 shrink-0 relative">
+          {/* Mobile: Smaller Portal to fit screen */}
+          <div className="flex sm:hidden w-24 h-24 shrink-0 relative">
             <div 
-              className="absolute inset-[-30%] rounded-full animate-pulse-slow"
+              className="absolute inset-[-20%] rounded-full animate-pulse-slow"
               style={{
                 background: "radial-gradient(circle, rgba(0, 242, 254, 0.3) 0%, transparent 60%)",
-                filter: "blur(20px) drop-shadow(0 0 20px rgba(0, 242, 254, 0.35))",
+                filter: "blur(15px) drop-shadow(0 0 15px rgba(0, 242, 254, 0.35))",
               }}
             />
             <MetatronsCube className="w-full h-full relative z-10" />
           </div>
 
           {/* Right: Text and CTA */}
-          <div className="flex-1 flex flex-col gap-5">
+          <div className="flex-1 min-w-0 flex flex-col gap-3 sm:gap-5">
             <div>
-              <h2 className="text-xl sm:text-2xl font-heading font-bold text-white mb-2">
+              <h2 className="text-base sm:text-2xl font-heading font-bold text-white mb-1 sm:mb-2 leading-tight">
                 {greeting}
               </h2>
-              <p className="text-base text-[#94a3b8]">
+              <p className="text-sm sm:text-base text-[#94a3b8] truncate">
                 {subtitle}
               </p>
             </div>
 
             <Link to="/meditations">
               <Button 
-                className="w-full sm:w-auto gap-2 bg-[#00F2FE] hover:bg-[#00D4E0] text-[#000000] font-extrabold shadow-[0_0_25px_rgba(0,242,254,0.5)] hover:shadow-[0_0_35px_rgba(0,242,254,0.6)] border-none transition-all text-base px-8 py-3"
+                className="w-full gap-2 bg-[#00F2FE] hover:bg-[#00D4E0] text-[#000000] font-extrabold shadow-[0_0_25px_rgba(0,242,254,0.5)] hover:shadow-[0_0_35px_rgba(0,242,254,0.6)] border-none transition-all text-sm sm:text-base px-4 sm:px-8 py-2.5 sm:py-3"
               >
                 Start Journey
-                <ArrowRight className="w-5 h-5" />
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
               </Button>
             </Link>
           </div>
