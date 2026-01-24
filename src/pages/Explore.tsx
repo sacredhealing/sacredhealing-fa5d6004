@@ -167,7 +167,7 @@ const Explore: React.FC = () => {
     // YouTube - Moved from Dashboard Quick Actions
     {
       id: 'videos',
-      to: '/videos',
+      to: '/spiritual-education',
       icon: Youtube,
       title: t('quickActions.videos', 'Videos'),
       description: t('explore.videoDesc', 'Watch & learn'),
