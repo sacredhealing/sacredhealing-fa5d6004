@@ -1,9 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Flame, Zap, Sparkles, ArrowRight } from 'lucide-react';
+import { Zap, Sparkles, ArrowRight } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { useSacredFlame } from '@/hooks/useSacredFlame';
+import { LivingCoinIcon } from '@/components/icons/LivingCoinIcon';
 
 export const HealingJourneysCard: React.FC = () => {
   const { brightness, streakDays, isLoading } = useSacredFlame();
@@ -45,30 +46,47 @@ export const HealingJourneysCard: React.FC = () => {
           whileHover={{ scale: 1.01 }}
         >
           <div className="flex items-center gap-4">
-            {/* Animated Flame */}
-            <div className="relative">
+            {/* Sacred Healing Coin with Turquoise Aura */}
+            <div className="relative flex items-center justify-center">
+              {/* Outer turquoise pulsing aura */}
               <motion.div
-                className="absolute inset-0 rounded-full"
+                className="absolute rounded-full"
                 style={{
-                  background: `radial-gradient(circle, hsla(35, 100%, 60%, ${brightness * 0.4}) 0%, transparent 70%)`,
-                  width: '64px',
-                  height: '64px',
-                  left: '-8px',
-                  top: '-8px',
+                  width: '72px',
+                  height: '72px',
+                  background: 'radial-gradient(circle, hsl(var(--secondary) / 0.4) 0%, transparent 70%)',
                 }}
                 animate={{
-                  scale: [1, 1.2, 1],
+                  scale: [1, 1.3, 1],
                   opacity: [0.4, 0.7, 0.4],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+              />
+              {/* Inner turquoise glow */}
+              <motion.div
+                className="absolute rounded-full"
+                style={{
+                  width: '56px',
+                  height: '56px',
+                  background: 'radial-gradient(circle, hsl(var(--secondary) / 0.5) 0%, transparent 60%)',
+                }}
+                animate={{
+                  scale: [1, 1.15, 1],
+                  opacity: [0.5, 0.8, 0.5],
                 }}
                 transition={{
                   duration: 2,
                   repeat: Infinity,
                   ease: 'easeInOut',
+                  delay: 0.5,
                 }}
               />
-              <div className="relative w-12 h-12 rounded-full bg-gradient-to-b from-amber-400 to-orange-600 flex items-center justify-center shadow-[0_0_20px_rgba(251,191,36,0.5)]">
-                <Flame className="w-6 h-6 text-white" />
-              </div>
+              {/* Living Coin Icon */}
+              <LivingCoinIcon size={48} showAura={false} />
             </div>
 
             <div className="flex-1">
