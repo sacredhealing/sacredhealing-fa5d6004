@@ -88,8 +88,8 @@ export const DailyRitualCard: React.FC = () => {
           <motion.div
             key={activity.id}
             layout
-            className={`flex items-center gap-3 p-3 rounded-[16px] bg-white/[0.02] border border-white/10 ${
-              activity.isCurrent ? 'ring-2 ring-[#00F2FE]/50 border-[#00F2FE]/30' : ''
+            className={`flex items-center gap-3 p-3 rounded-[16px] bg-white/[0.02] border border-primary/20 ${
+              activity.isCurrent ? 'ring-2 ring-primary/50 border-primary/30' : ''
             }`}
           >
             <div className={`p-2 rounded-lg bg-background/50 ${activity.iconColor}`}>

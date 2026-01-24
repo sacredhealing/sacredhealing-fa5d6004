@@ -36,8 +36,13 @@ export const AppLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen relative">
-      {/* Sanctuary gradient background - fixed and seamless */}
-      <div className="fixed inset-0 bg-gradient-sanctuary -z-20" />
+      {/* Deepest Midnight background with subtle indigo radial glow */}
+      <div 
+        className="fixed inset-0 -z-20"
+        style={{
+          background: "radial-gradient(ellipse at 50% 30%, rgba(30, 27, 75, 0.35) 0%, transparent 55%), #09090b",
+        }}
+      />
       
       {/* Animated ambient glow orbs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
