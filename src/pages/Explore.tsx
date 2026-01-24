@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { 
   Music, Wind, ShoppingBag, Crown, Heart, Trophy, Calendar, Headphones,
-  Sparkles, DollarSign, Search, Zap, Star, BookOpen, Mic, Users, Play, ChevronLeft, ChevronRight
+  Sparkles, DollarSign, Search, Zap, Star, BookOpen, Mic, Users, Play, ChevronLeft, ChevronRight,
+  Youtube
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -162,6 +163,30 @@ const Explore: React.FC = () => {
       border: 'border-rose-500/30 hover:border-rose-500/50',
       iconBg: 'bg-rose-500/20',
       iconColor: 'text-rose-400',
+    },
+    // YouTube - Moved from Dashboard Quick Actions
+    {
+      id: 'videos',
+      to: '/videos',
+      icon: Youtube,
+      title: t('quickActions.videos', 'Videos'),
+      description: t('explore.videoDesc', 'Watch & learn'),
+      gradient: 'from-rose-500/20 to-red-500/10',
+      border: 'border-rose-500/30 hover:border-rose-500/50',
+      iconBg: 'bg-rose-500/20',
+      iconColor: 'text-rose-400',
+    },
+    // Creative Soul - Moved from Dashboard Quick Actions
+    {
+      id: 'creative-soul',
+      to: '/creative-soul/store',
+      icon: Sparkles,
+      title: t('quickActions.creativeSoul', 'Creative Soul'),
+      description: t('explore.creativeSoulDesc', 'Create with AI'),
+      gradient: 'from-purple-500/20 to-violet-500/10',
+      border: 'border-purple-500/30 hover:border-purple-500/50',
+      iconBg: 'bg-purple-500/20',
+      iconColor: 'text-purple-400',
     },
   ];
 
@@ -362,6 +387,18 @@ const Explore: React.FC = () => {
             </Card>
           </Link>
         </div>
+      </div>
+
+      {/* Invite Friends - Moved from Dashboard */}
+      <div className="mt-8 mb-8 rounded-2xl glass-card p-5 animate-slide-up" style={{ animationDelay: '0.25s' }}>
+        <h2 className="text-lg font-heading font-semibold text-foreground mb-3">{t('dashboard.inviteFriends')}</h2>
+        <p className="text-sm text-muted-foreground mb-4">{t('dashboard.inviteDescription')}</p>
+        <Link to="/invite-friends">
+          <Button className="w-full gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-extrabold shadow-[0_0_30px_rgba(0,242,254,0.4)]">
+            <Users className="w-4 h-4" />
+            {t('dashboard.inviteFriends')}
+          </Button>
+        </Link>
       </div>
     </div>
   );

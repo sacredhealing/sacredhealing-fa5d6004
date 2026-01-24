@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react"
+import { Link } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,6 +10,8 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import { motion } from "framer-motion"
 import { usePhantomWallet } from "@/hooks/usePhantomWallet"
+import { useSHC } from "@/contexts/SHCContext"
+import { AnimatedCounter } from "@/components/ui/animated-counter"
 import { 
   Play, 
   Square, 
@@ -23,7 +27,8 @@ import {
   Terminal,
   Settings,
   RefreshCw,
-  Zap
+  Zap,
+  Sparkles
 } from "lucide-react"
 
 interface BotState {
@@ -42,6 +47,9 @@ interface BotState {
 }
 
 export default function AIIncomeEngine() {
+  const { t } = useTranslation()
+  const { balance: shcBalance } = useSHC()
+  
   const [botState, setBotState] = useState<BotState>({
     balance: 100,
     startingBalance: 100,
@@ -203,7 +211,7 @@ export default function AIIncomeEngine() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-6">
+    <div className="min-h-screen bg-background p-4 md:p-6 pb-24">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div 
@@ -227,6 +235,89 @@ export default function AIIncomeEngine() {
             <div className={`h-2 w-2 rounded-full mr-2 ${botState.status === "RUNNING" ? "bg-green-300 animate-pulse" : "bg-red-300"}`} />
             {botState.status}
           </Badge>
+        </motion.div>
+
+        {/* SHC Balance Card - Moved from Dashboard */}
+        <motion.div 
+          className="mb-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <Card className="glass-card p-4 sm:p-5 relative overflow-hidden">
+            <div className="flex items-center justify-between relative z-10 gap-3">
+              <div className="space-y-1 min-w-0 flex-1">
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  {t('dashboard.yourSHCBalance', 'Ditt SHC Saldo')}
+                </p>
+                <div className="flex items-baseline gap-2">
+                  <AnimatedCounter
+                    value={shcBalance?.balance ?? 0}
+                    className="text-3xl sm:text-4xl font-bold text-amber-400"
+                  />
+                  <span className="text-base sm:text-lg font-semibold text-amber-400/80">SHC</span>
+                </div>
+                <Link to="/earn">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="mt-2 sm:mt-3 bg-amber-400 text-background hover:bg-amber-300 border-0 font-semibold text-xs sm:text-sm px-3 sm:px-4"
+                  >
+                    {t('dashboard.claimRewards', 'Hämta Belöningar')}
+                  </Button>
+                </Link>
+              </div>
+
+              {/* Glowing Icon */}
+              <div className="relative shrink-0">
+                <motion.div
+                  className="absolute inset-0 rounded-full bg-amber-400/30 blur-xl"
+                  animate={{
+                    scale: [1, 1.3, 1],
+                    opacity: [0.3, 0.6, 0.3],
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                  }}
+                  style={{ width: '60px', height: '60px', left: '-6px', top: '-6px' }}
+                />
+                <motion.div
+                  className="absolute inset-0 rounded-full bg-amber-500/40 blur-md"
+                  animate={{
+                    scale: [1.1, 1, 1.1],
+                    opacity: [0.4, 0.7, 0.4],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                    delay: 0.5,
+                  }}
+                  style={{ width: '48px', height: '48px' }}
+                />
+                <div className="relative w-12 h-12 sm:w-[60px] sm:h-[60px] rounded-full bg-amber-400/20 flex items-center justify-center">
+                  <Sparkles className="w-6 h-6 sm:w-7 sm:h-7 text-amber-400" />
+                </div>
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+
+        {/* Wallet Button - Prominent */}
+        <motion.div 
+          className="mb-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+        >
+          <Link to="/wallet">
+            <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-extrabold text-base py-6 shadow-[0_0_30px_rgba(0,242,254,0.4)]">
+              <Wallet className="w-5 h-5 mr-2" />
+              {t('nav.wallet', 'Wallet')}
+            </Button>
+          </Link>
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -455,11 +546,11 @@ export default function AIIncomeEngine() {
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-primary">•</span>
-                    Auto-stops at -15% drawdown
+                    In TEST mode, simulates trades
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-primary">•</span>
-                    Test mode simulates trades safely
+                    11.11% profit split to platform
                   </li>
                 </ul>
               </CardContent>
