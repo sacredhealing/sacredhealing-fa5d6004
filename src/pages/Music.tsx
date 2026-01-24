@@ -9,6 +9,7 @@ import { useMusicPlayer, Track } from '@/contexts/MusicPlayerContext';
 import { TrackCard } from '@/components/music/TrackCard';
 import { CuratedPlaylistCard } from '@/components/music/CuratedPlaylistCard';
 import { useCuratedPlaylists, CuratedPlaylist } from '@/hooks/useCuratedPlaylists';
+import MusicMembershipBanner from '@/components/music/MusicMembershipBanner';
 interface Playlist {
   id: string;
   name: string;
@@ -250,20 +251,7 @@ const Music: React.FC = () => {
       </header>
 
       {/* Subscription Banner */}
-      {!isSubscribed && (
-        <div className="bg-primary/10 border border-primary/30 rounded-xl p-4 mb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Crown className="text-primary" size={20} />
-              <div>
-                <p className="text-sm font-medium">Unlimited streaming</p>
-                <p className="text-xs text-muted-foreground">€4.99/month • Full tracks + 100 SHC per stream</p>
-              </div>
-            </div>
-            <Button size="sm" onClick={handleSubscribe}>Subscribe</Button>
-          </div>
-        </div>
-      )}
+      <MusicMembershipBanner />
 
       {/* Mastering Service Banner */}
       <button
