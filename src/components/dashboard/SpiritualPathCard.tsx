@@ -31,10 +31,10 @@ export const SpiritualPathCard: React.FC = () => {
       const progressPercent = Math.round((activeProgress.current_day / activePath.duration_days) * 100);
 
       return (
-        <Card className="p-4 bg-gradient-to-br from-primary/10 to-accent/5 border-primary/20">
+        <Card className="glass-card p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Compass className="w-5 h-5 text-primary" />
+              <Compass className="w-5 h-5 text-[#00F2FE]" />
               <h3 className="font-heading font-semibold text-foreground">
                 {t('spiritualPath.yourPath', 'Your Path')}
               </h3>
@@ -76,7 +76,7 @@ export const SpiritualPathCard: React.FC = () => {
   }
 
   return (
-    <Card className="p-4 bg-gradient-to-br from-amber-500/10 to-purple-500/5 border-amber-500/20">
+    <Card className="glass-card p-4">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Compass className="w-5 h-5 text-amber-400" />

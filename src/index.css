@@ -80,7 +80,8 @@
     --primary: 271 76% 53%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 174 72% 56%;
+    /* Glowing Turquoise - #00F2FE */
+    --secondary: 186 100% 50%;
     --secondary-foreground: 250 60% 10%;
 
     --muted: 260 35% 12%;
@@ -94,47 +95,48 @@
 
     --border: 260 30% 18%;
     --input: 260 35% 12%;
-    --ring: 271 76% 53%;
+    --ring: 186 100% 50%;
 
-    --radius: 1rem;
+    --radius: 1.5rem;
 
     /* Custom tokens */
     --purple: 271 76% 53%;
     --purple-glow: 271 76% 70%;
     --gold: 51 100% 50%;
     --gold-glow: 51 100% 70%;
-    --turquoise: 174 72% 56%;
-    --turquoise-glow: 174 72% 70%;
+    /* Glowing Turquoise #00F2FE */
+    --turquoise: 186 100% 50%;
+    --turquoise-glow: 186 100% 70%;
     --indigo: 245 60% 35%;
     --violet: 280 70% 40%;
     
-    /* Sanctuary Gradients */
-    --gradient-sanctuary: linear-gradient(135deg, hsl(250 60% 4%) 0%, hsl(260 55% 8%) 30%, hsl(280 50% 12%) 70%, hsl(270 45% 8%) 100%);
+    /* Sanctuary Gradient: #0F0C29 -> #302B63 -> #24243E */
+    --gradient-sanctuary: linear-gradient(to bottom right, #0F0C29 0%, #302B63 50%, #24243E 100%);
     --gradient-spiritual: linear-gradient(135deg, hsl(271 76% 53%) 0%, hsl(271 76% 30%) 50%, hsl(250 60% 10%) 100%);
     --gradient-gold: linear-gradient(135deg, hsl(51 100% 50%) 0%, hsl(51 100% 40%) 100%);
-    --gradient-healing: linear-gradient(135deg, hsl(174 72% 56%) 0%, hsl(271 76% 53%) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(260 45% 12% / 0.6) 0%, hsl(260 45% 6% / 0.4) 100%);
-    --gradient-glow: radial-gradient(circle at center, hsl(271 76% 53% / 0.3) 0%, transparent 70%);
+    --gradient-healing: linear-gradient(135deg, hsl(186 100% 50%) 0%, hsl(271 76% 53%) 100%);
+    --gradient-card: linear-gradient(145deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+    --gradient-glow: radial-gradient(circle at center, hsl(186 100% 50% / 0.3) 0%, transparent 70%);
 
-    /* Glassmorphism */
-    --glass-bg: hsl(260 45% 10% / 0.4);
-    --glass-border: hsl(260 30% 30% / 0.3);
-    --glass-blur: 16px;
+    /* Glassmorphism - exact specs */
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-blur: 12px;
 
-    /* Shadows */
+    /* Shadows with Turquoise glow */
     --shadow-purple: 0 0 30px hsl(271 76% 53% / 0.4);
     --shadow-gold: 0 0 30px hsl(51 100% 50% / 0.4);
-    --shadow-turquoise: 0 0 20px hsl(174 72% 56% / 0.3);
-    --shadow-glow-soft: 0 0 20px hsl(271 76% 53% / 0.25);
+    --shadow-turquoise: 0 0 20px hsl(186 100% 50% / 0.4);
+    --shadow-glow-soft: 0 0 20px hsl(186 100% 50% / 0.25);
 
     --sidebar-background: 255 50% 6%;
     --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 271 76% 53%;
+    --sidebar-primary: 186 100% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 260 35% 12%;
     --sidebar-accent-foreground: 0 0% 98%;
     --sidebar-border: 260 30% 18%;
-    --sidebar-ring: 271 76% 53%;
+    --sidebar-ring: 186 100% 50%;
   }
 }
 
@@ -146,7 +148,8 @@
   body {
     @apply text-foreground font-sans antialiased;
     font-family: 'Inter', sans-serif;
-    background: var(--gradient-sanctuary);
+    /* Sanctuary Gradient: #0F0C29 -> #302B63 -> #24243E */
+    background: linear-gradient(to bottom right, #0F0C29 0%, #302B63 50%, #24243E 100%);
     background-attachment: fixed;
     min-height: 100vh;
   }
@@ -192,29 +195,32 @@
     background: var(--gradient-healing);
   }
 
-  /* Glassmorphism utilities */
+  /* Glassmorphism utilities - exact specs from user */
   .glass {
-    background: var(--glass-bg);
-    backdrop-filter: blur(var(--glass-blur));
-    -webkit-backdrop-filter: blur(var(--glass-blur));
-    border: 1px solid var(--glass-border);
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
   }
 
   .glass-card {
-    background: hsl(260 45% 10% / 0.5);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid hsl(260 30% 35% / 0.25);
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
     box-shadow: 
-      0 8px 32px hsl(260 60% 5% / 0.4),
-      inset 0 1px 0 hsl(260 30% 50% / 0.1);
+      0 8px 32px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
   }
 
   .glass-subtle {
-    background: hsl(260 45% 8% / 0.3);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid hsl(260 30% 30% / 0.2);
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
   }
 
   .glow-purple {
@@ -226,26 +232,40 @@
   }
 
   .glow-turquoise {
-    box-shadow: var(--shadow-turquoise);
+    box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
   }
 
   .glow-soft {
-    box-shadow: var(--shadow-glow-soft);
+    box-shadow: 0 0 20px rgba(0, 242, 254, 0.25);
   }
 
-  /* Button glow effect */
+  /* Button glow effect - Turquoise #00F2FE */
   .btn-glow {
     box-shadow: 
-      0 0 20px hsl(var(--primary) / 0.3),
-      0 0 40px hsl(var(--primary) / 0.15);
+      0 0 20px rgba(0, 242, 254, 0.4),
+      0 0 40px rgba(0, 242, 254, 0.2);
     border: none;
     transition: box-shadow 0.3s ease;
   }
 
   .btn-glow:hover {
     box-shadow: 
-      0 0 25px hsl(var(--primary) / 0.45),
-      0 0 50px hsl(var(--primary) / 0.25);
+      0 0 30px rgba(0, 242, 254, 0.6),
+      0 0 60px rgba(0, 242, 254, 0.3);
+  }
+
+  .btn-glow-turquoise {
+    box-shadow: 
+      0 0 20px rgba(0, 242, 254, 0.4),
+      0 0 40px rgba(0, 242, 254, 0.2);
+    border: none;
+    transition: box-shadow 0.3s ease;
+  }
+
+  .btn-glow-turquoise:hover {
+    box-shadow: 
+      0 0 30px rgba(0, 242, 254, 0.6),
+      0 0 60px rgba(0, 242, 254, 0.3);
   }
 
   .btn-glow-gold {
