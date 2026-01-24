@@ -14,6 +14,7 @@ import { usePhantomWallet } from '@/hooks/usePhantomWallet';
 import { HealingProgressCard } from '@/components/healing/HealingProgressCard';
 import HealingMeditationsList from '@/components/healing/HealingMeditationsList';
 import { useAdminRole } from '@/hooks/useAdminRole';
+import { IntentionThreshold, IntentionType } from '@/components/meditation/IntentionThreshold';
 
 interface HealingAudio {
   id: string;
@@ -247,6 +248,11 @@ const Healing: React.FC = () => {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [dynamicContent, setDynamicContent] = useState<Record<string, string>>({});
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  
+  // Intention threshold state
+  const [showThreshold, setShowThreshold] = useState(false);
+  const [pendingAudio, setPendingAudio] = useState<HealingAudio | null>(null);
+  const [currentIntention, setCurrentIntention] = useState<IntentionType | null>(null);
 
   // Get current language translations
   const currentLang = i18n.language?.split('-')[0] || 'en';
@@ -466,7 +472,8 @@ const Healing: React.FC = () => {
     }
   };
 
-  const togglePlay = (audio: HealingAudio) => {
+  // Opens the intention threshold before starting a healing audio
+  const initiatePlay = (audio: HealingAudio) => {
     // Admins have full access to all audio
     const canPlay = isAdmin || audio.is_free || ownedAudioIds.has(audio.id);
     const audioUrl = canPlay ? audio.audio_url : audio.preview_url;
@@ -474,16 +481,66 @@ const Healing: React.FC = () => {
     if (!audioUrl) return;
 
     if (playingId === audio.id) {
+      // If already playing this one, just pause
+      audioRef.current?.pause();
+      setPlayingId(null);
+      return;
+    }
+    
+    // Stop any current audio first
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setPlayingId(null);
+    }
+    
+    // Store the pending audio and show threshold
+    setPendingAudio(audio);
+    setShowThreshold(true);
+  };
+
+  // Handles intention selection and starts playback
+  const handleIntentionSelected = (intention: IntentionType) => {
+    setCurrentIntention(intention);
+    setShowThreshold(false);
+    
+    if (pendingAudio) {
+      startPlayback(pendingAudio);
+      setPendingAudio(null);
+    }
+  };
+
+  // Skip threshold and start without intention
+  const handleThresholdClose = () => {
+    setShowThreshold(false);
+    if (pendingAudio) {
+      startPlayback(pendingAudio);
+      setPendingAudio(null);
+    }
+  };
+
+  // Actual audio playback logic
+  const startPlayback = (audio: HealingAudio) => {
+    const canPlay = isAdmin || audio.is_free || ownedAudioIds.has(audio.id);
+    const audioUrl = canPlay ? audio.audio_url : audio.preview_url;
+    
+    if (!audioUrl) return;
+    
+    audioRef.current = new Audio(audioUrl);
+    audioRef.current.play();
+    audioRef.current.onended = () => {
+      setPlayingId(null);
+      setCurrentIntention(null);
+    };
+    setPlayingId(audio.id);
+  };
+
+  // Legacy togglePlay for direct pause (when already playing)
+  const togglePlay = (audio: HealingAudio) => {
+    if (playingId === audio.id) {
       audioRef.current?.pause();
       setPlayingId(null);
     } else {
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-      audioRef.current = new Audio(audioUrl);
-      audioRef.current.play();
-      audioRef.current.onended = () => setPlayingId(null);
-      setPlayingId(audio.id);
+      initiatePlay(audio);
     }
   };
 
@@ -497,7 +554,15 @@ const Healing: React.FC = () => {
   const paidAudios = audioTracks.filter(a => !a.is_free);
 
   return (
-    <div className="min-h-screen p-6 space-y-12">
+    <>
+      {/* Intention Threshold Screen */}
+      <IntentionThreshold
+        isOpen={showThreshold}
+        onSelectIntention={handleIntentionSelected}
+        onClose={handleThresholdClose}
+      />
+      
+      <div className="min-h-screen p-6 space-y-12">
       {/* Hero Section */}
       <Card className="bg-gradient-to-r from-primary/30 to-pink-500/30 border-none text-center overflow-hidden">
         <CardContent className="py-10 px-6">
@@ -801,6 +866,7 @@ const Healing: React.FC = () => {
       {/* Reviews Section */}
       <ReviewSection contentType="healing" contentId="general" />
     </div>
+    </>
   );
 };
 
