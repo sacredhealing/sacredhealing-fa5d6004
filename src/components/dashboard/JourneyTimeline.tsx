@@ -21,8 +21,8 @@ export const JourneyTimeline: React.FC = () => {
     <Card className="glass-card p-5">
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
-        <div className="p-2 rounded-lg bg-primary/20">
-          <Compass className="w-5 h-5 text-primary" />
+        <div className="p-2 rounded-lg bg-[#00F2FE]/20">
+          <Compass className="w-5 h-5 text-[#00F2FE]" />
         </div>
         <h3 className="font-heading font-semibold text-foreground">
           Your Journey Timeline
@@ -31,7 +31,7 @@ export const JourneyTimeline: React.FC = () => {
 
       {/* Soul Message */}
       <motion.div
-        className="mb-5 p-4 rounded-xl bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 border border-primary/20"
+        className="mb-5 p-4 rounded-[16px] bg-gradient-to-r from-primary/10 via-[#00F2FE]/10 to-accent/10 border border-[#00F2FE]/20"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
       >
@@ -43,7 +43,7 @@ export const JourneyTimeline: React.FC = () => {
       {/* Timeline Nodes */}
       <div className="relative flex items-center justify-between px-2">
         {/* Connection Line */}
-        <div className="absolute left-0 right-0 top-1/2 h-0.5 bg-gradient-to-r from-primary/50 via-secondary/30 to-muted/20 -translate-y-1/2" />
+        <div className="absolute left-0 right-0 top-1/2 h-0.5 bg-gradient-to-r from-[#00F2FE]/50 via-[#00F2FE]/30 to-muted/20 -translate-y-1/2" />
 
         {timelineNodes.map((node, index) => (
           <motion.div
@@ -56,19 +56,19 @@ export const JourneyTimeline: React.FC = () => {
             <motion.div
               className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all ${
                 node.completed
-                  ? 'bg-primary border-primary text-primary-foreground shadow-[0_0_15px_hsl(var(--primary)/0.5)]'
+                  ? 'bg-[#00F2FE] border-[#00F2FE] text-[#0F0C29] shadow-[0_0_15px_rgba(0,242,254,0.5)]'
                   : node.active
-                  ? 'bg-secondary/20 border-secondary text-secondary shadow-[0_0_15px_hsl(var(--secondary)/0.4)]'
-                  : 'bg-muted/30 border-border/50 text-muted-foreground'
+                  ? 'bg-[#00F2FE]/20 border-[#00F2FE] text-[#00F2FE] shadow-[0_0_15px_rgba(0,242,254,0.4)]'
+                  : 'bg-white/5 border-white/20 text-muted-foreground'
               }`}
               animate={
                 node.active
                   ? {
                       scale: [1, 1.1, 1],
                       boxShadow: [
-                        '0 0 15px hsl(var(--secondary) / 0.4)',
-                        '0 0 25px hsl(var(--secondary) / 0.6)',
-                        '0 0 15px hsl(var(--secondary) / 0.4)',
+                        '0 0 15px rgba(0, 242, 254, 0.4)',
+                        '0 0 25px rgba(0, 242, 254, 0.6)',
+                        '0 0 15px rgba(0, 242, 254, 0.4)',
                       ],
                     }
                   : {}

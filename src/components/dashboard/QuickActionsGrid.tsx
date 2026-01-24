@@ -34,8 +34,8 @@ export const QuickActionsGrid: React.FC = () => {
       icon: BookOpen,
       label: t('quickActions.courses', 'Kurser'),
       href: '/courses',
-      iconColor: 'text-secondary',
-      iconBg: 'bg-secondary/20',
+      iconColor: 'text-[#00F2FE]',
+      iconBg: 'bg-[#00F2FE]/20',
     },
     {
       icon: DollarSign,
@@ -68,7 +68,7 @@ export const QuickActionsGrid: React.FC = () => {
       <div className="grid grid-cols-3 gap-3">
         {actions.map((action) => (
           <Link key={action.href} to={action.href}>
-            <Card className="glass-card p-4 hover:border-primary/50 transition-all flex flex-col items-center justify-center gap-3 h-full min-h-[100px]">
+            <Card className="p-4 hover:border-[#00F2FE]/50 transition-all flex flex-col items-center justify-center gap-3 h-full min-h-[100px]">
               <div className={`w-12 h-12 rounded-full flex items-center justify-center ${action.iconBg}`}>
                 <action.icon className={`w-6 h-6 ${action.iconColor}`} />
               </div>

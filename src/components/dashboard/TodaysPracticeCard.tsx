@@ -21,9 +21,9 @@ export const TodaysPracticeCard: React.FC<TodaysPracticeCardProps> = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <Card className="glass-card relative overflow-hidden border-secondary/30">
+      <Card className="glass-card relative overflow-hidden border-[#00F2FE]/30">
         {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-secondary/10 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-[#00F2FE]/10 pointer-events-none" />
         
         {/* Content */}
         <div className="relative flex items-center p-6 gap-6">
@@ -50,7 +50,7 @@ export const TodaysPracticeCard: React.FC<TodaysPracticeCardProps> = ({
 
             <Link to="/meditations">
               <Button 
-                className="w-full sm:w-auto gap-2 bg-secondary hover:bg-secondary/90 text-secondary-foreground shadow-[0_0_20px_hsl(var(--secondary)/0.4)] hover:shadow-[0_0_30px_hsl(var(--secondary)/0.5)] transition-all"
+                className="w-full sm:w-auto gap-2 bg-[#00F2FE] hover:bg-[#00D4E0] text-[#0F0C29] font-semibold shadow-[0_0_20px_rgba(0,242,254,0.5)] hover:shadow-[0_0_30px_rgba(0,242,254,0.6)] transition-all"
               >
                 Start Journey
                 <ArrowRight className="w-4 h-4" />

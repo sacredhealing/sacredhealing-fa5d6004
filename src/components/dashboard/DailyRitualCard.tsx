@@ -70,7 +70,7 @@ export const DailyRitualCard: React.FC = () => {
   const completedCount = [journey.morning.completed, journey.midday.completed, journey.evening.completed].filter(Boolean).length;
 
   return (
-    <Card className="p-4 bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20">
+    <Card className="glass-card p-4">
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-heading font-semibold text-foreground">
           {t('dailyRitual.title', 'Daily Spiritual Practice')}
@@ -88,8 +88,8 @@ export const DailyRitualCard: React.FC = () => {
           <motion.div
             key={activity.id}
             layout
-            className={`flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r ${activity.color} border border-border/30 ${
-              activity.isCurrent ? 'ring-2 ring-primary/50' : ''
+            className={`flex items-center gap-3 p-3 rounded-[16px] bg-white/[0.02] border border-white/10 ${
+              activity.isCurrent ? 'ring-2 ring-[#00F2FE]/50 border-[#00F2FE]/30' : ''
             }`}
           >
             <div className={`p-2 rounded-lg bg-background/50 ${activity.iconColor}`}>

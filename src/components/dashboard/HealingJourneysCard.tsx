@@ -32,7 +32,7 @@ export const HealingJourneysCard: React.FC = () => {
         </div>
         <Link 
           to="/healing" 
-          className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
+          className="text-xs text-[#00F2FE] hover:text-[#00F2FE]/80 flex items-center gap-1 transition-colors"
         >
           All <ArrowRight className="w-3 h-3" />
         </Link>
@@ -91,11 +91,11 @@ export const HealingJourneysCard: React.FC = () => {
       {/* Quickie Reset Card */}
       <Link to="/breathing?quick=true">
         <motion.div
-          className="flex items-center gap-3 rounded-xl bg-background/40 border border-border/30 p-4 hover:border-secondary/40 hover:bg-background/60 transition-all group"
+          className="flex items-center gap-3 rounded-[16px] bg-white/[0.02] border border-white/10 p-4 hover:border-[#00F2FE]/40 hover:bg-white/[0.04] transition-all group"
           whileHover={{ scale: 1.01 }}
         >
-          <div className="p-3 rounded-full bg-secondary/20 group-hover:scale-110 transition-transform">
-            <Zap className="w-5 h-5 text-secondary" />
+          <div className="p-3 rounded-full bg-[#00F2FE]/20 group-hover:scale-110 transition-transform">
+            <Zap className="w-5 h-5 text-[#00F2FE]" />
           </div>
           <div className="flex-1">
             <h4 className="font-semibold text-foreground text-sm">Quickie Reset</h4>
