@@ -171,16 +171,17 @@ const Membership = () => {
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
-      <div className="bg-gradient-to-br from-primary/20 via-background to-accent/10 px-4 py-8 text-center">
-        <Crown className="w-12 h-12 text-amber-500 mx-auto mb-4" />
-        <h1 className="text-2xl font-bold text-foreground mb-2">Choose Your Path</h1>
-        <p className="text-muted-foreground">Unlock your full spiritual potential</p>
+      <div className="bg-gradient-to-br from-primary/20 via-background to-accent/10 px-4 py-6 sm:py-8 text-center">
+        <Crown className="w-10 h-10 sm:w-12 sm:h-12 text-amber-500 mx-auto mb-3 sm:mb-4" />
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-2">Choose Your Path</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">Unlock your full spiritual potential</p>
         
         {isPremium && (
           <Button 
             onClick={handleManageSubscription}
             variant="outline"
             className="mt-4"
+            size="sm"
             disabled={portalLoading}
           >
             {portalLoading ? (
@@ -195,7 +196,7 @@ const Membership = () => {
 
       {/* Trial Banner - show if user can start trial */}
       {canStartTrial && !isPremium && (
-        <div className="px-4 py-4">
+        <div className="px-3 sm:px-4 py-3 sm:py-4">
           <TrialBanner onTrialStarted={() => {
             refetchTrial();
             refreshMembership();
@@ -205,16 +206,16 @@ const Membership = () => {
 
       {/* Active Trial Banner */}
       {isTrialActive && (
-        <div className="px-4 py-4">
-          <Card className="p-4 bg-gradient-to-r from-primary/20 to-accent/20 border-primary/30">
+        <div className="px-3 sm:px-4 py-3 sm:py-4">
+          <Card className="p-3 sm:p-4 bg-gradient-to-r from-primary/20 to-accent/20 border-primary/30">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-primary/20">
-                <Gift className="w-5 h-5 text-primary" />
+              <div className="p-2 rounded-full bg-primary/20 flex-shrink-0">
+                <Gift className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               </div>
-              <div className="flex-1">
-                <p className="font-semibold text-foreground">Free Trial Active</p>
-                <p className="text-sm text-muted-foreground">
-                  {daysRemaining} days remaining - Enjoying full Premium access!
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm sm:text-base text-foreground">Free Trial Active</p>
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                  {daysRemaining} days remaining - Full Premium access!
                 </p>
               </div>
             </div>
@@ -224,13 +225,13 @@ const Membership = () => {
 
       {/* Promo Code Input */}
       {!isPremium && !isTrialActive && (
-        <div className="px-4 pb-4">
+        <div className="px-3 sm:px-4 pb-3 sm:pb-4">
           <PromoCodeInput
             onPromoApplied={setAppliedPromo}
             onPromoRemoved={() => setAppliedPromo(null)}
           />
           {appliedPromo && (
-            <p className="text-sm text-primary mt-2 text-center">
+            <p className="text-xs sm:text-sm text-primary mt-2 text-center">
               {appliedPromo.discount_type === 'percent' 
                 ? `${appliedPromo.discount_value}% off will be applied at checkout`
                 : `€${appliedPromo.discount_value} off will be applied at checkout`
@@ -241,7 +242,7 @@ const Membership = () => {
       )}
 
       {/* Tiers */}
-      <div className="px-4 py-6 space-y-4">
+      <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-3 sm:space-y-4">
         {tiers.map((tier) => {
           const Icon = tierIcons[tier.slug] || Star;
           const isCurrentPlan = currentTier === tier.slug;
@@ -251,60 +252,67 @@ const Membership = () => {
           return (
             <Card 
               key={tier.id} 
-              className={`p-5 relative overflow-hidden bg-gradient-to-br ${tierColors[tier.slug]} border ${isCurrentPlan ? 'border-primary ring-2 ring-primary/20' : 'border-border'}`}
+              className={`p-4 sm:p-5 relative overflow-hidden bg-gradient-to-br ${tierColors[tier.slug]} border ${isCurrentPlan ? 'border-primary ring-2 ring-primary/20' : 'border-border'}`}
             >
+              {/* Badges - positioned responsively */}
               {isPopular && !isCurrentPlan && (
-                <Badge className="absolute top-3 right-3 bg-primary text-primary-foreground">
+                <Badge className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-primary text-primary-foreground text-[10px] sm:text-xs">
                   Most Popular
                 </Badge>
               )}
               {isBestValue && !isCurrentPlan && (
-                <Badge className="absolute top-3 right-3 bg-amber-500 text-white">
+                <Badge className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-amber-500 text-white text-[10px] sm:text-xs">
                   Best Value
                 </Badge>
               )}
               {isCurrentPlan && (
-                <Badge className="absolute top-3 right-3 bg-green-500 text-white">
+                <Badge className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-green-500 text-white text-[10px] sm:text-xs">
                   Your Plan
                 </Badge>
               )}
 
-              <div className="flex items-start gap-4">
-                <div className={`p-3 rounded-xl ${tier.slug === 'lifetime' ? 'bg-amber-500/20' : 'bg-primary/10'}`}>
-                  <Icon className={`w-6 h-6 ${tier.slug === 'lifetime' ? 'text-amber-500' : 'text-primary'}`} />
+              <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
+                <div className={`p-2 sm:p-3 rounded-xl self-start ${tier.slug === 'lifetime' ? 'bg-amber-500/20' : 'bg-primary/10'}`}>
+                  <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${tier.slug === 'lifetime' ? 'text-amber-500' : 'text-primary'}`} />
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-lg text-foreground">{tier.name}</h3>
-                  <p className="text-sm text-muted-foreground mb-3">{tier.description}</p>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-base sm:text-lg text-foreground pr-16 sm:pr-24">{tier.name}</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3 line-clamp-2">{tier.description}</p>
                   
-                  <div className="flex items-baseline gap-1 mb-4">
-                    <span className="text-3xl font-bold text-foreground">€{tier.price_eur}</span>
+                  <div className="flex items-baseline gap-1 mb-3 sm:mb-4">
+                    <span className="text-2xl sm:text-3xl font-bold text-foreground">€{tier.price_eur}</span>
                     {tier.billing_interval && (
-                      <span className="text-muted-foreground">/{tier.billing_interval}</span>
+                      <span className="text-sm text-muted-foreground">/{tier.billing_interval}</span>
                     )}
                     {tier.slug === 'lifetime' && (
-                      <span className="text-muted-foreground text-sm ml-2">one-time</span>
+                      <span className="text-xs sm:text-sm text-muted-foreground ml-1 sm:ml-2">one-time</span>
                     )}
                   </div>
 
                   {tier.slug === 'premium-annual' && (
-                    <div className="mb-3 text-sm text-green-600 dark:text-green-400 font-medium">
+                    <div className="mb-2 sm:mb-3 text-xs sm:text-sm text-green-600 dark:text-green-400 font-medium">
                       Save €119.88 compared to monthly!
                     </div>
                   )}
 
-                  <ul className="space-y-2 mb-4">
-                    {tier.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-center gap-2 text-sm text-foreground">
-                        <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                        {feature}
+                  <ul className="space-y-1.5 sm:space-y-2 mb-3 sm:mb-4">
+                    {tier.features.slice(0, 4).map((feature, idx) => (
+                      <li key={idx} className="flex items-start gap-2 text-xs sm:text-sm text-foreground">
+                        <Check className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                        <span className="line-clamp-2">{feature}</span>
                       </li>
                     ))}
+                    {tier.features.length > 4 && (
+                      <li className="text-xs text-muted-foreground pl-5 sm:pl-6">
+                        +{tier.features.length - 4} more features
+                      </li>
+                    )}
                   </ul>
 
                   <Button 
                     onClick={() => handleSubscribe(tier)}
-                    className="w-full"
+                    className="w-full text-sm sm:text-base"
+                    size="sm"
                     variant={isCurrentPlan ? 'outline' : tier.slug === 'lifetime' ? 'default' : 'secondary'}
                     disabled={isCurrentPlan || checkoutLoading === tier.id}
                   >
@@ -329,33 +337,34 @@ const Membership = () => {
       </div>
 
       {/* Ayurveda Section */}
-      <div className="px-4 py-6">
+      <div className="px-3 sm:px-4 py-4 sm:py-6">
         <AyurvedaSection isPremium={isPremium} membershipTier={currentTier || 'free'} isAdmin={isAdmin} />
       </div>
 
       {/* Vedic Astrology Section */}
-      <div className="px-4 py-6">
+      <div className="px-3 sm:px-4 py-4 sm:py-6">
         <VedicAstrologySection />
       </div>
 
       {/* Premium Meditations List */}
-      <div className="px-4 py-6">
+      <div className="px-3 sm:px-4 py-4 sm:py-6">
         <PremiumMeditationsList />
       </div>
 
       {/* Transformation Program CTA */}
-      <div className="px-4 py-6">
-        <Card className="p-6 bg-gradient-to-br from-amber-500/20 via-primary/10 to-purple-500/20 border-amber-500/30">
+      <div className="px-3 sm:px-4 py-4 sm:py-6">
+        <Card className="p-4 sm:p-6 bg-gradient-to-br from-amber-500/20 via-primary/10 to-purple-500/20 border-amber-500/30">
           <div className="text-center">
-            <Badge className="bg-amber-500 text-white mb-3">Premium Coaching</Badge>
-            <h3 className="text-xl font-bold text-foreground mb-2">6-Month Transformation Program</h3>
-            <p className="text-muted-foreground mb-4">
+            <Badge className="bg-amber-500 text-white mb-2 sm:mb-3 text-xs">Premium Coaching</Badge>
+            <h3 className="text-lg sm:text-xl font-bold text-foreground mb-2">6-Month Transformation Program</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4 max-w-md mx-auto">
               Deep healing journey with personal guidance, daily WhatsApp support & 2 Zoom sessions/month
             </p>
-            <div className="text-3xl font-bold text-foreground mb-4">€2,497</div>
+            <div className="text-2xl sm:text-3xl font-bold text-foreground mb-3 sm:mb-4">€2,497</div>
             <Button 
               onClick={() => navigate('/transformation')}
-              className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+              className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-white"
+              size="sm"
             >
               Learn More
             </Button>
