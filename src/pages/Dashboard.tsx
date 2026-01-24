@@ -18,16 +18,18 @@ import { ShareableProgressCard } from '@/components/achievements/ShareableProgre
 import { ShareableQuoteCard } from '@/components/social/ShareableQuoteCard';
 import { useSocialShare } from '@/hooks/useSocialShare';
 import { FeaturedPlaylistsCarousel } from '@/components/dashboard/FeaturedPlaylistsCarousel';
-import { DailyRitualCard } from '@/components/dashboard/DailyRitualCard';
-import { DailyPracticeCard } from '@/components/dashboard/DailyPracticeCard';
-import { SpiritualPathCard } from '@/components/dashboard/SpiritualPathCard';
 import { SacredFlame } from '@/components/dashboard/SacredFlame';
-import { DailyPathCard } from '@/components/dashboard/DailyPathCard';
 import { useChallenges } from '@/hooks/useChallenges';
 import { useLiveEvents } from '@/hooks/useLiveEvents';
 import { ChallengeCard } from '@/components/challenges/ChallengeCard';
 import { LiveEventCard } from '@/components/events/LiveEventCard';
 import { useProfile } from '@/hooks/useProfile';
+import { AmbientSoundToggle } from '@/components/audio/AmbientSoundToggle';
+import { TodaysPracticeCard } from '@/components/dashboard/TodaysPracticeCard';
+import { BreathingJourneysCard } from '@/components/dashboard/BreathingJourneysCard';
+import { HealingJourneysCard } from '@/components/dashboard/HealingJourneysCard';
+import { JourneyTimeline } from '@/components/dashboard/JourneyTimeline';
+import { PositiveMeCard } from '@/components/dashboard/PositiveMeCard';
 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
@@ -47,18 +49,11 @@ const Dashboard: React.FC = () => {
   const { trackShare } = useSocialShare();
   const { challenges, isLoading: challengesLoading, joinChallenge } = useChallenges();
   const { events, isLoading: eventsLoading, rsvpToEvent } = useLiveEvents();
+
   // Check achievements when dashboard loads
   useEffect(() => {
     checkAchievements();
   }, [checkAchievements]);
-
-  const quickActions = [
-    { icon: Play, labelKey: 'quickActions.meditate', to: '/meditations', color: 'primary' },
-    { icon: Youtube, labelKey: 'quickActions.videos', to: '/spiritual-education', color: 'red' },
-    { icon: BookOpen, labelKey: 'quickActions.courses', to: '/courses', color: 'secondary' },
-    { icon: DollarSign, labelKey: 'quickActions.earn', to: '/income-streams', color: 'accent' },
-    { icon: Wallet, labelKey: 'quickActions.wallet', to: '/wallet', color: 'purple' },
-  ];
 
   return (
     <div className="min-h-screen px-4 pt-6">
@@ -67,173 +62,57 @@ const Dashboard: React.FC = () => {
         achievement={newlyUnlocked}
         onClose={dismissNewlyUnlocked}
       />
-      {/* Header */}
-      <header className="flex items-center justify-between mb-8 animate-fade-in">
-        <div>
-          <p className="text-muted-foreground text-sm">{t('dashboard.greeting')}</p>
-          <h1 className="text-2xl font-heading font-bold text-foreground">
-            {userProfile?.full_name || t('dashboard.sacredSoul')} ✨
-          </h1>
+
+      {/* Header with Sacred Flame and Ambient Toggle */}
+      <header className="flex items-center justify-between mb-6 animate-fade-in">
+        <div className="flex items-center gap-4">
+          {/* Sacred Flame on the left */}
+          <SacredFlame />
+          
+          {/* Greeting */}
+          <div>
+            <p className="text-sm text-muted-foreground">{t('dashboard.greeting')}</p>
+            <h1 className="text-xl font-heading font-bold text-foreground">
+              {userProfile?.full_name || t('dashboard.sacredSoul')}
+              <span className="ml-1 text-secondary">✨</span>
+            </h1>
+            <p className="text-xs text-muted-foreground/70">The soul awaits.</p>
+          </div>
         </div>
-        <SacredFlame />
+
+        {/* Ambient Sound Toggle on the right */}
+        <AmbientSoundToggle />
       </header>
 
-      {/* SHC Balance Card */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-card border border-border/50 p-6 mb-6 animate-slide-up">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-2xl" />
-        <div className="relative flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground mb-1">{t('dashboard.balance')}</p>
-            <div className="flex items-baseline gap-2">
-              <AnimatedCounter 
-                value={balance?.balance ?? 0} 
-                className="text-4xl font-heading font-bold text-gradient-gold"
-              />
-              <span className="text-lg text-accent font-medium">SHC</span>
-            </div>
-          </div>
-          <div className="w-16 h-16 rounded-full bg-accent/20 flex items-center justify-center glow-gold">
-            <Sparkles className="text-accent" size={28} />
-          </div>
-        </div>
-        <Link to="/wallet">
-          <Button size="sm" className="mt-4 bg-[#E5B526] hover:bg-[#F0C341] text-black font-semibold shadow-[0_0_20px_rgba(229,181,38,0.5)] hover:scale-105 transition-all duration-300 rounded-full px-6">
-            {t('dashboard.claimRewards')}
-          </Button>
-        </Link>
+      {/* Today's Sacred Practice - Hero Card */}
+      <div className="mb-6 animate-slide-up">
+        <TodaysPracticeCard 
+          greeting="Today's Sacred Practice"
+          subtitle="Morning: Rise with Clarity"
+        />
       </div>
 
-      {/* Personalized Daily Practice */}
-      <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.15s' }}>
-        <DailyPracticeCard />
+      {/* Two-Column Journeys Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+        {/* Breathing Journeys */}
+        <BreathingJourneysCard />
+        
+        {/* Healing Journeys */}
+        <HealingJourneysCard />
       </div>
 
-      {/* Today's Meditation */}
-      <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.2s' }}>
-        <h2 className="text-lg font-heading font-semibold text-foreground mb-4">{t('dashboard.todaysMeditation')}</h2>
-        <Link to="/meditations" className="block">
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-healing p-6 glow-purple">
-            <div className="absolute top-4 right-4 opacity-30">
-              <LotusIcon size={80} />
-            </div>
-            <div className="relative">
-              {meditationLoading ? (
-                <div className="animate-pulse">
-                  <div className="h-6 w-24 bg-background/20 rounded-full mb-3" />
-                  <div className="h-7 w-48 bg-background/20 rounded mb-2" />
-                  <div className="h-5 w-32 bg-background/20 rounded" />
-                </div>
-              ) : dailyMeditation ? (
-                <>
-                  <span className="inline-block px-3 py-1 bg-background/20 rounded-full text-xs font-medium text-foreground mb-3">
-                    {dailyMeditation.category}
-                  </span>
-                  <h3 className="text-xl font-heading font-bold text-foreground mb-2">
-                    {dailyMeditation.title}
-                  </h3>
-                  <div className="flex items-center gap-4 text-foreground/80 text-sm">
-                    <span>{dailyMeditation.duration_minutes} min</span>
-                    <span className="flex items-center gap-1">
-                      <Sparkles size={14} className="text-accent" />
-                      +{dailyMeditation.shc_reward || 100} SHC
-                    </span>
-                  </div>
-                  <Button variant="glass" size="sm" className="mt-4">
-                    <Play size={16} />
-                    {t('dashboard.startSession')}
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <span className="inline-block px-3 py-1 bg-background/20 rounded-full text-xs font-medium text-foreground mb-3">
-                    {t('meditations.categories.focus')}
-                  </span>
-                  <h3 className="text-xl font-heading font-bold text-foreground mb-2">
-                    {t('dashboard.morningAwakening')}
-                  </h3>
-                  <div className="flex items-center gap-4 text-foreground/80 text-sm">
-                    <span>10 {t('meditations.duration')}</span>
-                    <span className="flex items-center gap-1">
-                      <Sparkles size={14} className="text-accent" />
-                      +100 SHC
-                    </span>
-                  </div>
-                  <Button variant="glass" size="sm" className="mt-4">
-                    <Play size={16} />
-                    {t('dashboard.startSession')}
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-        </Link>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="animate-slide-up" style={{ animationDelay: '0.3s' }}>
-        <h2 className="text-lg font-heading font-semibold text-foreground mb-4">{t('dashboard.quickActions')}</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-2">
-          {quickActions.map((action) => {
-            // Special styling for Wallet card - same size as others but with purple theme
-            if (action.labelKey === 'quickActions.wallet') {
-              return (
-                <Link key={action.labelKey} to={action.to}>
-                  <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-card/60 border border-purple-800/50 hover:border-purple-600/60 hover:bg-card/80 transition-all duration-300">
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-purple-900/60 border border-purple-700/40">
-                      <action.icon className="text-purple-400" size={20} />
-                    </div>
-                    <span className="text-xs font-medium text-foreground text-center">{t(action.labelKey)}</span>
-                  </div>
-                </Link>
-              );
-            }
-            return (
-              <Link key={action.labelKey} to={action.to}>
-                <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-muted/30 border border-border/30 hover:bg-muted/50 transition-all duration-300">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    action.color === 'primary' ? 'bg-primary/20 text-primary' :
-                    action.color === 'secondary' ? 'bg-secondary/20 text-secondary' :
-                    action.color === 'accent' ? 'bg-accent/20 text-accent' :
-                    action.color === 'red' ? 'bg-red-500/20 text-red-500' :
-                    'bg-purple/20 text-purple'
-                  }`}>
-                    <action.icon size={20} />
-                  </div>
-                  <span className="text-xs font-medium text-foreground text-center">{t(action.labelKey)}</span>
-                </div>
-              </Link>
-            );
-          })}
-          {/* Creative Soul card - same size as others but with purple theme */}
-          <Link
-            to="/creative-soul/store"
-            onClick={() => {
-              console.log("CREATIVE_SOUL_CLICK_V1");
-            }}
-          >
-            <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-card/60 border border-purple-800/50 hover:border-purple-600/60 hover:bg-card/80 transition-all duration-300">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-purple-900/60 border border-purple-700/40">
-                <Sparkles className="text-purple-400" size={20} />
-              </div>
-              <span className="text-xs font-medium text-foreground text-center">Creative Soul</span>
-            </div>
-          </Link>
-        </div>
-      </div>
-
-      {/* Daily Ritual Card */}
-      <div className="mt-6 animate-slide-up" style={{ animationDelay: '0.32s' }}>
-        <DailyRitualCard />
-      </div>
-
-      {/* Daily Path Suggestion Card */}
-      <div className="mt-4 animate-slide-up" style={{ animationDelay: '0.325s' }}>
-        <DailyPathCard />
+      {/* Bottom Section: Positive Me + Timeline */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+        {/* Positive Me Stats */}
+        <PositiveMeCard />
+        
+        {/* Journey Timeline */}
+        <JourneyTimeline />
       </div>
 
       {/* Challenges Section */}
       {!challengesLoading && challenges && challenges.length > 0 && (
-        <div className="mt-6 animate-slide-up" style={{ animationDelay: '0.33s' }}>
+        <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.3s' }}>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-heading font-semibold text-foreground flex items-center gap-2">
               <Trophy className="w-5 h-5 text-primary" />
@@ -257,7 +136,7 @@ const Dashboard: React.FC = () => {
 
       {/* Live Events Section */}
       {!eventsLoading && events && events.length > 0 && events.filter(e => new Date(e.scheduled_at) > new Date()).length > 0 && (
-        <div className="mt-6 animate-slide-up" style={{ animationDelay: '0.34s' }}>
+        <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.35s' }}>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-heading font-semibold text-foreground flex items-center gap-2">
               <Radio className="w-5 h-5 text-primary" />
@@ -282,18 +161,13 @@ const Dashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Spiritual Path Card */}
-      <div className="mt-4 animate-slide-up" style={{ animationDelay: '0.35s' }}>
-        <SpiritualPathCard />
-      </div>
-
       {/* Featured Playlists Carousel */}
-      <div className="mt-6 animate-slide-up" style={{ animationDelay: '0.34s' }}>
+      <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.4s' }}>
         <FeaturedPlaylistsCarousel contentType="meditation" />
       </div>
 
-      {/* Featured Sections - Explore */}
-      <div className="mt-6 animate-slide-up" style={{ animationDelay: '0.35s' }}>
+      {/* Explore Section */}
+      <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.45s' }}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-heading font-semibold text-foreground">
             {t('dashboard.explore')}
@@ -311,7 +185,7 @@ const Dashboard: React.FC = () => {
         {/* Other Explore Items - Responsive Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           <Link to="/mantras">
-            <Card className="p-4 bg-gradient-to-br from-purple-500/20 to-amber-500/10 border-purple-500/30 hover:border-purple-500/50 transition-all h-full">
+            <Card className="glass-card p-4 hover:border-purple-500/50 transition-all h-full">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-purple-500/20 shrink-0">
                   <Music className="w-5 h-5 text-purple-400" />
@@ -325,7 +199,7 @@ const Dashboard: React.FC = () => {
           </Link>
 
           <Link to="/breathing">
-            <Card className="p-4 bg-gradient-to-br from-cyan-500/20 to-blue-500/10 border-cyan-500/30 hover:border-cyan-500/50 transition-all h-full">
+            <Card className="glass-card p-4 hover:border-cyan-500/50 transition-all h-full">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-cyan-500/20 shrink-0">
                   <Wind className="w-5 h-5 text-cyan-400" />
@@ -339,7 +213,7 @@ const Dashboard: React.FC = () => {
           </Link>
           
           <Link to="/shop">
-            <Card className="p-4 bg-gradient-to-br from-pink-500/20 to-purple-500/10 border-pink-500/30 hover:border-pink-500/50 transition-all h-full">
+            <Card className="glass-card p-4 hover:border-pink-500/50 transition-all h-full">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-pink-500/20 shrink-0">
                   <ShoppingBag className="w-5 h-5 text-pink-400" />
@@ -353,7 +227,7 @@ const Dashboard: React.FC = () => {
           </Link>
           
           <Link to="/membership">
-            <Card className="p-4 bg-gradient-to-br from-amber-500/20 to-purple-500/10 border-amber-500/30 hover:border-amber-500/50 transition-all h-full">
+            <Card className="glass-card p-4 hover:border-amber-500/50 transition-all h-full">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-amber-500/20 shrink-0">
                   <Crown className="w-5 h-5 text-amber-400" />
@@ -367,7 +241,7 @@ const Dashboard: React.FC = () => {
           </Link>
           
           <Link to="/transformation">
-            <Card className="p-4 bg-gradient-to-br from-green-500/20 to-emerald-500/10 border-green-500/30 hover:border-green-500/50 transition-all h-full">
+            <Card className="glass-card p-4 hover:border-green-500/50 transition-all h-full">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-green-500/20 shrink-0">
                   <Heart className="w-5 h-5 text-green-400" />
@@ -381,7 +255,7 @@ const Dashboard: React.FC = () => {
           </Link>
 
           <Link to="/leaderboard">
-            <Card className="p-4 bg-gradient-to-br from-yellow-500/20 to-orange-500/10 border-yellow-500/30 hover:border-yellow-500/50 transition-all h-full">
+            <Card className="glass-card p-4 hover:border-yellow-500/50 transition-all h-full">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-yellow-500/20 shrink-0">
                   <Trophy className="w-5 h-5 text-yellow-400" />
@@ -395,7 +269,7 @@ const Dashboard: React.FC = () => {
           </Link>
 
           <Link to="/affirmation-soundtrack">
-            <Card className="p-4 bg-gradient-to-br from-violet-500/20 to-fuchsia-500/10 border-violet-500/30 hover:border-violet-500/50 transition-all h-full">
+            <Card className="glass-card p-4 hover:border-violet-500/50 transition-all h-full">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-violet-500/20 shrink-0">
                   <Music className="w-5 h-5 text-violet-400" />
@@ -409,7 +283,7 @@ const Dashboard: React.FC = () => {
           </Link>
 
           <Link to="/private-sessions">
-            <Card className="p-4 bg-gradient-to-br from-amber-500/20 to-orange-500/10 border-amber-500/30 hover:border-amber-500/50 transition-all h-full">
+            <Card className="glass-card p-4 hover:border-amber-500/50 transition-all h-full">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-amber-500/20 shrink-0">
                   <Calendar className="w-5 h-5 text-amber-400" />
@@ -423,7 +297,7 @@ const Dashboard: React.FC = () => {
           </Link>
 
           <Link to="/podcast">
-            <Card className="p-4 bg-gradient-to-br from-emerald-500/20 to-green-500/10 border-emerald-500/30 hover:border-emerald-500/50 transition-all h-full">
+            <Card className="glass-card p-4 hover:border-emerald-500/50 transition-all h-full">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-emerald-500/20 shrink-0">
                   <Headphones className="w-5 h-5 text-emerald-400" />
@@ -440,7 +314,7 @@ const Dashboard: React.FC = () => {
 
       {/* Achievements Section */}
       {achievements.length > 0 && (
-        <div className="mt-6 animate-slide-up" style={{ animationDelay: '0.35s' }}>
+        <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.5s' }}>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Award className="w-5 h-5 text-primary" />
@@ -476,7 +350,7 @@ const Dashboard: React.FC = () => {
       )}
 
       {/* Shareable Progress Card */}
-      <div className="mt-6 animate-slide-up" style={{ animationDelay: '0.4s' }}>
+      <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.55s' }}>
         <div className="flex items-center gap-2 mb-4">
           <Share2 className="w-5 h-5 text-primary" />
           <h2 className="text-lg font-heading font-semibold text-foreground">
@@ -490,7 +364,7 @@ const Dashboard: React.FC = () => {
 
       {/* Daily Wisdom Shareable */}
       {quote && (
-        <div className="mt-6 animate-slide-up" style={{ animationDelay: '0.45s' }}>
+        <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.6s' }}>
           <ShareableQuoteCard 
             quote={quote}
             author="Paramahamsa Vishwananda"
@@ -501,7 +375,7 @@ const Dashboard: React.FC = () => {
       )}
 
       {/* Invite Friends */}
-      <div className="mt-8 rounded-2xl bg-muted/30 border border-border/30 p-5 animate-slide-up" style={{ animationDelay: '0.5s' }}>
+      <div className="mb-8 rounded-2xl glass-card p-5 animate-slide-up" style={{ animationDelay: '0.65s' }}>
         <h2 className="text-lg font-heading font-semibold text-foreground mb-3">{t('dashboard.inviteFriends')}</h2>
         <p className="text-sm text-muted-foreground mb-4">{t('dashboard.inviteDescription')}</p>
         <Link to="/invite-friends">
