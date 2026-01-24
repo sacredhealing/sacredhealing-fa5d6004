@@ -13,33 +13,33 @@ export const SHCBalanceCard: React.FC = () => {
   const { balance } = useSHC();
 
   return (
-    <Card className="glass-card p-5 relative overflow-hidden">
+    <Card className="glass-card p-4 sm:p-5 relative overflow-hidden">
       {/* Content */}
-      <div className="flex items-center justify-between relative z-10">
-        <div className="space-y-1">
-          <p className="text-sm text-muted-foreground">
+      <div className="flex items-center justify-between relative z-10 gap-3">
+        <div className="space-y-1 min-w-0 flex-1">
+          <p className="text-xs sm:text-sm text-muted-foreground">
             {t('dashboard.yourSHCBalance', 'Ditt SHC Saldo')}
           </p>
           <div className="flex items-baseline gap-2">
             <AnimatedCounter
               value={balance?.balance ?? 0}
-              className="text-4xl font-bold text-amber-400"
+              className="text-3xl sm:text-4xl font-bold text-amber-400"
             />
-            <span className="text-lg font-semibold text-amber-400/80">SHC</span>
+            <span className="text-base sm:text-lg font-semibold text-amber-400/80">SHC</span>
           </div>
           <Link to="/earn">
             <Button 
               variant="outline" 
               size="sm" 
-              className="mt-3 bg-amber-400 text-background hover:bg-amber-300 border-0 font-semibold"
+              className="mt-2 sm:mt-3 bg-amber-400 text-background hover:bg-amber-300 border-0 font-semibold text-xs sm:text-sm px-3 sm:px-4"
             >
               {t('dashboard.claimRewards', 'Hämta Belöningar')}
             </Button>
           </Link>
         </div>
 
-        {/* Glowing Icon */}
-        <div className="relative">
+        {/* Glowing Icon - smaller on mobile */}
+        <div className="relative shrink-0">
           {/* Outer glow */}
           <motion.div
             className="absolute inset-0 rounded-full bg-amber-400/30 blur-xl"
@@ -52,7 +52,7 @@ export const SHCBalanceCard: React.FC = () => {
               repeat: Infinity,
               ease: 'easeInOut',
             }}
-            style={{ width: '80px', height: '80px', left: '-10px', top: '-10px' }}
+            style={{ width: '60px', height: '60px', left: '-6px', top: '-6px' }}
           />
           {/* Inner glow */}
           <motion.div
@@ -67,11 +67,11 @@ export const SHCBalanceCard: React.FC = () => {
               ease: 'easeInOut',
               delay: 0.5,
             }}
-            style={{ width: '60px', height: '60px' }}
+            style={{ width: '48px', height: '48px' }}
           />
           {/* Icon */}
-          <div className="relative w-[60px] h-[60px] rounded-full bg-amber-400/20 flex items-center justify-center">
-            <Sparkles className="w-7 h-7 text-amber-400" />
+          <div className="relative w-12 h-12 sm:w-[60px] sm:h-[60px] rounded-full bg-amber-400/20 flex items-center justify-center">
+            <Sparkles className="w-6 h-6 sm:w-7 sm:h-7 text-amber-400" />
           </div>
         </div>
       </div>

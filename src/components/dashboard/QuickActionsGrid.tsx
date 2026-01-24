@@ -61,18 +61,18 @@ export const QuickActionsGrid: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-lg font-heading font-semibold text-foreground">
+    <div className="space-y-3 sm:space-y-4">
+      <h2 className="text-base sm:text-lg font-heading font-semibold text-foreground">
         {t('dashboard.quickActions', 'Snabbåtgärder')}
       </h2>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
         {actions.map((action) => (
           <Link key={action.href} to={action.href}>
-            <Card className="p-4 hover:border-primary/50 transition-all flex flex-col items-center justify-center gap-3 h-full min-h-[100px]">
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${action.iconBg}`}>
-                <action.icon className={`w-6 h-6 ${action.iconColor}`} />
+            <Card className="p-2.5 sm:p-4 hover:border-primary/50 transition-all flex flex-col items-center justify-center gap-2 sm:gap-3 h-full min-h-[80px] sm:min-h-[100px]">
+              <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center ${action.iconBg}`}>
+                <action.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${action.iconColor}`} />
               </div>
-              <span className="text-xs font-medium text-foreground text-center">
+              <span className="text-[10px] sm:text-xs font-medium text-foreground text-center leading-tight">
                 {action.label}
               </span>
             </Card>

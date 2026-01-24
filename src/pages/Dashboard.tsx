@@ -60,7 +60,7 @@ const Dashboard: React.FC = () => {
   }, [checkAchievements]);
 
   return (
-    <div className="min-h-screen px-4 pt-6">
+    <div className="min-h-screen px-3 sm:px-4 pt-4 sm:pt-6 pb-24">
       {/* Achievement Popup */}
       <AchievementPopup 
         achievement={newlyUnlocked}
@@ -68,19 +68,19 @@ const Dashboard: React.FC = () => {
       />
 
       {/* Header with Sacred Flame and Ambient Toggle */}
-      <header className="flex items-center justify-between mb-6 animate-fade-in">
-        <div className="flex items-center gap-4">
+      <header className="flex items-center justify-between mb-4 sm:mb-6 animate-fade-in">
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
           {/* Sacred Flame on the left */}
           <SacredFlame />
           
           {/* Greeting */}
-          <div>
-            <p className="text-sm text-muted-foreground">{t('dashboard.greeting')}</p>
-            <h1 className="text-xl font-heading font-bold text-foreground">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs sm:text-sm text-muted-foreground">{t('dashboard.greeting')}</p>
+            <h1 className="text-lg sm:text-xl font-heading font-bold text-foreground truncate">
               {userProfile?.full_name || t('dashboard.sacredSoul')}
               <span className="ml-1 text-secondary">✨</span>
             </h1>
-            <p className="text-xs text-muted-foreground/70">The soul awaits.</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground/70">The soul awaits.</p>
           </div>
         </div>
 
@@ -89,12 +89,12 @@ const Dashboard: React.FC = () => {
       </header>
 
       {/* SHC Balance Card */}
-      <div className="mb-6 animate-slide-up">
+      <div className="mb-4 sm:mb-6 animate-slide-up">
         <SHCBalanceCard />
       </div>
 
       {/* Today's Sacred Practice - Hero Card */}
-      <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.05s' }}>
+      <div className="mb-4 sm:mb-6 animate-slide-up" style={{ animationDelay: '0.05s' }}>
         <TodaysPracticeCard 
           greeting="Today's Sacred Practice"
           subtitle="Morning: Rise with Clarity"
@@ -102,7 +102,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Quick Actions Grid */}
-      <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+      <div className="mb-4 sm:mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
         <QuickActionsGrid />
       </div>
 
