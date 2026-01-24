@@ -9,34 +9,34 @@ interface MetatronsCubeProps {
 export const MetatronsCube: React.FC<MetatronsCubeProps> = ({ className }) => {
   return (
     <div className={cn("relative", className)}>
-      {/* Outer cyan glow - larger and brighter */}
+      {/* Outer cyan glow - PORTAL effect with drop-shadow */}
       <motion.div
-        className="absolute inset-[-25%] rounded-full"
+        className="absolute inset-[-40%] rounded-full"
         style={{
-          background: "radial-gradient(circle, rgba(0, 242, 254, 0.3) 0%, rgba(0, 242, 254, 0.1) 50%, transparent 70%)",
-          filter: "blur(20px)",
+          background: "radial-gradient(circle, rgba(0, 242, 254, 0.45) 0%, rgba(0, 242, 254, 0.2) 40%, transparent 70%)",
+          filter: "blur(30px) drop-shadow(0 0 40px rgba(0, 242, 254, 0.5))",
         }}
         animate={{
-          scale: [1, 1.15, 1],
-          opacity: [0.7, 1, 0.7],
+          scale: [1, 1.2, 1],
+          opacity: [0.8, 1, 0.8],
         }}
         transition={{
-          duration: 3,
+          duration: 4,
           repeat: Infinity,
           ease: "easeInOut",
         }}
       />
 
-      {/* Inner purple glow */}
+      {/* Secondary cyan ring glow */}
       <motion.div
-        className="absolute inset-[10%] rounded-full"
+        className="absolute inset-[-20%] rounded-full"
         style={{
-          background: "radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 60%)",
-          filter: "blur(10px)",
+          background: "radial-gradient(circle, transparent 40%, rgba(0, 242, 254, 0.3) 60%, transparent 80%)",
+          filter: "blur(15px)",
         }}
         animate={{
-          scale: [1, 1.15, 1],
-          opacity: [0.5, 0.8, 0.5],
+          scale: [1, 1.1, 1],
+          opacity: [0.6, 0.9, 0.6],
         }}
         transition={{
           duration: 3,

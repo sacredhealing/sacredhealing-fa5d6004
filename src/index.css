@@ -68,8 +68,8 @@
 
 @layer base {
   :root {
-    /* Deep Midnight Black - #050505 */
-    --background: 0 0% 2%;
+    /* Pure Midnight - #030303 */
+    --background: 0 0% 1%;
     --foreground: 0 0% 100%;
 
     --card: 270 30% 6%;
@@ -80,15 +80,15 @@
 
     /* Glowing Turquoise - #00F2FE (active buttons + icons) */
     --primary: 186 100% 50%;
-    --primary-foreground: 240 10% 4%;
+    --primary-foreground: 0 0% 0%;
 
     /* Spiritual Purple (supporting accent) */
     --secondary: 271 76% 53%;
     --secondary-foreground: 0 0% 100%;
 
     --muted: 270 20% 10%;
-    /* Soft Lavender-Grey #A5B4FC for descriptions */
-    --muted-foreground: 229 84% 81%;
+    /* Soft Lavender-Grey #94a3b8 for secondary text */
+    --muted-foreground: 215 16% 65%;
 
     --accent: 51 100% 50%;
     --accent-foreground: 0 0% 2%;
@@ -113,23 +113,23 @@
     --indigo: 245 60% 35%;
     --violet: 280 70% 40%;
     
-    /* Deep Midnight Black #050505 with subtle Deep Purple #1A1033 radial */
-    --gradient-sanctuary: radial-gradient(ellipse at 50% 40%, rgba(26, 16, 51, 0.6) 0%, transparent 60%), #050505;
-    --gradient-spiritual: linear-gradient(135deg, hsl(271 76% 53%) 0%, hsl(271 76% 30%) 50%, #050505 100%);
+    /* Pure Midnight #030303 with Deep Indigo #1e1b4b radial in top-left */
+    --gradient-sanctuary: radial-gradient(ellipse at 15% 20%, rgba(30, 27, 75, 0.7) 0%, transparent 50%), #030303;
+    --gradient-spiritual: linear-gradient(135deg, hsl(271 76% 53%) 0%, hsl(271 76% 30%) 50%, #030303 100%);
     --gradient-gold: linear-gradient(135deg, hsl(51 100% 50%) 0%, hsl(51 100% 40%) 100%);
     --gradient-healing: linear-gradient(135deg, hsl(186 100% 50%) 0%, hsl(271 76% 53%) 100%);
     --gradient-card: linear-gradient(145deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
     --gradient-glow: radial-gradient(circle at center, hsl(186 100% 50% / 0.3) 0%, transparent 70%);
 
     /* Glassmorphism - premium depth */
-    --glass-bg: rgba(255, 255, 255, 0.03);
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --glass-blur: 12px;
+    --glass-bg: rgba(255, 255, 255, 0.02);
+    --glass-border: rgba(0, 242, 254, 0.15);
+    --glass-blur: 25px;
 
     /* Shadows with Turquoise glow */
     --shadow-purple: 0 0 30px hsl(271 76% 53% / 0.4);
     --shadow-gold: 0 0 30px hsl(51 100% 50% / 0.4);
-    --shadow-turquoise: 0 0 20px hsl(186 100% 50% / 0.4);
+    --shadow-turquoise: 0 0 25px hsl(186 100% 50% / 0.5);
     --shadow-glow-soft: 0 0 20px hsl(186 100% 50% / 0.25);
 
     --sidebar-background: 255 50% 6%;
@@ -151,16 +151,17 @@
   body {
     @apply text-foreground font-sans antialiased;
     font-family: 'Inter', sans-serif;
-    /* Deep Midnight Black #050505 with subtle Deep Purple #1A1033 radial glow */
+    /* Pure Midnight #030303 with Deep Indigo #1e1b4b radial in top-left */
     background: 
-      radial-gradient(ellipse at 50% 40%, rgba(26, 16, 51, 0.6) 0%, transparent 55%),
-      #050505;
+      radial-gradient(ellipse at 15% 20%, rgba(30, 27, 75, 0.7) 0%, transparent 50%),
+      #030303;
     background-attachment: fixed;
     min-height: 100vh;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Poppins', sans-serif;
+    @apply text-white;
   }
 }
 
@@ -205,7 +206,7 @@
     background: rgba(255, 255, 255, 0.02);
     backdrop-filter: blur(25px);
     -webkit-backdrop-filter: blur(25px);
-    border: 1px solid rgba(0, 242, 254, 0.1);
+    border: 1px solid rgba(0, 242, 254, 0.15);
     border-radius: 24px;
   }
 
@@ -213,16 +214,16 @@
     background: rgba(255, 255, 255, 0.02);
     backdrop-filter: blur(25px);
     -webkit-backdrop-filter: blur(25px);
-    border: 1px solid rgba(0, 242, 254, 0.1);
+    border: 1px solid rgba(0, 242, 254, 0.15);
     border-radius: 24px;
     padding: 32px;
   }
 
   .glass-subtle {
     background: rgba(255, 255, 255, 0.02);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 242, 254, 0.1);
     border-radius: 24px;
   }
 

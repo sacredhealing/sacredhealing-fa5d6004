@@ -27,26 +27,26 @@ export const TodaysPracticeCard: React.FC<TodaysPracticeCardProps> = ({
         
         {/* Content with luxury spacing */}
         <div className="relative flex items-center p-8 gap-8">
-          {/* Left: Metatron's Cube Sacred Geometry - 3x LARGER with cyan glow */}
-          <div className="hidden sm:flex w-48 h-48 shrink-0 relative">
-            {/* Large cyan outer glow */}
+          {/* Left: Metatron's Cube Sacred Geometry - LARGER portal with cyan glow */}
+          <div className="hidden sm:flex w-56 h-56 shrink-0 relative">
+            {/* Large cyan outer glow - portal effect */}
             <div 
-              className="absolute inset-[-30%] rounded-full animate-pulse-slow"
+              className="absolute inset-[-40%] rounded-full animate-pulse-slow"
               style={{
-                background: "radial-gradient(circle, rgba(0, 242, 254, 0.25) 0%, rgba(0, 242, 254, 0.1) 40%, transparent 70%)",
-                filter: "blur(20px)",
+                background: "radial-gradient(circle, rgba(0, 242, 254, 0.35) 0%, rgba(0, 242, 254, 0.15) 40%, transparent 70%)",
+                filter: "blur(25px) drop-shadow(0 0 30px rgba(0, 242, 254, 0.4))",
               }}
             />
             <MetatronsCube className="w-full h-full relative z-10" />
           </div>
 
           {/* Mobile: Larger Portal */}
-          <div className="flex sm:hidden w-32 h-32 shrink-0 relative">
+          <div className="flex sm:hidden w-40 h-40 shrink-0 relative">
             <div 
-              className="absolute inset-[-25%] rounded-full animate-pulse-slow"
+              className="absolute inset-[-30%] rounded-full animate-pulse-slow"
               style={{
-                background: "radial-gradient(circle, rgba(0, 242, 254, 0.2) 0%, transparent 60%)",
-                filter: "blur(15px)",
+                background: "radial-gradient(circle, rgba(0, 242, 254, 0.3) 0%, transparent 60%)",
+                filter: "blur(20px) drop-shadow(0 0 20px rgba(0, 242, 254, 0.35))",
               }}
             />
             <MetatronsCube className="w-full h-full relative z-10" />
@@ -58,14 +58,14 @@ export const TodaysPracticeCard: React.FC<TodaysPracticeCardProps> = ({
               <h2 className="text-xl sm:text-2xl font-heading font-bold text-white mb-2">
                 {greeting}
               </h2>
-              <p className="text-base text-[#A5B4FC]">
+              <p className="text-base text-[#94a3b8]">
                 {subtitle}
               </p>
             </div>
 
             <Link to="/meditations">
               <Button 
-                className="w-full sm:w-auto gap-2 bg-[#00F2FE] hover:bg-[#00D4E0] text-[#050505] font-extrabold shadow-[0_0_20px_rgba(0,242,254,0.6)] hover:shadow-[0_0_30px_rgba(0,242,254,0.7)] border-none transition-all text-base px-8 py-3"
+                className="w-full sm:w-auto gap-2 bg-[#00F2FE] hover:bg-[#00D4E0] text-[#000000] font-extrabold shadow-[0_0_25px_rgba(0,242,254,0.5)] hover:shadow-[0_0_35px_rgba(0,242,254,0.6)] border-none transition-all text-base px-8 py-3"
               >
                 Start Journey
                 <ArrowRight className="w-5 h-5" />
