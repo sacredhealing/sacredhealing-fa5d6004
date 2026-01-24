@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { useSiteContent } from '@/hooks/useSiteContent';
+import { SacredBreathingGuide } from '@/components/breathing/SacredBreathingGuide';
 
 import { supabase } from '@/integrations/supabase/client';
 
@@ -215,32 +216,58 @@ const Breathing: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Breathing Circle */}
-        <div className="flex flex-col items-center py-8">
-          <div 
-            className={`w-48 h-48 rounded-full bg-gradient-to-br ${phaseColors[phase]} flex items-center justify-center transition-all duration-1000 ease-in-out ${circleScale} shadow-2xl`}
-          >
-            <div className="text-center text-white">
-              <p className="text-lg font-semibold mb-1">{phaseLabels[phase]}</p>
+        {/* Sacred Geometry Breathing Guide */}
+        <Card className="bg-gradient-to-br from-purple-900/30 to-violet-900/20 border-purple-500/30 overflow-hidden">
+          <CardHeader className="text-center pb-2">
+            <CardTitle className="text-lg flex items-center justify-center gap-2">
+              <Sparkles className="w-5 h-5 text-purple-400" />
+              Sacred Geometry Breathing
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Follow the expanding circle for a calm, meditative breath
+            </p>
+          </CardHeader>
+          <CardContent className="py-8">
+            <SacredBreathingGuide 
+              inhaleSeconds={4} 
+              exhaleSeconds={4} 
+            />
+          </CardContent>
+        </Card>
+
+        {/* Classic Breathing Circle */}
+        <Card className="bg-card/50 border-border/50">
+          <CardHeader className="text-center pb-2">
+            <CardTitle className="text-lg">Classic Timer</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col items-center py-6">
+              <div 
+                className={`w-48 h-48 rounded-full bg-gradient-to-br ${phaseColors[phase]} flex items-center justify-center transition-all duration-1000 ease-in-out ${circleScale} shadow-2xl`}
+              >
+                <div className="text-center text-white">
+                  <p className="text-lg font-semibold mb-1">{phaseLabels[phase]}</p>
+                  {isActive && (
+                    <p className="text-4xl font-bold">{timeLeft}</p>
+                  )}
+                </div>
+              </div>
+              
               {isActive && (
-                <p className="text-4xl font-bold">{timeLeft}</p>
+                <div className="mt-4 flex items-center gap-4 text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <Heart className="w-4 h-4" />
+                    <span className="text-sm">{t('breathing.cycle', 'Cycle')} {currentCycle}/{selectedPattern.cycles}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Clock className="w-4 h-4" />
+                    <span className="text-sm">{Math.floor(totalSeconds / 60)}:{(totalSeconds % 60).toString().padStart(2, '0')}</span>
+                  </div>
+                </div>
               )}
             </div>
-          </div>
-          
-          {isActive && (
-            <div className="mt-4 flex items-center gap-4 text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <Heart className="w-4 h-4" />
-                <span className="text-sm">{t('breathing.cycle', 'Cycle')} {currentCycle}/{selectedPattern.cycles}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Clock className="w-4 h-4" />
-                <span className="text-sm">{Math.floor(totalSeconds / 60)}:{(totalSeconds % 60).toString().padStart(2, '0')}</span>
-              </div>
-            </div>
-          )}
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Media Section - YouTube or Audio */}
         {selectedPattern.youtube_url && (
