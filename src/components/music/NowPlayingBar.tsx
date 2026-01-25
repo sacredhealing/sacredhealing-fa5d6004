@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Heart, X, ChevronUp } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Heart, X, ChevronUp, Music, Sparkles, Leaf } from 'lucide-react';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 
 const COLLAPSED_HEIGHT = 80;
@@ -9,6 +9,8 @@ const DRAG_THRESHOLD = 60;
 export const NowPlayingBar: React.FC = () => {
   const {
     currentTrack,
+    currentAudio,
+    audioContentType,
     isPlaying,
     progress,
     currentTime,
@@ -35,11 +37,35 @@ export const NowPlayingBar: React.FC = () => {
   const dragStartY = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  if (!currentTrack || isClosing) return null;
+  // Check if we have any audio playing (music track or universal audio)
+  const hasActiveAudio = currentTrack || currentAudio;
+  
+  if (!hasActiveAudio || isClosing) return null;
 
-  const isLiked = likedIds.includes(currentTrack.id);
-  const canPlayFull = hasAccess(currentTrack);
-  const displayDuration = canPlayFull ? duration : Math.min(duration, 30);
+  // Determine display info based on content type
+  const displayTitle = currentTrack?.title || currentAudio?.title || '';
+  const displayArtist = currentTrack?.artist || currentAudio?.artist || '';
+  const displayCover = currentTrack?.cover_image_url || currentAudio?.cover_image_url;
+  const isLiked = currentTrack ? likedIds.includes(currentTrack.id) : false;
+  const canPlayFull = currentTrack ? hasAccess(currentTrack) : true;
+  const displayDuration = currentTrack && !canPlayFull ? Math.min(duration, 30) : duration;
+  
+  // Show queue controls only for music
+  const showQueueControls = audioContentType === null || audioContentType === 'music';
+  
+  // Content type badge
+  const getContentTypeBadge = () => {
+    if (!audioContentType || audioContentType === 'music') return null;
+    return (
+      <span className={`text-[10px] px-2 py-0.5 rounded-full shrink-0 font-medium ${
+        audioContentType === 'meditation' 
+          ? 'bg-violet-500/20 text-violet-400' 
+          : 'bg-emerald-500/20 text-emerald-400'
+      }`}>
+        {audioContentType === 'meditation' ? 'Meditation' : 'Healing'}
+      </span>
+    );
+  };
 
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -135,37 +161,45 @@ export const NowPlayingBar: React.FC = () => {
           <div className="flex items-center gap-3">
             {/* Cover Art */}
             <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted shrink-0 shadow-md">
-              {currentTrack.cover_image_url ? (
-                <img src={currentTrack.cover_image_url} alt="" className="w-full h-full object-cover" />
+              {displayCover ? (
+                <img src={displayCover} alt="" className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xl">♪</div>
+                <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xl">
+                  {audioContentType === 'meditation' ? <Sparkles size={20} /> : audioContentType === 'healing' ? <Leaf size={20} /> : '♪'}
+                </div>
               )}
             </div>
 
             {/* Track Info */}
             <div className="min-w-0 flex-1">
-              <p className="font-semibold text-sm truncate text-foreground">{currentTrack.title}</p>
-              <p className="text-xs text-muted-foreground truncate">{currentTrack.artist}</p>
+              <p className="font-semibold text-sm truncate text-foreground">{displayTitle}</p>
+              <p className="text-xs text-muted-foreground truncate">{displayArtist}</p>
             </div>
 
-            {!canPlayFull && (
+            {!canPlayFull && currentTrack && (
               <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full shrink-0 font-medium">Preview</span>
             )}
+            
+            {getContentTypeBadge()}
 
             {/* Mini Controls - reduced for space */}
             <div className="flex items-center gap-0.5">
-              <button onClick={prevTrack} className="p-1.5 rounded-full hover:bg-muted/50 text-foreground">
-                <SkipBack size={16} />
-              </button>
+              {showQueueControls && (
+                <button onClick={prevTrack} className="p-1.5 rounded-full hover:bg-muted/50 text-foreground">
+                  <SkipBack size={16} />
+                </button>
+              )}
               <button 
                 onClick={togglePlay}
                 className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground shadow-lg"
               >
                 {isPlaying ? <Pause size={20} /> : <Play size={20} className="ml-0.5" />}
               </button>
-              <button onClick={nextTrack} className="p-1.5 rounded-full hover:bg-muted/50 text-foreground">
-                <SkipForward size={16} />
-              </button>
+              {showQueueControls && (
+                <button onClick={nextTrack} className="p-1.5 rounded-full hover:bg-muted/50 text-foreground">
+                  <SkipForward size={16} />
+                </button>
+              )}
             </div>
           </div>
 
@@ -184,20 +218,25 @@ export const NowPlayingBar: React.FC = () => {
           {/* Large Cover Art */}
           <div className="flex justify-center mb-4">
             <div className="w-32 h-32 rounded-xl overflow-hidden bg-muted shadow-xl">
-              {currentTrack.cover_image_url ? (
-                <img src={currentTrack.cover_image_url} alt="" className="w-full h-full object-cover" />
+              {displayCover ? (
+                <img src={displayCover} alt="" className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground text-4xl">♪</div>
+                <div className="w-full h-full flex items-center justify-center text-muted-foreground text-4xl">
+                  {audioContentType === 'meditation' ? <Sparkles size={40} /> : audioContentType === 'healing' ? <Leaf size={40} /> : '♪'}
+                </div>
               )}
             </div>
           </div>
 
           {/* Track Info */}
           <div className="text-center mb-4">
-            <p className="font-bold text-lg text-foreground truncate">{currentTrack.title}</p>
-            <p className="text-sm text-muted-foreground">{currentTrack.artist}</p>
-            {!canPlayFull && (
+            <p className="font-bold text-lg text-foreground truncate">{displayTitle}</p>
+            <p className="text-sm text-muted-foreground">{displayArtist}</p>
+            {!canPlayFull && currentTrack && (
               <span className="inline-block mt-1 text-xs bg-primary/20 text-primary px-3 py-0.5 rounded-full font-medium">Preview Only</span>
+            )}
+            {getContentTypeBadge() && (
+              <div className="mt-1">{getContentTypeBadge()}</div>
             )}
           </div>
 
@@ -216,35 +255,45 @@ export const NowPlayingBar: React.FC = () => {
 
           {/* Full Controls */}
           <div className="flex items-center justify-center gap-4">
-            <button onClick={toggleShuffle} className={`p-3 rounded-full hover:bg-muted/50 ${isShuffle ? 'text-primary' : 'text-muted-foreground'}`}>
-              <Shuffle size={20} />
-            </button>
-            <button onClick={prevTrack} className="p-3 rounded-full hover:bg-muted/50 text-foreground">
-              <SkipBack size={24} />
-            </button>
+            {showQueueControls && (
+              <button onClick={toggleShuffle} className={`p-3 rounded-full hover:bg-muted/50 ${isShuffle ? 'text-primary' : 'text-muted-foreground'}`}>
+                <Shuffle size={20} />
+              </button>
+            )}
+            {showQueueControls && (
+              <button onClick={prevTrack} className="p-3 rounded-full hover:bg-muted/50 text-foreground">
+                <SkipBack size={24} />
+              </button>
+            )}
             <button 
               onClick={togglePlay}
               className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-primary-foreground shadow-xl"
             >
               {isPlaying ? <Pause size={32} /> : <Play size={32} className="ml-1" />}
             </button>
-            <button onClick={nextTrack} className="p-3 rounded-full hover:bg-muted/50 text-foreground">
-              <SkipForward size={24} />
-            </button>
-            <button onClick={toggleLoop} className={`p-3 rounded-full hover:bg-muted/50 ${isLoop ? 'text-primary' : 'text-muted-foreground'}`}>
-              <Repeat size={20} />
-            </button>
+            {showQueueControls && (
+              <button onClick={nextTrack} className="p-3 rounded-full hover:bg-muted/50 text-foreground">
+                <SkipForward size={24} />
+              </button>
+            )}
+            {showQueueControls && (
+              <button onClick={toggleLoop} className={`p-3 rounded-full hover:bg-muted/50 ${isLoop ? 'text-primary' : 'text-muted-foreground'}`}>
+                <Repeat size={20} />
+              </button>
+            )}
           </div>
 
-          {/* Like Button */}
-          <div className="flex justify-center mt-2">
-            <button 
-              onClick={() => toggleLike(currentTrack.id)}
-              className={`p-2 rounded-full hover:bg-muted/50 ${isLiked ? 'text-red-500' : 'text-muted-foreground'}`}
-            >
-              <Heart size={24} fill={isLiked ? 'currentColor' : 'none'} />
-            </button>
-          </div>
+          {/* Like Button - only for music */}
+          {currentTrack && (
+            <div className="flex justify-center mt-2">
+              <button 
+                onClick={() => toggleLike(currentTrack.id)}
+                className={`p-2 rounded-full hover:bg-muted/50 ${isLiked ? 'text-red-500' : 'text-muted-foreground'}`}
+              >
+                <Heart size={24} fill={isLiked ? 'currentColor' : 'none'} />
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
