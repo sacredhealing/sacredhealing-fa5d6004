@@ -34,8 +34,10 @@ interface AudioLayer {
  * Renders meditation audio offline at CPU speed (not real-time)
  * A 5-minute track renders in ~5-10 seconds
  */
-// Maximum export duration to prevent memory crashes (10 minutes)
-const MAX_EXPORT_SECONDS = 600;
+// OfflineAudioContext allocates the full render buffer up-front.
+// To prevent Chrome renderer OOM (“Aw, Snap! error code 5”), we cap total frames.
+// 20,000,000 frames @ 44.1kHz ≈ 7.5 min, @ 22.05kHz ≈ 15.1 min.
+const MAX_RENDER_FRAMES = 20_000_000;
 
 export async function renderOffline(config: OfflineRenderConfig): Promise<AudioBuffer> {
   const {
@@ -53,9 +55,12 @@ export async function renderOffline(config: OfflineRenderConfig): Promise<AudioB
   } = config;
 
   // Clamp duration to prevent memory exhaustion (Error code 5)
-  const durationSeconds = Math.min(rawDuration, MAX_EXPORT_SECONDS);
-  if (rawDuration > MAX_EXPORT_SECONDS) {
-    console.warn(`[OfflineRender] Duration clamped from ${rawDuration}s to ${MAX_EXPORT_SECONDS}s to prevent memory issues`);
+  const maxSeconds = Math.max(1, Math.floor(MAX_RENDER_FRAMES / sampleRate));
+  const durationSeconds = Math.min(rawDuration, maxSeconds);
+  if (rawDuration > maxSeconds) {
+    console.warn(
+      `[OfflineRender] Duration clamped from ${rawDuration}s to ${maxSeconds}s (sampleRate=${sampleRate}) to prevent memory issues`
+    );
   }
 
   const totalFrames = Math.ceil(durationSeconds * sampleRate);

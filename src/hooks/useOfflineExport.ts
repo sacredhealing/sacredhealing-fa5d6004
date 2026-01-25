@@ -51,10 +51,14 @@ export function useOfflineExport() {
     setProgress({ percent: 0, step: 'Preparing render...', isExporting: true });
 
     try {
+      // Long offline renders at 44.1kHz create very large buffers and WAVs.
+      // Downsample to 22.05kHz for longer sessions to stay within browser memory limits.
+      const chosenSampleRate = config.durationSeconds > 300 ? 22050 : 44100;
+
       // Build render config
       const renderConfig: OfflineRenderConfig = {
         durationSeconds: config.durationSeconds,
-        sampleRate: 44100,
+        sampleRate: chosenSampleRate,
         neuralAudioUrl: config.neuralAudioUrl,
         neuralSourceVolume: config.neuralSourceVolume ?? 1.0,
         atmosphereAudioUrl: config.atmosphereAudioUrl,
@@ -103,6 +107,13 @@ export function useOfflineExport() {
       let finalFormat: 'wav' | 'mp3';
 
       try {
+        // Avoid crashing the browser by trying to base64-encode huge WAVs.
+        // For long sessions we keep the WAV master (still downloadable).
+        const MAX_MP3_CONVERT_WAV_BYTES = 25 * 1024 * 1024; // 25MB
+        if (wavBlob.size > MAX_MP3_CONVERT_WAV_BYTES) {
+          throw new Error('MP3 conversion skipped (WAV too large)');
+        }
+
         finalBlob = await convertToMp3(wavBlob);
         finalFormat = 'mp3';
         console.log('[OfflineExport] MP3 conversion successful:', finalBlob.size, 'bytes');
@@ -110,7 +121,12 @@ export function useOfflineExport() {
         console.warn('[OfflineExport] MP3 conversion failed, using WAV fallback:', e);
         finalBlob = wavBlob;
         finalFormat = 'wav';
-        toast.info('Using WAV format (MP3 service offline)');
+        const msg = (e as Error)?.message || '';
+        toast.info(
+          msg.includes('skipped')
+            ? 'Using WAV format (MP3 skipped for long export)'
+            : 'Using WAV format (MP3 service offline)'
+        );
       }
 
       if (abortRef.current) {
@@ -177,11 +193,8 @@ async function convertToMp3(wavBlob: Blob): Promise<Blob> {
   const workerUrl = sanitizeUrl(configData.url);
   const renderEndpoint = `${workerUrl}/render`;
 
-  // Convert blob to base64
-  const arrayBuffer = await wavBlob.arrayBuffer();
-  const base64 = btoa(
-    new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
-  );
+  // Convert blob to base64 (memory-safe: avoid O(n^2) string concatenation)
+  const base64 = await blobToBase64(wavBlob);
 
   // Send to worker
   const response = await fetch(renderEndpoint, {
@@ -217,4 +230,21 @@ async function convertToMp3(wavBlob: Blob): Promise<Blob> {
   }
 
   return new Blob([bytes], { type: 'audio/mpeg' });
+}
+
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      if (typeof result !== 'string') {
+        reject(new Error('Failed to encode blob'));
+        return;
+      }
+      const commaIdx = result.indexOf(',');
+      resolve(commaIdx >= 0 ? result.slice(commaIdx + 1) : result);
+    };
+    reader.onerror = () => reject(new Error('Failed to encode blob'));
+    reader.readAsDataURL(blob);
+  });
 }

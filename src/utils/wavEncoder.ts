@@ -8,12 +8,13 @@ export function audioBufferToWav(buffer: AudioBuffer): Blob {
   const sampleRate = buffer.sampleRate;
   const format = 1; // PCM
   const bitsPerSample = 16;
-  
-  // Interleave channels
-  const interleaved = interleaveChannels(buffer);
-  
+
+  // IMPORTANT: avoid allocating an extra interleaved Float32Array for long renders.
+  // That extra copy is large enough to crash Chrome during export.
+  const length = buffer.length;
+
   // Create WAV file
-  const dataLength = interleaved.length * 2; // 16-bit = 2 bytes per sample
+  const dataLength = length * numChannels * 2; // 16-bit = 2 bytes per sample
   const headerLength = 44;
   const totalLength = headerLength + dataLength;
   
@@ -40,29 +41,9 @@ export function audioBufferToWav(buffer: AudioBuffer): Blob {
   view.setUint32(40, dataLength, true);
   
   // Write audio data
-  floatTo16BitPCM(view, 44, interleaved);
+  floatTo16BitPCMFromBuffer(view, 44, buffer);
   
   return new Blob([arrayBuffer], { type: 'audio/wav' });
-}
-
-function interleaveChannels(buffer: AudioBuffer): Float32Array {
-  const numChannels = buffer.numberOfChannels;
-  const length = buffer.length;
-  const result = new Float32Array(length * numChannels);
-  
-  const channels: Float32Array[] = [];
-  for (let i = 0; i < numChannels; i++) {
-    channels.push(buffer.getChannelData(i));
-  }
-  
-  let index = 0;
-  for (let i = 0; i < length; i++) {
-    for (let channel = 0; channel < numChannels; channel++) {
-      result[index++] = channels[channel][i];
-    }
-  }
-  
-  return result;
 }
 
 function writeString(view: DataView, offset: number, string: string): void {
@@ -71,10 +52,21 @@ function writeString(view: DataView, offset: number, string: string): void {
   }
 }
 
-function floatTo16BitPCM(view: DataView, offset: number, input: Float32Array): void {
-  for (let i = 0; i < input.length; i++, offset += 2) {
-    const s = Math.max(-1, Math.min(1, input[i]));
-    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+
+function floatTo16BitPCMFromBuffer(view: DataView, offset: number, buffer: AudioBuffer): void {
+  const numChannels = buffer.numberOfChannels;
+  const length = buffer.length;
+  const channels: Float32Array[] = [];
+  for (let c = 0; c < numChannels; c++) {
+    channels.push(buffer.getChannelData(c));
+  }
+
+  for (let i = 0; i < length; i++) {
+    for (let c = 0; c < numChannels; c++) {
+      const s = Math.max(-1, Math.min(1, channels[c][i]));
+      view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+      offset += 2;
+    }
   }
 }
 
