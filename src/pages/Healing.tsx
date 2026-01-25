@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { toast as sonnerToast } from 'sonner';
@@ -18,6 +18,7 @@ import HealingMeditationsList from '@/components/healing/HealingMeditationsList'
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { IntentionThreshold, IntentionType } from '@/components/meditation/IntentionThreshold';
 import MeditationMembershipBanner from '@/components/meditation/MeditationMembershipBanner';
+import { useMusicPlayer, UniversalAudioItem } from '@/contexts/MusicPlayerContext';
 
 interface HealingAudio {
   id: string;
@@ -246,17 +247,23 @@ const Healing: React.FC = () => {
   const [audioTracks, setAudioTracks] = useState<HealingAudio[]>([]);
   const [ownedAudioIds, setOwnedAudioIds] = useState<Set<string>>(new Set());
   const [hasHealingAccess, setHasHealingAccess] = useState(false);
-  const [playingId, setPlayingId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<HealingPlan | null>(null);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [dynamicContent, setDynamicContent] = useState<Record<string, string>>({});
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  
+  // Unified player
+  const { playUniversalAudio, currentAudio, isPlaying: playerIsPlaying } = useMusicPlayer();
   
   // Intention threshold state
   const [showThreshold, setShowThreshold] = useState(false);
   const [pendingAudio, setPendingAudio] = useState<HealingAudio | null>(null);
   const [currentIntention, setCurrentIntention] = useState<IntentionType | null>(null);
+  
+  // Check if healing audio is currently playing
+  const isHealingPlaying = (audioId: string) => {
+    return currentAudio?.id === audioId && currentAudio?.contentType === 'healing' && playerIsPlaying;
+  };
 
   // Get current language translations
   const currentLang = i18n.language?.split('-')[0] || 'en';
@@ -484,17 +491,21 @@ const Healing: React.FC = () => {
 
     if (!audioUrl) return;
 
-    if (playingId === audio.id) {
-      // If already playing this one, just pause
-      audioRef.current?.pause();
-      setPlayingId(null);
+    // If already playing this one, toggle via unified player
+    if (currentAudio?.id === audio.id && currentAudio?.contentType === 'healing') {
+      const audioItem: UniversalAudioItem = {
+        id: audio.id,
+        title: audio.title,
+        artist: 'Sacred Healing',
+        audio_url: audioUrl,
+        cover_image_url: audio.cover_image_url,
+        duration_seconds: audio.duration_seconds,
+        shc_reward: audio.is_free ? 0 : audio.price_shc,
+        contentType: 'healing',
+        originalData: audio,
+      };
+      playUniversalAudio(audioItem);
       return;
-    }
-    
-    // Stop any current audio first
-    if (audioRef.current) {
-      audioRef.current.pause();
-      setPlayingId(null);
     }
     
     // Store the pending audio and show threshold
@@ -522,31 +533,26 @@ const Healing: React.FC = () => {
     }
   };
 
-  // Actual audio playback logic
+  // Actual audio playback logic - now uses unified player
   const startPlayback = (audio: HealingAudio) => {
     const canPlay = isAdmin || audio.is_free || ownedAudioIds.has(audio.id);
     const audioUrl = canPlay ? audio.audio_url : audio.preview_url;
     
     if (!audioUrl) return;
     
-    audioRef.current = new Audio(audioUrl);
-    audioRef.current.play();
-    audioRef.current.onended = () => {
-      setPlayingId(null);
-      
-      // Prompt to journal after healing session
-      sonnerToast.success('Session complete', {
-        description: 'Would you like to journal your reflection?',
-        action: {
-          label: 'Open Journal',
-          onClick: () => navigate(`/meditation-journal${currentIntention ? `?intention=${currentIntention}` : ''}`),
-        },
-        duration: 10000,
-      });
-      
-      setCurrentIntention(null);
+    const audioItem: UniversalAudioItem = {
+      id: audio.id,
+      title: audio.title,
+      artist: 'Sacred Healing',
+      audio_url: audioUrl,
+      cover_image_url: audio.cover_image_url,
+      duration_seconds: audio.duration_seconds,
+      shc_reward: audio.is_free ? 0 : audio.price_shc,
+      contentType: 'healing',
+      originalData: audio,
     };
-    setPlayingId(audio.id);
+    
+    playUniversalAudio(audioItem);
   };
 
   // Legacy togglePlay for direct pause (when already playing)

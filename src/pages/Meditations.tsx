@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Play, Pause, Clock, Sparkles, Leaf, Moon, Sun, Heart, Brain, ArrowLeft, Loader2 } from 'lucide-react';
@@ -16,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSHCBalance } from '@/hooks/useSHCBalance';
 import { useCuratedPlaylists, CuratedPlaylist } from '@/hooks/useCuratedPlaylists';
+import { useMusicPlayer, UniversalAudioItem } from '@/contexts/MusicPlayerContext';
 
 interface Meditation {
   id: string;
@@ -35,14 +36,11 @@ const Meditations: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { refreshBalance } = useSHCBalance();
+  const { playUniversalAudio, currentAudio, isPlaying, progress: playerProgress, stopTrack } = useMusicPlayer();
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchParams] = useSearchParams();
   const [meditations, setMeditations] = useState<Meditation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [playingId, setPlayingId] = useState<string | null>(null);
-  const [progress, setProgress] = useState<Record<string, number>>({});
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const playStartTimeRef = useRef<number>(0);
   
   // Intention threshold state
   const [showThreshold, setShowThreshold] = useState(false);
@@ -102,19 +100,36 @@ const Meditations: React.FC = () => {
     }
   }, [searchParams, t]);
 
+  // Check if a meditation is currently playing via the unified player
+  const isCurrentlyPlaying = (meditationId: string) => {
+    return currentAudio?.id === meditationId && currentAudio?.contentType === 'meditation' && isPlaying;
+  };
+
+  // Get progress for a meditation from unified player
+  const getMeditationProgress = (meditationId: string) => {
+    if (currentAudio?.id === meditationId && currentAudio?.contentType === 'meditation') {
+      return playerProgress;
+    }
+    return 0;
+  };
+
   // Opens the intention threshold before starting a meditation
   const initiatePlay = (meditation: Meditation) => {
-    if (playingId === meditation.id) {
-      // If already playing this one, just pause
-      audioRef.current?.pause();
-      setPlayingId(null);
+    // If already playing this one, toggle play/pause via unified player
+    if (currentAudio?.id === meditation.id && currentAudio?.contentType === 'meditation') {
+      const audioItem: UniversalAudioItem = {
+        id: meditation.id,
+        title: meditation.title,
+        artist: 'Sacred Healing',
+        audio_url: meditation.audio_url,
+        cover_image_url: meditation.cover_image_url,
+        duration_seconds: meditation.duration_minutes * 60,
+        shc_reward: meditation.shc_reward,
+        contentType: 'meditation',
+        originalData: meditation,
+      };
+      playUniversalAudio(audioItem);
       return;
-    }
-    
-    // Stop any current audio first
-    if (audioRef.current) {
-      audioRef.current.pause();
-      setPlayingId(null);
     }
     
     // Store the pending meditation and show threshold
@@ -142,129 +157,30 @@ const Meditations: React.FC = () => {
     }
   };
 
-  // Actual audio playback logic
+  // Actual audio playback logic - now uses unified player
   const startPlayback = async (meditation: Meditation) => {
-    // Create new audio
-    const audio = new Audio(meditation.audio_url);
-    audioRef.current = audio;
-    playStartTimeRef.current = Date.now();
-
-    audio.addEventListener('timeupdate', () => {
-      const progressPercent = (audio.currentTime / audio.duration) * 100;
-      setProgress(prev => ({ ...prev, [meditation.id]: progressPercent }));
-    });
-
-    audio.addEventListener('ended', async () => {
-      setPlayingId(null);
-      setProgress(prev => ({ ...prev, [meditation.id]: 0 }));
-      
-      // Award SHC if logged in with anti-farming validation
-      if (user) {
-        await awardMeditationReward(meditation);
-      }
-      
-      // Prompt to journal after meditation
-      toast.success('Meditation complete', {
-        description: 'Would you like to journal your reflection?',
-        action: {
-          label: 'Open Journal',
-          onClick: () => navigate(`/meditation-journal${currentIntention ? `?intention=${currentIntention}` : ''}`),
-        },
-        duration: 10000,
-      });
-      
-      setCurrentIntention(null);
-    });
-
-    try {
-      await audio.play();
-      setPlayingId(meditation.id);
-      
-      // Update play count
-      await supabase
-        .from('meditations')
-        .update({ play_count: meditation.play_count + 1 })
-        .eq('id', meditation.id);
-    } catch (error) {
-      toast.error('Failed to play audio');
-    }
+    const audioItem: UniversalAudioItem = {
+      id: meditation.id,
+      title: meditation.title,
+      artist: 'Sacred Healing',
+      audio_url: meditation.audio_url,
+      cover_image_url: meditation.cover_image_url,
+      duration_seconds: meditation.duration_minutes * 60,
+      shc_reward: meditation.shc_reward,
+      contentType: 'meditation',
+      originalData: meditation,
+    };
+    
+    playUniversalAudio(audioItem);
+    
+    // Update play count
+    await supabase
+      .from('meditations')
+      .update({ play_count: meditation.play_count + 1 })
+      .eq('id', meditation.id);
   };
 
-  const awardMeditationReward = async (meditation: Meditation) => {
-    if (!user) return;
-
-    try {
-      const durationListened = Math.floor((Date.now() - playStartTimeRef.current) / 1000);
-      const minDuration = Math.floor(meditation.duration_minutes * 60 * 0.8); // 80% minimum
-
-      // Check if user completed this meditation in the last 24 hours
-      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      const { data: recentCompletion } = await supabase
-        .from('meditation_completions')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('meditation_id', meditation.id)
-        .gte('completed_at', twentyFourHoursAgo)
-        .limit(1);
-
-      if (recentCompletion && recentCompletion.length > 0) {
-        toast.info('Already completed today', {
-          description: 'Earn rewards again after 24 hours',
-        });
-        return;
-      }
-
-      if (durationListened < minDuration) {
-        toast.info('Listen longer', {
-          description: 'Listen to at least 80% to earn rewards',
-        });
-        return;
-      }
-
-      // Record completion
-      await supabase.from('meditation_completions').insert({
-        user_id: user.id,
-        meditation_id: meditation.id,
-        duration_listened: durationListened,
-        shc_earned: meditation.shc_reward,
-      });
-
-      // Update user balance
-      const { data: balanceData } = await supabase
-        .from('user_balances')
-        .select('balance, total_earned')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (balanceData) {
-        await supabase
-          .from('user_balances')
-          .update({
-            balance: balanceData.balance + meditation.shc_reward,
-            total_earned: balanceData.total_earned + meditation.shc_reward,
-          })
-          .eq('user_id', user.id);
-      }
-
-      // Record transaction
-      await supabase.from('shc_transactions').insert({
-        user_id: user.id,
-        type: 'earned',
-        amount: meditation.shc_reward,
-        description: `Meditation completed: ${meditation.title}`,
-        status: 'completed',
-      });
-
-      toast.success(`+${meditation.shc_reward} SHC earned!`, {
-        description: 'Thank you for your practice',
-        icon: '✨',
-      });
-
-      refreshBalance();
-    } catch (error) {
-      console.error('Error awarding meditation reward:', error);
-    }
-  };
+  // Note: SHC rewards are now handled by the unified player context
 
   if (loading) {
     return (
@@ -345,8 +261,8 @@ const Meditations: React.FC = () => {
               </div>
             ) : (
               playlistMeditations.map((meditation, index) => {
-                const isPlaying = playingId === meditation.id;
-                const currentProgress = progress[meditation.id] || 0;
+                const isMeditationPlaying = isCurrentlyPlaying(meditation.id);
+                const currentProgress = getMeditationProgress(meditation.id);
 
                 return (
                   <div
@@ -364,7 +280,7 @@ const Meditations: React.FC = () => {
                         onClick={() => initiatePlay(meditation)}
                         className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center glow-purple hover:scale-110 transition-transform"
                       >
-                        {isPlaying ? (
+                        {isMeditationPlaying ? (
                           <Pause size={24} className="text-primary" />
                         ) : (
                           <Play size={24} className="text-primary ml-1" />
@@ -456,8 +372,8 @@ const Meditations: React.FC = () => {
                 {filteredMeditations
                   .filter(m => m.is_premium)
                   .map((meditation, index) => {
-                    const isPlaying = playingId === meditation.id;
-                    const currentProgress = progress[meditation.id] || 0;
+                    const isMeditationPlaying = isCurrentlyPlaying(meditation.id);
+                    const currentProgress = getMeditationProgress(meditation.id);
 
                     return (
                       <div
@@ -474,7 +390,7 @@ const Meditations: React.FC = () => {
                             onClick={() => initiatePlay(meditation)}
                             className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center glow-purple hover:scale-110 transition-transform"
                           >
-                            {isPlaying ? (
+                            {isMeditationPlaying ? (
                               <Pause size={24} className="text-primary" />
                             ) : (
                               <Play size={24} className="text-primary ml-1" />
@@ -533,8 +449,8 @@ const Meditations: React.FC = () => {
               filteredMeditations
                 .filter(m => !m.is_premium) // Show free meditations in main list
                 .map((meditation, index) => {
-                const isPlaying = playingId === meditation.id;
-                const currentProgress = progress[meditation.id] || 0;
+                const isMeditationPlaying = isCurrentlyPlaying(meditation.id);
+                const currentProgress = getMeditationProgress(meditation.id);
 
                 return (
                   <div
@@ -553,7 +469,7 @@ const Meditations: React.FC = () => {
                         onClick={() => initiatePlay(meditation)}
                         className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center glow-purple hover:scale-110 transition-transform"
                       >
-                        {isPlaying ? (
+                        {isMeditationPlaying ? (
                           <Pause size={24} className="text-primary" />
                         ) : (
                           <Play size={24} className="text-primary ml-1" />

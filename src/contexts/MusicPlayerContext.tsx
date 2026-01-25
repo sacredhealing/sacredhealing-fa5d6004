@@ -3,6 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useSHC } from '@/contexts/SHCContext';
 
+// Audio content type enum
+export type AudioContentType = 'music' | 'meditation' | 'healing';
+
 export interface Track {
   id: string;
   title: string;
@@ -37,8 +40,25 @@ export interface Track {
   analysis_status: string | null;
 }
 
+// Universal audio item that works for music, meditation, and healing
+export interface UniversalAudioItem {
+  id: string;
+  title: string;
+  artist: string;
+  audio_url: string;
+  preview_url?: string | null;
+  cover_image_url: string | null;
+  duration_seconds: number;
+  shc_reward: number;
+  contentType: AudioContentType;
+  // Original data reference
+  originalData?: any;
+}
+
 interface MusicPlayerContextType {
   currentTrack: Track | null;
+  currentAudio: UniversalAudioItem | null;
+  audioContentType: AudioContentType | null;
   isPlaying: boolean;
   progress: number;
   currentTime: number;
@@ -52,6 +72,7 @@ interface MusicPlayerContextType {
   isSubscribed: boolean;
   
   playTrack: (track: Track, queue?: Track[]) => void;
+  playUniversalAudio: (audio: UniversalAudioItem) => void;
   togglePlay: () => void;
   seekTo: (percent: number) => void;
   setVolume: (vol: number) => void;
@@ -81,6 +102,8 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const audioRef = useRef<HTMLAudioElement | null>(null);
   
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
+  const [currentAudio, setCurrentAudio] = useState<UniversalAudioItem | null>(null);
+  const [audioContentType, setAudioContentType] = useState<AudioContentType | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
@@ -94,6 +117,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [likedIds, setLikedIds] = useState<string[]>([]);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [currentQueueIndex, setCurrentQueueIndex] = useState(0);
+  const playStartTimeRef = useRef<number>(0);
 
   const PREVIEW_LIMIT = 30;
 
@@ -396,15 +420,133 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       audioRef.current = null;
     }
     setCurrentTrack(null);
+    setCurrentAudio(null);
+    setAudioContentType(null);
     setIsPlaying(false);
     setProgress(0);
     setCurrentTime(0);
     setDuration(0);
   }, []);
 
+  // Universal audio player for meditation and healing
+  const playUniversalAudio = useCallback(async (audio: UniversalAudioItem) => {
+    // If same audio is playing, toggle play/pause
+    if (currentAudio?.id === audio.id && audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        audioRef.current.play();
+        setIsPlaying(true);
+      }
+      return;
+    }
+
+    // Stop any current audio
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+
+    // Reset music track when playing meditation/healing
+    setCurrentTrack(null);
+    
+    const audioUrl = audio.audio_url;
+    audioRef.current = new Audio(audioUrl);
+    audioRef.current.volume = volume;
+    playStartTimeRef.current = Date.now();
+    
+    audioRef.current.onloadedmetadata = () => {
+      if (audioRef.current) setDuration(audioRef.current.duration);
+    };
+    
+    audioRef.current.ontimeupdate = () => {
+      if (!audioRef.current) return;
+      const time = audioRef.current.currentTime;
+      setCurrentTime(time);
+      setProgress((time / audioRef.current.duration) * 100);
+    };
+    
+    audioRef.current.onended = async () => {
+      setIsPlaying(false);
+      
+      // Award SHC for meditation/healing completion
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && audio.shc_reward > 0) {
+        const durationListened = Math.floor((Date.now() - playStartTimeRef.current) / 1000);
+        const minDuration = Math.floor(audio.duration_seconds * 0.8);
+        
+        if (durationListened >= minDuration) {
+          // Check for recent completion (anti-farming)
+          const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+          
+          let hasRecentCompletion = false;
+          
+          if (audio.contentType === 'meditation') {
+            const { data: recentCompletion } = await supabase
+              .from('meditation_completions')
+              .select('id')
+              .eq('user_id', user.id)
+              .eq('meditation_id', audio.id)
+              .gte('created_at', twentyFourHoursAgo)
+              .limit(1);
+            hasRecentCompletion = (recentCompletion && recentCompletion.length > 0);
+          } else {
+            const { data: recentCompletion } = await supabase
+              .from('content_analytics')
+              .select('id')
+              .eq('user_id', user.id)
+              .eq('content_id', audio.id)
+              .gte('created_at', twentyFourHoursAgo)
+              .limit(1);
+            hasRecentCompletion = (recentCompletion && recentCompletion.length > 0);
+          }
+          
+          if (!hasRecentCompletion) {
+            // Award SHC
+            const { data: balanceData } = await supabase
+              .from('user_balances')
+              .select('balance, total_earned')
+              .eq('user_id', user.id)
+              .maybeSingle();
+            
+            if (balanceData) {
+              await supabase.from('user_balances').update({
+                balance: balanceData.balance + audio.shc_reward,
+                total_earned: balanceData.total_earned + audio.shc_reward
+              }).eq('user_id', user.id);
+            }
+            
+            await supabase.from('shc_transactions').insert({
+              user_id: user.id,
+              type: 'earned',
+              amount: audio.shc_reward,
+              description: `${audio.contentType} completed: ${audio.title}`,
+              status: 'completed'
+            });
+            
+            addOptimisticBalance(audio.shc_reward);
+            toast({ title: `+${audio.shc_reward} SHC earned!`, description: `Completed "${audio.title}"` });
+          } else {
+            toast({ title: "Already completed today", description: "Earn rewards again after 24 hours." });
+          }
+        }
+      }
+    };
+    
+    audioRef.current.play();
+    setCurrentAudio(audio);
+    setAudioContentType(audio.contentType);
+    setProgress(0);
+    setCurrentTime(0);
+    setIsPlaying(true);
+  }, [currentAudio, isPlaying, volume, addOptimisticBalance, toast]);
+
   return (
     <MusicPlayerContext.Provider value={{
       currentTrack,
+      currentAudio,
+      audioContentType,
       isPlaying,
       progress,
       currentTime,
@@ -417,6 +559,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       likedIds,
       isSubscribed,
       playTrack,
+      playUniversalAudio,
       togglePlay,
       seekTo,
       setVolume,
