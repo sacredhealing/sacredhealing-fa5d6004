@@ -286,12 +286,13 @@ export function useSoulMeditateEngine() {
     warmthGainRef.current.gain.value = 1;
 
     // Create soft-knee limiter as final stage for glassy professional finish
+    // More aggressive settings to prevent distortion at max volume
     limiterRef.current = ctx.createDynamicsCompressor();
-    limiterRef.current.threshold.value = -1;  // -1 dB threshold
-    limiterRef.current.knee.value = 6;        // 6 dB soft knee
+    limiterRef.current.threshold.value = -6;  // -6 dB threshold (more headroom)
+    limiterRef.current.knee.value = 10;       // Wider soft knee for transparency
     limiterRef.current.ratio.value = 20;      // High ratio for limiting
     limiterRef.current.attack.value = 0.001;  // 1ms attack
-    limiterRef.current.release.value = 0.1;   // 100ms release
+    limiterRef.current.release.value = 0.05;  // 50ms release (faster recovery)
 
     // Connect DSP chain
     // Dry signals -> analyser
@@ -701,39 +702,48 @@ export function useSoulMeditateEngine() {
   }, []);
 
   // Update volumes
+  // Volume clamping helper to prevent distortion at max volume
+  // Max 0.85 gives headroom for the limiter when multiple layers combine
+  const clampVolume = (vol: number, maxVol: number = 0.85) => Math.min(Math.max(0, vol), maxVol);
+
   const updateNeuralVolume = useCallback((vol: number) => {
+    const safeVol = clampVolume(vol);
     if (neuralGainRef.current) {
-      neuralGainRef.current.gain.value = vol;
+      neuralGainRef.current.gain.value = safeVol;
     }
-    setNeuralLayer(prev => ({ ...prev, volume: vol }));
+    setNeuralLayer(prev => ({ ...prev, volume: vol })); // Store original for UI
   }, []);
 
   const updateAtmosphereVolume = useCallback((vol: number) => {
+    const safeVol = clampVolume(vol);
     if (atmosphereGainRef.current) {
-      atmosphereGainRef.current.gain.value = vol;
+      atmosphereGainRef.current.gain.value = safeVol;
     }
-    setAtmosphereLayer(prev => ({ ...prev, volume: vol }));
+    setAtmosphereLayer(prev => ({ ...prev, volume: vol })); // Store original for UI
   }, []);
 
   const updateSolfeggioVolume = useCallback((vol: number) => {
+    const safeVol = clampVolume(vol, 0.7); // Frequencies need more headroom
     if (solfeggioGainRef.current && frequencies.solfeggio.enabled) {
-      solfeggioGainRef.current.gain.value = vol;
+      solfeggioGainRef.current.gain.value = safeVol;
     }
-    setSolfeggioVolume(vol);
+    setSolfeggioVolume(vol); // Store original for UI
   }, [frequencies.solfeggio.enabled]);
 
   const updateBinauralVolume = useCallback((vol: number) => {
+    const safeVol = clampVolume(vol, 0.7); // Frequencies need more headroom
     if (binauralGainRef.current && frequencies.binaural.enabled) {
-      binauralGainRef.current.gain.value = vol;
+      binauralGainRef.current.gain.value = safeVol;
     }
-    setBinauralVolume(vol);
+    setBinauralVolume(vol); // Store original for UI
   }, [frequencies.binaural.enabled]);
 
   const updateMasterVolume = useCallback((vol: number) => {
+    const safeVol = clampVolume(vol, 0.9); // Master has limiter, allow slightly higher
     if (masterGainRef.current) {
-      masterGainRef.current.gain.value = vol;
+      masterGainRef.current.gain.value = safeVol;
     }
-    setMasterVolume(vol);
+    setMasterVolume(vol); // Store original for UI
   }, []);
 
   // Update EQ band
