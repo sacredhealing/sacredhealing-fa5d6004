@@ -34,9 +34,12 @@ interface AudioLayer {
  * Renders meditation audio offline at CPU speed (not real-time)
  * A 5-minute track renders in ~5-10 seconds
  */
+// Maximum export duration to prevent memory crashes (10 minutes)
+const MAX_EXPORT_SECONDS = 600;
+
 export async function renderOffline(config: OfflineRenderConfig): Promise<AudioBuffer> {
   const {
-    durationSeconds,
+    durationSeconds: rawDuration,
     sampleRate = 44100,
     neuralAudioUrl,
     neuralSourceVolume = 1.0,
@@ -49,15 +52,33 @@ export async function renderOffline(config: OfflineRenderConfig): Promise<AudioB
     onProgress
   } = config;
 
+  // Clamp duration to prevent memory exhaustion (Error code 5)
+  const durationSeconds = Math.min(rawDuration, MAX_EXPORT_SECONDS);
+  if (rawDuration > MAX_EXPORT_SECONDS) {
+    console.warn(`[OfflineRender] Duration clamped from ${rawDuration}s to ${MAX_EXPORT_SECONDS}s to prevent memory issues`);
+  }
+
   const totalFrames = Math.ceil(durationSeconds * sampleRate);
   const offlineCtx = new OfflineAudioContext(2, totalFrames, sampleRate);
   
   onProgress?.(5, 'Initializing render engine...');
 
-  // Master gain node
+  // Clamp master volume to prevent clipping (max 0.85 for headroom)
+  const safeVolume = Math.min(masterVolume, 0.85);
+
+  // Create master limiter BEFORE master gain to catch peaks
+  const masterLimiter = offlineCtx.createDynamicsCompressor();
+  masterLimiter.threshold.value = -3;  // -3 dB threshold (catches peaks before clipping)
+  masterLimiter.knee.value = 6;        // Soft knee
+  masterLimiter.ratio.value = 20;      // Brick-wall limiting
+  masterLimiter.attack.value = 0.001;  // 1ms attack
+  masterLimiter.release.value = 0.1;   // 100ms release
+  masterLimiter.connect(offlineCtx.destination);
+
+  // Master gain node - connects to limiter, not destination
   const masterGain = offlineCtx.createGain();
-  masterGain.gain.value = masterVolume;
-  masterGain.connect(offlineCtx.destination);
+  masterGain.gain.value = safeVolume;
+  masterGain.connect(masterLimiter);
 
   // DSP chain
   const dspOutput = await createDSPChain(offlineCtx, dsp, masterGain);
@@ -137,6 +158,7 @@ async function fetchAndDecode(ctx: OfflineAudioContext, url: string): Promise<Au
  */
 /**
  * Schedule a buffer to play with looping to fill the duration
+ * Uses a single looping buffer source to reduce memory pressure
  * Includes dynamics processing to match live preview chain
  */
 function scheduleLoopingBuffer(
@@ -147,8 +169,8 @@ function scheduleLoopingBuffer(
   destination: AudioNode,
   isNeuralSource: boolean = false
 ): void {
-  const bufferDuration = buffer.duration;
-  let currentTime = 0;
+  // Clamp volume to prevent distortion (leave headroom for mixing)
+  const safeVolume = Math.min(volume, 0.85);
   
   // Create dynamics chain for neural source (matches live engine)
   let outputNode: AudioNode = destination;
@@ -156,15 +178,15 @@ function scheduleLoopingBuffer(
   if (isNeuralSource) {
     // Create compressor matching live engine settings
     const compressor = ctx.createDynamicsCompressor();
-    compressor.threshold.value = -50; // Same as live engine
-    compressor.knee.value = 40;
+    compressor.threshold.value = -18; // More conservative threshold
+    compressor.knee.value = 12;       // Wider knee for smoother compression
     compressor.ratio.value = 4;
     compressor.attack.value = 0.003;
     compressor.release.value = 0.25;
     
     // Create soft-knee limiter matching live engine
     const limiter = ctx.createDynamicsCompressor();
-    limiter.threshold.value = -1;  // -1 dB threshold
+    limiter.threshold.value = -3;  // -3 dB threshold for headroom
     limiter.knee.value = 6;        // 6 dB soft knee
     limiter.ratio.value = 20;      // High ratio for limiting
     limiter.attack.value = 0.001;  // 1ms attack
@@ -178,30 +200,33 @@ function scheduleLoopingBuffer(
     console.log('[OfflineRender] Neural source dynamics chain applied (compressor + limiter)');
   }
   
-  while (currentTime < durationSeconds) {
-    const source = ctx.createBufferSource();
-    source.buffer = buffer;
-    
-    const gainNode = ctx.createGain();
-    gainNode.gain.value = volume;
-    
-    // Fade in/out for smooth loops
-    const fadeTime = Math.min(0.5, bufferDuration * 0.1);
-    const playDuration = Math.min(bufferDuration, durationSeconds - currentTime);
-    
-    gainNode.gain.setValueAtTime(0, currentTime);
-    gainNode.gain.linearRampToValueAtTime(volume, currentTime + fadeTime);
-    gainNode.gain.setValueAtTime(volume, currentTime + playDuration - fadeTime);
-    gainNode.gain.linearRampToValueAtTime(0, currentTime + playDuration);
-    
-    source.connect(gainNode);
-    gainNode.connect(outputNode);
-    
-    source.start(currentTime);
-    source.stop(currentTime + playDuration);
-    
-    currentTime += bufferDuration - fadeTime; // Overlap for crossfade
-  }
+  // Use a SINGLE looping buffer source instead of creating many to reduce memory
+  const source = ctx.createBufferSource();
+  source.buffer = buffer;
+  source.loop = true;
+  source.loopStart = 0;
+  source.loopEnd = buffer.duration;
+  
+  const gainNode = ctx.createGain();
+  
+  // Fade in at start
+  const fadeTime = Math.min(2, durationSeconds * 0.05);
+  gainNode.gain.setValueAtTime(0, 0);
+  gainNode.gain.linearRampToValueAtTime(safeVolume, fadeTime);
+  
+  // Hold at volume
+  gainNode.gain.setValueAtTime(safeVolume, durationSeconds - fadeTime);
+  
+  // Fade out at end
+  gainNode.gain.linearRampToValueAtTime(0, durationSeconds);
+  
+  source.connect(gainNode);
+  gainNode.connect(outputNode);
+  
+  source.start(0);
+  source.stop(durationSeconds);
+  
+  console.log(`[OfflineRender] Scheduled ${buffer.duration}s buffer to loop for ${durationSeconds}s (volume: ${safeVolume})`);
 }
 
 /**
