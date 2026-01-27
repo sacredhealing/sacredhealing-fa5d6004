@@ -555,14 +555,9 @@ const Healing: React.FC = () => {
     playUniversalAudio(audioItem);
   };
 
-  // Legacy togglePlay for direct pause (when already playing)
+  // Toggle play - uses unified player
   const togglePlay = (audio: HealingAudio) => {
-    if (playingId === audio.id) {
-      audioRef.current?.pause();
-      setPlayingId(null);
-    } else {
-      initiatePlay(audio);
-    }
+    initiatePlay(audio); // playUniversalAudio handles toggle internally
   };
 
   const formatDuration = (seconds: number) => {
@@ -791,7 +786,7 @@ const Healing: React.FC = () => {
                     onClick={() => togglePlay(audio)}
                     className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center hover:bg-primary/30 transition-colors"
                   >
-                    {playingId === audio.id ? (
+                    {isHealingPlaying(audio.id) ? (
                       <Pause className="w-5 h-5 text-primary" />
                     ) : (
                       <Play className="w-5 h-5 text-primary ml-1" />
@@ -840,7 +835,7 @@ const Healing: React.FC = () => {
                       {!hasAccess && (
                         <Lock className="w-4 h-4 text-muted-foreground absolute -top-1 -right-1" />
                       )}
-                      {playingId === audio.id ? (
+                      {isHealingPlaying(audio.id) ? (
                         <Pause className="w-5 h-5 text-primary" />
                       ) : (
                         <Play className="w-5 h-5 text-primary ml-1" />
