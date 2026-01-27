@@ -102,7 +102,7 @@ export const PromoCodeInput = ({
   }
 
   return (
-    <div className={cn("flex gap-2", className)}>
+    <div className={cn("flex flex-col sm:flex-row gap-2", className)}>
       <div className="relative flex-1">
         <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
@@ -117,6 +117,7 @@ export const PromoCodeInput = ({
         variant="outline" 
         onClick={handleApplyCode}
         disabled={isValidating || !code.trim()}
+        className="w-full sm:w-auto"
       >
         {isValidating ? (
           <Loader2 className="w-4 h-4 animate-spin" />
