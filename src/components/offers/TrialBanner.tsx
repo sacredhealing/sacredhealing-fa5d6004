@@ -84,12 +84,12 @@ export const TrialBanner = ({ onTrialStarted }: TrialBannerProps) => {
             </div>
           </div>
           
-          <div className="flex-shrink-0">
+          <div className="w-full md:w-auto md:flex-shrink-0">
             <Button
               size="lg"
               onClick={handleStartTrial}
               disabled={isStarting}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-6 text-lg font-semibold"
+              className="w-full md:w-auto bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-semibold"
             >
               {isStarting ? (
                 <>

@@ -180,7 +180,7 @@ const Membership = () => {
           <Button 
             onClick={handleManageSubscription}
             variant="outline"
-            className="mt-4"
+              className="mt-4 w-full sm:w-auto"
             size="sm"
             disabled={portalLoading}
           >
