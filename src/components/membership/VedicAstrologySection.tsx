@@ -102,11 +102,11 @@ export const VedicAstrologySection: React.FC = () => {
   return (
     <Card className="border-2 border-primary/30 bg-gradient-to-br from-purple-500/5 via-background to-blue-500/5">
       <CardContent className="p-4 sm:p-6">
-        <div className="flex items-start gap-3 mb-5 sm:mb-6">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center flex-shrink-0">
+        <div className="flex flex-col items-center text-center mb-5 sm:mb-6">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center flex-shrink-0 mb-3">
             <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
           </div>
-          <div className="flex-1">
+          <div>
             <h2 className="text-xl sm:text-2xl font-heading font-bold text-foreground">
               Vedic Astrology
             </h2>
@@ -223,36 +223,34 @@ export const VedicAstrologySection: React.FC = () => {
                 className={`border-2 ${isLocked ? 'border-border/50 opacity-60' : colors.border} bg-gradient-to-br ${colors.bg}`}
               >
                 <CardContent className="p-5">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className={`p-3 rounded-xl bg-gradient-to-br ${colors.bg} border ${colors.border}`}>
-                        <Icon className={`w-6 h-6 ${colors.text}`} />
+                  <div className="flex flex-col items-center text-center mb-4">
+                    <div className={`p-3 rounded-xl bg-gradient-to-br ${colors.bg} border ${colors.border} mb-3`}>
+                      <Icon className={`w-6 h-6 ${colors.text}`} />
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-center gap-2 mb-1 flex-wrap">
+                        <h3 className="font-bold text-lg text-foreground">{tier.name}</h3>
+                        {userHasAccess && (
+                          <Badge className="bg-green-500 text-white text-xs">
+                            Active
+                          </Badge>
+                        )}
+                        {isLocked && (
+                          <Badge variant="outline" className="text-xs">
+                            <Lock className="w-3 h-3 mr-1" />
+                            Locked
+                          </Badge>
+                        )}
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-bold text-lg text-foreground">{tier.name}</h3>
-                          {userHasAccess && (
-                            <Badge className="bg-green-500 text-white text-xs">
-                              Active
-                            </Badge>
-                          )}
-                          {isLocked && (
-                            <Badge variant="outline" className="text-xs">
-                              <Lock className="w-3 h-3 mr-1" />
-                              Locked
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground">{tier.description}</p>
-                      </div>
+                      <p className="text-sm text-muted-foreground">{tier.description}</p>
                     </div>
                   </div>
 
                   <div className="mb-4">
-                    <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
+                    <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide text-center">
                       Required Membership:
                     </p>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2 justify-center">
                       {tier.membership_required.map((req) => (
                         <Badge
                           key={req}
@@ -266,18 +264,18 @@ export const VedicAstrologySection: React.FC = () => {
                   </div>
 
                   <div className="mb-4">
-                    <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
+                    <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide text-center">
                       Features:
                     </p>
                     <ul className="space-y-1">
                       {tier.features.slice(0, 5).map((feature, idx) => (
-                        <li key={idx} className="flex items-start gap-2 text-sm text-foreground">
-                          <div className={`w-1.5 h-1.5 rounded-full mt-1.5 ${colors.text.replace('text-', 'bg-')} flex-shrink-0`} />
-                          <span>{feature}</span>
+                        <li key={idx} className="flex items-center justify-center gap-2 text-sm text-foreground">
+                          <div className={`w-1.5 h-1.5 rounded-full ${colors.text.replace('text-', 'bg-')} flex-shrink-0`} />
+                          <span className="text-center">{feature}</span>
                         </li>
                       ))}
                       {tier.features.length > 5 && (
-                        <li className="text-xs text-muted-foreground italic">
+                        <li className="text-xs text-muted-foreground italic text-center">
                           +{tier.features.length - 5} more features
                         </li>
                       )}
