@@ -222,23 +222,23 @@ export const VedicAstrologySection: React.FC = () => {
                 key={tier.id}
                 className={`border-2 ${isLocked ? 'border-border/50 opacity-60' : colors.border} bg-gradient-to-br ${colors.bg}`}
               >
-                <CardContent className="p-4 sm:p-5">
+                <CardContent className="p-3 sm:p-5">
                   {/* Header Row - Horizontal Layout */}
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className={`p-2.5 sm:p-3 rounded-xl bg-gradient-to-br ${colors.bg} border ${colors.border} flex-shrink-0`}>
-                      <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${colors.text}`} />
+                  <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                    <div className={`p-2 sm:p-3 rounded-xl bg-gradient-to-br ${colors.bg} border ${colors.border} flex-shrink-0`}>
+                      <Icon className={`w-4 h-4 sm:w-6 sm:h-6 ${colors.text}`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-bold text-base sm:text-lg text-foreground">{tier.name}</h3>
+                      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                        <h3 className="font-bold text-sm sm:text-lg text-foreground leading-tight">{tier.name}</h3>
                         {userHasAccess && (
-                          <Badge className="bg-green-500 text-white text-xs">
+                          <Badge className="bg-green-500 text-white text-[10px] sm:text-xs px-1.5 py-0.5">
                             Active
                           </Badge>
                         )}
                         {isLocked && (
-                          <Badge variant="outline" className="text-xs">
-                            <Lock className="w-3 h-3 mr-1" />
+                          <Badge variant="outline" className="text-[10px] sm:text-xs px-1.5 py-0.5">
+                            <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-0.5 sm:mr-1" />
                             Locked
                           </Badge>
                         )}
@@ -246,21 +246,21 @@ export const VedicAstrologySection: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Description - Full Width */}
-                  <p className="text-sm sm:text-base text-muted-foreground mb-4 leading-normal">{tier.description}</p>
+                  {/* Description - Compact, Horizontal */}
+                  <p className="text-xs sm:text-base text-muted-foreground mb-3 sm:mb-4 leading-tight sm:leading-normal line-clamp-2 sm:line-clamp-none">{tier.description}</p>
 
-                  {/* Required Membership and Features - Side by Side on larger screens */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
-                        Required Membership:
+                  {/* Required Membership and Features - Horizontal on mobile too */}
+                  <div className="flex flex-col sm:grid sm:grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
+                    <div className="flex-shrink-0">
+                      <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground mb-1.5 sm:mb-2 uppercase tracking-wide">
+                        Required:
                       </p>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-1.5 sm:gap-2">
                         {tier.membership_required.map((req) => (
                           <Badge
                             key={req}
                             variant={membershipTier === req ? 'default' : 'outline'}
-                            className="text-xs"
+                            className="text-[10px] sm:text-xs px-1.5 py-0.5"
                           >
                             {membershipMap[req] || req}
                           </Badge>
@@ -268,44 +268,44 @@ export const VedicAstrologySection: React.FC = () => {
                       </div>
                     </div>
 
-                    <div>
-                      <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground mb-1.5 sm:mb-2 uppercase tracking-wide">
                         Features:
                       </p>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-1.5">
+                      <div className="grid grid-cols-3 sm:grid-cols-3 gap-x-2 sm:gap-x-3 gap-y-1 sm:gap-y-1.5">
                         {tier.features.slice(0, 6).map((feature, idx) => (
-                          <div key={idx} className="flex items-start gap-1.5 text-xs sm:text-sm text-foreground">
-                            <div className={`w-1 h-1 rounded-full mt-1.5 ${colors.text.replace('text-', 'bg-')} flex-shrink-0`} />
-                            <span className="leading-snug">{feature}</span>
+                          <div key={idx} className="flex items-start gap-1 text-[10px] sm:text-sm text-foreground">
+                            <div className={`w-0.5 h-0.5 sm:w-1 sm:h-1 rounded-full mt-1.5 ${colors.text.replace('text-', 'bg-')} flex-shrink-0`} />
+                            <span className="leading-tight sm:leading-snug break-words">{feature}</span>
                           </div>
                         ))}
                       </div>
                       {tier.features.length > 6 && (
-                        <p className="text-xs text-muted-foreground italic mt-2">
-                          +{tier.features.length - 6} more features
+                        <p className="text-[10px] sm:text-xs text-muted-foreground italic mt-1.5 sm:mt-2">
+                          +{tier.features.length - 6} more
                         </p>
                       )}
                     </div>
                   </div>
 
-                  {/* Button - Full Width, Consistent */}
+                  {/* Button - Full Width, Consistent on Mobile */}
                   {userHasAccess ? (
                     <Button
                       onClick={() => handleAccessTool(tier.tier_level)}
-                      className={`w-full bg-gradient-to-r ${colors.border.replace('border-', 'from-').replace('/30', '')} ${colors.text.replace('text-', 'to-')} text-white hover:opacity-90 text-sm sm:text-base py-3 sm:py-4 min-h-[48px]`}
+                      className={`w-full bg-gradient-to-r ${colors.border.replace('border-', 'from-').replace('/30', '')} ${colors.text.replace('text-', 'to-')} text-white hover:opacity-90 text-xs sm:text-base py-2.5 sm:py-4 min-h-[44px] sm:min-h-[48px] font-medium`}
                       size="lg"
                     >
-                      <Sparkles className="w-4 h-4 mr-2 flex-shrink-0" />
-                      <span className="whitespace-nowrap">Open Vedic Astrology Tool</span>
+                      <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                      <span className="whitespace-nowrap text-xs sm:text-base">Open Vedic Tool</span>
                     </Button>
                   ) : (
                     <Button
                       onClick={handleUpgrade}
                       variant="outline"
-                      className="w-full text-sm sm:text-base py-3 sm:py-4 min-h-[48px]"
+                      className="w-full text-xs sm:text-base py-2.5 sm:py-4 min-h-[44px] sm:min-h-[48px] font-medium"
                       size="lg"
                     >
-                      <span className="whitespace-nowrap">Upgrade Membership to Unlock</span>
+                      <span className="whitespace-nowrap text-xs sm:text-base">Upgrade to Unlock</span>
                     </Button>
                   )}
                 </CardContent>
