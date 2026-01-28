@@ -222,33 +222,31 @@ export const VedicAstrologySection: React.FC = () => {
                 key={tier.id}
                 className={`border-2 ${isLocked ? 'border-border/50 opacity-60' : colors.border} bg-gradient-to-br ${colors.bg}`}
               >
-                <CardContent className="p-5">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className={`p-3 rounded-xl bg-gradient-to-br ${colors.bg} border ${colors.border}`}>
-                        <Icon className={`w-6 h-6 ${colors.text}`} />
+                <CardContent className="p-4 sm:p-5">
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className={`p-3 rounded-xl bg-gradient-to-br ${colors.bg} border ${colors.border} flex-shrink-0`}>
+                      <Icon className={`w-6 h-6 ${colors.text}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <h3 className="font-bold text-base sm:text-lg text-foreground">{tier.name}</h3>
+                        {userHasAccess && (
+                          <Badge className="bg-green-500 text-white text-xs">
+                            Active
+                          </Badge>
+                        )}
+                        {isLocked && (
+                          <Badge variant="outline" className="text-xs">
+                            <Lock className="w-3 h-3 mr-1" />
+                            Locked
+                          </Badge>
+                        )}
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-bold text-lg text-foreground">{tier.name}</h3>
-                          {userHasAccess && (
-                            <Badge className="bg-green-500 text-white text-xs">
-                              Active
-                            </Badge>
-                          )}
-                          {isLocked && (
-                            <Badge variant="outline" className="text-xs">
-                              <Lock className="w-3 h-3 mr-1" />
-                              Locked
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground">{tier.description}</p>
-                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{tier.description}</p>
                     </div>
                   </div>
 
-                  <div className="mb-4">
+                  <div className="mb-3 sm:mb-4">
                     <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
                       Required Membership:
                     </p>
@@ -265,42 +263,42 @@ export const VedicAstrologySection: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="mb-4">
+                  <div className="mb-3 sm:mb-4">
                     <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
                       Features:
                     </p>
-                    <ul className="space-y-1">
-                      {tier.features.slice(0, 5).map((feature, idx) => (
-                        <li key={idx} className="flex items-start gap-2 text-sm text-foreground">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2">
+                      {tier.features.slice(0, 6).map((feature, idx) => (
+                        <div key={idx} className="flex items-start gap-2 text-xs sm:text-sm text-foreground">
                           <div className={`w-1.5 h-1.5 rounded-full mt-1.5 ${colors.text.replace('text-', 'bg-')} flex-shrink-0`} />
-                          <span>{feature}</span>
-                        </li>
+                          <span className="leading-tight">{feature}</span>
+                        </div>
                       ))}
-                      {tier.features.length > 5 && (
-                        <li className="text-xs text-muted-foreground italic">
-                          +{tier.features.length - 5} more features
-                        </li>
+                      {tier.features.length > 6 && (
+                        <div className="text-xs text-muted-foreground italic col-span-1 sm:col-span-2">
+                          +{tier.features.length - 6} more features
+                        </div>
                       )}
-                    </ul>
+                    </div>
                   </div>
 
                   {userHasAccess ? (
                     <Button
                       onClick={() => handleAccessTool(tier.tier_level)}
-                      className={`w-full bg-gradient-to-r ${colors.border.replace('border-', 'from-').replace('/30', '')} ${colors.text.replace('text-', 'to-')} text-white hover:opacity-90`}
+                      className={`w-full bg-gradient-to-r ${colors.border.replace('border-', 'from-').replace('/30', '')} ${colors.text.replace('text-', 'to-')} text-white hover:opacity-90 text-xs sm:text-sm py-4 sm:py-6 min-h-[44px] sm:min-h-[48px]`}
                       size="lg"
                     >
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Open Vedic Astrology Tool
+                      <Sparkles className="w-4 h-4 mr-2 flex-shrink-0" />
+                      <span className="whitespace-nowrap">Open Vedic Astrology Tool</span>
                     </Button>
                   ) : (
                     <Button
                       onClick={handleUpgrade}
                       variant="outline"
-                      className="w-full"
+                      className="w-full text-xs sm:text-sm py-4 sm:py-6 min-h-[44px] sm:min-h-[48px]"
                       size="lg"
                     >
-                      Upgrade Membership to Unlock
+                      <span className="whitespace-nowrap">Upgrade Membership to Unlock</span>
                     </Button>
                   )}
                 </CardContent>
