@@ -10,7 +10,8 @@ import { useMembership } from '@/hooks/useMembership';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { BirthDetailsForm } from '@/components/vedic/BirthDetailsForm';
-import { DailyVedicInsight } from '@/components/vedic/DailyVedicInsight';
+import VedicInfluenceSection from '@/components/vedic/VedicInfluenceSection';
+import type { BirthDetails } from '@/lib/vedicCalculations';
 
 const tierIcons: Record<string, React.ElementType> = {
   basic: Star,
@@ -43,7 +44,7 @@ export const VedicAstrologySection: React.FC = () => {
   const { tier: membershipTier, isPremium } = useMembership();
   const [birthDetailsDialogOpen, setBirthDetailsDialogOpen] = useState(false);
   const [hasBirthDetails, setHasBirthDetails] = useState(false);
-  const [birthDetails, setBirthDetails] = useState<any>(null);
+  const [birthDetails, setBirthDetails] = useState<BirthDetails | null>(null);
 
   const fetchBirthDetails = async () => {
     if (!user) return;
@@ -57,7 +58,12 @@ export const VedicAstrologySection: React.FC = () => {
 
       if (data?.birth_name && data?.birth_date && data?.birth_time && data?.birth_place) {
         setHasBirthDetails(true);
-        setBirthDetails(data);
+        setBirthDetails({
+          name: data.birth_name,
+          date: data.birth_date,
+          time: data.birth_time,
+          place: data.birth_place,
+        });
       } else {
         setHasBirthDetails(false);
         setBirthDetails(null);
@@ -192,7 +198,10 @@ export const VedicAstrologySection: React.FC = () => {
         {/* Daily Vedic Insight */}
         {highestAccess && (
           <div className="mb-6 w-full">
-            <DailyVedicInsight tier={highestAccess} />
+            <VedicInfluenceSection 
+              birthDetails={birthDetails || undefined}
+              tier={highestAccess}
+            />
           </div>
         )}
 
