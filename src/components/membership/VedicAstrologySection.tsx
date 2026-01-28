@@ -287,22 +287,20 @@ export const VedicAstrologySection: React.FC = () => {
                   {userHasAccess ? (
                     <Button
                       onClick={() => handleAccessTool(tier.tier_level)}
-                      className={`w-full bg-gradient-to-r ${colors.border.replace('border-', 'from-').replace('/30', '')} ${colors.text.replace('text-', 'to-')} text-white hover:opacity-90 text-sm sm:text-base whitespace-normal h-auto min-h-[52px] py-3`}
-                      size="lg"
+                      className={`w-full bg-gradient-to-r ${colors.border.replace('border-', 'from-').replace('/30', '')} ${colors.text.replace('text-', 'to-')} text-white hover:opacity-90 text-sm sm:text-base`}
+                      size="sm"
                     >
-                      <span className="flex items-center justify-center gap-2">
-                        <Sparkles className="w-4 h-4 flex-shrink-0" />
-                        <span>Open Vedic Astrology Tool</span>
-                      </span>
+                      <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
+                      Open Vedic Astrology Tool
                     </Button>
                   ) : (
                     <Button
                       onClick={handleUpgrade}
                       variant="outline"
-                      className="w-full"
-                      size="lg"
+                      className="w-full text-sm sm:text-base"
+                      size="sm"
                     >
-                      Upgrade Membership to Unlock
+                      Upgrade to Unlock
                     </Button>
                   )}
                 </CardContent>
