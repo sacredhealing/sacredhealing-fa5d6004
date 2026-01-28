@@ -89,10 +89,12 @@ export const AyurvedaSection: React.FC<AyurvedaSectionProps> = ({
           <Button 
             size="lg"
             onClick={() => navigate('/ayurveda')}
-            className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-2xl py-5 sm:py-6"
+            className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-2xl py-4 sm:py-6 text-sm sm:text-base whitespace-normal h-auto min-h-[52px]"
           >
-            Begin Your Ayurvedic Journey
-            <ArrowRight className="ml-2 w-5 h-5" />
+            <span className="flex items-center justify-center gap-2">
+              <span>Begin Your Ayurvedic Journey</span>
+              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+            </span>
           </Button>
 
           {!isPremium && !isAdmin && (
