@@ -258,43 +258,42 @@ export const VedicAstrologySection: React.FC = () => {
                   {/* Description - Compact, Horizontal */}
                   <p className="text-xs sm:text-base text-muted-foreground mb-3 sm:mb-4 leading-tight sm:leading-normal line-clamp-2 sm:line-clamp-none">{tier.description}</p>
 
-                  {/* Required Membership and Features - Horizontal on mobile too */}
-                  <div className="flex flex-col sm:grid sm:grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
-                    <div className="flex-shrink-0">
-                      <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground mb-1.5 sm:mb-2 uppercase tracking-wide">
-                        Required:
-                      </p>
-                      <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                        {tier.membership_required.map((req) => (
-                          <Badge
-                            key={req}
-                            variant={membershipTier === req ? 'default' : 'outline'}
-                            className="text-[10px] sm:text-xs px-1.5 py-0.5"
-                          >
-                            {membershipMap[req] || req}
-                          </Badge>
-                        ))}
-                      </div>
+                  {/* Required Membership */}
+                  <div className="mb-3 sm:mb-4">
+                    <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground mb-1.5 sm:mb-2 uppercase tracking-wide">
+                      Required:
+                    </p>
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                      {tier.membership_required.map((req) => (
+                        <Badge
+                          key={req}
+                          variant={membershipTier === req ? 'default' : 'outline'}
+                          className="text-[10px] sm:text-xs px-2 py-0.5"
+                        >
+                          {membershipMap[req] || req}
+                        </Badge>
+                      ))}
                     </div>
+                  </div>
 
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground mb-1.5 sm:mb-2 uppercase tracking-wide">
-                        Features:
-                      </p>
-                      <div className="grid grid-cols-3 sm:grid-cols-3 gap-x-2 sm:gap-x-3 gap-y-1 sm:gap-y-1.5">
-                        {tier.features.slice(0, 6).map((feature, idx) => (
-                          <div key={idx} className="flex items-start gap-1 text-[10px] sm:text-sm text-foreground">
-                            <div className={`w-0.5 h-0.5 sm:w-1 sm:h-1 rounded-full mt-1.5 ${colors.text.replace('text-', 'bg-')} flex-shrink-0`} />
-                            <span className="leading-tight sm:leading-snug break-words">{feature}</span>
-                          </div>
-                        ))}
-                      </div>
-                      {tier.features.length > 6 && (
-                        <p className="text-[10px] sm:text-xs text-muted-foreground italic mt-1.5 sm:mt-2">
-                          +{tier.features.length - 6} more
-                        </p>
-                      )}
+                  {/* Features */}
+                  <div className="mb-3 sm:mb-4">
+                    <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground mb-1.5 sm:mb-2 uppercase tracking-wide">
+                      Features:
+                    </p>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+                      {tier.features.slice(0, 6).map((feature, idx) => (
+                        <div key={idx} className="flex items-start gap-1.5 text-xs sm:text-sm text-foreground">
+                          <div className={`w-1 h-1 rounded-full mt-1.5 ${colors.text.replace('text-', 'bg-')} flex-shrink-0`} />
+                          <span className="leading-snug">{feature}</span>
+                        </div>
+                      ))}
                     </div>
+                    {tier.features.length > 6 && (
+                      <p className="text-xs text-muted-foreground italic mt-2">
+                        +{tier.features.length - 6} more features
+                      </p>
+                    )}
                   </div>
 
                   {/* Button - Full Width, Consistent on Mobile */}
