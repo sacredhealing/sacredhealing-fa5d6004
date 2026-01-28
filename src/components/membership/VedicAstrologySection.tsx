@@ -100,7 +100,7 @@ export const VedicAstrologySection: React.FC = () => {
   };
 
   return (
-    <Card className="border-2 border-primary/30 bg-gradient-to-br from-purple-500/5 via-background to-blue-500/5">
+    <Card className="border-2 border-primary/30 bg-gradient-to-br from-purple-500/5 via-background to-blue-500/5 w-full max-w-none">
       <CardContent className="p-4 sm:p-6">
         <div className="flex flex-col items-center text-center mb-5 sm:mb-6">
           <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center flex-shrink-0 mb-3">
@@ -220,9 +220,9 @@ export const VedicAstrologySection: React.FC = () => {
             return (
               <Card
                 key={tier.id}
-                className={`border-2 ${isLocked ? 'border-border/50 opacity-60' : colors.border} bg-gradient-to-br ${colors.bg}`}
+                className={`border-2 ${isLocked ? 'border-border/50 opacity-60' : colors.border} bg-gradient-to-br ${colors.bg} w-full max-w-none`}
               >
-                <CardContent className="p-5">
+                <CardContent className="p-5 sm:p-6">
                   <div className="flex flex-col items-center text-center mb-4">
                     <div className={`p-3 rounded-xl bg-gradient-to-br ${colors.bg} border ${colors.border} mb-3`}>
                       <Icon className={`w-6 h-6 ${colors.text}`} />
@@ -242,7 +242,7 @@ export const VedicAstrologySection: React.FC = () => {
                           </Badge>
                         )}
                       </div>
-                      <p className="text-sm text-muted-foreground">{tier.description}</p>
+                      <p className="text-sm text-muted-foreground max-w-2xl mx-auto">{tier.description}</p>
                     </div>
                   </div>
 
@@ -267,19 +267,19 @@ export const VedicAstrologySection: React.FC = () => {
                     <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide text-center">
                       Features:
                     </p>
-                    <ul className="space-y-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-2">
                       {tier.features.slice(0, 5).map((feature, idx) => (
-                        <li key={idx} className="flex items-center gap-2 text-sm text-foreground justify-center">
+                        <div key={idx} className="flex items-center gap-2 text-sm text-foreground">
                           <div className={`w-1.5 h-1.5 rounded-full ${colors.text.replace('text-', 'bg-')} flex-shrink-0`} />
                           <span>{feature}</span>
-                        </li>
+                        </div>
                       ))}
-                      {tier.features.length > 5 && (
-                        <li className="text-xs text-muted-foreground italic text-center">
-                          +{tier.features.length - 5} more features
-                        </li>
-                      )}
-                    </ul>
+                    </div>
+                    {tier.features.length > 5 && (
+                      <p className="text-xs text-muted-foreground italic text-center mt-2">
+                        +{tier.features.length - 5} more features
+                      </p>
+                    )}
                   </div>
 
                   {userHasAccess ? (
