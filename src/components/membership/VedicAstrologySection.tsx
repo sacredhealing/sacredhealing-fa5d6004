@@ -106,7 +106,7 @@ export const VedicAstrologySection: React.FC = () => {
   };
 
   return (
-    <Card className="w-full border-2 border-primary/30 bg-gradient-to-br from-purple-500/5 via-background to-blue-500/5">
+    <Card className="w-full min-w-0 border-2 border-primary/30 bg-gradient-to-br from-purple-500/5 via-background to-blue-500/5">
       <CardContent className="p-4 sm:p-6">
         <div className="flex items-start gap-3 mb-5 sm:mb-6">
           <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center flex-shrink-0">
@@ -197,7 +197,7 @@ export const VedicAstrologySection: React.FC = () => {
 
         {/* Daily Vedic Insight */}
         {highestAccess && (
-          <div className="mb-6 w-full">
+          <div className="mb-6 w-full min-w-0">
             <VedicInfluenceSection 
               birthDetails={birthDetails || undefined}
               tier={highestAccess}

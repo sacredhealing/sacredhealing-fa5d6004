@@ -386,7 +386,7 @@ const Membership = () => {
       </div>
 
       {/* Vedic Astrology Section */}
-      <div className="px-3 sm:px-4 py-4 sm:py-6">
+      <div className="w-full min-w-0 px-3 sm:px-4 py-4 sm:py-6">
         <VedicAstrologySection />
       </div>
 
