@@ -301,20 +301,20 @@ export const VedicAstrologySection: React.FC = () => {
                   {userHasAccess ? (
                     <Button
                       onClick={() => handleAccessTool(tier.tier_level)}
-                      className={`w-full bg-gradient-to-r ${colors.border.replace('border-', 'from-').replace('/30', '')} ${colors.text.replace('text-', 'to-')} text-white hover:opacity-90 text-xs sm:text-base py-2.5 sm:py-4 min-h-[44px] sm:min-h-[48px] font-medium`}
+                      className={`w-full bg-gradient-to-r ${colors.border.replace('border-', 'from-').replace('/30', '')} ${colors.text.replace('text-', 'to-')} text-white hover:opacity-90 py-2.5 sm:py-4 min-h-[44px] sm:min-h-[48px] font-medium inline-flex items-center justify-center gap-1.5 sm:gap-2`}
                       size="lg"
                     >
-                      <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0" />
-                      <span className="whitespace-nowrap text-xs sm:text-base">Open Vedic Tool</span>
+                      <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                      <span className="whitespace-nowrap text-xs sm:text-base text-center">Open Vedic Astrology Tool</span>
                     </Button>
                   ) : (
                     <Button
                       onClick={handleUpgrade}
                       variant="outline"
-                      className="w-full text-xs sm:text-base py-2.5 sm:py-4 min-h-[44px] sm:min-h-[48px] font-medium"
+                      className="w-full text-xs sm:text-base py-2.5 sm:py-4 min-h-[44px] sm:min-h-[48px] font-medium inline-flex items-center justify-center whitespace-nowrap"
                       size="lg"
                     >
-                      <span className="whitespace-nowrap text-xs sm:text-base">Upgrade to Unlock</span>
+                      Upgrade to Unlock
                     </Button>
                   )}
                 </CardContent>
