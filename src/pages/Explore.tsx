@@ -200,20 +200,20 @@ const Explore: React.FC = () => {
     <div className="min-h-screen px-4 pt-6 pb-24">
       {/* Membership Banner */}
       <Link to="/membership" className="block mb-6 animate-fade-in">
-        <Card className="p-4 bg-gradient-to-r from-primary/20 via-accent/10 to-amber-500/20 border-primary/30 hover:border-primary/50 transition-all group">
-          <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-primary/30 to-accent/20 group-hover:scale-110 transition-transform">
-              <Crown className="w-6 h-6 text-primary" />
+        <Card className="p-5 sm:p-6 bg-gradient-to-r from-primary/30 via-accent/20 to-amber-500/30 border-primary/50 hover:border-primary/70 transition-all group shadow-lg shadow-primary/10">
+          <div className="flex items-center gap-4 sm:gap-5">
+            <div className="p-4 sm:p-5 rounded-xl bg-gradient-to-br from-primary/40 to-accent/30 group-hover:scale-110 transition-transform">
+              <Crown className="w-7 h-7 sm:w-8 sm:h-8 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-foreground text-sm sm:text-base">
+              <h3 className="font-bold text-foreground text-base sm:text-lg md:text-xl mb-1">
                 {t('membership.unlockPremium', 'Unlock Premium Access')}
               </h3>
-              <p className="text-xs text-muted-foreground truncate">
+              <p className="text-sm sm:text-base text-muted-foreground">
                 {t('membership.bannerDesc', 'All meditations, music & healing audio – unlimited')}
               </p>
             </div>
-            <Badge className="bg-primary/20 text-primary border-primary/30 text-xs whitespace-nowrap">
+            <Badge className="bg-primary/30 text-primary border-primary/50 text-sm sm:text-base px-4 py-2 whitespace-nowrap font-semibold">
               {t('membership.viewPlans', 'View Plans')}
             </Badge>
           </div>
@@ -273,9 +273,9 @@ const Explore: React.FC = () => {
         </Card>
       </div>
 
-      {/* Healing Journey - Primary Card */}
+      {/* Healing Journey - Compact Card */}
       <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-        <HealingProgressCard variant="full" />
+        <HealingProgressCard variant="compact" />
       </div>
 
       {/* Featured Playlists Carousel */}
