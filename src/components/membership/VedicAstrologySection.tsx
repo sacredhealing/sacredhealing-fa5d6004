@@ -10,8 +10,7 @@ import { useMembership } from '@/hooks/useMembership';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { BirthDetailsForm } from '@/components/vedic/BirthDetailsForm';
-import VedicInfluenceSection from '@/components/vedic/VedicInfluenceSection';
-import type { BirthDetails } from '@/lib/vedicCalculations';
+import { DailyVedicInsight } from '@/components/vedic/DailyVedicInsight';
 
 const tierIcons: Record<string, React.ElementType> = {
   basic: Star,
@@ -44,7 +43,7 @@ export const VedicAstrologySection: React.FC = () => {
   const { tier: membershipTier, isPremium } = useMembership();
   const [birthDetailsDialogOpen, setBirthDetailsDialogOpen] = useState(false);
   const [hasBirthDetails, setHasBirthDetails] = useState(false);
-  const [birthDetails, setBirthDetails] = useState<BirthDetails | null>(null);
+  const [birthDetails, setBirthDetails] = useState<any>(null);
 
   const fetchBirthDetails = async () => {
     if (!user) return;
@@ -58,12 +57,7 @@ export const VedicAstrologySection: React.FC = () => {
 
       if (data?.birth_name && data?.birth_date && data?.birth_time && data?.birth_place) {
         setHasBirthDetails(true);
-        setBirthDetails({
-          name: data.birth_name,
-          date: data.birth_date,
-          time: data.birth_time,
-          place: data.birth_place,
-        });
+        setBirthDetails(data);
       } else {
         setHasBirthDetails(false);
         setBirthDetails(null);
@@ -106,7 +100,7 @@ export const VedicAstrologySection: React.FC = () => {
   };
 
   return (
-    <Card className="w-full min-w-0 border-2 border-primary/30 bg-gradient-to-br from-purple-500/5 via-background to-blue-500/5">
+    <Card className="border-2 border-primary/30 bg-gradient-to-br from-purple-500/5 via-background to-blue-500/5">
       <CardContent className="p-4 sm:p-6">
         <div className="flex items-start gap-3 mb-5 sm:mb-6">
           <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center flex-shrink-0">
@@ -169,7 +163,7 @@ export const VedicAstrologySection: React.FC = () => {
                   <p className="font-semibold text-foreground">Birth Details Saved</p>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {birthDetails?.name} • {birthDetails?.place}
+                  {birthDetails?.birth_name} • {birthDetails?.birth_place}
                 </p>
               </div>
               <Dialog open={birthDetailsDialogOpen} onOpenChange={setBirthDetailsDialogOpen}>
@@ -183,7 +177,7 @@ export const VedicAstrologySection: React.FC = () => {
                     <DialogTitle>Update Birth Details</DialogTitle>
                   </DialogHeader>
                   <BirthDetailsForm
-                    initialData={birthDetails ? { birth_name: birthDetails.name, birth_date: birthDetails.date, birth_time: birthDetails.time, birth_place: birthDetails.place } : undefined}
+                    initialData={birthDetails}
                     onSaved={() => {
                       setBirthDetailsDialogOpen(false);
                       fetchBirthDetails();
@@ -197,11 +191,8 @@ export const VedicAstrologySection: React.FC = () => {
 
         {/* Daily Vedic Insight */}
         {highestAccess && (
-          <div className="mb-6 w-full min-w-0">
-            <VedicInfluenceSection 
-              birthDetails={birthDetails || undefined}
-              tier={highestAccess}
-            />
+          <div className="mb-6">
+            <DailyVedicInsight tier={highestAccess} />
           </div>
         )}
 
@@ -231,44 +222,42 @@ export const VedicAstrologySection: React.FC = () => {
                 key={tier.id}
                 className={`border-2 ${isLocked ? 'border-border/50 opacity-60' : colors.border} bg-gradient-to-br ${colors.bg}`}
               >
-                <CardContent className="p-3 sm:p-5">
-                  {/* Header Row - Horizontal Layout */}
-                  <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                    <div className={`p-2 sm:p-3 rounded-xl bg-gradient-to-br ${colors.bg} border ${colors.border} flex-shrink-0`}>
-                      <Icon className={`w-4 h-4 sm:w-6 sm:h-6 ${colors.text}`} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                        <h3 className="font-bold text-sm sm:text-lg text-foreground leading-tight">{tier.name}</h3>
-                        {userHasAccess && (
-                          <Badge className="bg-green-500 text-white text-[10px] sm:text-xs px-1.5 py-0.5">
-                            Active
-                          </Badge>
-                        )}
-                        {isLocked && (
-                          <Badge variant="outline" className="text-[10px] sm:text-xs px-1.5 py-0.5">
-                            <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-0.5 sm:mr-1" />
-                            Locked
-                          </Badge>
-                        )}
+                <CardContent className="p-5">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-3 rounded-xl bg-gradient-to-br ${colors.bg} border ${colors.border}`}>
+                        <Icon className={`w-6 h-6 ${colors.text}`} />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-bold text-lg text-foreground">{tier.name}</h3>
+                          {userHasAccess && (
+                            <Badge className="bg-green-500 text-white text-xs">
+                              Active
+                            </Badge>
+                          )}
+                          {isLocked && (
+                            <Badge variant="outline" className="text-xs">
+                              <Lock className="w-3 h-3 mr-1" />
+                              Locked
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">{tier.description}</p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Description - Compact, Horizontal */}
-                  <p className="text-xs sm:text-base text-muted-foreground mb-3 sm:mb-4 leading-tight sm:leading-normal line-clamp-2 sm:line-clamp-none">{tier.description}</p>
-
-                  {/* Required Membership */}
-                  <div className="mb-3 sm:mb-4">
-                    <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground mb-1.5 sm:mb-2 uppercase tracking-wide">
-                      Required:
+                  <div className="mb-4">
+                    <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
+                      Required Membership:
                     </p>
-                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                    <div className="flex flex-wrap gap-2">
                       {tier.membership_required.map((req) => (
                         <Badge
                           key={req}
                           variant={membershipTier === req ? 'default' : 'outline'}
-                          className="text-[10px] sm:text-xs px-2 py-0.5"
+                          className="text-xs"
                         >
                           {membershipMap[req] || req}
                         </Badge>
@@ -276,44 +265,42 @@ export const VedicAstrologySection: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Features */}
-                  <div className="mb-3 sm:mb-4">
-                    <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground mb-1.5 sm:mb-2 uppercase tracking-wide">
+                  <div className="mb-4">
+                    <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
                       Features:
                     </p>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
-                      {tier.features.slice(0, 6).map((feature, idx) => (
-                        <div key={idx} className="flex items-start gap-1.5 text-xs sm:text-sm text-foreground">
-                          <div className={`w-1 h-1 rounded-full mt-1.5 ${colors.text.replace('text-', 'bg-')} flex-shrink-0`} />
-                          <span className="leading-snug">{feature}</span>
-                        </div>
+                    <ul className="space-y-1">
+                      {tier.features.slice(0, 5).map((feature, idx) => (
+                        <li key={idx} className="flex items-start gap-2 text-sm text-foreground">
+                          <div className={`w-1.5 h-1.5 rounded-full mt-1.5 ${colors.text.replace('text-', 'bg-')} flex-shrink-0`} />
+                          <span>{feature}</span>
+                        </li>
                       ))}
-                    </div>
-                    {tier.features.length > 6 && (
-                      <p className="text-xs text-muted-foreground italic mt-2">
-                        +{tier.features.length - 6} more features
-                      </p>
-                    )}
+                      {tier.features.length > 5 && (
+                        <li className="text-xs text-muted-foreground italic">
+                          +{tier.features.length - 5} more features
+                        </li>
+                      )}
+                    </ul>
                   </div>
 
-                  {/* Button - Full Width, Consistent on Mobile */}
                   {userHasAccess ? (
                     <Button
                       onClick={() => handleAccessTool(tier.tier_level)}
-                      className={`w-full bg-gradient-to-r ${colors.border.replace('border-', 'from-').replace('/30', '')} ${colors.text.replace('text-', 'to-')} text-white hover:opacity-90 py-2.5 sm:py-4 min-h-[44px] sm:min-h-[48px] font-medium inline-flex items-center justify-center gap-1.5 sm:gap-2`}
+                      className={`w-full bg-gradient-to-r ${colors.border.replace('border-', 'from-').replace('/30', '')} ${colors.text.replace('text-', 'to-')} text-white hover:opacity-90`}
                       size="lg"
                     >
-                      <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-                      <span className="whitespace-nowrap text-xs sm:text-base text-center">Open Vedic Astrology Tool</span>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Open Vedic Astrology Tool
                     </Button>
                   ) : (
                     <Button
                       onClick={handleUpgrade}
                       variant="outline"
-                      className="w-full text-xs sm:text-base py-2.5 sm:py-4 min-h-[44px] sm:min-h-[48px] font-medium inline-flex items-center justify-center whitespace-nowrap"
+                      className="w-full"
                       size="lg"
                     >
-                      Upgrade to Unlock
+                      Upgrade Membership to Unlock
                     </Button>
                   )}
                 </CardContent>

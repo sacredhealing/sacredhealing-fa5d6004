@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Crown, Check, Sparkles, Star, Zap, Settings, Loader2, Gift, ArrowRight } from 'lucide-react';
+import { Crown, Check, Sparkles, Star, Zap, Settings, Loader2, Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -336,57 +336,13 @@ const Membership = () => {
         })}
       </div>
 
-      {/* Ayurvedic Journey Section */}
+      {/* Ayurveda Section */}
       <div className="px-3 sm:px-4 py-4 sm:py-6">
-        <Card className="p-6 bg-gradient-to-br from-background via-background to-muted/20 border-2 border-primary/30 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-50" />
-          <div className="relative z-10">
-            <h2 className="text-2xl font-bold text-foreground mb-4">Ayurvedic Journey</h2>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-              <div className="flex items-center gap-2 text-sm text-foreground">
-                <Check className="w-4 h-4 text-primary flex-shrink-0" />
-                <span>Dosha constitution</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-foreground">
-                <Check className="w-4 h-4 text-primary flex-shrink-0" />
-                <span>Personalized diet recommendations</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-foreground">
-                <Check className="w-4 h-4 text-primary flex-shrink-0" />
-                <span>Mental constitution (Manas Prakriti)</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-foreground">
-                <Check className="w-4 h-4 text-primary flex-shrink-0" />
-                <span>Lifestyle rituals for balance</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-foreground">
-                <Check className="w-4 h-4 text-primary flex-shrink-0" />
-                <span>Life situation healing path</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-foreground">
-                <Check className="w-4 h-4 text-primary flex-shrink-0" />
-                <span>Herbal & botanical support</span>
-              </div>
-            </div>
-            
-            <Link to="/ayurvedic-journey" className="block w-full">
-              <Button 
-                className="w-full bg-gradient-to-r from-primary via-primary/90 to-accent text-white hover:from-primary/90 hover:via-primary/80 hover:to-accent/90 font-semibold py-4 sm:py-6 rounded-lg shadow-[0_0_20px_hsl(var(--primary)/0.4)] text-xs sm:text-sm md:text-base px-3 sm:px-6 min-h-[48px] sm:min-h-[56px]"
-                size="lg"
-              >
-                <span className="flex items-center justify-center gap-1.5 sm:gap-2 w-full">
-                  <span className="text-center leading-tight sm:leading-normal">Begin Your Ayurvedic Journey</span>
-                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ml-0.5" />
-                </span>
-              </Button>
-            </Link>
-          </div>
-        </Card>
+        <AyurvedaSection isPremium={isPremium} membershipTier={currentTier || 'free'} isAdmin={isAdmin} />
       </div>
 
       {/* Vedic Astrology Section */}
-      <div className="w-full min-w-0 px-3 sm:px-4 py-4 sm:py-6">
+      <div className="px-3 sm:px-4 py-4 sm:py-6">
         <VedicAstrologySection />
       </div>
 

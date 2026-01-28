@@ -88,7 +88,7 @@ export const AyurvedaSection: React.FC<AyurvedaSectionProps> = ({
 
           <Button 
             size="lg"
-            onClick={() => navigate('/ayurvedic-journey')}
+            onClick={() => navigate('/ayurveda')}
             className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-2xl py-5 sm:py-6"
           >
             Begin Your Ayurvedic Journey
