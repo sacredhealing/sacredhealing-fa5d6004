@@ -169,7 +169,7 @@ export const VedicAstrologySection: React.FC = () => {
                   <p className="font-semibold text-foreground">Birth Details Saved</p>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {birthDetails?.birth_name} • {birthDetails?.birth_place}
+                  {birthDetails?.name} • {birthDetails?.place}
                 </p>
               </div>
               <Dialog open={birthDetailsDialogOpen} onOpenChange={setBirthDetailsDialogOpen}>
@@ -183,7 +183,7 @@ export const VedicAstrologySection: React.FC = () => {
                     <DialogTitle>Update Birth Details</DialogTitle>
                   </DialogHeader>
                   <BirthDetailsForm
-                    initialData={birthDetails}
+                    initialData={birthDetails ? { birth_name: birthDetails.name, birth_date: birthDetails.date, birth_time: birthDetails.time, birth_place: birthDetails.place } : undefined}
                     onSaved={() => {
                       setBirthDetailsDialogOpen(false);
                       fetchBirthDetails();
