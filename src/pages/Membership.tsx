@@ -372,12 +372,12 @@ const Membership = () => {
             
             <Button 
               onClick={() => navigate('/ayurvedic-journey')}
-              className="w-full bg-gradient-to-r from-primary via-primary/90 to-accent text-white hover:from-primary/90 hover:via-primary/80 hover:to-accent/90 font-semibold py-6 rounded-lg shadow-[0_0_20px_hsl(var(--primary)/0.4)] text-sm sm:text-base"
+              className="w-full bg-gradient-to-r from-primary via-primary/90 to-accent text-white hover:from-primary/90 hover:via-primary/80 hover:to-accent/90 font-semibold py-4 sm:py-6 rounded-lg shadow-[0_0_20px_hsl(var(--primary)/0.4)] text-xs sm:text-sm md:text-base px-3 sm:px-6 min-h-[48px] sm:min-h-[56px]"
               size="lg"
             >
-              <span className="flex items-center justify-center gap-2 w-full whitespace-nowrap">
-                Begin Your Ayurvedic Journey
-                <ArrowRight className="w-5 h-5 flex-shrink-0" />
+              <span className="flex items-center justify-center gap-1.5 sm:gap-2 w-full">
+                <span className="text-center leading-tight sm:leading-normal">Begin Your Ayurvedic Journey</span>
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ml-0.5" />
               </span>
             </Button>
           </div>
