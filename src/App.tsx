@@ -168,6 +168,7 @@ const App = () => (
                   <Route path="/invite-friends" element={<InviteFriends />} />
                   <Route path="/vedic-astrology" element={<VedicAstrology />} />
                   <Route path="/ayurveda" element={<Ayurveda />} />
+                  <Route path="/ayurvedic-journey" element={<Ayurveda />} />
                   <Route path="/creative-soul" element={<CreativeSoulLanding />} />
                   <Route path="/creative-soul-hub" element={<CreativeSoulHub />} />
                   {/* ROUTE DEFINITION: /creative-soul/store renders CreativeSoulStore.tsx */}
