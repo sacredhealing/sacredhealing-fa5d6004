@@ -269,9 +269,9 @@ export const VedicAstrologySection: React.FC = () => {
                     </p>
                     <ul className="space-y-1">
                       {tier.features.slice(0, 5).map((feature, idx) => (
-                        <li key={idx} className="flex items-center justify-center gap-2 text-sm text-foreground">
+                        <li key={idx} className="flex items-center gap-2 text-sm text-foreground justify-center">
                           <div className={`w-1.5 h-1.5 rounded-full ${colors.text.replace('text-', 'bg-')} flex-shrink-0`} />
-                          <span className="text-center">{feature}</span>
+                          <span>{feature}</span>
                         </li>
                       ))}
                       {tier.features.length > 5 && (
