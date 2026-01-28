@@ -68,7 +68,7 @@ export const DailyVedicInsight: React.FC<DailyVedicInsightProps> = ({ tier }) =>
     : null;
 
   return (
-    <div className="w-full max-w-md sm:max-w-lg mx-auto px-4 sm:px-6 space-y-4">
+    <div className="w-full space-y-4">
       {/* Daily Influence Card */}
       <Card className="w-full border-2 border-primary/30 bg-gradient-to-br from-purple-500/5 to-blue-500/5">
         <CardHeader className="p-4 sm:p-6">
