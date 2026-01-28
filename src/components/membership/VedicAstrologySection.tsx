@@ -191,7 +191,7 @@ export const VedicAstrologySection: React.FC = () => {
 
         {/* Daily Vedic Insight */}
         {highestAccess && (
-          <div className="mb-6">
+          <div className="mb-6 w-full min-w-0">
             <DailyVedicInsight tier={highestAccess} />
           </div>
         )}
