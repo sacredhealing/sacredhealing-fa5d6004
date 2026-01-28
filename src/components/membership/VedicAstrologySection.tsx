@@ -223,12 +223,13 @@ export const VedicAstrologySection: React.FC = () => {
                 className={`border-2 ${isLocked ? 'border-border/50 opacity-60' : colors.border} bg-gradient-to-br ${colors.bg}`}
               >
                 <CardContent className="p-4 sm:p-5">
-                  <div className="flex items-start gap-3 mb-4">
-                    <div className={`p-3 rounded-xl bg-gradient-to-br ${colors.bg} border ${colors.border} flex-shrink-0`}>
-                      <Icon className={`w-6 h-6 ${colors.text}`} />
+                  {/* Header Row - Horizontal Layout */}
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className={`p-2.5 sm:p-3 rounded-xl bg-gradient-to-br ${colors.bg} border ${colors.border} flex-shrink-0`}>
+                      <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${colors.text}`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="font-bold text-base sm:text-lg text-foreground">{tier.name}</h3>
                         {userHasAccess && (
                           <Badge className="bg-green-500 text-white text-xs">
@@ -242,50 +243,56 @@ export const VedicAstrologySection: React.FC = () => {
                           </Badge>
                         )}
                       </div>
-                      <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{tier.description}</p>
                     </div>
                   </div>
 
-                  <div className="mb-3 sm:mb-4">
-                    <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
-                      Required Membership:
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {tier.membership_required.map((req) => (
-                        <Badge
-                          key={req}
-                          variant={membershipTier === req ? 'default' : 'outline'}
-                          className="text-xs"
-                        >
-                          {membershipMap[req] || req}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
+                  {/* Description - Full Width */}
+                  <p className="text-sm sm:text-base text-muted-foreground mb-4 leading-normal">{tier.description}</p>
 
-                  <div className="mb-3 sm:mb-4">
-                    <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
-                      Features:
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2">
-                      {tier.features.slice(0, 6).map((feature, idx) => (
-                        <div key={idx} className="flex items-start gap-2 text-xs sm:text-sm text-foreground">
-                          <div className={`w-1.5 h-1.5 rounded-full mt-1.5 ${colors.text.replace('text-', 'bg-')} flex-shrink-0`} />
-                          <span className="leading-tight">{feature}</span>
-                        </div>
-                      ))}
+                  {/* Required Membership and Features - Side by Side on larger screens */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
+                        Required Membership:
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {tier.membership_required.map((req) => (
+                          <Badge
+                            key={req}
+                            variant={membershipTier === req ? 'default' : 'outline'}
+                            className="text-xs"
+                          >
+                            {membershipMap[req] || req}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
+                        Features:
+                      </p>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-1.5">
+                        {tier.features.slice(0, 6).map((feature, idx) => (
+                          <div key={idx} className="flex items-start gap-1.5 text-xs sm:text-sm text-foreground">
+                            <div className={`w-1 h-1 rounded-full mt-1.5 ${colors.text.replace('text-', 'bg-')} flex-shrink-0`} />
+                            <span className="leading-snug">{feature}</span>
+                          </div>
+                        ))}
+                      </div>
                       {tier.features.length > 6 && (
-                        <div className="text-xs text-muted-foreground italic col-span-1 sm:col-span-2">
+                        <p className="text-xs text-muted-foreground italic mt-2">
                           +{tier.features.length - 6} more features
-                        </div>
+                        </p>
                       )}
                     </div>
                   </div>
 
+                  {/* Button - Full Width, Consistent */}
                   {userHasAccess ? (
                     <Button
                       onClick={() => handleAccessTool(tier.tier_level)}
-                      className={`w-full bg-gradient-to-r ${colors.border.replace('border-', 'from-').replace('/30', '')} ${colors.text.replace('text-', 'to-')} text-white hover:opacity-90 text-xs sm:text-sm py-4 sm:py-6 min-h-[44px] sm:min-h-[48px]`}
+                      className={`w-full bg-gradient-to-r ${colors.border.replace('border-', 'from-').replace('/30', '')} ${colors.text.replace('text-', 'to-')} text-white hover:opacity-90 text-sm sm:text-base py-3 sm:py-4 min-h-[48px]`}
                       size="lg"
                     >
                       <Sparkles className="w-4 h-4 mr-2 flex-shrink-0" />
@@ -295,7 +302,7 @@ export const VedicAstrologySection: React.FC = () => {
                     <Button
                       onClick={handleUpgrade}
                       variant="outline"
-                      className="w-full text-xs sm:text-sm py-4 sm:py-6 min-h-[44px] sm:min-h-[48px]"
+                      className="w-full text-sm sm:text-base py-3 sm:py-4 min-h-[48px]"
                       size="lg"
                     >
                       <span className="whitespace-nowrap">Upgrade Membership to Unlock</span>
