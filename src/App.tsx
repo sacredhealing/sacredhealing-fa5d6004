@@ -25,6 +25,7 @@ import Wallet from "./pages/Wallet";
 import Profile from "./pages/Profile";
 import AdminDashboard from "./pages/AdminDashboard";
 import Admin from "./pages/Admin";
+import AdminMeditationEdit from "./pages/AdminMeditationEdit";
 import AdminMusic from "./pages/AdminMusic";
 import AdminHealing from "./pages/AdminHealing";
 import AdminHealingEdit from "./pages/AdminHealingEdit";
@@ -180,6 +181,7 @@ const App = () => (
                 </Route>
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/meditations" element={<Admin />} />
+                <Route path="/admin/meditations/:id" element={<AdminMeditationEdit />} />
                 <Route path="/admin/music" element={<AdminMusic />} />
                 <Route path="/admin/healing" element={<AdminHealing />} />
                 <Route path="/admin/healing/:id" element={<AdminHealingEdit />} />
