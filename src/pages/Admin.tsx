@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Upload, Plus, Trash2, Music, Loader2, ArrowLeft, FileText, Save, X } from 'lucide-react';
+import { Upload, Plus, Trash2, Music, Loader2, ArrowLeft, FileText, Save, X, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -528,6 +528,14 @@ Rest in this peaceful state. When you're ready, gently open your eyes, knowing y
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/admin/meditations/${med.id}`)}
+                      >
+                        <Pencil className="w-4 h-4 mr-1" />
+                        Edit
+                      </Button>
                       <Button
                         variant={med.script_text ? "default" : "outline"}
                         size="sm"
