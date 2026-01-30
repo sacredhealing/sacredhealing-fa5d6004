@@ -214,24 +214,49 @@ def generate_healing_tone(frequency_hz, duration_seconds, sample_rate=44100):
     return tone
 
 
-def apply_noise_reduction(audio, sample_rate, reduction_level='medium'):
-    """Apply noise reduction using noisereduce"""
+def apply_noise_reduction(audio, sample_rate, reduction_level='medium', preserve_stereo=True):
+    """Apply noise reduction using noisereduce - preserves stereo if requested"""
     try:
-        # Convert to mono if stereo
-        if len(audio.shape) > 1:
-            audio = np.mean(audio, axis=1)
+        is_stereo = len(audio.shape) > 1 and audio.shape[1] >= 2
         
-        # Map reduction level to noisereduce parameters
-        reduction_map = {
-            'light': {'stationary': True, 'prop_decrease': 0.3},
-            'medium': {'stationary': True, 'prop_decrease': 0.6},
-            'aggressive': {'stationary': True, 'prop_decrease': 0.9}
-        }
-        
-        params = reduction_map.get(reduction_level, reduction_map['medium'])
-        
-        # Apply noise reduction
-        reduced = nr.reduce_noise(y=audio, sr=sample_rate, **params)
+        if preserve_stereo and is_stereo:
+            # Process each channel separately to preserve stereo
+            left = audio[:, 0]
+            right = audio[:, 1]
+            
+            # Map reduction level to noisereduce parameters (more aggressive for vocal recordings)
+            reduction_map = {
+                'light': {'stationary': True, 'prop_decrease': 0.4, 'n_std_thresh_stationary': 1.5},
+                'medium': {'stationary': True, 'prop_decrease': 0.7, 'n_std_thresh_stationary': 2.0},
+                'aggressive': {'stationary': True, 'prop_decrease': 0.95, 'n_std_thresh_stationary': 2.5}
+            }
+            
+            params = reduction_map.get(reduction_level, reduction_map['aggressive'])
+            
+            # Apply noise reduction to each channel
+            left_reduced = nr.reduce_noise(y=left, sr=sample_rate, **params)
+            right_reduced = nr.reduce_noise(y=right, sr=sample_rate, **params)
+            
+            # Combine back to stereo
+            reduced = np.column_stack([left_reduced, right_reduced])
+            print(f"[NOISE REDUCTION] Applied {reduction_level} noise reduction to stereo channels")
+        else:
+            # Convert to mono if not preserving stereo
+            if is_stereo:
+                audio = np.mean(audio, axis=1)
+            
+            # Map reduction level to noisereduce parameters
+            reduction_map = {
+                'light': {'stationary': True, 'prop_decrease': 0.4, 'n_std_thresh_stationary': 1.5},
+                'medium': {'stationary': True, 'prop_decrease': 0.7, 'n_std_thresh_stationary': 2.0},
+                'aggressive': {'stationary': True, 'prop_decrease': 0.95, 'n_std_thresh_stationary': 2.5}
+            }
+            
+            params = reduction_map.get(reduction_level, reduction_map['aggressive'])
+            
+            # Apply noise reduction
+            reduced = nr.reduce_noise(y=audio, sr=sample_rate, **params)
+            print(f"[NOISE REDUCTION] Applied {reduction_level} noise reduction to mono audio")
         
         return reduced
     except Exception as e:
@@ -245,46 +270,86 @@ def balance_stereo(audio, sample_rate):
         # If mono, convert to stereo first
         if len(audio.shape) == 1:
             audio = np.column_stack([audio, audio])
+            print(f"[STEREO BALANCE] Converted mono to stereo")
+        
+        # Ensure we have 2 channels
+        if audio.shape[1] < 2:
+            audio = np.column_stack([audio[:, 0], audio[:, 0]])
         
         # Get left and right channels
-        left = audio[:, 0] if audio.shape[1] >= 1 else audio
-        right = audio[:, 1] if audio.shape[1] >= 2 else audio
+        left = audio[:, 0].copy()
+        right = audio[:, 1].copy()
         
-        # Calculate channel levels
-        left_level = np.abs(left).mean()
-        right_level = np.abs(right).mean()
+        # Calculate RMS levels for better balance detection
+        left_rms = np.sqrt(np.mean(left**2))
+        right_rms = np.sqrt(np.mean(right**2))
+        
+        # Calculate peak levels as well
+        left_peak = np.abs(left).max()
+        right_peak = np.abs(right).max()
+        
+        print(f"[STEREO BALANCE] Left RMS: {left_rms:.4f}, Right RMS: {right_rms:.4f}")
+        print(f"[STEREO BALANCE] Left Peak: {left_peak:.4f}, Right Peak: {right_peak:.4f}")
         
         # Detect if audio is heavily left-biased (common in mobile recordings)
-        if left_level > 0 and right_level > 0:
-            level_ratio = left_level / right_level
+        if left_rms > 0 and right_rms > 0:
+            level_ratio = left_rms / right_rms
             
-            # If left is significantly louder (ratio > 1.5), balance it
-            if level_ratio > 1.5:
-                # Reduce left channel and boost right channel to center the audio
-                balance_factor = np.sqrt(level_ratio)
-                left = left / balance_factor
-                right = right * balance_factor
+            # If left is significantly louder (ratio > 1.2), balance it
+            if level_ratio > 1.2:
+                # Calculate balance factor to center the audio
+                # We want to reduce left and boost right proportionally
+                target_ratio = 1.0  # Perfect balance
+                left_gain = target_ratio / level_ratio
+                right_gain = level_ratio / target_ratio
+                
+                # Apply gains (but limit to prevent distortion)
+                left_gain = min(left_gain, 1.0)  # Don't boost left
+                right_gain = min(right_gain, 2.0)  # Can boost right up to 2x
+                
+                left = left * left_gain
+                right = right * right_gain
                 print(f"[STEREO BALANCE] Left-biased audio detected (ratio: {level_ratio:.2f}), balancing...")
-            # If right is significantly louder (ratio < 0.67), balance it
-            elif level_ratio < 0.67:
-                balance_factor = np.sqrt(1.0 / level_ratio)
-                left = left * balance_factor
-                right = right / balance_factor
+                print(f"[STEREO BALANCE] Applied gains - Left: {left_gain:.2f}x, Right: {right_gain:.2f}x")
+            # If right is significantly louder (ratio < 0.83), balance it
+            elif level_ratio < 0.83:
+                target_ratio = 1.0
+                left_gain = level_ratio / target_ratio
+                right_gain = target_ratio / level_ratio
+                
+                left_gain = min(left_gain, 2.0)  # Can boost left up to 2x
+                right_gain = min(right_gain, 1.0)  # Don't boost right
+                
+                left = left * left_gain
+                right = right * right_gain
                 print(f"[STEREO BALANCE] Right-biased audio detected (ratio: {level_ratio:.2f}), balancing...")
+                print(f"[STEREO BALANCE] Applied gains - Left: {left_gain:.2f}x, Right: {right_gain:.2f}x")
+            else:
+                print(f"[STEREO BALANCE] Audio is already balanced (ratio: {level_ratio:.2f})")
         else:
             # If one channel is silent or very quiet, duplicate the active channel
-            if left_level > 0 and right_level < left_level * 0.1:
+            if left_rms > 0 and right_rms < left_rms * 0.1:
                 right = left.copy()
                 print(f"[STEREO BALANCE] Right channel silent, duplicating left channel")
-            elif right_level > 0 and left_level < right_level * 0.1:
+            elif right_rms > 0 and left_rms < right_rms * 0.1:
                 left = right.copy()
                 print(f"[STEREO BALANCE] Left channel silent, duplicating right channel")
+            else:
+                # Both channels are very quiet, keep as is
+                print(f"[STEREO BALANCE] Both channels are quiet, keeping as is")
         
-        # Normalize to prevent clipping
+        # Normalize to prevent clipping while maintaining relative levels
         max_val = max(np.abs(left).max(), np.abs(right).max())
         if max_val > 0:
+            # Normalize to 95% to prevent clipping
             left = left / max_val * 0.95
             right = right / max_val * 0.95
+        
+        # Verify final balance
+        final_left_rms = np.sqrt(np.mean(left**2))
+        final_right_rms = np.sqrt(np.mean(right**2))
+        final_ratio = final_left_rms / final_right_rms if final_right_rms > 0 else 1.0
+        print(f"[STEREO BALANCE] Final balance - Left RMS: {final_left_rms:.4f}, Right RMS: {final_right_rms:.4f}, Ratio: {final_ratio:.2f}")
         
         # Combine back to stereo
         balanced = np.column_stack([left, right])
@@ -292,6 +357,8 @@ def balance_stereo(audio, sample_rate):
         return balanced
     except Exception as e:
         print(f"Stereo balancing error: {e}")
+        import traceback
+        traceback.print_exc()
         return audio  # Return original if balancing fails
 
 
@@ -333,72 +400,123 @@ def process_audio_file(audio_path, frequency_hz, binaural_type, style, duration,
                       noise_reduction_level=None, sample_rate=44100, is_vocal_recording=False):
     """Process audio file with all effects, including automatic noise reduction and stereo balancing for vocal recordings"""
     try:
-        # Load audio
+        # Load audio - keep stereo if available
         audio, sr = librosa.load(audio_path, sr=sample_rate, mono=False)
+        
+        # Check if audio is stereo
+        is_stereo = len(audio.shape) > 1 and audio.shape[1] >= 2
         
         # For vocal recordings (mobile recordings), always apply noise reduction and stereo balancing
         if is_vocal_recording:
             print(f"[PROCESS] Vocal recording detected - applying automatic noise reduction and stereo balancing")
             
-            # First, balance stereo to fix left/right channel issues
-            if len(audio.shape) > 1:
+            # First, balance stereo to fix left/right channel issues (preserve stereo)
+            if is_stereo:
                 audio = balance_stereo(audio, sr)
+                print(f"[PROCESS] Stereo balanced - audio is now centered")
             
-            # Convert to mono for noise reduction
-            if len(audio.shape) > 1:
-                audio_mono = np.mean(audio, axis=0)
-            else:
-                audio_mono = audio
-            
-            # Apply noise reduction (use medium if not specified, aggressive for mobile recordings)
+            # Apply noise reduction while preserving stereo
             reduction_level = noise_reduction_level or 'aggressive'
-            audio_mono = apply_noise_reduction(audio_mono, sr, reduction_level)
-            print(f"[PROCESS] Applied noise reduction (level: {reduction_level})")
+            audio = apply_noise_reduction(audio, sr, reduction_level, preserve_stereo=True)
+            print(f"[PROCESS] Applied noise reduction (level: {reduction_level}) while preserving stereo")
         else:
-            # Convert to mono if needed for processing
-            if len(audio.shape) > 1:
-                audio_mono = np.mean(audio, axis=0)
-            else:
-                audio_mono = audio
-            
             # Apply noise reduction if requested
             if noise_reduction_level:
-                audio_mono = apply_noise_reduction(audio_mono, sr, noise_reduction_level)
+                audio = apply_noise_reduction(audio, sr, noise_reduction_level, preserve_stereo=is_stereo)
+        
+        # Get audio length for tone generation
+        if is_stereo:
+            audio_length = len(audio) / sr
+            # Use left channel for length calculation
+            audio_for_mixing = audio[:, 0]
+        else:
+            audio_length = len(audio) / sr
+            audio_for_mixing = audio
         
         # Generate healing tone
-        healing_tone = generate_healing_tone(frequency_hz, len(audio_mono) / sr, sr)
+        healing_tone = generate_healing_tone(frequency_hz, audio_length, sr)
         
         # Generate binaural beats if requested
         binaural = None
         if binaural_type != 'none':
-            binaural = generate_binaural_beats(frequency_hz, binaural_type, 
-                                              len(audio_mono) / sr, sr)
+            binaural = generate_binaural_beats(frequency_hz, binaural_type, audio_length, sr)
         
-        # Mix audio layers
-        # Base audio: 40%
-        processed = audio_mono * 0.4
-        
-        # Healing tone: 30%
-        if len(healing_tone) > len(processed):
-            healing_tone = healing_tone[:len(processed)]
-        elif len(healing_tone) < len(processed):
-            healing_tone = np.pad(healing_tone, (0, len(processed) - len(healing_tone)))
-        processed += healing_tone * 0.3
-        
-        # Binaural beats: 30% (if enabled)
-        if binaural is not None:
-            binaural_mono = np.mean(binaural, axis=1)
-            if len(binaural_mono) > len(processed):
-                binaural_mono = binaural_mono[:len(processed)]
-            elif len(binaural_mono) < len(processed):
-                binaural_mono = np.pad(binaural_mono, (0, len(processed) - len(binaural_mono)))
-            processed += binaural_mono * 0.3
-        
-        # Normalize
-        processed = processed / np.max(np.abs(processed)) * 0.9
-        
-        # Convert back to stereo
-        processed_stereo = np.column_stack([processed, processed])
+        # Mix audio layers - preserve stereo if original was stereo
+        if is_stereo:
+            # Process stereo audio
+            left = audio[:, 0]
+            right = audio[:, 1]
+            
+            # Base audio: 40%
+            processed_left = left * 0.4
+            processed_right = right * 0.4
+            
+            # Healing tone: 30% (mono, add to both channels)
+            if len(healing_tone) > len(processed_left):
+                healing_tone = healing_tone[:len(processed_left)]
+            elif len(healing_tone) < len(processed_left):
+                healing_tone = np.pad(healing_tone, (0, len(processed_left) - len(healing_tone)))
+            processed_left += healing_tone * 0.3
+            processed_right += healing_tone * 0.3
+            
+            # Binaural beats: 30% (if enabled) - use stereo binaural if available
+            if binaural is not None:
+                if len(binaural.shape) > 1 and binaural.shape[1] >= 2:
+                    # Stereo binaural
+                    binaural_left = binaural[:, 0]
+                    binaural_right = binaural[:, 1]
+                else:
+                    # Mono binaural
+                    binaural_mono = binaural if len(binaural.shape) == 1 else binaural[:, 0]
+                    binaural_left = binaural_mono
+                    binaural_right = binaural_mono
+                
+                if len(binaural_left) > len(processed_left):
+                    binaural_left = binaural_left[:len(processed_left)]
+                    binaural_right = binaural_right[:len(processed_right)]
+                elif len(binaural_left) < len(processed_left):
+                    pad_len = len(processed_left) - len(binaural_left)
+                    binaural_left = np.pad(binaural_left, (0, pad_len))
+                    binaural_right = np.pad(binaural_right, (0, pad_len))
+                
+                processed_left += binaural_left * 0.3
+                processed_right += binaural_right * 0.3
+            
+            # Normalize stereo
+            max_val = max(np.abs(processed_left).max(), np.abs(processed_right).max())
+            if max_val > 0:
+                processed_left = processed_left / max_val * 0.9
+                processed_right = processed_right / max_val * 0.9
+            
+            # Combine back to stereo
+            processed_stereo = np.column_stack([processed_left, processed_right])
+            print(f"[PROCESS] Output is stereo - balanced and noise-reduced")
+        else:
+            # Process mono audio
+            processed = audio_for_mixing * 0.4
+            
+            # Healing tone: 30%
+            if len(healing_tone) > len(processed):
+                healing_tone = healing_tone[:len(processed)]
+            elif len(healing_tone) < len(processed):
+                healing_tone = np.pad(healing_tone, (0, len(processed) - len(healing_tone)))
+            processed += healing_tone * 0.3
+            
+            # Binaural beats: 30% (if enabled)
+            if binaural is not None:
+                binaural_mono = np.mean(binaural, axis=1) if len(binaural.shape) > 1 else binaural
+                if len(binaural_mono) > len(processed):
+                    binaural_mono = binaural_mono[:len(processed)]
+                elif len(binaural_mono) < len(processed):
+                    binaural_mono = np.pad(binaural_mono, (0, len(processed) - len(binaural_mono)))
+                processed += binaural_mono * 0.3
+            
+            # Normalize
+            processed = processed / np.max(np.abs(processed)) * 0.9
+            
+            # Convert to stereo for output
+            processed_stereo = np.column_stack([processed, processed])
+            print(f"[PROCESS] Output converted to stereo from mono")
         
         return processed_stereo, sr
         
