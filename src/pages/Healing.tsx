@@ -485,11 +485,17 @@ const Healing: React.FC = () => {
 
   // Opens the intention threshold before starting a healing audio
   const initiatePlay = (audio: HealingAudio) => {
-    // Admins have full access to all audio
-    const canPlay = isAdmin || audio.is_free || ownedAudioIds.has(audio.id);
+    // Admins, healing plan subscribers, and audio purchasers have full access
+    const canPlay = isAdmin || audio.is_free || ownedAudioIds.has(audio.id) || hasHealingAccess;
     const audioUrl = canPlay ? audio.audio_url : audio.preview_url;
 
-    if (!audioUrl) return;
+    if (!audioUrl) {
+      // No audio URL available - show helpful message
+      if (canPlay && !audio.audio_url) {
+        sonnerToast.error('Audio not yet uploaded', { description: 'This healing audio is coming soon.' });
+      }
+      return;
+    }
 
     // If already playing this one, toggle via unified player
     if (currentAudio?.id === audio.id && currentAudio?.contentType === 'healing') {
@@ -535,7 +541,8 @@ const Healing: React.FC = () => {
 
   // Actual audio playback logic - now uses unified player
   const startPlayback = (audio: HealingAudio) => {
-    const canPlay = isAdmin || audio.is_free || ownedAudioIds.has(audio.id);
+    // Admins, healing plan subscribers, and audio purchasers have full access
+    const canPlay = isAdmin || audio.is_free || ownedAudioIds.has(audio.id) || hasHealingAccess;
     const audioUrl = canPlay ? audio.audio_url : audio.preview_url;
     
     if (!audioUrl) return;
