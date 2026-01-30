@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { toast as sonnerToast } from 'sonner';
-import { Sparkles, Play, Pause, Lock, Download, Heart, Clock, Music, CheckCircle, Star, CreditCard, Wallet } from 'lucide-react';
+import { Sparkles, Play, Pause, Lock, Download, Heart, Clock, Music, CheckCircle, Star, CreditCard, Wallet, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
@@ -259,6 +259,7 @@ const Healing: React.FC = () => {
   const [showThreshold, setShowThreshold] = useState(false);
   const [pendingAudio, setPendingAudio] = useState<HealingAudio | null>(null);
   const [currentIntention, setCurrentIntention] = useState<IntentionType | null>(null);
+  const [faqOpen, setFaqOpen] = useState(false);
   
   // Check if healing audio is currently playing
   const isHealingPlaying = (audioId: string) => {
@@ -681,21 +682,35 @@ const Healing: React.FC = () => {
         </div>
       </div>
 
-      {/* FAQ Section */}
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-center text-foreground">{t.faqTitle}</h2>
-        <Accordion type="multiple" className="space-y-2">
-          {(faqTranslations[currentLang as keyof typeof faqTranslations] || faqTranslations.en).map((faq, i) => (
-            <AccordionItem key={i} value={`faq-${i}`} className="border border-border rounded-lg px-4">
-              <AccordionTrigger className="text-left text-foreground hover:no-underline">
-                {faq.question}
-              </AccordionTrigger>
-              <AccordionContent className="text-muted-foreground">
-                {faq.answer}
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+      {/* FAQ Section - Collapsible */}
+      <div className="space-y-4">
+        <Button
+          variant="outline"
+          className="w-full flex items-center justify-between py-6"
+          onClick={() => setFaqOpen(!faqOpen)}
+        >
+          <span className="text-lg font-semibold">{t.faqTitle}</span>
+          {faqOpen ? (
+            <ChevronUp className="w-5 h-5" />
+          ) : (
+            <ChevronDown className="w-5 h-5" />
+          )}
+        </Button>
+        
+        {faqOpen && (
+          <Accordion type="multiple" className="space-y-2">
+            {(faqTranslations[currentLang as keyof typeof faqTranslations] || faqTranslations.en).map((faq, i) => (
+              <AccordionItem key={i} value={`faq-${i}`} className="border border-border rounded-lg px-4">
+                <AccordionTrigger className="text-left text-foreground hover:no-underline">
+                  {faq.question}
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground">
+                  {faq.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        )}
       </div>
 
       {/* Purchase Section */}
