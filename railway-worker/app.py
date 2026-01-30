@@ -239,6 +239,62 @@ def apply_noise_reduction(audio, sample_rate, reduction_level='medium'):
         return audio  # Return original if reduction fails
 
 
+def balance_stereo(audio, sample_rate):
+    """Balance stereo audio - center vocals and remove left/right bias from mobile recordings"""
+    try:
+        # If mono, convert to stereo first
+        if len(audio.shape) == 1:
+            audio = np.column_stack([audio, audio])
+        
+        # Get left and right channels
+        left = audio[:, 0] if audio.shape[1] >= 1 else audio
+        right = audio[:, 1] if audio.shape[1] >= 2 else audio
+        
+        # Calculate channel levels
+        left_level = np.abs(left).mean()
+        right_level = np.abs(right).mean()
+        
+        # Detect if audio is heavily left-biased (common in mobile recordings)
+        if left_level > 0 and right_level > 0:
+            level_ratio = left_level / right_level
+            
+            # If left is significantly louder (ratio > 1.5), balance it
+            if level_ratio > 1.5:
+                # Reduce left channel and boost right channel to center the audio
+                balance_factor = np.sqrt(level_ratio)
+                left = left / balance_factor
+                right = right * balance_factor
+                print(f"[STEREO BALANCE] Left-biased audio detected (ratio: {level_ratio:.2f}), balancing...")
+            # If right is significantly louder (ratio < 0.67), balance it
+            elif level_ratio < 0.67:
+                balance_factor = np.sqrt(1.0 / level_ratio)
+                left = left * balance_factor
+                right = right / balance_factor
+                print(f"[STEREO BALANCE] Right-biased audio detected (ratio: {level_ratio:.2f}), balancing...")
+        else:
+            # If one channel is silent or very quiet, duplicate the active channel
+            if left_level > 0 and right_level < left_level * 0.1:
+                right = left.copy()
+                print(f"[STEREO BALANCE] Right channel silent, duplicating left channel")
+            elif right_level > 0 and left_level < right_level * 0.1:
+                left = right.copy()
+                print(f"[STEREO BALANCE] Left channel silent, duplicating right channel")
+        
+        # Normalize to prevent clipping
+        max_val = max(np.abs(left).max(), np.abs(right).max())
+        if max_val > 0:
+            left = left / max_val * 0.95
+            right = right / max_val * 0.95
+        
+        # Combine back to stereo
+        balanced = np.column_stack([left, right])
+        
+        return balanced
+    except Exception as e:
+        print(f"Stereo balancing error: {e}")
+        return audio  # Return original if balancing fails
+
+
 def download_audio(url):
     """Download audio from URL or YouTube"""
     try:
@@ -274,21 +330,40 @@ def download_audio(url):
 
 
 def process_audio_file(audio_path, frequency_hz, binaural_type, style, duration, 
-                      noise_reduction_level=None, sample_rate=44100):
-    """Process audio file with all effects"""
+                      noise_reduction_level=None, sample_rate=44100, is_vocal_recording=False):
+    """Process audio file with all effects, including automatic noise reduction and stereo balancing for vocal recordings"""
     try:
         # Load audio
         audio, sr = librosa.load(audio_path, sr=sample_rate, mono=False)
         
-        # Convert to mono if needed for processing
-        if len(audio.shape) > 1:
-            audio_mono = np.mean(audio, axis=0)
+        # For vocal recordings (mobile recordings), always apply noise reduction and stereo balancing
+        if is_vocal_recording:
+            print(f"[PROCESS] Vocal recording detected - applying automatic noise reduction and stereo balancing")
+            
+            # First, balance stereo to fix left/right channel issues
+            if len(audio.shape) > 1:
+                audio = balance_stereo(audio, sr)
+            
+            # Convert to mono for noise reduction
+            if len(audio.shape) > 1:
+                audio_mono = np.mean(audio, axis=0)
+            else:
+                audio_mono = audio
+            
+            # Apply noise reduction (use medium if not specified, aggressive for mobile recordings)
+            reduction_level = noise_reduction_level or 'aggressive'
+            audio_mono = apply_noise_reduction(audio_mono, sr, reduction_level)
+            print(f"[PROCESS] Applied noise reduction (level: {reduction_level})")
         else:
-            audio_mono = audio
-        
-        # Apply noise reduction if requested
-        if noise_reduction_level:
-            audio_mono = apply_noise_reduction(audio_mono, sr, noise_reduction_level)
+            # Convert to mono if needed for processing
+            if len(audio.shape) > 1:
+                audio_mono = np.mean(audio, axis=0)
+            else:
+                audio_mono = audio
+            
+            # Apply noise reduction if requested
+            if noise_reduction_level:
+                audio_mono = apply_noise_reduction(audio_mono, sr, noise_reduction_level)
         
         # Generate healing tone
         healing_tone = generate_healing_tone(frequency_hz, len(audio_mono) / sr, sr)
@@ -450,6 +525,7 @@ def process_audio():
         youtube_urls = payload.get('youtube_urls', [])
         direct_urls = payload.get('direct_urls', [])
         noise_reduction_level = payload.get('noise_reduction_level')
+        is_vocal_recording = payload.get('is_vocal_recording', False)  # Flag for mobile/vocal recordings
         
         # Process in background thread
         def process_job():
@@ -471,9 +547,10 @@ def process_audio():
                 
                 send_callback(callback_url, callback_api_key, job_id, 'processing', 25)
                 
-                # Process audio
+                # Process audio (with automatic noise reduction and stereo balancing for vocal recordings)
                 processed_audio, sr = process_audio_file(
-                    audio_path, frequency_hz, binaural or 'none', style, duration, noise_reduction_level
+                    audio_path, frequency_hz, binaural or 'none', style, duration, 
+                    noise_reduction_level, sample_rate=44100, is_vocal_recording=is_vocal_recording
                 )
                 
                 send_callback(callback_url, callback_api_key, job_id, 'processing', 55)

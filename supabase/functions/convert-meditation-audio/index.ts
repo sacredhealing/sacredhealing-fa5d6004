@@ -494,6 +494,9 @@ serve(async (req) => {
         mode: noiseMode,
         strength: noiseStrength,
       },
+      // Vocal recording flag - enables automatic noise reduction and stereo balancing for mobile recordings
+      // Automatically set to true if audio is uploaded (likely from mobile) or explicitly set
+      is_vocal_recording: body.is_vocal_recording ?? (!!body.audioUrl || !!inputSources.upload_storage_path),
       // BPM matching
       bpm: {
         enabled: bpmEnabled,
