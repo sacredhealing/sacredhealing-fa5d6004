@@ -86,6 +86,11 @@ export function useSoulMeditateEngine() {
   const noiseCompressorRef = useRef<DynamicsCompressorNode | null>(null);
   const noiseGateRef = useRef<GainNode | null>(null);
   
+  // Stereo-to-mono balancer (fixes unbalanced phone recordings)
+  const monoSplitterRef = useRef<ChannelSplitterNode | null>(null);
+  const monoMergerRef = useRef<ChannelMergerNode | null>(null);
+  const monoMixGainRef = useRef<GainNode | null>(null);
+  
   // 3-Band Parametric EQ for neural source (Weight, Presence, Air)
   const eqWeightRef = useRef<BiquadFilterNode | null>(null);     // 400Hz - Boxy control
   const eqPresenceRef = useRef<BiquadFilterNode | null>(null);   // 4kHz - Clarity
@@ -208,6 +213,28 @@ export function useSoulMeditateEngine() {
     // Noise gate gain (for very quiet sections)
     noiseGateRef.current = ctx.createGain();
     noiseGateRef.current.gain.value = 1;
+    
+    // Stereo-to-Mono Balancer: Fixes unbalanced phone recordings (e.g. louder left channel)
+    // Splits stereo into L and R, mixes to mono (balanced), outputs to both channels
+    monoSplitterRef.current = ctx.createChannelSplitter(2);
+    monoMergerRef.current = ctx.createChannelMerger(2);
+    monoMixGainRef.current = ctx.createGain();
+    monoMixGainRef.current.gain.value = 0.5; // Mix L+R at 50% each to prevent clipping
+    
+    // Create a second gain for the right channel mix
+    const monoMixGainR = ctx.createGain();
+    monoMixGainR.gain.value = 0.5;
+    
+    // Connect: splitter -> both channels sum through gains -> merger (mono to both L and R)
+    // Left channel (0) -> mix gain -> merger input 0 and 1
+    // Right channel (1) -> mix gain R -> merger input 0 and 1
+    monoSplitterRef.current.connect(monoMixGainRef.current, 0); // Left to mix gain
+    monoSplitterRef.current.connect(monoMixGainR, 1);            // Right to mix gain R
+    monoMixGainRef.current.connect(monoMergerRef.current, 0, 0); // Left mix -> output L
+    monoMixGainRef.current.connect(monoMergerRef.current, 0, 1); // Left mix -> output R
+    monoMixGainR.connect(monoMergerRef.current, 0, 0);           // Right mix -> output L
+    monoMixGainR.connect(monoMergerRef.current, 0, 1);           // Right mix -> output R
+    console.log('Stereo-to-Mono Balancer initialized: auto-balances uneven phone recordings');
     
     // Create 100Hz low-cut filter
     lowCutFilterRef.current = ctx.createBiquadFilter();
@@ -392,9 +419,11 @@ export function useSoulMeditateEngine() {
     // Create source node and connect through noise cleanup chain
     const source = audioContextRef.current.createMediaElementSource(audio);
 
-    // Connect through full chain: source -> noise cleanup -> EQ -> low cut -> gain
-    // Chain: source -> highpass -> lowpass -> compressor -> gate -> lowCut -> weight -> presence -> air -> gain
+    // Connect through full chain: source -> MONO BALANCER -> noise cleanup -> EQ -> low cut -> gain
+    // Chain: source -> monoSplitter -> monoMerger -> highpass -> lowpass -> compressor -> gate -> lowCut -> weight -> presence -> air -> gain
     if (
+      monoSplitterRef.current &&
+      monoMergerRef.current &&
       noiseHighPassRef.current &&
       noiseLowPassRef.current &&
       noiseCompressorRef.current &&
@@ -405,7 +434,11 @@ export function useSoulMeditateEngine() {
       eqAirRef.current &&
       neuralGainRef.current
     ) {
-      source.connect(noiseHighPassRef.current);
+      // First: Stereo-to-Mono Balancer (fixes uneven phone recordings)
+      source.connect(monoSplitterRef.current);
+      monoMergerRef.current.connect(noiseHighPassRef.current);
+      
+      // Then: Noise cleanup chain
       noiseHighPassRef.current.connect(noiseLowPassRef.current);
       noiseLowPassRef.current.connect(noiseCompressorRef.current);
       noiseCompressorRef.current.connect(noiseGateRef.current);
@@ -414,7 +447,7 @@ export function useSoulMeditateEngine() {
       eqWeightRef.current.connect(eqPresenceRef.current);
       eqPresenceRef.current.connect(eqAirRef.current);
       eqAirRef.current.connect(neuralGainRef.current);
-      console.log('Full audio chain connected: noise cleanup -> low cut(100Hz) -> EQ(Weight/Presence/Air) -> gain');
+      console.log('Full audio chain connected: MONO BALANCER -> noise cleanup -> low cut(100Hz) -> EQ(Weight/Presence/Air) -> gain');
     } else {
       // Fallback: direct connection
       source.connect(neuralGainRef.current);

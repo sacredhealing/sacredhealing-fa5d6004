@@ -181,6 +181,25 @@ function scheduleLoopingBuffer(
   let outputNode: AudioNode = destination;
   
   if (isNeuralSource) {
+    // STEREO-TO-MONO BALANCER: Fixes unbalanced phone recordings (louder left/right channel)
+    // Splits stereo into L and R, mixes to mono (balanced), outputs to both channels
+    const monoSplitter = ctx.createChannelSplitter(2);
+    const monoMerger = ctx.createChannelMerger(2);
+    const monoMixGainL = ctx.createGain();
+    const monoMixGainR = ctx.createGain();
+    monoMixGainL.gain.value = 0.5; // Mix L+R at 50% each to prevent clipping
+    monoMixGainR.gain.value = 0.5;
+    
+    // Connect: splitter -> both channels sum through gains -> merger (mono to both L and R)
+    monoSplitter.connect(monoMixGainL, 0); // Left channel to mix gain L
+    monoSplitter.connect(monoMixGainR, 1); // Right channel to mix gain R
+    monoMixGainL.connect(monoMerger, 0, 0); // Left mix -> output L
+    monoMixGainL.connect(monoMerger, 0, 1); // Left mix -> output R
+    monoMixGainR.connect(monoMerger, 0, 0); // Right mix -> output L
+    monoMixGainR.connect(monoMerger, 0, 1); // Right mix -> output R
+    
+    console.log('[OfflineRender] Stereo-to-Mono Balancer applied to neural source');
+    
     // Create compressor matching live engine settings
     const compressor = ctx.createDynamicsCompressor();
     compressor.threshold.value = -18; // More conservative threshold
@@ -197,12 +216,15 @@ function scheduleLoopingBuffer(
     limiter.attack.value = 0.001;  // 1ms attack
     limiter.release.value = 0.1;   // 100ms release
     
-    // Chain: source -> compressor -> limiter -> destination
+    // Chain: monoMerger -> compressor -> limiter -> destination
+    monoMerger.connect(compressor);
     compressor.connect(limiter);
     limiter.connect(destination);
-    outputNode = compressor;
     
-    console.log('[OfflineRender] Neural source dynamics chain applied (compressor + limiter)');
+    // Output to mono splitter (start of chain)
+    outputNode = monoSplitter;
+    
+    console.log('[OfflineRender] Neural source chain: MONO BALANCER -> compressor -> limiter -> destination');
   }
   
   // Use a SINGLE looping buffer source instead of creating many to reduce memory
