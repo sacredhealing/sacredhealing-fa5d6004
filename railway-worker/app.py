@@ -412,38 +412,39 @@ def process_audio_file(audio_path, frequency_hz, binaural_type, style, duration,
         # Load audio - keep stereo if available
         audio, sr = librosa.load(audio_path, sr=sample_rate, mono=False)
         
-        # Check if audio is stereo
-        is_stereo = len(audio.shape) > 1 and audio.shape[1] >= 2
-        
-        # Convert neural source (user-uploaded audio) from stereo to mono
-        # This ensures the neural source track is mono, but we'll output stereo by duplicating
-        if is_stereo:
+        # ALWAYS convert neural source (user-uploaded audio) from stereo to mono
+        # This ensures the neural source track is mono, regardless of input format
+        if len(audio.shape) > 1:
             # Convert stereo to mono by averaging channels (neural source only)
             audio = np.mean(audio, axis=1)
-            print(f"[PROCESS] Neural source converted from stereo to mono")
-            is_stereo = False  # Mark as mono for processing
+            print(f"[PROCESS] Neural source converted from stereo to mono (averaged channels)")
+        else:
+            # Already mono, but ensure it's 1D array
+            audio = audio.flatten()
+            print(f"[PROCESS] Neural source is already mono")
+        
+        # Neural source is now guaranteed to be mono (1D array)
+        is_stereo = False
+        print(f"[PROCESS] Neural source shape: {audio.shape}, is_stereo: {is_stereo}")
         
         # For vocal recordings (mobile recordings), always apply noise reduction
         if is_vocal_recording:
             print(f"[PROCESS] Vocal recording detected - applying automatic noise reduction")
             
-            # Apply noise reduction (audio is now mono, so no need for stereo balancing)
+            # Apply noise reduction (neural source is always mono)
             reduction_level = noise_reduction_level or 'aggressive'
             audio = apply_noise_reduction(audio, sr, reduction_level, preserve_stereo=False)
-            print(f"[PROCESS] Applied noise reduction (level: {reduction_level})")
+            print(f"[PROCESS] Applied noise reduction (level: {reduction_level}) to mono neural source")
         else:
-            # Apply noise reduction if requested
+            # Apply noise reduction if requested (neural source is always mono)
             if noise_reduction_level:
-                audio = apply_noise_reduction(audio, sr, noise_reduction_level, preserve_stereo=is_stereo)
+                audio = apply_noise_reduction(audio, sr, noise_reduction_level, preserve_stereo=False)
+                print(f"[PROCESS] Applied noise reduction (level: {noise_reduction_level}) to mono neural source")
         
-        # Get audio length for tone generation
-        if is_stereo:
-            audio_length = len(audio) / sr
-            # Use left channel for length calculation
-            audio_for_mixing = audio[:, 0]
-        else:
-            audio_length = len(audio) / sr
-            audio_for_mixing = audio
+        # Get audio length for tone generation (neural source is always mono)
+        audio_length = len(audio) / sr
+        audio_for_mixing = audio
+        print(f"[PROCESS] Neural source length: {audio_length:.2f} seconds, samples: {len(audio)}")
         
         # Generate healing tone
         healing_tone = generate_healing_tone(frequency_hz, audio_length, sr)
@@ -453,82 +454,44 @@ def process_audio_file(audio_path, frequency_hz, binaural_type, style, duration,
         if binaural_type != 'none':
             binaural = generate_binaural_beats(frequency_hz, binaural_type, audio_length, sr)
         
-        # Mix audio layers - preserve stereo if original was stereo
-        if is_stereo:
-            # Process stereo audio
-            left = audio[:, 0]
-            right = audio[:, 1]
+        # Mix audio layers - neural source is ALWAYS mono, output is ALWAYS stereo
+        # Process mono neural source
+        processed = audio_for_mixing * 0.4
+        print(f"[PROCESS] Neural source (mono) mixed at 40% volume")
+        
+        # Healing tone: 30% (mono, add to mono neural source)
+        if len(healing_tone) > len(processed):
+            healing_tone = healing_tone[:len(processed)]
+        elif len(healing_tone) < len(processed):
+            healing_tone = np.pad(healing_tone, (0, len(processed) - len(healing_tone)))
+        processed += healing_tone * 0.3
+        print(f"[PROCESS] Healing tone (mono) mixed at 30% volume")
+        
+        # Binaural beats: 30% (if enabled) - convert to mono for mixing
+        if binaural is not None:
+            # Convert binaural to mono by averaging channels
+            if len(binaural.shape) > 1 and binaural.shape[1] >= 2:
+                binaural_mono = np.mean(binaural, axis=1)
+            else:
+                binaural_mono = binaural if len(binaural.shape) == 1 else binaural.flatten()
             
-            # Base audio: 40%
-            processed_left = left * 0.4
-            processed_right = right * 0.4
-            
-            # Healing tone: 30% (mono, add to both channels)
-            if len(healing_tone) > len(processed_left):
-                healing_tone = healing_tone[:len(processed_left)]
-            elif len(healing_tone) < len(processed_left):
-                healing_tone = np.pad(healing_tone, (0, len(processed_left) - len(healing_tone)))
-            processed_left += healing_tone * 0.3
-            processed_right += healing_tone * 0.3
-            
-            # Binaural beats: 30% (if enabled) - use stereo binaural if available
-            if binaural is not None:
-                if len(binaural.shape) > 1 and binaural.shape[1] >= 2:
-                    # Stereo binaural
-                    binaural_left = binaural[:, 0]
-                    binaural_right = binaural[:, 1]
-                else:
-                    # Mono binaural
-                    binaural_mono = binaural if len(binaural.shape) == 1 else binaural[:, 0]
-                    binaural_left = binaural_mono
-                    binaural_right = binaural_mono
-                
-                if len(binaural_left) > len(processed_left):
-                    binaural_left = binaural_left[:len(processed_left)]
-                    binaural_right = binaural_right[:len(processed_right)]
-                elif len(binaural_left) < len(processed_left):
-                    pad_len = len(processed_left) - len(binaural_left)
-                    binaural_left = np.pad(binaural_left, (0, pad_len))
-                    binaural_right = np.pad(binaural_right, (0, pad_len))
-                
-                processed_left += binaural_left * 0.3
-                processed_right += binaural_right * 0.3
-            
-            # Normalize stereo
-            max_val = max(np.abs(processed_left).max(), np.abs(processed_right).max())
-            if max_val > 0:
-                processed_left = processed_left / max_val * 0.9
-                processed_right = processed_right / max_val * 0.9
-            
-            # Combine back to stereo
-            processed_stereo = np.column_stack([processed_left, processed_right])
-            print(f"[PROCESS] Output is stereo - balanced and noise-reduced")
-        else:
-            # Process mono audio
-            processed = audio_for_mixing * 0.4
-            
-            # Healing tone: 30%
-            if len(healing_tone) > len(processed):
-                healing_tone = healing_tone[:len(processed)]
-            elif len(healing_tone) < len(processed):
-                healing_tone = np.pad(healing_tone, (0, len(processed) - len(healing_tone)))
-            processed += healing_tone * 0.3
-            
-            # Binaural beats: 30% (if enabled)
-            if binaural is not None:
-                binaural_mono = np.mean(binaural, axis=1) if len(binaural.shape) > 1 else binaural
-                if len(binaural_mono) > len(processed):
-                    binaural_mono = binaural_mono[:len(processed)]
-                elif len(binaural_mono) < len(processed):
-                    binaural_mono = np.pad(binaural_mono, (0, len(processed) - len(binaural_mono)))
-                processed += binaural_mono * 0.3
-            
-            # Normalize
-            processed = processed / np.max(np.abs(processed)) * 0.9
-            
-            # Convert to stereo for output
-            processed_stereo = np.column_stack([processed, processed])
-            print(f"[PROCESS] Output converted to stereo from mono")
+            if len(binaural_mono) > len(processed):
+                binaural_mono = binaural_mono[:len(processed)]
+            elif len(binaural_mono) < len(processed):
+                binaural_mono = np.pad(binaural_mono, (0, len(processed) - len(binaural_mono)))
+            processed += binaural_mono * 0.3
+            print(f"[PROCESS] Binaural beats (converted to mono) mixed at 30% volume")
+        
+        # Normalize mono mix
+        max_val = np.abs(processed).max()
+        if max_val > 0:
+            processed = processed / max_val * 0.9
+        print(f"[PROCESS] Mono mix normalized, max value: {max_val:.4f}")
+        
+        # Convert mono neural source to stereo output by duplicating to both channels
+        processed_stereo = np.column_stack([processed, processed])
+        print(f"[PROCESS] Final output: stereo (mono neural source duplicated to both channels)")
+        print(f"[PROCESS] Output shape: {processed_stereo.shape}, channels: {processed_stereo.shape[1] if len(processed_stereo.shape) > 1 else 1}")
         
         return processed_stereo, sr
         
