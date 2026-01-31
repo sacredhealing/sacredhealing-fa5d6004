@@ -415,19 +415,22 @@ def process_audio_file(audio_path, frequency_hz, binaural_type, style, duration,
         # Check if audio is stereo
         is_stereo = len(audio.shape) > 1 and audio.shape[1] >= 2
         
-        # For vocal recordings (mobile recordings), always apply noise reduction and stereo balancing
+        # Convert neural source (user-uploaded audio) from stereo to mono
+        # This ensures the neural source track is mono, but we'll output stereo by duplicating
+        if is_stereo:
+            # Convert stereo to mono by averaging channels (neural source only)
+            audio = np.mean(audio, axis=1)
+            print(f"[PROCESS] Neural source converted from stereo to mono")
+            is_stereo = False  # Mark as mono for processing
+        
+        # For vocal recordings (mobile recordings), always apply noise reduction
         if is_vocal_recording:
-            print(f"[PROCESS] Vocal recording detected - applying automatic noise reduction and stereo balancing")
+            print(f"[PROCESS] Vocal recording detected - applying automatic noise reduction")
             
-            # First, balance stereo to fix left/right channel issues (preserve stereo)
-            if is_stereo:
-                audio = balance_stereo(audio, sr)
-                print(f"[PROCESS] Stereo balanced - audio is now centered")
-            
-            # Apply noise reduction while preserving stereo
+            # Apply noise reduction (audio is now mono, so no need for stereo balancing)
             reduction_level = noise_reduction_level or 'aggressive'
-            audio = apply_noise_reduction(audio, sr, reduction_level, preserve_stereo=True)
-            print(f"[PROCESS] Applied noise reduction (level: {reduction_level}) while preserving stereo")
+            audio = apply_noise_reduction(audio, sr, reduction_level, preserve_stereo=False)
+            print(f"[PROCESS] Applied noise reduction (level: {reduction_level})")
         else:
             # Apply noise reduction if requested
             if noise_reduction_level:
