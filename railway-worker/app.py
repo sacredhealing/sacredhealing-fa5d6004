@@ -265,22 +265,28 @@ def apply_noise_reduction(audio, sample_rate, reduction_level='medium', preserve
 
 
 def balance_stereo(audio, sample_rate):
-    """Balance stereo audio - center vocals and remove left/right bias from mobile recordings"""
+    """
+    Balance stereo audio using FFmpeg-style channel duplication.
+    Only applies when necessary - detects which channel has better audio and duplicates it to both.
+    Similar to: pan=stereo|c0=c0|c1=c0 (if left is better) or pan=stereo|c0=c1|c1=c1 (if right is better)
+    """
     try:
         # If mono, convert to stereo first
         if len(audio.shape) == 1:
             audio = np.column_stack([audio, audio])
             print(f"[STEREO BALANCE] Converted mono to stereo")
+            return audio  # Mono input doesn't need balancing
         
         # Ensure we have 2 channels
         if audio.shape[1] < 2:
             audio = np.column_stack([audio[:, 0], audio[:, 0]])
+            return audio
         
         # Get left and right channels
         left = audio[:, 0].copy()
         right = audio[:, 1].copy()
         
-        # Calculate RMS levels for better balance detection
+        # Calculate RMS levels to determine which channel has better audio
         left_rms = np.sqrt(np.mean(left**2))
         right_rms = np.sqrt(np.mean(right**2))
         
@@ -291,54 +297,57 @@ def balance_stereo(audio, sample_rate):
         print(f"[STEREO BALANCE] Left RMS: {left_rms:.4f}, Right RMS: {right_rms:.4f}")
         print(f"[STEREO BALANCE] Left Peak: {left_peak:.4f}, Right Peak: {right_peak:.4f}")
         
-        # Detect if audio is heavily left-biased (common in mobile recordings)
+        # Threshold for when to apply duplication (only when significant imbalance)
+        # Ratio > 2.0 means left is much better, ratio < 0.5 means right is much better
+        IMBALANCE_THRESHOLD = 2.0
+        
+        # Check if we need to balance (only apply when necessary)
+        needs_balancing = False
+        better_channel = None
+        
         if left_rms > 0 and right_rms > 0:
             level_ratio = left_rms / right_rms
             
-            # If left is significantly louder (ratio > 1.2), balance it
-            if level_ratio > 1.2:
-                # Calculate balance factor to center the audio
-                # We want to reduce left and boost right proportionally
-                target_ratio = 1.0  # Perfect balance
-                left_gain = target_ratio / level_ratio
-                right_gain = level_ratio / target_ratio
-                
-                # Apply gains (but limit to prevent distortion)
-                left_gain = min(left_gain, 1.0)  # Don't boost left
-                right_gain = min(right_gain, 2.0)  # Can boost right up to 2x
-                
-                left = left * left_gain
-                right = right * right_gain
-                print(f"[STEREO BALANCE] Left-biased audio detected (ratio: {level_ratio:.2f}), balancing...")
-                print(f"[STEREO BALANCE] Applied gains - Left: {left_gain:.2f}x, Right: {right_gain:.2f}x")
-            # If right is significantly louder (ratio < 0.83), balance it
-            elif level_ratio < 0.83:
-                target_ratio = 1.0
-                left_gain = level_ratio / target_ratio
-                right_gain = target_ratio / level_ratio
-                
-                left_gain = min(left_gain, 2.0)  # Can boost left up to 2x
-                right_gain = min(right_gain, 1.0)  # Don't boost right
-                
-                left = left * left_gain
-                right = right * right_gain
-                print(f"[STEREO BALANCE] Right-biased audio detected (ratio: {level_ratio:.2f}), balancing...")
-                print(f"[STEREO BALANCE] Applied gains - Left: {left_gain:.2f}x, Right: {right_gain:.2f}x")
+            # If left channel is significantly better (ratio > 2.0)
+            if level_ratio > IMBALANCE_THRESHOLD:
+                needs_balancing = True
+                better_channel = 'left'
+                print(f"[STEREO BALANCE] Left channel is significantly better (ratio: {level_ratio:.2f})")
+                print(f"[STEREO BALANCE] Applying: pan=stereo|c0=c0|c1=c0 (duplicate left to both)")
+            # If right channel is significantly better (ratio < 0.5)
+            elif level_ratio < (1.0 / IMBALANCE_THRESHOLD):
+                needs_balancing = True
+                better_channel = 'right'
+                print(f"[STEREO BALANCE] Right channel is significantly better (ratio: {level_ratio:.2f})")
+                print(f"[STEREO BALANCE] Applying: pan=stereo|c0=c1|c1=c1 (duplicate right to both)")
             else:
-                print(f"[STEREO BALANCE] Audio is already balanced (ratio: {level_ratio:.2f})")
+                print(f"[STEREO BALANCE] Audio is balanced (ratio: {level_ratio:.2f}), no processing needed")
         else:
             # If one channel is silent or very quiet, duplicate the active channel
             if left_rms > 0 and right_rms < left_rms * 0.1:
-                right = left.copy()
+                needs_balancing = True
+                better_channel = 'left'
                 print(f"[STEREO BALANCE] Right channel silent, duplicating left channel")
             elif right_rms > 0 and left_rms < right_rms * 0.1:
-                left = right.copy()
+                needs_balancing = True
+                better_channel = 'right'
                 print(f"[STEREO BALANCE] Left channel silent, duplicating right channel")
-            else:
-                # Both channels are very quiet, keep as is
-                print(f"[STEREO BALANCE] Both channels are quiet, keeping as is")
         
-        # Normalize to prevent clipping while maintaining relative levels
+        # Only apply duplication if necessary
+        if needs_balancing and better_channel:
+            if better_channel == 'left':
+                # pan=stereo|c0=c0|c1=c0 - duplicate left to both channels
+                right = left.copy()
+                print(f"[STEREO BALANCE] Duplicated left channel to right")
+            else:
+                # pan=stereo|c0=c1|c1=c1 - duplicate right to both channels
+                left = right.copy()
+                print(f"[STEREO BALANCE] Duplicated right channel to left")
+        else:
+            # No balancing needed, keep original channels
+            print(f"[STEREO BALANCE] No balancing needed, keeping original stereo")
+        
+        # Normalize to prevent clipping
         max_val = max(np.abs(left).max(), np.abs(right).max())
         if max_val > 0:
             # Normalize to 95% to prevent clipping
