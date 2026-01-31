@@ -488,10 +488,25 @@ def process_audio_file(audio_path, frequency_hz, binaural_type, style, duration,
             processed = processed / max_val * 0.9
         print(f"[PROCESS] Mono mix normalized, max value: {max_val:.4f}")
         
-        # Convert mono neural source to stereo output by duplicating to both channels
-        processed_stereo = np.column_stack([processed, processed])
-        print(f"[PROCESS] Final output: stereo (mono neural source duplicated to both channels)")
-        print(f"[PROCESS] Output shape: {processed_stereo.shape}, channels: {processed_stereo.shape[1] if len(processed_stereo.shape) > 1 else 1}")
+        # Ensure processed is 1D and contiguous for perfect duplication
+        processed = np.ascontiguousarray(processed.flatten())
+        
+        # Convert mono neural source to PERFECT stereo output - IDENTICAL signal in both channels
+        # Use the same array reference to ensure perfect mono in both L and R
+        processed_stereo = np.column_stack([processed, processed]).astype(np.float32)
+        
+        # Verify both channels are identical (should be zero difference)
+        channel_diff = np.abs(processed_stereo[:, 0] - processed_stereo[:, 1]).max()
+        print(f"[PROCESS] Channel difference check: {channel_diff:.10f} (should be 0.0 for perfect mono)")
+        
+        # Ensure output is proper stereo format (N, 2) shape
+        assert processed_stereo.shape[1] == 2, f"Output must be stereo (2 channels), got shape: {processed_stereo.shape}"
+        assert processed_stereo.shape[0] == len(processed), f"Output length mismatch"
+        
+        print(f"[PROCESS] Final output: PERFECT stereo mono (identical signal in both L and R channels)")
+        print(f"[PROCESS] Output shape: {processed_stereo.shape}, dtype: {processed_stereo.dtype}")
+        print(f"[PROCESS] Left channel RMS: {np.sqrt(np.mean(processed_stereo[:, 0]**2)):.6f}")
+        print(f"[PROCESS] Right channel RMS: {np.sqrt(np.mean(processed_stereo[:, 1]**2)):.6f}")
         
         return processed_stereo, sr
         
@@ -501,12 +516,37 @@ def process_audio_file(audio_path, frequency_hz, binaural_type, style, duration,
 
 
 def save_audio(audio, sample_rate, output_path):
-    """Save audio to file"""
+    """Save audio to file - ensures proper stereo format with identical channels"""
     try:
-        sf.write(output_path, audio, sample_rate)
+        # Ensure audio is in correct format for saving
+        if len(audio.shape) == 1:
+            # If mono, convert to stereo by duplicating (perfect mono in both channels)
+            audio = np.column_stack([audio, audio])
+            print(f"[SAVE] Converted mono to stereo for saving")
+        elif len(audio.shape) == 2 and audio.shape[1] == 2:
+            # Already stereo, ensure it's contiguous and verify channels are identical
+            audio = np.ascontiguousarray(audio)
+            # Verify both channels are identical (for perfect mono)
+            channel_diff = np.abs(audio[:, 0] - audio[:, 1]).max()
+            if channel_diff > 1e-10:
+                print(f"[SAVE] WARNING: Channels differ by {channel_diff:.10f}, forcing to identical")
+                # Force both channels to be identical (use left channel for both)
+                audio = np.column_stack([audio[:, 0], audio[:, 0]])
+        else:
+            raise ValueError(f"Unexpected audio shape: {audio.shape}")
+        
+        # Verify stereo format
+        assert audio.shape[1] == 2, f"Audio must be stereo (2 channels), got shape: {audio.shape}"
+        
+        # Save as stereo WAV file with 24-bit PCM for high quality
+        sf.write(output_path, audio, sample_rate, subtype='PCM_24')
+        print(f"[SAVE] Saved PERFECT stereo mono audio: {output_path}")
+        print(f"[SAVE] Shape: {audio.shape}, sample_rate: {sample_rate}, channels identical: {np.allclose(audio[:, 0], audio[:, 1])}")
         return True
     except Exception as e:
         print(f"Save error: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 
