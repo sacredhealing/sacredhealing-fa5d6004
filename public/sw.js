@@ -2,7 +2,7 @@ const CACHE_NAME = 'sacred-healing-v1';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
-  '/icon-512x512.jpg',
+  '/icon-512x512.png',
   '/manifest.json',
   '/noiseGateProcessor.js'
 ];
