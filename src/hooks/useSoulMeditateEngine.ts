@@ -99,14 +99,6 @@ export function useSoulMeditateEngine() {
   // Low cut filter (100Hz high-pass)
   const lowCutFilterRef = useRef<BiquadFilterNode | null>(null);
   
-  // De-esser (sibilance reduction - targets 5-8kHz)
-  const deEsserFilterRef = useRef<BiquadFilterNode | null>(null);
-  const deEsserCompressorRef = useRef<DynamicsCompressorNode | null>(null);
-  const deEsserGainRef = useRef<GainNode | null>(null);
-  
-  // User-controllable Noise Gate (waveshaper reduces signal below threshold)
-  const userNoiseGateRef = useRef<WaveShaperNode | null>(null);
-  
   const atmosphereSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const atmosphereAudioRef = useRef<HTMLAudioElement | null>(null);
   const atmosphereGainRef = useRef<GainNode | null>(null);
@@ -171,9 +163,7 @@ export function useSoulMeditateEngine() {
     weight: -0.5,    // dB gain at 400Hz
     presence: 3,     // dB gain at 4kHz
     air: 1,          // dB gain at 10kHz+
-    lowCutEnabled: true,
-    deEsserAmount: 0,      // 0-100% sibilance reduction
-    noiseGateThreshold: -60 // -80 to -20 dB
+    lowCutEnabled: true
   });
 
   // Initialize audio context
@@ -274,23 +264,6 @@ export function useSoulMeditateEngine() {
     eqAirRef.current.gain.value = eqSettings.air;
     
     console.log('3-Band Parametric EQ initialized: Weight(400Hz), Presence(4kHz), Air(10kHz+)');
-    
-    // Create De-esser (sibilance reduction - simple EQ cut at 6.5kHz, no compressor)
-    // User controls amount 0-100% -> 0 to -12dB cut
-    deEsserFilterRef.current = ctx.createBiquadFilter();
-    deEsserFilterRef.current.type = 'peaking';
-    deEsserFilterRef.current.frequency.value = 6500; // Target "s" and "sh" sounds
-    deEsserFilterRef.current.Q.value = 2;
-    deEsserFilterRef.current.gain.value = (eqSettings.deEsserAmount / 100) * -12;
-    
-    console.log('De-esser initialized: 6.5kHz peaking filter (no compressor)');
-    
-    // Create User-controllable Noise Gate (waveshaper - reduces signal below threshold)
-    const gateThresholdLinear = Math.pow(10, eqSettings.noiseGateThreshold / 20);
-    userNoiseGateRef.current = ctx.createWaveShaper();
-    userNoiseGateRef.current.curve = createNoiseGateCurve(gateThresholdLinear);
-    
-    console.log('User Noise Gate initialized: threshold', eqSettings.noiseGateThreshold, 'dB');
 
     atmosphereGainRef.current = ctx.createGain();
     atmosphereGainRef.current.gain.value = atmosphereLayer.volume;
@@ -403,23 +376,6 @@ export function useSoulMeditateEngine() {
     return curve as Float32Array | null;
   }
 
-  // Create noise gate curve - reduces signal below threshold
-  function createNoiseGateCurve(thresholdLinear: number): Float32Array {
-    const len = 65536;
-    const curve = new Float32Array(len);
-    for (let i = 0; i < len; i++) {
-      const x = (i / (len - 1)) * 2 - 1;
-      const absX = Math.abs(x);
-      if (absX < thresholdLinear && absX > 1e-10) {
-        const sign = x >= 0 ? 1 : -1;
-        curve[i] = sign * absX * (absX / thresholdLinear);
-      } else {
-        curve[i] = x;
-      }
-    }
-    return curve;
-  }
-
   // Load neural source (user uploaded audio)
   const loadNeuralSource = useCallback(async (file: File | string) => {
     // Preserve file reference for later use (TypeScript narrowing workaround)
@@ -463,25 +419,35 @@ export function useSoulMeditateEngine() {
     // Create source node and connect through noise cleanup chain
     const source = audioContextRef.current.createMediaElementSource(audio);
 
-    // Connect neural source: source -> lowCut -> EQ -> de-esser -> noise gate -> gain
-    // De-esser and noise gate are user-controlled via VirtualChannelStrip (no compressor)
+    // Connect through full chain: source -> MONO BALANCER -> noise cleanup -> EQ -> low cut -> gain
+    // Chain: source -> monoSplitter -> monoMerger -> highpass -> lowpass -> compressor -> gate -> lowCut -> weight -> presence -> air -> gain
     if (
+      monoSplitterRef.current &&
+      monoMergerRef.current &&
+      noiseHighPassRef.current &&
+      noiseLowPassRef.current &&
+      noiseCompressorRef.current &&
+      noiseGateRef.current &&
       lowCutFilterRef.current &&
       eqWeightRef.current &&
       eqPresenceRef.current &&
       eqAirRef.current &&
-      deEsserFilterRef.current &&
-      userNoiseGateRef.current &&
       neuralGainRef.current
     ) {
-      source.connect(lowCutFilterRef.current);
+      // First: Stereo-to-Mono Balancer (fixes uneven phone recordings)
+      source.connect(monoSplitterRef.current);
+      monoMergerRef.current.connect(noiseHighPassRef.current);
+      
+      // Then: Noise cleanup chain
+      noiseHighPassRef.current.connect(noiseLowPassRef.current);
+      noiseLowPassRef.current.connect(noiseCompressorRef.current);
+      noiseCompressorRef.current.connect(noiseGateRef.current);
+      noiseGateRef.current.connect(lowCutFilterRef.current);
       lowCutFilterRef.current.connect(eqWeightRef.current);
       eqWeightRef.current.connect(eqPresenceRef.current);
       eqPresenceRef.current.connect(eqAirRef.current);
-      eqAirRef.current.connect(deEsserFilterRef.current);
-      deEsserFilterRef.current.connect(userNoiseGateRef.current);
-      userNoiseGateRef.current.connect(neuralGainRef.current);
-      console.log('Neural source chain: lowCut -> EQ -> de-esser -> noise gate -> gain');
+      eqAirRef.current.connect(neuralGainRef.current);
+      console.log('Full audio chain connected: MONO BALANCER -> noise cleanup -> low cut(100Hz) -> EQ(Weight/Presence/Air) -> gain');
     } else {
       // Fallback: direct connection
       source.connect(neuralGainRef.current);
@@ -862,44 +828,6 @@ export function useSoulMeditateEngine() {
       return { ...prev, lowCutEnabled: newEnabled };
     });
   }, []);
-  
-  // Update De-esser amount (0-100%)
-  // Reduces harsh "s" and "sh" sounds (sibilance)
-  const updateDeEsser = useCallback((amount: number) => {
-    const ctx = audioContextRef.current;
-    if (!ctx) return;
-    
-    // Clamp to 0-100
-    const clampedAmount = Math.max(0, Math.min(100, amount));
-    
-    // Map amount to de-esser filter gain (0% = 0dB cut, 100% = -12dB cut at 6.5kHz)
-    const cutDb = (clampedAmount / 100) * -12;
-    
-    if (deEsserFilterRef.current) {
-      deEsserFilterRef.current.gain.setValueAtTime(cutDb, ctx.currentTime);
-    }
-    
-    setEqSettings(prev => ({ ...prev, deEsserAmount: clampedAmount }));
-    console.log(`De-esser set to ${clampedAmount}% (${cutDb.toFixed(1)}dB cut at 6.5kHz)`);
-  }, []);
-  
-  // Update Noise Gate threshold (-80 to -20 dB)
-  // Reduces background noise during quiet sections (waveshaper curve)
-  const updateNoiseGate = useCallback((thresholdDb: number) => {
-    const ctx = audioContextRef.current;
-    if (!ctx) return;
-    
-    // Clamp to -80 to -20 dB range
-    const clampedThreshold = Math.max(-80, Math.min(-20, thresholdDb));
-    const thresholdLinear = Math.pow(10, clampedThreshold / 20);
-    
-    if (userNoiseGateRef.current) {
-      userNoiseGateRef.current.curve = createNoiseGateCurve(thresholdLinear);
-    }
-    
-    setEqSettings(prev => ({ ...prev, noiseGateThreshold: clampedThreshold }));
-    console.log(`Noise Gate threshold set to ${clampedThreshold}dB`);
-  }, []);
 
   // Update DSP settings
   const updateDSP = useCallback((newDsp: Partial<DSPSettings>) => {
@@ -1134,9 +1062,7 @@ export function useSoulMeditateEngine() {
     updateDSP,
     updateEQ,
     toggleLowCut,
-    updateDeEsser,
-    updateNoiseGate,
-
+    
     // DAW Actions
     updateDawRegions,
     dawSeek,

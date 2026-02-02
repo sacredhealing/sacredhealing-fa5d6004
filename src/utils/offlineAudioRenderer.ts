@@ -21,10 +21,6 @@ export interface OfflineRenderConfig {
   binaural?: { enabled: boolean; carrierHz: number; beatHz: number; volume: number };
   dsp: DSPSettings;
   masterVolume: number;
-  /** Neural source: de-esser 0-100% */
-  deEsserAmount?: number;
-  /** Neural source: noise gate threshold -80 to -20 dB */
-  noiseGateThreshold?: number;
   onProgress?: (percent: number, step: string) => void;
 }
 
@@ -55,8 +51,6 @@ export async function renderOffline(config: OfflineRenderConfig): Promise<AudioB
     binaural,
     dsp,
     masterVolume,
-    deEsserAmount = 0,
-    noiseGateThreshold = -60,
     onProgress
   } = config;
 
@@ -125,7 +119,7 @@ export async function renderOffline(config: OfflineRenderConfig): Promise<AudioB
 
   // Schedule all audio layers with looping
   for (const layer of layers) {
-    scheduleLoopingBuffer(offlineCtx, layer.buffer, layer.volume, durationSeconds, dspOutput, layer.isNeuralSource ?? false, deEsserAmount, noiseGateThreshold);
+    scheduleLoopingBuffer(offlineCtx, layer.buffer, layer.volume, durationSeconds, dspOutput, layer.isNeuralSource ?? false);
   }
 
   onProgress?.(50, 'Generating healing frequencies...');
@@ -165,25 +159,8 @@ async function fetchAndDecode(ctx: OfflineAudioContext, url: string): Promise<Au
 }
 
 /**
- * Create a waveshaper curve for noise gate - reduces signal below threshold
+ * Schedule a buffer to play with looping to fill the duration
  */
-function createNoiseGateCurve(thresholdLinear: number): Float32Array {
-  const len = 65536;
-  const curve = new Float32Array(len);
-  for (let i = 0; i < len; i++) {
-    const x = (i / (len - 1)) * 2 - 1; // -1 to 1
-    const absX = Math.abs(x);
-    if (absX < thresholdLinear && absX > 1e-10) {
-      // Below threshold: scale down (gate closes)
-      const sign = x >= 0 ? 1 : -1;
-      curve[i] = sign * absX * (absX / thresholdLinear);
-    } else {
-      curve[i] = x;
-    }
-  }
-  return curve;
-}
-
 /**
  * Schedule a buffer to play with looping to fill the duration
  * Uses a single looping buffer source to reduce memory pressure
@@ -195,9 +172,7 @@ function scheduleLoopingBuffer(
   volume: number,
   durationSeconds: number,
   destination: AudioNode,
-  isNeuralSource: boolean = false,
-  deEsserAmount: number = 0,
-  noiseGateThreshold: number = -60
+  isNeuralSource: boolean = false
 ): void {
   // Clamp volume to prevent distortion (leave headroom for mixing)
   const safeVolume = Math.min(volume, 0.85);
@@ -206,34 +181,50 @@ function scheduleLoopingBuffer(
   let outputNode: AudioNode = destination;
   
   if (isNeuralSource) {
-    // Neural source chain: de-esser -> noise gate -> limiter (no compressor)
-    // De-esser: peaking filter cut at 6.5kHz
-    const deEsser = ctx.createBiquadFilter();
-    deEsser.type = 'peaking';
-    deEsser.frequency.value = 6500;
-    deEsser.Q.value = 2;
-    deEsser.gain.value = (deEsserAmount / 100) * -12; // 0% = 0dB, 100% = -12dB cut
-
-    // Noise gate: waveshaper reduces very quiet sections (below threshold)
-    const gateThresholdLinear = Math.pow(10, noiseGateThreshold / 20);
-    const gateCurve = createNoiseGateCurve(gateThresholdLinear);
-    const noiseGate = ctx.createWaveShaper();
-    noiseGate.curve = gateCurve;
-
-    // Limiter: gentle headroom only
+    // STEREO-TO-MONO BALANCER: Fixes unbalanced phone recordings (louder left/right channel)
+    // Splits stereo into L and R, mixes to mono (balanced), outputs to both channels
+    const monoSplitter = ctx.createChannelSplitter(2);
+    const monoMerger = ctx.createChannelMerger(2);
+    const monoMixGainL = ctx.createGain();
+    const monoMixGainR = ctx.createGain();
+    monoMixGainL.gain.value = 0.5; // Mix L+R at 50% each to prevent clipping
+    monoMixGainR.gain.value = 0.5;
+    
+    // Connect: splitter -> both channels sum through gains -> merger (mono to both L and R)
+    monoSplitter.connect(monoMixGainL, 0); // Left channel to mix gain L
+    monoSplitter.connect(monoMixGainR, 1); // Right channel to mix gain R
+    monoMixGainL.connect(monoMerger, 0, 0); // Left mix -> output L
+    monoMixGainL.connect(monoMerger, 0, 1); // Left mix -> output R
+    monoMixGainR.connect(monoMerger, 0, 0); // Right mix -> output L
+    monoMixGainR.connect(monoMerger, 0, 1); // Right mix -> output R
+    
+    console.log('[OfflineRender] Stereo-to-Mono Balancer applied to neural source');
+    
+    // Create compressor matching live engine settings
+    const compressor = ctx.createDynamicsCompressor();
+    compressor.threshold.value = -18; // More conservative threshold
+    compressor.knee.value = 12;       // Wider knee for smoother compression
+    compressor.ratio.value = 4;
+    compressor.attack.value = 0.003;
+    compressor.release.value = 0.25;
+    
+    // Create soft-knee limiter matching live engine
     const limiter = ctx.createDynamicsCompressor();
-    limiter.threshold.value = -3;
-    limiter.knee.value = 6;
-    limiter.ratio.value = 20;
-    limiter.attack.value = 0.001;
-    limiter.release.value = 0.1;
-
-    deEsser.connect(noiseGate);
-    noiseGate.connect(limiter);
+    limiter.threshold.value = -3;  // -3 dB threshold for headroom
+    limiter.knee.value = 6;        // 6 dB soft knee
+    limiter.ratio.value = 20;      // High ratio for limiting
+    limiter.attack.value = 0.001;  // 1ms attack
+    limiter.release.value = 0.1;   // 100ms release
+    
+    // Chain: monoMerger -> compressor -> limiter -> destination
+    monoMerger.connect(compressor);
+    compressor.connect(limiter);
     limiter.connect(destination);
-    outputNode = deEsser;
-
-    console.log(`[OfflineRender] Neural source: de-esser(${deEsserAmount}%) -> noise gate(${noiseGateThreshold}dB) -> limiter`);
+    
+    // Output to mono splitter (start of chain)
+    outputNode = monoSplitter;
+    
+    console.log('[OfflineRender] Neural source chain: MONO BALANCER -> compressor -> limiter -> destination');
   }
   
   // Use a SINGLE looping buffer source instead of creating many to reduce memory

@@ -36,10 +36,6 @@ export interface ExportConfig {
   binauralVolume?: number;
   dsp: DSPSettings;
   masterVolume: number;
-  /** Neural source only: de-esser 0-100% */
-  deEsserAmount?: number;
-  /** Neural source only: noise gate threshold -80 to -20 dB */
-  noiseGateThreshold?: number;
 }
 
 export function useOfflineExport() {
@@ -80,8 +76,6 @@ export function useOfflineExport() {
         } : undefined,
         dsp: config.dsp,
         masterVolume: config.masterVolume,
-        deEsserAmount: config.deEsserAmount ?? 0,
-        noiseGateThreshold: config.noiseGateThreshold ?? -60,
         onProgress: (percent, step) => {
           if (!abortRef.current) {
             setProgress({ percent, step, isExporting: true });
