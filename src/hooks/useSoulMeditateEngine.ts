@@ -172,8 +172,8 @@ export function useSoulMeditateEngine() {
     presence: 3,     // dB gain at 4kHz
     air: 1,          // dB gain at 10kHz+
     lowCutEnabled: true,
-    deEsserAmount: 0,   // 0-100% de-esser intensity
-    noiseGateThreshold: -60 // dB threshold for noise gate (-80 to -20)
+    deEsserAmount: 0,      // 0-100% sibilance reduction
+    noiseGateThreshold: -60 // -80 to -20 dB
   });
 
   // Initialize audio context
@@ -901,6 +901,7 @@ export function useSoulMeditateEngine() {
     console.log(`Noise Gate threshold set to ${clampedThreshold}dB`);
   }, []);
 
+  // Update DSP settings
   const updateDSP = useCallback((newDsp: Partial<DSPSettings>) => {
     setDSP(prev => {
       const updated = { ...prev, ...newDsp };
@@ -1135,7 +1136,7 @@ export function useSoulMeditateEngine() {
     toggleLowCut,
     updateDeEsser,
     updateNoiseGate,
-    
+
     // DAW Actions
     updateDawRegions,
     dawSeek,

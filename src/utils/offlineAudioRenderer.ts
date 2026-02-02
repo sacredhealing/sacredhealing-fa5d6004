@@ -21,9 +21,10 @@ export interface OfflineRenderConfig {
   binaural?: { enabled: boolean; carrierHz: number; beatHz: number; volume: number };
   dsp: DSPSettings;
   masterVolume: number;
-  // Neural source processing options
-  deEsserAmount?: number;        // 0-100% de-esser intensity
-  noiseGateThreshold?: number;   // -80 to -20 dB threshold
+  /** Neural source: de-esser 0-100% */
+  deEsserAmount?: number;
+  /** Neural source: noise gate threshold -80 to -20 dB */
+  noiseGateThreshold?: number;
   onProgress?: (percent: number, step: string) => void;
 }
 
@@ -124,16 +125,7 @@ export async function renderOffline(config: OfflineRenderConfig): Promise<AudioB
 
   // Schedule all audio layers with looping
   for (const layer of layers) {
-    scheduleLoopingBuffer(
-      offlineCtx, 
-      layer.buffer, 
-      layer.volume, 
-      durationSeconds, 
-      dspOutput, 
-      layer.isNeuralSource ?? false,
-      deEsserAmount,
-      noiseGateThreshold
-    );
+    scheduleLoopingBuffer(offlineCtx, layer.buffer, layer.volume, durationSeconds, dspOutput, layer.isNeuralSource ?? false, deEsserAmount, noiseGateThreshold);
   }
 
   onProgress?.(50, 'Generating healing frequencies...');
@@ -194,9 +186,6 @@ function createNoiseGateCurve(thresholdLinear: number): Float32Array {
 
 /**
  * Schedule a buffer to play with looping to fill the duration
- */
-/**
- * Schedule a buffer to play with looping to fill the duration
  * Uses a single looping buffer source to reduce memory pressure
  * Includes dynamics processing to match live preview chain
  */
@@ -224,13 +213,13 @@ function scheduleLoopingBuffer(
     deEsser.frequency.value = 6500;
     deEsser.Q.value = 2;
     deEsser.gain.value = (deEsserAmount / 100) * -12; // 0% = 0dB, 100% = -12dB cut
-    
+
     // Noise gate: waveshaper reduces very quiet sections (below threshold)
     const gateThresholdLinear = Math.pow(10, noiseGateThreshold / 20);
     const gateCurve = createNoiseGateCurve(gateThresholdLinear);
     const noiseGate = ctx.createWaveShaper();
     noiseGate.curve = gateCurve;
-    
+
     // Limiter: gentle headroom only
     const limiter = ctx.createDynamicsCompressor();
     limiter.threshold.value = -3;
@@ -238,12 +227,12 @@ function scheduleLoopingBuffer(
     limiter.ratio.value = 20;
     limiter.attack.value = 0.001;
     limiter.release.value = 0.1;
-    
+
     deEsser.connect(noiseGate);
     noiseGate.connect(limiter);
     limiter.connect(destination);
     outputNode = deEsser;
-    
+
     console.log(`[OfflineRender] Neural source: de-esser(${deEsserAmount}%) -> noise gate(${noiseGateThreshold}dB) -> limiter`);
   }
   

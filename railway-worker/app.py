@@ -461,14 +461,19 @@ def process_audio_file(audio_path, frequency_hz, binaural_type, style, duration,
         is_stereo = False
         print(f"[PROCESS] Neural source shape: {audio.shape}, is_stereo: {is_stereo}")
         
-        # Noise reduction: only apply when EXPLICITLY requested. Auto noise reduction on
-        # uploads caused chaos (artifacts, pumping) on meditation/vocal audio.
-        if noise_reduction_level:
-            reduction_level = noise_reduction_level
+        # For vocal recordings (mobile recordings), always apply noise reduction
+        if is_vocal_recording:
+            print(f"[PROCESS] Vocal recording detected - applying automatic noise reduction")
+            
+            # Apply noise reduction (neural source is always mono)
+            reduction_level = noise_reduction_level or 'aggressive'
             audio = apply_noise_reduction(audio, sr, reduction_level, preserve_stereo=False)
             print(f"[PROCESS] Applied noise reduction (level: {reduction_level}) to mono neural source")
-        elif is_vocal_recording:
-            print(f"[PROCESS] Vocal recording detected - skipping noise reduction (preserves audio quality)")
+        else:
+            # Apply noise reduction if requested (neural source is always mono)
+            if noise_reduction_level:
+                audio = apply_noise_reduction(audio, sr, noise_reduction_level, preserve_stereo=False)
+                print(f"[PROCESS] Applied noise reduction (level: {noise_reduction_level}) to mono neural source")
         
         # De-esser (neural source only): optional, 0-100%
         if de_esser_amount is not None and de_esser_amount > 0:
