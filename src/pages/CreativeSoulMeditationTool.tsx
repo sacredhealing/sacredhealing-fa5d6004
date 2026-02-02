@@ -522,14 +522,10 @@ export default function CreativeSoulMeditationTool() {
               lowCutEnabled={engine.eqSettings.lowCutEnabled}
               onLowCutToggle={engine.toggleLowCut}
               onEqChange={engine.updateEQ}
-              onDeEsserChange={engine.updateDeEsser}
-              onNoiseGateChange={engine.updateNoiseGate}
               eqValues={{
                 weight: engine.eqSettings.weight,
                 presence: engine.eqSettings.presence,
-                air: engine.eqSettings.air,
-                deEsserAmount: engine.eqSettings.deEsserAmount,
-                noiseGateThreshold: engine.eqSettings.noiseGateThreshold
+                air: engine.eqSettings.air
               }}
             />
           </div>
