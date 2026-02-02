@@ -392,29 +392,22 @@ export function useSoulMeditateEngine() {
     // Create source node and connect through noise cleanup chain
     const source = audioContextRef.current.createMediaElementSource(audio);
 
-    // Connect through full chain: source -> noise cleanup -> EQ -> low cut -> gain
-    // Chain: source -> highpass -> lowpass -> compressor -> gate -> lowCut -> weight -> presence -> air -> gain
+    // Connect neural source: source -> lowCut -> EQ -> gain
+    // NOTE: Noise gate and aggressive compressor were removed - they caused chaos on uploaded
+    // meditation/vocal audio (pumping, artifacts). Use clean path: gentle low-cut only.
     if (
-      noiseHighPassRef.current &&
-      noiseLowPassRef.current &&
-      noiseCompressorRef.current &&
-      noiseGateRef.current &&
       lowCutFilterRef.current &&
       eqWeightRef.current &&
       eqPresenceRef.current &&
       eqAirRef.current &&
       neuralGainRef.current
     ) {
-      source.connect(noiseHighPassRef.current);
-      noiseHighPassRef.current.connect(noiseLowPassRef.current);
-      noiseLowPassRef.current.connect(noiseCompressorRef.current);
-      noiseCompressorRef.current.connect(noiseGateRef.current);
-      noiseGateRef.current.connect(lowCutFilterRef.current);
+      source.connect(lowCutFilterRef.current);
       lowCutFilterRef.current.connect(eqWeightRef.current);
       eqWeightRef.current.connect(eqPresenceRef.current);
       eqPresenceRef.current.connect(eqAirRef.current);
       eqAirRef.current.connect(neuralGainRef.current);
-      console.log('Full audio chain connected: noise cleanup -> low cut(100Hz) -> EQ(Weight/Presence/Air) -> gain');
+      console.log('Neural source chain: low cut(100Hz) -> EQ(Weight/Presence/Air) -> gain (noise gate/compressor bypassed)');
     } else {
       // Fallback: direct connection
       source.connect(neuralGainRef.current);

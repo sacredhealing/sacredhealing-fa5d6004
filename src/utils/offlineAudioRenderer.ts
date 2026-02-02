@@ -181,15 +181,8 @@ function scheduleLoopingBuffer(
   let outputNode: AudioNode = destination;
   
   if (isNeuralSource) {
-    // Create compressor matching live engine settings
-    const compressor = ctx.createDynamicsCompressor();
-    compressor.threshold.value = -18; // More conservative threshold
-    compressor.knee.value = 12;       // Wider knee for smoother compression
-    compressor.ratio.value = 4;
-    compressor.attack.value = 0.003;
-    compressor.release.value = 0.25;
-    
-    // Create soft-knee limiter matching live engine
+    // Gentle limiter only - no aggressive compressor. Previous compressor caused chaos
+    // (pumping, artifacts) on uploaded meditation/vocal audio.
     const limiter = ctx.createDynamicsCompressor();
     limiter.threshold.value = -3;  // -3 dB threshold for headroom
     limiter.knee.value = 6;        // 6 dB soft knee
@@ -197,12 +190,10 @@ function scheduleLoopingBuffer(
     limiter.attack.value = 0.001;  // 1ms attack
     limiter.release.value = 0.1;   // 100ms release
     
-    // Chain: source -> compressor -> limiter -> destination
-    compressor.connect(limiter);
     limiter.connect(destination);
-    outputNode = compressor;
+    outputNode = limiter;
     
-    console.log('[OfflineRender] Neural source dynamics chain applied (compressor + limiter)');
+    console.log('[OfflineRender] Neural source: gentle limiter only (no compressor)');
   }
   
   // Use a SINGLE looping buffer source instead of creating many to reduce memory
