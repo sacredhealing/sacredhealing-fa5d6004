@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Waves, Zap } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
+import { Waves, Zap, VolumeX } from 'lucide-react';
 import AnalogKnob from './AnalogKnob';
 
 interface EQBand {
@@ -25,6 +25,9 @@ interface VirtualChannelStripProps {
     presence: number;
     air: number;
   };
+  /** Noise gate threshold -80 to -20 dB. Last in chain, reduces hiss/background. */
+  noiseGateThreshold?: number;
+  onNoiseGateChange?: (thresholdDb: number) => void;
 }
 
 const DEFAULT_BANDS: EQBand[] = [
@@ -61,6 +64,8 @@ export default function VirtualChannelStrip({
   onLowCutToggle,
   onEqChange,
   eqValues,
+  noiseGateThreshold = -60,
+  onNoiseGateChange,
 }: VirtualChannelStripProps) {
   // Initialize bands with external values or defaults
   const [bands, setBands] = useState<EQBand[]>(() => {
@@ -186,6 +191,32 @@ export default function VirtualChannelStrip({
             </div>
           ))}
         </div>
+
+        {/* Noise Gate - Last in chain, reduces hiss/background (no stereo change) */}
+        {onNoiseGateChange && (
+          <div className="mt-6 pt-4 border-t border-slate-800/50">
+            <div className="flex items-center gap-3">
+              <VolumeX className="w-4 h-4 text-slate-400 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-slate-400 uppercase tracking-wider">Noise Gate</span>
+                  <span className="text-cyan-400 font-mono">{noiseGateThreshold} dB</span>
+                </div>
+                <Slider
+                  value={[noiseGateThreshold]}
+                  onValueChange={([v]) => onNoiseGateChange(v)}
+                  min={-80}
+                  max={-20}
+                  step={1}
+                  className="w-full"
+                />
+                <p className="text-[10px] text-slate-500 mt-1 italic">
+                  Reduces background hiss below threshold • Last in chain
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Footer Info */}
         <div className="mt-6 pt-4 border-t border-slate-800/50 flex items-center justify-between text-xs text-slate-500">

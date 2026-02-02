@@ -527,6 +527,8 @@ export default function CreativeSoulMeditationTool() {
                 presence: engine.eqSettings.presence,
                 air: engine.eqSettings.air
               }}
+              noiseGateThreshold={engine.eqSettings.noiseGateThreshold}
+              onNoiseGateChange={engine.updateNoiseGate}
             />
           </div>
         )}
