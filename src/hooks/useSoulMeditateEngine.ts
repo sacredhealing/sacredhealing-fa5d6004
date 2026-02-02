@@ -99,8 +99,8 @@ export function useSoulMeditateEngine() {
   // Low cut filter (100Hz high-pass)
   const lowCutFilterRef = useRef<BiquadFilterNode | null>(null);
 
-  // User-controllable noise gate (WaveShaper) - last in chain, reduces hiss below threshold
-  const userNoiseGateRef = useRef<WaveShaperNode | null>(null);
+  // User-controllable noise gate (AudioWorklet) - professional envelope-following gate
+  const userNoiseGateRef = useRef<AudioNode | null>(null);
   
   const atmosphereSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const atmosphereAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -167,7 +167,11 @@ export function useSoulMeditateEngine() {
     presence: 3,     // dB gain at 4kHz
     air: 1,          // dB gain at 10kHz+
     lowCutEnabled: true,
-    noiseGateThreshold: -45,  // -80 to -20 dB, reduces hiss below threshold (higher = more gating)
+    noiseGateThreshold: -40,   // -80 to -20 dB
+    noiseGateAttack: 5,        // ms, 1-50
+    noiseGateRelease: 120,     // ms, 50-500
+    noiseGateRange: -72,       // dB reduction when closed, -96 to -24
+    noiseGateEnabled: true,
   });
 
   // Initialize audio context
@@ -269,12 +273,28 @@ export function useSoulMeditateEngine() {
     
     console.log('3-Band Parametric EQ initialized: Weight(400Hz), Presence(4kHz), Air(10kHz+)');
 
-    // User noise gate (WaveShaper) - mutes signal below threshold, last in chain
-    const gateThresholdLinear = Math.pow(10, eqSettings.noiseGateThreshold / 20);
-    userNoiseGateRef.current = ctx.createWaveShaper();
-    userNoiseGateRef.current.curve = createNoiseGateCurve(gateThresholdLinear);
-    userNoiseGateRef.current.oversample = '2x';
-    console.log('Noise gate initialized: threshold', eqSettings.noiseGateThreshold, 'dB');
+    // Professional noise gate (AudioWorklet) - envelope-following with attack/release
+    try {
+      await ctx.audioWorklet.addModule('/noiseGateProcessor.js');
+      const gateNode = new AudioWorkletNode(ctx, 'noise-gate-processor', {
+        numberOfInputs: 1,
+        numberOfOutputs: 1,
+        parameterData: {
+          threshold: eqSettings.noiseGateThreshold,
+          attack: eqSettings.noiseGateAttack / 1000,
+          release: eqSettings.noiseGateRelease / 1000,
+          range: eqSettings.noiseGateRange,
+          enabled: eqSettings.noiseGateEnabled ? 1 : 0,
+        },
+      });
+      userNoiseGateRef.current = gateNode;
+      console.log('Noise gate initialized: threshold', eqSettings.noiseGateThreshold, 'dB, attack', eqSettings.noiseGateAttack, 'ms, release', eqSettings.noiseGateRelease, 'ms');
+    } catch (e) {
+      console.error('Noise gate worklet failed, using bypass:', e);
+      const bypassGain = ctx.createGain();
+      bypassGain.gain.value = 1;
+      userNoiseGateRef.current = bypassGain;
+    }
 
     atmosphereGainRef.current = ctx.createGain();
     atmosphereGainRef.current.gain.value = atmosphereLayer.volume;
@@ -372,18 +392,6 @@ export function useSoulMeditateEngine() {
       }
     }
     return buffer;
-  }
-
-  // Noise gate curve: mutes signal below threshold (reduces background hiss)
-  function createNoiseGateCurve(thresholdLinear: number): Float32Array {
-    const len = 65536;
-    const curve = new Float32Array(len);
-    for (let i = 0; i < len; i++) {
-      const x = (i / (len - 1)) * 2 - 1;
-      const absX = Math.abs(x);
-      curve[i] = absX < thresholdLinear ? 0 : x;
-    }
-    return curve;
   }
 
   // Create warmth curve (soft saturation)
@@ -833,16 +841,46 @@ export function useSoulMeditateEngine() {
     console.log(`EQ ${bandId} set to ${clampedValue}dB`);
   }, []);
   
-  // Update noise gate threshold (-80 to -20 dB) - reduces hiss below threshold
-  const updateNoiseGate = useCallback((thresholdDb: number) => {
+  // Update noise gate parameters (pass object or single number for threshold)
+  const updateNoiseGate = useCallback((params: number | {
+    threshold?: number;
+    attack?: number;
+    release?: number;
+    range?: number;
+    enabled?: boolean;
+  }) => {
+    const opts = typeof params === 'number' ? { threshold: params } : params;
     const ctx = audioContextRef.current;
-    if (!ctx) return;
-    const clamped = Math.max(-80, Math.min(-20, thresholdDb));
-    const thresholdLinear = Math.pow(10, clamped / 20);
-    if (userNoiseGateRef.current) {
-      userNoiseGateRef.current.curve = createNoiseGateCurve(thresholdLinear);
+    const node = userNoiseGateRef.current;
+    if (!ctx || !node || !('parameters' in node)) return;
+
+    const nodeParams = (node as AudioWorkletNode).parameters;
+    const now = ctx.currentTime;
+
+    if (opts.threshold !== undefined) {
+      const v = Math.max(-80, Math.min(-10, opts.threshold));
+      nodeParams.get('threshold')!.setValueAtTime(v, now);
+      setEqSettings(prev => ({ ...prev, noiseGateThreshold: v }));
     }
-    setEqSettings(prev => ({ ...prev, noiseGateThreshold: clamped }));
+    if (opts.attack !== undefined) {
+      const v = Math.max(1, Math.min(50, opts.attack));
+      nodeParams.get('attack')!.setValueAtTime(v / 1000, now);
+      setEqSettings(prev => ({ ...prev, noiseGateAttack: v }));
+    }
+    if (opts.release !== undefined) {
+      const v = Math.max(50, Math.min(500, opts.release));
+      nodeParams.get('release')!.setValueAtTime(v / 1000, now);
+      setEqSettings(prev => ({ ...prev, noiseGateRelease: v }));
+    }
+    if (opts.range !== undefined) {
+      const v = Math.max(-96, Math.min(-6, opts.range));
+      nodeParams.get('range')!.setValueAtTime(v, now);
+      setEqSettings(prev => ({ ...prev, noiseGateRange: v }));
+    }
+    if (opts.enabled !== undefined) {
+      nodeParams.get('enabled')!.setValueAtTime(opts.enabled ? 1 : 0, now);
+      setEqSettings(prev => ({ ...prev, noiseGateEnabled: opts.enabled }));
+    }
   }, []);
 
   // Toggle low cut filter (100Hz high-pass)

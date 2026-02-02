@@ -25,9 +25,15 @@ interface VirtualChannelStripProps {
     presence: number;
     air: number;
   };
-  /** Noise gate threshold -80 to -20 dB. Last in chain, reduces hiss/background. */
-  noiseGateThreshold?: number;
-  onNoiseGateChange?: (thresholdDb: number) => void;
+  /** Noise gate - professional envelope-following gate */
+  noiseGate?: {
+    threshold: number;   // -80 to -10 dB
+    attack: number;     // 1-50 ms
+    release: number;   // 50-500 ms
+    range: number;     // -96 to -6 dB reduction when closed
+    enabled: boolean;
+  };
+  onNoiseGateChange?: (params: { threshold?: number; attack?: number; release?: number; range?: number; enabled?: boolean }) => void;
 }
 
 const DEFAULT_BANDS: EQBand[] = [
@@ -64,7 +70,7 @@ export default function VirtualChannelStrip({
   onLowCutToggle,
   onEqChange,
   eqValues,
-  noiseGateThreshold = -60,
+  noiseGate,
   onNoiseGateChange,
 }: VirtualChannelStripProps) {
   // Initialize bands with external values or defaults
@@ -192,29 +198,84 @@ export default function VirtualChannelStrip({
           ))}
         </div>
 
-        {/* Noise Gate - Last in chain, reduces hiss/background (no stereo change) */}
-        {onNoiseGateChange && (
-          <div className="mt-6 pt-4 border-t border-slate-800/50">
-            <div className="flex items-center gap-3">
-              <VolumeX className="w-4 h-4 text-slate-400 shrink-0" />
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-slate-400 uppercase tracking-wider">Noise Gate</span>
-                  <span className="text-cyan-400 font-mono">{noiseGateThreshold} dB</span>
+        {/* Professional Noise Gate - envelope-following, last in chain */}
+        {onNoiseGateChange && noiseGate && (
+          <div className="mt-6 pt-4 border-t border-slate-800/50 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <VolumeX className="w-4 h-4 text-slate-400" />
+                <span className="text-slate-400 uppercase tracking-wider text-xs font-bold">Noise Gate</span>
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => onNoiseGateChange({ enabled: !noiseGate.enabled })}
+                className={`text-xs font-mono ${noiseGate.enabled ? 'text-cyan-400' : 'text-slate-500'}`}
+              >
+                {noiseGate.enabled ? 'ON' : 'OFF'}
+              </Button>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <div className="flex justify-between text-[10px] mb-0.5">
+                  <span className="text-slate-500">Threshold</span>
+                  <span className="text-cyan-400 font-mono">{noiseGate.threshold} dB</span>
                 </div>
                 <Slider
-                  value={[noiseGateThreshold]}
-                  onValueChange={([v]) => onNoiseGateChange(v)}
+                  value={[noiseGate.threshold]}
+                  onValueChange={([v]) => onNoiseGateChange({ threshold: v })}
                   min={-80}
-                  max={-20}
+                  max={-10}
                   step={1}
                   className="w-full"
                 />
-                <p className="text-[10px] text-slate-500 mt-1 italic">
-                  Reduces background hiss below threshold • Last in chain
-                </p>
+              </div>
+              <div>
+                <div className="flex justify-between text-[10px] mb-0.5">
+                  <span className="text-slate-500">Range</span>
+                  <span className="text-cyan-400 font-mono">{noiseGate.range} dB</span>
+                </div>
+                <Slider
+                  value={[noiseGate.range]}
+                  onValueChange={([v]) => onNoiseGateChange({ range: v })}
+                  min={-96}
+                  max={-24}
+                  step={1}
+                  className="w-full"
+                />
+              </div>
+              <div>
+                <div className="flex justify-between text-[10px] mb-0.5">
+                  <span className="text-slate-500">Attack</span>
+                  <span className="text-cyan-400 font-mono">{noiseGate.attack} ms</span>
+                </div>
+                <Slider
+                  value={[noiseGate.attack]}
+                  onValueChange={([v]) => onNoiseGateChange({ attack: v })}
+                  min={1}
+                  max={50}
+                  step={1}
+                  className="w-full"
+                />
+              </div>
+              <div>
+                <div className="flex justify-between text-[10px] mb-0.5">
+                  <span className="text-slate-500">Release</span>
+                  <span className="text-cyan-400 font-mono">{noiseGate.release} ms</span>
+                </div>
+                <Slider
+                  value={[noiseGate.release]}
+                  onValueChange={([v]) => onNoiseGateChange({ release: v })}
+                  min={50}
+                  max={500}
+                  step={5}
+                  className="w-full"
+                />
               </div>
             </div>
+            <p className="text-[10px] text-slate-500 italic">
+              Envelope-following gate • Reduces hiss in quiet sections • Last in chain
+            </p>
           </div>
         )}
 

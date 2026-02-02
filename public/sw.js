@@ -3,7 +3,8 @@ const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/icon-512x512.jpg',
-  '/manifest.json'
+  '/manifest.json',
+  '/noiseGateProcessor.js'
 ];
 
 // Install event - cache static assets
