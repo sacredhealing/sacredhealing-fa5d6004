@@ -1,6 +1,8 @@
 # PWA Screenshots for Google Play
 
-Add your app screenshots here for the PWA manifest and Google Play Store submission.
+Placeholder screenshots (scaled from app icon) are included so manifest links work. **Replace with real app screenshots** before publishing to Google Play.
+
+For IARC age rating and related_applications (native app ID), add those to the manifest after completing IARC certification and Play Store publishing.
 
 ## Required images
 
