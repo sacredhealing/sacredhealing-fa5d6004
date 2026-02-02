@@ -30,7 +30,106 @@
       "purpose": "maskable"
     }
   ],
-  "screenshots": [],
+  "screenshots": [
+    {
+      "src": "/screenshots/home-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "label": "Home - Today's Sacred Practice",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/screenshots/meditations-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "label": "Guided meditations library",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/screenshots/breathing-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "label": "Breathing exercises",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/screenshots/healing-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "label": "Healing audio library",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/screenshots/music-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "label": "Music - Browse tracks by genre and mood",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/screenshots/explore-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "label": "Explore - Healing Journey and What We Offer",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/screenshots/community-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "label": "Community - Chat and Go Live",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/screenshots/profile-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "label": "Profile - Badges, streak, and premium upgrade",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/screenshots/membership-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "label": "30 Days of Sacred Healing - Membership",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/screenshots/home-narrow.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "label": "Home screen",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/screenshots/meditations-narrow.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "label": "Meditations on mobile",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/screenshots/music-narrow.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "label": "Music on mobile",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/screenshots/profile-narrow.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "label": "Profile on mobile",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/screenshots/community-narrow.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "label": "Community on mobile",
+      "form_factor": "narrow"
+    }
+  ],
   "shortcuts": [
     {
       "name": "Meditate",
@@ -62,5 +161,18 @@
         "audio/mp4": [".m4a"]
       }
     }
-  ]
+  ],
+  "share_target": {
+    "action": "/creative-soul/meditation",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "files": [
+        {
+          "name": "audio",
+          "accept": ["audio/mpeg", "audio/wav", "audio/mp4"]
+        }
+      ]
+    }
+  }
 }
