@@ -5,6 +5,7 @@ import numpy as np
 import librosa
 import soundfile as sf
 import noisereduce as nr
+from scipy import signal as scipy_signal
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from pydub import AudioSegment
@@ -264,6 +265,38 @@ def apply_noise_reduction(audio, sample_rate, reduction_level='medium', preserve
         return audio  # Return original if reduction fails
 
 
+def apply_de_esser(audio, sr, amount_percent=0):
+    """Apply de-esser (EQ cut at 6.5kHz) to neural source. amount 0-100 -> 0 to -12dB cut."""
+    if amount_percent <= 0:
+        return audio
+    # Use notch filter at 6.5kHz - Q=2 for sibilance band
+    b, a = scipy_signal.iirnotch(6500.0, 2.0, fs=sr)
+    # Mix dry with filtered: more amount = more cut
+    wet = scipy_signal.filtfilt(b, a, audio)
+    mix = 1 - (amount_percent / 100.0)  # 0% = all dry, 100% = all filtered (max cut)
+    result = audio * mix + wet * (1 - mix)
+    print(f"[DE-ESSER] Applied {amount_percent}% at 6.5kHz")
+    return result.astype(np.float32)
+
+
+def apply_noise_gate(audio, threshold_db=-60):
+    """Apply noise gate - reduce signal below threshold (waveshaper-style)."""
+    if threshold_db >= -20:
+        return audio
+    threshold_linear = 10 ** (threshold_db / 20)
+    abs_audio = np.abs(audio)
+    # Soft gate: when |x| < threshold, scale toward 0 (quadratic curve)
+    with np.errstate(divide='ignore', invalid='ignore'):
+        scaled = np.where(
+            (abs_audio < threshold_linear) & (abs_audio > 1e-10),
+            abs_audio * (abs_audio / threshold_linear),
+            abs_audio
+        )
+    out = np.sign(audio) * np.where(abs_audio < 1e-10, 0, scaled)
+    print(f"[NOISE GATE] Applied threshold {threshold_db}dB")
+    return out.astype(np.float32)
+
+
 def balance_stereo(audio, sample_rate):
     """
     Balance stereo audio using FFmpeg-style channel duplication.
@@ -406,7 +439,8 @@ def download_audio(url):
 
 
 def process_audio_file(audio_path, frequency_hz, binaural_type, style, duration, 
-                      noise_reduction_level=None, sample_rate=44100, is_vocal_recording=False):
+                      noise_reduction_level=None, sample_rate=44100, is_vocal_recording=False,
+                      de_esser_amount=None, noise_gate_threshold=None):
     """Process audio file with all effects, including automatic noise reduction and stereo balancing for vocal recordings"""
     try:
         # Load audio - keep stereo if available
@@ -435,6 +469,14 @@ def process_audio_file(audio_path, frequency_hz, binaural_type, style, duration,
             print(f"[PROCESS] Applied noise reduction (level: {reduction_level}) to mono neural source")
         elif is_vocal_recording:
             print(f"[PROCESS] Vocal recording detected - skipping noise reduction (preserves audio quality)")
+        
+        # De-esser (neural source only): optional, 0-100%
+        if de_esser_amount is not None and de_esser_amount > 0:
+            audio = apply_de_esser(audio, sr, de_esser_amount)
+        
+        # Noise gate (neural source only): optional, -80 to -20 dB
+        if noise_gate_threshold is not None and noise_gate_threshold < -20:
+            audio = apply_noise_gate(audio, noise_gate_threshold)
         
         # Get audio length for tone generation (neural source is always mono)
         audio_length = len(audio) / sr
@@ -654,6 +696,8 @@ def process_audio():
         direct_urls = payload.get('direct_urls', [])
         noise_reduction_level = payload.get('noise_reduction_level')
         is_vocal_recording = payload.get('is_vocal_recording', False)  # Flag for mobile/vocal recordings
+        de_esser_amount = payload.get('de_esser_amount')  # 0-100% for neural source
+        noise_gate_threshold = payload.get('noise_gate_threshold')  # -80 to -20 dB for neural source
         
         # Process in background thread
         def process_job():
@@ -675,10 +719,11 @@ def process_audio():
                 
                 send_callback(callback_url, callback_api_key, job_id, 'processing', 25)
                 
-                # Process audio (with automatic noise reduction and stereo balancing for vocal recordings)
+                # Process audio (with optional de-esser and noise gate for neural source)
                 processed_audio, sr = process_audio_file(
                     audio_path, frequency_hz, binaural or 'none', style, duration, 
-                    noise_reduction_level, sample_rate=44100, is_vocal_recording=is_vocal_recording
+                    noise_reduction_level, sample_rate=44100, is_vocal_recording=is_vocal_recording,
+                    de_esser_amount=de_esser_amount, noise_gate_threshold=noise_gate_threshold
                 )
                 
                 send_callback(callback_url, callback_api_key, job_id, 'processing', 55)

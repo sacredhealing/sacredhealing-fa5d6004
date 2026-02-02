@@ -189,7 +189,9 @@ export default function CreativeSoulMeditationTool() {
       binauralBeatHz: engine.frequencies.binaural.enabled ? brainwaveFreq : undefined,
       binauralVolume: engine.binauralVolume,
       dsp: dspSettings,
-      masterVolume: engine.masterVolume
+      masterVolume: engine.masterVolume,
+      deEsserAmount: engine.eqSettings.deEsserAmount,
+      noiseGateThreshold: engine.eqSettings.noiseGateThreshold,
     });
 
     if (result) {

@@ -104,8 +104,8 @@ export function useSoulMeditateEngine() {
   const deEsserCompressorRef = useRef<DynamicsCompressorNode | null>(null);
   const deEsserGainRef = useRef<GainNode | null>(null);
   
-  // User-controllable Noise Gate (expander for background noise)
-  const userNoiseGateRef = useRef<DynamicsCompressorNode | null>(null);
+  // User-controllable Noise Gate (waveshaper reduces signal below threshold)
+  const userNoiseGateRef = useRef<WaveShaperNode | null>(null);
   
   const atmosphereSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const atmosphereAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -275,34 +275,20 @@ export function useSoulMeditateEngine() {
     
     console.log('3-Band Parametric EQ initialized: Weight(400Hz), Presence(4kHz), Air(10kHz+)');
     
-    // Create De-esser (sibilance reduction - targets 5-8kHz "s" and "sh" sounds)
-    // Uses a band-pass filter to isolate sibilance, then compresses it
+    // Create De-esser (sibilance reduction - simple EQ cut at 6.5kHz, no compressor)
+    // User controls amount 0-100% -> 0 to -12dB cut
     deEsserFilterRef.current = ctx.createBiquadFilter();
     deEsserFilterRef.current.type = 'peaking';
-    deEsserFilterRef.current.frequency.value = 6500; // Target "s" sounds
+    deEsserFilterRef.current.frequency.value = 6500; // Target "s" and "sh" sounds
     deEsserFilterRef.current.Q.value = 2;
-    deEsserFilterRef.current.gain.value = 0; // No cut initially
+    deEsserFilterRef.current.gain.value = (eqSettings.deEsserAmount / 100) * -12;
     
-    deEsserCompressorRef.current = ctx.createDynamicsCompressor();
-    deEsserCompressorRef.current.threshold.value = -20;
-    deEsserCompressorRef.current.knee.value = 6;
-    deEsserCompressorRef.current.ratio.value = 8; // Strong compression for sibilance
-    deEsserCompressorRef.current.attack.value = 0.001; // Very fast attack
-    deEsserCompressorRef.current.release.value = 0.05; // Quick release
+    console.log('De-esser initialized: 6.5kHz peaking filter (no compressor)');
     
-    deEsserGainRef.current = ctx.createGain();
-    deEsserGainRef.current.gain.value = 1;
-    
-    console.log('De-esser initialized: 6.5kHz sibilance reduction');
-    
-    // Create User-controllable Noise Gate (expander)
-    // Acts as an expander to reduce background noise during quiet sections
-    userNoiseGateRef.current = ctx.createDynamicsCompressor();
-    userNoiseGateRef.current.threshold.value = eqSettings.noiseGateThreshold; // User adjustable
-    userNoiseGateRef.current.knee.value = 10;
-    userNoiseGateRef.current.ratio.value = 12; // Strong expansion effect
-    userNoiseGateRef.current.attack.value = 0.001;
-    userNoiseGateRef.current.release.value = 0.1;
+    // Create User-controllable Noise Gate (waveshaper - reduces signal below threshold)
+    const gateThresholdLinear = Math.pow(10, eqSettings.noiseGateThreshold / 20);
+    userNoiseGateRef.current = ctx.createWaveShaper();
+    userNoiseGateRef.current.curve = createNoiseGateCurve(gateThresholdLinear);
     
     console.log('User Noise Gate initialized: threshold', eqSettings.noiseGateThreshold, 'dB');
 
@@ -417,6 +403,23 @@ export function useSoulMeditateEngine() {
     return curve as Float32Array | null;
   }
 
+  // Create noise gate curve - reduces signal below threshold
+  function createNoiseGateCurve(thresholdLinear: number): Float32Array {
+    const len = 65536;
+    const curve = new Float32Array(len);
+    for (let i = 0; i < len; i++) {
+      const x = (i / (len - 1)) * 2 - 1;
+      const absX = Math.abs(x);
+      if (absX < thresholdLinear && absX > 1e-10) {
+        const sign = x >= 0 ? 1 : -1;
+        curve[i] = sign * absX * (absX / thresholdLinear);
+      } else {
+        curve[i] = x;
+      }
+    }
+    return curve;
+  }
+
   // Load neural source (user uploaded audio)
   const loadNeuralSource = useCallback(async (file: File | string) => {
     // Preserve file reference for later use (TypeScript narrowing workaround)
@@ -460,22 +463,25 @@ export function useSoulMeditateEngine() {
     // Create source node and connect through noise cleanup chain
     const source = audioContextRef.current.createMediaElementSource(audio);
 
-    // Connect neural source: source -> lowCut -> EQ -> gain
-    // NOTE: Noise gate, de-esser and aggressive compressor were removed - they caused chaos on uploaded
-    // meditation/vocal audio (pumping, artifacts). Use clean path: gentle low-cut only.
+    // Connect neural source: source -> lowCut -> EQ -> de-esser -> noise gate -> gain
+    // De-esser and noise gate are user-controlled via VirtualChannelStrip (no compressor)
     if (
       lowCutFilterRef.current &&
       eqWeightRef.current &&
       eqPresenceRef.current &&
       eqAirRef.current &&
+      deEsserFilterRef.current &&
+      userNoiseGateRef.current &&
       neuralGainRef.current
     ) {
       source.connect(lowCutFilterRef.current);
       lowCutFilterRef.current.connect(eqWeightRef.current);
       eqWeightRef.current.connect(eqPresenceRef.current);
       eqPresenceRef.current.connect(eqAirRef.current);
-      eqAirRef.current.connect(neuralGainRef.current);
-      console.log('Neural source chain: low cut(100Hz) -> EQ(Weight/Presence/Air) -> gain (noise gate/de-esser bypassed)');
+      eqAirRef.current.connect(deEsserFilterRef.current);
+      deEsserFilterRef.current.connect(userNoiseGateRef.current);
+      userNoiseGateRef.current.connect(neuralGainRef.current);
+      console.log('Neural source chain: lowCut -> EQ -> de-esser -> noise gate -> gain');
     } else {
       // Fallback: direct connection
       source.connect(neuralGainRef.current);
@@ -878,16 +884,17 @@ export function useSoulMeditateEngine() {
   }, []);
   
   // Update Noise Gate threshold (-80 to -20 dB)
-  // Reduces background noise during quiet sections
+  // Reduces background noise during quiet sections (waveshaper curve)
   const updateNoiseGate = useCallback((thresholdDb: number) => {
     const ctx = audioContextRef.current;
     if (!ctx) return;
     
     // Clamp to -80 to -20 dB range
     const clampedThreshold = Math.max(-80, Math.min(-20, thresholdDb));
+    const thresholdLinear = Math.pow(10, clampedThreshold / 20);
     
     if (userNoiseGateRef.current) {
-      userNoiseGateRef.current.threshold.setValueAtTime(clampedThreshold, ctx.currentTime);
+      userNoiseGateRef.current.curve = createNoiseGateCurve(thresholdLinear);
     }
     
     setEqSettings(prev => ({ ...prev, noiseGateThreshold: clampedThreshold }));

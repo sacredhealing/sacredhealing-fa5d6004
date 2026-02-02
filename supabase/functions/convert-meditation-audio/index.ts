@@ -137,6 +137,10 @@ interface PayloadV2 {
   music_source?: string;
   keep_original_music?: boolean;
   variants?: number;
+  /** Neural source only: de-esser 0-100% */
+  de_esser_amount?: number;
+  /** Neural source only: noise gate -80 to -20 dB */
+  noise_gate_threshold?: number;
 }
 
 interface RequestBody {
@@ -171,6 +175,10 @@ interface RequestBody {
   output_quality?: "standard" | "high" | "lossless";
   // Vocal recording flag for mobile uploads (enables auto stereo balancing and noise reduction)
   is_vocal_recording?: boolean;
+  /** Neural source only: de-esser 0-100% */
+  deEsserAmount?: number;
+  /** Neural source only: noise gate -80 to -20 dB */
+  noiseGateThreshold?: number;
 }
 
 // ============ WORKER HEALTH CHECK ============
@@ -499,6 +507,9 @@ serve(async (req) => {
       // Vocal recording flag - enables automatic noise reduction and stereo balancing for mobile recordings
       // Automatically set to true if audio is uploaded (likely from mobile) or explicitly set
       is_vocal_recording: body.is_vocal_recording ?? (!!body.audioUrl || !!inputSources.upload_storage_path),
+      // Neural source only: de-esser (0-100%) and noise gate (-80 to -20 dB)
+      de_esser_amount: payloadData.de_esser_amount ?? body.deEsserAmount,
+      noise_gate_threshold: payloadData.noise_gate_threshold ?? body.noiseGateThreshold,
       // BPM matching
       bpm: {
         enabled: bpmEnabled,

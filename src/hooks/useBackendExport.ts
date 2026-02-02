@@ -28,6 +28,10 @@ export interface ExportPayload {
   source_volume?: number;
   ambient_volume?: number;
   duration?: number;
+  /** Neural source only: de-esser 0-100% */
+  deEsserAmount?: number;
+  /** Neural source only: noise gate -80 to -20 dB */
+  noiseGateThreshold?: number;
 }
 
 export interface ExportJob {
@@ -225,9 +229,13 @@ export function useBackendExport() {
           duration_seconds: payload.duration || 300,
           variants: 1,
           mastering: { enabled: true, preset: 'meditation_warm' },
+          de_esser_amount: payload.deEsserAmount,
+          noise_gate_threshold: payload.noiseGateThreshold,
         },
         // Legacy fields used by current backend mapping (mix levels)
         binaural_enabled: payload.binaural.enabled,
+        deEsserAmount: payload.deEsserAmount,
+        noiseGateThreshold: payload.noiseGateThreshold,
         binaural_volume: payload.binaural.volume,
         frequency_hz: payload.frequency_hz,
         frequency_enabled: payload.healing_frequency.enabled,

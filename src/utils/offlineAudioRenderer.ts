@@ -173,6 +173,26 @@ async function fetchAndDecode(ctx: OfflineAudioContext, url: string): Promise<Au
 }
 
 /**
+ * Create a waveshaper curve for noise gate - reduces signal below threshold
+ */
+function createNoiseGateCurve(thresholdLinear: number): Float32Array {
+  const len = 65536;
+  const curve = new Float32Array(len);
+  for (let i = 0; i < len; i++) {
+    const x = (i / (len - 1)) * 2 - 1; // -1 to 1
+    const absX = Math.abs(x);
+    if (absX < thresholdLinear && absX > 1e-10) {
+      // Below threshold: scale down (gate closes)
+      const sign = x >= 0 ? 1 : -1;
+      curve[i] = sign * absX * (absX / thresholdLinear);
+    } else {
+      curve[i] = x;
+    }
+  }
+  return curve;
+}
+
+/**
  * Schedule a buffer to play with looping to fill the duration
  */
 /**
@@ -197,19 +217,34 @@ function scheduleLoopingBuffer(
   let outputNode: AudioNode = destination;
   
   if (isNeuralSource) {
-    // Gentle limiter only - no aggressive compressor. De-esser and noise gate caused chaos
-    // (pumping, artifacts) on uploaded meditation/vocal audio.
+    // Neural source chain: de-esser -> noise gate -> limiter (no compressor)
+    // De-esser: peaking filter cut at 6.5kHz
+    const deEsser = ctx.createBiquadFilter();
+    deEsser.type = 'peaking';
+    deEsser.frequency.value = 6500;
+    deEsser.Q.value = 2;
+    deEsser.gain.value = (deEsserAmount / 100) * -12; // 0% = 0dB, 100% = -12dB cut
+    
+    // Noise gate: waveshaper reduces very quiet sections (below threshold)
+    const gateThresholdLinear = Math.pow(10, noiseGateThreshold / 20);
+    const gateCurve = createNoiseGateCurve(gateThresholdLinear);
+    const noiseGate = ctx.createWaveShaper();
+    noiseGate.curve = gateCurve;
+    
+    // Limiter: gentle headroom only
     const limiter = ctx.createDynamicsCompressor();
-    limiter.threshold.value = -3;  // -3 dB threshold for headroom
-    limiter.knee.value = 6;        // 6 dB soft knee
-    limiter.ratio.value = 20;      // High ratio for limiting
-    limiter.attack.value = 0.001;  // 1ms attack
-    limiter.release.value = 0.1;   // 100ms release
+    limiter.threshold.value = -3;
+    limiter.knee.value = 6;
+    limiter.ratio.value = 20;
+    limiter.attack.value = 0.001;
+    limiter.release.value = 0.1;
     
+    deEsser.connect(noiseGate);
+    noiseGate.connect(limiter);
     limiter.connect(destination);
-    outputNode = limiter;
+    outputNode = deEsser;
     
-    console.log('[OfflineRender] Neural source: gentle limiter only (no compressor/de-esser/noise gate)');
+    console.log(`[OfflineRender] Neural source: de-esser(${deEsserAmount}%) -> noise gate(${noiseGateThreshold}dB) -> limiter`);
   }
   
   // Use a SINGLE looping buffer source instead of creating many to reduce memory
