@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Waves, Zap } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
+import { Waves, Zap, Volume2, VolumeX } from 'lucide-react';
 import AnalogKnob from './AnalogKnob';
 
 interface EQBand {
@@ -20,10 +21,14 @@ interface VirtualChannelStripProps {
   lowCutEnabled?: boolean;
   onLowCutToggle?: () => void;
   onEqChange?: (bandId: string, value: number) => void;
+  onDeEsserChange?: (amount: number) => void;
+  onNoiseGateChange?: (threshold: number) => void;
   eqValues?: {
     weight: number;
     presence: number;
     air: number;
+    deEsserAmount?: number;
+    noiseGateThreshold?: number;
   };
 }
 
@@ -60,6 +65,8 @@ export default function VirtualChannelStrip({
   lowCutEnabled = true,
   onLowCutToggle,
   onEqChange,
+  onDeEsserChange,
+  onNoiseGateChange,
   eqValues,
 }: VirtualChannelStripProps) {
   // Initialize bands with external values or defaults
@@ -73,6 +80,10 @@ export default function VirtualChannelStrip({
     return initial;
   });
   const [selectedBand, setSelectedBand] = useState<string | null>('weight');
+  
+  // De-esser and Noise Gate local state
+  const [deEsserAmount, setDeEsserAmount] = useState(eqValues?.deEsserAmount ?? 0);
+  const [noiseGateThreshold, setNoiseGateThreshold] = useState(eqValues?.noiseGateThreshold ?? -60);
 
   // Sync with external EQ values when they change
   useEffect(() => {
@@ -85,8 +96,14 @@ export default function VirtualChannelStrip({
           default: return band;
         }
       }));
+      if (eqValues.deEsserAmount !== undefined) {
+        setDeEsserAmount(eqValues.deEsserAmount);
+      }
+      if (eqValues.noiseGateThreshold !== undefined) {
+        setNoiseGateThreshold(eqValues.noiseGateThreshold);
+      }
     }
-  }, [eqValues?.weight, eqValues?.presence, eqValues?.air]);
+  }, [eqValues?.weight, eqValues?.presence, eqValues?.air, eqValues?.deEsserAmount, eqValues?.noiseGateThreshold]);
 
   const handleBandChange = (bandId: string, value: number) => {
     setBands(prev => prev.map(band => 
@@ -94,6 +111,16 @@ export default function VirtualChannelStrip({
     ));
     // Call the engine's EQ update function
     onEqChange?.(bandId, value);
+  };
+  
+  const handleDeEsserChange = (value: number) => {
+    setDeEsserAmount(value);
+    onDeEsserChange?.(value);
+  };
+  
+  const handleNoiseGateChange = (value: number) => {
+    setNoiseGateThreshold(value);
+    onNoiseGateChange?.(value);
   };
 
   const formatDb = (value: number) => {
@@ -141,7 +168,7 @@ export default function VirtualChannelStrip({
         </div>
 
         {/* EQ Modules */}
-        <div className="grid grid-cols-3 gap-8">
+        <div className="grid grid-cols-3 gap-8 mb-8">
           {bands.map((band) => (
             <div 
               key={band.id}
@@ -186,12 +213,63 @@ export default function VirtualChannelStrip({
             </div>
           ))}
         </div>
+        
+        {/* De-esser & Noise Gate Controls */}
+        <div className="grid grid-cols-2 gap-6 p-4 bg-slate-900/60 rounded-xl border border-slate-800/50 mb-6">
+          {/* De-esser Control */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-purple-500" />
+                <span className="text-sm font-bold text-white uppercase tracking-wider">De-esser</span>
+              </div>
+              <span className="text-sm font-mono text-purple-400">{deEsserAmount}%</span>
+            </div>
+            <Slider
+              value={[deEsserAmount]}
+              min={0}
+              max={100}
+              step={1}
+              onValueChange={([v]) => handleDeEsserChange(v)}
+              className="[&_[role=slider]]:bg-purple-500 [&_[role=slider]]:border-purple-400"
+            />
+            <p className="text-[10px] text-slate-500 uppercase tracking-wide">
+              Reduces harsh "S" and "SH" sounds (sibilance at 6.5kHz)
+            </p>
+          </div>
+          
+          {/* Noise Gate Control */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {noiseGateThreshold > -40 ? (
+                  <VolumeX className="w-4 h-4 text-amber-500" />
+                ) : (
+                  <Volume2 className="w-4 h-4 text-amber-500/50" />
+                )}
+                <span className="text-sm font-bold text-white uppercase tracking-wider">Noise Gate</span>
+              </div>
+              <span className="text-sm font-mono text-amber-400">{noiseGateThreshold}dB</span>
+            </div>
+            <Slider
+              value={[noiseGateThreshold]}
+              min={-80}
+              max={-20}
+              step={1}
+              onValueChange={([v]) => handleNoiseGateChange(v)}
+              className="[&_[role=slider]]:bg-amber-500 [&_[role=slider]]:border-amber-400"
+            />
+            <p className="text-[10px] text-slate-500 uppercase tracking-wide">
+              Reduces background noise below threshold (plosives & room noise)
+            </p>
+          </div>
+        </div>
 
         {/* Footer Info */}
-        <div className="mt-6 pt-4 border-t border-slate-800/50 flex items-center justify-between text-xs text-slate-500">
+        <div className="pt-4 border-t border-slate-800/50 flex items-center justify-between text-xs text-slate-500">
           <div className="flex items-center gap-2">
             <Waves className="w-3 h-3" />
-            <span>3-Band Parametric EQ • 48kHz Processing</span>
+            <span>3-Band Parametric EQ • De-esser • Noise Gate • 48kHz Processing</span>
           </div>
           <div className="flex items-center gap-2">
             <Zap className="w-3 h-3 text-cyan-500" />
