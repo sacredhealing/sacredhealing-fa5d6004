@@ -21,6 +21,9 @@ export interface OfflineRenderConfig {
   binaural?: { enabled: boolean; carrierHz: number; beatHz: number; volume: number };
   dsp: DSPSettings;
   masterVolume: number;
+  // Neural source processing options
+  deEsserAmount?: number;        // 0-100% de-esser intensity
+  noiseGateThreshold?: number;   // -80 to -20 dB threshold
   onProgress?: (percent: number, step: string) => void;
 }
 
@@ -51,6 +54,8 @@ export async function renderOffline(config: OfflineRenderConfig): Promise<AudioB
     binaural,
     dsp,
     masterVolume,
+    deEsserAmount = 0,
+    noiseGateThreshold = -60,
     onProgress
   } = config;
 
@@ -119,7 +124,16 @@ export async function renderOffline(config: OfflineRenderConfig): Promise<AudioB
 
   // Schedule all audio layers with looping
   for (const layer of layers) {
-    scheduleLoopingBuffer(offlineCtx, layer.buffer, layer.volume, durationSeconds, dspOutput, layer.isNeuralSource ?? false);
+    scheduleLoopingBuffer(
+      offlineCtx, 
+      layer.buffer, 
+      layer.volume, 
+      durationSeconds, 
+      dspOutput, 
+      layer.isNeuralSource ?? false,
+      deEsserAmount,
+      noiseGateThreshold
+    );
   }
 
   onProgress?.(50, 'Generating healing frequencies...');
@@ -172,7 +186,9 @@ function scheduleLoopingBuffer(
   volume: number,
   durationSeconds: number,
   destination: AudioNode,
-  isNeuralSource: boolean = false
+  isNeuralSource: boolean = false,
+  deEsserAmount: number = 0,
+  noiseGateThreshold: number = -60
 ): void {
   // Clamp volume to prevent distortion (leave headroom for mixing)
   const safeVolume = Math.min(volume, 0.85);
@@ -181,7 +197,7 @@ function scheduleLoopingBuffer(
   let outputNode: AudioNode = destination;
   
   if (isNeuralSource) {
-    // Gentle limiter only - no aggressive compressor. Previous compressor caused chaos
+    // Gentle limiter only - no aggressive compressor. De-esser and noise gate caused chaos
     // (pumping, artifacts) on uploaded meditation/vocal audio.
     const limiter = ctx.createDynamicsCompressor();
     limiter.threshold.value = -3;  // -3 dB threshold for headroom
@@ -193,7 +209,7 @@ function scheduleLoopingBuffer(
     limiter.connect(destination);
     outputNode = limiter;
     
-    console.log('[OfflineRender] Neural source: gentle limiter only (no compressor)');
+    console.log('[OfflineRender] Neural source: gentle limiter only (no compressor/de-esser/noise gate)');
   }
   
   // Use a SINGLE looping buffer source instead of creating many to reduce memory

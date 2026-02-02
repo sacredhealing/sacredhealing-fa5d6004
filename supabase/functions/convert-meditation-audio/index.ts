@@ -169,6 +169,8 @@ interface RequestBody {
   variants?: number;
   output_format?: "mp3" | "wav" | "flac";
   output_quality?: "standard" | "high" | "lossless";
+  // Vocal recording flag for mobile uploads (enables auto stereo balancing and noise reduction)
+  is_vocal_recording?: boolean;
 }
 
 // ============ WORKER HEALTH CHECK ============
