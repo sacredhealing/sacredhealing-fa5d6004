@@ -21,6 +21,9 @@ export interface OfflineRenderConfig {
   binaural?: { enabled: boolean; carrierHz: number; beatHz: number; volume: number };
   dsp: DSPSettings;
   masterVolume: number;
+  // Neural source processing options
+  deEsserAmount?: number;        // 0-100% de-esser intensity
+  noiseGateThreshold?: number;   // -80 to -20 dB threshold
   onProgress?: (percent: number, step: string) => void;
 }
 
@@ -51,6 +54,8 @@ export async function renderOffline(config: OfflineRenderConfig): Promise<AudioB
     binaural,
     dsp,
     masterVolume,
+    deEsserAmount = 0,
+    noiseGateThreshold = -60,
     onProgress
   } = config;
 
@@ -119,7 +124,16 @@ export async function renderOffline(config: OfflineRenderConfig): Promise<AudioB
 
   // Schedule all audio layers with looping
   for (const layer of layers) {
-    scheduleLoopingBuffer(offlineCtx, layer.buffer, layer.volume, durationSeconds, dspOutput, layer.isNeuralSource ?? false);
+    scheduleLoopingBuffer(
+      offlineCtx, 
+      layer.buffer, 
+      layer.volume, 
+      durationSeconds, 
+      dspOutput, 
+      layer.isNeuralSource ?? false,
+      deEsserAmount,
+      noiseGateThreshold
+    );
   }
 
   onProgress?.(50, 'Generating healing frequencies...');
@@ -172,7 +186,9 @@ function scheduleLoopingBuffer(
   volume: number,
   durationSeconds: number,
   destination: AudioNode,
-  isNeuralSource: boolean = false
+  isNeuralSource: boolean = false,
+  deEsserAmount: number = 0,
+  noiseGateThreshold: number = -60
 ): void {
   // Clamp volume to prevent distortion (leave headroom for mixing)
   const safeVolume = Math.min(volume, 0.85);
@@ -200,6 +216,24 @@ function scheduleLoopingBuffer(
     
     console.log('[OfflineRender] Stereo-to-Mono Balancer applied to neural source');
     
+    // Create De-esser (sibilance reduction at 6.5kHz)
+    const deEsserFilter = ctx.createBiquadFilter();
+    deEsserFilter.type = 'peaking';
+    deEsserFilter.frequency.value = 6500;
+    deEsserFilter.Q.value = 2;
+    // Map deEsserAmount (0-100%) to cut dB (0 to -12dB)
+    deEsserFilter.gain.value = (deEsserAmount / 100) * -12;
+    
+    // Create user Noise Gate (expander)
+    const userNoiseGate = ctx.createDynamicsCompressor();
+    userNoiseGate.threshold.value = noiseGateThreshold;
+    userNoiseGate.knee.value = 10;
+    userNoiseGate.ratio.value = 12;
+    userNoiseGate.attack.value = 0.001;
+    userNoiseGate.release.value = 0.1;
+    
+    console.log(`[OfflineRender] De-esser: ${deEsserAmount}%, Noise Gate: ${noiseGateThreshold}dB`);
+    
     // Create compressor matching live engine settings
     const compressor = ctx.createDynamicsCompressor();
     compressor.threshold.value = -18; // More conservative threshold
@@ -216,15 +250,17 @@ function scheduleLoopingBuffer(
     limiter.attack.value = 0.001;  // 1ms attack
     limiter.release.value = 0.1;   // 100ms release
     
-    // Chain: monoMerger -> compressor -> limiter -> destination
-    monoMerger.connect(compressor);
+    // Chain: monoMerger -> deEsser -> noiseGate -> compressor -> limiter -> destination
+    monoMerger.connect(deEsserFilter);
+    deEsserFilter.connect(userNoiseGate);
+    userNoiseGate.connect(compressor);
     compressor.connect(limiter);
     limiter.connect(destination);
     
     // Output to mono splitter (start of chain)
     outputNode = monoSplitter;
     
-    console.log('[OfflineRender] Neural source chain: MONO BALANCER -> compressor -> limiter -> destination');
+    console.log('[OfflineRender] Neural source chain: MONO BALANCER -> De-esser -> Noise Gate -> compressor -> limiter -> destination');
   }
   
   // Use a SINGLE looping buffer source instead of creating many to reduce memory
