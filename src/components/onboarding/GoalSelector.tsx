@@ -69,8 +69,8 @@ export const GoalSelector: React.FC<GoalSelectorProps> = ({ selectedGoals, onTog
             )}
           >
             <span className={cn(
-              'transition-colors',
-              isSelected ? goal.color : 'text-foreground/70'
+              'transition-colors font-semibold',
+              goal.color
             )}>
               {goal.label}
             </span>
