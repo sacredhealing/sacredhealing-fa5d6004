@@ -98,6 +98,9 @@ export function useSoulMeditateEngine() {
   
   // Low cut filter (100Hz high-pass)
   const lowCutFilterRef = useRef<BiquadFilterNode | null>(null);
+
+  // User-controllable noise gate (WaveShaper) - last in chain, reduces hiss below threshold
+  const userNoiseGateRef = useRef<WaveShaperNode | null>(null);
   
   const atmosphereSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const atmosphereAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -163,7 +166,8 @@ export function useSoulMeditateEngine() {
     weight: -0.5,    // dB gain at 400Hz
     presence: 3,     // dB gain at 4kHz
     air: 1,          // dB gain at 10kHz+
-    lowCutEnabled: true
+    lowCutEnabled: true,
+    noiseGateThreshold: -45,  // -80 to -20 dB, reduces hiss below threshold (higher = more gating)
   });
 
   // Initialize audio context
@@ -265,6 +269,13 @@ export function useSoulMeditateEngine() {
     
     console.log('3-Band Parametric EQ initialized: Weight(400Hz), Presence(4kHz), Air(10kHz+)');
 
+    // User noise gate (WaveShaper) - mutes signal below threshold, last in chain
+    const gateThresholdLinear = Math.pow(10, eqSettings.noiseGateThreshold / 20);
+    userNoiseGateRef.current = ctx.createWaveShaper();
+    userNoiseGateRef.current.curve = createNoiseGateCurve(gateThresholdLinear);
+    userNoiseGateRef.current.oversample = '2x';
+    console.log('Noise gate initialized: threshold', eqSettings.noiseGateThreshold, 'dB');
+
     atmosphereGainRef.current = ctx.createGain();
     atmosphereGainRef.current.gain.value = atmosphereLayer.volume;
 
@@ -363,6 +374,18 @@ export function useSoulMeditateEngine() {
     return buffer;
   }
 
+  // Noise gate curve: mutes signal below threshold (reduces background hiss)
+  function createNoiseGateCurve(thresholdLinear: number): Float32Array {
+    const len = 65536;
+    const curve = new Float32Array(len);
+    for (let i = 0; i < len; i++) {
+      const x = (i / (len - 1)) * 2 - 1;
+      const absX = Math.abs(x);
+      curve[i] = absX < thresholdLinear ? 0 : x;
+    }
+    return curve;
+  }
+
   // Create warmth curve (soft saturation)
   function createWarmthCurve(drive: number): Float32Array | null {
     const samples = 44100;
@@ -419,35 +442,35 @@ export function useSoulMeditateEngine() {
     // Create source node and connect through noise cleanup chain
     const source = audioContextRef.current.createMediaElementSource(audio);
 
-    // Connect through full chain: source -> MONO BALANCER -> noise cleanup -> EQ -> low cut -> gain
-    // Chain: source -> monoSplitter -> monoMerger -> highpass -> lowpass -> compressor -> gate -> lowCut -> weight -> presence -> air -> gain
+    // Connect through full chain: source -> MONO BALANCER -> noise cleanup -> low cut -> EQ -> noise gate -> gain
+    // User noise gate is LAST in chain to reduce hiss (no stereo change)
     if (
       monoSplitterRef.current &&
       monoMergerRef.current &&
       noiseHighPassRef.current &&
       noiseLowPassRef.current &&
       noiseCompressorRef.current &&
-      noiseGateRef.current &&
       lowCutFilterRef.current &&
       eqWeightRef.current &&
       eqPresenceRef.current &&
       eqAirRef.current &&
+      userNoiseGateRef.current &&
       neuralGainRef.current
     ) {
       // First: Stereo-to-Mono Balancer (fixes uneven phone recordings)
       source.connect(monoSplitterRef.current);
       monoMergerRef.current.connect(noiseHighPassRef.current);
       
-      // Then: Noise cleanup chain
+      // Noise cleanup -> low cut -> EQ -> user noise gate (last) -> gain
       noiseHighPassRef.current.connect(noiseLowPassRef.current);
       noiseLowPassRef.current.connect(noiseCompressorRef.current);
-      noiseCompressorRef.current.connect(noiseGateRef.current);
-      noiseGateRef.current.connect(lowCutFilterRef.current);
+      noiseCompressorRef.current.connect(lowCutFilterRef.current);
       lowCutFilterRef.current.connect(eqWeightRef.current);
       eqWeightRef.current.connect(eqPresenceRef.current);
       eqPresenceRef.current.connect(eqAirRef.current);
-      eqAirRef.current.connect(neuralGainRef.current);
-      console.log('Full audio chain connected: MONO BALANCER -> noise cleanup -> low cut(100Hz) -> EQ(Weight/Presence/Air) -> gain');
+      eqAirRef.current.connect(userNoiseGateRef.current);
+      userNoiseGateRef.current.connect(neuralGainRef.current);
+      console.log('Full audio chain: MONO -> cleanup -> lowCut -> EQ -> noise gate -> gain');
     } else {
       // Fallback: direct connection
       source.connect(neuralGainRef.current);
@@ -810,6 +833,18 @@ export function useSoulMeditateEngine() {
     console.log(`EQ ${bandId} set to ${clampedValue}dB`);
   }, []);
   
+  // Update noise gate threshold (-80 to -20 dB) - reduces hiss below threshold
+  const updateNoiseGate = useCallback((thresholdDb: number) => {
+    const ctx = audioContextRef.current;
+    if (!ctx) return;
+    const clamped = Math.max(-80, Math.min(-20, thresholdDb));
+    const thresholdLinear = Math.pow(10, clamped / 20);
+    if (userNoiseGateRef.current) {
+      userNoiseGateRef.current.curve = createNoiseGateCurve(thresholdLinear);
+    }
+    setEqSettings(prev => ({ ...prev, noiseGateThreshold: clamped }));
+  }, []);
+
   // Toggle low cut filter (100Hz high-pass)
   const toggleLowCut = useCallback(() => {
     const ctx = audioContextRef.current;
@@ -1062,7 +1097,8 @@ export function useSoulMeditateEngine() {
     updateDSP,
     updateEQ,
     toggleLowCut,
-    
+    updateNoiseGate,
+
     // DAW Actions
     updateDawRegions,
     dawSeek,
