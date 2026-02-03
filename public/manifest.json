@@ -18,15 +18,27 @@
   "categories": ["health", "lifestyle", "wellness", "meditation"],
   "icons": [
     {
-      "src": "/icon-512x512.png",
-      "sizes": "1024x1024",
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon-512x512.png",
-      "sizes": "1024x1024",
+      "src": "/icon-512x512.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
       "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512x512.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
       "purpose": "maskable"
     }
   ],
@@ -135,19 +147,19 @@
       "name": "Meditate",
       "short_name": "Meditate",
       "url": "/meditations",
-      "icons": [{ "src": "/icon-512x512.png", "sizes": "1024x1024", "type": "image/png" }]
+      "icons": [{ "src": "/icon-512x512.jpg", "sizes": "512x512", "type": "image/jpeg" }]
     },
     {
       "name": "Healing Audio",
       "short_name": "Healing",
       "url": "/healing",
-      "icons": [{ "src": "/icon-512x512.png", "sizes": "1024x1024", "type": "image/png" }]
+      "icons": [{ "src": "/icon-512x512.jpg", "sizes": "512x512", "type": "image/jpeg" }]
     },
     {
       "name": "Breathing",
       "short_name": "Breathe",
       "url": "/breathing",
-      "icons": [{ "src": "/icon-512x512.png", "sizes": "1024x1024", "type": "image/png" }]
+      "icons": [{ "src": "/icon-512x512.jpg", "sizes": "512x512", "type": "image/jpeg" }]
     }
   ],
   "related_applications": [],

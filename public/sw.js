@@ -3,7 +3,7 @@ const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/icon-192x192.png',
-  '/icon-512x512.png',
+  '/icon-512x512.jpg',
   '/manifest.json',
   '/noiseGateProcessor.js'
 ];
