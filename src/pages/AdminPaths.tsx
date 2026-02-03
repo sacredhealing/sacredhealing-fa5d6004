@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit, Check, AlertCircle, Map } from 'lucide-react';
+import { ArrowLeft, Edit, Check, AlertCircle, Map, ImagePlus, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,6 +16,7 @@ interface SpiritualPath {
   title: string;
   slug: string;
   duration_days: number;
+  cover_image_url: string | null;
 }
 
 interface PathDay {
@@ -46,6 +49,10 @@ const AdminPaths: React.FC = () => {
   const [editingDay, setEditingDay] = useState<PathDay | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [coverUrls, setCoverUrls] = useState<Record<string, string>>({});
+  const [savingCover, setSavingCover] = useState<string | null>(null);
+  const [uploadingForPathId, setUploadingForPathId] = useState<string | null>(null);
+  const coverInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchData();
@@ -57,13 +64,15 @@ const AdminPaths: React.FC = () => {
       // Fetch all paths
       const { data: pathsData, error: pathsError } = await supabase
         .from('spiritual_paths')
-        .select('id, title, slug, duration_days')
+        .select('id, title, slug, duration_days, cover_image_url')
         .eq('is_active', true)
         .order('order_index');
 
       if (pathsError) throw pathsError;
       setPaths(pathsData || []);
-      
+      setCoverUrls(
+        (pathsData || []).reduce((acc, p) => ({ ...acc, [p.id]: p.cover_image_url || '' }), {})
+      );
       if (pathsData && pathsData.length > 0 && !selectedPath) {
         setSelectedPath(pathsData[0].id);
       }
@@ -124,6 +133,49 @@ const AdminPaths: React.FC = () => {
     fetchData();
   };
 
+  const saveCoverImage = async (pathId: string) => {
+    const url = coverUrls[pathId]?.trim() || null;
+    setSavingCover(pathId);
+    try {
+      const { error } = await supabase
+        .from('spiritual_paths')
+        .update({ cover_image_url: url || null })
+        .eq('id', pathId);
+      if (error) throw error;
+      toast.success('Cover image updated');
+      fetchData();
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to update cover image');
+    } finally {
+      setSavingCover(null);
+    }
+  };
+
+  const handleCoverUpload = async (pathId: string, file: File) => {
+    setSavingCover(pathId);
+    try {
+      const ext = file.name.split('.').pop();
+      const fileName = `paths/${pathId}-${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from('community-uploads')
+        .upload(fileName, file, { contentType: file.type, upsert: true });
+      if (uploadError) throw uploadError;
+      const { data } = supabase.storage.from('community-uploads').getPublicUrl(fileName);
+      const { error } = await supabase
+        .from('spiritual_paths')
+        .update({ cover_image_url: data.publicUrl })
+        .eq('id', pathId);
+      if (error) throw error;
+      setCoverUrls((prev) => ({ ...prev, [pathId]: data.publicUrl }));
+      toast.success('Cover image updated');
+      fetchData();
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to upload image');
+    } finally {
+      setSavingCover(null);
+    }
+  };
+
   const currentPath = paths.find(p => p.id === selectedPath);
 
   if (loading) {
@@ -174,12 +226,53 @@ const AdminPaths: React.FC = () => {
             <TabsContent key={path.id} value={path.id} className="mt-6">
               {/* Path Info */}
               <Card className="p-4 mb-6">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-4">
                   <div>
                     <h2 className="text-lg font-semibold text-foreground">{path.title}</h2>
                     <p className="text-sm text-muted-foreground">
                       {path.duration_days} days • {getPathStats(path.id).complete} of {getPathStats(path.id).total} days complete
                     </p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <Label>Cover image (shown on /paths)</Label>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="w-24 h-24 rounded-lg overflow-hidden bg-muted shrink-0">
+                      {coverUrls[path.id] ? (
+                        <img src={coverUrls[path.id]} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No image</div>
+                      )}
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <Input
+                        placeholder="Image URL (e.g. https://...)"
+                        value={coverUrls[path.id] || ''}
+                        onChange={(e) => setCoverUrls((prev) => ({ ...prev, [path.id]: e.target.value }))}
+                        className="text-sm"
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setUploadingForPathId(path.id);
+                            setTimeout(() => coverInputRef.current?.click(), 0);
+                          }}
+                          disabled={savingCover === path.id}
+                        >
+                          {savingCover === path.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImagePlus className="w-4 h-4" />}
+                          <span className="ml-1">Upload</span>
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => saveCoverImage(path.id)}
+                          disabled={savingCover === path.id}
+                        >
+                          Save URL
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </Card>
@@ -282,6 +375,21 @@ const AdminPaths: React.FC = () => {
             </TabsContent>
           ))}
         </Tabs>
+
+        <input
+          ref={coverInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f && uploadingForPathId) {
+              handleCoverUpload(uploadingForPathId, f);
+              setUploadingForPathId(null);
+            }
+            e.target.value = '';
+          }}
+        />
 
         {/* Editor Dialog */}
         <PathDayEditor
