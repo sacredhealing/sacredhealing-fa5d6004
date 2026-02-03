@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.sacredhealing.app",
+    "sha256_cert_fingerprints": ["FD:28:1A:95:E8:72:89:B6:E2:7B:F8:71:93:E7:CA:9E:80:7E:CE:19:39:B4:55:D8:A1:02:75:E8:47:EC:2B:30"]
+  }
+}]
