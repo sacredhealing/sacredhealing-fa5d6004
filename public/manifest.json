@@ -18,15 +18,15 @@
   "categories": ["health", "lifestyle", "wellness", "meditation"],
   "icons": [
     {
-      "src": "/icon-512x512.png",
+      "src": "/icon.svg",
       "sizes": "512x512",
-      "type": "image/png",
+      "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/icon-512x512.png",
+      "src": "/icon.svg",
       "sizes": "512x512",
-      "type": "image/png",
+      "type": "image/svg+xml",
       "purpose": "maskable"
     }
   ],
@@ -135,19 +135,19 @@
       "name": "Meditate",
       "short_name": "Meditate",
       "url": "/meditations",
-      "icons": [{ "src": "/icon-512x512.png", "sizes": "512x512", "type": "image/png" }]
+      "icons": [{ "src": "/icon.svg", "sizes": "512x512", "type": "image/svg+xml" }]
     },
     {
       "name": "Healing Audio",
       "short_name": "Healing",
       "url": "/healing",
-      "icons": [{ "src": "/icon-512x512.png", "sizes": "512x512", "type": "image/png" }]
+      "icons": [{ "src": "/icon.svg", "sizes": "512x512", "type": "image/svg+xml" }]
     },
     {
       "name": "Breathing",
       "short_name": "Breathe",
       "url": "/breathing",
-      "icons": [{ "src": "/icon-512x512.png", "sizes": "512x512", "type": "image/png" }]
+      "icons": [{ "src": "/icon.svg", "sizes": "512x512", "type": "image/svg+xml" }]
     }
   ],
   "related_applications": [],
