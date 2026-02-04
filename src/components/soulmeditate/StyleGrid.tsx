@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
-import { Sparkles, Volume2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Sparkles, Volume2, RefreshCw } from 'lucide-react';
 
 export type MeditationStyle =
   | 'indian'
@@ -53,6 +54,10 @@ interface StyleGridProps {
   /** Atmosphere (ambient) volume 0-1 */
   atmosphereVolume?: number;
   onAtmosphereVolumeChange?: (vol: number) => void;
+  /** Fetch a new random sound from the library for the current style (no reload) */
+  onRefreshSound?: () => void;
+  /** True while loading a new sound */
+  isRefreshingSound?: boolean;
 }
 
 export default function StyleGrid({
@@ -60,6 +65,8 @@ export default function StyleGrid({
   onStyleSelect,
   atmosphereVolume = 0.85,
   onAtmosphereVolumeChange,
+  onRefreshSound,
+  isRefreshingSound = false,
 }: StyleGridProps) {
   return (
     <Card className="bg-black/40 backdrop-blur-xl border-white/10">
@@ -72,20 +79,40 @@ export default function StyleGrid({
             II. Meditation Style & Atmosphere
           </CardTitle>
 
-          {/* Atmosphere Volume Slider */}
-          <div className="flex items-center gap-3 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
-            <Volume2 className="w-4 h-4 text-cyan-400" />
-            <Slider
-              value={[atmosphereVolume]}
-              min={0}
-              max={1}
-              step={0.01}
-              onValueChange={([v]) => onAtmosphereVolumeChange?.(v)}
-              className="w-24 [&_[role=slider]]:bg-cyan-400"
-            />
-            <span className="text-xs text-white/60 w-9 tabular-nums">
-              {Math.round(atmosphereVolume * 100)}%
-            </span>
+          <div className="flex items-center gap-3">
+            {/* Search new sound button */}
+            {onRefreshSound && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onRefreshSound}
+                disabled={isRefreshingSound}
+                className="bg-white/5 border-white/20 text-cyan-400 hover:bg-cyan-500/20 hover:border-cyan-500/50"
+                title="Search for a new sound in the library"
+              >
+                {isRefreshingSound ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="w-4 h-4" />
+                )}
+                <span className="ml-2 hidden sm:inline">New Sound</span>
+              </Button>
+            )}
+            {/* Atmosphere Volume Slider */}
+            <div className="flex items-center gap-3 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+              <Volume2 className="w-4 h-4 text-cyan-400" />
+              <Slider
+                value={[atmosphereVolume]}
+                min={0}
+                max={1}
+                step={0.01}
+                onValueChange={([v]) => onAtmosphereVolumeChange?.(v)}
+                className="w-24 [&_[role=slider]]:bg-cyan-400"
+              />
+              <span className="text-xs text-white/60 w-9 tabular-nums">
+                {Math.round(atmosphereVolume * 100)}%
+              </span>
+            </div>
           </div>
         </div>
       </CardHeader>

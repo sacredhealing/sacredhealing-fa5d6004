@@ -321,6 +321,23 @@ export default function CreativeSoulMeditationTool() {
     }
   }, [activeStyle, engine.isInitialized]);
 
+  // Search for new sound in library (same style, no reload)
+  const [isRefreshingSound, setIsRefreshingSound] = useState(false);
+  const handleRefreshSound = useCallback(async () => {
+    if (!engine.isInitialized) return;
+    setIsRefreshingSound(true);
+    try {
+      const ok = await engine.loadAtmosphere(activeStyle);
+      if (ok) {
+        toast.success('Loaded new sound from library');
+      } else {
+        toast.error('Could not load new sound');
+      }
+    } finally {
+      setIsRefreshingSound(false);
+    }
+  }, [engine, activeStyle]);
+
   // Sync frequencies when changed
   useEffect(() => {
     if (engine.frequencies.solfeggio.enabled && engine.frequencies.solfeggio.hz !== healingFreq) {
@@ -656,6 +673,8 @@ export default function CreativeSoulMeditationTool() {
             onStyleSelect={setActiveStyle}
             atmosphereVolume={engine.atmosphereLayer.volume}
             onAtmosphereVolumeChange={engine.updateAtmosphereVolume}
+            onRefreshSound={engine.isInitialized ? handleRefreshSound : undefined}
+            isRefreshingSound={isRefreshingSound}
           />
         </div>
 
