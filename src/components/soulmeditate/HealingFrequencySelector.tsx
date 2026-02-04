@@ -25,17 +25,17 @@ const HEALING_FREQUENCIES: HealingFrequency[] = [
   { freq: 963, name: '963 Hz', description: 'Crown & Unity', color: 'from-violet-500 to-fuchsia-500', chakraColor: 'violet' },
 ];
 
-const CHAKRA_STYLES: Record<string, { border: string; icon: string; label: string; buttonShadow: string }> = {
-  red: { border: 'border-red-500/60 shadow-lg shadow-red-500/20', icon: 'text-red-400', label: 'Root', buttonShadow: 'shadow-red-500/30' },
-  orange: { border: 'border-orange-500/60 shadow-lg shadow-orange-500/20', icon: 'text-orange-400', label: 'Sacral', buttonShadow: 'shadow-orange-500/30' },
-  yellow: { border: 'border-amber-500/60 shadow-lg shadow-amber-500/20', icon: 'text-amber-400', label: 'Solar Plexus', buttonShadow: 'shadow-amber-500/30' },
-  green: { border: 'border-green-500/60 shadow-lg shadow-green-500/20', icon: 'text-green-400', label: 'Heart', buttonShadow: 'shadow-green-500/30' },
-  emerald: { border: 'border-emerald-500/60 shadow-lg shadow-emerald-500/20', icon: 'text-emerald-400', label: 'Heart', buttonShadow: 'shadow-emerald-500/30' },
-  cyan: { border: 'border-cyan-500/60 shadow-lg shadow-cyan-500/20', icon: 'text-cyan-400', label: 'Throat', buttonShadow: 'shadow-cyan-500/30' },
-  teal: { border: 'border-teal-500/60 shadow-lg shadow-teal-500/20', icon: 'text-teal-400', label: 'Heart', buttonShadow: 'shadow-teal-500/30' },
-  blue: { border: 'border-blue-500/60 shadow-lg shadow-blue-500/20', icon: 'text-blue-400', label: 'Throat', buttonShadow: 'shadow-blue-500/30' },
-  indigo: { border: 'border-indigo-500/60 shadow-lg shadow-indigo-500/20', icon: 'text-indigo-400', label: 'Third Eye', buttonShadow: 'shadow-indigo-500/30' },
-  violet: { border: 'border-violet-500/60 shadow-lg shadow-violet-500/20', icon: 'text-violet-400', label: 'Crown', buttonShadow: 'shadow-violet-500/30' },
+const CHAKRA_STYLES: Record<string, { border: string; icon: string; label: string; buttonShadow: string; buttonBg: string }> = {
+  red: { border: 'border-red-500/60 shadow-lg shadow-red-500/20', icon: 'text-red-400', label: 'Root', buttonShadow: 'shadow-red-500/30', buttonBg: 'bg-red-500' },
+  orange: { border: 'border-orange-500/60 shadow-lg shadow-orange-500/20', icon: 'text-orange-400', label: 'Sacral', buttonShadow: 'shadow-orange-500/30', buttonBg: 'bg-orange-500' },
+  yellow: { border: 'border-amber-500/60 shadow-lg shadow-amber-500/20', icon: 'text-amber-400', label: 'Solar Plexus', buttonShadow: 'shadow-amber-500/30', buttonBg: 'bg-amber-500' },
+  green: { border: 'border-green-500/60 shadow-lg shadow-green-500/20', icon: 'text-green-400', label: 'Heart', buttonShadow: 'shadow-green-500/30', buttonBg: 'bg-green-500' },
+  emerald: { border: 'border-emerald-500/60 shadow-lg shadow-emerald-500/20', icon: 'text-emerald-400', label: 'Heart', buttonShadow: 'shadow-emerald-500/30', buttonBg: 'bg-emerald-500' },
+  cyan: { border: 'border-cyan-500/60 shadow-lg shadow-cyan-500/20', icon: 'text-cyan-400', label: 'Throat', buttonShadow: 'shadow-cyan-500/30', buttonBg: 'bg-cyan-500' },
+  teal: { border: 'border-teal-500/60 shadow-lg shadow-teal-500/20', icon: 'text-teal-400', label: 'Heart', buttonShadow: 'shadow-teal-500/30', buttonBg: 'bg-teal-500' },
+  blue: { border: 'border-blue-500/60 shadow-lg shadow-blue-500/20', icon: 'text-blue-400', label: 'Throat', buttonShadow: 'shadow-blue-500/30', buttonBg: 'bg-blue-500' },
+  indigo: { border: 'border-indigo-500/60 shadow-lg shadow-indigo-500/20', icon: 'text-indigo-400', label: 'Third Eye', buttonShadow: 'shadow-indigo-500/30', buttonBg: 'bg-indigo-500' },
+  violet: { border: 'border-violet-500/60 shadow-lg shadow-violet-500/20', icon: 'text-violet-400', label: 'Crown', buttonShadow: 'shadow-violet-500/30', buttonBg: 'bg-violet-500' },
 };
 
 interface HealingFrequencySelectorProps {
@@ -97,7 +97,7 @@ export default function HealingFrequencySelector({
                 onClick={() => onSelect(freq.freq)}
                 className={`p-3 rounded-xl text-left transition-all border ${
                   isActive
-                    ? `bg-gradient-to-r ${freq.color} border-transparent text-white shadow-lg ${CHAKRA_STYLES[freq.chakraColor]?.buttonShadow || ''}`
+                    ? `${CHAKRA_STYLES[freq.chakraColor]?.buttonBg || 'bg-cyan-500'} border-transparent text-white shadow-lg ${CHAKRA_STYLES[freq.chakraColor]?.buttonShadow || ''}`
                     : 'bg-slate-900/50 border-slate-800 hover:border-slate-700 text-white/70'
                 }`}
               >
