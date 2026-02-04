@@ -100,7 +100,7 @@ export const VedicAstrologySection: React.FC = () => {
   };
 
   return (
-    <Card className="border-2 border-primary/30 bg-gradient-to-br from-purple-500/5 via-background to-blue-500/5 w-full max-w-none">
+    <Card className="overflow-hidden border-2 border-primary/30 bg-gradient-to-br from-purple-500/5 via-background to-blue-500/5 w-full max-w-full">
       <CardContent className="p-4 sm:p-6">
         <div className="flex flex-col items-center text-center mb-5 sm:mb-6">
           <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center flex-shrink-0 mb-3">
@@ -118,8 +118,8 @@ export const VedicAstrologySection: React.FC = () => {
 
         {/* Birth Details Section */}
         {!hasBirthDetails ? (
-          <Card className="mb-6 border-2 border-primary/30 bg-gradient-to-br from-blue-500/5 to-purple-500/5">
-            <CardContent className="p-4 sm:p-5">
+          <Card className="mb-6 overflow-hidden border-2 border-primary/30 bg-gradient-to-br from-blue-500/5 to-purple-500/5 w-full max-w-full">
+            <CardContent className="p-3 sm:p-5">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="flex items-start gap-3">
                   <div className="p-3 rounded-full bg-primary/20">
@@ -155,14 +155,14 @@ export const VedicAstrologySection: React.FC = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="mb-6 p-4 rounded-lg bg-green-500/10 border border-green-500/30">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <CheckCircle className="w-5 h-5 text-green-500" />
-                  <p className="font-semibold text-foreground">Birth Details Saved</p>
+          <div className="mb-6 p-3 sm:p-4 rounded-xl bg-green-500/10 border border-green-500/30 w-full min-w-0 overflow-hidden">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 shrink-0" />
+                  <p className="font-semibold text-foreground text-sm sm:text-base">Birth Details Saved</p>
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">
                   {birthDetails?.birth_name} • {birthDetails?.birth_place}
                 </p>
               </div>
@@ -197,14 +197,14 @@ export const VedicAstrologySection: React.FC = () => {
         )}
 
         {highestAccess && (
-          <div className="mb-6 p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
-            <div className="flex items-center gap-2 mb-2">
-              <Star className="w-5 h-5 text-blue-500" />
-              <p className="font-semibold text-foreground">
+          <div className="mb-6 p-3 sm:p-4 rounded-xl bg-blue-500/10 border border-blue-500/30 w-full min-w-0 overflow-hidden">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <Star className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 shrink-0" />
+              <p className="font-semibold text-foreground text-sm sm:text-base">
                 Your Current Access: {tiers.find(t => t.tier_level === highestAccess)?.name}
               </p>
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground">
               Based on your {membershipMap[membershipTier || 'free']} membership
             </p>
           </div>
@@ -220,7 +220,7 @@ export const VedicAstrologySection: React.FC = () => {
             return (
               <Card
                 key={tier.id}
-                className={`border-2 ${isLocked ? 'border-border/50 opacity-60' : colors.border} bg-gradient-to-br ${colors.bg} w-full max-w-none`}
+                className={`overflow-hidden border-2 ${isLocked ? 'border-border/50 opacity-60' : colors.border} bg-gradient-to-br ${colors.bg} w-full max-w-full`}
               >
                 <CardContent className="p-5 sm:p-6">
                   <div className="flex flex-col items-center text-center mb-4">
@@ -309,7 +309,7 @@ export const VedicAstrologySection: React.FC = () => {
           })}
         </div>
 
-        <div className="mt-6 p-4 rounded-lg bg-muted/30 border border-border/50">
+        <div className="mt-6 p-3 sm:p-4 rounded-xl bg-muted/30 border border-border/50 w-full min-w-0 overflow-hidden">
           <p className="text-sm text-muted-foreground text-center">
             <strong className="text-foreground">Note:</strong> Vedic Astrology access is automatically granted based on your membership tier. 
             Upgrade your membership to unlock higher tiers of cosmic wisdom.

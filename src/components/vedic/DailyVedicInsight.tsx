@@ -68,45 +68,45 @@ export const DailyVedicInsight: React.FC<DailyVedicInsightProps> = ({ tier }) =>
     : null;
 
   return (
-    <div className="space-y-4 w-full min-w-0">
+    <div className="space-y-4 w-full min-w-0 max-w-full">
       {/* Daily Influence Card */}
-      <Card className="border-2 border-primary/30 bg-gradient-to-br from-purple-500/5 to-blue-500/5 w-full max-w-none">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary" />
-              Today's Vedic Influence
+      <Card className="overflow-hidden border-2 border-primary/30 bg-gradient-to-br from-purple-500/5 to-blue-500/5 w-full max-w-full">
+        <CardHeader className="p-4 sm:p-6 pb-0">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0" />
+              <span>Today's Vedic Influence</span>
             </CardTitle>
-            <Badge variant="outline" className="text-xs">
-              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+            <Badge variant="outline" className="text-[10px] sm:text-xs w-fit shrink-0">
+              {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
             </Badge>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4 w-full min-w-0">
+        <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6 pt-3 sm:pt-4 w-full min-w-0">
           {/* Nakshatra Info */}
-          <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
-            <div className="flex items-center gap-2 mb-2">
-              <Star className="w-4 h-4 text-primary" />
-              <span className="font-semibold text-foreground">Current Nakshatra: {dailyInfluence.nakshatra}</span>
+          <div className="p-3 sm:p-4 rounded-xl bg-primary/10 border border-primary/20 w-full min-w-0 overflow-hidden">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <Star className="w-4 h-4 text-primary shrink-0" />
+              <span className="font-semibold text-foreground text-sm sm:text-base">Current Nakshatra: {dailyInfluence.nakshatra}</span>
             </div>
-            <p className="text-sm text-muted-foreground">{dailyInfluence.theme}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground break-words">{dailyInfluence.theme}</p>
           </div>
 
           {/* Planetary Influence */}
-          <div className="w-full min-w-0">
-            <p className="text-sm font-medium text-foreground mb-2">Planetary Influence:</p>
-            <p className="text-sm text-muted-foreground w-full">{dailyInfluence.planetaryInfluence}</p>
+          <div className="w-full min-w-0 overflow-hidden">
+            <p className="text-xs sm:text-sm font-medium text-foreground mb-1">Planetary Influence:</p>
+            <p className="text-xs sm:text-sm text-muted-foreground break-words">{dailyInfluence.planetaryInfluence}</p>
           </div>
 
           {/* Teacher Wisdom */}
-          <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
-            <div className="flex items-start gap-3">
-              <Quote className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-sm italic text-foreground mb-2">
+          <div className="p-3 sm:p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 w-full min-w-0 overflow-hidden">
+            <div className="flex items-start gap-2 sm:gap-3">
+              <Quote className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs sm:text-sm italic text-foreground mb-1 break-words">
                   "{dailyInfluence.wisdomQuote}"
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[10px] sm:text-xs text-muted-foreground">
                   — {dailyInfluence.teacher}
                 </p>
               </div>
@@ -114,31 +114,31 @@ export const DailyVedicInsight: React.FC<DailyVedicInsightProps> = ({ tier }) =>
           </div>
 
           {/* Do's and Don'ts */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
-              <div className="flex items-center gap-2 mb-3">
-                <CheckCircle className="w-4 h-4 text-green-500" />
-                <span className="font-semibold text-foreground text-sm">What to Do</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div className="p-3 sm:p-4 rounded-xl bg-green-500/10 border border-green-500/20 w-full min-w-0 overflow-hidden">
+              <div className="flex items-center gap-2 mb-2">
+                <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 shrink-0" />
+                <span className="font-semibold text-foreground text-xs sm:text-sm">What to Do</span>
               </div>
-              <ul className="space-y-1">
+              <ul className="space-y-0.5 sm:space-y-1">
                 {dailyInfluence.do.map((item, idx) => (
-                  <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
-                    <span className="text-green-500 mt-1">•</span>
+                  <li key={idx} className="text-xs sm:text-sm text-muted-foreground flex items-start gap-2 break-words">
+                    <span className="text-green-500 mt-0.5 shrink-0">•</span>
                     <span>{item}</span>
                   </li>
                 ))}
               </ul>
             </div>
 
-            <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20">
-              <div className="flex items-center gap-2 mb-3">
-                <AlertCircle className="w-4 h-4 text-red-500" />
-                <span className="font-semibold text-foreground text-sm">What to Avoid</span>
+            <div className="p-3 sm:p-4 rounded-xl bg-red-500/10 border border-red-500/20 w-full min-w-0 overflow-hidden">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 text-red-500 shrink-0" />
+                <span className="font-semibold text-foreground text-xs sm:text-sm">What to Avoid</span>
               </div>
-              <ul className="space-y-1">
+              <ul className="space-y-0.5 sm:space-y-1">
                 {dailyInfluence.avoid.map((item, idx) => (
-                  <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
-                    <span className="text-red-500 mt-1">•</span>
+                  <li key={idx} className="text-xs sm:text-sm text-muted-foreground flex items-start gap-2 break-words">
+                    <span className="text-red-500 mt-0.5 shrink-0">•</span>
                     <span>{item}</span>
                   </li>
                 ))}
@@ -147,7 +147,7 @@ export const DailyVedicInsight: React.FC<DailyVedicInsightProps> = ({ tier }) =>
           </div>
 
           {!birthDetails && (
-            <div className="p-3 rounded-lg bg-muted/50 border border-border/50">
+            <div className="p-3 rounded-xl bg-muted/50 border border-border/50 w-full min-w-0 overflow-hidden">
               <p className="text-xs text-muted-foreground text-center">
                 💡 <strong>Tip:</strong> Add your birth details for personalized daily guidance based on your unique chart.
               </p>
@@ -158,41 +158,41 @@ export const DailyVedicInsight: React.FC<DailyVedicInsightProps> = ({ tier }) =>
 
       {/* Premium Guidance - Personal Vedic Compass */}
       {premiumGuidance && (
-        <Card className="border-2 border-purple-500/30 bg-gradient-to-br from-purple-500/5 to-pink-500/5 w-full max-w-none">
-          <CardHeader className="w-full min-w-0">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-purple-400" />
+        <Card className="overflow-hidden border-2 border-purple-500/30 bg-gradient-to-br from-purple-500/5 to-pink-500/5 w-full max-w-full">
+          <CardHeader className="w-full min-w-0 p-4 sm:p-6">
+            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400 shrink-0" />
               Personal Vedic Compass
             </CardTitle>
-            <p className="text-sm text-muted-foreground w-full">
+            <p className="text-xs sm:text-sm text-muted-foreground w-full break-words mt-1">
               {premiumGuidance.personalizedMessage}
             </p>
           </CardHeader>
-          <CardContent className="space-y-4 w-full min-w-0">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20 w-full min-w-0">
-                <h4 className="font-semibold text-sm mb-2 text-foreground flex items-center gap-2">
+          <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6 pt-0 w-full min-w-0">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="p-3 sm:p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 w-full min-w-0 overflow-hidden">
+                <h4 className="font-semibold text-xs sm:text-sm mb-1 text-foreground flex items-center gap-2">
                   💼 Career Insights
                 </h4>
-                <p className="text-sm text-muted-foreground w-full">{premiumGuidance.career}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground break-words">{premiumGuidance.career}</p>
               </div>
-              <div className="p-4 rounded-lg bg-pink-500/10 border border-pink-500/20 w-full min-w-0">
-                <h4 className="font-semibold text-sm mb-2 text-foreground flex items-center gap-2">
+              <div className="p-3 sm:p-4 rounded-xl bg-pink-500/10 border border-pink-500/20 w-full min-w-0 overflow-hidden">
+                <h4 className="font-semibold text-xs sm:text-sm mb-1 text-foreground flex items-center gap-2">
                   💕 Relationship Harmony
                 </h4>
-                <p className="text-sm text-muted-foreground w-full">{premiumGuidance.relationships}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground break-words">{premiumGuidance.relationships}</p>
               </div>
-              <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20 w-full min-w-0">
-                <h4 className="font-semibold text-sm mb-2 text-foreground flex items-center gap-2">
+              <div className="p-3 sm:p-4 rounded-xl bg-green-500/10 border border-green-500/20 w-full min-w-0 overflow-hidden">
+                <h4 className="font-semibold text-xs sm:text-sm mb-1 text-foreground flex items-center gap-2">
                   🌿 Health Recommendations
                 </h4>
-                <p className="text-sm text-muted-foreground w-full">{premiumGuidance.health}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground break-words">{premiumGuidance.health}</p>
               </div>
-              <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20 w-full min-w-0">
-                <h4 className="font-semibold text-sm mb-2 text-foreground flex items-center gap-2">
+              <div className="p-3 sm:p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 w-full min-w-0 overflow-hidden">
+                <h4 className="font-semibold text-xs sm:text-sm mb-1 text-foreground flex items-center gap-2">
                   💰 Financial Timing
                 </h4>
-                <p className="text-sm text-muted-foreground w-full">{premiumGuidance.finances}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground break-words">{premiumGuidance.finances}</p>
               </div>
             </div>
             
@@ -209,63 +209,63 @@ export const DailyVedicInsight: React.FC<DailyVedicInsightProps> = ({ tier }) =>
 
       {/* Master Deep Reading - Master Vedic Blueprint */}
       {masterReading && (
-        <Card className="border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-orange-500/5 w-full max-w-none">
-          <CardHeader className="w-full min-w-0">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Crown className="w-5 h-5 text-amber-400" />
+        <Card className="overflow-hidden border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-orange-500/5 w-full max-w-full">
+          <CardHeader className="w-full min-w-0 p-4 sm:p-6">
+            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+              <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 shrink-0" />
               Master Vedic Blueprint
             </CardTitle>
-            <p className="text-sm text-muted-foreground w-full">
+            <p className="text-xs sm:text-sm text-muted-foreground w-full break-words mt-1">
               Comprehensive insights into your soul's journey and cosmic destiny
             </p>
           </CardHeader>
-          <CardContent className="space-y-5 w-full min-w-0">
+          <CardContent className="space-y-3 sm:space-y-5 p-4 sm:p-6 pt-0 w-full min-w-0">
             {/* Soul Purpose */}
-            <div className="p-4 rounded-lg bg-purple-500/10 border border-purple-500/20 w-full min-w-0">
-              <h4 className="font-semibold text-sm mb-2 text-foreground flex items-center gap-2">
+            <div className="p-3 sm:p-4 rounded-xl bg-purple-500/10 border border-purple-500/20 w-full min-w-0 overflow-hidden">
+              <h4 className="font-semibold text-xs sm:text-sm mb-1 text-foreground flex items-center gap-2">
                 🔮 Soul Purpose Analysis
               </h4>
-              <p className="text-sm text-muted-foreground leading-relaxed w-full">{masterReading.soulPurpose}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed break-words">{masterReading.soulPurpose}</p>
             </div>
 
             {/* Karma Patterns */}
-            <div className="p-4 rounded-lg bg-indigo-500/10 border border-indigo-500/20 w-full min-w-0">
-              <h4 className="font-semibold text-sm mb-2 text-foreground flex items-center gap-2">
+            <div className="p-3 sm:p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20 w-full min-w-0 overflow-hidden">
+              <h4 className="font-semibold text-xs sm:text-sm mb-1 text-foreground flex items-center gap-2">
                 ⚖️ Karma Pattern Insights
               </h4>
-              <p className="text-sm text-muted-foreground leading-relaxed w-full">{masterReading.karmaPatterns}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed break-words">{masterReading.karmaPatterns}</p>
             </div>
 
             {/* Strengths & Challenges Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-              <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20 w-full min-w-0">
-                <h4 className="font-semibold text-sm mb-2 text-foreground flex items-center gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full">
+              <div className="p-3 sm:p-4 rounded-xl bg-green-500/10 border border-green-500/20 w-full min-w-0 overflow-hidden">
+                <h4 className="font-semibold text-xs sm:text-sm mb-1 text-foreground flex items-center gap-2">
                   ⭐ Strengths Mapping
                 </h4>
-                <p className="text-sm text-muted-foreground leading-relaxed w-full">{masterReading.strengths}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed break-words">{masterReading.strengths}</p>
               </div>
-              <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 w-full min-w-0">
-                <h4 className="font-semibold text-sm mb-2 text-foreground flex items-center gap-2">
+              <div className="p-3 sm:p-4 rounded-xl bg-red-500/10 border border-red-500/20 w-full min-w-0 overflow-hidden">
+                <h4 className="font-semibold text-xs sm:text-sm mb-1 text-foreground flex items-center gap-2">
                   🎯 Challenge Mapping
                 </h4>
-                <p className="text-sm text-muted-foreground leading-relaxed w-full">{masterReading.challenges}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed break-words">{masterReading.challenges}</p>
               </div>
             </div>
 
             {/* Timing Peaks */}
-            <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20 w-full min-w-0">
-              <h4 className="font-semibold text-sm mb-2 text-foreground flex items-center gap-2">
+            <div className="p-3 sm:p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 w-full min-w-0 overflow-hidden">
+              <h4 className="font-semibold text-xs sm:text-sm mb-1 text-foreground flex items-center gap-2">
                 📅 Timing Peak Predictions
               </h4>
-              <p className="text-sm text-muted-foreground leading-relaxed w-full">{masterReading.timingPeaks}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed break-words">{masterReading.timingPeaks}</p>
             </div>
 
             {/* Birth Chart Summary */}
-            <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20 w-full min-w-0">
-              <h4 className="font-semibold text-sm mb-2 text-foreground flex items-center gap-2">
+            <div className="p-3 sm:p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 w-full min-w-0 overflow-hidden">
+              <h4 className="font-semibold text-xs sm:text-sm mb-1 text-foreground flex items-center gap-2">
                 📜 Detailed Birth Chart Analysis
               </h4>
-              <p className="text-sm text-muted-foreground leading-relaxed w-full">{masterReading.birthChartSummary}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed break-words">{masterReading.birthChartSummary}</p>
             </div>
 
             {!birthDetails && (
