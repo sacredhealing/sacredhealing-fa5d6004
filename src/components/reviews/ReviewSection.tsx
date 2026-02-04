@@ -110,8 +110,8 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
                 <p className="text-sm text-muted-foreground">{t('reviews.rewardDescription')}</p>
               </div>
               <Button 
-                variant="gold" 
                 size="sm"
+                className="bg-[#00F2FE] text-black font-extrabold hover:bg-[#00D4E0] shadow-[0_0_20px_rgba(0,242,254,0.4)] border-0"
                 onClick={() => setShowForm(true)}
               >
                 {t('reviews.writeReview')}
