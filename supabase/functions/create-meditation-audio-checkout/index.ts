@@ -7,12 +7,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Stripe Price IDs - Update these with your actual Stripe Price IDs from dashboard
-const PRICE_IDS = {
-  one_time: Deno.env.get("STRIPE_PRICE_ONE_TIME") || "price_one_time_149",       // €149 one-time
-  subscription: Deno.env.get("STRIPE_PRICE_SUBSCRIPTION") || "price_sub_monthly", // €9.99/month
-  per_track: Deno.env.get("STRIPE_PRICE_PER_TRACK") || "price_per_track_999",     // €9.99 per track
-};
+// Stripe Price IDs - use env vars; fallback to dynamic pricing if not set
+const PRICE_LIFETIME = Deno.env.get("STRIPE_PRICE_LIFETIME_149");
+const PRICE_MONTHLY = Deno.env.get("STRIPE_PRICE_SUBSCRIPTION") || Deno.env.get("STRIPE_PRICE_MONTHLY_1499");
+const PRICE_SINGLE = Deno.env.get("STRIPE_PRICE_SINGLE_999") || Deno.env.get("STRIPE_PRICE_PER_TRACK");
 
 // Coin credits per purchase option
 const COIN_CREDITS = {
@@ -57,18 +55,15 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const { data: tool, error: toolError } = await supabaseAdmin
+    const { data: tool } = await supabaseAdmin
       .from('creative_tools')
-      .select('*')
+      .select('id, name')
       .eq('slug', 'creative-soul-meditation')
       .eq('is_active', true)
-      .single();
+      .maybeSingle();
 
-    if (toolError || !tool) {
-      throw new Error("Creative Soul Meditation tool not found or inactive");
-    }
-
-    const { id: toolId, name: toolName } = tool;
+    const toolId = tool?.id ?? "creative-soul-meditation";
+    const toolName = tool?.name ?? "Creative Soul Meditation";
     const shcCoinsToCredit = COIN_CREDITS[option as keyof typeof COIN_CREDITS];
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
@@ -88,28 +83,30 @@ serve(async (req) => {
       })).id;
     }
 
-    const origin = req.headers.get("origin") || req.headers.get("referer")?.split('/').slice(0, 3).join('/') || "https://sacredhealing.app";
+    const SITE_URL = Deno.env.get("SITE_URL") || Deno.env.get("SUPABASE_URL")?.replace(".supabase.co", "") || req.headers.get("origin") || "https://sacredhealing.app";
 
-    // Determine pricing and mode based on option
-    const priceId = PRICE_IDS[option as keyof typeof PRICE_IDS];
+    // Map option to price ID (use same env vars as creative-soul-create-checkout for consistency)
+    const priceIdMap: Record<string, string | undefined> = {
+      one_time: PRICE_LIFETIME,
+      subscription: PRICE_MONTHLY,
+      per_track: PRICE_SINGLE,
+    };
+    const priceId = priceIdMap[option];
     const mode = option === "subscription" ? "subscription" : "payment";
-    const isPriceId = priceId && priceId.startsWith("price_"); // Check if it's a valid Stripe Price ID format
+    const usePriceId = priceId && priceId.startsWith("price_") && priceId.length > 20; // Real Stripe IDs are longer
     
-    // Create line items based on option
+    // Create line items - use dynamic pricing when env vars not set (avoids invalid price ID errors)
     let lineItems;
     
-    if (isPriceId) {
-      // Use existing Stripe Price ID from environment or defaults
-      lineItems = [{ price: priceId, quantity: 1 }];
+    if (usePriceId) {
+      lineItems = [{ price: priceId!, quantity: 1 }];
     } else {
-      // Use dynamic pricing
-      const prices = {
-        one_time: { amount: 14900, description: "One-time purchase - Lifetime access + 1000 SHC Coins" }, // €149
-        subscription: { amount: 999, description: "Monthly subscription - €9.99/month + 200 SHC Coins/month" }, // €9.99
-        per_track: { amount: 999, description: "Per-track generation - €9.99 per track + 100 SHC Coins" }, // €9.99
+      const prices: Record<string, { amount: number; description: string; recurring?: boolean }> = {
+        one_time: { amount: 14900, description: "Lifetime access - Creative Soul Meditation + 1000 SHC Coins" },
+        subscription: { amount: 999, description: "Monthly subscription - €9.99/month + 200 SHC Coins/month", recurring: true },
+        per_track: { amount: 999, description: "One meditation export - €9.99 per track + 100 SHC Coins" },
       };
-      
-      const priceInfo = prices[option as keyof typeof prices];
+      const priceInfo = prices[option] || prices.per_track;
       lineItems = [{
         price_data: {
           currency: "eur",
@@ -122,10 +119,8 @@ serve(async (req) => {
             },
           },
           unit_amount: priceInfo.amount,
-          ...(option === "subscription" && {
-            recurring: {
-              interval: "month",
-            },
+          ...(priceInfo.recurring && {
+            recurring: { interval: "month" as const },
           }),
         },
         quantity: 1,
@@ -139,14 +134,15 @@ serve(async (req) => {
       line_items: lineItems,
       mode: mode,
       payment_method_types: ["card"],
-      success_url: `${origin}/creative-soul/store?success=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/creative-soul/store?canceled=true`,
+      success_url: `${SITE_URL}/creative-soul/meditation?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${SITE_URL}/creative-soul/meditation?payment=cancel`,
       metadata: {
         user_id: user.id,
-        tool_id: toolId,
-        tool_slug: 'creative-soul-meditation',
+        tool_id: String(toolId),
+        tool_slug: 'creative-soul',
         tool_name: toolName,
         purchase_type: "meditation_audio",
+        plan: option === 'one_time' ? 'lifetime' : (option === 'subscription' ? 'monthly' : 'single'),
         option: option,
         shc_coins: String(shcCoinsToCredit),
         ...(affiliateId && { affiliate_id: affiliateId }),
@@ -154,8 +150,9 @@ serve(async (req) => {
       payment_intent_data: mode === "payment" ? {
         metadata: {
           user_id: user.id,
-          tool_id: toolId,
+          tool_id: String(toolId),
           purchase_type: "meditation_audio",
+          plan: option === 'one_time' ? 'lifetime' : (option === 'subscription' ? 'monthly' : 'single'),
           option: option,
           shc_coins: String(shcCoinsToCredit),
         },

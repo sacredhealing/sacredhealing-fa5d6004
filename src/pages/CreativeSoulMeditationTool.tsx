@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,6 +28,9 @@ import {
 } from 'lucide-react';
 import { useSoulMeditateEngine } from '@/hooks/useSoulMeditateEngine';
 import { useOfflineExport } from '@/hooks/useOfflineExport';
+import { useAuth } from '@/hooks/useAuth';
+import { useAdminRole } from '@/hooks/useAdminRole';
+import { supabase } from '@/integrations/supabase/client';
 import SpectralVisualizer from '@/components/soulmeditate/SpectralVisualizer';
 import NeuralSourceInput from '@/components/soulmeditate/NeuralSourceInput';
 import AtmosphereSelector from '@/components/soulmeditate/AtmosphereSelector';
@@ -58,8 +62,16 @@ function formatTime(seconds: number): string {
 
 export default function CreativeSoulMeditationTool() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { user } = useAuth();
+  const { isAdmin } = useAdminRole();
   const engine = useSoulMeditateEngine();
   const offlineExport = useOfflineExport();
+  
+  const [hasExportAccess, setHasExportAccess] = useState(false);
+  const [exportAccessLoading, setExportAccessLoading] = useState(true);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [paymentLoading, setPaymentLoading] = useState(false);
   
   // UI State
   const [visualizerMode, setVisualizerMode] = useState<VisualizerMode>('bars');
@@ -157,10 +169,46 @@ export default function CreativeSoulMeditationTool() {
     }
   }, [engine, stopAll, startNeuralProcess]);
 
-  // Handle offline export - fast rendering using OfflineAudioContext
+  // Handle payment for single export (€9.99)
+  const handlePayForExport = useCallback(async () => {
+    if (!user) {
+      toast.info('Please sign in to purchase');
+      navigate('/auth');
+      return;
+    }
+    setPaymentLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-meditation-audio-checkout', {
+        body: { option: 'per_track' },
+      });
+      if (error) throw error;
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL returned');
+      }
+    } catch (err: unknown) {
+      console.error('Checkout error:', err);
+      toast.error('Failed to start checkout. Please try again.');
+      setPaymentLoading(false);
+    }
+  }, [user, navigate]);
+
+  // Handle offline export - gate behind payment if no access
   const handleExport = useCallback(async () => {
     if (!engine.isInitialized) {
       toast.error('Please initialize the engine first');
+      return;
+    }
+
+    // Require payment for export unless user has access
+    if (!hasExportAccess) {
+      if (!user) {
+        toast.info('Please sign in to export');
+        navigate('/auth');
+        return;
+      }
+      setShowPaymentDialog(true);
       return;
     }
 
@@ -200,7 +248,7 @@ export default function CreativeSoulMeditationTool() {
       });
       toast.success(`Meditation rendered as ${result.format.toUpperCase()}`);
     }
-  }, [engine, offlineExport, exportDuration, healingFreq, brainwaveFreq]);
+  }, [engine, offlineExport, exportDuration, healingFreq, brainwaveFreq, hasExportAccess, user, navigate]);
 
   // Cancel export
   const cancelExport = useCallback(() => {
@@ -220,6 +268,43 @@ export default function CreativeSoulMeditationTool() {
     engine.loadNeuralSource(url);
     toast.success(`Loaded: ${title}`);
   }, [engine]);
+
+  // Check export access (creative_soul_entitlements or admin)
+  useEffect(() => {
+    const checkAccess = async () => {
+      if (!user) {
+        setHasExportAccess(false);
+        setExportAccessLoading(false);
+        return;
+      }
+      if (isAdmin) {
+        setHasExportAccess(true);
+        setExportAccessLoading(false);
+        return;
+      }
+      try {
+        const { data: entitlements } = await supabase
+          .from('creative_soul_entitlements')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('has_access', true);
+        const { data: grantedAccess } = await supabase
+          .from('admin_granted_access')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+          .in('access_type', ['creative_soul', 'creative_soul_meditation']);
+        setHasExportAccess(
+          (entitlements && entitlements.length > 0) || (grantedAccess && grantedAccess.length > 0)
+        );
+      } catch {
+        setHasExportAccess(false);
+      } finally {
+        setExportAccessLoading(false);
+      }
+    };
+    checkAccess();
+  }, [user, isAdmin, searchParams.get('payment')]); // Refetch when returning from payment
 
   // Auto-load atmosphere when style changes (random sound from database)
   useEffect(() => {
@@ -616,6 +701,53 @@ export default function CreativeSoulMeditationTool() {
           </div>
         </div>
       </div>
+
+      {/* Payment required for export */}
+      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+        <DialogContent className="bg-slate-900 border-cyan-500/30 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-xl">Download Master File</DialogTitle>
+            <DialogDescription className="text-white/70">
+              Create and preview your meditation for free. Pay €9.99 once to download your master file.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex items-center gap-2 text-sm text-white/80">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+              One meditation export
+            </div>
+            <div className="flex items-center gap-2 text-sm text-white/80">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+              All styles available
+            </div>
+            <div className="flex items-center gap-2 text-sm text-white/80">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+              High-quality output
+            </div>
+            <div className="flex items-center gap-2 text-sm text-white/80">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+              Pay as you go
+            </div>
+            <Button
+              onClick={handlePayForExport}
+              disabled={paymentLoading}
+              className="w-full bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white font-semibold py-6"
+            >
+              {paymentLoading ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <Zap className="w-5 h-5 mr-2" />
+                  Pay €9.99 Per Track
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
