@@ -48,6 +48,9 @@ const SOLFEGGIO_FREQUENCIES = [
   { hz: 963, label: '963 Hz – Crown Activation', color: '#a855f7' },
 ];
 
+// III. Quantum Calibration is 5dB lower than II. Meditation Style & Neural Source
+const QUANTUM_CALIBRATION_LINEAR = Math.pow(10, -5 / 20); // ≈ 0.562
+
 const BINAURAL_PRESETS = [
   { beatHz: 0.5, label: 'Epsilon (0.5 Hz) – Transcendence' },
   { beatHz: 2, label: 'Delta (2 Hz) – Deep Healing Sleep' },
@@ -684,9 +687,9 @@ export function useSoulMeditateEngine() {
     osc.connect(solfeggioGainRef.current);
     osc.start();
 
-    // Set volume immediately for audible tone
+    // Set volume immediately for audible tone (5dB lower than II. Meditation Style)
     solfeggioGainRef.current.gain.cancelScheduledValues(audioContextRef.current.currentTime);
-    solfeggioGainRef.current.gain.setValueAtTime(solfeggioVolume, audioContextRef.current.currentTime);
+    solfeggioGainRef.current.gain.setValueAtTime(solfeggioVolume * QUANTUM_CALIBRATION_LINEAR, audioContextRef.current.currentTime);
 
     solfeggioOscRef.current = osc;
     setFrequencies(prev => ({ ...prev, solfeggio: { enabled: true, hz } }));
@@ -741,9 +744,9 @@ export function useSoulMeditateEngine() {
     leftOsc.start();
     rightOsc.start();
 
-    // Set volume immediately for audible tone
+    // Set volume immediately for audible tone (5dB lower than II. Meditation Style)
     binauralGainRef.current.gain.cancelScheduledValues(ctx.currentTime);
-    binauralGainRef.current.gain.setValueAtTime(binauralVolume, ctx.currentTime);
+    binauralGainRef.current.gain.setValueAtTime(binauralVolume * QUANTUM_CALIBRATION_LINEAR, ctx.currentTime);
 
     binauralLeftOscRef.current = leftOsc;
     binauralRightOscRef.current = rightOsc;
@@ -787,7 +790,7 @@ export function useSoulMeditateEngine() {
   }, []);
 
   const updateSolfeggioVolume = useCallback((vol: number) => {
-    const safeVol = clampVolume(vol, 0.7); // Frequencies need more headroom
+    const safeVol = clampVolume(vol, 0.7) * QUANTUM_CALIBRATION_LINEAR; // 5dB lower than II
     if (solfeggioGainRef.current && frequencies.solfeggio.enabled) {
       solfeggioGainRef.current.gain.value = safeVol;
     }
@@ -795,7 +798,7 @@ export function useSoulMeditateEngine() {
   }, [frequencies.solfeggio.enabled]);
 
   const updateBinauralVolume = useCallback((vol: number) => {
-    const safeVol = clampVolume(vol, 0.7); // Frequencies need more headroom
+    const safeVol = clampVolume(vol, 0.7) * QUANTUM_CALIBRATION_LINEAR; // 5dB lower than II
     if (binauralGainRef.current && frequencies.binaural.enabled) {
       binauralGainRef.current.gain.value = safeVol;
     }

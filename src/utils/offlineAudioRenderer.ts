@@ -3,6 +3,9 @@
  * Renders full meditation audio in seconds using OfflineAudioContext
  */
 
+// III. Quantum Calibration is 5dB lower than II. Meditation Style & Neural Source
+const QUANTUM_CALIBRATION_LINEAR = Math.pow(10, -5 / 20); // ≈ 0.562
+
 export interface DSPSettings {
   reverb: number;
   delay: number;
@@ -124,16 +127,16 @@ export async function renderOffline(config: OfflineRenderConfig): Promise<AudioB
 
   onProgress?.(50, 'Generating healing frequencies...');
 
-  // Solfeggio frequency
+  // Solfeggio frequency (5dB lower than II. Meditation Style)
   if (solfeggio?.enabled && solfeggio.hz > 0) {
-    createSolfeggioOscillator(offlineCtx, solfeggio.hz, solfeggio.volume, durationSeconds, dspOutput);
+    createSolfeggioOscillator(offlineCtx, solfeggio.hz, solfeggio.volume * QUANTUM_CALIBRATION_LINEAR, durationSeconds, dspOutput);
   }
 
   onProgress?.(60, 'Generating binaural beats...');
 
-  // Binaural beats (stereo oscillators)
+  // Binaural beats (5dB lower than II. Meditation Style)
   if (binaural?.enabled && binaural.beatHz > 0) {
-    createBinauralBeats(offlineCtx, binaural.carrierHz, binaural.beatHz, binaural.volume, durationSeconds, dspOutput);
+    createBinauralBeats(offlineCtx, binaural.carrierHz, binaural.beatHz, binaural.volume * QUANTUM_CALIBRATION_LINEAR, durationSeconds, dspOutput);
   }
 
   onProgress?.(70, 'Rendering audio (this may take a moment)...');
