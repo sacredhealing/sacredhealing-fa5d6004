@@ -92,7 +92,7 @@ export const OnboardingStep: React.FC<OnboardingStepProps> = ({
           </Button>
         </div>
       )}
-      <AppDisclaimer fixed position="aboveFooter" />
+      <AppDisclaimer />
     </div>
   );
 };

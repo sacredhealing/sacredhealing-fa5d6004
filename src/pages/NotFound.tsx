@@ -18,7 +18,7 @@ const NotFound = () => {
           Return to Home
         </a>
       </div>
-      <AppDisclaimer fixed position="screen" />
+      <AppDisclaimer />
     </div>
   );
 };

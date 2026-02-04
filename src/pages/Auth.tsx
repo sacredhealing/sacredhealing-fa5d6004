@@ -226,7 +226,7 @@ const Auth: React.FC = () => {
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-secondary/15 rounded-full blur-[100px]" />
       </div>
 
-      <div className="relative z-10 flex-1 flex flex-col px-6 pt-12 pb-20">
+      <div className="relative z-10 flex-1 flex flex-col px-6 pt-12 pb-8">
         {/* Header */}
         <div className="flex flex-col items-center animate-fade-in">
           <LotusIcon size={80} className="drop-shadow-[0_0_20px_hsl(var(--primary))]" />
@@ -334,7 +334,7 @@ const Auth: React.FC = () => {
             {isLogin ? t('auth.signUp') : t('auth.signIn')}
           </button>
         </p>
-        <AppDisclaimer fixed position="screen" />
+        <AppDisclaimer className="mt-auto pt-8" />
       </div>
     </div>
   );

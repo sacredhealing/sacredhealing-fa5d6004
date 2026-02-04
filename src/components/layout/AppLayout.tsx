@@ -114,13 +114,12 @@ export const AppLayout: React.FC = () => {
           exit="exit"
           variants={pageVariants}
           transition={pageTransition}
-          className="relative pb-24"
+          className="relative pb-28"
         >
           <Outlet />
+          <AppDisclaimer />
         </motion.main>
       </AnimatePresence>
-      
-      <AppDisclaimer fixed />
       <NowPlayingBar />
       <BottomNav />
       <AnnouncementPopup />
