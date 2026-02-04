@@ -86,8 +86,7 @@ const CreativeSoulStore = () => {
     if (isAdmin || hasMeditationAccess) {
       navigate('/creative-soul/meditation');
     } else {
-      // Show pricing options instead of direct purchase
-      navigate('/creative-soul-meditation-landing');
+      navigate('/creative-soul');
     }
   };
 
