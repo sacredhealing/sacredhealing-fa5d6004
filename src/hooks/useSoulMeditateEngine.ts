@@ -601,6 +601,48 @@ export function useSoulMeditateEngine() {
     }
 
     if (!sounds || sounds.length === 0) {
+      // Fallback: try 'indian' (only style with active sounds in seed data)
+      if (styleId !== 'indian') {
+        const { data: fallbackSounds, error: fallbackErr } = await supabase
+          .from('meditation_style_sounds')
+          .select('*')
+          .eq('style_id', 'indian')
+          .eq('is_active', true);
+        if (!fallbackErr && fallbackSounds?.length) {
+          const fb = fallbackSounds[Math.floor(Math.random() * fallbackSounds.length)];
+          const fbUrl = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${fb.file_path}`;
+          if (atmosphereAudioRef.current) {
+            atmosphereAudioRef.current.pause();
+            atmosphereAudioRef.current.volume = 0;
+          }
+          if (atmosphereSourceRef.current) {
+            atmosphereSourceRef.current.disconnect();
+            atmosphereSourceRef.current = null;
+          }
+          atmosphereAudioRef.current = null;
+          const audio = new Audio();
+          audio.crossOrigin = 'anonymous';
+          audio.loop = true;
+          audio.src = fbUrl;
+          try {
+            const src = audioContextRef.current!.createMediaElementSource(audio);
+            src.connect(atmosphereGainRef.current!);
+            atmosphereSourceRef.current = src;
+            atmosphereAudioRef.current = audio;
+            setAtmosphereLayer({
+              isPlaying: true,
+              volume: atmosphereLayer.volume,
+              source: `indian:${fb.name}`,
+              exportInput: { directUrl: fbUrl, displayName: fb.name }
+            });
+            audioContextRef.current?.resume();
+            audio.play().catch(console.warn);
+            return { ok: true, fallbackFrom: styleId };
+          } catch (e) {
+            console.error('Fallback load failed:', e);
+          }
+        }
+      }
       console.log(`No active sounds found for style: ${styleId}`);
       if (atmosphereAudioRef.current) {
         atmosphereAudioRef.current.pause();
@@ -657,11 +699,15 @@ export function useSoulMeditateEngine() {
     setAtmosphereLayer(prev => ({ 
       ...prev, 
       source: `${styleId}:${selectedSound.name}`,
+      isPlaying: true,
       exportInput: {
         directUrl: audioUrl,
         displayName: selectedSound.name
       }
     }));
+    // Auto-play so user hears the new sound immediately
+    audioContextRef.current?.resume();
+    audio.play().catch(console.warn);
     return { ok: true };
   }, [initialize, atmosphereLayer.source]);
 

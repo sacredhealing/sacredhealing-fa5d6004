@@ -317,7 +317,12 @@ export default function CreativeSoulMeditationTool() {
   // Auto-load atmosphere when style changes (random sound from database)
   useEffect(() => {
     if (engine.isInitialized) {
-      engine.loadAtmosphere(activeStyle);
+      engine.loadAtmosphere(activeStyle).then((result) => {
+        if (result.ok && 'fallbackFrom' in result && result.fallbackFrom) {
+          const label = result.fallbackFrom.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+          toast.info(`No sounds for ${label}. Loaded from Indian instead.`);
+        }
+      });
     }
   }, [activeStyle, engine.isInitialized]);
 
@@ -329,7 +334,12 @@ export default function CreativeSoulMeditationTool() {
     try {
       const result = await engine.loadAtmosphere(styleId);
       if (result.ok) {
-        toast.success('Loaded new sound from library');
+        const fallbackFrom = 'fallbackFrom' in result ? result.fallbackFrom : undefined;
+        toast.success(
+          fallbackFrom
+            ? `No sounds for ${fallbackFrom.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}. Loaded from Indian instead.`
+            : 'Loaded new sound from library'
+        );
       } else if (result.reason === 'no_sounds') {
         const styleLabel = styleId.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
         toast.error(`No sounds in library for ${styleLabel}. Try Indian or another style.`);
