@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Sparkles, Headphones, ArrowLeft, Check, Lightbulb, Languages, FileText, Mic, Youtube, Cpu, Music, Waves, Brain, Layers, Zap, Loader2 } from "lucide-react";
+import { Sparkles, Headphones, ArrowLeft, Check, Music, Waves, Brain, Layers, Zap, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +14,6 @@ const CreativeSoulStore = () => {
   const { isAdmin } = useAdminRole();
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
-  const [hasStudioAccess, setHasStudioAccess] = useState(false);
   const [hasMeditationAccess, setHasMeditationAccess] = useState(false);
   const [loading, setLoading] = useState(true);
   const [purchaseLoading, setPurchaseLoading] = useState<string | null>(null);
@@ -58,7 +57,6 @@ const CreativeSoulStore = () => {
 
         const hasEntitlement = entitlements?.some(hasValidEntitlement) ?? false;
         if (hasEntitlement) {
-          setHasStudioAccess(true);
           setHasMeditationAccess(true);
         }
 
@@ -67,13 +65,10 @@ const CreativeSoulStore = () => {
           .select('*')
           .eq('user_id', user.id)
           .eq('is_active', true)
-          .in('access_type', ['creative_soul', 'creative_soul_meditation']);
+          .eq('access_type', 'creative_soul_meditation');
 
-        if (grantedAccess) {
-          grantedAccess.forEach(access => {
-            if (access.access_type === 'creative_soul') setHasStudioAccess(true);
-            if (access.access_type === 'creative_soul_meditation') setHasMeditationAccess(true);
-          });
+        if (grantedAccess?.length) {
+          setHasMeditationAccess(true);
         }
       } catch (error) {
         console.error('Error checking access:', error);
@@ -84,14 +79,6 @@ const CreativeSoulStore = () => {
 
     checkAccess();
   }, [user]);
-
-  const handleStudioAccess = () => {
-    if (isAdmin || hasStudioAccess) {
-      navigate('/creative-soul/tool');
-    } else {
-      handlePurchase('creative-soul-studio');
-    }
-  };
 
   const handleMeditationAccess = () => {
     if (isAdmin || hasMeditationAccess) {
@@ -127,42 +114,6 @@ const CreativeSoulStore = () => {
       setPurchaseLoading(null);
     }
   };
-
-  const handlePurchase = async (toolSlug: string) => {
-    if (!user) {
-      toast.error('Please sign in to purchase');
-      navigate('/auth');
-      return;
-    }
-
-    setPurchaseLoading(toolSlug);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-creative-tool-checkout', {
-        body: { 
-          toolSlug,
-          ...(affiliateId && { affiliateId })
-        }
-      });
-
-      if (error) throw error;
-      if (data?.url) {
-        window.location.href = data.url;
-      }
-    } catch (error) {
-      console.error('Checkout error:', error);
-      toast.error('Failed to start checkout');
-      setPurchaseLoading(null);
-    }
-  };
-
-  const studioFeatures = [
-    { icon: Lightbulb, label: "Generate Ideas" },
-    { icon: Languages, label: "Translate Content" },
-    { icon: Mic, label: "Transcribe Audio" },
-    { icon: FileText, label: "Analyze PDFs" },
-    { icon: Youtube, label: "YouTube Insights" },
-    { icon: Cpu, label: "Creative AI" },
-  ];
 
   const meditationFeatures = [
     { icon: Waves, label: "Healing Frequencies" },
@@ -212,57 +163,6 @@ const CreativeSoulStore = () => {
         </div>
 
         <div className="max-w-3xl mx-auto space-y-8">
-          {/* Creative Soul Studio Card */}
-          <Card className="bg-card/50 border-border/50 backdrop-blur-sm overflow-hidden">
-            <CardHeader className="pb-4">
-              <div className="flex items-start justify-between">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-purple-600/20 border border-purple-500/30">
-                  <Sparkles className="w-6 h-6 text-purple-400" />
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-white">€19.99</div>
-                  <div className="flex gap-2 mt-1">
-                    <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-xs">
-                      <Check className="w-3 h-3 mr-1" />
-                      Free Access
-                    </Badge>
-                    <Badge variant="outline" className="bg-purple-500/10 text-purple-400 border-purple-500/30 text-xs">
-                      AI Powered
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-              <CardTitle className="text-xl text-white mt-4">Creative Soul Studio</CardTitle>
-              <CardDescription className="text-muted-foreground">
-                Your AI-powered creative companion. Generate ideas, translate content between languages, 
-                extract insights from PDFs, transcribe audio, analyze YouTube videos, and more. 
-                Everything you need to bring your creative visions to life.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {studioFeatures.map((feature, index) => (
-                  <div key={index} className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <feature.icon className="w-4 h-4 text-purple-400" />
-                    <span>{feature.label}</span>
-                  </div>
-                ))}
-              </div>
-              <Button 
-                onClick={handleStudioAccess}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
-                disabled={loading || purchaseLoading === 'creative-soul-studio'}
-              >
-                {purchaseLoading === 'creative-soul-studio' ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <Check className="w-4 h-4 mr-2" />
-                )}
-                {isAdmin || hasStudioAccess ? 'Open Studio (Admin Access)' : 'Get Access'}
-              </Button>
-            </CardContent>
-          </Card>
-
           {/* Creative Soul Meditation Card */}
           <Card className="bg-card/50 border-border/50 backdrop-blur-sm overflow-hidden">
             <CardHeader className="pb-4">

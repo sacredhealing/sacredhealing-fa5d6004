@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Sparkles, Music, PenTool, Heart, Zap, ArrowLeft, Check, ArrowRight, Globe, Crown, Headphones, Layers, Split } from 'lucide-react';
+import { Sparkles, Music, Heart, ArrowLeft, Check, ArrowRight, Headphones, Layers, Split } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -64,93 +64,7 @@ export default function CreativeSoulSales() {
 
       {/* Content */}
       <div className="max-w-6xl mx-auto px-4 py-12 space-y-12">
-        {/* Creative Soul Studio Banner - Always visible */}
-        <section>
-        <h2 className="text-3xl font-heading font-semibold text-foreground mb-2 text-center">
-          Creative Tools
-        </h2>
-        <p className="text-muted-foreground text-center mb-8">
-            AI-powered tools for your creative journey
-          </p>
-          
-          {/* Creative Soul Studio Card */}
-          <div className="max-w-2xl mx-auto">
-            <Card className="relative overflow-hidden border-2 border-purple-500/30 hover:border-purple-500/50 transition-all duration-300">
-              <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl opacity-50" />
-              <div className="absolute bottom-0 left-0 w-32 h-32 bg-pink-500/10 rounded-full blur-2xl opacity-40" />
-              
-              <div className="relative p-8 flex flex-col">
-                <div className="flex items-start justify-between mb-6">
-                  <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/30">
-                    <Sparkles className="w-8 h-8 text-purple-400" />
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <Badge variant="outline" className="text-lg font-bold px-3 py-1">
-                      €19.99
-                    </Badge>
-                    {isAdmin && (
-                      <Badge variant="outline" className="text-sm font-semibold bg-green-500/10 text-green-400 border-green-500/30">
-                        <Check className="w-3 h-3 mr-1" />
-                        Free Access
-                      </Badge>
-                    )}
-                    <Badge variant="outline" className="text-xs bg-purple-500/10 text-purple-400 border-purple-500/30">
-                      AI-Powered
-                        </Badge>
-                  </div>
-                </div>
-
-                <h3 className="text-3xl font-heading font-bold text-foreground mb-4">
-                  Creative Soul Studio
-                </h3>
-                
-                <p className="text-muted-foreground mb-6 text-lg leading-relaxed">
-                  Your AI-powered creative companion. Generate ideas, translate content between languages, 
-                  extract insights from PDFs, transcribe audio, analyze YouTube videos, and more. 
-                  Everything you need to bring your creative visions to life.
-                </p>
-
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-8">
-                  {[
-                    { icon: PenTool, label: 'Generate Ideas' },
-                    { icon: Globe, label: 'Translate Content' },
-                    { icon: Music, label: 'Transcribe Audio' },
-                    { icon: Zap, label: 'Analyze PDFs' },
-                    { icon: Heart, label: 'YouTube Insights' },
-                    { icon: Crown, label: 'Creative AI' },
-                  ].map(({ icon: FeatureIcon, label }) => (
-                    <div key={label} className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <FeatureIcon className="w-4 h-4 text-purple-400" />
-                      <span>{label}</span>
-                    </div>
-                  ))}
-                  </div>
-                  
-                {isAdmin ? (
-                    <Button
-                    onClick={() => navigate('/creative-soul-tool')}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold"
-                      size="lg"
-                    >
-                    <Check className="w-4 h-4 mr-2" />
-                    Open Studio (Admin Access)
-                    </Button>
-                  ) : (
-                    <Button
-                    onClick={() => navigate('/creative-soul')}
-                    className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold"
-                      size="lg"
-                    >
-                    Get This Tool
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  )}
-                </div>
-            </Card>
-          </div>
-        </section>
-
-        {/* Creative Soul Meditation Banner */}
+        {/* Creative Soul Meditation */}
         <section>
           <div className="max-w-2xl mx-auto">
             <Card className="relative overflow-hidden border-2 border-purple-500/30 hover:border-purple-500/50 transition-all duration-300">
