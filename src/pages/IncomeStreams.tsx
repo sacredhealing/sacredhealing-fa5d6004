@@ -120,7 +120,7 @@ const IncomeStreams: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen pb-24">
+    <div className="min-h-screen pb-24 w-full max-w-full overflow-x-hidden">
       {/* SHC Balance Banner */}
       <div className="px-4 pt-6 pb-4">
         <SHCBalanceCard />
@@ -150,7 +150,7 @@ const IncomeStreams: React.FC = () => {
       </div>
 
       {/* Income Stream Cards Grid */}
-      <div className="px-4 grid gap-4">
+      <div className="px-4 grid gap-4 w-full max-w-full box-border">
         {streams.length === 0 ? (
           <Card className="bg-card/50">
             <CardContent className="py-12 text-center">
@@ -169,46 +169,46 @@ const IncomeStreams: React.FC = () => {
             const colorTo = stream.color_to || 'primary/70';
 
             const cardContent = (
-              <Card className="bg-card/50 backdrop-blur-sm border-border/50 overflow-hidden transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 group cursor-pointer">
+              <Card className="bg-card/50 backdrop-blur-sm border-border/50 overflow-hidden transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 group cursor-pointer w-full max-w-full">
                 <CardContent className="p-0">
-                  <div className="flex items-center gap-4 p-4">
+                  <div className="flex items-start sm:items-center gap-3 sm:gap-4 p-3 sm:p-4">
                     {/* Icon */}
                     <div 
-                      className={`w-14 h-14 rounded-xl bg-gradient-to-br from-${colorFrom} to-${colorTo} flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform`}
+                      className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-${colorFrom} to-${colorTo} flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform`}
                       style={{
                         background: `linear-gradient(to bottom right, var(--${colorFrom.replace('/', '-').replace('-500', '')}, hsl(var(--primary))), var(--${colorTo.replace('/', '-').replace('-600', '').replace('-500', '')}, hsl(var(--primary) / 0.7)))`
                       }}
                     >
-                      <IconComponent className="w-7 h-7 text-white" />
+                      <IconComponent className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                     </div>
                     
                     {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-foreground truncate">{title}</h3>
+                    <div className="flex-1 min-w-0 overflow-hidden">
+                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1">
+                        <h3 className="font-semibold text-foreground truncate text-sm sm:text-base">{title}</h3>
                         {badge && (
-                          <Badge variant="secondary" className="text-xs shrink-0">
+                          <Badge variant="secondary" className="text-[10px] sm:text-xs shrink-0">
                             {badge}
                           </Badge>
                         )}
                         {stream.is_featured && (
-                          <Badge className="bg-amber-500/20 text-amber-400 text-xs shrink-0">
+                          <Badge className="bg-amber-500/20 text-amber-400 text-[10px] sm:text-xs shrink-0">
                             ⭐
                           </Badge>
                         )}
                       </div>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
+                      <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 break-words">
                         {description || t('incomeStreams.exploreOpportunity', 'Explore this opportunity')}
                       </p>
                       {earnings && (
-                        <p className="text-xs text-primary mt-1">
+                        <p className="text-[10px] sm:text-xs text-primary mt-1 truncate">
                           💰 {earnings}
                         </p>
                       )}
                     </div>
                     
                     {/* Arrow */}
-                    <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all shrink-0" />
+                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all shrink-0 mt-1 sm:mt-0" />
                   </div>
                 </CardContent>
               </Card>
@@ -216,14 +216,14 @@ const IncomeStreams: React.FC = () => {
 
             if (isInternalLink(stream.link)) {
               return (
-                <Link key={stream.id} to={stream.link}>
+                <Link key={stream.id} to={stream.link} className="block w-full max-w-full">
                   {cardContent}
                 </Link>
               );
             }
 
             return (
-              <a key={stream.id} href={stream.link} target="_blank" rel="noopener noreferrer">
+              <a key={stream.id} href={stream.link} target="_blank" rel="noopener noreferrer" className="block w-full max-w-full">
                 {cardContent}
               </a>
             );

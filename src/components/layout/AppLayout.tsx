@@ -114,7 +114,7 @@ export const AppLayout: React.FC = () => {
           exit="exit"
           variants={pageVariants}
           transition={pageTransition}
-          className="relative pb-28"
+          className="relative pb-28 overflow-x-hidden"
         >
           <Outlet />
           <AppDisclaimer />
