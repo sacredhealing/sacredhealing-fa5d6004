@@ -341,8 +341,8 @@ const Membership = () => {
         <AyurvedaSection isPremium={isPremium} membershipTier={currentTier || 'free'} isAdmin={isAdmin} />
       </div>
 
-      {/* Vedic Astrology Section */}
-      <div className="px-3 sm:px-4 py-4 sm:py-6">
+      {/* Vedic Astrology Section - reduced padding on mobile for wider text column */}
+      <div className="px-2 sm:px-4 py-4 sm:py-6">
         <VedicAstrologySection />
       </div>
 

@@ -101,7 +101,7 @@ export const VedicAstrologySection: React.FC = () => {
 
   return (
     <Card className="overflow-hidden border-2 border-primary/30 bg-gradient-to-br from-purple-500/5 via-background to-blue-500/5 w-full max-w-full">
-      <CardContent className="p-4 sm:p-6">
+      <CardContent className="p-4 sm:p-6 text-left">
         <div className="flex flex-col items-center text-center mb-5 sm:mb-6">
           <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center flex-shrink-0 mb-3">
             <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
@@ -191,7 +191,7 @@ export const VedicAstrologySection: React.FC = () => {
 
         {/* Daily Vedic Insight */}
         {highestAccess && (
-          <div className="mb-6 w-full min-w-0">
+          <div className="mb-6 w-full">
             <DailyVedicInsight tier={highestAccess} />
           </div>
         )}

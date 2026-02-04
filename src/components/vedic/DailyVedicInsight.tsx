@@ -6,6 +6,26 @@ import { getDailyVedicInfluence, getPremiumDailyGuidance, getMasterDeepReading, 
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 
+/** Splits long text into paragraphs for readability - breaks on sentence boundaries */
+const VedicParagraphs: React.FC<{ text: string; className?: string }> = ({ text, className = '' }) => {
+  const paragraphs = text
+    .split(/(?<=[.!?])\s+/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+  if (paragraphs.length <= 1) {
+    return <p className={`text-sm text-muted-foreground leading-relaxed text-left ${className}`}>{text}</p>;
+  }
+  return (
+    <div className={`space-y-3 text-left ${className}`}>
+      {paragraphs.map((para, i) => (
+        <p key={i} className="text-sm text-muted-foreground leading-relaxed">
+          {para}
+        </p>
+      ))}
+    </div>
+  );
+};
+
 interface DailyVedicInsightProps {
   tier: 'basic' | 'premium' | 'master';
 }
@@ -170,29 +190,29 @@ export const DailyVedicInsight: React.FC<DailyVedicInsightProps> = ({ tier }) =>
           </CardHeader>
           <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6 pt-0 w-full">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <div className="p-3 sm:p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 w-full">
-                <h4 className="font-semibold text-sm mb-1 text-foreground flex items-center gap-2">
+              <div className="p-4 sm:p-5 rounded-xl bg-blue-500/10 border border-blue-500/20 w-full text-left">
+                <h4 className="font-semibold text-sm mb-2 text-foreground flex items-center gap-2">
                   💼 Career Insights
                 </h4>
-                <p className="text-sm text-muted-foreground leading-relaxed">{premiumGuidance.career}</p>
+                <VedicParagraphs text={premiumGuidance.career} />
               </div>
-              <div className="p-3 sm:p-4 rounded-xl bg-pink-500/10 border border-pink-500/20 w-full">
-                <h4 className="font-semibold text-sm mb-1 text-foreground flex items-center gap-2">
+              <div className="p-4 sm:p-5 rounded-xl bg-pink-500/10 border border-pink-500/20 w-full text-left">
+                <h4 className="font-semibold text-sm mb-2 text-foreground flex items-center gap-2">
                   💕 Relationship Harmony
                 </h4>
-                <p className="text-sm text-muted-foreground leading-relaxed">{premiumGuidance.relationships}</p>
+                <VedicParagraphs text={premiumGuidance.relationships} />
               </div>
-              <div className="p-3 sm:p-4 rounded-xl bg-green-500/10 border border-green-500/20 w-full">
-                <h4 className="font-semibold text-sm mb-1 text-foreground flex items-center gap-2">
+              <div className="p-4 sm:p-5 rounded-xl bg-green-500/10 border border-green-500/20 w-full text-left">
+                <h4 className="font-semibold text-sm mb-2 text-foreground flex items-center gap-2">
                   🌿 Health Recommendations
                 </h4>
-                <p className="text-sm text-muted-foreground leading-relaxed">{premiumGuidance.health}</p>
+                <VedicParagraphs text={premiumGuidance.health} />
               </div>
-              <div className="p-3 sm:p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 w-full">
-                <h4 className="font-semibold text-sm mb-1 text-foreground flex items-center gap-2">
+              <div className="p-4 sm:p-5 rounded-xl bg-amber-500/10 border border-amber-500/20 w-full text-left">
+                <h4 className="font-semibold text-sm mb-2 text-foreground flex items-center gap-2">
                   💰 Financial Timing
                 </h4>
-                <p className="text-sm text-muted-foreground leading-relaxed">{premiumGuidance.finances}</p>
+                <VedicParagraphs text={premiumGuidance.finances} />
               </div>
             </div>
             
@@ -221,51 +241,51 @@ export const DailyVedicInsight: React.FC<DailyVedicInsightProps> = ({ tier }) =>
           </CardHeader>
           <CardContent className="space-y-3 sm:space-y-5 p-4 sm:p-6 pt-0 w-full">
             {/* Soul Purpose */}
-            <div className="p-3 sm:p-4 rounded-xl bg-purple-500/10 border border-purple-500/20 w-full">
-              <h4 className="font-semibold text-sm mb-2 text-foreground flex items-center gap-2">
+            <div className="p-4 sm:p-5 rounded-xl bg-purple-500/10 border border-purple-500/20 w-full text-left">
+              <h4 className="font-semibold text-sm mb-3 text-foreground flex items-center gap-2">
                 🔮 Soul Purpose Analysis
               </h4>
-              <p className="text-sm text-muted-foreground leading-relaxed">{masterReading.soulPurpose}</p>
+              <VedicParagraphs text={masterReading.soulPurpose} />
             </div>
 
             {/* Karma Patterns */}
-            <div className="p-3 sm:p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20 w-full">
-              <h4 className="font-semibold text-sm mb-2 text-foreground flex items-center gap-2">
+            <div className="p-4 sm:p-5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 w-full text-left">
+              <h4 className="font-semibold text-sm mb-3 text-foreground flex items-center gap-2">
                 ⚖️ Karma Pattern Insights
               </h4>
-              <p className="text-sm text-muted-foreground leading-relaxed">{masterReading.karmaPatterns}</p>
+              <VedicParagraphs text={masterReading.karmaPatterns} />
             </div>
 
             {/* Strengths & Challenges Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full">
-              <div className="p-3 sm:p-4 rounded-xl bg-green-500/10 border border-green-500/20 w-full">
-                <h4 className="font-semibold text-sm mb-2 text-foreground flex items-center gap-2">
+              <div className="p-4 sm:p-5 rounded-xl bg-green-500/10 border border-green-500/20 w-full text-left">
+                <h4 className="font-semibold text-sm mb-3 text-foreground flex items-center gap-2">
                   ⭐ Strengths Mapping
                 </h4>
-                <p className="text-sm text-muted-foreground leading-relaxed">{masterReading.strengths}</p>
+                <VedicParagraphs text={masterReading.strengths} />
               </div>
-              <div className="p-3 sm:p-4 rounded-xl bg-red-500/10 border border-red-500/20 w-full">
-                <h4 className="font-semibold text-sm mb-2 text-foreground flex items-center gap-2">
+              <div className="p-4 sm:p-5 rounded-xl bg-red-500/10 border border-red-500/20 w-full text-left">
+                <h4 className="font-semibold text-sm mb-3 text-foreground flex items-center gap-2">
                   🎯 Challenge Mapping
                 </h4>
-                <p className="text-sm text-muted-foreground leading-relaxed">{masterReading.challenges}</p>
+                <VedicParagraphs text={masterReading.challenges} />
               </div>
             </div>
 
             {/* Timing Peaks */}
-            <div className="p-3 sm:p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 w-full">
-              <h4 className="font-semibold text-sm mb-2 text-foreground flex items-center gap-2">
+            <div className="p-4 sm:p-5 rounded-xl bg-blue-500/10 border border-blue-500/20 w-full text-left">
+              <h4 className="font-semibold text-sm mb-3 text-foreground flex items-center gap-2">
                 📅 Timing Peak Predictions
               </h4>
-              <p className="text-sm text-muted-foreground leading-relaxed">{masterReading.timingPeaks}</p>
+              <VedicParagraphs text={masterReading.timingPeaks} />
             </div>
 
             {/* Birth Chart Summary */}
-            <div className="p-3 sm:p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 w-full">
-              <h4 className="font-semibold text-sm mb-2 text-foreground flex items-center gap-2">
+            <div className="p-4 sm:p-5 rounded-xl bg-amber-500/10 border border-amber-500/20 w-full text-left">
+              <h4 className="font-semibold text-sm mb-3 text-foreground flex items-center gap-2">
                 📜 Detailed Birth Chart Analysis
               </h4>
-              <p className="text-sm text-muted-foreground leading-relaxed">{masterReading.birthChartSummary}</p>
+              <VedicParagraphs text={masterReading.birthChartSummary} />
             </div>
 
             {!birthDetails && (
