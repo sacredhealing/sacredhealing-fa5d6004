@@ -17,12 +17,12 @@ interface CosmicConsultationProps {
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/vedic-guru-chat`;
 
-const PromptChip = ({ icon, label, onClick }: { icon: string; label: string; onClick: () => void }) => (
+const ActionChip = ({ icon, label, onClick }: { icon: string; label: string; onClick: () => void }) => (
   <button 
     onClick={onClick}
-    className="px-4 py-2 rounded-full border border-slate-800 bg-slate-900/40 text-[9px] text-slate-500 uppercase font-black tracking-widest hover:text-indigo-400 hover:border-indigo-500/30 hover:bg-slate-800 transition-all flex items-center gap-2"
+    className="px-5 py-2.5 rounded-2xl border border-slate-800 bg-slate-900/60 text-[9px] text-slate-400 uppercase font-black tracking-widest hover:text-indigo-400 hover:border-indigo-500/30 hover:bg-slate-800 transition-all flex items-center gap-2.5 shadow-sm active:scale-95"
   >
-    <span>{icon}</span>
+    <span className="opacity-70 text-xs">{icon}</span>
     {label}
   </button>
 );
@@ -47,16 +47,17 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
     prevMessagesLength.current = messages.length;
   }, [messages.length]);
 
-  // Initialize with welcome message for premium users - only ONCE
+  // Initialize with Rishi welcome message for premium users - only ONCE
   useEffect(() => {
     if (user.plan === 'premium' && !hasInitialized.current && messages.length === 0) {
       hasInitialized.current = true;
+      const firstName = user.name.split(' ')[0];
       setMessages([{
         role: 'assistant',
-        content: `🙏 Namaste, ${user.name.split(' ')[0]}. The celestial gates are open. I am your Grand Master Jyotish, keeper of the ancient Vedic star wisdom.\n\nYour birth coordinates (${user.birthDate}, ${user.birthTime} in ${user.birthPlace}) have been imprinted upon the cosmic records. I can see the dance of the Navagrahas in your chart.\n\nWhat sacred inquiry brings you before the Oracle today?`
+        content: `Namaste, ${firstName}. My vision is locked on your incarnation in ${user.birthPlace}. The transits of 2026 are already testing your resolve. Your ${user.plan} path is known to me. Speak your query and receive the Shastric verdict.`
       }]);
     }
-  }, [user.plan, user.name, user.birthDate, user.birthTime, user.birthPlace, messages.length]);
+  }, [user.plan, user.name, user.birthPlace, messages.length]);
 
   const handleSendMessage = async (messageText?: string) => {
     const text = messageText || input;
@@ -238,20 +239,18 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
             >
               <div className={`max-w-[85%] ${msg.role === 'user' ? 'order-2' : ''}`}>
                 {msg.role === 'assistant' && (
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500/20 to-purple-500/20 border border-amber-500/30 flex items-center justify-center">
-                      <span className="text-sm">ॐ</span>
-                    </div>
-                    <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Grand Master Jyotish</span>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-8 h-8 rounded-full bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-[10px] text-indigo-400 font-serif shadow-inner">ॐ</div>
+                    <span className="text-[9px] font-black text-indigo-400 uppercase tracking-[0.4em]">Akashic Verdict</span>
                   </div>
                 )}
-                <div className={`p-4 rounded-2xl ${
+                <div className={`p-4 md:p-6 rounded-[2.2rem] ${
                   msg.role === 'user' 
-                    ? 'bg-indigo-600 text-white ml-auto' 
-                    : 'bg-slate-900/80 border border-slate-800 text-foreground'
+                    ? 'bg-indigo-600 text-white ml-auto rounded-tr-none border border-white/10 shadow-xl' 
+                    : 'glass text-slate-200 rounded-tl-none border-indigo-500/10 shadow-2xl'
                 }`}>
-                  <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                    {msg.content || (isLoading && i === messages.length - 1 ? '...' : '')}
+                  <p className={`text-sm md:text-base leading-relaxed whitespace-pre-wrap font-light ${msg.role === 'assistant' ? 'font-serif italic text-slate-100/90' : ''}`}>
+                    {msg.content || (isLoading && i === messages.length - 1 ? 'Decoding 2026 transits...' : '')}
                   </p>
                 </div>
               </div>
@@ -276,34 +275,35 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
       </ScrollArea>
 
       {/* Input Area */}
-      <div className="p-4 border-t border-slate-800/50 bg-slate-950/80 space-y-4">
-        <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="flex gap-3">
-          <div className="flex-1 relative">
+      <div className="p-4 border-t border-slate-800/50 bg-slate-950/95 backdrop-blur-3xl space-y-4">
+        <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="relative group">
+          <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-indigo-500/10 rounded-[1.5rem] blur opacity-50 group-hover:opacity-100 transition duration-700" />
+          <div className="relative flex gap-3">
             <textarea
               ref={textareaRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Speak your query to the Guru..."
+              placeholder="Command the Rishi's vision..."
               rows={1}
-              className="w-full bg-slate-900/50 border border-slate-700 rounded-2xl px-5 py-4 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 placeholder:text-slate-600 resize-none"
+              className="flex-1 bg-slate-900/90 border border-slate-800 rounded-[1.5rem] px-6 py-4 text-sm text-white focus:outline-none placeholder:text-slate-600 resize-none font-serif italic"
             />
+            <Button 
+              type="submit"
+              disabled={isLoading || !input.trim()}
+              className="p-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-30 transition-all active:scale-95 shadow-xl"
+            >
+              <Send className="w-5 h-5" />
+            </Button>
           </div>
-          <Button 
-            type="submit"
-            disabled={isLoading || !input.trim()}
-            className="p-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-30 shadow-xl shadow-indigo-500/30"
-          >
-            <Send className="w-5 h-5" />
-          </Button>
         </form>
         
-        {/* Prompt Chips */}
+        {/* Action Chips */}
         <div className="flex flex-wrap gap-2 justify-center">
-          <PromptChip icon="✨" label="Personal Mantra" onClick={() => handleSendMessage("What is my personalized Beeja Mantra based on my chart's current planetary weaknesses?")} />
-          <PromptChip icon="🧭" label="Soul Purpose" onClick={() => handleSendMessage("Can you analyze my Atmakaraka and tell me what my soul's main lesson is in this life?")} />
-          <PromptChip icon="💼" label="Career Clarity" onClick={() => handleSendMessage("Is my current profession aligned with my 10th house ruler and Amatyakaraka?")} />
-          <PromptChip icon="🌿" label="Health Remedy" onClick={() => handleSendMessage("Which spiritual remedy (Upaya) will help balance my health according to my current Dasha?")} />
+          <ActionChip icon="🌏" label="2026 World Outlook" onClick={() => handleSendMessage("Rishi, scan the world events of early 2026. Use Google Search. How do these mundane shifts impact my personal destiny?")} />
+          <ActionChip icon="💰" label="Financial Verdict" onClick={() => handleSendMessage("Is this moment auspicious for major financial action? Deliver the Verdict.")} />
+          <ActionChip icon="⚡" label="Karmic Blockage" onClick={() => handleSendMessage("Identify the primary karmic obstacle in my current 2026 cycle and provide the Shastric Remedy.")} />
+          <ActionChip icon="🔱" label="Dharma path" onClick={() => handleSendMessage("What is the highest alignment for my soul this week? No questions, just the path.")} />
         </div>
       </div>
     </motion.div>
