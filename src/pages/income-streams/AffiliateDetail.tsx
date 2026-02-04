@@ -223,7 +223,10 @@ const AffiliateDetail: React.FC = () => {
                   </div>
                   <p className="text-sm text-secondary font-medium">≈ {formatEur(eurValue)}</p>
                 </div>
-                <Button onClick={() => navigate('/wallet?tab=affiliate')} variant="gold">
+                <Button 
+                  onClick={() => navigate('/wallet?tab=affiliate')} 
+                  className="bg-gradient-to-r from-[hsl(51,100%,50%)] to-[hsl(45,100%,45%)] text-gray-900 font-extrabold shadow-[0_0_20px_hsl(51_100%_50%/0.5)] hover:shadow-[0_0_30px_hsl(51_100%_50%/0.6)] border-0"
+                >
                   <Wallet className="h-4 w-4 mr-2" />
                   {t('affiliate.withdraw', 'Withdraw')}
                 </Button>
@@ -255,11 +258,17 @@ const AffiliateDetail: React.FC = () => {
               <p className="text-foreground font-mono text-sm break-all">{referralLink}</p>
             </div>
             <div className="flex gap-3">
-              <Button onClick={copyToClipboard} variant="outline" className="flex-1">
+              <Button 
+                onClick={copyToClipboard} 
+                className="flex-1 bg-[#00F2FE] text-black font-extrabold hover:bg-[#00D4E0] shadow-[0_0_25px_rgba(0,242,254,0.5)] border-0"
+              >
                 {copied ? <CheckCircle className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
                 {copied ? t('affiliate.copied', 'Copied!') : t('affiliate.copyLink', 'Copy Link')}
               </Button>
-              <Button onClick={shareLink} variant="gold" className="flex-1">
+              <Button 
+                onClick={shareLink} 
+                className="flex-1 bg-gradient-to-r from-[hsl(51,100%,50%)] to-[hsl(45,100%,45%)] text-gray-900 font-extrabold shadow-[0_0_20px_hsl(51_100%_50%/0.5)] hover:shadow-[0_0_30px_hsl(51_100%_50%/0.6)] border-0"
+              >
                 <Share2 className="h-4 w-4 mr-2" />
                 {t('affiliate.share', 'Share')}
               </Button>
@@ -274,7 +283,7 @@ const AffiliateDetail: React.FC = () => {
                     value={customCode}
                     onChange={(e) => setCustomCode(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))}
                     placeholder="your-name"
-                    className="font-mono text-sm"
+                    className="font-mono text-sm bg-white/10 border-white/20 text-white placeholder:text-white/50"
                     maxLength={30}
                   />
                   <p className="text-xs text-muted-foreground">
@@ -285,7 +294,7 @@ const AffiliateDetail: React.FC = () => {
                       onClick={saveCustomCode} 
                       size="sm" 
                       disabled={isSaving || customCode.length < 3}
-                      className="flex-1"
+                      className="flex-1 bg-[#00F2FE] text-black font-extrabold hover:bg-[#00D4E0] shadow-[0_0_15px_rgba(0,242,254,0.4)] border-0"
                     >
                       {isSaving ? (
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
@@ -296,7 +305,11 @@ const AffiliateDetail: React.FC = () => {
                         </>
                       )}
                     </Button>
-                    <Button onClick={cancelEditing} size="sm" variant="outline" className="flex-1">
+                    <Button 
+                      onClick={cancelEditing} 
+                      size="sm" 
+                      className="flex-1 bg-white/10 text-white border border-white/20 hover:bg-white/20"
+                    >
                       <X className="h-3 w-3 mr-1" />
                       {t('common.cancel', 'Cancel')}
                     </Button>
@@ -308,7 +321,11 @@ const AffiliateDetail: React.FC = () => {
                     <p className="text-xs text-muted-foreground">{t('affiliate.yourCode', 'Your code')}:</p>
                     <p className="font-mono font-bold text-primary">{data?.referralCode}</p>
                   </div>
-                  <Button onClick={startEditing} size="sm" variant="ghost">
+                  <Button 
+                    onClick={startEditing} 
+                    size="sm" 
+                    className="bg-white/10 text-white border border-white/20 hover:bg-white/20"
+                  >
                     <Edit3 className="h-4 w-4 mr-1" />
                     {t('affiliate.customize', 'Customize')}
                   </Button>
@@ -460,7 +477,11 @@ const AffiliateDetail: React.FC = () => {
         )}
 
         {/* Main CTA */}
-        <Button onClick={shareLink} className="w-full" size="lg" variant="gold">
+        <Button 
+          onClick={shareLink} 
+          className="w-full bg-gradient-to-r from-[hsl(51,100%,50%)] to-[hsl(45,100%,45%)] text-gray-900 font-extrabold shadow-[0_0_20px_hsl(51_100%_50%/0.5)] hover:shadow-[0_0_30px_hsl(51_100%_50%/0.6)] border-0" 
+          size="lg"
+        >
           <Share2 className="w-4 h-4 mr-2" />
           {t('affiliate.shareNow', 'Share Your Link Now')}
         </Button>
