@@ -97,7 +97,7 @@ const Onboarding: React.FC = () => {
           </motion.div>
         </motion.div>
         </div>
-        <AppDisclaimer />
+        <AppDisclaimer fixed position="screen" />
       </div>
     );
   }

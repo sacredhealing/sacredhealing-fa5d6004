@@ -244,7 +244,7 @@ const About: React.FC = () => {
           </div>
         </div>
       </section>
-      <AppDisclaimer />
+      <AppDisclaimer fixed position="screen" />
     </div>
   );
 };

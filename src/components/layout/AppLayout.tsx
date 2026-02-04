@@ -120,11 +120,11 @@ export const AppLayout: React.FC = () => {
         </motion.main>
       </AnimatePresence>
       
+      <AppDisclaimer fixed />
       <NowPlayingBar />
       <BottomNav />
       <AnnouncementPopup />
       <PWAInstallPrompt />
-      <AppDisclaimer />
     </div>
   );
 };
