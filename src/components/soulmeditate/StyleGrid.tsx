@@ -54,8 +54,8 @@ interface StyleGridProps {
   /** Atmosphere (ambient) volume 0-1 */
   atmosphereVolume?: number;
   onAtmosphereVolumeChange?: (vol: number) => void;
-  /** Fetch a new random sound from the library for the current style (no reload) */
-  onRefreshSound?: () => void;
+  /** Fetch a new random sound from the library for the selected style (no reload). Receives the active style id. */
+  onRefreshSound?: (styleId: MeditationStyle) => void;
   /** True while loading a new sound */
   isRefreshingSound?: boolean;
 }
@@ -85,7 +85,7 @@ export default function StyleGrid({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={onRefreshSound}
+                onClick={() => onRefreshSound(activeStyle)}
                 disabled={isRefreshingSound}
                 className="bg-white/5 border-white/20 text-cyan-400 hover:bg-cyan-500/20 hover:border-cyan-500/50"
                 title="Search for a new sound in the library"

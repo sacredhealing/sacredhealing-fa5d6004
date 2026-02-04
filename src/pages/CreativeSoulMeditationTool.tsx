@@ -323,15 +323,15 @@ export default function CreativeSoulMeditationTool() {
 
   // Search for new sound in library (same style, no reload)
   const [isRefreshingSound, setIsRefreshingSound] = useState(false);
-  const handleRefreshSound = useCallback(async () => {
+  const handleRefreshSound = useCallback(async (styleId: MeditationStyle) => {
     if (!engine.isInitialized) return;
     setIsRefreshingSound(true);
     try {
-      const result = await engine.loadAtmosphere(activeStyle);
+      const result = await engine.loadAtmosphere(styleId);
       if (result.ok) {
         toast.success('Loaded new sound from library');
       } else if (result.reason === 'no_sounds') {
-        const styleLabel = activeStyle.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+        const styleLabel = styleId.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
         toast.error(`No sounds in library for ${styleLabel}. Try Indian or another style.`);
       } else {
         toast.error('Could not load new sound');
@@ -339,7 +339,7 @@ export default function CreativeSoulMeditationTool() {
     } finally {
       setIsRefreshingSound(false);
     }
-  }, [engine, activeStyle]);
+  }, [engine]);
 
   // Sync frequencies when changed
   useEffect(() => {

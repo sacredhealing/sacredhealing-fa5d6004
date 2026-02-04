@@ -588,7 +588,7 @@ export function useSoulMeditateEngine() {
     const SUPABASE_URL = 'https://ssygukfdbtehvtndandn.supabase.co';
     const BUCKET = 'creative-soul-library';
     
-    // Fetch available sounds for this style from database
+    // Fetch available sounds for this style from database (always use the requested styleId)
     const { data: sounds, error } = await supabase
       .from('meditation_style_sounds')
       .select('*')
@@ -602,7 +602,6 @@ export function useSoulMeditateEngine() {
 
     if (!sounds || sounds.length === 0) {
       console.log(`No active sounds found for style: ${styleId}`);
-      // Clear atmosphere so we don't keep playing wrong style's sound
       if (atmosphereAudioRef.current) {
         atmosphereAudioRef.current.pause();
         atmosphereAudioRef.current.volume = 0;
@@ -617,10 +616,14 @@ export function useSoulMeditateEngine() {
     }
 
     // Pick a different sound than current when possible (for "New Sound" button)
+    // Only consider current sound if it's from the SAME category (styleId)
     const currentSource = atmosphereLayer.source;
-    const currentName = currentSource?.includes(':') ? currentSource.split(':')[1] : null;
+    const currentStyleMatch = currentSource?.startsWith(`${styleId}:`);
+    const currentName = currentStyleMatch && currentSource?.includes(':')
+      ? currentSource.split(':').slice(1).join(':').trim()
+      : null;
     const candidates = currentName && sounds.length > 1
-      ? sounds.filter((s) => s.name !== currentName)
+      ? sounds.filter((s) => s.name?.trim() !== currentName)
       : sounds;
     const selectedSound = candidates[Math.floor(Math.random() * candidates.length)];
     const audioUrl = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${selectedSound.file_path}`;
