@@ -327,9 +327,12 @@ export default function CreativeSoulMeditationTool() {
     if (!engine.isInitialized) return;
     setIsRefreshingSound(true);
     try {
-      const ok = await engine.loadAtmosphere(activeStyle);
-      if (ok) {
+      const result = await engine.loadAtmosphere(activeStyle);
+      if (result.ok) {
         toast.success('Loaded new sound from library');
+      } else if (result.reason === 'no_sounds') {
+        const styleLabel = activeStyle.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+        toast.error(`No sounds in library for ${styleLabel}. Try Indian or another style.`);
       } else {
         toast.error('Could not load new sound');
       }

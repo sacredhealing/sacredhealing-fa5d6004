@@ -582,7 +582,7 @@ export function useSoulMeditateEngine() {
     
     if (!audioContextRef.current || !atmosphereGainRef.current) {
       console.error('Failed to initialize audio context');
-      return false;
+      return { ok: false, reason: 'error' as const };
     }
 
     const SUPABASE_URL = 'https://ssygukfdbtehvtndandn.supabase.co';
@@ -595,55 +595,72 @@ export function useSoulMeditateEngine() {
       .eq('style_id', styleId)
       .eq('is_active', true);
 
-    let audioUrl = '';
-    let selectedSound = null;
-
-    if (sounds && sounds.length > 0) {
-      // Randomly select one sound from available options
-      const randomIndex = Math.floor(Math.random() * sounds.length);
-      selectedSound = sounds[randomIndex];
-      audioUrl = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${selectedSound.file_path}`;
-      console.log(`Selected sound for ${styleId}:`, selectedSound.name);
-    } else {
-      console.log(`No active sounds found for style: ${styleId}`);
+    if (error) {
+      console.error('Failed to fetch atmosphere sounds:', error);
+      return { ok: false, reason: 'error' as const };
     }
 
-    // Clean up previous audio
+    if (!sounds || sounds.length === 0) {
+      console.log(`No active sounds found for style: ${styleId}`);
+      // Clear atmosphere so we don't keep playing wrong style's sound
+      if (atmosphereAudioRef.current) {
+        atmosphereAudioRef.current.pause();
+        atmosphereAudioRef.current.volume = 0;
+      }
+      if (atmosphereSourceRef.current) {
+        atmosphereSourceRef.current.disconnect();
+        atmosphereSourceRef.current = null;
+      }
+      atmosphereAudioRef.current = null;
+      setAtmosphereLayer(prev => ({ ...prev, source: styleId, exportInput: undefined }));
+      return { ok: false, reason: 'no_sounds' as const };
+    }
+
+    // Pick a different sound than current when possible (for "New Sound" button)
+    const currentSource = atmosphereLayer.source;
+    const currentName = currentSource?.includes(':') ? currentSource.split(':')[1] : null;
+    const candidates = currentName && sounds.length > 1
+      ? sounds.filter((s) => s.name !== currentName)
+      : sounds;
+    const selectedSound = candidates[Math.floor(Math.random() * candidates.length)];
+    const audioUrl = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${selectedSound.file_path}`;
+
+    // Pause and mute before disconnect to avoid click/pop
     if (atmosphereAudioRef.current) {
       atmosphereAudioRef.current.pause();
+      atmosphereAudioRef.current.volume = 0;
     }
     if (atmosphereSourceRef.current) {
       atmosphereSourceRef.current.disconnect();
       atmosphereSourceRef.current = null;
     }
+    atmosphereAudioRef.current = null;
 
     const audio = new Audio();
     audio.crossOrigin = 'anonymous';
     audio.loop = true;
     audio.src = audioUrl;
-    
-    atmosphereAudioRef.current = audio;
 
-    if (audioUrl) {
-      try {
-        const source = audioContextRef.current.createMediaElementSource(audio);
-        source.connect(atmosphereGainRef.current);
-        atmosphereSourceRef.current = source;
-      } catch (e) {
-        console.log('Atmosphere audio not available:', styleId);
-      }
+    try {
+      const source = audioContextRef.current.createMediaElementSource(audio);
+      source.connect(atmosphereGainRef.current);
+      atmosphereSourceRef.current = source;
+      atmosphereAudioRef.current = audio;
+    } catch (e) {
+      console.error('Atmosphere audio setup failed:', e);
+      return { ok: false, reason: 'error' as const };
     }
 
     setAtmosphereLayer(prev => ({ 
       ...prev, 
-      source: selectedSound ? `${styleId}:${selectedSound.name}` : styleId,
-      exportInput: audioUrl ? {
+      source: `${styleId}:${selectedSound.name}`,
+      exportInput: {
         directUrl: audioUrl,
-        displayName: selectedSound?.name || styleId
-      } : undefined
+        displayName: selectedSound.name
+      }
     }));
-    return true;
-  }, [initialize]);
+    return { ok: true };
+  }, [initialize, atmosphereLayer.source]);
 
   // Play/pause neural layer
   const toggleNeuralPlay = useCallback(() => {
