@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Clock, Loader2, Play } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Clock, Loader2, Play } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -60,16 +60,7 @@ const HealingMeditationsList: React.FC = () => {
 
   return (
     <Card className="mt-6">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-primary" />
-          Healing Meditations Library
-        </CardTitle>
-        <p className="text-sm text-muted-foreground mt-1">
-          {meditations.length} healing meditations available
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 pt-6">
         {meditations.length > 0 ? (
           <div className="space-y-2">
             {meditations.map((meditation) => (
