@@ -950,7 +950,7 @@ serve(async (req) => {
       // Find user by stripe_customer_id in creative_soul_entitlements
       const { data: ent } = await supabaseAdmin
         .from("creative_soul_entitlements")
-        .select("user_id")
+        .select("user_id, plan")
         .eq("stripe_customer_id", customerId)
         .maybeSingle();
 
@@ -964,8 +964,17 @@ serve(async (req) => {
         }, 'processed');
       } else {
         const userId = ent.user_id as string;
-
-        // Access allowed only for active/trialing; remove otherwise
+        // Do NOT overwrite lifetime/single - they have permanent access
+        if (ent.plan === "lifetime" || ent.plan === "single") {
+          logStep("Skipping subscription update - user has lifetime/single access", { userId, plan: ent.plan });
+          await logWebhookEvent(supabaseAdmin, event.id, event.type, {
+            subscriptionId,
+            status,
+            userId,
+            note: "Lifetime/single - no update"
+          }, 'processed');
+        } else {
+        // Access allowed only for active/trialing; revoke otherwise (monthly only)
         const hasAccess = status === "active" || status === "trialing";
 
         await supabaseAdmin.from("creative_soul_entitlements").upsert(
@@ -1023,6 +1032,7 @@ serve(async (req) => {
           userId,
           hasAccess
         }, 'processed');
+        }
       }
     }
 
@@ -1036,11 +1046,11 @@ serve(async (req) => {
 
       const { data: ent } = await supabaseAdmin
         .from("creative_soul_entitlements")
-        .select("user_id")
+        .select("user_id, plan")
         .eq("stripe_customer_id", customerId)
         .maybeSingle();
 
-      if (ent?.user_id) {
+      if (ent?.user_id && ent.plan !== "lifetime" && ent.plan !== "single") {
         await supabaseAdmin.from("creative_soul_entitlements").update({
           has_access: false,
           subscription_status: status,
@@ -1048,6 +1058,8 @@ serve(async (req) => {
         }).eq("user_id", ent.user_id);
 
         logStep("Creative Soul access revoked due to payment failure", { userId: ent.user_id, status });
+      } else if (ent?.user_id && (ent.plan === "lifetime" || ent.plan === "single")) {
+        logStep("Skipping revoke - user has lifetime/single access", { userId: ent.user_id });
       }
 
       await logWebhookEvent(supabaseAdmin, event.id, event.type, {

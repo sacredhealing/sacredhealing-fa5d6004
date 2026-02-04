@@ -32,6 +32,17 @@ const CreativeSoulStore = () => {
     }
   }, [searchParams]);
 
+  // Lifetime = forever, monthly = until period end, single = after payment
+  const hasValidEntitlement = (ent: { has_access: boolean; plan?: string; current_period_end?: string | null }) => {
+    if (!ent?.has_access) return false;
+    if (ent.plan === 'lifetime' || ent.plan === 'single') return true;
+    if (ent.plan === 'monthly') {
+      if (!ent.current_period_end) return true;
+      return new Date(ent.current_period_end) > new Date();
+    }
+    return true;
+  };
+
   useEffect(() => {
     const checkAccess = async () => {
       if (!user) {
@@ -42,11 +53,11 @@ const CreativeSoulStore = () => {
       try {
         const { data: entitlements } = await supabase
           .from('creative_soul_entitlements')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('has_access', true);
+          .select('has_access, plan, current_period_end')
+          .eq('user_id', user.id);
 
-        if (entitlements && entitlements.length > 0) {
+        const hasEntitlement = entitlements?.some(hasValidEntitlement) ?? false;
+        if (hasEntitlement) {
           setHasStudioAccess(true);
           setHasMeditationAccess(true);
         }
