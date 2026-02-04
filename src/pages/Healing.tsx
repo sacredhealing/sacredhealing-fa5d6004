@@ -725,8 +725,8 @@ const Healing: React.FC = () => {
             {HEALING_PLANS.map((plan) => (
               <Button 
                 key={plan.id}
-                variant="gold" 
                 size="lg"
+                className="bg-[#00F2FE] text-black font-extrabold hover:bg-[#00D4E0] shadow-[0_0_25px_rgba(0,242,254,0.5)] hover:shadow-[0_0_35px_rgba(0,242,254,0.6)] border-0"
                 onClick={() => openPaymentModal(plan)}
                 disabled={isProcessing}
               >
@@ -737,8 +737,8 @@ const Healing: React.FC = () => {
               </Button>
             ))}
             <Button 
-              variant="outline" 
               size="lg"
+              className="bg-[#00F2FE] text-black font-extrabold hover:bg-[#00D4E0] shadow-[0_0_25px_rgba(0,242,254,0.5)] hover:shadow-[0_0_35px_rgba(0,242,254,0.6)] border-0"
               onClick={handleSubscriptionStripe}
               disabled={isProcessing}
             >
@@ -759,9 +759,8 @@ const Healing: React.FC = () => {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <Button
-              variant="gold"
               size="lg"
-              className="w-full flex items-center justify-center gap-3"
+              className="w-full flex items-center justify-center gap-3 bg-[#00F2FE] text-black font-extrabold hover:bg-[#00D4E0] shadow-[0_0_25px_rgba(0,242,254,0.5)] border-0"
               onClick={() => selectedPlan && handleStripePayment(selectedPlan.id)}
               disabled={isProcessing}
             >
@@ -769,9 +768,8 @@ const Healing: React.FC = () => {
               Pay with Card
             </Button>
             <Button
-              variant="outline"
               size="lg"
-              className="w-full flex items-center justify-center gap-3 border-primary text-primary hover:bg-primary/10"
+              className="w-full flex items-center justify-center gap-3 bg-white/10 text-white border border-white/20 hover:bg-white/20"
               onClick={() => selectedPlan && handleCryptoPayment(selectedPlan)}
               disabled={isProcessing}
             >
@@ -884,8 +882,8 @@ const Healing: React.FC = () => {
                     ) : (
                       <div className="flex gap-2">
                         <Button 
-                          variant="gold" 
                           size="sm"
+                          className="bg-[#00F2FE] text-black font-extrabold hover:bg-[#00D4E0] shadow-[0_0_20px_rgba(0,242,254,0.4)] border-0"
                           onClick={() => handlePurchaseAudio(audio, 'stripe')}
                           disabled={isProcessing}
                         >
