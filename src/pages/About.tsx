@@ -7,6 +7,7 @@ import lailaSmile from '@/assets/laila-smile.jpg';
 import adamDrum from '@/assets/adam-drum.jpg';
 import lailaAdamPink from '@/assets/laila-adam-pink.jpg';
 import lailaYogaBeach from '@/assets/laila-yoga-beach.jpg';
+import { AppDisclaimer } from '@/components/AppDisclaimer';
 
 const About: React.FC = () => {
   const values = [
@@ -243,6 +244,7 @@ const About: React.FC = () => {
           </div>
         </div>
       </section>
+      <AppDisclaimer />
     </div>
   );
 };

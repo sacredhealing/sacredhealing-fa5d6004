@@ -6,6 +6,7 @@ import { BackButton } from './BackButton';
 import { AnnouncementPopup } from '@/components/AnnouncementPopup';
 import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
 import { NowPlayingBar } from '@/components/music/NowPlayingBar';
+import { AppDisclaimer } from '@/components/AppDisclaimer';
 
 const pageVariants = {
   initial: {
@@ -123,6 +124,7 @@ export const AppLayout: React.FC = () => {
       <BottomNav />
       <AnnouncementPopup />
       <PWAInstallPrompt />
+      <AppDisclaimer />
     </div>
   );
 };

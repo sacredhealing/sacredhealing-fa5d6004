@@ -9,6 +9,7 @@ import { DurationSelector } from '@/components/onboarding/DurationSelector';
 import { TimeSelector } from '@/components/onboarding/TimeSelector';
 import { PathRecommendation } from '@/components/onboarding/PathRecommendation';
 import { useOnboarding } from '@/hooks/useOnboarding';
+import { AppDisclaimer } from '@/components/AppDisclaimer';
 
 const TOTAL_STEPS = 5;
 
@@ -28,6 +29,7 @@ const Onboarding: React.FC = () => {
   if (currentStep === 0) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-6 bg-background">
+        <div className="flex-1 flex flex-col items-center justify-center">
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -94,6 +96,8 @@ const Onboarding: React.FC = () => {
             </Button>
           </motion.div>
         </motion.div>
+        </div>
+        <AppDisclaimer />
       </div>
     );
   }

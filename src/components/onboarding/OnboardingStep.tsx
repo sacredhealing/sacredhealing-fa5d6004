@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { AppDisclaimer } from '@/components/AppDisclaimer';
 
 interface OnboardingStepProps {
   title: string;
@@ -91,6 +92,7 @@ export const OnboardingStep: React.FC<OnboardingStepProps> = ({
           </Button>
         </div>
       )}
+      <AppDisclaimer />
     </div>
   );
 };

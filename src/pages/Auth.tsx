@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { usePhantomWallet } from '@/hooks/usePhantomWallet';
 import { supabase } from '@/integrations/supabase/client';
+import { AppDisclaimer } from '@/components/AppDisclaimer';
 
 const Auth: React.FC = () => {
   const navigate = useNavigate();
@@ -333,6 +334,7 @@ const Auth: React.FC = () => {
             {isLogin ? t('auth.signUp') : t('auth.signIn')}
           </button>
         </p>
+        <AppDisclaimer className="mt-auto pt-8" />
       </div>
     </div>
   );

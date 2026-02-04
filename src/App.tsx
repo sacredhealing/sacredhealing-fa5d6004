@@ -10,6 +10,7 @@ import { AmbientAudioProvider } from "@/contexts/AmbientAudioContext";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { AppLayout } from "./components/layout/AppLayout";
+import { AdminLayout } from "./components/layout/AdminLayout";
 import { ProtectedRoute } from "./components/layout/ProtectedRoute";
 import { AuthOnlyRoute } from "./components/layout/AuthOnlyRoute";
 import Home from "./pages/Home";
@@ -179,31 +180,33 @@ const App = () => (
                   <Route path="/creative-soul-tool" element={<CreativeSoulTool />} />
                   <Route path="/creative-soul-meditation-tool" element={<CreativeSoulMeditationTool />} />
                 </Route>
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/admin/meditations" element={<Admin />} />
-                <Route path="/admin/meditations/:id" element={<AdminMeditationEdit />} />
-                <Route path="/admin/music" element={<AdminMusic />} />
-                <Route path="/admin/healing" element={<AdminHealing />} />
-                <Route path="/admin/healing/:id" element={<AdminHealingEdit />} />
-                <Route path="/admin/content" element={<AdminContent />} />
-                <Route path="/admin/courses" element={<AdminCourses />} />
-                <Route path="/admin/announcements" element={<AdminAnnouncements />} />
-                <Route path="/admin/income-streams" element={<AdminIncomeStreams />} />
-                <Route path="/admin/youtube" element={<AdminYouTube />} />
-                <Route path="/admin/mantras" element={<AdminMantras />} />
-                <Route path="/admin/shop" element={<AdminShop />} />
-                <Route path="/admin/private-sessions" element={<AdminPrivateSessions />} />
-                <Route path="/admin/transformation" element={<AdminTransformation />} />
-                <Route path="/admin/email-list" element={<AdminEmailList />} />
-                <Route path="/admin/system" element={<AdminSystem />} />
-                <Route path="/admin/breathing" element={<AdminBreathing />} />
-                <Route path="/admin/ambient-sounds" element={<AdminAmbientSounds />} />
-                <Route path="/admin/affirmation" element={<AdminAffirmation />} />
-                <Route path="/admin/analytics" element={<AdminAnalytics />} />
-                <Route path="/admin/paths" element={<AdminPaths />} />
-                <Route path="/admin/circles" element={<AdminCircles />} />
-                <Route path="/admin/music-analytics" element={<AdminMusicAnalytics />} />
-                <Route path="/admin/content-roadmap" element={<AdminContentRoadmap />} />
+                <Route element={<AdminLayout />}>
+                  <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/admin/meditations" element={<Admin />} />
+                  <Route path="/admin/meditations/:id" element={<AdminMeditationEdit />} />
+                  <Route path="/admin/music" element={<AdminMusic />} />
+                  <Route path="/admin/healing" element={<AdminHealing />} />
+                  <Route path="/admin/healing/:id" element={<AdminHealingEdit />} />
+                  <Route path="/admin/content" element={<AdminContent />} />
+                  <Route path="/admin/courses" element={<AdminCourses />} />
+                  <Route path="/admin/announcements" element={<AdminAnnouncements />} />
+                  <Route path="/admin/income-streams" element={<AdminIncomeStreams />} />
+                  <Route path="/admin/youtube" element={<AdminYouTube />} />
+                  <Route path="/admin/mantras" element={<AdminMantras />} />
+                  <Route path="/admin/shop" element={<AdminShop />} />
+                  <Route path="/admin/private-sessions" element={<AdminPrivateSessions />} />
+                  <Route path="/admin/transformation" element={<AdminTransformation />} />
+                  <Route path="/admin/email-list" element={<AdminEmailList />} />
+                  <Route path="/admin/system" element={<AdminSystem />} />
+                  <Route path="/admin/breathing" element={<AdminBreathing />} />
+                  <Route path="/admin/ambient-sounds" element={<AdminAmbientSounds />} />
+                  <Route path="/admin/affirmation" element={<AdminAffirmation />} />
+                  <Route path="/admin/analytics" element={<AdminAnalytics />} />
+                  <Route path="/admin/paths" element={<AdminPaths />} />
+                  <Route path="/admin/circles" element={<AdminCircles />} />
+                  <Route path="/admin/music-analytics" element={<AdminMusicAnalytics />} />
+                  <Route path="/admin/content-roadmap" element={<AdminContentRoadmap />} />
+                </Route>
               </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>
