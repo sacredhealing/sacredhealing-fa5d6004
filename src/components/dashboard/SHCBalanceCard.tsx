@@ -27,7 +27,7 @@ export const SHCBalanceCard: React.FC = () => {
             />
             <span className="text-base sm:text-lg font-semibold text-amber-400/80">SHC</span>
           </div>
-          <Link to="/earn">
+          <Link to="/wallet">
             <Button 
               variant="outline" 
               size="sm" 
