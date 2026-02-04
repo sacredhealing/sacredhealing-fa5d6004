@@ -3,7 +3,9 @@ import { motion } from 'framer-motion';
 import { Lock, Sparkles, Crown, Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import type { UserProfile, MembershipTier } from '@/lib/vedicTypes';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import type { UserProfile } from '@/lib/vedicTypes';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -28,18 +30,62 @@ const ActionChip = ({ icon, label, onClick }: { icon: string; label: string; onC
 );
 
 export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, onUpgrade }) => {
+  const { user: authUser } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const hasInitialized = useRef(false);
   const prevMessagesLength = useRef(0);
 
+  // Load saved conversation history on mount (premium only)
+  useEffect(() => {
+    if (user.plan !== 'premium') {
+      setHistoryLoaded(true);
+      return;
+    }
+    if (!authUser?.id) return;
+
+    const loadHistory = async () => {
+      const { data, error } = await (supabase as any)
+        .from('vedic_guru_chat_messages')
+        .select('role, content')
+        .eq('user_id', authUser.id)
+        .order('created_at', { ascending: true });
+
+      if (!error && data?.length > 0) {
+        setMessages(data.map((r: { role: string; content: string }) => ({ role: r.role as 'user' | 'assistant', content: r.content })));
+      }
+      setHistoryLoaded(true);
+    };
+
+    loadHistory();
+  }, [authUser?.id, user.plan]);
+
+  // Initialize with Rishi welcome only when history is empty (first-time premium user)
+  useEffect(() => {
+    if (!historyLoaded || user.plan !== 'premium' || hasInitialized.current || messages.length > 0) return;
+
+    hasInitialized.current = true;
+    const firstName = user.name.split(' ')[0];
+    const welcomeContent = `Namaste, ${firstName}. My vision is locked on your incarnation in ${user.birthPlace}. The transits of 2026 are already testing your resolve. Your ${user.plan} path is known to me. Speak your query and receive the Shastric verdict.`;
+    const welcomeMsg: ChatMessage = { role: 'assistant', content: welcomeContent };
+    setMessages([welcomeMsg]);
+
+    // Persist welcome so guru remembers on next visit
+    if (authUser?.id) {
+      (supabase as any)
+        .from('vedic_guru_chat_messages')
+        .insert({ user_id: authUser.id, role: 'assistant', content: welcomeContent })
+        .then(() => {});
+    }
+  }, [historyLoaded, user.plan, user.name, user.birthPlace, messages.length, authUser?.id]);
+
   // Auto-scroll only when new messages are added (not on every render)
   useEffect(() => {
     if (messages.length > prevMessagesLength.current) {
-      // Small delay to let DOM update
       requestAnimationFrame(() => {
         scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
       });
@@ -47,17 +93,12 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
     prevMessagesLength.current = messages.length;
   }, [messages.length]);
 
-  // Initialize with Rishi welcome message for premium users - only ONCE
-  useEffect(() => {
-    if (user.plan === 'premium' && !hasInitialized.current && messages.length === 0) {
-      hasInitialized.current = true;
-      const firstName = user.name.split(' ')[0];
-      setMessages([{
-        role: 'assistant',
-        content: `Namaste, ${firstName}. My vision is locked on your incarnation in ${user.birthPlace}. The transits of 2026 are already testing your resolve. Your ${user.plan} path is known to me. Speak your query and receive the Shastric verdict.`
-      }]);
-    }
-  }, [user.plan, user.name, user.birthPlace, messages.length]);
+  const saveMessage = async (role: 'user' | 'assistant', content: string) => {
+    if (!authUser?.id) return;
+    await (supabase as any)
+      .from('vedic_guru_chat_messages')
+      .insert({ user_id: authUser.id, role, content });
+  };
 
   const handleSendMessage = async (messageText?: string) => {
     const text = messageText || input;
@@ -67,6 +108,9 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
+
+    // Persist user message so guru remembers
+    saveMessage('user', text);
 
     try {
       const response = await fetch(CHAT_URL, {
@@ -152,6 +196,11 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
             }
           } catch { /* ignore */ }
         }
+      }
+
+      // Persist assistant response so guru remembers on next visit
+      if (assistantContent.trim()) {
+        saveMessage('assistant', assistantContent.trim());
       }
 
     } catch (error) {
