@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { HealingProgressCard } from '@/components/healing/HealingProgressCard';
 import { useSHC } from '@/contexts/SHCContext';
+import { useMembership } from '@/hooks/useMembership';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
 import { useCuratedPlaylists } from '@/hooks/useCuratedPlaylists';
 import {
@@ -25,6 +26,7 @@ import {
 const Explore: React.FC = () => {
   const { t } = useTranslation();
   const { balance, profile } = useSHC();
+  const { isPremium } = useMembership();
   const [searchQuery, setSearchQuery] = useState('');
   const { playlists: meditationPlaylists, loading: playlistsLoading } = useCuratedPlaylists('meditation');
 
@@ -207,14 +209,14 @@ const Explore: React.FC = () => {
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="font-bold text-foreground text-base sm:text-lg md:text-xl mb-1">
-                {t('membership.unlockPremium', 'Unlock Premium Access')}
+                {isPremium ? t('membership.accessPremium', 'Access Premium Access') : t('membership.unlockPremium', 'Unlock Premium Access')}
               </h3>
               <p className="text-sm sm:text-base text-muted-foreground">
                 {t('membership.bannerDesc', 'All meditations, music & healing audio – unlimited')}
               </p>
             </div>
             <Badge className="bg-primary/30 text-primary border-primary/50 text-sm sm:text-base px-4 py-2 whitespace-nowrap font-semibold">
-              {t('membership.viewPlans', 'View Plans')}
+              {isPremium ? t('membership.managePlan', 'Manage') : t('membership.viewPlans', 'View Plans')}
             </Badge>
           </div>
         </Card>

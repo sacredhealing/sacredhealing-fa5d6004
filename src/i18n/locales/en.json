@@ -133,7 +133,12 @@
     "perSession": "per session",
     "perTrack": "per track",
     "renews": "Renews",
-    "soon": "soon"
+    "soon": "soon",
+    "unlockPremium": "Unlock Premium Access",
+    "accessPremium": "Access Premium Access",
+    "bannerDesc": "All meditations, music & healing audio – unlimited",
+    "viewPlans": "View Plans",
+    "managePlan": "Manage"
   },
   "wealth": {
     "badge": "Wealth Activation",
