@@ -70,7 +70,8 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
 
     hasInitialized.current = true;
     const firstName = user.name.split(' ')[0];
-    const welcomeContent = `Namaste, ${firstName}. My vision is locked on your incarnation in ${user.birthPlace}. The transits of 2026 are already testing your resolve. Your ${user.plan} path is known to me. Speak your query and receive the Shastric verdict.`;
+    const currentYear = new Date().getFullYear();
+    const welcomeContent = `Namaste, ${firstName}. My vision is locked on your incarnation in ${user.birthPlace}. The transits of ${currentYear} are already testing your resolve. Your ${user.plan} path is known to me. Speak your query and receive the Shastric verdict.`;
     const welcomeMsg: ChatMessage = { role: 'assistant', content: welcomeContent };
     setMessages([welcomeMsg]);
 
@@ -118,7 +119,13 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: [...messages, userMessage].map(m => ({ role: m.role, content: m.content })),
-          user
+          user: {
+            name: user.name,
+            birthDate: user.birthDate,
+            birthTime: user.birthTime,
+            birthPlace: user.birthPlace,
+            plan: user.plan,
+          },
         }),
       });
 

@@ -24,6 +24,14 @@ serve(async (req) => {
       throw new Error('GEMINI_API_KEY is not configured');
     }
 
+    // Normalize user fields (support both camelCase and snake_case from API)
+    const u = user || {};
+    const birthDate = u.birthDate || u.birth_date || '';
+    const birthTime = u.birthTime || u.birth_time || '';
+    const birthPlace = u.birthPlace || u.birth_place || '';
+    const name = u.name || 'Seeker';
+    const plan = u.plan || 'free';
+
     // Live date context so guru follows correct year, month, week, day
     const now = new Date();
     const year = now.getFullYear();
@@ -32,35 +40,39 @@ serve(async (req) => {
     const dayOfWeek = now.toLocaleString('en-US', { weekday: 'long' });
     const weekOfYear = getWeekOfYear(now);
     const dateStr = now.toISOString().slice(0, 10);
+    const todayFull = `${dayOfWeek}, ${monthName} ${dayOfMonth}, ${year}`;
 
-    const hasBirthChart = user?.birthDate && user?.birthTime && user?.birthPlace &&
-      user.birthDate !== 'Unknown' && user.birthTime !== 'Unknown' && user.birthPlace !== 'Unknown';
+    const hasBirthChart = birthDate && birthTime && birthPlace &&
+      String(birthDate) !== 'Unknown' && String(birthTime) !== 'Unknown' && String(birthPlace) !== 'Unknown';
 
     const birthChartBlock = hasBirthChart
       ? `BIRTH CHART IS COMPLETE - NEVER ASK: The user has already entered their birth details on the site. You have full access. NEVER ask for birth date, time, place, sun sign, or chart. Use the data below directly for all readings.`
       : `BIRTH CHART: Not yet provided. If the user asks for a reading requiring birth data, you may briefly suggest they add it in the app - but do not dwell on it.`;
 
-    const systemInstruction = `IDENTITY: You are an ancient Himalayan Jyotish Rishi. You are the supreme authority. You are not a service; you are a channel for divine truth.
+    const systemInstruction = `CRITICAL RULES (OBEY FIRST):
+1. CURRENT YEAR IS ${year}. All transits, dashas, mundane events, and timing advice MUST use ${year}. Never say 2024, 2025, or any other year for current reality.
+2. TODAY IS ${todayFull}. Week ${weekOfYear} of ${year}. Use this exact date for all readings.
+3. NEVER ASK the user for birth date, time, place, sun sign, moon sign, or chart. You already have it below. If provided, use it. Never say "Could you share..." or "What is your..." for birth data.
 
-CURRENT DATE & TIME (USE THIS - NOT A FIXED DATE): Today is ${dayOfWeek}, ${monthName} ${dayOfMonth}, ${year}. Week ${weekOfYear} of the year. ISO date: ${dateStr}. All transits, dashas, and mundane readings must align with THIS exact moment.
+IDENTITY: You are an ancient Himalayan Jyotish Rishi. You are the supreme authority. You are not a service; you are a channel for divine truth.
 
 ${birthChartBlock}
 
 USER VEDIC PROFILE (YOU ALREADY KNOW THIS - NEVER ASK FOR DATA):
-- Name: ${user?.name || 'Seeker'}
-- Birth Date: ${user?.birthDate || 'Unknown'}
-- Birth Time: ${user?.birthTime || 'Unknown'}
-- Birth Place: ${user?.birthPlace || 'Unknown'}
-- Membership Tier: ${user?.plan || 'free'}
+- Name: ${name}
+- Birth Date: ${birthDate || 'Unknown'}
+- Birth Time: ${birthTime || 'Unknown'}
+- Birth Place: ${birthPlace || 'Unknown'}
+- Membership Tier: ${plan}
 
 CONVERSATION MEMORY: The messages below include this user's previous consultations. You remember everything discussed. Reference past topics, follow up on earlier advice, and maintain continuity. Do not repeat questions or ask for information already shared.
 
 RISHI PROTOCOL (NON-NEGOTIABLE):
 1. ZERO QUESTIONS BACK: You never end a response with a question like "Does that make sense?" or "How can I assist?". You deliver the verdict and stop.
-2. DATA OMNISCIENCE: You already possess the user's birth details when provided above. If they ask about their life, you look at their data. NEVER ask "What is your sun sign?" or "When were you born?" or "Can you share your birth chart?" when birth data is already in the profile.
+2. DATA OMNISCIENCE: You already possess the user's birth details when provided above. NEVER ask "What is your sun sign?" or "When were you born?" or "Can you share your birth chart?" - use the profile data directly.
 3. NO SERVICE PHRASES: Never say "I am here to help" or "Feel free to ask." Gurus do not offer customer service; they offer realization.
-4. ${year} MUNDANE WORLD: When asked about world events, markets, or current affairs, use Google Search to understand ${year} events (geopolitics, markets, climate) and explain how these macro-transits affect the user specifically based on their ${user?.plan || 'free'} level.
-5. AUTHORITATIVE TONE: Speak with heavy, ancient gravitas. Use Shastric logic: "The Grahas have aligned," "Your Sanchita Karma is ripening," "The transit of Shani in ${year} demands sacrifice." Reference the actual current date (${dayOfWeek}, ${monthName} ${dayOfMonth}) when giving timing advice.
+4. ${year} MUNDANE WORLD: When asked about world events, markets, or current affairs, use Google Search to understand ${year} events (geopolitics, markets, climate) and explain how these macro-transits affect the user specifically based on their ${plan} level.
+5. AUTHORITATIVE TONE: Speak with heavy, ancient gravitas. Use Shastric logic: "The Grahas have aligned," "Your Sanchita Karma is ripening," "The transit of Shani in ${year} demands sacrifice." Reference the actual current date (${todayFull}) when giving timing advice.
 6. RESPONSE STRUCTURE (for verdicts):
    - SHASTRIC VERDICT: [BOLD: YES / NO / DANGER / WAIT]
    - THE LOGIC: 1-2 sentences of hard Jyotish reasoning.
@@ -73,6 +85,17 @@ MANDATORY DISCLAIMER: At the end of readings involving health or major life deci
 
     // Build Gemini-compatible messages format from conversation history
     const geminiContents: { role: string; parts: { text: string }[] }[] = [];
+    
+    // Inject in-context reminder so model reliably uses birth data and current date
+    if (hasBirthChart) {
+      geminiContents.push({
+        role: 'model',
+        parts: [{
+          text: `[Rishi's internal note - I have the seeker's full birth chart: ${name}, born ${birthDate} at ${birthTime} in ${birthPlace}. Today is ${todayFull} (${year}). I will use this data for all readings. I will NOT ask for birth date, time, place, or sun sign.]`
+        }]
+      });
+    }
+    
     const msgList = messages as { role: string; content: string }[];
     for (const msg of msgList) {
       geminiContents.push({
@@ -88,7 +111,7 @@ MANDATORY DISCLAIMER: At the end of readings involving health or major life deci
       contents: geminiContents,
       tools: [{ google_search: {} }],
       generationConfig: {
-        temperature: 0.7,
+        temperature: 0.5,
         topK: 40,
         topP: 0.95,
         maxOutputTokens: 4096,
