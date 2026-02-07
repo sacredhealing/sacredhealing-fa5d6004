@@ -39,7 +39,7 @@ export const HealingJourneysCard: React.FC = () => {
       </div>
 
       {/* Sacred Flame Status Card */}
-      <Link to="/healing">
+      <Link to="/healing/my-sacred-flame">
         <motion.div
           className="relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-500/20 via-orange-500/10 to-red-500/20 border border-amber-500/30 p-4 hover:border-amber-500/50 transition-all group"
           whileHover={{ scale: 1.01 }}

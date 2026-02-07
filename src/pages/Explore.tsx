@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 
 import {
   Heart,
@@ -18,8 +19,9 @@ import {
   Users,
   BookOpen,
   Headphones,
-  Calendar,
   Youtube,
+  Crown,
+  Star,
 } from "lucide-react";
 
 type OfferItem = {
@@ -311,6 +313,68 @@ export default function Explore() {
                 </Link>
               ))}
             </div>
+          </div>
+
+          {/* Featured Programs */}
+          <div className="mt-6">
+            <h3 className="text-base font-heading font-semibold text-foreground mb-4">
+              {t("common.featured", "Featured")}
+            </h3>
+            <div className="space-y-3">
+              <Link to="/stargate">
+                <Card className="p-4 bg-gradient-to-r from-amber-500/20 via-purple-500/10 to-pink-500/20 border-amber-500/30 hover:border-amber-500/50 transition-all">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-amber-500/30 to-purple-500/20">
+                      <Crown className="w-6 h-6 text-amber-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-foreground">{t("home.stargateMembership")}</h3>
+                      <p className="text-xs text-muted-foreground">{t("home.stargateDesc")}</p>
+                    </div>
+                    <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">€25/mo</Badge>
+                  </div>
+                </Card>
+              </Link>
+              <Link to="/certification">
+                <Card className="p-4 bg-gradient-to-r from-emerald-500/20 via-teal-500/10 to-cyan-500/20 border-emerald-500/30 hover:border-emerald-500/50 transition-all">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500/30 to-teal-500/20">
+                      <Star className="w-6 h-6 text-emerald-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-foreground">{t("home.practitionerCert")}</h3>
+                      <p className="text-xs text-muted-foreground">{t("home.certDesc")}</p>
+                    </div>
+                    <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">12 mo</Badge>
+                  </div>
+                </Card>
+              </Link>
+              <Link to="/pregnancy-program">
+                <Card className="p-4 bg-gradient-to-r from-rose-500/20 via-pink-500/10 to-fuchsia-500/20 border-rose-500/30 hover:border-rose-500/50 transition-all">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-rose-500/30 to-pink-500/20">
+                      <Heart className="w-6 h-6 text-rose-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-foreground">{t("pregnancy.title", "Sacred Pregnancy")}</h3>
+                      <p className="text-xs text-muted-foreground">{t("pregnancy.subtitle", "Support on your journey")}</p>
+                    </div>
+                  </div>
+                </Card>
+              </Link>
+            </div>
+          </div>
+
+          {/* Invite Friends */}
+          <div className="mt-6 rounded-2xl glass-card p-5">
+            <h3 className="text-base font-heading font-semibold text-foreground mb-3">{t("dashboard.inviteFriends")}</h3>
+            <p className="text-sm text-muted-foreground mb-4">{t("dashboard.inviteDescription")}</p>
+            <Link to="/invite-friends">
+              <Button className="w-full gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-extrabold shadow-[0_0_30px_rgba(0,242,254,0.4)]">
+                <Users className="w-4 h-4" />
+                {t("dashboard.inviteFriends")}
+              </Button>
+            </Link>
           </div>
         </div>
       )}

@@ -38,6 +38,7 @@ import AdminAnnouncements from "./pages/AdminAnnouncements";
 import AdminIncomeStreams from "./pages/AdminIncomeStreams";
 import AdminYouTube from "./pages/AdminYouTube";
 import Healing from "./pages/Healing";
+import MySacredFlame from "./pages/healing/MySacredFlame";
 import Breathing from "./pages/Breathing";
 import IncomeStreams from "./pages/IncomeStreams";
 import SpiritualEducation from "./pages/SpiritualEducation";
@@ -141,6 +142,7 @@ const App = () => (
                   <Route path="/wallet" element={<Wallet />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/healing" element={<Healing />} />
+                  <Route path="/healing/my-sacred-flame" element={<MySacredFlame />} />
                   <Route path="/breathing" element={<Breathing />} />
                   <Route path="/income-streams" element={<IncomeStreams />} />
                   <Route path="/income-streams/affiliate" element={<AffiliateDetail />} />

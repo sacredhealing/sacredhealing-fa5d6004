@@ -8,17 +8,65 @@ interface SriYantraProps {
 }
 
 /**
- * Sri Yantra - Sacred geometry of 9 interlocking triangles
- * (4 upward/Shiva, 5 downward/Shakti) surrounding a central bindu.
+ * Sri Yantra - Traditional sacred geometry with 9 interlocking triangles
+ * (4 upward/Shiva, 5 downward/Shakti) forming 43 smaller triangles,
+ * 8 inner + 16 outer lotus petals, central bindu.
  */
 export const SriYantra: React.FC<SriYantraProps> = ({ className, style }) => {
-  const stroke = "rgba(0, 242, 254, 0.4)";
-  const strokeLight = "rgba(0, 242, 254, 0.25)";
-  const strokeThin = "rgba(0, 242, 254, 0.15)";
+  const cx = 100;
+  const cy = 100;
+  const stroke = "rgba(0, 242, 254, 0.45)";
+  const strokeLight = "rgba(0, 242, 254, 0.3)";
+  const strokeThin = "rgba(0, 242, 254, 0.2)";
+
+  // Base angle ~52° (golden ratio), tan(52°) ≈ 1.28
+  const tan52 = 1.28;
+
+  // 5 downward triangles (Shakti) - apex at bottom, sized to fit within lotus ring
+  const downHeights = [52, 40, 28, 16, 5];
+  const downTriangles = downHeights.map((h) => {
+    const halfBase = h * tan52;
+    return `M ${cx - halfBase},${cy - h} L ${cx + halfBase},${cy - h} L ${cx},${cy + h} Z`;
+  });
+
+  // 4 upward triangles (Shiva) - apex at top
+  const upHeights = [44, 30, 18, 6];
+  const upTriangles = upHeights.map((h) => {
+    const halfBase = h * tan52;
+    return `M ${cx - halfBase},${cy + h} L ${cx + halfBase},${cy + h} L ${cx},${cy - h} Z`;
+  });
+
+  // 8 lotus petals (inner ring - Ashtadala Padma)
+  const petal8 = Array.from({ length: 8 }, (_, i) => {
+    const centerDeg = (i * 360) / 8 - 90;
+    const halfSpan = 22.5;
+    const rIn = 58;
+    const rOut = 72;
+    const deg = (d: number) => (d * Math.PI) / 180;
+    const x = (r: number, a: number) => cx + r * Math.cos(deg(a));
+    const y = (r: number, a: number) => cy - r * Math.sin(deg(a));
+    const start = centerDeg - halfSpan;
+    const end = centerDeg + halfSpan;
+    return `M ${x(rIn, start)},${y(rIn, start)} A ${rIn},${rIn} 0 0,1 ${x(rIn, end)},${y(rIn, end)} L ${x(rOut, centerDeg)},${y(rOut, centerDeg)} Z`;
+  });
+
+  // 16 lotus petals (outer ring - Shodasabala Padma)
+  const petal16 = Array.from({ length: 16 }, (_, i) => {
+    const centerDeg = (i * 360) / 16 - 90;
+    const halfSpan = 11.25;
+    const rIn = 74;
+    const rOut = 88;
+    const deg = (d: number) => (d * Math.PI) / 180;
+    const x = (r: number, a: number) => cx + r * Math.cos(deg(a));
+    const y = (r: number, a: number) => cy - r * Math.sin(deg(a));
+    const start = centerDeg - halfSpan;
+    const end = centerDeg + halfSpan;
+    return `M ${x(rIn, start)},${y(rIn, start)} A ${rIn},${rIn} 0 0,1 ${x(rIn, end)},${y(rIn, end)} L ${x(rOut, centerDeg)},${y(rOut, centerDeg)} Z`;
+  });
 
   return (
     <div className={cn("relative", className)} style={style}>
-      {/* Outer cyan glow - portal effect */}
+      {/* Outer cyan glow */}
       <motion.div
         className="absolute inset-[-40%] rounded-full"
         style={{
@@ -37,90 +85,62 @@ export const SriYantra: React.FC<SriYantraProps> = ({ className, style }) => {
         }}
       />
 
-      {/* Sri Yantra SVG - 9 interlocking triangles (scaled from 504 to 200) */}
       <motion.svg
         viewBox="0 0 200 200"
         className="absolute inset-0 w-full h-full"
         preserveAspectRatio="xMidYMid meet"
       >
-        {/* Outer square (bhupura) */}
-        <rect
-          x="12"
-          y="12"
-          width="176"
-          height="176"
+        {/* Outer circular frame */}
+        <circle
+          cx={cx}
+          cy={cy}
+          r="92"
           fill="none"
           stroke={strokeThin}
           strokeWidth="0.5"
-          rx="2"
         />
 
-        {/* Lotus circles */}
-        <circle cx="100" cy="100" r="88" fill="none" stroke={strokeThin} strokeWidth="0.3" />
-        <circle cx="100" cy="100" r="78" fill="none" stroke={strokeLight} strokeWidth="0.4" />
+        {/* 16 lotus petals (outer ring - Shodasabala Padma) */}
+        <g fill="none" stroke={strokeLight} strokeWidth="0.5">
+          {petal16.map((d, i) => (
+            <path key={`p16-${i}`} d={d} />
+          ))}
+        </g>
 
-        {/* 9 interlocking triangles - classic Sri Yantra structure */}
-        {/* 5 downward triangles (Shakti) - outer to inner */}
-        <polygon
-          points="100,25 175,100 100,175 25,100"
+        {/* 8 lotus petals (inner ring - Ashtadala Padma) */}
+        <g fill="none" stroke={strokeLight} strokeWidth="0.5">
+          {petal8.map((d, i) => (
+            <path key={`p8-${i}`} d={d} />
+          ))}
+        </g>
+
+        {/* Inner circle between petals and triangles */}
+        <circle
+          cx={cx}
+          cy={cy}
+          r="54"
           fill="none"
-          stroke={strokeLight}
-          strokeWidth="0.5"
-        />
-        <polygon
-          points="100,38 162,100 100,162 38,100"
-          fill="none"
-          stroke={stroke}
-          strokeWidth="0.6"
-        />
-        <polygon
-          points="100,52 148,100 100,148 52,100"
-          fill="none"
-          stroke={stroke}
-          strokeWidth="0.6"
-        />
-        <polygon
-          points="100,68 132,100 100,132 68,100"
-          fill="none"
-          stroke={stroke}
-          strokeWidth="0.5"
-        />
-        <polygon
-          points="100,82 118,100 100,118 82,100"
-          fill="none"
-          stroke={strokeLight}
-          strokeWidth="0.5"
+          stroke={strokeThin}
+          strokeWidth="0.3"
         />
 
-        {/* 4 upward triangles (Shiva) - interlocking */}
-        <polygon
-          points="100,138 35,55 165,55"
-          fill="none"
-          stroke={stroke}
-          strokeWidth="0.6"
-        />
-        <polygon
-          points="100,125 52,73 148,73"
-          fill="none"
-          stroke={stroke}
-          strokeWidth="0.5"
-        />
-        <polygon
-          points="100,112 68,88 132,88"
-          fill="none"
-          stroke={stroke}
-          strokeWidth="0.5"
-        />
-        <polygon
-          points="100,100 82,82 118,82"
-          fill="none"
-          stroke={strokeLight}
-          strokeWidth="0.5"
-        />
+        {/* 9 interlocking triangles - 5 downward (Shakti) */}
+        <g fill="none" stroke={stroke} strokeWidth="0.6" strokeLinejoin="round">
+          {downTriangles.map((d, i) => (
+            <path key={`down-${i}`} d={d} />
+          ))}
+        </g>
+
+        {/* 4 upward (Shiva) */}
+        <g fill="none" stroke={stroke} strokeWidth="0.6" strokeLinejoin="round">
+          {upTriangles.map((d, i) => (
+            <path key={`up-${i}`} d={d} />
+          ))}
+        </g>
 
         {/* Central bindu (cosmic point) */}
-        <circle cx="100" cy="100" r="5" fill="rgba(0, 242, 254, 0.6)" />
-        <circle cx="100" cy="100" r="3" fill="rgba(0, 242, 254, 0.9)" />
+        <circle cx={cx} cy={cy} r="4" fill="rgba(0, 242, 254, 0.7)" />
+        <circle cx={cx} cy={cy} r="2" fill="rgba(0, 242, 254, 0.95)" />
       </motion.svg>
 
       {/* Center pulsing glow */}
