@@ -80,12 +80,9 @@ const Dashboard: React.FC = () => {
         <AmbientSoundToggle />
       </header>
 
-      {/* Today's Sacred Practice - Hero Card */}
+      {/* Today's Sacred Practice - Hero Card (Daily Guidance Engine) */}
       <div className="mb-4 sm:mb-6 animate-slide-up" style={{ animationDelay: '0.05s' }}>
-        <TodaysPracticeCard 
-          greeting="Today's Sacred Practice"
-          subtitle="Morning: Rise with Clarity"
-        />
+        <TodaysPracticeCard greeting="Today's Sacred Practice" />
       </div>
 
       {/* Daily Spiritual Practice */}
