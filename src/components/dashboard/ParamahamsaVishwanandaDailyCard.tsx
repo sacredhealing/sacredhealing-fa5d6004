@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Sun, ExternalLink } from 'lucide-react';
+import { Sun } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { useDailyQuote } from '@/hooks/useDailyQuote';
 
@@ -31,15 +31,6 @@ export const ParamahamsaVishwanandaDailyCard: React.FC = () => {
                 "{quote}"
               </blockquote>
             )}
-            <a
-              href="https://paramahamsavishwananda.com/inspirations/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 mt-3 text-amber-600 dark:text-amber-400 text-sm font-medium hover:text-amber-500 dark:hover:text-amber-300 transition-colors"
-            >
-              <span>{t("explore.viewDaily", "View daily quote")}</span>
-              <ExternalLink className="w-4 h-4" />
-            </a>
           </div>
         </div>
       </Card>
