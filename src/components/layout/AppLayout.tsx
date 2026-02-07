@@ -10,9 +10,9 @@ import { AppDisclaimer } from '@/components/AppDisclaimer';
 
 const pageVariants = {
   initial: {
-    opacity: 0,
-    y: 8,
-    filter: 'blur(3px)',
+    opacity: 1,
+    y: 0,
+    filter: 'blur(0px)',
   },
   animate: {
     opacity: 1,
@@ -20,16 +20,16 @@ const pageVariants = {
     filter: 'blur(0px)',
   },
   exit: {
-    opacity: 0,
-    y: -8,
-    filter: 'blur(3px)',
+    opacity: 0.7,
+    y: -4,
+    filter: 'blur(2px)',
   },
 };
 
 const pageTransition = {
   type: 'tween' as const,
   ease: [0.25, 0.1, 0.25, 1] as const,
-  duration: 0.35,
+  duration: 0.2,
 };
 
 export const AppLayout: React.FC = () => {

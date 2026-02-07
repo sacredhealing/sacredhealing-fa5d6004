@@ -1225,6 +1225,17 @@
   "explore": {
     "title": "Explore",
     "subtitle": "Discover your spiritual journey",
+    "guidance": {
+      "subtitle": "How can we help you today?",
+      "calm": { "title": "Calm my mind", "subtitle": "Reduce stress & anxiety" },
+      "heal": { "title": "Heal emotionally", "subtitle": "Inner child, release & restore" },
+      "energy": { "title": "Boost my energy", "subtitle": "Motivation & power" },
+      "sleep": { "title": "Sleep deeply", "subtitle": "Wind down & rest" }
+    },
+    "browseAll": {
+      "title": "Browse all tools",
+      "subtitle": "For advanced users or when you want everything"
+    },
     "featuredPlaylists": "Featured Playlists",
     "searchPlaceholder": "Search for content...",
     "categories": "Categories",

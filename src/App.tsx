@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import About from "./pages/About";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -9,6 +10,7 @@ import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
 import { AmbientAudioProvider } from "@/contexts/AmbientAudioContext";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { Loader2 } from "lucide-react";
 import { AppLayout } from "./components/layout/AppLayout";
 import { AdminLayout } from "./components/layout/AdminLayout";
 import { ProtectedRoute } from "./components/layout/ProtectedRoute";
@@ -110,6 +112,13 @@ const App = () => (
               <Toaster />
               <Sonner />
               <DebugBanner />
+            <Suspense
+              fallback={
+                <div className="min-h-screen flex items-center justify-center bg-[#030303]" style={{ background: "radial-gradient(ellipse at 15% 20%, rgba(30, 27, 75, 0.7) 0%, transparent 50%), #030303" }}>
+                  <Loader2 className="w-10 h-10 animate-spin text-[#00F2FE]" />
+                </div>
+              }
+            >
             <BrowserRouter>
               <Routes>
               <Route path="/" element={<Auth />} />
@@ -211,6 +220,7 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
+            </Suspense>
             </AmbientAudioProvider>
           </MusicPlayerProvider>
         </SHCProvider>

@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useMemo } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { 
   Music, Wind, ShoppingBag, Crown, Heart, Trophy, Calendar, Headphones,
   Sparkles, DollarSign, Search, Zap, Star, BookOpen, Mic, Users, Play, ChevronLeft, ChevronRight,
-  Youtube, Award, Share2, ArrowRight
+  Youtube, Award, Share2, ArrowRight, Moon, ChevronDown
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { HealingProgressCard } from '@/components/healing/HealingProgressCard';
 import { useSHC } from '@/contexts/SHCContext';
@@ -33,11 +34,22 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel';
 
+type DoorKey = 'calm' | 'heal' | 'energy' | 'sleep';
+
 const Explore: React.FC = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { balance, profile } = useSHC();
   const { isPremium } = useMembership();
   const [searchQuery, setSearchQuery] = useState('');
+  const [showAllTools, setShowAllTools] = useState(false);
+
+  const doors = useMemo(() => [
+    { key: 'calm' as DoorKey, title: t('explore.guidance.calm.title', 'Calm my mind'), subtitle: t('explore.guidance.calm.subtitle', 'Reduce stress & anxiety'), icon: Sparkles, to: '/breathing?mode=calm' },
+    { key: 'heal' as DoorKey, title: t('explore.guidance.heal.title', 'Heal emotionally'), subtitle: t('explore.guidance.heal.subtitle', 'Inner child, release & restore'), icon: Heart, to: '/paths/deep-healing-from-within' },
+    { key: 'energy' as DoorKey, title: t('explore.guidance.energy.title', 'Boost my energy'), subtitle: t('explore.guidance.energy.subtitle', 'Motivation & power'), icon: Zap, to: '/music?mood=energizing' },
+    { key: 'sleep' as DoorKey, title: t('explore.guidance.sleep.title', 'Sleep deeply'), subtitle: t('explore.guidance.sleep.subtitle', 'Wind down & rest'), icon: Moon, to: '/meditations?category=sleep' },
+  ], [t]);
   const { playlists: meditationPlaylists, loading: playlistsLoading } = useCuratedPlaylists('meditation');
   const { achievements, userAchievements, getAchievementProgress } = useAchievements();
   const { trackShare } = useSocialShare();
@@ -236,23 +248,49 @@ const Explore: React.FC = () => {
 
       {/* Header */}
       <header className="mb-6 animate-fade-in">
-        <h1 className="text-2xl font-heading font-bold text-foreground mb-1">
-          {t('dashboard.explore')}
+        <h1 className="text-2xl font-heading font-semibold text-foreground">
+          {t('explore.title', 'Explore')}
         </h1>
-        <p className="text-muted-foreground text-sm">
-          {t('home.offerSubtitle', 'Comprehensive tools and guidance for your spiritual journey')}
+        <p className="text-sm text-muted-foreground mt-1">
+          {t('explore.guidance.subtitle', 'How can we help you today?')}
         </p>
       </header>
 
-      {/* Search */}
-      <div className="relative mb-6 animate-slide-up">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
-        <Input
-          placeholder={t('community.searchUsers', 'Search...')}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10 bg-muted/30 border-border/50"
-        />
+      {/* Guidance Hub (4 Doors) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 animate-slide-up">
+        {doors.map((door) => {
+          const Icon = door.icon;
+          return (
+            <button
+              key={door.key}
+              onClick={() => navigate(door.to)}
+              className="text-left"
+            >
+              <Card
+                className={cn(
+                  'p-5 rounded-2xl border border-border/50',
+                  'bg-gradient-to-r from-background/60 to-background/20',
+                  'hover:border-primary/40 hover:shadow-md transition-all'
+                )}
+              >
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-2xl flex items-center justify-center bg-primary/10 border border-primary/20">
+                    <Icon className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-lg font-semibold text-foreground">
+                      {door.title}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {door.subtitle}
+                    </div>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                </div>
+              </Card>
+            </button>
+          );
+        })}
       </div>
 
       {/* Progress Stats */}
@@ -411,33 +449,66 @@ const Explore: React.FC = () => {
         </div>
       )}
 
-      {/* Explore Grid */}
-      <div className="animate-slide-up" style={{ animationDelay: '0.15s' }}>
-        <h2 className="text-lg font-heading font-semibold text-foreground mb-4">
-          {t('home.whatWeOffer', 'What We Offer')}
-        </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          {filteredCategories.map((item) => (
-            <Link key={item.id} to={item.to}>
-              <Card className={`p-4 bg-gradient-to-br ${item.gradient} ${item.border} transition-all h-full relative overflow-hidden`}>
-                {item.badge && (
-                  <Badge className="absolute top-2 right-2 text-[10px] px-1.5 py-0.5 bg-accent/20 text-accent border-accent/30">
-                    {item.badge}
-                  </Badge>
-                )}
-                <div className="flex flex-col gap-3">
-                  <div className={`p-2 rounded-lg ${item.iconBg} w-fit`}>
-                    <item.icon className={`w-5 h-5 ${item.iconColor}`} />
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="font-semibold text-foreground text-sm truncate">{item.title}</h3>
-                    <p className="text-xs text-muted-foreground line-clamp-2">{item.description}</p>
-                  </div>
-                </div>
-              </Card>
-            </Link>
-          ))}
-        </div>
+      {/* Collapsible "Browse all tools" */}
+      <div className="mt-8 animate-slide-up" style={{ animationDelay: '0.15s' }}>
+        <button
+          onClick={() => setShowAllTools((v) => !v)}
+          className="w-full flex items-center justify-between py-3 px-2 rounded-xl hover:bg-muted/30 transition"
+        >
+          <div>
+            <div className="text-base font-semibold text-foreground">
+              {t('explore.browseAll.title', 'Browse all tools')}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {t('explore.browseAll.subtitle', 'For advanced users or when you want everything')}
+            </div>
+          </div>
+          <ChevronDown
+            className={cn(
+              'h-5 w-5 text-muted-foreground transition-transform',
+              showAllTools ? 'rotate-180' : 'rotate-0'
+            )}
+          />
+        </button>
+
+        {showAllTools && (
+          <div className="mt-3">
+            <h2 className="text-lg font-heading font-semibold text-foreground mb-4">
+              {t('home.whatWeOffer', 'What We Offer')}
+            </h2>
+            <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                placeholder={t('community.searchUsers', 'Search...')}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 bg-muted/30 border-border/50"
+              />
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              {filteredCategories.map((item) => (
+                <Link key={item.id} to={item.to}>
+                  <Card className={`p-4 bg-gradient-to-br ${item.gradient} ${item.border} transition-all h-full relative overflow-hidden`}>
+                    {item.badge && (
+                      <Badge className="absolute top-2 right-2 text-[10px] px-1.5 py-0.5 bg-accent/20 text-accent border-accent/30">
+                        {item.badge}
+                      </Badge>
+                    )}
+                    <div className="flex flex-col gap-3">
+                      <div className={`p-2 rounded-lg ${item.iconBg} w-fit`}>
+                        <item.icon className={`w-5 h-5 ${item.iconColor}`} />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-foreground text-sm truncate">{item.title}</h3>
+                        <p className="text-xs text-muted-foreground line-clamp-2">{item.description}</p>
+                      </div>
+                    </div>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Featured Programs */}

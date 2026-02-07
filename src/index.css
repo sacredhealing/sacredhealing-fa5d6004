@@ -148,6 +148,10 @@
     @apply border-border;
   }
 
+  html, body, #root {
+    min-height: 100vh;
+  }
+
   body {
     @apply text-foreground font-sans antialiased;
     font-family: 'Inter', sans-serif;
@@ -156,7 +160,6 @@
       radial-gradient(ellipse at 15% 20%, rgba(30, 27, 75, 0.7) 0%, transparent 50%),
       #030303;
     background-attachment: fixed;
-    min-height: 100vh;
   }
 
   h1, h2, h3, h4, h5, h6 {
