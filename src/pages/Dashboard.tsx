@@ -16,6 +16,7 @@ import { JourneyTimeline } from '@/components/dashboard/JourneyTimeline';
 import { ShareableProgressCard } from '@/components/achievements/ShareableProgressCard';
 import { AchievementPopup } from '@/components/achievements/AchievementPopup';
 import { AchievementBadge } from '@/components/achievements/AchievementBadge';
+import { SectionCollapse } from '@/components/ui/SectionCollapse';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useSocialShare } from '@/hooks/useSocialShare';
 import type { DailyGuidance } from '@/hooks/useDailyGuidance';
@@ -100,62 +101,76 @@ const Dashboard: React.FC = () => {
             />
           </div>
 
-          {/* Daily Spiritual Practice & Your Path */}
+          {/* Daily Spiritual Practice & Your Path — above the fold */}
           <div className="space-y-4 mb-6 animate-slide-up">
             <DailyRitualCard />
             <SpiritualPathCard />
           </div>
 
-          {/* Breathing & Healing Journeys */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 animate-slide-up">
-            <BreathingJourneysCard />
-            <HealingJourneysCard />
+          {/* Collapsed: More practices */}
+          <div className="mb-4 animate-slide-up">
+            <SectionCollapse
+              title="More practices"
+              description="Breathing and healing journeys"
+              defaultOpen={false}
+            >
+              <div className="space-y-4">
+                <BreathingJourneysCard />
+                <HealingJourneysCard />
+              </div>
+            </SectionCollapse>
           </div>
 
-          {/* Positive Me & Journey Timeline */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 animate-slide-up">
-            <PositiveMeCard />
-            <JourneyTimeline />
-          </div>
-
-          {/* Achievements row */}
-          {achievements.length > 0 && (
-            <div className="mb-6 animate-slide-up">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-heading font-semibold text-foreground">
-                  Achievements
-                </h2>
-                <span className="text-xs text-muted-foreground">
-                  {userAchievements.length}/{achievements.length}
-                </span>
-              </div>
-              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                {achievements.slice(0, 6).map((achievement) => {
-                  const progress = getAchievementProgress(achievement);
-                  return (
-                    <div key={achievement.id} className="flex-shrink-0">
-                      <AchievementBadge
-                        name={achievement.name}
-                        description={achievement.description || ''}
-                        iconName={achievement.icon_name}
-                        badgeColor={achievement.badge_color}
-                        unlocked={progress.unlocked}
-                        unlockedAt={progress.unlockedAt}
-                        shcReward={achievement.shc_reward}
-                        size="sm"
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Share My Progress */}
+          {/* Collapsed: Progress & achievements */}
           <div className="mb-6 animate-slide-up">
-            <ShareableProgressCard
-              onShare={() => trackShare({ shareType: 'progress_card', platform: 'native' })}
-            />
+            <SectionCollapse
+              title="Progress & achievements"
+              description="Timeline, streaks, achievements and share"
+              defaultOpen={false}
+            >
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <PositiveMeCard />
+                  <JourneyTimeline />
+                </div>
+
+                {achievements.length > 0 && (
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-lg font-heading font-semibold text-foreground">
+                        Achievements
+                      </h2>
+                      <span className="text-xs text-muted-foreground">
+                        {userAchievements.length}/{achievements.length}
+                      </span>
+                    </div>
+                    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                      {achievements.slice(0, 6).map((achievement) => {
+                        const progress = getAchievementProgress(achievement);
+                        return (
+                          <div key={achievement.id} className="flex-shrink-0">
+                            <AchievementBadge
+                              name={achievement.name}
+                              description={achievement.description || ''}
+                              iconName={achievement.icon_name}
+                              badgeColor={achievement.badge_color}
+                              unlocked={progress.unlocked}
+                              unlockedAt={progress.unlockedAt}
+                              shcReward={achievement.shc_reward}
+                              size="sm"
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                <ShareableProgressCard
+                  onShare={() => trackShare({ shareType: 'progress_card', platform: 'native' })}
+                />
+              </div>
+            </SectionCollapse>
           </div>
         </>
       )}
