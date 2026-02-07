@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { 
   Music, Wind, ShoppingBag, Crown, Heart, Trophy, Calendar, Headphones,
   Sparkles, DollarSign, Search, Zap, Star, BookOpen, Mic, Users, Play, ChevronLeft, ChevronRight,
-  Youtube
+  Youtube, Award, Share2, ArrowRight
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,16 @@ import { useSHC } from '@/contexts/SHCContext';
 import { useMembership } from '@/hooks/useMembership';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
 import { useCuratedPlaylists } from '@/hooks/useCuratedPlaylists';
+import { BreathingJourneysCard } from '@/components/dashboard/BreathingJourneysCard';
+import { HealingJourneysCard } from '@/components/dashboard/HealingJourneysCard';
+import { PositiveMeCard } from '@/components/dashboard/PositiveMeCard';
+import { JourneyTimeline } from '@/components/dashboard/JourneyTimeline';
+import { DailyRitualCard } from '@/components/dashboard/DailyRitualCard';
+import { SpiritualPathCard } from '@/components/dashboard/SpiritualPathCard';
+import { useAchievements } from '@/hooks/useAchievements';
+import { AchievementBadge } from '@/components/achievements/AchievementBadge';
+import { ShareableProgressCard } from '@/components/achievements/ShareableProgressCard';
+import { useSocialShare } from '@/hooks/useSocialShare';
 import {
   Carousel,
   CarouselContent,
@@ -29,6 +39,8 @@ const Explore: React.FC = () => {
   const { isPremium } = useMembership();
   const [searchQuery, setSearchQuery] = useState('');
   const { playlists: meditationPlaylists, loading: playlistsLoading } = useCuratedPlaylists('meditation');
+  const { achievements, userAchievements, getAchievementProgress } = useAchievements();
+  const { trackShare } = useSocialShare();
 
   const exploreCategories = [
     {
@@ -278,6 +290,73 @@ const Explore: React.FC = () => {
       {/* Healing Journey - Compact Card */}
       <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
         <HealingProgressCard variant="compact" />
+      </div>
+
+      {/* Daily Spiritual Practice & Your Path - Moved from Home */}
+      <div className="space-y-4 mb-6 animate-slide-up" style={{ animationDelay: '0.105s' }}>
+        <DailyRitualCard />
+        <SpiritualPathCard />
+      </div>
+
+      {/* Breathing & Healing Journeys - Moved from Home */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 animate-slide-up" style={{ animationDelay: '0.11s' }}>
+        <BreathingJourneysCard />
+        <HealingJourneysCard />
+      </div>
+
+      {/* Positive Me & Journey Timeline - Moved from Home */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 animate-slide-up" style={{ animationDelay: '0.12s' }}>
+        <PositiveMeCard />
+        <JourneyTimeline />
+      </div>
+
+      {/* Achievements - Moved from Home */}
+      {achievements.length > 0 && (
+        <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.13s' }}>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Award className="w-5 h-5 text-primary" />
+              <h2 className="text-lg font-heading font-semibold text-foreground">
+                Achievements
+              </h2>
+            </div>
+            <Badge variant="outline" className="text-xs">
+              {userAchievements.length}/{achievements.length}
+            </Badge>
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            {achievements.slice(0, 6).map((achievement) => {
+              const progress = getAchievementProgress(achievement);
+              return (
+                <div key={achievement.id} className="flex-shrink-0">
+                  <AchievementBadge
+                    name={achievement.name}
+                    description={achievement.description || ''}
+                    iconName={achievement.icon_name}
+                    badgeColor={achievement.badge_color}
+                    unlocked={progress.unlocked}
+                    unlockedAt={progress.unlockedAt}
+                    shcReward={achievement.shc_reward}
+                    size="sm"
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Share Progress - Moved from Home */}
+      <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.14s' }}>
+        <div className="flex items-center gap-2 mb-4">
+          <Share2 className="w-5 h-5 text-primary" />
+          <h2 className="text-lg font-heading font-semibold text-foreground">
+            Share Your Journey
+          </h2>
+        </div>
+        <ShareableProgressCard
+          onShare={() => trackShare({ shareType: 'progress_card', platform: 'native' })}
+        />
       </div>
 
       {/* Featured Playlists Carousel */}

@@ -7,15 +7,19 @@ import { Button } from '@/components/ui/button';
 import { MetatronsCube } from './MetatronsCube';
 import { useDailyGuidance } from '@/hooks/useDailyGuidance';
 import { Skeleton } from '@/components/ui/skeleton';
+import type { DailyGuidance } from '@/hooks/useDailyGuidance';
 
 interface TodaysPracticeCardProps {
   greeting?: string;
   subtitle?: string;
+  /** When provided, Start button uses onClick instead of Link (for inline session flow) */
+  onStartClick?: (guidance: DailyGuidance) => void;
 }
 
 export const TodaysPracticeCard: React.FC<TodaysPracticeCardProps> = ({
   greeting = "Today's Sacred Practice",
   subtitle: subtitleProp,
+  onStartClick,
 }) => {
   const { guidance, isLoading } = useDailyGuidance();
   const subtitle = subtitleProp ?? guidance.message;
@@ -102,15 +106,26 @@ export const TodaysPracticeCard: React.FC<TodaysPracticeCardProps> = ({
               </p>
             </div>
 
-            <Link to={sessionId}>
-              <Button 
+            {onStartClick ? (
+              <Button
+                onClick={() => onStartClick(guidance)}
                 className="w-full gap-2 bg-[#00F2FE] hover:bg-[#00D4E0] text-[#000000] shadow-[0_0_30px_rgba(0,242,254,0.4)] hover:shadow-[0_0_40px_rgba(0,242,254,0.5)] border-none transition-all text-sm sm:text-base px-4 sm:px-8 py-2.5 sm:py-3"
                 style={{ fontWeight: 800 }}
               >
                 {buttonLabel}
                 <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
               </Button>
-            </Link>
+            ) : (
+              <Link to={sessionId}>
+                <Button 
+                  className="w-full gap-2 bg-[#00F2FE] hover:bg-[#00D4E0] text-[#000000] shadow-[0_0_30px_rgba(0,242,254,0.4)] hover:shadow-[0_0_40px_rgba(0,242,254,0.5)] border-none transition-all text-sm sm:text-base px-4 sm:px-8 py-2.5 sm:py-3"
+                  style={{ fontWeight: 800 }}
+                >
+                  {buttonLabel}
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </Card>
