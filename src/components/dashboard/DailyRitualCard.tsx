@@ -106,7 +106,7 @@ export const DailyRitualCard: React.FC = () => {
             </div>
 
             {activity.completed ? (
-              <span className="text-xs text-green-500 font-medium flex items-center gap-1">
+              <span className="text-xs text-green-500 font-medium flex items-center gap-1 shrink-0">
                 <Check className="w-3 h-3" />
                 +{activity.reward} SHC
               </span>
@@ -116,7 +116,7 @@ export const DailyRitualCard: React.FC = () => {
                 variant="spiritual"
                 onClick={activity.onComplete}
                 disabled={activity.isLoading}
-                className="text-xs h-7 px-3"
+                className="text-xs font-extrabold text-[#000000] h-8 min-h-[32px] px-4 shrink-0"
               >
                 {activity.isLoading ? '...' : t('common.complete', 'Complete')}
               </Button>

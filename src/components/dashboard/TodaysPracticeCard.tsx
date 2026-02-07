@@ -62,9 +62,9 @@ export const TodaysPracticeCard: React.FC<TodaysPracticeCardProps> = ({
         {/* Subtle gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-r from-secondary/5 via-transparent to-primary/5 pointer-events-none" />
         
-        {/* Content - responsive padding and layout */}
-        <div className="relative flex items-center p-4 sm:p-8 gap-3 sm:gap-8">
-          {/* Left: Metatron's Cube Sacred Geometry - 200% larger */}
+        {/* Content - responsive padding and layout: stack on mobile, side-by-side on desktop */}
+        <div className="relative flex flex-col sm:flex-row sm:items-center p-4 sm:p-8 gap-4 sm:gap-8">
+          {/* Left: Sacred Geometry - centered on mobile */}
           <div className="hidden sm:flex w-72 h-72 shrink-0 relative">
             {/* Large cyan outer glow - portal effect */}
             <div 
@@ -80,8 +80,8 @@ export const TodaysPracticeCard: React.FC<TodaysPracticeCardProps> = ({
             />
           </div>
 
-          {/* Mobile: Smaller Portal to fit screen */}
-          <div className="flex sm:hidden w-28 h-28 shrink-0 relative">
+          {/* Mobile: Smaller Portal centered */}
+          <div className="flex sm:hidden w-24 h-24 shrink-0 relative self-center">
             <div 
               className="absolute inset-[-25%] rounded-full animate-pulse-slow"
               style={{
@@ -96,12 +96,12 @@ export const TodaysPracticeCard: React.FC<TodaysPracticeCardProps> = ({
           </div>
 
           {/* Right: Text and CTA */}
-          <div className="flex-1 min-w-0 flex flex-col gap-3 sm:gap-5">
-            <div>
+          <div className="flex-1 min-w-0 flex flex-col gap-3 sm:gap-5 w-full">
+            <div className="w-full min-w-0">
               <h2 className="text-base sm:text-2xl font-heading font-bold text-white mb-1 sm:mb-2 leading-tight">
                 {greeting}
               </h2>
-              <p className="text-sm sm:text-base text-[#94a3b8] truncate">
+              <p className="text-sm sm:text-base text-[#94a3b8] line-clamp-2 sm:line-clamp-none">
                 {subtitle}
               </p>
             </div>
@@ -109,20 +109,20 @@ export const TodaysPracticeCard: React.FC<TodaysPracticeCardProps> = ({
             {onStartClick ? (
               <Button
                 onClick={() => onStartClick(guidance)}
-                className="w-full gap-2 bg-[#00F2FE] hover:bg-[#00D4E0] text-[#000000] shadow-[0_0_30px_rgba(0,242,254,0.4)] hover:shadow-[0_0_40px_rgba(0,242,254,0.5)] border-none transition-all text-sm sm:text-base px-4 sm:px-8 py-2.5 sm:py-3"
+                className="w-full gap-2 bg-[#00F2FE] hover:bg-[#00D4E0] text-[#000000] shadow-[0_0_30px_rgba(0,242,254,0.4)] hover:shadow-[0_0_40px_rgba(0,242,254,0.5)] border-none transition-all text-sm sm:text-base px-4 sm:px-8 py-3 flex-shrink-0"
                 style={{ fontWeight: 800 }}
               >
                 {buttonLabel}
-                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
               </Button>
             ) : (
-              <Link to={sessionId}>
+              <Link to={sessionId} className="w-full block">
                 <Button 
-                  className="w-full gap-2 bg-[#00F2FE] hover:bg-[#00D4E0] text-[#000000] shadow-[0_0_30px_rgba(0,242,254,0.4)] hover:shadow-[0_0_40px_rgba(0,242,254,0.5)] border-none transition-all text-sm sm:text-base px-4 sm:px-8 py-2.5 sm:py-3"
+                  className="w-full gap-2 bg-[#00F2FE] hover:bg-[#00D4E0] text-[#000000] shadow-[0_0_30px_rgba(0,242,254,0.4)] hover:shadow-[0_0_40px_rgba(0,242,254,0.5)] border-none transition-all text-sm sm:text-base px-4 sm:px-8 py-3 flex-shrink-0"
                   style={{ fontWeight: 800 }}
                 >
                   {buttonLabel}
-                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
                 </Button>
               </Link>
             )}
