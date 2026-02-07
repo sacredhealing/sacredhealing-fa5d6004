@@ -49,7 +49,7 @@ export const PositiveMeCard: React.FC = () => {
       <div className="space-y-4">
         <StatItem
           icon={Sparkles}
-          label="SHC Balance"
+          label="Energy Collected"
           value={
             <span className="flex items-baseline gap-1">
               <AnimatedCounter value={balance?.balance ?? 0} className="text-sm font-semibold" />
@@ -62,7 +62,7 @@ export const PositiveMeCard: React.FC = () => {
 
         <StatItem
           icon={Heart}
-          label="Sessions This Week"
+          label="Moments of Presence"
           value="12"
           color="bg-rose-500/20 text-rose-400"
           delay={0.1}
@@ -70,7 +70,7 @@ export const PositiveMeCard: React.FC = () => {
 
         <StatItem
           icon={Clock}
-          label="Mindful Minutes"
+          label="Time With Yourself"
           value="145 min"
           color="bg-secondary/20 text-secondary"
           delay={0.2}

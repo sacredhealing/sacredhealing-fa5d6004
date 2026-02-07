@@ -12,6 +12,8 @@ interface AchievementBadgeProps {
   size?: "sm" | "md" | "lg";
   showDetails?: boolean;
   onClick?: () => void;
+  /** Progress text for locked achievements, e.g. "12 / 30 days" */
+  progressText?: string | null;
 }
 
 const iconMap: Record<string, any> = {
@@ -47,6 +49,7 @@ export const AchievementBadge = ({
   size = "md",
   showDetails = true,
   onClick,
+  progressText,
 }: AchievementBadgeProps) => {
   const Icon = iconMap[iconName] || Award;
   const colorStyle = colorMap[badgeColor] || colorMap.gold;
@@ -101,6 +104,12 @@ export const AchievementBadge = ({
           {description && (
             <p className="text-xs text-muted-foreground mt-1 max-w-[120px]">
               {description}
+            </p>
+          )}
+
+          {!unlocked && progressText && (
+            <p className="text-xs text-primary/80 mt-1 font-medium">
+              {progressText}
             </p>
           )}
 

@@ -158,6 +158,7 @@ const Dashboard: React.FC = () => {
                               unlockedAt={progress.unlockedAt}
                               shcReward={achievement.shc_reward}
                               size="sm"
+                              progressText={progress.progressText}
                             />
                           </div>
                         );

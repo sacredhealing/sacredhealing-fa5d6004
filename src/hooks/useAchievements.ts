@@ -50,6 +50,12 @@ export const useAchievements = () => {
   const [userMilestones, setUserMilestones] = useState<UserMilestone[]>([]);
   const [loading, setLoading] = useState(true);
   const [newlyUnlocked, setNewlyUnlocked] = useState<Achievement | null>(null);
+  const [userStats, setUserStats] = useState<{
+    streakDays: number;
+    totalSessions: number;
+    meditationCount: number;
+    referrals: number;
+  }>({ streakDays: 0, totalSessions: 0, meditationCount: 0, referrals: 0 });
 
   const fetchAchievements = useCallback(async () => {
     try {
@@ -104,6 +110,23 @@ export const useAchievements = () => {
       if (userMilestonesData) {
         setUserMilestones(userMilestonesData as unknown as UserMilestone[]);
       }
+
+      // Fetch user stats for achievement progress display
+      const [profileRes, meditationRes, musicRes, mantraRes] = await Promise.all([
+        supabase.from("profiles").select("streak_days, total_referrals").eq("user_id", user.id).single(),
+        supabase.from("meditation_completions").select("*", { count: "exact", head: true }).eq("user_id", user.id),
+        supabase.from("music_completions").select("*", { count: "exact", head: true }).eq("user_id", user.id),
+        supabase.from("mantra_completions").select("*", { count: "exact", head: true }).eq("user_id", user.id),
+      ]);
+
+      const streakDays = (profileRes.data as { streak_days?: number; total_referrals?: number } | null)?.streak_days ?? 0;
+      const referrals = (profileRes.data as { streak_days?: number; total_referrals?: number } | null)?.total_referrals ?? 0;
+      const meditationCount = meditationRes.count ?? 0;
+      const musicCount = musicRes.count ?? 0;
+      const mantraCount = mantraRes.count ?? 0;
+      const totalSessions = meditationCount + musicCount + mantraCount;
+
+      setUserStats({ streakDays, totalSessions, meditationCount, referrals });
     } catch (error) {
       console.error("Error fetching user progress:", error);
     }
@@ -145,8 +168,35 @@ export const useAchievements = () => {
     return {
       unlocked: !!unlocked,
       unlockedAt: unlocked?.unlocked_at,
+      progressText: (() => {
+        if (unlocked) return null;
+        const { requirement_type, requirement_value } = achievement;
+        let current = 0;
+        let unit = "";
+        switch (requirement_type) {
+          case "streak_days":
+            current = userStats.streakDays;
+            unit = "days";
+            break;
+          case "total_sessions":
+            current = userStats.totalSessions;
+            unit = "sessions";
+            break;
+          case "meditation_count":
+            current = userStats.meditationCount;
+            unit = "meditations";
+            break;
+          case "referrals":
+            current = userStats.referrals;
+            unit = "referrals";
+            break;
+          default:
+            return null;
+        }
+        return `${Math.min(current, requirement_value)} / ${requirement_value} ${unit}`;
+      })(),
     };
-  }, [userAchievements]);
+  }, [userAchievements, userStats]);
 
   const getMilestoneProgress = useCallback((milestone: Milestone) => {
     const reached = userMilestones.find(

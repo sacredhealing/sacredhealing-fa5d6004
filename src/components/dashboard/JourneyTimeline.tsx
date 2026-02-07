@@ -1,8 +1,11 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Compass, Sparkles, Heart, Moon, Sun, Star } from 'lucide-react';
+import { Compass, Sparkles, Heart, Moon, Sun, Star, ArrowRight } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { useDailyPath } from '@/hooks/useDailyPath';
+import { useDailyGuidance } from '@/hooks/useDailyGuidance';
 
 const timelineNodes = [
   { id: 1, completed: true, icon: Sun },
@@ -13,9 +16,12 @@ const timelineNodes = [
 ];
 
 export const JourneyTimeline: React.FC = () => {
+  const navigate = useNavigate();
   const { suggestion } = useDailyPath();
+  const { guidance } = useDailyGuidance();
 
   const soulMessage = suggestion?.message || "Your soul seeks calm. Try 'Heart-Opening Breath' next.";
+  const nextStepRoute = guidance?.session_id || suggestion?.practiceRoute || '/meditations';
 
   return (
     <Card className="glass-card p-5">
@@ -31,7 +37,7 @@ export const JourneyTimeline: React.FC = () => {
 
       {/* Soul Message */}
       <motion.div
-        className="mb-5 p-4 rounded-[16px] bg-gradient-to-r from-secondary/10 via-primary/10 to-accent/10 border border-primary/20"
+        className="mb-4 p-4 rounded-[16px] bg-gradient-to-r from-secondary/10 via-primary/10 to-accent/10 border border-primary/20"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
       >
@@ -39,6 +45,15 @@ export const JourneyTimeline: React.FC = () => {
           "{soulMessage}"
         </p>
       </motion.div>
+
+      {/* Primary CTA */}
+      <Button
+        onClick={() => navigate(nextStepRoute)}
+        className="w-full gap-2 mb-5 bg-[#00F2FE] hover:bg-[#00D4E0] text-[#000000] font-extrabold"
+      >
+        Continue your next step
+        <ArrowRight className="w-4 h-4" />
+      </Button>
 
       {/* Timeline Nodes */}
       <div className="relative flex items-center justify-between px-2">
