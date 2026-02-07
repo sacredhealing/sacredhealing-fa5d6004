@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MetatronsCube } from './MetatronsCube';
+import { SriYantra } from './SriYantra';
 import { useDailyGuidance } from '@/hooks/useDailyGuidance';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { DailyGuidance } from '@/hooks/useDailyGuidance';
@@ -74,7 +74,7 @@ export const TodaysPracticeCard: React.FC<TodaysPracticeCardProps> = ({
                 filter: "blur(30px)",
               }}
             />
-            <MetatronsCube 
+            <SriYantra 
               className="w-full h-full relative z-10" 
               style={{ filter: "drop-shadow(0 0 15px #00F2FE)" }}
             />
@@ -89,7 +89,7 @@ export const TodaysPracticeCard: React.FC<TodaysPracticeCardProps> = ({
                 filter: "blur(18px)",
               }}
             />
-            <MetatronsCube 
+            <SriYantra 
               className="w-full h-full relative z-10" 
               style={{ filter: "drop-shadow(0 0 15px #00F2FE)" }}
             />
