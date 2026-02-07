@@ -17,7 +17,6 @@ import { ShareableProgressCard } from '@/components/achievements/ShareableProgre
 import { AchievementPopup } from '@/components/achievements/AchievementPopup';
 import { AchievementBadge } from '@/components/achievements/AchievementBadge';
 import { SectionCollapse } from '@/components/ui/SectionCollapse';
-import { ParamahamsaVishwanandaDailyCard } from '@/components/dashboard/ParamahamsaVishwanandaDailyCard';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useSocialShare } from '@/hooks/useSocialShare';
 import type { DailyGuidance } from '@/hooks/useDailyGuidance';
@@ -166,8 +165,6 @@ const Dashboard: React.FC = () => {
                     </div>
                   </div>
                 )}
-
-                <ParamahamsaVishwanandaDailyCard />
 
                 <ShareableProgressCard
                   onShare={() => trackShare({ shareType: 'progress_card', platform: 'native' })}
