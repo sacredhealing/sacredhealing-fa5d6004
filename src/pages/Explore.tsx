@@ -1,506 +1,310 @@
-import React, { useState, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { 
-  Music, Wind, ShoppingBag, Crown, Heart, Trophy, Calendar, Headphones,
-  Sparkles, DollarSign, Search, Zap, Star, BookOpen, Mic, Users, Play, ChevronLeft, ChevronRight,
-  Youtube, Award, Share2, ArrowRight, Moon, ChevronDown
-} from 'lucide-react';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { HealingProgressCard } from '@/components/healing/HealingProgressCard';
-import { useSHC } from '@/contexts/SHCContext';
-import { useMembership } from '@/hooks/useMembership';
-import { AnimatedCounter } from '@/components/ui/animated-counter';
-import { useCuratedPlaylists } from '@/hooks/useCuratedPlaylists';
-import { BreathingJourneysCard } from '@/components/dashboard/BreathingJourneysCard';
-import { HealingJourneysCard } from '@/components/dashboard/HealingJourneysCard';
-import { PositiveMeCard } from '@/components/dashboard/PositiveMeCard';
-import { JourneyTimeline } from '@/components/dashboard/JourneyTimeline';
-import { DailyRitualCard } from '@/components/dashboard/DailyRitualCard';
-import { SpiritualPathCard } from '@/components/dashboard/SpiritualPathCard';
-import { useAchievements } from '@/hooks/useAchievements';
-import { AchievementBadge } from '@/components/achievements/AchievementBadge';
-import { ShareableProgressCard } from '@/components/achievements/ShareableProgressCard';
-import { useSocialShare } from '@/hooks/useSocialShare';
+import React, { useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+
 import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from '@/components/ui/carousel';
+  Heart,
+  Moon,
+  Zap,
+  Sparkles,
+  Music2,
+  ShoppingBag,
+  Mic,
+  Trophy,
+  Users,
+  BookOpen,
+  Headphones,
+  Calendar,
+  Youtube,
+} from "lucide-react";
 
-type DoorKey = 'calm' | 'heal' | 'energy' | 'sleep';
+type OfferItem = {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  to: string;
+  badge?: string;
+};
 
-const Explore: React.FC = () => {
+export default function Explore() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { balance, profile } = useSHC();
-  const { isPremium } = useMembership();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showAllTools, setShowAllTools] = useState(false);
 
-  const doors = useMemo(() => [
-    { key: 'calm' as DoorKey, title: t('explore.guidance.calm.title', 'Calm my mind'), subtitle: t('explore.guidance.calm.subtitle', 'Reduce stress & anxiety'), icon: Sparkles, to: '/breathing?mode=calm' },
-    { key: 'heal' as DoorKey, title: t('explore.guidance.heal.title', 'Heal emotionally'), subtitle: t('explore.guidance.heal.subtitle', 'Inner child, release & restore'), icon: Heart, to: '/paths/deep-healing-from-within' },
-    { key: 'energy' as DoorKey, title: t('explore.guidance.energy.title', 'Boost my energy'), subtitle: t('explore.guidance.energy.subtitle', 'Motivation & power'), icon: Zap, to: '/music?mood=energizing' },
-    { key: 'sleep' as DoorKey, title: t('explore.guidance.sleep.title', 'Sleep deeply'), subtitle: t('explore.guidance.sleep.subtitle', 'Wind down & rest'), icon: Moon, to: '/meditations?category=sleep' },
-  ], [t]);
-  const { playlists: meditationPlaylists, loading: playlistsLoading } = useCuratedPlaylists('meditation');
-  const { achievements, userAchievements, getAchievementProgress } = useAchievements();
-  const { trackShare } = useSocialShare();
+  const [showAll, setShowAll] = useState(false);
+  const [query, setQuery] = useState("");
 
-  const exploreCategories = [
-    {
-      id: 'mantras',
-      to: '/mantras',
-      icon: Music,
-      title: t('dashboard.mantras'),
-      description: t('dashboard.earnMantras'),
-      gradient: 'from-purple-500/20 to-amber-500/10',
-      border: 'border-purple-500/30 hover:border-purple-500/50',
-      iconBg: 'bg-purple-500/20',
-      iconColor: 'text-purple-400',
-      badge: '111 SHC',
-    },
-    {
-      id: 'breathing',
-      to: '/breathing',
-      icon: Wind,
-      title: t('dashboard.breathing', 'Breathing'),
-      description: t('dashboard.breathingDesc', 'Calm & energize'),
-      gradient: 'from-cyan-500/20 to-blue-500/10',
-      border: 'border-cyan-500/30 hover:border-cyan-500/50',
-      iconBg: 'bg-cyan-500/20',
-      iconColor: 'text-cyan-400',
-    },
-    {
-      id: 'shop',
-      to: '/shop',
-      icon: ShoppingBag,
-      title: t('nav.shop'),
-      description: t('dashboard.lailasCollection'),
-      gradient: 'from-pink-500/20 to-purple-500/10',
-      border: 'border-pink-500/30 hover:border-pink-500/50',
-      iconBg: 'bg-pink-500/20',
-      iconColor: 'text-pink-400',
-    },
-    {
-      id: 'membership',
-      to: '/membership',
-      icon: Crown,
-      title: t('dashboard.membership'),
-      description: t('dashboard.upgradeYourPlan'),
-      gradient: 'from-amber-500/20 to-purple-500/10',
-      border: 'border-amber-500/30 hover:border-amber-500/50',
-      iconBg: 'bg-amber-500/20',
-      iconColor: 'text-amber-400',
-    },
-    {
-      id: 'transformation',
-      to: '/transformation',
-      icon: Heart,
-      title: t('dashboard.coaching'),
-      description: t('dashboard.sixMonthProgram'),
-      gradient: 'from-green-500/20 to-emerald-500/10',
-      border: 'border-green-500/30 hover:border-green-500/50',
-      iconBg: 'bg-green-500/20',
-      iconColor: 'text-green-400',
-    },
-    {
-      id: 'leaderboard',
-      to: '/leaderboard',
-      icon: Trophy,
-      title: t('dashboard.leaderboard'),
-      description: t('dashboard.leaderboardDesc'),
-      gradient: 'from-yellow-500/20 to-orange-500/10',
-      border: 'border-yellow-500/30 hover:border-yellow-500/50',
-      iconBg: 'bg-yellow-500/20',
-      iconColor: 'text-yellow-400',
-      badge: '5,000 SHC',
-    },
-    {
-      id: 'affirmation',
-      to: '/affirmation-soundtrack',
-      icon: Mic,
-      title: t('dashboard.affirmationSoundtrack'),
-      description: t('dashboard.personalizedForYou'),
-      gradient: 'from-violet-500/20 to-fuchsia-500/10',
-      border: 'border-violet-500/30 hover:border-violet-500/50',
-      iconBg: 'bg-violet-500/20',
-      iconColor: 'text-violet-400',
-    },
-    {
-      id: 'sessions',
-      to: '/private-sessions',
-      icon: Calendar,
-      title: t('dashboard.privateSessions'),
-      description: t('dashboard.privateSessionsDesc'),
-      gradient: 'from-amber-500/20 to-orange-500/10',
-      border: 'border-amber-500/30 hover:border-amber-500/50',
-      iconBg: 'bg-amber-500/20',
-      iconColor: 'text-amber-400',
-    },
-    {
-      id: 'podcast',
-      to: '/podcast',
-      icon: Headphones,
-      title: t('dashboard.podcast'),
-      description: t('dashboard.podcastDesc'),
-      gradient: 'from-emerald-500/20 to-green-500/10',
-      border: 'border-emerald-500/30 hover:border-emerald-500/50',
-      iconBg: 'bg-emerald-500/20',
-      iconColor: 'text-emerald-400',
-    },
-    {
-      id: 'ai-income',
-      to: '/income-streams',
-      icon: Zap,
-      title: t('dashboard.aiIncomeEngine'),
-      description: t('dashboard.aiIncomeDesc'),
-      gradient: 'from-blue-500/20 to-indigo-500/10',
-      border: 'border-blue-500/30 hover:border-blue-500/50',
-      iconBg: 'bg-blue-500/20',
-      iconColor: 'text-blue-400',
-      badge: t('common.new', 'New'),
-    },
-    {
-      id: 'courses',
-      to: '/courses',
-      icon: BookOpen,
-      title: t('nav.courses'),
-      description: t('courses.subtitle', 'Deepen your practice'),
-      gradient: 'from-indigo-500/20 to-purple-500/10',
-      border: 'border-indigo-500/30 hover:border-indigo-500/50',
-      iconBg: 'bg-indigo-500/20',
-      iconColor: 'text-indigo-400',
-    },
-    {
-      id: 'community',
-      to: '/community',
-      icon: Users,
-      title: t('nav.community'),
-      description: t('home.communityDesc', 'Connect with like-minded souls'),
-      gradient: 'from-rose-500/20 to-pink-500/10',
-      border: 'border-rose-500/30 hover:border-rose-500/50',
-      iconBg: 'bg-rose-500/20',
-      iconColor: 'text-rose-400',
-    },
-    // YouTube - Moved from Dashboard Quick Actions
-    {
-      id: 'videos',
-      to: '/spiritual-education',
-      icon: Youtube,
-      title: t('quickActions.videos', 'Videos'),
-      description: t('explore.videoDesc', 'Watch & learn'),
-      gradient: 'from-rose-500/20 to-red-500/10',
-      border: 'border-rose-500/30 hover:border-rose-500/50',
-      iconBg: 'bg-rose-500/20',
-      iconColor: 'text-rose-400',
-    },
-    // Creative Soul - Moved from Dashboard Quick Actions
-    {
-      id: 'creative-soul',
-      to: '/creative-soul/store',
-      icon: Sparkles,
-      title: t('quickActions.creativeSoul', 'Creative Soul'),
-      description: t('explore.creativeSoulDesc', 'Create with AI'),
-      gradient: 'from-purple-500/20 to-violet-500/10',
-      border: 'border-purple-500/30 hover:border-purple-500/50',
-      iconBg: 'bg-purple-500/20',
-      iconColor: 'text-purple-400',
-    },
-  ];
-
-  const filteredCategories = exploreCategories.filter(
-    (cat) =>
-      cat.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      cat.description.toLowerCase().includes(searchQuery.toLowerCase())
+  const offers: OfferItem[] = useMemo(
+    () => [
+      {
+        title: t("explore.mantras", "Mantras"),
+        description: t("explore.mantrasDesc", "Earn SHC"),
+        icon: <Music2 className="h-5 w-5" />,
+        to: "/mantras",
+        badge: "111 SHC",
+      },
+      {
+        title: t("explore.breathing", "Breathing"),
+        description: t("explore.breathingDesc", "Calm & energize"),
+        icon: <Sparkles className="h-5 w-5" />,
+        to: "/breathing",
+      },
+      {
+        title: t("explore.shop", "Shop"),
+        description: t("explore.shopDesc", "Laila's Collection"),
+        icon: <ShoppingBag className="h-5 w-5" />,
+        to: "/shop",
+      },
+      {
+        title: t("explore.membership", "Membership"),
+        description: t("explore.membershipDesc", "Upgrade your plan"),
+        icon: <Sparkles className="h-5 w-5" />,
+        to: "/membership",
+      },
+      {
+        title: t("explore.coaching", "Coaching"),
+        description: t("explore.coachingDesc", "6-Month Program"),
+        icon: <Heart className="h-5 w-5" />,
+        to: "/transformation",
+      },
+      {
+        title: t("explore.leaderboard", "Leaderboard"),
+        description: t("explore.leaderboardDesc", "Top earners win monthly"),
+        icon: <Trophy className="h-5 w-5" />,
+        to: "/leaderboard",
+        badge: "5,000 SHC",
+      },
+      {
+        title: t("explore.affirmationSoundtrack", "Affirmation Soundtrack"),
+        description: t("explore.affirmationSoundtrackDesc", "Personalized for you"),
+        icon: <Mic className="h-5 w-5" />,
+        to: "/affirmation-soundtrack",
+      },
+      {
+        title: t("explore.privateSessions", "Private Sessions"),
+        description: t("explore.privateSessionsDesc", "1-on-1 with Adam or Laila"),
+        icon: <Users className="h-5 w-5" />,
+        to: "/private-sessions",
+      },
+      {
+        title: t("explore.podcast", "Podcast"),
+        description: t("explore.podcastDesc", "Streams on Spotify"),
+        icon: <Headphones className="h-5 w-5" />,
+        to: "/podcast",
+      },
+      {
+        title: t("explore.abundance", "Sacred Healing Abundance"),
+        description: t("explore.abundanceDesc", "Earn with us"),
+        icon: <Zap className="h-5 w-5" />,
+        to: "/income-streams",
+        badge: t("common.new", "New"),
+      },
+      {
+        title: t("explore.courses", "Courses"),
+        description: t("explore.coursesDesc", "Deepen your practice"),
+        icon: <BookOpen className="h-5 w-5" />,
+        to: "/courses",
+      },
+      {
+        title: t("explore.community", "Community"),
+        description: t("explore.communityDesc", "Chat with guides & members"),
+        icon: <Users className="h-5 w-5" />,
+        to: "/community",
+      },
+      {
+        title: t("explore.videos", "Videos"),
+        description: t("explore.videosDesc", "Watch & learn"),
+        icon: <Youtube className="h-5 w-5" />,
+        to: "/spiritual-education",
+      },
+      {
+        title: t("explore.creativeSoul", "Creative Soul"),
+        description: t("explore.creativeSoulDesc", "Create with AI"),
+        icon: <Sparkles className="h-5 w-5" />,
+        to: "/creative-soul/store",
+      },
+    ],
+    [t]
   );
 
+  const goIntent = (intent: "calm" | "heal" | "energy" | "sleep") => {
+    switch (intent) {
+      case "calm":
+        navigate("/meditations?category=healing");
+        return;
+      case "heal":
+        navigate("/paths");
+        return;
+      case "energy":
+        navigate("/music?mood=energizing");
+        return;
+      case "sleep":
+        navigate("/meditations?category=sleep");
+        return;
+      default:
+        navigate("/explore");
+    }
+  };
+
+  const filteredOffers = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return offers;
+    return offers.filter((o) => {
+      return (
+        o.title.toLowerCase().includes(q) ||
+        o.description.toLowerCase().includes(q) ||
+        (o.badge ? o.badge.toLowerCase().includes(q) : false)
+      );
+    });
+  }, [offers, query]);
+
   return (
-    <div className="min-h-screen px-4 pt-6 pb-24">
-      {/* Membership Banner */}
-      <Link to="/membership" className="block mb-6 animate-fade-in">
-        <Card className="p-5 sm:p-6 bg-gradient-to-r from-primary/30 via-accent/20 to-amber-500/30 border-primary/50 hover:border-primary/70 transition-all group shadow-lg shadow-primary/10">
-          <div className="flex items-center gap-4 sm:gap-5">
-            <div className="p-4 sm:p-5 rounded-xl bg-gradient-to-br from-primary/40 to-accent/30 group-hover:scale-110 transition-transform">
-              <Crown className="w-7 h-7 sm:w-8 sm:h-8 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-foreground text-base sm:text-lg md:text-xl mb-1">
-                {isPremium ? t('membership.accessPremium', 'Access Premium Access') : t('membership.unlockPremium', 'Unlock Premium Access')}
-              </h3>
-              <p className="text-sm sm:text-base text-muted-foreground">
-                {t('membership.bannerDesc', 'All meditations, music & healing audio – unlimited')}
-              </p>
-            </div>
-            <Badge className="bg-primary/30 text-primary border-primary/50 text-sm sm:text-base px-4 py-2 whitespace-nowrap font-semibold">
-              {isPremium ? t('membership.managePlan', 'Manage') : t('membership.viewPlans', 'View Plans')}
-            </Badge>
-          </div>
-        </Card>
-      </Link>
-
-      {/* Header */}
-      <header className="mb-6 animate-fade-in">
+    <div className="px-4 pb-24 pt-4">
+      <div className="mb-3">
         <h1 className="text-2xl font-heading font-semibold text-foreground">
-          {t('explore.title', 'Explore')}
+          {t("explore.title", "Explore")}
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {t('explore.guidance.subtitle', 'How can we help you today?')}
+        <p className="text-muted-foreground mt-1 text-sm">
+          {t("explore.helpToday", "How can we help you today?")}
         </p>
-      </header>
-
-      {/* Guidance Hub (4 Doors) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 animate-slide-up">
-        {doors.map((door) => {
-          const Icon = door.icon;
-          return (
-            <button
-              key={door.key}
-              onClick={() => navigate(door.to)}
-              className="text-left"
-            >
-              <Card
-                className={cn(
-                  'p-5 rounded-2xl border border-border/50',
-                  'bg-gradient-to-r from-background/60 to-background/20',
-                  'hover:border-primary/40 hover:shadow-md transition-all'
-                )}
-              >
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-2xl flex items-center justify-center bg-primary/10 border border-primary/20">
-                    <Icon className="h-6 w-6 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-lg font-semibold text-foreground">
-                      {door.title}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {door.subtitle}
-                    </div>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                </div>
-              </Card>
-            </button>
-          );
-        })}
       </div>
 
-      {/* Progress Stats */}
-      <div className="grid grid-cols-2 gap-3 mb-6 animate-slide-up" style={{ animationDelay: '0.05s' }}>
-        <Card className="p-4 bg-gradient-to-br from-primary/10 to-accent/5 border-primary/20">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/20">
-              <Star className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">{t('wallet.totalBalance', 'Total Balance')}</p>
-              <div className="flex items-baseline gap-1">
-                <AnimatedCounter value={balance?.balance ?? 0} className="text-lg font-bold text-foreground" />
-                <span className="text-xs text-accent">SHC</span>
-              </div>
-            </div>
-          </div>
-        </Card>
-        <Card className="p-4 bg-gradient-to-br from-accent/10 to-amber-500/5 border-accent/20">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-accent/20">
-              <Sparkles className="w-5 h-5 text-accent" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">{t('dashboard.streak', 'Streak')}</p>
-              <div className="flex items-baseline gap-1">
-                <span className="text-lg font-bold text-foreground">{profile?.streak_days ?? 0}</span>
-                <span className="text-xs text-muted-foreground">{t('common.days', 'days')}</span>
-              </div>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* Healing Journey - Compact Card */}
-      <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-        <HealingProgressCard variant="compact" />
-      </div>
-
-      {/* Daily Spiritual Practice & Your Path - Moved from Home */}
-      <div className="space-y-4 mb-6 animate-slide-up" style={{ animationDelay: '0.105s' }}>
-        <DailyRitualCard />
-        <SpiritualPathCard />
-      </div>
-
-      {/* Breathing & Healing Journeys - Moved from Home */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 animate-slide-up" style={{ animationDelay: '0.11s' }}>
-        <BreathingJourneysCard />
-        <HealingJourneysCard />
-      </div>
-
-      {/* Positive Me & Journey Timeline - Moved from Home */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 animate-slide-up" style={{ animationDelay: '0.12s' }}>
-        <PositiveMeCard />
-        <JourneyTimeline />
-      </div>
-
-      {/* Achievements - Moved from Home */}
-      {achievements.length > 0 && (
-        <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.13s' }}>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Award className="w-5 h-5 text-primary" />
-              <h2 className="text-lg font-heading font-semibold text-foreground">
-                Achievements
-              </h2>
-            </div>
-            <Badge variant="outline" className="text-xs">
-              {userAchievements.length}/{achievements.length}
-            </Badge>
-          </div>
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {achievements.slice(0, 6).map((achievement) => {
-              const progress = getAchievementProgress(achievement);
-              return (
-                <div key={achievement.id} className="flex-shrink-0">
-                  <AchievementBadge
-                    name={achievement.name}
-                    description={achievement.description || ''}
-                    iconName={achievement.icon_name}
-                    badgeColor={achievement.badge_color}
-                    unlocked={progress.unlocked}
-                    unlockedAt={progress.unlockedAt}
-                    shcReward={achievement.shc_reward}
-                    size="sm"
-                  />
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Share Progress - Moved from Home */}
-      <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.14s' }}>
-        <div className="flex items-center gap-2 mb-4">
-          <Share2 className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-heading font-semibold text-foreground">
-            Share Your Journey
-          </h2>
-        </div>
-        <ShareableProgressCard
-          onShare={() => trackShare({ shareType: 'progress_card', platform: 'native' })}
-        />
-      </div>
-
-      {/* Featured Playlists Carousel */}
-      {meditationPlaylists && meditationPlaylists.length > 0 && (
-        <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.12s' }}>
-          <h2 className="text-lg font-heading font-semibold text-foreground mb-4">
-            {t('explore.featuredPlaylists', 'Featured Playlists')}
-          </h2>
-          <Carousel
-            opts={{
-              align: 'start',
-              loop: true,
-            }}
-            className="w-full"
-          >
-            <CarouselContent className="-ml-2 md:-ml-4">
-              {meditationPlaylists.slice(0, 8).map((playlist) => (
-                <CarouselItem key={playlist.id} className="pl-2 md:pl-4 basis-[70%] sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
-                  <Link to={`/meditations?playlist=${playlist.id}`}>
-                    <Card className="relative overflow-hidden group cursor-pointer border-border/30 hover:border-primary/50 transition-all">
-                      <div className="aspect-square relative">
-                        {playlist.cover_image_url ? (
-                          <img
-                            src={playlist.cover_image_url}
-                            alt={playlist.title}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-primary/30 to-accent/20 flex items-center justify-center">
-                            <Music className="w-12 h-12 text-primary/50" />
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                          <div className="w-12 h-12 rounded-full bg-primary/90 flex items-center justify-center">
-                            <Play className="w-5 h-5 text-primary-foreground ml-0.5" />
-                          </div>
-                        </div>
-                      </div>
-                      <div className="absolute bottom-0 left-0 right-0 p-3">
-                        <h3 className="font-semibold text-foreground text-sm truncate">{playlist.title}</h3>
-                        <p className="text-xs text-muted-foreground truncate">{playlist.category}</p>
-                      </div>
-                    </Card>
-                  </Link>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="left-2 hidden sm:flex" />
-            <CarouselNext className="right-2 hidden sm:flex" />
-          </Carousel>
-        </div>
-      )}
-
-      {/* Collapsible "Browse all tools" */}
-      <div className="mt-8 animate-slide-up" style={{ animationDelay: '0.15s' }}>
+      {/* Quick Intent (4 buttons) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
         <button
-          onClick={() => setShowAllTools((v) => !v)}
-          className="w-full flex items-center justify-between py-3 px-2 rounded-xl hover:bg-muted/30 transition"
+          onClick={() => goIntent("calm")}
+          className="rounded-2xl border border-border/50 bg-card/50 px-4 py-4 text-left hover:bg-muted/30 transition"
         >
-          <div>
-            <div className="text-base font-semibold text-foreground">
-              {t('explore.browseAll.title', 'Browse all tools')}
+          <div className="flex items-center gap-3">
+            <span className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+              <Sparkles className="h-5 w-5 text-primary" />
+            </span>
+            <div className="flex-1">
+              <div className="font-semibold text-foreground">
+                {t("explore.intent.calm", "Calm my mind")}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {t("explore.intent.calmDesc", "Reduce stress & anxiety")}
+              </div>
             </div>
-            <div className="text-xs text-muted-foreground">
-              {t('explore.browseAll.subtitle', 'For advanced users or when you want everything')}
-            </div>
+            <span className="text-muted-foreground">›</span>
           </div>
-          <ChevronDown
-            className={cn(
-              'h-5 w-5 text-muted-foreground transition-transform',
-              showAllTools ? 'rotate-180' : 'rotate-0'
-            )}
-          />
         </button>
 
-        {showAllTools && (
-          <div className="mt-3">
-            <h2 className="text-lg font-heading font-semibold text-foreground mb-4">
-              {t('home.whatWeOffer', 'What We Offer')}
-            </h2>
-            <div className="relative mb-4">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input
-                placeholder={t('community.searchUsers', 'Search...')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-muted/30 border-border/50"
-              />
+        <button
+          onClick={() => goIntent("heal")}
+          className="rounded-2xl border border-border/50 bg-card/50 px-4 py-4 text-left hover:bg-muted/30 transition"
+        >
+          <div className="flex items-center gap-3">
+            <span className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+              <Heart className="h-5 w-5 text-primary" />
+            </span>
+            <div className="flex-1">
+              <div className="font-semibold text-foreground">
+                {t("explore.intent.heal", "Heal emotionally")}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {t("explore.intent.healDesc", "Inner child, release & restore")}
+              </div>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-              {filteredCategories.map((item) => (
-                <Link key={item.id} to={item.to}>
-                  <Card className={`p-4 bg-gradient-to-br ${item.gradient} ${item.border} transition-all h-full relative overflow-hidden`}>
-                    {item.badge && (
-                      <Badge className="absolute top-2 right-2 text-[10px] px-1.5 py-0.5 bg-accent/20 text-accent border-accent/30">
-                        {item.badge}
-                      </Badge>
-                    )}
-                    <div className="flex flex-col gap-3">
-                      <div className={`p-2 rounded-lg ${item.iconBg} w-fit`}>
-                        <item.icon className={`w-5 h-5 ${item.iconColor}`} />
+            <span className="text-muted-foreground">›</span>
+          </div>
+        </button>
+
+        <button
+          onClick={() => goIntent("energy")}
+          className="rounded-2xl border border-border/50 bg-card/50 px-4 py-4 text-left hover:bg-muted/30 transition"
+        >
+          <div className="flex items-center gap-3">
+            <span className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+              <Zap className="h-5 w-5 text-primary" />
+            </span>
+            <div className="flex-1">
+              <div className="font-semibold text-foreground">
+                {t("explore.intent.energy", "Boost my energy")}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {t("explore.intent.energyDesc", "Motivation & power")}
+              </div>
+            </div>
+            <span className="text-muted-foreground">›</span>
+          </div>
+        </button>
+
+        <button
+          onClick={() => goIntent("sleep")}
+          className="rounded-2xl border border-border/50 bg-card/50 px-4 py-4 text-left hover:bg-muted/30 transition"
+        >
+          <div className="flex items-center gap-3">
+            <span className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+              <Moon className="h-5 w-5 text-primary" />
+            </span>
+            <div className="flex-1">
+              <div className="font-semibold text-foreground">
+                {t("explore.intent.sleep", "Sleep deeply")}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {t("explore.intent.sleepDesc", "Wind down & rest")}
+              </div>
+            </div>
+            <span className="text-muted-foreground">›</span>
+          </div>
+        </button>
+      </div>
+
+      {/* Browse everything (collapsed by default) */}
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-lg font-heading font-semibold text-foreground">
+          {t("explore.browseAll", "Browse everything")}
+        </h2>
+        <Button
+          variant="ghost"
+          onClick={() => setShowAll((v) => !v)}
+          className="text-sm"
+        >
+          {showAll ? t("common.hide", "Hide") : t("common.show", "Show")}
+        </Button>
+      </div>
+
+      {showAll && (
+        <div className="space-y-4">
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={t("common.search", "Search...")}
+            className="rounded-2xl bg-muted/30 border-border/50"
+          />
+
+          <div>
+            <div className="text-sm text-muted-foreground mb-2">
+              {t("explore.whatWeOffer", "What we offer")}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {filteredOffers.map((item) => (
+                <Link key={item.to} to={item.to} className="block">
+                  <Card className="rounded-2xl p-4 bg-card/50 border-border/50 hover:bg-muted/30 transition">
+                    <div className="flex items-start gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                        {item.icon}
                       </div>
-                      <div className="min-w-0">
-                        <h3 className="font-semibold text-foreground text-sm truncate">{item.title}</h3>
-                        <p className="text-xs text-muted-foreground line-clamp-2">{item.description}</p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="font-semibold text-foreground truncate">
+                            {item.title}
+                          </div>
+                          {item.badge ? (
+                            <span className="text-xs px-2 py-1 rounded-full bg-accent/20 text-accent border border-accent/30 shrink-0">
+                              {item.badge}
+                            </span>
+                          ) : null}
+                        </div>
+                        <div className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                          {item.description}
+                        </div>
                       </div>
                     </div>
                   </Card>
@@ -508,74 +312,8 @@ const Explore: React.FC = () => {
               ))}
             </div>
           </div>
-        )}
-      </div>
-
-      {/* Featured Programs */}
-      <div className="mt-8 animate-slide-up" style={{ animationDelay: '0.2s' }}>
-        <h2 className="text-lg font-heading font-semibold text-foreground mb-4">
-          {t('common.featured', 'Featured')}
-        </h2>
-        <div className="space-y-3">
-          <Link to="/stargate-membership">
-            <Card className="p-4 bg-gradient-to-r from-amber-500/20 via-purple-500/10 to-pink-500/20 border-amber-500/30 hover:border-amber-500/50 transition-all">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-amber-500/30 to-purple-500/20">
-                  <Crown className="w-6 h-6 text-amber-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-foreground">{t('home.stargateMembership')}</h3>
-                  <p className="text-xs text-muted-foreground">{t('home.stargateDesc')}</p>
-                </div>
-                <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">€25/mo</Badge>
-              </div>
-            </Card>
-          </Link>
-
-          <Link to="/practitioner-certification">
-            <Card className="p-4 bg-gradient-to-r from-emerald-500/20 via-teal-500/10 to-cyan-500/20 border-emerald-500/30 hover:border-emerald-500/50 transition-all">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500/30 to-teal-500/20">
-                  <Star className="w-6 h-6 text-emerald-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-foreground">{t('home.practitionerCert')}</h3>
-                  <p className="text-xs text-muted-foreground">{t('home.certDesc')}</p>
-                </div>
-                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">12 mo</Badge>
-              </div>
-            </Card>
-          </Link>
-
-          <Link to="/pregnancy-program">
-            <Card className="p-4 bg-gradient-to-r from-rose-500/20 via-pink-500/10 to-fuchsia-500/20 border-rose-500/30 hover:border-rose-500/50 transition-all">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-rose-500/30 to-pink-500/20">
-                  <Heart className="w-6 h-6 text-rose-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-foreground">{t('pregnancy.title', 'Sacred Pregnancy')}</h3>
-                  <p className="text-xs text-muted-foreground">{t('pregnancy.subtitle', 'Support on your journey')}</p>
-                </div>
-              </div>
-            </Card>
-          </Link>
         </div>
-      </div>
-
-      {/* Invite Friends - Moved from Dashboard */}
-      <div className="mt-8 mb-8 rounded-2xl glass-card p-5 animate-slide-up" style={{ animationDelay: '0.25s' }}>
-        <h2 className="text-lg font-heading font-semibold text-foreground mb-3">{t('dashboard.inviteFriends')}</h2>
-        <p className="text-sm text-muted-foreground mb-4">{t('dashboard.inviteDescription')}</p>
-        <Link to="/invite-friends">
-          <Button className="w-full gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-extrabold shadow-[0_0_30px_rgba(0,242,254,0.4)]">
-            <Users className="w-4 h-4" />
-            {t('dashboard.inviteFriends')}
-          </Button>
-        </Link>
-      </div>
+      )}
     </div>
   );
-};
-
-export default Explore;
+}
