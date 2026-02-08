@@ -336,8 +336,36 @@
   "spiritualPath": {
     "yourPath": "Din väg",
     "continueDay": "Fortsätt dag",
+    "continueDayWithNumber": "Fortsätt dag {{day}}",
+    "progressComplete": "{{percent}}% klart",
     "startJourney": "Börja din resa",
-    "day": "Dag"
+    "day": "Dag",
+    "paths": {
+      "inner_peace": {
+        "title": "Vägen till inre frid",
+        "description": "21-dagars resa för att hitta varaktig lugn genom dagliga övningar inriktade på lugn och stresslindring."
+      },
+      "inner_peace_7day": {
+        "title": "Vägen till inre frid",
+        "description": "7-dagars resa för att hitta stillhet och lugn genom dagliga övningar."
+      },
+      "deep_healing": {
+        "title": "Vägen till djup läkning",
+        "description": "En resa av djup läkning och transformation."
+      },
+      "sleep_sanctuary": {
+        "title": "Sömnens helgedom",
+        "description": "Vila och återhämta dig med övningar för fridfull sömn."
+      },
+      "focus_mastery": {
+        "title": "Fokusering och närvaro",
+        "description": "Skärpa sinnet och odla fokus."
+      },
+      "awaken_inner_sight": {
+        "title": "Väck din inre syn",
+        "description": "Utforska intuition och väck din inre visdom."
+      }
+    }
   },
   "dailyRitual": {
     "title": "Daglig andlig praxis",

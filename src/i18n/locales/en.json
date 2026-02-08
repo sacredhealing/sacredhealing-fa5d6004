@@ -400,8 +400,36 @@
   "spiritualPath": {
     "yourPath": "Your Path",
     "continueDay": "Continue Day",
+    "continueDayWithNumber": "Continue Day {{day}}",
+    "progressComplete": "{{percent}}% complete",
     "startJourney": "Start Your Journey",
-    "day": "Day"
+    "day": "Day",
+    "paths": {
+      "inner_peace": {
+        "title": "Inner Peace Path",
+        "description": "21-day journey to find lasting tranquility through daily practices focused on calm and stress relief."
+      },
+      "inner_peace_7day": {
+        "title": "Inner Peace Path",
+        "description": "7-day journey to find stillness and calm through daily practices."
+      },
+      "deep_healing": {
+        "title": "Deep Healing Path",
+        "description": "A journey of deep healing and transformation."
+      },
+      "sleep_sanctuary": {
+        "title": "Sleep Sanctuary Path",
+        "description": "Rest and restore with practices for peaceful sleep."
+      },
+      "focus_mastery": {
+        "title": "Focus Mastery Path",
+        "description": "Sharpen your mind and cultivate focus."
+      },
+      "awaken_inner_sight": {
+        "title": "Awaken Your Inner Sight",
+        "description": "Explore intuition and awaken inner wisdom."
+      }
+    }
   },
   "dailyRitual": {
     "title": "Daily Spiritual Practice",

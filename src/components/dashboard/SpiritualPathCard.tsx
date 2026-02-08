@@ -46,20 +46,24 @@ export const SpiritualPathCard: React.FC = () => {
 
           <div className="space-y-3">
             <div>
-              <p className="font-medium text-foreground">{activePath.title}</p>
-              <p className="text-xs text-muted-foreground">{activePath.description}</p>
+              <p className="font-medium text-foreground">
+                {t(`spiritualPath.paths.${activePath.slug.replace(/-/g, '_')}.title`, activePath.title)}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {t(`spiritualPath.paths.${activePath.slug.replace(/-/g, '_')}.description`, activePath.description || '')}
+              </p>
             </div>
 
             <Progress value={progressPercent} className="h-2" />
 
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground">
-                {progressPercent}% {t('common.complete', 'complete')}
+                {t('spiritualPath.progressComplete', { percent: progressPercent, defaultValue: `${progressPercent}% complete` })}
               </span>
               <Link to={`/paths/${activePath.slug}`}>
                 <Button size="sm" variant="spiritual" className="text-xs h-8">
                   <Play className="w-3 h-3 mr-1" />
-                  {t('spiritualPath.continueDay', 'Continue Day')} {activeProgress.current_day}
+                  {t('spiritualPath.continueDayWithNumber', { day: activeProgress.current_day, defaultValue: `Continue Day ${activeProgress.current_day}` })}
                 </Button>
               </Link>
             </div>
@@ -104,8 +108,12 @@ export const SpiritualPathCard: React.FC = () => {
           </div>
           
           <div className="flex-1 min-w-0">
-            <p className="font-medium text-foreground text-sm">{recommendedPath.title}</p>
-            <p className="text-xs text-muted-foreground line-clamp-1">{recommendedPath.description}</p>
+            <p className="font-medium text-foreground text-sm">
+              {t(`spiritualPath.paths.${recommendedPath.slug.replace(/-/g, '_')}.title`, recommendedPath.title)}
+            </p>
+            <p className="text-xs text-muted-foreground line-clamp-1">
+              {t(`spiritualPath.paths.${recommendedPath.slug.replace(/-/g, '_')}.description`, recommendedPath.description || '')}
+            </p>
             <div className="flex items-center gap-2 mt-1">
               <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
                 {recommendedPath.duration_days} {t('common.days')}

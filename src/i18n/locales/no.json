@@ -336,8 +336,36 @@
   "spiritualPath": {
     "yourPath": "Din vei",
     "continueDay": "Fortsett dag",
+    "continueDayWithNumber": "Fortsett dag {{day}}",
+    "progressComplete": "{{percent}}% fullført",
     "startJourney": "Start reisen din",
-    "day": "Dag"
+    "day": "Dag",
+    "paths": {
+      "inner_peace": {
+        "title": "Indre fred-veien",
+        "description": "21-dagers reise for å finne varig ro gjennom daglige øvelser fokusert på ro og stressavlastning."
+      },
+      "inner_peace_7day": {
+        "title": "Indre fred-veien",
+        "description": "7-dagers reise for å finne stillhet og ro gjennom daglige øvelser."
+      },
+      "deep_healing": {
+        "title": "Dyp helbredelse-veien",
+        "description": "En reise av dyp helbredelse og transformasjon."
+      },
+      "sleep_sanctuary": {
+        "title": "Søvnens tilfluktssted",
+        "description": "Hvil og gjenopprett deg med øvelser for fredelig søvn."
+      },
+      "focus_mastery": {
+        "title": "Fokusering og mestring",
+        "description": "Skjerp sinnet og utvikle fokus."
+      },
+      "awaken_inner_sight": {
+        "title": "Vekk din indre syn",
+        "description": "Utforsk intuisjon og vekk indre visdom."
+      }
+    }
   },
   "dailyRitual": {
     "title": "Daglig åndelig praksis",

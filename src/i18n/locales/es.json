@@ -446,8 +446,36 @@
   "spiritualPath": {
     "yourPath": "Tu camino",
     "continueDay": "Continuar día",
+    "continueDayWithNumber": "Continuar día {{day}}",
+    "progressComplete": "{{percent}}% completado",
     "startJourney": "Comienza tu viaje",
-    "day": "Día"
+    "day": "Día",
+    "paths": {
+      "inner_peace": {
+        "title": "Camino de paz interior",
+        "description": "Viaje de 21 días para encontrar tranquilidad duradera a través de prácticas diarias centradas en la calma y el alivio del estrés."
+      },
+      "inner_peace_7day": {
+        "title": "Camino de paz interior",
+        "description": "Viaje de 7 días para encontrar quietud y calma a través de prácticas diarias."
+      },
+      "deep_healing": {
+        "title": "Camino de sanación profunda",
+        "description": "Un viaje de sanación profunda y transformación."
+      },
+      "sleep_sanctuary": {
+        "title": "Santuario del sueño",
+        "description": "Descansa y restaura con prácticas para un sueño tranquilo."
+      },
+      "focus_mastery": {
+        "title": "Maestría del enfoque",
+        "description": "Agudiza tu mente y cultiva el enfoque."
+      },
+      "awaken_inner_sight": {
+        "title": "Despierta tu vista interior",
+        "description": "Explora la intuición y despierta la sabiduría interior."
+      }
+    }
   },
   "dailyRitual": {
     "title": "Práctica espiritual diaria",
