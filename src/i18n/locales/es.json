@@ -1384,6 +1384,16 @@
     "title": "Biblioteca",
     "subtitle": "Descubre tu viaje espiritual",
     "helpToday": "¿Cómo podemos ayudarte hoy?",
+    "intent": {
+      "calm": "Calmar mi mente",
+      "calmDesc": "Reduce el estrés y la ansiedad",
+      "heal": "Sanar emocionalmente",
+      "healDesc": "Niño interior, libera y restaura",
+      "energy": "Aumentar mi energía",
+      "energyDesc": "Motivación y poder",
+      "sleep": "Dormir profundamente",
+      "sleepDesc": "Relájate y descansa"
+    },
     "yourTools": "Tus Herramientas",
     "continueJourney": "Continúa Tu Viaje",
     "categoryDailyPractice": "Práctica Diaria",

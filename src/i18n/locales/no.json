@@ -1293,6 +1293,16 @@
     "title": "Bibliotek",
     "subtitle": "Oppdag din åndelige reise",
     "helpToday": "Hvordan kan vi hjelpe deg i dag?",
+    "intent": {
+      "calm": "Ro sinnet",
+      "calmDesc": "Reduser stress og angst",
+      "heal": "Hele emosjonelt",
+      "healDesc": "Indre barn, frigjør og gjenopprett",
+      "energy": "Øk min energi",
+      "energyDesc": "Motivasjon og kraft",
+      "sleep": "Sov dypt",
+      "sleepDesc": "Slapp av og hvile"
+    },
     "yourTools": "Dine Verktøy",
     "continueJourney": "Fortsett Din Reise",
     "categoryDailyPractice": "Daglig Praksis",

@@ -1361,6 +1361,16 @@
     "title": "Bibliotek",
     "subtitle": "Upptäck din andliga resa",
     "helpToday": "Hur kan vi hjälpa dig idag?",
+    "intent": {
+      "calm": "Lugna sinnet",
+      "calmDesc": "Minska stress och ångest",
+      "heal": "Läka emotionellt",
+      "healDesc": "Inre barn, släpp och återställ",
+      "energy": "Öka min energi",
+      "energyDesc": "Motivation och kraft",
+      "sleep": "Sova djupt",
+      "sleepDesc": "Varva ner och vila"
+    },
     "yourTools": "Dina Verktyg",
     "continueJourney": "Fortsätt Din Resa",
     "categoryDailyPractice": "Daglig Praktik",
