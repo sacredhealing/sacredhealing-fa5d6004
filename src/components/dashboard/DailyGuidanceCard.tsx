@@ -8,7 +8,7 @@ import { BreathingAnchor } from './BreathingAnchor';
 import { useDailyGuidance } from '@/hooks/useDailyGuidance';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTranslation } from 'react-i18next';
-import { getCompletionGuidance } from '@/lib/sacredGuidanceMessages';
+import { getCompletionGuidance, getAllCompleteGuidance, getIntegrationButtonLabel } from '@/lib/sacredGuidanceMessages';
 import type { DailyGuidance } from '@/hooks/useDailyGuidance';
 import type { ReturnState } from '@/hooks/useReturnVisit';
 
@@ -93,15 +93,17 @@ export const DailyGuidanceCard: React.FC<DailyGuidanceCardProps> = ({
   streakIncreased = false,
 }) => {
   const { t } = useTranslation();
-  const { guidance, isLoading, lastCompleted, timeOfDay, streakDays } = useDailyGuidance();
+  const { guidance, isLoading, lastCompleted, hasCompletedAllThree, timeOfDay, streakDays } = useDailyGuidance();
   const [breathingDone, setBreathingDone] = useState(false);
 
   const hasCompletedToday = lastCompleted !== null;
   const showContinuation = hasCompletedToday && !isDayClosed;
+  const showAllComplete = hasCompletedAllThree && !isDayClosed;
 
-  const completionGuidance = showContinuation && lastCompleted
+  const completionGuidance = showContinuation && lastCompleted && !showAllComplete
     ? getCompletionGuidance({ lastCompleted, streakDays, t })
     : null;
+  const allCompleteGuidance = showAllComplete ? getAllCompleteGuidance(t) : null;
 
   // Return-visit overrides
   const isSameDayReturn = returnState === 'same_day';
@@ -113,19 +115,23 @@ export const DailyGuidanceCard: React.FC<DailyGuidanceCardProps> = ({
       ? t('dashboard.returnNextDayHero', "Welcome back.")
       : isDayClosed
         ? t('dashboard.dayCompleteRest', "Your day is complete. Rest well.")
-        : showContinuation && completionGuidance
-          ? completionGuidance.greeting
-          : t(getGreetingKey(timeOfDay));
+        : showAllComplete && allCompleteGuidance
+          ? allCompleteGuidance.greeting
+          : showContinuation && completionGuidance
+            ? completionGuidance.greeting
+            : t(getGreetingKey(timeOfDay));
 
   const subtitle = isSameDayReturn
     ? t('dashboard.returnSameDaySubtitle', "Take one conscious breath before continuing.")
     : isNextDayReturn
       ? t('dashboard.returnNextDaySubtitle', "Your path remembers where you left it.")
-      : showContinuation
-        ? completionGuidance?.subtext ?? t('dashboard.integrateSubtitle', 'A gentle next step to carry the feeling forward.')
-        : !hasCompletedToday
-          ? guidance.message
-          : null;
+      : showAllComplete && allCompleteGuidance
+        ? allCompleteGuidance.subtext
+        : showContinuation
+          ? completionGuidance?.subtext ?? t('dashboard.integrateSubtitle', 'A gentle next step to carry the feeling forward.')
+          : !hasCompletedToday
+            ? guidance.message
+            : null;
 
   const subtextIsGolden = isNextDayReturn && streakIncreased
     ? true
@@ -135,19 +141,23 @@ export const DailyGuidanceCard: React.FC<DailyGuidanceCardProps> = ({
     ? t('dashboard.returnNextDayStreakSubtext', "Consistency is transforming your inner rhythm.")
     : null;
 
-  const buttonLabel = showContinuation
-    ? t('dashboard.continueGently', 'Continue gently')
-    : guidance.button_label ?? t('dashboard.startJourney', 'Start Journey');
+  const buttonLabel = showAllComplete && allCompleteGuidance
+    ? allCompleteGuidance.button
+    : showContinuation && lastCompleted
+      ? getIntegrationButtonLabel(lastCompleted, t)
+      : guidance.button_label ?? t('dashboard.startJourney', 'Start Journey');
 
-  const continuationGuidance = showContinuation && lastCompleted
+  const continuationGuidance = showContinuation && lastCompleted && !showAllComplete
     ? getContinuationSuggestion(lastCompleted, t)
     : null;
 
   const activeGuidance = showContinuation && continuationGuidance ? continuationGuidance : guidance;
 
-  const continuationAnchor = showContinuation && lastCompleted
+  const continuationAnchor = showContinuation && lastCompleted && !showAllComplete
     ? t(getContinuationAnchorKey(lastCompleted))
     : null;
+
+  const isCloseButton = showAllComplete && allCompleteGuidance;
 
   if (isLoading) {
     return (
@@ -236,15 +246,19 @@ export const DailyGuidanceCard: React.FC<DailyGuidanceCardProps> = ({
               </div>
             )}
 
-            {onStartClick && !isDayClosed && (
+            {(onStartClick || (isCloseButton && onSkipContinuation)) && !isDayClosed && (
               <div className="flex flex-col gap-2">
                 <Button
-                  onClick={() => onStartClick(activeGuidance, showContinuation ? { isContinuation: true } : undefined)}
+                  onClick={() =>
+                    isCloseButton && onSkipContinuation
+                      ? onSkipContinuation()
+                      : onStartClick?.(activeGuidance, showContinuation ? { isContinuation: true } : undefined)
+                  }
                   className="w-full gap-2 bg-[#00F2FE] hover:bg-[#00D4E0] text-[#000000] shadow-[0_0_30px_rgba(0,242,254,0.4)] hover:shadow-[0_0_40px_rgba(0,242,254,0.5)] border-none transition-all text-sm sm:text-base px-4 sm:px-8 py-3 flex-shrink-0"
                   style={{ fontWeight: 800 }}
                 >
                   {buttonLabel}
-                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                  {!isCloseButton && <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />}
                 </Button>
                 {continuationAnchor && (
                   <p className="text-xs text-muted-foreground/90 text-center border-t border-white/5 pt-2 mt-1">

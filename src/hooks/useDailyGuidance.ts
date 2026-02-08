@@ -202,6 +202,11 @@ export function useDailyGuidance() {
 
   const timeOfDay = getTimeOfDay();
   const lastCompleted = getLastCompletedActivity(activity);
+  const hasCompletedAllThree = !!(
+    activity?.morning_completed &&
+    activity?.midday_completed &&
+    activity?.evening_completed
+  );
   const streakDays = profile?.streak_days ?? 0;
   const primaryGoal = goals?.[0]?.goal_type;
   const activePathSlug = pathProgress?.slug;
@@ -229,6 +234,7 @@ export function useDailyGuidance() {
     isLoading,
     timeOfDay,
     lastCompleted,
+    hasCompletedAllThree,
     streakDays,
     completeSlot,
   };

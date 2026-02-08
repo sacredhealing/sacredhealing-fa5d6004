@@ -2,7 +2,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSHC } from '@/contexts/SHCContext';
-import { toast } from 'sonner';
 
 export interface DailyActivity {
   id: string;
@@ -119,7 +118,6 @@ export const useDailyJourney = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['daily-activity'] });
       queryClient.invalidateQueries({ queryKey: ['daily-guidance-activity'] });
-      toast.success('Morning practice complete! +15 SHC 🌅');
     },
   });
 
@@ -135,7 +133,6 @@ export const useDailyJourney = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['daily-activity'] });
       queryClient.invalidateQueries({ queryKey: ['daily-guidance-activity'] });
-      toast.success('Midday mindfulness complete! +10 SHC ☀️');
     },
   });
 
@@ -153,7 +150,6 @@ export const useDailyJourney = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['daily-activity'] });
       queryClient.invalidateQueries({ queryKey: ['daily-guidance-activity'] });
-      toast.success('Evening reset complete! +20 SHC 🌙');
     },
   });
 
