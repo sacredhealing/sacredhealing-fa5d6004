@@ -350,7 +350,15 @@
     "morePracticesDesc": "Breathing and healing journeys",
     "progressAchievements": "Progress & achievements",
     "progressAchievementsDesc": "Timeline, streaks, achievements and share",
-    "achievements": "Achievements"
+    "achievements": "Achievements",
+    "continuationAnchorMorning": "Tonight, you'll close the day differently.",
+    "continuationAnchorMidday": "This evening will feel calmer than usual.",
+    "continuationAnchorEvening": "Tomorrow morning will begin softer.",
+    "returnSameDayHero": "Your earlier practice is still echoing.",
+    "returnSameDaySubtitle": "Take one conscious breath before continuing.",
+    "returnNextDayHero": "Welcome back.",
+    "returnNextDaySubtitle": "Your path remembers where you left it.",
+    "returnNextDayStreakSubtext": "Consistency is transforming your inner rhythm."
   },
   "journeys": {
     "breathingTitle": "Breathing Journeys",

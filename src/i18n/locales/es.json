@@ -388,7 +388,15 @@
     "morePracticesDesc": "Viajes de respiración y sanación",
     "progressAchievements": "Progreso y logros",
     "progressAchievementsDesc": "Línea de tiempo, rachas, logros y compartir",
-    "achievements": "Logros"
+    "achievements": "Logros",
+    "continuationAnchorMorning": "Esta noche cerrarás el día de otra manera.",
+    "continuationAnchorMidday": "Esta noche se sentirá más tranquila de lo habitual.",
+    "continuationAnchorEvening": "Mañana por la mañana comenzará más suave.",
+    "returnSameDayHero": "Tu práctica anterior sigue resonando.",
+    "returnSameDaySubtitle": "Dale una respiración consciente antes de continuar.",
+    "returnNextDayHero": "Bienvenido de nuevo.",
+    "returnNextDaySubtitle": "Tu camino recuerda dónde lo dejaste.",
+    "returnNextDayStreakSubtext": "La constancia está transformando tu ritmo interior."
   },
   "journeys": {
     "breathingTitle": "Viajes de respiración",

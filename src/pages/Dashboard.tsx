@@ -5,6 +5,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { useDailyGuidance } from '@/hooks/useDailyGuidance';
 import { useDailyJourney } from '@/hooks/useDailyJourney';
 import { useDayClosed } from '@/hooks/useDayClosed';
+import { useReturnVisit } from '@/hooks/useReturnVisit';
 import { useDashboardAutostart, dismissDashboardAutostartForToday } from '@/hooks/useDashboardAutostart';
 import { AmbientSoundToggle } from '@/components/audio/AmbientSoundToggle';
 import { DailyGuidanceCard } from '@/components/dashboard/DailyGuidanceCard';
@@ -47,9 +48,15 @@ function guidanceToSessionLike(guidance: DailyGuidance): SessionLike {
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
   const { profile: userProfile } = useProfile();
-  const { guidance, isLoading, lastCompleted, completeSlot } = useDailyGuidance();
+  const { guidance, isLoading, lastCompleted, completeSlot, streakDays } = useDailyGuidance();
   const { completeMorning, completeMidday, completeEvening } = useDailyJourney();
   const { isDayClosed, markDayClosed } = useDayClosed();
+  const { returnState, streakIncreased } = useReturnVisit({
+    hasCompletedToday: lastCompleted !== null,
+    isDayClosed,
+    streakDays,
+    isLoading,
+  });
   const {
     newlyUnlocked,
     dismissNewlyUnlocked,
@@ -159,6 +166,8 @@ const Dashboard: React.FC = () => {
               onSkipContinuation={() => {
                 markDayClosed();
               }}
+              returnState={returnState}
+              streakIncreased={streakIncreased}
             />
             {!hasCompletedToday && (
               <button

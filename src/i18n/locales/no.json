@@ -278,7 +278,15 @@
     "morePracticesDesc": "Pust og helbredelsesreiser",
     "progressAchievements": "Fremgang og prestasjoner",
     "progressAchievementsDesc": "Tidslinje, strik, prestasjoner og del",
-    "achievements": "Prestasjoner"
+    "achievements": "Prestasjoner",
+    "continuationAnchorMorning": "I kveld vil du lukke dagen annerledes.",
+    "continuationAnchorMidday": "Kvelden vil føles roligere enn vanlig.",
+    "continuationAnchorEvening": "I morgen tidlig vil begynne mykere.",
+    "returnSameDayHero": "Din tidligere praksis ekkoer fortsatt.",
+    "returnSameDaySubtitle": "Ta ett bevisst pust før du fortsetter.",
+    "returnNextDayHero": "Velkommen tilbake.",
+    "returnNextDaySubtitle": "Din vei husker hvor du slapp.",
+    "returnNextDayStreakSubtext": "Konsistens transformerer din indre rytme."
   },
   "journeys": {
     "breathingTitle": "Pustereiser",
