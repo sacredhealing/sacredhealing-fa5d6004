@@ -8,6 +8,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Globe } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
 
 const languages = [
   { code: 'en', name: 'English', flag: '🇬🇧' },
@@ -18,9 +20,14 @@ const languages = [
 
 export const LanguageSelector: React.FC = () => {
   const { i18n } = useTranslation();
+  const { user } = useAuth();
+  const { updatePreferredLanguage } = useProfile();
 
-  const handleLanguageChange = (value: string) => {
+  const handleLanguageChange = async (value: string) => {
     i18n.changeLanguage(value);
+    if (user) {
+      await updatePreferredLanguage(value);
+    }
   };
 
   const currentLanguage = languages.find((lang) => lang.code === i18n.language) || languages[0];

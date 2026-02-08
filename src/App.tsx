@@ -101,6 +101,7 @@ import InviteFriends from "./pages/InviteFriends";
 import VedicAstrology from "./pages/VedicAstrology";
 import Ayurveda from "./pages/Ayurveda";
 import { DebugBanner } from "./components/DebugBanner";
+import { ProfileLanguageSync } from "./components/ProfileLanguageSync";
 import "@/lib/performance"; // Initialize performance monitoring
 
 const App = () => (
@@ -113,6 +114,7 @@ const App = () => (
               <Toaster />
               <Sonner />
               <DebugBanner />
+              <ProfileLanguageSync />
             <Suspense
               fallback={
                 <div className="min-h-screen flex items-center justify-center bg-[#030303]" style={{ background: "radial-gradient(ellipse at 15% 20%, rgba(30, 27, 75, 0.7) 0%, transparent 50%), #030303" }}>

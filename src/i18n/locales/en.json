@@ -507,7 +507,8 @@
     "enterBio": "Tell us a little about yourself...",
     "premiumFeature1": "All meditations & courses",
     "premiumFeature2": "Premium healing content",
-    "premiumFeature3": "Priority support"
+    "premiumFeature3": "Priority support",
+    "certificates": "Certificates"
   },
   "courses": {
     "title": "Courses",

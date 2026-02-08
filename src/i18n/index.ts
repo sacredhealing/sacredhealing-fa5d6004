@@ -7,17 +7,23 @@ import sv from './locales/sv.json';
 import es from './locales/es.json';
 import no from './locales/no.json';
 
+/**
+ * i18n init: English, Spanish, Swedish, Norwegian.
+ * Language is initialized from localStorage/navigator, then synced with
+ * profile.preferred_language via ProfileLanguageSync when user is logged in.
+ */
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     resources: {
       en: { translation: en },
-      sv: { translation: sv },
       es: { translation: es },
+      sv: { translation: sv },
       no: { translation: no },
     },
     fallbackLng: 'en',
+    supportedLngs: ['en', 'es', 'sv', 'no'],
     interpolation: {
       escapeValue: false,
     },

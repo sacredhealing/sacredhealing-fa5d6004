@@ -152,7 +152,7 @@ const Profile: React.FC = () => {
       {certificates.length > 0 && (
         <div className="mb-8 animate-slide-up" style={{ animationDelay: '0.05s' }}>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-heading font-semibold text-foreground">Certificates</h2>
+            <h2 className="text-lg font-heading font-semibold text-foreground">{t('profile.certificates')}</h2>
           </div>
           <div className="space-y-3">
             {certificates.map((certificate) => (

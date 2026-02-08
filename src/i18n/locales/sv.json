@@ -422,7 +422,8 @@
     "web3Wallet": "Web3 plånbok",
     "premiumFeature1": "Alla meditationer & kurser",
     "premiumFeature2": "Premium helande innehåll",
-    "premiumFeature3": "Prioriterad support"
+    "premiumFeature3": "Prioriterad support",
+    "certificates": "Certifikat"
   },
   "courses": {
     "title": "Kurser",

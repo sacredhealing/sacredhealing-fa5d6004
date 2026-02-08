@@ -3,12 +3,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
 
-interface Profile {
+export interface Profile {
   user_id: string;
   full_name: string | null;
   avatar_url: string | null;
   bio: string | null;
   streak_days: number;
+  preferred_language: string | null;
 }
 
 export const useProfile = () => {
@@ -27,7 +28,7 @@ export const useProfile = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('user_id, full_name, avatar_url, bio, streak_days')
+        .select('user_id, full_name, avatar_url, bio, streak_days, preferred_language')
         .eq('user_id', user.id)
         .single();
 
@@ -43,6 +44,25 @@ export const useProfile = () => {
   useEffect(() => {
     fetchProfile();
   }, [user]);
+
+  const updatePreferredLanguage = async (language: string) => {
+    if (!user) return false;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ preferred_language: language })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      setProfile(prev => prev ? { ...prev, preferred_language: language } : null);
+      return true;
+    } catch (error) {
+      console.error('Error updating language:', error);
+      return false;
+    }
+  };
 
   const updateProfile = async (updates: { full_name?: string; bio?: string }) => {
     if (!user) return false;
@@ -105,6 +125,7 @@ export const useProfile = () => {
     profile,
     isLoading,
     updateProfile,
+    updatePreferredLanguage,
     uploadAvatar,
     hasAvatar,
     refetch: fetchProfile
