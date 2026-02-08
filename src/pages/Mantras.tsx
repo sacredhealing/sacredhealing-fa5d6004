@@ -236,10 +236,10 @@ const Mantras = () => {
 
             return (
               <Card key={mantra.id} className="overflow-hidden">
-                <div className="flex items-center gap-4 p-4">
+                <div className="flex items-center gap-3 sm:gap-4 p-4">
                   {/* Cover Image */}
                   <div 
-                    className="w-16 h-16 rounded-lg bg-gradient-to-br from-purple-500/30 to-amber-500/30 flex items-center justify-center flex-shrink-0 overflow-hidden"
+                    className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg bg-gradient-to-br from-purple-500/30 to-amber-500/30 flex items-center justify-center flex-shrink-0 overflow-hidden"
                   >
                     {mantra.cover_image_url ? (
                       <img 
@@ -252,11 +252,11 @@ const Mantras = () => {
                     )}
                   </div>
 
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-foreground truncate">{mantra.title}</h3>
+                  {/* Info - min-w ensures title is visible on mobile */}
+                  <div className="flex-1 min-w-[100px]">
+                    <h3 className="font-semibold text-foreground break-words">{mantra.title}</h3>
                     {mantra.description && (
-                      <p className="text-sm text-muted-foreground truncate">{mantra.description}</p>
+                      <p className="text-sm text-muted-foreground line-clamp-2 break-words">{mantra.description}</p>
                     )}
                     <div className="flex items-center gap-3 mt-1 flex-wrap">
                       <span className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -278,7 +278,7 @@ const Mantras = () => {
                   <Button
                     size="icon"
                     variant={isPlaying ? 'default' : 'outline'}
-                    className="flex-shrink-0 rounded-full w-12 h-12"
+                    className="flex-shrink-0 rounded-full w-10 h-10 sm:w-12 sm:h-12"
                     onClick={() => handlePlay(mantra)}
                   >
                     {isPlaying ? (
