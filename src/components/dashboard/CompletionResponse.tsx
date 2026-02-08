@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Sparkles, ArrowRight } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { getFallbackRecommendations } from '@/lib/recommendationEngine';
+import { SessionRecommendationCards } from './SessionRecommendationCards';
+import type { CompletedSession } from '@/lib/recommendationEngine';
 
 const REFLECTIONS = [
   "Well done. You've taken a step for your wellbeing.",
@@ -23,22 +26,27 @@ const pickRandom = <T,>(arr: T[]): T =>
 
 interface CompletionResponseProps {
   onDone: () => void;
-  onSeeSuggestions?: () => void;
+  completedSession?: CompletedSession | null;
 }
 
 export const CompletionResponse: React.FC<CompletionResponseProps> = ({
   onDone,
-  onSeeSuggestions,
+  completedSession,
 }) => {
   const reflection = pickRandom(REFLECTIONS);
   const affirmation = pickRandom(AFFIRMATIONS);
+
+  const recommendations = useMemo(
+    () => getFallbackRecommendations(completedSession ?? null),
+    [completedSession]
+  );
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-    >
+>
       <Card className="glass-card p-6 sm:p-8">
         <div className="flex flex-col items-center text-center space-y-6">
           <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/30 to-accent/20 flex items-center justify-center">
@@ -50,24 +58,12 @@ export const CompletionResponse: React.FC<CompletionResponseProps> = ({
               "{affirmation}"
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3 w-full">
-            {onSeeSuggestions && (
-              <Button
-                onClick={onSeeSuggestions}
-                className="flex-1 gap-2"
-              >
-                You may also like
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            )}
-            <Button
-              onClick={onDone}
-              variant={onSeeSuggestions ? 'outline' : 'default'}
-              className="flex-1"
-            >
-              Done
-            </Button>
-          </div>
+
+          <SessionRecommendationCards recommendations={recommendations} />
+
+          <Button onClick={onDone} className="w-full">
+            Done
+          </Button>
         </div>
       </Card>
     </motion.div>

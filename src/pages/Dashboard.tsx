@@ -8,7 +8,7 @@ import { AmbientSoundToggle } from '@/components/audio/AmbientSoundToggle';
 import { TodaysPracticeCard } from '@/components/dashboard/TodaysPracticeCard';
 import { InlineSessionPlayer } from '@/components/dashboard/InlineSessionPlayer';
 import { CompletionResponse } from '@/components/dashboard/CompletionResponse';
-import { FeaturedPlaylistsCarousel } from '@/components/dashboard/FeaturedPlaylistsCarousel';
+import { mapSessionTypeToCompleted } from '@/lib/recommendationEngine';
 import { DailyRitualCard } from '@/components/dashboard/DailyRitualCard';
 import { SpiritualPathCard } from '@/components/dashboard/SpiritualPathCard';
 import { BreathingJourneysCard } from '@/components/dashboard/BreathingJourneysCard';
@@ -23,7 +23,7 @@ import { useAchievements } from '@/hooks/useAchievements';
 import { useSocialShare } from '@/hooks/useSocialShare';
 import type { DailyGuidance } from '@/hooks/useDailyGuidance';
 
-export type HomeFlowState = 'idle' | 'in_session' | 'completed' | 'suggestions';
+export type HomeFlowState = 'idle' | 'in_session' | 'completed';
 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
@@ -73,14 +73,15 @@ const Dashboard: React.FC = () => {
     setActiveGuidance(null);
   };
 
-  const handleSeeSuggestions = () => {
-    setFlowState('suggestions');
-  };
-
-  const handleCloseSuggestions = () => {
-    setFlowState('idle');
-    setActiveGuidance(null);
-  };
+  const completedSession = activeGuidance
+    ? mapSessionTypeToCompleted(
+        activeGuidance.session_type,
+        activeGuidance.session_id,
+        activeGuidance.session_id?.startsWith('/paths/')
+          ? activeGuidance.session_id.replace('/paths/', '')
+          : undefined
+      )
+    : null;
 
   return (
     <div className="min-h-screen px-3 sm:px-4 pt-4 sm:pt-6 pb-24">
@@ -200,31 +201,13 @@ const Dashboard: React.FC = () => {
         </div>
       )}
 
-      {/* State: completed - Reflection + Affirmation */}
+      {/* State: completed - Reflection + Affirmation + Recommendations */}
       {flowState === 'completed' && (
         <div className="mb-6 animate-slide-up">
           <CompletionResponse
             onDone={handleDone}
-            onSeeSuggestions={handleSeeSuggestions}
+            completedSession={completedSession}
           />
-        </div>
-      )}
-
-      {/* State: suggestions - You may also like */}
-      {flowState === 'suggestions' && (
-        <div className="space-y-6 animate-slide-up">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-heading font-semibold text-foreground">
-              You may also like
-            </h2>
-            <button
-              onClick={handleCloseSuggestions}
-              className="text-sm text-primary hover:text-primary/80"
-            >
-              Done
-            </button>
-          </div>
-          <FeaturedPlaylistsCarousel contentType="meditation" />
         </div>
       )}
     </div>
