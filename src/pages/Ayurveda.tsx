@@ -1,5 +1,4 @@
 import React from 'react';
-import { BackButton } from '@/components/layout/BackButton';
 import { AyurvedaTool } from '@/components/ayurveda/AyurvedaTool';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminRole } from '@/hooks/useAdminRole';
@@ -22,10 +21,7 @@ const Ayurveda = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6">
-        <BackButton />
-        <div className="mt-6">
-          <AyurvedaTool membershipLevel={getAyurvedaLevel()} isAdmin={isAdmin} />
-        </div>
+        <AyurvedaTool membershipLevel={getAyurvedaLevel()} isAdmin={isAdmin} />
       </div>
     </div>
   );

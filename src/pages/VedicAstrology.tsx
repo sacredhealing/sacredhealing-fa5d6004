@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { BackButton } from '@/components/layout/BackButton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -144,8 +143,6 @@ const VedicAstrology: React.FC = () => {
       </div>
 
       <div className="container max-w-4xl mx-auto py-6 px-4 pb-24">
-        <BackButton />
-        
         {/* Header */}
         <motion.header 
           className="text-center mb-8 pt-8"

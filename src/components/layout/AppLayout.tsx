@@ -118,8 +118,12 @@ export const AppLayout: React.FC = () => {
         />
       </div>
       
-      {/* Universal back button */}
-      <BackButton />
+      {/* Header bar with back button - reserves top space, content stays full width */}
+      {showBackButton ? (
+        <header className="fixed top-0 left-0 right-0 h-14 z-[100] flex items-center px-4 bg-background/80 backdrop-blur-sm border-b border-border/20">
+          <BackButton variant="inline" />
+        </header>
+      ) : null}
       
       {/* Page content with fade transitions */}
       <AnimatePresence mode="wait">
@@ -130,7 +134,7 @@ export const AppLayout: React.FC = () => {
           exit="exit"
           variants={pageVariants}
           transition={pageTransition}
-          className={`relative pb-28 overflow-x-hidden ${showBackButton ? 'pl-16' : ''}`}
+          className={`relative pb-28 overflow-x-hidden ${showBackButton ? 'pt-14' : ''}`}
         >
           <Outlet />
           <AppDisclaimer />
