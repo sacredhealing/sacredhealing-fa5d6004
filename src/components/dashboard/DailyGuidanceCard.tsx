@@ -9,9 +9,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useTranslation } from 'react-i18next';
 import type { DailyGuidance } from '@/hooks/useDailyGuidance';
 
+export type StartClickOptions = { isContinuation?: boolean };
+
 interface DailyGuidanceCardProps {
   /** When provided, Start button uses onClick (for inline session flow) */
-  onStartClick?: (guidance: DailyGuidance) => void;
+  onStartClick?: (guidance: DailyGuidance, options?: StartClickOptions) => void;
+  /** When day is closed (after continuation or skip), show rest state */
+  isDayClosed?: boolean;
+  /** Call when user skips continuation - marks day closed */
+  onSkipContinuation?: () => void;
 }
 
 function getGreetingKey(timeOfDay: 'morning' | 'midday' | 'evening'): string {
@@ -63,25 +69,38 @@ function getContinuationSuggestion(
   }
 }
 
-export const DailyGuidanceCard: React.FC<DailyGuidanceCardProps> = ({ onStartClick }) => {
+export const DailyGuidanceCard: React.FC<DailyGuidanceCardProps> = ({
+  onStartClick,
+  isDayClosed = false,
+  onSkipContinuation,
+}) => {
   const { t } = useTranslation();
   const { guidance, isLoading, lastCompleted, timeOfDay } = useDailyGuidance();
 
   const hasCompletedToday = lastCompleted !== null;
+  const showContinuation = hasCompletedToday && !isDayClosed;
 
-  const greeting = hasCompletedToday
-    ? t('dashboard.integrateGreeting', "Beautiful. Let's integrate it.")
-    : t(getGreetingKey(timeOfDay));
+  const greeting = isDayClosed
+    ? t('dashboard.dayCompleteRest', "Your day is complete. Rest well.")
+    : showContinuation
+      ? t('dashboard.integrateGreeting', "Beautiful. Let's integrate it.")
+      : t(getGreetingKey(timeOfDay));
 
-  const buttonLabel = hasCompletedToday
+  const subtitle = showContinuation
+    ? t('dashboard.integrateSubtitle', 'A gentle next step to carry the feeling forward.')
+    : !hasCompletedToday
+      ? guidance.message
+      : null;
+
+  const buttonLabel = showContinuation
     ? t('dashboard.continueGently', 'Continue gently')
     : guidance.button_label ?? t('dashboard.startJourney', 'Start Journey');
 
-  const continuationGuidance = hasCompletedToday && lastCompleted
+  const continuationGuidance = showContinuation && lastCompleted
     ? getContinuationSuggestion(lastCompleted, t)
     : null;
 
-  const activeGuidance = hasCompletedToday && continuationGuidance ? continuationGuidance : guidance;
+  const activeGuidance = showContinuation && continuationGuidance ? continuationGuidance : guidance;
 
   if (isLoading) {
     return (
@@ -152,26 +171,33 @@ export const DailyGuidanceCard: React.FC<DailyGuidanceCardProps> = ({ onStartCli
               <h2 className="text-base sm:text-2xl font-heading font-bold text-white mb-1 sm:mb-2 leading-tight">
                 {greeting}
               </h2>
-              {hasCompletedToday && continuationGuidance ? (
+              {subtitle && (
                 <p className="text-sm sm:text-base text-[#94a3b8] line-clamp-2 sm:line-clamp-none">
-                  {continuationGuidance.button_label} ({continuationGuidance.message})
-                </p>
-              ) : !hasCompletedToday && (
-                <p className="text-sm sm:text-base text-[#94a3b8] line-clamp-2 sm:line-clamp-none">
-                  {guidance.message}
+                  {subtitle}
                 </p>
               )}
             </div>
 
-            {onStartClick && (
-              <Button
-                onClick={() => onStartClick(activeGuidance)}
-                className="w-full gap-2 bg-[#00F2FE] hover:bg-[#00D4E0] text-[#000000] shadow-[0_0_30px_rgba(0,242,254,0.4)] hover:shadow-[0_0_40px_rgba(0,242,254,0.5)] border-none transition-all text-sm sm:text-base px-4 sm:px-8 py-3 flex-shrink-0"
-                style={{ fontWeight: 800 }}
-              >
-                {buttonLabel}
-                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-              </Button>
+            {onStartClick && !isDayClosed && (
+              <div className="flex flex-col gap-2">
+                <Button
+                  onClick={() => onStartClick(activeGuidance, showContinuation ? { isContinuation: true } : undefined)}
+                  className="w-full gap-2 bg-[#00F2FE] hover:bg-[#00D4E0] text-[#000000] shadow-[0_0_30px_rgba(0,242,254,0.4)] hover:shadow-[0_0_40px_rgba(0,242,254,0.5)] border-none transition-all text-sm sm:text-base px-4 sm:px-8 py-3 flex-shrink-0"
+                  style={{ fontWeight: 800 }}
+                >
+                  {buttonLabel}
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                </Button>
+                {showContinuation && onSkipContinuation && (
+                  <button
+                    type="button"
+                    onClick={onSkipContinuation}
+                    className="text-xs text-muted-foreground hover:text-foreground/80 transition-colors"
+                  >
+                    {t('common.notNow')}
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </div>

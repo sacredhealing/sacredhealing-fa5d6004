@@ -4,6 +4,7 @@ import { SacredFlame } from '@/components/dashboard/SacredFlame';
 import { useProfile } from '@/hooks/useProfile';
 import { useDailyGuidance } from '@/hooks/useDailyGuidance';
 import { useDailyJourney } from '@/hooks/useDailyJourney';
+import { useDayClosed } from '@/hooks/useDayClosed';
 import { useDashboardAutostart, dismissDashboardAutostartForToday } from '@/hooks/useDashboardAutostart';
 import { AmbientSoundToggle } from '@/components/audio/AmbientSoundToggle';
 import { DailyGuidanceCard } from '@/components/dashboard/DailyGuidanceCard';
@@ -48,6 +49,7 @@ const Dashboard: React.FC = () => {
   const { profile: userProfile } = useProfile();
   const { guidance, isLoading, lastCompleted, completeSlot } = useDailyGuidance();
   const { completeMorning, completeMidday, completeEvening } = useDailyJourney();
+  const { isDayClosed, markDayClosed } = useDayClosed();
   const {
     newlyUnlocked,
     dismissNewlyUnlocked,
@@ -60,14 +62,16 @@ const Dashboard: React.FC = () => {
 
   const [flowState, setFlowState] = useState<HomeFlowState>('idle');
   const [activeGuidance, setActiveGuidance] = useState<DailyGuidance | null>(null);
+  const [isContinuationCompletion, setIsContinuationCompletion] = useState(false);
 
   useEffect(() => {
     checkAchievements();
   }, [checkAchievements]);
 
-  const handleStartSession = useCallback((g: DailyGuidance) => {
+  const handleStartSession = useCallback((g: DailyGuidance, options?: { isContinuation?: boolean }) => {
     setActiveGuidance(g);
     setFlowState('in_session');
+    setIsContinuationCompletion(options?.isContinuation ?? false);
   }, []);
 
   const todaySession = useMemo(() => {
@@ -93,9 +97,11 @@ const Dashboard: React.FC = () => {
   }, []);
 
   const handleSessionComplete = () => {
-    if (completeSlot === 'morning') completeMorning.mutate(undefined);
-    else if (completeSlot === 'midday') completeMidday.mutate(undefined);
-    else if (completeSlot === 'evening') completeEvening.mutate({});
+    if (!isContinuationCompletion) {
+      if (completeSlot === 'morning') completeMorning.mutate(undefined);
+      else if (completeSlot === 'midday') completeMidday.mutate(undefined);
+      else if (completeSlot === 'evening') completeEvening.mutate({});
+    }
     setFlowState('completed');
   };
 
@@ -104,10 +110,14 @@ const Dashboard: React.FC = () => {
     setActiveGuidance(null);
   };
 
-  const handleDone = () => {
+  const handleDone = useCallback(() => {
+    if (isContinuationCompletion) {
+      markDayClosed();
+    }
     setFlowState('idle');
     setActiveGuidance(null);
-  };
+    setIsContinuationCompletion(false);
+  }, [isContinuationCompletion, markDayClosed]);
 
   const completedSession = activeGuidance
     ? mapSessionTypeToCompleted(
@@ -143,15 +153,23 @@ const Dashboard: React.FC = () => {
       {flowState === 'idle' && (
         <>
           <div className="mb-4 sm:mb-6 animate-slide-up">
-            <DailyGuidanceCard onStartClick={handleStartSession} />
-            <button
-              type="button"
-              onClick={onNotNow}
-              className="mt-2 text-xs text-muted-foreground hover:text-foreground/80 transition-colors block ml-auto"
-              style={{ opacity: 0.7 }}
-            >
-              {t('common.notNow')}
-            </button>
+            <DailyGuidanceCard
+              onStartClick={handleStartSession}
+              isDayClosed={isDayClosed}
+              onSkipContinuation={() => {
+                markDayClosed();
+              }}
+            />
+            {!hasCompletedToday && (
+              <button
+                type="button"
+                onClick={onNotNow}
+                className="mt-2 text-xs text-muted-foreground hover:text-foreground/80 transition-colors block ml-auto"
+                style={{ opacity: 0.7 }}
+              >
+                {t('common.notNow')}
+              </button>
+            )}
           </div>
 
           {/* Daily Spiritual Practice & Your Path — above the fold */}
@@ -248,6 +266,7 @@ const Dashboard: React.FC = () => {
           <CompletionResponse
             onDone={handleDone}
             completedSession={completedSession}
+            variant={isContinuationCompletion ? 'closing' : 'standard'}
           />
         </div>
       )}
