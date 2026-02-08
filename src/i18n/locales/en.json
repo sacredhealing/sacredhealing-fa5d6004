@@ -351,6 +351,23 @@
     "progressAchievementsDesc": "Timeline, streaks, achievements and share",
     "achievements": "Achievements"
   },
+  "journeys": {
+    "breathingTitle": "Breathing Journeys",
+    "healingTitle": "Healing Journeys",
+    "all": "All",
+    "anxietyRelief": "Anxiety Relief",
+    "balance": "Balance",
+    "focus": "Focus",
+    "sleep": "Sleep",
+    "mySacredFlame": "My Sacred Flame",
+    "blazingBright": "Blazing Bright",
+    "glowingStrong": "Glowing Strong",
+    "gentlyBurning": "Gently Burning",
+    "needsKindling": "Needs Kindling",
+    "dayStreak": "day streak",
+    "quickieReset": "Quickie Reset",
+    "quickieResetDesc": "2 min breathing exercise"
+  },
   "spiritualPath": {
     "yourPath": "Your Path",
     "continueDay": "Continue Day",

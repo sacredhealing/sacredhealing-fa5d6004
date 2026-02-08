@@ -4,16 +4,17 @@ import { motion } from 'framer-motion';
 import { Flame, Zap, Sparkles, ArrowRight } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { useSacredFlame } from '@/hooks/useSacredFlame';
+import { useTranslation } from 'react-i18next';
 
 export const HealingJourneysCard: React.FC = () => {
+  const { t } = useTranslation();
   const { brightness, streakDays, isLoading } = useSacredFlame();
 
-  // Flame status based on brightness
   const getFlameStatus = () => {
-    if (brightness >= 0.8) return { text: 'Blazing Bright', color: 'text-amber-400' };
-    if (brightness >= 0.5) return { text: 'Glowing Strong', color: 'text-orange-400' };
-    if (brightness >= 0.3) return { text: 'Gently Burning', color: 'text-yellow-400' };
-    return { text: 'Needs Kindling', color: 'text-muted-foreground' };
+    if (brightness >= 0.8) return { textKey: 'journeys.blazingBright', color: 'text-amber-400' };
+    if (brightness >= 0.5) return { textKey: 'journeys.glowingStrong', color: 'text-orange-400' };
+    if (brightness >= 0.3) return { textKey: 'journeys.gentlyBurning', color: 'text-yellow-400' };
+    return { textKey: 'journeys.needsKindling', color: 'text-muted-foreground' };
   };
 
   const flameStatus = getFlameStatus();
@@ -27,14 +28,14 @@ export const HealingJourneysCard: React.FC = () => {
             <Sparkles className="w-5 h-5 text-primary" />
           </div>
           <h3 className="font-heading font-semibold text-foreground">
-            Healing Journeys
+            {t('journeys.healingTitle')}
           </h3>
         </div>
         <Link 
           to="/healing" 
           className="text-xs text-[#00F2FE] hover:text-[#00F2FE]/80 flex items-center gap-1 transition-colors"
         >
-          All <ArrowRight className="w-3 h-3" />
+          {t('journeys.all')} <ArrowRight className="w-3 h-3" />
         </Link>
       </div>
 
@@ -72,13 +73,13 @@ export const HealingJourneysCard: React.FC = () => {
             </div>
 
             <div className="flex-1">
-              <h4 className="font-semibold text-foreground mb-1">My Sacred Flame</h4>
+              <h4 className="font-semibold text-foreground mb-1">{t('journeys.mySacredFlame')}</h4>
               <div className="flex items-center gap-2">
                 <span className={`text-sm font-medium ${flameStatus.color}`}>
-                  {isLoading ? '...' : flameStatus.text}
+                  {isLoading ? '...' : t(flameStatus.textKey)}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  • {streakDays} day streak
+                  • {streakDays} {t('journeys.dayStreak')}
                 </span>
               </div>
             </div>
@@ -98,8 +99,8 @@ export const HealingJourneysCard: React.FC = () => {
             <Zap className="w-5 h-5 text-[#00F2FE]" />
           </div>
           <div className="flex-1">
-            <h4 className="font-semibold text-foreground text-sm">Quickie Reset</h4>
-            <p className="text-xs text-muted-foreground">2 min breathing exercise</p>
+            <h4 className="font-semibold text-foreground text-sm">{t('journeys.quickieReset')}</h4>
+            <p className="text-xs text-muted-foreground">{t('journeys.quickieResetDesc')}</p>
           </div>
           <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground group-hover:translate-x-1 transition-all" />
         </motion.div>

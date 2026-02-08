@@ -279,6 +279,23 @@
     "progressAchievementsDesc": "Tidslinje, strik, prestasjoner og del",
     "achievements": "Prestasjoner"
   },
+  "journeys": {
+    "breathingTitle": "Pustereiser",
+    "healingTitle": "Helbredelsesreiser",
+    "all": "Alle",
+    "anxietyRelief": "Angstlindring",
+    "balance": "Balanse",
+    "focus": "Fokus",
+    "sleep": "Søvn",
+    "mySacredFlame": "Min hellige flamme",
+    "blazingBright": "Glødende lys",
+    "glowingStrong": "Gløder sterkt",
+    "gentlyBurning": "Brenner forsiktig",
+    "needsKindling": "Trenger tennved",
+    "dayStreak": "dagers rekke",
+    "quickieReset": "Rask reset",
+    "quickieResetDesc": "2 min pustøvelse"
+  },
   "spiritualPath": {
     "yourPath": "Din vei",
     "continueDay": "Fortsett dag",

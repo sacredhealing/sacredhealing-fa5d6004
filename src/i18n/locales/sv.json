@@ -279,6 +279,23 @@
     "progressAchievementsDesc": "Tidslinje, svit, prestationer och dela",
     "achievements": "Prestationer"
   },
+  "journeys": {
+    "breathingTitle": "Andningsresor",
+    "healingTitle": "Helningsresor",
+    "all": "Alla",
+    "anxietyRelief": "Ångestlindring",
+    "balance": "Balans",
+    "focus": "Fokus",
+    "sleep": "Sömn",
+    "mySacredFlame": "Min heliga låga",
+    "blazingBright": "Bländande ljus",
+    "glowingStrong": "Glöder starkt",
+    "gentlyBurning": "Brinner mildt",
+    "needsKindling": "Behöver tändved",
+    "dayStreak": "dagars rad",
+    "quickieReset": "Snabb återställning",
+    "quickieResetDesc": "2 min andningsövning"
+  },
   "spiritualPath": {
     "yourPath": "Din väg",
     "continueDay": "Fortsätt dag",

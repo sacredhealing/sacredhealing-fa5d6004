@@ -360,6 +360,23 @@
     "progressAchievementsDesc": "Línea de tiempo, rachas, logros y compartir",
     "achievements": "Logros"
   },
+  "journeys": {
+    "breathingTitle": "Viajes de respiración",
+    "healingTitle": "Viajes de sanación",
+    "all": "Todos",
+    "anxietyRelief": "Alivio de ansiedad",
+    "balance": "Equilibrio",
+    "focus": "Enfoque",
+    "sleep": "Sueño",
+    "mySacredFlame": "Mi llama sagrada",
+    "blazingBright": "Ardiendo intensamente",
+    "glowingStrong": "Brillando fuerte",
+    "gentlyBurning": "Ardiendo suavemente",
+    "needsKindling": "Necesita leña",
+    "dayStreak": "días de racha",
+    "quickieReset": "Reset rápido",
+    "quickieResetDesc": "Ejercicio de respiración 2 min"
+  },
   "spiritualPath": {
     "yourPath": "Tu camino",
     "continueDay": "Continuar día",
