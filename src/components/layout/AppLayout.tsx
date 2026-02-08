@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
+import { STORAGE_KEY_RETURN_FROM_SESSION } from '@/hooks/useDashboardAutoLaunch';
 import { AnimatePresence, motion } from 'framer-motion';
 import { BottomNav } from './BottomNav';
 import { BackButton } from './BackButton';
@@ -32,8 +33,22 @@ const pageTransition = {
   duration: 0.2,
 };
 
+const SESSION_ROUTES = ['/ritual', '/breathing', '/meditations', '/journal'];
+
+function isSessionRoute(pathname: string): boolean {
+  if (SESSION_ROUTES.includes(pathname)) return true;
+  if (pathname.startsWith('/paths/')) return true;
+  return false;
+}
+
 export const AppLayout: React.FC = () => {
   const location = useLocation();
+
+  useEffect(() => {
+    if (isSessionRoute(location.pathname)) {
+      sessionStorage.setItem(STORAGE_KEY_RETURN_FROM_SESSION, '1');
+    }
+  }, [location.pathname]);
 
   return (
     <div className="min-h-screen relative">

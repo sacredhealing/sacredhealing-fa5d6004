@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SacredFlame } from '@/components/dashboard/SacredFlame';
 import { useProfile } from '@/hooks/useProfile';
+import { useDailyGuidance } from '@/hooks/useDailyGuidance';
+import { useDashboardAutoLaunch } from '@/hooks/useDashboardAutoLaunch';
 import { AmbientSoundToggle } from '@/components/audio/AmbientSoundToggle';
 import { TodaysPracticeCard } from '@/components/dashboard/TodaysPracticeCard';
 import { InlineSessionPlayer } from '@/components/dashboard/InlineSessionPlayer';
@@ -26,6 +28,7 @@ export type HomeFlowState = 'idle' | 'in_session' | 'completed' | 'suggestions';
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
   const { profile: userProfile } = useProfile();
+  const { guidance, isLoading, lastCompleted } = useDailyGuidance();
   const {
     newlyUnlocked,
     dismissNewlyUnlocked,
@@ -47,6 +50,14 @@ const Dashboard: React.FC = () => {
     setActiveGuidance(guidance);
     setFlowState('in_session');
   };
+
+  useDashboardAutoLaunch({
+    onLaunch: handleStartSession,
+    guidance,
+    isLoading,
+    lastCompleted,
+    flowState,
+  });
 
   const handleSessionComplete = () => {
     setFlowState('completed');
