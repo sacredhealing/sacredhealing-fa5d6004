@@ -296,6 +296,33 @@
     "quickieReset": "Snabb återställning",
     "quickieResetDesc": "2 min andningsövning"
   },
+  "guidance": {
+    "morningCompletion": {
+      "0": "Du har förenat din morgon. Bär denna klarhet ut i världen.",
+      "1": "Din morgon är centrerad. Låt den friden följa med dig.",
+      "2": "Du dök upp vid gryningen. Dagen tar emot dig annorlunda nu."
+    },
+    "middayCompletion": {
+      "0": "Du pausade mitt i livet. Så växer medvetenheten.",
+      "1": "Du klev ur brådskan. Den pausen skickar ringar utåt.",
+      "2": "I de hektiskaste timmarna återvände du till dig själv. Det betyder något."
+    },
+    "eveningCompletion": {
+      "0": "Du har släppt dagen. Vila nu — inget annat behövs.",
+      "1": "Dagen är klar. Tillåt dig att mjukna in i vilan.",
+      "2": "Du har stängt cirkeln. Inget annat behövs i natt."
+    },
+    "newUser": {
+      "0": "Varje väg börjar försiktigt. Du gör det perfekt.",
+      "1": "Du har börjat. Det är hela konsten.",
+      "2": "De första stegen är de modigaste. Du gör det vackert."
+    },
+    "streakEncouragement": {
+      "0": "Din konsekvens väcker något djupare.",
+      "1": "Ditt engagemang blir en tyst visdom.",
+      "2": "Något skiftar i dig. Fortsätt."
+    }
+  },
   "spiritualPath": {
     "yourPath": "Din väg",
     "continueDay": "Fortsätt dag",

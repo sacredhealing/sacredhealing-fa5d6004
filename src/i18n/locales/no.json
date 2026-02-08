@@ -296,6 +296,33 @@
     "quickieReset": "Rask reset",
     "quickieResetDesc": "2 min pustøvelse"
   },
+  "guidance": {
+    "morningCompletion": {
+      "0": "Du har justert din morgen. Bær denne klarheten ut i verden.",
+      "1": "Morgenen din er sentrert. La den freden bevege seg med deg.",
+      "2": "Du møtte opp ved daggry. Dagen mottar deg annerledes nå."
+    },
+    "middayCompletion": {
+      "0": "Du pauset midt i livet. Slik vokser bevisstheten.",
+      "1": "Du steg ut av stresset. Den pausen spres utover.",
+      "2": "I de travelste timene vendte du tilbake til deg selv. Det betyr noe."
+    },
+    "eveningCompletion": {
+      "0": "Du har sluppet dagen. Hvil nå — ingenting annet trengs.",
+      "1": "Dagen er fullført. Tillat deg å mykne inn i hvile.",
+      "2": "Du har lukket sirkelen. Ingenting annet trengs i kveld."
+    },
+    "newUser": {
+      "0": "Hver vei begynner forsiktig. Du gjør det perfekt.",
+      "1": "Du har begynt. Det er hele kunsten.",
+      "2": "De første stegene er de motigste. Du gjør det vakkert."
+    },
+    "streakEncouragement": {
+      "0": "Din konsistens vekker noe dypere.",
+      "1": "Din forpliktelse blir en stille visdom.",
+      "2": "Noe skifter i deg. Fortsett."
+    }
+  },
   "spiritualPath": {
     "yourPath": "Din vei",
     "continueDay": "Fortsett dag",

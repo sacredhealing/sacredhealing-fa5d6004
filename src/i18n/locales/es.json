@@ -377,6 +377,33 @@
     "quickieReset": "Reset rápido",
     "quickieResetDesc": "Ejercicio de respiración 2 min"
   },
+  "guidance": {
+    "morningCompletion": {
+      "0": "Has alineado tu mañana. Lleva esa claridad al mundo.",
+      "1": "Tu mañana está centrada. Deja que esa paz te acompañe.",
+      "2": "Te presentaste al amanecer. El día te recibe diferente ahora."
+    },
+    "middayCompletion": {
+      "0": "Pausaste en medio de la vida. Así crece la consciencia.",
+      "1": "Saliste de la prisa. Esa pausa se expande.",
+      "2": "En las horas más ocupadas, volviste a ti. Eso importa."
+    },
+    "eveningCompletion": {
+      "0": "Soltaste el día. Descansa ahora — nada más hace falta.",
+      "1": "El día está completo. Permítete suavizar en el descanso.",
+      "2": "Cerraste el círculo. Nada más hace falta esta noche."
+    },
+    "newUser": {
+      "0": "Todo camino comienza con suavidad. Lo estás haciendo perfectamente.",
+      "1": "Has comenzado. Eso es todo el arte.",
+      "2": "Los primeros pasos son los más valientes. Te ves hermosa."
+    },
+    "streakEncouragement": {
+      "0": "Tu consistencia está despertando algo más profundo.",
+      "1": "Tu compromiso se está convirtiendo en una sabiduría silenciosa.",
+      "2": "Algo está cambiando en ti. Sigue adelante."
+    }
+  },
   "spiritualPath": {
     "yourPath": "Tu camino",
     "continueDay": "Continuar día",

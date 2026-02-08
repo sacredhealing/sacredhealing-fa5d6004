@@ -368,6 +368,33 @@
     "quickieReset": "Quickie Reset",
     "quickieResetDesc": "2 min breathing exercise"
   },
+  "guidance": {
+    "morningCompletion": {
+      "0": "You've aligned your morning. Carry this clarity into the world.",
+      "1": "Your morning is centered. Let that peace move with you.",
+      "2": "You showed up at dawn. The day receives you differently now."
+    },
+    "middayCompletion": {
+      "0": "You paused in the middle of life. This is how awareness grows.",
+      "1": "You stepped out of the rush. That pause ripples outward.",
+      "2": "In the busiest hours, you returned to yourself. That matters."
+    },
+    "eveningCompletion": {
+      "0": "You released the day. Rest now — nothing else is needed.",
+      "1": "The day is complete. Allow yourself to soften into rest.",
+      "2": "You've closed the circle. Nothing else is needed tonight."
+    },
+    "newUser": {
+      "0": "Every path begins gently. You're doing perfectly.",
+      "1": "You've begun. That is the whole art.",
+      "2": "The first steps are the bravest. You're doing beautifully."
+    },
+    "streakEncouragement": {
+      "0": "Your consistency is awakening something deeper.",
+      "1": "Your commitment is becoming a quiet wisdom.",
+      "2": "Something is shifting in you. Keep going."
+    }
+  },
   "spiritualPath": {
     "yourPath": "Your Path",
     "continueDay": "Continue Day",

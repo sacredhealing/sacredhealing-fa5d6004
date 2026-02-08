@@ -7,6 +7,7 @@ import { SriYantra } from './SriYantra';
 import { useDailyGuidance } from '@/hooks/useDailyGuidance';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTranslation } from 'react-i18next';
+import { getCompletionGuidance } from '@/lib/sacredGuidanceMessages';
 import type { DailyGuidance } from '@/hooks/useDailyGuidance';
 
 export type StartClickOptions = { isContinuation?: boolean };
@@ -75,22 +76,28 @@ export const DailyGuidanceCard: React.FC<DailyGuidanceCardProps> = ({
   onSkipContinuation,
 }) => {
   const { t } = useTranslation();
-  const { guidance, isLoading, lastCompleted, timeOfDay } = useDailyGuidance();
+  const { guidance, isLoading, lastCompleted, timeOfDay, streakDays } = useDailyGuidance();
 
   const hasCompletedToday = lastCompleted !== null;
   const showContinuation = hasCompletedToday && !isDayClosed;
 
+  const completionGuidance = showContinuation && lastCompleted
+    ? getCompletionGuidance({ lastCompleted, streakDays, t })
+    : null;
+
   const greeting = isDayClosed
     ? t('dashboard.dayCompleteRest', "Your day is complete. Rest well.")
-    : showContinuation
-      ? t('dashboard.integrateGreeting', "Beautiful. Let's integrate it.")
+    : showContinuation && completionGuidance
+      ? completionGuidance.greeting
       : t(getGreetingKey(timeOfDay));
 
   const subtitle = showContinuation
-    ? t('dashboard.integrateSubtitle', 'A gentle next step to carry the feeling forward.')
+    ? completionGuidance?.subtext ?? t('dashboard.integrateSubtitle', 'A gentle next step to carry the feeling forward.')
     : !hasCompletedToday
       ? guidance.message
       : null;
+
+  const subtextIsGolden = completionGuidance?.subtextIsGolden ?? false;
 
   const buttonLabel = showContinuation
     ? t('dashboard.continueGently', 'Continue gently')
@@ -172,7 +179,7 @@ export const DailyGuidanceCard: React.FC<DailyGuidanceCardProps> = ({
                 {greeting}
               </h2>
               {subtitle && (
-                <p className="text-sm sm:text-base text-[#94a3b8] line-clamp-2 sm:line-clamp-none">
+                <p className={`text-sm sm:text-base line-clamp-2 sm:line-clamp-none ${subtextIsGolden ? 'text-amber-400/90' : 'text-[#94a3b8]'}`}>
                   {subtitle}
                 </p>
               )}
