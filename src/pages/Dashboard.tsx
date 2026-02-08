@@ -133,7 +133,7 @@ const Dashboard: React.FC = () => {
               {userProfile?.full_name || t('dashboard.sacredSoul')}
               <span className="ml-1 text-secondary">✨</span>
             </h1>
-            <p className="text-[10px] sm:text-xs text-muted-foreground/70">The soul awaits.</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground/70">{t('common.soulAwaits')}</p>
           </div>
         </div>
         <AmbientSoundToggle />
@@ -150,7 +150,7 @@ const Dashboard: React.FC = () => {
               className="mt-2 text-xs text-muted-foreground hover:text-foreground/80 transition-colors block ml-auto"
               style={{ opacity: 0.7 }}
             >
-              Not now
+              {t('common.notNow')}
             </button>
           </div>
 
@@ -163,8 +163,8 @@ const Dashboard: React.FC = () => {
           {/* Collapsed: More practices */}
           <div className="mb-4 animate-slide-up">
             <SectionCollapse
-              title="More practices"
-              description="Breathing and healing journeys"
+              title={t('dashboard.morePractices')}
+              description={t('dashboard.morePracticesDesc')}
               defaultOpen={false}
             >
               <div className="space-y-4">
@@ -177,8 +177,8 @@ const Dashboard: React.FC = () => {
           {/* Collapsed: Progress & achievements */}
           <div className="mb-6 animate-slide-up">
             <SectionCollapse
-              title="Progress & achievements"
-              description="Timeline, streaks, achievements and share"
+              title={t('dashboard.progressAchievements')}
+              description={t('dashboard.progressAchievementsDesc')}
               defaultOpen={false}
             >
               <div className="space-y-4">
@@ -191,7 +191,7 @@ const Dashboard: React.FC = () => {
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <h2 className="text-lg font-heading font-semibold text-foreground">
-                        Achievements
+                        {t('dashboard.achievements')}
                       </h2>
                       <span className="text-xs text-muted-foreground">
                         {userAchievements.length}/{achievements.length}

@@ -40,7 +40,7 @@ export const SpiritualPathCard: React.FC = () => {
               </h3>
             </div>
             <Badge variant="outline" className="text-xs">
-              Day {activeProgress.current_day}/{activePath.duration_days}
+              {t('spiritualPath.day')} {activeProgress.current_day}/{activePath.duration_days}
             </Badge>
           </div>
 
@@ -108,7 +108,7 @@ export const SpiritualPathCard: React.FC = () => {
             <p className="text-xs text-muted-foreground line-clamp-1">{recommendedPath.description}</p>
             <div className="flex items-center gap-2 mt-1">
               <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                {recommendedPath.duration_days} days
+                {recommendedPath.duration_days} {t('common.days')}
               </Badge>
               <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-accent border-accent/30">
                 +{recommendedPath.shc_reward_total} SHC

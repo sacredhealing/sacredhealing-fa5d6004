@@ -46,7 +46,11 @@
     "new": "Nuevo",
     "delete": "Eliminar",
     "edit": "Editar",
-    "confirm": "Confirmar"
+    "confirm": "Confirmar",
+    "complete": "completado",
+    "notNow": "Ahora no",
+    "soulAwaits": "El alma espera.",
+    "disclaimer": "Esta aplicación es solo para fines espirituales y de entretenimiento y no pretende proporcionar asesoramiento médico, diagnóstico o tratamiento."
   },
   "membership": {
     "meditationMembership": "Membresía de Meditación",
@@ -335,7 +339,18 @@
     "greetingEvening": "Suelta el día.",
     "optionalReset": "Opcional: reset de 2 minutos",
     "optionalResetDesc": "Una respiración rápida para recentrarte.",
-    "startJourney": "Iniciar viaje"
+    "startJourney": "Iniciar viaje",
+    "morePractices": "Más prácticas",
+    "morePracticesDesc": "Viajes de respiración y sanación",
+    "progressAchievements": "Progreso y logros",
+    "progressAchievementsDesc": "Línea de tiempo, rachas, logros y compartir",
+    "achievements": "Logros"
+  },
+  "spiritualPath": {
+    "yourPath": "Tu camino",
+    "continueDay": "Continuar día",
+    "startJourney": "Comienza tu viaje",
+    "day": "Día"
   },
   "dailyRitual": {
     "title": "Práctica espiritual diaria",

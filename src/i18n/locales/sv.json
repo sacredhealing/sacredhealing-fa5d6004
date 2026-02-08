@@ -43,7 +43,11 @@
     "and": "och",
     "from": "från",
     "to": "till",
-    "new": "Ny"
+    "new": "Ny",
+    "complete": "klart",
+    "notNow": "Inte nu",
+    "soulAwaits": "Själen väntar.",
+    "disclaimer": "Denna app är endast för andliga och underhållningsändamål och är inte avsedd att ge medicinsk rådgivning, diagnos eller behandling."
   },
   "membership": {
     "meditationMembership": "Meditationsmedlemskap",
@@ -254,7 +258,18 @@
     "greetingEvening": "Släpp dagen.",
     "optionalReset": "Valfritt: 2-minuters återställning",
     "optionalResetDesc": "En snabb andning för att återcentrera.",
-    "startJourney": "Starta resan"
+    "startJourney": "Starta resan",
+    "morePractices": "Flera övningar",
+    "morePracticesDesc": "Andnings- och helningsresor",
+    "progressAchievements": "Framsteg och prestationer",
+    "progressAchievementsDesc": "Tidslinje, svit, prestationer och dela",
+    "achievements": "Prestationer"
+  },
+  "spiritualPath": {
+    "yourPath": "Din väg",
+    "continueDay": "Fortsätt dag",
+    "startJourney": "Börja din resa",
+    "day": "Dag"
   },
   "dailyRitual": {
     "title": "Daglig andlig praxis",

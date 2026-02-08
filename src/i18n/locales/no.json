@@ -43,7 +43,11 @@
     "and": "og",
     "from": "fra",
     "to": "til",
-    "new": "Ny"
+    "new": "Ny",
+    "complete": "fullført",
+    "notNow": "Ikke nå",
+    "soulAwaits": "Sjelen venter.",
+    "disclaimer": "Denne appen er kun for åndelige og underholdningsformål og er ikke beregnet på å gi medisinsk rådgivning, diagnose eller behandling."
   },
   "membership": {
     "meditationMembership": "Meditasjonsmedlemskap",
@@ -254,7 +258,18 @@
     "greetingEvening": "Slipp løs dagen.",
     "optionalReset": "Valgfritt: 2-minutters reset",
     "optionalResetDesc": "Et raskt pust for å sentrere deg.",
-    "startJourney": "Start reisen"
+    "startJourney": "Start reisen",
+    "morePractices": "Flere praksiser",
+    "morePracticesDesc": "Pust og helbredelsesreiser",
+    "progressAchievements": "Fremgang og prestasjoner",
+    "progressAchievementsDesc": "Tidslinje, strik, prestasjoner og del",
+    "achievements": "Prestasjoner"
+  },
+  "spiritualPath": {
+    "yourPath": "Din vei",
+    "continueDay": "Fortsett dag",
+    "startJourney": "Start reisen din",
+    "day": "Dag"
   },
   "dailyRitual": {
     "title": "Daglig åndelig praksis",

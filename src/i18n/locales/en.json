@@ -109,7 +109,11 @@
     "new": "New",
     "search": "Search...",
     "hide": "Hide",
-    "show": "Show"
+    "show": "Show",
+    "complete": "complete",
+    "notNow": "Not now",
+    "soulAwaits": "The soul awaits.",
+    "disclaimer": "This app is for spiritual and entertainment purposes only and is not intended to provide medical advice, diagnosis, or treatment."
   },
   "membership": {
     "meditationMembership": "Meditation Membership",
@@ -326,7 +330,18 @@
     "greetingEvening": "Release the day.",
     "optionalReset": "Optional: 2-minute reset",
     "optionalResetDesc": "A quick breath to recenter.",
-    "startJourney": "Start Journey"
+    "startJourney": "Start Journey",
+    "morePractices": "More practices",
+    "morePracticesDesc": "Breathing and healing journeys",
+    "progressAchievements": "Progress & achievements",
+    "progressAchievementsDesc": "Timeline, streaks, achievements and share",
+    "achievements": "Achievements"
+  },
+  "spiritualPath": {
+    "yourPath": "Your Path",
+    "continueDay": "Continue Day",
+    "startJourney": "Start Your Journey",
+    "day": "Day"
   },
   "dailyRitual": {
     "title": "Daily Spiritual Practice",
