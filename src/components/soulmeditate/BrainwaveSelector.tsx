@@ -15,7 +15,7 @@ interface BrainwavePreset {
 // Chakra-aligned: Crown/Third Eye (deep) → Throat → Heart → Solar Plexus → Crown (peak)
 const BRAINWAVE_PRESETS: BrainwavePreset[] = [
   { id: 'epsilon', label: 'EPSILON', freq: 0.5, description: 'Transcendental States', color: 'from-violet-600 to-purple-700', chakraColor: 'violet' },
-  { id: 'delta', label: 'DELTA', freq: 2, description: 'Deep Sleep / Repair', color: 'from-indigo-600 to-violet-700', chakraColor: 'indigo' },
+  { id: 'delta', label: 'DELTA', freq: 2, description: 'Deep Sleep / Restore', color: 'from-indigo-600 to-violet-700', chakraColor: 'indigo' },
   { id: 'theta4', label: 'THETA', freq: 4, description: 'Meditation', color: 'from-blue-600 to-indigo-700', chakraColor: 'blue' },
   { id: 'theta6', label: 'THETA', freq: 6, description: 'Creative Visualization', color: 'from-sky-600 to-blue-700', chakraColor: 'sky' },
   { id: 'alpha', label: 'ALPHA', freq: 10, description: 'Stress Relief / Flow', color: 'from-cyan-600 to-teal-700', chakraColor: 'cyan' },

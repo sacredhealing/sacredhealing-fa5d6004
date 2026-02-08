@@ -28,7 +28,7 @@ export const HealingJourneysCard: React.FC = () => {
             <Sparkles className="w-5 h-5 text-primary" />
           </div>
           <h3 className="font-heading font-semibold text-foreground">
-            {t('journeys.healingTitle')}
+            {t('journeys.soulTitle')}
           </h3>
         </div>
         <Link 

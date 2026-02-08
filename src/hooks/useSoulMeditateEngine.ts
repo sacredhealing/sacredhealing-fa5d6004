@@ -41,7 +41,7 @@ const SOLFEGGIO_FREQUENCIES = [
   { hz: 396, label: '396 Hz – Liberation', color: '#eab308' },
   { hz: 417, label: '417 Hz – Transmutation', color: '#22c55e' },
   { hz: 432, label: '432 Hz – Cosmic Harmony', color: '#14b8a6' },
-  { hz: 528, label: '528 Hz – DNA Repair', color: '#06b6d4' },
+  { hz: 528, label: '528 Hz – DNA Restore', color: '#06b6d4' },
   { hz: 639, label: '639 Hz – Heart Coherence', color: '#3b82f6' },
   { hz: 741, label: '741 Hz – Awakening', color: '#6366f1' },
   { hz: 852, label: '852 Hz – Third Eye', color: '#8b5cf6' },

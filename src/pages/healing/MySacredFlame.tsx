@@ -1,10 +1,12 @@
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft, Flame, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function MySacredFlame() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <div className="min-h-screen px-4 py-4">
@@ -19,18 +21,18 @@ export default function MySacredFlame() {
 
         <div className="flex items-center gap-2">
           <Flame className="h-5 w-5 text-white/80" />
-          <h1 className="text-xl font-semibold text-white">My Sacred Flame</h1>
+          <h1 className="text-xl font-semibold text-white">{t("journeys.mySacredFlame")}</h1>
         </div>
       </div>
 
       <Card className="bg-white/5 border-white/10 rounded-2xl">
         <CardContent className="p-4 space-y-3">
           <p className="text-white/80">
-            This is your personal healing journey space — built for gentle daily progress.
+            {t("soul.mySacredFlameDesc", "This is your personal soul journey space — built for gentle daily progress.")}
           </p>
 
           <div className="text-white/60 text-sm">
-            Next step: choose a short practice (2–10 min) to keep your flame glowing.
+            {t("soul.mySacredFlameNext", "Next step: choose a short practice (2–10 min) to keep your flame glowing.")}
           </div>
 
           <div className="flex flex-col sm:flex-row gap-2">
@@ -39,7 +41,7 @@ export default function MySacredFlame() {
               onClick={() => navigate("/healing")}
             >
               <PlayCircle className="h-4 w-4 mr-2" />
-              Start a Healing Session
+              {t("soul.startSession", "Start a Soul Session")}
             </Button>
 
             <Button
@@ -47,7 +49,7 @@ export default function MySacredFlame() {
               className="rounded-xl border-white/15 text-white"
               onClick={() => navigate("/paths")}
             >
-              View Healing Paths
+              {t("soul.viewPaths", "View Soul Paths")}
             </Button>
           </div>
         </CardContent>

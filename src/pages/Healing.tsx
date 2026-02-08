@@ -41,113 +41,10 @@ interface HealingPlan {
 }
 
 const HEALING_PLANS: HealingPlan[] = [
-  { id: '7_day', name: '7-Day Healing', price: 97, days: 7 },
-  { id: '14_day', name: '14-Day Healing', price: 147, days: 14 },
-  { id: '30_day', name: '30-Day Healing', price: 197, days: 30 },
+  { id: '7_day', name: '7-Day Soul', price: 97, days: 7 },
+  { id: '14_day', name: '14-Day Soul', price: 147, days: 14 },
+  { id: '30_day', name: '30-Day Soul', price: 197, days: 30 },
 ];
-
-const translations = {
-  en: {
-    heroTitle: "30 Days of Sacred Healing",
-    heroSubtitle: "Experience energetic, emotional, mental, and spiritual transformation with Adam & Laila's Sacred Healing Vibration.",
-    moreAboutHealingTitle: "More About the Healing",
-    moreAboutHealingText: "The 30 Days of Healing is designed to support your overall well-being and enhance multiple aspects of your life. Through this regular healing practice, we help you replenish your energy and vitality using divine energies of love, light, peace, and chi. This process may help promote balance, calm, and clarity, supporting body, mind, and spirit.",
-    healthTitle: "Health & Vitality",
-    healthText: "Supports energetic balance, vitality, organ and immune system function, circulation, digestive and reproductive health, stress relief, and overall wellness.",
-    mentalTitle: "Mental & Emotional Balance",
-    mentalText: "Helps reduce stress, anxiety, and negative thought patterns while promoting emotional stability, self-love, and positive mindset.",
-    spiritualTitle: "Spiritual Transformation",
-    spiritualText: "Supports awakening your spiritual potential, deeper meditation, higher vibration, wisdom, and connection with inner divinity.",
-    testimonialsTitle: "Testimonials",
-    faqTitle: "Frequently Asked Questions",
-    purchaseTitle: "Join the Healing",
-    purchaseSubtitle: "Select the package that fits your needs:",
-    button7Day: "7-Day Healing - €97",
-    button14Day: "14-Day Healing - €147",
-    button30Day: "30-Day Healing - €197",
-    button3Month: "Subscribe 3 Months - €147/mo",
-    activeAccess: "You have active healing access!",
-    freeAudio: "Free Healing Audio",
-    premiumAudio: "Premium Healing Audio",
-    free: "FREE",
-    owned: "OWNED"
-  },
-  sv: {
-    heroTitle: "30 Dagar av Helig Healing",
-    heroSubtitle: "Upplev energisk, emotionell, mental och andlig transformation med Adam & Lailas Sacred Healing Vibration.",
-    moreAboutHealingTitle: "Mer om Healing",
-    moreAboutHealingText: "De 30 dagarna av Healing är utformade för att stödja ditt välbefinnande och förbättra flera aspekter av ditt liv. Genom denna regelbundna healing hjälper vi dig att fylla på energi och vitalitet med gudomlig energi av kärlek, ljus, fred och chi. Denna process kan främja balans, lugn och klarhet, stödja kropp, sinne och själ.",
-    healthTitle: "Hälsa & Vitalitet",
-    healthText: "Stöder energibalans, vitalitet, organ- och immunsystemfunktion, cirkulation, matsmältnings- och reproduktiv hälsa, stresslindring och allmänt välbefinnande.",
-    mentalTitle: "Mental & Emotionell Balans",
-    mentalText: "Hjälper till att minska stress, ångest och negativa tankemönster samtidigt som det främjar emotionell stabilitet, självkärlek och positivt tänkande.",
-    spiritualTitle: "Andlig Transformation",
-    spiritualText: "Stöder uppvaknande av din andliga potential, djupare meditation, högre vibration, visdom och kontakt med din inre gudomlighet.",
-    testimonialsTitle: "Testimonials",
-    faqTitle: "Vanliga Frågor",
-    purchaseTitle: "Bli Medlem i Healing",
-    purchaseSubtitle: "Välj paketet som passar dig:",
-    button7Day: "7-Dagars Healing - €97",
-    button14Day: "14-Dagars Healing - €147",
-    button30Day: "30-Dagars Healing - €197",
-    button3Month: "Prenumerera 3 Månader - €147/månad",
-    activeAccess: "Du har aktiv healing-åtkomst!",
-    freeAudio: "Gratis Healing Audio",
-    premiumAudio: "Premium Healing Audio",
-    free: "GRATIS",
-    owned: "ÄGER"
-  },
-  es: {
-    heroTitle: "30 Días de Sanación Sagrada",
-    heroSubtitle: "Experimenta la transformación energética, emocional, mental y espiritual con la Vibración de Sanación Sagrada de Adam y Laila.",
-    moreAboutHealingTitle: "Más Sobre la Sanación",
-    moreAboutHealingText: "Los 30 Días de Sanación están diseñados para apoyar tu bienestar general y mejorar múltiples aspectos de tu vida. A través de esta práctica regular de sanación, ayudamos a reponer tu energía y vitalidad utilizando energías divinas de amor, luz, paz y chi. Este proceso puede promover equilibrio, calma y claridad, apoyando cuerpo, mente y espíritu.",
-    healthTitle: "Salud & Vitalidad",
-    healthText: "Apoya el equilibrio energético, vitalidad, función de órganos y sistema inmunológico, circulación, salud digestiva y reproductiva, alivio del estrés y bienestar general.",
-    mentalTitle: "Equilibrio Mental & Emocional",
-    mentalText: "Ayuda a reducir el estrés, la ansiedad y los patrones de pensamiento negativos mientras promueve estabilidad emocional, amor propio y una mentalidad positiva.",
-    spiritualTitle: "Transformación Espiritual",
-    spiritualText: "Apoya el despertar de tu potencial espiritual, meditación más profunda, vibración más alta, sabiduría y conexión con la divinidad interior.",
-    testimonialsTitle: "Testimonios",
-    faqTitle: "Preguntas Frecuentes",
-    purchaseTitle: "Únete a la Sanación",
-    purchaseSubtitle: "Selecciona el paquete que se adapta a tus necesidades:",
-    button7Day: "Sanación de 7 Días - €97",
-    button14Day: "Sanación de 14 Días - €147",
-    button30Day: "Sanación de 30 Días - €197",
-    button3Month: "Suscribirse 3 Meses - €147/mes",
-    activeAccess: "¡Tienes acceso activo a sanación!",
-    freeAudio: "Audio de Sanación Gratuito",
-    premiumAudio: "Audio de Sanación Premium",
-    free: "GRATIS",
-    owned: "COMPRADO"
-  },
-  no: {
-    heroTitle: "30 Dager med Hellig Healing",
-    heroSubtitle: "Opplev energisk, emosjonell, mental og åndelig transformasjon med Adam & Lailas Sacred Healing Vibration.",
-    moreAboutHealingTitle: "Mer om Healing",
-    moreAboutHealingText: "De 30 dagene med Healing er designet for å støtte ditt generelle velvære og forbedre flere aspekter av livet ditt. Gjennom denne regelmessige healingpraksisen hjelper vi deg med å fylle på energi og vitalitet ved hjelp av guddommelige energier av kjærlighet, lys, fred og chi. Denne prosessen kan fremme balanse, ro og klarhet, og støtte kropp, sinn og sjel.",
-    healthTitle: "Helse & Vitalitet",
-    healthText: "Støtter energibalanse, vitalitet, organ- og immunsystemfunksjon, sirkulasjon, fordøyelses- og reproduktiv helse, stressavlastning og generell velvære.",
-    mentalTitle: "Mental & Emosjonell Balanse",
-    mentalText: "Hjelper med å redusere stress, angst og negative tankemønstre samtidig som det fremmer emosjonell stabilitet, egenkjærlighet og positiv tankegang.",
-    spiritualTitle: "Åndelig Transformasjon",
-    spiritualText: "Støtter oppvåkning av ditt åndelige potensial, dypere meditasjon, høyere vibrasjon, visdom og forbindelse med din indre guddommelighet.",
-    testimonialsTitle: "Testimonials",
-    faqTitle: "Ofte Stilte Spørsmål",
-    purchaseTitle: "Bli Med på Healing",
-    purchaseSubtitle: "Velg pakken som passer dine behov:",
-    button7Day: "7-Dagers Healing - €97",
-    button14Day: "14-Dagers Healing - €147",
-    button30Day: "30-Dagers Healing - €197",
-    button3Month: "Abonner 3 Måneder - €147/mnd",
-    activeAccess: "Du har aktiv healing-tilgang!",
-    freeAudio: "Gratis Healing Audio",
-    premiumAudio: "Premium Healing Audio",
-    free: "GRATIS",
-    owned: "EIERD"
-  }
-};
 
 const faqTranslations = {
   en: [
@@ -160,7 +57,7 @@ const faqTranslations = {
     { question: "How long is the healing sent for, and how often?", answer: "Each session is sent for approximately 30 minutes on the date and time booked." },
     { question: "How does the healing transform?", answer: "The Sacred Healing Vibration transmits divine love and light to the physical, emotional, mental, and spiritual levels. It works face-to-face or remotely. Being open enhances the experience." },
     { question: "What exactly will the energy heal?", answer: "Supports organ health, immune system, circulation, vitality, spiritual growth, focus, motivation, calmness, sleep, emotional balance, recovery, pain relief, and any other frequencies needed for your healing journey." },
-    { question: "Does the healing cure physical symptoms or diseases?", answer: "Healing works on spiritual, mental, emotional, and physical levels. Spiritual and mental effects are noticed first, while emotional and physical improvements may take longer. Detox-like effects may occur. Not a substitute for medical care." },
+    { question: "Does the soul practice support physical well-being?", answer: "The practice works on spiritual, mental, emotional, and physical levels. Spiritual and mental effects are noticed first, while emotional and physical improvements may take longer. Detox-like effects may occur. Not a substitute for medical care." },
     { question: "Can I sign someone else up for the healing?", answer: "Yes, you can register family, friends, or pets. Provide a photograph of the recipient after payment." },
     { question: "If I give the healing to someone else, do they have to know?", answer: "No. Healing works subtly on their body, mind, emotions, and spirit. Out of respect, ask first if possible." },
     { question: "Does the healing negatively affect other medical treatments?", answer: "No, the energy works on a subtle level and does not interfere with mainstream or alternative treatments. Temporary detox symptoms may occur." },
@@ -176,7 +73,7 @@ const faqTranslations = {
     { question: "Hur länge skickas healingen och hur ofta?", answer: "Varje session skickas i cirka 30 minuter på det bokade datumet och tiden." },
     { question: "Hur transformerar healingen?", answer: "Sacred Healing Vibration överför gudomlig kärlek och ljus till fysiska, emotionella, mentala och andliga nivåer. Det fungerar ansikte mot ansikte eller på distans. Öppenhet förstärker upplevelsen." },
     { question: "Vad exakt kommer energin att heala?", answer: "Stöder organhälsa, immunsystem, cirkulation, vitalitet, andlig tillväxt, fokus, motivation, lugn, sömn, emotionell balans, återhämtning, smärtlindring och alla andra frekvenser som behövs för din healingresa." },
-    { question: "Botar healingen fysiska symptom eller sjukdomar?", answer: "Healing verkar på andliga, mentala, emotionella och fysiska nivåer. Andliga och mentala effekter märks först, medan emotionella och fysiska förbättringar kan ta längre tid. Detox-liknande effekter kan förekomma. Ersätter inte medicinsk vård." },
+    { question: "Stöder själpraktiken fysiskt välbefinnande?", answer: "Praktiken verkar på andliga, mentala, emotionella och fysiska nivåer. Andliga och mentala effekter märks först, medan emotionella och fysiska förbättringar kan ta längre tid. Detox-liknande effekter kan förekomma. Ersätter inte medicinsk vård." },
     { question: "Kan jag anmäla någon annan för healingen?", answer: "Ja, du kan registrera familj, vänner eller husdjur. Ge ett fotografi av mottagaren efter betalning." },
     { question: "Om jag ger healingen till någon annan, måste de veta om det?", answer: "Nej. Healing verkar subtilt på deras kropp, sinne, känslor och ande. Av respekt, fråga först om möjligt." },
     { question: "Påverkar healingen andra medicinska behandlingar negativt?", answer: "Nej, energin verkar på en subtil nivå och stör inte konventionella eller alternativa behandlingar. Tillfälliga detox-symptom kan förekomma." },
@@ -192,7 +89,7 @@ const faqTranslations = {
     { question: "¿Cuánto tiempo se envía la sanación y con qué frecuencia?", answer: "Cada sesión se envía durante aproximadamente 30 minutos en la fecha y hora reservadas." },
     { question: "¿Cómo transforma la sanación?", answer: "La Vibración de Sanación Sagrada transmite amor divino y luz a los niveles físico, emocional, mental y espiritual. Funciona cara a cara o de forma remota. Estar abierto mejora la experiencia." },
     { question: "¿Qué exactamente sanará la energía?", answer: "Apoya la salud de los órganos, sistema inmunológico, circulación, vitalidad, crecimiento espiritual, enfoque, motivación, calma, sueño, equilibrio emocional, recuperación, alivio del dolor y cualquier otra frecuencia necesaria para tu viaje de sanación." },
-    { question: "¿La sanación cura síntomas físicos o enfermedades?", answer: "La sanación actúa en niveles espirituales, mentales, emocionales y físicos. Los efectos espirituales y mentales se notan primero, mientras que las mejoras emocionales y físicas pueden tardar más. Pueden ocurrir efectos similares a la desintoxicación. No sustituye la atención médica." },
+    { question: "¿La práctica del alma apoya el bienestar físico?", answer: "La práctica actúa en niveles espirituales, mentales, emocionales y físicos. Los efectos espirituales y mentales se notan primero, mientras que las mejoras emocionales y físicas pueden tardar más. Pueden ocurrir efectos similares a la desintoxicación. No sustituye la atención médica." },
     { question: "¿Puedo inscribir a otra persona para la sanación?", answer: "Sí, puedes registrar familia, amigos o mascotas. Proporciona una fotografía del destinatario después del pago." },
     { question: "Si le doy la sanación a otra persona, ¿tienen que saberlo?", answer: "No. La sanación actúa sutilmente en su cuerpo, mente, emociones y espíritu. Por respeto, pregunta primero si es posible." },
     { question: "¿La sanación afecta negativamente otros tratamientos médicos?", answer: "No, la energía actúa a un nivel sutil y no interfiere con tratamientos convencionales o alternativos. Pueden ocurrir síntomas temporales de desintoxicación." },
@@ -208,7 +105,7 @@ const faqTranslations = {
     { question: "Hvor lenge sendes healingen og hvor ofte?", answer: "Hver sesjon sendes i omtrent 30 minutter på den bookede datoen og tidspunktet." },
     { question: "Hvordan transformerer healingen?", answer: "Sacred Healing Vibration overfører guddommelig kjærlighet og lys til fysiske, emosjonelle, mentale og åndelige nivåer. Det fungerer ansikt til ansikt eller på avstand. Åpenhet forsterker opplevelsen." },
     { question: "Hva eksakt vil energien heale?", answer: "Støtter organhelse, immunsystem, sirkulasjon, vitalitet, åndelig vekst, fokus, motivasjon, ro, søvn, emosjonell balanse, restitusjon, smertelindring og alle andre frekvenser som trengs for din healingreise." },
-    { question: "Kurerer healingen fysiske symptomer eller sykdommer?", answer: "Healing virker på åndelige, mentale, emosjonelle og fysiske nivåer. Åndelige og mentale effekter merkes først, mens emosjonelle og fysiske forbedringer kan ta lengre tid. Detox-lignende effekter kan forekomme. Erstatter ikke medisinsk behandling." },
+    { question: "Støtter sjelpraksisen fysisk velvære?", answer: "Praktiken virker på åndelige, mentale, emosjonelle og fysiske nivåer. Åndelige og mentale effekter merkes først, mens emosjonelle og fysiske forbedringer kan ta lengre tid. Detox-lignende effekter kan forekomme. Erstatter ikke medisinsk behandling." },
     { question: "Kan jeg melde på noen andre for healingen?", answer: "Ja, du kan registrere familie, venner eller kjæledyr. Gi et fotografi av mottakeren etter betaling." },
     { question: "Hvis jeg gir healingen til noen andre, må de vite om det?", answer: "Nei. Healing virker subtilt på deres kropp, sinn, følelser og ånd. Av respekt, spør først hvis mulig." },
     { question: "Påvirker healingen andre medisinske behandlinger negativt?", answer: "Nei, energien virker på et subtilt nivå og forstyrrer ikke konvensjonelle eller alternative behandlinger. Midlertidige detox-symptomer kan forekomme." },
@@ -236,7 +133,7 @@ const testimonials = [
 ];
 
 const Healing: React.FC = () => {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { balance } = useSHCBalance();
@@ -265,9 +162,7 @@ const Healing: React.FC = () => {
     return currentAudio?.id === audioId && currentAudio?.contentType === 'healing' && playerIsPlaying;
   };
 
-  // Get current language translations
   const currentLang = i18n.language?.split('-')[0] || 'en';
-  const t = translations[currentLang as keyof typeof translations] || translations.en;
 
   // Helper to get content from database or fallback to static
   const getContent = (key: string, fallback: string) => {
@@ -285,7 +180,7 @@ const Healing: React.FC = () => {
     if (params.get('success') === 'true') {
       toast({
         title: 'Payment Successful!',
-        description: 'Welcome to your Sacred Healing Journey',
+        description: 'Welcome to your Sacred Soul Journey',
       });
       window.history.replaceState({}, '', '/healing');
       checkHealingAccess();
@@ -502,7 +397,7 @@ const Healing: React.FC = () => {
       const audioItem: UniversalAudioItem = {
         id: audio.id,
         title: audio.title,
-        artist: 'Sacred Healing',
+        artist: 'Sacred Soul',
         audio_url: audioUrl,
         cover_image_url: audio.cover_image_url,
         duration_seconds: audio.duration_seconds,
@@ -550,7 +445,7 @@ const Healing: React.FC = () => {
     const audioItem: UniversalAudioItem = {
       id: audio.id,
       title: audio.title,
-      artist: 'Sacred Healing',
+      artist: 'Sacred Soul',
       audio_url: audioUrl,
       cover_image_url: audio.cover_image_url,
       duration_seconds: audio.duration_seconds,
@@ -594,10 +489,10 @@ const Healing: React.FC = () => {
         <CardContent className="py-10 px-6">
           <Sparkles className="w-12 h-12 text-primary mx-auto mb-4" />
           <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
-            {getContent('hero_title', t.heroTitle)}
+            {getContent('hero_title', t('soul.heroTitle'))}
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            {getContent('hero_subtitle', t.heroSubtitle)}
+            {getContent('hero_subtitle', t('soul.heroSubtitle'))}
           </p>
         </CardContent>
       </Card>
@@ -611,9 +506,9 @@ const Healing: React.FC = () => {
           <CardContent className="pt-6">
             <h2 className="text-2xl font-bold text-foreground mb-3 flex items-center gap-2">
               <Heart className="w-6 h-6 text-primary" />
-              {getContent('about_title', t.moreAboutHealingTitle)}
+              {getContent('about_title', t('soul.moreAboutTitle'))}
             </h2>
-            <p className="text-muted-foreground">{getContent('about_text', t.moreAboutHealingText)}</p>
+            <p className="text-muted-foreground">{getContent('about_text', t('soul.moreAboutText'))}</p>
           </CardContent>
         </Card>
 
@@ -622,9 +517,9 @@ const Healing: React.FC = () => {
             <CardContent className="pt-6">
               <Star className="w-8 h-8 text-primary mb-3" />
               <h3 className="text-lg font-semibold text-foreground mb-2">
-                {getContent('health_title', t.healthTitle)}
+                {getContent('health_title', t('soul.healthTitle'))}
               </h3>
-              <p className="text-sm text-muted-foreground">{getContent('health_text', t.healthText)}</p>
+              <p className="text-sm text-muted-foreground">{getContent('health_text', t('soul.healthText'))}</p>
             </CardContent>
           </Card>
 
@@ -632,9 +527,9 @@ const Healing: React.FC = () => {
             <CardContent className="pt-6">
               <Heart className="w-8 h-8 text-primary mb-3" />
               <h3 className="text-lg font-semibold text-foreground mb-2">
-                {getContent('mental_title', t.mentalTitle)}
+                {getContent('mental_title', t('soul.mentalTitle'))}
               </h3>
-              <p className="text-sm text-muted-foreground">{getContent('mental_text', t.mentalText)}</p>
+              <p className="text-sm text-muted-foreground">{getContent('mental_text', t('soul.mentalText'))}</p>
             </CardContent>
           </Card>
 
@@ -642,9 +537,9 @@ const Healing: React.FC = () => {
             <CardContent className="pt-6">
               <Sparkles className="w-8 h-8 text-primary mb-3" />
               <h3 className="text-lg font-semibold text-foreground mb-2">
-                {getContent('spiritual_title', t.spiritualTitle)}
+                {getContent('spiritual_title', t('soul.spiritualTitle'))}
               </h3>
-              <p className="text-sm text-muted-foreground">{getContent('spiritual_text', t.spiritualText)}</p>
+              <p className="text-sm text-muted-foreground">{getContent('spiritual_text', t('soul.spiritualText'))}</p>
             </CardContent>
           </Card>
         </div>
@@ -652,7 +547,7 @@ const Healing: React.FC = () => {
 
       {/* Testimonials Section */}
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-center text-foreground">{t.testimonialsTitle}</h2>
+        <h2 className="text-2xl font-bold text-center text-foreground">{t('soul.testimonialsTitle')}</h2>
         <div className="space-y-4">
           {testimonials.map((testimonial, i) => (
             <Card key={i} className="border-border">
@@ -688,7 +583,7 @@ const Healing: React.FC = () => {
           className="w-full flex items-center justify-between py-6"
           onClick={() => setFaqOpen(!faqOpen)}
         >
-          <span className="text-lg font-semibold">{t.faqTitle}</span>
+          <span className="text-lg font-semibold">{t('soul.faqTitle')}</span>
           {faqOpen ? (
             <ChevronUp className="w-5 h-5" />
           ) : (
@@ -716,8 +611,8 @@ const Healing: React.FC = () => {
       {!hasHealingAccess && (
         <div className="space-y-6">
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-foreground mb-2">{t.purchaseTitle}</h2>
-            <p className="text-muted-foreground">{t.purchaseSubtitle}</p>
+            <h2 className="text-2xl font-bold text-foreground mb-2">{t('soul.purchaseTitle')}</h2>
+            <p className="text-muted-foreground">{t('soul.purchaseSubtitle')}</p>
           </div>
           
           <div className="flex flex-wrap justify-center gap-4">
@@ -729,10 +624,10 @@ const Healing: React.FC = () => {
                 onClick={() => openPaymentModal(plan)}
                 disabled={isProcessing}
               >
-                {currentLang === 'en' && `${plan.name} - €${plan.price}`}
-                {currentLang === 'sv' && `${plan.days}-Dagars Healing - €${plan.price}`}
-                {currentLang === 'es' && `Sanación de ${plan.days} Días - €${plan.price}`}
-                {currentLang === 'no' && `${plan.days}-Dagers Healing - €${plan.price}`}
+                {currentLang === 'en' && `${plan.days}-Day Soul - €${plan.price}`}
+                {currentLang === 'sv' && `${plan.days}-Dagars Själ - €${plan.price}`}
+                {currentLang === 'es' && `Alma de ${plan.days} Días - €${plan.price}`}
+                {currentLang === 'no' && `${plan.days}-Dagers Sjel - €${plan.price}`}
               </Button>
             ))}
             <Button 
@@ -741,7 +636,7 @@ const Healing: React.FC = () => {
               onClick={handleSubscriptionStripe}
               disabled={isProcessing}
             >
-              {t.button3Month}
+              {t('soul.button3Month')}
             </Button>
           </div>
         </div>
@@ -784,7 +679,7 @@ const Healing: React.FC = () => {
         <Card className="p-4 bg-green-500/10 border-green-500/30">
           <div className="flex items-center gap-2 text-green-500">
             <CheckCircle className="w-5 h-5" />
-            <span className="font-medium">{t.activeAccess}</span>
+            <span className="font-medium">{t('soul.activeAccess')}</span>
           </div>
         </Card>
       )}
@@ -794,7 +689,7 @@ const Healing: React.FC = () => {
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
             <Music className="w-5 h-5 text-primary" />
-            {t.freeAudio}
+            {t('soul.freeAudio')}
           </h2>
           
           <div className="grid gap-3">
@@ -817,7 +712,7 @@ const Healing: React.FC = () => {
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Clock className="w-3 h-3" />
                       <span>{formatDuration(audio.duration_seconds)}</span>
-                      <span className="text-green-500 font-medium">• {t.free}</span>
+                      <span className="text-green-500 font-medium">• {t('soul.free')}</span>
                     </div>
                   </div>
                   
@@ -836,7 +731,7 @@ const Healing: React.FC = () => {
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-primary" />
-            {t.premiumAudio}
+            {t('soul.premiumAudio')}
           </h2>
           
           <div className="grid gap-3">
@@ -867,7 +762,7 @@ const Healing: React.FC = () => {
                         <Clock className="w-3 h-3" />
                         <span>{formatDuration(audio.duration_seconds)}</span>
                         {hasAccess ? (
-                          <span className="text-green-500 font-medium">• {t.owned}</span>
+                          <span className="text-green-500 font-medium">• {t('soul.owned')}</span>
                         ) : (
                           <span className="text-primary font-medium">• ${audio.price_usd}</span>
                         )}

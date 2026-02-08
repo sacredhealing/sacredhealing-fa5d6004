@@ -49,7 +49,7 @@ export default function Explore() {
     () => [
       { title: t("explore.meditations", "Meditations"), description: t("explore.meditationsDesc", "Find your inner peace"), icon: <Sparkles className="h-5 w-5" />, to: "/meditations" },
       { title: t("explore.breathing", "Breathing"), description: t("explore.breathingDesc", "Calm & energize"), icon: <Sparkles className="h-5 w-5" />, to: "/breathing" },
-      { title: t("explore.healing", "Healing"), description: t("explore.healingDesc", "Transform & restore"), icon: <Heart className="h-5 w-5" />, to: "/healing" },
+      { title: t("explore.soul", "Soul"), description: t("explore.soulDesc", "Transform & restore"), icon: <Heart className="h-5 w-5" />, to: "/healing" },
       { title: t("explore.music", "Music"), description: t("explore.musicDesc", "Sacred frequencies"), icon: <Music2 className="h-5 w-5" />, to: "/music" },
     ],
     [t]

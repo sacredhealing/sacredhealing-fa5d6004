@@ -18,7 +18,7 @@ const HEALING_FREQUENCIES: HealingFrequency[] = [
   { freq: 396, name: '396 Hz', description: 'Liberation from Fear', color: 'from-yellow-500 to-amber-500', chakraColor: 'yellow' },
   { freq: 417, name: '417 Hz', description: 'Transmutation', color: 'from-lime-500 to-green-500', chakraColor: 'green' },
   { freq: 432, name: '432 Hz', description: 'Cosmic Harmony', color: 'from-emerald-500 to-teal-500', chakraColor: 'emerald' },
-  { freq: 528, name: '528 Hz', description: 'DNA Repair & Love', color: 'from-cyan-500 to-blue-500', chakraColor: 'cyan' },
+  { freq: 528, name: '528 Hz', description: 'DNA Restore & Love', color: 'from-cyan-500 to-blue-500', chakraColor: 'cyan' },
   { freq: 639, name: '639 Hz', description: 'Heart Connection', color: 'from-teal-500 to-sky-500', chakraColor: 'teal' },
   { freq: 741, name: '741 Hz', description: 'Awakening Intuition', color: 'from-blue-500 to-indigo-500', chakraColor: 'blue' },
   { freq: 852, name: '852 Hz', description: 'Third Eye Activation', color: 'from-indigo-500 to-violet-500', chakraColor: 'indigo' },

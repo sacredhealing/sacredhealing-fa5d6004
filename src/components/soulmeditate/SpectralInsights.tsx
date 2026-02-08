@@ -208,7 +208,7 @@ function generateLocalInsights(
     396: 'liberation from fear and guilt',
     417: 'facilitating change and transformation',
     432: 'natural harmonic resonance with Earth',
-    528: 'DNA repair and cellular healing',
+    528: 'DNA restore and cellular alignment',
     639: 'heart coherence and connection',
     741: 'awakening intuition and clarity',
     852: 'third eye activation',
