@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Lock, Sparkles, Crown, Send, Loader2 } from 'lucide-react';
+import { Lock, Sparkles, Crown, Send, Loader2, Mic, MicOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/hooks/useAuth';
@@ -35,12 +35,34 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const recognitionRef = useRef<{ stop: () => void } | null>(null);
   const hasInitialized = useRef(false);
   const prevMessagesLength = useRef(0);
 
-  // Load saved conversation history on mount (premium only)
+  // Fetch fresh user data from profiles before each send (ensures guru has latest birth details)
+  const fetchFreshUserData = useCallback(async (): Promise<UserProfile> => {
+    if (!authUser?.id) return user;
+    const { data } = await (supabase as any)
+      .from('profiles')
+      .select('birth_name, birth_date, birth_time, birth_place')
+      .eq('user_id', authUser.id)
+      .maybeSingle();
+    if (data?.birth_name && data?.birth_date && data?.birth_time && data?.birth_place) {
+      return {
+        ...user,
+        name: data.birth_name || user.name,
+        birthDate: String(data.birth_date || user.birthDate),
+        birthTime: String(data.birth_time || user.birthTime),
+        birthPlace: data.birth_place || user.birthPlace,
+      };
+    }
+    return user;
+  }, [authUser?.id, user]);
+
+  // Load saved conversation history on mount (premium only - guru remembers all past convos)
   useEffect(() => {
     if (user.plan !== 'premium') {
       setHistoryLoaded(true);
@@ -110,21 +132,29 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
     setInput('');
     setIsLoading(true);
 
-    // Persist user message so guru remembers
+    // Persist user message so guru remembers (saves all conversations)
     saveMessage('user', text);
 
     try {
+      // Fetch fresh user data from DB so guru always has latest birth details
+      const freshUser = await fetchFreshUserData();
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
       const response = await fetch(CHAT_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           messages: [...messages, userMessage].map(m => ({ role: m.role, content: m.content })),
           user: {
-            name: user.name,
-            birthDate: user.birthDate,
-            birthTime: user.birthTime,
-            birthPlace: user.birthPlace,
-            plan: user.plan,
+            name: freshUser.name,
+            birthDate: freshUser.birthDate,
+            birthTime: freshUser.birthTime,
+            birthPlace: freshUser.birthPlace,
+            plan: freshUser.plan,
           },
         }),
       });
@@ -227,6 +257,48 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
       handleSendMessage();
     }
   };
+
+  // Voice input via Web Speech API
+  const toggleMic = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = () => setIsListening(true);
+    recognition.onend = () => setIsListening(false);
+
+    recognition.onresult = (event: { results: Iterable<{ 0?: { transcript?: string } }> }) => {
+      const transcript = Array.from(event.results)
+        .map((r) => r[0]?.transcript ?? '')
+        .join('');
+      if (transcript.trim()) {
+        setInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
+      }
+    };
+
+    recognition.onerror = () => setIsListening(false);
+
+    recognitionRef.current = recognition;
+    recognition.start();
+  };
+
+  useEffect(() => {
+    return () => {
+      recognitionRef.current?.stop();
+    };
+  }, []);
 
   // Sacred Lock UI for non-premium users
   if (user.plan !== 'premium') {
@@ -334,16 +406,28 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
       <div className="p-4 border-t border-slate-800/50 bg-slate-950/95 backdrop-blur-3xl space-y-4">
         <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="relative group">
           <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-indigo-500/10 rounded-[1.5rem] blur opacity-50 group-hover:opacity-100 transition duration-700" />
-          <div className="relative flex gap-3">
+          <div className="relative flex gap-2">
             <textarea
               ref={textareaRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Command the Rishi's vision..."
+              placeholder="Command the Rishi's vision or speak..."
               rows={1}
               className="flex-1 bg-slate-900/90 border border-slate-800 rounded-[1.5rem] px-6 py-4 text-sm text-white focus:outline-none placeholder:text-slate-600 resize-none font-serif italic"
             />
+            {typeof window !== 'undefined' && ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition) && (
+              <Button
+                type="button"
+                variant={isListening ? 'default' : 'outline'}
+                onClick={toggleMic}
+                disabled={isLoading}
+                className={`p-4 rounded-2xl ${isListening ? 'bg-rose-600 hover:bg-rose-500' : 'border-slate-700'} transition-all active:scale-95`}
+                aria-label={isListening ? 'Stop listening' : 'Speak'}
+              >
+                {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+              </Button>
+            )}
             <Button 
               type="submit"
               disabled={isLoading || !input.trim()}
@@ -356,10 +440,10 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
         
         {/* Action Chips */}
         <div className="flex flex-wrap gap-2 justify-center">
-          <ActionChip icon="🌏" label="2026 World Outlook" onClick={() => handleSendMessage("Rishi, scan the world events of early 2026. Use Google Search. How do these mundane shifts impact my personal destiny?")} />
-          <ActionChip icon="💰" label="Financial Verdict" onClick={() => handleSendMessage("Is this moment auspicious for major financial action? Deliver the Verdict.")} />
-          <ActionChip icon="⚡" label="Karmic Blockage" onClick={() => handleSendMessage("Identify the primary karmic obstacle in my current 2026 cycle and provide the Shastric Remedy.")} />
-          <ActionChip icon="🔱" label="Dharma path" onClick={() => handleSendMessage("What is the highest alignment for my soul this week? No questions, just the path.")} />
+          <ActionChip icon="🌏" label={`${new Date().getFullYear()} World Outlook`} onClick={() => handleSendMessage(`Rishi, scan the world events of ${new Date().getFullYear()}. Use Google Search. How do these mundane shifts impact my personal destiny? Use my birth data and today's date.`)} />
+          <ActionChip icon="💰" label="Financial Verdict" onClick={() => handleSendMessage("Is this moment auspicious for major financial action? Use my chart and today's date. Deliver the Verdict.")} />
+          <ActionChip icon="⚡" label="Karmic Blockage" onClick={() => handleSendMessage("Identify the primary karmic obstacle in my current cycle and provide the Shastric Remedy. Use my birth data.")} />
+          <ActionChip icon="🔱" label="Dharma path" onClick={() => handleSendMessage("What is the highest alignment for my soul this week? No questions, just the path. Use my chart.")} />
         </div>
       </div>
     </motion.div>
