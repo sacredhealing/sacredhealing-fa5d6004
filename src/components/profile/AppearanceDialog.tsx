@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Moon, Sun, Monitor } from 'lucide-react';
@@ -34,6 +35,7 @@ if (typeof window !== 'undefined') {
 }
 
 export const AppearanceDialog: React.FC<AppearanceDialogProps> = ({ open, onOpenChange }) => {
+  const { t } = useTranslation();
   const [theme, setTheme] = React.useState<'dark' | 'light' | 'system'>(getStoredTheme);
 
   const handleThemeChange = (newTheme: 'dark' | 'light' | 'system') => {
@@ -41,15 +43,15 @@ export const AppearanceDialog: React.FC<AppearanceDialogProps> = ({ open, onOpen
     localStorage.setItem('app-theme', newTheme);
     applyTheme(newTheme);
     toast({
-      title: "Theme updated",
-      description: `Theme changed to ${newTheme}`,
+      title: t('appearance.themeUpdated'),
+      description: `${t('appearance.themeChangedTo')} ${t(`appearance.${newTheme}`)}`,
     });
   };
 
   const themeOptions = [
-    { value: 'dark' as const, label: 'Dark', icon: Moon, description: 'Easy on the eyes' },
-    { value: 'light' as const, label: 'Light', icon: Sun, description: 'Bright and clear' },
-    { value: 'system' as const, label: 'System', icon: Monitor, description: 'Match device settings' },
+    { value: 'dark' as const, labelKey: 'appearance.dark', icon: Moon, descKey: 'appearance.darkDesc' },
+    { value: 'light' as const, labelKey: 'appearance.light', icon: Sun, descKey: 'appearance.lightDesc' },
+    { value: 'system' as const, labelKey: 'appearance.system', icon: Monitor, descKey: 'appearance.systemDesc' },
   ];
 
   return (
@@ -58,14 +60,14 @@ export const AppearanceDialog: React.FC<AppearanceDialogProps> = ({ open, onOpen
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-foreground">
             <Moon size={20} className="text-primary" />
-            Appearance
+            {t('appearance.title')}
           </DialogTitle>
           <DialogDescription>
-            Choose your preferred theme for the app
+            {t('appearance.description')}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
-          <Label className="text-muted-foreground text-sm">Choose your theme</Label>
+          <Label className="text-muted-foreground text-sm">{t('appearance.chooseTheme')}</Label>
           <div className="grid gap-3">
             {themeOptions.map((option) => (
               <button
@@ -85,8 +87,8 @@ export const AppearanceDialog: React.FC<AppearanceDialogProps> = ({ open, onOpen
                   <option.icon size={20} className={theme === option.value ? "text-primary" : "text-muted-foreground"} />
                 </div>
                 <div className="text-left">
-                  <p className="font-medium text-foreground">{option.label}</p>
-                  <p className="text-xs text-muted-foreground">{option.description}</p>
+                  <p className="font-medium text-foreground">{t(option.labelKey)}</p>
+                  <p className="text-xs text-muted-foreground">{t(option.descKey)}</p>
                 </div>
               </button>
             ))}

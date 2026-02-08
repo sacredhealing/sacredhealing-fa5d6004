@@ -499,6 +499,26 @@
     "premiumFeature3": "Soporte prioritario",
     "certificates": "Certificados"
   },
+  "appearance": {
+    "title": "Apariencia",
+    "description": "Elige el tema preferido para la app",
+    "chooseTheme": "Elige tu tema",
+    "dark": "Oscuro",
+    "darkDesc": "Cómodo para la vista",
+    "light": "Claro",
+    "lightDesc": "Luminoso y claro",
+    "system": "Sistema",
+    "systemDesc": "Según configuración del dispositivo",
+    "themeUpdated": "Tema actualizado",
+    "themeChangedTo": "Tema cambiado a"
+  },
+  "pwa": {
+    "installTitle": "Instalar Sacred Healing",
+    "installDesc": "Añade a tu pantalla de inicio para la mejor experiencia",
+    "install": "Instalar",
+    "installApp": "Instalar App",
+    "notNow": "Ahora no"
+  },
   "courses": {
     "title": "Cursos",
     "subtitle": "Profundiza tu práctica",

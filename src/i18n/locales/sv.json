@@ -117,6 +117,7 @@
   },
   "nav": {
     "home": "Hem",
+    "explore": "Utforska",
     "meditate": "Meditera",
     "healing": "Läkning",
     "music": "Musik",
@@ -424,6 +425,26 @@
     "premiumFeature2": "Premium helande innehåll",
     "premiumFeature3": "Prioriterad support",
     "certificates": "Certifikat"
+  },
+  "appearance": {
+    "title": "Utseende",
+    "description": "Välj önskat tema för appen",
+    "chooseTheme": "Välj ditt tema",
+    "dark": "Mörkt",
+    "darkDesc": "Skonsamt för ögonen",
+    "light": "Ljust",
+    "lightDesc": "Ljust och tydligt",
+    "system": "System",
+    "systemDesc": "Matcha enhetsinställningar",
+    "themeUpdated": "Tema uppdaterat",
+    "themeChangedTo": "Tema ändrat till"
+  },
+  "pwa": {
+    "installTitle": "Inställ Sacred Healing",
+    "installDesc": "Lägg till på hemskärmen för bästa upplevelse",
+    "install": "Inställ",
+    "installApp": "Inställ App",
+    "notNow": "Inte nu"
   },
   "courses": {
     "title": "Kurser",

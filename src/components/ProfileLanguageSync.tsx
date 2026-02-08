@@ -16,9 +16,12 @@ export const ProfileLanguageSync: React.FC = () => {
   useEffect(() => {
     if (!user || !profile?.preferred_language) return;
 
-    const lang = profile.preferred_language;
-    if (SUPPORTED_LANGS.includes(lang) && i18n.language !== lang) {
-      i18n.changeLanguage(lang);
+    const lang = (profile.preferred_language || 'en').split('-')[0];
+    if (SUPPORTED_LANGS.includes(lang)) {
+      const currentBase = i18n.language?.split('-')[0] || 'en';
+      if (currentBase !== lang) {
+        i18n.changeLanguage(lang);
+      }
     }
   }, [user, profile?.preferred_language]);
 

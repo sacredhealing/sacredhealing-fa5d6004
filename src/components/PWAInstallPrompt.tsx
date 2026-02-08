@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Download, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -9,6 +10,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export const PWAInstallPrompt: React.FC = () => {
+  const { t } = useTranslation();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const [dismissed, setDismissed] = useState(false);
@@ -78,9 +80,9 @@ export const PWAInstallPrompt: React.FC = () => {
         </div>
         
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-foreground mb-1">Install Sacred Healing</h3>
+          <h3 className="font-semibold text-foreground mb-1">{t('pwa.installTitle')}</h3>
           <p className="text-sm text-muted-foreground mb-3">
-            Add to your home screen for the best experience
+            {t('pwa.installDesc')}
           </p>
           
           <Button 
@@ -89,7 +91,7 @@ export const PWAInstallPrompt: React.FC = () => {
             className="w-full bg-primary hover:bg-primary/90"
           >
             <Download className="w-4 h-4 mr-2" />
-            Install App
+            {t('pwa.installApp')}
           </Button>
         </div>
       </div>

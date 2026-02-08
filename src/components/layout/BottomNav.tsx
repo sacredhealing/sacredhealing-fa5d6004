@@ -4,38 +4,26 @@ import { useTranslation } from 'react-i18next';
 import { Home, Play, Music2, Users, Sparkles, Compass, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Simplified navigation - Step 8: UI Simplification
-const getNavItems = (t: (key: string) => string) => [
-  { to: '/dashboard', icon: Home, label: 'Home' },
-  { to: '/explore', icon: Compass, label: 'Explore' },
-  { to: '/meditations', icon: Play, label: 'Meditate' },
-  { to: '/music', icon: Music2, label: 'Music' },
-  { to: '/healing', icon: Sparkles, label: 'Healing' },
-  { to: '/community', icon: Users, label: 'Community' },
-  { to: '/profile', icon: User, label: 'Profile' },
+const NAV_ITEMS = [
+  { to: '/dashboard', icon: Home, labelKey: 'nav.home' },
+  { to: '/explore', icon: Compass, labelKey: 'nav.explore' },
+  { to: '/meditations', icon: Play, labelKey: 'nav.meditate' },
+  { to: '/music', icon: Music2, labelKey: 'nav.music' },
+  { to: '/healing', icon: Sparkles, labelKey: 'nav.healing' },
+  { to: '/community', icon: Users, labelKey: 'nav.community' },
+  { to: '/profile', icon: User, labelKey: 'nav.profile' },
 ];
-
-const NAV_LABELS: Record<string, string> = {
-  '/dashboard': 'Home',
-  '/explore': 'Explore',
-  '/meditations': 'Meditate',
-  '/music': 'Music',
-  '/healing': 'Healing',
-  '/community': 'Community',
-  '/profile': 'Profile',
-};
 
 export const BottomNav: React.FC = () => {
   const { t } = useTranslation();
-  const navItems = getNavItems(t);
-  
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-t border-border/50 safe-area-bottom">
       <div 
         className="grid grid-cols-7 w-full px-1 py-1"
         style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}
       >
-        {navItems.map((item) => (
+        {NAV_ITEMS.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
@@ -57,7 +45,7 @@ export const BottomNav: React.FC = () => {
                   )}
                 />
                 <span className="text-[9px] xs:text-[10px] font-medium leading-tight">
-                  {NAV_LABELS[item.to] || item.label}
+                  {t(item.labelKey)}
                 </span>
               </>
             )}

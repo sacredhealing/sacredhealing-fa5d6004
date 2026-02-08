@@ -30,10 +30,12 @@ export const LanguageSelector: React.FC = () => {
     }
   };
 
-  const currentLanguage = languages.find((lang) => lang.code === i18n.language) || languages[0];
+  const currentLangCode = i18n.language?.split('-')[0] || 'en';
+  const currentLanguage = languages.find((lang) => lang.code === currentLangCode) || languages[0];
+  const selectValue = languages.some((l) => l.code === currentLangCode) ? currentLangCode : 'en';
 
   return (
-    <Select value={i18n.language} onValueChange={handleLanguageChange}>
+    <Select value={selectValue} onValueChange={handleLanguageChange}>
       <SelectTrigger className="w-full bg-card/50 border-border/50">
         <div className="flex items-center gap-2">
           <Globe size={18} className="text-muted-foreground" />

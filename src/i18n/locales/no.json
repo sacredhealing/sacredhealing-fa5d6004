@@ -117,6 +117,7 @@
   },
   "nav": {
     "home": "Hjem",
+    "explore": "Utforske",
     "meditate": "Mediter",
     "healing": "Healing",
     "music": "Musikk",
@@ -424,6 +425,26 @@
     "premiumFeature1": "Alle meditasjoner og kurs",
     "premiumFeature2": "Premium helbredende innhold",
     "premiumFeature3": "Prioritert støtte"
+  },
+  "appearance": {
+    "title": "Utseende",
+    "description": "Velg ønsket tema for appen",
+    "chooseTheme": "Velg tema",
+    "dark": "Mørk",
+    "darkDesc": "Skånsomt for øynene",
+    "light": "Lys",
+    "lightDesc": "Lyst og tydelig",
+    "system": "System",
+    "systemDesc": "Tilpass enhetsinnstillinger",
+    "themeUpdated": "Tema oppdatert",
+    "themeChangedTo": "Tema endret til"
+  },
+  "pwa": {
+    "installTitle": "Installer Sacred Healing",
+    "installDesc": "Legg til på hjemskjermen for best opplevelse",
+    "install": "Installer",
+    "installApp": "Installer App",
+    "notNow": "Ikke nå"
   },
   "courses": {
     "title": "Kurs",

@@ -188,6 +188,7 @@
   },
   "nav": {
     "home": "Home",
+    "explore": "Explore",
     "meditate": "Meditate",
     "healing": "Healing",
     "music": "Music",
@@ -509,6 +510,26 @@
     "premiumFeature2": "Premium healing content",
     "premiumFeature3": "Priority support",
     "certificates": "Certificates"
+  },
+  "appearance": {
+    "title": "Appearance",
+    "description": "Choose your preferred theme for the app",
+    "chooseTheme": "Choose your theme",
+    "dark": "Dark",
+    "darkDesc": "Easy on the eyes",
+    "light": "Light",
+    "lightDesc": "Bright and clear",
+    "system": "System",
+    "systemDesc": "Match device settings",
+    "themeUpdated": "Theme updated",
+    "themeChangedTo": "Theme changed to"
+  },
+  "pwa": {
+    "installTitle": "Install Sacred Healing",
+    "installDesc": "Add to your home screen for the best experience",
+    "install": "Install",
+    "installApp": "Install App",
+    "notNow": "Not now"
   },
   "courses": {
     "title": "Courses",
