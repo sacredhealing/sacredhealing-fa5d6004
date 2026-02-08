@@ -8,5 +8,15 @@
         "FD:28:1A:95:E8:72:89:B6:E2:7B:F8:71:93:E7:CA:9E:80:7E:CE:19:39:B4:55:D8:A1:02:75:E8:47:EC:2B:30"
       ]
     }
+  },
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.lovable.sacredhealing.v1",
+      "sha256_cert_fingerprints": [
+        "93:58:89:4E:2B:15:E7:84:95:AA:27:EC:46:10:43:E7:D7:C7:C6:DF:8F:83:EF:EB:35:7F:BA:BB:0D:E8:46:D8"
+      ]
+    }
   }
 ]

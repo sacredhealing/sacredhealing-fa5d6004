@@ -32,13 +32,8 @@ const CreativeSoulStore = () => {
   }, [searchParams]);
 
   // Lifetime = forever, monthly = until period end, single = after payment
-  const hasValidEntitlement = (ent: { has_access: boolean; plan?: string; current_period_end?: string | null }) => {
+  const hasValidEntitlement = (ent: { has_access: boolean; plan?: string }) => {
     if (!ent?.has_access) return false;
-    if (ent.plan === 'lifetime' || ent.plan === 'single') return true;
-    if (ent.plan === 'monthly') {
-      if (!ent.current_period_end) return true;
-      return new Date(ent.current_period_end) > new Date();
-    }
     return true;
   };
 
@@ -52,7 +47,7 @@ const CreativeSoulStore = () => {
       try {
         const { data: entitlements } = await supabase
           .from('creative_soul_entitlements')
-          .select('has_access, plan, current_period_end')
+          .select('has_access, plan')
           .eq('user_id', user.id);
 
         const hasEntitlement = entitlements?.some(hasValidEntitlement) ?? false;
