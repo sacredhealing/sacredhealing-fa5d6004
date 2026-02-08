@@ -23,6 +23,46 @@ function getGreetingKey(timeOfDay: 'morning' | 'midday' | 'evening'): string {
   }
 }
 
+/**
+ * Contextual continuation suggestion after completing today's practice.
+ * Does NOT count toward streak. Optional but emotionally inviting.
+ */
+function getContinuationSuggestion(
+  lastCompleted: 'morning' | 'midday' | 'evening',
+  t: (key: string, fallback?: string) => string
+): DailyGuidance {
+  switch (lastCompleted) {
+    case 'morning':
+      return {
+        message: t('dashboard.continuationSetIntentionDesc', '2–3 min audio'),
+        session_type: 'meditation',
+        session_id: '/meditations?category=morning',
+        button_label: t('dashboard.continuationSetIntention', 'Set Intention'),
+      };
+    case 'midday':
+      return {
+        message: t('dashboard.continuationHeartBreathDesc', '2–3 min'),
+        session_type: 'breathing_reset',
+        session_id: '/breathing',
+        button_label: t('dashboard.continuationHeartBreath', 'Heart-Opening Breath'),
+      };
+    case 'evening':
+      return {
+        message: t('dashboard.continuationSleepPrepDesc', '5–10 min'),
+        session_type: 'meditation',
+        session_id: '/meditations?category=sleep',
+        button_label: t('dashboard.continuationSleepPrep', 'Sleep Preparation'),
+      };
+    default:
+      return {
+        message: t('dashboard.continuationHeartBreathDesc', '2–3 min'),
+        session_type: 'breathing_reset',
+        session_id: '/breathing',
+        button_label: t('dashboard.continuationHeartBreath', 'Heart-Opening Breath'),
+      };
+  }
+}
+
 export const DailyGuidanceCard: React.FC<DailyGuidanceCardProps> = ({ onStartClick }) => {
   const { t } = useTranslation();
   const { guidance, isLoading, lastCompleted, timeOfDay } = useDailyGuidance();
@@ -30,21 +70,18 @@ export const DailyGuidanceCard: React.FC<DailyGuidanceCardProps> = ({ onStartCli
   const hasCompletedToday = lastCompleted !== null;
 
   const greeting = hasCompletedToday
-    ? t('dashboard.completedToday', "You've completed today's practice 🌙")
+    ? t('dashboard.integrateGreeting', "Beautiful. Let's integrate it.")
     : t(getGreetingKey(timeOfDay));
 
   const buttonLabel = hasCompletedToday
-    ? t('dashboard.optionalReset', 'Optional: 2-minute reset')
+    ? t('dashboard.continueGently', 'Continue gently')
     : guidance.button_label ?? t('dashboard.startJourney', 'Start Journey');
 
-  const optionalResetGuidance: DailyGuidance = {
-    message: t('dashboard.optionalResetDesc', 'A quick breath to recenter.'),
-    session_type: 'breathing_reset',
-    session_id: '/breathing?quick=true',
-    button_label: buttonLabel,
-  };
+  const continuationGuidance = hasCompletedToday && lastCompleted
+    ? getContinuationSuggestion(lastCompleted, t)
+    : null;
 
-  const activeGuidance = hasCompletedToday ? optionalResetGuidance : guidance;
+  const activeGuidance = hasCompletedToday && continuationGuidance ? continuationGuidance : guidance;
 
   if (isLoading) {
     return (
@@ -115,7 +152,11 @@ export const DailyGuidanceCard: React.FC<DailyGuidanceCardProps> = ({ onStartCli
               <h2 className="text-base sm:text-2xl font-heading font-bold text-white mb-1 sm:mb-2 leading-tight">
                 {greeting}
               </h2>
-              {!hasCompletedToday && (
+              {hasCompletedToday && continuationGuidance ? (
+                <p className="text-sm sm:text-base text-[#94a3b8] line-clamp-2 sm:line-clamp-none">
+                  {continuationGuidance.button_label} ({continuationGuidance.message})
+                </p>
+              ) : !hasCompletedToday && (
                 <p className="text-sm sm:text-base text-[#94a3b8] line-clamp-2 sm:line-clamp-none">
                   {guidance.message}
                 </p>
