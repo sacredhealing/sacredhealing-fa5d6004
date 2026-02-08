@@ -118,6 +118,7 @@ export const useDailyJourney = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['daily-activity'] });
       queryClient.invalidateQueries({ queryKey: ['daily-guidance-activity'] });
+      queryClient.invalidateQueries({ queryKey: ['user-daily-state'] });
     },
   });
 
@@ -133,6 +134,7 @@ export const useDailyJourney = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['daily-activity'] });
       queryClient.invalidateQueries({ queryKey: ['daily-guidance-activity'] });
+      queryClient.invalidateQueries({ queryKey: ['user-daily-state'] });
     },
   });
 
@@ -150,6 +152,7 @@ export const useDailyJourney = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['daily-activity'] });
       queryClient.invalidateQueries({ queryKey: ['daily-guidance-activity'] });
+      queryClient.invalidateQueries({ queryKey: ['user-daily-state'] });
     },
   });
 

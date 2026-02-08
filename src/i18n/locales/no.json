@@ -331,6 +331,32 @@
       "0": "Din konsistens vekker noe dypere.",
       "1": "Din forpliktelse blir en stille visdom.",
       "2": "Noe skifter i deg. Fortsett."
+    },
+    "adaptiveHero": {
+      "morning": {
+        "calm": "Du er allerede sentrert. La oss fordype det.",
+        "busy": "En myk start er nok i dag.",
+        "heavy": "Begynn på nytt forsiktig.",
+        "engaged": "Din disiplin åpner nytt rom."
+      },
+      "midday": {
+        "calm": "Hold deg stabil gjennom dagen.",
+        "busy": "Ett enkelt pust kan resette alt.",
+        "heavy": "Du trenger ikke fikse dagen — bare pause.",
+        "engaged": "Vend innover før verden trekker igjen."
+      },
+      "evening": {
+        "calm": "La dagen oppløses.",
+        "busy": "Slipp det du bar.",
+        "heavy": "Du klarte deg. Det er nok.",
+        "engaged": "Integrasjon skjer i hvile."
+      }
+    },
+    "adaptiveCta": {
+      "busy": { "button": "2-minutters reset", "message": "Rask reset." },
+      "heavy": { "button": "5-minutters trøst", "message": "Myk støtte når du trenger det." },
+      "calm": { "button": "Daglig reise", "message": "Praksisen din venter." },
+      "engaged": { "button": "Dypere økt", "message": "Gå dypere." }
     }
   },
   "spiritualPath": {

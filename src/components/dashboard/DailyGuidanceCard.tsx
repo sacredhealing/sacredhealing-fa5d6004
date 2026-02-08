@@ -8,7 +8,7 @@ import { BreathingAnchor } from './BreathingAnchor';
 import { useDailyGuidance } from '@/hooks/useDailyGuidance';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTranslation } from 'react-i18next';
-import { getCompletionGuidance, getAllCompleteGuidance, getIntegrationButtonLabel } from '@/lib/sacredGuidanceMessages';
+import { getCompletionGuidance, getAllCompleteGuidance, getIntegrationButtonLabel, getAdaptiveHero } from '@/lib/sacredGuidanceMessages';
 import type { DailyGuidance } from '@/hooks/useDailyGuidance';
 import type { ReturnState } from '@/hooks/useReturnVisit';
 
@@ -93,7 +93,7 @@ export const DailyGuidanceCard: React.FC<DailyGuidanceCardProps> = ({
   streakIncreased = false,
 }) => {
   const { t } = useTranslation();
-  const { guidance, isLoading, lastCompleted, hasCompletedAllThree, timeOfDay, streakDays } = useDailyGuidance();
+  const { guidance, isLoading, lastCompleted, hasCompletedAllThree, timeOfDay, streakDays, userState } = useDailyGuidance();
   const [breathingDone, setBreathingDone] = useState(false);
 
   const hasCompletedToday = lastCompleted !== null;
@@ -119,7 +119,7 @@ export const DailyGuidanceCard: React.FC<DailyGuidanceCardProps> = ({
           ? allCompleteGuidance.greeting
           : showContinuation && completionGuidance
             ? completionGuidance.greeting
-            : t(getGreetingKey(timeOfDay));
+            : getAdaptiveHero(timeOfDay, userState ?? 'calm', t);
 
   const subtitle = isSameDayReturn
     ? t('dashboard.returnSameDaySubtitle', "Take one conscious breath before continuing.")
@@ -146,6 +146,11 @@ export const DailyGuidanceCard: React.FC<DailyGuidanceCardProps> = ({
     : showContinuation && lastCompleted
       ? getIntegrationButtonLabel(lastCompleted, t)
       : guidance.button_label ?? t('dashboard.startJourney', 'Start Journey');
+  // Translate adaptive CTA when in state-driven mode
+  const displayedButtonLabel =
+    !hasCompletedToday && userState && userState !== 'calm'
+      ? t(`guidance.adaptiveCta.${userState}.button`, guidance.button_label ?? '')
+      : buttonLabel;
 
   const continuationGuidance = showContinuation && lastCompleted && !showAllComplete
     ? getContinuationSuggestion(lastCompleted, t)
@@ -257,7 +262,7 @@ export const DailyGuidanceCard: React.FC<DailyGuidanceCardProps> = ({
                   className="w-full gap-2 bg-[#00F2FE] hover:bg-[#00D4E0] text-[#000000] shadow-[0_0_30px_rgba(0,242,254,0.4)] hover:shadow-[0_0_40px_rgba(0,242,254,0.5)] border-none transition-all text-sm sm:text-base px-4 sm:px-8 py-3 flex-shrink-0"
                   style={{ fontWeight: 800 }}
                 >
-                  {buttonLabel}
+                  {displayedButtonLabel}
                   {!isCloseButton && <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />}
                 </Button>
                 {continuationAnchor && (

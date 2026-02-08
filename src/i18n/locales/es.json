@@ -441,6 +441,32 @@
       "0": "Tu consistencia está despertando algo más profundo.",
       "1": "Tu compromiso se está convirtiendo en una sabiduría silenciosa.",
       "2": "Algo está cambiando en ti. Sigue adelante."
+    },
+    "adaptiveHero": {
+      "morning": {
+        "calm": "Ya estás centrado. Profundicemos.",
+        "busy": "Un comienzo suave es suficiente hoy.",
+        "heavy": "Comienza de nuevo con suavidad.",
+        "engaged": "Tu disciplina está abriendo nuevo espacio."
+      },
+      "midday": {
+        "calm": "Mantente estable durante el día.",
+        "busy": "Una sola respiración puede resetear todo.",
+        "heavy": "No necesitas arreglar el día — solo pausar.",
+        "engaged": "Vuelve hacia dentro antes de que el mundo te jale."
+      },
+      "evening": {
+        "calm": "Deja que el día se disuelva.",
+        "busy": "Suelta lo que cargaste.",
+        "heavy": "Lo lograste. Eso es suficiente.",
+        "engaged": "La integración ocurre en el descanso."
+      }
+    },
+    "adaptiveCta": {
+      "busy": { "button": "Reset de 2 minutos", "message": "Un reset rápido." },
+      "heavy": { "button": "5 minutos de confort", "message": "Apoyo suave cuando lo necesitas." },
+      "calm": { "button": "Viaje diario", "message": "Tu práctica te espera." },
+      "engaged": { "button": "Sesión más profunda", "message": "Ve más profundo." }
     }
   },
   "spiritualPath": {

@@ -391,6 +391,32 @@
     "integrationButtonMorning": "Step into the day",
     "integrationButtonMidday": "Return to your flow",
     "integrationButtonEvening": "Enter rest",
+    "adaptiveHero": {
+      "morning": {
+        "calm": "You're already centered. Let's deepen it.",
+        "busy": "A gentle start is enough today.",
+        "heavy": "Begin again softly.",
+        "engaged": "Your discipline is opening new space."
+      },
+      "midday": {
+        "calm": "Stay steady through the day.",
+        "busy": "Just one breath can reset everything.",
+        "heavy": "You don't need to fix the day — only pause.",
+        "engaged": "Return inward before the world pulls again."
+      },
+      "evening": {
+        "calm": "Let the day dissolve.",
+        "busy": "Release what you carried.",
+        "heavy": "You made it through. That is enough.",
+        "engaged": "Integration happens in rest."
+      }
+    },
+    "adaptiveCta": {
+      "busy": { "button": "2-minute reset", "message": "A quick reset." },
+      "heavy": { "button": "5-minute comfort", "message": "Gentle support when you need it." },
+      "calm": { "button": "Daily journey", "message": "Your practice awaits." },
+      "engaged": { "button": "Deeper session", "message": "Go deeper." }
+    },
     "newUser": {
       "0": "Every path begins gently. You're doing perfectly.",
       "1": "You've begun. That is the whole art.",

@@ -331,6 +331,32 @@
       "0": "Din konsekvens väcker något djupare.",
       "1": "Ditt engagemang blir en tyst visdom.",
       "2": "Något skiftar i dig. Fortsätt."
+    },
+    "adaptiveHero": {
+      "morning": {
+        "calm": "Du är redan centrerad. Låt oss fördjupa det.",
+        "busy": "En försiktig start räcker idag.",
+        "heavy": "Börja om försiktigt.",
+        "engaged": "Din disciplin öppnar nytt utrymme."
+      },
+      "midday": {
+        "calm": "Stanna stadig genom dagen.",
+        "busy": "Ett enda andetag kan återställa allt.",
+        "heavy": "Du behöver inte fixa dagen — bara pausa.",
+        "engaged": "Återvänd inåt innan världen drar igen."
+      },
+      "evening": {
+        "calm": "Låt dagen lösa upp sig.",
+        "busy": "Släpp vad du bar.",
+        "heavy": "Du klarade dig. Det räcker.",
+        "engaged": "Integration sker i vila."
+      }
+    },
+    "adaptiveCta": {
+      "busy": { "button": "2-minuters återställning", "message": "En snabb återställning." },
+      "heavy": { "button": "5-minuters tröst", "message": "Mjukt stöd när du behöver det." },
+      "calm": { "button": "Daglig resa", "message": "Din praxis väntar." },
+      "engaged": { "button": "Djupare session", "message": "Gå djupare." }
     }
   },
   "spiritualPath": {

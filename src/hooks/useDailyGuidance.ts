@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserDailyState } from '@/hooks/useUserDailyState';
+import { getAdaptiveGuidance } from '@/lib/sacredGuidanceMessages';
 
 export type TimeOfDay = 'morning' | 'midday' | 'evening';
 export type SessionType = 'morning_ritual' | 'breathing_reset' | 'evening_reflection' | 'journal' | 'meditation' | 'path_day';
@@ -200,6 +202,7 @@ export function useDailyGuidance() {
 
   const isLoading = activityLoading || profileLoading || goalsLoading || pathLoading;
 
+  const { userState } = useUserDailyState();
   const timeOfDay = getTimeOfDay();
   const lastCompleted = getLastCompletedActivity(activity);
   const hasCompletedAllThree = !!(
@@ -212,7 +215,7 @@ export function useDailyGuidance() {
   const activePathSlug = pathProgress?.slug;
   const hasActivePath = !!pathProgress;
 
-  const guidance = getDailyGuidance({
+  const defaultGuidance = getDailyGuidance({
     timeOfDay,
     lastCompleted,
     streakDays,
@@ -221,16 +224,30 @@ export function useDailyGuidance() {
     hasActivePath,
   });
 
+  // Adaptive CTA: busy/heavy/engaged override default guidance
+  const adaptiveCta = !lastCompleted && userState !== 'calm' ? getAdaptiveGuidance(userState) : null;
+  const guidance = adaptiveCta
+    ? {
+        message: adaptiveCta.message,
+        session_type: adaptiveCta.session_type as DailyGuidance['session_type'],
+        session_id: adaptiveCta.session_id,
+        button_label: adaptiveCta.button_label,
+      }
+    : defaultGuidance;
+
   /** Which practice slot to mark when this guidance session is completed */
   const completeSlot: 'morning' | 'midday' | 'evening' | null = (() => {
     if (guidance.session_type === 'morning_ritual' || (guidance.session_type === 'path_day' && timeOfDay === 'morning' && !lastCompleted)) return 'morning';
     if (guidance.session_type === 'evening_reflection') return 'evening';
     if (guidance.session_type === 'breathing_reset' && timeOfDay === 'midday' && !lastCompleted) return 'midday';
+    if (guidance.session_type === 'breathing_reset' && timeOfDay === 'morning' && !lastCompleted) return 'morning';
+    if (guidance.session_type === 'meditation' && !lastCompleted) return timeOfDay === 'morning' ? 'morning' : timeOfDay === 'evening' ? 'evening' : 'midday';
     return null;
   })();
 
   return {
     guidance,
+    userState,
     isLoading,
     timeOfDay,
     lastCompleted,

@@ -1,10 +1,79 @@
 /**
  * Sacred Guidance Messaging System
  * Integration-phase language — reinforces identity change, not completion.
- * "Something in me is changing" not "I did my meditation"
+ * Adaptive hero + CTA by phase + user state (calm, busy, heavy, engaged).
  */
 
 export type TimeOfDay = 'morning' | 'midday' | 'evening';
+export type UserDailyState = 'calm' | 'busy' | 'heavy' | 'engaged';
+
+/** Hero messages by phase + state — personal, not programmed */
+export const HERO_MAP: Record<TimeOfDay, Record<UserDailyState, string>> = {
+  morning: {
+    calm: "You're already centered. Let's deepen it.",
+    busy: "A gentle start is enough today.",
+    heavy: "Begin again softly.",
+    engaged: "Your discipline is opening new space.",
+  },
+  midday: {
+    calm: "Stay steady through the day.",
+    busy: "Just one breath can reset everything.",
+    heavy: "You don't need to fix the day — only pause.",
+    engaged: "Return inward before the world pulls again.",
+  },
+  evening: {
+    calm: "Let the day dissolve.",
+    busy: "Release what you carried.",
+    heavy: "You made it through. That is enough.",
+    engaged: "Integration happens in rest.",
+  },
+};
+
+/** CTA by state — adaptive session suggestions */
+export const CTA_MAP: Record<
+  UserDailyState,
+  { session_type: string; session_id: string; button_label: string; message: string }
+> = {
+  busy: {
+    session_type: 'breathing_reset',
+    session_id: '/breathing?quick=true',
+    button_label: '2-minute reset',
+    message: 'A quick reset.',
+  },
+  heavy: {
+    session_type: 'meditation',
+    session_id: '/meditations?category=healing',
+    button_label: '5-minute comfort',
+    message: 'Gentle support when you need it.',
+  },
+  calm: {
+    session_type: 'morning_ritual',
+    session_id: '/ritual',
+    button_label: 'Daily journey',
+    message: 'Your practice awaits.',
+  },
+  engaged: {
+    session_type: 'meditation',
+    session_id: '/meditations',
+    button_label: 'Deeper session',
+    message: 'Go deeper.',
+  },
+};
+
+/** Adaptive hero for idle state (no completion today) */
+export function getAdaptiveHero(
+  phase: TimeOfDay,
+  state: UserDailyState,
+  t: (key: string, fallback?: string) => string
+): string {
+  const fallback = HERO_MAP[phase][state];
+  return t(`guidance.adaptiveHero.${phase}.${state}`, fallback);
+}
+
+/** Adaptive CTA — returns guidance for busy/heavy/engaged; calm uses default getDailyGuidance */
+export function getAdaptiveGuidance(state: UserDailyState) {
+  return CTA_MAP[state];
+}
 
 /** Integration-phase messages (no "finishing" tone) */
 const MORNING_INTEGRATION = {
