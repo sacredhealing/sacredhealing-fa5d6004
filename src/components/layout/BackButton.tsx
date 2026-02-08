@@ -2,13 +2,13 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 
+export const BACK_BUTTON_HIDE_PATHS = ['/', '/dashboard', '/splash', '/auth', '/community'];
+
 export const BackButton: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Don't show on home/dashboard, splash/auth pages, or community (has its own tabs)
-  const hideOnPaths = ['/', '/dashboard', '/splash', '/auth', '/community'];
-  if (hideOnPaths.includes(location.pathname)) {
+  if (BACK_BUTTON_HIDE_PATHS.includes(location.pathname)) {
     return null;
   }
 

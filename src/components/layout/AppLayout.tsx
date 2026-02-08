@@ -3,7 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { STORAGE_KEY_RETURN_FROM_SESSION } from '@/hooks/useDashboardAutoLaunch';
 import { AnimatePresence, motion } from 'framer-motion';
 import { BottomNav } from './BottomNav';
-import { BackButton } from './BackButton';
+import { BackButton, BACK_BUTTON_HIDE_PATHS } from './BackButton';
 import { AnnouncementPopup } from '@/components/AnnouncementPopup';
 import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
 import { NowPlayingBar } from '@/components/music/NowPlayingBar';
@@ -43,6 +43,7 @@ function isSessionRoute(pathname: string): boolean {
 
 export const AppLayout: React.FC = () => {
   const location = useLocation();
+  const showBackButton = !BACK_BUTTON_HIDE_PATHS.includes(location.pathname);
 
   useEffect(() => {
     if (isSessionRoute(location.pathname)) {
@@ -129,7 +130,7 @@ export const AppLayout: React.FC = () => {
           exit="exit"
           variants={pageVariants}
           transition={pageTransition}
-          className="relative pb-28 overflow-x-hidden"
+          className={`relative pb-28 overflow-x-hidden ${showBackButton ? 'pl-16' : ''}`}
         >
           <Outlet />
           <AppDisclaimer />
