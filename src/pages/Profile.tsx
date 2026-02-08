@@ -205,9 +205,8 @@ const Profile: React.FC = () => {
               </ul>
 
               <Button 
-                variant="gold" 
                 size="sm"
-                className="w-full"
+                className="w-full bg-[#00F2FE] text-black font-extrabold hover:bg-[#00D4E0] shadow-[0_0_25px_rgba(0,242,254,0.5)] hover:shadow-[0_0_35px_rgba(0,242,254,0.6)] border-none"
                 onClick={(e) => {
                   e.stopPropagation();
                   navigate('/membership');
