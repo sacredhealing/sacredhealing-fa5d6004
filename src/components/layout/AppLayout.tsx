@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import { STORAGE_KEY_RETURN_FROM_SESSION } from '@/hooks/useDashboardAutoLaunch';
+import { STORAGE_KEY_RETURN_FROM_SESSION } from '@/hooks/useDashboardAutostart';
 import { AnimatePresence, motion } from 'framer-motion';
 import { BottomNav } from './BottomNav';
 import { BackButton, BACK_BUTTON_HIDE_PATHS } from './BackButton';

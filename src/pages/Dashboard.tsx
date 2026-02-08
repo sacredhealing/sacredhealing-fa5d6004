@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SacredFlame } from '@/components/dashboard/SacredFlame';
 import { useProfile } from '@/hooks/useProfile';
 import { useDailyGuidance } from '@/hooks/useDailyGuidance';
-import { useDashboardAutoLaunch } from '@/hooks/useDashboardAutoLaunch';
+import { useDashboardAutostart, dismissDashboardAutostartForToday } from '@/hooks/useDashboardAutostart';
 import { AmbientSoundToggle } from '@/components/audio/AmbientSoundToggle';
 import { TodaysPracticeCard } from '@/components/dashboard/TodaysPracticeCard';
 import { InlineSessionPlayer } from '@/components/dashboard/InlineSessionPlayer';
@@ -22,8 +22,25 @@ import { SectionCollapse } from '@/components/ui/SectionCollapse';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useSocialShare } from '@/hooks/useSocialShare';
 import type { DailyGuidance } from '@/hooks/useDailyGuidance';
+import type { SessionLike } from '@/hooks/useDashboardAutostart';
 
 export type HomeFlowState = 'idle' | 'in_session' | 'completed';
+
+function guidanceToSessionLike(guidance: DailyGuidance): SessionLike {
+  const typeMap: Record<string, SessionLike['type']> = {
+    breathing_reset: 'breath',
+    morning_ritual: 'meditation',
+    evening_reflection: 'meditation',
+    journal: 'meditation',
+    meditation: 'meditation',
+    path_day: 'path',
+  };
+  return {
+    id: guidance.session_id,
+    type: typeMap[guidance.session_type] ?? 'meditation',
+    title: guidance.button_label,
+  };
+}
 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
@@ -46,18 +63,32 @@ const Dashboard: React.FC = () => {
     checkAchievements();
   }, [checkAchievements]);
 
-  const handleStartSession = (guidance: DailyGuidance) => {
-    setActiveGuidance(guidance);
+  const handleStartSession = useCallback((g: DailyGuidance) => {
+    setActiveGuidance(g);
     setFlowState('in_session');
-  };
+  }, []);
 
-  useDashboardAutoLaunch({
-    onLaunch: handleStartSession,
-    guidance,
-    isLoading,
-    lastCompleted,
-    flowState,
+  const todaySession = useMemo(() => {
+    if (isLoading || !guidance?.session_id) return null;
+    return { ...guidance, ...guidanceToSessionLike(guidance) } as SessionLike & DailyGuidance;
+  }, [guidance, isLoading]);
+
+  const hasCompletedToday = lastCompleted !== null;
+
+  const openSession = useCallback((session: SessionLike) => {
+    handleStartSession(session as unknown as DailyGuidance);
+  }, [handleStartSession]);
+
+  useDashboardAutostart({
+    todaySession,
+    hasCompletedToday,
+    openSession,
+    enabled: flowState === 'idle',
   });
+
+  const onNotNow = useCallback(() => {
+    dismissDashboardAutostartForToday();
+  }, []);
 
   const handleSessionComplete = () => {
     setFlowState('completed');
@@ -111,6 +142,14 @@ const Dashboard: React.FC = () => {
               greeting="Today's Sacred Practice"
               onStartClick={handleStartSession}
             />
+            <button
+              type="button"
+              onClick={onNotNow}
+              className="mt-2 text-xs text-muted-foreground hover:text-foreground/80 transition-colors block ml-auto"
+              style={{ opacity: 0.7 }}
+            >
+              Not now
+            </button>
           </div>
 
           {/* Daily Spiritual Practice & Your Path — above the fold */}
