@@ -247,7 +247,21 @@
     "podcast": "Podcast",
     "podcastDesc": "280K+ strømmer på Spotify",
     "aiIncomeEngine": "Hellig Helbredelse Overflod",
-    "aiIncomeDesc": "Tjen med oss"
+    "aiIncomeDesc": "Tjen med oss",
+    "completedToday": "Du har fullført dagens praksis 🌙",
+    "greetingMorning": "La oss begynne forsiktig.",
+    "greetingMidday": "Pause og returner til deg selv.",
+    "greetingEvening": "Slipp løs dagen.",
+    "optionalReset": "Valgfritt: 2-minutters reset",
+    "optionalResetDesc": "Et raskt pust for å sentrere deg.",
+    "startJourney": "Start reisen"
+  },
+  "dailyRitual": {
+    "title": "Daglig åndelig praksis",
+    "morning": "Morgenritual",
+    "midday": "Middagspraksis",
+    "evening": "Kveldsrefleksjon",
+    "upcoming": "Kommende"
   },
   "quickActions": {
     "meditate": "Mediter",

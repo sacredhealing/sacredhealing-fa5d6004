@@ -328,7 +328,21 @@
     "podcast": "Podcast",
     "podcastDesc": "280K+ reproducciones en Spotify",
     "aiIncomeEngine": "Abundancia de Sanación Sagrada",
-    "aiIncomeDesc": "Gana con nosotros"
+    "aiIncomeDesc": "Gana con nosotros",
+    "completedToday": "Has completado la práctica de hoy 🌙",
+    "greetingMorning": "Comencemos con suavidad.",
+    "greetingMidday": "Pausa y regresa a ti mismo.",
+    "greetingEvening": "Suelta el día.",
+    "optionalReset": "Opcional: reset de 2 minutos",
+    "optionalResetDesc": "Una respiración rápida para recentrarte.",
+    "startJourney": "Iniciar viaje"
+  },
+  "dailyRitual": {
+    "title": "Práctica espiritual diaria",
+    "morning": "Ritual matutino",
+    "midday": "Práctica del mediodía",
+    "evening": "Reflexión nocturna",
+    "upcoming": "Próximo"
   },
   "quickActions": {
     "meditate": "Meditar",

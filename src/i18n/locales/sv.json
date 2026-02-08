@@ -247,7 +247,21 @@
     "podcast": "Podcast",
     "podcastDesc": "280K+ strömmar på Spotify",
     "aiIncomeEngine": "Helig Läkande Överflöd",
-    "aiIncomeDesc": "Tjäna med oss"
+    "aiIncomeDesc": "Tjäna med oss",
+    "completedToday": "Du har slutfört dagens praxis 🌙",
+    "greetingMorning": "Låt oss börja försiktigt.",
+    "greetingMidday": "Pausa och återvänd till dig själv.",
+    "greetingEvening": "Släpp dagen.",
+    "optionalReset": "Valfritt: 2-minuters återställning",
+    "optionalResetDesc": "En snabb andning för att återcentrera.",
+    "startJourney": "Starta resan"
+  },
+  "dailyRitual": {
+    "title": "Daglig andlig praxis",
+    "morning": "Morgonritual",
+    "midday": "Middagspraxis",
+    "evening": "Kvällsreflektion",
+    "upcoming": "Kommande"
   },
   "quickActions": {
     "meditate": "Meditera",

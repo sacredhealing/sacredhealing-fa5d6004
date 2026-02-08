@@ -1,26 +1,18 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Sun, Moon, Sparkles, Check, Lock, Cloud } from 'lucide-react';
+import { Sun, Moon, Check, Lock, Cloud, Clock } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useDailyJourney } from '@/hooks/useDailyJourney';
 import { motion } from 'framer-motion';
 
 export const DailyRitualCard: React.FC = () => {
   const { t } = useTranslation();
-  const { 
-    getJourneyData, 
-    completeMorning, 
-    completeMidday, 
-    completeEvening,
-    isLoading 
-  } = useDailyJourney();
+  const { getJourneyData, isLoading } = useDailyJourney();
 
   const journey = getJourneyData();
   const currentHour = new Date().getHours();
 
-  // Determine which activity is current
   const isMorningTime = currentHour >= 5 && currentHour < 12;
   const isMiddayTime = currentHour >= 12 && currentHour < 17;
   const isEveningTime = currentHour >= 17 || currentHour < 5;
@@ -32,11 +24,8 @@ export const DailyRitualCard: React.FC = () => {
       label: t('dailyRitual.morning', 'Morning Ritual'),
       time: '5:00 - 12:00',
       completed: journey.morning.completed,
-      isCurrent: isMorningTime && !journey.morning.completed,
+      isUpcoming: isMorningTime && !journey.morning.completed,
       reward: journey.morning.shcReward,
-      onComplete: () => completeMorning.mutate(undefined),
-      isLoading: completeMorning.isPending,
-      color: 'from-amber-500/20 to-orange-500/10',
       iconColor: 'text-amber-400',
     },
     {
@@ -45,11 +34,8 @@ export const DailyRitualCard: React.FC = () => {
       label: t('dailyRitual.midday', 'Midday Practice'),
       time: '12:00 - 17:00',
       completed: journey.midday.completed,
-      isCurrent: isMiddayTime && !journey.midday.completed,
+      isUpcoming: isMiddayTime && !journey.midday.completed,
       reward: journey.midday.shcReward,
-      onComplete: () => completeMidday.mutate(undefined),
-      isLoading: completeMidday.isPending,
-      color: 'from-sky-500/20 to-blue-500/10',
       iconColor: 'text-sky-400',
     },
     {
@@ -58,14 +44,17 @@ export const DailyRitualCard: React.FC = () => {
       label: t('dailyRitual.evening', 'Evening Reflection'),
       time: '17:00 - 5:00',
       completed: journey.evening.completed,
-      isCurrent: isEveningTime && !journey.evening.completed,
+      isUpcoming: isEveningTime && !journey.evening.completed,
       reward: journey.evening.shcReward,
-      onComplete: () => completeEvening.mutate({}),
-      isLoading: completeEvening.isPending,
-      color: 'from-indigo-500/20 to-purple-500/10',
       iconColor: 'text-indigo-400',
     },
   ];
+
+  const getStatus = (activity: (typeof activities)[0]) => {
+    if (activity.completed) return 'completed';
+    if (activity.isUpcoming) return 'upcoming';
+    return 'locked';
+  };
 
   const completedCount = [journey.morning.completed, journey.midday.completed, journey.evening.completed].filter(Boolean).length;
 
@@ -82,49 +71,44 @@ export const DailyRitualCard: React.FC = () => {
 
       <Progress value={journey.totalProgress} className="h-2 mb-4" />
 
-      {/* Activity Cards */}
       <div className="space-y-2">
-        {activities.map((activity) => (
-          <motion.div
-            key={activity.id}
-            layout
-            className={`flex items-center gap-3 p-3 rounded-[16px] bg-white/[0.02] border border-primary/20 ${
-              activity.isCurrent ? 'ring-2 ring-primary/50 border-primary/30' : ''
-            }`}
-          >
-            <div className={`p-2 rounded-lg bg-background/50 ${activity.iconColor}`}>
-              {activity.completed ? (
-                <Check className="w-4 h-4 text-green-500" />
-              ) : (
-                <activity.icon className="w-4 h-4" />
-              )}
-            </div>
-            
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm text-foreground">{activity.label}</p>
-              <p className="text-[10px] text-muted-foreground">{activity.time}</p>
-            </div>
+        {activities.map((activity) => {
+          const status = getStatus(activity);
+          return (
+            <motion.div
+              key={activity.id}
+              layout
+              className="flex items-center gap-3 p-3 rounded-[16px] bg-white/[0.02] border border-primary/20"
+            >
+              <div className={`p-2 rounded-lg bg-background/50 ${activity.iconColor}`}>
+                {status === 'completed' ? (
+                  <Check className="w-4 h-4 text-green-500" />
+                ) : (
+                  <activity.icon className="w-4 h-4" />
+                )}
+              </div>
 
-            {activity.completed ? (
-              <span className="text-xs text-green-500 font-medium flex items-center gap-1 shrink-0">
-                <Check className="w-3 h-3" />
-                +{activity.reward} SHC
-              </span>
-            ) : activity.isCurrent ? (
-              <Button
-                size="sm"
-                variant="spiritual"
-                onClick={activity.onComplete}
-                disabled={activity.isLoading}
-                className="text-xs font-extrabold text-[#000000] h-8 min-h-[32px] px-4 shrink-0"
-              >
-                {activity.isLoading ? '...' : t('common.complete', 'Complete')}
-              </Button>
-            ) : (
-              <Lock className="w-4 h-4 text-muted-foreground/50" />
-            )}
-          </motion.div>
-        ))}
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm text-foreground">{activity.label}</p>
+                <p className="text-[10px] text-muted-foreground">{activity.time}</p>
+              </div>
+
+              {status === 'completed' ? (
+                <span className="text-xs text-green-500 font-medium flex items-center gap-1 shrink-0">
+                  <Check className="w-3 h-3" />
+                  +{activity.reward} SHC
+                </span>
+              ) : status === 'upcoming' ? (
+                <span className="text-xs text-muted-foreground flex items-center gap-1 shrink-0">
+                  <Clock className="w-3 h-3" />
+                  {t('dailyRitual.upcoming', 'Upcoming')}
+                </span>
+              ) : (
+                <Lock className="w-4 h-4 text-muted-foreground/50 shrink-0" />
+              )}
+            </motion.div>
+          );
+        })}
       </div>
     </Card>
   );

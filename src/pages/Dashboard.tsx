@@ -3,9 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { SacredFlame } from '@/components/dashboard/SacredFlame';
 import { useProfile } from '@/hooks/useProfile';
 import { useDailyGuidance } from '@/hooks/useDailyGuidance';
+import { useDailyJourney } from '@/hooks/useDailyJourney';
 import { useDashboardAutostart, dismissDashboardAutostartForToday } from '@/hooks/useDashboardAutostart';
 import { AmbientSoundToggle } from '@/components/audio/AmbientSoundToggle';
-import { TodaysPracticeCard } from '@/components/dashboard/TodaysPracticeCard';
+import { DailyGuidanceCard } from '@/components/dashboard/DailyGuidanceCard';
 import { InlineSessionPlayer } from '@/components/dashboard/InlineSessionPlayer';
 import { CompletionResponse } from '@/components/dashboard/CompletionResponse';
 import { mapSessionTypeToCompleted } from '@/lib/recommendationEngine';
@@ -45,7 +46,8 @@ function guidanceToSessionLike(guidance: DailyGuidance): SessionLike {
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
   const { profile: userProfile } = useProfile();
-  const { guidance, isLoading, lastCompleted } = useDailyGuidance();
+  const { guidance, isLoading, lastCompleted, completeSlot } = useDailyGuidance();
+  const { completeMorning, completeMidday, completeEvening } = useDailyJourney();
   const {
     newlyUnlocked,
     dismissNewlyUnlocked,
@@ -91,6 +93,9 @@ const Dashboard: React.FC = () => {
   }, []);
 
   const handleSessionComplete = () => {
+    if (completeSlot === 'morning') completeMorning.mutate(undefined);
+    else if (completeSlot === 'midday') completeMidday.mutate(undefined);
+    else if (completeSlot === 'evening') completeEvening.mutate({});
     setFlowState('completed');
   };
 
@@ -138,10 +143,7 @@ const Dashboard: React.FC = () => {
       {flowState === 'idle' && (
         <>
           <div className="mb-4 sm:mb-6 animate-slide-up">
-            <TodaysPracticeCard
-              greeting="Today's Sacred Practice"
-              onStartClick={handleStartSession}
-            />
+            <DailyGuidanceCard onStartClick={handleStartSession} />
             <button
               type="button"
               onClick={onNotNow}

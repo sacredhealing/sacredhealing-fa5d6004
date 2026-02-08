@@ -319,7 +319,21 @@
     "podcast": "Podcast",
     "podcastDesc": "280K+ streams on Spotify",
     "aiIncomeEngine": "Sacred Healing Abundance",
-    "aiIncomeDesc": "Earn with us"
+    "aiIncomeDesc": "Earn with us",
+    "completedToday": "You've completed today's practice 🌙",
+    "greetingMorning": "Let's begin gently.",
+    "greetingMidday": "Pause and return to yourself.",
+    "greetingEvening": "Release the day.",
+    "optionalReset": "Optional: 2-minute reset",
+    "optionalResetDesc": "A quick breath to recenter.",
+    "startJourney": "Start Journey"
+  },
+  "dailyRitual": {
+    "title": "Daily Spiritual Practice",
+    "morning": "Morning Ritual",
+    "midday": "Midday Practice",
+    "evening": "Evening Reflection",
+    "upcoming": "Upcoming"
   },
   "quickActions": {
     "meditate": "Meditate",

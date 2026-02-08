@@ -118,6 +118,7 @@ export const useDailyJourney = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['daily-activity'] });
+      queryClient.invalidateQueries({ queryKey: ['daily-guidance-activity'] });
       toast.success('Morning practice complete! +15 SHC 🌅');
     },
   });
@@ -133,6 +134,7 @@ export const useDailyJourney = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['daily-activity'] });
+      queryClient.invalidateQueries({ queryKey: ['daily-guidance-activity'] });
       toast.success('Midday mindfulness complete! +10 SHC ☀️');
     },
   });
@@ -150,6 +152,7 @@ export const useDailyJourney = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['daily-activity'] });
+      queryClient.invalidateQueries({ queryKey: ['daily-guidance-activity'] });
       toast.success('Evening reset complete! +20 SHC 🌙');
     },
   });

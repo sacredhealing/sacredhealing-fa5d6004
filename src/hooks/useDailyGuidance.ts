@@ -216,11 +216,20 @@ export function useDailyGuidance() {
     hasActivePath,
   });
 
+  /** Which practice slot to mark when this guidance session is completed */
+  const completeSlot: 'morning' | 'midday' | 'evening' | null = (() => {
+    if (guidance.session_type === 'morning_ritual' || (guidance.session_type === 'path_day' && timeOfDay === 'morning' && !lastCompleted)) return 'morning';
+    if (guidance.session_type === 'evening_reflection') return 'evening';
+    if (guidance.session_type === 'breathing_reset' && timeOfDay === 'midday' && !lastCompleted) return 'midday';
+    return null;
+  })();
+
   return {
     guidance,
     isLoading,
     timeOfDay,
     lastCompleted,
     streakDays,
+    completeSlot,
   };
 }
