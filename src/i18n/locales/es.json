@@ -482,7 +482,12 @@
     "morning": "Ritual matutino",
     "midday": "Práctica del mediodía",
     "evening": "Reflexión nocturna",
-    "upcoming": "Próximo"
+    "morningShort": "Mañana",
+    "middayShort": "Mediodía",
+    "eveningShort": "Noche",
+    "upcoming": "Próximo",
+    "passedGently": "Pasó suavemente",
+    "arrivingLater": "Llega más tarde"
   },
   "quickActions": {
     "meditate": "Meditar",

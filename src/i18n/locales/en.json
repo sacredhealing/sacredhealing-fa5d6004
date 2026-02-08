@@ -436,7 +436,12 @@
     "morning": "Morning Ritual",
     "midday": "Midday Practice",
     "evening": "Evening Reflection",
-    "upcoming": "Upcoming"
+    "morningShort": "Morning",
+    "middayShort": "Midday",
+    "eveningShort": "Evening",
+    "upcoming": "Upcoming",
+    "passedGently": "Passed gently",
+    "arrivingLater": "Arriving later"
   },
   "quickActions": {
     "meditate": "Meditate",

@@ -372,7 +372,12 @@
     "morning": "Morgenritual",
     "midday": "Middagspraksis",
     "evening": "Kveldsrefleksjon",
-    "upcoming": "Kommende"
+    "morningShort": "Morgen",
+    "middayShort": "Middag",
+    "eveningShort": "Kveld",
+    "upcoming": "Kommende",
+    "passedGently": "Gikk forsiktig forbi",
+    "arrivingLater": "Kommer senere"
   },
   "quickActions": {
     "meditate": "Mediter",

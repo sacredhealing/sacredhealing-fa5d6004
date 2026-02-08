@@ -48,7 +48,7 @@ function guidanceToSessionLike(guidance: DailyGuidance): SessionLike {
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
   const { profile: userProfile } = useProfile();
-  const { guidance, isLoading, lastCompleted, completeSlot, streakDays } = useDailyGuidance();
+  const { guidance, isLoading, lastCompleted, completeSlot, streakDays, hasCompletedAllThree } = useDailyGuidance();
   const { completeMorning, completeMidday, completeEvening } = useDailyJourney();
   const { isDayClosed, markDayClosed } = useDayClosed();
   const { returnState, streakIncreased } = useReturnVisit({
@@ -183,7 +183,10 @@ const Dashboard: React.FC = () => {
 
           {/* Daily Spiritual Practice & Your Path — above the fold */}
           <div className="space-y-4 mb-6 animate-slide-up">
-            <DailyRitualCard />
+            <DailyRitualCard
+              isDayClosed={isDayClosed}
+              hasCompletedAllThree={hasCompletedAllThree}
+            />
             <SpiritualPathCard />
           </div>
 
