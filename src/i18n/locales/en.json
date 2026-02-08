@@ -188,7 +188,7 @@
   },
   "nav": {
     "home": "Home",
-    "explore": "Explore",
+    "explore": "Library",
     "meditate": "Meditate",
     "healing": "Healing",
     "music": "Music",
@@ -1262,7 +1262,7 @@
     "benefit5": "Increases energy levels"
   },
   "explore": {
-    "title": "Explore",
+    "title": "Library",
     "subtitle": "Discover your spiritual journey",
     "helpToday": "How can we help you today?",
     "guidance": {

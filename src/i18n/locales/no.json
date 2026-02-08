@@ -117,7 +117,7 @@
   },
   "nav": {
     "home": "Hjem",
-    "explore": "Utforske",
+    "explore": "Bibliotek",
     "meditate": "Mediter",
     "healing": "Healing",
     "music": "Musikk",
@@ -1119,7 +1119,7 @@
     "startSharing": "Begynn å dele lenken din for å tjene belønninger!"
   },
   "explore": {
-    "title": "Utforsk",
+    "title": "Bibliotek",
     "subtitle": "Oppdag din åndelige reise",
     "helpToday": "Hvordan kan vi hjelpe deg i dag?",
     "yourTools": "Dine Verktøy",

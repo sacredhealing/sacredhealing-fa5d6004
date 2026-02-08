@@ -127,7 +127,7 @@ export default function Explore() {
     <div className="px-4 pb-24 pt-4">
       <div className="mb-3">
         <h1 className="text-2xl font-heading font-semibold text-foreground">
-          {t("explore.title", "Explore")}
+          {t("explore.title", "Library")}
         </h1>
         <p className="text-muted-foreground mt-1 text-sm">
           {t("explore.helpToday", "How can we help you today?")}

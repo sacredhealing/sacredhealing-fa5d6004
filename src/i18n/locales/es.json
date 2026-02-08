@@ -204,7 +204,7 @@
     "courses": "Cursos",
     "shop": "Tienda",
     "about": "Sobre nosotros",
-    "explore": "Explorar"
+    "explore": "Biblioteca"
   },
   "home": {
     "heroTitle1": "Despierta tu energía.",
@@ -1210,7 +1210,7 @@
     "benefit5": "Aumenta los niveles de energía"
   },
   "explore": {
-    "title": "Explorar",
+    "title": "Biblioteca",
     "subtitle": "Descubre tu viaje espiritual",
     "helpToday": "¿Cómo podemos ayudarte hoy?",
     "yourTools": "Tus Herramientas",
