@@ -73,15 +73,14 @@ export function selectStartNowItem(
 
   for (const item of items) {
     const lang = getItemLanguage(item);
-    // Filter by preferred language, but always allow unknown to avoid empty states.
-    if (lang !== "unknown" && lang !== language) continue;
+    if (lang !== language) continue;
 
     const durationSec = getDurationSec(item);
 
     const s =
       scoreByState(userState, durationSec) +
       scoreByDayPhase(dayPhase, item) +
-      (lang === language ? 25 : 0);
+      25;
 
     if (s > bestScore) {
       bestScore = s;

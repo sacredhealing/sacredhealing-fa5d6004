@@ -35,10 +35,7 @@ function textOf(item: any) {
 }
 
 export function filterByMeditationLanguage(items: any[], lang: ContentLanguage) {
-  return items.filter((it) => {
-    const l = getItemLanguage(it);
-    return l === "unknown" || l === lang;
-  });
+  return items.filter((it) => getItemLanguage(it) === lang);
 }
 
 export function sectionForItem(item: any): MeditationSectionKey {
