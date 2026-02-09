@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ParamahamsaVishwanandaDailyCard } from "@/components/dashboard/ParamahamsaVishwanandaDailyCard";
 import { LibrarySection, type LibraryItem } from "@/components/explore/LibrarySection";
+import { CollapsibleSection } from "@/features/library/CollapsibleSection";
+import { useQuickActionItems } from "@/features/library/useQuickActionItems";
+import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { getDayPhase } from "@/utils/postSessionContext";
 
 import {
@@ -86,23 +89,21 @@ export default function Explore() {
     [t]
   );
 
-  const goIntent = (intent: "calm" | "heal" | "energy" | "sleep") => {
-    switch (intent) {
-      case "calm":
-        navigate("/meditations?category=healing");
-        return;
-      case "heal":
-        navigate("/paths");
-        return;
-      case "energy":
-        navigate("/music?mood=energizing");
-        return;
-      case "sleep":
-        navigate("/meditations?category=sleep");
-        return;
-      default:
-        navigate("/explore");
-    }
+  const { playUniversalAudio } = useMusicPlayer();
+  const { items: quickItems, loading: quickLoading } = useQuickActionItems();
+
+  const onQuickCalm = () => {
+    if (quickItems.calm) playUniversalAudio(quickItems.calm);
+    else navigate("/meditations?category=healing");
+  };
+  const onQuickHeart = () => {
+    if (quickItems.heart) playUniversalAudio(quickItems.heart);
+    else navigate("/healing");
+  };
+  const onQuickPause = () => navigate("/breathing");
+  const onQuickSleep = () => {
+    if (quickItems.sleep) playUniversalAudio(quickItems.sleep);
+    else navigate("/meditations?category=sleep");
   };
 
   return (
@@ -116,11 +117,12 @@ export default function Explore() {
         </p>
       </div>
 
-      {/* Quick Intent (4 buttons) */}
+      {/* Quick Actions — start immediately, no navigation to categories */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
         <button
-          onClick={() => goIntent("calm")}
-          className="rounded-2xl border border-border/50 bg-card/50 px-4 py-4 text-left hover:bg-muted/30 transition"
+          onClick={onQuickCalm}
+          disabled={quickLoading}
+          className="rounded-2xl border border-border/50 bg-card/50 px-4 py-4 text-left hover:bg-muted/30 transition disabled:opacity-70"
         >
           <div className="flex items-center gap-3">
             <span className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
@@ -128,14 +130,15 @@ export default function Explore() {
             </span>
             <div className="flex-1">
               <div className="font-semibold text-foreground">{t("explore.intent.calm", "Calm my mind")}</div>
-              <div className="text-sm text-muted-foreground">{t("explore.intent.calmDesc", "Reduce stress & anxiety")}</div>
+              <div className="text-sm text-muted-foreground">{t("explore.intent.calmDesc", "A short reset (2–3 min)")}</div>
             </div>
             <span className="text-muted-foreground">›</span>
           </div>
         </button>
         <button
-          onClick={() => goIntent("heal")}
-          className="rounded-2xl border border-border/50 bg-card/50 px-4 py-4 text-left hover:bg-muted/30 transition"
+          onClick={onQuickHeart}
+          disabled={quickLoading}
+          className="rounded-2xl border border-border/50 bg-card/50 px-4 py-4 text-left hover:bg-muted/30 transition disabled:opacity-70"
         >
           <div className="flex items-center gap-3">
             <span className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
@@ -143,13 +146,13 @@ export default function Explore() {
             </span>
             <div className="flex-1">
               <div className="font-semibold text-foreground">{t("explore.intent.heal", "Soften the heart")}</div>
-              <div className="text-sm text-muted-foreground">{t("explore.intent.healDesc", "Release, nurture & restore")}</div>
+              <div className="text-sm text-muted-foreground">{t("explore.intent.healDesc", "Gentle support when it feels heavy")}</div>
             </div>
             <span className="text-muted-foreground">›</span>
           </div>
         </button>
         <button
-          onClick={() => goIntent("energy")}
+          onClick={onQuickPause}
           className="rounded-2xl border border-border/50 bg-card/50 px-4 py-4 text-left hover:bg-muted/30 transition"
         >
           <div className="flex items-center gap-3">
@@ -157,15 +160,16 @@ export default function Explore() {
               <Zap className="h-5 w-5 text-primary" />
             </span>
             <div className="flex-1">
-              <div className="font-semibold text-foreground">{t("explore.intent.energy", "Boost my energy")}</div>
-              <div className="text-sm text-muted-foreground">{t("explore.intent.energyDesc", "Motivation & power")}</div>
+              <div className="font-semibold text-foreground">{t("explore.intent.pause", "Take a small pause")}</div>
+              <div className="text-sm text-muted-foreground">{t("explore.intent.pauseDesc", "One-minute breath reset")}</div>
             </div>
             <span className="text-muted-foreground">›</span>
           </div>
         </button>
         <button
-          onClick={() => goIntent("sleep")}
-          className="rounded-2xl border border-border/50 bg-card/50 px-4 py-4 text-left hover:bg-muted/30 transition"
+          onClick={onQuickSleep}
+          disabled={quickLoading}
+          className="rounded-2xl border border-border/50 bg-card/50 px-4 py-4 text-left hover:bg-muted/30 transition disabled:opacity-70"
         >
           <div className="flex items-center gap-3">
             <span className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
@@ -173,7 +177,7 @@ export default function Explore() {
             </span>
             <div className="flex-1">
               <div className="font-semibold text-foreground">{t("explore.intent.sleep", "Sleep deeply")}</div>
-              <div className="text-sm text-muted-foreground">{t("explore.intent.sleepDesc", "Wind down & rest")}</div>
+              <div className="text-sm text-muted-foreground">{t("explore.intent.sleepDesc", "Unwind into rest")}</div>
             </div>
             <span className="text-muted-foreground">›</span>
           </div>
@@ -209,34 +213,34 @@ export default function Explore() {
         </Link>
       </div>
 
-      {/* Start */}
-      <LibrarySection
-        title={t("explore.sectionStart", "Start")}
-        items={startItems}
-        initialVisible={4}
-      />
-
-      {/* Deepen */}
-      <LibrarySection
-        title={t("explore.sectionDeepen", "Deepen")}
-        items={deepenItems}
-        initialVisible={4}
-      />
-
-      {/* Connect */}
-      <LibrarySection
-        title={t("explore.sectionConnect", "Connect")}
-        subtitle={t("explore.sectionConnectSubtitle", "A place to practice with others")}
-        items={connectItems}
-        initialVisible={4}
-      />
-
-      {/* Explore */}
-      <LibrarySection
-        title={t("explore.sectionExplore", "Explore")}
-        items={exploreItems}
-        initialVisible={4}
-      />
+      {/* Explore everything — collapsed by default */}
+      <CollapsibleSection
+        title={t("explore.exploreEverything", "Explore everything")}
+        subtitle={t("explore.exploreEverythingSubtitle", "Open when you feel ready.")}
+        defaultOpen={false}
+      >
+        <LibrarySection
+          title={t("explore.sectionStart", "Start")}
+          items={startItems}
+          initialVisible={4}
+        />
+        <LibrarySection
+          title={t("explore.sectionDeepen", "Deepen")}
+          items={deepenItems}
+          initialVisible={4}
+        />
+        <LibrarySection
+          title={t("explore.sectionConnect", "Connect")}
+          subtitle={t("explore.sectionConnectSubtitle", "A place to practice with others")}
+          items={connectItems}
+          initialVisible={4}
+        />
+        <LibrarySection
+          title={t("explore.sectionExplore", "Explore")}
+          items={exploreItems}
+          initialVisible={4}
+        />
+      </CollapsibleSection>
 
       {/* Invite Friends */}
       <div className="rounded-2xl glass-card p-5 mb-6">

@@ -1533,14 +1533,18 @@
     },
     "intent": {
       "calm": "Calm my mind",
-      "calmDesc": "Reduce stress & anxiety",
+      "calmDesc": "A short reset (2–3 min)",
       "heal": "Soften the heart",
-      "healDesc": "Release, nurture & restore",
+      "healDesc": "Gentle support when it feels heavy",
       "energy": "Boost my energy",
       "energyDesc": "Motivation & power",
+      "pause": "Take a small pause",
+      "pauseDesc": "One-minute breath reset",
       "sleep": "Sleep deeply",
-      "sleepDesc": "Wind down & rest"
+      "sleepDesc": "Unwind into rest"
     },
+    "exploreEverything": "Explore everything",
+    "exploreEverythingSubtitle": "Open when you feel ready.",
     "browseAll": "Browse everything",
     "browseAllSubtitle": "For advanced users or when you want everything",
     "yourTools": "Your Tools",
