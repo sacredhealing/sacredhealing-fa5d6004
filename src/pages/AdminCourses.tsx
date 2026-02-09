@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, BookOpen, Loader2, Save, Video, FileText, Music, Type, Edit2, X, Globe, Link as LinkIcon, FolderOpen, ChevronUp, ChevronDown, GripVertical } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, BookOpen, Loader2, Save, Video, FileText, Music, Type, Edit2, X, Globe, Link as LinkIcon, FolderOpen, ChevronUp, ChevronDown, GripVertical, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import AudioUpload from '@/components/admin/AudioUpload';
+import { AcademyCertification } from '@/components/admin/academy/AcademyCertification';
 interface Course {
   id: string;
   title: string;
@@ -525,8 +526,12 @@ const AdminCourses: React.FC = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="courses">
+        <Tabs defaultValue="academy">
           <TabsList>
+            <TabsTrigger value="academy" className="flex items-center gap-2">
+              <GraduationCap className="w-4 h-4" />
+              Academy Certification
+            </TabsTrigger>
             <TabsTrigger value="courses">Courses</TabsTrigger>
             <TabsTrigger value="lessons" disabled={!selectedCourse}>
               Lessons {selectedCourse ? `(${selectedCourse.title})` : '(Select a course)'}
@@ -536,14 +541,17 @@ const AdminCourses: React.FC = () => {
             </TabsTrigger>
           </TabsList>
 
-          {/* Selection Status */}
-          {!selectedCourse && (
-            <div className="mt-4 p-3 rounded-lg bg-primary/10 border border-primary/20 text-sm text-muted-foreground">
-              👆 Scroll down and <strong>click on a course</strong> below to manage its lessons and materials
-            </div>
-          )}
+          <TabsContent value="academy" className="mt-6">
+            <AcademyCertification />
+          </TabsContent>
 
-          <TabsContent value="courses" className="space-y-6">
+          <TabsContent value="courses" className="space-y-6 mt-6">
+            {/* Selection Status */}
+            {!selectedCourse && (
+              <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-sm text-muted-foreground">
+                👆 Scroll down and <strong>click on a course</strong> below to manage its lessons and materials
+              </div>
+            )}
             {/* Create/Edit Course Form */}
             <Card className="p-6">
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
