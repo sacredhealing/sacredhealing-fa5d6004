@@ -1,12 +1,14 @@
 import React from 'react';
+import { Download } from 'lucide-react';
 import type { ProjectState } from '@/types/vedicTranslation';
 
 interface Props {
   state: ProjectState;
   onOpenArchive: () => void;
+  onExportToFile?: () => void;
 }
 
-export const StateMonitor: React.FC<Props> = ({ state, onOpenArchive }) => {
+export const StateMonitor: React.FC<Props> = ({ state, onOpenArchive, onExportToFile }) => {
   return (
     <div className="bg-slate-900/40 backdrop-blur-xl p-8 rounded-2xl border border-white/10 shadow-2xl relative overflow-hidden group">
       <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -51,6 +53,15 @@ export const StateMonitor: React.FC<Props> = ({ state, onOpenArchive }) => {
         >
           Explore Sacred Archive
         </button>
+        {onExportToFile && (
+          <button
+            type="button"
+            onClick={onExportToFile}
+            className="w-full bg-amber-500/10 border border-amber-500/30 text-amber-400 px-4 py-4 rounded-xl text-[10px] font-bold cinzel tracking-[0.4em] mt-3 hover:bg-amber-500/20 transition-all uppercase flex items-center justify-center gap-2"
+          >
+            <Download className="w-4 h-4" /> Export & Push to Git
+          </button>
+        )}
       </div>
     </div>
   );

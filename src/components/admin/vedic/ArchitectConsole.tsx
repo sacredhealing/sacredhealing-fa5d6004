@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Mic, MicOff } from 'lucide-react';
 import { Interaction, ProjectState, VedicBook } from '@/types/vedicTranslation';
 import { generateVedicResponse } from '@/services/vedicGeminiService';
 
@@ -7,35 +8,191 @@ interface Props {
   interactions: Interaction[];
   onAddInteractions: (newOnes: Interaction[]) => void;
   onStateChange: (newState: Partial<ProjectState>) => void;
-  onArchiveUpdate: (type: 'TITLE' | 'SUMMARY' | 'COMMENTARY', content: string) => void;
+  onArchiveUpdate: (type: 'TITLE' | 'SUMMARY' | 'COMMENTARY', content: string, chapter?: number) => void;
 }
 
 export const ArchitectConsole: React.FC<Props> = ({ state, interactions, onAddInteractions, onStateChange, onArchiveUpdate }) => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingError, setRecordingError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [interactions]);
 
+  const blobToBase64 = (blob: Blob): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        resolve(result.split(',')[1] || '');
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+
+  const webmToWav = async (blob: Blob): Promise<{ base64: string; mimeType: string }> => {
+    const arrayBuffer = await blob.arrayBuffer();
+    const audioCtx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+    const numChannels = audioBuffer.numberOfChannels;
+    const sampleRate = audioBuffer.sampleRate;
+    const length = audioBuffer.length * numChannels * 2 + 44;
+    const buffer = new ArrayBuffer(length);
+    const view = new DataView(buffer);
+    const channels: Float32Array[] = [];
+    for (let i = 0; i < numChannels; i++) channels.push(audioBuffer.getChannelData(i));
+    let offset = 0;
+    const write = (value: number) => { view.setUint8(offset++, value); };
+    const write16 = (value: number) => { view.setUint16(offset, value, true); offset += 2; };
+    const write32 = (value: number) => { view.setUint32(offset, value, true); offset += 4; };
+    'RIFF'.split('').forEach(c => write(c.charCodeAt(0)));
+    write32(length - 8);
+    'WAVE'.split('').forEach(c => write(c.charCodeAt(0)));
+    'fmt '.split('').forEach(c => write(c.charCodeAt(0)));
+    write32(16); write16(1); write16(numChannels); write32(sampleRate);
+    write32(sampleRate * numChannels * 2); write16(numChannels * 2); write16(16);
+    'data'.split('').forEach(c => write(c.charCodeAt(0)));
+    write32(length - 44);
+    for (let i = 0; i < audioBuffer.length; i++) {
+      for (let c = 0; c < numChannels; c++) {
+        const s = Math.max(-1, Math.min(1, channels[c][i]));
+        write16(s < 0 ? s * 0x8000 : s * 0x7fff);
+      }
+    }
+    const wavBlob = new Blob([buffer], { type: 'audio/wav' });
+    const base64 = await blobToBase64(wavBlob);
+    return { base64, mimeType: 'audio/wav' };
+  };
+
+  const startRecording = async () => {
+    setRecordingError(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : MediaRecorder.isTypeSupported('audio/webm')
+          ? 'audio/webm'
+          : 'audio/mp4';
+      streamRef.current = stream;
+      const recorder = new MediaRecorder(stream);
+      chunksRef.current = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+      recorder.start();
+      mediaRecorderRef.current = recorder;
+      setIsRecording(true);
+    } catch (err) {
+      setRecordingError(err instanceof Error ? err.message : 'Microphone access denied');
+    }
+  };
+
+  const stopRecording = () => {
+    const recorder = mediaRecorderRef.current;
+    if (!recorder || recorder.state !== 'recording') return;
+
+    recorder.onstop = async () => {
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+      mediaRecorderRef.current = null;
+      setIsRecording(false);
+      if (chunksRef.current.length === 0) return;
+      const blob = new Blob(chunksRef.current, { type: recorder.mimeType });
+      let base64: string;
+      let mimeType: string;
+      if (blob.type.includes('webm') || blob.type.includes('mp4')) {
+        try {
+          const converted = await webmToWav(blob);
+          base64 = converted.base64;
+          mimeType = converted.mimeType;
+        } catch {
+          base64 = await blobToBase64(blob);
+          mimeType = blob.type || 'audio/webm';
+        }
+      } else {
+        base64 = await blobToBase64(blob);
+        mimeType = blob.type || 'audio/wav';
+      }
+      await handleSubmitWithAudio(base64, mimeType);
+    };
+    recorder.stop();
+  };
+
+  const handleSubmitWithAudio = async (audioBase64: string, mimeType: string) => {
+    const displayContent = input.trim() || '[Voice recording]';
+    const userInteraction: Interaction = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: displayContent,
+      timestamp: new Date(),
+      metadata: { book: state.currentBook, chapter: state.chapter, verse: state.verse }
+    };
+
+    onAddInteractions([userInteraction]);
+    setInput('');
+    setLoading(true);
+
+    const response = await generateVedicResponse(
+      input.trim(),
+      [...interactions, userInteraction],
+      state,
+      { data: audioBase64, mimeType }
+    );
+    const cleanedContent = processResponseTags(response);
+
+    const architectInteraction: Interaction = {
+      id: (Date.now() + 1).toString(),
+      role: 'assistant',
+      content: cleanedContent,
+      timestamp: new Date(),
+      metadata: { book: state.currentBook, chapter: state.chapter, verse: state.verse }
+    };
+
+    onAddInteractions([architectInteraction]);
+    setLoading(false);
+    onStateChange({ interactionCount: state.interactionCount + 1 });
+
+    const upper = displayContent.toUpperCase();
+    if (upper.includes('SWITCH TO')) {
+      if (upper.includes('BHAGAVAD GITA')) onStateChange({ currentBook: VedicBook.BHAGAVAD_GITA, chapter: 1, verse: 1 });
+      else if (upper.includes('GURU GITA')) onStateChange({ currentBook: VedicBook.GURU_GITA, chapter: 1, verse: 1 });
+      else if (upper.includes('SHREEMAD BHAGAVATAM')) onStateChange({ currentBook: VedicBook.SHREEMAD_BHAGAVATAM, chapter: 1, verse: 1 });
+    }
+  };
+
   const processResponseTags = (response: string) => {
-    const titleMatch = response.match(/\[\[ARCHIVE_SET_TITLE\]\]([\s\S]*?)\[\[\/ARCHIVE_SET_TITLE\]\]/);
-    if (titleMatch) onArchiveUpdate('TITLE', titleMatch[1].trim());
-
-    const summaryMatch = response.match(/\[\[ARCHIVE_SET_SUMMARY\]\]([\s\S]*?)\[\[\/ARCHIVE_SET_SUMMARY\]\]/);
-    if (summaryMatch) onArchiveUpdate('SUMMARY', summaryMatch[1].trim());
-
-    const commentaryMatch = response.match(/\[\[ARCHIVE_APPEND_COMMENTARY\]\]([\s\S]*?)\[\[\/ARCHIVE_APPEND_COMMENTARY\]\]/);
-    if (commentaryMatch) onArchiveUpdate('COMMENTARY', commentaryMatch[1].trim());
-
-    const oldMatch = response.match(/\[\[ARCHIVE_APPEND\]\]([\s\S]*?)\[\[\/ARCHIVE_APPEND\]\]/);
-    if (oldMatch) onArchiveUpdate('COMMENTARY', oldMatch[1].trim());
+    const parseChapter = (attrs: string): number => {
+      const m = attrs?.match(/chapter\s*=\s*(\d+)/i);
+      return m ? parseInt(m[1], 10) : state.chapter;
+    };
+    const titleRe = /\[\[ARCHIVE_SET_TITLE(\s+[^\]]*)?\]\]([\s\S]*?)\[\[\/ARCHIVE_SET_TITLE\]\]/g;
+    let m;
+    while ((m = titleRe.exec(response)) !== null) {
+      onArchiveUpdate('TITLE', m[2].trim(), parseChapter(m[1]));
+    }
+    const summaryRe = /\[\[ARCHIVE_SET_SUMMARY(\s+[^\]]*)?\]\]([\s\S]*?)\[\[\/ARCHIVE_SET_SUMMARY\]\]/g;
+    while ((m = summaryRe.exec(response)) !== null) {
+      onArchiveUpdate('SUMMARY', m[2].trim(), parseChapter(m[1]));
+    }
+    const commentaryRe = /\[\[ARCHIVE_APPEND_COMMENTARY(\s+[^\]]*)?\]\]([\s\S]*?)\[\[\/ARCHIVE_APPEND_COMMENTARY\]\]/g;
+    while ((m = commentaryRe.exec(response)) !== null) {
+      onArchiveUpdate('COMMENTARY', m[2].trim(), parseChapter(m[1]));
+    }
+    const oldRe = /\[\[ARCHIVE_APPEND\]\]([\s\S]*?)\[\[\/ARCHIVE_APPEND\]\]/g;
+    while ((m = oldRe.exec(response)) !== null) {
+      onArchiveUpdate('COMMENTARY', m[1].trim(), state.chapter);
+    }
 
     return response
-      .replace(/\[\[ARCHIVE_SET_TITLE\]\][\s\S]*?\[\[\/ARCHIVE_SET_TITLE\]\]/g, '')
-      .replace(/\[\[ARCHIVE_SET_SUMMARY\]\][\s\S]*?\[\[\/ARCHIVE_SET_SUMMARY\]\]/g, '')
-      .replace(/\[\[ARCHIVE_APPEND_COMMENTARY\]\][\s\S]*?\[\[\/ARCHIVE_APPEND_COMMENTARY\]\]/g, '')
+      .replace(/\[\[ARCHIVE_SET_TITLE[^\]]*\]\][\s\S]*?\[\[\/ARCHIVE_SET_TITLE\]\]/g, '')
+      .replace(/\[\[ARCHIVE_SET_SUMMARY[^\]]*\]\][\s\S]*?\[\[\/ARCHIVE_SET_SUMMARY\]\]/g, '')
+      .replace(/\[\[ARCHIVE_APPEND_COMMENTARY[^\]]*\]\][\s\S]*?\[\[\/ARCHIVE_APPEND_COMMENTARY\]\]/g, '')
       .replace(/\[\[ARCHIVE_APPEND\]\][\s\S]*?\[\[\/ARCHIVE_APPEND\]\]/g, '')
       .trim();
   };
@@ -174,13 +331,29 @@ export const ArchitectConsole: React.FC<Props> = ({ state, interactions, onAddIn
         )}
       </div>
       <form onSubmit={handleSubmit} className="p-10 bg-black/60 border-t border-white/10 backdrop-blur-2xl">
-        <div className="flex gap-6 max-w-5xl mx-auto items-center">
-          <input
-            type="text"
+        {recordingError && (
+          <p className="text-amber-400/80 text-sm text-center mb-4 cinzel tracking-wide">{recordingError}</p>
+        )}
+        <div className="flex gap-4 max-w-5xl mx-auto items-center">
+          <button
+            type="button"
+            onClick={isRecording ? stopRecording : startRecording}
+            disabled={loading}
+            title={isRecording ? 'Stop recording' : 'Record voice'}
+            className={`flex-shrink-0 p-5 rounded-2xl border transition-all ${
+              isRecording
+                ? 'bg-red-500/20 border-red-400/50 text-red-400 animate-pulse'
+                : 'bg-white/5 border-white/10 text-amber-400 hover:bg-amber-500/10 hover:border-amber-500/30'
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
+            {isRecording ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+          </button>
+          <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Upload manuscript or issue command..."
-            className="flex-1 py-5 px-8 rounded-2xl border border-white/10 focus:outline-none focus:ring-2 focus:ring-amber-500/30 bg-white/5 text-white placeholder-amber-100/10 font-light tracking-wide transition-all text-lg"
+            placeholder="Paste your Bhagavad Gita chapter headings, translations, or commentary... (one or many blocks)"
+            rows={3}
+            className="flex-1 py-4 px-6 rounded-2xl border border-white/10 focus:outline-none focus:ring-2 focus:ring-amber-500/30 bg-white/5 text-white placeholder-amber-100/10 font-light tracking-wide transition-all text-lg resize-y min-h-[60px]"
           />
           <button
             type="submit"

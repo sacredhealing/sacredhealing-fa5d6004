@@ -46,6 +46,8 @@ export interface Manuscript {
     specialMessage: string;
   };
   chapter1: Chapter;
+  /** Additional chapters (Bhagavad Gita has 18, etc.) */
+  chapters?: Record<number, Chapter>;
 }
 
 export interface LibraryArchive {

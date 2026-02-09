@@ -8,8 +8,11 @@ import { StateMonitor } from '@/components/admin/vedic/StateMonitor';
 import { ArchiveModal } from '@/components/admin/vedic/ArchiveModal';
 import { ProjectState, VedicBook, LibraryArchive } from '@/types/vedicTranslation';
 import { INITIAL_ARCHIVE } from '@/data/vedicManuscript';
+import { downloadVedicManuscript } from '@/utils/vedicExport';
+import { useToast } from '@/hooks/use-toast';
 
 const AdminVedicTranslation: React.FC = () => {
+  const { toast } = useToast();
   const [state, setState] = useState<ProjectState>({
     currentBook: VedicBook.BHAGAVAD_GITA,
     chapter: 1,
@@ -54,26 +57,40 @@ const AdminVedicTranslation: React.FC = () => {
     }));
   };
 
-  const handleArchiveUpdate = (type: 'TITLE' | 'SUMMARY' | 'COMMENTARY', content: string) => {
+  const handleArchiveUpdate = (type: 'TITLE' | 'SUMMARY' | 'COMMENTARY', content: string, chapter?: number) => {
+    const ch = chapter ?? state.chapter;
     setArchive(prev => {
-      const manuscript = { ...prev[state.currentBook] };
-      const currentChapter = { ...manuscript.chapter1 };
+      const manuscript = JSON.parse(JSON.stringify(prev[state.currentBook]));
+      const getChapter = (n: number): typeof manuscript.chapter1 => {
+        if (n === 1) return manuscript.chapter1 ?? { title: '', summary: '', verses: [] };
+        if (!manuscript.chapters) manuscript.chapters = {};
+        if (!manuscript.chapters[n]) manuscript.chapters[n] = { title: '', summary: '', verses: [] };
+        return manuscript.chapters[n];
+      };
+      const currentChapter = getChapter(ch);
 
-      if (type === 'TITLE') {
-        currentChapter.title = content;
-      } else if (type === 'SUMMARY') {
-        currentChapter.summary = content;
-      } else if (type === 'COMMENTARY') {
-        const currentCommentaries = currentChapter.commentaries || [];
-        currentChapter.commentaries = [...currentCommentaries, content];
+      if (type === 'TITLE') currentChapter.title = content;
+      else if (type === 'SUMMARY') currentChapter.summary = content;
+      else if (type === 'COMMENTARY') {
+        currentChapter.commentaries = [...(currentChapter.commentaries || []), content];
       }
 
-      manuscript.chapter1 = currentChapter;
+      if (ch === 1) manuscript.chapter1 = currentChapter;
+      else (manuscript.chapters = manuscript.chapters || {})[ch] = currentChapter;
       return { ...prev, [state.currentBook]: manuscript };
     });
   };
 
   const currentInteractions = allInteractions.filter(i => i.metadata?.book === state.currentBook);
+
+  const handleExportToFile = () => {
+    downloadVedicManuscript(archive, 'vedicManuscript.ts');
+    toast({
+      title: 'File downloaded',
+      description: 'Replace src/data/vedicManuscript.ts with the downloaded file. Then run: git add . && git commit -m "Vedic translation update" && git push',
+      duration: 8000
+    });
+  };
 
   return (
     <div className="min-h-screen flex flex-col selection:bg-amber-500/30 selection:text-white transition-colors duration-1000 vedic-translation" style={{ background: 'var(--theme-bg)' }}>
@@ -117,7 +134,7 @@ const AdminVedicTranslation: React.FC = () => {
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-6 grid grid-cols-1 lg:grid-cols-4 gap-12">
         <aside className="lg:col-span-1 space-y-8">
-          <StateMonitor state={state} onOpenArchive={() => setArchiveVisible(true)} />
+          <StateMonitor state={state} onOpenArchive={() => setArchiveVisible(true)} onExportToFile={handleExportToFile} />
           <div className="bg-gradient-to-br from-black/40 to-black/60 p-8 rounded-2xl border border-white/10 shadow-2xl relative overflow-hidden backdrop-blur-xl">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[var(--theme-accent)] to-transparent opacity-50" />
             <h3 className="cinzel font-bold mb-6 flex items-center text-[var(--theme-accent)] tracking-widest text-sm uppercase">

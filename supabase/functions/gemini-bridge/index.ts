@@ -11,7 +11,7 @@ interface GeminiBridgeRequest {
   model?: string; // 'flash', 'flash-lite', 'pro'
   feature?: string; // 'vedic_reading', 'guru_chat', 'ayurveda', 'translation', 'dosha', 'music'
   stream?: boolean;
-  messages?: Array<{ role: string; content: string }>;
+  messages?: Array<{ role: string; content: string; audio?: { data: string; mimeType: string } }>;
 }
 
 serve(async (req) => {
@@ -55,11 +55,18 @@ serve(async (req) => {
     let contents: any[] = [];
     
     if (messages && messages.length > 0) {
-      // Chat mode - convert messages format
-      contents = messages.map(msg => ({
-        role: msg.role === "assistant" ? "model" : msg.role,
-        parts: [{ text: msg.content }]
-      }));
+      // Chat mode - convert messages format (supports optional audio on user messages)
+      contents = messages.map(msg => {
+        const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];
+        if (msg.content) parts.push({ text: msg.content });
+        if (msg.audio?.data && msg.audio?.mimeType) {
+          parts.push({ inlineData: { mimeType: msg.audio.mimeType, data: msg.audio.data } });
+        }
+        return {
+          role: msg.role === "assistant" ? "model" : msg.role,
+          parts: parts.length ? parts : [{ text: "" }]
+        };
+      });
     } else {
       // Single prompt mode
       const fullPrompt = context ? `${context}\n\n${prompt}` : prompt;
