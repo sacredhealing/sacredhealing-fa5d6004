@@ -359,6 +359,28 @@
       "engaged": { "button": "Dypere økt", "message": "Gå dypere." }
     }
   },
+  "pathDetail": {
+    "pathNotFound": "Stien ble ikke funnet",
+    "backToPaths": "Tilbake til stier",
+    "days": "dager",
+    "yourProgress": "Din fremgang",
+    "dayOf": "Dag {{current}} av {{total}}",
+    "shcEarned": "{{count}} SHC tjent så langt",
+    "startThisPath": "Start denne stien",
+    "dailyPractice": "Daglig praksis",
+    "journalPrompt": "Dagboksprompt",
+    "todaysMantra": "Dagens mantra",
+    "breathingPractice": "Pustøvelse",
+    "completeDay": "Fullfør dag {{day}}",
+    "contentComingSoon": "Daglig innhold kommer snart.",
+    "musicForPath": "Musikk for denne stien",
+    "seeAll": "Se alle",
+    "difficulty": {
+      "beginner": "Nybegynner",
+      "intermediate": "Mellomnivå",
+      "advanced": "Avansert"
+    }
+  },
   "spiritualPath": {
     "yourPath": "Din vei",
     "continueDay": "Fortsett dag",
@@ -369,11 +391,29 @@
     "paths": {
       "inner_peace": {
         "title": "Indre fred-veien",
-        "description": "21-dagers reise for å finne varig ro gjennom daglige øvelser fokusert på ro og stressavlastning."
+        "description": "En 21-dagers reise for å finne varig ro gjennom daglige øvelser fokusert på ro og stressavlastning.",
+        "days": {
+          "1": { "title": "Finne stillhet", "description": "Begynn reisen din ved å koble til stillheten inni deg.", "affirmation": "Jeg er i fred med meg selv og verden rundt meg.", "journalPrompt": "Hva betyr indre fred for deg?" },
+          "2": { "title": "Pustevitenskap", "description": "Oppdag den beroligende kraften i bevisst pusting.", "affirmation": "Med hvert pust inviterer jeg ro og slipper uro.", "journalPrompt": "Hvordan påvirker pusten din emosjonelle tilstand?" },
+          "3": { "title": "Slippe spenning", "description": "Lær å frigjøre fysisk og mental spenning.", "affirmation": "Jeg slipper det som ikke lenger tjener meg med kjærlighet.", "journalPrompt": "Hvor holder du spenning i kroppen?" },
+          "4": { "title": "Nåværende øyeblikk", "description": "Finn fred i øyeblikk av stillhet og ensomhet.", "affirmation": "I stillhet finner jeg mitt sanne jeg.", "journalPrompt": "Hva oppstår når du sitter i stillhet?" },
+          "5": { "title": "Selvmedfølelse", "description": "Fred begynner med hvordan vi behandler oss selv. I dag dyrker vi dyp selvmedfølelse.", "affirmation": "Jeg er verdig kjærlighet og vennlighet. Jeg behandler meg selv med samme medfølelse jeg tilbyr andre.", "journalPrompt": "Hva ville du si til ditt yngre jeg?" },
+          "6": { "title": "Jordnær nærvær", "description": "Jord deg i det nåværende øyeblikket.", "affirmation": "Jeg er jordet, sentrert og trygg.", "journalPrompt": "Hva hjelper deg å føle deg jordet?" },
+          "7": { "title": "Fredelig integrasjon", "description": "Integrer læringene dine i hverdagen.", "affirmation": "Fred flyter gjennom meg i hvert øyeblikk.", "journalPrompt": "Hvordan vil du opprettholde fred i hverdagen?" }
+        }
       },
       "inner_peace_7day": {
         "title": "Indre fred-veien",
-        "description": "7-dagers reise for å finne stillhet og ro gjennom daglige øvelser."
+        "description": "7-dagers reise for å finne stillhet og ro gjennom daglige øvelser.",
+        "days": {
+          "1": { "title": "Finne stillhet", "description": "Begynn reisen din ved å koble til stillheten inni deg.", "affirmation": "Jeg er i fred med meg selv og verden rundt meg.", "journalPrompt": "Hva betyr indre fred for deg?" },
+          "2": { "title": "Fredens pust", "description": "Oppdag den beroligende kraften i bevisst pusting.", "affirmation": "Med hvert pust inviterer jeg ro og slipper uro.", "journalPrompt": "Hvordan påvirker pusten din emosjonelle tilstand?" },
+          "3": { "title": "Slippe spenning", "description": "Lær å frigjøre fysisk og mental spenning.", "affirmation": "Jeg slipper det som ikke lenger tjener meg med kjærlighet.", "journalPrompt": "Hvor holder du spenning i kroppen?" },
+          "4": { "title": "Omfavne stillhet", "description": "Finn fred i øyeblikk av stillhet og ensomhet.", "affirmation": "I stillhet finner jeg mitt sanne jeg.", "journalPrompt": "Hva oppstår når du sitter i stillhet?" },
+          "5": { "title": "Hjertets åpning", "description": "Åpne hjertet ditt for kjærlighet og medfølelse.", "affirmation": "Hjertet mitt er åpent for å gi og motta kjærlighet.", "journalPrompt": "Hva ville du si til ditt yngre jeg?" },
+          "6": { "title": "Jordnær nærvær", "description": "Jord deg i det nåværende øyeblikket.", "affirmation": "Jeg er jordet, sentrert og trygg.", "journalPrompt": "Hva hjelper deg å føle deg jordet?" },
+          "7": { "title": "Fredelig integrasjon", "description": "Integrer læringene dine i hverdagen.", "affirmation": "Fred flyter gjennom meg i hvert øyeblikk.", "journalPrompt": "Hvordan vil du opprettholde fred i hverdagen?" }
+        }
       },
       "deep_healing": {
         "title": "Dyp helbredelse-veien",

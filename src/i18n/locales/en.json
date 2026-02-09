@@ -423,6 +423,28 @@
       "2": "The first steps are the bravest. You're doing beautifully."
     }
   },
+  "pathDetail": {
+    "pathNotFound": "Path not found",
+    "backToPaths": "Back to Paths",
+    "days": "days",
+    "yourProgress": "Your Progress",
+    "dayOf": "Day {{current}} of {{total}}",
+    "shcEarned": "{{count}} SHC earned so far",
+    "startThisPath": "Start This Path",
+    "dailyPractice": "Daily Practice",
+    "journalPrompt": "Journal Prompt",
+    "todaysMantra": "Today's Mantra",
+    "breathingPractice": "Breathing Practice",
+    "completeDay": "Complete Day {{day}}",
+    "contentComingSoon": "Daily content will be available soon.",
+    "musicForPath": "Music for This Path",
+    "seeAll": "See All",
+    "difficulty": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced"
+    }
+  },
   "spiritualPath": {
     "yourPath": "Your Path",
     "continueDay": "Continue Day",
@@ -433,11 +455,29 @@
     "paths": {
       "inner_peace": {
         "title": "Inner Peace Path",
-        "description": "21-day journey to find lasting tranquility through daily practices focused on calm and stress relief."
+        "description": "A 21-day journey to find lasting tranquility through daily practices focused on calm and stress relief.",
+        "days": {
+          "1": { "title": "Finding Stillness", "description": "Begin your journey by connecting with the stillness within.", "affirmation": "I am at peace with myself and the world around me.", "journalPrompt": "What does inner peace mean to you?" },
+          "2": { "title": "Breath Awareness", "description": "Discover the calming power of conscious breathing.", "affirmation": "With each breath, I invite calmness and release worry.", "journalPrompt": "How does your breath affect your emotional state?" },
+          "3": { "title": "Releasing Tension", "description": "Learn to release physical and mental tension.", "affirmation": "I release what no longer serves me with love.", "journalPrompt": "Where do you hold tension in your body?" },
+          "4": { "title": "Present Moment", "description": "Find peace in moments of silence and solitude.", "affirmation": "In silence, I find my true self.", "journalPrompt": "What arises when you sit in silence?" },
+          "5": { "title": "Self-Compassion", "description": "Peace begins with how we treat ourselves. Today we cultivate deep self-compassion.", "affirmation": "I am worthy of love and kindness. I treat myself with the same compassion I offer others.", "journalPrompt": "What would you tell your younger self?" },
+          "6": { "title": "Grounding Presence", "description": "Ground yourself in the present moment.", "affirmation": "I am grounded, centered, and secure.", "journalPrompt": "What helps you feel grounded?" },
+          "7": { "title": "Peaceful Integration", "description": "Integrate your learnings into daily life.", "affirmation": "Peace flows through me in every moment.", "journalPrompt": "How will you maintain peace in daily life?" }
+        }
       },
       "inner_peace_7day": {
         "title": "Inner Peace Path",
-        "description": "7-day journey to find stillness and calm through daily practices."
+        "description": "7-day journey to find stillness and calm through daily practices.",
+        "days": {
+          "1": { "title": "Finding Stillness", "description": "Begin your journey by connecting with the stillness within.", "affirmation": "I am at peace with myself and the world around me.", "journalPrompt": "What does inner peace mean to you?" },
+          "2": { "title": "Breath of Peace", "description": "Discover the calming power of conscious breathing.", "affirmation": "With each breath, I invite calmness and release worry.", "journalPrompt": "How does your breath affect your emotional state?" },
+          "3": { "title": "Releasing Tension", "description": "Learn to release physical and mental tension.", "affirmation": "I release what no longer serves me with love.", "journalPrompt": "Where do you hold tension in your body?" },
+          "4": { "title": "Embracing Silence", "description": "Find peace in moments of silence and solitude.", "affirmation": "In silence, I find my true self.", "journalPrompt": "What arises when you sit in silence?" },
+          "5": { "title": "Heart Opening", "description": "Open your heart to love and compassion.", "affirmation": "My heart is open to give and receive love.", "journalPrompt": "What would you tell your younger self?" },
+          "6": { "title": "Grounding Presence", "description": "Ground yourself in the present moment.", "affirmation": "I am grounded, centered, and secure.", "journalPrompt": "What helps you feel grounded?" },
+          "7": { "title": "Peaceful Integration", "description": "Integrate your learnings into daily life.", "affirmation": "Peace flows through me in every moment.", "journalPrompt": "How will you maintain peace in daily life?" }
+        }
       },
       "deep_healing": {
         "title": "Deep Healing Path",

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Clock, Star, Play, BookOpen, CheckCircle2, Lock, Wind, Music, Headphones } from 'lucide-react';
 import { useSpiritualPaths, SpiritualPath, PathDay } from '@/hooks/useSpiritualPaths';
@@ -20,9 +21,11 @@ const PATH_SLUG_MAP: Record<string, string> = {
 };
 
 const PathDetail: React.FC = () => {
+  const { t } = useTranslation();
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { getPathBySlug, getPathDays, getProgressForPath, startPath, completeDay, isProgressLoading, userProgress } = useSpiritualPaths();
+  const pathKey = slug ? slug.replace(/-/g, '_') : '';
   
   // Fetch path-specific music tracks
   const pathTrackSlug = slug ? PATH_SLUG_MAP[slug] || slug.replace(/-/g, '_') : undefined;
@@ -76,8 +79,8 @@ const PathDetail: React.FC = () => {
   if (!path) {
     return (
       <div className="min-h-screen px-4 pt-6 pb-24 flex flex-col items-center justify-center">
-        <p className="text-muted-foreground mb-4">Path not found</p>
-        <Button onClick={() => navigate('/paths')}>Back to Paths</Button>
+        <p className="text-muted-foreground mb-4">{t('pathDetail.pathNotFound')}</p>
+        <Button onClick={() => navigate('/paths')}>{t('pathDetail.backToPaths')}</Button>
       </div>
     );
   }
@@ -124,18 +127,18 @@ const PathDetail: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <Badge className="mb-2 capitalize">{path.difficulty}</Badge>
+          <Badge className="mb-2 capitalize">{t(`pathDetail.difficulty.${path.difficulty.toLowerCase()}`, path.difficulty)}</Badge>
           <h1 className="text-2xl font-heading font-bold text-foreground mb-2">
-            {path.title}
+            {pathKey ? t(`spiritualPath.paths.${pathKey}.title`, path.title) : path.title}
           </h1>
           <p className="text-muted-foreground mb-4">
-            {path.description}
+            {pathKey ? t(`spiritualPath.paths.${pathKey}.description`, path.description || '') : (path.description || '')}
           </p>
 
           <div className="flex items-center gap-4 text-sm mb-6">
             <div className="flex items-center gap-1 text-muted-foreground">
               <Clock className="w-4 h-4" />
-              <span>{path.duration_days} days</span>
+              <span>{path.duration_days} {t('pathDetail.days')}</span>
             </div>
             <div className="flex items-center gap-1 text-accent">
               <Star className="w-4 h-4" />
@@ -147,14 +150,14 @@ const PathDetail: React.FC = () => {
           {progress ? (
             <Card className="p-4 mb-6 bg-gradient-card border-primary/30">
               <div className="flex items-center justify-between mb-3">
-                <span className="font-semibold text-foreground">Your Progress</span>
+                <span className="font-semibold text-foreground">{t('pathDetail.yourProgress')}</span>
                 <span className="text-sm text-muted-foreground">
-                  Day {progress.current_day} of {path.duration_days}
+                  {t('pathDetail.dayOf', { current: progress.current_day, total: path.duration_days })}
                 </span>
               </div>
               <Progress value={progressPercent} className="h-3 mb-2" />
               <p className="text-xs text-muted-foreground">
-                {progress.total_shc_earned} SHC earned so far
+                {t('pathDetail.shcEarned', { count: progress.total_shc_earned })}
               </p>
             </Card>
           ) : (
@@ -166,13 +169,13 @@ const PathDetail: React.FC = () => {
               disabled={startPath.isPending}
             >
               <Play className="w-5 h-5 mr-2" />
-              Start This Path
+              {t('pathDetail.startThisPath')}
             </Button>
           )}
 
           {/* Daily Content */}
           <h2 className="font-heading font-semibold text-lg text-foreground mb-3">
-            Daily Practice
+            {t('pathDetail.dailyPractice')}
           </h2>
 
           <Accordion type="single" collapsible defaultValue={`day-${currentDay}`}>
@@ -196,7 +199,7 @@ const PathDetail: React.FC = () => {
                       )}
                       <div className="text-left">
                         <span className="font-medium text-foreground">
-                          Day {day.day_number}: {day.title}
+                          {t('spiritualPath.day')} {day.day_number}: {pathKey ? t(`spiritualPath.paths.${pathKey}.days.${day.day_number}.title`, day.title) : day.title}
                         </span>
                         <span className="text-xs text-accent ml-2">+{day.shc_reward} SHC</span>
                       </div>
@@ -204,31 +207,38 @@ const PathDetail: React.FC = () => {
                   </AccordionTrigger>
                   <AccordionContent>
                     <div className="pl-8 space-y-3">
-                      {day.description && (
-                        <p className="text-sm text-muted-foreground">{day.description}</p>
-                      )}
+                      {(() => {
+                        const desc = pathKey ? t(`spiritualPath.paths.${pathKey}.days.${day.day_number}.description`, day.description || '') : day.description;
+                        return desc ? <p className="text-sm text-muted-foreground">{desc}</p> : null;
+                      })()}
                       
-                      {day.affirmation && (
-                        <Card className="p-3 bg-primary/10 border-primary/30">
-                          <p className="text-sm italic text-foreground">"{day.affirmation}"</p>
-                        </Card>
-                      )}
+                      {(() => {
+                        const aff = pathKey ? t(`spiritualPath.paths.${pathKey}.days.${day.day_number}.affirmation`, day.affirmation || '') : day.affirmation;
+                        return aff ? (
+                          <Card className="p-3 bg-primary/10 border-primary/30">
+                            <p className="text-sm italic text-foreground">"{aff}"</p>
+                          </Card>
+                        ) : null;
+                      })()}
 
-                      {day.journal_prompt && (
-                        <div className="flex items-start gap-2">
-                          <BookOpen className="w-4 h-4 text-muted-foreground mt-0.5" />
-                          <div>
-                            <p className="text-xs text-muted-foreground mb-1">Journal Prompt</p>
-                            <p className="text-sm text-foreground">{day.journal_prompt}</p>
+                      {(() => {
+                        const jp = pathKey ? t(`spiritualPath.paths.${pathKey}.days.${day.day_number}.journalPrompt`, day.journal_prompt || '') : day.journal_prompt;
+                        return jp ? (
+                          <div className="flex items-start gap-2">
+                            <BookOpen className="w-4 h-4 text-muted-foreground mt-0.5" />
+                            <div>
+                              <p className="text-xs text-muted-foreground mb-1">{t('pathDetail.journalPrompt')}</p>
+                              <p className="text-sm text-foreground">{jp}</p>
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        ) : null;
+                      })()}
 
                       {day.mantra_text && (
                         <div className="flex items-start gap-2">
                           <Music className="w-4 h-4 text-accent mt-0.5" />
                           <div>
-                            <p className="text-xs text-muted-foreground mb-1">Today's Mantra</p>
+                            <p className="text-xs text-muted-foreground mb-1">{t('pathDetail.todaysMantra')}</p>
                             <p className="text-sm text-foreground font-medium">{day.mantra_text}</p>
                           </div>
                         </div>
@@ -238,7 +248,7 @@ const PathDetail: React.FC = () => {
                         <div className="flex items-start gap-2">
                           <Wind className="w-4 h-4 text-primary mt-0.5" />
                           <div>
-                            <p className="text-xs text-muted-foreground mb-1">Breathing Practice</p>
+                            <p className="text-xs text-muted-foreground mb-1">{t('pathDetail.breathingPractice')}</p>
                             <p className="text-sm text-foreground">{day.breathing_description}</p>
                           </div>
                         </div>
@@ -252,7 +262,7 @@ const PathDetail: React.FC = () => {
                           disabled={completeDay.isPending}
                         >
                           <CheckCircle2 className="w-4 h-4 mr-2" />
-                          Complete Day {day.day_number}
+                          {t('pathDetail.completeDay', { day: day.day_number })}
                         </Button>
                       )}
                     </div>
@@ -261,7 +271,7 @@ const PathDetail: React.FC = () => {
               );
             }) : (
               <p className="text-muted-foreground text-center py-8">
-                Daily content will be available soon.
+                {t('pathDetail.contentComingSoon')}
               </p>
             )}
           </Accordion>
@@ -272,10 +282,10 @@ const PathDetail: React.FC = () => {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-heading font-semibold text-lg text-foreground flex items-center gap-2">
                   <Headphones className="w-5 h-5 text-primary" />
-                  Music for This Path
+                  {t('pathDetail.musicForPath')}
                 </h2>
                 <Link to="/music" className="text-sm text-primary hover:underline">
-                  See All
+                  {t('pathDetail.seeAll')}
                 </Link>
               </div>
               

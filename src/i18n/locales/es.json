@@ -469,6 +469,28 @@
       "engaged": { "button": "Sesión más profunda", "message": "Ve más profundo." }
     }
   },
+  "pathDetail": {
+    "pathNotFound": "Camino no encontrado",
+    "backToPaths": "Volver a caminos",
+    "days": "días",
+    "yourProgress": "Tu progreso",
+    "dayOf": "Día {{current}} de {{total}}",
+    "shcEarned": "{{count}} SHC ganados hasta ahora",
+    "startThisPath": "Iniciar este camino",
+    "dailyPractice": "Práctica diaria",
+    "journalPrompt": "Sugerencia de diario",
+    "todaysMantra": "Mantra de hoy",
+    "breathingPractice": "Práctica de respiración",
+    "completeDay": "Completar día {{day}}",
+    "contentComingSoon": "El contenido diario estará disponible pronto.",
+    "musicForPath": "Música para este camino",
+    "seeAll": "Ver todo",
+    "difficulty": {
+      "beginner": "Principiante",
+      "intermediate": "Intermedio",
+      "advanced": "Avanzado"
+    }
+  },
   "spiritualPath": {
     "yourPath": "Tu camino",
     "continueDay": "Continuar día",
@@ -479,11 +501,29 @@
     "paths": {
       "inner_peace": {
         "title": "Camino de paz interior",
-        "description": "Viaje de 21 días para encontrar tranquilidad duradera a través de prácticas diarias centradas en la calma y el alivio del estrés."
+        "description": "Un viaje de 21 días para encontrar tranquilidad duradera a través de prácticas diarias centradas en la calma y el alivio del estrés.",
+        "days": {
+          "1": { "title": "Encontrar la quietud", "description": "Comienza tu viaje conectando con la quietud interior.", "affirmation": "Estoy en paz conmigo mismo y el mundo que me rodea.", "journalPrompt": "¿Qué significa para ti la paz interior?" },
+          "2": { "title": "Conciencia de la respiración", "description": "Descubre el poder calmante de la respiración consciente.", "affirmation": "Con cada respiración, invito la calma y libero la preocupación.", "journalPrompt": "¿Cómo afecta tu respiración tu estado emocional?" },
+          "3": { "title": "Soltar la tensión", "description": "Aprende a liberar la tensión física y mental.", "affirmation": "Libero con amor lo que ya no me sirve.", "journalPrompt": "¿Dónde guardas tensión en tu cuerpo?" },
+          "4": { "title": "Momento presente", "description": "Encuentra paz en momentos de silencio y soledad.", "affirmation": "En el silencio encuentro mi verdadero yo.", "journalPrompt": "¿Qué surge cuando te sientas en silencio?" },
+          "5": { "title": "Autocompasión", "description": "La paz comienza con cómo nos tratamos a nosotros mismos. Hoy cultivamos profunda autocompasión.", "affirmation": "Merezco amor y amabilidad. Me trato con la misma compasión que ofrezco a otros.", "journalPrompt": "¿Qué le dirías a tu yo más joven?" },
+          "6": { "title": "Presencia enraizada", "description": "Enraízate en el momento presente.", "affirmation": "Estoy enraizado, centrado y seguro.", "journalPrompt": "¿Qué te ayuda a sentirte enraizado?" },
+          "7": { "title": "Integración pacífica", "description": "Integra tus aprendizajes en la vida diaria.", "affirmation": "La paz fluye a través de mí en cada momento.", "journalPrompt": "¿Cómo mantendrás la paz en la vida diaria?" }
+        }
       },
       "inner_peace_7day": {
         "title": "Camino de paz interior",
-        "description": "Viaje de 7 días para encontrar quietud y calma a través de prácticas diarias."
+        "description": "Viaje de 7 días para encontrar quietud y calma a través de prácticas diarias.",
+        "days": {
+          "1": { "title": "Encontrar la quietud", "description": "Comienza tu viaje conectando con la quietud interior.", "affirmation": "Estoy en paz conmigo mismo y el mundo que me rodea.", "journalPrompt": "¿Qué significa para ti la paz interior?" },
+          "2": { "title": "Aliento de paz", "description": "Descubre el poder calmante de la respiración consciente.", "affirmation": "Con cada respiración, invito la calma y libero la preocupación.", "journalPrompt": "¿Cómo afecta tu respiración tu estado emocional?" },
+          "3": { "title": "Soltar la tensión", "description": "Aprende a liberar la tensión física y mental.", "affirmation": "Libero con amor lo que ya no me sirve.", "journalPrompt": "¿Dónde guardas tensión en tu cuerpo?" },
+          "4": { "title": "Abrazar el silencio", "description": "Encuentra paz en momentos de silencio y soledad.", "affirmation": "En el silencio encuentro mi verdadero yo.", "journalPrompt": "¿Qué surge cuando te sientas en silencio?" },
+          "5": { "title": "Apertura del corazón", "description": "Abre tu corazón al amor y la compasión.", "affirmation": "Mi corazón está abierto para dar y recibir amor.", "journalPrompt": "¿Qué le dirías a tu yo más joven?" },
+          "6": { "title": "Presencia enraizada", "description": "Enraízate en el momento presente.", "affirmation": "Estoy enraizado, centrado y seguro.", "journalPrompt": "¿Qué te ayuda a sentirte enraizado?" },
+          "7": { "title": "Integración pacífica", "description": "Integra tus aprendizajes en la vida diaria.", "affirmation": "La paz fluye a través de mí en cada momento.", "journalPrompt": "¿Cómo mantendrás la paz en la vida diaria?" }
+        }
       },
       "deep_healing": {
         "title": "Camino de sanación profunda",
