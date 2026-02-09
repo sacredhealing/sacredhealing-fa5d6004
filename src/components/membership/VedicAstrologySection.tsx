@@ -257,7 +257,7 @@ export const VedicAstrologySection: React.FC = () => {
                     </div>
                   </div>
 
-                  <AccessBadge userTier={tier} requiredTier={membershipRequiredToTier(tier.membership_required)} />
+                  <AccessBadge userTier={tier as any} requiredTier={membershipRequiredToTier(tier.membership_required)} />
 
                   <div className="mb-4">
                     <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide text-center">

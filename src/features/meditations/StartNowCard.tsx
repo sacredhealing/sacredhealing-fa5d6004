@@ -8,7 +8,7 @@ type Props = {
 };
 
 /** All copy uses app language (t) — meditationLanguage only for empty-state text. */
-function getCopy(t: (key: string, fallback?: string) => string, dayPhase: Props["dayPhase"], userState: Props["userState"]) {
+function getCopy(t: (key: string, fallback?: string | Record<string, unknown>) => string, dayPhase: Props["dayPhase"], userState: Props["userState"]) {
   const title =
     userState === "busy"
       ? t("meditations.startNow.titleBusy", "Quick reset")
@@ -37,7 +37,7 @@ function getCopy(t: (key: string, fallback?: string) => string, dayPhase: Props[
 
 export function StartNowCard({ item, dayPhase, userState, onStart }: Props) {
   const { t } = useTranslation();
-  const c = getCopy(t, dayPhase, userState);
+  const c = getCopy(t as any, dayPhase, userState);
 
   return (
     <div className="mt-2 rounded-2xl border border-border bg-muted/30 p-4">
