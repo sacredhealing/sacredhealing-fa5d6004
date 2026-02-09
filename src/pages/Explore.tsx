@@ -24,6 +24,7 @@ import {
   Trophy,
   ChevronDown,
   ChevronUp,
+  Mic2,
 } from "lucide-react";
 
 type OfferItem = {
@@ -49,17 +50,20 @@ export default function Explore() {
     () => [
       { title: t("explore.meditations", "Meditations"), description: t("explore.meditationsDesc", "Find your inner peace"), icon: <Sparkles className="h-5 w-5" />, to: "/meditations" },
       { title: t("explore.breathing", "Breathing"), description: t("explore.breathingDesc", "Calm & energize"), icon: <Sparkles className="h-5 w-5" />, to: "/breathing" },
-      { title: t("explore.soul", "Soul"), description: t("explore.soulDesc", "Transform & restore"), icon: <Heart className="h-5 w-5" />, to: "/healing" },
       { title: t("explore.music", "Music"), description: t("explore.musicDesc", "Sacred frequencies"), icon: <Music2 className="h-5 w-5" />, to: "/music" },
+      { title: t("explore.soul", "Soul"), description: t("explore.soulDesc", "Transform & restore"), icon: <Heart className="h-5 w-5" />, to: "/healing" },
+      { title: t("explore.mantras", "Mantras"), description: t("explore.mantrasDesc", "Earn SHC"), icon: <Music2 className="h-5 w-5" />, to: "/mantras", badge: "111 SHC" },
     ],
     [t]
   );
 
   const growth: OfferItem[] = useMemo(
     () => [
+      { title: t("explore.membership", "Membership"), description: t("explore.membershipDesc", "Upgrade your plan"), icon: <Crown className="h-5 w-5" />, to: "/stargate" },
       { title: t("explore.courses", "Courses"), description: t("explore.coursesDesc", "Deepen your practice"), icon: <BookOpen className="h-5 w-5" />, to: "/courses" },
       { title: t("explore.coaching", "Coaching"), description: t("explore.coachingDesc", "6-Month Program"), icon: <Heart className="h-5 w-5" />, to: "/transformation" },
       { title: t("explore.privateSessions", "Private Sessions"), description: t("explore.privateSessionsDesc", "1-on-1 with Adam or Laila"), icon: <Users className="h-5 w-5" />, to: "/private-sessions" },
+      { title: t("explore.affirmationSoundtrack", "Affirmation Soundtrack"), description: t("explore.affirmationSoundtrackDesc", "Personalized for you"), icon: <Mic2 className="h-5 w-5" />, to: "/affirmation-soundtrack" },
     ],
     [t]
   );
@@ -274,7 +278,7 @@ export default function Explore() {
           className="w-full flex items-center justify-between py-3 px-4 rounded-2xl border border-border/50 bg-card/50 hover:bg-muted/30 transition"
         >
           <h2 className="text-lg font-heading font-semibold text-foreground">
-            {t("explore.yourTools", "Your Tools")}
+            {t("explore.whatWeOffer", "What we offer")}
           </h2>
           {toolsExpanded ? (
             <ChevronUp className="h-5 w-5 text-muted-foreground" />
