@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&family=DM+Serif+Display:ital@0;1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&family=DM+Serif+Display:ital@0;1&family=Cinzel:wght@400;500;600;700&family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400&display=swap');
 
 @import "tailwindcss";
 
@@ -382,6 +382,37 @@
   }
   .border-3 {
     border-width: 3px;
+  }
+
+  /* Vedic Translation Tool */
+  .cinzel {
+    font-family: 'Cinzel', serif;
+  }
+  .sacred-gold {
+    color: var(--theme-accent, #b48c35);
+  }
+  .sacred-gold-glow {
+    text-shadow: 0 0 12px var(--theme-glow, rgba(180, 140, 53, 0.25));
+  }
+  .royal-card {
+    background: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(180, 140, 53, 0.1);
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+  }
+  .slide-in-from-left-4 {
+    animation-name: slide-in-from-left-4;
+  }
+}
+
+@keyframes slide-in-from-left-4 {
+  from {
+    opacity: 0;
+    transform: translateX(-1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
 }
 

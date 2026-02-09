@@ -23,7 +23,8 @@ import {
   BarChart3,
   Map,
   MessageCircle,
-  Volume2
+  Volume2,
+  Languages
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -169,6 +170,13 @@ const adminSections = [
     icon: MessageCircle,
     href: '/admin/circles',
     color: 'text-pink-500',
+  },
+  {
+    title: 'Vedic Translation Tool',
+    description: 'Bhagavad Gita, Guru Gita & Bhagavatam – devotional Swedish translations',
+    icon: Languages,
+    href: '/admin/vedic-translation',
+    color: 'text-amber-500',
   },
 ];
 

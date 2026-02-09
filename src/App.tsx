@@ -91,6 +91,7 @@ import MeditationJournal from "./pages/MeditationJournal";
 import AdminPaths from "./pages/AdminPaths";
 import AdminCircles from "./pages/AdminCircles";
 import AdminContentRoadmap from "./pages/AdminContentRoadmap";
+import AdminVedicTranslation from "./pages/AdminVedicTranslation";
 import CreativeSoulSales from "./pages/CreativeSoulSales";
 import CreativeSoulTool from "./pages/CreativeSoulTool";
 import CreativeSoulLanding from "./pages/CreativeSoulLanding";
@@ -219,6 +220,7 @@ const App = () => (
                   <Route path="/admin/circles" element={<AdminCircles />} />
                   <Route path="/admin/music-analytics" element={<AdminMusicAnalytics />} />
                   <Route path="/admin/content-roadmap" element={<AdminContentRoadmap />} />
+                  <Route path="/admin/vedic-translation" element={<AdminVedicTranslation />} />
                 </Route>
               </Route>
                 <Route path="*" element={<NotFound />} />
