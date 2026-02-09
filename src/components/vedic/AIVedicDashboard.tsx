@@ -292,12 +292,14 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, onEdit
             />
           </div>
 
+          {/* Future Hora Picker - Always visible */}
+          <HoraDateTimePicker timeOffset={timeOffset} onTimeOffsetChange={(v) => setTimeOffset(v)} />
+
           {/* Time Travel Controls */}
           {user.plan !== 'free' && (
             <div className="bg-background/80 border border-border p-5 rounded-3xl shadow-2xl space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Time-Travel Scrubber</span>
-                <HoraDateTimePicker timeOffset={timeOffset} onTimeOffsetChange={(v) => setTimeOffset(v)} />
               </div>
               <Slider
                 value={[timeOffset]}

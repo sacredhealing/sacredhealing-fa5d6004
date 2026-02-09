@@ -45,7 +45,7 @@ export const HoraDateTimePicker: React.FC<HoraDateTimePickerProps> = ({
   };
 
   const displayLabel = isLive
-    ? 'Live Now'
+    ? 'Check Future Hora'
     : selectedDate
     ? format(selectedDate, 'MMM d, yyyy') + ` ${String(selectedHour).padStart(2, '0')}:${String(selectedMinute).padStart(2, '0')}`
     : `${timeOffset > 0 ? '+' : ''}${Math.round(timeOffset / 60)}h ${Math.abs(timeOffset % 60)}m`;
@@ -56,18 +56,20 @@ export const HoraDateTimePicker: React.FC<HoraDateTimePickerProps> = ({
         <PopoverTrigger asChild>
           <Button
             variant="outline"
-            size="sm"
-            className={`gap-2 text-xs rounded-xl border-border/50 ${
-              !isLive ? 'border-amber-500/50 bg-amber-500/10 text-amber-400' : ''
+            size="default"
+            className={`gap-2 text-sm font-bold rounded-2xl border-2 px-5 py-3 ${
+              !isLive
+                ? 'border-amber-500 bg-amber-500/15 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.3)]'
+                : 'border-amber-500/50 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 hover:border-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.15)]'
             }`}
           >
-            <CalendarIcon className="w-3.5 h-3.5" />
+            <CalendarIcon className="w-5 h-5" />
             {displayLabel}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="end">
-          <div className="p-3 space-y-3">
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+        <PopoverContent className="w-auto p-0 z-50 bg-background border-border shadow-2xl" align="start" sideOffset={8}>
+          <div className="p-4 space-y-4">
+            <p className="text-xs font-bold text-amber-400 uppercase tracking-wider">
               Check Hora for any date & time
             </p>
             <Calendar
@@ -82,7 +84,7 @@ export const HoraDateTimePicker: React.FC<HoraDateTimePickerProps> = ({
               <select
                 value={selectedHour}
                 onChange={(e) => setSelectedHour(Number(e.target.value))}
-                className="bg-background border border-border rounded-md px-2 py-1 text-sm"
+                className="bg-background border border-border rounded-md px-2 py-1.5 text-sm text-foreground"
               >
                 {Array.from({ length: 24 }, (_, i) => (
                   <option key={i} value={i}>
@@ -90,11 +92,11 @@ export const HoraDateTimePicker: React.FC<HoraDateTimePickerProps> = ({
                   </option>
                 ))}
               </select>
-              <span className="text-sm font-bold">:</span>
+              <span className="text-sm font-bold text-foreground">:</span>
               <select
                 value={selectedMinute}
                 onChange={(e) => setSelectedMinute(Number(e.target.value))}
-                className="bg-background border border-border rounded-md px-2 py-1 text-sm"
+                className="bg-background border border-border rounded-md px-2 py-1.5 text-sm text-foreground"
               >
                 {[0, 15, 30, 45].map((m) => (
                   <option key={m} value={m}>
@@ -122,8 +124,8 @@ export const HoraDateTimePicker: React.FC<HoraDateTimePickerProps> = ({
           onClick={handleReset}
           className="text-xs text-amber-400 hover:text-amber-300 gap-1 px-2"
         >
-          <RotateCcw className="w-3 h-3" />
-          Reset
+          <RotateCcw className="w-3.5 h-3.5" />
+          Reset to Live
         </Button>
       )}
     </div>
