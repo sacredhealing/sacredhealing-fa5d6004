@@ -474,6 +474,28 @@
       "buttonCalm": "Starta nu",
       "selecting": "Väljer en meditation…"
     },
+    "sections": {
+      "short": "Korta återställningar",
+      "shortDesc": "2–5 minuter. Lätt att börja.",
+      "morning": "Morgon",
+      "morningDesc": "Börja dagen lugnt.",
+      "sleep": "Sömn",
+      "sleepDesc": "Slappna av kropp och sinn.",
+      "healing": "Läkning",
+      "healingDesc": "Stöd det som är ömt.",
+      "focus": "Fokus",
+      "focusDesc": "Tydlig och stadig uppmärksamhet.",
+      "nature": "Natur",
+      "natureDesc": "Grunda dig i jordens närvaro.",
+      "more": "Mer",
+      "moreDesc": "Utforska när du känner dig redo."
+    },
+    "sectionsSubtitle": "Kurat av avsikt. Expandera när du känner dig redo.",
+    "noMeditations": "Inga meditationer hittades",
+    "noMeditationsHint": "Meditationer kommer snart.",
+    "showMore": "Visa mer",
+    "showLess": "Visa mindre",
+    "backToTop": "↑ Topp",
     "categories": {
       "all": "Alla",
       "morning": "Morgon",

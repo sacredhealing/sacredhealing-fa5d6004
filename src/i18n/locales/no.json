@@ -474,6 +474,28 @@
       "buttonCalm": "Start nå",
       "selecting": "Velger en meditasjon…"
     },
+    "sections": {
+      "short": "Korte resetter",
+      "shortDesc": "2–5 minutter. Lett å begynne.",
+      "morning": "Morgen",
+      "morningDesc": "Start dagen rolig.",
+      "sleep": "Søvn",
+      "sleepDesc": "Slapp av kropp og sinn.",
+      "healing": "Healing",
+      "healingDesc": "Støtt det som er ømt.",
+      "focus": "Fokus",
+      "focusDesc": "Tydelig og stabil oppmerksomhet.",
+      "nature": "Natur",
+      "natureDesc": "Jord deg i nærværet av jorden.",
+      "more": "Mer",
+      "moreDesc": "Utforsk når du føler deg klar."
+    },
+    "sectionsSubtitle": "Kuratert etter intensjon. Utvid når du føler deg klar.",
+    "noMeditations": "Ingen meditasjoner funnet",
+    "noMeditationsHint": "Meditasjoner kommer snart.",
+    "showMore": "Vis mer",
+    "showLess": "Vis mindre",
+    "backToTop": "↑ Topp",
     "categories": {
       "all": "Alle",
       "morning": "Morgen",

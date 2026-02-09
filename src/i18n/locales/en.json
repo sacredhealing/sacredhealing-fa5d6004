@@ -538,6 +538,28 @@
       "buttonCalm": "Start now",
       "selecting": "Selecting a meditation…"
     },
+    "sections": {
+      "short": "Short resets",
+      "shortDesc": "2–5 minutes. Easy to begin.",
+      "morning": "Morning",
+      "morningDesc": "Start your day gently.",
+      "sleep": "Sleep",
+      "sleepDesc": "Unwind the body and mind.",
+      "healing": "Healing",
+      "healingDesc": "Support what's tender.",
+      "focus": "Focus",
+      "focusDesc": "Clear and steady attention.",
+      "nature": "Nature",
+      "natureDesc": "Ground in the presence of earth.",
+      "more": "More",
+      "moreDesc": "Explore when you feel ready."
+    },
+    "sectionsSubtitle": "Curated by intention. Expand when you feel ready.",
+    "noMeditations": "No meditations found",
+    "noMeditationsHint": "Meditations will be added soon.",
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "backToTop": "↑ Top",
     "categories": {
       "all": "All",
       "morning": "Morning",

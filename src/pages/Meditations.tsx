@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Play, Pause, Clock, Sparkles, Leaf, Moon, Sun, Heart, Brain, ArrowLeft, Loader2 } from 'lucide-react';
+import { Play, Pause, Clock, Sparkles, ArrowLeft, Loader2 } from 'lucide-react';
 import { TranslatedText } from '@/components/TranslatedText';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -21,7 +21,9 @@ import { StartNowCard } from '@/features/meditations/StartNowCard';
 import { LanguageToggle } from '@/features/meditations/LanguageToggle';
 import { useMeditationContentLanguage } from '@/features/meditations/useContentLanguage';
 import { selectStartNowItem } from '@/features/meditations/startNowSelector';
-import { getItemLanguage } from '@/features/meditations/getItemLanguage';
+import { filterByMeditationLanguage, buildSections } from '@/features/meditations/groupAndFilter';
+import { MeditationSection } from '@/features/meditations/MeditationSection';
+import { BackToTopFab } from '@/features/meditations/BackToTopFab';
 
 interface Meditation {
   id: string;
@@ -43,7 +45,6 @@ const Meditations: React.FC = () => {
   const { userState } = useUserDailyState();
   const dayPhase = getDayPhase();
 
-  const [activeCategory, setActiveCategory] = useState('all');
   const [searchParams] = useSearchParams();
   const [meditations, setMeditations] = useState<Meditation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,15 +58,6 @@ const Meditations: React.FC = () => {
   const { playlists: curatedPlaylists, getPlaylistItems } = useCuratedPlaylists('meditation');
   const [selectedPlaylist, setSelectedPlaylist] = useState<CuratedPlaylist | null>(null);
   const [playlistMeditations, setPlaylistMeditations] = useState<Meditation[]>([]);
-
-  const categories = [
-    { id: 'all', label: t('meditations.categories.all', 'All'), icon: Sparkles },
-    { id: 'morning', label: t('meditations.categories.morning', 'Morning'), icon: Sun },
-    { id: 'sleep', label: t('meditations.categories.sleep', 'Sleep'), icon: Moon },
-    { id: 'healing', label: t('meditations.categories.healing', 'Healing'), icon: Heart },
-    { id: 'focus', label: t('meditations.categories.focus', 'Focus'), icon: Brain },
-    { id: 'nature', label: t('meditations.categories.nature', 'Nature'), icon: Leaf },
-  ];
 
   useEffect(() => {
     fetchMeditations();
@@ -83,17 +75,13 @@ const Meditations: React.FC = () => {
     setLoading(false);
   };
 
-  const filteredMeditations = activeCategory === 'all'
-    ? meditations
-    : meditations.filter(m => m.category === activeCategory);
+  // Filter by meditation content language
+  const filtered = useMemo(
+    () => filterByMeditationLanguage(meditations, language),
+    [meditations, language]
+  );
 
-  // Filter by content language (unknown = show in both)
-  const languageFilter = (item: Meditation) => {
-    const lang = getItemLanguage(item);
-    return lang === 'unknown' || lang === language;
-  };
-
-  const filteredByLanguage = filteredMeditations.filter(languageFilter);
+  const sections = useMemo(() => buildSections(filtered), [filtered]);
 
   // Start Now: one-tap selection (no browsing)
   const startNowItem = useMemo(() => {
@@ -357,160 +345,93 @@ const Meditations: React.FC = () => {
               </div>
             )}
 
-            {/* All Meditations */}
+            {/* Progressive disclosure sections */}
             <div className="mt-6">
-              <h2 className="text-lg font-heading font-semibold text-foreground mb-3">
+              <h2 className="text-lg font-heading font-semibold text-foreground mb-1">
                 {t('meditations.allMeditations', 'All meditations')}
               </h2>
-              <div className="flex gap-2 overflow-x-auto pb-4 mb-4 scrollbar-hide animate-slide-up">
-                {categories.map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => setActiveCategory(cat.id)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all duration-300 ${
-                      activeCategory === cat.id
-                        ? 'bg-primary text-primary-foreground glow-purple'
-                        : 'bg-muted/30 text-muted-foreground hover:bg-muted/50'
-                    }`}
-                  >
-                    <cat.icon size={16} />
-                    <span className="text-sm font-medium">{cat.label}</span>
-                  </button>
-                ))}
-              </div>
+              <p className="text-sm text-muted-foreground mb-4">
+                {t('meditations.sectionsSubtitle', 'Curated by intention. Expand when you feel ready.')}
+              </p>
 
-              {/* Premium Meditations */}
-              {filteredByLanguage.filter(m => m.is_premium).length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-primary" />
-                    Premium Meditations ({filteredByLanguage.filter(m => m.is_premium).length})
-                  </h3>
-                  <div className="space-y-4 mb-6">
-                    {filteredByLanguage
-                      .filter(m => m.is_premium)
-                      .map((meditation, index) => {
-                        const isMeditationPlaying = isCurrentlyPlaying(meditation.id);
-                        const currentProgress = getMeditationProgress(meditation.id);
-
-                        return (
-                          <div
-                            key={meditation.id}
-                            className="relative overflow-hidden rounded-2xl bg-gradient-card border border-primary/30 p-5 animate-slide-up hover:scale-[1.02] transition-transform duration-300"
-                            style={{ animationDelay: `${index * 0.05}s` }}
-                          >
-                            <div className="absolute top-3 right-3 px-2 py-1 bg-primary/20 rounded-full">
-                              <span className="text-xs font-medium text-primary">Premium</span>
-                            </div>
-                            <div className="flex items-center gap-4">
-                              <button
-                                onClick={() => initiatePlay(meditation)}
-                                className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center glow-purple hover:scale-110 transition-transform"
-                              >
-                                {isMeditationPlaying ? (
-                                  <Pause size={24} className="text-primary" />
-                                ) : (
-                                  <Play size={24} className="text-primary ml-1" />
-                                )}
-                              </button>
-                              <div className="flex-1">
-                                <h3 className="font-heading font-semibold text-foreground">
-                                  <TranslatedText>{meditation.title}</TranslatedText>
-                                </h3>
-                                <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
-                                  <span className="flex items-center gap-1">
-                                    <Clock size={14} />
-                                    {meditation.duration_minutes} min
-                                  </span>
-                                  <span className="flex items-center gap-1">
-                                    <Sparkles size={14} className="text-accent" />
-                                    +{meditation.shc_reward} SHC
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                            {isPlaying && (
-                              <div className="mt-4">
-                                <Progress value={currentProgress} className="h-1" />
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                  </div>
+              {filtered.length === 0 ? (
+                <div className="text-center py-12">
+                  <Sparkles className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="font-semibold text-foreground mb-2">{t('meditations.noMeditations', 'No meditations found')}</h3>
+                  <p className="text-muted-foreground text-sm">
+                    {t('meditations.noMeditationsHint', 'Meditations will be added soon.')}
+                  </p>
                 </div>
+              ) : (
+                <>
+                  <MeditationSection
+                    title={t('meditations.sections.short', 'Short resets')}
+                    subtitle={t('meditations.sections.shortDesc', '2–5 minutes. Easy to begin.')}
+                    items={sections.short}
+                    onPlay={initiatePlay}
+                    isCurrentlyPlaying={isCurrentlyPlaying}
+                    getProgress={getMeditationProgress}
+                    isPlaying={isPlaying}
+                  />
+                  <MeditationSection
+                    title={t('meditations.sections.morning', 'Morning')}
+                    subtitle={t('meditations.sections.morningDesc', 'Start your day gently.')}
+                    items={sections.morning}
+                    onPlay={initiatePlay}
+                    isCurrentlyPlaying={isCurrentlyPlaying}
+                    getProgress={getMeditationProgress}
+                    isPlaying={isPlaying}
+                  />
+                  <MeditationSection
+                    title={t('meditations.sections.sleep', 'Sleep')}
+                    subtitle={t('meditations.sections.sleepDesc', 'Unwind the body and mind.')}
+                    items={sections.sleep}
+                    onPlay={initiatePlay}
+                    isCurrentlyPlaying={isCurrentlyPlaying}
+                    getProgress={getMeditationProgress}
+                    isPlaying={isPlaying}
+                  />
+                  <MeditationSection
+                    title={t('meditations.sections.healing', 'Healing')}
+                    subtitle={t('meditations.sections.healingDesc', "Support what's tender.")}
+                    items={sections.healing}
+                    onPlay={initiatePlay}
+                    isCurrentlyPlaying={isCurrentlyPlaying}
+                    getProgress={getMeditationProgress}
+                    isPlaying={isPlaying}
+                  />
+                  <MeditationSection
+                    title={t('meditations.sections.focus', 'Focus')}
+                    subtitle={t('meditations.sections.focusDesc', 'Clear and steady attention.')}
+                    items={sections.focus}
+                    onPlay={initiatePlay}
+                    isCurrentlyPlaying={isCurrentlyPlaying}
+                    getProgress={getMeditationProgress}
+                    isPlaying={isPlaying}
+                  />
+                  <MeditationSection
+                    title={t('meditations.sections.nature', 'Nature')}
+                    subtitle={t('meditations.sections.natureDesc', 'Ground in the presence of earth.')}
+                    items={sections.nature}
+                    onPlay={initiatePlay}
+                    isCurrentlyPlaying={isCurrentlyPlaying}
+                    getProgress={getMeditationProgress}
+                    isPlaying={isPlaying}
+                  />
+                  <MeditationSection
+                    title={t('meditations.sections.more', 'More')}
+                    subtitle={t('meditations.sections.moreDesc', 'Explore when you feel ready.')}
+                    items={sections.all}
+                    onPlay={initiatePlay}
+                    isCurrentlyPlaying={isCurrentlyPlaying}
+                    getProgress={getMeditationProgress}
+                    isPlaying={isPlaying}
+                  />
+                </>
               )}
-
-              {/* Free Meditations */}
-              {filteredByLanguage.filter(m => !m.is_premium).length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-sm font-semibold text-foreground mb-3">
-                    Free Meditations ({filteredByLanguage.filter(m => !m.is_premium).length})
-                  </h3>
-                </div>
-              )}
-
-              {/* Meditation List */}
-              <div className="space-y-4">
-                {filteredByLanguage.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Sparkles className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="font-semibold text-foreground mb-2">No meditations found</h3>
-                    <p className="text-muted-foreground text-sm">
-                      {activeCategory === 'all' ? 'Meditations will be added soon.' : 'Try selecting a different category.'}
-                    </p>
-                  </div>
-                ) : (
-                  filteredByLanguage
-                    .filter(m => !m.is_premium)
-                    .map((meditation, index) => {
-                      const isMeditationPlaying = isCurrentlyPlaying(meditation.id);
-                      const currentProgress = getMeditationProgress(meditation.id);
-
-                      return (
-                        <div
-                          key={meditation.id}
-                          className="relative overflow-hidden rounded-2xl bg-gradient-card border border-border/50 p-5 animate-slide-up hover:scale-[1.02] transition-transform duration-300"
-                          style={{ animationDelay: `${index * 0.05}s` }}
-                        >
-                          <div className="flex items-center gap-4">
-                            <button
-                              onClick={() => initiatePlay(meditation)}
-                              className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center glow-purple hover:scale-110 transition-transform"
-                            >
-                              {isMeditationPlaying ? (
-                                <Pause size={24} className="text-primary" />
-                              ) : (
-                                <Play size={24} className="text-primary ml-1" />
-                              )}
-                            </button>
-                            <div className="flex-1">
-                              <h3 className="font-heading font-semibold text-foreground">
-                                <TranslatedText>{meditation.title}</TranslatedText>
-                              </h3>
-                              <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
-                                <span className="flex items-center gap-1">
-                                  <Clock size={14} />
-                                  {meditation.duration_minutes} min
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <Sparkles size={14} className="text-accent" />
-                                  +{meditation.shc_reward} SHC
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          {isPlaying && (
-                            <div className="mt-4">
-                              <Progress value={currentProgress} className="h-1" />
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })
-                )}
-              </div>
             </div>
+
+            <BackToTopFab />
 
             {/* Go deeper (optional) - paid offerings moved DOWN */}
             <div className="mt-10">
