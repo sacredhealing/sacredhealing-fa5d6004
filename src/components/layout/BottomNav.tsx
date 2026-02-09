@@ -6,10 +6,10 @@ import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
   { to: '/dashboard', icon: Home, labelKey: 'nav.home' },
-  { to: '/explore', icon: Compass, labelKey: 'nav.explore' },
   { to: '/meditations', icon: Play, labelKey: 'nav.meditate' },
   { to: '/music', icon: Music2, labelKey: 'nav.music' },
   { to: '/healing', icon: Sparkles, labelKey: 'nav.soul' },
+  { to: '/explore', icon: Compass, labelKey: 'nav.explore' },
   { to: '/community', icon: Users, labelKey: 'nav.community' },
   { to: '/profile', icon: User, labelKey: 'nav.profile' },
 ];
