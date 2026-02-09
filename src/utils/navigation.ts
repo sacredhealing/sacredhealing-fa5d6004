@@ -6,7 +6,7 @@ export function setNavigator(n: NavigateFunction) {
   navigator = n;
 }
 
-export function navigateTo(path: string, options?: Parameters<NavigateFunction>[1]) {
+export function navigateTo(path: string, options?: { state?: any; replace?: boolean }) {
   if (!navigator) return;
   navigator(path, options);
 }

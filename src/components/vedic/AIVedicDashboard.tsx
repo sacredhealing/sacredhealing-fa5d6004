@@ -15,6 +15,7 @@ import { getPlanetEmoji, getEnergyGradient, getSuccessColor } from '@/lib/vedicT
 import { CosmicConsultation } from './CosmicConsultation';
 import { TimezoneSelector, useUserTimezone } from './TimezoneSelector';
 import { AccurateHoraWatch } from './AccurateHoraWatch';
+import { HoraDateTimePicker } from './HoraDateTimePicker';
 
 interface AIVedicDashboardProps {
   user: UserProfile;
@@ -291,12 +292,12 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, onEdit
             />
           </div>
 
-          {/* Time Travel Scrubber (Subscribers only) */}
+          {/* Time Travel Controls */}
           {user.plan !== 'free' && (
-            <div className="bg-background/80 border border-border p-5 rounded-3xl shadow-2xl">
-              <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase mb-3">
-                <span className="text-indigo-400">Time-Travel Scrubber</span>
-                <span>{timeOffset === 0 ? 'Live Now' : `${timeOffset > 0 ? '+' : ''}${timeOffset}m`}</span>
+            <div className="bg-background/80 border border-border p-5 rounded-3xl shadow-2xl space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Time-Travel Scrubber</span>
+                <HoraDateTimePicker timeOffset={timeOffset} onTimeOffsetChange={(v) => setTimeOffset(v)} />
               </div>
               <Slider
                 value={[timeOffset]}
@@ -306,9 +307,9 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, onEdit
                 onValueChange={handleTimeOffsetChange}
                 className="w-full"
               />
-              <div className="flex justify-between text-[9px] text-muted-foreground mt-2">
+              <div className="flex justify-between text-[9px] text-muted-foreground">
                 <span>-12h</span>
-                <span>Now</span>
+                <span>{timeOffset === 0 ? 'Now' : `${timeOffset > 0 ? '+' : ''}${timeOffset}m`}</span>
                 <span>+12h</span>
               </div>
             </div>

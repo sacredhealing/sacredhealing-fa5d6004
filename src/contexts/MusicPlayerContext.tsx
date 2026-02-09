@@ -543,7 +543,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         item: { id: audio.id, title: audio.title, contentType: audio.contentType },
       };
       await new Promise((r) => setTimeout(r, 1200));
-      navigateTo('/integrate', { state: ctx });
+      (navigateTo as any)('/integrate', { state: ctx });
     };
     
     audioRef.current.play();

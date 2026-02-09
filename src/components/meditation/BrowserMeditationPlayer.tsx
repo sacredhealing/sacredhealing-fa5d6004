@@ -89,7 +89,7 @@ export default function BrowserMeditationPlayer({
           const durationListenedSec = timerMinutes * 60;
           (async () => {
             await new Promise((r) => setTimeout(r, 1200));
-            navigateTo('/integrate', {
+            (navigateTo as any)('/integrate', {
               state: {
                 dayPhase: getDayPhase(),
                 userState: 'engaged',
