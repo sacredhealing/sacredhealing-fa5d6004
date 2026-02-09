@@ -90,20 +90,20 @@ export default function Explore() {
   );
 
   const { playUniversalAudio } = useMusicPlayer();
-  const { items: quickItems, loading: quickLoading } = useQuickActionItems();
+  const { items: quickItems } = useQuickActionItems();
 
   const onQuickCalm = () => {
-    if (quickItems.calm) playUniversalAudio(quickItems.calm);
-    else navigate("/meditations?category=healing");
+    if (quickItems.calm?.audio_url) playUniversalAudio(quickItems.calm);
+    navigate("/meditations?category=healing");
   };
   const onQuickHeart = () => {
-    if (quickItems.heart) playUniversalAudio(quickItems.heart);
-    else navigate("/healing");
+    if (quickItems.heart?.audio_url) playUniversalAudio(quickItems.heart);
+    navigate("/healing");
   };
   const onQuickPause = () => navigate("/breathing");
   const onQuickSleep = () => {
-    if (quickItems.sleep) playUniversalAudio(quickItems.sleep);
-    else navigate("/meditations?category=sleep");
+    if (quickItems.sleep?.audio_url) playUniversalAudio(quickItems.sleep);
+    navigate("/meditations?category=sleep");
   };
 
   return (
@@ -121,8 +121,7 @@ export default function Explore() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
         <button
           onClick={onQuickCalm}
-          disabled={quickLoading}
-          className="rounded-2xl border border-border/50 bg-card/50 px-4 py-4 text-left hover:bg-muted/30 transition disabled:opacity-70"
+          className="rounded-2xl border border-border/50 bg-card/50 px-4 py-4 text-left hover:bg-muted/30 transition"
         >
           <div className="flex items-center gap-3">
             <span className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
@@ -137,8 +136,7 @@ export default function Explore() {
         </button>
         <button
           onClick={onQuickHeart}
-          disabled={quickLoading}
-          className="rounded-2xl border border-border/50 bg-card/50 px-4 py-4 text-left hover:bg-muted/30 transition disabled:opacity-70"
+          className="rounded-2xl border border-border/50 bg-card/50 px-4 py-4 text-left hover:bg-muted/30 transition"
         >
           <div className="flex items-center gap-3">
             <span className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
@@ -168,8 +166,7 @@ export default function Explore() {
         </button>
         <button
           onClick={onQuickSleep}
-          disabled={quickLoading}
-          className="rounded-2xl border border-border/50 bg-card/50 px-4 py-4 text-left hover:bg-muted/30 transition disabled:opacity-70"
+          className="rounded-2xl border border-border/50 bg-card/50 px-4 py-4 text-left hover:bg-muted/30 transition"
         >
           <div className="flex items-center gap-3">
             <span className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
