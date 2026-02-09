@@ -1,4 +1,4 @@
-# Cache Buster - Updated: $(date)
+# Cache Buster - Nav reorder: Home, Meditate, Music, Soul, Library, Community, Profile (2026-02-09)
 # If you see old UI, clear browser cache:
 # Chrome/Edge: Ctrl+Shift+R (Windows) or Cmd+Shift+R (Mac)
 # Firefox: Ctrl+F5 (Windows) or Cmd+Shift+R (Mac)
