@@ -7,6 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useVedicAstrology } from '@/hooks/useVedicAstrology';
 import { useMembership } from '@/hooks/useMembership';
+import { useMembershipTier } from '@/features/membership/useMembershipTier';
+import { AccessBadge } from '@/features/membership/AccessBadge';
+import type { MembershipTier } from '@/features/membership/useMembershipTier';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { BirthDetailsForm } from '@/components/vedic/BirthDetailsForm';
@@ -17,6 +20,13 @@ const tierIcons: Record<string, React.ElementType> = {
   premium: Sparkles,
   master: Crown,
 };
+
+function membershipRequiredToTier(req: string[]): MembershipTier {
+  if (req.some((r) => r.toLowerCase().includes("lifetime"))) return "lifetime";
+  if (req.some((r) => r.toLowerCase().includes("annual") || r.toLowerCase().includes("premium")))
+    return "monthly";
+  return "free";
+}
 
 const tierColors: Record<string, { bg: string; border: string; text: string }> = {
   basic: {
@@ -41,6 +51,7 @@ export const VedicAstrologySection: React.FC = () => {
   const { user } = useAuth();
   const { tiers, isLoading, hasAccess, getHighestAccessLevel } = useVedicAstrology();
   const { tier: membershipTier, isPremium } = useMembership();
+  const tier = useMembershipTier();
   const [birthDetailsDialogOpen, setBirthDetailsDialogOpen] = useState(false);
   const [hasBirthDetails, setHasBirthDetails] = useState(false);
   const [birthDetails, setBirthDetails] = useState<any>(null);
@@ -246,22 +257,7 @@ export const VedicAstrologySection: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="mb-4">
-                    <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide text-center">
-                      Required Membership:
-                    </p>
-                    <div className="flex flex-wrap gap-2 justify-center">
-                      {tier.membership_required.map((req) => (
-                        <Badge
-                          key={req}
-                          variant={membershipTier === req ? 'default' : 'outline'}
-                          className="text-xs"
-                        >
-                          {membershipMap[req] || req}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
+                  <AccessBadge userTier={tier} requiredTier={membershipRequiredToTier(tier.membership_required)} />
 
                   <div className="mb-4">
                     <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide text-center">
@@ -300,7 +296,7 @@ export const VedicAstrologySection: React.FC = () => {
                       className="w-full"
                       size="lg"
                     >
-                      Upgrade Membership to Unlock
+                      Unlock Membership
                     </Button>
                   )}
                 </CardContent>
