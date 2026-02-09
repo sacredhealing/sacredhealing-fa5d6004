@@ -28,6 +28,7 @@ const AdminMeditationEdit: React.FC = () => {
     isPremium: false,
     shcReward: 5,
     scriptText: '',
+    language: 'en' as 'en' | 'sv',
   });
 
   useEffect(() => {
@@ -56,6 +57,7 @@ const AdminMeditationEdit: React.FC = () => {
           isPremium: data.is_premium,
           shcReward: data.shc_reward,
           scriptText: (data as any).script_text || '',
+          language: ((data as any).language === 'sv' ? 'sv' : 'en') as 'en' | 'sv',
         });
       }
     } catch (error: any) {
@@ -82,6 +84,7 @@ const AdminMeditationEdit: React.FC = () => {
           is_premium: formData.isPremium,
           shc_reward: formData.shcReward,
           script_text: formData.scriptText || null,
+          language: formData.language,
         } as any)
         .eq('id', id);
 
@@ -260,6 +263,22 @@ When you're ready, gently open your eyes, carrying this clarity and focus with y
                   ))}
                 </select>
               </div>
+            </div>
+
+            <div>
+              <Label htmlFor="language">Meditation language</Label>
+              <select
+                id="language"
+                value={formData.language}
+                onChange={(e) => setFormData({ ...formData, language: e.target.value as 'en' | 'sv' })}
+                className="w-full h-10 px-3 rounded-md bg-muted/50 border border-border text-foreground mt-2"
+              >
+                <option value="en">English</option>
+                <option value="sv">Svenska</option>
+              </select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Controls which language filter shows this meditation on /meditations
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-6">
