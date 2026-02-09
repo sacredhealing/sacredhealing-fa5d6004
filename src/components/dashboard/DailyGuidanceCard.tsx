@@ -100,10 +100,11 @@ export const DailyGuidanceCard: React.FC<DailyGuidanceCardProps> = ({
   const showContinuation = hasCompletedToday && !isDayClosed;
   const showAllComplete = hasCompletedAllThree && !isDayClosed;
 
+  const tFn = t as unknown as (key: string, fallback?: string) => string;
   const completionGuidance = showContinuation && lastCompleted && !showAllComplete
-    ? getCompletionGuidance({ lastCompleted, streakDays, t })
+    ? getCompletionGuidance({ lastCompleted, streakDays, t: tFn })
     : null;
-  const allCompleteGuidance = showAllComplete ? getAllCompleteGuidance(t) : null;
+  const allCompleteGuidance = showAllComplete ? getAllCompleteGuidance(tFn) : null;
 
   // Return-visit overrides
   const isSameDayReturn = returnState === 'same_day';
@@ -119,7 +120,7 @@ export const DailyGuidanceCard: React.FC<DailyGuidanceCardProps> = ({
           ? allCompleteGuidance.greeting
           : showContinuation && completionGuidance
             ? completionGuidance.greeting
-            : getAdaptiveHero(timeOfDay, userState ?? 'calm', t);
+            : getAdaptiveHero(timeOfDay, userState ?? 'calm', tFn);
 
   const subtitle = isSameDayReturn
     ? t('dashboard.returnSameDaySubtitle', "Take one conscious breath before continuing.")
@@ -144,7 +145,7 @@ export const DailyGuidanceCard: React.FC<DailyGuidanceCardProps> = ({
   const buttonLabel = showAllComplete && allCompleteGuidance
     ? allCompleteGuidance.button
     : showContinuation && lastCompleted
-      ? getIntegrationButtonLabel(lastCompleted, t)
+      ? getIntegrationButtonLabel(lastCompleted, tFn)
       : guidance.button_label ?? t('dashboard.startJourney', 'Start Journey');
   // Translate adaptive CTA when in state-driven mode
   const displayedButtonLabel =
@@ -153,7 +154,7 @@ export const DailyGuidanceCard: React.FC<DailyGuidanceCardProps> = ({
       : buttonLabel;
 
   const continuationGuidance = showContinuation && lastCompleted && !showAllComplete
-    ? getContinuationSuggestion(lastCompleted, t)
+    ? getContinuationSuggestion(lastCompleted, tFn)
     : null;
 
   const activeGuidance = showContinuation && continuationGuidance ? continuationGuidance : guidance;

@@ -1,4 +1,4 @@
-import type { LibraryArchive, Manuscript, Chapter, VedicBook } from '@/types/vedicTranslation';
+import { type LibraryArchive, type Manuscript, type Chapter, VedicBook } from '@/types/vedicTranslation';
 
 const escapeBacktick = (s: string) => String(s).replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
 const escapeDouble = (s: string) => String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n');
