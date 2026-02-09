@@ -10,6 +10,14 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
   },
+  optimizeDeps: {
+    include: ["ethers"],
+  },
+  build: {
+    commonjsOptions: {
+      include: [/ethers/, /node_modules/],
+    },
+  },
   plugins: [
     react(), 
     tailwindcss(),
