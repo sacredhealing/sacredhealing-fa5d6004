@@ -455,6 +455,25 @@
   "meditations": {
     "title": "Meditationer",
     "subtitle": "Hitta din inre frid",
+    "meditationLanguage": "Meditationsspråk",
+    "allMeditations": "Alla meditationer",
+    "featuredCollections": "Utvalda samlingar",
+    "goDeeper": "Fördjupa (valfritt)",
+    "goDeeperDesc": "När du vill investera i något mer personligt.",
+    "startNow": {
+      "titleBusy": "Snabb återställning",
+      "titleHeavy": "Mjukna det som känns tungt",
+      "titleEngaged": "Fördjupa din practice",
+      "titleCalm": "Din dagliga practice",
+      "subtitleMorning": "Börja dagen lugnt — utan att tänka.",
+      "subtitleMidday": "En paus som bär resten av dagen.",
+      "subtitleEvening": "Låt kvällen landa i kroppen.",
+      "buttonBusy": "Starta 2 min",
+      "buttonHeavy": "Starta trygghet",
+      "buttonEngaged": "Starta nu",
+      "buttonCalm": "Starta nu",
+      "selecting": "Väljer en meditation…"
+    },
     "categories": {
       "all": "Alla",
       "morning": "Morgon",

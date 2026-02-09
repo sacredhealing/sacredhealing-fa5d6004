@@ -519,6 +519,25 @@
   "meditations": {
     "title": "Meditations",
     "subtitle": "Find your inner peace",
+    "meditationLanguage": "Meditation language",
+    "allMeditations": "All meditations",
+    "featuredCollections": "Featured Collections",
+    "goDeeper": "Go deeper (optional)",
+    "goDeeperDesc": "When you want something more personal.",
+    "startNow": {
+      "titleBusy": "Quick reset",
+      "titleHeavy": "Soften what feels heavy",
+      "titleEngaged": "Go deeper",
+      "titleCalm": "Your daily practice",
+      "subtitleMorning": "Start your day gently — no decisions.",
+      "subtitleMidday": "A pause that supports your day.",
+      "subtitleEvening": "Let the evening settle in your body.",
+      "buttonBusy": "Start 2 min",
+      "buttonHeavy": "Start comfort",
+      "buttonEngaged": "Start now",
+      "buttonCalm": "Start now",
+      "selecting": "Selecting a meditation…"
+    },
     "categories": {
       "all": "All",
       "morning": "Morning",

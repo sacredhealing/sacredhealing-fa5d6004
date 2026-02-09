@@ -1,44 +1,43 @@
-import type { ContentLanguage } from "@/utils/contentLanguage";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   item: any | null;
-  language: ContentLanguage;
   dayPhase: "morning" | "midday" | "evening";
   userState: "calm" | "busy" | "heavy" | "engaged";
   onStart: (item: any) => void;
 };
 
-function copy(language: ContentLanguage, dayPhase: Props["dayPhase"], userState: Props["userState"]) {
-  const isSv = language === "sv";
-
+/** All copy uses app language (t) — meditationLanguage only for empty-state text. */
+function getCopy(t: (key: string, fallback?: string) => string, dayPhase: Props["dayPhase"], userState: Props["userState"]) {
   const title =
     userState === "busy"
-      ? isSv ? "Snabb återställning" : "Quick reset"
+      ? t("meditations.startNow.titleBusy", "Quick reset")
       : userState === "heavy"
-      ? isSv ? "Mjukna det som känns tungt" : "Soften what feels heavy"
+      ? t("meditations.startNow.titleHeavy", "Soften what feels heavy")
       : userState === "engaged"
-      ? isSv ? "Fördjupa din practice" : "Go deeper"
-      : isSv ? "Din dagliga practice" : "Your daily practice";
+      ? t("meditations.startNow.titleEngaged", "Go deeper")
+      : t("meditations.startNow.titleCalm", "Your daily practice");
 
   const subtitle =
     dayPhase === "morning"
-      ? isSv ? "Börja dagen lugnt — utan att tänka." : "Start your day gently — no decisions."
+      ? t("meditations.startNow.subtitleMorning", "Start your day gently — no decisions.")
       : dayPhase === "midday"
-      ? isSv ? "En paus som bär resten av dagen." : "A pause that supports your day."
-      : isSv ? "Låt kvällen landa i kroppen." : "Let the evening settle in your body.";
+      ? t("meditations.startNow.subtitleMidday", "A pause that supports your day.")
+      : t("meditations.startNow.subtitleEvening", "Let the evening settle in your body.");
 
   const button =
     userState === "busy"
-      ? isSv ? "Starta 2 min" : "Start 2 min"
+      ? t("meditations.startNow.buttonBusy", "Start 2 min")
       : userState === "heavy"
-      ? isSv ? "Starta trygghet" : "Start comfort"
-      : isSv ? "Starta nu" : "Start now";
+      ? t("meditations.startNow.buttonHeavy", "Start comfort")
+      : t("meditations.startNow.buttonCalm", "Start now");
 
   return { title, subtitle, button };
 }
 
-export function StartNowCard({ item, language, dayPhase, userState, onStart }: Props) {
-  const c = copy(language, dayPhase, userState);
+export function StartNowCard({ item, dayPhase, userState, onStart }: Props) {
+  const { t } = useTranslation();
+  const c = getCopy(t, dayPhase, userState);
 
   return (
     <div className="mt-2 rounded-2xl border border-border bg-muted/30 p-4">
@@ -47,7 +46,7 @@ export function StartNowCard({ item, language, dayPhase, userState, onStart }: P
 
       <div className="mt-3 flex items-center justify-between gap-3">
         <div className="text-sm text-muted-foreground">
-          {item ? (item.title ?? item.name ?? "") : (language === "sv" ? "Väljer en meditation…" : "Selecting a meditation…")}
+          {item ? (item.title ?? item.name ?? "") : t("meditations.startNow.selecting", "Selecting a meditation…")}
         </div>
 
         <button

@@ -19,7 +19,7 @@ import { useUserDailyState } from '@/hooks/useUserDailyState';
 import { getDayPhase } from '@/utils/postSessionContext';
 import { StartNowCard } from '@/features/meditations/StartNowCard';
 import { LanguageToggle } from '@/features/meditations/LanguageToggle';
-import { useContentLanguage } from '@/features/meditations/useContentLanguage';
+import { useMeditationContentLanguage } from '@/features/meditations/useContentLanguage';
 import { selectStartNowItem } from '@/features/meditations/startNowSelector';
 import { getItemLanguage } from '@/features/meditations/getItemLanguage';
 
@@ -39,7 +39,7 @@ interface Meditation {
 const Meditations: React.FC = () => {
   const { t } = useTranslation();
   const { playUniversalAudio, currentAudio, isPlaying, progress: playerProgress } = useMusicPlayer();
-  const { language, setLanguage } = useContentLanguage();
+  const { language, setLanguage } = useMeditationContentLanguage();
   const { userState } = useUserDailyState();
   const dayPhase = getDayPhase();
 
@@ -220,17 +220,16 @@ const Meditations: React.FC = () => {
         {/* Header */}
         <header className="mb-4 animate-fade-in">
           <h1 className="text-3xl font-heading font-bold text-foreground">
-            {language === 'sv' ? 'Meditationer' : t('meditations.title', 'Meditations')}
+            {t('meditations.title', 'Meditations')}
           </h1>
           <p className="text-muted-foreground mt-1">
-            {language === 'sv' ? 'Hitta din inre frid' : t('meditations.subtitle', 'Find your inner peace')}
+            {t('meditations.subtitle', 'Find your inner peace')}
           </p>
         </header>
 
         {/* START NOW (Second Start) - zero browsing */}
         <StartNowCard
           item={loading ? null : startNowItem}
-          language={language}
           dayPhase={dayPhase}
           userState={userState}
           onStart={onStartNow}
@@ -340,7 +339,7 @@ const Meditations: React.FC = () => {
             {curatedPlaylists.length > 0 && (
               <div className="mt-6 mb-6">
                 <h2 className="text-lg font-heading font-semibold text-foreground mb-4">
-                  {t('meditations.featuredCollections', 'Featured Collections')}
+                  {t('meditations.featuredCollections', 'Featured collections')}
                 </h2>
                 <div className="grid grid-cols-1 gap-4">
                   {curatedPlaylists.map(playlist => (
@@ -361,7 +360,7 @@ const Meditations: React.FC = () => {
             {/* All Meditations */}
             <div className="mt-6">
               <h2 className="text-lg font-heading font-semibold text-foreground mb-3">
-                {language === 'sv' ? 'Alla meditationer' : t('meditations.allMeditations', 'All Meditations')}
+                {t('meditations.allMeditations', 'All meditations')}
               </h2>
               <div className="flex gap-2 overflow-x-auto pb-4 mb-4 scrollbar-hide animate-slide-up">
                 {categories.map((cat) => (
@@ -516,12 +515,10 @@ const Meditations: React.FC = () => {
             {/* Go deeper (optional) - paid offerings moved DOWN */}
             <div className="mt-10">
               <h2 className="text-lg font-heading font-semibold text-foreground mb-1">
-                {language === 'sv' ? 'Fördjupa (valfritt)' : 'Go deeper (optional)'}
+                {t('meditations.goDeeper', 'Go deeper (optional)')}
               </h2>
               <p className="text-sm text-muted-foreground mb-4">
-                {language === 'sv'
-                  ? 'När du vill investera i något mer personligt.'
-                  : 'When you want something more personal.'}
+                {t('meditations.goDeeperDesc', 'When you want something more personal.')}
               </p>
 
               <MeditationMembershipBanner />

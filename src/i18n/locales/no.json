@@ -455,6 +455,25 @@
   "meditations": {
     "title": "Meditasjoner",
     "subtitle": "Finn din indre fred",
+    "meditationLanguage": "Meditasjonsspråk",
+    "allMeditations": "Alle meditasjoner",
+    "featuredCollections": "Utvalgte samlinger",
+    "goDeeper": "Gå dypere (valgfritt)",
+    "goDeeperDesc": "Når du vil investere i noe mer personlig.",
+    "startNow": {
+      "titleBusy": "Rask reset",
+      "titleHeavy": "Myk opp det som føles tungt",
+      "titleEngaged": "Gå dypere",
+      "titleCalm": "Din daglige praksis",
+      "subtitleMorning": "Start dagen rolig — uten valg.",
+      "subtitleMidday": "En pause som bærer resten av dagen.",
+      "subtitleEvening": "La kvelden lande i kroppen.",
+      "buttonBusy": "Start 2 min",
+      "buttonHeavy": "Start trøst",
+      "buttonEngaged": "Start nå",
+      "buttonCalm": "Start nå",
+      "selecting": "Velger en meditasjon…"
+    },
     "categories": {
       "all": "Alle",
       "morning": "Morgen",
