@@ -1,5 +1,7 @@
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
+import { setNavigator } from "@/utils/navigation";
 import About from "./pages/About";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -92,6 +94,7 @@ import AdminPaths from "./pages/AdminPaths";
 import AdminCircles from "./pages/AdminCircles";
 import AdminContentRoadmap from "./pages/AdminContentRoadmap";
 import AdminVedicTranslation from "./pages/AdminVedicTranslation";
+import PostSession from "./pages/PostSession";
 import CreativeSoulSales from "./pages/CreativeSoulSales";
 import CreativeSoulTool from "./pages/CreativeSoulTool";
 import CreativeSoulLanding from "./pages/CreativeSoulLanding";
@@ -105,37 +108,24 @@ import { DebugBanner } from "./components/DebugBanner";
 import { ProfileLanguageSync } from "./components/ProfileLanguageSync";
 import "@/lib/performance"; // Initialize performance monitoring
 
-const App = () => (
-  <ErrorBoundary>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <SHCProvider>
-          <MusicPlayerProvider>
-            <AmbientAudioProvider>
-              <Toaster />
-              <Sonner />
-              <DebugBanner />
-              <ProfileLanguageSync />
-            <Suspense
-              fallback={
-                <div className="min-h-screen flex items-center justify-center bg-[#030303]" style={{ background: "radial-gradient(ellipse at 15% 20%, rgba(30, 27, 75, 0.7) 0%, transparent 50%), #030303" }}>
-                  <Loader2 className="w-10 h-10 animate-spin text-[#00F2FE]" />
-                </div>
-              }
-            >
-            <BrowserRouter>
-              <Routes>
-              <Route path="/" element={<Auth />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/auth" element={<Auth />} />
-              {/* Public landing pages */}
-              <Route element={<AuthOnlyRoute />}>
-                <Route path="/onboarding" element={<Onboarding />} />
-              </Route>
-              <Route element={<ProtectedRoute />}>
-                <Route element={<AppLayout />}>
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/explore" element={<Explore />} />
+function AppRoutes() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    setNavigator(navigate);
+  }, [navigate]);
+  return (
+    <Routes>
+      <Route path="/" element={<Auth />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/auth" element={<Auth />} />
+      <Route element={<AuthOnlyRoute />}>
+        <Route path="/onboarding" element={<Onboarding />} />
+      </Route>
+      <Route path="/integrate" element={<PostSession />} />
+      <Route element={<ProtectedRoute />}>
+        <Route element={<AppLayout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/explore" element={<Explore />} />
                   <Route path="/meditations" element={<Meditations />} />
                   <Route path="/courses" element={<Courses />} />
                   <Route path="/music" element={<Music />} />
@@ -224,9 +214,32 @@ const App = () => (
                 </Route>
               </Route>
                 <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-            </Suspense>
+    </Routes>
+  );
+}
+
+const App = () => (
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <SHCProvider>
+          <MusicPlayerProvider>
+            <AmbientAudioProvider>
+              <Toaster />
+              <Sonner />
+              <DebugBanner />
+              <ProfileLanguageSync />
+              <Suspense
+                fallback={
+                  <div className="min-h-screen flex items-center justify-center bg-[#030303]" style={{ background: "radial-gradient(ellipse at 15% 20%, rgba(30, 27, 75, 0.7) 0%, transparent 50%), #030303" }}>
+                    <Loader2 className="w-10 h-10 animate-spin text-[#00F2FE]" />
+                  </div>
+                }
+              >
+                <BrowserRouter>
+                  <AppRoutes />
+                </BrowserRouter>
+              </Suspense>
             </AmbientAudioProvider>
           </MusicPlayerProvider>
         </SHCProvider>

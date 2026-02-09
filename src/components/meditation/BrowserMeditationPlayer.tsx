@@ -1,4 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import { navigateTo } from '@/utils/navigation';
+import { getDayPhase, getSessionDepth } from '@/utils/postSessionContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -84,6 +86,21 @@ export default function BrowserMeditationPlayer({
         if (timerMinutes > 0 && next >= timerMinutes * 60) {
           stopPlaying();
           toast.success('Meditation session complete 🙏');
+          const durationListenedSec = timerMinutes * 60;
+          (async () => {
+            await new Promise((r) => setTimeout(r, 1200));
+            navigateTo('/integrate', {
+              state: {
+                dayPhase: getDayPhase(),
+                userState: 'engaged',
+                streakDays: 0,
+                depth: getSessionDepth(durationListenedSec),
+                durationSec: durationListenedSec,
+                completed: true,
+                item: { contentType: 'meditation', title: 'Timed Meditation', id: 'browser-timer' },
+              },
+            });
+          })();
           return 0;
         }
         return next;

@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useRef, useCallback, useEff
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useSHC } from '@/contexts/SHCContext';
+import { navigateTo } from '@/utils/navigation';
+import { getDayPhase, getSessionDepth } from '@/utils/postSessionContext';
 
 // Audio content type enum
 export type AudioContentType = 'music' | 'meditation' | 'healing';
@@ -469,17 +471,15 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     
     audioRef.current.onended = async () => {
       setIsPlaying(false);
+      const durationListenedSec = Math.floor((Date.now() - playStartTimeRef.current) / 1000);
       
-      // Award SHC for meditation/healing completion
+      // Award SHC for meditation/healing completion (unchanged)
       const { data: { user } } = await supabase.auth.getUser();
       if (user && audio.shc_reward > 0) {
-        const durationListened = Math.floor((Date.now() - playStartTimeRef.current) / 1000);
         const minDuration = Math.floor(audio.duration_seconds * 0.8);
         
-        if (durationListened >= minDuration) {
-          // Check for recent completion (anti-farming)
+        if (durationListenedSec >= minDuration) {
           const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-          
           let hasRecentCompletion = false;
           
           if (audio.contentType === 'meditation') {
@@ -503,7 +503,6 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
           }
           
           if (!hasRecentCompletion) {
-            // Award SHC
             const { data: balanceData } = await supabase
               .from('user_balances')
               .select('balance, total_earned')
@@ -532,6 +531,19 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
           }
         }
       }
+      
+      // Post-session redirect to integration layer
+      const ctx = {
+        dayPhase: getDayPhase(),
+        userState: 'engaged',
+        streakDays: 0,
+        depth: getSessionDepth(durationListenedSec),
+        durationSec: durationListenedSec,
+        completed: true,
+        item: { id: audio.id, title: audio.title, contentType: audio.contentType },
+      };
+      await new Promise((r) => setTimeout(r, 1200));
+      navigateTo('/integrate', { state: ctx });
     };
     
     audioRef.current.play();
