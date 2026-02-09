@@ -1519,7 +1519,7 @@
     "guidance": {
       "subtitle": "How can we help you today?",
       "calm": { "title": "Calm my mind", "subtitle": "Reduce stress & anxiety" },
-      "heal": { "title": "Soften the heart", "subtitle": "Inner child, release & restore" },
+      "heal": { "title": "Soften the heart", "subtitle": "Release, nurture & restore" },
       "energy": { "title": "Boost my energy", "subtitle": "Motivation & power" },
       "sleep": { "title": "Sleep deeply", "subtitle": "Wind down & rest" }
     },
@@ -1527,7 +1527,7 @@
       "calm": "Calm my mind",
       "calmDesc": "Reduce stress & anxiety",
       "heal": "Soften the heart",
-      "healDesc": "Inner child, release & restore",
+      "healDesc": "Release, nurture & restore",
       "energy": "Boost my energy",
       "energyDesc": "Motivation & power",
       "sleep": "Sleep deeply",

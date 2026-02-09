@@ -184,7 +184,7 @@ export default function Explore() {
                 {t("explore.intent.heal", "Soften the heart")}
               </div>
               <div className="text-sm text-muted-foreground">
-                {t("explore.intent.healDesc", "Inner child, release & restore")}
+                {t("explore.intent.healDesc", "Release, nurture & restore")}
               </div>
             </div>
             <span className="text-muted-foreground">›</span>
