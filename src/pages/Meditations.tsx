@@ -368,6 +368,7 @@ const Meditations: React.FC = () => {
                     title={t('meditations.sections.short', 'Short resets')}
                     subtitle={t('meditations.sections.shortDesc', '2–5 minutes. Easy to begin.')}
                     items={sections.short}
+                    defaultExpanded
                     onPlay={initiatePlay}
                     isCurrentlyPlaying={isCurrentlyPlaying}
                     getProgress={getMeditationProgress}

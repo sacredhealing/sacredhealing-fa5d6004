@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Play, Pause, Clock, Sparkles } from "lucide-react";
+import { Play, Pause, Clock, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import { TranslatedText } from "@/components/TranslatedText";
 import { Progress } from "@/components/ui/progress";
 
@@ -9,6 +9,7 @@ type Props = {
   subtitle?: string;
   items: any[];
   initialVisible?: number;
+  defaultExpanded?: boolean;
   onPlay: (item: any) => void;
   isCurrentlyPlaying?: (id: string) => boolean;
   getProgress?: (id: string) => number;
@@ -20,44 +21,56 @@ export function MeditationSection({
   subtitle,
   items,
   initialVisible = 6,
+  defaultExpanded = false,
   onPlay,
   isCurrentlyPlaying,
   getProgress,
   isPlaying,
 }: Props) {
   const { t } = useTranslation();
-  const [expanded, setExpanded] = useState(false);
+  const [sectionOpen, setSectionOpen] = useState(defaultExpanded);
+  const [itemsExpanded, setItemsExpanded] = useState(false);
 
   const visibleItems = useMemo(() => {
-    if (expanded) return items;
+    if (itemsExpanded) return items;
     return items.slice(0, initialVisible);
-  }, [items, expanded, initialVisible]);
+  }, [items, itemsExpanded, initialVisible]);
 
   if (!items?.length) return null;
 
   return (
-    <div className="mt-6">
-      <div className="flex items-end justify-between gap-3">
+    <div className="mt-4">
+      <button
+        onClick={() => setSectionOpen((v) => !v)}
+        className="w-full flex items-center justify-between gap-3 p-3 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 transition text-left"
+      >
         <div>
           <div className="text-lg font-semibold text-foreground">{title}</div>
           {subtitle ? (
-            <div className="mt-1 text-sm text-muted-foreground">{subtitle}</div>
+            <div className="mt-0.5 text-sm text-muted-foreground">{subtitle}</div>
           ) : null}
         </div>
+        <div className="shrink-0 text-muted-foreground">
+          {sectionOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+        </div>
+      </button>
 
-        {items.length > initialVisible ? (
-          <button
-            onClick={() => setExpanded((v) => !v)}
-            className="shrink-0 rounded-full border border-border bg-muted/30 px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition"
-          >
-            {expanded
-              ? t("meditations.showLess", "Show less")
-              : t("meditations.showMore", "Show more")}
-          </button>
-        ) : null}
-      </div>
+      {sectionOpen && (
+        <div className="mt-3 pl-1">
+          <div className="flex items-center justify-end gap-2 mb-2">
+            {items.length > initialVisible ? (
+              <button
+                onClick={() => setItemsExpanded((v) => !v)}
+                className="shrink-0 rounded-full border border-border bg-muted/30 px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition"
+              >
+                {itemsExpanded
+                  ? t("meditations.showLess", "Show less")
+                  : t("meditations.showMore", "Show more")}
+              </button>
+            ) : null}
+          </div>
 
-      <div className="mt-3 space-y-3">
+          <div className="space-y-3">
         {visibleItems.map((m: any) => {
           const isMeditationPlaying = isCurrentlyPlaying?.(m.id) ?? false;
           const currentProgress = getProgress?.(m.id) ?? 0;
@@ -111,7 +124,9 @@ export function MeditationSection({
             </div>
           );
         })}
-      </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
