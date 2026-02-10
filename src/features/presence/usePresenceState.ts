@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from "react";
 
 const STORAGE_KEY = "sh_last_session";
+const CUSTOM_EVENT = "sh_last_session_updated";
 
 function getSnapshot(): string {
   try {
@@ -8,7 +9,8 @@ function getSnapshot(): string {
     if (!raw) return "start";
 
     const data = JSON.parse(raw);
-    const hours = (Date.now() - data.ts) / 1000 / 60 / 60;
+    const ts = typeof data.ts === 'number' ? data.ts : data.ts;
+    const hours = (Date.now() - ts) / 1000 / 60 / 60;
 
     if (hours > 24) return "start";
     if (hours > 1) return "returned";
@@ -22,8 +24,13 @@ function subscribe(callback: () => void): () => void {
   const onStorage = (e: StorageEvent) => {
     if (e.key === STORAGE_KEY) callback();
   };
+  const onCustom = () => callback();
   window.addEventListener("storage", onStorage);
-  return () => window.removeEventListener("storage", onStorage);
+  window.addEventListener(CUSTOM_EVENT, onCustom);
+  return () => {
+    window.removeEventListener("storage", onStorage);
+    window.removeEventListener(CUSTOM_EVENT, onCustom);
+  };
 }
 
 export type PresenceState = "start" | "returned" | "deep";

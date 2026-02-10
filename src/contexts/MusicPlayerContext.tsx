@@ -5,6 +5,19 @@ import { useSHC } from '@/contexts/SHCContext';
 import { navigateTo } from '@/utils/navigation';
 import { getDayPhase, getSessionDepth } from '@/utils/postSessionContext';
 
+const SH_LAST_SESSION_KEY = 'sh_last_session';
+const SH_LAST_SESSION_UPDATED = 'sh_last_session_updated';
+
+function writeLastSessionAndNotify(ts: number, durationSec: number, type: string): void {
+  try {
+    localStorage.setItem(
+      SH_LAST_SESSION_KEY,
+      JSON.stringify({ v: 1, ts, duration: durationSec, type })
+    );
+    window.dispatchEvent(new Event(SH_LAST_SESSION_UPDATED));
+  } catch (_) {}
+}
+
 // Audio content type enum
 export type AudioContentType = 'music' | 'meditation' | 'healing';
 
@@ -120,6 +133,8 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [currentQueueIndex, setCurrentQueueIndex] = useState(0);
   const playStartTimeRef = useRef<number>(0);
+  const completedThresholdForIdRef = useRef<string | null>(null);
+  const devForceEndTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const PREVIEW_LIMIT = 30;
 
@@ -417,6 +432,10 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   }, [toast]);
 
   const stopTrack = useCallback(() => {
+    if (devForceEndTimeoutRef.current) {
+      clearTimeout(devForceEndTimeoutRef.current);
+      devForceEndTimeoutRef.current = null;
+    }
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;
@@ -449,6 +468,11 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       audioRef.current.pause();
       audioRef.current = null;
     }
+    if (devForceEndTimeoutRef.current) {
+      clearTimeout(devForceEndTimeoutRef.current);
+      devForceEndTimeoutRef.current = null;
+    }
+    completedThresholdForIdRef.current = null;
 
     // Reset music track when playing meditation/healing
     setCurrentTrack(null);
@@ -465,24 +489,22 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     audioRef.current.ontimeupdate = () => {
       if (!audioRef.current) return;
       const time = audioRef.current.currentTime;
+      const dur = audioRef.current.duration;
       setCurrentTime(time);
-      setProgress((time / audioRef.current.duration) * 100);
+      setProgress(dur > 0 && isFinite(dur) ? (time / dur) * 100 : 0);
+      // Completion threshold backup (mobile sometimes doesn't fire onended)
+      if (isFinite(dur) && dur > 0 && time >= dur - 0.25 && completedThresholdForIdRef.current !== audio.id) {
+        completedThresholdForIdRef.current = audio.id;
+        const durationListenedSec = Math.floor((Date.now() - playStartTimeRef.current) / 1000);
+        writeLastSessionAndNotify(Date.now(), durationListenedSec, audio.contentType);
+      }
     };
     
     audioRef.current.onended = async () => {
       setIsPlaying(false);
       const durationListenedSec = Math.floor((Date.now() - playStartTimeRef.current) / 1000);
 
-      try {
-        localStorage.setItem(
-          "sh_last_session",
-          JSON.stringify({
-            ts: Date.now(),
-            duration: durationListenedSec,
-            type: audio.contentType,
-          })
-        );
-      } catch (_) {}
+      writeLastSessionAndNotify(Date.now(), durationListenedSec, audio.contentType);
 
       // Award SHC for meditation/healing completion (unchanged)
       const { data: { user } } = await supabase.auth.getUser();
@@ -563,6 +585,17 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     setProgress(0);
     setCurrentTime(0);
     setIsPlaying(true);
+
+    // DEV-only: ?devForceEnd=1 simulates session end after 4s for testing Library flip
+    if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) {
+      const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+      if (params.get('devForceEnd') === '1') {
+        devForceEndTimeoutRef.current = setTimeout(() => {
+          writeLastSessionAndNotify(Date.now(), 240, audio.contentType);
+          devForceEndTimeoutRef.current = null;
+        }, 4000);
+      }
+    }
   }, [currentAudio, isPlaying, volume, addOptimisticBalance, toast]);
 
   return (
