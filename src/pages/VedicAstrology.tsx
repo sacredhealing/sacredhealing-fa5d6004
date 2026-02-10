@@ -47,20 +47,26 @@ const VedicAstrology: React.FC = () => {
   const [birthDetailsDialogOpen, setBirthDetailsDialogOpen] = useState(false);
 
   const userKey = user?.id ?? 'anon';
-  const lsKey = (k: string) => `vedic:${userKey}:${k}`;
+  const lsKey = (k: string) => `sh:vedic:${userKey}:${k}`;
 
-  // Persisted state
+  // Persisted state (survives unmount / navigation)
   const [useAIMode, setUseAIMode] = usePersistedState<boolean>(lsKey('aiMode'), true);
   const [syncState, setSyncState] = usePersistedState<{ status: 'idle' | 'synced' | 'error'; lastSyncedAt?: string }>(
     lsKey('sync'),
     { status: 'idle' }
   );
   const [cachedBirth, setCachedBirth] = usePersistedState<any>(lsKey('birth'), null);
+  const [cachedResults, setCachedResults] = usePersistedState<any>(lsKey('cachedResults'), null);
 
   // Live birth details from DB
   const [hasBirthDetails, setHasBirthDetails] = useState(false);
   const [birthDetails, setBirthDetails] = useState<any>(null);
   const [activeTier, setActiveTier] = useState<'basic' | 'premium' | 'master' | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
+
+  const synced = syncState.status === 'synced';
+  const lastSyncedAt = syncState.lastSyncedAt ?? null;
 
   const fetchBirthDetails = async () => {
     if (!user) return;
@@ -75,9 +81,10 @@ const VedicAstrology: React.FC = () => {
         setHasBirthDetails(true);
         setBirthDetails(data);
         setCachedBirth(data);
-        if (syncState.status === 'idle') {
+        if (!synced) {
           setSyncState({ status: 'synced', lastSyncedAt: new Date().toISOString() });
         }
+        setSyncError(null);
       } else {
         setHasBirthDetails(false);
         setBirthDetails(null);
@@ -97,7 +104,7 @@ const VedicAstrology: React.FC = () => {
 
   useEffect(() => {
     fetchBirthDetails();
-  }, [user]);
+  }, [user]);  
 
   useEffect(() => {
     const urlTier = (searchParams.get('tier') as 'basic' | 'premium' | 'master' | null) || null;
@@ -161,7 +168,7 @@ const VedicAstrology: React.FC = () => {
           </p>
         </motion.header>
 
-        {/* Profile Snapshot Card */}
+        {/* Profile Snapshot Card (basic info about me) */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -172,16 +179,18 @@ const VedicAstrology: React.FC = () => {
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-4">
               <div className="flex items-center gap-3 mb-1">
                 <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                <span className="font-semibold text-foreground text-sm">{birthDetails?.birth_name || 'Your Chart'}</span>
+                <span className="font-semibold text-foreground text-sm">
+                  {birthDetails?.birth_name || 'Your Chart'}
+                </span>
               </div>
               <p className="text-xs text-muted-foreground ml-7">
-                {birthDetails?.birth_place} • {birthDetails?.birth_date} {birthDetails?.birth_time}
+                {(birthDetails?.birth_place || 'Unknown location')} • {birthDetails?.birth_date} {birthDetails?.birth_time}
               </p>
               <div className="mt-3 flex items-center justify-between ml-7">
                 <span className="text-[10px] text-muted-foreground/60">
-                  {syncState.status === 'synced' && syncState.lastSyncedAt
-                    ? `Synced • ${new Date(syncState.lastSyncedAt).toLocaleString()}`
-                    : 'Not synced'}
+                  {synced && lastSyncedAt
+                    ? `Synced • ${new Date(lastSyncedAt).toLocaleString()}`
+                    : 'Not synced yet'}
                 </span>
                 <Dialog open={birthDetailsDialogOpen} onOpenChange={setBirthDetailsDialogOpen}>
                   <DialogTrigger asChild>
@@ -199,11 +208,17 @@ const VedicAstrology: React.FC = () => {
                         setBirthDetailsDialogOpen(false);
                         fetchBirthDetails();
                         setSyncState({ status: 'synced', lastSyncedAt: new Date().toISOString() });
+                        setSyncError(null);
                       }}
                     />
                   </DialogContent>
                 </Dialog>
               </div>
+              {syncError ? (
+                <div className="mt-3 text-[10px] text-red-400 ml-7">
+                  {syncError}
+                </div>
+              ) : null}
             </div>
           ) : (
             <Card className="border-2 border-primary/30 bg-gradient-to-br from-blue-500/5 to-purple-500/5 backdrop-blur-sm">
@@ -236,6 +251,7 @@ const VedicAstrology: React.FC = () => {
                           setBirthDetailsDialogOpen(false);
                           fetchBirthDetails();
                           setSyncState({ status: 'synced', lastSyncedAt: new Date().toISOString() });
+                          setSyncError(null);
                         }}
                       />
                     </DialogContent>
@@ -245,6 +261,28 @@ const VedicAstrology: React.FC = () => {
             </Card>
           )}
         </motion.div>
+
+        {/* Primary Consult Guru CTA near top */}
+        <button
+          onClick={() => {
+            if (!hasBirthDetails) {
+              setBirthDetailsDialogOpen(true);
+              return;
+            }
+            scrollTo('consult-guru');
+          }}
+          className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/7 transition"
+        >
+          <div className="text-white font-semibold">Consult the Guru</div>
+          <div className="mt-1 text-sm text-white/60">
+            Ask a question and receive guidance based on your chart.
+          </div>
+          <div className="mt-4">
+            <span className="inline-flex rounded-full bg-white px-4 py-2 text-sm font-semibold text-black">
+              Ask now
+            </span>
+          </div>
+        </button>
 
         {/* Mode Toggle */}
         {hasBirthDetails && activeTier && (
@@ -276,7 +314,7 @@ const VedicAstrology: React.FC = () => {
           </div>
         )}
 
-        {/* Sticky Section Nav */}
+        {/* Sticky Section Nav (jump between major sections) */}
         {hasBirthDetails && activeTier && useAIMode && (
           <motion.div
             className="sticky top-0 z-50 mb-6"
@@ -324,7 +362,7 @@ const VedicAstrology: React.FC = () => {
           </motion.div>
         )}
 
-        {/* Available Tiers - ONLY for free users */}
+        {/* Available Tiers - ONLY for free users (hidden for paid) */}
         {!isPaid && (
           <motion.div 
             className="space-y-4 pt-8 border-t border-border/30"
@@ -414,8 +452,8 @@ const VedicAstrology: React.FC = () => {
         )}
       </div>
 
-      {/* Sticky "Consult Guru" CTA for paid users */}
-      {isPaid && hasBirthDetails && useAIMode && (
+      {/* Sticky "Consult Guru" CTA for synced users */}
+      {synced && hasBirthDetails && useAIMode && (
         <div className="fixed bottom-20 right-4 z-50">
           <Button
             onClick={() => scrollTo('consult-guru')}
