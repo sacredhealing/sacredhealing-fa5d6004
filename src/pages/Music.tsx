@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Music2, Plus, List, Crown, ChevronRight, X, GripVertical, Edit2, Check, Loader2, Disc, ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Music2, Plus, List, Crown, ChevronRight, X, GripVertical, Edit2, Check, Loader2, Disc, ArrowLeft, ChevronDown, ChevronUp, Headphones } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -50,11 +50,51 @@ const SPIRITUAL_PATHS = [
   { value: 'awakening', label: 'Awakening' },
 ];
 
+type MoodKey = 'calm' | 'comfort' | 'energy' | 'rest' | 'background';
+
+function pickByTags(tracks: Track[], tags: string[]) {
+  const tset = tags.map((t) => t.toLowerCase());
+  const score = (it: Track) => {
+    const raw: any = (it as any)?.tags ?? (it as any)?.metadata?.tags ?? [];
+    let list: string[] =
+      Array.isArray(raw)
+        ? raw.map((x: any) => String(x).toLowerCase())
+        : typeof raw === 'string'
+        ? raw.split(',').map((x: any) => x.trim().toLowerCase())
+        : [];
+
+    // Also treat mood / spiritual_path / genre as soft tags
+    const extras = [
+      (it as any).mood,
+      (it as any).spiritual_path,
+      (it as any).genre,
+    ]
+      .filter(Boolean)
+      .map((x: any) => String(x).toLowerCase());
+
+    list = [...list, ...extras];
+
+    let s = 0;
+    for (const t of tset) if (list.includes(t)) s += 10;
+    return s;
+  };
+
+  const ranked = [...tracks].sort((a, b) => score(b) - score(a));
+  return ranked.filter((x) => score(x) > 0);
+}
+
+function timeOfDayKey() {
+  const h = new Date().getHours();
+  if (h >= 5 && h < 12) return 'morning';
+  if (h >= 12 && h < 18) return 'afternoon';
+  return 'night';
+}
+
 const Music: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { isSubscribed, checkSubscription, refreshPurchases, playTrack } = useMusicPlayer();
+  const { isSubscribed, checkSubscription, refreshPurchases, playTrack, currentTrack } = useMusicPlayer();
   
   const [tracks, setTracks] = useState<Track[]>([]);
   const [albums, setAlbums] = useState<Album[]>([]);
@@ -80,6 +120,7 @@ const Music: React.FC = () => {
   const [editingName, setEditingName] = useState('');
   const [selectedPlaylist, setSelectedPlaylist] = useState<string | null>(null);
   const [playlistTracks, setPlaylistTracks] = useState<string[]>([]);
+  const [openLibrary, setOpenLibrary] = useState(false);
 
   useEffect(() => {
     fetchTracks();
@@ -237,12 +278,61 @@ const Music: React.FC = () => {
   const historyTracks = playHistory.map(h => tracks.find(t => t.id === h.track_id)).filter(Boolean) as Track[];
   const playlistTracksList = playlistTracks.map(id => tracks.find(t => t.id === id)).filter(Boolean) as Track[];
 
+  const moodTags: Record<MoodKey, string[]> = {
+    calm: ['calm', 'ground', 'soft', 'still', 'peace'],
+    comfort: ['comfort', 'heart', 'warm', 'tender'],
+    energy: ['energy', 'uplift', 'focus', 'bright'],
+    rest: ['sleep', 'night', 'deep', 'rest', 'unwind'],
+    background: ['ambient', 'background', 'loop', 'focus'],
+  };
+
+  const curated = useMemo(() => {
+    if (!tracks.length) {
+      return {
+        calm: [] as Track[],
+        comfort: [] as Track[],
+        energy: [] as Track[],
+        rest: [] as Track[],
+        background: [] as Track[],
+      };
+    }
+    return {
+      calm: pickByTags(tracks, moodTags.calm),
+      comfort: pickByTags(tracks, moodTags.comfort),
+      energy: pickByTags(tracks, moodTags.energy),
+      rest: pickByTags(tracks, moodTags.rest),
+      background: pickByTags(tracks, moodTags.background),
+    };
+  }, [tracks]);
+
+  const playMood = (key: MoodKey) => {
+    const list = (curated as any)[key] as Track[] | undefined;
+    const first = list?.[0] ?? tracks?.[0];
+    if (!first) return;
+    playTrack(first, tracks);
+  };
+
+  const playForMe = () => {
+    const tod = timeOfDayKey();
+    const key: MoodKey =
+      tod === 'morning' ? 'energy' : tod === 'afternoon' ? 'background' : 'rest';
+
+    const list = (curated as any)[key] as Track[] | undefined;
+    const pick = list?.[0] ?? tracks?.[0];
+    if (!pick) return;
+    playTrack(pick, tracks);
+  };
+
+  const lastPlayed: Track | null =
+    currentTrack ||
+    (historyTracks && historyTracks.length > 0 ? historyTracks[0] : null);
+
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
   }
 
   return (
-    <div className="min-h-screen px-4 pt-6 pb-40">
+    <div className="min-h-screen px-4 pt-6 pb-40 max-w-3xl mx-auto">
       {/* Header */}
       <header className="mb-4">
         <h1 className="text-2xl font-heading font-bold text-foreground flex items-center gap-2">
@@ -269,6 +359,110 @@ const Music: React.FC = () => {
         </div>
         <ChevronRight size={16} className="text-muted-foreground" />
       </button>
+
+      {/* Start listening — state doorway */}
+      <section className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div className="text-white font-semibold">What do you need right now?</div>
+        <div className="mt-1 text-sm text-white/60">
+          One tap — and the sound meets you where you are.
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <button
+            onClick={() => playMood('calm')}
+            className="rounded-2xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/7 transition"
+          >
+            <div className="text-white font-semibold">Calm my thoughts</div>
+            <div className="mt-1 text-sm text-white/60">Quiet the mind, soften the body.</div>
+          </button>
+
+          <button
+            onClick={() => playMood('comfort')}
+            className="rounded-2xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/7 transition"
+          >
+            <div className="text-white font-semibold">Feel comfort</div>
+            <div className="mt-1 text-sm text-white/60">Warm support for the heart.</div>
+          </button>
+
+          <button
+            onClick={() => playMood('energy')}
+            className="rounded-2xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/7 transition"
+          >
+            <div className="text-white font-semibold">More energy</div>
+            <div className="mt-1 text-sm text-white/60">Lift and focus without strain.</div>
+          </button>
+
+          <button
+            onClick={() => playMood('rest')}
+            className="rounded-2xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/7 transition"
+          >
+            <div className="text-white font-semibold">Deep rest</div>
+            <div className="mt-1 text-sm text-white/60">Slow down into night.</div>
+          </button>
+
+          <button
+            onClick={() => playMood('background')}
+            className="sm:col-span-2 rounded-2xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/7 transition"
+          >
+            <div className="text-white font-semibold">Silent background</div>
+            <div className="mt-1 text-sm text-white/60">Gentle atmosphere while you live.</div>
+          </button>
+        </div>
+      </section>
+
+      {/* Current flow */}
+      <section className="mt-6">
+        <div className="text-lg font-semibold text-white">Current flow</div>
+        <div className="mt-1 text-sm text-white/60">
+          Your sound can continue where you left off.
+        </div>
+
+        <div className="mt-3 grid gap-3">
+          {lastPlayed && (
+            <button
+              onClick={() => playTrack(lastPlayed, tracks)}
+              className="rounded-2xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/7 transition"
+            >
+              <div className="text-white font-semibold">Continue listening</div>
+              <div className="mt-1 text-sm text-white/60">
+                {lastPlayed?.title ?? 'Last played'}
+              </div>
+            </button>
+          )}
+
+          <button
+            onClick={playForMe}
+            className="rounded-2xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/7 transition"
+          >
+            <div className="text-white font-semibold">The sound that fits now</div>
+            <div className="mt-1 text-sm text-white/60">
+              Matched to your time of day — no thinking required.
+            </div>
+          </button>
+        </div>
+      </section>
+
+      {/* Browse all sounds (collapsed library with full controls) */}
+      <section className="mt-8 rounded-2xl border border-white/10 bg-white/5">
+        <button
+          onClick={() => setOpenLibrary((v) => !v)}
+          className="w-full flex items-center justify-between px-4 py-4"
+        >
+          <div className="text-left">
+            <div className="text-white font-semibold">Browse all sounds</div>
+            <div className="mt-1 text-sm text-white/60">
+              Only if you feel like exploring.
+            </div>
+          </div>
+          {openLibrary ? (
+            <ChevronUp className="text-white/70" />
+          ) : (
+            <ChevronDown className="text-white/70" />
+          )}
+        </button>
+
+        {openLibrary && (
+          <div className="px-1 pt-3 pb-4">
 
       {/* Tabs */}
       <div className="flex gap-2 mb-4 overflow-x-auto">
@@ -647,6 +841,20 @@ const Music: React.FC = () => {
           </div>
         </div>
       )}
+          </div>
+        )}
+      </section>
+
+      {/* Floating CTA: Play something for me */}
+      <div className="fixed bottom-20 right-4 z-50">
+        <button
+          onClick={playForMe}
+          className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-black shadow-lg hover:opacity-90 transition"
+        >
+          <Headphones size={16} />
+          Play something for me
+        </button>
+      </div>
     </div>
   );
 };
