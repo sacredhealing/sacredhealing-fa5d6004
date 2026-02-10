@@ -357,14 +357,15 @@ const Healing: React.FC = () => {
         onSelectIntention={handleIntentionSelected}
         onClose={handleThresholdClose}
       />
-      <div className="min-h-screen p-6 space-y-8">
-        <MeditationMembershipBanner />
+      <div className="min-h-screen bg-background">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-8">
+          <MeditationMembershipBanner />
 
-        <section className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-muted/20 px-4 py-3">
-          <HealingLanguageToggle language={language} setLanguage={setLanguage} />
-        </section>
+          <section className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-muted/20 px-4 py-3">
+            <HealingLanguageToggle language={language} setLanguage={setLanguage} />
+          </section>
 
-        <Card className="bg-gradient-to-r from-primary/30 to-pink-500/30 border-none text-center overflow-hidden">
+          <Card className="bg-gradient-to-r from-primary/30 to-pink-500/30 border-none text-center overflow-hidden">
           <CardContent className="py-10 px-6">
             <Sparkles className="w-12 h-12 text-primary mx-auto mb-4" />
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
@@ -382,277 +383,280 @@ const Healing: React.FC = () => {
               {t('healing.ctaStartSession')}
             </Button>
           </CardContent>
-        </Card>
+          </Card>
 
-        <div className="max-w-2xl mx-auto text-center text-sm text-muted-foreground">
-          <p>{t('healing.reassurance1')}</p>
-          <p>{t('healing.reassurance2')}</p>
-        </div>
-
-        <HealingProgressCard variant="full" />
-
-        <Card className="border-border">
-          <CardContent className="pt-6">
-            <h2 className="text-2xl font-bold text-foreground mb-3 flex items-center gap-2">
-              <Heart className="w-6 h-6 text-primary" />
-              {t('healing.whatHappensTitle')}
-            </h2>
-            <ul className="mt-1 text-sm text-muted-foreground space-y-1">
-              <li>• {t('healing.whatHappensBullet1')}</li>
-              <li>• {t('healing.whatHappensBullet2')}</li>
-              <li>• {t('healing.whatHappensBullet3')}</li>
-              <li>• {t('healing.whatHappensBullet4')}</li>
-            </ul>
-          </CardContent>
-        </Card>
-
-        {sessions.recommended.length > 0 && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-              <Star className="w-5 h-5 text-primary" />
-              {t('healing.recommendedForYou')}
-            </h2>
-            <div className="grid gap-3">
-              {sessions.recommended.map((audio) => (
-                <SessionRow
-                  key={audio.id}
-                  audio={audio as HealingAudio}
-                  isPlaying={isHealingPlaying(audio.id)}
-                  onTogglePlay={togglePlay}
-                  formatDuration={formatDuration}
-                  isAdmin={isAdmin}
-                  ownedAudioIds={ownedAudioIds}
-                  hasHealingAccess={hasHealingAccess}
-                  onPurchase={handlePurchaseAudio}
-                  isProcessing={isProcessing}
-                  t={t}
-                />
-              ))}
-            </div>
+          <div className="text-center text-sm text-muted-foreground">
+            <p>{t('healing.reassurance1')}</p>
+            <p>{t('healing.reassurance2')}</p>
           </div>
-        )}
 
-        {shortOnly.length > 0 && (
-          <div className="space-y-4">
-            <button
-              type="button"
-              className="w-full flex items-center justify-between text-left"
-              onClick={() => setShortExpanded(!shortExpanded)}
-            >
-              <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-                <Music className="w-5 h-5 text-primary" />
-                {t('healing.shortSessions')}
+          <HealingProgressCard variant="full" />
+
+          <Card className="border-border">
+            <CardContent className="pt-6">
+              <h2 className="text-xl font-bold text-foreground mb-3 flex items-center gap-2">
+                <Heart className="w-6 h-6 text-primary" />
+                {t('healing.whatHappensTitle')}
               </h2>
-              {shortExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-            </button>
-            {shortExpanded && (
-              <div className="grid gap-3">
-                {shortOnly.map((audio) => (
-                  <SessionRow
-                    key={audio.id}
-                    audio={audio as HealingAudio}
-                    isPlaying={isHealingPlaying(audio.id)}
-                    onTogglePlay={togglePlay}
-                    formatDuration={formatDuration}
-                    isAdmin={isAdmin}
-                    ownedAudioIds={ownedAudioIds}
-                    hasHealingAccess={hasHealingAccess}
-                    onPurchase={handlePurchaseAudio}
-                    isProcessing={isProcessing}
-                    t={t}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {deepOnly.length > 0 && (
-          <div className="space-y-4">
-            <button
-              type="button"
-              className="w-full flex items-center justify-between text-left"
-              onClick={() => setDeepExpanded(!deepExpanded)}
-            >
-              <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-primary" />
-                {t('healing.deepSessions')}
-              </h2>
-              {deepExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-            </button>
-            {deepExpanded && (
-              <div className="grid gap-3">
-                {deepOnly.map((audio) => (
-                  <SessionRow
-                    key={audio.id}
-                    audio={audio as HealingAudio}
-                    isPlaying={isHealingPlaying(audio.id)}
-                    onTogglePlay={togglePlay}
-                    formatDuration={formatDuration}
-                    isAdmin={isAdmin}
-                    ownedAudioIds={ownedAudioIds}
-                    hasHealingAccess={hasHealingAccess}
-                    onPurchase={handlePurchaseAudio}
-                    isProcessing={isProcessing}
-                    t={t}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        <Button variant="outline" className="w-full" onClick={() => navigate('/meditations')}>
-          {t('healing.viewAllSessions')}
-        </Button>
-
-        {!hasAnyFilteredAudio && (
-          <Card className="border-border bg-muted/30">
-            <CardContent className="p-6 text-center">
-              <p className="text-sm text-muted-foreground">
-                {language === 'en' ? t('healing.noSessionsInEnglish') : t('healing.noSessionsInSwedish')}
-              </p>
+              <ul className="mt-1 text-sm text-muted-foreground space-y-1">
+                <li>• {t('healing.whatHappensBullet1')}</li>
+                <li>• {t('healing.whatHappensBullet2')}</li>
+                <li>• {t('healing.whatHappensBullet3')}</li>
+                <li>• {t('healing.whatHappensBullet4')}</li>
+              </ul>
             </CardContent>
           </Card>
-        )}
 
-        <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-center text-foreground">{t('healing.testimonialsTitle')}</h2>
-          <p className="text-sm text-muted-foreground text-center">{t('healing.testimonialsSubtitle')}</p>
-          <div className="space-y-4">
-            {testimonials.slice(0, 2).map((testimonial, i) => (
-              <Card key={i} className="border-border">
-                <CardContent className="pt-6">
-                  <h3 className="font-semibold text-foreground text-lg">{testimonial.name}</h3>
-                  {testimonial.text && <p className="text-muted-foreground italic">&quot;{testimonial.text}&quot;</p>}
-                </CardContent>
-              </Card>
-            ))}
-            <Button variant="ghost" className="w-full" onClick={() => setTestimonialsExpanded(!testimonialsExpanded)}>
-              {t('healing.seeMore')}
-            </Button>
-            {testimonialsExpanded &&
-              testimonials.slice(2).map((testimonial, i) => (
-                <Card key={`more-${i}`} className="border-border">
+            {sessions.recommended.length > 0 && (
+            <div className="space-y-4">
+              <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <Star className="w-5 h-5 text-primary" />
+                {t('healing.recommendedForYou')}
+              </h2>
+              <div className="grid gap-3">
+                {sessions.recommended.map((audio) => (
+                  <SessionRow
+                    key={audio.id}
+                    audio={audio as HealingAudio}
+                    isPlaying={isHealingPlaying(audio.id)}
+                    onTogglePlay={togglePlay}
+                    formatDuration={formatDuration}
+                    isAdmin={isAdmin}
+                    ownedAudioIds={ownedAudioIds}
+                    hasHealingAccess={hasHealingAccess}
+                    onPurchase={handlePurchaseAudio}
+                    isProcessing={isProcessing}
+                    t={t}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+            {shortOnly.length > 0 && (
+            <div className="space-y-4">
+              <button
+                type="button"
+                className="w-full flex items-center justify-between text-left"
+                onClick={() => setShortExpanded(!shortExpanded)}
+              >
+                <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  <Music className="w-5 h-5 text-primary" />
+                  {t('healing.shortSessions')}
+                </h2>
+                {shortExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+              </button>
+              {shortExpanded && (
+                <div className="grid gap-3">
+                  {shortOnly.map((audio) => (
+                    <SessionRow
+                      key={audio.id}
+                      audio={audio as HealingAudio}
+                      isPlaying={isHealingPlaying(audio.id)}
+                      onTogglePlay={togglePlay}
+                      formatDuration={formatDuration}
+                      isAdmin={isAdmin}
+                      ownedAudioIds={ownedAudioIds}
+                      hasHealingAccess={hasHealingAccess}
+                      onPurchase={handlePurchaseAudio}
+                      isProcessing={isProcessing}
+                      t={t}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {deepOnly.length > 0 && (
+            <div className="space-y-4">
+              <button
+                type="button"
+                className="w-full flex items-center justify-between text-left"
+                onClick={() => setDeepExpanded(!deepExpanded)}
+              >
+                <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                  {t('healing.deepSessions')}
+                </h2>
+                {deepExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+              </button>
+              {deepExpanded && (
+                <div className="grid gap-3">
+                  {deepOnly.map((audio) => (
+                    <SessionRow
+                      key={audio.id}
+                      audio={audio as HealingAudio}
+                      isPlaying={isHealingPlaying(audio.id)}
+                      onTogglePlay={togglePlay}
+                      formatDuration={formatDuration}
+                      isAdmin={isAdmin}
+                      ownedAudioIds={ownedAudioIds}
+                      hasHealingAccess={hasHealingAccess}
+                      onPurchase={handlePurchaseAudio}
+                      isProcessing={isProcessing}
+                      t={t}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          <Button variant="outline" className="w-full" onClick={() => navigate('/meditations')}>
+            {t('healing.viewAllSessions')}
+          </Button>
+
+          {!hasAnyFilteredAudio && (
+            <Card className="border-border bg-muted/30">
+              <CardContent className="p-6 text-center">
+                <p className="text-sm text-muted-foreground">
+                  {language === 'en' ? t('healing.noSessionsInEnglish') : t('healing.noSessionsInSwedish')}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          <section className="space-y-4">
+            <h2 className="text-lg font-bold text-center text-foreground">{t('healing.testimonialsTitle')}</h2>
+            <p className="text-sm text-muted-foreground text-center">{t('healing.testimonialsSubtitle')}</p>
+            <div className="space-y-4">
+              {testimonials.slice(0, 2).map((testimonial, i) => (
+                <Card key={i} className="border-border">
                   <CardContent className="pt-6">
                     <h3 className="font-semibold text-foreground text-lg">{testimonial.name}</h3>
                     {testimonial.text && <p className="text-muted-foreground italic">&quot;{testimonial.text}&quot;</p>}
-                    {'videos' in testimonial && testimonial.videos && (
-                      <div className="grid md:grid-cols-3 gap-4 mt-4">
-                        {testimonial.videos.map((url, j) => (
-                          <div key={j} className="aspect-video">
-                            <iframe
-                              className="w-full h-full rounded-lg"
-                              src={url}
-                              title={`Video ${j + 1}`}
-                              frameBorder="0"
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                              allowFullScreen
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    )}
                   </CardContent>
                 </Card>
               ))}
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <Button variant="outline" className="w-full flex items-center justify-between py-6" onClick={() => setFaqOpen(!faqOpen)}>
-            <span className="text-lg font-semibold">{t('soul.faqTitle')}</span>
-            {faqOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-          </Button>
-          {faqOpen && (
-            <Accordion type="multiple" className="space-y-2">
-              {faqItems.map((faq, i) => (
-                <AccordionItem key={i} value={`faq-${i}`} className="border border-border rounded-lg px-4">
-                  <AccordionTrigger className="text-left text-foreground hover:no-underline">{faq.question}</AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground">{faq.answer}</AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          )}
-        </div>
-
-        {!hasHealingAccess && (
-          <div className="space-y-6">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold text-foreground mb-2">{t('healing.choosePlanTitle')}</h2>
-              <p className="text-muted-foreground">{t('healing.choosePlanSubtitle')}</p>
-            </div>
-            <div className="flex flex-wrap justify-center gap-4">
-              {HEALING_PLANS.map((plan) => (
-                <Button
-                  key={plan.id}
-                  size="lg"
-                  className="bg-[#00F2FE] text-black font-extrabold hover:bg-[#00D4E0] border-0"
-                  onClick={() => openPaymentModal(plan)}
-                  disabled={isProcessing}
-                >
-                  {plan.days} {t('common.days')}
-                </Button>
-              ))}
-              <Button
-                size="lg"
-                className="bg-[#00F2FE] text-black font-extrabold hover:bg-[#00D4E0] border-0"
-                onClick={handleSubscriptionStripe}
-                disabled={isProcessing}
-              >
-                Ongoing
+              <Button variant="ghost" className="w-full" onClick={() => setTestimonialsExpanded(!testimonialsExpanded)}>
+                {testimonialsExpanded ? t('healing.seeLess') : t('healing.seeMore')}
               </Button>
+              {testimonialsExpanded &&
+                testimonials.slice(2).map((testimonial, i) => (
+                  <Card key={`more-${i}`} className="border-border">
+                    <CardContent className="pt-6">
+                      <h3 className="font-semibold text-foreground text-lg">{testimonial.name}</h3>
+                      {testimonial.text && <p className="text-muted-foreground italic">&quot;{testimonial.text}&quot;</p>}
+                      {'videos' in testimonial && testimonial.videos && (
+                        <div className="grid md:grid-cols-3 gap-4 mt-4">
+                          {testimonial.videos.map((url, j) => (
+                            <div key={j} className="aspect-video">
+                              <iframe
+                                className="w-full h-full rounded-lg"
+                                src={url}
+                                title={`Video ${j + 1}`}
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
             </div>
-            <Card className="border-border/60 bg-muted/40">
-              <CardContent className="pt-4 pb-4">
-                <p className="text-sm text-muted-foreground">{t('healing.distanceDisclosure')}</p>
+          </section>
+
+          <div className="space-y-4">
+            <Button variant="outline" className="w-full flex items-center justify-between py-6" onClick={() => setFaqOpen(!faqOpen)}>
+              <span className="text-lg font-semibold">{t('soul.faqTitle')}</span>
+              {faqOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+            </Button>
+            {faqOpen && (
+              <Accordion type="multiple" className="space-y-2">
+                {faqItems.map((faq, i) => (
+                  <AccordionItem key={i} value={`faq-${i}`} className="border border-border rounded-lg px-4">
+                    <AccordionTrigger className="text-left text-foreground hover:no-underline">{faq.question}</AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground">{faq.answer}</AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            )}
+          </div>
+
+          {!hasHealingAccess && (
+            <Card className="border-border">
+              <CardContent className="pt-6 pb-6">
+                <div className="text-center mb-6">
+                  <h2 className="text-xl font-bold text-foreground mb-2">{t('healing.choosePlanTitle')}</h2>
+                  <p className="text-sm text-muted-foreground">{t('healing.choosePlanSubtitle')}</p>
+                </div>
+                <div className="flex flex-wrap justify-center gap-3">
+                  {HEALING_PLANS.map((plan) => (
+                    <Button
+                      key={plan.id}
+                      size="lg"
+                      className="bg-[#00F2FE] text-black font-extrabold hover:bg-[#00D4E0] border-0"
+                      onClick={() => openPaymentModal(plan)}
+                      disabled={isProcessing}
+                    >
+                      {plan.days} {t('common.days')}
+                    </Button>
+                  ))}
+                  <Button
+                    size="lg"
+                    className="bg-[#00F2FE] text-black font-extrabold hover:bg-[#00D4E0] border-0"
+                    onClick={handleSubscriptionStripe}
+                    disabled={isProcessing}
+                  >
+                    {t('healing.ongoing')}
+                  </Button>
+                </div>
+                <Card className="mt-4 border-border/60 bg-muted/40">
+                  <CardContent className="pt-4 pb-4">
+                    <p className="text-sm text-muted-foreground">{t('healing.distanceDisclosure')}</p>
+                  </CardContent>
+                </Card>
               </CardContent>
             </Card>
-          </div>
-        )}
+          )}
 
-        <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>{t('healing.choosePaymentMethod')}</DialogTitle>
-              <DialogDescription>
-                {selectedPlan && `${selectedPlan.name} - €${selectedPlan.price}`}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <Button
-                size="lg"
-                className="w-full flex items-center justify-center gap-3 bg-[#00F2FE] text-black font-extrabold border-0"
-                onClick={() => selectedPlan && handleStripePayment(selectedPlan.id)}
-                disabled={isProcessing}
-              >
-                <CreditCard className="w-5 h-5" />
-                {t('healing.payWithCard')}
-              </Button>
-              <Button
-                size="lg"
-                className="w-full flex items-center justify-center gap-3 bg-white/10 text-white border border-white/20 hover:bg-white/20"
-                onClick={() => selectedPlan && handleCryptoPayment(selectedPlan)}
-                disabled={isProcessing}
-              >
-                <Wallet className="w-5 h-5" />
-                {t('healing.payWithCrypto')}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+          {hasHealingAccess && (
+            <Card className="p-4 bg-green-500/10 border-green-500/30">
+              <div className="flex items-center gap-2 text-green-500">
+                <CheckCircle className="w-5 h-5" />
+                <span className="font-medium">{t('healing.activeAccess')}</span>
+              </div>
+            </Card>
+          )}
 
-        {hasHealingAccess && (
-          <Card className="p-4 bg-green-500/10 border-green-500/30">
-            <div className="flex items-center gap-2 text-green-500">
-              <CheckCircle className="w-5 h-5" />
-              <span className="font-medium">{t('healing.activeAccess')}</span>
-            </div>
-          </Card>
-        )}
-
-        <ReviewSection contentType="healing" contentId="general" />
+          <ReviewSection contentType="healing" contentId="general" />
+        </div>
       </div>
+
+      <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('healing.choosePaymentMethod')}</DialogTitle>
+            <DialogDescription>
+              {selectedPlan && `${selectedPlan.name} - €${selectedPlan.price}`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Button
+              size="lg"
+              className="w-full flex items-center justify-center gap-3 bg-[#00F2FE] text-black font-extrabold border-0"
+              onClick={() => selectedPlan && handleStripePayment(selectedPlan.id)}
+              disabled={isProcessing}
+            >
+              <CreditCard className="w-5 h-5" />
+              {t('healing.payWithCard')}
+            </Button>
+            <Button
+              size="lg"
+              className="w-full flex items-center justify-center gap-3 bg-white/10 text-white border border-white/20 hover:bg-white/20"
+              onClick={() => selectedPlan && handleCryptoPayment(selectedPlan)}
+              disabled={isProcessing}
+            >
+              <Wallet className="w-5 h-5" />
+              {t('healing.payWithCrypto')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

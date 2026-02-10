@@ -855,7 +855,9 @@
     "shortSessions": "Korta sessioner",
     "deepSessions": "Djupa sessioner",
     "noSessionsInEnglish": "Inga sessioner på engelska än. Fler kommer snart.",
-    "noSessionsInSwedish": "Inga sessioner på svenska än. Fler kommer snart."
+    "noSessionsInSwedish": "Inga sessioner på svenska än. Fler kommer snart.",
+    "ongoing": "Löpande",
+    "seeLess": "Visa mindre"
   },
   "shop": {
     "title": "Helig butik",
