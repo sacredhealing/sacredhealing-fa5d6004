@@ -122,6 +122,22 @@ const Profile: React.FC = () => {
             <p className="text-xs text-muted-foreground">{t('profile.badges')}</p>
           </div>
         </div>
+
+        {/* Start here guide card */}
+        <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="text-white font-semibold">Start here</div>
+          <div className="mt-1 text-sm text-white/60">
+            If this is your first time, this short guide explains how Sacred Healing works
+            and how to begin gently.
+          </div>
+
+          <button
+            onClick={() => navigate("/onboarding")}
+            className="mt-4 rounded-full bg-white px-5 py-3 text-sm font-semibold text-black hover:opacity-90 transition"
+          >
+            Open guide
+          </button>
+        </div>
       </div>
 
       {/* Badges */}
@@ -174,8 +190,28 @@ const Profile: React.FC = () => {
         <LanguageSelector />
       </div>
 
-      {/* Premium CTA - Membership Card */}
-      <div className="mb-8 animate-slide-up" style={{ animationDelay: '0.15s' }}>
+      {/* Menu */}
+      <div className="space-y-2 animate-slide-up" style={{ animationDelay: '0.25s' }}>
+        {menuItems.map((item) => (
+          <button
+            key={item.label}
+            onClick={item.onClick}
+            className="w-full flex items-center gap-4 p-4 rounded-xl bg-gradient-card border border-border/50 hover:bg-muted/50 transition-all"
+          >
+            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+              <item.icon size={20} className="text-muted-foreground" />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="font-medium text-foreground">{item.label}</p>
+              <p className="text-xs text-muted-foreground">{item.sublabel}</p>
+            </div>
+            <ChevronRight size={20} className="text-muted-foreground" />
+          </button>
+        ))}
+      </div>
+
+      {/* Premium CTA - Membership Card (moved below preferences) */}
+      <div className="mb-8 mt-8 animate-slide-up" style={{ animationDelay: '0.3s' }}>
         <div 
           className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-500/20 via-background to-amber-500/10 border border-border/50 p-5 cursor-pointer hover:border-primary/50 transition-all"
           onClick={() => navigate('/membership')}
@@ -218,26 +254,6 @@ const Profile: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Menu */}
-      <div className="space-y-2 animate-slide-up" style={{ animationDelay: '0.25s' }}>
-        {menuItems.map((item) => (
-          <button
-            key={item.label}
-            onClick={item.onClick}
-            className="w-full flex items-center gap-4 p-4 rounded-xl bg-gradient-card border border-border/50 hover:bg-muted/50 transition-all"
-          >
-            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-              <item.icon size={20} className="text-muted-foreground" />
-            </div>
-            <div className="flex-1 text-left">
-              <p className="font-medium text-foreground">{item.label}</p>
-              <p className="text-xs text-muted-foreground">{item.sublabel}</p>
-            </div>
-            <ChevronRight size={20} className="text-muted-foreground" />
-          </button>
-        ))}
       </div>
 
       {/* Logout */}
