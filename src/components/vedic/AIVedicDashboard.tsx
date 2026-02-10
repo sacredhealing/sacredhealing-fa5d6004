@@ -231,6 +231,7 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, onEdit
   return (
     <div className="max-w-4xl mx-auto space-y-12">
       {/* Cosmic Sync Status Header */}
+      <div id="overview" />
       <motion.div 
         className="flex flex-wrap items-center justify-between gap-4 p-5 rounded-3xl bg-card/50 backdrop-blur-md border border-border/50"
         initial={{ opacity: 0, y: -10 }}
@@ -267,7 +268,8 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, onEdit
         </div>
       </motion.div>
 
-      {/* HORA WATCH - DR PILLAI EDITION - Now with accurate sunrise/sunset-based calculations */}
+      {/* HORA WATCH - DR PILLAI EDITION */}
+      <div id="hora" />
       <motion.section 
         className="space-y-6"
         initial={{ opacity: 0, y: 20 }}
@@ -329,6 +331,7 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, onEdit
       </motion.section>
 
       {/* Today's Cosmic Pulse with Audio */}
+      <div id="nakshatra" />
       <motion.section 
         className="space-y-6"
         initial={{ opacity: 0, y: 20 }}
@@ -487,6 +490,7 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, onEdit
       )}
 
       {/* Master Soul Blueprint (Premium Tier) */}
+      <div id="blueprint" />
       {user.plan === 'premium' && reading.masterBlueprint && (
         <motion.section 
           className="space-y-10"
@@ -579,6 +583,7 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, onEdit
       )}
 
       {/* Consult Guru - Live Oracle Chat */}
+      <div id="consult-guru" />
       <motion.section 
         className="space-y-6"
         initial={{ opacity: 0, y: 20 }}
