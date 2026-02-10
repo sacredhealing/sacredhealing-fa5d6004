@@ -123,20 +123,50 @@ const Profile: React.FC = () => {
           </div>
         </div>
 
-        {/* Start here guide card */}
-        <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4">
-          <div className="text-white font-semibold">Start here</div>
-          <div className="mt-1 text-sm text-white/60">
-            If this is your first time, this short guide explains how Sacred Healing works
-            and how to begin gently.
+        {/* Your Space + orientation (above badges) */}
+        <div className="mt-4 grid gap-3">
+          {/* Your Space */}
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <div className="text-white font-semibold">Your Sacred Healing Space</div>
+            <div className="mt-2 text-sm text-white/70 whitespace-pre-line">
+              {"This app is a daily support space.\nYou don't need to learn anything or believe anything.\nJust come, choose how you feel, and follow a short practice.\nOver time your mind, sleep and emotions naturally reorganize."}
+            </div>
           </div>
 
-          <Button
-            onClick={() => navigate("/onboarding")}
-            className="mt-4 rounded-full px-5 py-3 text-sm font-semibold"
-          >
-            Open guide
-          </Button>
+          {/* How to use */}
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <div className="text-white font-semibold">How to use this app</div>
+            <div className="mt-2 text-sm text-white/70 grid gap-2">
+              <div>1. Open Home → follow today's suggestion</div>
+              <div>2. If stressed → go to Soul</div>
+              <div>3. If curious → explore Astrology or Ayurveda</div>
+            </div>
+          </div>
+
+          {/* What each tab does (collapsed) */}
+          <details className="rounded-2xl border border-white/10 bg-white/5 p-4 group">
+            <summary className="cursor-pointer text-white font-semibold list-none flex items-center justify-between">
+              What each tab does
+              <ChevronRight className="w-4 h-4 text-white/60 group-open:rotate-90 transition-transform" />
+            </summary>
+            <div className="mt-3 text-sm text-white/70 grid gap-2">
+              <div><span className="text-white/90 font-medium">Home:</span> Your daily step. Just follow it.</div>
+              <div><span className="text-white/90 font-medium">Meditate:</span> Guided practices when you want quiet.</div>
+              <div><span className="text-white/90 font-medium">Music:</span> Background sound for focus, sleep or calm.</div>
+              <div><span className="text-white/90 font-medium">Soul:</span> Receive deeper sessions (you can just rest).</div>
+              <div><span className="text-white/90 font-medium">Library:</span> All tools in one place.</div>
+              <div><span className="text-white/90 font-medium">Community:</span> Talk or listen to others (optional).</div>
+            </div>
+          </details>
+
+          {/* Reassurance */}
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <div className="text-white font-semibold">What is happening to me?</div>
+            <div className="mt-2 text-sm text-white/70">
+              Many people notice better sleep, calmer reactions, or emotional release after some days.
+              This is normal — just go gently and continue daily.
+            </div>
+          </div>
         </div>
       </div>
 
