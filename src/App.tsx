@@ -84,6 +84,7 @@ import AdminAffirmation from "./pages/AdminAffirmation";
 import AdminMusicAnalytics from "./pages/AdminMusicAnalytics";
 import AdminAnalytics from "./pages/AdminAnalytics";
 import Explore from "./pages/Explore";
+import LibraryAbundance from "./pages/LibraryAbundance";
 import Onboarding from "./pages/Onboarding";
 import SpiritualPaths from "./pages/SpiritualPaths";
 import PathDetail from "./pages/PathDetail";
@@ -137,6 +138,7 @@ function AppRoutes() {
                   <Route path="/healing" element={<Healing />} />
                   <Route path="/healing/my-sacred-flame" element={<MySacredFlame />} />
                   <Route path="/breathing" element={<Breathing />} />
+                  <Route path="/library/abundance" element={<LibraryAbundance />} />
                   <Route path="/income-streams" element={<IncomeStreams />} />
                   <Route path="/income-streams/affiliate" element={<AffiliateDetail />} />
                   <Route path="/income-streams/shc-coin" element={<SHCCoinDetail />} />
