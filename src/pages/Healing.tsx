@@ -41,9 +41,9 @@ interface HealingPlan {
 }
 
 const HEALING_PLANS: HealingPlan[] = [
-  { id: '7_day', name: '7-Day Soul', price: 97, days: 7 },
-  { id: '14_day', name: '14-Day Soul', price: 147, days: 14 },
-  { id: '30_day', name: '30-Day Soul', price: 197, days: 30 },
+  { id: '7_day', name: '7 days', price: 97, days: 7 },
+  { id: '14_day', name: '14 days', price: 147, days: 14 },
+  { id: '30_day', name: '30 days', price: 197, days: 30 },
 ];
 
 const faqTranslations = {
@@ -489,13 +489,19 @@ const Healing: React.FC = () => {
         <CardContent className="py-10 px-6">
           <Sparkles className="w-12 h-12 text-primary mx-auto mb-4" />
           <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
-            {getContent('hero_title', t('soul.heroTitle'))}
+            {getContent('hero_title', '30-Day Inner Reset')}
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            {getContent('hero_subtitle', t('soul.heroSubtitle'))}
+            {getContent('hero_subtitle', 'Gentle daily sessions you can receive — just listen and rest.')}
           </p>
         </CardContent>
       </Card>
+
+      {/* Reassurance copy */}
+      <div className="mt-4 max-w-2xl mx-auto text-center text-sm text-muted-foreground">
+        <p>You don’t have to believe anything.</p>
+        <p>Just try one session and notice how you feel afterward.</p>
+      </div>
 
       {/* Healing Progress Card */}
       <HealingProgressCard variant="full" />
@@ -506,9 +512,14 @@ const Healing: React.FC = () => {
           <CardContent className="pt-6">
             <h2 className="text-2xl font-bold text-foreground mb-3 flex items-center gap-2">
               <Heart className="w-6 h-6 text-primary" />
-              {getContent('about_title', t('soul.moreAboutTitle'))}
+              What happens in a session
             </h2>
-            <p className="text-muted-foreground">{getContent('about_text', t('soul.moreAboutText'))}</p>
+            <ul className="mt-1 text-sm text-muted-foreground space-y-1">
+              <li>• You sit or lie down</li>
+              <li>• You listen</li>
+              <li>• The body settles naturally</li>
+              <li>• No effort needed</li>
+            </ul>
           </CardContent>
         </Card>
 
@@ -547,7 +558,10 @@ const Healing: React.FC = () => {
 
       {/* Testimonials Section */}
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-center text-foreground">{t('soul.testimonialsTitle')}</h2>
+        <h2 className="text-2xl font-bold text-center text-foreground">What people noticed</h2>
+        <p className="text-sm text-muted-foreground text-center">
+          Everyone experiences it differently.
+        </p>
         <div className="space-y-4">
           {testimonials.map((testimonial, i) => (
             <Card key={i} className="border-border">
@@ -611,8 +625,12 @@ const Healing: React.FC = () => {
       {!hasHealingAccess && (
         <div className="space-y-6">
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-foreground mb-2">{t('soul.purchaseTitle')}</h2>
-            <p className="text-muted-foreground">{t('soul.purchaseSubtitle')}</p>
+            <h2 className="text-2xl font-bold text-foreground mb-2">
+              Choose how long you want to practice
+            </h2>
+            <p className="text-muted-foreground">
+              You can start with a short period and extend when it feels right.
+            </p>
           </div>
           
           <div className="flex flex-wrap justify-center gap-4">
@@ -624,10 +642,7 @@ const Healing: React.FC = () => {
                 onClick={() => openPaymentModal(plan)}
                 disabled={isProcessing}
               >
-                {currentLang === 'en' && `${plan.days}-Day Soul - €${plan.price}`}
-                {currentLang === 'sv' && `${plan.days}-Dagars Själ - €${plan.price}`}
-                {currentLang === 'es' && `Alma de ${plan.days} Días - €${plan.price}`}
-                {currentLang === 'no' && `${plan.days}-Dagers Sjel - €${plan.price}`}
+                {`${plan.days} days`}
               </Button>
             ))}
             <Button 
@@ -636,9 +651,18 @@ const Healing: React.FC = () => {
               onClick={handleSubscriptionStripe}
               disabled={isProcessing}
             >
-              {t('soul.button3Month')}
+              Ongoing
             </Button>
           </div>
+
+          {/* Distance healing disclosure */}
+          <Card className="border-border/60 bg-muted/40">
+            <CardContent className="pt-4 pb-4">
+              <p className="text-sm text-muted-foreground">
+                Some sessions include silent transmission. You don’t need to understand it — just relax and observe how you feel afterward.
+              </p>
+            </CardContent>
+          </Card>
         </div>
       )}
 
@@ -689,7 +713,7 @@ const Healing: React.FC = () => {
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
             <Music className="w-5 h-5 text-primary" />
-            {t('soul.freeAudio')}
+            Short Sessions
           </h2>
           
           <div className="grid gap-3">
@@ -731,7 +755,7 @@ const Healing: React.FC = () => {
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-primary" />
-            {t('soul.premiumAudio')}
+            Deep Sessions
           </h2>
           
           <div className="grid gap-3">
