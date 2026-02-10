@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { toast as sonnerToast } from 'sonner';
@@ -11,21 +11,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useSHCBalance } from '@/hooks/useSHCBalance';
 import { ReviewSection } from '@/components/reviews/ReviewSection';
-import { TranslatedContent } from '@/components/TranslatedContent';
 import { usePhantomWallet } from '@/hooks/usePhantomWallet';
 import { HealingProgressCard } from '@/components/healing/HealingProgressCard';
 import { useAdminRole } from '@/hooks/useAdminRole';
-import { useProfile } from '@/hooks/useProfile';
 import { IntentionThreshold, IntentionType } from '@/components/meditation/IntentionThreshold';
 import MeditationMembershipBanner from '@/components/meditation/MeditationMembershipBanner';
 import { useMusicPlayer, UniversalAudioItem } from '@/contexts/MusicPlayerContext';
-import { ContentLanguagePicker } from '@/components/ContentLanguagePicker';
-import {
-  getHealingContentLang,
-  setHealingContentLang,
-  HEALING_CONTENT_LANG_KEY,
-  type ContentLang,
-} from '@/utils/healingContentLanguage';
+import { useHealingMeditationLanguage } from '@/hooks/useHealingMeditationLanguage';
+import { HealingLanguageToggle } from '@/features/healing/HealingLanguageToggle';
+import { getHealingSessions, type HealingSessionItem } from '@/features/healing/getHealingSessions';
 
 interface HealingAudio {
   id: string;
@@ -40,6 +34,8 @@ interface HealingAudio {
   price_shc: number;
   category: string;
   language?: string | null;
+  tags?: string[] | null;
+  play_count?: number;
 }
 
 interface HealingPlan {
@@ -55,196 +51,87 @@ const HEALING_PLANS: HealingPlan[] = [
   { id: '30_day', name: '30 days', price: 197, days: 30 },
 ];
 
-const faqTranslations = {
+const faqTranslations: Record<string, { question: string; answer: string }[]> = {
   en: [
-    { question: "How do I prepare myself for the healing?", answer: "You can receive the healing energy anytime, but choosing a specific time allows deeper connection. Sit or lie down comfortably, invite the energy to flow, and optionally listen to our healing music on Spotify or YouTube." },
-    { question: "When will my healing start?", answer: "Healing begins after registration and booking your preferred date and time. The energy is programmed to flow according to your selected schedule." },
-    { question: "How do I receive the healing at a distance?", answer: "Choose a time to receive the healing. Energy flows through the quantum field without restrictions. This encourages surrender and trust." },
-    { question: "Do I have to do anything to make the healing work?", answer: "No special action is required, but meditation or being open enhances receptivity. Visualize receiving the energy and optionally pray for all beings. You can also send healing to someone else." },
-    { question: "Is The Sacred Healing Vibration the same as Reiki?", answer: "Both draw from the universal source, but Sacred Healing Vibration does not follow a learned Reiki method. Frequencies are intuitively scanned and sent to support your unique needs." },
-    { question: "Who can receive the healing?", answer: "Anyone or anything: adults, children, animals, those passing away, recently passed, or spaces like homes and vehicles. Healing works anywhere in the quantum universe." },
-    { question: "How long is the healing sent for, and how often?", answer: "Each session is sent for approximately 30 minutes on the date and time booked." },
-    { question: "How does the healing transform?", answer: "The Sacred Healing Vibration transmits divine love and light to the physical, emotional, mental, and spiritual levels. It works face-to-face or remotely. Being open enhances the experience." },
-    { question: "What exactly will the energy heal?", answer: "Supports organ health, immune system, circulation, vitality, spiritual growth, focus, motivation, calmness, sleep, emotional balance, recovery, pain relief, and any other frequencies needed for your healing journey." },
-    { question: "Does the soul practice support physical well-being?", answer: "The practice works on spiritual, mental, emotional, and physical levels. Spiritual and mental effects are noticed first, while emotional and physical improvements may take longer. Detox-like effects may occur. Not a substitute for medical care." },
-    { question: "Can I sign someone else up for the healing?", answer: "Yes, you can register family, friends, or pets. Provide a photograph of the recipient after payment." },
-    { question: "If I give the healing to someone else, do they have to know?", answer: "No. Healing works subtly on their body, mind, emotions, and spirit. Out of respect, ask first if possible." },
-    { question: "Does the healing negatively affect other medical treatments?", answer: "No, the energy works on a subtle level and does not interfere with mainstream or alternative treatments. Temporary detox symptoms may occur." },
-    { question: "Does it cost anything to receive the healing?", answer: "Pricing: 30-Day Healing €197, 14-Day Healing €147, 7-Day Healing €97. Option to subscribe 3 months for €147 per month." }
+    { question: "How do I prepare myself for the session?", answer: "You can receive the energy anytime. Sit or lie down comfortably, invite the energy to flow, and optionally listen to our music on Spotify or YouTube." },
+    { question: "When will my session start?", answer: "Sessions begin after registration and booking your preferred date and time. The energy is programmed to flow according to your selected schedule." },
+    { question: "How do I receive at a distance?", answer: "Choose a time to receive. Energy flows through the quantum field without restrictions." },
+    { question: "Is this the same as Reiki?", answer: "Both draw from the universal source. Sacred Healing Vibration does not follow a learned Reiki method. Frequencies are intuitively scanned and sent to support your unique needs." },
+    { question: "Who can receive?", answer: "Anyone or anything: adults, children, animals, those passing away, recently passed, or spaces like homes and vehicles." },
+    { question: "Does it cost anything?", answer: "Pricing: 30-Day €197, 14-Day €147, 7-Day €97. Option to subscribe 3 months for €147 per month." },
   ],
   sv: [
-    { question: "Hur förbereder jag mig för healingen?", answer: "Du kan ta emot healingenergin när som helst, men att välja en specifik tid möjliggör djupare koppling. Sitt eller ligg bekvämt, bjud in energin att flöda, och lyssna gärna på vår healingmusik på Spotify eller YouTube." },
-    { question: "När börjar min healing?", answer: "Healingen börjar efter registrering och bokning av ditt önskade datum och tid. Energin är programmerad att flöda enligt ditt valda schema." },
-    { question: "Hur tar jag emot healingen på distans?", answer: "Välj en tid för att ta emot healingen. Energi flödar genom kvantfältet utan begränsningar. Detta uppmuntrar till överlåtelse och tillit." },
-    { question: "Måste jag göra något för att healingen ska fungera?", answer: "Ingen speciell åtgärd krävs, men meditation eller öppenhet förstärker mottagligheten. Visualisera att du tar emot energin och be gärna för alla varelser. Du kan också skicka healing till någon annan." },
-    { question: "Är Sacred Healing Vibration samma som Reiki?", answer: "Båda hämtar från den universella källan, men Sacred Healing Vibration följer inte en inlärd Reiki-metod. Frekvenser skannas intuitivt och skickas för att stödja dina unika behov." },
-    { question: "Vem kan ta emot healingen?", answer: "Vem som helst eller vad som helst: vuxna, barn, djur, de som går bort, nyligen avlidna, eller utrymmen som hem och fordon. Healing fungerar överallt i kvantuniversum." },
-    { question: "Hur länge skickas healingen och hur ofta?", answer: "Varje session skickas i cirka 30 minuter på det bokade datumet och tiden." },
-    { question: "Hur transformerar healingen?", answer: "Sacred Healing Vibration överför gudomlig kärlek och ljus till fysiska, emotionella, mentala och andliga nivåer. Det fungerar ansikte mot ansikte eller på distans. Öppenhet förstärker upplevelsen." },
-    { question: "Vad exakt kommer energin att heala?", answer: "Stöder organhälsa, immunsystem, cirkulation, vitalitet, andlig tillväxt, fokus, motivation, lugn, sömn, emotionell balans, återhämtning, smärtlindring och alla andra frekvenser som behövs för din healingresa." },
-    { question: "Stöder själpraktiken fysiskt välbefinnande?", answer: "Praktiken verkar på andliga, mentala, emotionella och fysiska nivåer. Andliga och mentala effekter märks först, medan emotionella och fysiska förbättringar kan ta längre tid. Detox-liknande effekter kan förekomma. Ersätter inte medicinsk vård." },
-    { question: "Kan jag anmäla någon annan för healingen?", answer: "Ja, du kan registrera familj, vänner eller husdjur. Ge ett fotografi av mottagaren efter betalning." },
-    { question: "Om jag ger healingen till någon annan, måste de veta om det?", answer: "Nej. Healing verkar subtilt på deras kropp, sinne, känslor och ande. Av respekt, fråga först om möjligt." },
-    { question: "Påverkar healingen andra medicinska behandlingar negativt?", answer: "Nej, energin verkar på en subtil nivå och stör inte konventionella eller alternativa behandlingar. Tillfälliga detox-symptom kan förekomma." },
-    { question: "Kostar det något att ta emot healingen?", answer: "Prissättning: 30-dagars Healing €197, 14-dagars Healing €147, 7-dagars Healing €97. Möjlighet att prenumerera 3 månader för €147 per månad." }
+    { question: "Hur förbereder jag mig?", answer: "Du kan ta emot energin när som helst. Sitt eller ligg bekvämt, bjud in energin att flöda, och lyssna gärna på vår musik på Spotify eller YouTube." },
+    { question: "När börjar min session?", answer: "Sessioner börjar efter registrering och bokning av datum och tid. Energin är programmerad att flöda enligt ditt valda schema." },
+    { question: "Hur tar jag emot på distans?", answer: "Välj en tid för att ta emot. Energi flödar genom kvantfältet utan begränsningar." },
+    { question: "Är det samma som Reiki?", answer: "Båda hämtar från den universella källan. Sacred Healing Vibration följer inte en inlärd Reiki-metod." },
+    { question: "Vem kan ta emot?", answer: "Vem som helst eller vad som helst: vuxna, barn, djur, utrymmen som hem och fordon." },
+    { question: "Kostar det något?", answer: "30-dagar €197, 14-dagar €147, 7-dagar €97. Möjlighet att prenumerera 3 månader för €147 per månad." },
   ],
-  es: [
-    { question: "¿Cómo me preparo para la sanación?", answer: "Puedes recibir la energía de sanación en cualquier momento, pero elegir un momento específico permite una conexión más profunda. Siéntate o acuéstate cómodamente, invita a la energía a fluir y, opcionalmente, escucha nuestra música de sanación en Spotify o YouTube." },
-    { question: "¿Cuándo comenzará mi sanación?", answer: "La sanación comienza después del registro y la reserva de tu fecha y hora preferidas. La energía está programada para fluir según tu horario seleccionado." },
-    { question: "¿Cómo recibo la sanación a distancia?", answer: "Elige un momento para recibir la sanación. La energía fluye a través del campo cuántico sin restricciones. Esto fomenta la entrega y la confianza." },
-    { question: "¿Tengo que hacer algo para que la sanación funcione?", answer: "No se requiere ninguna acción especial, pero la meditación o estar abierto mejora la receptividad. Visualiza recibir la energía y opcionalmente ora por todos los seres. También puedes enviar sanación a otra persona." },
-    { question: "¿Es la Vibración de Sanación Sagrada lo mismo que Reiki?", answer: "Ambos provienen de la fuente universal, pero la Vibración de Sanación Sagrada no sigue un método Reiki aprendido. Las frecuencias se escanean intuitivamente y se envían para apoyar tus necesidades únicas." },
-    { question: "¿Quién puede recibir la sanación?", answer: "Cualquiera o cualquier cosa: adultos, niños, animales, personas que están falleciendo, recientemente fallecidas, o espacios como hogares y vehículos. La sanación funciona en cualquier lugar del universo cuántico." },
-    { question: "¿Cuánto tiempo se envía la sanación y con qué frecuencia?", answer: "Cada sesión se envía durante aproximadamente 30 minutos en la fecha y hora reservadas." },
-    { question: "¿Cómo transforma la sanación?", answer: "La Vibración de Sanación Sagrada transmite amor divino y luz a los niveles físico, emocional, mental y espiritual. Funciona cara a cara o de forma remota. Estar abierto mejora la experiencia." },
-    { question: "¿Qué exactamente sanará la energía?", answer: "Apoya la salud de los órganos, sistema inmunológico, circulación, vitalidad, crecimiento espiritual, enfoque, motivación, calma, sueño, equilibrio emocional, recuperación, alivio del dolor y cualquier otra frecuencia necesaria para tu viaje de sanación." },
-    { question: "¿La práctica del alma apoya el bienestar físico?", answer: "La práctica actúa en niveles espirituales, mentales, emocionales y físicos. Los efectos espirituales y mentales se notan primero, mientras que las mejoras emocionales y físicas pueden tardar más. Pueden ocurrir efectos similares a la desintoxicación. No sustituye la atención médica." },
-    { question: "¿Puedo inscribir a otra persona para la sanación?", answer: "Sí, puedes registrar familia, amigos o mascotas. Proporciona una fotografía del destinatario después del pago." },
-    { question: "Si le doy la sanación a otra persona, ¿tienen que saberlo?", answer: "No. La sanación actúa sutilmente en su cuerpo, mente, emociones y espíritu. Por respeto, pregunta primero si es posible." },
-    { question: "¿La sanación afecta negativamente otros tratamientos médicos?", answer: "No, la energía actúa a un nivel sutil y no interfiere con tratamientos convencionales o alternativos. Pueden ocurrir síntomas temporales de desintoxicación." },
-    { question: "¿Cuesta algo recibir la sanación?", answer: "Precios: Sanación de 30 días €197, Sanación de 14 días €147, Sanación de 7 días €97. Opción de suscribirse 3 meses por €147 al mes." }
-  ],
-  no: [
-    { question: "Hvordan forbereder jeg meg på healingen?", answer: "Du kan motta healingenergien når som helst, men å velge et bestemt tidspunkt muliggjør dypere tilkobling. Sitt eller ligg komfortabelt, inviter energien til å flyte, og lytt gjerne til vår healingmusikk på Spotify eller YouTube." },
-    { question: "Når starter healingen min?", answer: "Healingen begynner etter registrering og booking av ønsket dato og tid. Energien er programmert til å flyte i henhold til din valgte tidsplan." },
-    { question: "Hvordan mottar jeg healingen på avstand?", answer: "Velg et tidspunkt for å motta healingen. Energi flyter gjennom kvantefeltet uten begrensninger. Dette oppmuntrer til overgivelse og tillit." },
-    { question: "Må jeg gjøre noe for at healingen skal fungere?", answer: "Ingen spesiell handling er nødvendig, men meditasjon eller åpenhet forsterker mottakeligheten. Visualiser at du mottar energien og be gjerne for alle vesener. Du kan også sende healing til noen andre." },
-    { question: "Er Sacred Healing Vibration det samme som Reiki?", answer: "Begge henter fra den universelle kilden, men Sacred Healing Vibration følger ikke en innlært Reiki-metode. Frekvenser skannes intuitivt og sendes for å støtte dine unike behov." },
-    { question: "Hvem kan motta healingen?", answer: "Hvem som helst eller hva som helst: voksne, barn, dyr, de som går bort, nylig avdøde, eller rom som hjem og kjøretøy. Healing fungerer hvor som helst i kvanteuniverset." },
-    { question: "Hvor lenge sendes healingen og hvor ofte?", answer: "Hver sesjon sendes i omtrent 30 minutter på den bookede datoen og tidspunktet." },
-    { question: "Hvordan transformerer healingen?", answer: "Sacred Healing Vibration overfører guddommelig kjærlighet og lys til fysiske, emosjonelle, mentale og åndelige nivåer. Det fungerer ansikt til ansikt eller på avstand. Åpenhet forsterker opplevelsen." },
-    { question: "Hva eksakt vil energien heale?", answer: "Støtter organhelse, immunsystem, sirkulasjon, vitalitet, åndelig vekst, fokus, motivasjon, ro, søvn, emosjonell balanse, restitusjon, smertelindring og alle andre frekvenser som trengs for din healingreise." },
-    { question: "Støtter sjelpraksisen fysisk velvære?", answer: "Praktiken virker på åndelige, mentale, emosjonelle og fysiske nivåer. Åndelige og mentale effekter merkes først, mens emosjonelle og fysiske forbedringer kan ta lengre tid. Detox-lignende effekter kan forekomme. Erstatter ikke medisinsk behandling." },
-    { question: "Kan jeg melde på noen andre for healingen?", answer: "Ja, du kan registrere familie, venner eller kjæledyr. Gi et fotografi av mottakeren etter betaling." },
-    { question: "Hvis jeg gir healingen til noen andre, må de vite om det?", answer: "Nei. Healing virker subtilt på deres kropp, sinn, følelser og ånd. Av respekt, spør først hvis mulig." },
-    { question: "Påvirker healingen andre medisinske behandlinger negativt?", answer: "Nei, energien virker på et subtilt nivå og forstyrrer ikke konvensjonelle eller alternative behandlinger. Midlertidige detox-symptomer kan forekomme." },
-    { question: "Koster det noe å motta healingen?", answer: "Priser: 30-dagers Healing €197, 14-dagers Healing €147, 7-dagers Healing €97. Mulighet for å abonnere 3 måneder for €147 per måned." }
-  ]
 };
 
 const testimonials = [
-  { 
-    name: "Michelle Folhmann", 
-    videos: [
-      "https://www.youtube.com/embed/xOHaZqrykjg?start=1", 
-      "https://www.youtube.com/embed/NX-aI9_PTR4", 
-      "https://www.youtube.com/embed/rk1MdyH3BV0"
-    ] 
-  },
-  { 
-    name: "Michelle Folhmann", 
-    text: "I 'randomly' came into contact with Adam & Laila, and from that day on my life has gone through positive transformations on every level. My life has taken turns I never thought were possible, and for that I am forever grateful." 
-  },
-  { 
-    name: "Cathrine Nummiranta", 
-    text: "Everything changed at Adam's workshop. I am free from old stress and totally cured from the panic attacks I had since I was 14 years old. I listen daily to Adam & Laila's meditations. There are no words for how much it means to me." 
-  }
+  { name: "Michelle Folhmann", text: "I 'randomly' came into contact with Adam & Laila, and from that day on my life has gone through positive transformations on every level." },
+  { name: "Cathrine Nummiranta", text: "Everything changed at Adam's workshop. I am free from old stress and totally cured from the panic attacks I had since I was 14 years old." },
+  { name: "Michelle Folhmann", videos: ["https://www.youtube.com/embed/xOHaZqrykjg?start=1", "https://www.youtube.com/embed/NX-aI9_PTR4", "https://www.youtube.com/embed/rk1MdyH3BV0"] },
 ];
 
 const Healing: React.FC = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { profile } = useProfile();
   const { balance } = useSHCBalance();
   const { walletAddress, isPhantomInstalled, connectWallet, isConnecting } = usePhantomWallet();
   const { isAdmin } = useAdminRole();
+  const { language, setLanguage } = useHealingMeditationLanguage();
 
-  const [contentLang, setContentLangState] = useState<ContentLang>(() =>
-    getHealingContentLang(profile?.preferred_language)
-  );
-  const setContentLang = (lang: ContentLang) => {
-    setContentLangState(lang);
-    setHealingContentLang(lang);
-  };
-
-  // When profile loads and user has never set healing content lang, default from profile
-  useEffect(() => {
-    if (!profile?.preferred_language) return;
-    try {
-      if (!localStorage.getItem(HEALING_CONTENT_LANG_KEY)) {
-        const fromProfile = getHealingContentLang(profile.preferred_language);
-        setContentLangState(fromProfile);
-        setHealingContentLang(fromProfile);
-      }
-    } catch {
-      // ignore
-    }
-  }, [profile?.preferred_language]);
-  
   const [audioTracks, setAudioTracks] = useState<HealingAudio[]>([]);
   const [ownedAudioIds, setOwnedAudioIds] = useState<Set<string>>(new Set());
   const [hasHealingAccess, setHasHealingAccess] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<HealingPlan | null>(null);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
-  const [dynamicContent, setDynamicContent] = useState<Record<string, string>>({});
-  
-  // Unified player
-  const { playUniversalAudio, currentAudio, isPlaying: playerIsPlaying } = useMusicPlayer();
-  
-  // Intention threshold state
   const [showThreshold, setShowThreshold] = useState(false);
   const [pendingAudio, setPendingAudio] = useState<HealingAudio | null>(null);
-  const [currentIntention, setCurrentIntention] = useState<IntentionType | null>(null);
   const [faqOpen, setFaqOpen] = useState(false);
-  
-  // Check if healing audio is currently playing
-  const isHealingPlaying = (audioId: string) => {
-    return currentAudio?.id === audioId && currentAudio?.contentType === 'healing' && playerIsPlaying;
-  };
+  const [shortExpanded, setShortExpanded] = useState(false);
+  const [deepExpanded, setDeepExpanded] = useState(false);
+  const [testimonialsExpanded, setTestimonialsExpanded] = useState(false);
 
-  const currentLang = i18n.language?.split('-')[0] || 'en';
+  const { playUniversalAudio, currentAudio, isPlaying: playerIsPlaying } = useMusicPlayer();
 
-  // Filter audio by session content language; default missing language to "en"
-  const normalizedTracks = audioTracks.map((a) => ({
-    ...a,
-    language: (a.language === "sv" || a.language === "en" ? a.language : "en") as ContentLang,
-  }));
-  const freeAudios = normalizedTracks.filter((a) => a.is_free && a.language === contentLang);
-  const paidAudios = normalizedTracks.filter((a) => !a.is_free && a.language === contentLang);
+  const currentLang = (i18n.language?.split('-')[0] || 'en') as keyof typeof faqTranslations;
+  const faqItems = faqTranslations[currentLang] ?? faqTranslations.en;
 
-  // Helper to get content from database or fallback to static
-  const getContent = (key: string, fallback: string) => {
-    const dbKey = `healing_${key}_${currentLang}`;
-    return dynamicContent[dbKey] || fallback;
-  };
+  const sessions = useMemo(
+    () => getHealingSessions(audioTracks as HealingSessionItem[], language),
+    [audioTracks, language]
+  );
+  const recommendedSession = sessions.recommended[0];
+  const recommendedIds = new Set(sessions.recommended.map((a) => a.id));
+  const shortOnly = sessions.shortSessions.filter((a) => !recommendedIds.has(a.id));
+  const deepOnly = sessions.deepSessions.filter((a) => !recommendedIds.has(a.id));
+
+  const isHealingPlaying = (audioId: string) =>
+    currentAudio?.id === audioId && currentAudio?.contentType === 'healing' && playerIsPlaying;
 
   useEffect(() => {
     fetchAudioTracks();
-    fetchDynamicContent();
     checkHealingAccess();
     checkOwnedAudio();
+  }, []);
 
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('success') === 'true') {
       toast({
-        title: 'Payment Successful!',
-        description: 'Welcome to your Sacred Soul Journey',
+        title: t('healing.paymentSuccess'),
+        description: t('healing.welcomeJourney'),
       });
       window.history.replaceState({}, '', '/healing');
       checkHealingAccess();
     }
-  }, []);
-
-  useEffect(() => {
-    fetchDynamicContent();
-  }, [currentLang]);
-
-  const fetchDynamicContent = async () => {
-    const { data } = await supabase
-      .from('site_content')
-      .select('content_key, content')
-      .like('content_key', 'healing_%');
-    
-    if (data) {
-      const contentMap: Record<string, string> = {};
-      data.forEach(item => {
-        contentMap[item.content_key] = item.content;
-      });
-      setDynamicContent(contentMap);
-    }
-  };
+  }, [t, toast]);
 
   const fetchAudioTracks = async () => {
     const { data } = await supabase
@@ -257,7 +144,6 @@ const Healing: React.FC = () => {
   const checkHealingAccess = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-
     const { data } = await supabase
       .from('healing_purchases')
       .select('*')
@@ -265,22 +151,17 @@ const Healing: React.FC = () => {
       .eq('status', 'active')
       .gte('expires_at', new Date().toISOString())
       .limit(1);
-
-    setHasHealingAccess(data && data.length > 0);
+    setHasHealingAccess(!!(data && data.length > 0));
   };
 
   const checkOwnedAudio = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-
     const { data } = await supabase
       .from('healing_audio_purchases')
       .select('audio_id')
       .eq('user_id', user.id);
-
-    if (data) {
-      setOwnedAudioIds(new Set(data.map(p => p.audio_id)));
-    }
+    if (data) setOwnedAudioIds(new Set(data.map((p) => p.audio_id)));
   };
 
   const openPaymentModal = (plan: HealingPlan) => {
@@ -294,19 +175,15 @@ const Healing: React.FC = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        toast({ title: 'Please sign in', variant: "destructive" });
+        toast({ title: t('common.signIn'), variant: 'destructive' });
         return;
       }
-
-      const { data, error } = await supabase.functions.invoke('create-healing-checkout', {
-        body: { planType },
-      });
-
+      const { data, error } = await supabase.functions.invoke('create-healing-checkout', { body: { planType } });
       if (error) throw error;
       if (data?.url) window.open(data.url, '_blank');
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      toast({ title: 'Error', description: message, variant: "destructive" });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      toast({ title: t('common.error'), description: message, variant: 'destructive' });
     } finally {
       setIsProcessing(false);
     }
@@ -314,53 +191,36 @@ const Healing: React.FC = () => {
 
   const handleCryptoPayment = async (plan: HealingPlan) => {
     setPaymentModalOpen(false);
-    
     if (!isPhantomInstalled) {
-      toast({
-        title: "Phantom Not Installed",
-        description: "Please install Phantom wallet to pay with crypto",
-        variant: "destructive",
-      });
+      toast({ title: 'Phantom Not Installed', description: 'Please install Phantom wallet to pay with crypto', variant: 'destructive' });
       window.open('https://phantom.app/', '_blank');
       return;
     }
-
     if (!walletAddress) {
       try {
         await connectWallet();
       } catch {
-        toast({
-          title: "Connection Failed",
-          description: "Please connect your Phantom wallet",
-          variant: "destructive",
-        });
-        return;
+        toast({ title: 'Connection Failed', description: 'Please connect your Phantom wallet', variant: 'destructive' });
       }
+      return;
     }
-
     setIsProcessing(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        toast({ title: "Please sign in", variant: "destructive" });
-        setIsProcessing(false);
+        toast({ title: t('common.signIn'), variant: 'destructive' });
         return;
       }
-
-      const treasuryWallet = "BAfPGN6DUAKYVwmmGkhMQxJyDv2cHEHRnfcbzy1GNy5j";
+      const treasuryWallet = 'BAfPGN6DUAKYVwmmGkhMQxJyDv2cHEHRnfcbzy1GNy5j';
       const solAmount = (plan.price * 0.005).toFixed(4);
-      const solanaUrl = `https://phantom.app/ul/v1/browse/https://solscan.io/account/${treasuryWallet}`;
-      
       toast({
-        title: "Send SOL to Complete Purchase",
-        description: `Please send ${solAmount} SOL to: ${treasuryWallet.slice(0, 8)}...${treasuryWallet.slice(-8)}. Contact support after sending to activate your healing access.`,
+        title: 'Send SOL to Complete Purchase',
+        description: `Please send ${solAmount} SOL. Contact support after sending to activate your access.`,
       });
-      
-      window.open(solanaUrl, '_blank');
-      
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Payment failed';
-      toast({ title: "Payment Failed", description: message, variant: "destructive" });
+      window.open(`https://phantom.app/ul/v1/browse/https://solscan.io/account/${treasuryWallet}`, '_blank');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Payment failed';
+      toast({ title: 'Payment Failed', description: message, variant: 'destructive' });
     } finally {
       setIsProcessing(false);
     }
@@ -371,19 +231,15 @@ const Healing: React.FC = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        toast({ title: 'Please sign in', variant: "destructive" });
+        toast({ title: t('common.signIn'), variant: 'destructive' });
         return;
       }
-
-      const { data, error } = await supabase.functions.invoke('create-healing-checkout', {
-        body: { planType: 'subscription' },
-      });
-
+      const { data, error } = await supabase.functions.invoke('create-healing-checkout', { body: { planType: 'subscription' } });
       if (error) throw error;
       if (data?.url) window.open(data.url, '_blank');
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      toast({ title: 'Error', description: message, variant: "destructive" });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      toast({ title: t('common.error'), description: message, variant: 'destructive' });
     } finally {
       setIsProcessing(false);
     }
@@ -394,47 +250,37 @@ const Healing: React.FC = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        toast({ title: 'Please sign in', variant: "destructive" });
+        toast({ title: t('common.signIn'), variant: 'destructive' });
         return;
       }
-
       const { data, error } = await supabase.functions.invoke('purchase-healing-audio', {
         body: { audioId: audio.id, paymentMethod: method },
       });
-
       if (error) throw error;
-
-      if (data?.url) {
-        window.open(data.url, '_blank');
-      } else if (data?.success) {
-        toast({ title: 'Purchase Complete!', description: `You now own ${audio.title}` });
-        setOwnedAudioIds(prev => new Set([...prev, audio.id]));
+      if (data?.url) window.open(data.url, '_blank');
+      else if (data?.success) {
+        toast({ title: t('healing.purchaseComplete'), description: `${t('healing.youNowOwn')} ${audio.title}` });
+        setOwnedAudioIds((prev) => new Set([...prev, audio.id]));
       }
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      toast({ title: 'Error', description: message, variant: "destructive" });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      toast({ title: t('common.error'), description: message, variant: 'destructive' });
     } finally {
       setIsProcessing(false);
     }
   };
 
-  // Opens the intention threshold before starting a healing audio
   const initiatePlay = (audio: HealingAudio) => {
-    // Admins, healing plan subscribers, and audio purchasers have full access
     const canPlay = isAdmin || audio.is_free || ownedAudioIds.has(audio.id) || hasHealingAccess;
     const audioUrl = canPlay ? audio.audio_url : audio.preview_url;
-
     if (!audioUrl) {
-      // No audio URL available - show helpful message
       if (canPlay && !audio.audio_url) {
-        sonnerToast.error('Audio not yet uploaded', { description: 'This healing audio is coming soon.' });
+        sonnerToast.error('Audio not yet uploaded', { description: 'This session is coming soon.' });
       }
       return;
     }
-
-    // If already playing this one, toggle via unified player
     if (currentAudio?.id === audio.id && currentAudio?.contentType === 'healing') {
-      const audioItem: UniversalAudioItem = {
+      playUniversalAudio({
         id: audio.id,
         title: audio.title,
         artist: 'Sacred Soul',
@@ -444,28 +290,21 @@ const Healing: React.FC = () => {
         shc_reward: audio.is_free ? 0 : audio.price_shc,
         contentType: 'healing',
         originalData: audio,
-      };
-      playUniversalAudio(audioItem);
+      });
       return;
     }
-    
-    // Store the pending audio and show threshold
     setPendingAudio(audio);
     setShowThreshold(true);
   };
 
-  // Handles intention selection and starts playback
   const handleIntentionSelected = (intention: IntentionType) => {
-    setCurrentIntention(intention);
     setShowThreshold(false);
-    
     if (pendingAudio) {
       startPlayback(pendingAudio);
       setPendingAudio(null);
     }
   };
 
-  // Skip threshold and start without intention
   const handleThresholdClose = () => {
     setShowThreshold(false);
     if (pendingAudio) {
@@ -474,15 +313,11 @@ const Healing: React.FC = () => {
     }
   };
 
-  // Actual audio playback logic - now uses unified player
   const startPlayback = (audio: HealingAudio) => {
-    // Admins, healing plan subscribers, and audio purchasers have full access
     const canPlay = isAdmin || audio.is_free || ownedAudioIds.has(audio.id) || hasHealingAccess;
     const audioUrl = canPlay ? audio.audio_url : audio.preview_url;
-    
     if (!audioUrl) return;
-    
-    const audioItem: UniversalAudioItem = {
+    playUniversalAudio({
       id: audio.id,
       title: audio.title,
       artist: 'Sacred Soul',
@@ -492,14 +327,11 @@ const Healing: React.FC = () => {
       shc_reward: audio.is_free ? 0 : audio.price_shc,
       contentType: 'healing',
       originalData: audio,
-    };
-    
-    playUniversalAudio(audioItem);
+    });
   };
 
-  // Toggle play - uses unified player
   const togglePlay = (audio: HealingAudio) => {
-    initiatePlay(audio); // playUniversalAudio handles toggle internally
+    initiatePlay(audio);
   };
 
   const formatDuration = (seconds: number) => {
@@ -508,378 +340,388 @@ const Healing: React.FC = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const hasAnyFilteredAudio = freeAudios.length > 0 || paidAudios.length > 0;
+  const startRecommendedSession = () => {
+    if (recommendedSession) {
+      startPlayback(recommendedSession as HealingAudio);
+    } else {
+      navigate('/meditations');
+    }
+  };
+
+  const hasAnyFilteredAudio = sessions.allInLanguage.length > 0;
 
   return (
     <>
-      {/* Intention Threshold Screen */}
       <IntentionThreshold
         isOpen={showThreshold}
         onSelectIntention={handleIntentionSelected}
         onClose={handleThresholdClose}
       />
-      
-      <div className="min-h-screen p-6 space-y-12">
-      {/* Membership Banner */}
-      <MeditationMembershipBanner />
+      <div className="min-h-screen p-6 space-y-8">
+        <MeditationMembershipBanner />
 
-      {/* Session language filter: single pill, switch via popover — always visible */}
-      <section className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-muted/20 px-4 py-3">
-        <span className="text-sm font-medium text-foreground">{t('healing.sessionLanguage', 'Session language')}</span>
-        <ContentLanguagePicker value={contentLang} onChange={setContentLang} />
-      </section>
+        <section className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-muted/20 px-4 py-3">
+          <HealingLanguageToggle language={language} setLanguage={setLanguage} />
+        </section>
 
-      {/* Hero Section */}
-      <Card className="bg-gradient-to-r from-primary/30 to-pink-500/30 border-none text-center overflow-hidden">
-        <CardContent className="py-10 px-6">
-          <Sparkles className="w-12 h-12 text-primary mx-auto mb-4" />
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
-            {getContent('hero_title', '30-Day Inner Reset')}
-          </h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            {getContent('hero_subtitle', 'Gentle daily sessions you can receive — just listen and rest.')}
-          </p>
-        </CardContent>
-      </Card>
+        <Card className="bg-gradient-to-r from-primary/30 to-pink-500/30 border-none text-center overflow-hidden">
+          <CardContent className="py-10 px-6">
+            <Sparkles className="w-12 h-12 text-primary mx-auto mb-4" />
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
+              {t('healing.pageTitle')}
+            </h1>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              {t('healing.pageSubtitle')}
+            </p>
+            <Button
+              size="lg"
+              className="mt-6 bg-primary text-primary-foreground hover:bg-primary/90"
+              onClick={startRecommendedSession}
+            >
+              <Play className="w-5 h-5 mr-2" />
+              {t('healing.ctaStartSession')}
+            </Button>
+          </CardContent>
+        </Card>
 
-      {/* Reassurance copy */}
-      <div className="mt-4 max-w-2xl mx-auto text-center text-sm text-muted-foreground">
-        <p>You don’t have to believe anything.</p>
-        <p>Just try one session and notice how you feel afterward.</p>
-      </div>
+        <div className="max-w-2xl mx-auto text-center text-sm text-muted-foreground">
+          <p>{t('healing.reassurance1')}</p>
+          <p>{t('healing.reassurance2')}</p>
+        </div>
 
-      {/* Healing Progress Card */}
-      <HealingProgressCard variant="full" />
+        <HealingProgressCard variant="full" />
 
-      {/* Main Content Sections */}
-      <div className="space-y-8">
         <Card className="border-border">
           <CardContent className="pt-6">
             <h2 className="text-2xl font-bold text-foreground mb-3 flex items-center gap-2">
               <Heart className="w-6 h-6 text-primary" />
-              What happens in a session
+              {t('healing.whatHappensTitle')}
             </h2>
             <ul className="mt-1 text-sm text-muted-foreground space-y-1">
-              <li>• You sit or lie down</li>
-              <li>• You listen</li>
-              <li>• The body settles naturally</li>
-              <li>• No effort needed</li>
+              <li>• {t('healing.whatHappensBullet1')}</li>
+              <li>• {t('healing.whatHappensBullet2')}</li>
+              <li>• {t('healing.whatHappensBullet3')}</li>
+              <li>• {t('healing.whatHappensBullet4')}</li>
             </ul>
           </CardContent>
         </Card>
 
-        <div className="grid md:grid-cols-3 gap-4">
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-            <CardContent className="pt-6">
-              <Star className="w-8 h-8 text-primary mb-3" />
-              <h3 className="text-lg font-semibold text-foreground mb-2">
-                {getContent('health_title', t('soul.healthTitle'))}
-              </h3>
-              <p className="text-sm text-muted-foreground">{getContent('health_text', t('soul.healthText'))}</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-            <CardContent className="pt-6">
-              <Heart className="w-8 h-8 text-primary mb-3" />
-              <h3 className="text-lg font-semibold text-foreground mb-2">
-                {getContent('mental_title', t('soul.mentalTitle'))}
-              </h3>
-              <p className="text-sm text-muted-foreground">{getContent('mental_text', t('soul.mentalText'))}</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-            <CardContent className="pt-6">
-              <Sparkles className="w-8 h-8 text-primary mb-3" />
-              <h3 className="text-lg font-semibold text-foreground mb-2">
-                {getContent('spiritual_title', t('soul.spiritualTitle'))}
-              </h3>
-              <p className="text-sm text-muted-foreground">{getContent('spiritual_text', t('soul.spiritualText'))}</p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* Testimonials Section */}
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-center text-foreground">What people noticed</h2>
-        <p className="text-sm text-muted-foreground text-center">
-          Everyone experiences it differently.
-        </p>
-        <div className="space-y-4">
-          {testimonials.map((testimonial, i) => (
-            <Card key={i} className="border-border">
-              <CardContent className="pt-6 space-y-4">
-                <h3 className="font-semibold text-foreground text-lg">{testimonial.name}</h3>
-                {testimonial.text && <p className="text-muted-foreground italic">"{testimonial.text}"</p>}
-                {testimonial.videos && (
-                  <div className="grid md:grid-cols-3 gap-4">
-                    {testimonial.videos.map((url, j) => (
-                      <div key={j} className="aspect-video">
-                        <iframe
-                          className="w-full h-full rounded-lg"
-                          src={url}
-                          title={`Video testimonial ${j+1}`}
-                          frameBorder="0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-
-      {/* FAQ Section - Collapsible */}
-      <div className="space-y-4">
-        <Button
-          variant="outline"
-          className="w-full flex items-center justify-between py-6"
-          onClick={() => setFaqOpen(!faqOpen)}
-        >
-          <span className="text-lg font-semibold">{t('soul.faqTitle')}</span>
-          {faqOpen ? (
-            <ChevronUp className="w-5 h-5" />
-          ) : (
-            <ChevronDown className="w-5 h-5" />
-          )}
-        </Button>
-        
-        {faqOpen && (
-          <Accordion type="multiple" className="space-y-2">
-            {(faqTranslations[currentLang as keyof typeof faqTranslations] || faqTranslations.en).map((faq, i) => (
-              <AccordionItem key={i} value={`faq-${i}`} className="border border-border rounded-lg px-4">
-                <AccordionTrigger className="text-left text-foreground hover:no-underline">
-                  {faq.question}
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground">
-                  {faq.answer}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        )}
-      </div>
-
-      {/* Purchase Section */}
-      {!hasHealingAccess && (
-        <div className="space-y-6">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-foreground mb-2">
-              Choose how long you want to practice
+        {sessions.recommended.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
+              <Star className="w-5 h-5 text-primary" />
+              {t('healing.recommendedForYou')}
             </h2>
-            <p className="text-muted-foreground">
-              You can start with a short period and extend when it feels right.
-            </p>
+            <div className="grid gap-3">
+              {sessions.recommended.map((audio) => (
+                <SessionRow
+                  key={audio.id}
+                  audio={audio as HealingAudio}
+                  isPlaying={isHealingPlaying(audio.id)}
+                  onTogglePlay={togglePlay}
+                  formatDuration={formatDuration}
+                  isAdmin={isAdmin}
+                  ownedAudioIds={ownedAudioIds}
+                  hasHealingAccess={hasHealingAccess}
+                  onPurchase={handlePurchaseAudio}
+                  isProcessing={isProcessing}
+                  t={t}
+                />
+              ))}
+            </div>
           </div>
-          
-          <div className="flex flex-wrap justify-center gap-4">
-            {HEALING_PLANS.map((plan) => (
-              <Button 
-                key={plan.id}
-                size="lg"
-                className="bg-[#00F2FE] text-black font-extrabold hover:bg-[#00D4E0] shadow-[0_0_25px_rgba(0,242,254,0.5)] hover:shadow-[0_0_35px_rgba(0,242,254,0.6)] border-0"
-                onClick={() => openPaymentModal(plan)}
-                disabled={isProcessing}
-              >
-                {`${plan.days} days`}
-              </Button>
-            ))}
-            <Button 
-              size="lg"
-              className="bg-[#00F2FE] text-black font-extrabold hover:bg-[#00D4E0] shadow-[0_0_25px_rgba(0,242,254,0.5)] hover:shadow-[0_0_35px_rgba(0,242,254,0.6)] border-0"
-              onClick={handleSubscriptionStripe}
-              disabled={isProcessing}
-            >
-              Ongoing
-            </Button>
-          </div>
+        )}
 
-          {/* Distance healing disclosure */}
-          <Card className="border-border/60 bg-muted/40">
-            <CardContent className="pt-4 pb-4">
+        {shortOnly.length > 0 && (
+          <div className="space-y-4">
+            <button
+              type="button"
+              className="w-full flex items-center justify-between text-left"
+              onClick={() => setShortExpanded(!shortExpanded)}
+            >
+              <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
+                <Music className="w-5 h-5 text-primary" />
+                {t('healing.shortSessions')}
+              </h2>
+              {shortExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+            </button>
+            {shortExpanded && (
+              <div className="grid gap-3">
+                {shortOnly.map((audio) => (
+                  <SessionRow
+                    key={audio.id}
+                    audio={audio as HealingAudio}
+                    isPlaying={isHealingPlaying(audio.id)}
+                    onTogglePlay={togglePlay}
+                    formatDuration={formatDuration}
+                    isAdmin={isAdmin}
+                    ownedAudioIds={ownedAudioIds}
+                    hasHealingAccess={hasHealingAccess}
+                    onPurchase={handlePurchaseAudio}
+                    isProcessing={isProcessing}
+                    t={t}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {deepOnly.length > 0 && (
+          <div className="space-y-4">
+            <button
+              type="button"
+              className="w-full flex items-center justify-between text-left"
+              onClick={() => setDeepExpanded(!deepExpanded)}
+            >
+              <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-primary" />
+                {t('healing.deepSessions')}
+              </h2>
+              {deepExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+            </button>
+            {deepExpanded && (
+              <div className="grid gap-3">
+                {deepOnly.map((audio) => (
+                  <SessionRow
+                    key={audio.id}
+                    audio={audio as HealingAudio}
+                    isPlaying={isHealingPlaying(audio.id)}
+                    onTogglePlay={togglePlay}
+                    formatDuration={formatDuration}
+                    isAdmin={isAdmin}
+                    ownedAudioIds={ownedAudioIds}
+                    hasHealingAccess={hasHealingAccess}
+                    onPurchase={handlePurchaseAudio}
+                    isProcessing={isProcessing}
+                    t={t}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        <Button variant="outline" className="w-full" onClick={() => navigate('/meditations')}>
+          {t('healing.viewAllSessions')}
+        </Button>
+
+        {!hasAnyFilteredAudio && (
+          <Card className="border-border bg-muted/30">
+            <CardContent className="p-6 text-center">
               <p className="text-sm text-muted-foreground">
-                Some sessions include silent transmission. You don’t need to understand it — just relax and observe how you feel afterward.
+                {language === 'en' ? t('healing.noSessionsInEnglish') : t('healing.noSessionsInSwedish')}
               </p>
             </CardContent>
           </Card>
-        </div>
-      )}
+        )}
 
-      {/* Payment Method Modal */}
-      <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Choose Payment Method</DialogTitle>
-            <DialogDescription>
-              {selectedPlan && `${selectedPlan.name} - €${selectedPlan.price}`}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <Button
-              size="lg"
-              className="w-full flex items-center justify-center gap-3 bg-[#00F2FE] text-black font-extrabold hover:bg-[#00D4E0] shadow-[0_0_25px_rgba(0,242,254,0.5)] border-0"
-              onClick={() => selectedPlan && handleStripePayment(selectedPlan.id)}
-              disabled={isProcessing}
-            >
-              <CreditCard className="w-5 h-5" />
-              Pay with Card
-            </Button>
-            <Button
-              size="lg"
-              className="w-full flex items-center justify-center gap-3 bg-white/10 text-white border border-white/20 hover:bg-white/20"
-              onClick={() => selectedPlan && handleCryptoPayment(selectedPlan)}
-              disabled={isProcessing}
-            >
-              <Wallet className="w-5 h-5" />
-              Pay with Crypto (SOL)
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Access Badge */}
-      {hasHealingAccess && (
-        <Card className="p-4 bg-green-500/10 border-green-500/30">
-          <div className="flex items-center gap-2 text-green-500">
-            <CheckCircle className="w-5 h-5" />
-            <span className="font-medium">{t('soul.activeAccess')}</span>
-          </div>
-        </Card>
-      )}
-
-      {/* Free Audio Section */}
-      {freeAudios.length > 0 && (
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-            <Music className="w-5 h-5 text-primary" />
-            {t('healing.shortSessions', 'Short Sessions')}
-          </h2>
-          
-          <div className="grid gap-3">
-            {freeAudios.map(audio => (
-              <Card key={audio.id} className="p-4">
-                <div className="flex items-center gap-4">
-                  <button
-                    onClick={() => togglePlay(audio)}
-                    className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center hover:bg-primary/30 transition-colors"
-                  >
-                    {isHealingPlaying(audio.id) ? (
-                      <Pause className="w-5 h-5 text-primary" />
-                    ) : (
-                      <Play className="w-5 h-5 text-primary ml-1" />
-                    )}
-                  </button>
-                  
-                  <div className="flex-1">
-                    <h3 className="font-medium text-foreground">{audio.title}</h3>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Clock className="w-3 h-3" />
-                      <span>{formatDuration(audio.duration_seconds)}</span>
-                      <span className="text-green-500 font-medium">• {t('soul.free')}</span>
-                    </div>
-                  </div>
-                  
-                  <Button variant="ghost" size="icon">
-                    <Download className="w-4 h-4" />
-                  </Button>
-                </div>
+        <div className="space-y-6">
+          <h2 className="text-2xl font-bold text-center text-foreground">{t('healing.testimonialsTitle')}</h2>
+          <p className="text-sm text-muted-foreground text-center">{t('healing.testimonialsSubtitle')}</p>
+          <div className="space-y-4">
+            {testimonials.slice(0, 2).map((testimonial, i) => (
+              <Card key={i} className="border-border">
+                <CardContent className="pt-6">
+                  <h3 className="font-semibold text-foreground text-lg">{testimonial.name}</h3>
+                  {testimonial.text && <p className="text-muted-foreground italic">&quot;{testimonial.text}&quot;</p>}
+                </CardContent>
               </Card>
             ))}
-          </div>
-        </div>
-      )}
-
-      {/* Empty state when no sessions in selected language */}
-      {!hasAnyFilteredAudio && (
-        <Card className="border-border bg-muted/30">
-          <CardContent className="p-6 text-center">
-            <p className="text-sm text-muted-foreground">
-              {contentLang === "en"
-                ? t("healing.noSessionsInEnglish", "No sessions in English yet. More will be added soon.")
-                : t("healing.noSessionsInSwedish", "Inga sessioner på svenska än. Fler kommer snart.")}
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Premium Audio Section */}
-      {paidAudios.length > 0 && (
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-primary" />
-            {t('healing.deepSessions', 'Deep Sessions')}
-          </h2>
-          
-          <div className="grid gap-3">
-            {paidAudios.map(audio => {
-              const owned = isAdmin || ownedAudioIds.has(audio.id);
-              const hasAccess = isAdmin || owned || hasHealingAccess;
-              
-              return (
-                <Card key={audio.id} className="p-4">
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={() => togglePlay(audio)}
-                      className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center hover:bg-primary/30 transition-colors relative"
-                    >
-                      {!hasAccess && (
-                        <Lock className="w-4 h-4 text-muted-foreground absolute -top-1 -right-1" />
-                      )}
-                      {isHealingPlaying(audio.id) ? (
-                        <Pause className="w-5 h-5 text-primary" />
-                      ) : (
-                        <Play className="w-5 h-5 text-primary ml-1" />
-                      )}
-                    </button>
-                    
-                    <div className="flex-1">
-                      <h3 className="font-medium text-foreground">{audio.title}</h3>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Clock className="w-3 h-3" />
-                        <span>{formatDuration(audio.duration_seconds)}</span>
-                        {hasAccess ? (
-                          <span className="text-green-500 font-medium">• {t('soul.owned')}</span>
-                        ) : (
-                          <span className="text-primary font-medium">• ${audio.price_usd}</span>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {hasAccess ? (
-                      <Button variant="ghost" size="icon">
-                        <Download className="w-4 h-4" />
-                      </Button>
-                    ) : (
-                      <div className="flex gap-2">
-                        <Button 
-                          size="sm"
-                          className="bg-[#00F2FE] text-black font-extrabold hover:bg-[#00D4E0] shadow-[0_0_20px_rgba(0,242,254,0.4)] border-0"
-                          onClick={() => handlePurchaseAudio(audio, 'stripe')}
-                          disabled={isProcessing}
-                        >
-                          ${audio.price_usd}
-                        </Button>
+            <Button variant="ghost" className="w-full" onClick={() => setTestimonialsExpanded(!testimonialsExpanded)}>
+              {t('healing.seeMore')}
+            </Button>
+            {testimonialsExpanded &&
+              testimonials.slice(2).map((testimonial, i) => (
+                <Card key={`more-${i}`} className="border-border">
+                  <CardContent className="pt-6">
+                    <h3 className="font-semibold text-foreground text-lg">{testimonial.name}</h3>
+                    {testimonial.text && <p className="text-muted-foreground italic">&quot;{testimonial.text}&quot;</p>}
+                    {'videos' in testimonial && testimonial.videos && (
+                      <div className="grid md:grid-cols-3 gap-4 mt-4">
+                        {testimonial.videos.map((url, j) => (
+                          <div key={j} className="aspect-video">
+                            <iframe
+                              className="w-full h-full rounded-lg"
+                              src={url}
+                              title={`Video ${j + 1}`}
+                              frameBorder="0"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                            />
+                          </div>
+                        ))}
                       </div>
                     )}
-                  </div>
+                  </CardContent>
                 </Card>
-              );
-            })}
+              ))}
           </div>
         </div>
-      )}
 
-      {/* Reviews Section */}
-      <ReviewSection contentType="healing" contentId="general" />
-    </div>
+        <div className="space-y-4">
+          <Button variant="outline" className="w-full flex items-center justify-between py-6" onClick={() => setFaqOpen(!faqOpen)}>
+            <span className="text-lg font-semibold">{t('soul.faqTitle')}</span>
+            {faqOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+          </Button>
+          {faqOpen && (
+            <Accordion type="multiple" className="space-y-2">
+              {faqItems.map((faq, i) => (
+                <AccordionItem key={i} value={`faq-${i}`} className="border border-border rounded-lg px-4">
+                  <AccordionTrigger className="text-left text-foreground hover:no-underline">{faq.question}</AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground">{faq.answer}</AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          )}
+        </div>
+
+        {!hasHealingAccess && (
+          <div className="space-y-6">
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-foreground mb-2">{t('healing.choosePlanTitle')}</h2>
+              <p className="text-muted-foreground">{t('healing.choosePlanSubtitle')}</p>
+            </div>
+            <div className="flex flex-wrap justify-center gap-4">
+              {HEALING_PLANS.map((plan) => (
+                <Button
+                  key={plan.id}
+                  size="lg"
+                  className="bg-[#00F2FE] text-black font-extrabold hover:bg-[#00D4E0] border-0"
+                  onClick={() => openPaymentModal(plan)}
+                  disabled={isProcessing}
+                >
+                  {plan.days} {t('common.days')}
+                </Button>
+              ))}
+              <Button
+                size="lg"
+                className="bg-[#00F2FE] text-black font-extrabold hover:bg-[#00D4E0] border-0"
+                onClick={handleSubscriptionStripe}
+                disabled={isProcessing}
+              >
+                Ongoing
+              </Button>
+            </div>
+            <Card className="border-border/60 bg-muted/40">
+              <CardContent className="pt-4 pb-4">
+                <p className="text-sm text-muted-foreground">{t('healing.distanceDisclosure')}</p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>{t('healing.choosePaymentMethod')}</DialogTitle>
+              <DialogDescription>
+                {selectedPlan && `${selectedPlan.name} - €${selectedPlan.price}`}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <Button
+                size="lg"
+                className="w-full flex items-center justify-center gap-3 bg-[#00F2FE] text-black font-extrabold border-0"
+                onClick={() => selectedPlan && handleStripePayment(selectedPlan.id)}
+                disabled={isProcessing}
+              >
+                <CreditCard className="w-5 h-5" />
+                {t('healing.payWithCard')}
+              </Button>
+              <Button
+                size="lg"
+                className="w-full flex items-center justify-center gap-3 bg-white/10 text-white border border-white/20 hover:bg-white/20"
+                onClick={() => selectedPlan && handleCryptoPayment(selectedPlan)}
+                disabled={isProcessing}
+              >
+                <Wallet className="w-5 h-5" />
+                {t('healing.payWithCrypto')}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {hasHealingAccess && (
+          <Card className="p-4 bg-green-500/10 border-green-500/30">
+            <div className="flex items-center gap-2 text-green-500">
+              <CheckCircle className="w-5 h-5" />
+              <span className="font-medium">{t('healing.activeAccess')}</span>
+            </div>
+          </Card>
+        )}
+
+        <ReviewSection contentType="healing" contentId="general" />
+      </div>
     </>
   );
 };
+
+function SessionRow({
+  audio,
+  isPlaying,
+  onTogglePlay,
+  formatDuration,
+  isAdmin,
+  ownedAudioIds,
+  hasHealingAccess,
+  onPurchase,
+  isProcessing,
+  t,
+}: {
+  audio: HealingAudio;
+  isPlaying: boolean;
+  onTogglePlay: (a: HealingAudio) => void;
+  formatDuration: (s: number) => string;
+  isAdmin: boolean;
+  ownedAudioIds: Set<string>;
+  hasHealingAccess: boolean;
+  onPurchase: (a: HealingAudio, m: 'shc' | 'stripe') => void;
+  isProcessing: boolean;
+  t: (key: string, fallback?: string) => string;
+}) {
+  const owned = isAdmin || ownedAudioIds.has(audio.id);
+  const hasAccess = isAdmin || owned || hasHealingAccess;
+  return (
+    <Card className="p-4">
+      <div className="flex items-center gap-4">
+        <button
+          type="button"
+          onClick={() => onTogglePlay(audio)}
+          className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center hover:bg-primary/30 transition-colors relative"
+        >
+          {!hasAccess && <Lock className="w-4 h-4 text-muted-foreground absolute -top-1 -right-1" />}
+          {isPlaying ? <Pause className="w-5 h-5 text-primary" /> : <Play className="w-5 h-5 text-primary ml-1" />}
+        </button>
+        <div className="flex-1">
+          <h3 className="font-medium text-foreground">{audio.title}</h3>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Clock className="w-3 h-3" />
+            <span>{formatDuration(audio.duration_seconds)}</span>
+            {hasAccess ? (
+              <span className="text-green-500 font-medium">• {t('healing.owned')}</span>
+            ) : (
+              <span className="text-primary font-medium">• ${audio.price_usd}</span>
+            )}
+          </div>
+        </div>
+        {hasAccess ? (
+          <Button variant="ghost" size="icon">
+            <Download className="w-4 h-4" />
+          </Button>
+        ) : (
+          <Button
+            size="sm"
+            className="bg-[#00F2FE] text-black font-extrabold border-0"
+            onClick={() => onPurchase(audio, 'stripe')}
+            disabled={isProcessing}
+          >
+            ${audio.price_usd}
+          </Button>
+        )}
+      </div>
+    </Card>
+  );
+}
 
 export default Healing;

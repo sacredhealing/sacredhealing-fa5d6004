@@ -1,10 +1,11 @@
 /**
- * Healing/Soul page content filter only — does NOT affect app UI language.
- * Default from profile when user has never set it; persist to localStorage.
+ * Healing page session content language only — does NOT affect app UI language.
+ * Persist in localStorage under "healing:meditationLanguage".
+ * Default from profile when user has never set it; else English.
  */
 export type ContentLang = "sv" | "en";
 
-export const HEALING_CONTENT_LANG_KEY = "contentLang:healing";
+export const HEALING_CONTENT_LANG_KEY = "healing:meditationLanguage";
 
 export function getHealingContentLang(profileLang?: string | null): ContentLang {
   const stored = localStorage.getItem(HEALING_CONTENT_LANG_KEY);

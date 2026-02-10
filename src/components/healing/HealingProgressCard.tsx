@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Play, Flame, Target, Music, Heart, Sparkles, TrendingUp, Calendar } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -11,6 +12,7 @@ interface HealingProgressCardProps {
 }
 
 export const HealingProgressCard: React.FC<HealingProgressCardProps> = ({ variant = 'compact' }) => {
+  const { t } = useTranslation();
   const { progress, nextRecommendation, isLoading } = useHealingProgress();
 
   if (isLoading) {
@@ -39,8 +41,8 @@ export const HealingProgressCard: React.FC<HealingProgressCardProps> = ({ varian
                 <Heart className="w-5 h-5 text-purple-400" />
               </div>
               <div>
-                <h3 className="font-semibold text-foreground text-sm">Healing Journey</h3>
-                <p className="text-xs text-muted-foreground">Level {healingLevel}</p>
+                <h3 className="font-semibold text-foreground text-sm">{t('healing.journeyTitle')}</h3>
+                <p className="text-xs text-muted-foreground">{t('healing.level')} {healingLevel}</p>
               </div>
             </div>
             <div className="flex items-center gap-1 text-accent">
@@ -52,8 +54,8 @@ export const HealingProgressCard: React.FC<HealingProgressCardProps> = ({ varian
           <Progress value={progressToNextLevel} className="h-2 mb-2" />
           
           <div className="flex justify-between text-xs text-muted-foreground">
-            <span>{totalSessions} sessions</span>
-            <span>{5 - (totalSessions % 5)} to next level</span>
+            <span>{totalSessions} {t('healing.sessionsCount')}</span>
+            <span>{5 - (totalSessions % 5)} {t('healing.toNextLevel')}</span>
           </div>
         </Card>
       </Link>
@@ -64,66 +66,63 @@ export const HealingProgressCard: React.FC<HealingProgressCardProps> = ({ varian
   return (
     <Card className="p-6 bg-gradient-to-br from-purple-500/20 via-pink-500/10 to-amber-500/10 border-purple-500/30">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-heading font-semibold text-foreground">Your Healing Journey</h2>
+        <h2 className="text-lg font-heading font-semibold text-foreground">{t('healing.journeyTitle')}</h2>
         <div className="flex items-center gap-2 bg-accent/20 rounded-full px-3 py-1">
           <Flame className="w-4 h-4 text-accent" />
-          <span className="text-sm font-medium text-accent">{progress.currentStreak} day streak</span>
+          <span className="text-sm font-medium text-accent">{progress.currentStreak} {t('healing.streakDays')}</span>
         </div>
       </div>
 
-      {/* Level Progress */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <Target className="w-5 h-5 text-purple-400" />
-            <span className="font-medium text-foreground">Level {healingLevel}</span>
+            <span className="font-medium text-foreground">{t('healing.level')} {healingLevel}</span>
           </div>
           <span className="text-sm text-muted-foreground">{progressToNextLevel.toFixed(0)}%</span>
         </div>
         <Progress value={progressToNextLevel} className="h-3" />
         <p className="text-xs text-muted-foreground mt-1">
-          {5 - (totalSessions % 5)} more sessions to reach Level {healingLevel + 1}
+          {5 - (totalSessions % 5)} {t('healing.moreSessionsToLevel')} {healingLevel + 1}
         </p>
       </div>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-3 mb-6">
         <div className="bg-muted/30 rounded-xl p-3 text-center">
           <div className="flex items-center justify-center gap-1 mb-1">
             <Play className="w-4 h-4 text-primary" />
             <span className="text-xl font-bold text-foreground">{progress.totalMeditations}</span>
           </div>
-          <p className="text-xs text-muted-foreground">Meditations</p>
+          <p className="text-xs text-muted-foreground">{t('healing.meditationsLabel')}</p>
         </div>
         <div className="bg-muted/30 rounded-xl p-3 text-center">
           <div className="flex items-center justify-center gap-1 mb-1">
             <Music className="w-4 h-4 text-purple-400" />
             <span className="text-xl font-bold text-foreground">{progress.totalMantras}</span>
           </div>
-          <p className="text-xs text-muted-foreground">Mantras</p>
+          <p className="text-xs text-muted-foreground">{t('healing.mantrasLabel')}</p>
         </div>
         <div className="bg-muted/30 rounded-xl p-3 text-center">
           <div className="flex items-center justify-center gap-1 mb-1">
             <Calendar className="w-4 h-4 text-green-400" />
             <span className="text-xl font-bold text-foreground">{progress.daysActive}</span>
           </div>
-          <p className="text-xs text-muted-foreground">Days Active</p>
+          <p className="text-xs text-muted-foreground">{t('healing.daysActiveLabel')}</p>
         </div>
         <div className="bg-muted/30 rounded-xl p-3 text-center">
           <div className="flex items-center justify-center gap-1 mb-1">
             <Sparkles className="w-4 h-4 text-accent" />
             <span className="text-xl font-bold text-foreground">{progress.totalSHCEarned}</span>
           </div>
-          <p className="text-xs text-muted-foreground">SHC Earned</p>
+          <p className="text-xs text-muted-foreground">{t('healing.shcEarnedLabel')}</p>
         </div>
       </div>
 
-      {/* Next Recommendation */}
       {nextRecommendation && (
         <div className="bg-gradient-healing rounded-xl p-4">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp className="w-4 h-4 text-foreground" />
-            <span className="text-sm font-medium text-foreground">Recommended Next</span>
+            <span className="text-sm font-medium text-foreground">{t('healing.recommendedNextLabel')}</span>
           </div>
           <h3 className="font-semibold text-foreground mb-1">{nextRecommendation.title}</h3>
           <div className="flex items-center gap-3 text-sm text-foreground/80 mb-3">
@@ -138,7 +137,7 @@ export const HealingProgressCard: React.FC<HealingProgressCardProps> = ({ varian
           <Link to={nextRecommendation.type === 'meditation' ? '/meditations' : '/mantras'}>
             <Button variant="glass" size="sm" className="w-full">
               <Play className="w-4 h-4 mr-2" />
-              Start Session
+              {t('healing.startSessionButton')}
             </Button>
           </Link>
         </div>
