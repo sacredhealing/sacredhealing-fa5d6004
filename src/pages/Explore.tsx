@@ -8,8 +8,11 @@ import { ParamahamsaVishwanandaDailyCard } from "@/components/dashboard/Paramaha
 import { LibrarySection, type LibraryItem } from "@/components/explore/LibrarySection";
 import { CollapsibleSection } from "@/features/library/CollapsibleSection";
 import { useQuickActionItems } from "@/features/library/useQuickActionItems";
+import { resolveQuickActionItem } from "@/features/library/quickActionResolver";
 import { usePresenceState } from "@/features/presence/usePresenceState";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
+import { useMeditationContentLanguage } from "@/features/meditations/useContentLanguage";
+import { useToast } from "@/hooks/use-toast";
 import { getDayPhase } from "@/utils/postSessionContext";
 
 import {
@@ -91,8 +94,28 @@ export default function Explore() {
   );
 
   const { playUniversalAudio } = useMusicPlayer();
-  const { items: quickItems } = useQuickActionItems();
+  const { allAudioItems } = useQuickActionItems();
+  const { language: meditationLanguage } = useMeditationContentLanguage();
+  const { toast } = useToast();
   const presence = usePresenceState();
+
+  const onQuick = (key: "calm" | "heart" | "pause" | "sleep") => {
+    if (key === "pause") {
+      const item = resolveQuickActionItem(allAudioItems, "pause", meditationLanguage);
+      if (item) {
+        playUniversalAudio(item);
+      } else {
+        navigate("/breathing");
+      }
+      return;
+    }
+    const item = resolveQuickActionItem(allAudioItems, key, meditationLanguage);
+    if (!item) {
+      toast({ title: t("explore.quickActionUnavailable", "Meditations will be added soon.") });
+      return;
+    }
+    playUniversalAudio(item);
+  };
 
   const subtitleMap: Record<string, string> = {
     start: t(getSubtitleKey(dayPhase), "Begin gently today."),
@@ -110,19 +133,10 @@ export default function Explore() {
       ? t("explore.intent.calmDesc", "A short reset (2–3 min)")
       : t("explore.presence.stayWithState", "Stay with this state");
 
-  const onQuickCalm = () => {
-    if (quickItems.calm?.audio_url) playUniversalAudio(quickItems.calm);
-    navigate("/meditations?category=healing");
-  };
-  const onQuickHeart = () => {
-    if (quickItems.heart?.audio_url) playUniversalAudio(quickItems.heart);
-    navigate("/healing");
-  };
-  const onQuickPause = () => navigate("/breathing");
-  const onQuickSleep = () => {
-    if (quickItems.sleep?.audio_url) playUniversalAudio(quickItems.sleep);
-    navigate("/meditations?category=sleep");
-  };
+  const onQuickCalm = () => onQuick("calm");
+  const onQuickHeart = () => onQuick("heart");
+  const onQuickPause = () => onQuick("pause");
+  const onQuickSleep = () => onQuick("sleep");
 
   return (
     <div className="px-4 pb-24 pt-4">
