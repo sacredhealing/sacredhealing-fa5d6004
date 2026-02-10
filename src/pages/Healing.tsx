@@ -9,7 +9,6 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useSHCBalance } from '@/hooks/useSHCBalance';
 import { ReviewSection } from '@/components/reviews/ReviewSection';
 import { usePhantomWallet } from '@/hooks/usePhantomWallet';
 import { HealingProgressCard } from '@/components/healing/HealingProgressCard';
@@ -80,10 +79,14 @@ const Healing: React.FC = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { balance } = useSHCBalance();
-  const { walletAddress, isPhantomInstalled, connectWallet, isConnecting } = usePhantomWallet();
+  const { walletAddress, isPhantomInstalled, connectWallet } = usePhantomWallet();
   const { isAdmin } = useAdminRole();
   const { language, setLanguage } = useHealingMeditationLanguage();
+
+  const tSafe = useMemo(() => (key: string, fallback: string) => {
+    const v = t(key);
+    return v === key ? fallback : v;
+  }, [t]);
 
   const [audioTracks, setAudioTracks] = useState<HealingAudio[]>([]);
   const [ownedAudioIds, setOwnedAudioIds] = useState<Set<string>>(new Set());
@@ -102,6 +105,11 @@ const Healing: React.FC = () => {
 
   const currentLang = (i18n.language?.split('-')[0] || 'en') as keyof typeof faqTranslations;
   const faqItems = faqTranslations[currentLang] ?? faqTranslations.en;
+
+  const testimonialVideos = useMemo(() => {
+    const entry = testimonials.find((x): x is typeof x & { videos: string[] } => 'videos' in x && Array.isArray((x as { videos?: string[] }).videos));
+    return entry?.videos ?? [];
+  }, []);
 
   const sessions = useMemo(
     () => getHealingSessions(audioTracks as HealingSessionItem[], language),
@@ -369,10 +377,10 @@ const Healing: React.FC = () => {
           <CardContent className="py-10 px-6">
             <Sparkles className="w-12 h-12 text-primary mx-auto mb-4" />
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
-              {t('healing.pageTitle')}
+              {tSafe('healing.pageTitle', '30 Days of Sacred Support')}
             </h1>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              {t('healing.pageSubtitle')}
+              {tSafe('healing.pageSubtitle', 'Calm, guided sessions and transmissions. Just listen and rest.')}
             </p>
             <Button
               size="lg"
@@ -380,14 +388,14 @@ const Healing: React.FC = () => {
               onClick={startRecommendedSession}
             >
               <Play className="w-5 h-5 mr-2" />
-              {t('healing.ctaStartSession')}
+              {tSafe('healing.ctaStartSession', 'Start a session')}
             </Button>
           </CardContent>
           </Card>
 
           <div className="text-center text-sm text-muted-foreground">
-            <p>{t('healing.reassurance1')}</p>
-            <p>{t('healing.reassurance2')}</p>
+            <p>{tSafe('healing.reassurance1', "You don't have to believe anything.")}</p>
+            <p>{tSafe('healing.reassurance2', 'Just try one session and notice how you feel afterward.')}</p>
           </div>
 
           <HealingProgressCard variant="full" />
@@ -396,13 +404,13 @@ const Healing: React.FC = () => {
             <CardContent className="pt-6">
               <h2 className="text-xl font-bold text-foreground mb-3 flex items-center gap-2">
                 <Heart className="w-6 h-6 text-primary" />
-                {t('healing.whatHappensTitle')}
+                {tSafe('healing.whatHappensTitle', 'What happens in a session')}
               </h2>
               <ul className="mt-1 text-sm text-muted-foreground space-y-1">
-                <li>• {t('healing.whatHappensBullet1')}</li>
-                <li>• {t('healing.whatHappensBullet2')}</li>
-                <li>• {t('healing.whatHappensBullet3')}</li>
-                <li>• {t('healing.whatHappensBullet4')}</li>
+                <li>• {tSafe('healing.whatHappensBullet1', 'You sit or lie down')}</li>
+                <li>• {tSafe('healing.whatHappensBullet2', 'You listen')}</li>
+                <li>• {tSafe('healing.whatHappensBullet3', 'The body settles naturally')}</li>
+                <li>• {tSafe('healing.whatHappensBullet4', 'No effort needed')}</li>
               </ul>
             </CardContent>
           </Card>
@@ -411,7 +419,7 @@ const Healing: React.FC = () => {
             <div className="space-y-4">
               <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
                 <Star className="w-5 h-5 text-primary" />
-                {t('healing.recommendedForYou')}
+                {tSafe('healing.recommendedForYou', 'Recommended for you')}
               </h2>
               <div className="grid gap-3">
                 {sessions.recommended.map((audio) => (
@@ -426,7 +434,7 @@ const Healing: React.FC = () => {
                     hasHealingAccess={hasHealingAccess}
                     onPurchase={handlePurchaseAudio}
                     isProcessing={isProcessing}
-                    t={t}
+                    tSafe={tSafe}
                   />
                 ))}
               </div>
@@ -442,7 +450,7 @@ const Healing: React.FC = () => {
               >
                 <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
                   <Music className="w-5 h-5 text-primary" />
-                  {t('healing.shortSessions')}
+                  {tSafe('healing.shortSessions', 'Short Sessions')}
                 </h2>
                 {shortExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
               </button>
@@ -460,7 +468,7 @@ const Healing: React.FC = () => {
                       hasHealingAccess={hasHealingAccess}
                       onPurchase={handlePurchaseAudio}
                       isProcessing={isProcessing}
-                      t={t}
+                      tSafe={tSafe}
                     />
                   ))}
                 </div>
@@ -477,7 +485,7 @@ const Healing: React.FC = () => {
               >
                 <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-primary" />
-                  {t('healing.deepSessions')}
+                  {tSafe('healing.deepSessions', 'Deep Sessions')}
                 </h2>
                 {deepExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
               </button>
@@ -495,7 +503,7 @@ const Healing: React.FC = () => {
                       hasHealingAccess={hasHealingAccess}
                       onPurchase={handlePurchaseAudio}
                       isProcessing={isProcessing}
-                      t={t}
+                      tSafe={tSafe}
                     />
                   ))}
                 </div>
@@ -504,65 +512,66 @@ const Healing: React.FC = () => {
           )}
 
           <Button variant="outline" className="w-full" onClick={() => navigate('/meditations')}>
-            {t('healing.viewAllSessions')}
+            {tSafe('healing.viewAllSessions', 'View all sessions')}
           </Button>
 
           {!hasAnyFilteredAudio && (
             <Card className="border-border bg-muted/30">
               <CardContent className="p-6 text-center">
                 <p className="text-sm text-muted-foreground">
-                  {language === 'en' ? t('healing.noSessionsInEnglish') : t('healing.noSessionsInSwedish')}
+                  {language === 'en' ? tSafe('healing.noSessionsInEnglish', 'No sessions in English yet. More will be added soon.') : tSafe('healing.noSessionsInSwedish', 'No sessions in Swedish yet. More will be added soon.')}
                 </p>
               </CardContent>
             </Card>
           )}
 
-          <section className="space-y-4">
-            <h2 className="text-lg font-bold text-center text-foreground">{t('healing.testimonialsTitle')}</h2>
-            <p className="text-sm text-muted-foreground text-center">{t('healing.testimonialsSubtitle')}</p>
+          <section className="space-y-4" aria-labelledby="what-people-noticed">
+            <h2 id="what-people-noticed" className="text-lg font-bold text-center text-foreground">
+              {tSafe('healing.testimonialsTitle', 'What people noticed')}
+            </h2>
+            <p className="text-sm text-muted-foreground text-center">
+              {tSafe('healing.testimonialsSubtitle', 'Everyone experiences it differently.')}
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {testimonialVideos.map((url, j) => (
+                <div key={j} className="aspect-video rounded-lg overflow-hidden border border-border">
+                  <iframe
+                    className="w-full h-full"
+                    src={url}
+                    title={tSafe('healing.testimonialVideo', 'Testimonial') + ` ${j + 1}`}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+              ))}
+            </div>
             <div className="space-y-4">
-              {testimonials.slice(0, 2).map((testimonial, i) => (
+              {testimonials.filter((x): x is typeof x & { text: string } => 'text' in x && !!x.text).slice(0, 2).map((testimonial, i) => (
                 <Card key={i} className="border-border">
                   <CardContent className="pt-6">
                     <h3 className="font-semibold text-foreground text-lg">{testimonial.name}</h3>
-                    {testimonial.text && <p className="text-muted-foreground italic">&quot;{testimonial.text}&quot;</p>}
+                    <p className="text-muted-foreground italic">&quot;{testimonial.text}&quot;</p>
                   </CardContent>
                 </Card>
               ))}
               <Button variant="ghost" className="w-full" onClick={() => setTestimonialsExpanded(!testimonialsExpanded)}>
-                {testimonialsExpanded ? t('healing.seeLess') : t('healing.seeMore')}
+                {testimonialsExpanded ? tSafe('healing.seeLess', 'See less') : tSafe('healing.seeMore', 'See more')}
               </Button>
-              {testimonialsExpanded &&
-                testimonials.slice(2).map((testimonial, i) => (
-                  <Card key={`more-${i}`} className="border-border">
-                    <CardContent className="pt-6">
-                      <h3 className="font-semibold text-foreground text-lg">{testimonial.name}</h3>
-                      {testimonial.text && <p className="text-muted-foreground italic">&quot;{testimonial.text}&quot;</p>}
-                      {'videos' in testimonial && testimonial.videos && (
-                        <div className="grid md:grid-cols-3 gap-4 mt-4">
-                          {testimonial.videos.map((url, j) => (
-                            <div key={j} className="aspect-video">
-                              <iframe
-                                className="w-full h-full rounded-lg"
-                                src={url}
-                                title={`Video ${j + 1}`}
-                                frameBorder="0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
+              {testimonialsExpanded && testimonials.filter((x): x is typeof x & { text: string } => 'text' in x && !!x.text).slice(2).map((testimonial, i) => (
+                <Card key={`more-${i}`} className="border-border">
+                  <CardContent className="pt-6">
+                    <h3 className="font-semibold text-foreground text-lg">{testimonial.name}</h3>
+                    <p className="text-muted-foreground italic">&quot;{testimonial.text}&quot;</p>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </section>
 
           <div className="space-y-4">
             <Button variant="outline" className="w-full flex items-center justify-between py-6" onClick={() => setFaqOpen(!faqOpen)}>
-              <span className="text-lg font-semibold">{t('soul.faqTitle')}</span>
+              <span className="text-lg font-semibold">{tSafe('healing.faqTitle', 'Frequently Asked Questions')}</span>
               {faqOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
             </Button>
             {faqOpen && (
@@ -581,8 +590,8 @@ const Healing: React.FC = () => {
             <Card className="border-border">
               <CardContent className="pt-6 pb-6">
                 <div className="text-center mb-6">
-                  <h2 className="text-xl font-bold text-foreground mb-2">{t('healing.choosePlanTitle')}</h2>
-                  <p className="text-sm text-muted-foreground">{t('healing.choosePlanSubtitle')}</p>
+                  <h2 className="text-xl font-bold text-foreground mb-2">{tSafe('healing.choosePlanTitle', 'Choose your plan')}</h2>
+                  <p className="text-sm text-muted-foreground">{tSafe('healing.choosePlanSubtitle', 'Unlock all sessions for your chosen period.')}</p>
                 </div>
                 <div className="flex flex-wrap justify-center gap-3">
                   {HEALING_PLANS.map((plan) => (
@@ -593,7 +602,7 @@ const Healing: React.FC = () => {
                       onClick={() => openPaymentModal(plan)}
                       disabled={isProcessing}
                     >
-                      {plan.days} {t('common.days')}
+                      {plan.days} {tSafe('common.days', 'days')}
                     </Button>
                   ))}
                   <Button
@@ -602,12 +611,12 @@ const Healing: React.FC = () => {
                     onClick={handleSubscriptionStripe}
                     disabled={isProcessing}
                   >
-                    {t('healing.ongoing')}
+                    {tSafe('healing.ongoing', 'Ongoing')}
                   </Button>
                 </div>
                 <Card className="mt-4 border-border/60 bg-muted/40">
                   <CardContent className="pt-4 pb-4">
-                    <p className="text-sm text-muted-foreground">{t('healing.distanceDisclosure')}</p>
+                    <p className="text-sm text-muted-foreground">{tSafe('healing.distanceDisclosure', 'Remote support sessions. This app is for spiritual and entertainment purposes only. It is not intended to provide medical advice, diagnosis, or treatment.')}</p>
                   </CardContent>
                 </Card>
               </CardContent>
@@ -618,7 +627,7 @@ const Healing: React.FC = () => {
             <Card className="p-4 bg-green-500/10 border-green-500/30">
               <div className="flex items-center gap-2 text-green-500">
                 <CheckCircle className="w-5 h-5" />
-                <span className="font-medium">{t('healing.activeAccess')}</span>
+                <span className="font-medium">{tSafe('healing.activeAccess', 'You have active access')}</span>
               </div>
             </Card>
           )}
@@ -630,7 +639,7 @@ const Healing: React.FC = () => {
       <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{t('healing.choosePaymentMethod')}</DialogTitle>
+            <DialogTitle>{tSafe('healing.choosePaymentMethod', 'Choose payment method')}</DialogTitle>
             <DialogDescription>
               {selectedPlan && `${selectedPlan.name} - €${selectedPlan.price}`}
             </DialogDescription>
@@ -643,7 +652,7 @@ const Healing: React.FC = () => {
               disabled={isProcessing}
             >
               <CreditCard className="w-5 h-5" />
-              {t('healing.payWithCard')}
+              {tSafe('healing.payWithCard', 'Pay with card')}
             </Button>
             <Button
               size="lg"
@@ -652,7 +661,7 @@ const Healing: React.FC = () => {
               disabled={isProcessing}
             >
               <Wallet className="w-5 h-5" />
-              {t('healing.payWithCrypto')}
+              {tSafe('healing.payWithCrypto', 'Pay with crypto')}
             </Button>
           </div>
         </DialogContent>
@@ -671,7 +680,7 @@ function SessionRow({
   hasHealingAccess,
   onPurchase,
   isProcessing,
-  t,
+  tSafe,
 }: {
   audio: HealingAudio;
   isPlaying: boolean;
@@ -682,7 +691,7 @@ function SessionRow({
   hasHealingAccess: boolean;
   onPurchase: (a: HealingAudio, m: 'shc' | 'stripe') => void;
   isProcessing: boolean;
-  t: (key: string, fallback?: string) => string;
+  tSafe: (key: string, fallback: string) => string;
 }) {
   const owned = isAdmin || ownedAudioIds.has(audio.id);
   const hasAccess = isAdmin || owned || hasHealingAccess;
@@ -703,7 +712,7 @@ function SessionRow({
             <Clock className="w-3 h-3" />
             <span>{formatDuration(audio.duration_seconds)}</span>
             {hasAccess ? (
-              <span className="text-green-500 font-medium">• {t('healing.owned')}</span>
+              <span className="text-green-500 font-medium">• {tSafe('healing.owned', 'Owned')}</span>
             ) : (
               <span className="text-primary font-medium">• ${audio.price_usd}</span>
             )}

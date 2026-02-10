@@ -9,7 +9,7 @@ import { useProfile } from "@/hooks/useProfile";
 
 /**
  * Healing page: meditation/session content language only (not app UI).
- * Persist in localStorage "healing:meditationLanguage". Default from profile when unset, else English.
+ * Persist in localStorage "healingLanguage". Default from profile when unset, else English.
  * State initialized from localStorage only to avoid flicker.
  */
 export function useHealingMeditationLanguage() {

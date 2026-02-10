@@ -5,7 +5,7 @@
  */
 export type ContentLang = "sv" | "en";
 
-export const HEALING_CONTENT_LANG_KEY = "healing:meditationLanguage";
+export const HEALING_CONTENT_LANG_KEY = "healingLanguage";
 
 export function getHealingContentLang(profileLang?: string | null): ContentLang {
   const stored = localStorage.getItem(HEALING_CONTENT_LANG_KEY);
