@@ -523,11 +523,11 @@ const Healing: React.FC = () => {
       {/* Membership Banner */}
       <MeditationMembershipBanner />
 
-      {/* Session language filter: single pill, switch via popover */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-sm text-muted-foreground">{t('healing.sessionLanguage', 'Session language')}</span>
+      {/* Session language filter: single pill, switch via popover — always visible */}
+      <section className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-muted/20 px-4 py-3">
+        <span className="text-sm font-medium text-foreground">{t('healing.sessionLanguage', 'Session language')}</span>
         <ContentLanguagePicker value={contentLang} onChange={setContentLang} />
-      </div>
+      </section>
 
       {/* Hero Section */}
       <Card className="bg-gradient-to-r from-primary/30 to-pink-500/30 border-none text-center overflow-hidden">
