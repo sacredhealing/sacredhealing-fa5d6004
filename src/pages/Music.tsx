@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Music2, Plus, List, Crown, ChevronRight, X, GripVertical, Edit2, Check, Loader2, Disc, ArrowLeft, ChevronDown, ChevronUp, Headphones } from 'lucide-react';
+import { Music2, Plus, List, Crown, ChevronRight, X, GripVertical, Edit2, Check, Loader2, Disc, ArrowLeft, ChevronDown, ChevronUp, Headphones, Shuffle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -10,6 +10,8 @@ import { TrackCard } from '@/components/music/TrackCard';
 import { CuratedPlaylistCard } from '@/components/music/CuratedPlaylistCard';
 import { useCuratedPlaylists, CuratedPlaylist } from '@/hooks/useCuratedPlaylists';
 import MusicMembershipBanner from '@/components/music/MusicMembershipBanner';
+import { useAuth } from '@/hooks/useAuth';
+import { selectTrackForMood, type MoodKey, getTrackIdSafe, getTrackLabel } from '@/features/music/selectTrackForMood';
 interface Playlist {
   id: string;
   name: string;
@@ -50,39 +52,6 @@ const SPIRITUAL_PATHS = [
   { value: 'awakening', label: 'Awakening' },
 ];
 
-type MoodKey = 'calm' | 'comfort' | 'energy' | 'rest' | 'background';
-
-function pickByTags(tracks: Track[], tags: string[]) {
-  const tset = tags.map((t) => t.toLowerCase());
-  const score = (it: Track) => {
-    const raw: any = (it as any)?.tags ?? (it as any)?.metadata?.tags ?? [];
-    let list: string[] =
-      Array.isArray(raw)
-        ? raw.map((x: any) => String(x).toLowerCase())
-        : typeof raw === 'string'
-        ? raw.split(',').map((x: any) => x.trim().toLowerCase())
-        : [];
-
-    // Also treat mood / spiritual_path / genre as soft tags
-    const extras = [
-      (it as any).mood,
-      (it as any).spiritual_path,
-      (it as any).genre,
-    ]
-      .filter(Boolean)
-      .map((x: any) => String(x).toLowerCase());
-
-    list = [...list, ...extras];
-
-    let s = 0;
-    for (const t of tset) if (list.includes(t)) s += 10;
-    return s;
-  };
-
-  const ranked = [...tracks].sort((a, b) => score(b) - score(a));
-  return ranked.filter((x) => score(x) > 0);
-}
-
 function timeOfDayKey() {
   const h = new Date().getHours();
   if (h >= 5 && h < 12) return 'morning';
@@ -95,6 +64,7 @@ const Music: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isSubscribed, checkSubscription, refreshPurchases, playTrack, currentTrack } = useMusicPlayer();
+  const { user } = useAuth();
   
   const [tracks, setTracks] = useState<Track[]>([]);
   const [albums, setAlbums] = useState<Album[]>([]);
@@ -121,6 +91,14 @@ const Music: React.FC = () => {
   const [selectedPlaylist, setSelectedPlaylist] = useState<string | null>(null);
   const [playlistTracks, setPlaylistTracks] = useState<string[]>([]);
   const [openLibrary, setOpenLibrary] = useState(false);
+  const [shuffleNonce, setShuffleNonce] = useState(0);
+  const [selectedForMood, setSelectedForMood] = useState<Record<MoodKey, Track | null>>({
+    calm: null,
+    comfort: null,
+    energy: null,
+    rest: null,
+    background: null,
+  });
 
   useEffect(() => {
     fetchTracks();
@@ -277,50 +255,59 @@ const Music: React.FC = () => {
   const newReleases = [...tracks].sort((a, b) => new Date(b.release_date || b.created_at).getTime() - new Date(a.release_date || a.created_at).getTime()).slice(0, 5);
   const historyTracks = playHistory.map(h => tracks.find(t => t.id === h.track_id)).filter(Boolean) as Track[];
   const playlistTracksList = playlistTracks.map(id => tracks.find(t => t.id === id)).filter(Boolean) as Track[];
+  const userId = user?.id ?? 'anon';
 
-  const moodTags: Record<MoodKey, string[]> = {
-    calm: ['calm', 'ground', 'soft', 'still', 'peace'],
-    comfort: ['comfort', 'heart', 'warm', 'tender'],
-    energy: ['energy', 'uplift', 'focus', 'bright'],
-    rest: ['sleep', 'night', 'deep', 'rest', 'unwind'],
-    background: ['ambient', 'background', 'loop', 'focus'],
-  };
+  const dailyPicks = useMemo(() => {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    const date = `${yyyy}-${mm}-${dd}`;
+    const baseSeed = `${userId}:${date}:${shuffleNonce}`;
 
-  const curated = useMemo(() => {
-    if (!tracks.length) {
-      return {
-        calm: [] as Track[],
-        comfort: [] as Track[],
-        energy: [] as Track[],
-        rest: [] as Track[],
-        background: [] as Track[],
-      };
-    }
-    return {
-      calm: pickByTags(tracks, moodTags.calm),
-      comfort: pickByTags(tracks, moodTags.comfort),
-      energy: pickByTags(tracks, moodTags.energy),
-      rest: pickByTags(tracks, moodTags.rest),
-      background: pickByTags(tracks, moodTags.background),
+    const picks: Record<MoodKey, Track | null> = {
+      calm: null,
+      comfort: null,
+      energy: null,
+      rest: null,
+      background: null,
     };
-  }, [tracks]);
 
-  const playMood = (key: MoodKey) => {
-    const list = (curated as any)[key] as Track[] | undefined;
-    const first = list?.[0] ?? tracks?.[0];
-    if (!first) return;
-    playTrack(first, tracks);
+    const used: string[] = [];
+
+    const pickMood = (mood: MoodKey) => {
+      const t = selectTrackForMood(tracks as any[], mood, {
+        seed: `${baseSeed}:${mood}`,
+        excludeIds: used,
+      }) as Track | null;
+      if (t) used.push(getTrackIdSafe(t as any));
+      picks[mood] = t;
+    };
+
+    pickMood('calm');
+    pickMood('comfort');
+    pickMood('energy');
+    pickMood('rest');
+    pickMood('background');
+
+    return picks;
+  }, [tracks, userId, shuffleNonce]);
+
+  const onMoodClick = (mood: MoodKey) => {
+    const track = dailyPicks[mood];
+    if (!track) {
+      toast({ title: 'No tracks available', description: 'Music sessions are coming soon.' });
+      return;
+    }
+    playTrack(track, tracks);
+    setSelectedForMood((prev) => ({ ...prev, [mood]: track }));
   };
 
   const playForMe = () => {
     const tod = timeOfDayKey();
     const key: MoodKey =
       tod === 'morning' ? 'energy' : tod === 'afternoon' ? 'background' : 'rest';
-
-    const list = (curated as any)[key] as Track[] | undefined;
-    const pick = list?.[0] ?? tracks?.[0];
-    if (!pick) return;
-    playTrack(pick, tracks);
+    onMoodClick(key);
   };
 
   const lastPlayed: Track | null =
@@ -362,52 +349,89 @@ const Music: React.FC = () => {
 
       {/* Start listening — state doorway */}
       <section className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4">
-        <div className="text-white font-semibold">What do you need right now?</div>
-        <div className="mt-1 text-sm text-white/60">
-          One tap — and the sound meets you where you are.
-        </div>
-
-        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="text-white font-semibold">What do you need right now?</div>
+            <div className="mt-1 text-sm text-white/60">
+              One tap — and the sound meets you where you are.
+            </div>
+          </div>
           <button
-            onClick={() => playMood('calm')}
-            className="rounded-2xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/7 transition"
+            onClick={() => {
+              setShuffleNonce((n) => n + 1);
+              setSelectedForMood({
+                calm: null,
+                comfort: null,
+                energy: null,
+                rest: null,
+                background: null,
+              });
+            }}
+            className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80 hover:bg-white/7 transition flex items-center gap-1"
+            aria-label="Shuffle picks"
           >
-            <div className="text-white font-semibold">Calm my thoughts</div>
-            <div className="mt-1 text-sm text-white/60">Quiet the mind, soften the body.</div>
-          </button>
-
-          <button
-            onClick={() => playMood('comfort')}
-            className="rounded-2xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/7 transition"
-          >
-            <div className="text-white font-semibold">Feel comfort</div>
-            <div className="mt-1 text-sm text-white/60">Warm support for the heart.</div>
-          </button>
-
-          <button
-            onClick={() => playMood('energy')}
-            className="rounded-2xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/7 transition"
-          >
-            <div className="text-white font-semibold">More energy</div>
-            <div className="mt-1 text-sm text-white/60">Lift and focus without strain.</div>
-          </button>
-
-          <button
-            onClick={() => playMood('rest')}
-            className="rounded-2xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/7 transition"
-          >
-            <div className="text-white font-semibold">Deep rest</div>
-            <div className="mt-1 text-sm text-white/60">Slow down into night.</div>
-          </button>
-
-          <button
-            onClick={() => playMood('background')}
-            className="sm:col-span-2 rounded-2xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/7 transition"
-          >
-            <div className="text-white font-semibold">Silent background</div>
-            <div className="mt-1 text-sm text-white/60">Gentle atmosphere while you live.</div>
+            <Shuffle size={16} />
+            <span>Shuffle</span>
           </button>
         </div>
+
+        {(() => {
+          const moodCards: Array<{ key: MoodKey; title: string; fallback: string }> = [
+            {
+              key: 'calm',
+              title: 'Calm my thoughts',
+              fallback: 'Quiet the mind, soften the body.',
+            },
+            {
+              key: 'comfort',
+              title: 'Feel comfort',
+              fallback: 'Warm support for the heart.',
+            },
+            {
+              key: 'energy',
+              title: 'More energy',
+              fallback: 'Lift and focus without strain.',
+            },
+            {
+              key: 'rest',
+              title: 'Deep rest',
+              fallback: 'Slow down into night.',
+            },
+            {
+              key: 'background',
+              title: 'Silent background',
+              fallback: 'Gentle atmosphere while you live.',
+            },
+          ];
+
+          return (
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {moodCards.map((c) => {
+                const pick = dailyPicks[c.key];
+                const selected = selectedForMood[c.key];
+                const line = selected
+                  ? `Playing: ${getTrackLabel(selected)}`
+                  : pick
+                  ? `Today’s pick: ${getTrackLabel(pick)}`
+                  : c.fallback;
+
+                return (
+                  <button
+                    key={c.key}
+                    onClick={() => onMoodClick(c.key)}
+                    className={[
+                      'rounded-2xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/7 transition',
+                      c.key === 'background' ? 'sm:col-span-2' : '',
+                    ].join(' ')}
+                  >
+                    <div className="text-white font-semibold">{c.title}</div>
+                    <div className="mt-1 text-sm text-white/60">{line}</div>
+                  </button>
+                );
+              })}
+            </div>
+          );
+        })()}
       </section>
 
       {/* Current flow */}
