@@ -1,7 +1,8 @@
 import { useMemo } from "react";
 import { useMembership } from "@/hooks/useMembership";
+import type { MembershipTier } from "./tier";
 
-export type MembershipTier = "free" | "monthly" | "annual" | "lifetime";
+export type { MembershipTier } from "./tier";
 
 export function useMembershipTier(): MembershipTier {
   const { tier: rawTier, loading } = useMembership();

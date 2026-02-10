@@ -5,6 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
+import { useMembershipTier } from '@/features/membership/useMembershipTier';
+import { AccessTag } from '@/features/membership/AccessTag';
+import { hasTierAccess } from '@/features/membership/tier';
+
+const AYURVEDA_REQUIRED_TIER = 'monthly' as const;
 
 interface AyurvedaSectionProps {
   isPremium?: boolean;
@@ -12,12 +17,14 @@ interface AyurvedaSectionProps {
   isAdmin?: boolean;
 }
 
-export const AyurvedaSection: React.FC<AyurvedaSectionProps> = ({ 
+export const AyurvedaSection: React.FC<AyurvedaSectionProps> = ({
   isPremium = false,
   membershipTier = 'free',
   isAdmin = false
 }) => {
   const navigate = useNavigate();
+  const tier = useMembershipTier();
+  const hasAccess = isAdmin || hasTierAccess(tier, AYURVEDA_REQUIRED_TIER);
 
   return (
     <Card className="overflow-hidden border-2 border-emerald-500/20 bg-gradient-to-br from-emerald-50/50 to-background dark:from-emerald-950/20">
@@ -31,10 +38,13 @@ export const AyurvedaSection: React.FC<AyurvedaSectionProps> = ({
               <Leaf className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-600 dark:text-emerald-400" />
             </motion.div>
             <div>
-              <Badge className="bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 mb-2">
-                <Sparkles className="w-3 h-3 mr-1" />
-                AI-Powered Ayurveda
-              </Badge>
+              <div className="flex items-center gap-2 flex-wrap mb-2">
+                <Badge className="bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30">
+                  <Sparkles className="w-3 h-3 mr-1" />
+                  AI-Powered Ayurveda
+                </Badge>
+                <AccessTag userTier={tier} requiredTier={AYURVEDA_REQUIRED_TIER} />
+              </div>
               <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground">
                 Discover Your Prakriti
               </h2>
@@ -86,21 +96,25 @@ export const AyurvedaSection: React.FC<AyurvedaSectionProps> = ({
             </ul>
           </div>
 
-          <Button 
-            size="lg"
-            onClick={() => navigate('/ayurveda')}
-            className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-2xl py-4 sm:py-6 text-sm sm:text-base whitespace-normal h-auto min-h-[52px]"
-          >
-            <span className="flex items-center justify-center gap-2">
-              <span>Begin Your Ayurvedic Journey</span>
-              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-            </span>
-          </Button>
-
-          {!isPremium && !isAdmin && (
-            <p className="text-center text-xs text-muted-foreground mt-4">
-              Free tier includes basic analysis. Upgrade for AI chat consultations and live audio sessions.
-            </p>
+          {hasAccess ? (
+            <Button 
+              size="lg"
+              onClick={() => navigate('/ayurveda')}
+              className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-2xl py-4 sm:py-6 text-sm sm:text-base whitespace-normal h-auto min-h-[52px]"
+            >
+              <span className="flex items-center justify-center gap-2">
+                <span>Begin Your Ayurvedic Journey</span>
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+              </span>
+            </Button>
+          ) : (
+            <button
+              type="button"
+              className="mt-3 w-full rounded-full bg-white px-5 py-3 text-sm font-semibold text-black"
+              onClick={() => navigate('/membership')}
+            >
+              Upgrade
+            </button>
           )}
         </div>
       </CardContent>

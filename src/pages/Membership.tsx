@@ -9,7 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
 import { useMembershipTier } from '@/features/membership/useMembershipTier';
-import { YourMembershipSummary } from '@/features/membership/YourMembershipSummary';
+import type { MembershipTier } from '@/features/membership/tier';
 import { useFreeTrial } from '@/hooks/useFreeTrial';
 import { TrialBanner } from '@/components/offers/TrialBanner';
 import { PromoCodeInput } from '@/components/offers/PromoCodeInput';
@@ -18,7 +18,7 @@ import { VedicAstrologySection } from '@/components/membership/VedicAstrologySec
 import { AyurvedaSection } from '@/components/membership/AyurvedaSection';
 import { toast } from 'sonner';
 
-interface MembershipTier {
+interface PlanTier {
   id: string;
   name: string;
   slug: string;
@@ -53,7 +53,7 @@ const Membership = () => {
   const { tier: currentTier, isPremium, isAdmin, refresh: refreshMembership } = useMembership();
   const tier = useMembershipTier();
   const { isTrialActive, daysRemaining, canStartTrial, refetch: refetchTrial } = useFreeTrial();
-  const [tiers, setTiers] = useState<MembershipTier[]>([]);
+  const [tiers, setTiers] = useState<PlanTier[]>([]);
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
@@ -105,7 +105,7 @@ const Membership = () => {
     setLoading(false);
   };
 
-  const handleSubscribe = async (tier: MembershipTier) => {
+  const handleSubscribe = async (tier: PlanTier) => {
     if (!user) {
       navigate('/auth');
       return;
@@ -171,16 +171,11 @@ const Membership = () => {
     );
   }
 
+  const membershipTier = tier as MembershipTier;
+
   return (
     <div className="min-h-screen bg-background pb-24">
-      {/* Paid users: show membership summary, not plan chooser */}
-      {(tier !== "free" || isTrialActive) ? (
-        <YourMembershipSummary
-          tier={tier === "free" ? "annual" : tier}
-          onManage={handleManageSubscription}
-          managing={portalLoading}
-        />
-      ) : (
+      {membershipTier === "free" && !isTrialActive ? (
         <>
           {/* Header - free users only */}
           <div className="bg-gradient-to-br from-primary/20 via-background to-accent/10 px-4 py-6 sm:py-8 text-center">
@@ -336,6 +331,35 @@ const Membership = () => {
             })()}
           </div>
         </>
+      ) : (
+        /* Paid / trial: active card, Continue + Manage subscription */
+        <div className="px-3 sm:px-4 py-6 sm:py-8">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <div className="text-white font-semibold">Your membership is active</div>
+            <div className="mt-1 text-sm text-white/60">Your space is open.</div>
+
+            <div className="mt-4">
+              <button
+                className="w-full rounded-full bg-white px-5 py-3 text-sm font-semibold text-black"
+                onClick={() => navigate("/")}
+              >
+                Continue
+              </button>
+
+              <button
+                type="button"
+                className="mt-3 w-full text-sm text-white/60 hover:text-white/80 transition"
+                onClick={() => {
+                  if (portalLoading) return;
+                  handleManageSubscription();
+                }}
+                disabled={portalLoading}
+              >
+                {portalLoading ? "Opening…" : "Manage subscription"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Active Trial Banner - when on trial */}

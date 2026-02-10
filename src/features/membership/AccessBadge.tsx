@@ -1,11 +1,5 @@
-import type { MembershipTier } from "./useMembershipTier";
-
-const rank: Record<MembershipTier, number> = {
-  free: 0,
-  monthly: 1,
-  annual: 2,
-  lifetime: 3,
-};
+import type { MembershipTier } from "./tier";
+import { hasTierAccess } from "./tier";
 
 export function AccessBadge({
   userTier,
@@ -14,7 +8,7 @@ export function AccessBadge({
   userTier: MembershipTier;
   requiredTier: MembershipTier;
 }) {
-  const hasAccess = rank[userTier] >= rank[requiredTier];
+  const hasAccess = hasTierAccess(userTier, requiredTier);
 
   return (
     <div className="mt-2">

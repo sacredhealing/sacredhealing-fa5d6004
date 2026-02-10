@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, Star, Crown, Lock, CheckCircle, User, Calendar } from 'lucide-react';
+import { Sparkles, Star, Crown, CheckCircle, User, Calendar } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,8 +8,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useVedicAstrology } from '@/hooks/useVedicAstrology';
 import { useMembership } from '@/hooks/useMembership';
 import { useMembershipTier } from '@/features/membership/useMembershipTier';
-import { AccessBadge } from '@/features/membership/AccessBadge';
-import type { MembershipTier } from '@/features/membership/useMembershipTier';
+import { AccessTag } from '@/features/membership/AccessTag';
+import { hasTierAccess } from '@/features/membership/tier';
+import type { MembershipTier } from '@/features/membership/tier';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { BirthDetailsForm } from '@/components/vedic/BirthDetailsForm';
@@ -50,8 +51,8 @@ export const VedicAstrologySection: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { tiers, isLoading, hasAccess, getHighestAccessLevel } = useVedicAstrology();
-  const { tier: membershipTier, isPremium } = useMembership();
-  const tier = useMembershipTier();
+  const { tier: membershipTierRaw } = useMembership();
+  const userTier = useMembershipTier();
   const [birthDetailsDialogOpen, setBirthDetailsDialogOpen] = useState(false);
   const [hasBirthDetails, setHasBirthDetails] = useState(false);
   const [birthDetails, setBirthDetails] = useState<any>(null);
@@ -103,12 +104,6 @@ export const VedicAstrologySection: React.FC = () => {
   }
 
   const highestAccess = getHighestAccessLevel();
-  const membershipMap: Record<string, string> = {
-    'free': 'Free',
-    'premium-monthly': 'Premium Monthly',
-    'premium-annual': 'Premium Annual',
-    'lifetime': 'Lifetime',
-  };
 
   return (
     <Card className="overflow-hidden border-2 border-primary/30 bg-gradient-to-br from-purple-500/5 via-background to-blue-500/5 w-full max-w-full">
@@ -215,23 +210,20 @@ export const VedicAstrologySection: React.FC = () => {
                 Your Current Access: {tiers.find(t => t.tier_level === highestAccess)?.name}
               </p>
             </div>
-            <p className="text-xs sm:text-sm text-muted-foreground">
-              Based on your {membershipMap[membershipTier || 'free']} membership
-            </p>
           </div>
         )}
 
         <div className="space-y-4">
-          {tiers.map((tier) => {
-            const Icon = tierIcons[tier.tier_level] || Star;
-            const colors = tierColors[tier.tier_level] || tierColors.basic;
-            const userHasAccess = hasAccess(tier.tier_level);
-            const isLocked = !userHasAccess;
+          {tiers.map((vedicTier) => {
+            const Icon = tierIcons[vedicTier.tier_level] || Star;
+            const colors = tierColors[vedicTier.tier_level] || tierColors.basic;
+            const requiredTier = membershipRequiredToTier(vedicTier.membership_required);
+            const userHasAccess = hasTierAccess(userTier, requiredTier);
 
             return (
               <Card
-                key={tier.id}
-                className={`overflow-hidden border-2 ${isLocked ? 'border-border/50 opacity-60' : colors.border} bg-gradient-to-br ${colors.bg} w-full max-w-full`}
+                key={vedicTier.id}
+                className={`overflow-hidden border-2 ${!userHasAccess ? 'border-border/50 opacity-60' : colors.border} bg-gradient-to-br ${colors.bg} w-full max-w-full`}
               >
                 <CardContent className="p-5 sm:p-6">
                   <div className="flex flex-col items-center text-center mb-4">
@@ -240,47 +232,35 @@ export const VedicAstrologySection: React.FC = () => {
                     </div>
                     <div>
                       <div className="flex items-center justify-center gap-2 mb-1 flex-wrap">
-                        <h3 className="font-bold text-lg text-foreground">{tier.name}</h3>
-                        {userHasAccess && (
-                          <Badge className="bg-green-500 text-white text-xs">
-                            Active
-                          </Badge>
-                        )}
-                        {isLocked && (
-                          <Badge variant="outline" className="text-xs">
-                            <Lock className="w-3 h-3 mr-1" />
-                            Locked
-                          </Badge>
-                        )}
+                        <h3 className="font-bold text-lg text-foreground">{vedicTier.name}</h3>
+                        <AccessTag userTier={userTier} requiredTier={requiredTier} />
                       </div>
-                      <p className="text-sm text-muted-foreground max-w-2xl mx-auto">{tier.description}</p>
+                      <p className="text-sm text-muted-foreground max-w-2xl mx-auto">{vedicTier.description}</p>
                     </div>
                   </div>
-
-                  <AccessBadge userTier={tier as any} requiredTier={membershipRequiredToTier(tier.membership_required)} />
 
                   <div className="mb-4">
                     <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide text-center">
                       Features:
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-2">
-                      {tier.features.slice(0, 5).map((feature, idx) => (
+                      {vedicTier.features.slice(0, 5).map((feature, idx) => (
                         <div key={idx} className="flex items-center gap-2 text-sm text-foreground">
                           <div className={`w-1.5 h-1.5 rounded-full ${colors.text.replace('text-', 'bg-')} flex-shrink-0`} />
                           <span>{feature}</span>
                         </div>
                       ))}
                     </div>
-                    {tier.features.length > 5 && (
+                    {vedicTier.features.length > 5 && (
                       <p className="text-xs text-muted-foreground italic text-center mt-2">
-                        +{tier.features.length - 5} more features
+                        +{vedicTier.features.length - 5} more features
                       </p>
                     )}
                   </div>
 
                   {userHasAccess ? (
                     <Button
-                      onClick={() => handleAccessTool(tier.tier_level)}
+                      onClick={() => handleAccessTool(vedicTier.tier_level)}
                       className={`w-full bg-gradient-to-r ${colors.border.replace('border-', 'from-').replace('/30', '')} ${colors.text.replace('text-', 'to-')} text-white hover:opacity-90 text-sm sm:text-base whitespace-normal h-auto min-h-[52px] py-3`}
                       size="lg"
                     >
@@ -290,26 +270,18 @@ export const VedicAstrologySection: React.FC = () => {
                       </span>
                     </Button>
                   ) : (
-                    <Button
+                    <button
+                      type="button"
+                      className="mt-3 w-full rounded-full bg-white px-5 py-3 text-sm font-semibold text-black"
                       onClick={handleUpgrade}
-                      variant="outline"
-                      className="w-full"
-                      size="lg"
                     >
-                      Unlock Membership
-                    </Button>
+                      Upgrade
+                    </button>
                   )}
                 </CardContent>
               </Card>
             );
           })}
-        </div>
-
-        <div className="mt-6 p-3 sm:p-4 rounded-xl bg-muted/30 border border-border/50 w-full min-w-0 overflow-hidden">
-          <p className="text-sm text-muted-foreground text-center">
-            <strong className="text-foreground">Note:</strong> Vedic Astrology access is automatically granted based on your membership tier. 
-            Upgrade your membership to unlock higher tiers of cosmic wisdom.
-          </p>
         </div>
       </CardContent>
     </Card>

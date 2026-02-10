@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Sparkles, Lock, Clock, Loader2, Mic } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useMembership } from '@/hooks/useMembership';
+import { useMembershipTier } from '@/features/membership/useMembershipTier';
+import { AccessTag } from '@/features/membership/AccessTag';
+import { hasTierAccess } from '@/features/membership/tier';
 
 interface Meditation {
   id: string;
@@ -25,8 +29,13 @@ interface ContentTask {
   length_target_minutes: number | null;
 }
 
+const PREMIUM_MEDITATIONS_REQUIRED = 'monthly' as const;
+
 const PremiumMeditationsList: React.FC = () => {
+  const navigate = useNavigate();
   const { isPremium } = useMembership();
+  const tier = useMembershipTier();
+  const hasAccess = hasTierAccess(tier, PREMIUM_MEDITATIONS_REQUIRED);
   const [meditations, setMeditations] = useState<Meditation[]>([]);
   const [tasks, setTasks] = useState<ContentTask[]>([]);
   const [loading, setLoading] = useState(true);
@@ -106,13 +115,23 @@ const PremiumMeditationsList: React.FC = () => {
   return (
     <Card className="mt-6">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 flex-wrap">
           <Sparkles className="w-5 h-5 text-primary" />
           Premium Meditations Library
+          <AccessTag userTier={tier} requiredTier={PREMIUM_MEDITATIONS_REQUIRED} />
         </CardTitle>
         <p className="text-sm text-muted-foreground mt-1">
-          {totalMeditations} total meditations {isPremium ? '(You have access)' : '(Unlock with Premium)'}
+          {totalMeditations} total meditations
         </p>
+        {!hasAccess && (
+          <button
+            type="button"
+            className="mt-3 rounded-full bg-white px-5 py-3 text-sm font-semibold text-black w-full sm:w-auto"
+            onClick={() => navigate('/membership')}
+          >
+            Upgrade
+          </button>
+        )}
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Recorded Premium Meditations */}

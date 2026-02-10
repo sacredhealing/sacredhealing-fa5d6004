@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Crown, Loader2, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { MembershipTier } from "./useMembershipTier";
+import type { MembershipTier } from "./tier";
 
 const tierLabels: Record<MembershipTier, string> = {
   free: "Free",
