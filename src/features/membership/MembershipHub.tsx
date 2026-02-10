@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function MembershipHub({ onManage }: { onManage: () => void }) {
   const navigate = useNavigate();
@@ -14,18 +15,19 @@ export function MembershipHub({ onManage }: { onManage: () => void }) {
         <div className="mt-1 text-sm text-white/60">Your membership is active.</div>
 
         <div className="mt-4 flex justify-center gap-3">
-          <button
+          <Button
             onClick={() => navigate("/library")}
-            className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-black hover:opacity-90 transition"
+            className="rounded-full px-5 py-3 text-sm font-semibold"
           >
             Continue
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={onManage}
-            className="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm text-white/80 hover:text-white transition"
+            variant="outline"
+            className="rounded-full px-5 py-3 text-sm font-semibold"
           >
             Manage
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -44,9 +46,12 @@ export function MembershipHub({ onManage }: { onManage: () => void }) {
               Your daily influence + deeper blueprint.
             </div>
             <div className="mt-4">
-              <span className="inline-flex rounded-full bg-white px-4 py-2 text-sm font-semibold text-black">
+              <Button
+                size="sm"
+                className="rounded-full px-4 py-2 text-sm font-semibold"
+              >
                 Open Vedic Astrology
-              </span>
+              </Button>
             </div>
           </button>
 
@@ -59,9 +64,12 @@ export function MembershipHub({ onManage }: { onManage: () => void }) {
               Discover your prakriti and daily balance.
             </div>
             <div className="mt-4">
-              <span className="inline-flex rounded-full bg-white px-4 py-2 text-sm font-semibold text-black">
+              <Button
+                size="sm"
+                className="rounded-full px-4 py-2 text-sm font-semibold"
+              >
                 Open Ayurveda
-              </span>
+              </Button>
             </div>
           </button>
         </div>
@@ -87,7 +95,7 @@ export function MembershipHub({ onManage }: { onManage: () => void }) {
         {openOptional ? (
           <div className="px-4 pb-4">
             <button
-              onClick={() => navigate("/programs/6-month")}
+              onClick={() => navigate("/transformation")}
               className="w-full rounded-2xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/7 transition"
             >
               <div className="text-white font-semibold">6-Month Program</div>
@@ -95,9 +103,12 @@ export function MembershipHub({ onManage }: { onManage: () => void }) {
                 A deeper transformation path with guidance.
               </div>
               <div className="mt-4">
-                <span className="inline-flex rounded-full bg-white px-4 py-2 text-sm font-semibold text-black">
+                <Button
+                  size="sm"
+                  className="rounded-full px-4 py-2 text-sm font-semibold"
+                >
                   View program
-                </span>
+                </Button>
               </div>
             </button>
           </div>
