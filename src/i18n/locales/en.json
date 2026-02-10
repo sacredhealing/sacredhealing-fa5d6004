@@ -749,6 +749,28 @@
     "premiumFeature3": "Earn 33 SHC per session & stream",
     "certificates": "Certificates"
   },
+  "settings": {
+    "legal": {
+      "title": "Legal & Disclaimers",
+      "subtitle": "Medical disclaimer & terms"
+    }
+  },
+  "legal": {
+    "title": "Sacred Healing: Legal Notice",
+    "subtitle": "Please read before use.",
+    "entertainment": {
+      "title": "Entertainment only",
+      "body": "All content, including meditations, frequencies, and spiritual guidance, is for entertainment and spiritual purposes only."
+    },
+    "no_medical": {
+      "title": "No medical advice",
+      "body": "This app does not provide medical advice, diagnosis, or treatment. Always seek the advice of your physician or other qualified health providers with any questions you may have regarding a medical condition."
+    },
+    "not_substitute": {
+      "title": "Not a substitute",
+      "body": "Never disregard professional medical advice or delay seeking it because of something you have read or experienced in this app. If you think you may have a medical emergency, contact your doctor or emergency services immediately."
+    }
+  },
   "appearance": {
     "title": "Appearance",
     "description": "Choose your preferred theme for the app",

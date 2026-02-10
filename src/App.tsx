@@ -28,6 +28,7 @@ import ArtistProfile from "./pages/ArtistProfile";
 import Mastering from "./pages/Mastering";
 import Wallet from "./pages/Wallet";
 import Profile from "./pages/Profile";
+import Legal from "./pages/Legal";
 import AdminDashboard from "./pages/AdminDashboard";
 import Admin from "./pages/Admin";
 import AdminMeditationEdit from "./pages/AdminMeditationEdit";
@@ -135,6 +136,7 @@ function AppRoutes() {
                   <Route path="/mastering" element={<Mastering />} />
                   <Route path="/wallet" element={<Wallet />} />
                   <Route path="/profile" element={<Profile />} />
+                  <Route path="/legal" element={<Legal />} />
                   <Route path="/healing" element={<Healing />} />
                   <Route path="/healing/my-sacred-flame" element={<MySacredFlame />} />
                   <Route path="/breathing" element={<Breathing />} />

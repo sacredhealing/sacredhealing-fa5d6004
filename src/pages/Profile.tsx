@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { User, Mail, Flame, Award, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield, LayoutDashboard, Globe, Megaphone, Crown, Check, Pencil, Banknote } from 'lucide-react';
+import { User, Mail, Flame, Award, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield, Scale, LayoutDashboard, Globe, Megaphone, Crown, Check, Pencil, Banknote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LanguageSelector } from '@/components/LanguageSelector';
@@ -70,6 +70,7 @@ const Profile: React.FC = () => {
     },
     { icon: Moon, label: t('profile.appearance'), sublabel: t('profile.darkMode'), onClick: () => setAppearanceOpen(true) },
     { icon: Shield, label: t('profile.privacy'), sublabel: t('profile.dataAndSecurity'), onClick: () => setPrivacyOpen(true) },
+    { icon: Scale, label: t('settings.legal.title'), sublabel: t('settings.legal.subtitle'), onClick: () => navigate('/legal') },
     { icon: Settings, label: t('profile.settings'), sublabel: t('profile.appPreferences'), onClick: () => setSettingsOpen(true) },
   ];
 

@@ -667,6 +667,28 @@
     "premiumFeature3": "Tjäna 33 SHC per session & ström",
     "certificates": "Certifikat"
   },
+  "settings": {
+    "legal": {
+      "title": "Juridik & disclaimer",
+      "subtitle": "Medicinsk disclaimer och villkor"
+    }
+  },
+  "legal": {
+    "title": "Sacred Healing: Rättsligt meddelande",
+    "subtitle": "Läs gärna innan användning.",
+    "entertainment": {
+      "title": "Endast underhållning",
+      "body": "Allt innehåll, inklusive meditationer, frekvenser och andlig vägledning, är endast för underhållnings- och andliga ändamål."
+    },
+    "no_medical": {
+      "title": "Inget medicinskt råd",
+      "body": "Denna app ger inte medicinsk rådgivning, diagnos eller behandling. Sök alltid råd från din läkare eller annan legitimerad hälsoexpert vid frågor om din hälsa."
+    },
+    "not_substitute": {
+      "title": "Inte en ersättning",
+      "body": "Försumma aldrig professionell medicinsk rådgivning eller dröj med att söka den på grund av något du läst eller upplevt i denna app. Vid misstänkt medicinsk nödsituation, kontakta din läkare eller nödnummer omedelbart."
+    }
+  },
   "appearance": {
     "title": "Utseende",
     "description": "Välj önskat tema för appen",
