@@ -14,6 +14,8 @@ import CommunityFeed from '@/components/community/CommunityFeed';
 import SacredCircles from '@/components/community/SacredCircles';
 import CommunityChannels from '@/components/community/CommunityChannels';
 import { formatDistanceToNow } from 'date-fns';
+import { CommunityGuideTab } from '@/features/community/CommunityGuideTab';
+import { useMembershipTier } from '@/features/membership/useMembershipTier';
 
 interface GuideInfo {
   user_id: string;
@@ -34,6 +36,7 @@ const Community = () => {
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
   const [guideInfo, setGuideInfo] = useState<GuideInfo | null>(null);
   const [adminConversations, setAdminConversations] = useState<any[]>([]);
+  const membershipTier = useMembershipTier();
 
   // Fetch guide (first admin) for regular users
   useEffect(() => {
@@ -223,6 +226,7 @@ const Community = () => {
 
   // Render non-chat content for certain tabs
   const renderTabContent = () => {
+    if (activeTab === 'guide') return <CommunityGuideTab tier={membershipTier} />;
     if (activeTab === 'feed') return <CommunityFeed />;
     if (activeTab === 'circles') return <SacredCircles />;
     if (activeTab === 'channels') return <CommunityChannels />;
