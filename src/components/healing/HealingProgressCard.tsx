@@ -14,6 +14,10 @@ interface HealingProgressCardProps {
 export const HealingProgressCard: React.FC<HealingProgressCardProps> = ({ variant = 'compact' }) => {
   const { t } = useTranslation();
   const { progress, nextRecommendation, isLoading } = useHealingProgress();
+  const tSafe = (key: string, fallback: string) => {
+    const v = t(key);
+    return v === key ? fallback : v;
+  };
 
   if (isLoading) {
     return (
@@ -41,8 +45,8 @@ export const HealingProgressCard: React.FC<HealingProgressCardProps> = ({ varian
                 <Heart className="w-5 h-5 text-purple-400" />
               </div>
               <div>
-                <h3 className="font-semibold text-foreground text-sm">{t('healing.journeyTitle')}</h3>
-                <p className="text-xs text-muted-foreground">{t('healing.level')} {healingLevel}</p>
+                <h3 className="font-semibold text-foreground text-sm">{tSafe('healing.journeyTitle', 'Your journey')}</h3>
+                <p className="text-xs text-muted-foreground">{tSafe('healing.level', 'Level')} {healingLevel}</p>
               </div>
             </div>
             <div className="flex items-center gap-1 text-accent">
@@ -54,8 +58,8 @@ export const HealingProgressCard: React.FC<HealingProgressCardProps> = ({ varian
           <Progress value={progressToNextLevel} className="h-2 mb-2" />
           
           <div className="flex justify-between text-xs text-muted-foreground">
-            <span>{totalSessions} {t('healing.sessionsCount')}</span>
-            <span>{5 - (totalSessions % 5)} {t('healing.toNextLevel')}</span>
+            <span>{totalSessions} {tSafe('healing.sessionsCount', 'sessions')}</span>
+            <span>{5 - (totalSessions % 5)} {tSafe('healing.toNextLevel', 'to next level')}</span>
           </div>
         </Card>
       </Link>
@@ -66,10 +70,10 @@ export const HealingProgressCard: React.FC<HealingProgressCardProps> = ({ varian
   return (
     <Card className="p-6 bg-gradient-to-br from-purple-500/20 via-pink-500/10 to-amber-500/10 border-purple-500/30">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-heading font-semibold text-foreground">{t('healing.journeyTitle')}</h2>
+        <h2 className="text-lg font-heading font-semibold text-foreground">{tSafe('healing.journeyTitle', 'Your journey')}</h2>
         <div className="flex items-center gap-2 bg-accent/20 rounded-full px-3 py-1">
           <Flame className="w-4 h-4 text-accent" />
-          <span className="text-sm font-medium text-accent">{progress.currentStreak} {t('healing.streakDays')}</span>
+          <span className="text-sm font-medium text-accent">{progress.currentStreak} {tSafe('healing.streakDays', 'day streak')}</span>
         </div>
       </div>
 
@@ -77,13 +81,13 @@ export const HealingProgressCard: React.FC<HealingProgressCardProps> = ({ varian
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <Target className="w-5 h-5 text-purple-400" />
-            <span className="font-medium text-foreground">{t('healing.level')} {healingLevel}</span>
+            <span className="font-medium text-foreground">{tSafe('healing.level', 'Level')} {healingLevel}</span>
           </div>
           <span className="text-sm text-muted-foreground">{progressToNextLevel.toFixed(0)}%</span>
         </div>
         <Progress value={progressToNextLevel} className="h-3" />
         <p className="text-xs text-muted-foreground mt-1">
-          {5 - (totalSessions % 5)} {t('healing.moreSessionsToLevel')} {healingLevel + 1}
+          {5 - (totalSessions % 5)} {tSafe('healing.moreSessionsToLevel', 'more sessions to reach Level')} {healingLevel + 1}
         </p>
       </div>
 
@@ -93,28 +97,28 @@ export const HealingProgressCard: React.FC<HealingProgressCardProps> = ({ varian
             <Play className="w-4 h-4 text-primary" />
             <span className="text-xl font-bold text-foreground">{progress.totalMeditations}</span>
           </div>
-          <p className="text-xs text-muted-foreground">{t('healing.meditationsLabel')}</p>
+          <p className="text-xs text-muted-foreground">{tSafe('healing.meditationsLabel', 'Meditations')}</p>
         </div>
         <div className="bg-muted/30 rounded-xl p-3 text-center">
           <div className="flex items-center justify-center gap-1 mb-1">
             <Music className="w-4 h-4 text-purple-400" />
             <span className="text-xl font-bold text-foreground">{progress.totalMantras}</span>
           </div>
-          <p className="text-xs text-muted-foreground">{t('healing.mantrasLabel')}</p>
+          <p className="text-xs text-muted-foreground">{tSafe('healing.mantrasLabel', 'Mantras')}</p>
         </div>
         <div className="bg-muted/30 rounded-xl p-3 text-center">
           <div className="flex items-center justify-center gap-1 mb-1">
             <Calendar className="w-4 h-4 text-green-400" />
             <span className="text-xl font-bold text-foreground">{progress.daysActive}</span>
           </div>
-          <p className="text-xs text-muted-foreground">{t('healing.daysActiveLabel')}</p>
+          <p className="text-xs text-muted-foreground">{tSafe('healing.daysActiveLabel', 'Days Active')}</p>
         </div>
         <div className="bg-muted/30 rounded-xl p-3 text-center">
           <div className="flex items-center justify-center gap-1 mb-1">
             <Sparkles className="w-4 h-4 text-accent" />
             <span className="text-xl font-bold text-foreground">{progress.totalSHCEarned}</span>
           </div>
-          <p className="text-xs text-muted-foreground">{t('healing.shcEarnedLabel')}</p>
+          <p className="text-xs text-muted-foreground">{tSafe('healing.shcEarnedLabel', 'SHC Earned')}</p>
         </div>
       </div>
 
@@ -122,7 +126,7 @@ export const HealingProgressCard: React.FC<HealingProgressCardProps> = ({ varian
         <div className="bg-gradient-healing rounded-xl p-4">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp className="w-4 h-4 text-foreground" />
-            <span className="text-sm font-medium text-foreground">{t('healing.recommendedNextLabel')}</span>
+            <span className="text-sm font-medium text-foreground">{tSafe('healing.recommendedNextLabel', 'Recommended Next')}</span>
           </div>
           <h3 className="font-semibold text-foreground mb-1">{nextRecommendation.title}</h3>
           <div className="flex items-center gap-3 text-sm text-foreground/80 mb-3">
@@ -137,7 +141,7 @@ export const HealingProgressCard: React.FC<HealingProgressCardProps> = ({ varian
           <Link to={nextRecommendation.type === 'meditation' ? '/meditations' : '/mantras'}>
             <Button variant="glass" size="sm" className="w-full">
               <Play className="w-4 h-4 mr-2" />
-              {t('healing.startSessionButton')}
+              {tSafe('healing.startSessionButton', 'Start Session')}
             </Button>
           </Link>
         </div>
