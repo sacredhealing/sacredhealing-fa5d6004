@@ -1,36 +1,47 @@
-import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
-import LanguageDetector from 'i18next-browser-languagedetector';
+import { en } from "./translations/en";
+import { sv } from "./translations/sv";
 
-import en from './locales/en.json';
-import sv from './locales/sv.json';
-import es from './locales/es.json';
-import no from './locales/no.json';
+export const supportedLanguages = ["en", "sv"] as const;
+export type Language = (typeof supportedLanguages)[number];
 
-/**
- * i18n init: English, Spanish, Swedish, Norwegian.
- * Language is initialized from localStorage/navigator, then synced with
- * profile.preferred_language via ProfileLanguageSync when user is logged in.
- */
-i18n
-  .use(LanguageDetector)
-  .use(initReactI18next)
-  .init({
-    resources: {
-      en: { translation: en },
-      es: { translation: es },
-      sv: { translation: sv },
-      no: { translation: no },
-    },
-    fallbackLng: 'en',
-    supportedLngs: ['en', 'es', 'sv', 'no'],
-    interpolation: {
-      escapeValue: false,
-    },
-    detection: {
-      order: ['localStorage', 'navigator'],
-      caches: ['localStorage'],
-    },
-  });
+export const translations = { en, sv } as const;
 
-export default i18n;
+type Dict = Record<string, any>;
+
+function getByPath(obj: Dict, path: string): unknown {
+  return path.split(".").reduce((acc: any, key) => (acc ? acc[key] : undefined), obj);
+}
+
+function interpolate(template: string, vars?: Record<string, string | number>) {
+  if (!vars) return template;
+  return template.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_, k) =>
+    vars[k] === undefined || vars[k] === null ? "" : String(vars[k])
+  );
+}
+
+const warned = new Set<string>();
+function warnMissing(key: string, lang: Language) {
+  if (process.env.NODE_ENV === "production") return;
+  const id = `${lang}:${key}`;
+  if (warned.has(id)) return;
+  warned.add(id);
+  // eslint-disable-next-line no-console
+  console.warn(`[i18n] Missing key "${key}" for lang "${lang}" (fallback to en)`);
+}
+
+export function createT(lang: Language) {
+  return function t(key: string, vars?: Record<string, string | number>) {
+    const primary = getByPath(translations[lang] as unknown as Dict, key);
+    if (typeof primary === "string") return interpolate(primary, vars);
+
+    const fallback = getByPath(translations.en as unknown as Dict, key);
+    if (typeof fallback === "string") {
+      warnMissing(key, lang);
+      return interpolate(fallback, vars);
+    }
+
+    warnMissing(key, lang);
+    return key; // last resort, shows obvious missing key
+  };
+}
+
