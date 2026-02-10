@@ -472,7 +472,18 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     audioRef.current.onended = async () => {
       setIsPlaying(false);
       const durationListenedSec = Math.floor((Date.now() - playStartTimeRef.current) / 1000);
-      
+
+      try {
+        localStorage.setItem(
+          "sh_last_session",
+          JSON.stringify({
+            ts: Date.now(),
+            duration: durationListenedSec,
+            type: audio.contentType,
+          })
+        );
+      } catch (_) {}
+
       // Award SHC for meditation/healing completion (unchanged)
       const { data: { user } } = await supabase.auth.getUser();
       if (user && audio.shc_reward > 0) {

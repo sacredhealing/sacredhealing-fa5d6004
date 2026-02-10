@@ -8,6 +8,7 @@ import { ParamahamsaVishwanandaDailyCard } from "@/components/dashboard/Paramaha
 import { LibrarySection, type LibraryItem } from "@/components/explore/LibrarySection";
 import { CollapsibleSection } from "@/features/library/CollapsibleSection";
 import { useQuickActionItems } from "@/features/library/useQuickActionItems";
+import { usePresenceState } from "@/features/presence/usePresenceState";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { getDayPhase } from "@/utils/postSessionContext";
 
@@ -91,6 +92,23 @@ export default function Explore() {
 
   const { playUniversalAudio } = useMusicPlayer();
   const { items: quickItems } = useQuickActionItems();
+  const presence = usePresenceState();
+
+  const subtitleMap: Record<string, string> = {
+    start: t(getSubtitleKey(dayPhase), "Begin gently today."),
+    returned: t("explore.presence.returned", "Welcome back — stay with the feeling."),
+    deep: t("explore.presence.deep", "You're in a quiet space now."),
+  };
+  const subtitle = subtitleMap[presence] ?? subtitleMap.start;
+
+  const firstActionTitle =
+    presence === "start"
+      ? t("explore.intent.calm", "Calm my mind")
+      : t("explore.presence.continueGently", "Continue gently");
+  const firstActionSubtitle =
+    presence === "start"
+      ? t("explore.intent.calmDesc", "A short reset (2–3 min)")
+      : t("explore.presence.stayWithState", "Stay with this state");
 
   const onQuickCalm = () => {
     if (quickItems.calm?.audio_url) playUniversalAudio(quickItems.calm);
@@ -112,8 +130,8 @@ export default function Explore() {
         <h1 className="text-2xl font-heading font-semibold text-foreground">
           {t("explore.title", "Library")}
         </h1>
-        <p className="text-muted-foreground mt-1 text-sm">
-          {t(getSubtitleKey(dayPhase), "Take a small pause.")}
+        <p className="text-white/60 mt-1 text-sm">
+          {subtitle}
         </p>
       </div>
 
@@ -128,8 +146,8 @@ export default function Explore() {
               <Sparkles className="h-5 w-5 text-primary" />
             </span>
             <div className="flex-1">
-              <div className="font-semibold text-foreground">{t("explore.intent.calm", "Calm my mind")}</div>
-              <div className="text-sm text-muted-foreground">{t("explore.intent.calmDesc", "A short reset (2–3 min)")}</div>
+              <div className="font-semibold text-foreground">{firstActionTitle}</div>
+              <div className="text-sm text-muted-foreground">{firstActionSubtitle}</div>
             </div>
             <span className="text-muted-foreground">›</span>
           </div>

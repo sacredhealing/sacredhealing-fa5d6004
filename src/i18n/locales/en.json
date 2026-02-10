@@ -1545,6 +1545,12 @@
     },
     "exploreEverything": "Explore everything",
     "exploreEverythingSubtitle": "Open when you feel ready.",
+    "presence": {
+      "returned": "Welcome back — stay with the feeling.",
+      "deep": "You're in a quiet space now.",
+      "continueGently": "Continue gently",
+      "stayWithState": "Stay with this state"
+    },
     "browseAll": "Browse everything",
     "browseAllSubtitle": "For advanced users or when you want everything",
     "yourTools": "Your Tools",
