@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Sparkles, Wind, Play } from 'lucide-react';
 import { SacredFlame } from '@/components/dashboard/SacredFlame';
 import { useProfile } from '@/hooks/useProfile';
 import { useDailyGuidance } from '@/hooks/useDailyGuidance';
@@ -47,6 +49,7 @@ function guidanceToSessionLike(guidance: DailyGuidance): SessionLike {
 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { profile: userProfile } = useProfile();
   const { guidance, isLoading, lastCompleted, completeSlot, streakDays, hasCompletedAllThree } = useDailyGuidance();
   const { completeMorning, completeMidday, completeEvening } = useDailyJourney();
@@ -181,6 +184,45 @@ const Dashboard: React.FC = () => {
             )}
           </div>
 
+          {/* One minute rituals — Mantra, Breath, Meditate */}
+          <div className="mb-6 animate-slide-up">
+            <h3 className="text-base font-heading font-semibold text-foreground mb-3">
+              {t('dashboard.oneMinuteRituals', 'One minute rituals')}
+            </h3>
+            <div className="grid grid-cols-3 gap-3">
+              <button
+                type="button"
+                onClick={() => navigate('/mantras')}
+                className="rounded-2xl border border-border/50 bg-card/50 p-4 flex flex-col items-center gap-2 hover:bg-muted/30 transition"
+              >
+                <span className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                </span>
+                <span className="font-semibold text-foreground text-sm">{t('dashboard.ritualMantra', 'Mantra')}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/breathing')}
+                className="rounded-2xl border border-border/50 bg-card/50 p-4 flex flex-col items-center gap-2 hover:bg-muted/30 transition"
+              >
+                <span className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                  <Wind className="h-5 w-5 text-primary" />
+                </span>
+                <span className="font-semibold text-foreground text-sm">{t('dashboard.ritualBreath', 'Breath')}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/meditations')}
+                className="rounded-2xl border border-border/50 bg-card/50 p-4 flex flex-col items-center gap-2 hover:bg-muted/30 transition"
+              >
+                <span className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                  <Play className="h-5 w-5 text-primary" />
+                </span>
+                <span className="font-semibold text-foreground text-sm">{t('dashboard.ritualMeditate', 'Meditate')}</span>
+              </button>
+            </div>
+          </div>
+
           {/* Daily Spiritual Practice & Your Path — above the fold */}
           <div className="space-y-4 mb-6 animate-slide-up">
             <DailyRitualCard
@@ -281,6 +323,18 @@ const Dashboard: React.FC = () => {
             variant={isContinuationCompletion ? 'closing' : 'standard'}
           />
         </div>
+      )}
+
+      {/* Floating Mantra quick action — visible on Home when idle */}
+      {flowState === 'idle' && (
+        <button
+          type="button"
+          onClick={() => navigate('/mantras')}
+          className="fixed bottom-20 right-4 z-40 rounded-full h-14 w-14 bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 flex items-center justify-center"
+          aria-label={t('dashboard.ritualMantra', 'Mantra')}
+        >
+          <Sparkles className="h-6 w-6" />
+        </button>
       )}
     </div>
   );

@@ -51,13 +51,22 @@ export default function Explore() {
   const navigate = useNavigate();
   const dayPhase = getDayPhase();
 
+  const dailyEssentialsItems: LibraryItem[] = useMemo(
+    () => [
+      { key: "meditations", title: t("explore.meditations", "Meditations"), subtitle: t("explore.meditationsDesc", "Find your inner peace"), href: "/meditations", icon: <Sparkles className="h-5 w-5" /> },
+      { key: "breathing", title: t("explore.breathing", "Breathing"), subtitle: t("explore.breathingDesc", "Calm & energize"), href: "/breathing", icon: <Sparkles className="h-5 w-5" /> },
+      { key: "music", title: t("explore.music", "Music"), subtitle: t("explore.musicDesc", "Sacred frequencies"), href: "/music", icon: <Music2 className="h-5 w-5" /> },
+      { key: "mantras", title: t("explore.mantras", "Mantras"), subtitle: t("explore.mantrasDesc", "A phrase to hold you"), href: "/mantras", icon: <Music2 className="h-5 w-5" /> },
+    ],
+    [t]
+  );
+
   const startItems: LibraryItem[] = useMemo(
     () => [
       { key: "meditations", title: t("explore.meditations", "Meditations"), subtitle: t("explore.meditationsDesc", "Find your inner peace"), href: "/meditations", icon: <Sparkles className="h-5 w-5" /> },
       { key: "breathing", title: t("explore.breathing", "Breathing"), subtitle: t("explore.breathingDesc", "Calm & energize"), href: "/breathing", icon: <Sparkles className="h-5 w-5" /> },
       { key: "music", title: t("explore.music", "Music"), subtitle: t("explore.musicDesc", "Sacred frequencies"), href: "/music", icon: <Music2 className="h-5 w-5" /> },
       { key: "soul", title: t("explore.soul", "Soul"), subtitle: t("explore.soulDesc", "Transform & restore"), href: "/healing", icon: <Heart className="h-5 w-5" /> },
-      { key: "mantras", title: t("explore.mantras", "Mantras"), subtitle: t("explore.mantrasDesc", "Earn SHC"), href: "/mantras", icon: <Music2 className="h-5 w-5" />, badge: "111 SHC" },
     ],
     [t]
   );
@@ -151,6 +160,28 @@ export default function Explore() {
         <p className="text-white/60 mt-1 text-sm">
           {subtitle}
         </p>
+      </div>
+
+      {/* Daily essentials — first visible row: Meditations, Breath, Music, Mantras */}
+      <div className="mb-6">
+        <h3 className="text-base font-heading font-semibold text-foreground mb-3">
+          {t("explore.dailyEssentials", "Daily essentials")}
+        </h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {dailyEssentialsItems.map((item) => (
+            <Link key={item.key} to={item.href} className="block">
+              <Card className="rounded-2xl p-4 bg-card/50 border-border/50 hover:bg-muted/30 transition h-full">
+                <div className="flex flex-col items-center text-center gap-2">
+                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                    {item.icon}
+                  </div>
+                  <div className="font-semibold text-foreground text-sm">{item.title}</div>
+                  <div className="text-xs text-muted-foreground line-clamp-2">{item.subtitle}</div>
+                </div>
+              </Card>
+            </Link>
+          ))}
+        </div>
       </div>
 
       {/* Quick Actions — start immediately, no navigation to categories */}
