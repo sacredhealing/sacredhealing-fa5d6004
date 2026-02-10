@@ -255,22 +255,34 @@ const Community = () => {
         {/* Mobile Tab Bar - only visible on mobile */}
         <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border z-30">
           <div className="flex justify-around py-2">
-            {(['guide', 'channels', 'feed', 'circles', 'messages'] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => handleTabChange(tab)}
-                className={`flex flex-col items-center px-3 py-1 text-xs ${
-                  activeTab === tab ? 'text-primary' : 'text-muted-foreground'
-                }`}
-              >
-                {tab === 'guide' && '🧘'}
-                {tab === 'channels' && '📢'}
-                {tab === 'feed' && '📝'}
-                {tab === 'circles' && '⭕'}
-                {tab === 'messages' && '💬'}
-                <span className="capitalize mt-1">{tab === 'messages' ? 'DMs' : tab}</span>
-              </button>
-            ))}
+            {(['guide', 'channels', 'feed', 'circles', 'messages'] as const).map((tab) => {
+              const label =
+                tab === 'guide'
+                  ? 'Start here'
+                  : tab === 'channels'
+                  ? 'Spaces'
+                  : tab === 'feed'
+                  ? 'Reflections'
+                  : tab === 'circles'
+                  ? 'Groups'
+                  : 'Messages';
+              return (
+                <button
+                  key={tab}
+                  onClick={() => handleTabChange(tab)}
+                  className={`flex flex-col items-center px-3 py-1 text-xs ${
+                    activeTab === tab ? 'text-primary' : 'text-muted-foreground'
+                  }`}
+                >
+                  {tab === 'guide' && '🧘'}
+                  {tab === 'channels' && '📢'}
+                  {tab === 'feed' && '📝'}
+                  {tab === 'circles' && '⭕'}
+                  {tab === 'messages' && '💬'}
+                  <span className="mt-1">{label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -301,22 +313,34 @@ const Community = () => {
       {showMobileSidebar && (
         <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border z-30">
           <div className="flex justify-around py-2">
-            {(['guide', 'channels', 'feed', 'circles', 'messages'] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => handleTabChange(tab)}
-                className={`flex flex-col items-center px-3 py-1 text-xs ${
-                  activeTab === tab ? 'text-primary' : 'text-muted-foreground'
-                }`}
-              >
-                {tab === 'guide' && '🧘'}
-                {tab === 'channels' && '📢'}
-                {tab === 'feed' && '📝'}
-                {tab === 'circles' && '⭕'}
-                {tab === 'messages' && '💬'}
-                <span className="capitalize mt-1">{tab === 'messages' ? 'DMs' : tab}</span>
-              </button>
-            ))}
+            {(['guide', 'channels', 'feed', 'circles', 'messages'] as const).map((tab) => {
+              const label =
+                tab === 'guide'
+                  ? 'Start here'
+                  : tab === 'channels'
+                  ? 'Spaces'
+                  : tab === 'feed'
+                  ? 'Reflections'
+                  : tab === 'circles'
+                  ? 'Groups'
+                  : 'Messages';
+              return (
+                <button
+                  key={tab}
+                  onClick={() => handleTabChange(tab)}
+                  className={`flex flex-col items-center px-3 py-1 text-xs ${
+                    activeTab === tab ? 'text-primary' : 'text-muted-foreground'
+                  }`}
+                >
+                  {tab === 'guide' && '🧘'}
+                  {tab === 'channels' && '📢'}
+                  {tab === 'feed' && '📝'}
+                  {tab === 'circles' && '⭕'}
+                  {tab === 'messages' && '💬'}
+                  <span className="mt-1">{label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}

@@ -53,11 +53,11 @@ const ChatSidebar = ({
   );
 
   const tabs: { id: ChatTab; label: string }[] = [
-    { id: 'guide', label: 'Guide' },
-    { id: 'channels', label: 'Channels' },
-    { id: 'feed', label: 'Feed' },
-    { id: 'circles', label: 'Circles' },
-    { id: 'messages', label: 'DMs' },
+    { id: 'guide', label: 'Start here' },
+    { id: 'channels', label: 'Spaces' },
+    { id: 'feed', label: 'Reflections' },
+    { id: 'circles', label: 'Groups' },
+    { id: 'messages', label: 'Messages' },
   ];
 
   return (
@@ -118,12 +118,33 @@ const ChatSidebar = ({
             <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
         ) : filteredContacts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-8 text-muted-foreground text-center">
-            <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center mb-4">
-              <Search className="h-6 w-6 opacity-50" />
+          search ? (
+            <div className="flex flex-col items-center justify-center p-8 text-muted-foreground text-center">
+              <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+                <Search className="h-6 w-6 opacity-50" />
+              </div>
+              <p>No results found</p>
             </div>
-            <p>{search ? 'No results found' : 'No conversations yet'}</p>
-          </div>
+          ) : (
+            <div className="p-4">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="text-white font-semibold">
+                  Welcome — you can just listen here
+                </div>
+                <div className="mt-1 text-sm text-white/60">
+                  Many people come here quietly at first.
+                  You don’t need to post anything.
+                  You can simply read, breathe, or share when ready.
+                </div>
+                <button
+                  onClick={() => onTabChange('feed')}
+                  className="mt-4 rounded-full bg-white px-5 py-3 text-sm font-semibold text-black hover:opacity-90 transition"
+                >
+                  Read today&apos;s reflections
+                </button>
+              </div>
+            </div>
+          )
         ) : (
           filteredContacts.map((contact) => (
             <ChatListItem

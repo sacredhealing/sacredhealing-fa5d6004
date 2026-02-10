@@ -22,6 +22,42 @@ import RichMediaPost from './RichMediaPost';
 import LiveStreamList from './LiveStreamList';
 import AdminGoLive from './AdminGoLive';
 
+function getMockPosts(arrival: string) {
+  const base: Record<string, string[]> = {
+    Heavy: [
+      "If today feels heavy, you’re not behind. You’re human.",
+      "One gentle breath is enough to begin.",
+      "You can read quietly. You belong here.",
+    ],
+    Restless: [
+      "Restless days pass. Let the body settle one minute at a time.",
+      "Try unclenching the jaw and softening the shoulders.",
+      "You don’t need to fix anything right now.",
+    ],
+    Calm: [
+      "If you feel calm, you can share calm just by being here.",
+      "Let this steadiness stay with you.",
+      "A quiet day is still a meaningful day.",
+    ],
+    Grateful: [
+      "Gratitude is a nervous system signal: ‘I am safe enough now.’",
+      "If you want, share one small thing that helped today.",
+      "Your gratitude supports the whole space.",
+    ],
+    "Just looking": [
+      "You can simply read. No pressure to post.",
+      "This space is here whenever you’re ready.",
+      "Take one slow breath before scrolling.",
+    ],
+  };
+
+  const list = base[arrival] ?? base["Just looking"];
+  return list.map((text, i) => ({
+    id: `${arrival}-${i}`,
+    text,
+  }));
+}
+
 const CommunityFeed = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -30,6 +66,7 @@ const CommunityFeed = () => {
   const { posts, isLoading, likePost, fetchPosts } = useCommunity();
   const [expandedPost, setExpandedPost] = useState<string | null>(null);
   const [profileEditOpen, setProfileEditOpen] = useState(false);
+  const [arrival, setArrival] = useState<string | null>(null);
 
   if (isLoading) {
     return (
@@ -59,27 +96,91 @@ const CommunityFeed = () => {
         <AdminPostCreator onPostCreated={fetchPosts} />
       )}
 
+      {/* Today in the space (heartbeat) */}
+      <section className="mt-4">
+        <div className="text-white font-semibold">Today in the space</div>
+        <div className="mt-2 grid gap-2 text-sm text-white/70">
+          <div>🌿 Someone slept better after 4 days</div>
+          <div>💭 A member noticed calmer reactions</div>
+          <div>🌙 Evening silence gathering later</div>
+        </div>
+      </section>
+
+      {/* One-tap arrival */}
+      <section className="mt-5 rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div className="text-white font-semibold">How are you arriving today?</div>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          {["Heavy", "Restless", "Calm", "Grateful", "Just looking"].map((m) => (
+            <button
+              key={m}
+              onClick={() => setArrival(m)}
+              className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80 hover:bg-white/7 transition"
+            >
+              {m}
+            </button>
+          ))}
+        </div>
+
+        {arrival ? (
+          <div className="mt-4">
+            <div className="text-sm text-white/60">
+              Reflections for {arrival.toLowerCase()} moments
+            </div>
+            <div className="mt-3 grid gap-2">
+              {getMockPosts(arrival).map((p) => (
+                <div
+                  key={p.id}
+                  className="rounded-xl border border-white/10 bg-white/5 p-3"
+                >
+                  <div className="text-white/80 text-sm">{p.text}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </section>
+
       {/* Posts */}
-      {posts.length === 0 ? (
-        <Card className="bg-card border-border">
-          <CardContent className="p-8 text-center">
-            <p className="text-muted-foreground">{t('community.noPosts')}</p>
-          </CardContent>
-        </Card>
-      ) : (
-        posts.map((post) => (
-          <RichMediaPost
-            key={post.id}
-            post={post}
-            onLike={likePost}
-            onToggleComments={(postId) => setExpandedPost(expandedPost === postId ? null : postId)}
-            isCommentsOpen={expandedPost === post.id}
-            hasAvatar={hasAvatar}
-          >
-            <PostComments postId={post.id} onCommentAdded={fetchPosts} hasAvatar={hasAvatar} />
-          </RichMediaPost>
-        ))
-      )}
+      <div className="space-y-3">
+        {/* Pinned Daily Arrival */}
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="text-white font-semibold">🌅 Daily Arrival</div>
+          <div className="mt-1 text-sm text-white/60">
+            Take one slow breath before reading.
+            You can share one word about your day — or simply read others.
+          </div>
+        </div>
+
+        {posts.length === 0 ? (
+          <Card className="bg-card border-border">
+            <CardContent className="p-6 text-center">
+              <p className="text-sm text-muted-foreground">
+                It’s a quiet moment here. You can arrive using the buttons above or check back later.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          posts.map((post) => (
+            <RichMediaPost
+              key={post.id}
+              post={post}
+              onLike={likePost}
+              onToggleComments={(postId) =>
+                setExpandedPost(expandedPost === postId ? null : postId)
+              }
+              isCommentsOpen={expandedPost === post.id}
+              hasAvatar={hasAvatar}
+            >
+              <PostComments
+                postId={post.id}
+                onCommentAdded={fetchPosts}
+                hasAvatar={hasAvatar}
+              />
+            </RichMediaPost>
+          ))
+        )}
+      </div>
 
       <ProfileEditDialog open={profileEditOpen} onOpenChange={setProfileEditOpen} />
     </div>
