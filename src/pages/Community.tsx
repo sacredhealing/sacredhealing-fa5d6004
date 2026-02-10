@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminRole } from '@/hooks/useAdminRole';
@@ -23,13 +24,23 @@ interface GuideInfo {
   avatar_url: string | null;
 }
 
+const TAB_FROM_PARAM: Record<string, ChatTab> = {
+  start: 'guide',
+  spaces: 'channels',
+  reflections: 'feed',
+  groups: 'circles',
+};
+
 const Community = () => {
   const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { isAdmin } = useAdminRole();
   const { conversations, isLoading: convLoading } = useCommunity();
-  
-  const [activeTab, setActiveTab] = useState<ChatTab>('guide');
+
+  const tabParam = searchParams.get('tab');
+  const initialTab = (tabParam && TAB_FROM_PARAM[tabParam]) ? TAB_FROM_PARAM[tabParam] : 'feed';
+  const [activeTab, setActiveTab] = useState<ChatTab>(initialTab);
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
   const [newChatUser, setNewChatUser] = useState<{ id: string; name: string; avatar: string | null } | null>(null);
   const [showMobileSidebar, setShowMobileSidebar] = useState(true);
@@ -236,24 +247,12 @@ const Community = () => {
   const tabContent = renderTabContent();
 
   // For non-chat tabs, render content in main area
-  // On mobile, show content directly (not sidebar)
+  // Mobile: single column with top tab bar. Desktop: left rail + main content.
   if (tabContent) {
     return (
-      <div className="flex h-[calc(100vh-64px)] overflow-hidden">
-        {/* Sidebar - hidden on mobile for content tabs, visible on desktop */}
-        <div className="hidden md:flex h-full w-auto z-20">
-          <ChatSidebar
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
-            contacts={[]}
-            activeContactId={null}
-            onSelectContact={() => {}}
-            isLoading={false}
-          />
-        </div>
-
-        {/* Mobile Tab Bar - only visible on mobile */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border z-30">
+      <div className="flex flex-col md:flex-row h-[calc(100vh-64px)] overflow-hidden">
+        {/* Mobile Tab Bar - top on mobile only */}
+        <div className="md:hidden shrink-0 border-b border-border bg-background z-20">
           <div className="flex justify-around py-2">
             {(['guide', 'channels', 'feed', 'circles', 'messages'] as const).map((tab) => {
               const label =
@@ -270,8 +269,8 @@ const Community = () => {
                 <button
                   key={tab}
                   onClick={() => handleTabChange(tab)}
-                  className={`flex flex-col items-center px-3 py-1 text-xs ${
-                    activeTab === tab ? 'text-primary' : 'text-muted-foreground'
+                  className={`flex flex-col items-center px-2 py-1.5 text-xs min-w-0 ${
+                    activeTab === tab ? 'text-primary font-medium' : 'text-muted-foreground'
                   }`}
                 >
                   {tab === 'guide' && '🧘'}
@@ -279,15 +278,28 @@ const Community = () => {
                   {tab === 'feed' && '📝'}
                   {tab === 'circles' && '⭕'}
                   {tab === 'messages' && '💬'}
-                  <span className="mt-1">{label}</span>
+                  <span className="mt-0.5">{label}</span>
                 </button>
               );
             })}
           </div>
         </div>
 
+        {/* Left rail - hidden on mobile, search + tabs on desktop */}
+        <div className="hidden md:flex h-full w-auto md:w-[350px] shrink-0 z-20">
+          <ChatSidebar
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+            contacts={[]}
+            activeContactId={null}
+            onSelectContact={() => {}}
+            isLoading={false}
+            hideWelcomeBlock
+          />
+        </div>
+
         {/* Main Content - always visible for content tabs */}
-        <div className="flex flex-col flex-1 h-full overflow-auto p-4 pb-24">
+        <div className="flex flex-col flex-1 min-h-0 overflow-auto p-4">
           {tabContent}
         </div>
       </div>

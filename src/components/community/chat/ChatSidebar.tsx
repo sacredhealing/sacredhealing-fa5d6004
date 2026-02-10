@@ -31,6 +31,8 @@ interface ChatSidebarProps {
   onSelectContact: (id: string) => void;
   onNewMessage?: () => void;
   isLoading?: boolean;
+  /** When true, do not show the large welcome block when list is empty (content is in main area). */
+  hideWelcomeBlock?: boolean;
 }
 
 const ChatSidebar = ({
@@ -40,7 +42,8 @@ const ChatSidebar = ({
   activeContactId,
   onSelectContact,
   onNewMessage,
-  isLoading = false
+  isLoading = false,
+  hideWelcomeBlock = false,
 }: ChatSidebarProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -124,6 +127,10 @@ const ChatSidebar = ({
                 <Search className="h-6 w-6 opacity-50" />
               </div>
               <p>No results found</p>
+            </div>
+          ) : hideWelcomeBlock ? (
+            <div className="p-4 text-center text-sm text-muted-foreground">
+              Content is in the main area.
             </div>
           ) : (
             <div className="p-4">

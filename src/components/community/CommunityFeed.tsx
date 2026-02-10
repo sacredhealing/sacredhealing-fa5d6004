@@ -4,6 +4,7 @@ import { useCommunity, usePostComments } from '@/hooks/useCommunity';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useAdminRole } from '@/hooks/useAdminRole';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -58,8 +59,15 @@ function getMockPosts(arrival: string) {
   }));
 }
 
+const SEEDED_REFLECTIONS = [
+  { id: 'seed-1', title: 'One word check-in', body: 'What word describes your inner weather today?' },
+  { id: 'seed-2', title: 'Gentle win', body: 'What is one small thing you did for yourself recently?' },
+  { id: 'seed-3', title: 'Evening softness', body: 'Before sleep: place one hand on your heart and breathe once.' },
+];
+
 const CommunityFeed = () => {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const { user } = useAuth();
   const { hasAvatar } = useProfile();
   const { isAdmin } = useAdminRole();
@@ -78,6 +86,14 @@ const CommunityFeed = () => {
 
   return (
     <div className="space-y-4">
+      {/* Welcome card at top of Reflections (mobile + desktop) */}
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div className="text-white font-semibold">Welcome — you can just listen here</div>
+        <div className="mt-1 text-sm text-white/60">
+          Many people come here quietly at first. You don’t need to post. Read, breathe, or share when ready.
+        </div>
+      </div>
+
       {/* Avatar Required Alert */}
       {user && !hasAvatar && (
         <AvatarRequiredAlert onUploadClick={() => setProfileEditOpen(true)} />
@@ -153,13 +169,24 @@ const CommunityFeed = () => {
         </div>
 
         {posts.length === 0 ? (
-          <Card className="bg-card border-border">
-            <CardContent className="p-6 text-center">
-              <p className="text-sm text-muted-foreground">
-                It’s a quiet moment here. You can arrive using the buttons above or check back later.
-              </p>
-            </CardContent>
-          </Card>
+          <div className="space-y-3">
+            {SEEDED_REFLECTIONS.map((item) => (
+              <Card key={item.id} className="bg-card border-border">
+                <CardContent className="p-4">
+                  <h3 className="font-semibold text-foreground">{item.title}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">{item.body}</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-3"
+                    onClick={() => toast({ title: 'Coming soon', description: 'Reply will be available soon.' })}
+                  >
+                    Reply
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         ) : (
           posts.map((post) => (
             <RichMediaPost
