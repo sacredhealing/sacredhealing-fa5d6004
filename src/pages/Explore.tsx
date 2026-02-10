@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -7,12 +7,13 @@ import { Card } from "@/components/ui/card";
 import { ParamahamsaVishwanandaDailyCard } from "@/components/dashboard/ParamahamsaVishwanandaDailyCard";
 import { LibrarySection, type LibraryItem } from "@/components/explore/LibrarySection";
 import { CollapsibleSection } from "@/features/library/CollapsibleSection";
+import { QuickActionFallback } from "@/features/library/QuickActionFallback";
 import { useQuickActionItems } from "@/features/library/useQuickActionItems";
 import { resolveQuickActionItem } from "@/features/library/quickActionResolver";
 import { usePresenceState } from "@/features/presence/usePresenceState";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { useMeditationContentLanguage } from "@/features/meditations/useContentLanguage";
-import { useToast } from "@/hooks/use-toast";
+import { useMembership } from "@/hooks/useMembership";
 import { getDayPhase } from "@/utils/postSessionContext";
 
 import {
@@ -96,13 +97,15 @@ export default function Explore() {
   const { playUniversalAudio } = useMusicPlayer();
   const { allAudioItems } = useQuickActionItems();
   const { language: meditationLanguage } = useMeditationContentLanguage();
-  const { toast } = useToast();
+  const { isPremium: isPaid } = useMembership();
+  const [showFallback, setShowFallback] = useState(false);
   const presence = usePresenceState();
 
   const onQuick = (key: "calm" | "heart" | "pause" | "sleep") => {
     if (key === "pause") {
       const item = resolveQuickActionItem(allAudioItems, "pause", meditationLanguage);
       if (item) {
+        setShowFallback(false);
         playUniversalAudio(item);
       } else {
         navigate("/breathing");
@@ -111,9 +114,10 @@ export default function Explore() {
     }
     const item = resolveQuickActionItem(allAudioItems, key, meditationLanguage);
     if (!item) {
-      toast({ title: t("explore.quickActionUnavailable", "Meditations will be added soon.") });
+      setShowFallback(true);
       return;
     }
+    setShowFallback(false);
     playUniversalAudio(item);
   };
 
@@ -213,6 +217,15 @@ export default function Explore() {
         </button>
       </div>
 
+      {showFallback ? (
+        <QuickActionFallback
+          title={t("explore.fallback.title", "New sessions are arriving")}
+          body={t("explore.fallback.body", "Your library is still being filled. You can explore what's available right now.")}
+          buttonLabel={t("explore.fallback.button", "Browse meditations")}
+          onClick={() => navigate("/meditations")}
+        />
+      ) : null}
+
       {/* Your Space — Premium Membership only */}
       <div className="mb-6">
         <h3 className="text-base font-heading font-semibold text-foreground mb-1">
@@ -234,6 +247,9 @@ export default function Explore() {
                     {t("explore.badgePremium", "Premium")}
                   </span>
                 </div>
+                {isPaid ? (
+                  <div className="mt-1 text-xs text-muted-foreground">{t("explore.included", "Included")}</div>
+                ) : null}
                 <p className="text-xs text-muted-foreground mt-1">{t("explore.membershipEnterSpace", "Enter your space")}</p>
               </div>
               <span className="text-muted-foreground">›</span>
