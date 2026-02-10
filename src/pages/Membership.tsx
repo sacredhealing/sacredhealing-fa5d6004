@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Crown, Check, Sparkles, Star, Zap, Settings, Loader2, Gift } from 'lucide-react';
+import { Crown, Check, Sparkles, Star, Zap, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,9 +13,7 @@ import type { MembershipTier } from '@/features/membership/tier';
 import { useFreeTrial } from '@/hooks/useFreeTrial';
 import { TrialBanner } from '@/components/offers/TrialBanner';
 import { PromoCodeInput } from '@/components/offers/PromoCodeInput';
-import PremiumMeditationsList from '@/components/membership/PremiumMeditationsList';
-import { VedicAstrologySection } from '@/components/membership/VedicAstrologySection';
-import { AyurvedaSection } from '@/components/membership/AyurvedaSection';
+import { MembershipHub } from '@/features/membership/MembershipHub';
 import { toast } from 'sonner';
 
 interface PlanTier {
@@ -50,9 +48,9 @@ const Membership = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  const { tier: currentTier, isPremium, isAdmin, refresh: refreshMembership } = useMembership();
+  const { tier: currentTier, refresh: refreshMembership } = useMembership();
   const tier = useMembershipTier();
-  const { isTrialActive, daysRemaining, canStartTrial, refetch: refetchTrial } = useFreeTrial();
+  const { isTrialActive, canStartTrial, refetch: refetchTrial } = useFreeTrial();
   const [tiers, setTiers] = useState<PlanTier[]>([]);
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
@@ -332,90 +330,8 @@ const Membership = () => {
           </div>
         </>
       ) : (
-        /* Paid / trial: active card, Continue + Manage subscription */
-        <div className="px-3 sm:px-4 py-6 sm:py-8">
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <div className="text-white font-semibold">Your membership is active</div>
-            <div className="mt-1 text-sm text-white/60">Your space is open.</div>
-
-            <div className="mt-4">
-              <button
-                className="w-full rounded-full bg-white px-5 py-3 text-sm font-semibold text-black"
-                onClick={() => navigate("/")}
-              >
-                Continue
-              </button>
-
-              <button
-                type="button"
-                className="mt-3 w-full text-sm text-white/60 hover:text-white/80 transition"
-                onClick={() => {
-                  if (portalLoading) return;
-                  handleManageSubscription();
-                }}
-                disabled={portalLoading}
-              >
-                {portalLoading ? "Opening…" : "Manage subscription"}
-              </button>
-            </div>
-          </div>
-        </div>
+        <MembershipHub onManage={handleManageSubscription} />
       )}
-
-      {/* Active Trial Banner - when on trial */}
-      {isTrialActive && (
-        <div className="px-3 sm:px-4 py-3 sm:py-4">
-          <Card className="p-3 sm:p-4 bg-gradient-to-r from-primary/20 to-accent/20 border-primary/30">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-primary/20 flex-shrink-0">
-                <Gift className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm sm:text-base text-foreground">Free Trial Active</p>
-                <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                  {daysRemaining} days remaining - Full Premium access!
-                </p>
-              </div>
-            </div>
-          </Card>
-        </div>
-      )}
-
-      {/* Ayurveda Section */}
-      <div className="px-3 sm:px-4 py-4 sm:py-6">
-        <AyurvedaSection isPremium={isPremium} membershipTier={currentTier || 'free'} isAdmin={isAdmin} />
-      </div>
-
-      {/* Vedic Astrology Section - reduced padding on mobile for wider text column */}
-      <div className="px-2 sm:px-4 py-4 sm:py-6">
-        <VedicAstrologySection />
-      </div>
-
-      {/* Premium Meditations List */}
-      <div className="px-3 sm:px-4 py-4 sm:py-6">
-        <PremiumMeditationsList />
-      </div>
-
-      {/* Transformation Program CTA */}
-      <div className="px-3 sm:px-4 py-4 sm:py-6">
-        <Card className="p-4 sm:p-6 bg-gradient-to-br from-amber-500/20 via-primary/10 to-purple-500/20 border-amber-500/30">
-          <div className="text-center">
-            <Badge className="bg-amber-500 text-white mb-2 sm:mb-3 text-xs">Premium Coaching</Badge>
-            <h3 className="text-lg sm:text-xl font-bold text-foreground mb-2">6-Month Transformation Program</h3>
-            <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4 max-w-md mx-auto">
-              Deep healing journey with personal guidance, daily WhatsApp support & 2 Zoom sessions/month
-            </p>
-            <div className="text-2xl sm:text-3xl font-bold text-foreground mb-3 sm:mb-4">€2,497</div>
-            <Button 
-              onClick={() => navigate('/transformation')}
-              className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-white"
-              size="sm"
-            >
-              Learn More
-            </Button>
-          </div>
-        </Card>
-      </div>
     </div>
   );
 };
