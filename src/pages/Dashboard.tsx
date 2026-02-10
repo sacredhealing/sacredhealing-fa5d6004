@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Sparkles, Wind, Play } from 'lucide-react';
+import { Sparkles, Play, Music2 } from 'lucide-react';
 import { SacredFlame } from '@/components/dashboard/SacredFlame';
 import { useProfile } from '@/hooks/useProfile';
 import { useDailyGuidance } from '@/hooks/useDailyGuidance';
@@ -184,11 +184,14 @@ const Dashboard: React.FC = () => {
             )}
           </div>
 
-          {/* One minute rituals — Mantra, Breath, Meditate */}
-          <div className="mb-6 animate-slide-up">
-            <h3 className="text-base font-heading font-semibold text-foreground mb-3">
-              {t('dashboard.oneMinuteRituals', 'One minute rituals')}
-            </h3>
+          {/* Listen now — Mantra, Meditation, Music only */}
+          <section className="mb-6 animate-slide-up" aria-labelledby="listen-now-heading">
+            <h2 id="listen-now-heading" className="text-base font-heading font-semibold text-foreground mb-1">
+              {t('dashboard.listenNow', 'Listen now')}
+            </h2>
+            <p className="text-sm text-muted-foreground mb-3">
+              {t('dashboard.listenNowSubtitle', 'Choose how you want to begin')}
+            </p>
             <div className="grid grid-cols-3 gap-3">
               <button
                 type="button"
@@ -199,16 +202,7 @@ const Dashboard: React.FC = () => {
                   <Sparkles className="h-5 w-5 text-primary" />
                 </span>
                 <span className="font-semibold text-foreground text-sm">{t('dashboard.ritualMantra', 'Mantra')}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate('/breathing')}
-                className="rounded-2xl border border-border/50 bg-card/50 p-4 flex flex-col items-center gap-2 hover:bg-muted/30 transition"
-              >
-                <span className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
-                  <Wind className="h-5 w-5 text-primary" />
-                </span>
-                <span className="font-semibold text-foreground text-sm">{t('dashboard.ritualBreath', 'Breath')}</span>
+                <span className="text-xs text-muted-foreground">{t('dashboard.ritualMantraDesc', 'Gentle heart focus')}</span>
               </button>
               <button
                 type="button"
@@ -218,13 +212,28 @@ const Dashboard: React.FC = () => {
                 <span className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
                   <Play className="h-5 w-5 text-primary" />
                 </span>
-                <span className="font-semibold text-foreground text-sm">{t('dashboard.ritualMeditate', 'Meditate')}</span>
+                <span className="font-semibold text-foreground text-sm">{t('dashboard.ritualMeditate', 'Meditation')}</span>
+                <span className="text-xs text-muted-foreground">{t('dashboard.ritualMeditateDesc', 'Guided inner quiet')}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/music')}
+                className="rounded-2xl border border-border/50 bg-card/50 p-4 flex flex-col items-center gap-2 hover:bg-muted/30 transition"
+              >
+                <span className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                  <Music2 className="h-5 w-5 text-primary" />
+                </span>
+                <span className="font-semibold text-foreground text-sm">{t('dashboard.ritualMusic', 'Music')}</span>
+                <span className="text-xs text-muted-foreground">{t('dashboard.ritualMusicDesc', 'Background calm')}</span>
               </button>
             </div>
-          </div>
+          </section>
 
-          {/* Daily Spiritual Practice & Your Path — above the fold */}
-          <div className="space-y-4 mb-6 animate-slide-up">
+          {/* Daily routine — optional, visually softened */}
+          <div className="pt-6 border-t border-border/50 space-y-4 mb-6 animate-slide-up">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              {t('dashboard.dailyRoutineSection', 'Daily routine')}
+            </p>
             <DailyRitualCard
               isDayClosed={isDayClosed}
               hasCompletedAllThree={hasCompletedAllThree}
