@@ -131,12 +131,12 @@ const Profile: React.FC = () => {
             and how to begin gently.
           </div>
 
-          <button
+          <Button
             onClick={() => navigate("/onboarding")}
-            className="mt-4 rounded-full bg-white px-5 py-3 text-sm font-semibold text-black hover:opacity-90 transition"
+            className="mt-4 rounded-full px-5 py-3 text-sm font-semibold"
           >
             Open guide
-          </button>
+          </Button>
         </div>
       </div>
 
