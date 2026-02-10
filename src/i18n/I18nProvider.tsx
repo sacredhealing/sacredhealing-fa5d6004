@@ -23,13 +23,14 @@ async function fetchProfileLanguage(userId: string): Promise<Language | null> {
   try {
     const { data, error } = await supabase
       .from("profiles")
-      .select("language")
+      .select("preferred_language")
       .eq("user_id", userId)
       .single();
 
     if (error) return null;
-    if (!data?.language) return null;
-    return normalizeLanguage(data.language);
+    const raw = (data as { preferred_language?: string | null })?.preferred_language;
+    if (!raw) return null;
+    return normalizeLanguage(raw.split("-")[0]);
   } catch {
     return null;
   }
@@ -39,7 +40,8 @@ async function upsertProfileLanguage(userId: string, lang: Language) {
   try {
     await supabase
       .from("profiles")
-      .upsert({ user_id: userId, language: lang }, { onConflict: "user_id" });
+      .update({ preferred_language: lang })
+      .eq("user_id", userId);
   } catch {
     // ignore — local UI still updates
   }
@@ -56,14 +58,23 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     }
   });
 
-  // Load from Supabase on mount + auth changes
+  // Load from Supabase on mount + auth changes; on logout use localStorage then "en"
   useEffect(() => {
     let mounted = true;
 
     const load = async () => {
       const { data } = await supabase.auth.getUser();
       const user = data?.user;
-      if (!user) return;
+
+      if (!user) {
+        const stored = localStorage.getItem(LS_KEY);
+        const fallback = stored && supportedLanguages.includes(stored as Language) ? (stored as Language) : "en";
+        if (mounted) {
+          setLanguageState(fallback);
+          i18n.changeLanguage(fallback);
+        }
+        return;
+      }
 
       const profLang = await fetchProfileLanguage(user.id);
       if (mounted && profLang) {

@@ -15,9 +15,17 @@ import { TranslatedContent } from '@/components/TranslatedContent';
 import { usePhantomWallet } from '@/hooks/usePhantomWallet';
 import { HealingProgressCard } from '@/components/healing/HealingProgressCard';
 import { useAdminRole } from '@/hooks/useAdminRole';
+import { useProfile } from '@/hooks/useProfile';
 import { IntentionThreshold, IntentionType } from '@/components/meditation/IntentionThreshold';
 import MeditationMembershipBanner from '@/components/meditation/MeditationMembershipBanner';
 import { useMusicPlayer, UniversalAudioItem } from '@/contexts/MusicPlayerContext';
+import { ContentLanguagePicker } from '@/components/ContentLanguagePicker';
+import {
+  getHealingContentLang,
+  setHealingContentLang,
+  HEALING_CONTENT_LANG_KEY,
+  type ContentLang,
+} from '@/utils/healingContentLanguage';
 
 interface HealingAudio {
   id: string;
@@ -31,6 +39,7 @@ interface HealingAudio {
   price_usd: number;
   price_shc: number;
   category: string;
+  language?: string | null;
 }
 
 interface HealingPlan {
@@ -136,9 +145,32 @@ const Healing: React.FC = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { profile } = useProfile();
   const { balance } = useSHCBalance();
   const { walletAddress, isPhantomInstalled, connectWallet, isConnecting } = usePhantomWallet();
   const { isAdmin } = useAdminRole();
+
+  const [contentLang, setContentLangState] = useState<ContentLang>(() =>
+    getHealingContentLang(profile?.preferred_language)
+  );
+  const setContentLang = (lang: ContentLang) => {
+    setContentLangState(lang);
+    setHealingContentLang(lang);
+  };
+
+  // When profile loads and user has never set healing content lang, default from profile
+  useEffect(() => {
+    if (!profile?.preferred_language) return;
+    try {
+      if (!localStorage.getItem(HEALING_CONTENT_LANG_KEY)) {
+        const fromProfile = getHealingContentLang(profile.preferred_language);
+        setContentLangState(fromProfile);
+        setHealingContentLang(fromProfile);
+      }
+    } catch {
+      // ignore
+    }
+  }, [profile?.preferred_language]);
   
   const [audioTracks, setAudioTracks] = useState<HealingAudio[]>([]);
   const [ownedAudioIds, setOwnedAudioIds] = useState<Set<string>>(new Set());
@@ -163,6 +195,14 @@ const Healing: React.FC = () => {
   };
 
   const currentLang = i18n.language?.split('-')[0] || 'en';
+
+  // Filter audio by session content language; default missing language to "en"
+  const normalizedTracks = audioTracks.map((a) => ({
+    ...a,
+    language: (a.language === "sv" || a.language === "en" ? a.language : "en") as ContentLang,
+  }));
+  const freeAudios = normalizedTracks.filter((a) => a.is_free && a.language === contentLang);
+  const paidAudios = normalizedTracks.filter((a) => !a.is_free && a.language === contentLang);
 
   // Helper to get content from database or fallback to static
   const getContent = (key: string, fallback: string) => {
@@ -468,8 +508,7 @@ const Healing: React.FC = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const freeAudios = audioTracks.filter(a => a.is_free);
-  const paidAudios = audioTracks.filter(a => !a.is_free);
+  const hasAnyFilteredAudio = freeAudios.length > 0 || paidAudios.length > 0;
 
   return (
     <>
@@ -483,6 +522,12 @@ const Healing: React.FC = () => {
       <div className="min-h-screen p-6 space-y-12">
       {/* Membership Banner */}
       <MeditationMembershipBanner />
+
+      {/* Session language filter: single pill, switch via popover */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-sm text-muted-foreground">{t('healing.sessionLanguage', 'Session language')}</span>
+        <ContentLanguagePicker value={contentLang} onChange={setContentLang} />
+      </div>
 
       {/* Hero Section */}
       <Card className="bg-gradient-to-r from-primary/30 to-pink-500/30 border-none text-center overflow-hidden">
@@ -713,7 +758,7 @@ const Healing: React.FC = () => {
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
             <Music className="w-5 h-5 text-primary" />
-            Short Sessions
+            {t('healing.shortSessions', 'Short Sessions')}
           </h2>
           
           <div className="grid gap-3">
@@ -750,12 +795,25 @@ const Healing: React.FC = () => {
         </div>
       )}
 
+      {/* Empty state when no sessions in selected language */}
+      {!hasAnyFilteredAudio && (
+        <Card className="border-border bg-muted/30">
+          <CardContent className="p-6 text-center">
+            <p className="text-sm text-muted-foreground">
+              {contentLang === "en"
+                ? t("healing.noSessionsInEnglish", "No sessions in English yet. More will be added soon.")
+                : t("healing.noSessionsInSwedish", "Inga sessioner på svenska än. Fler kommer snart.")}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Premium Audio Section */}
       {paidAudios.length > 0 && (
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-primary" />
-            Deep Sessions
+            {t('healing.deepSessions', 'Deep Sessions')}
           </h2>
           
           <div className="grid gap-3">

@@ -39,7 +39,12 @@
     "freeAudio": "Free Healing Audio",
     "free": "FREE",
     "premiumAudio": "Premium Healing Audio",
-    "owned": "OWNED"
+    "owned": "OWNED",
+    "sessionLanguage": "Session language",
+    "shortSessions": "Short Sessions",
+    "deepSessions": "Deep Sessions",
+    "noSessionsInEnglish": "No sessions in English yet. More will be added soon.",
+    "noSessionsInSwedish": "No sessions in Swedish yet. More will be added soon."
   },
   "meditations": {
     "title": "Meditations",

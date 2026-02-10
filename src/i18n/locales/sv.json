@@ -789,7 +789,12 @@
     "freeAudio": "Gratis läkande ljud",
     "free": "GRATIS",
     "premiumAudio": "Premium läkande ljud",
-    "owned": "ÄGD"
+    "owned": "ÄGD",
+    "sessionLanguage": "Sessionens språk",
+    "shortSessions": "Korta sessioner",
+    "deepSessions": "Djupa sessioner",
+    "noSessionsInEnglish": "No sessions in English yet. More will be added soon.",
+    "noSessionsInSwedish": "Inga sessioner på svenska än. Fler kommer snart."
   },
   "shop": {
     "title": "Helig butik",
