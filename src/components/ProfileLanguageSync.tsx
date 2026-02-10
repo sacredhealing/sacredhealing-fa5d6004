@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
-import i18n from '@/i18n';
+import i18n from '@/i18n/setup';
 
 const SUPPORTED_LANGS = ['en', 'es', 'sv', 'no'];
 
