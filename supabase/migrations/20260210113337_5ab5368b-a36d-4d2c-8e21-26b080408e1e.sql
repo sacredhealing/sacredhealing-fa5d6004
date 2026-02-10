@@ -1,0 +1,3 @@
+ALTER TABLE public.healing_audio
+  ADD COLUMN IF NOT EXISTS language TEXT NOT NULL DEFAULT 'en',
+  ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}';
