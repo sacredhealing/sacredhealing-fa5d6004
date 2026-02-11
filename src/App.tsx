@@ -22,6 +22,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Meditations from "./pages/Meditations";
 import Courses from "./pages/Courses";
+import CourseDetail from "./pages/CourseDetail";
 import Music from "./pages/Music";
 import TrackDetail from "./pages/TrackDetail";
 import ArtistProfile from "./pages/ArtistProfile";
@@ -130,6 +131,7 @@ function AppRoutes() {
           <Route path="/explore" element={<Explore />} />
                   <Route path="/meditations" element={<Meditations />} />
                   <Route path="/courses" element={<Courses />} />
+                  <Route path="/courses/:id" element={<CourseDetail />} />
                   <Route path="/music" element={<Music />} />
                   <Route path="/music/track/:trackId" element={<TrackDetail />} />
                   <Route path="/music/artist/:artistId" element={<ArtistProfile />} />
