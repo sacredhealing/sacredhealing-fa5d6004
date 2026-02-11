@@ -476,7 +476,7 @@ const CourseDetail: React.FC = () => {
         </Card>
 
         {/* Embedded Video Player - Inline on page */}
-        {activeVideoUrl && (
+        {(activeVideoUrl || activeVideoTitle) && (
           <Card className="p-6" id="embedded-video-player">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold">{activeVideoTitle}</h2>
@@ -494,7 +494,7 @@ const CourseDetail: React.FC = () => {
               </Button>
             </div>
             <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-              {extractYouTubeId(activeVideoUrl) ? (
+              {activeVideoUrl && extractYouTubeId(activeVideoUrl) ? (
                 <iframe
                   width="100%"
                   height="100%"
@@ -506,8 +506,14 @@ const CourseDetail: React.FC = () => {
                   className="absolute top-0 left-0 w-full h-full rounded-lg"
                 />
               ) : (
-                <div className="absolute inset-0 flex items-center justify-center bg-muted rounded-lg">
-                  <p className="text-muted-foreground">Video URL is not valid or not available.</p>
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted rounded-lg p-8">
+                  <Video className="w-16 h-16 text-muted-foreground/50 mb-4" />
+                  <p className="text-muted-foreground text-center text-lg font-medium mb-2">
+                    Content Coming Soon
+                  </p>
+                  <p className="text-muted-foreground/70 text-center text-sm">
+                    This lesson content is being prepared. Please check back soon.
+                  </p>
                 </div>
               )}
             </div>
@@ -526,8 +532,19 @@ const CourseDetail: React.FC = () => {
                     activeVideoLessonId === lesson.id ? 'ring-2 ring-primary bg-primary/5' : ''
                   } ${!lesson.content_url ? 'opacity-60' : ''}`}
                   onClick={() => {
+                    // Always allow clicking - if content_url is missing, we'll handle it in the player
                     if (!lesson.content_url) {
-                      toast.error('Lesson content is not available yet. Please contact support if this persists.');
+                      // Still set the active lesson to show it's selected, but show a message
+                      setActiveVideoTitle(lesson.title);
+                      setActiveVideoUrl(null);
+                      setActiveVideoLessonId(lesson.id);
+                      setTimeout(() => {
+                        const videoElement = document.getElementById('embedded-video-player');
+                        if (videoElement) {
+                          videoElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                      }, 100);
+                      toast.info('This lesson content is being prepared. Please check back soon.');
                       return;
                     }
 
