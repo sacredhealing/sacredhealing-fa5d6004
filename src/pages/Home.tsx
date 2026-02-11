@@ -13,7 +13,8 @@ import {
   Play,
   Shield,
   Zap,
-  Headphones
+  Headphones,
+  Wind
 } from 'lucide-react';
 import heroImage from '@/assets/hero-together.jpg';
 import lailaSmile from '@/assets/laila-smile.jpg';
@@ -21,6 +22,27 @@ import adamDrum from '@/assets/adam-drum.jpg';
 import lailaAdamPink from '@/assets/laila-adam-pink.jpg';
 
 const Home: React.FC = () => {
+  const QUICK_ACTIONS = [
+    {
+      id: "mantra",
+      title: "Mantra",
+      icon: Sparkles,
+      route: "/mantras",
+    },
+    {
+      id: "breath",
+      title: "Breath",
+      icon: Wind,
+      route: "/breathing",
+    },
+    {
+      id: "meditate",
+      title: "Meditate",
+      icon: Play,
+      route: "/meditations",
+    },
+  ];
+
   const services = [
     {
       icon: Heart,
@@ -108,6 +130,22 @@ const Home: React.FC = () => {
         <div className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
           <div className="w-5 h-8 sm:w-6 sm:h-10 border-2 border-muted-foreground rounded-full flex justify-center">
             <div className="w-1 h-2 sm:h-3 bg-muted-foreground rounded-full mt-1.5 sm:mt-2 animate-pulse" />
+          </div>
+        </div>
+      </section>
+
+      {/* Quick Actions Section */}
+      <section className="py-8 sm:py-12 bg-background border-b border-border/50">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 xs:grid-cols-3 gap-4 sm:gap-6">
+            {QUICK_ACTIONS.map((action) => (
+              <Link key={action.id} to={action.route}>
+                <Card className="bg-card/50 backdrop-blur border-border/50 p-4 sm:p-6 h-full hover:bg-card/80 hover:border-gold/50 transition-all duration-300 group text-center">
+                  <action.icon className="w-8 h-8 sm:w-10 md:w-12 sm:h-10 md:h-12 text-gold mx-auto mb-3 sm:mb-4 group-hover:scale-110 transition-transform" />
+                  <h3 className="text-lg sm:text-xl font-heading font-bold text-foreground">{action.title}</h3>
+                </Card>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
