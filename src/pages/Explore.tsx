@@ -1,75 +1,338 @@
-import React from 'react';
-import { ChevronRight, Wind, Heart, Zap, Moon, Sparkles } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import React, { useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
-const Explore = () => {
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { ParamahamsaVishwanandaDailyCard } from "@/components/dashboard/ParamahamsaVishwanandaDailyCard";
+import { LibrarySection, type LibraryItem } from "@/components/explore/LibrarySection";
+import { CollapsibleSection } from "@/features/library/CollapsibleSection";
+import { QuickActionFallback } from "@/features/library/QuickActionFallback";
+import { useQuickActionItems } from "@/features/library/useQuickActionItems";
+import { resolveQuickActionItem } from "@/features/library/quickActionResolver";
+import { usePresenceState } from "@/features/presence/usePresenceState";
+import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
+import { useMeditationContentLanguage } from "@/features/meditations/useContentLanguage";
+import { useMembership } from "@/hooks/useMembership";
+import { getDayPhase } from "@/utils/postSessionContext";
+
+import {
+  Heart,
+  Moon,
+  Zap,
+  Sparkles,
+  Music2,
+  ShoppingBag,
+  Users,
+  BookOpen,
+  Headphones,
+  Youtube,
+  Crown,
+  Star,
+  Trophy,
+  Mic2,
+} from "lucide-react";
+
+function getSubtitleKey(phase: "morning" | "midday" | "evening"): string {
+  switch (phase) {
+    case "morning":
+      return "explore.subtitleMorning";
+    case "midday":
+      return "explore.subtitleMidday";
+    case "evening":
+      return "explore.subtitleEvening";
+    default:
+      return "explore.subtitleMidday";
+  }
+}
+
+export default function Explore() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
+  const dayPhase = getDayPhase();
+
+  const dailyEssentialsItems: LibraryItem[] = useMemo(
+    () => [
+      { key: "meditations", title: t("explore.meditations", "Meditations"), subtitle: t("explore.meditationsDesc", "Find your inner peace"), href: "/meditations", icon: <Sparkles className="h-5 w-5" /> },
+      { key: "breathing", title: t("explore.breathing", "Breathing"), subtitle: t("explore.breathingDesc", "Calm & energize"), href: "/breathing", icon: <Sparkles className="h-5 w-5" /> },
+      { key: "music", title: t("explore.music", "Music"), subtitle: t("explore.musicDesc", "Sacred frequencies"), href: "/music", icon: <Music2 className="h-5 w-5" /> },
+      { key: "mantras", title: t("explore.mantras", "Mantras"), subtitle: t("explore.mantrasDesc", "A phrase to hold you"), href: "/mantras", icon: <Music2 className="h-5 w-5" /> },
+    ],
+    [t]
+  );
+
+  const startItems: LibraryItem[] = useMemo(
+    () => [
+      { key: "meditations", title: t("explore.meditations", "Meditations"), subtitle: t("explore.meditationsDesc", "Find your inner peace"), href: "/meditations", icon: <Sparkles className="h-5 w-5" /> },
+      { key: "breathing", title: t("explore.breathing", "Breathing"), subtitle: t("explore.breathingDesc", "Calm & energize"), href: "/breathing", icon: <Sparkles className="h-5 w-5" /> },
+      { key: "music", title: t("explore.music", "Music"), subtitle: t("explore.musicDesc", "Sacred frequencies"), href: "/music", icon: <Music2 className="h-5 w-5" /> },
+      { key: "soul", title: t("explore.soul", "Soul"), subtitle: t("explore.soulDesc", "Transform & restore"), href: "/healing", icon: <Heart className="h-5 w-5" /> },
+    ],
+    [t]
+  );
+
+  const deepenItems: LibraryItem[] = useMemo(
+    () => [
+      { key: "courses", title: t("explore.courses", "Courses"), subtitle: t("explore.coursesDesc", "Deepen your practice"), href: "/courses", icon: <BookOpen className="h-5 w-5" /> },
+      { key: "coaching", title: t("explore.coaching", "Coaching"), subtitle: t("explore.coachingDesc", "6-Month Program"), href: "/transformation", icon: <Heart className="h-5 w-5" /> },
+      { key: "privateSessions", title: t("explore.privateSessions", "Private Sessions"), subtitle: t("explore.privateSessionsDesc", "1-on-1 with Adam or Laila"), href: "/private-sessions", icon: <Users className="h-5 w-5" /> },
+      { key: "affirmationSoundtrack", title: t("explore.affirmationSoundtrack", "Affirmation Soundtrack"), subtitle: t("explore.affirmationSoundtrackDesc", "Personalized for you"), href: "/affirmation-soundtrack", icon: <Mic2 className="h-5 w-5" /> },
+      { key: "certification", title: t("home.practitionerCert", "Practitioner Certification"), subtitle: t("home.certDesc", "Become a certified practitioner"), href: "/certification", icon: <Star className="h-5 w-5" /> },
+      { key: "pregnancy", title: t("pregnancy.title", "Sacred Pregnancy"), subtitle: t("pregnancy.subtitle", "Support on your journey"), href: "/pregnancy-program", icon: <Heart className="h-5 w-5" /> },
+    ],
+    [t]
+  );
+
+  const connectItems: LibraryItem[] = useMemo(
+    () => [
+      { key: "community", title: t("explore.community", "Community"), subtitle: t("explore.communityDesc", "Chat with guides & members"), href: "/community", icon: <Users className="h-5 w-5" /> },
+      { key: "stargate", title: t("home.stargateMembership", "Stargate Membership"), subtitle: t("home.stargateDesc", "Weekly live sessions, Telegram community"), href: "/stargate", icon: <Crown className="h-5 w-5" />, badge: t("explore.badgeSwedish", "Swedish") },
+    ],
+    [t]
+  );
+
+  const exploreItems: LibraryItem[] = useMemo(
+    () => [
+      { key: "podcast", title: t("explore.podcast", "Podcast"), subtitle: t("explore.podcastDesc", "Streams on Spotify"), href: "/podcast", icon: <Headphones className="h-5 w-5" /> },
+      { key: "videos", title: t("explore.videos", "Videos"), subtitle: t("explore.videosDesc", "Watch & learn"), href: "/spiritual-education", icon: <Youtube className="h-5 w-5" /> },
+      { key: "creativeSoul", title: t("explore.creativeSoul", "Creative Soul"), subtitle: t("explore.creativeSoulDesc", "Create with AI"), href: "/creative-soul/store", icon: <Sparkles className="h-5 w-5" /> },
+      { key: "shop", title: t("explore.shop", "Shop"), subtitle: t("explore.shopDesc", "Laila's Collection"), href: "/shop", icon: <ShoppingBag className="h-5 w-5" /> },
+      { key: "leaderboard", title: t("explore.leaderboard", "Leaderboard"), subtitle: t("explore.leaderboardDesc", "Top earners win monthly"), href: "/leaderboard", icon: <Trophy className="h-5 w-5" />, badge: "5,000 SHC" },
+      { key: "abundance", title: t("explore.abundance", "Abundance"), subtitle: t("explore.abundanceDescInner", "Inner abundance & life support"), href: "/library/abundance", icon: <Zap className="h-5 w-5" /> },
+    ],
+    [t]
+  );
+
+  const { playUniversalAudio } = useMusicPlayer();
+  const { allAudioItems } = useQuickActionItems();
+  const { language: meditationLanguage } = useMeditationContentLanguage();
+  const { isPremium: isPaid } = useMembership();
+  const [showFallback, setShowFallback] = useState(false);
+  const presence = usePresenceState();
+
+  const onQuick = (key: "calm" | "heart" | "pause" | "sleep") => {
+    if (key === "pause") {
+      const item = resolveQuickActionItem(allAudioItems, "pause", meditationLanguage);
+      if (item) {
+        setShowFallback(false);
+        playUniversalAudio(item);
+      } else {
+        navigate("/breathing");
+      }
+      return;
+    }
+    const item = resolveQuickActionItem(allAudioItems, key, meditationLanguage);
+    if (!item) {
+      setShowFallback(true);
+      return;
+    }
+    setShowFallback(false);
+    playUniversalAudio(item);
+  };
+
+  const subtitleMap: Record<string, string> = {
+    start: t(getSubtitleKey(dayPhase), "Begin gently today."),
+    returned: t("explore.presence.returned", "Welcome back — stay with the feeling."),
+    deep: t("explore.presence.deep", "You're in a quiet space now."),
+  };
+  const subtitle = subtitleMap[presence] ?? subtitleMap.start;
+
+  const firstActionTitle =
+    presence === "start"
+      ? t("explore.intent.calm", "Calm my mind")
+      : t("explore.presence.continueGently", "Continue gently");
+  const firstActionSubtitle =
+    presence === "start"
+      ? t("explore.intent.calmDesc", "A short reset (2–3 min)")
+      : t("explore.presence.stayWithState", "Stay with this state");
+
+  const onQuickCalm = () => onQuick("calm");
+  const onQuickHeart = () => onQuick("heart");
+  const onQuickPause = () => onQuick("pause");
+  const onQuickSleep = () => onQuick("sleep");
 
   return (
-    <div className="min-h-screen bg-black text-white pb-24">
-      {/* Keeping your exact original container padding and width */}
-      <div className="flex flex-col gap-6 p-4 md:p-8 max-w-7xl mx-auto">
-        
-        <header className="mb-2">
-          <h1 className="text-2xl font-semibold text-white">Library</h1>
-          <p className="text-sm text-gray-400">Begin gently today.</p>
-        </header>
+    <div className="px-4 pb-24 pt-4">
+      <div className="mb-3">
+        <h1 className="text-2xl font-heading font-semibold text-foreground">
+          {t("explore.title", "Library")}
+        </h1>
+        <p className="text-white/60 mt-1 text-sm">
+          {subtitle}
+        </p>
+      </div>
 
-        {/* SECTION: Daily Essentials (Keep original styles and functional links) */}
-        <section>
-          <h2 className="text-sm font-medium text-gray-400 mb-4 tracking-wide uppercase">Daily essentials</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[
-              { label: "Calm my mind", sub: "A short reset (2-3 min)", icon: <Wind size={20} className="text-cyan-400" />, path: "/meditate" },
-              { label: "Soften the heart", sub: "Gentle support when it feels heavy", icon: <Heart size={20} className="text-rose-400" />, path: "/soul" },
-              { label: "Take a small pause", sub: "One-minute breath reset", icon: <Zap size={20} className="text-amber-400" />, path: "/breathing" },
-              { label: "Sleep deeply", sub: "Unwind into rest", icon: <Moon size={20} className="text-indigo-400" />, path: "/music" }
-            ].map((item) => (
-              <button 
-                key={item.label}
-                onClick={() => navigate(item.path)}
-                className="flex items-center justify-between p-5 bg-[#1A1A1A]/50 border border-white/5 rounded-2xl hover:bg-white/5 transition-all text-left"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="p-2 bg-white/5 rounded-xl">{item.icon}</div>
-                  <div>
-                    <p className="text-sm font-medium text-white">{item.label}</p>
-                    <p className="text-xs text-gray-500">{item.sub}</p>
+      {/* Daily essentials — first visible row: Meditations, Breath, Music, Mantras */}
+      <div className="mb-6">
+        <h3 className="text-base font-heading font-semibold text-foreground mb-3">
+          {t("explore.dailyEssentials", "Daily essentials")}
+        </h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {dailyEssentialsItems.map((item) => (
+            <Link key={item.key} to={item.href} className="block">
+              <Card className="rounded-2xl p-4 bg-card/50 border-border/50 hover:bg-muted/30 transition h-full">
+                <div className="flex flex-col items-center text-center gap-2">
+                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                    {item.icon}
                   </div>
+                  <div className="font-semibold text-foreground text-sm">{item.title}</div>
+                  <div className="text-xs text-muted-foreground line-clamp-2">{item.subtitle}</div>
                 </div>
-                <ChevronRight size={18} className="text-gray-600" />
-              </button>
-            ))}
-          </div>
-        </section>
-
-        {/* SECTION: Your Space (Restored original style) */}
-        <section className="mt-4">
-          <h2 className="text-sm font-medium text-gray-400 mb-4 tracking-wide uppercase">Your Space</h2>
-          <button 
-            onClick={() => navigate('/membership')}
-            className="w-full p-6 bg-gradient-to-r from-[#1A1A1A] to-[#2A1A3A] border border-purple-500/20 rounded-2xl text-left flex items-center justify-between group"
-          >
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-purple-500/10 rounded-2xl text-purple-400">
-                <Sparkles size={24} />
-              </div>
-              <div>
-                <p className="text-lg font-medium text-white">Membership <span className="text-xs bg-yellow-500/20 text-yellow-500 px-2 py-0.5 rounded-full ml-2">Premium</span></p>
-                <p className="text-sm text-gray-400">Everything in one place. Yours to return to.</p>
-              </div>
-            </div>
-            <ChevronRight size={20} className="text-gray-600 group-hover:text-white transition-colors" />
-          </button>
-        </section>
-
-        {/* Invite Friends & Quote footer restored to your original look */}
-        <div className="mt-8 pt-8 border-t border-white/5 text-center">
-            <p className="text-xs italic text-gray-600">"Your life becomes meaningful when you live for others."</p>
+              </Card>
+            </Link>
+          ))}
         </div>
+      </div>
+
+      {/* Quick Actions — start immediately, no navigation to categories */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+        <button
+          onClick={onQuickCalm}
+          className="rounded-2xl border border-border/50 bg-card/50 px-4 py-4 text-left hover:bg-muted/30 transition"
+        >
+          <div className="flex items-center gap-3">
+            <span className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+              <Sparkles className="h-5 w-5 text-primary" />
+            </span>
+            <div className="flex-1">
+              <div className="font-semibold text-foreground">{firstActionTitle}</div>
+              <div className="text-sm text-muted-foreground">{firstActionSubtitle}</div>
+            </div>
+            <span className="text-muted-foreground">›</span>
+          </div>
+        </button>
+        <button
+          onClick={onQuickHeart}
+          className="rounded-2xl border border-border/50 bg-card/50 px-4 py-4 text-left hover:bg-muted/30 transition"
+        >
+          <div className="flex items-center gap-3">
+            <span className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+              <Heart className="h-5 w-5 text-primary" />
+            </span>
+            <div className="flex-1">
+              <div className="font-semibold text-foreground">{t("explore.intent.heal", "Soften the heart")}</div>
+              <div className="text-sm text-muted-foreground">{t("explore.intent.healDesc", "Gentle support when it feels heavy")}</div>
+            </div>
+            <span className="text-muted-foreground">›</span>
+          </div>
+        </button>
+        <button
+          onClick={onQuickPause}
+          className="rounded-2xl border border-border/50 bg-card/50 px-4 py-4 text-left hover:bg-muted/30 transition"
+        >
+          <div className="flex items-center gap-3">
+            <span className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+              <Zap className="h-5 w-5 text-primary" />
+            </span>
+            <div className="flex-1">
+              <div className="font-semibold text-foreground">{t("explore.intent.pause", "Take a small pause")}</div>
+              <div className="text-sm text-muted-foreground">{t("explore.intent.pauseDesc", "One-minute breath reset")}</div>
+            </div>
+            <span className="text-muted-foreground">›</span>
+          </div>
+        </button>
+        <button
+          onClick={onQuickSleep}
+          className="rounded-2xl border border-border/50 bg-card/50 px-4 py-4 text-left hover:bg-muted/30 transition"
+        >
+          <div className="flex items-center gap-3">
+            <span className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+              <Moon className="h-5 w-5 text-primary" />
+            </span>
+            <div className="flex-1">
+              <div className="font-semibold text-foreground">{t("explore.intent.sleep", "Sleep deeply")}</div>
+              <div className="text-sm text-muted-foreground">{t("explore.intent.sleepDesc", "Unwind into rest")}</div>
+            </div>
+            <span className="text-muted-foreground">›</span>
+          </div>
+        </button>
+      </div>
+
+      {showFallback ? (
+        <QuickActionFallback
+          title={t("explore.fallback.title", "New sessions are arriving")}
+          body={t("explore.fallback.body", "Your library is still being filled. You can explore what's available right now.")}
+          buttonLabel={t("explore.fallback.button", "Browse meditations")}
+          onClick={() => navigate("/meditations")}
+        />
+      ) : null}
+
+      {/* Your Space — Premium Membership only */}
+      <div className="mb-6">
+        <h3 className="text-base font-heading font-semibold text-foreground mb-1">
+          {t("explore.yourSpaceTitle", "Your Space")}
+        </h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          {t("explore.yourSpaceSubtitle", "Everything in one place. Yours to return to.")}
+        </p>
+        <Link to="/membership" className="block">
+          <Card className="rounded-2xl p-4 bg-gradient-to-r from-amber-500/20 via-purple-500/10 to-pink-500/20 border-amber-500/30 hover:border-amber-500/50 transition-all">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-amber-500/30 to-purple-500/20">
+                <Crown className="w-6 h-6 text-amber-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold text-foreground">{t("explore.membership", "Membership")}</h3>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                    {t("explore.badgePremium", "Premium")}
+                  </span>
+                </div>
+                {isPaid ? (
+                  <div className="mt-1 text-xs text-muted-foreground">{t("explore.included", "Included")}</div>
+                ) : null}
+                <p className="text-xs text-muted-foreground mt-1">{t("explore.membershipEnterSpace", "Enter your space")}</p>
+              </div>
+              <span className="text-muted-foreground">›</span>
+            </div>
+          </Card>
+        </Link>
+      </div>
+
+      {/* Explore everything — collapsed by default */}
+      <CollapsibleSection
+        title={t("explore.exploreEverything", "Explore everything")}
+        subtitle={t("explore.exploreEverythingSubtitle", "Open when you feel ready.")}
+        defaultOpen={false}
+      >
+        <LibrarySection
+          title={t("explore.sectionStart", "Start")}
+          items={startItems}
+          initialVisible={4}
+        />
+        <LibrarySection
+          title={t("explore.sectionDeepen", "Deepen")}
+          items={deepenItems}
+          initialVisible={4}
+        />
+        <LibrarySection
+          title={t("explore.sectionConnect", "Connect")}
+          subtitle={t("explore.sectionConnectSubtitle", "A place to practice with others")}
+          items={connectItems}
+          initialVisible={4}
+        />
+        <LibrarySection
+          title={t("explore.sectionExplore", "Explore")}
+          items={exploreItems}
+          initialVisible={4}
+        />
+      </CollapsibleSection>
+
+      {/* Invite Friends */}
+      <div className="rounded-2xl glass-card p-5 mb-6">
+        <h3 className="text-base font-heading font-semibold text-foreground mb-3">{t("dashboard.inviteFriends")}</h3>
+        <p className="text-sm text-muted-foreground mb-4">{t("dashboard.inviteDescription")}</p>
+        <Link to="/invite-friends">
+          <Button className="w-full gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-extrabold shadow-[0_0_30px_rgba(0,242,254,0.4)]">
+            <Users className="w-4 h-4" />
+            {t("dashboard.inviteFriends")}
+          </Button>
+        </Link>
+      </div>
+
+      <div className="mt-8">
+        <ParamahamsaVishwanandaDailyCard />
       </div>
     </div>
   );
-};
-
-export default Explore;
+}
