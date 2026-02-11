@@ -9,7 +9,9 @@ import { useAdminRole } from '@/hooks/useAdminRole';
 import { toast } from 'sonner';
 import { ReviewSection } from '@/components/reviews/ReviewSection';
 import WealthCourseUpsell from '@/components/courses/WealthCourseUpsell';
+import VideoPlayerModal from '@/components/courses/VideoPlayerModal';
 import { useTranslation } from 'react-i18next';
+import { useMembership } from '@/hooks/useMembership';
 
 // Swedish Wealth Course ID
 const WEALTH_COURSE_ID = 'f6b3a3e2-c78e-4234-8cf4-cc059655e118';
@@ -64,6 +66,7 @@ const CourseDetail: React.FC = () => {
   const navigate = useNavigate();
   const { user, session } = useAuth();
   const { isAdmin, isLoading: isAdminLoading } = useAdminRole();
+  const { tier: membershipTier, isPremium } = useMembership();
   const { t } = useTranslation();
   const [course, setCourse] = useState<Course | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
@@ -72,6 +75,9 @@ const CourseDetail: React.FC = () => {
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [selectedCourseForReview, setSelectedCourseForReview] = useState<string | null>(null);
   const [showWealthUpsell, setShowWealthUpsell] = useState(false);
+  const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
+  const [activeVideoTitle, setActiveVideoTitle] = useState<string>('');
+  const [hasStargateMembership, setHasStargateMembership] = useState(false);
 
   useEffect(() => {
     // Wait for admin loading to complete before fetching course
@@ -84,17 +90,48 @@ const CourseDetail: React.FC = () => {
   useEffect(() => {
     if (user && id && !isAdminLoading) {
       fetchEnrollment();
+      checkStargateMembership();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, id, isAdminLoading]);
 
+  const checkStargateMembership = async () => {
+    if (!user) return;
+    try {
+      // Check if user has premium membership (which includes Stargate)
+      // Stargate members have premium tier access
+      // Also check if user has any active premium subscription
+      const { data: membershipData } = await supabase
+        .from('user_memberships')
+        .select('*, membership_tiers!inner(slug, name)')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .or('current_period_end.is.null,current_period_end.gt.now()');
+      
+      // Check if user has premium tier (premium-monthly, premium-annual, lifetime, or Stargate)
+      const hasPremiumAccess = membershipData && membershipData.length > 0 && 
+        membershipData.some(m => {
+          const tierSlug = m.membership_tiers?.slug || '';
+          return tierSlug.includes('premium') || tierSlug === 'lifetime';
+        });
+      
+      // Stargate membership grants full course access
+      // Premium members (including Stargate) get access
+      setHasStargateMembership(hasPremiumAccess || isPremium || membershipTier !== 'free');
+    } catch (error) {
+      console.error('Error checking Stargate membership:', error);
+      // Default to false if check fails
+      setHasStargateMembership(false);
+    }
+  };
+
   useEffect(() => {
-    // Fetch lessons if enrolled OR if admin (admins get full access)
+    // Fetch lessons if enrolled OR if admin OR if has Stargate membership (admins and Stargate members get full access)
     // Wait for admin loading to complete
-    if (course && !isAdminLoading && (enrollment || isAdmin)) {
+    if (course && !isAdminLoading && (enrollment || isAdmin || hasStargateMembership || isPremium)) {
       fetchLessons();
     }
-  }, [course, enrollment, isAdmin, isAdminLoading]);
+  }, [course, enrollment, isAdmin, isAdminLoading, hasStargateMembership, isPremium]);
 
   const fetchCourse = async () => {
     if (!id) return;
@@ -149,10 +186,9 @@ const CourseDetail: React.FC = () => {
   };
 
   const fetchLessons = async () => {
-    // Allow admins to access lessons without enrollment
-    // Wait for admin loading to complete
+    // Allow admins, Stargate members, and enrolled users to access lessons
     if (!course || isAdminLoading) return;
-    if (!enrollment && !isAdmin) return;
+    if (!enrollment && !isAdmin && !hasStargateMembership && !isPremium) return;
     
     try {
       const { data, error } = await supabase
@@ -251,8 +287,8 @@ const CourseDetail: React.FC = () => {
     );
   }
 
-  // Admins get full access, otherwise check enrollment
-  const hasAccess = isAdmin || !!enrollment;
+  // Admins, Stargate members, and enrolled users get full access
+  const hasAccess = isAdmin || !!enrollment || hasStargateMembership || isPremium;
   const isEnrolled = !!enrollment;
   const progress = enrollment?.progress_percent || 0;
   const langInfo = getLanguageInfo(course.language || 'en');
@@ -273,7 +309,7 @@ const CourseDetail: React.FC = () => {
         <Card className="p-6">
           <div className="flex items-start gap-4 mb-4">
             <div className="w-16 h-16 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
-              {isAdmin ? (
+              {isAdmin || hasStargateMembership || isPremium ? (
                 <Award className="w-8 h-8 text-primary" />
               ) : isEnrolled ? (
                 progress === 100 ? (
@@ -317,12 +353,18 @@ const CourseDetail: React.FC = () => {
             </div>
           </div>
 
-          {/* Admin Badge */}
-          {isAdmin && (
+          {/* Admin/Stargate Badge */}
+          {(isAdmin || hasStargateMembership || isPremium) && (
             <div className="mt-4 p-4 bg-primary/10 rounded-lg border border-primary/20">
               <div className="flex items-center gap-2">
                 <Award className="w-5 h-5 text-primary" />
-                <span className="text-sm font-medium text-primary">Admin Access - Full Course Access Granted</span>
+                <span className="text-sm font-medium text-primary">
+                  {isAdmin 
+                    ? 'Admin Access - Full Course Access Granted'
+                    : hasStargateMembership || isPremium
+                    ? 'Full Course Access Granted'
+                    : 'Access Granted'}
+                </span>
               </div>
             </div>
           )}
@@ -428,18 +470,32 @@ const CourseDetail: React.FC = () => {
 
                     try {
                       // Handle different content types
-                      if (lesson.content_type === 'text') {
-                        // For text content, open in same window or show in modal
+                      if (lesson.content_type === 'video') {
+                        // For video content, use the video player modal with proper YouTube embed
+                        setActiveVideoTitle(lesson.title);
+                        setActiveVideoUrl(lesson.content_url);
+                      } else if (lesson.content_type === 'audio') {
+                        // Audio can also use video player if it's YouTube, otherwise open directly
+                        if (lesson.content_url.includes('youtube.com') || lesson.content_url.includes('youtu.be')) {
+                          setActiveVideoTitle(lesson.title);
+                          setActiveVideoUrl(lesson.content_url);
+                        } else {
+                          window.open(lesson.content_url, '_blank');
+                        }
+                      } else if (lesson.content_type === 'text') {
+                        // For text content, open in new tab
                         window.open(lesson.content_url, '_blank');
                       } else if (lesson.content_type === 'pdf') {
                         // PDFs can be opened directly
                         window.open(lesson.content_url, '_blank');
-                      } else if (lesson.content_type === 'video' || lesson.content_type === 'audio') {
-                        // Video and audio - open in new tab
-                        window.open(lesson.content_url, '_blank');
                       } else {
-                        // Default: open in new tab
-                        window.open(lesson.content_url, '_blank');
+                        // Default: check if it's YouTube, otherwise open in new tab
+                        if (lesson.content_url.includes('youtube.com') || lesson.content_url.includes('youtu.be')) {
+                          setActiveVideoTitle(lesson.title);
+                          setActiveVideoUrl(lesson.content_url);
+                        } else {
+                          window.open(lesson.content_url, '_blank');
+                        }
                       }
                     } catch (error) {
                       console.error('Error opening lesson content:', error);
@@ -507,6 +563,17 @@ const CourseDetail: React.FC = () => {
       {showWealthUpsell && course.id === WEALTH_COURSE_ID && (
         <WealthCourseUpsell onClose={() => setShowWealthUpsell(false)} />
       )}
+
+      {/* Video Player Modal */}
+      <VideoPlayerModal
+        isOpen={!!activeVideoUrl}
+        onClose={() => {
+          setActiveVideoUrl(null);
+          setActiveVideoTitle('');
+        }}
+        videoUrl={activeVideoUrl}
+        title={activeVideoTitle}
+      />
     </div>
   );
 };
