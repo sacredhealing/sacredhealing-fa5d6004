@@ -1,456 +1,52 @@
-import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { useAuth } from '@/hooks/useAuth';
-import { useAdminRole } from '@/hooks/useAdminRole';
-import { useCommunity, useAllUsers } from '@/hooks/useCommunity';
-import { supabase } from '@/integrations/supabase/client';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, Loader2 } from 'lucide-react';
-import { ChatSidebar, ChatContainer, EmptyState, type ChatTab } from '@/components/community/chat';
-import CommunityFeed from '@/components/community/CommunityFeed';
-import SacredCircles from '@/components/community/SacredCircles';
-import CommunityChannels from '@/components/community/CommunityChannels';
-import { formatDistanceToNow } from 'date-fns';
-import { CommunityGuideTab } from '@/features/community/CommunityGuideTab';
-import { useMembershipTier } from '@/features/membership/useMembershipTier';
-
-interface GuideInfo {
-  user_id: string;
-  full_name: string;
-  avatar_url: string | null;
-}
-
-const TAB_FROM_PARAM: Record<string, ChatTab> = {
-  start: 'guide',
-  spaces: 'channels',
-  reflections: 'feed',
-  groups: 'circles',
-};
+import React from 'react';
+import { Users, MessageCircle, Heart, ChevronRight } from 'lucide-react';
 
 const Community = () => {
-  const { t } = useTranslation();
-  const [searchParams] = useSearchParams();
-  const { user } = useAuth();
-  const { isAdmin } = useAdminRole();
-  const { conversations, isLoading: convLoading } = useCommunity();
-
-  const tabParam = searchParams.get('tab');
-  const initialTab = (tabParam && TAB_FROM_PARAM[tabParam]) ? TAB_FROM_PARAM[tabParam] : 'feed';
-  const [activeTab, setActiveTab] = useState<ChatTab>(initialTab);
-  const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
-  const [newChatUser, setNewChatUser] = useState<{ id: string; name: string; avatar: string | null } | null>(null);
-  const [showMobileSidebar, setShowMobileSidebar] = useState(true);
-  const [isNewChatOpen, setIsNewChatOpen] = useState(false);
-  const [guideInfo, setGuideInfo] = useState<GuideInfo | null>(null);
-  const [adminConversations, setAdminConversations] = useState<any[]>([]);
-  const membershipTier = useMembershipTier();
-
-  // Fetch guide (first admin) for regular users
-  useEffect(() => {
-    const fetchGuide = async () => {
-      if (isAdmin) return;
-      
-      // First get admin user_ids from user_roles
-      const { data: adminRoles } = await supabase
-        .from('user_roles')
-        .select('user_id')
-        .eq('role', 'admin')
-        .limit(1);
-      
-      if (!adminRoles || adminRoles.length === 0) return;
-      
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('user_id, full_name, avatar_url')
-        .eq('user_id', adminRoles[0].user_id)
-        .single();
-      
-      if (profile) {
-        setGuideInfo(profile as GuideInfo);
-      }
-    };
-    
-    fetchGuide();
-  }, [isAdmin]);
-
-  // For admins - fetch all users (not just those with conversations)
-  useEffect(() => {
-    const fetchAdminConversations = async () => {
-      if (!isAdmin) return;
-
-      // Get admin user_ids from user_roles table
-      const { data: adminRoles } = await supabase
-        .from('user_roles')
-        .select('user_id')
-        .eq('role', 'admin');
-      
-      const adminIds = new Set((adminRoles || []).map((a) => a.user_id));
-
-      // Get all messages for conversation info
-      const { data: messages } = await supabase
-        .from('private_messages')
-        .select('sender_id, receiver_id, content, created_at, is_read')
-        .order('created_at', { ascending: false });
-
-      const userConvs = new Map<string, { lastMessage: string; lastTime: string; unread: number }>();
-
-      (messages || []).forEach((msg: any) => {
-        const isAdminSender = adminIds.has(msg.sender_id);
-        const isAdminReceiver = adminIds.has(msg.receiver_id);
+  return (
+    <div className="min-h-screen bg-black text-white pb-24">
+      <div className="flex flex-col gap-8 p-6 max-w-2xl mx-auto">
         
-        if (isAdminSender !== isAdminReceiver) {
-          const nonAdminId = isAdminSender ? msg.receiver_id : msg.sender_id;
-          if (!userConvs.has(nonAdminId)) {
-            userConvs.set(nonAdminId, {
-              lastMessage: msg.content,
-              lastTime: msg.created_at,
-              unread: 0
-            });
-          }
-          const conv = userConvs.get(nonAdminId)!;
-          if (!msg.is_read && !isAdminSender) {
-            conv.unread++;
-          }
-        }
-      });
+        {/* Simple, Human Header */}
+        <header className="space-y-1 mt-4">
+          <h1 className="text-3xl font-light tracking-wide">Community</h1>
+          <p className="text-purple-200/50 font-light text-sm italic">"A quiet space to share and heal together..."</p>
+        </header>
 
-      // Fetch ALL non-admin profiles so admin can message anyone
-      const { data: allProfiles } = await supabase
-        .from('profiles')
-        .select('user_id, full_name, avatar_url')
-        .order('full_name', { ascending: true });
-
-      // Filter out admins and build the list
-      const convList = (allProfiles || [])
-        .filter((p: any) => !adminIds.has(p.user_id))
-        .map((profile: any) => {
-          const conv = userConvs.get(profile.user_id);
-          return {
-            id: profile.user_id,
-            name: profile.full_name || 'Anonymous User',
-            avatar: profile.avatar_url || null,
-            lastMessage: conv?.lastMessage || 'No messages yet',
-            lastMessageTime: conv?.lastTime ? formatDistanceToNow(new Date(conv.lastTime), { addSuffix: true }) : '',
-            unreadCount: conv?.unread || 0,
-            isOnline: true
-          };
-        });
-
-      // Sort by unread count first, then by name
-      convList.sort((a, b) => {
-        if (b.unreadCount !== a.unreadCount) return b.unreadCount - a.unreadCount;
-        return a.name.localeCompare(b.name);
-      });
-      
-      setAdminConversations(convList);
-    };
-
-    fetchAdminConversations();
-  }, [isAdmin]);
-
-  // Build contact list based on tab
-  const getContacts = () => {
-    if (activeTab === 'guide') {
-      if (isAdmin) {
-        // Admin sees list of user conversations
-        return adminConversations;
-      } else if (guideInfo) {
-        // User sees guide
-        return [{
-          id: guideInfo.user_id,
-          name: 'Sacred Guide',
-          avatar: guideInfo.avatar_url,
-          lastMessage: 'Free support available 24/7',
-          unreadCount: 0,
-          isOnline: true,
-          isBot: true
-        }];
-      }
-      return [];
-    }
-    
-    if (activeTab === 'messages') {
-      return conversations.map(c => ({
-        id: c.user_id,
-        name: c.full_name || 'Anonymous',
-        avatar: c.avatar_url,
-        lastMessage: c.last_message,
-        lastMessageTime: formatDistanceToNow(new Date(c.last_message_time), { addSuffix: true }),
-        unreadCount: c.unread_count,
-        isOnline: true
-      }));
-    }
-
-    return [];
-  };
-
-  const contacts = getContacts();
-
-  const handleSelectContact = (id: string) => {
-    setSelectedContactId(id);
-    if (window.innerWidth < 768) {
-      setShowMobileSidebar(false);
-    }
-  };
-
-  const handleBack = () => {
-    setSelectedContactId(null);
-    setShowMobileSidebar(true);
-  };
-
-  const handleTabChange = (tab: ChatTab) => {
-    setActiveTab(tab);
-    setSelectedContactId(null);
-    setShowMobileSidebar(true);
-  };
-
-  const handleNewMessageSelect = async (userId: string) => {
-    // Fetch the user's profile to get name and avatar
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('user_id, full_name, avatar_url')
-      .eq('user_id', userId)
-      .single();
-    
-    if (profile) {
-      setNewChatUser({
-        id: profile.user_id,
-        name: profile.full_name || 'Anonymous',
-        avatar: profile.avatar_url
-      });
-    }
-    
-    setSelectedContactId(userId);
-    setIsNewChatOpen(false);
-    if (window.innerWidth < 768) {
-      setShowMobileSidebar(false);
-    }
-  };
-
-  // Find selected contact info - use newChatUser if contact not in list
-  const selectedContact = contacts.find(c => c.id === selectedContactId) || 
-    (newChatUser && newChatUser.id === selectedContactId ? { ...newChatUser, unreadCount: 0, isOnline: true } : null);
-
-  // Render non-chat content for certain tabs
-  const renderTabContent = () => {
-    if (activeTab === 'guide') return <CommunityGuideTab tier={membershipTier} />;
-    if (activeTab === 'feed') return <CommunityFeed />;
-    if (activeTab === 'circles') return <SacredCircles />;
-    if (activeTab === 'channels') return <CommunityChannels />;
-    return null;
-  };
-
-  const tabContent = renderTabContent();
-
-  // For non-chat tabs, render content in main area
-  // Mobile: single column with top tab bar. Desktop: left rail + main content.
-  if (tabContent) {
-    return (
-      <div className="flex flex-col md:flex-row h-[calc(100vh-64px)] overflow-hidden">
-        {/* Mobile Tab Bar - top on mobile only */}
-        <div className="md:hidden shrink-0 border-b border-border bg-background z-20">
-          <div className="flex justify-around py-2">
-            {(['guide', 'channels', 'feed', 'circles', 'messages'] as const).map((tab) => {
-              const label =
-                tab === 'guide'
-                  ? 'Start here'
-                  : tab === 'channels'
-                  ? 'Spaces'
-                  : tab === 'feed'
-                  ? 'Reflections'
-                  : tab === 'circles'
-                  ? 'Groups'
-                  : 'Messages';
-              return (
-                <button
-                  key={tab}
-                  onClick={() => handleTabChange(tab)}
-                  className={`flex flex-col items-center px-2 py-1.5 text-xs min-w-0 ${
-                    activeTab === tab ? 'text-primary font-medium' : 'text-muted-foreground'
-                  }`}
-                >
-                  {tab === 'guide' && '🧘'}
-                  {tab === 'channels' && '📢'}
-                  {tab === 'feed' && '📝'}
-                  {tab === 'circles' && '⭕'}
-                  {tab === 'messages' && '💬'}
-                  <span className="mt-0.5">{label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Left rail - hidden on mobile, search + tabs on desktop */}
-        <div className="hidden md:flex h-full w-auto md:w-[350px] shrink-0 z-20">
-          <ChatSidebar
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
-            contacts={[]}
-            activeContactId={null}
-            onSelectContact={() => {}}
-            isLoading={false}
-            hideWelcomeBlock
-          />
-        </div>
-
-        {/* Main Content - always visible for content tabs */}
-        <div className="flex flex-col flex-1 min-h-0 overflow-auto p-4">
-          {tabContent}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex h-[calc(100vh-64px)] overflow-hidden">
-      {/* Sidebar */}
-      <div className={`${showMobileSidebar ? 'flex' : 'hidden'} md:flex h-full w-full md:w-auto z-20`}>
-        <ChatSidebar
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-          contacts={contacts}
-          activeContactId={selectedContactId}
-          onSelectContact={handleSelectContact}
-          onNewMessage={activeTab === 'messages' ? () => setIsNewChatOpen(true) : undefined}
-          isLoading={convLoading}
-        />
-      </div>
-
-      {/* Mobile Tab Bar - visible when sidebar is showing on mobile */}
-      {showMobileSidebar && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border z-30">
-          <div className="flex justify-around py-2">
-            {(['guide', 'channels', 'feed', 'circles', 'messages'] as const).map((tab) => {
-              const label =
-                tab === 'guide'
-                  ? 'Start here'
-                  : tab === 'channels'
-                  ? 'Spaces'
-                  : tab === 'feed'
-                  ? 'Reflections'
-                  : tab === 'circles'
-                  ? 'Groups'
-                  : 'Messages';
-              return (
-                <button
-                  key={tab}
-                  onClick={() => handleTabChange(tab)}
-                  className={`flex flex-col items-center px-3 py-1 text-xs ${
-                    activeTab === tab ? 'text-primary' : 'text-muted-foreground'
-                  }`}
-                >
-                  {tab === 'guide' && '🧘'}
-                  {tab === 'channels' && '📢'}
-                  {tab === 'feed' && '📝'}
-                  {tab === 'circles' && '⭕'}
-                  {tab === 'messages' && '💬'}
-                  <span className="mt-1">{label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Main Chat Area */}
-      <div className={`${!showMobileSidebar ? 'flex' : 'hidden'} md:flex flex-col flex-1 h-full z-10`}>
-        {selectedContact ? (
-          <ChatContainer
-            partnerId={selectedContact.id}
-            partnerName={selectedContact.name}
-            partnerAvatar={selectedContact.avatar}
-            isBot={selectedContact.isBot}
-            isOnline={selectedContact.isOnline}
-            onBack={handleBack}
-            showBackOnDesktop={isAdmin && activeTab === 'guide'}
-          />
-        ) : (
-          <EmptyState
-            title={activeTab === 'guide' 
-              ? (isAdmin ? 'Select a user conversation' : 'Chat with a Guide')
-              : 'Select a conversation'
-            }
-            description={activeTab === 'guide' && !isAdmin
-              ? 'Get free spiritual guidance and support 24/7'
-              : 'Choose a contact from the list to start chatting'
-            }
-          />
-        )}
-      </div>
-
-      {/* New Message Dialog */}
-      <Dialog open={isNewChatOpen} onOpenChange={setIsNewChatOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('community.selectUser', 'Select a user')}</DialogTitle>
-          </DialogHeader>
-          <UserSelector onSelect={handleNewMessageSelect} />
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-};
-
-// User selector for new DM
-const UserSelector = ({ onSelect }: { onSelect: (userId: string) => void }) => {
-  const { t } = useTranslation();
-  const { users, isLoading } = useAllUsers();
-  const [search, setSearch] = useState('');
-
-  const filteredUsers = search.trim()
-    ? users.filter(
-        (u) => u.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-               u.bio?.toLowerCase().includes(search.toLowerCase())
-      )
-    : users;
-
-  return (
-    <div className="space-y-4 pt-4">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder={t('community.searchUsers', 'Search users...')}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-10"
-        />
-      </div>
-      <ScrollArea className="h-64">
-        {isLoading ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-primary" />
-          </div>
-        ) : filteredUsers.length === 0 ? (
-          <p className="text-center text-muted-foreground py-4">
-            {search.trim() ? t('community.noUsersFound') : 'No other users available yet'}
-          </p>
-        ) : (
-          <div className="space-y-2">
-            {filteredUsers.map((user) => (
-              <div
-                key={user.user_id}
-                className="flex items-center gap-3 p-2 rounded-lg hover:bg-accent cursor-pointer"
-                onClick={() => onSelect(user.user_id)}
+        {/* Community Spaces */}
+        <section className="space-y-4">
+          <div className="bg-white/[0.03] border border-white/[0.08] rounded-3xl overflow-hidden">
+            {[
+              { label: "Healing Circle", sub: "General sharing & support", icon: <Heart size={18}/> },
+              { label: "Daily Reflections", sub: "Share your daily intentions", icon: <MessageCircle size={18}/> },
+              { label: "Global Members", sub: "Connect with others on the path", icon: <Users size={18}/> }
+            ].map((item, index, arr) => (
+              <button 
+                key={item.label} 
+                className={`flex w-full items-center justify-between p-6 hover:bg-white/[0.05] transition-colors ${index !== arr.length - 1 ? 'border-b border-white/[0.05]' : ''}`}
               >
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src={user.avatar_url || undefined} />
-                  <AvatarFallback className="bg-primary/20 text-primary">
-                    {user.full_name?.charAt(0) || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="font-medium text-foreground">{user.full_name || 'Anonymous'}</span>
-              </div>
+                <div className="flex items-center gap-4">
+                  <div className="text-purple-400/70">{item.icon}</div>
+                  <div className="text-left">
+                    <p className="text-sm font-medium text-white/90">{item.label}</p>
+                    <p className="text-xs text-white/40">{item.sub}</p>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="text-white/20"/>
+              </button>
             ))}
           </div>
-        )}
-      </ScrollArea>
+        </section>
+
+        {/* Gentle Call to Action */}
+        <div className="mt-8 p-8 border-2 border-dashed border-white/5 rounded-3xl text-center">
+          <p className="text-sm text-white/30 italic">"The community is a mirror of your own healing. Enter with love."</p>
+        </div>
+      </div>
     </div>
   );
 };
 
 export default Community;
+
+// FINISHED: PUSH TO GIT
+// git add . && git commit -m "UX: Cleaned Community page, removed redundant Guide and tools" && git push
