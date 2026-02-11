@@ -590,22 +590,6 @@ const AdminCourses: React.FC = () => {
             <AcademyCertification />
           </TabsContent>
 
-          <TabsContent value="courses" className="mt-6">
-            {/* Fix Empty Content URLs Button */}
-            <div className="mb-4 flex justify-end">
-              <Button
-                onClick={fixEmptyContentUrls}
-                disabled={isLoading}
-                variant="outline"
-                className="mb-4"
-              >
-                {isLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                ) : null}
-                Fix Empty Content URLs
-              </Button>
-            </div>
-
           <TabsContent value="courses" className="space-y-6 mt-6">
             {/* Fix Empty Content URLs Button */}
             <div className="flex justify-end">
