@@ -415,14 +415,35 @@ const CourseDetail: React.FC = () => {
               {lessons.map((lesson, index) => (
                 <div
                   key={lesson.id}
-                  className="flex items-center gap-4 p-4 border rounded-lg hover:bg-muted/30 transition-colors cursor-pointer"
+                  className={`flex items-center gap-4 p-4 border rounded-lg transition-colors ${
+                    lesson.content_url 
+                      ? 'hover:bg-muted/30 cursor-pointer' 
+                      : 'opacity-50 cursor-not-allowed'
+                  }`}
                   onClick={() => {
-                    if (lesson.content_url) {
-                      if (lesson.content_type === 'video' || lesson.content_type === 'audio') {
+                    if (!lesson.content_url) {
+                      toast.error('Lesson content is not available yet');
+                      return;
+                    }
+
+                    try {
+                      // Handle different content types
+                      if (lesson.content_type === 'text') {
+                        // For text content, open in same window or show in modal
+                        window.open(lesson.content_url, '_blank');
+                      } else if (lesson.content_type === 'pdf') {
+                        // PDFs can be opened directly
+                        window.open(lesson.content_url, '_blank');
+                      } else if (lesson.content_type === 'video' || lesson.content_type === 'audio') {
+                        // Video and audio - open in new tab
                         window.open(lesson.content_url, '_blank');
                       } else {
+                        // Default: open in new tab
                         window.open(lesson.content_url, '_blank');
                       }
+                    } catch (error) {
+                      console.error('Error opening lesson content:', error);
+                      toast.error('Failed to open lesson content. Please try again.');
                     }
                   }}
                 >
@@ -447,10 +468,19 @@ const CourseDetail: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  <Play className="w-5 h-5 text-muted-foreground" />
+                  {lesson.content_url ? (
+                    <Play className="w-5 h-5 text-muted-foreground" />
+                  ) : (
+                    <Lock className="w-5 h-5 text-muted-foreground/50" />
+                  )}
                 </div>
               ))}
             </div>
+            {lessons.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No lessons available yet for this course.
+              </p>
+            )}
           </Card>
         )}
 
