@@ -522,16 +522,12 @@ const CourseDetail: React.FC = () => {
               {lessons.map((lesson, index) => (
                 <div
                   key={lesson.id}
-                  className={`flex items-center gap-4 p-4 border rounded-lg transition-colors ${
-                    lesson.content_url 
-                      ? 'hover:bg-muted/30 cursor-pointer' 
-                      : 'opacity-50 cursor-not-allowed'
-                  } ${
+                  className={`flex items-center gap-4 p-4 border rounded-lg transition-colors hover:bg-muted/30 cursor-pointer ${
                     activeVideoLessonId === lesson.id ? 'ring-2 ring-primary bg-primary/5' : ''
-                  }`}
+                  } ${!lesson.content_url ? 'opacity-60' : ''}`}
                   onClick={() => {
                     if (!lesson.content_url) {
-                      toast.error('Lesson content is not available yet');
+                      toast.error('Lesson content is not available yet. Please contact support if this persists.');
                       return;
                     }
 
@@ -616,7 +612,7 @@ const CourseDetail: React.FC = () => {
                   {lesson.content_url ? (
                     <Play className="w-5 h-5 text-muted-foreground" />
                   ) : (
-                    <Lock className="w-5 h-5 text-muted-foreground/50" />
+                    <Play className="w-5 h-5 text-muted-foreground/40" />
                   )}
                 </div>
               ))}
