@@ -31,6 +31,7 @@ import {
   Star,
   Trophy,
   Mic2,
+  ChevronRight,
 } from "lucide-react";
 
 function getSubtitleKey(phase: "morning" | "midday" | "evening"): string {
@@ -225,37 +226,113 @@ export default function Explore() {
         />
       ) : null}
 
-      {/* Your Space — Premium Membership only */}
-      <div className="mb-6">
-        <h3 className="text-base font-heading font-semibold text-foreground mb-1">
-          {t("explore.yourSpaceTitle", "Your Space")}
-        </h3>
-        <p className="text-sm text-muted-foreground mb-4">
-          {t("explore.yourSpaceSubtitle", "Everything in one place. Yours to return to.")}
-        </p>
-        <Link to="/membership" className="block">
-          <Card className="rounded-2xl p-4 bg-gradient-to-r from-amber-500/20 via-purple-500/10 to-pink-500/20 border-amber-500/30 hover:border-amber-500/50 transition-all">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-amber-500/30 to-purple-500/20">
-                <Crown className="w-6 h-6 text-amber-400" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-foreground">{t("explore.membership", "Membership")}</h3>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                    {t("explore.badgePremium", "Premium")}
-                  </span>
+      {/* Your Space */}
+      <section className="mt-8">
+        <h2 className="text-sm font-medium text-white/50 mb-4 tracking-wide uppercase">
+          Your Space
+        </h2>
+
+        <div className="w-full relative overflow-hidden rounded-3xl border border-white/10 bg-white/5">
+          {/* subtle "alive" glow */}
+          <div className="pointer-events-none absolute inset-0 opacity-0 hover:opacity-100 transition-opacity
+                          bg-gradient-to-r from-white/0 via-white/5 to-white/0" />
+
+          {/* Header row clickable */}
+          <button
+            onClick={() => navigate("/membership")}
+            className="w-full p-6 text-left hover:bg-white/7 transition relative z-10"
+          >
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
+                  <Sparkles size={24} className="text-white/80" />
                 </div>
-                {isPaid ? (
-                  <div className="mt-1 text-xs text-muted-foreground">{t("explore.included", "Included")}</div>
-                ) : null}
-                <p className="text-xs text-muted-foreground mt-1">{t("explore.membershipEnterSpace", "Enter your space")}</p>
+
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-semibold text-white">
+                      {isPaid ? "Your Space" : "Membership"}
+                    </h3>
+
+                    {isPaid ? (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full border border-white/10 bg-white/5 text-white/70">
+                        Active
+                      </span>
+                    ) : null}
+                  </div>
+
+                  <p className="text-sm text-white/60 mt-1 max-w-md leading-relaxed">
+                    {isPaid
+                      ? "Everything included for you — choose where to enter."
+                      : "Open your full space and access everything in one place."}
+                  </p>
+                </div>
               </div>
-              <span className="text-muted-foreground">›</span>
+
+              <div className="p-2 rounded-full bg-white/5 border border-white/10">
+                <ChevronRight size={20} className="text-white/60" />
+              </div>
             </div>
-          </Card>
-        </Link>
-      </div>
+          </button>
+
+          {/* Paid-only: tool launcher row inside the same card */}
+          {isPaid ? (
+            <div className="relative z-10 px-6 pb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <button
+                  onClick={() => navigate("/vedic-astrology")}
+                  className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left hover:bg-white/7 transition"
+                >
+                  <div className="text-sm font-semibold text-white">Vedic Astrology</div>
+                  <div className="mt-1 text-xs text-white/60">Daily influence + blueprint</div>
+                </button>
+
+                <button
+                  onClick={() => navigate("/ayurveda")}
+                  className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left hover:bg-white/7 transition"
+                >
+                  <div className="text-sm font-semibold text-white">Ayurveda</div>
+                  <div className="mt-1 text-xs text-white/60">Balance + daily guidance</div>
+                </button>
+
+                <button
+                  onClick={() => navigate("/soul")}
+                  className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left hover:bg-white/7 transition"
+                >
+                  <div className="text-sm font-semibold text-white">Soul</div>
+                  <div className="mt-1 text-xs text-white/60">Receive deeper sessions</div>
+                </button>
+              </div>
+
+              <div className="mt-3 flex items-center justify-between">
+                <button
+                  onClick={() => navigate("/library")}
+                  className="text-sm text-white/70 hover:text-white transition underline underline-offset-4"
+                >
+                  Open Library
+                </button>
+
+                <button
+                  onClick={() => navigate("/membership")}
+                  className="text-sm text-white/70 hover:text-white transition underline underline-offset-4"
+                >
+                  Manage
+                </button>
+              </div>
+            </div>
+          ) : (
+            // Free-only: simple CTA footer (optional)
+            <div className="relative z-10 px-6 pb-6">
+              <button
+                onClick={() => navigate("/membership")}
+                className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-black hover:opacity-90 transition"
+              >
+                View plans
+              </button>
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* Explore everything — collapsed by default */}
       <CollapsibleSection
