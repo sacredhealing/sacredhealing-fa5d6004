@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Play, Lock, Award, Clock, CheckCircle, Loader2, Video, Music, Type, FileText, Globe, Wallet, Sparkles } from 'lucide-react';
+import { ArrowLeft, Play, Lock, Award, Clock, CheckCircle, Loader2, Video, Music, Type, FileText, Globe, Wallet, Sparkles, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
@@ -63,7 +63,7 @@ const CourseDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user, session } = useAuth();
-  const { isAdmin } = useAdminRole();
+  const { isAdmin, isLoading: isAdminLoading } = useAdminRole();
   const { t } = useTranslation();
   const [course, setCourse] = useState<Course | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
@@ -74,22 +74,30 @@ const CourseDetail: React.FC = () => {
   const [showWealthUpsell, setShowWealthUpsell] = useState(false);
 
   useEffect(() => {
-    if (id) {
+    // Wait for admin loading to complete before fetching course
+    if (id && !isAdminLoading) {
       fetchCourse();
-      if (user) {
-        fetchEnrollment();
-      }
     }
-  }, [id, user, isAdmin]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, isAdmin, isAdminLoading]);
+
+  useEffect(() => {
+    if (user && id && !isAdminLoading) {
+      fetchEnrollment();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, id, isAdminLoading]);
 
   useEffect(() => {
     // Fetch lessons if enrolled OR if admin (admins get full access)
-    if (course && (enrollment || isAdmin)) {
+    // Wait for admin loading to complete
+    if (course && !isAdminLoading && (enrollment || isAdmin)) {
       fetchLessons();
     }
-  }, [course, enrollment, isAdmin]);
+  }, [course, enrollment, isAdmin, isAdminLoading]);
 
   const fetchCourse = async () => {
+    if (!id) return;
     setIsLoading(true);
     try {
       // Admins can access unpublished courses
@@ -98,7 +106,8 @@ const CourseDetail: React.FC = () => {
         .select('*')
         .eq('id', id);
       
-      if (!isAdmin) {
+      // Only filter by published if not admin (isAdmin is false, not undefined)
+      if (isAdmin === false) {
         query = query.eq('is_published', true);
       }
       
@@ -141,7 +150,10 @@ const CourseDetail: React.FC = () => {
 
   const fetchLessons = async () => {
     // Allow admins to access lessons without enrollment
-    if (!course || (!enrollment && !isAdmin)) return;
+    // Wait for admin loading to complete
+    if (!course || isAdminLoading) return;
+    if (!enrollment && !isAdmin) return;
+    
     try {
       const { data, error } = await supabase
         .from('lessons')
@@ -155,6 +167,7 @@ const CourseDetail: React.FC = () => {
       }
     } catch (error) {
       console.error('Error fetching lessons:', error);
+      // Don't show error toast for lessons, just log it
     }
   };
 
@@ -220,7 +233,8 @@ const CourseDetail: React.FC = () => {
     }
   };
 
-  if (isLoading) {
+  // Show loading while checking admin status or fetching course
+  if (isAdminLoading || isLoading) {
     return (
       <div className="min-h-screen px-4 pt-6 pb-24 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
