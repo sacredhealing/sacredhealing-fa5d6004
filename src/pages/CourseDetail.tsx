@@ -60,6 +60,19 @@ interface Enrollment {
   progress_percent: number;
 }
 
+interface LessonMaterial {
+  id: string;
+  course_id: string;
+  lesson_id: string | null;
+  title: string;
+  file_url: string;
+  file_type: string;
+}
+
+type LessonWithMaterials = Lesson & {
+  materials?: LessonMaterial[];
+};
+
 const CourseDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -68,7 +81,7 @@ const CourseDetail: React.FC = () => {
   const { tier: membershipTier, isPremium } = useMembership();
   const { t } = useTranslation();
   const [course, setCourse] = useState<Course | null>(null);
-  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [lessons, setLessons] = useState<LessonWithMaterials[]>([]);
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEnrolling, setIsEnrolling] = useState(false);
@@ -191,16 +204,40 @@ const CourseDetail: React.FC = () => {
     if (!enrollment && !isAdmin && !hasStargateMembership && !isPremium) return;
     
     try {
-      const { data, error } = await supabase
-        .from('lessons')
-        .select('*')
-        .eq('course_id', course.id)
-        .order('order_index', { ascending: true });
+      // Fetch lessons and their related materials for this course
+      const [
+        { data: lessonData, error: lessonError },
+        { data: materialData, error: materialError }
+      ] = await Promise.all([
+        supabase
+          .from('lessons')
+          .select('*')
+          .eq('course_id', course.id)
+          .order('order_index', { ascending: true }),
+        supabase
+          .from('course_materials')
+          .select('id, course_id, lesson_id, title, file_url, file_type')
+          .eq('course_id', course.id)
+      ]);
 
-      if (error) throw error;
-      if (data) {
-        setLessons(data as Lesson[]);
-      }
+      if (lessonError) throw lessonError;
+      if (materialError) throw materialError;
+
+      const materialsByLessonId = new Map<string, LessonMaterial[]>();
+
+      (materialData || []).forEach((material: any) => {
+        if (!material.lesson_id) return;
+        const existing = materialsByLessonId.get(material.lesson_id) || [];
+        existing.push(material as LessonMaterial);
+        materialsByLessonId.set(material.lesson_id, existing);
+      });
+
+      const lessonsWithMaterials: LessonWithMaterials[] = (lessonData || []).map((lesson: any) => ({
+        ...(lesson as Lesson),
+        materials: materialsByLessonId.get(lesson.id) || []
+      }));
+
+      setLessons(lessonsWithMaterials);
     } catch (error) {
       console.error('Error fetching lessons:', error);
       // Don't show error toast for lessons, just log it
@@ -525,18 +562,33 @@ const CourseDetail: React.FC = () => {
           <Card className="p-6">
             <h2 className="text-xl font-semibold mb-4">Course Lessons</h2>
             <div className="space-y-3">
-              {lessons.map((lesson, index) => (
-                <div
-                  key={lesson.id}
-                  className={`flex items-center gap-4 p-4 border rounded-lg transition-colors hover:bg-muted/30 cursor-pointer ${
-                    activeVideoLessonId === lesson.id ? 'ring-2 ring-primary bg-primary/5' : ''
-                  } ${!lesson.content_url ? 'opacity-60' : ''}`}
-                  onClick={() => {
-                    // Always allow clicking - if content_url is missing, we'll handle it in the player
-                    if (!lesson.content_url) {
-                      // Still set the active lesson to show it's selected, but show a message
+              {lessons.map((lesson, index) => {
+                const downloadableMaterial = lesson.materials?.find(
+                  (material) =>
+                    material.file_type === 'pdf' ||
+                    material.file_type === 'audio'
+                );
+
+                const handleLessonClick = () => {
+                  // Always allow clicking - if content_url is missing, we'll handle it in the player
+                  if (!lesson.content_url) {
+                    setActiveVideoTitle(lesson.title);
+                    setActiveVideoUrl(null);
+                    setActiveVideoLessonId(lesson.id);
+                    setTimeout(() => {
+                      const videoElement = document.getElementById('embedded-video-player');
+                      if (videoElement) {
+                        videoElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }
+                    }, 100);
+                    toast.info('This lesson content is being prepared. Please check back soon.');
+                    return;
+                  }
+
+                  try {
+                    if (lesson.content_type === 'video') {
                       setActiveVideoTitle(lesson.title);
-                      setActiveVideoUrl(null);
+                      setActiveVideoUrl(lesson.content_url);
                       setActiveVideoLessonId(lesson.id);
                       setTimeout(() => {
                         const videoElement = document.getElementById('embedded-video-player');
@@ -544,95 +596,109 @@ const CourseDetail: React.FC = () => {
                           videoElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
                         }
                       }, 100);
-                      toast.info('This lesson content is being prepared. Please check back soon.');
-                      return;
-                    }
-
-                    try {
-                      // Handle different content types
-                      if (lesson.content_type === 'video') {
-                        // For video content, embed inline on the page
+                    } else if (lesson.content_type === 'audio') {
+                      if (
+                        lesson.content_url.includes('youtube.com') ||
+                        lesson.content_url.includes('youtu.be')
+                      ) {
                         setActiveVideoTitle(lesson.title);
                         setActiveVideoUrl(lesson.content_url);
                         setActiveVideoLessonId(lesson.id);
-                        // Scroll to video player
                         setTimeout(() => {
                           const videoElement = document.getElementById('embedded-video-player');
                           if (videoElement) {
                             videoElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
                           }
                         }, 100);
-                      } else if (lesson.content_type === 'audio') {
-                        // Audio can also be embedded if it's YouTube, otherwise open directly
-                        if (lesson.content_url.includes('youtube.com') || lesson.content_url.includes('youtu.be')) {
-                          setActiveVideoTitle(lesson.title);
-                          setActiveVideoUrl(lesson.content_url);
-                          setActiveVideoLessonId(lesson.id);
-                          setTimeout(() => {
-                            const videoElement = document.getElementById('embedded-video-player');
-                            if (videoElement) {
-                              videoElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                            }
-                          }, 100);
-                        } else {
-                          window.open(lesson.content_url, '_blank');
-                        }
-                      } else if (lesson.content_type === 'text') {
-                        // For text content, open in new tab
-                        window.open(lesson.content_url, '_blank');
-                      } else if (lesson.content_type === 'pdf') {
-                        // PDFs can be opened directly
-                        window.open(lesson.content_url, '_blank');
                       } else {
-                        // Default: check if it's YouTube, embed inline, otherwise open in new tab
-                        if (lesson.content_url.includes('youtube.com') || lesson.content_url.includes('youtu.be')) {
-                          setActiveVideoTitle(lesson.title);
-                          setActiveVideoUrl(lesson.content_url);
-                          setActiveVideoLessonId(lesson.id);
-                          setTimeout(() => {
-                            const videoElement = document.getElementById('embedded-video-player');
-                            if (videoElement) {
-                              videoElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                            }
-                          }, 100);
-                        } else {
-                          window.open(lesson.content_url, '_blank');
-                        }
+                        window.open(lesson.content_url, '_blank');
                       }
-                    } catch (error) {
-                      console.error('Error opening lesson content:', error);
-                      toast.error('Failed to open lesson content. Please try again.');
+                    } else if (lesson.content_type === 'text') {
+                      window.open(lesson.content_url, '_blank');
+                    } else if (lesson.content_type === 'pdf') {
+                      window.open(lesson.content_url, '_blank');
+                    } else {
+                      if (
+                        lesson.content_url.includes('youtube.com') ||
+                        lesson.content_url.includes('youtu.be')
+                      ) {
+                        setActiveVideoTitle(lesson.title);
+                        setActiveVideoUrl(lesson.content_url);
+                        setActiveVideoLessonId(lesson.id);
+                        setTimeout(() => {
+                          const videoElement = document.getElementById('embedded-video-player');
+                          if (videoElement) {
+                            videoElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          }
+                        }, 100);
+                      } else {
+                        window.open(lesson.content_url, '_blank');
+                      }
                     }
-                  }}
-                >
-                  <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-medium shrink-0">
-                    {index + 1}
-                  </div>
-                  <div className="flex items-center gap-2 flex-1">
-                    {getContentTypeIcon(lesson.content_type)}
-                    <div className="flex-1">
-                      <p className="font-medium">{lesson.title}</p>
-                      {lesson.description && (
-                        <p className="text-sm text-muted-foreground">{lesson.description}</p>
-                      )}
-                      <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                        <Clock className="w-3 h-3" />
-                        {lesson.duration_minutes} min
-                        {lesson.is_preview && (
-                          <span className="px-2 py-0.5 bg-primary/20 text-primary rounded-full">
-                            Preview
-                          </span>
+                  } catch (error) {
+                    console.error('Error opening lesson content:', error);
+                    toast.error('Failed to open lesson content. Please try again.');
+                  }
+                };
+
+                const handleMaterialClick = (
+                  event: React.MouseEvent<HTMLButtonElement>,
+                  material: LessonMaterial
+                ) => {
+                  event.stopPropagation();
+                  window.open(material.file_url, '_blank');
+                };
+
+                return (
+                  <div
+                    key={lesson.id}
+                    className={`flex items-center gap-4 p-4 border rounded-lg transition-colors hover:bg-muted/30 cursor-pointer ${
+                      activeVideoLessonId === lesson.id ? 'ring-2 ring-primary bg-primary/5' : ''
+                    } ${!lesson.content_url ? 'opacity-60' : ''}`}
+                    onClick={handleLessonClick}
+                  >
+                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-medium shrink-0">
+                      {index + 1}
+                    </div>
+                    <div className="flex items-center gap-2 flex-1">
+                      {getContentTypeIcon(lesson.content_type)}
+                      <div className="flex-1">
+                        <p className="font-medium">{lesson.title}</p>
+                        {lesson.description && (
+                          <p className="text-sm text-muted-foreground">{lesson.description}</p>
                         )}
+                        <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                          <Clock className="w-3 h-3" />
+                          {lesson.duration_minutes} min
+                          {lesson.is_preview && (
+                            <span className="px-2 py-0.5 bg-primary/20 text-primary rounded-full">
+                              Preview
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
+                    <div className="flex items-center gap-2">
+                      {lesson.content_url ? (
+                        <Play className="w-5 h-5 text-muted-foreground" />
+                      ) : (
+                        <Play className="w-5 h-5 text-muted-foreground/40" />
+                      )}
+                      {downloadableMaterial && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(event) => handleMaterialClick(event, downloadableMaterial)}
+                        >
+                          {downloadableMaterial.file_type === 'pdf'
+                            ? 'View material'
+                            : 'Listen'}
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                  {lesson.content_url ? (
-                    <Play className="w-5 h-5 text-muted-foreground" />
-                  ) : (
-                    <Play className="w-5 h-5 text-muted-foreground/40" />
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
             {lessons.length === 0 && (
               <p className="text-sm text-muted-foreground text-center py-4">
