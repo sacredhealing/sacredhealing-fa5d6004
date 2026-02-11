@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useAdminRole } from '@/hooks/useAdminRole';
 import { toast } from 'sonner';
 import { ReviewSection } from '@/components/reviews/ReviewSection';
 import WealthCourseUpsell from '@/components/courses/WealthCourseUpsell';
@@ -62,6 +63,7 @@ const CourseDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user, session } = useAuth();
+  const { isAdmin } = useAdminRole();
   const { t } = useTranslation();
   const [course, setCourse] = useState<Course | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
@@ -78,23 +80,29 @@ const CourseDetail: React.FC = () => {
         fetchEnrollment();
       }
     }
-  }, [id, user]);
+  }, [id, user, isAdmin]);
 
   useEffect(() => {
-    if (course && enrollment) {
+    // Fetch lessons if enrolled OR if admin (admins get full access)
+    if (course && (enrollment || isAdmin)) {
       fetchLessons();
     }
-  }, [course, enrollment]);
+  }, [course, enrollment, isAdmin]);
 
   const fetchCourse = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      // Admins can access unpublished courses
+      let query = supabase
         .from('courses')
         .select('*')
-        .eq('id', id)
-        .eq('is_published', true)
-        .single();
+        .eq('id', id);
+      
+      if (!isAdmin) {
+        query = query.eq('is_published', true);
+      }
+      
+      const { data, error } = await query.single();
 
       if (error) throw error;
       if (data) {
@@ -132,7 +140,8 @@ const CourseDetail: React.FC = () => {
   };
 
   const fetchLessons = async () => {
-    if (!course || !enrollment) return;
+    // Allow admins to access lessons without enrollment
+    if (!course || (!enrollment && !isAdmin)) return;
     try {
       const { data, error } = await supabase
         .from('lessons')
@@ -228,6 +237,8 @@ const CourseDetail: React.FC = () => {
     );
   }
 
+  // Admins get full access, otherwise check enrollment
+  const hasAccess = isAdmin || !!enrollment;
   const isEnrolled = !!enrollment;
   const progress = enrollment?.progress_percent || 0;
   const langInfo = getLanguageInfo(course.language || 'en');
@@ -248,7 +259,9 @@ const CourseDetail: React.FC = () => {
         <Card className="p-6">
           <div className="flex items-start gap-4 mb-4">
             <div className="w-16 h-16 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
-              {isEnrolled ? (
+              {isAdmin ? (
+                <Award className="w-8 h-8 text-primary" />
+              ) : isEnrolled ? (
                 progress === 100 ? (
                   <CheckCircle className="w-8 h-8 text-secondary" />
                 ) : (
@@ -290,8 +303,18 @@ const CourseDetail: React.FC = () => {
             </div>
           </div>
 
+          {/* Admin Badge */}
+          {isAdmin && (
+            <div className="mt-4 p-4 bg-primary/10 rounded-lg border border-primary/20">
+              <div className="flex items-center gap-2">
+                <Award className="w-5 h-5 text-primary" />
+                <span className="text-sm font-medium text-primary">Admin Access - Full Course Access Granted</span>
+              </div>
+            </div>
+          )}
+
           {/* Enrollment Status */}
-          {isEnrolled && (
+          {isEnrolled && !isAdmin && (
             <div className="mt-4 p-4 bg-primary/10 rounded-lg">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium">Your Progress</span>
@@ -306,8 +329,8 @@ const CourseDetail: React.FC = () => {
             </div>
           )}
 
-          {/* Enrollment Actions */}
-          {!isEnrolled && (
+          {/* Enrollment Actions - Only show if not admin and not enrolled */}
+          {!hasAccess && (
             <div className="mt-6 space-y-4">
               <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
                 <div>
@@ -370,8 +393,8 @@ const CourseDetail: React.FC = () => {
           )}
         </Card>
 
-        {/* Lessons Section */}
-        {isEnrolled && lessons.length > 0 && (
+        {/* Lessons Section - Show for admins or enrolled users */}
+        {hasAccess && lessons.length > 0 && (
           <Card className="p-6">
             <h2 className="text-xl font-semibold mb-4">Course Lessons</h2>
             <div className="space-y-3">
