@@ -73,6 +73,3 @@ const Explore = () => {
 };
 
 export default Explore;
-
-// FINISHED: PUSH TO GIT
-// git add . && git commit -m "FIX: Reverted Library layout to original theme and only removed redundant cards" && git push
