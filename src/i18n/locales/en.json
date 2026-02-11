@@ -396,6 +396,12 @@
   },
   "dashboard": {
     "greeting": "Good morning",
+    "headerGreetingMorning": "Good morning",
+    "headerGreetingMidday": "Good afternoon",
+    "headerGreetingEvening": "Good evening",
+    "mantra": "Mantra",
+    "soul": "Soul",
+    "meditate": "Meditate",
     "sacredSoul": "Sacred Soul",
     "streak": "day streak",
     "balance": "Your SHC Balance",

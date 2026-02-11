@@ -53,11 +53,15 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
 
   const QUICK_ACTIONS = [
-    { id: "mantra", title: "Mantra", icon: Sparkles, route: "/mantras" },
-    { id: "soul", title: "Soul", icon: Heart, route: "/creative-soul" },
-    { id: "meditate", title: "Meditate", icon: Play, route: "/meditations" },
+    { id: "mantra", titleKey: "dashboard.mantra", icon: Sparkles, route: "/mantras" },
+    { id: "soul", titleKey: "dashboard.soul", icon: Heart, route: "/creative-soul" },
+    { id: "meditate", titleKey: "dashboard.meditate", icon: Play, route: "/meditations" },
   ];
   const { profile: userProfile } = useProfile();
+
+  const currentHour = new Date().getHours();
+  const timePhase: 'morning' | 'midday' | 'evening' = currentHour >= 5 && currentHour < 12 ? 'morning' : currentHour >= 12 && currentHour < 17 ? 'midday' : 'evening';
+  const greetingKey = timePhase === 'morning' ? 'dashboard.headerGreetingMorning' : timePhase === 'midday' ? 'dashboard.headerGreetingMidday' : 'dashboard.headerGreetingEvening';
   const { guidance, isLoading, lastCompleted, completeSlot, streakDays, hasCompletedAllThree } = useDailyGuidance();
   const { completeMorning, completeMidday, completeEvening } = useDailyJourney();
   const { isDayClosed, markDayClosed } = useDayClosed();
@@ -155,7 +159,7 @@ const Dashboard: React.FC = () => {
         <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
           <SacredFlame />
           <div className="min-w-0 flex-1">
-            <p className="text-xs sm:text-sm text-muted-foreground">{t('dashboard.greeting')}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">{t(greetingKey)}</p>
             <h1 className="text-lg sm:text-xl font-heading font-bold text-foreground truncate">
               {userProfile?.full_name || t('dashboard.sacredSoul')}
               <span className="ml-1 text-secondary">✨</span>
@@ -222,7 +226,7 @@ const Dashboard: React.FC = () => {
                         <div className="relative inline-block mb-1.5 sm:mb-2">
                           <action.icon className={`w-7 h-7 sm:w-8 sm:h-8 ${iconColors[index]} mx-auto group-hover:scale-105 transition-transform duration-300`} style={{ filter: `drop-shadow(0 0 5px ${index === 0 ? 'rgba(167,139,250,0.35)' : index === 1 ? 'rgba(0,242,254,0.35)' : 'rgba(255,193,7,0.35)'})` }} />
                         </div>
-                        <h3 className="text-xs sm:text-sm font-heading font-bold text-white">{action.title}</h3>
+                        <h3 className="text-xs sm:text-sm font-heading font-bold text-white">{t(action.titleKey)}</h3>
                       </div>
                     </Card>
                   </button>

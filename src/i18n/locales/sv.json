@@ -280,6 +280,12 @@
   },
   "dashboard": {
     "greeting": "God morgon",
+    "headerGreetingMorning": "God morgon",
+    "headerGreetingMidday": "God eftermiddag",
+    "headerGreetingEvening": "God kväll",
+    "mantra": "Mantra",
+    "soul": "Själ",
+    "meditate": "Meditera",
     "sacredSoul": "Helig Själ",
     "streak": "dagars svit",
     "balance": "Ditt SHC Saldo",
@@ -374,6 +380,18 @@
     "quickieResetDesc": "2 min andningsövning"
   },
   "guidance": {
+    "morningIntegration": "Morgonen har öppnat ett utrymme inom dig. Låt dagen avslöja vad den rör.",
+    "morningIntegrationSubtext": "Lägg märke till vad som känns mjukare än vanligt.",
+    "middayIntegration": "Andetaget omorganiserar fortfarande din inre rytm. Rör dig försiktigt en stund.",
+    "middayIntegrationSubtext": "Var uppmärksam på dina reaktioner idag.",
+    "eveningIntegration": "Ditt sinne lägger sig under ytan. Sömnen kommer att fortsätta processen.",
+    "eveningIntegrationSubtext": "Imorgon kan börja annorlunda.",
+    "allCompleteHero": "Inget mer att uppnå idag. Lev bara i det som har förändrats.",
+    "allCompleteButton": "Stäng för nu",
+    "allCompleteSubtext": "Vi träffas igen imorgon.",
+    "integrationButtonMorning": "Steg ut i dagen",
+    "integrationButtonMidday": "Återvänd till din flöde",
+    "integrationButtonEvening": "Gå in i vila",
     "morningCompletion": {
       "0": "Du har förenat din morgon. Bär denna klarhet ut i världen.",
       "1": "Din morgon är centrerad. Låt den friden följa med dig.",

@@ -280,6 +280,12 @@
   },
   "dashboard": {
     "greeting": "God morgen",
+    "headerGreetingMorning": "God morgen",
+    "headerGreetingMidday": "God ettermiddag",
+    "headerGreetingEvening": "God kveld",
+    "mantra": "Mantra",
+    "soul": "Sjel",
+    "meditate": "Mediter",
     "sacredSoul": "Hellige sjel",
     "streak": "dagers rekke",
     "balance": "Din SHC-saldo",
@@ -364,6 +370,18 @@
     "quickieResetDesc": "2 min pustøvelse"
   },
   "guidance": {
+    "morningIntegration": "Morgenen har åpnet et rom i deg. La dagen avsløre det den berører.",
+    "morningIntegrationSubtext": "Legg merke til hva som føles mykere enn vanlig.",
+    "middayIntegration": "Pusten omorganiserer fortsatt din indre rytme. Beveg deg forsiktig en stund.",
+    "middayIntegrationSubtext": "Vær oppmerksom på reaksjonene dine i dag.",
+    "eveningIntegration": "Sinnet ditt legger seg under overflaten. Søvnen vil fortsette prosessen.",
+    "eveningIntegrationSubtext": "I morgen kan begynne annerledes.",
+    "allCompleteHero": "Ingenting mer å oppnå i dag. Bare lev i det som har forandret seg.",
+    "allCompleteButton": "Lukk for nå",
+    "allCompleteSubtext": "Vi møtes igjen i morgen.",
+    "integrationButtonMorning": "Gå ut i dagen",
+    "integrationButtonMidday": "Tilbake til flyten",
+    "integrationButtonEvening": "Gå inn i hvile",
     "morningCompletion": {
       "0": "Du har justert din morgen. Bær denne klarheten ut i verden.",
       "1": "Morgenen din er sentrert. La den freden bevege seg med deg.",

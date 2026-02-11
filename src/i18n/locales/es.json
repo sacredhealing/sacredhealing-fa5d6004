@@ -429,6 +429,12 @@
   },
   "dashboard": {
     "greeting": "Buenos días",
+    "headerGreetingMorning": "Buenos días",
+    "headerGreetingMidday": "Buenas tardes",
+    "headerGreetingEvening": "Buenas noches",
+    "mantra": "Mantra",
+    "soul": "Alma",
+    "meditate": "Meditar",
     "sacredSoul": "Alma Sagrada",
     "streak": "días de racha",
     "balance": "Tu Saldo SHC",
@@ -515,6 +521,18 @@
     "quickieResetDesc": "Ejercicio de respiración 2 min"
   },
   "guidance": {
+    "morningIntegration": "La mañana ha abierto un espacio en ti. Deja que el día revele lo que toca.",
+    "morningIntegrationSubtext": "Nota lo que se siente más suave de lo habitual.",
+    "middayIntegration": "La respiración sigue reorganizando tu ritmo interior. Muévete con suavidad un rato.",
+    "middayIntegrationSubtext": "Presta atención a tus reacciones hoy.",
+    "eveningIntegration": "Tu mente se asienta bajo la superficie. El sueño continuará el proceso.",
+    "eveningIntegrationSubtext": "Mañana puede comenzar de otra manera.",
+    "allCompleteHero": "Nada que lograr ya hoy. Solo vive dentro de lo que ha cambiado.",
+    "allCompleteButton": "Cerrar por ahora",
+    "allCompleteSubtext": "Nos encontraremos de nuevo mañana.",
+    "integrationButtonMorning": "Entra en el día",
+    "integrationButtonMidday": "Vuelve a tu flujo",
+    "integrationButtonEvening": "Entra en descanso",
     "morningCompletion": {
       "0": "Has alineado tu mañana. Lleva esa claridad al mundo.",
       "1": "Tu mañana está centrada. Deja que esa paz te acompañe.",
