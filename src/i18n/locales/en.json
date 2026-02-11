@@ -468,6 +468,35 @@
     "progressAchievements": "Progress & achievements",
     "progressAchievementsDesc": "Timeline, streaks, achievements and share",
     "achievements": "Achievements",
+    "positiveMe": "Positive Me",
+    "energyCollected": "Energy Collected",
+    "momentsOfPresence": "Moments of Presence",
+    "timeWithYourself": "Time With Yourself",
+    "journeyTimeline": "Your Journey Timeline",
+    "journeyTimelineDefaultMessage": "Your soul seeks calm. Try 'Heart-Opening Breath' next.",
+    "continueNextStep": "Continue your next step",
+    "dailyPath": {
+      "healing": {
+        "message": "Your soul felt heavy today. Would you like to try the Heart-Opening Breath tomorrow?",
+        "practiceTitle": "Heart-Opening Breath"
+      },
+      "anxiety": {
+        "message": "Your soul felt heavy today. Would you like to try the Heart-Opening Breath tomorrow?",
+        "practiceTitle": "Heart-Opening Breath"
+      },
+      "focus": {
+        "message": "You sought clarity today. Would you like to energize with the Morning Solar Breath tomorrow?",
+        "practiceTitle": "Morning Solar Breath"
+      },
+      "peace": {
+        "message": "You sought tranquility today. Continue your journey with a gentle meditation tomorrow.",
+        "practiceTitle": "Peaceful Morning Meditation"
+      },
+      "release": {
+        "message": "You let go of what no longer serves you. Tomorrow, try a grounding breathwork session.",
+        "practiceTitle": "Grounding Breath"
+      }
+    },
     "continuationAnchorMorning": "Tonight, you'll close the day differently.",
     "continuationAnchorMidday": "This evening will feel calmer than usual.",
     "continuationAnchorEvening": "Tomorrow morning will begin softer.",
@@ -1789,5 +1818,49 @@
     "creativeSoulDesc": "Create with AI",
     "vishwanandaDaily": "Today's inspiration & wisdom",
     "viewDaily": "View daily quote"
+  },
+  "achievements": {
+    "unlocked": "Achievement Unlocked!",
+    "share": "Share Achievement",
+    "first-meditation": {
+      "name": "First Steps",
+      "description": "Complete your first meditation"
+    },
+    "streak-3": {
+      "name": "Building Momentum",
+      "description": "Maintain a 3-day streak"
+    },
+    "streak-7": {
+      "name": "Week Warrior",
+      "description": "Maintain a 7-day streak"
+    },
+    "streak-30": {
+      "name": "Monthly Master",
+      "description": "Maintain a 30-day streak"
+    },
+    "sessions-10": {
+      "name": "Dedicated Practitioner",
+      "description": "Complete 10 sessions"
+    },
+    "sessions-50": {
+      "name": "Committed Seeker",
+      "description": "Complete 50 sessions"
+    },
+    "sessions-100": {
+      "name": "Enlightened Soul",
+      "description": "Complete 100 sessions"
+    },
+    "first-share": {
+      "name": "Social Butterfly",
+      "description": "Share your progress"
+    },
+    "first-referral": {
+      "name": "Community Builder",
+      "description": "Refer your first friend"
+    },
+    "early-adopter": {
+      "name": "Early Adopter",
+      "description": "Joined during launch period"
+    }
   }
 }

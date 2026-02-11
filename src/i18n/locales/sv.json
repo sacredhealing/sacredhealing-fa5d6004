@@ -352,6 +352,35 @@
     "progressAchievements": "Framsteg och prestationer",
     "progressAchievementsDesc": "Tidslinje, svit, prestationer och dela",
     "achievements": "Prestationer",
+    "positiveMe": "Positivt Jag",
+    "energyCollected": "Insamlad energi",
+    "momentsOfPresence": "Ögonblick av närvaro",
+    "timeWithYourself": "Tid med dig själv",
+    "journeyTimeline": "Din resa tidslinje",
+    "journeyTimelineDefaultMessage": "Din själ söker lugn. Prova 'Hjärtöppnande andning' härnäst.",
+    "continueNextStep": "Fortsätt ditt nästa steg",
+    "dailyPath": {
+      "healing": {
+        "message": "Din själ kändes tung idag. Vill du prova Hjärtöppnande andning imorgon?",
+        "practiceTitle": "Hjärtöppnande andning"
+      },
+      "anxiety": {
+        "message": "Din själ kändes tung idag. Vill du prova Hjärtöppnande andning imorgon?",
+        "practiceTitle": "Hjärtöppnande andning"
+      },
+      "focus": {
+        "message": "Du sökte klarhet idag. Vill du energisera med Morgonsolens andning imorgon?",
+        "practiceTitle": "Morgonsolens andning"
+      },
+      "peace": {
+        "message": "Du sökte lugn idag. Fortsätt din resa med en mjuk meditation imorgon.",
+        "practiceTitle": "Fridfull morgonmeditation"
+      },
+      "release": {
+        "message": "Du släppte det som inte längre tjänar dig. Imorgon, prova en jordande andningssession.",
+        "practiceTitle": "Jordande andning"
+      }
+    },
     "continuationAnchorMorning": "I kväll kommer du att avsluta dagen annorlunda.",
     "continuationAnchorMidday": "Kvällen kommer att kännas lugnare än vanligt.",
     "continuationAnchorEvening": "Imorgon bitti börjar mjukare.",
@@ -1735,5 +1764,49 @@
     "coursesEnrolled": "Inskrivna Kurser",
     "featuredPrograms": "Utvalda Program",
     "viewAll": "Visa Alla"
+  },
+  "achievements": {
+    "unlocked": "Prestation upplåst!",
+    "share": "Dela prestation",
+    "first-meditation": {
+      "name": "Första steg",
+      "description": "Slutför din första meditation"
+    },
+    "streak-3": {
+      "name": "Bygger momentum",
+      "description": "Behåll en 3-dagars svit"
+    },
+    "streak-7": {
+      "name": "Veckokrigare",
+      "description": "Behåll en 7-dagars svit"
+    },
+    "streak-30": {
+      "name": "Månadsmästare",
+      "description": "Behåll en 30-dagars svit"
+    },
+    "sessions-10": {
+      "name": "Hängiven utövare",
+      "description": "Slutför 10 sessioner"
+    },
+    "sessions-50": {
+      "name": "Engagerad sökare",
+      "description": "Slutför 50 sessioner"
+    },
+    "sessions-100": {
+      "name": "Upplyst själ",
+      "description": "Slutför 100 sessioner"
+    },
+    "first-share": {
+      "name": "Social fjäril",
+      "description": "Dela din framgång"
+    },
+    "first-referral": {
+      "name": "Samhällsbyggare",
+      "description": "Hänvisa din första vän"
+    },
+    "early-adopter": {
+      "name": "Tidig adoptör",
+      "description": "Gick med under lanseringsperioden"
+    }
   }
 }

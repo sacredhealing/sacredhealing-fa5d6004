@@ -342,6 +342,35 @@
     "progressAchievements": "Fremgang og prestasjoner",
     "progressAchievementsDesc": "Tidslinje, strik, prestasjoner og del",
     "achievements": "Prestasjoner",
+    "positiveMe": "Positiv Meg",
+    "energyCollected": "Innsamlet energi",
+    "momentsOfPresence": "Øyeblikk av nærvær",
+    "timeWithYourself": "Tid med deg selv",
+    "journeyTimeline": "Din reise tidslinje",
+    "journeyTimelineDefaultMessage": "Din sjel søker ro. Prøv 'Hjerteåpnende pust' neste.",
+    "continueNextStep": "Fortsett ditt neste steg",
+    "dailyPath": {
+      "healing": {
+        "message": "Din sjel føltes tung i dag. Vil du prøve Hjerteåpnende pust i morgen?",
+        "practiceTitle": "Hjerteåpnende pust"
+      },
+      "anxiety": {
+        "message": "Din sjel føltes tung i dag. Vil du prøve Hjerteåpnende pust i morgen?",
+        "practiceTitle": "Hjerteåpnende pust"
+      },
+      "focus": {
+        "message": "Du søkte klarhet i dag. Vil du energisere med Morgensolens pust i morgen?",
+        "practiceTitle": "Morgensolens pust"
+      },
+      "peace": {
+        "message": "Du søkte ro i dag. Fortsett din reise med en myk meditasjon i morgen.",
+        "practiceTitle": "Fredelig morgenmeditasjon"
+      },
+      "release": {
+        "message": "Du slapp det som ikke lenger tjener deg. I morgen, prøv en jordende pustøvelse.",
+        "practiceTitle": "Jordende pust"
+      }
+    },
     "continuationAnchorMorning": "I kveld vil du lukke dagen annerledes.",
     "continuationAnchorMidday": "Kvelden vil føles roligere enn vanlig.",
     "continuationAnchorEvening": "I morgen tidlig vil begynne mykere.",
@@ -1549,5 +1578,49 @@
     "featuredPrograms": "Utvalgte programmer",
     "featuredPlaylists": "Utvalgte spillelister",
     "viewAll": "Se alle"
+  },
+  "achievements": {
+    "unlocked": "Prestasjon låst opp!",
+    "share": "Del prestasjon",
+    "first-meditation": {
+      "name": "Første steg",
+      "description": "Fullfør din første meditasjon"
+    },
+    "streak-3": {
+      "name": "Bygger momentum",
+      "description": "Behold en 3-dagers rekke"
+    },
+    "streak-7": {
+      "name": "Uke kriger",
+      "description": "Behold en 7-dagers rekke"
+    },
+    "streak-30": {
+      "name": "Månedsmester",
+      "description": "Behold en 30-dagers rekke"
+    },
+    "sessions-10": {
+      "name": "Hengiven utøver",
+      "description": "Fullfør 10 økter"
+    },
+    "sessions-50": {
+      "name": "Engasjert søker",
+      "description": "Fullfør 50 økter"
+    },
+    "sessions-100": {
+      "name": "Opplyst sjel",
+      "description": "Fullfør 100 økter"
+    },
+    "first-share": {
+      "name": "Sosial sommerfugl",
+      "description": "Del din fremgang"
+    },
+    "first-referral": {
+      "name": "Samfunnsbygger",
+      "description": "Henvis din første venn"
+    },
+    "early-adopter": {
+      "name": "Tidlig adopter",
+      "description": "Ble med under lanseringsperioden"
+    }
   }
 }

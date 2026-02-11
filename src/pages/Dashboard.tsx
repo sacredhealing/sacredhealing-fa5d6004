@@ -27,6 +27,7 @@ import { SectionCollapse } from '@/components/ui/SectionCollapse';
 import { Card } from '@/components/ui/card';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useSocialShare } from '@/hooks/useSocialShare';
+import { translateAchievement } from '@/lib/translateAchievement';
 import type { DailyGuidance } from '@/hooks/useDailyGuidance';
 import type { SessionLike } from '@/hooks/useDashboardAutostart';
 
@@ -287,11 +288,12 @@ const Dashboard: React.FC = () => {
                     <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                       {achievements.slice(0, 6).map((achievement) => {
                         const progress = getAchievementProgress(achievement);
+                        const translated = translateAchievement(achievement.slug, t, achievement.name, achievement.description || '');
                         return (
                           <div key={achievement.id} className="flex-shrink-0">
                             <AchievementBadge
-                              name={achievement.name}
-                              description={achievement.description || ''}
+                              name={translated.name}
+                              description={translated.description}
                               iconName={achievement.icon_name}
                               badgeColor={achievement.badge_color}
                               unlocked={progress.unlocked}

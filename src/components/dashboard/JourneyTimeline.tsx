@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useDailyPath } from '@/hooks/useDailyPath';
 import { useDailyGuidance } from '@/hooks/useDailyGuidance';
+import { useTranslation } from 'react-i18next';
 
 const timelineNodes = [
   { id: 1, completed: true, icon: Sun },
@@ -19,8 +20,9 @@ export const JourneyTimeline: React.FC = () => {
   const navigate = useNavigate();
   const { suggestion } = useDailyPath();
   const { guidance } = useDailyGuidance();
+  const { t } = useTranslation();
 
-  const soulMessage = suggestion?.message || "Your soul seeks calm. Try 'Heart-Opening Breath' next.";
+  const soulMessage = suggestion?.message || t('dashboard.journeyTimelineDefaultMessage');
   const nextStepRoute = guidance?.session_id || suggestion?.practiceRoute || '/meditations';
 
   return (
@@ -31,7 +33,7 @@ export const JourneyTimeline: React.FC = () => {
           <Compass className="w-5 h-5 text-primary" />
         </div>
         <h3 className="font-heading font-semibold text-foreground">
-          Your Journey Timeline
+          {t('dashboard.journeyTimeline')}
         </h3>
       </div>
 
@@ -51,7 +53,7 @@ export const JourneyTimeline: React.FC = () => {
         onClick={() => navigate(nextStepRoute)}
         className="w-full gap-2 mb-5 bg-[#00F2FE] hover:bg-[#00D4E0] text-[#000000] font-extrabold"
       >
-        Continue your next step
+        {t('dashboard.continueNextStep')}
         <ArrowRight className="w-4 h-4" />
       </Button>
 

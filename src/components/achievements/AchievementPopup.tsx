@@ -3,9 +3,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AchievementBadge } from "./AchievementBadge";
+import { useTranslation } from "react-i18next";
+import { translateAchievement } from "@/lib/translateAchievement";
 
 interface Achievement {
   id: string;
+  slug?: string;
   name: string;
   description: string;
   icon_name: string;
@@ -24,6 +27,7 @@ export const AchievementPopup = ({
   onClose,
   onShare 
 }: AchievementPopupProps) => {
+  const { t } = useTranslation();
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -48,6 +52,10 @@ export const AchievementPopup = ({
       onShare(achievement);
     }
   };
+
+  const translatedAchievement = achievement && achievement.slug
+    ? translateAchievement(achievement.slug, t, achievement.name, achievement.description || '')
+    : { name: achievement?.name || '', description: achievement?.description || '' };
 
   return (
     <AnimatePresence>
@@ -100,7 +108,7 @@ export const AchievementPopup = ({
                   animate={{ opacity: 1 }}
                   className="text-primary font-semibold text-sm uppercase tracking-wider"
                 >
-                  Achievement Unlocked!
+                  {t('achievements.unlocked')}
                 </motion.p>
               </div>
 
@@ -111,8 +119,8 @@ export const AchievementPopup = ({
                   transition={{ type: "spring", damping: 10, delay: 0.2 }}
                 >
                   <AchievementBadge
-                    name={achievement.name}
-                    description={achievement.description}
+                    name={translatedAchievement.name}
+                    description={translatedAchievement.description}
                     iconName={achievement.icon_name}
                     badgeColor={achievement.badge_color}
                     shcReward={achievement.shc_reward}
@@ -136,7 +144,7 @@ export const AchievementPopup = ({
                     className="gap-2"
                   >
                     <Share2 className="w-4 h-4" />
-                    Share Achievement
+                    {t('achievements.share')}
                   </Button>
                 </motion.div>
               )}

@@ -493,6 +493,35 @@
     "progressAchievements": "Progreso y logros",
     "progressAchievementsDesc": "Línea de tiempo, rachas, logros y compartir",
     "achievements": "Logros",
+    "positiveMe": "Yo Positivo",
+    "energyCollected": "Energía Recolectada",
+    "momentsOfPresence": "Momentos de Presencia",
+    "timeWithYourself": "Tiempo Contigo Mismo",
+    "journeyTimeline": "Tu Línea de Tiempo del Viaje",
+    "journeyTimelineDefaultMessage": "Tu alma busca calma. Prueba 'Respiración de Apertura del Corazón' a continuación.",
+    "continueNextStep": "Continúa tu siguiente paso",
+    "dailyPath": {
+      "healing": {
+        "message": "Tu alma se sintió pesada hoy. ¿Te gustaría probar la Respiración de Apertura del Corazón mañana?",
+        "practiceTitle": "Respiración de Apertura del Corazón"
+      },
+      "anxiety": {
+        "message": "Tu alma se sintió pesada hoy. ¿Te gustaría probar la Respiración de Apertura del Corazón mañana?",
+        "practiceTitle": "Respiración de Apertura del Corazón"
+      },
+      "focus": {
+        "message": "Buscaste claridad hoy. ¿Te gustaría energizarte con la Respiración Solar Matutina mañana?",
+        "practiceTitle": "Respiración Solar Matutina"
+      },
+      "peace": {
+        "message": "Buscaste tranquilidad hoy. Continúa tu viaje con una meditación suave mañana.",
+        "practiceTitle": "Meditación Matutina Pacífica"
+      },
+      "release": {
+        "message": "Dejaste ir lo que ya no te sirve. Mañana, prueba una sesión de respiración de conexión a tierra.",
+        "practiceTitle": "Respiración de Conexión a Tierra"
+      }
+    },
     "continuationAnchorMorning": "Esta noche cerrarás el día de otra manera.",
     "continuationAnchorMidday": "Esta noche se sentirá más tranquila de lo habitual.",
     "continuationAnchorEvening": "Mañana por la mañana comenzará más suave.",
@@ -1640,5 +1669,49 @@
     "coursesEnrolled": "Cursos Inscritos",
     "featuredPrograms": "Programas Destacados",
     "viewAll": "Ver Todo"
+  },
+  "achievements": {
+    "unlocked": "¡Logro Desbloqueado!",
+    "share": "Compartir Logro",
+    "first-meditation": {
+      "name": "Primeros Pasos",
+      "description": "Completa tu primera meditación"
+    },
+    "streak-3": {
+      "name": "Construyendo Momentum",
+      "description": "Mantén una racha de 3 días"
+    },
+    "streak-7": {
+      "name": "Guerrero Semanal",
+      "description": "Mantén una racha de 7 días"
+    },
+    "streak-30": {
+      "name": "Maestro Mensual",
+      "description": "Mantén una racha de 30 días"
+    },
+    "sessions-10": {
+      "name": "Practicante Dedicado",
+      "description": "Completa 10 sesiones"
+    },
+    "sessions-50": {
+      "name": "Buscador Comprometido",
+      "description": "Completa 50 sesiones"
+    },
+    "sessions-100": {
+      "name": "Alma Iluminada",
+      "description": "Completa 100 sesiones"
+    },
+    "first-share": {
+      "name": "Mariposa Social",
+      "description": "Comparte tu progreso"
+    },
+    "first-referral": {
+      "name": "Constructor de Comunidad",
+      "description": "Refiere a tu primer amigo"
+    },
+    "early-adopter": {
+      "name": "Adoptante Temprano",
+      "description": "Se unió durante el período de lanzamiento"
+    }
   }
 }

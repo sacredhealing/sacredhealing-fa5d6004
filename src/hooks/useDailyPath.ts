@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './useAuth';
+import { useTranslation } from 'react-i18next';
 import type { IntentionType } from '@/components/meditation/IntentionThreshold';
 
 export interface DailyPathSuggestion {
@@ -12,39 +13,30 @@ export interface DailyPathSuggestion {
 
 const STORAGE_KEY = 'sacred-healing-daily-path';
 
-// Suggestion mapping based on intention
-const INTENTION_SUGGESTIONS: Record<IntentionType, { message: string; practiceTitle: string; practiceRoute: string }> = {
-  healing: {
-    message: 'Your soul felt heavy today. Would you like to try the Heart-Opening Breath tomorrow?',
-    practiceTitle: 'Heart-Opening Breath',
-    practiceRoute: '/breathing',
-  },
-  anxiety: {
-    message: 'Your soul felt heavy today. Would you like to try the Heart-Opening Breath tomorrow?',
-    practiceTitle: 'Heart-Opening Breath',
-    practiceRoute: '/breathing',
-  },
-  focus: {
-    message: 'You sought clarity today. Would you like to energize with the Morning Solar Breath tomorrow?',
-    practiceTitle: 'Morning Solar Breath',
-    practiceRoute: '/breathing',
-  },
-  peace: {
-    message: 'You sought tranquility today. Continue your journey with a gentle meditation tomorrow.',
-    practiceTitle: 'Peaceful Morning Meditation',
-    practiceRoute: '/meditations',
-  },
-  release: {
-    message: 'You let go of what no longer serves you. Tomorrow, try a grounding breathwork session.',
-    practiceTitle: 'Grounding Breath',
-    practiceRoute: '/breathing',
-  },
-};
-
 export const useDailyPath = () => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [suggestion, setSuggestion] = useState<DailyPathSuggestion | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Get translated suggestion based on intention
+  const getSuggestionForIntention = useCallback((intention: IntentionType) => {
+    const messageKey = `dashboard.dailyPath.${intention}.message`;
+    const practiceTitleKey = `dashboard.dailyPath.${intention}.practiceTitle`;
+    const practiceRouteMap: Record<IntentionType, string> = {
+      healing: '/breathing',
+      anxiety: '/breathing',
+      focus: '/breathing',
+      peace: '/meditations',
+      release: '/breathing',
+    };
+
+    return {
+      message: t(messageKey),
+      practiceTitle: t(practiceTitleKey),
+      practiceRoute: practiceRouteMap[intention] || '/meditations',
+    };
+  }, [t]);
 
   // Load suggestion from localStorage
   useEffect(() => {
@@ -63,7 +55,13 @@ export const useDailyPath = () => {
         const today = new Date().toDateString();
         
         if (suggestionDate === today) {
-          setSuggestion(parsed);
+          // Translate the stored suggestion based on current language
+          const translated = getSuggestionForIntention(parsed.intention);
+          setSuggestion({
+            ...parsed,
+            message: translated.message,
+            practiceTitle: translated.practiceTitle,
+          });
         } else {
           // Clear stale suggestions
           localStorage.removeItem(`${STORAGE_KEY}-${user.id}`);
@@ -75,13 +73,13 @@ export const useDailyPath = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, getSuggestionForIntention]);
 
   // Save a new suggestion based on intention
   const saveSuggestion = useCallback((intention: IntentionType) => {
     if (!user) return;
 
-    const suggestionConfig = INTENTION_SUGGESTIONS[intention];
+    const suggestionConfig = getSuggestionForIntention(intention);
     if (!suggestionConfig) return;
 
     const newSuggestion: DailyPathSuggestion = {
@@ -98,7 +96,7 @@ export const useDailyPath = () => {
     } catch (error) {
       console.error('Error saving daily path:', error);
     }
-  }, [user]);
+  }, [user, getSuggestionForIntention]);
 
   // Clear the suggestion (e.g., when user follows the suggestion)
   const clearSuggestion = useCallback(() => {
@@ -111,11 +109,6 @@ export const useDailyPath = () => {
       console.error('Error clearing daily path:', error);
     }
   }, [user]);
-
-  // Get the suggestion config for an intention (for preview)
-  const getSuggestionForIntention = useCallback((intention: IntentionType) => {
-    return INTENTION_SUGGESTIONS[intention] || null;
-  }, []);
 
   return {
     suggestion,

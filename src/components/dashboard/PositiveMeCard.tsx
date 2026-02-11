@@ -4,6 +4,7 @@ import { TrendingUp, Clock, Sparkles, Heart } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { useSHC } from '@/contexts/SHCContext';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
+import { useTranslation } from 'react-i18next';
 
 interface StatItemProps {
   icon: React.ElementType;
@@ -32,6 +33,7 @@ const StatItem: React.FC<StatItemProps> = ({ icon: Icon, label, value, color, de
 
 export const PositiveMeCard: React.FC = () => {
   const { balance } = useSHC();
+  const { t } = useTranslation();
 
   return (
     <Card className="glass-card p-5 h-full">
@@ -41,7 +43,7 @@ export const PositiveMeCard: React.FC = () => {
           <TrendingUp className="w-5 h-5 text-accent" />
         </div>
         <h3 className="font-heading font-semibold text-foreground">
-          Positive Me
+          {t('dashboard.positiveMe')}
         </h3>
       </div>
 
@@ -49,7 +51,7 @@ export const PositiveMeCard: React.FC = () => {
       <div className="space-y-4">
         <StatItem
           icon={Sparkles}
-          label="Energy Collected"
+          label={t('dashboard.energyCollected')}
           value={
             <span className="flex items-baseline gap-1">
               <AnimatedCounter value={balance?.balance ?? 0} className="text-sm font-semibold" />
@@ -62,7 +64,7 @@ export const PositiveMeCard: React.FC = () => {
 
         <StatItem
           icon={Heart}
-          label="Moments of Presence"
+          label={t('dashboard.momentsOfPresence')}
           value="12"
           color="bg-rose-500/20 text-rose-400"
           delay={0.1}
@@ -70,7 +72,7 @@ export const PositiveMeCard: React.FC = () => {
 
         <StatItem
           icon={Clock}
-          label="Time With Yourself"
+          label={t('dashboard.timeWithYourself')}
           value="145 min"
           color="bg-secondary/20 text-secondary"
           delay={0.2}
