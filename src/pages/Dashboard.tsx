@@ -191,9 +191,9 @@ const Dashboard: React.FC = () => {
             )}
           </div>
 
-          {/* Quick Actions Section */}
-          <div className="mb-4 sm:mb-6 animate-slide-up">
-            <div className="grid grid-cols-3 gap-3 sm:gap-4">
+          {/* Quick Actions Section — compact, visually light, subtle glow */}
+          <div className="mb-4 sm:mb-5 animate-slide-up">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
               {QUICK_ACTIONS.map((action, index) => {
                 const gradients = [
                   'bg-gradient-to-br from-purple-900/40 via-secondary/30 to-purple-800/40',
@@ -201,9 +201,9 @@ const Dashboard: React.FC = () => {
                   'bg-gradient-to-br from-amber-500/30 via-gold/20 to-amber-400/30',
                 ];
                 const glows = [
-                  'shadow-[0_0_20px_rgba(167,139,250,0.3)] hover:shadow-[0_0_30px_rgba(167,139,250,0.5)]',
-                  'shadow-[0_0_20px_rgba(0,242,254,0.3)] hover:shadow-[0_0_30px_rgba(0,242,254,0.5)]',
-                  'shadow-[0_0_20px_rgba(255,193,7,0.3)] hover:shadow-[0_0_30px_rgba(255,193,7,0.5)]',
+                  'shadow-[0_0_10px_rgba(167,139,250,0.16)] hover:shadow-[0_0_14px_rgba(167,139,250,0.22)]',
+                  'shadow-[0_0_10px_rgba(0,242,254,0.16)] hover:shadow-[0_0_14px_rgba(0,242,254,0.22)]',
+                  'shadow-[0_0_10px_rgba(255,193,7,0.16)] hover:shadow-[0_0_14px_rgba(255,193,7,0.22)]',
                 ];
                 const iconColors = [
                   'text-purple-300',
@@ -216,13 +216,13 @@ const Dashboard: React.FC = () => {
                     onClick={() => navigate(action.route)}
                     className="group relative"
                   >
-                    <Card className={`glass-card relative overflow-hidden p-4 sm:p-5 h-full ${gradients[index]} border border-white/10 hover:border-white/20 transition-all duration-300 ${glows[index]}`}>
+                    <Card className={`glass-card relative overflow-hidden p-2.5 sm:p-3 h-full min-h-0 ${gradients[index]} border border-white/10 hover:border-white/20 transition-all duration-300 ${glows[index]}`}>
                       <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       <div className="relative z-10 text-center">
-                        <div className="relative inline-block mb-3">
-                          <action.icon className={`w-8 h-8 sm:w-10 sm:h-10 ${iconColors[index]} mx-auto group-hover:scale-110 transition-transform duration-300`} style={{ filter: `drop-shadow(0 0 8px ${index === 0 ? 'rgba(167,139,250,0.6)' : index === 1 ? 'rgba(0,242,254,0.6)' : 'rgba(255,193,7,0.6)'})` }} />
+                        <div className="relative inline-block mb-1.5 sm:mb-2">
+                          <action.icon className={`w-7 h-7 sm:w-8 sm:h-8 ${iconColors[index]} mx-auto group-hover:scale-105 transition-transform duration-300`} style={{ filter: `drop-shadow(0 0 5px ${index === 0 ? 'rgba(167,139,250,0.35)' : index === 1 ? 'rgba(0,242,254,0.35)' : 'rgba(255,193,7,0.35)'})` }} />
                         </div>
-                        <h3 className="text-sm sm:text-base font-heading font-bold text-white">{action.title}</h3>
+                        <h3 className="text-xs sm:text-sm font-heading font-bold text-white">{action.title}</h3>
                       </div>
                     </Card>
                   </button>

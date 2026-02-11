@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Play, Lock, Award, Clock, CheckCircle, Loader2, Video, Music, Type, FileText, Globe, Wallet, Sparkles, MessageSquare, X } from 'lucide-react';
+import { ArrowLeft, Play, Lock, Award, Clock, CheckCircle, Loader2, Video, Music, Type, FileText, Globe, Wallet, Sparkles, MessageSquare, X, ChevronRight, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
@@ -67,6 +67,7 @@ interface LessonMaterial {
   title: string;
   file_url: string;
   file_type: string;
+  order_index?: number;
 }
 
 type LessonWithMaterials = Lesson & {
@@ -139,12 +140,21 @@ const CourseDetail: React.FC = () => {
   };
 
   useEffect(() => {
-    // Fetch lessons if enrolled OR if admin OR if has Stargate membership (admins and Stargate members get full access)
-    // Wait for admin loading to complete
     if (course && !isAdminLoading && (enrollment || isAdmin || hasStargateMembership || isPremium)) {
       fetchLessons();
     }
   }, [course, enrollment, isAdmin, isAdminLoading, hasStargateMembership, isPremium]);
+
+  // Auto-select first lesson when entering course with access (Sacred Study layout)
+  useEffect(() => {
+    const access = isAdmin || !!enrollment || hasStargateMembership || isPremium;
+    if (!access || lessons.length === 0) return;
+    if (activeVideoLessonId) return;
+    const first = lessons[0];
+    setActiveVideoLessonId(first.id);
+    setActiveVideoTitle(first.title);
+    setActiveVideoUrl(first.content_type === 'video' || first.content_type === 'audio' ? (first.content_url || null) : null);
+  }, [isAdmin, enrollment, hasStargateMembership, isPremium, lessons, activeVideoLessonId]);
 
   const fetchCourse = async () => {
     if (!id) return;
@@ -216,25 +226,25 @@ const CourseDetail: React.FC = () => {
           .order('order_index', { ascending: true }),
         supabase
           .from('course_materials')
-          .select('id, course_id, lesson_id, title, file_url, file_type')
+          .select('id, course_id, lesson_id, title, file_url, file_type, order_index')
           .eq('course_id', course.id)
+          .order('order_index', { ascending: true })
       ]);
 
       if (lessonError) throw lessonError;
       if (materialError) throw materialError;
 
       const materialsByLessonId = new Map<string, LessonMaterial[]>();
-
       (materialData || []).forEach((material: any) => {
         if (!material.lesson_id) return;
         const existing = materialsByLessonId.get(material.lesson_id) || [];
-        existing.push(material as LessonMaterial);
+        existing.push({ ...material, order_index: material.order_index ?? 0 } as LessonMaterial);
         materialsByLessonId.set(material.lesson_id, existing);
       });
 
       const lessonsWithMaterials: LessonWithMaterials[] = (lessonData || []).map((lesson: any) => ({
         ...(lesson as Lesson),
-        materials: materialsByLessonId.get(lesson.id) || []
+        materials: (materialsByLessonId.get(lesson.id) || []).sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
       }));
 
       setLessons(lessonsWithMaterials);
@@ -512,200 +522,131 @@ const CourseDetail: React.FC = () => {
           )}
         </Card>
 
-        {/* Embedded Video Player - Inline on page */}
-        {(activeVideoUrl || activeVideoTitle) && (
-          <Card className="p-6" id="embedded-video-player">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">{activeVideoTitle}</h2>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setActiveVideoUrl(null);
-                  setActiveVideoTitle('');
-                  setActiveVideoLessonId(null);
-                }}
-              >
-                <X className="h-4 w-4 mr-2" />
-                Close Video
-              </Button>
-            </div>
-            <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-              {activeVideoUrl && extractYouTubeId(activeVideoUrl) ? (
-                <iframe
-                  width="100%"
-                  height="100%"
-                  src={`https://www.youtube.com/embed/${extractYouTubeId(activeVideoUrl)}?rel=0&modestbranding=1&origin=${window.location.origin}`}
-                  title={activeVideoTitle}
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                  className="absolute top-0 left-0 w-full h-full rounded-lg"
-                />
-              ) : (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted rounded-lg p-8">
-                  <Video className="w-16 h-16 text-muted-foreground/50 mb-4" />
-                  <p className="text-muted-foreground text-center text-lg font-medium mb-2">
-                    Content Coming Soon
-                  </p>
-                  <p className="text-muted-foreground/70 text-center text-sm">
-                    This lesson content is being prepared. Please check back soon.
-                  </p>
-                </div>
-              )}
-            </div>
-          </Card>
-        )}
-
-        {/* Lessons Section - Show for admins or enrolled users */}
+        {/* Sacred Study layout: sidebar + main (only when has access and has lessons) */}
         {hasAccess && lessons.length > 0 && (
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Course Lessons</h2>
-            <div className="space-y-3">
-              {lessons.map((lesson, index) => {
-                const downloadableMaterial = lesson.materials?.find(
-                  (material) =>
-                    material.file_type === 'pdf' ||
-                    material.file_type === 'audio'
-                );
-
-                const handleLessonClick = () => {
-                  // Always allow clicking - if content_url is missing, we'll handle it in the player
-                  if (!lesson.content_url) {
-                    setActiveVideoTitle(lesson.title);
-                    setActiveVideoUrl(null);
-                    setActiveVideoLessonId(lesson.id);
-                    setTimeout(() => {
-                      const videoElement = document.getElementById('embedded-video-player');
-                      if (videoElement) {
-                        videoElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                      }
-                    }, 100);
-                    toast.info('This lesson content is being prepared. Please check back soon.');
-                    return;
-                  }
-
-                  try {
-                    if (lesson.content_type === 'video') {
-                      setActiveVideoTitle(lesson.title);
-                      setActiveVideoUrl(lesson.content_url);
-                      setActiveVideoLessonId(lesson.id);
-                      setTimeout(() => {
-                        const videoElement = document.getElementById('embedded-video-player');
-                        if (videoElement) {
-                          videoElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }
-                      }, 100);
-                    } else if (lesson.content_type === 'audio') {
-                      if (
-                        lesson.content_url.includes('youtube.com') ||
-                        lesson.content_url.includes('youtu.be')
-                      ) {
-                        setActiveVideoTitle(lesson.title);
-                        setActiveVideoUrl(lesson.content_url);
-                        setActiveVideoLessonId(lesson.id);
-                        setTimeout(() => {
-                          const videoElement = document.getElementById('embedded-video-player');
-                          if (videoElement) {
-                            videoElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          <div className="flex flex-col lg:flex-row gap-6 mt-6">
+            {/* Left: curriculum list */}
+            <aside className="w-full lg:w-72 shrink-0">
+              <Card className="p-4 lg:max-h-[70vh] overflow-hidden flex flex-col">
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">Curriculum</h3>
+                <div className="overflow-y-auto space-y-1 pr-1">
+                  {lessons.map((lesson, index) => {
+                    const isActive = activeVideoLessonId === lesson.id;
+                    const isLocked = !lesson.content_url && lesson.content_type !== 'text';
+                    return (
+                      <button
+                        key={lesson.id}
+                        type="button"
+                        onClick={() => {
+                          setActiveVideoLessonId(lesson.id);
+                          setActiveVideoTitle(lesson.title);
+                          const url = lesson.content_type === 'video' || lesson.content_type === 'audio'
+                            ? (lesson.content_url || null)
+                            : null;
+                          setActiveVideoUrl(url);
+                          if (!lesson.content_url && lesson.content_type !== 'text') {
+                            toast.info('This lesson content is being prepared.');
                           }
-                        }, 100);
-                      } else {
-                        window.open(lesson.content_url, '_blank');
-                      }
-                    } else if (lesson.content_type === 'text') {
-                      window.open(lesson.content_url, '_blank');
-                    } else if (lesson.content_type === 'pdf') {
-                      window.open(lesson.content_url, '_blank');
-                    } else {
-                      if (
-                        lesson.content_url.includes('youtube.com') ||
-                        lesson.content_url.includes('youtu.be')
-                      ) {
-                        setActiveVideoTitle(lesson.title);
-                        setActiveVideoUrl(lesson.content_url);
-                        setActiveVideoLessonId(lesson.id);
-                        setTimeout(() => {
-                          const videoElement = document.getElementById('embedded-video-player');
-                          if (videoElement) {
-                            videoElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                          }
-                        }, 100);
-                      } else {
-                        window.open(lesson.content_url, '_blank');
-                      }
-                    }
-                  } catch (error) {
-                    console.error('Error opening lesson content:', error);
-                    toast.error('Failed to open lesson content. Please try again.');
-                  }
-                };
+                        }}
+                        className={`w-full text-left rounded-lg px-3 py-2.5 flex items-center gap-3 transition-colors ${
+                          isActive ? 'bg-primary/15 border border-primary/30' : 'hover:bg-muted/40 border border-transparent'
+                        } ${isLocked ? 'opacity-75' : ''}`}
+                      >
+                        <span className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-xs font-medium shrink-0">
+                          {index + 1}
+                        </span>
+                        <span className="flex-1 truncate text-sm font-medium">{lesson.title}</span>
+                        {isLocked && <Lock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </Card>
+            </aside>
 
-                const handleMaterialClick = (
-                  event: React.MouseEvent<HTMLButtonElement>,
-                  material: LessonMaterial
-                ) => {
-                  event.stopPropagation();
-                  window.open(material.file_url, '_blank');
-                };
-
-                return (
-                  <div
-                    key={lesson.id}
-                    className={`flex items-center gap-4 p-4 border rounded-lg transition-colors hover:bg-muted/30 cursor-pointer ${
-                      activeVideoLessonId === lesson.id ? 'ring-2 ring-primary bg-primary/5' : ''
-                    } ${!lesson.content_url ? 'opacity-60' : ''}`}
-                    onClick={handleLessonClick}
-                  >
-                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-medium shrink-0">
-                      {index + 1}
+            {/* Right: large player + lesson title + description + only Sacred Material & Continue */}
+            <main className="flex-1 min-w-0 space-y-4">
+              <Card className="p-6 overflow-hidden">
+                {/* Large video/audio player */}
+                <div className="relative w-full rounded-lg overflow-hidden bg-muted/30" style={{ paddingBottom: '56.25%' }}>
+                  {activeVideoUrl && extractYouTubeId(activeVideoUrl) ? (
+                    <iframe
+                      width="100%"
+                      height="100%"
+                      src={`https://www.youtube.com/embed/${extractYouTubeId(activeVideoUrl)}?rel=0&modestbranding=1&origin=${window.location.origin}`}
+                      title={activeVideoTitle}
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                      className="absolute top-0 left-0 w-full h-full"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-8">
+                      <Video className="w-16 h-16 text-muted-foreground/50 mb-4" />
+                      <p className="text-muted-foreground text-center font-medium mb-1">Content Coming Soon</p>
+                      <p className="text-muted-foreground/70 text-center text-sm">This lesson is being prepared.</p>
                     </div>
-                    <div className="flex items-center gap-2 flex-1">
-                      {getContentTypeIcon(lesson.content_type)}
-                      <div className="flex-1">
-                        <p className="font-medium">{lesson.title}</p>
-                        {lesson.description && (
-                          <p className="text-sm text-muted-foreground">{lesson.description}</p>
-                        )}
-                        <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                          <Clock className="w-3 h-3" />
-                          {lesson.duration_minutes} min
-                          {lesson.is_preview && (
-                            <span className="px-2 py-0.5 bg-primary/20 text-primary rounded-full">
-                              Preview
-                            </span>
-                          )}
+                  )}
+                </div>
+
+                {/* Lesson title + description */}
+                <div className="mt-6">
+                  <h2 className="text-xl font-semibold text-foreground">{activeVideoTitle}</h2>
+                  {lessons.find(l => l.id === activeVideoLessonId)?.description && (
+                    <p className="text-muted-foreground mt-2 leading-relaxed">
+                      {lessons.find(l => l.id === activeVideoLessonId)?.description}
+                    </p>
+                  )}
+                </div>
+
+                {/* Only 2 actions: Sacred Material (if exists), Continue (next lesson) */}
+                <div className="mt-6 flex flex-wrap items-center gap-3">
+                  {(() => {
+                    const currentLesson = lessons.find(l => l.id === activeVideoLessonId);
+                    const lessonMaterials = currentLesson?.materials ?? [];
+                    return (
+                      lessonMaterials.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {lessonMaterials.map((material) => (
+                            <Button
+                              key={material.id}
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open(material.file_url, '_blank')}
+                              className="gap-2"
+                            >
+                              <BookOpen className="w-4 h-4" />
+                              {lessonMaterials.length === 1 ? 'Sacred Material' : `Sacred Material: ${material.title}`}
+                            </Button>
+                          ))}
                         </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {lesson.content_url ? (
-                        <Play className="w-5 h-5 text-muted-foreground" />
-                      ) : (
-                        <Play className="w-5 h-5 text-muted-foreground/40" />
-                      )}
-                      {downloadableMaterial && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={(event) => handleMaterialClick(event, downloadableMaterial)}
-                        >
-                          {downloadableMaterial.file_type === 'pdf'
-                            ? 'View material'
-                            : 'Listen'}
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            {lessons.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                No lessons available yet for this course.
-              </p>
-            )}
-          </Card>
+                      )
+                    );
+                  })()}
+                  {(() => {
+                    const idx = lessons.findIndex(l => l.id === activeVideoLessonId);
+                    const nextLesson = idx >= 0 && idx < lessons.length - 1 ? lessons[idx + 1] : null;
+                    return nextLesson ? (
+                      <Button
+                        className="gap-2"
+                        onClick={() => {
+                          setActiveVideoLessonId(nextLesson.id);
+                          setActiveVideoTitle(nextLesson.title);
+                          const url = nextLesson.content_type === 'video' || nextLesson.content_type === 'audio'
+                            ? (nextLesson.content_url || null)
+                            : null;
+                          setActiveVideoUrl(url);
+                        }}
+                      >
+                        Continue
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
+                    ) : null;
+                  })()}
+                </div>
+              </Card>
+            </main>
+          </div>
         )}
 
         {/* Reviews Section */}
