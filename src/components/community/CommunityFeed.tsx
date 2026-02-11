@@ -23,42 +23,6 @@ import RichMediaPost from './RichMediaPost';
 import LiveStreamList from './LiveStreamList';
 import AdminGoLive from './AdminGoLive';
 
-function getMockPosts(arrival: string) {
-  const base: Record<string, string[]> = {
-    Heavy: [
-      "If today feels heavy, you’re not behind. You’re human.",
-      "One gentle breath is enough to begin.",
-      "You can read quietly. You belong here.",
-    ],
-    Restless: [
-      "Restless days pass. Let the body settle one minute at a time.",
-      "Try unclenching the jaw and softening the shoulders.",
-      "You don’t need to fix anything right now.",
-    ],
-    Calm: [
-      "If you feel calm, you can share calm just by being here.",
-      "Let this steadiness stay with you.",
-      "A quiet day is still a meaningful day.",
-    ],
-    Grateful: [
-      "Gratitude is a nervous system signal: ‘I am safe enough now.’",
-      "If you want, share one small thing that helped today.",
-      "Your gratitude supports the whole space.",
-    ],
-    "Just looking": [
-      "You can simply read. No pressure to post.",
-      "This space is here whenever you’re ready.",
-      "Take one slow breath before scrolling.",
-    ],
-  };
-
-  const list = base[arrival] ?? base["Just looking"];
-  return list.map((text, i) => ({
-    id: `${arrival}-${i}`,
-    text,
-  }));
-}
-
 const SEEDED_REFLECTIONS = [
   { id: 'seed-1', title: 'One word check-in', body: 'What word describes your inner weather today?' },
   { id: 'seed-2', title: 'Gentle win', body: 'What is one small thing you did for yourself recently?' },
@@ -74,7 +38,6 @@ const CommunityFeed = () => {
   const { posts, isLoading, likePost, fetchPosts } = useCommunity();
   const [expandedPost, setExpandedPost] = useState<string | null>(null);
   const [profileEditOpen, setProfileEditOpen] = useState(false);
-  const [arrival, setArrival] = useState<string | null>(null);
 
   if (isLoading) {
     return (
@@ -86,99 +49,55 @@ const CommunityFeed = () => {
 
   return (
     <div className="space-y-4">
-      {/* Welcome card at top of Reflections (mobile + desktop) */}
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-        <div className="text-white font-semibold">Welcome — you can just listen here</div>
-        <div className="mt-1 text-sm text-white/60">
-          Many people come here quietly at first. You don’t need to post. Read, breathe, or share when ready.
-        </div>
+      {/* Header - Community title */}
+      <div className="mb-2">
+        <h1 className="text-2xl font-semibold text-white">Community</h1>
+        <p className="text-sm text-white/60 mt-1">
+          A shared space to connect, reflect, and grow together.
+        </p>
       </div>
+
+      {/* Live Indicator Banner - Prominent when admins are live */}
+      <LiveStreamList />
 
       {/* Avatar Required Alert */}
       {user && !hasAvatar && (
         <AvatarRequiredAlert onUploadClick={() => setProfileEditOpen(true)} />
       )}
 
-      {/* Admin Go Live Button */}
+      {/* Admin Go Live Button - Only for admins */}
       {isAdmin && (
         <AdminGoLive />
       )}
-
-      {/* Live Streams */}
-      <LiveStreamList />
 
       {/* Admin Post Creator - Only visible to admins */}
       {isAdmin && (
         <AdminPostCreator onPostCreated={fetchPosts} />
       )}
 
-      {/* Today in the space (heartbeat) */}
-      <section className="mt-4">
-        <div className="text-white font-semibold">Today in the space</div>
-        <div className="mt-2 grid gap-2 text-sm text-white/70">
-          <div>🌿 Someone slept better after 4 days</div>
-          <div>💭 A member noticed calmer reactions</div>
-          <div>🌙 Evening silence gathering later</div>
-        </div>
-      </section>
-
-      {/* One-tap arrival */}
-      <section className="mt-5 rounded-2xl border border-white/10 bg-white/5 p-4">
-        <div className="text-white font-semibold">How are you arriving today?</div>
-
-        <div className="mt-3 flex flex-wrap gap-2">
-          {["Heavy", "Restless", "Calm", "Grateful", "Just looking"].map((m) => (
-            <button
-              key={m}
-              onClick={() => setArrival(m)}
-              className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80 hover:bg-white/7 transition"
-            >
-              {m}
-            </button>
-          ))}
-        </div>
-
-        {arrival ? (
-          <div className="mt-4">
-            <div className="text-sm text-white/60">
-              Reflections for {arrival.toLowerCase()} moments
-            </div>
-            <div className="mt-3 grid gap-2">
-              {getMockPosts(arrival).map((p) => (
-                <div
-                  key={p.id}
-                  className="rounded-xl border border-white/10 bg-white/5 p-3"
-                >
-                  <div className="text-white/80 text-sm">{p.text}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : null}
-      </section>
-
-      {/* Posts */}
-      <div className="space-y-3">
-        {/* Pinned Daily Arrival */}
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-          <div className="text-white font-semibold">🌅 Daily Arrival</div>
-          <div className="mt-1 text-sm text-white/60">
-            Take one slow breath before reading.
-            You can share one word about your day — or simply read others.
-          </div>
-        </div>
-
+      {/* Feed Posts */}
+      <div className="space-y-4">
         {posts.length === 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-4">
+            {/* Empty state message */}
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center">
+              <p className="text-white/80 text-sm">
+                {isAdmin 
+                  ? "Share your first reflection or go live to start the conversation."
+                  : "No posts yet. Admins will share reflections and updates here soon."}
+              </p>
+            </div>
+            
+            {/* Seeded reflections for empty state */}
             {SEEDED_REFLECTIONS.map((item) => (
-              <Card key={item.id} className="bg-card border-border">
+              <Card key={item.id} className="bg-white/5 border-white/10">
                 <CardContent className="p-4">
-                  <h3 className="font-semibold text-foreground">{item.title}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{item.body}</p>
+                  <h3 className="font-semibold text-white">{item.title}</h3>
+                  <p className="mt-1 text-sm text-white/70">{item.body}</p>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="mt-3"
+                    className="mt-3 border-white/20 text-white/80 hover:bg-white/10"
                     onClick={() => toast({ title: 'Coming soon', description: 'Reply will be available soon.' })}
                   >
                     Reply

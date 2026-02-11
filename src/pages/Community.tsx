@@ -15,17 +15,8 @@ import CommunityFeed from '@/components/community/CommunityFeed';
 import SacredCircles from '@/components/community/SacredCircles';
 import CommunityChannels from '@/components/community/CommunityChannels';
 import { formatDistanceToNow } from 'date-fns';
-import { CommunityGuideTab } from '@/features/community/CommunityGuideTab';
-import { useMembershipTier } from '@/features/membership/useMembershipTier';
-
-interface GuideInfo {
-  user_id: string;
-  full_name: string;
-  avatar_url: string | null;
-}
 
 const TAB_FROM_PARAM: Record<string, ChatTab> = {
-  start: 'guide',
   spaces: 'channels',
   reflections: 'feed',
   groups: 'circles',
@@ -45,134 +36,9 @@ const Community = () => {
   const [newChatUser, setNewChatUser] = useState<{ id: string; name: string; avatar: string | null } | null>(null);
   const [showMobileSidebar, setShowMobileSidebar] = useState(true);
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
-  const [guideInfo, setGuideInfo] = useState<GuideInfo | null>(null);
-  const [adminConversations, setAdminConversations] = useState<any[]>([]);
-  const membershipTier = useMembershipTier();
-
-  // Fetch guide (first admin) for regular users
-  useEffect(() => {
-    const fetchGuide = async () => {
-      if (isAdmin) return;
-      
-      // First get admin user_ids from user_roles
-      const { data: adminRoles } = await supabase
-        .from('user_roles')
-        .select('user_id')
-        .eq('role', 'admin')
-        .limit(1);
-      
-      if (!adminRoles || adminRoles.length === 0) return;
-      
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('user_id, full_name, avatar_url')
-        .eq('user_id', adminRoles[0].user_id)
-        .single();
-      
-      if (profile) {
-        setGuideInfo(profile as GuideInfo);
-      }
-    };
-    
-    fetchGuide();
-  }, [isAdmin]);
-
-  // For admins - fetch all users (not just those with conversations)
-  useEffect(() => {
-    const fetchAdminConversations = async () => {
-      if (!isAdmin) return;
-
-      // Get admin user_ids from user_roles table
-      const { data: adminRoles } = await supabase
-        .from('user_roles')
-        .select('user_id')
-        .eq('role', 'admin');
-      
-      const adminIds = new Set((adminRoles || []).map((a) => a.user_id));
-
-      // Get all messages for conversation info
-      const { data: messages } = await supabase
-        .from('private_messages')
-        .select('sender_id, receiver_id, content, created_at, is_read')
-        .order('created_at', { ascending: false });
-
-      const userConvs = new Map<string, { lastMessage: string; lastTime: string; unread: number }>();
-
-      (messages || []).forEach((msg: any) => {
-        const isAdminSender = adminIds.has(msg.sender_id);
-        const isAdminReceiver = adminIds.has(msg.receiver_id);
-        
-        if (isAdminSender !== isAdminReceiver) {
-          const nonAdminId = isAdminSender ? msg.receiver_id : msg.sender_id;
-          if (!userConvs.has(nonAdminId)) {
-            userConvs.set(nonAdminId, {
-              lastMessage: msg.content,
-              lastTime: msg.created_at,
-              unread: 0
-            });
-          }
-          const conv = userConvs.get(nonAdminId)!;
-          if (!msg.is_read && !isAdminSender) {
-            conv.unread++;
-          }
-        }
-      });
-
-      // Fetch ALL non-admin profiles so admin can message anyone
-      const { data: allProfiles } = await supabase
-        .from('profiles')
-        .select('user_id, full_name, avatar_url')
-        .order('full_name', { ascending: true });
-
-      // Filter out admins and build the list
-      const convList = (allProfiles || [])
-        .filter((p: any) => !adminIds.has(p.user_id))
-        .map((profile: any) => {
-          const conv = userConvs.get(profile.user_id);
-          return {
-            id: profile.user_id,
-            name: profile.full_name || 'Anonymous User',
-            avatar: profile.avatar_url || null,
-            lastMessage: conv?.lastMessage || 'No messages yet',
-            lastMessageTime: conv?.lastTime ? formatDistanceToNow(new Date(conv.lastTime), { addSuffix: true }) : '',
-            unreadCount: conv?.unread || 0,
-            isOnline: true
-          };
-        });
-
-      // Sort by unread count first, then by name
-      convList.sort((a, b) => {
-        if (b.unreadCount !== a.unreadCount) return b.unreadCount - a.unreadCount;
-        return a.name.localeCompare(b.name);
-      });
-      
-      setAdminConversations(convList);
-    };
-
-    fetchAdminConversations();
-  }, [isAdmin]);
 
   // Build contact list based on tab
   const getContacts = () => {
-    if (activeTab === 'guide') {
-      if (isAdmin) {
-        // Admin sees list of user conversations
-        return adminConversations;
-      } else if (guideInfo) {
-        // User sees guide
-        return [{
-          id: guideInfo.user_id,
-          name: 'Sacred Guide',
-          avatar: guideInfo.avatar_url,
-          lastMessage: 'Free support available 24/7',
-          unreadCount: 0,
-          isOnline: true,
-          isBot: true
-        }];
-      }
-      return [];
-    }
-    
     if (activeTab === 'messages') {
       return conversations.map(c => ({
         id: c.user_id,
@@ -237,7 +103,6 @@ const Community = () => {
 
   // Render non-chat content for certain tabs
   const renderTabContent = () => {
-    if (activeTab === 'guide') return <CommunityGuideTab tier={membershipTier} />;
     if (activeTab === 'feed') return <CommunityFeed />;
     if (activeTab === 'circles') return <SacredCircles />;
     if (activeTab === 'channels') return <CommunityChannels />;
@@ -254,11 +119,9 @@ const Community = () => {
         {/* Mobile Tab Bar - top on mobile only */}
         <div className="md:hidden shrink-0 border-b border-border bg-background z-20">
           <div className="flex justify-around py-2">
-            {(['guide', 'channels', 'feed', 'circles', 'messages'] as const).map((tab) => {
+            {(['channels', 'feed', 'circles', 'messages'] as const).map((tab) => {
               const label =
-                tab === 'guide'
-                  ? 'Start here'
-                  : tab === 'channels'
+                tab === 'channels'
                   ? 'Spaces'
                   : tab === 'feed'
                   ? 'Reflections'
@@ -273,7 +136,6 @@ const Community = () => {
                     activeTab === tab ? 'text-primary font-medium' : 'text-muted-foreground'
                   }`}
                 >
-                  {tab === 'guide' && '🧘'}
                   {tab === 'channels' && '📢'}
                   {tab === 'feed' && '📝'}
                   {tab === 'circles' && '⭕'}
@@ -325,11 +187,9 @@ const Community = () => {
       {showMobileSidebar && (
         <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border z-30">
           <div className="flex justify-around py-2">
-            {(['guide', 'channels', 'feed', 'circles', 'messages'] as const).map((tab) => {
+            {(['channels', 'feed', 'circles', 'messages'] as const).map((tab) => {
               const label =
-                tab === 'guide'
-                  ? 'Start here'
-                  : tab === 'channels'
+                tab === 'channels'
                   ? 'Spaces'
                   : tab === 'feed'
                   ? 'Reflections'
@@ -344,7 +204,6 @@ const Community = () => {
                     activeTab === tab ? 'text-primary' : 'text-muted-foreground'
                   }`}
                 >
-                  {tab === 'guide' && '🧘'}
                   {tab === 'channels' && '📢'}
                   {tab === 'feed' && '📝'}
                   {tab === 'circles' && '⭕'}
@@ -367,18 +226,12 @@ const Community = () => {
             isBot={selectedContact.isBot}
             isOnline={selectedContact.isOnline}
             onBack={handleBack}
-            showBackOnDesktop={isAdmin && activeTab === 'guide'}
+            showBackOnDesktop={false}
           />
         ) : (
           <EmptyState
-            title={activeTab === 'guide' 
-              ? (isAdmin ? 'Select a user conversation' : 'Chat with a Guide')
-              : 'Select a conversation'
-            }
-            description={activeTab === 'guide' && !isAdmin
-              ? 'Get free spiritual guidance and support 24/7'
-              : 'Choose a contact from the list to start chatting'
-            }
+            title="Select a conversation"
+            description="Choose a contact from the list to start chatting"
           />
         )}
       </div>

@@ -25,11 +25,25 @@ const LiveStreamList = () => {
 
   return (
     <>
+      {/* Prominent Live Banner */}
+      <div className="rounded-2xl border-2 border-red-500/50 bg-gradient-to-r from-red-500/20 via-red-500/10 to-red-500/20 p-4 mb-4">
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse block" />
+            <span className="absolute inset-0 w-3 h-3 bg-red-500 rounded-full animate-ping opacity-75" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+              Admin is live now — join the circle
+            </h3>
+            <p className="text-sm text-white/70 mt-0.5">
+              Connect in real-time with guidance and support
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div className="space-y-3">
-        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-          <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-          Live Now
-        </h3>
         
         {activeStreams.map((stream) => (
           <Card 
