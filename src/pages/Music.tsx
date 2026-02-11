@@ -410,7 +410,7 @@ const Music: React.FC = () => {
                 const pick = dailyPicks[c.key];
                 const selected = selectedForMood[c.key];
                 const line = selected
-                  ? `Playing: ${getTrackLabel(selected)}`
+                  ? `Today's pick: ${getTrackLabel(selected)}`
                   : pick
                   ? `Today’s pick: ${getTrackLabel(pick)}`
                   : c.fallback;
@@ -420,12 +420,25 @@ const Music: React.FC = () => {
                     key={c.key}
                     onClick={() => onMoodClick(c.key)}
                     className={[
-                      'rounded-2xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/7 transition',
+                      'rounded-2xl border p-4 text-left transition-colors transition-shadow relative',
+                      (currentTrack && selected && currentTrack.id === selected.id)
+                        ? 'border-primary/50 bg-white/10 shadow-[0_0_20px_rgba(0,242,254,0.2)]'
+                        : 'border-white/10 bg-white/5 hover:bg-white/7',
                       c.key === 'background' ? 'sm:col-span-2' : '',
                     ].join(' ')}
                   >
                     <div className="text-white font-semibold">{c.title}</div>
                     <div className="mt-1 text-sm text-white/60">{line}</div>
+                    {(currentTrack && selected && currentTrack.id === selected.id) && (
+                      <>
+                        <div className="mt-2 text-xs text-white/60 opacity-70">
+                          Others are listening to this today
+                        </div>
+                        <div className="mt-1 text-xs text-primary/70 opacity-70">
+                          Now playing
+                        </div>
+                      </>
+                    )}
                   </button>
                 );
               })}
@@ -434,29 +447,53 @@ const Music: React.FC = () => {
         })()}
       </section>
 
-      {/* Current flow */}
+      {/* Your sound path */}
       <section className="mt-6">
-        <div className="text-lg font-semibold text-white">Current flow</div>
+        <div className="text-lg font-semibold text-white">Your sound path</div>
         <div className="mt-1 text-sm text-white/60">
-          Your sound can continue where you left off.
+          The sounds you've returned to recently.
         </div>
 
         <div className="mt-3 grid gap-3">
           {lastPlayed && (
             <button
               onClick={() => playTrack(lastPlayed, tracks)}
-              className="rounded-2xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/7 transition"
+              className="rounded-2xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/7 transition-colors transition-shadow"
             >
               <div className="text-white font-semibold">Continue listening</div>
               <div className="mt-1 text-sm text-white/60">
                 {lastPlayed?.title ?? 'Last played'}
               </div>
+              {lastPlayed?.mood && (
+                <div className="mt-1 text-xs text-white/50">
+                  {lastPlayed.mood}
+                </div>
+              )}
             </button>
           )}
 
+          {/* Show last 2-3 tracks from history */}
+          {historyTracks.slice(0, 2).map((track, index) => {
+            if (track.id === lastPlayed?.id) return null; // Skip if already shown above
+            return (
+              <button
+                key={track.id}
+                onClick={() => playTrack(track, tracks)}
+                className="rounded-2xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/7 transition-colors transition-shadow"
+              >
+                <div className="text-white font-semibold">{track.title}</div>
+                {track.mood && (
+                  <div className="mt-1 text-xs text-white/50">
+                    {track.mood}
+                  </div>
+                )}
+              </button>
+            );
+          })}
+
           <button
             onClick={playForMe}
-            className="rounded-2xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/7 transition"
+            className="rounded-2xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/7 transition-colors transition-shadow"
           >
             <div className="text-white font-semibold">The sound that fits now</div>
             <div className="mt-1 text-sm text-white/60">
