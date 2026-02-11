@@ -358,7 +358,23 @@
       "fromTheSpace": "From the Space",
       "today": "Today",
       "sharedBy": "Shared by the Sacred Healing team",
-      "comment": "Comment"
+      "comment": "Comment",
+      "createEntry": "Create Diary Entry",
+      "type": "Type",
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "title": "Title",
+      "titlePlaceholder": "e.g., Today's Note, This Week's Reflection...",
+      "content": "Content",
+      "contentPlaceholder": "Share what you're doing, reflections, updates...",
+      "post": "Post Diary Entry",
+      "success": "Success",
+      "createdSuccessfully": "Diary entry created successfully!",
+      "error": "Error",
+      "failedToCreate": "Failed to create diary entry",
+      "fillAllFields": "Please fill in all fields"
     }
   },
   "supportCircle": {

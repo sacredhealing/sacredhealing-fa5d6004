@@ -22,6 +22,7 @@ import AdminPostCreator from './AdminPostCreator';
 import RichMediaPost from './RichMediaPost';
 import LiveStreamList from './LiveStreamList';
 import AdminGoLive from './AdminGoLive';
+import AdminDiaryCreator from './AdminDiaryCreator';
 import { useDiaryEntries } from '@/features/community/useDiaryEntries';
 
 const CommunityFeed = () => {
@@ -33,7 +34,12 @@ const CommunityFeed = () => {
   const { posts, isLoading, likePost, fetchPosts } = useCommunity();
   const [expandedPost, setExpandedPost] = useState<string | null>(null);
   const [profileEditOpen, setProfileEditOpen] = useState(false);
-  const diaryEntries = useDiaryEntries();
+  const [diaryRefreshKey, setDiaryRefreshKey] = useState(0);
+  const { entries: diaryEntries, isLoading: diaryLoading } = useDiaryEntries(diaryRefreshKey);
+
+  const handleDiaryCreated = () => {
+    setDiaryRefreshKey(prev => prev + 1);
+  };
 
   const SEEDED_REFLECTIONS = [
     { id: 'seed-1', title: t('community.seededReflections.oneWordCheckIn.title'), body: t('community.seededReflections.oneWordCheckIn.body') },
@@ -77,10 +83,15 @@ const CommunityFeed = () => {
         <AdminPostCreator onPostCreated={fetchPosts} />
       )}
 
+      {/* Admin Diary Creator - Only visible to admins */}
+      {isAdmin && (
+        <AdminDiaryCreator onDiaryCreated={handleDiaryCreated} />
+      )}
+
       {/* ===================== */}
       {/* ADMIN DIARY SECTION */}
       {/* ===================== */}
-      {diaryEntries.length > 0 && (
+      {!diaryLoading && diaryEntries.length > 0 && (
         <section className="mb-8 space-y-4">
           <h2 className="text-xs uppercase tracking-widest text-white/40 px-1">
             {t('community.diary.fromTheSpace', 'From the Space')}

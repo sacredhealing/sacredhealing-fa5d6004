@@ -242,7 +242,23 @@
       "fromTheSpace": "Fra rommet",
       "today": "I dag",
       "sharedBy": "Delt av Sacred Healing-teamet",
-      "comment": "Kommenter"
+      "comment": "Kommenter",
+      "createEntry": "Opprett dagboksoppføring",
+      "type": "Type",
+      "daily": "Daglig",
+      "weekly": "Ukentlig",
+      "monthly": "Månedlig",
+      "yearly": "Årlig",
+      "title": "Tittel",
+      "titlePlaceholder": "f.eks. Dagens notat, Ukens refleksjon...",
+      "content": "Innhold",
+      "contentPlaceholder": "Del hva du gjør, refleksjoner, oppdateringer...",
+      "post": "Publiser dagboksoppføring",
+      "success": "Suksess",
+      "createdSuccessfully": "Dagboksoppføring opprettet!",
+      "error": "Feil",
+      "failedToCreate": "Kunne ikke opprette dagboksoppføring",
+      "fillAllFields": "Vennligst fyll ut alle felt"
     }
   },
   "supportCircle": {

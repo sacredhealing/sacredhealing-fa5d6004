@@ -391,7 +391,23 @@
       "fromTheSpace": "Desde el Espacio",
       "today": "Hoy",
       "sharedBy": "Compartido por el equipo de Sacred Healing",
-      "comment": "Comentar"
+      "comment": "Comentar",
+      "createEntry": "Crear Entrada de Diario",
+      "type": "Tipo",
+      "daily": "Diario",
+      "weekly": "Semanal",
+      "monthly": "Mensual",
+      "yearly": "Anual",
+      "title": "Título",
+      "titlePlaceholder": "ej. Nota de Hoy, Reflexión de Esta Semana...",
+      "content": "Contenido",
+      "contentPlaceholder": "Comparte lo que estás haciendo, reflexiones, actualizaciones...",
+      "post": "Publicar Entrada de Diario",
+      "success": "Éxito",
+      "createdSuccessfully": "¡Entrada de diario creada exitosamente!",
+      "error": "Error",
+      "failedToCreate": "Error al crear entrada de diario",
+      "fillAllFields": "Por favor completa todos los campos"
     }
   },
   "supportCircle": {

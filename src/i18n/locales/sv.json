@@ -242,7 +242,23 @@
       "fromTheSpace": "Från utrymmet",
       "today": "Idag",
       "sharedBy": "Delat av Sacred Healing-teamet",
-      "comment": "Kommentera"
+      "comment": "Kommentera",
+      "createEntry": "Skapa dagboksinlägg",
+      "type": "Typ",
+      "daily": "Daglig",
+      "weekly": "Veckovis",
+      "monthly": "Månadsvis",
+      "yearly": "Årlig",
+      "title": "Titel",
+      "titlePlaceholder": "t.ex. Idagens anteckning, Veckans reflektion...",
+      "content": "Innehåll",
+      "contentPlaceholder": "Dela vad du gör, reflektioner, uppdateringar...",
+      "post": "Publicera dagboksinlägg",
+      "success": "Framgång",
+      "createdSuccessfully": "Dagboksinlägg skapat framgångsrikt!",
+      "error": "Fel",
+      "failedToCreate": "Kunde inte skapa dagboksinlägg",
+      "fillAllFields": "Vänligen fyll i alla fält"
     }
   },
   "supportCircle": {
