@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Sparkles, Play, Music2 } from 'lucide-react';
+import { Sparkles, Play, Music2, Wind } from 'lucide-react';
 import { SacredFlame } from '@/components/dashboard/SacredFlame';
 import { useProfile } from '@/hooks/useProfile';
 import { useDailyGuidance } from '@/hooks/useDailyGuidance';
@@ -24,6 +24,7 @@ import { ShareableProgressCard } from '@/components/achievements/ShareableProgre
 import { AchievementPopup } from '@/components/achievements/AchievementPopup';
 import { AchievementBadge } from '@/components/achievements/AchievementBadge';
 import { SectionCollapse } from '@/components/ui/SectionCollapse';
+import { Card } from '@/components/ui/card';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useSocialShare } from '@/hooks/useSocialShare';
 import type { DailyGuidance } from '@/hooks/useDailyGuidance';
@@ -50,6 +51,27 @@ function guidanceToSessionLike(guidance: DailyGuidance): SessionLike {
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+
+  const QUICK_ACTIONS = [
+    {
+      id: "mantra",
+      title: "Mantra",
+      icon: Sparkles,
+      route: "/mantras",
+    },
+    {
+      id: "breath",
+      title: "Breath",
+      icon: Wind,
+      route: "/breathing",
+    },
+    {
+      id: "meditate",
+      title: "Meditate",
+      icon: Play,
+      route: "/meditations",
+    },
+  ];
   const { profile: userProfile } = useProfile();
   const { guidance, isLoading, lastCompleted, completeSlot, streakDays, hasCompletedAllThree } = useDailyGuidance();
   const { completeMorning, completeMidday, completeEvening } = useDailyJourney();
@@ -158,6 +180,24 @@ const Dashboard: React.FC = () => {
         </div>
         <AmbientSoundToggle />
       </header>
+
+      {/* Quick Actions Section */}
+      <div className="mb-4 sm:mb-6 animate-slide-up">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+          {QUICK_ACTIONS.map((action) => (
+            <button
+              key={action.id}
+              onClick={() => navigate(action.route)}
+              className="group"
+            >
+              <Card className="bg-card/50 backdrop-blur border-border/50 p-3 sm:p-4 h-full hover:bg-card/80 hover:border-gold/50 transition-all duration-300 text-center">
+                <action.icon className="w-6 h-6 sm:w-8 sm:h-8 text-gold mx-auto mb-2 group-hover:scale-110 transition-transform" />
+                <h3 className="text-xs sm:text-sm font-heading font-bold text-foreground">{action.title}</h3>
+              </Card>
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* State: idle - Daily Guidance Card + restored sections */}
       {flowState === 'idle' && (
