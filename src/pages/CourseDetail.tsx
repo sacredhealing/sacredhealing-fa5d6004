@@ -349,19 +349,29 @@ const CourseDetail: React.FC = () => {
     return `https://www.youtube.com/embed/${id}?rel=0&modestbranding=1&origin=${window.location.origin}`;
   };
 
-  // Get video URL for main player: lesson content_url (video/audio) OR first YouTube material. Video → main player only.
+  // Get video URL for main player: lesson content_url (video/audio) OR first YouTube material (by type or URL). Video → main player only.
   const getVideoUrlForLesson = (lesson: LessonWithMaterials): string | null => {
-    if ((lesson.content_type === 'video' || lesson.content_type === 'audio') && lesson.content_url?.trim()) {
-      return lesson.content_url.trim();
+    const trimmedContentUrl = lesson.content_url?.trim();
+    if ((lesson.content_type === 'video' || lesson.content_type === 'audio') && trimmedContentUrl && extractYouTubeId(trimmedContentUrl)) {
+      return trimmedContentUrl;
     }
-    const youtubeMaterial = lesson.materials?.find((m) => m.file_type === 'youtube');
-    if (youtubeMaterial?.file_url?.trim()) return youtubeMaterial.file_url.trim();
+    const materials = lesson.materials ?? [];
+    const byType = materials.find((m) => String(m.file_type).toLowerCase() === 'youtube' && m.file_url?.trim());
+    if (byType?.file_url?.trim()) return byType.file_url.trim();
+    const byUrl = materials.find((m) => m.file_url?.trim() && extractYouTubeId(m.file_url.trim()));
+    if (byUrl?.file_url?.trim()) return byUrl.file_url.trim();
+    if (trimmedContentUrl) return trimmedContentUrl;
     return null;
   };
 
   // Materials that are NOT video (PDF / Audio) → Sacred Material buttons only. Never show Sacred Material for YouTube.
   const getNonVideoMaterials = (lesson: LessonWithMaterials): LessonMaterial[] => {
-    return (lesson.materials ?? []).filter((m) => m.file_type !== 'youtube');
+    return (lesson.materials ?? []).filter((m) => {
+      const type = String(m.file_type).toLowerCase();
+      if (type === 'youtube') return false;
+      if (m.file_url?.trim() && extractYouTubeId(m.file_url.trim())) return false;
+      return true;
+    });
   };
 
   // Show loading while checking admin status or fetching course
