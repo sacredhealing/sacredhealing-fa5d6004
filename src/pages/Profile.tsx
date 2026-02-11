@@ -128,44 +128,43 @@ const Profile: React.FC = () => {
         <div className="mt-4 grid gap-3">
           {/* Your Space */}
           <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <div className="text-white font-semibold">Your Sacred Healing Space</div>
+            <div className="text-white font-semibold">{t('profile.yourSacredSpace.title')}</div>
             <div className="mt-2 text-sm text-white/70 whitespace-pre-line">
-              {"This app is a daily support space.\nYou don't need to learn anything or believe anything.\nJust come, choose how you feel, and follow a short practice.\nOver time your mind, sleep and emotions naturally reorganize."}
+              {t('profile.yourSacredSpace.description')}
             </div>
           </div>
 
           {/* How to use */}
           <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <div className="text-white font-semibold">How to use this app</div>
+            <div className="text-white font-semibold">{t('profile.howToUse.title')}</div>
             <div className="mt-2 text-sm text-white/70 grid gap-2">
-              <div>1. Open Home → follow today's suggestion</div>
-              <div>2. If stressed → go to Soul</div>
-              <div>3. If curious → explore Astrology or Ayurveda</div>
+              <div>{t('profile.howToUse.step1')}</div>
+              <div>{t('profile.howToUse.step2')}</div>
+              <div>{t('profile.howToUse.step3')}</div>
             </div>
           </div>
 
           {/* What each tab does (collapsed) */}
           <details className="rounded-2xl border border-white/10 bg-white/5 p-4 group">
             <summary className="cursor-pointer text-white font-semibold list-none flex items-center justify-between">
-              What each tab does
+              {t('profile.whatEachTabDoes.title')}
               <ChevronRight className="w-4 h-4 text-white/60 group-open:rotate-90 transition-transform" />
             </summary>
             <div className="mt-3 text-sm text-white/70 grid gap-2">
-              <div><span className="text-white/90 font-medium">Home:</span> Your daily step. Just follow it.</div>
-              <div><span className="text-white/90 font-medium">Meditate:</span> Guided practices when you want quiet.</div>
-              <div><span className="text-white/90 font-medium">Music:</span> Background sound for focus, sleep or calm.</div>
-              <div><span className="text-white/90 font-medium">Soul:</span> Receive deeper sessions (you can just rest).</div>
-              <div><span className="text-white/90 font-medium">Library:</span> All tools in one place.</div>
-              <div><span className="text-white/90 font-medium">Community:</span> Talk or listen to others (optional).</div>
+              <div>{t('profile.whatEachTabDoes.home')}</div>
+              <div>{t('profile.whatEachTabDoes.meditate')}</div>
+              <div>{t('profile.whatEachTabDoes.music')}</div>
+              <div>{t('profile.whatEachTabDoes.soul')}</div>
+              <div>{t('profile.whatEachTabDoes.library')}</div>
+              <div>{t('profile.whatEachTabDoes.community')}</div>
             </div>
           </details>
 
           {/* Reassurance */}
           <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <div className="text-white font-semibold">What is happening to me?</div>
-            <div className="mt-2 text-sm text-white/70">
-              Many people notice better sleep, calmer reactions, or emotional release after some days.
-              This is normal — just go gently and continue daily.
+            <div className="text-white font-semibold">{t('profile.whatIsHappening.title')}</div>
+            <div className="mt-2 text-sm text-white/70 whitespace-pre-line">
+              {t('profile.whatIsHappening.description')}
             </div>
           </div>
         </div>

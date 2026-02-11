@@ -763,7 +763,32 @@
     "premiumFeature1": "Todas las meditaciones y cursos",
     "premiumFeature2": "Música sagrada y audio del alma – ilimitado",
     "premiumFeature3": "Gana 33 SHC por sesión y reproducción",
-    "certificates": "Certificados"
+    "certificates": "Certificados",
+    "yourSacredSpace": {
+      "title": "Tu Espacio de Sanación Sagrada",
+      "description": "Esta app es un espacio de apoyo diario.\nNo necesitas aprender nada ni creer en nada.\nSolo ven, elige cómo te sientes y sigue una práctica corta.\nCon el tiempo tu mente, sueño y emociones se reorganizan naturalmente."
+    },
+    "howToUse": {
+      "title": "Cómo usar esta app",
+      "step1": "1. Abre Inicio → sigue la sugerencia de hoy",
+      "step2": "2. Si estás estresado → ve a Alma",
+      "step3": "3. Si tienes curiosidad → explora Astrología o Ayurveda"
+    },
+    "whatEachTabDoes": {
+      "title": "Qué hace cada pestaña",
+      "home": "Inicio: Tu paso diario. Solo síguelo.",
+      "meditate": "Meditar: Prácticas guiadas cuando quieras tranquilidad.",
+      "music": "Música: Sonido de fondo para concentración, sueño o calma.",
+      "soul": "Alma: Recibe sesiones más profundas (puedes solo descansar).",
+      "library": "Biblioteca: Todas las herramientas en un lugar.",
+      "community": "Comunidad: Habla o escucha a otros (opcional)."
+    },
+    "whatIsHappening": {
+      "title": "¿Qué me está pasando?",
+      "description": "Muchas personas notan mejor sueño, reacciones más calmadas o liberación emocional después de algunos días.\nEsto es normal — solo ve con calma y continúa diariamente."
+    },
+    "walletEarningsAdvanced": "Cartera y Ganancias (Avanzado)",
+    "walletEarningsDesc": "SHC, afiliado, fuentes de ingresos"
   },
   "appearance": {
     "title": "Apariencia",

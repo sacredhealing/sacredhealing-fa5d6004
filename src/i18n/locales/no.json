@@ -661,7 +661,32 @@
     "certificates": "Sertifikater",
     "premiumFeature1": "Alle meditasjoner og kurs",
     "premiumFeature2": "Hellig musikk & sjel-lyd – ubegrenset",
-    "premiumFeature3": "Tjen 33 SHC per økt & strøm"
+    "premiumFeature3": "Tjen 33 SHC per økt & strøm",
+    "yourSacredSpace": {
+      "title": "Ditt Sacred Healing-rom",
+      "description": "Denne appen er et daglig støtterom.\nDu trenger ikke å lære noe eller tro på noe.\nBare kom, velg hvordan du føler deg og følg en kort praksis.\nOver tid reorganiseres sinnet, søvnen og følelsene dine naturlig."
+    },
+    "howToUse": {
+      "title": "Hvordan bruke denne appen",
+      "step1": "1. Åpne Hjem → følg dagens forslag",
+      "step2": "2. Hvis du er stresset → gå til Sjel",
+      "step3": "3. Hvis du er nysgjerrig → utforsk Astrologi eller Ayurveda"
+    },
+    "whatEachTabDoes": {
+      "title": "Hva hver fane gjør",
+      "home": "Hjem: Ditt daglige steg. Bare følg det.",
+      "meditate": "Mediter: Guided praksis når du vil ha ro.",
+      "music": "Musikk: Bakgrunnslyd for fokus, søvn eller ro.",
+      "soul": "Sjel: Motta dypere økter (du kan bare hvile).",
+      "library": "Bibliotek: Alle verktøy på ett sted.",
+      "community": "Fellesskap: Snakk eller lytt til andre (valgfritt)."
+    },
+    "whatIsHappening": {
+      "title": "Hva skjer med meg?",
+      "description": "Mange legger merke til bedre søvn, roligere reaksjoner eller emosjonell frigjøring etter noen dager.\nDette er normalt — bare gå forsiktig og fortsett daglig."
+    },
+    "walletEarningsAdvanced": "Lommebok og Inntekter (Avansert)",
+    "walletEarningsDesc": "SHC, affiliate, inntektsstrømmer"
   },
   "appearance": {
     "title": "Utseende",

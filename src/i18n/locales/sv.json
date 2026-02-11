@@ -671,7 +671,32 @@
     "premiumFeature1": "Alla meditationer & kurser",
     "premiumFeature2": "Helig musik & själ-ljud – obegränsat",
     "premiumFeature3": "Tjäna 33 SHC per session & ström",
-    "certificates": "Certifikat"
+    "certificates": "Certifikat",
+    "yourSacredSpace": {
+      "title": "Din Sacred Healing-plats",
+      "description": "Denna app är en daglig stödplats.\nDu behöver inte lära dig något eller tro på något.\nKom bara, välj hur du mår och följ en kort praktik.\nMed tiden organiseras ditt sinne, din sömn och dina känslor naturligt."
+    },
+    "howToUse": {
+      "title": "Så använder du appen",
+      "step1": "1. Öppna Home → följ dagens förslag",
+      "step2": "2. Om du är stressad → gå till Soul",
+      "step3": "3. Om du är nyfiken → utforska Astrology eller Ayurveda"
+    },
+    "whatEachTabDoes": {
+      "title": "Vad varje flik gör",
+      "home": "Home: Ditt dagliga steg. Följ bara.",
+      "meditate": "Meditate: Guidad praktik när du vill ha lugn.",
+      "music": "Music: Bakgrundsljud för fokus, sömn eller ro.",
+      "soul": "Soul: Ta emot djupare sessioner (du kan bara vila).",
+      "library": "Library: Alla verktyg på ett ställe.",
+      "community": "Community: Prata eller lyssna på andra (valfritt)."
+    },
+    "whatIsHappening": {
+      "title": "Vad händer i mig?",
+      "description": "Många märker bättre sömn, lugnare reaktioner eller känslomässig release efter några dagar.\nDet är normalt — gå varsamt och fortsätt dagligen."
+    },
+    "walletEarningsAdvanced": "Plånbok & Intäkter (Avancerat)",
+    "walletEarningsDesc": "SHC, affiliate, intäktsströmmar"
   },
   "settings": {
     "legal": {

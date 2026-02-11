@@ -792,7 +792,32 @@
     "premiumFeature1": "All meditations & courses",
     "premiumFeature2": "Sacred music & soul audio – unlimited",
     "premiumFeature3": "Earn 33 SHC per session & stream",
-    "certificates": "Certificates"
+    "certificates": "Certificates",
+    "yourSacredSpace": {
+      "title": "Your Sacred Healing Space",
+      "description": "This app is a daily support space.\nYou don't need to learn anything or believe anything.\nJust come, choose how you feel, and follow a short practice.\nOver time your mind, sleep and emotions naturally reorganize."
+    },
+    "howToUse": {
+      "title": "How to use this app",
+      "step1": "1. Open Home → follow today's suggestion",
+      "step2": "2. If stressed → go to Soul",
+      "step3": "3. If curious → explore Astrology or Ayurveda"
+    },
+    "whatEachTabDoes": {
+      "title": "What each tab does",
+      "home": "Home: Your daily step. Just follow it.",
+      "meditate": "Meditate: Guided practices when you want quiet.",
+      "music": "Music: Background sound for focus, sleep or calm.",
+      "soul": "Soul: Receive deeper sessions (you can just rest).",
+      "library": "Library: All tools in one place.",
+      "community": "Community: Talk or listen to others (optional)."
+    },
+    "whatIsHappening": {
+      "title": "What is happening to me?",
+      "description": "Many people notice better sleep, calmer reactions, or emotional release after some days.\nThis is normal — just go gently and continue daily."
+    },
+    "walletEarningsAdvanced": "Wallet & Earnings (Advanced)",
+    "walletEarningsDesc": "SHC, affiliate, income streams"
   },
   "settings": {
     "legal": {
