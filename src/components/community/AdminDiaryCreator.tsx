@@ -37,7 +37,7 @@ const AdminDiaryCreator = ({ onDiaryCreated }: AdminDiaryCreatorProps) => {
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('community_posts')
         .insert({
           user_id: user.id,
@@ -45,9 +45,18 @@ const AdminDiaryCreator = ({ onDiaryCreated }: AdminDiaryCreatorProps) => {
           post_type: 'diary',
           diary_type: diaryType,
           diary_title: title.trim(),
-        });
+        })
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error creating diary entry:', error);
+        throw new Error(error.message || 'Failed to create diary entry');
+      }
+
+      if (!data) {
+        throw new Error('No data returned from insert');
+      }
 
       toast({ 
         title: t('community.diary.success'), 
@@ -60,11 +69,12 @@ const AdminDiaryCreator = ({ onDiaryCreated }: AdminDiaryCreatorProps) => {
       setDiaryType('daily');
       
       onDiaryCreated();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating diary entry:', error);
+      const errorMessage = error?.message || error?.toString() || t('community.diary.failedToCreate');
       toast({ 
         title: t('community.diary.error'), 
-        description: t('community.diary.failedToCreate'),
+        description: errorMessage,
         variant: 'destructive' 
       });
     } finally {
