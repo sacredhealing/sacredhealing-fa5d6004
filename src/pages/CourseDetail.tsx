@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Play, Lock, Award, Clock, CheckCircle, Loader2, Video, Music, Type, FileText, Globe, Wallet, Sparkles, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Play, Lock, Award, Clock, CheckCircle, Loader2, Video, Music, Type, FileText, Globe, Wallet, Sparkles, MessageSquare, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,7 +9,6 @@ import { useAdminRole } from '@/hooks/useAdminRole';
 import { toast } from 'sonner';
 import { ReviewSection } from '@/components/reviews/ReviewSection';
 import WealthCourseUpsell from '@/components/courses/WealthCourseUpsell';
-import VideoPlayerModal from '@/components/courses/VideoPlayerModal';
 import { useTranslation } from 'react-i18next';
 import { useMembership } from '@/hooks/useMembership';
 
@@ -77,6 +76,7 @@ const CourseDetail: React.FC = () => {
   const [showWealthUpsell, setShowWealthUpsell] = useState(false);
   const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
   const [activeVideoTitle, setActiveVideoTitle] = useState<string>('');
+  const [activeVideoLessonId, setActiveVideoLessonId] = useState<string | null>(null);
   const [hasStargateMembership, setHasStargateMembership] = useState(false);
 
   useEffect(() => {
@@ -269,6 +269,32 @@ const CourseDetail: React.FC = () => {
     }
   };
 
+  // Extract YouTube video ID from various URL formats
+  const extractYouTubeId = (url: string | null): string | null => {
+    if (!url) return null;
+    
+    // Handle youtube.com/embed/ format
+    const embedMatch = url.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]+)/);
+    if (embedMatch) return embedMatch[1];
+    
+    // Handle youtube.com/watch?v= format
+    const watchMatch = url.match(/youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/);
+    if (watchMatch) return watchMatch[1];
+    
+    // Handle youtu.be/ format
+    const shortMatch = url.match(/youtu\.be\/([a-zA-Z0-9_-]+)/);
+    if (shortMatch) return shortMatch[1];
+    
+    // Handle youtube.com/v/ format
+    const vMatch = url.match(/youtube\.com\/v\/([a-zA-Z0-9_-]+)/);
+    if (vMatch) return vMatch[1];
+    
+    // If it's already just an ID
+    if (/^[a-zA-Z0-9_-]+$/.test(url)) return url;
+    
+    return null;
+  };
+
   // Show loading while checking admin status or fetching course
   if (isAdminLoading || isLoading) {
     return (
@@ -449,6 +475,45 @@ const CourseDetail: React.FC = () => {
           )}
         </Card>
 
+        {/* Embedded Video Player - Inline on page */}
+        {activeVideoUrl && (
+          <Card className="p-6" id="embedded-video-player">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">{activeVideoTitle}</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setActiveVideoUrl(null);
+                  setActiveVideoTitle('');
+                  setActiveVideoLessonId(null);
+                }}
+              >
+                <X className="h-4 w-4 mr-2" />
+                Close Video
+              </Button>
+            </div>
+            <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+              {extractYouTubeId(activeVideoUrl) ? (
+                <iframe
+                  width="100%"
+                  height="100%"
+                  src={`https://www.youtube.com/embed/${extractYouTubeId(activeVideoUrl)}?rel=0&modestbranding=1&origin=${window.location.origin}`}
+                  title={activeVideoTitle}
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  className="absolute top-0 left-0 w-full h-full rounded-lg"
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center bg-muted rounded-lg">
+                  <p className="text-muted-foreground">Video URL is not valid or not available.</p>
+                </div>
+              )}
+            </div>
+          </Card>
+        )}
+
         {/* Lessons Section - Show for admins or enrolled users */}
         {hasAccess && lessons.length > 0 && (
           <Card className="p-6">
@@ -461,6 +526,8 @@ const CourseDetail: React.FC = () => {
                     lesson.content_url 
                       ? 'hover:bg-muted/30 cursor-pointer' 
                       : 'opacity-50 cursor-not-allowed'
+                  } ${
+                    activeVideoLessonId === lesson.id ? 'ring-2 ring-primary bg-primary/5' : ''
                   }`}
                   onClick={() => {
                     if (!lesson.content_url) {
@@ -471,14 +538,29 @@ const CourseDetail: React.FC = () => {
                     try {
                       // Handle different content types
                       if (lesson.content_type === 'video') {
-                        // For video content, use the video player modal with proper YouTube embed
+                        // For video content, embed inline on the page
                         setActiveVideoTitle(lesson.title);
                         setActiveVideoUrl(lesson.content_url);
+                        setActiveVideoLessonId(lesson.id);
+                        // Scroll to video player
+                        setTimeout(() => {
+                          const videoElement = document.getElementById('embedded-video-player');
+                          if (videoElement) {
+                            videoElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          }
+                        }, 100);
                       } else if (lesson.content_type === 'audio') {
-                        // Audio can also use video player if it's YouTube, otherwise open directly
+                        // Audio can also be embedded if it's YouTube, otherwise open directly
                         if (lesson.content_url.includes('youtube.com') || lesson.content_url.includes('youtu.be')) {
                           setActiveVideoTitle(lesson.title);
                           setActiveVideoUrl(lesson.content_url);
+                          setActiveVideoLessonId(lesson.id);
+                          setTimeout(() => {
+                            const videoElement = document.getElementById('embedded-video-player');
+                            if (videoElement) {
+                              videoElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }
+                          }, 100);
                         } else {
                           window.open(lesson.content_url, '_blank');
                         }
@@ -489,10 +571,17 @@ const CourseDetail: React.FC = () => {
                         // PDFs can be opened directly
                         window.open(lesson.content_url, '_blank');
                       } else {
-                        // Default: check if it's YouTube, otherwise open in new tab
+                        // Default: check if it's YouTube, embed inline, otherwise open in new tab
                         if (lesson.content_url.includes('youtube.com') || lesson.content_url.includes('youtu.be')) {
                           setActiveVideoTitle(lesson.title);
                           setActiveVideoUrl(lesson.content_url);
+                          setActiveVideoLessonId(lesson.id);
+                          setTimeout(() => {
+                            const videoElement = document.getElementById('embedded-video-player');
+                            if (videoElement) {
+                              videoElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }
+                          }, 100);
                         } else {
                           window.open(lesson.content_url, '_blank');
                         }
@@ -564,16 +653,6 @@ const CourseDetail: React.FC = () => {
         <WealthCourseUpsell onClose={() => setShowWealthUpsell(false)} />
       )}
 
-      {/* Video Player Modal */}
-      <VideoPlayerModal
-        isOpen={!!activeVideoUrl}
-        onClose={() => {
-          setActiveVideoUrl(null);
-          setActiveVideoTitle('');
-        }}
-        videoUrl={activeVideoUrl}
-        title={activeVideoTitle}
-      />
     </div>
   );
 };
