@@ -202,7 +202,42 @@
     "startConversation": "Start samtalen!",
     "profileRequired": "Profilbilde Kreves",
     "profileRequiredDesc": "Vennligst last opp et profilbilde for å chatte, kommentere eller like innhold.",
-    "uploadNow": "Last opp nå"
+    "uploadNow": "Last opp nå",
+    "subtitle": "Et delt rom for å koble seg, reflektere og vokse sammen.",
+    "spaces": "Rom",
+    "reflections": "Refleksjoner",
+    "groups": "Grupper",
+    "selectConversation": "Velg en samtale",
+    "selectConversationDesc": "Velg en kontakt fra listen for å starte chatting",
+    "noOtherUsersAvailable": "Ingen andre brukere tilgjengelig ennå",
+    "anonymous": "Anonym",
+    "emptyStateAdmin": "Del din første refleksjon eller gå live for å starte samtalen.",
+    "emptyStateMember": "Ingen innlegg ennå. Admins vil dele refleksjoner og oppdateringer her snart.",
+    "reply": "Svar",
+    "comingSoon": "Kommer snart",
+    "replyAvailableSoon": "Svar vil være tilgjengelig snart.",
+    "seededReflections": {
+      "oneWordCheckIn": {
+        "title": "Ett ord innsjekk",
+        "body": "Hvilket ord beskriver ditt indre vær i dag?"
+      },
+      "gentleWin": {
+        "title": "Mild seier",
+        "body": "Hva er en liten ting du gjorde for deg selv nylig?"
+      },
+      "eveningSoftness": {
+        "title": "Kveldsmykhet",
+        "body": "Før søvn: legg en hånd på hjertet ditt og pust en gang."
+      }
+    },
+    "liveStream": {
+      "adminLiveNow": "Admin er live nå — bli med i sirkelen",
+      "connectRealTime": "Koble deg i sanntid med veiledning og støtte",
+      "live": "LIVE",
+      "watch": "Se",
+      "admin": "Admin",
+      "started": "Startet"
+    }
   },
   "supportCircle": {
     "createRequest": "Opprett forespørsel",

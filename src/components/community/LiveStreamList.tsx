@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -8,6 +9,7 @@ import LiveStreamViewer from './LiveStreamViewer';
 import { formatDistanceToNow } from 'date-fns';
 
 const LiveStreamList = () => {
+  const { t } = useTranslation();
   const { activeStreams, isLoading } = useLiveStream();
   const [selectedStream, setSelectedStream] = useState<LiveStream | null>(null);
 
@@ -34,10 +36,10 @@ const LiveStreamList = () => {
           </div>
           <div className="flex-1">
             <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-              Admin is live now — join the circle
+              {t('community.liveStream.adminLiveNow')}
             </h3>
             <p className="text-sm text-white/70 mt-0.5">
-              Connect in real-time with guidance and support
+              {t('community.liveStream.connectRealTime')}
             </p>
           </div>
         </div>
@@ -61,14 +63,14 @@ const LiveStreamList = () => {
                     </AvatarFallback>
                   </Avatar>
                   <span className="absolute -bottom-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
-                    LIVE
+                    {t('community.liveStream.live')}
                   </span>
                 </div>
                 
                 <div className="flex-1 min-w-0">
                   <h4 className="font-semibold text-foreground truncate">{stream.title}</h4>
                   <p className="text-sm text-muted-foreground">
-                    {stream.profile?.full_name || 'Admin'} • Started {formatDistanceToNow(new Date(stream.started_at), { addSuffix: true })}
+                    {stream.profile?.full_name || t('community.liveStream.admin')} • {t('community.liveStream.started')} {formatDistanceToNow(new Date(stream.started_at), { addSuffix: true })}
                   </p>
                 </div>
                 
@@ -79,7 +81,7 @@ const LiveStreamList = () => {
                   </div>
                   <Button size="sm" className="bg-red-500 hover:bg-red-600">
                     <Video className="h-4 w-4 mr-1" />
-                    Watch
+                    {t('community.liveStream.watch')}
                   </Button>
                 </div>
               </div>

@@ -351,7 +351,42 @@
     "startConversation": "¡Inicia la conversación!",
     "profileRequired": "Foto de Perfil Requerida",
     "profileRequiredDesc": "Por favor sube una foto de perfil para chatear, comentar o dar me gusta.",
-    "uploadNow": "Subir ahora"
+    "uploadNow": "Subir ahora",
+    "subtitle": "Un espacio compartido para conectar, reflexionar y crecer juntos.",
+    "spaces": "Espacios",
+    "reflections": "Reflexiones",
+    "groups": "Grupos",
+    "selectConversation": "Selecciona una conversación",
+    "selectConversationDesc": "Elige un contacto de la lista para comenzar a chatear",
+    "noOtherUsersAvailable": "No hay otros usuarios disponibles aún",
+    "anonymous": "Anónimo",
+    "emptyStateAdmin": "Comparte tu primera reflexión o transmite en vivo para iniciar la conversación.",
+    "emptyStateMember": "Sin publicaciones aún. Los administradores compartirán reflexiones y actualizaciones aquí pronto.",
+    "reply": "Responder",
+    "comingSoon": "Próximamente",
+    "replyAvailableSoon": "La respuesta estará disponible pronto.",
+    "seededReflections": {
+      "oneWordCheckIn": {
+        "title": "Check-in de una palabra",
+        "body": "¿Qué palabra describe tu clima interior hoy?"
+      },
+      "gentleWin": {
+        "title": "Victoria suave",
+        "body": "¿Qué es una pequeña cosa que hiciste por ti mismo recientemente?"
+      },
+      "eveningSoftness": {
+        "title": "Suavidad nocturna",
+        "body": "Antes de dormir: coloca una mano en tu corazón y respira una vez."
+      }
+    },
+    "liveStream": {
+      "adminLiveNow": "El administrador está en vivo ahora — únete al círculo",
+      "connectRealTime": "Conéctate en tiempo real con orientación y apoyo",
+      "live": "EN VIVO",
+      "watch": "Ver",
+      "admin": "Administrador",
+      "started": "Comenzó"
+    }
   },
   "supportCircle": {
     "createRequest": "Crear Solicitud",

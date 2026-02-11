@@ -292,10 +292,14 @@
   },
   "community": {
     "title": "Community",
+    "subtitle": "A shared space to connect, reflect, and grow together.",
     "feed": "Feed",
+    "spaces": "Spaces",
+    "reflections": "Reflections",
+    "groups": "Groups",
+    "messages": "Messages",
     "support": "Support",
     "chatRooms": "Chat",
-    "messages": "DMs",
     "shareSomething": "Share something with the community...",
     "uploadAvatarFirst": "Upload a profile picture to start posting...",
     "post": "Post",
@@ -312,13 +316,44 @@
     "typeMessage": "Type a message...",
     "newMessage": "New Message",
     "selectUser": "Select a user",
+    "selectConversation": "Select a conversation",
+    "selectConversationDesc": "Choose a contact from the list to start chatting",
     "searchUsers": "Search users...",
     "noUsersFound": "No users found",
+    "noOtherUsersAvailable": "No other users available yet",
     "noConversations": "No conversations yet",
     "startConversation": "Start the conversation!",
     "profileRequired": "Profile Picture Required",
     "profileRequiredDesc": "Please upload a profile picture to chat, comment, or like content.",
-    "uploadNow": "Upload now"
+    "uploadNow": "Upload now",
+    "anonymous": "Anonymous",
+    "emptyStateAdmin": "Share your first reflection or go live to start the conversation.",
+    "emptyStateMember": "No posts yet. Admins will share reflections and updates here soon.",
+    "reply": "Reply",
+    "comingSoon": "Coming soon",
+    "replyAvailableSoon": "Reply will be available soon.",
+    "seededReflections": {
+      "oneWordCheckIn": {
+        "title": "One word check-in",
+        "body": "What word describes your inner weather today?"
+      },
+      "gentleWin": {
+        "title": "Gentle win",
+        "body": "What is one small thing you did for yourself recently?"
+      },
+      "eveningSoftness": {
+        "title": "Evening softness",
+        "body": "Before sleep: place one hand on your heart and breathe once."
+      }
+    },
+    "liveStream": {
+      "adminLiveNow": "Admin is live now — join the circle",
+      "connectRealTime": "Connect in real-time with guidance and support",
+      "live": "LIVE",
+      "watch": "Watch",
+      "admin": "Admin",
+      "started": "Started"
+    }
   },
   "supportCircle": {
     "createRequest": "Create Request",

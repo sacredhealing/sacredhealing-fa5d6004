@@ -202,7 +202,42 @@
     "startConversation": "Starta konversationen!",
     "profileRequired": "Profilbild Krävs",
     "profileRequiredDesc": "Vänligen ladda upp en profilbild för att chatta, kommentera eller gilla innehåll.",
-    "uploadNow": "Ladda upp nu"
+    "uploadNow": "Ladda upp nu",
+    "subtitle": "Ett delat utrymme för att ansluta, reflektera och växa tillsammans.",
+    "spaces": "Utrymmen",
+    "reflections": "Reflektioner",
+    "groups": "Grupper",
+    "selectConversation": "Välj en konversation",
+    "selectConversationDesc": "Välj en kontakt från listan för att börja chatta",
+    "noOtherUsersAvailable": "Inga andra användare tillgängliga ännu",
+    "anonymous": "Anonym",
+    "emptyStateAdmin": "Dela din första reflektion eller gå live för att starta konversationen.",
+    "emptyStateMember": "Inga inlägg ännu. Admins kommer att dela reflektioner och uppdateringar här snart.",
+    "reply": "Svara",
+    "comingSoon": "Kommer snart",
+    "replyAvailableSoon": "Svar kommer att vara tillgängligt snart.",
+    "seededReflections": {
+      "oneWordCheckIn": {
+        "title": "Ett ord check-in",
+        "body": "Vilket ord beskriver ditt inre väder idag?"
+      },
+      "gentleWin": {
+        "title": "Mild vinst",
+        "body": "Vad är en liten sak du gjorde för dig själv nyligen?"
+      },
+      "eveningSoftness": {
+        "title": "Kvällsmjukhet",
+        "body": "Före sömn: lägg en hand på ditt hjärta och andas en gång."
+      }
+    },
+    "liveStream": {
+      "adminLiveNow": "Admin är live nu — gå med i cirkeln",
+      "connectRealTime": "Anslut i realtid med vägledning och stöd",
+      "live": "LIVE",
+      "watch": "Titta",
+      "admin": "Admin",
+      "started": "Startade"
+    }
   },
   "supportCircle": {
     "createRequest": "Skapa Förfrågan",

@@ -23,12 +23,6 @@ import RichMediaPost from './RichMediaPost';
 import LiveStreamList from './LiveStreamList';
 import AdminGoLive from './AdminGoLive';
 
-const SEEDED_REFLECTIONS = [
-  { id: 'seed-1', title: 'One word check-in', body: 'What word describes your inner weather today?' },
-  { id: 'seed-2', title: 'Gentle win', body: 'What is one small thing you did for yourself recently?' },
-  { id: 'seed-3', title: 'Evening softness', body: 'Before sleep: place one hand on your heart and breathe once.' },
-];
-
 const CommunityFeed = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -38,6 +32,12 @@ const CommunityFeed = () => {
   const { posts, isLoading, likePost, fetchPosts } = useCommunity();
   const [expandedPost, setExpandedPost] = useState<string | null>(null);
   const [profileEditOpen, setProfileEditOpen] = useState(false);
+
+  const SEEDED_REFLECTIONS = [
+    { id: 'seed-1', title: t('community.seededReflections.oneWordCheckIn.title'), body: t('community.seededReflections.oneWordCheckIn.body') },
+    { id: 'seed-2', title: t('community.seededReflections.gentleWin.title'), body: t('community.seededReflections.gentleWin.body') },
+    { id: 'seed-3', title: t('community.seededReflections.eveningSoftness.title'), body: t('community.seededReflections.eveningSoftness.body') },
+  ];
 
   if (isLoading) {
     return (
@@ -51,9 +51,9 @@ const CommunityFeed = () => {
     <div className="space-y-4">
       {/* Header - Community title */}
       <div className="mb-2">
-        <h1 className="text-2xl font-semibold text-white">Community</h1>
+        <h1 className="text-2xl font-semibold text-white">{t('community.title')}</h1>
         <p className="text-sm text-white/60 mt-1">
-          A shared space to connect, reflect, and grow together.
+          {t('community.subtitle')}
         </p>
       </div>
 
@@ -83,8 +83,8 @@ const CommunityFeed = () => {
             <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center">
               <p className="text-white/80 text-sm">
                 {isAdmin 
-                  ? "Share your first reflection or go live to start the conversation."
-                  : "No posts yet. Admins will share reflections and updates here soon."}
+                  ? t('community.emptyStateAdmin')
+                  : t('community.emptyStateMember')}
               </p>
             </div>
             
@@ -98,9 +98,9 @@ const CommunityFeed = () => {
                     variant="outline"
                     size="sm"
                     className="mt-3 border-white/20 text-white/80 hover:bg-white/10"
-                    onClick={() => toast({ title: 'Coming soon', description: 'Reply will be available soon.' })}
+                    onClick={() => toast({ title: t('community.comingSoon'), description: t('community.replyAvailableSoon') })}
                   >
-                    Reply
+                    {t('community.reply')}
                   </Button>
                 </CardContent>
               </Card>
@@ -183,7 +183,7 @@ const PostComments = ({ postId, onCommentAdded, hasAvatar }: { postId: string; o
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 bg-muted rounded-lg p-2">
-              <p className="text-sm font-medium text-foreground">{comment.profile?.full_name || 'Anonymous'}</p>
+              <p className="text-sm font-medium text-foreground">{comment.profile?.full_name || t('community.anonymous')}</p>
               <p className="text-sm text-foreground">{comment.content}</p>
               <p className="text-xs text-muted-foreground mt-1">
                 {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}

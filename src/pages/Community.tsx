@@ -42,7 +42,7 @@ const Community = () => {
     if (activeTab === 'messages') {
       return conversations.map(c => ({
         id: c.user_id,
-        name: c.full_name || 'Anonymous',
+            name: c.full_name || t('community.anonymous'),
         avatar: c.avatar_url,
         lastMessage: c.last_message,
         lastMessageTime: formatDistanceToNow(new Date(c.last_message_time), { addSuffix: true }),
@@ -85,7 +85,7 @@ const Community = () => {
     if (profile) {
       setNewChatUser({
         id: profile.user_id,
-        name: profile.full_name || 'Anonymous',
+        name: profile.full_name || t('community.anonymous'),
         avatar: profile.avatar_url
       });
     }
@@ -122,12 +122,12 @@ const Community = () => {
             {(['channels', 'feed', 'circles', 'messages'] as const).map((tab) => {
               const label =
                 tab === 'channels'
-                  ? 'Spaces'
+                  ? t('community.spaces')
                   : tab === 'feed'
-                  ? 'Reflections'
+                  ? t('community.reflections')
                   : tab === 'circles'
-                  ? 'Groups'
-                  : 'Messages';
+                  ? t('community.groups')
+                  : t('community.messages');
               return (
                 <button
                   key={tab}
@@ -230,8 +230,8 @@ const Community = () => {
           />
         ) : (
           <EmptyState
-            title="Select a conversation"
-            description="Choose a contact from the list to start chatting"
+            title={t('community.selectConversation')}
+            description={t('community.selectConversationDesc')}
           />
         )}
       </div>
@@ -280,7 +280,7 @@ const UserSelector = ({ onSelect }: { onSelect: (userId: string) => void }) => {
           </div>
         ) : filteredUsers.length === 0 ? (
           <p className="text-center text-muted-foreground py-4">
-            {search.trim() ? t('community.noUsersFound') : 'No other users available yet'}
+            {search.trim() ? t('community.noUsersFound') : t('community.noOtherUsersAvailable')}
           </p>
         ) : (
           <div className="space-y-2">
@@ -296,7 +296,7 @@ const UserSelector = ({ onSelect }: { onSelect: (userId: string) => void }) => {
                     {user.full_name?.charAt(0) || 'U'}
                   </AvatarFallback>
                 </Avatar>
-                <span className="font-medium text-foreground">{user.full_name || 'Anonymous'}</span>
+                <span className="font-medium text-foreground">{user.full_name || t('community.anonymous')}</span>
               </div>
             ))}
           </div>
