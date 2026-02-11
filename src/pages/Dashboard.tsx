@@ -181,24 +181,6 @@ const Dashboard: React.FC = () => {
         <AmbientSoundToggle />
       </header>
 
-      {/* Quick Actions Section */}
-      <div className="mb-4 sm:mb-6 animate-slide-up">
-        <div className="grid grid-cols-3 gap-2 sm:gap-3">
-          {QUICK_ACTIONS.map((action) => (
-            <button
-              key={action.id}
-              onClick={() => navigate(action.route)}
-              className="group"
-            >
-              <Card className="bg-card/50 backdrop-blur border-border/50 p-3 sm:p-4 h-full hover:bg-card/80 hover:border-gold/50 transition-all duration-300 text-center">
-                <action.icon className="w-6 h-6 sm:w-8 sm:h-8 text-gold mx-auto mb-2 group-hover:scale-110 transition-transform" />
-                <h3 className="text-xs sm:text-sm font-heading font-bold text-foreground">{action.title}</h3>
-              </Card>
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* State: idle - Daily Guidance Card + restored sections */}
       {flowState === 'idle' && (
         <>
@@ -222,6 +204,46 @@ const Dashboard: React.FC = () => {
                 {t('common.notNow')}
               </button>
             )}
+          </div>
+
+          {/* Quick Actions Section */}
+          <div className="mb-4 sm:mb-6 animate-slide-up">
+            <div className="grid grid-cols-3 gap-3 sm:gap-4">
+              {QUICK_ACTIONS.map((action, index) => {
+                const gradients = [
+                  'bg-gradient-to-br from-purple-900/40 via-secondary/30 to-purple-800/40',
+                  'bg-gradient-to-br from-primary/30 via-turquoise/20 to-primary/20',
+                  'bg-gradient-to-br from-amber-500/30 via-gold/20 to-amber-400/30',
+                ];
+                const glows = [
+                  'shadow-[0_0_20px_rgba(167,139,250,0.3)] hover:shadow-[0_0_30px_rgba(167,139,250,0.5)]',
+                  'shadow-[0_0_20px_rgba(0,242,254,0.3)] hover:shadow-[0_0_30px_rgba(0,242,254,0.5)]',
+                  'shadow-[0_0_20px_rgba(255,193,7,0.3)] hover:shadow-[0_0_30px_rgba(255,193,7,0.5)]',
+                ];
+                const iconColors = [
+                  'text-purple-300',
+                  'text-primary',
+                  'text-amber-400',
+                ];
+                return (
+                  <button
+                    key={action.id}
+                    onClick={() => navigate(action.route)}
+                    className="group relative"
+                  >
+                    <Card className={`glass-card relative overflow-hidden p-4 sm:p-5 h-full ${gradients[index]} border border-white/10 hover:border-white/20 transition-all duration-300 ${glows[index]}`}>
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      <div className="relative z-10 text-center">
+                        <div className="relative inline-block mb-3">
+                          <action.icon className={`w-8 h-8 sm:w-10 sm:h-10 ${iconColors[index]} mx-auto group-hover:scale-110 transition-transform duration-300`} style={{ filter: `drop-shadow(0 0 8px ${index === 0 ? 'rgba(167,139,250,0.6)' : index === 1 ? 'rgba(0,242,254,0.6)' : 'rgba(255,193,7,0.6)'})` }} />
+                        </div>
+                        <h3 className="text-sm sm:text-base font-heading font-bold text-white">{action.title}</h3>
+                      </div>
+                    </Card>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Daily routine — optional, visually softened */}
