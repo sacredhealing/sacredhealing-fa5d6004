@@ -22,42 +22,49 @@ export const ShareableProgressCard: React.FC<ShareableProgressCardProps> = ({ on
     { 
       icon: Flame, 
       value: profile?.streak_days ?? 0, 
-      label: 'Day Streak',
+      labelKey: 'progressCard.dayStreak',
       color: 'text-orange-400'
     },
     { 
       icon: Trophy, 
       value: userAchievements.length, 
-      label: 'Achievements',
+      labelKey: 'progressCard.achievements',
       color: 'text-yellow-400'
     },
     { 
       icon: Star, 
       value: userMilestones.length, 
-      label: 'Milestones',
+      labelKey: 'progressCard.milestones',
       color: 'text-purple-400'
     },
     { 
       icon: Sparkles, 
       value: balance?.balance ?? 0, 
-      label: 'SHC Earned',
+      labelKey: 'progressCard.shcEarned',
       color: 'text-amber-400'
     },
   ];
 
   const handleShare = async () => {
     const shareUrl = 'https://sacredhealing.lovable.app?utm_source=share&utm_medium=progress_card';
-    const shareText = `🧘 My Sacred Healing Journey:\n✨ ${profile?.streak_days ?? 0} Day Streak\n🏆 ${userAchievements.length} Achievements\n💫 ${balance?.balance ?? 0} SHC Earned\n\nJoin me on this transformative path!`;
+    const shareText = [
+      `🧘 ${t('progressCard.shareIntro')}`,
+      `✨ ${profile?.streak_days ?? 0} ${t('progressCard.dayStreak')}`,
+      `🏆 ${userAchievements.length} ${t('progressCard.achievements')}`,
+      `💫 ${balance?.balance ?? 0} ${t('progressCard.shcEarned')}`,
+      '',
+      t('progressCard.shareJoinPath'),
+    ].join('\n');
 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'My Sacred Healing Progress',
+          title: t('progressCard.shareTitle'),
           text: shareText,
           url: shareUrl,
         });
         onShare?.();
-        toast.success('Shared successfully!');
+        toast.success(t('progressCard.sharedSuccess'));
       } catch (err) {
         if ((err as Error).name !== 'AbortError') {
           copyToClipboard(shareText + '\n' + shareUrl);
@@ -71,10 +78,10 @@ export const ShareableProgressCard: React.FC<ShareableProgressCardProps> = ({ on
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      toast.success('Progress copied to clipboard!');
+      toast.success(t('progressCard.copiedToClipboard'));
       onShare?.();
     } catch (err) {
-      toast.error('Failed to copy');
+      toast.error(t('progressCard.failedToCopy'));
     }
   };
 
@@ -97,22 +104,22 @@ export const ShareableProgressCard: React.FC<ShareableProgressCardProps> = ({ on
           </div>
           <div>
             <h3 className="text-lg font-heading font-bold text-white">
-              {(profile as any)?.display_name || 'Sacred Soul'}
+              {(profile as any)?.display_name || t('progressCard.sacredSoul')}
             </h3>
-            <p className="text-sm text-purple-200">Sacred Healing Journey</p>
+            <p className="text-sm text-purple-200">{t('progressCard.sacredHealingJourney')}</p>
           </div>
         </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 gap-4 mb-6">
-          {stats.map((stat, index) => (
+          {stats.map((stat) => (
             <div 
-              key={stat.label}
+              key={stat.labelKey}
               className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center"
             >
               <stat.icon className={`w-6 h-6 ${stat.color} mx-auto mb-2`} />
               <p className="text-2xl font-bold text-white">{stat.value.toLocaleString()}</p>
-              <p className="text-xs text-purple-200">{stat.label}</p>
+              <p className="text-xs text-purple-200">{t(stat.labelKey)}</p>
             </div>
           ))}
         </div>
@@ -120,7 +127,7 @@ export const ShareableProgressCard: React.FC<ShareableProgressCardProps> = ({ on
         {/* Branding */}
         <div className="flex items-center justify-center gap-2 mb-4">
           <LotusIcon size={20} className="text-amber-400" />
-          <span className="text-sm font-medium text-amber-400">Sacred Healing</span>
+          <span className="text-sm font-medium text-amber-400">{t('progressCard.sacredHealing')}</span>
         </div>
 
         {/* Share Button */}
@@ -129,7 +136,7 @@ export const ShareableProgressCard: React.FC<ShareableProgressCardProps> = ({ on
           className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
         >
           <Share2 className="w-4 h-4 mr-2" />
-          Share My Progress
+          {t('progressCard.shareMyProgress')}
         </Button>
       </div>
     </Card>

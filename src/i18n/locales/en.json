@@ -1862,5 +1862,21 @@
       "name": "Early Adopter",
       "description": "Joined during launch period"
     }
+  },
+  "progressCard": {
+    "sacredSoul": "Sacred Soul",
+    "sacredHealingJourney": "Sacred Healing Journey",
+    "dayStreak": "Day Streak",
+    "achievements": "Achievements",
+    "milestones": "Milestones",
+    "shcEarned": "SHC Earned",
+    "sacredHealing": "Sacred Healing",
+    "shareMyProgress": "Share My Progress",
+    "shareIntro": "My Sacred Healing Journey:",
+    "shareTitle": "My Sacred Healing Progress",
+    "shareJoinPath": "Join me on this transformative path!",
+    "sharedSuccess": "Shared successfully!",
+    "copiedToClipboard": "Progress copied to clipboard!",
+    "failedToCopy": "Failed to copy"
   }
 }

@@ -1808,5 +1808,21 @@
       "name": "Tidig adoptör",
       "description": "Gick med under lanseringsperioden"
     }
+  },
+  "progressCard": {
+    "sacredSoul": "Helig Själ",
+    "sacredHealingJourney": "Sacred Healing-resan",
+    "dayStreak": "Dagars svit",
+    "achievements": "Prestationer",
+    "milestones": "Milstolpar",
+    "shcEarned": "SHC intjänat",
+    "sacredHealing": "Sacred Healing",
+    "shareMyProgress": "Dela min framgång",
+    "shareIntro": "Min Sacred Healing-resa:",
+    "shareTitle": "Min Sacred Healing-framgång",
+    "shareJoinPath": "Följ mig på denna förvandlande väg!",
+    "sharedSuccess": "Delat!",
+    "copiedToClipboard": "Framgång kopierad till urklipp!",
+    "failedToCopy": "Kunde inte kopiera"
   }
 }

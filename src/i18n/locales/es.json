@@ -1713,5 +1713,21 @@
       "name": "Adoptante Temprano",
       "description": "Se unió durante el período de lanzamiento"
     }
+  },
+  "progressCard": {
+    "sacredSoul": "Alma Sagrada",
+    "sacredHealingJourney": "Viaje de Sacred Healing",
+    "dayStreak": "Racha de días",
+    "achievements": "Logros",
+    "milestones": "Hitos",
+    "shcEarned": "SHC Ganados",
+    "sacredHealing": "Sacred Healing",
+    "shareMyProgress": "Compartir mi progreso",
+    "shareIntro": "Mi viaje de Sacred Healing:",
+    "shareTitle": "Mi progreso en Sacred Healing",
+    "shareJoinPath": "¡Únete a mí en este camino transformador!",
+    "sharedSuccess": "¡Compartido con éxito!",
+    "copiedToClipboard": "¡Progreso copiado al portapapeles!",
+    "failedToCopy": "Error al copiar"
   }
 }
