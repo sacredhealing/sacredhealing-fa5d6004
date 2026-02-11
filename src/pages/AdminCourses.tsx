@@ -305,7 +305,7 @@ const AdminCourses: React.FC = () => {
       title: lessonForm.title,
       description: lessonForm.content_type === 'text' ? lessonForm.text_content : lessonForm.description,
       content_type: lessonForm.content_type,
-      content_url: lessonForm.content_type === 'text' ? null : lessonForm.content_url,
+      content_url: lessonForm.content_type === 'text' ? null : (lessonForm.content_url?.trim() || null),
       duration_minutes: lessonForm.duration_minutes,
       is_preview: lessonForm.is_preview,
       course_id: selectedCourse.id,
@@ -380,7 +380,7 @@ const AdminCourses: React.FC = () => {
       title: lessonForm.title,
       description: lessonForm.content_type === 'text' ? lessonForm.text_content : lessonForm.description,
       content_type: lessonForm.content_type,
-      content_url: lessonForm.content_type === 'text' ? null : lessonForm.content_url,
+      content_url: lessonForm.content_type === 'text' ? null : (lessonForm.content_url?.trim() || null),
       duration_minutes: lessonForm.duration_minutes,
       is_preview: lessonForm.is_preview,
     };
@@ -496,6 +496,51 @@ const AdminCourses: React.FC = () => {
     setMaterialForm({ title: '', file_url: '', file_type: 'text' });
   };
 
+  const fixEmptyContentUrls = async () => {
+    setIsLoading(true);
+    try {
+      // Fetch all lessons with empty string content_url
+      const { data: lessonsToFix, error: fetchError } = await supabase
+        .from('lessons')
+        .select('id, content_url')
+        .eq('content_url', '');
+
+      if (fetchError) {
+        toast({ title: 'Error', description: fetchError.message, variant: 'destructive' });
+        setIsLoading(false);
+        return;
+      }
+
+      if (!lessonsToFix || lessonsToFix.length === 0) {
+        toast({ title: 'No fixes needed', description: 'All lessons already have valid content URLs or null values.' });
+        setIsLoading(false);
+        return;
+      }
+
+      // Update all empty strings to null
+      const { error: updateError } = await supabase
+        .from('lessons')
+        .update({ content_url: null })
+        .eq('content_url', '');
+
+      if (updateError) {
+        toast({ title: 'Error', description: updateError.message, variant: 'destructive' });
+      } else {
+        toast({ 
+          title: 'Success', 
+          description: `Fixed ${lessonsToFix.length} lesson(s) with empty content URLs.` 
+        });
+        // Refresh lessons if a course is selected
+        if (selectedCourse) {
+          fetchLessons(selectedCourse.id);
+        }
+      }
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message || 'Failed to fix content URLs', variant: 'destructive' });
+    }
+    setIsLoading(false);
+  };
+
   const getLanguageInfo = (code: string) => {
     return languages.find(l => l.code === code) || languages[0];
   };
@@ -545,7 +590,37 @@ const AdminCourses: React.FC = () => {
             <AcademyCertification />
           </TabsContent>
 
+          <TabsContent value="courses" className="mt-6">
+            {/* Fix Empty Content URLs Button */}
+            <div className="mb-4 flex justify-end">
+              <Button
+                onClick={fixEmptyContentUrls}
+                disabled={isLoading}
+                variant="outline"
+                className="mb-4"
+              >
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                ) : null}
+                Fix Empty Content URLs
+              </Button>
+            </div>
+
           <TabsContent value="courses" className="space-y-6 mt-6">
+            {/* Fix Empty Content URLs Button */}
+            <div className="flex justify-end">
+              <Button
+                onClick={fixEmptyContentUrls}
+                disabled={isLoading}
+                variant="outline"
+              >
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                ) : null}
+                Fix Empty Content URLs
+              </Button>
+            </div>
+            
             {/* Selection Status */}
             {!selectedCourse && (
               <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-sm text-muted-foreground">
