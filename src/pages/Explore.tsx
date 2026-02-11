@@ -226,111 +226,105 @@ export default function Explore() {
         />
       ) : null}
 
-      {/* Your Space */}
+      {/* SECTION: Your Space */}
       <section className="mt-8">
-        <h2 className="text-sm font-medium text-white/50 mb-4 tracking-wide uppercase">
+        <h2 className="text-sm font-medium text-white/60 mb-4 tracking-wide uppercase">
           Your Space
         </h2>
 
-        <div className="w-full relative overflow-hidden rounded-3xl border border-white/10 bg-white/5">
-          {/* subtle "alive" glow */}
-          <div className="pointer-events-none absolute inset-0 opacity-0 hover:opacity-100 transition-opacity
-                          bg-gradient-to-r from-white/0 via-white/5 to-white/0" />
+        <div className="relative overflow-hidden rounded-3xl border border-purple-500/30
+                        bg-gradient-to-br from-purple-900/30 via-purple-800/20 to-black">
 
-          {/* Header row clickable */}
+          {/* soft animated glow */}
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-fuchsia-500/10 to-purple-500/10 opacity-60" />
+
+          {/* Header */}
           <button
             onClick={() => navigate("/membership")}
-            className="w-full p-6 text-left hover:bg-white/7 transition relative z-10"
+            className="relative z-10 w-full p-6 text-left hover:bg-white/5 transition"
           >
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-4">
-                <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
-                  <Sparkles size={24} className="text-white/80" />
+                <div className="p-3 rounded-2xl bg-purple-500/20 border border-purple-400/30">
+                  <Sparkles size={24} className="text-purple-300" />
                 </div>
 
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="text-lg font-semibold text-white">
-                      {isPaid ? "Your Space" : "Membership"}
+                      Your Space
                     </h3>
-
-                    {isPaid ? (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full border border-white/10 bg-white/5 text-white/70">
-                        Active
-                      </span>
-                    ) : null}
+                    <span className="text-[10px] px-2 py-0.5 rounded-full
+                                     bg-purple-500/30 text-purple-200 border border-purple-400/40">
+                      Active
+                    </span>
                   </div>
 
-                  <p className="text-sm text-white/60 mt-1 max-w-md leading-relaxed">
-                    {isPaid
-                      ? "Everything included for you — choose where to enter."
-                      : "Open your full space and access everything in one place."}
+                  <p className="text-sm text-white/70 mt-1">
+                    Everything included for you — choose where to enter.
                   </p>
                 </div>
               </div>
 
-              <div className="p-2 rounded-full bg-white/5 border border-white/10">
-                <ChevronRight size={20} className="text-white/60" />
+              <div className="p-2 rounded-full bg-purple-500/20 border border-purple-400/30">
+                <ChevronRight size={20} className="text-purple-200" />
               </div>
             </div>
           </button>
 
-          {/* Paid-only: tool launcher row inside the same card */}
-          {isPaid ? (
-            <div className="relative z-10 px-6 pb-6">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <button
-                  onClick={() => navigate("/vedic-astrology")}
-                  className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left hover:bg-white/7 transition"
-                >
-                  <div className="text-sm font-semibold text-white">Vedic Astrology</div>
-                  <div className="mt-1 text-xs text-white/60">Daily influence + blueprint</div>
-                </button>
-
-                <button
-                  onClick={() => navigate("/ayurveda")}
-                  className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left hover:bg-white/7 transition"
-                >
-                  <div className="text-sm font-semibold text-white">Ayurveda</div>
-                  <div className="mt-1 text-xs text-white/60">Balance + daily guidance</div>
-                </button>
-
-                <button
-                  onClick={() => navigate("/soul")}
-                  className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left hover:bg-white/7 transition"
-                >
-                  <div className="text-sm font-semibold text-white">Soul</div>
-                  <div className="mt-1 text-xs text-white/60">Receive deeper sessions</div>
-                </button>
-              </div>
-
-              <div className="mt-3 flex items-center justify-between">
-                <button
-                  onClick={() => navigate("/library")}
-                  className="text-sm text-white/70 hover:text-white transition underline underline-offset-4"
-                >
-                  Open Library
-                </button>
-
-                <button
-                  onClick={() => navigate("/membership")}
-                  className="text-sm text-white/70 hover:text-white transition underline underline-offset-4"
-                >
-                  Manage
-                </button>
-              </div>
-            </div>
-          ) : (
-            // Free-only: simple CTA footer (optional)
-            <div className="relative z-10 px-6 pb-6">
+          {/* Tools */}
+          <div className="relative z-10 px-6 pb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button
-                onClick={() => navigate("/membership")}
-                className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-black hover:opacity-90 transition"
+                onClick={() => navigate("/vedic-astrology")}
+                className="rounded-2xl px-4 py-4 text-left
+                           bg-gradient-to-r from-purple-600/30 to-purple-500/20
+                           border border-purple-400/40
+                           hover:from-purple-600/50 hover:to-purple-500/40
+                           transition"
               >
-                View plans
+                <div className="text-sm font-semibold text-white">
+                  Vedic Astrology
+                </div>
+                <div className="mt-1 text-xs text-purple-100/80">
+                  Daily influence + blueprint
+                </div>
+              </button>
+
+              <button
+                onClick={() => navigate("/ayurveda")}
+                className="rounded-2xl px-4 py-4 text-left
+                           bg-gradient-to-r from-purple-600/30 to-purple-500/20
+                           border border-purple-400/40
+                           hover:from-purple-600/50 hover:to-purple-500/40
+                           transition"
+              >
+                <div className="text-sm font-semibold text-white">
+                  Ayurveda
+                </div>
+                <div className="mt-1 text-xs text-purple-100/80">
+                  Balance + daily guidance
+                </div>
               </button>
             </div>
-          )}
+
+            {/* Footer actions */}
+            <div className="mt-4 flex items-center justify-between">
+              <button
+                onClick={() => navigate("/library")}
+                className="text-sm text-purple-200 hover:text-white transition underline underline-offset-4"
+              >
+                Open Library
+              </button>
+
+              <button
+                onClick={() => navigate("/membership")}
+                className="text-sm text-purple-200 hover:text-white transition underline underline-offset-4"
+              >
+                Manage
+              </button>
+            </div>
+          </div>
         </div>
       </section>
 
