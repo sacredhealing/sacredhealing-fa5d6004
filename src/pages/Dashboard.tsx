@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Sparkles, Play, Music2, Wind } from 'lucide-react';
+import { Sparkles, Play, Music2, Heart } from 'lucide-react';
 import { SacredFlame } from '@/components/dashboard/SacredFlame';
 import { useProfile } from '@/hooks/useProfile';
 import { useDailyGuidance } from '@/hooks/useDailyGuidance';
@@ -53,24 +53,9 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
 
   const QUICK_ACTIONS = [
-    {
-      id: "mantra",
-      title: "Mantra",
-      icon: Sparkles,
-      route: "/mantras",
-    },
-    {
-      id: "breath",
-      title: "Breath",
-      icon: Wind,
-      route: "/breathing",
-    },
-    {
-      id: "meditate",
-      title: "Meditate",
-      icon: Play,
-      route: "/meditations",
-    },
+    { id: "mantra", title: "Mantra", icon: Sparkles, route: "/mantras" },
+    { id: "soul", title: "Soul", icon: Heart, route: "/creative-soul" },
+    { id: "meditate", title: "Meditate", icon: Play, route: "/meditations" },
   ];
   const { profile: userProfile } = useProfile();
   const { guidance, isLoading, lastCompleted, completeSlot, streakDays, hasCompletedAllThree } = useDailyGuidance();
