@@ -153,7 +153,7 @@ const CourseDetail: React.FC = () => {
     const first = lessons[0];
     setActiveVideoLessonId(first.id);
     setActiveVideoTitle(first.title);
-    setActiveVideoUrl(first.content_type === 'video' || first.content_type === 'audio' ? (first.content_url || null) : null);
+    setActiveVideoUrl(getVideoUrlForLesson(first));
   }, [isAdmin, enrollment, hasStargateMembership, isPremium, lessons, activeVideoLessonId]);
 
   const fetchCourse = async () => {
@@ -316,7 +316,7 @@ const CourseDetail: React.FC = () => {
     }
   };
 
-  // Extract YouTube video ID from various URL formats
+  // Extract YouTube video ID from various URL formats (including youtu.be)
   const extractYouTubeId = (url: string | null): string | null => {
     if (!url) return null;
     
@@ -328,7 +328,7 @@ const CourseDetail: React.FC = () => {
     const watchMatch = url.match(/youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/);
     if (watchMatch) return watchMatch[1];
     
-    // Handle youtu.be/ format
+    // Handle youtu.be/ format (shortened links from admin)
     const shortMatch = url.match(/youtu\.be\/([a-zA-Z0-9_-]+)/);
     if (shortMatch) return shortMatch[1];
     
@@ -340,6 +340,28 @@ const CourseDetail: React.FC = () => {
     if (/^[a-zA-Z0-9_-]+$/.test(url)) return url;
     
     return null;
+  };
+
+  // Normalize any YouTube URL to embed format before passing to iframe
+  const toYouTubeEmbedUrl = (url: string | null): string | null => {
+    const id = extractYouTubeId(url);
+    if (!id) return null;
+    return `https://www.youtube.com/embed/${id}?rel=0&modestbranding=1&origin=${window.location.origin}`;
+  };
+
+  // Get video URL for main player: lesson content_url (video/audio) OR first YouTube material. Video → main player only.
+  const getVideoUrlForLesson = (lesson: LessonWithMaterials): string | null => {
+    if ((lesson.content_type === 'video' || lesson.content_type === 'audio') && lesson.content_url?.trim()) {
+      return lesson.content_url.trim();
+    }
+    const youtubeMaterial = lesson.materials?.find((m) => m.file_type === 'youtube');
+    if (youtubeMaterial?.file_url?.trim()) return youtubeMaterial.file_url.trim();
+    return null;
+  };
+
+  // Materials that are NOT video (PDF / Audio) → Sacred Material buttons only. Never show Sacred Material for YouTube.
+  const getNonVideoMaterials = (lesson: LessonWithMaterials): LessonMaterial[] => {
+    return (lesson.materials ?? []).filter((m) => m.file_type !== 'youtube');
   };
 
   // Show loading while checking admin status or fetching course
@@ -532,7 +554,10 @@ const CourseDetail: React.FC = () => {
                 <div className="overflow-y-auto space-y-1 pr-1">
                   {lessons.map((lesson, index) => {
                     const isActive = activeVideoLessonId === lesson.id;
-                    const isLocked = !lesson.content_url && lesson.content_type !== 'text';
+                    const videoUrl = getVideoUrlForLesson(lesson);
+                    const isLocked = !hasAccess
+                      ? !videoUrl && lesson.content_type !== 'text'
+                      : false;
                     return (
                       <button
                         key={lesson.id}
@@ -540,11 +565,8 @@ const CourseDetail: React.FC = () => {
                         onClick={() => {
                           setActiveVideoLessonId(lesson.id);
                           setActiveVideoTitle(lesson.title);
-                          const url = lesson.content_type === 'video' || lesson.content_type === 'audio'
-                            ? (lesson.content_url || null)
-                            : null;
-                          setActiveVideoUrl(url);
-                          if (!lesson.content_url && lesson.content_type !== 'text') {
+                          setActiveVideoUrl(videoUrl);
+                          if (!hasAccess && !videoUrl && lesson.content_type !== 'text') {
                             toast.info('This lesson content is being prepared.');
                           }
                         }}
@@ -569,24 +591,30 @@ const CourseDetail: React.FC = () => {
               <Card className="p-6 overflow-hidden">
                 {/* Large video/audio player */}
                 <div className="relative w-full rounded-lg overflow-hidden bg-muted/30" style={{ paddingBottom: '56.25%' }}>
-                  {activeVideoUrl && extractYouTubeId(activeVideoUrl) ? (
-                    <iframe
-                      width="100%"
-                      height="100%"
-                      src={`https://www.youtube.com/embed/${extractYouTubeId(activeVideoUrl)}?rel=0&modestbranding=1&origin=${window.location.origin}`}
-                      title={activeVideoTitle}
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                      allowFullScreen
-                      className="absolute top-0 left-0 w-full h-full"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center p-8">
-                      <Video className="w-16 h-16 text-muted-foreground/50 mb-4" />
-                      <p className="text-muted-foreground text-center font-medium mb-1">Content Coming Soon</p>
-                      <p className="text-muted-foreground/70 text-center text-sm">This lesson is being prepared.</p>
-                    </div>
-                  )}
+                  {(() => {
+                    const embedUrl = toYouTubeEmbedUrl(activeVideoUrl);
+                    if (embedUrl) {
+                      return (
+                        <iframe
+                          width="100%"
+                          height="100%"
+                          src={embedUrl}
+                          title={activeVideoTitle}
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                          allowFullScreen
+                          className="absolute top-0 left-0 w-full h-full"
+                        />
+                      );
+                    }
+                    return (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center p-8">
+                        <Video className="w-16 h-16 text-muted-foreground/50 mb-4" />
+                        <p className="text-muted-foreground text-center font-medium mb-1">Content Coming Soon</p>
+                        <p className="text-muted-foreground/70 text-center text-sm">This lesson is being prepared.</p>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Lesson title + description */}
@@ -599,15 +627,15 @@ const CourseDetail: React.FC = () => {
                   )}
                 </div>
 
-                {/* Only 2 actions: Sacred Material (if exists), Continue (next lesson) */}
+                {/* Only 2 actions: Sacred Material (PDF/Audio only; never YouTube), Continue (next lesson) */}
                 <div className="mt-6 flex flex-wrap items-center gap-3">
                   {(() => {
                     const currentLesson = lessons.find(l => l.id === activeVideoLessonId);
-                    const lessonMaterials = currentLesson?.materials ?? [];
+                    const nonVideoMaterials = currentLesson ? getNonVideoMaterials(currentLesson) : [];
                     return (
-                      lessonMaterials.length > 0 && (
+                      nonVideoMaterials.length > 0 && (
                         <div className="flex flex-wrap gap-2">
-                          {lessonMaterials.map((material) => (
+                          {nonVideoMaterials.map((material) => (
                             <Button
                               key={material.id}
                               variant="outline"
@@ -616,7 +644,7 @@ const CourseDetail: React.FC = () => {
                               className="gap-2"
                             >
                               <BookOpen className="w-4 h-4" />
-                              {lessonMaterials.length === 1 ? 'Sacred Material' : `Sacred Material: ${material.title}`}
+                              {nonVideoMaterials.length === 1 ? 'Sacred Material' : `Sacred Material: ${material.title}`}
                             </Button>
                           ))}
                         </div>
@@ -632,10 +660,7 @@ const CourseDetail: React.FC = () => {
                         onClick={() => {
                           setActiveVideoLessonId(nextLesson.id);
                           setActiveVideoTitle(nextLesson.title);
-                          const url = nextLesson.content_type === 'video' || nextLesson.content_type === 'audio'
-                            ? (nextLesson.content_url || null)
-                            : null;
-                          setActiveVideoUrl(url);
+                          setActiveVideoUrl(getVideoUrlForLesson(nextLesson));
                         }}
                       >
                         Continue
