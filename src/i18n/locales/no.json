@@ -237,6 +237,12 @@
       "watch": "Se",
       "admin": "Admin",
       "started": "Startet"
+    },
+    "diary": {
+      "fromTheSpace": "Fra rommet",
+      "today": "I dag",
+      "sharedBy": "Delt av Sacred Healing-teamet",
+      "comment": "Kommenter"
     }
   },
   "supportCircle": {

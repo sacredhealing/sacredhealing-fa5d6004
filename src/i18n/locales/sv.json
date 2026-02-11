@@ -237,6 +237,12 @@
       "watch": "Titta",
       "admin": "Admin",
       "started": "Startade"
+    },
+    "diary": {
+      "fromTheSpace": "Från utrymmet",
+      "today": "Idag",
+      "sharedBy": "Delat av Sacred Healing-teamet",
+      "comment": "Kommentera"
     }
   },
   "supportCircle": {

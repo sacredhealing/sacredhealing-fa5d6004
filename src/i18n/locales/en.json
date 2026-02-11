@@ -353,6 +353,12 @@
       "watch": "Watch",
       "admin": "Admin",
       "started": "Started"
+    },
+    "diary": {
+      "fromTheSpace": "From the Space",
+      "today": "Today",
+      "sharedBy": "Shared by the Sacred Healing team",
+      "comment": "Comment"
     }
   },
   "supportCircle": {

@@ -22,6 +22,7 @@ import AdminPostCreator from './AdminPostCreator';
 import RichMediaPost from './RichMediaPost';
 import LiveStreamList from './LiveStreamList';
 import AdminGoLive from './AdminGoLive';
+import { useDiaryEntries } from '@/features/community/useDiaryEntries';
 
 const CommunityFeed = () => {
   const { t } = useTranslation();
@@ -32,6 +33,7 @@ const CommunityFeed = () => {
   const { posts, isLoading, likePost, fetchPosts } = useCommunity();
   const [expandedPost, setExpandedPost] = useState<string | null>(null);
   const [profileEditOpen, setProfileEditOpen] = useState(false);
+  const diaryEntries = useDiaryEntries();
 
   const SEEDED_REFLECTIONS = [
     { id: 'seed-1', title: t('community.seededReflections.oneWordCheckIn.title'), body: t('community.seededReflections.oneWordCheckIn.body') },
@@ -73,6 +75,60 @@ const CommunityFeed = () => {
       {/* Admin Post Creator - Only visible to admins */}
       {isAdmin && (
         <AdminPostCreator onPostCreated={fetchPosts} />
+      )}
+
+      {/* ===================== */}
+      {/* ADMIN DIARY SECTION */}
+      {/* ===================== */}
+      {diaryEntries.length > 0 && (
+        <section className="mb-8 space-y-4">
+          <h2 className="text-xs uppercase tracking-widest text-white/40 px-1">
+            {t('community.diary.fromTheSpace', 'From the Space')}
+          </h2>
+
+          {diaryEntries.map((entry) => (
+            <div
+              key={entry.id}
+              className="rounded-2xl border border-white/10 bg-white/[0.03] p-5"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-white">
+                    {entry.title}
+                  </span>
+                  {entry.type === "daily" && (
+                    <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full">
+                      {t('community.diary.today', 'Today')}
+                    </span>
+                  )}
+                </div>
+                <span className="text-[10px] uppercase tracking-wider text-white/40">
+                  {entry.type}
+                </span>
+              </div>
+
+              <p className="text-sm text-white/70 leading-relaxed">
+                {entry.body}
+              </p>
+
+              <div className="mt-4 flex items-center justify-between">
+                <span className="text-[11px] text-white/30">
+                  {t('community.diary.sharedBy', 'Shared by the Sacred Healing team')}
+                </span>
+
+                <button 
+                  className="text-xs text-purple-400 hover:text-purple-300 transition"
+                  onClick={() => toast({ 
+                    title: t('community.comingSoon'), 
+                    description: t('community.replyAvailableSoon') 
+                  })}
+                >
+                  {t('community.diary.comment', 'Comment')}
+                </button>
+              </div>
+            </div>
+          ))}
+        </section>
       )}
 
       {/* Feed Posts */}
