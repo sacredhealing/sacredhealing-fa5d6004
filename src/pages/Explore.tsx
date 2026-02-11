@@ -15,9 +15,9 @@ const Explore = () => {
           <p className="text-sm text-gray-400">Begin gently today.</p>
         </header>
 
-        {/* SECTION: Daily Essentials (Now only the list rows) */}
+        {/* SECTION: Daily Essentials (Keep original styles and functional links) */}
         <section>
-          <h2 className="text-sm font-medium text-gray-400 mb-4 tracking-wide uppercase">How do you feel?</h2>
+          <h2 className="text-sm font-medium text-gray-400 mb-4 tracking-wide uppercase">Daily essentials</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[
               { label: "Calm my mind", sub: "A short reset (2-3 min)", icon: <Wind size={20} className="text-cyan-400" />, path: "/meditate" },
