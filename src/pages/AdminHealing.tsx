@@ -24,6 +24,7 @@ interface HealingAudio {
   price_shc: number;
   category: string;
   script_text?: string | null;
+  language?: string | null;
   created_at: string;
 }
 
@@ -43,6 +44,7 @@ const AdminHealing: React.FC = () => {
     priceUsd: 4.99,
     category: 'healing',
     scriptText: '',
+    language: 'en' as 'en' | 'sv' | 'es' | 'no',
   });
 
   useEffect(() => {
@@ -104,10 +106,11 @@ const AdminHealing: React.FC = () => {
 
       if (data) {
         console.log('Fetched healing audios:', data.length);
-        // Ensure script_text is included even if types are outdated
+        // Ensure script_text and language are included even if types are outdated
         setAudios(data.map(item => ({
           ...item,
-          script_text: (item as any).script_text || null
+          script_text: (item as any).script_text || null,
+          language: (item as any).language || 'en'
         })) as HealingAudio[]);
       } else {
         console.log('No healing audio data returned');
@@ -128,7 +131,7 @@ const AdminHealing: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Use type assertion to include script_text even if types are outdated
+      // Use type assertion to include script_text and language even if types are outdated
       const { error } = await supabase.from('healing_audio').insert({
         title: formData.title,
         description: formData.description || null,
@@ -140,6 +143,7 @@ const AdminHealing: React.FC = () => {
         price_shc: 0,
         category: formData.category,
         script_text: formData.scriptText || null,
+        language: formData.language,
       } as any);
 
       if (error) throw error;
@@ -155,6 +159,7 @@ const AdminHealing: React.FC = () => {
         priceUsd: 4.99,
         category: 'healing',
         scriptText: '',
+        language: 'en',
       });
       fetchAudios();
     } catch (error: any) {
@@ -427,6 +432,24 @@ USING (public.has_role(auth.uid(), 'admin'));`;
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                 placeholder="healing, chakra, frequency, sleep, emotional, etc."
               />
+            </div>
+
+            <div>
+              <Label htmlFor="language">Meditation language</Label>
+              <select
+                id="language"
+                value={formData.language}
+                onChange={(e) => setFormData({ ...formData, language: e.target.value as 'en' | 'sv' | 'es' | 'no' })}
+                className="w-full h-10 px-3 rounded-md bg-muted/50 border border-border text-foreground mt-2"
+              >
+                <option value="en">English</option>
+                <option value="sv">Svenska</option>
+                <option value="es">Español</option>
+                <option value="no">Norsk</option>
+              </select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Controls which language filter shows this healing audio
+              </p>
             </div>
 
             <div>

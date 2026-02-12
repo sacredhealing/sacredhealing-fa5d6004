@@ -27,6 +27,7 @@ const AdminHealingEdit: React.FC = () => {
     priceUsd: 4.99,
     category: 'healing',
     scriptText: '',
+    language: 'en' as 'en' | 'sv' | 'es' | 'no',
   });
 
   useEffect(() => {
@@ -56,6 +57,7 @@ const AdminHealingEdit: React.FC = () => {
           priceUsd: data.price_usd,
           category: data.category,
           scriptText: (data as any).script_text || '',
+          language: ((data as any).language === 'sv' ? 'sv' : (data as any).language === 'es' ? 'es' : (data as any).language === 'no' ? 'no' : 'en') as 'en' | 'sv' | 'es' | 'no',
         });
       }
     } catch (error: any) {
@@ -84,6 +86,7 @@ const AdminHealingEdit: React.FC = () => {
           price_shc: 0,
           category: formData.category,
           script_text: formData.scriptText || null,
+          language: formData.language,
         } as any)
         .eq('id', id);
 
@@ -264,6 +267,24 @@ You are safe. You are loved. You are ready for peaceful sleep. Allow yourself to
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                 placeholder="healing, chakra, frequency, sleep, emotional, etc."
               />
+            </div>
+
+            <div>
+              <Label htmlFor="language">Meditation language</Label>
+              <select
+                id="language"
+                value={formData.language}
+                onChange={(e) => setFormData({ ...formData, language: e.target.value as 'en' | 'sv' | 'es' | 'no' })}
+                className="w-full h-10 px-3 rounded-md bg-muted/50 border border-border text-foreground mt-2"
+              >
+                <option value="en">English</option>
+                <option value="sv">Svenska</option>
+                <option value="es">Español</option>
+                <option value="no">Norsk</option>
+              </select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Controls which language filter shows this healing audio
+              </p>
             </div>
 
             <div className="flex items-center gap-2">
