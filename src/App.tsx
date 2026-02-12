@@ -139,7 +139,7 @@ function AppRoutes() {
                   <Route path="/wallet" element={<Wallet />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/legal" element={<Legal />} />
-                  <Route path="/healing" element={<Navigate to="/creative-soul" replace />} />
+                  <Route path="/healing" element={<Healing />} />
                   <Route path="/healing/my-sacred-flame" element={<MySacredFlame />} />
                   <Route path="/breathing" element={<Breathing />} />
                   <Route path="/library/abundance" element={<LibraryAbundance />} />
