@@ -11,6 +11,7 @@ import { ReviewSection } from '@/components/reviews/ReviewSection';
 import WealthCourseUpsell from '@/components/courses/WealthCourseUpsell';
 import { useTranslation } from 'react-i18next';
 import { useMembership } from '@/hooks/useMembership';
+import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 
 // Swedish Wealth Course ID
 const WEALTH_COURSE_ID = 'f6b3a3e2-c78e-4234-8cf4-cc059655e118';
@@ -81,6 +82,7 @@ const CourseDetail: React.FC = () => {
   const { isAdmin, isLoading: isAdminLoading } = useAdminRole();
   const { tier: membershipTier, isPremium } = useMembership();
   const { t } = useTranslation();
+  const { playUniversalAudio } = useMusicPlayer();
   const [course, setCourse] = useState<Course | null>(null);
   const [lessons, setLessons] = useState<LessonWithMaterials[]>([]);
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
@@ -92,6 +94,7 @@ const CourseDetail: React.FC = () => {
   const [activeVideoTitle, setActiveVideoTitle] = useState<string>('');
   const [activeVideoLessonId, setActiveVideoLessonId] = useState<string | null>(null);
   const [hasStargateMembership, setHasStargateMembership] = useState(false);
+  const [courseLevelMaterials, setCourseLevelMaterials] = useState<LessonMaterial[]>([]);
 
   useEffect(() => {
     // Wait for admin loading to complete before fetching course
@@ -235,8 +238,14 @@ const CourseDetail: React.FC = () => {
       if (materialError) throw materialError;
 
       const materialsByLessonId = new Map<string, LessonMaterial[]>();
+      const courseMaterials: LessonMaterial[] = [];
+      
       (materialData || []).forEach((material: any) => {
-        if (!material.lesson_id) return;
+        if (!material.lesson_id) {
+          // Course-level materials (no lesson_id) - store separately
+          courseMaterials.push({ ...material, order_index: material.order_index ?? 0 } as LessonMaterial);
+          return;
+        }
         const existing = materialsByLessonId.get(material.lesson_id) || [];
         existing.push({ ...material, order_index: material.order_index ?? 0 } as LessonMaterial);
         materialsByLessonId.set(material.lesson_id, existing);
@@ -247,7 +256,17 @@ const CourseDetail: React.FC = () => {
         materials: (materialsByLessonId.get(lesson.id) || []).sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
       }));
 
+      // Attach course-level materials to the first lesson if it exists
+      if (lessonsWithMaterials.length > 0 && courseMaterials.length > 0) {
+        const firstLesson = lessonsWithMaterials[0];
+        firstLesson.materials = [
+          ...(firstLesson.materials || []),
+          ...courseMaterials.sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
+        ];
+      }
+
       setLessons(lessonsWithMaterials);
+      setCourseLevelMaterials(courseMaterials.sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0)));
     } catch (error) {
       console.error('Error fetching lessons:', error);
       // Don't show error toast for lessons, just log it
@@ -645,18 +664,42 @@ const CourseDetail: React.FC = () => {
                     return (
                       nonVideoMaterials.length > 0 && (
                         <div className="flex flex-wrap gap-2">
-                          {nonVideoMaterials.map((material) => (
-                            <Button
-                              key={material.id}
-                              variant="outline"
-                              size="sm"
-                              onClick={() => window.open(material.file_url, '_blank')}
-                              className="gap-2"
-                            >
-                              <BookOpen className="w-4 h-4" />
-                              {nonVideoMaterials.length === 1 ? 'Sacred Material' : `Sacred Material: ${material.title}`}
-                            </Button>
-                          ))}
+                          {nonVideoMaterials.map((material) => {
+                            const isAudio = material.file_type?.toLowerCase() === 'audio' || 
+                                           material.file_url?.match(/\.(mp3|wav|m4a|ogg|aac)$/i);
+                            const handleMaterialClick = () => {
+                              if (isAudio && playUniversalAudio) {
+                                // Play audio in music player
+                                playUniversalAudio({
+                                  id: material.id,
+                                  title: material.title,
+                                  artist: course?.instructor_name || 'Sacred Healing',
+                                  audio_url: material.file_url,
+                                  preview_url: null,
+                                  cover_image_url: course?.cover_image_url || null,
+                                  duration_seconds: 0,
+                                  shc_reward: 0,
+                                  contentType: 'meditation'
+                                });
+                              } else {
+                                // Open PDF or other files in new tab
+                                window.open(material.file_url, '_blank');
+                              }
+                            };
+                            
+                            return (
+                              <Button
+                                key={material.id}
+                                variant="outline"
+                                size="sm"
+                                onClick={handleMaterialClick}
+                                className="gap-2"
+                              >
+                                {isAudio ? <Music className="w-4 h-4" /> : <BookOpen className="w-4 h-4" />}
+                                {nonVideoMaterials.length === 1 ? 'Sacred Material' : `Sacred Material: ${material.title}`}
+                              </Button>
+                            );
+                          })}
                         </div>
                       )
                     );
