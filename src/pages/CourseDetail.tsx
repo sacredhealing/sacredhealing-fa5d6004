@@ -256,13 +256,29 @@ const CourseDetail: React.FC = () => {
         materials: (materialsByLessonId.get(lesson.id) || []).sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
       }));
 
-      // Attach course-level materials to the first lesson if it exists
-      if (lessonsWithMaterials.length > 0 && courseMaterials.length > 0) {
-        const firstLesson = lessonsWithMaterials[0];
-        firstLesson.materials = [
-          ...(firstLesson.materials || []),
-          ...courseMaterials.sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
-        ];
+      // Attach course-level materials to lessons that don't have video content (like Books/text lessons)
+      // First try to attach to text/pdf lessons, then fallback to first lesson
+      if (courseMaterials.length > 0) {
+        const textLessons = lessonsWithMaterials.filter(l => 
+          l.content_type === 'text' || l.content_type === 'pdf' || 
+          (!l.content_url || l.content_url.trim() === '')
+        );
+        
+        if (textLessons.length > 0) {
+          // Attach to first text/pdf lesson (likely Books)
+          const targetLesson = textLessons[0];
+          targetLesson.materials = [
+            ...(targetLesson.materials || []),
+            ...courseMaterials.sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
+          ];
+        } else if (lessonsWithMaterials.length > 0) {
+          // Fallback to first lesson if no text lessons
+          const firstLesson = lessonsWithMaterials[0];
+          firstLesson.materials = [
+            ...(firstLesson.materials || []),
+            ...courseMaterials.sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
+          ];
+        }
       }
 
       setLessons(lessonsWithMaterials);
@@ -656,11 +672,27 @@ const CourseDetail: React.FC = () => {
                   )}
                 </div>
 
+                {/* Show text content if lesson is text type */}
+                {(() => {
+                  const currentLesson = lessons.find(l => l.id === activeVideoLessonId);
+                  if (currentLesson?.content_type === 'text' && currentLesson?.content_url) {
+                    return (
+                      <div className="mt-6 p-4 bg-muted/30 rounded-lg border border-border/50">
+                        <div className="prose prose-invert max-w-none text-foreground whitespace-pre-wrap">
+                          {currentLesson.content_url}
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+
                 {/* Only 2 actions: Sacred Material (PDF/Audio only; never YouTube), Continue (next lesson) */}
                 <div className="mt-6 flex flex-wrap items-center gap-3">
                   {(() => {
                     const currentLesson = lessons.find(l => l.id === activeVideoLessonId);
                     const nonVideoMaterials = currentLesson ? getNonVideoMaterials(currentLesson) : [];
+                    // Always show materials if they exist, even for text/pdf lessons without video
                     return (
                       nonVideoMaterials.length > 0 && (
                         <div className="flex flex-wrap gap-2">
