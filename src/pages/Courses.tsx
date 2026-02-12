@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Lock, Award, Clock, Sparkles, CheckCircle, Loader2, RefreshCw, MessageSquare, Globe, Wallet } from 'lucide-react';
+import { Play, Lock, Award, Clock, Sparkles, CheckCircle, Loader2, RefreshCw, MessageSquare, Globe, Wallet, PlayCircle, Music, FileText, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -44,6 +44,14 @@ interface Enrollment {
   progress_percent: number;
 }
 
+interface Lesson {
+  id: string;
+  title: string;
+  content_type: string;
+  duration_minutes: number;
+  order_index: number;
+}
+
 const Courses: React.FC = () => {
   const { user, session } = useAuth();
   const navigate = useNavigate();
@@ -54,6 +62,9 @@ const Courses: React.FC = () => {
   const [enrollingId, setEnrollingId] = useState<string | null>(null);
   const [selectedCourseForReview, setSelectedCourseForReview] = useState<string | null>(null);
   const [showWealthUpsell, setShowWealthUpsell] = useState(false);
+  const [expandedCourseId, setExpandedCourseId] = useState<string | null>(null);
+  const [courseLessons, setCourseLessons] = useState<Record<string, Lesson[]>>({});
+  const [loadingLessons, setLoadingLessons] = useState<Record<string, boolean>>({});
 
   const currentLanguage = i18n.language?.split('-')[0] || 'en';
 
@@ -86,6 +97,53 @@ const Courses: React.FC = () => {
 
   const getEnrollment = (courseId: string) => {
     return enrollments.find(e => e.course_id === courseId);
+  };
+
+  const fetchLessons = async (courseId: string) => {
+    if (courseLessons[courseId]) return; // Already loaded
+    
+    setLoadingLessons(prev => ({ ...prev, [courseId]: true }));
+    const { data } = await supabase
+      .from('lessons')
+      .select('id, title, content_type, duration_minutes, order_index')
+      .eq('course_id', courseId)
+      .order('order_index');
+    
+    if (data) {
+      setCourseLessons(prev => ({ ...prev, [courseId]: data as Lesson[] }));
+    }
+    setLoadingLessons(prev => ({ ...prev, [courseId]: false }));
+  };
+
+  const handleToggleCurriculum = (courseId: string) => {
+    if (expandedCourseId === courseId) {
+      setExpandedCourseId(null);
+    } else {
+      setExpandedCourseId(courseId);
+      fetchLessons(courseId);
+    }
+  };
+
+  const getLessonIcon = (contentType: string) => {
+    switch (contentType?.toLowerCase()) {
+      case 'video':
+        return <PlayCircle size={16} className="text-gray-400" />;
+      case 'audio':
+        return <Music size={16} className="text-gray-400" />;
+      case 'pdf':
+        return <FileText size={16} className="text-gray-400" />;
+      default:
+        return <FileText size={16} className="text-gray-400" />;
+    }
+  };
+
+  const formatDuration = (minutes: number) => {
+    if (minutes < 60) {
+      return `${minutes} min`;
+    }
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
   };
 
   const handleEnroll = async (course: Course, paymentMethod: 'free' | 'stripe' | 'crypto', isRecurring = false) => {
@@ -294,6 +352,54 @@ const Courses: React.FC = () => {
                       <MessageSquare size={12} />
                       Reviews & Comments
                     </button>
+
+                    {/* Curriculum Preview */}
+                    <div className="mt-5 border-t border-white/5 pt-4">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleCurriculum(course.id);
+                        }}
+                        className="flex items-center gap-2 text-xs text-purple-400 hover:text-purple-300 transition-colors"
+                      >
+                        {expandedCourseId === course.id ? 'Hide curriculum' : `See what's inside (${course.lesson_count} lessons)`}
+                        <ChevronDown
+                          size={14}
+                          className={`transition-transform ${expandedCourseId === course.id ? 'rotate-180' : ''}`}
+                        />
+                      </button>
+
+                      {expandedCourseId === course.id && (
+                        <div className="mt-4 space-y-2">
+                          {loadingLessons[course.id] ? (
+                            <div className="flex items-center justify-center py-4">
+                              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                            </div>
+                          ) : courseLessons[course.id] && courseLessons[course.id].length > 0 ? (
+                            courseLessons[course.id].map((lesson) => (
+                              <div
+                                key={lesson.id}
+                                className="flex items-center justify-between p-3 bg-white/5 border border-white/5 rounded-xl opacity-60"
+                              >
+                                <div className="flex items-center gap-3">
+                                  {getLessonIcon(lesson.content_type)}
+                                  <span className="text-sm text-gray-200 font-light">
+                                    {lesson.title}
+                                  </span>
+                                </div>
+                                <span className="text-[10px] font-mono text-gray-500">
+                                  {formatDuration(lesson.duration_minutes)}
+                                </span>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="text-xs text-muted-foreground py-2">
+                              No lessons available yet
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
 
                     {/* Action Button */}
                     <Button 
