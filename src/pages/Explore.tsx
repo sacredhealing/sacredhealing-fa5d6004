@@ -137,10 +137,10 @@ export default function Explore() {
       ? t("explore.intent.calmDesc", "A short reset (2–3 min)")
       : t("explore.presence.stayWithState", "Stay with this state");
 
-  const onQuickCalm = () => onQuick("calm");
+  const onQuickCalm = () => navigate("/meditations");
   const onQuickHeart = () => onQuick("heart");
   const onQuickPause = () => onQuick("pause");
-  const onQuickSleep = () => onQuick("sleep");
+  const onQuickSleep = () => navigate("/meditations");
 
   return (
     <div className="px-4 pb-24 pt-4">
