@@ -687,16 +687,40 @@ const CourseDetail: React.FC = () => {
                   return null;
                 })()}
 
+                {/* Show text materials content directly */}
+                {(() => {
+                  const currentLesson = lessons.find(l => l.id === activeVideoLessonId);
+                  const nonVideoMaterials = currentLesson ? getNonVideoMaterials(currentLesson) : [];
+                  const textMaterials = nonVideoMaterials.filter(m => m.file_type?.toLowerCase() === 'text');
+                  
+                  return (
+                    textMaterials.length > 0 && (
+                      <div className="mt-6 space-y-4">
+                        {textMaterials.map((material) => (
+                          <div key={material.id} className="p-4 bg-muted/30 rounded-lg border border-border/50">
+                            <h3 className="text-lg font-semibold text-foreground mb-3">{material.title}</h3>
+                            <div className="prose prose-invert max-w-none text-foreground whitespace-pre-wrap">
+                              {material.file_url}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )
+                  );
+                })()}
+
                 {/* Only 2 actions: Sacred Material (PDF/Audio only; never YouTube), Continue (next lesson) */}
                 <div className="mt-6 flex flex-wrap items-center gap-3">
                   {(() => {
                     const currentLesson = lessons.find(l => l.id === activeVideoLessonId);
                     const nonVideoMaterials = currentLesson ? getNonVideoMaterials(currentLesson) : [];
+                    // Filter out text materials (they're displayed above) and only show buttons for PDF/Audio
+                    const actionableMaterials = nonVideoMaterials.filter(m => m.file_type?.toLowerCase() !== 'text');
                     // Always show materials if they exist, even for text/pdf lessons without video
                     return (
-                      nonVideoMaterials.length > 0 && (
+                      actionableMaterials.length > 0 && (
                         <div className="flex flex-wrap gap-2">
-                          {nonVideoMaterials.map((material) => {
+                          {actionableMaterials.map((material) => {
                             const isAudio = material.file_type?.toLowerCase() === 'audio' || 
                                            material.file_url?.match(/\.(mp3|wav|m4a|ogg|aac)$/i);
                             const handleMaterialClick = () => {
@@ -728,7 +752,7 @@ const CourseDetail: React.FC = () => {
                                 className="gap-2"
                               >
                                 {isAudio ? <Music className="w-4 h-4" /> : <BookOpen className="w-4 h-4" />}
-                                {nonVideoMaterials.length === 1 ? 'Sacred Material' : `Sacred Material: ${material.title}`}
+                                {actionableMaterials.length === 1 ? 'Sacred Material' : `Sacred Material: ${material.title}`}
                               </Button>
                             );
                           })}
