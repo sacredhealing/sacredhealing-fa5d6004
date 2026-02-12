@@ -138,7 +138,7 @@ export default function Explore() {
       : t("explore.presence.stayWithState", "Stay with this state");
 
   const onQuickCalm = () => navigate("/meditations");
-  const onQuickHeart = () => onQuick("heart");
+  const onQuickHeart = () => navigate("/healing");
   const onQuickPause = () => onQuick("pause");
   const onQuickSleep = () => navigate("/meditations");
 
