@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Music, Trash2, Edit, Save, X, Calendar } from 'lucide-react';
+import { ArrowLeft, Plus, Music, Trash2, Edit, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -27,10 +27,9 @@ interface Mantra {
   is_premium?: boolean;
   explanation?: string | null;
   recommended_duration?: string | null;
-  vedic_period_id?: string | null;
 }
 
-// Core mantra categories (spiritually coherent, Jyotish-compatible)
+// Core mantra categories (add mantras/MP3s to each) (spiritually coherent, Jyotish-compatible)
 const MANTRA_CATEGORIES = [
   { value: 'planet', label: 'Planetary (Jyotish)' },
   { value: 'deity', label: 'Deity' },
@@ -82,99 +81,6 @@ const INTENTION_TYPES = [
   { value: 'inner_strength', label: 'Inner Strength' },
 ] as const;
 
-interface VedicPeriod {
-  id: string;
-  title: string;
-  description: string | null;
-  start_date: string;
-  end_date: string;
-  year: number;
-}
-
-function VedicPeriodsManager({ periods, onRefresh }: { periods: VedicPeriod[]; onRefresh: () => void }) {
-  const [showForm, setShowForm] = useState(false);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [year, setYear] = useState(new Date().getFullYear());
-
-  const handleAdd = async () => {
-    if (!title || !startDate || !endDate) {
-      toast.error('Title, start date, and end date required');
-      return;
-    }
-    const { error } = await supabase.from('vedic_periods').insert({
-      title,
-      description: description || null,
-      start_date: startDate,
-      end_date: endDate,
-      year,
-    });
-    if (error) {
-      toast.error('Failed to add period');
-    } else {
-      toast.success('Period added');
-      setTitle('');
-      setDescription('');
-      setStartDate('');
-      setEndDate('');
-      setShowForm(false);
-      onRefresh();
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('Delete this period?')) return;
-    const { error } = await supabase.from('vedic_periods').delete().eq('id', id);
-    if (!error) {
-      toast.success('Period deleted');
-      onRefresh();
-    }
-  };
-
-  return (
-    <div className="space-y-3">
-      {periods.length === 0 && !showForm && (
-        <p className="text-sm text-muted-foreground">No periods yet. Add one to link mantras.</p>
-      )}
-      {periods.map((p) => (
-        <div key={p.id} className="flex items-center justify-between rounded-lg border p-3">
-          <div className="flex items-center gap-3">
-            <Calendar className="w-4 h-4 text-muted-foreground" />
-            <div>
-              <p className="font-medium">{p.title}</p>
-              <p className="text-xs text-muted-foreground">{p.start_date} – {p.end_date} ({p.year})</p>
-            </div>
-          </div>
-          <Button variant="ghost" size="icon" onClick={() => handleDelete(p.id)}>
-            <Trash2 className="w-4 h-4 text-destructive" />
-          </Button>
-        </div>
-      ))}
-      {showForm ? (
-        <div className="space-y-2 rounded-lg border p-3">
-          <Input placeholder="Period title" value={title} onChange={(e) => setTitle(e.target.value)} />
-          <Textarea placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
-          <div className="flex gap-2">
-            <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-            <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-            <Input type="number" value={year} onChange={(e) => setYear(parseInt(e.target.value) || new Date().getFullYear())} className="w-20" />
-          </div>
-          <div className="flex gap-2">
-            <Button size="sm" onClick={handleAdd}>Save</Button>
-            <Button size="sm" variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
-          </div>
-        </div>
-      ) : (
-        <Button variant="outline" size="sm" onClick={() => setShowForm(true)}>
-          <Plus className="w-4 h-4 mr-1" /> Add Period
-        </Button>
-      )}
-    </div>
-  );
-}
-
 const AdminMantras = () => {
   const navigate = useNavigate();
   const [mantras, setMantras] = useState<Mantra[]>([]);
@@ -197,21 +103,10 @@ const AdminMantras = () => {
   const [isPremium, setIsPremium] = useState(false);
   const [explanation, setExplanation] = useState('');
   const [recommendedDuration, setRecommendedDuration] = useState('');
-  const [vedicPeriodId, setVedicPeriodId] = useState<string | null>(null);
-  const [vedicPeriods, setVedicPeriods] = useState<VedicPeriod[]>([]);
 
   useEffect(() => {
     fetchMantras();
-    fetchVedicPeriods();
   }, []);
-
-  const fetchVedicPeriods = async () => {
-    const { data } = await supabase
-      .from('vedic_periods')
-      .select('id, title, description, start_date, end_date, year')
-      .order('start_date', { ascending: true });
-    if (data) setVedicPeriods(data);
-  };
 
   const fetchMantras = async () => {
     const { data, error } = await supabase
@@ -242,7 +137,6 @@ const AdminMantras = () => {
     setIsPremium(false);
     setExplanation('');
     setRecommendedDuration('');
-    setVedicPeriodId(null);
     setEditingId(null);
     setShowForm(false);
   };
@@ -264,7 +158,6 @@ const AdminMantras = () => {
     setIsPremium(mantra.is_premium ?? false);
     setExplanation(mantra.explanation || '');
     setRecommendedDuration(mantra.recommended_duration || '');
-    setVedicPeriodId(mantra.vedic_period_id ?? null);
     setEditingId(mantra.id);
     setShowForm(true);
   };
@@ -287,7 +180,6 @@ const AdminMantras = () => {
           is_premium: isPremium,
           explanation: explanation || null,
           recommended_duration: recommendedDuration || null,
-          vedic_period_id: vedicPeriodId || null,
         })
         .eq('id', editingId);
 
@@ -310,7 +202,6 @@ const AdminMantras = () => {
           is_premium: isPremium,
           explanation: explanation || null,
           recommended_duration: recommendedDuration || null,
-          vedic_period_id: vedicPeriodId || null,
         });
 
       if (error) {
@@ -366,21 +257,9 @@ const AdminMantras = () => {
       </div>
 
       <div className="px-4 py-4">
-        {/* Manage Vedic Periods */}
-        <Card className="p-4 mb-4">
-          <h3 className="font-semibold mb-3">Vedic Periods</h3>
-          <p className="text-sm text-muted-foreground mb-3">
-            Create periods for {new Date().getFullYear()}. Mantras can be linked to a period.
-          </p>
-          <VedicPeriodsManager
-            periods={vedicPeriods}
-            onRefresh={fetchVedicPeriods}
-          />
-        </Card>
-
         {/* Add Button */}
         {!showForm && (
-          <Button onClick={() => setShowForm(true)} className="w-full mb-4">
+          <Button type="button" onClick={() => setShowForm(true)} className="w-full mb-4">
             <Plus className="w-4 h-4 mr-2" />
             Add New Mantra
           </Button>
@@ -542,22 +421,6 @@ const AdminMantras = () => {
                   onChange={(e) => setRecommendedDuration(e.target.value)}
                   placeholder="13 Feb 2026 – 1 Apr 2026"
                 />
-              </div>
-
-              <div>
-                <Label>Vedic Period</Label>
-                <select
-                  value={vedicPeriodId ?? ''}
-                  onChange={(e) => setVedicPeriodId(e.target.value || null)}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                >
-                  <option value="">None</option>
-                  {vedicPeriods.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.title} ({p.start_date} – {p.end_date})
-                    </option>
-                  ))}
-                </select>
               </div>
 
               <div className="flex items-center gap-2">
