@@ -1,14 +1,17 @@
+/**
+ * DO NOT DELETE OR REFACTOR — CORE SPIRITUAL LOGIC
+ * Mantra page: playback (108 reps), Jyotish/Vedic recommendation, Vedic Guide card.
+ */
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Music, Play, Pause, RotateCcw, Volume2, ChevronDown, Sparkles, Lock } from 'lucide-react';
+import { Music, Play, Pause, RotateCcw, Volume2, ChevronDown, Sparkles } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useMembership } from '@/hooks/useMembership';
 import { useSHCBalance } from '@/hooks/useSHCBalance';
 import { toast } from 'sonner';
-import { getMantras, getCurrentVedicPeriod, getMantrasByPeriod, type MantraItem, type VedicPeriodItem, MANTRA_REPETITIONS } from '@/features/mantras/getMantras';
+import { getMantras, type MantraItem, MANTRA_REPETITIONS } from '@/features/mantras/getMantras';
 import { useJyotishMantraRecommendation } from '@/hooks/useJyotishMantraRecommendation';
 
 function getPlayableUrl(url: string): string {
@@ -37,11 +40,9 @@ function groupMantrasByCategory(mantras: MantraItem[]) {
 const Mantras = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const { isPremium } = useMembership();
   const { refreshBalance } = useSHCBalance();
 
   const [mantras, setMantras] = useState<MantraItem[]>([]);
-  const [currentPeriod, setCurrentPeriod] = useState<VedicPeriodItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedMantraId, setSelectedMantraId] = useState<string | null>(null);
   const [count, setCount] = useState(0);
@@ -68,34 +69,19 @@ const Mantras = () => {
 
   useEffect(() => {
     let cancelled = false;
-    const load = async () => {
-      const period = await getCurrentVedicPeriod();
-      if (cancelled) return;
-      setCurrentPeriod(period ?? null);
-      if (period) {
-        const periodMantras = await getMantrasByPeriod(period.id);
-        if (!cancelled) {
-          setMantras(periodMantras);
-          if (periodMantras.length > 0 && !selectedMantraId) {
-            const recommendedId = jyotishRecommendation?.recommendedMantraId;
-            setSelectedMantraId(recommendedId && periodMantras.find(m => m.id === recommendedId) ? recommendedId : periodMantras[0].id);
-          }
-        }
-      } else {
-        const allMantras = await getMantras();
-        if (!cancelled) {
-          setMantras(allMantras);
-          if (allMantras.length > 0 && !selectedMantraId) {
-            const recommendedId = jyotishRecommendation?.recommendedMantraId;
-            setSelectedMantraId(recommendedId && allMantras.find(m => m.id === recommendedId) ? recommendedId : allMantras[0].id);
-          }
+    getMantras().then((data) => {
+      if (!cancelled) {
+        setMantras(data);
+        // Preselect recommended mantra if available, otherwise first mantra
+        if (data.length > 0 && !selectedMantraId) {
+          const recommendedId = jyotishRecommendation?.recommendedMantraId;
+          setSelectedMantraId(recommendedId && data.find(m => m.id === recommendedId) ? recommendedId : data[0].id);
         }
       }
-      if (!cancelled) setLoading(false);
-    };
-    load();
+      setLoading(false);
+    });
     return () => { cancelled = true; };
-  }, []);
+  }, [jyotishRecommendation?.recommendedMantraId]);
 
   // Update selected mantra when recommendation changes (only if no mantra is currently selected)
   useEffect(() => {
@@ -187,10 +173,6 @@ const Mantras = () => {
       toast.error(t('mantras.noAudio', 'No audio available.'));
       return;
     }
-    if (selectedMantra.is_premium && !isPremium) {
-      toast.error(t('mantras.premiumRequired', 'Premium membership required.'));
-      return;
-    }
     if (count >= reps) setCount(0);
     if (audioRef.current && currentMantraIdRef.current === selectedMantra.id && count < reps) {
       setIsPlaying(true);
@@ -258,19 +240,6 @@ const Mantras = () => {
       <div className="px-4 flex flex-col gap-6 md:flex-row md:gap-8">
         {/* Choose a mantra — list (clickable) */}
         <section className="flex-shrink-0 md:w-72">
-          {currentPeriod && (
-            <Card className="mb-4">
-              <CardContent className="p-4">
-                <h3 className="font-semibold text-foreground mb-1">{currentPeriod.title}</h3>
-                {currentPeriod.description && (
-                  <p className="text-sm text-muted-foreground mb-2">{currentPeriod.description}</p>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  {currentPeriod.start_date} – {currentPeriod.end_date}
-                </p>
-              </CardContent>
-            </Card>
-          )}
           <button
             type="button"
             className="flex w-full items-center justify-between py-2 text-left"
@@ -311,21 +280,10 @@ const Mantras = () => {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
                                 <p className="font-medium text-foreground truncate">{m.title}</p>
-                                {m.category && (
-                                  <span className="text-[10px] text-muted-foreground uppercase">{m.category}</span>
-                                )}
                                 <span className="text-[10px] text-primary font-medium uppercase tracking-wide">Recommended</span>
                               </div>
-                              {m.recommended_duration ? (
-                                <p className="text-xs text-muted-foreground">{m.recommended_duration}</p>
-                              ) : m.duration_seconds > 0 ? (
+                              {m.duration_seconds > 0 && (
                                 <p className="text-xs text-muted-foreground">{formatDuration(m.duration_seconds)}</p>
-                              ) : null}
-                              {m.explanation && (
-                                <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{m.explanation}</p>
-                              )}
-                              {m.is_premium && !isPremium && (
-                                <Lock className="w-3 h-3 text-muted-foreground mt-1" />
                               )}
                             </div>
                           </button>
@@ -333,10 +291,10 @@ const Mantras = () => {
                       })}
                     </>
                   )}
-                  {Object.entries(groupedMantras).map(([cat, items]) => (
-                    <div key={cat} className="mt-4">
+                  {Object.entries(groupedMantras).map(([category, items]) => (
+                    <div key={category} className="mt-4">
                       <h4 className="text-xs uppercase text-muted-foreground mb-2">
-                        {cat.replace('_', ' ')}
+                        {category.replace('_', ' ')}
                       </h4>
                       {items.map((m) => {
                         const isRecommended = recommendedMantras.some((rm) => rm.id === m.id);
@@ -363,23 +321,12 @@ const Mantras = () => {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
                                 <p className="font-medium text-foreground truncate">{m.title}</p>
-                                {m.category && (
-                                  <span className="text-[10px] text-muted-foreground uppercase">{m.category}</span>
-                                )}
                                 {isRecommended && (
                                   <span className="text-[10px] text-primary font-medium uppercase tracking-wide">Recommended</span>
                                 )}
                               </div>
-                              {m.recommended_duration ? (
-                                <p className="text-xs text-muted-foreground">{m.recommended_duration}</p>
-                              ) : m.duration_seconds > 0 ? (
+                              {m.duration_seconds > 0 && (
                                 <p className="text-xs text-muted-foreground">{formatDuration(m.duration_seconds)}</p>
-                              ) : null}
-                              {m.explanation && (
-                                <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{m.explanation}</p>
-                              )}
-                              {m.is_premium && !isPremium && (
-                                <Lock className="w-3 h-3 text-muted-foreground mt-1" />
                               )}
                             </div>
                           </button>
@@ -406,26 +353,11 @@ const Mantras = () => {
                 <p className="text-lg sm:text-xl font-semibold text-foreground text-center mb-1">
                   {selectedMantra.title}
                 </p>
-                {selectedMantra.category && (
-                  <p className="text-xs text-muted-foreground text-center uppercase">{selectedMantra.category}</p>
-                )}
-                {selectedMantra.recommended_duration && (
-                  <p className="text-xs text-muted-foreground text-center">{selectedMantra.recommended_duration}</p>
-                )}
-                {selectedMantra.explanation && (
-                  <p className="text-sm text-muted-foreground text-center mt-2 mb-4">{selectedMantra.explanation}</p>
-                )}
-                {selectedMantra.is_premium && !isPremium && (
-                  <div className="flex items-center justify-center gap-2 text-amber-500 text-sm mb-4">
-                    <Lock className="w-4 h-4" />
-                    {t('mantras.premiumRequired', 'Premium membership required')}
-                  </div>
-                )}
                 <p className="text-sm text-muted-foreground text-center mb-6">
                   {t('mantras.guidanceVoice', 'Voice only')}
                 </p>
 
-                {/* Vedic Guide Card - Only show if Jyotish data exists */}
+                {/* Vedic Guide Card - Only show if Jyotish data exists - ABOVE How to practice */}
                 {jyotishRecommendation && (
                   <Card className="rounded-xl border-border bg-primary/5 border-primary/20 mb-6">
                     <CardContent className="p-4">
@@ -443,21 +375,6 @@ const Mantras = () => {
                             <span>Best time: {jyotishRecommendation.bestTime}</span>
                           </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {jyotishRecommendation && (
-                  <Card className="mb-4">
-                    <CardContent>
-                      <p className="text-sm">
-                        {jyotishRecommendation.message}
-                      </p>
-                      <div className="text-xs text-muted-foreground mt-2 flex gap-4">
-                        <span>{jyotishRecommendation.duration}</span>
-                        <span>{jyotishRecommendation.repetitions}x</span>
-                        <span>{jyotishRecommendation.bestTime}</span>
                       </div>
                     </CardContent>
                   </Card>

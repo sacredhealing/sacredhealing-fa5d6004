@@ -1,3 +1,7 @@
+/**
+ * DO NOT DELETE OR REFACTOR — CORE SPIRITUAL LOGIC
+ * Jyotish/Vedic mantra recommendation based on birth chart and dasha.
+ */
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
