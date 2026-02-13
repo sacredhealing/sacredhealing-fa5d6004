@@ -18,7 +18,7 @@ export interface JyotishMantraRecommendation {
  * Hook to get Jyotish-based mantra recommendation
  * Returns null if user has no Jyotish data
  */
-export function useJyotishMantraRecommendation(mantras: Array<{ id: string; title: string; category: string; planet_type: string | null }>): JyotishMantraRecommendation | null {
+export function useJyotishMantraRecommendation(mantras: Array<{ id: string; title: string }>): JyotishMantraRecommendation | null {
   const { user } = useAuth();
   const [hasBirthDetails, setHasBirthDetails] = useState(false);
   const [birthDetails, setBirthDetails] = useState<any>(null);
@@ -139,10 +139,11 @@ export function useJyotishMantraRecommendation(mantras: Array<{ id: string; titl
     return null;
   }
 
-  // Find matching mantra by category and planet_type
-  const recommendedMantra = mantras.find(m =>
-    m.category === 'planet' && m.planet_type === currentPlanet
-  ) || mantras.find(m => m.category === 'planet');
+  // Find matching mantra by keywords in title
+  const recommendedMantra = mantras.find(m => {
+    const titleLower = m.title.toLowerCase();
+    return planetInfo.mantraKeywords.some(keyword => titleLower.includes(keyword));
+  });
 
   return {
     planet: currentPlanet,
