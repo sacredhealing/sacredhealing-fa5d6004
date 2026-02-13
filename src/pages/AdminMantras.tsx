@@ -20,6 +20,8 @@ interface Mantra {
   duration_seconds: number;
   shc_reward: number;
   is_active: boolean;
+  category: string;
+  planet_type: string | null;
 }
 
 const AdminMantras = () => {
@@ -36,6 +38,8 @@ const AdminMantras = () => {
     duration_seconds: 180,
     shc_reward: 111,
     is_active: true,
+    category: 'general',
+    planet_type: null as string | null,
   });
 
   useEffect(() => {
@@ -63,6 +67,8 @@ const AdminMantras = () => {
       duration_seconds: 180,
       shc_reward: 111,
       is_active: true,
+      category: 'general',
+      planet_type: null,
     });
     setEditingId(null);
     setShowForm(false);
@@ -77,21 +83,29 @@ const AdminMantras = () => {
       duration_seconds: mantra.duration_seconds,
       shc_reward: mantra.shc_reward,
       is_active: mantra.is_active,
+      category: mantra.category || 'general',
+      planet_type: mantra.planet_type || null,
     });
     setEditingId(mantra.id);
     setShowForm(true);
   };
 
   const handleSave = async () => {
-    if (!formData.title || !formData.audio_url) {
+    if (!formData.title || !formData.audio_url || !formData.category) {
       toast.error('Please fill in required fields');
       return;
     }
 
+    // Prepare data for save (only include planet_type if category is 'planet')
+    const saveData: any = {
+      ...formData,
+      planet_type: formData.category === 'planet' ? formData.planet_type : null,
+    };
+
     if (editingId) {
       const { error } = await supabase
         .from('mantras')
-        .update(formData)
+        .update(saveData)
         .eq('id', editingId);
 
       if (error) {
@@ -104,7 +118,7 @@ const AdminMantras = () => {
     } else {
       const { error } = await supabase
         .from('mantras')
-        .insert(formData);
+        .insert(saveData);
 
       if (error) {
         toast.error('Failed to add mantra');
@@ -196,6 +210,48 @@ const AdminMantras = () => {
                 />
               </div>
 
+              <div>
+                <Label>Mantra Category *</Label>
+                <select
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value, planet_type: e.target.value === 'planet' ? formData.planet_type : null })}
+                  className="w-full h-10 px-3 rounded-md bg-background border border-input text-foreground mt-2"
+                  required
+                >
+                  <option value="planet">Planet</option>
+                  <option value="deity">Deity</option>
+                  <option value="intention">Intention</option>
+                  <option value="karma">Karma</option>
+                  <option value="wealth">Wealth</option>
+                  <option value="health">Health</option>
+                  <option value="peace">Peace of Mind</option>
+                  <option value="protection">Protection</option>
+                  <option value="general">General</option>
+                </select>
+              </div>
+
+              {formData.category === 'planet' && (
+                <div>
+                  <Label>Planet Type</Label>
+                  <select
+                    value={formData.planet_type || ''}
+                    onChange={(e) => setFormData({ ...formData, planet_type: e.target.value || null })}
+                    className="w-full h-10 px-3 rounded-md bg-background border border-input text-foreground mt-2"
+                  >
+                    <option value="">Select planet...</option>
+                    <option value="sun">Sun</option>
+                    <option value="moon">Moon</option>
+                    <option value="mars">Mars</option>
+                    <option value="mercury">Mercury</option>
+                    <option value="jupiter">Jupiter</option>
+                    <option value="venus">Venus</option>
+                    <option value="saturn">Saturn</option>
+                    <option value="rahu">Rahu</option>
+                    <option value="ketu">Ketu</option>
+                  </select>
+                </div>
+              )}
+
               <AudioUpload
                 value={formData.audio_url}
                 onChange={(url) => setFormData({ ...formData, audio_url: url })}
@@ -259,6 +315,7 @@ const AdminMantras = () => {
                   <h4 className="font-medium text-foreground truncate">{mantra.title}</h4>
                   <p className="text-sm text-muted-foreground">
                     {Math.floor(mantra.duration_seconds / 60)}:{(mantra.duration_seconds % 60).toString().padStart(2, '0')} • {mantra.shc_reward} SHC
+                    {mantra.category && ` • ${mantra.category.charAt(0).toUpperCase() + mantra.category.slice(1)}${mantra.planet_type ? ` (${mantra.planet_type})` : ''}`}
                   </p>
                 </div>
                 <div className="flex gap-2">
