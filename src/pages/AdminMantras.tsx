@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Music, Trash2, Edit, Save, X, Calendar } from 'lucide-react';
+import { ArrowLeft, Plus, Music, Trash2, Edit, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -20,105 +20,6 @@ interface Mantra {
   duration_seconds: number;
   shc_reward: number;
   is_active: boolean;
-  category?: string;
-  planet_type?: string | null;
-  is_premium?: boolean;
-  explanation?: string | null;
-  recommended_duration?: string | null;
-  vedic_period_id?: string | null;
-}
-
-interface VedicPeriod {
-  id: string;
-  title: string;
-  description: string | null;
-  start_date: string;
-  end_date: string;
-  year: number;
-}
-
-function VedicPeriodsManager({ periods, onRefresh }: { periods: VedicPeriod[]; onRefresh: () => void }) {
-  const [showForm, setShowForm] = useState(false);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [year, setYear] = useState(new Date().getFullYear());
-
-  const handleAdd = async () => {
-    if (!title || !startDate || !endDate) {
-      toast.error('Title, start date, and end date required');
-      return;
-    }
-    const { error } = await supabase.from('vedic_periods').insert({
-      title,
-      description: description || null,
-      start_date: startDate,
-      end_date: endDate,
-      year,
-    });
-    if (error) {
-      toast.error('Failed to add period');
-    } else {
-      toast.success('Period added');
-      setTitle('');
-      setDescription('');
-      setStartDate('');
-      setEndDate('');
-      setShowForm(false);
-      onRefresh();
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('Delete this period?')) return;
-    const { error } = await supabase.from('vedic_periods').delete().eq('id', id);
-    if (!error) {
-      toast.success('Period deleted');
-      onRefresh();
-    }
-  };
-
-  return (
-    <div className="space-y-3">
-      {periods.length === 0 && !showForm && (
-        <p className="text-sm text-muted-foreground">No periods yet. Add one to link mantras.</p>
-      )}
-      {periods.map((p) => (
-        <div key={p.id} className="flex items-center justify-between rounded-lg border p-3">
-          <div className="flex items-center gap-3">
-            <Calendar className="w-4 h-4 text-muted-foreground" />
-            <div>
-              <p className="font-medium">{p.title}</p>
-              <p className="text-xs text-muted-foreground">{p.start_date} – {p.end_date} ({p.year})</p>
-            </div>
-          </div>
-          <Button variant="ghost" size="icon" onClick={() => handleDelete(p.id)}>
-            <Trash2 className="w-4 h-4 text-destructive" />
-          </Button>
-        </div>
-      ))}
-      {showForm ? (
-        <div className="space-y-2 rounded-lg border p-3">
-          <Input placeholder="Period title" value={title} onChange={(e) => setTitle(e.target.value)} />
-          <Textarea placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
-          <div className="flex gap-2">
-            <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-            <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-            <Input type="number" value={year} onChange={(e) => setYear(parseInt(e.target.value) || new Date().getFullYear())} className="w-20" />
-          </div>
-          <div className="flex gap-2">
-            <Button size="sm" onClick={handleAdd}>Save</Button>
-            <Button size="sm" variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
-          </div>
-        </div>
-      ) : (
-        <Button variant="outline" size="sm" onClick={() => setShowForm(true)}>
-          <Plus className="w-4 h-4 mr-1" /> Add Period
-        </Button>
-      )}
-    </div>
-  );
 }
 
 const AdminMantras = () => {
@@ -136,26 +37,10 @@ const AdminMantras = () => {
     shc_reward: 111,
     is_active: true,
   });
-  const [category, setCategory] = useState('general');
-  const [planetType, setPlanetType] = useState<string | null>(null);
-  const [isPremium, setIsPremium] = useState(false);
-  const [explanation, setExplanation] = useState('');
-  const [recommendedDuration, setRecommendedDuration] = useState('');
-  const [vedicPeriodId, setVedicPeriodId] = useState<string | null>(null);
-  const [vedicPeriods, setVedicPeriods] = useState<VedicPeriod[]>([]);
 
   useEffect(() => {
     fetchMantras();
-    fetchVedicPeriods();
   }, []);
-
-  const fetchVedicPeriods = async () => {
-    const { data } = await supabase
-      .from('vedic_periods')
-      .select('id, title, description, start_date, end_date, year')
-      .order('start_date', { ascending: true });
-    if (data) setVedicPeriods(data);
-  };
 
   const fetchMantras = async () => {
     const { data, error } = await supabase
@@ -179,12 +64,6 @@ const AdminMantras = () => {
       shc_reward: 111,
       is_active: true,
     });
-    setCategory('general');
-    setPlanetType(null);
-    setIsPremium(false);
-    setExplanation('');
-    setRecommendedDuration('');
-    setVedicPeriodId(null);
     setEditingId(null);
     setShowForm(false);
   };
@@ -199,12 +78,6 @@ const AdminMantras = () => {
       shc_reward: mantra.shc_reward,
       is_active: mantra.is_active,
     });
-    setCategory(mantra.category || 'general');
-    setPlanetType(mantra.planet_type ?? null);
-    setIsPremium(mantra.is_premium ?? false);
-    setExplanation(mantra.explanation || '');
-    setRecommendedDuration(mantra.recommended_duration || '');
-    setVedicPeriodId(mantra.vedic_period_id ?? null);
     setEditingId(mantra.id);
     setShowForm(true);
   };
@@ -218,15 +91,7 @@ const AdminMantras = () => {
     if (editingId) {
       const { error } = await supabase
         .from('mantras')
-        .update({
-          ...formData,
-          category,
-          planet_type: category === 'planet' ? planetType : null,
-          is_premium: isPremium,
-          explanation: explanation || null,
-          recommended_duration: recommendedDuration || null,
-          vedic_period_id: vedicPeriodId || null,
-        })
+        .update(formData)
         .eq('id', editingId);
 
       if (error) {
@@ -239,15 +104,7 @@ const AdminMantras = () => {
     } else {
       const { error } = await supabase
         .from('mantras')
-        .insert({
-          ...formData,
-          category,
-          planet_type: category === 'planet' ? planetType : null,
-          is_premium: isPremium,
-          explanation: explanation || null,
-          recommended_duration: recommendedDuration || null,
-          vedic_period_id: vedicPeriodId || null,
-        });
+        .insert(formData);
 
       if (error) {
         toast.error('Failed to add mantra');
@@ -302,18 +159,6 @@ const AdminMantras = () => {
       </div>
 
       <div className="px-4 py-4">
-        {/* Manage Vedic Periods */}
-        <Card className="p-4 mb-4">
-          <h3 className="font-semibold mb-3">Vedic Periods</h3>
-          <p className="text-sm text-muted-foreground mb-3">
-            Create periods for {new Date().getFullYear()}. Mantras can be linked to a period.
-          </p>
-          <VedicPeriodsManager
-            periods={vedicPeriods}
-            onRefresh={fetchVedicPeriods}
-          />
-        </Card>
-
         {/* Add Button */}
         {!showForm && (
           <Button onClick={() => setShowForm(true)} className="w-full mb-4">
@@ -341,48 +186,6 @@ const AdminMantras = () => {
                   placeholder="Om Namah Shivaya"
                 />
               </div>
-
-              <div>
-                <label className="text-sm">Mantra Category</label>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  required
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                >
-                  <option value="planet">Planet</option>
-                  <option value="deity">Deity</option>
-                  <option value="intention">Intention</option>
-                  <option value="karma">Karma</option>
-                  <option value="wealth">Wealth</option>
-                  <option value="health">Health</option>
-                  <option value="peace">Peace of Mind</option>
-                  <option value="protection">Protection</option>
-                  <option value="general">General</option>
-                </select>
-              </div>
-
-              {category === 'planet' && (
-                <>
-                  <label className="text-sm mt-2">Planet</label>
-                  <select
-                    value={planetType ?? ''}
-                    onChange={(e) => setPlanetType(e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  >
-                    <option value="">Select planet</option>
-                    <option value="sun">Sun</option>
-                    <option value="moon">Moon</option>
-                    <option value="mars">Mars</option>
-                    <option value="mercury">Mercury</option>
-                    <option value="jupiter">Jupiter</option>
-                    <option value="venus">Venus</option>
-                    <option value="saturn">Saturn</option>
-                    <option value="rahu">Rahu</option>
-                    <option value="ketu">Ketu</option>
-                  </select>
-                </>
-              )}
 
               <div>
                 <Label>Description</Label>
@@ -426,49 +229,6 @@ const AdminMantras = () => {
                     onChange={(e) => setFormData({ ...formData, shc_reward: parseInt(e.target.value) || 111 })}
                   />
                 </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Switch
-                  checked={isPremium}
-                  onCheckedChange={setIsPremium}
-                />
-                <Label>Premium</Label>
-              </div>
-
-              <div>
-                <Label>Explanation (shown to users)</Label>
-                <Textarea
-                  value={explanation}
-                  onChange={(e) => setExplanation(e.target.value)}
-                  placeholder="Long text explanation for this mantra..."
-                  rows={3}
-                />
-              </div>
-
-              <div>
-                <Label>Recommended duration</Label>
-                <Input
-                  value={recommendedDuration}
-                  onChange={(e) => setRecommendedDuration(e.target.value)}
-                  placeholder="13 Feb 2026 – 1 Apr 2026"
-                />
-              </div>
-
-              <div>
-                <Label>Vedic Period</Label>
-                <select
-                  value={vedicPeriodId ?? ''}
-                  onChange={(e) => setVedicPeriodId(e.target.value || null)}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                >
-                  <option value="">None</option>
-                  {vedicPeriods.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.title} ({p.start_date} – {p.end_date})
-                    </option>
-                  ))}
-                </select>
               </div>
 
               <div className="flex items-center gap-2">
