@@ -22,11 +22,65 @@ interface Mantra {
   is_active: boolean;
   category?: string;
   planet_type?: string | null;
+  deity_name?: string | null;
+  intention_type?: string | null;
   is_premium?: boolean;
   explanation?: string | null;
   recommended_duration?: string | null;
   vedic_period_id?: string | null;
 }
+
+// Core mantra categories (spiritually coherent, Jyotish-compatible)
+const MANTRA_CATEGORIES = [
+  { value: 'planet', label: 'Planetary (Jyotish)' },
+  { value: 'deity', label: 'Deity' },
+  { value: 'intention', label: 'Intention' },
+  { value: 'karma', label: 'Karma & Healing' },
+  { value: 'wealth', label: 'Wealth & Abundance' },
+  { value: 'health', label: 'Health & Vitality' },
+  { value: 'peace', label: 'Peace & Calm' },
+  { value: 'protection', label: 'Protection & Power' },
+  { value: 'spiritual', label: 'Spiritual Growth' },
+  { value: 'general', label: 'General / Universal' },
+] as const;
+
+const PLANET_TYPES = [
+  { value: 'sun', label: 'Sun (Surya)' },
+  { value: 'moon', label: 'Moon (Chandra)' },
+  { value: 'mars', label: 'Mars (Mangala)' },
+  { value: 'mercury', label: 'Mercury (Budha)' },
+  { value: 'jupiter', label: 'Jupiter (Guru)' },
+  { value: 'venus', label: 'Venus (Shukra)' },
+  { value: 'saturn', label: 'Saturn (Shani)' },
+  { value: 'rahu', label: 'Rahu' },
+  { value: 'ketu', label: 'Ketu' },
+] as const;
+
+const DEITY_NAMES = [
+  { value: 'shiva', label: 'Shiva' },
+  { value: 'vishnu', label: 'Vishnu' },
+  { value: 'krishna', label: 'Krishna' },
+  { value: 'rama', label: 'Rama' },
+  { value: 'ganesha', label: 'Ganesha' },
+  { value: 'lakshmi', label: 'Lakshmi' },
+  { value: 'saraswati', label: 'Saraswati' },
+  { value: 'durga', label: 'Durga' },
+  { value: 'kali', label: 'Kali' },
+  { value: 'hanuman', label: 'Hanuman' },
+  { value: 'dattatreya', label: 'Dattatreya' },
+  { value: 'guru', label: 'Guru / Lineage' },
+] as const;
+
+const INTENTION_TYPES = [
+  { value: 'clarity', label: 'Clarity' },
+  { value: 'confidence', label: 'Confidence' },
+  { value: 'focus', label: 'Focus' },
+  { value: 'discipline', label: 'Discipline' },
+  { value: 'letting_go', label: 'Letting Go' },
+  { value: 'protection', label: 'Protection' },
+  { value: 'manifestation', label: 'Manifestation' },
+  { value: 'inner_strength', label: 'Inner Strength' },
+] as const;
 
 interface VedicPeriod {
   id: string;
@@ -138,6 +192,8 @@ const AdminMantras = () => {
   });
   const [category, setCategory] = useState('general');
   const [planetType, setPlanetType] = useState<string | null>(null);
+  const [deityName, setDeityName] = useState<string | null>(null);
+  const [intentionType, setIntentionType] = useState<string | null>(null);
   const [isPremium, setIsPremium] = useState(false);
   const [explanation, setExplanation] = useState('');
   const [recommendedDuration, setRecommendedDuration] = useState('');
@@ -181,6 +237,8 @@ const AdminMantras = () => {
     });
     setCategory('general');
     setPlanetType(null);
+    setDeityName(null);
+    setIntentionType(null);
     setIsPremium(false);
     setExplanation('');
     setRecommendedDuration('');
@@ -201,6 +259,8 @@ const AdminMantras = () => {
     });
     setCategory(mantra.category || 'general');
     setPlanetType(mantra.planet_type ?? null);
+    setDeityName(mantra.deity_name ?? null);
+    setIntentionType(mantra.intention_type ?? null);
     setIsPremium(mantra.is_premium ?? false);
     setExplanation(mantra.explanation || '');
     setRecommendedDuration(mantra.recommended_duration || '');
@@ -222,6 +282,8 @@ const AdminMantras = () => {
           ...formData,
           category,
           planet_type: category === 'planet' ? planetType : null,
+          deity_name: category === 'deity' ? deityName : null,
+          intention_type: category === 'intention' ? intentionType : null,
           is_premium: isPremium,
           explanation: explanation || null,
           recommended_duration: recommendedDuration || null,
@@ -243,6 +305,8 @@ const AdminMantras = () => {
           ...formData,
           category,
           planet_type: category === 'planet' ? planetType : null,
+          deity_name: category === 'deity' ? deityName : null,
+          intention_type: category === 'intention' ? intentionType : null,
           is_premium: isPremium,
           explanation: explanation || null,
           recommended_duration: recommendedDuration || null,
@@ -342,47 +406,75 @@ const AdminMantras = () => {
                 />
               </div>
 
-              <div>
-                <label className="text-sm">Mantra Category</label>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  required
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                >
-                  <option value="planet">Planet</option>
-                  <option value="deity">Deity</option>
-                  <option value="intention">Intention</option>
-                  <option value="karma">Karma</option>
-                  <option value="wealth">Wealth</option>
-                  <option value="health">Health</option>
-                  <option value="peace">Peace of Mind</option>
-                  <option value="protection">Protection</option>
-                  <option value="general">General</option>
-                </select>
-              </div>
-
-              {category === 'planet' && (
-                <>
-                  <label className="text-sm mt-2">Planet</label>
+              {/* Category — organized, contextual sub-selects only when needed */}
+              <div className="space-y-3">
+                <div>
+                  <Label>Category</Label>
                   <select
-                    value={planetType ?? ''}
-                    onChange={(e) => setPlanetType(e.target.value)}
+                    value={category}
+                    onChange={(e) => {
+                      setCategory(e.target.value);
+                      setPlanetType(null);
+                      setDeityName(null);
+                      setIntentionType(null);
+                    }}
+                    required
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   >
-                    <option value="">Select planet</option>
-                    <option value="sun">Sun</option>
-                    <option value="moon">Moon</option>
-                    <option value="mars">Mars</option>
-                    <option value="mercury">Mercury</option>
-                    <option value="jupiter">Jupiter</option>
-                    <option value="venus">Venus</option>
-                    <option value="saturn">Saturn</option>
-                    <option value="rahu">Rahu</option>
-                    <option value="ketu">Ketu</option>
+                    {MANTRA_CATEGORIES.map((c) => (
+                      <option key={c.value} value={c.value}>{c.label}</option>
+                    ))}
                   </select>
-                </>
-              )}
+                </div>
+
+                {category === 'planet' && (
+                  <div>
+                    <Label>Planet (for Jyotish)</Label>
+                    <select
+                      value={planetType ?? ''}
+                      onChange={(e) => setPlanetType(e.target.value || null)}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                      <option value="">Select planet</option>
+                      {PLANET_TYPES.map((p) => (
+                        <option key={p.value} value={p.value}>{p.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {category === 'deity' && (
+                  <div>
+                    <Label>Deity</Label>
+                    <select
+                      value={deityName ?? ''}
+                      onChange={(e) => setDeityName(e.target.value || null)}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                      <option value="">Select deity</option>
+                      {DEITY_NAMES.map((d) => (
+                        <option key={d.value} value={d.value}>{d.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {category === 'intention' && (
+                  <div>
+                    <Label>Intention Type</Label>
+                    <select
+                      value={intentionType ?? ''}
+                      onChange={(e) => setIntentionType(e.target.value || null)}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                      <option value="">Select intention</option>
+                      {INTENTION_TYPES.map((i) => (
+                        <option key={i.value} value={i.value}>{i.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
 
               <div>
                 <Label>Description</Label>
@@ -499,6 +591,11 @@ const AdminMantras = () => {
                   <h4 className="font-medium text-foreground truncate">{mantra.title}</h4>
                   <p className="text-sm text-muted-foreground">
                     {Math.floor(mantra.duration_seconds / 60)}:{(mantra.duration_seconds % 60).toString().padStart(2, '0')} • {mantra.shc_reward} SHC
+                    {mantra.category && (
+                      <span className="ml-2 text-xs uppercase text-muted-foreground/80">
+                        • {MANTRA_CATEGORIES.find(c => c.value === mantra.category)?.label ?? mantra.category}
+                      </span>
+                    )}
                   </p>
                 </div>
                 <div className="flex gap-2">
