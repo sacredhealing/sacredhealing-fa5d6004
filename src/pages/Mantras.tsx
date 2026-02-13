@@ -214,31 +214,6 @@ const Mantras = () => {
         </p>
       </section>
 
-      {/* Vedic Recommendation — at top */}
-      {jyotishRecommendation && (
-        <section className="px-4 mb-4">
-          <Card className="rounded-xl border-cyan-500/20 bg-cyan-500/5 border">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center flex-shrink-0">
-                  <Sparkles className="h-4 w-4 text-cyan-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground mb-2">
-                    {jyotishRecommendation.message}
-                  </p>
-                  <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
-                    <span>Duration: {jyotishRecommendation.duration}</span>
-                    <span>Repetitions: {jyotishRecommendation.repetitions}</span>
-                    <span>Best time: {jyotishRecommendation.bestTime}</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-      )}
-
       {/* Category Grid — Library-style wide cards */}
       <section className="px-4 mb-6">
         <h2 className="font-semibold text-foreground mb-3">{t('mantras.browseBy', 'Browse by category')}</h2>
@@ -361,6 +336,29 @@ const Mantras = () => {
                 <p className="text-sm text-muted-foreground text-center mb-6">
                   {t('mantras.guidanceVoice', 'Voice only')}
                 </p>
+
+                {/* Vedic Recommendation — inside player card */}
+                {jyotishRecommendation && (
+                  <Card className="rounded-xl border-cyan-500/20 bg-cyan-500/5 border mb-6">
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center flex-shrink-0">
+                          <Sparkles className="h-4 w-4 text-cyan-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground mb-2">
+                            {jyotishRecommendation.message}
+                          </p>
+                          <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+                            <span>Duration: {jyotishRecommendation.duration}</span>
+                            <span>Repetitions: {jyotishRecommendation.repetitions}</span>
+                            <span>Best time: {jyotishRecommendation.bestTime}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
                 <Card className="rounded-xl border-border bg-muted/20 mb-6">
                   <CardContent className="p-4">
