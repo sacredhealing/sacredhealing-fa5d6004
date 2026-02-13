@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Music, Play, Pause, RotateCcw, ChevronDown, ChevronRight, Sparkles } from 'lucide-react';
+import { Music, Play, Pause, RotateCcw, ChevronDown, ChevronRight, Sparkles, LayoutGrid } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -239,38 +239,52 @@ const Mantras = () => {
         </section>
       )}
 
-      {/* Category Grid — horizontal scroll */}
+      {/* Category Grid — Library-style wide cards */}
       <section className="px-4 mb-6">
         <h2 className="font-semibold text-foreground mb-3">{t('mantras.browseBy', 'Browse by category')}</h2>
-        <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-thin scrollbar-thumb-white/10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <button
             type="button"
             onClick={() => setSelectedCategoryId(null)}
-            className={`flex-shrink-0 flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all ${
+            className={`flex items-center gap-4 p-5 rounded-2xl border transition-all text-left ${
               selectedCategoryId === null
-                ? 'border-cyan-500/50 bg-cyan-500/10 text-cyan-300'
-                : 'border-white/5 bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground'
+                ? 'bg-[#1A1A1A] border-cyan-500/30 text-foreground'
+                : 'bg-[#1A1A1A]/80 border-white/10 hover:bg-white/5 hover:border-white/20 text-muted-foreground hover:text-foreground'
             }`}
           >
-            <span className="text-lg">🌟</span>
-            <span className="text-sm font-light whitespace-nowrap">All</span>
+            <div className="p-3 bg-cyan-500/10 rounded-xl text-cyan-400 flex-shrink-0">
+              <LayoutGrid className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-medium">All</h3>
+              <p className="text-[10px] text-white/40">Explore sacred sounds</p>
+            </div>
+            <ChevronRight size={16} className="text-white/20 flex-shrink-0" />
           </button>
-          {MANTRA_CATEGORIES.map((cat) => (
-            <button
-              key={cat.id}
-              type="button"
-              onClick={() => setSelectedCategoryId(cat.id)}
-              className={`flex-shrink-0 flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all ${
-                selectedCategoryId === cat.id
-                  ? 'border-cyan-500/50 bg-cyan-500/10 text-cyan-300'
-                  : 'border-white/5 bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <span className="text-lg">{cat.icon}</span>
-              <span className="text-sm font-light whitespace-nowrap">{cat.label}</span>
-              <ChevronRight size={14} className="text-white/20 flex-shrink-0" />
-            </button>
-          ))}
+          {MANTRA_CATEGORIES.map((cat) => {
+            const IconComponent = cat.icon;
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setSelectedCategoryId(cat.id)}
+                className={`flex items-center gap-4 p-5 rounded-2xl border transition-all text-left ${
+                  selectedCategoryId === cat.id
+                    ? 'bg-[#1A1A1A] border-cyan-500/30 text-foreground'
+                    : 'bg-[#1A1A1A]/80 border-white/10 hover:bg-white/5 hover:border-white/20 text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <div className="p-3 bg-cyan-500/10 rounded-xl text-cyan-400 flex-shrink-0">
+                  <IconComponent className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-medium">{cat.label}</h3>
+                  <p className="text-[10px] text-white/40">Explore sacred sounds</p>
+                </div>
+                <ChevronRight size={16} className="text-white/20 flex-shrink-0" />
+              </button>
+            );
+          })}
         </div>
       </section>
 
