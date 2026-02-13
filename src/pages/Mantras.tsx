@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Music, Play, Pause, RotateCcw, ChevronRight, Sparkles, Hash } from 'lucide-react';
+import { Music, Play, Pause, RotateCcw, ChevronRight, ChevronDown, Sparkles, Hash } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -95,6 +95,7 @@ const Mantras = () => {
   const [count, setCount] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [listExpanded, setListExpanded] = useState(true);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const currentMantraIdRef = useRef<string | null>(null);
@@ -308,49 +309,111 @@ const Mantras = () => {
   }
 
   return (
-    <div className="max-w-[1400px] mx-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-8 md:gap-10 min-h-screen pb-28">
-      {/* ===============================================
-          LEFT: MANTRA LIST (NAV)
-      =============================================== */}
-      <aside className="space-y-2 lg:h-[calc(100vh-4rem)] lg:overflow-y-auto pr-2 lg:pr-4 scrollbar-thin scrollbar-thumb-zinc-800">
-        <div className="mb-8">
-          <h1 className="text-3xl font-serif font-bold text-white mb-2 tracking-tight">
-            {t('mantras.title', 'Mantras')}
-          </h1>
-          <p className="text-zinc-500 text-sm">
-            {t('mantras.subtitle', 'Choose one mantra and repeat it 108 times.')}
-          </p>
-        </div>
+    <div className="min-h-screen bg-background pb-28">
+      <div className="max-w-[1400px] mx-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-8 md:gap-10">
+        {/* ===============================================
+            LEFT: MANTRA LIST (NAV)
+        =============================================== */}
+        <aside className="space-y-2 lg:h-[calc(100vh-4rem)] lg:overflow-y-auto pr-2 lg:pr-4 scrollbar-thin scrollbar-thumb-zinc-800">
+          <div className="mb-6">
+            <h1 className="text-2xl md:text-3xl font-heading font-serif font-bold text-foreground mb-2 tracking-tight">
+              {t('mantras.title', 'Mantras')}
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              {t('mantras.subtitle', 'Choose one mantra and repeat it 108 times.')}
+            </p>
+          </div>
 
-        {/* RECOMMENDED */}
-        {jyotish && recommendedMantras.length > 0 && (
-          <CategorySection
-            title={t('mantras.recommended', 'Recommended for You')}
-            mantras={recommendedMantras}
-            selectedMantraId={selectedMantraId}
-            onSelect={handleMantraSelect}
-            highlight
-          />
-        )}
+          {/* Choose a mantra — expandable flat list (always shows all mantras) */}
+          <div className="mb-6">
+            <button
+              type="button"
+              className="flex w-full items-center justify-between py-2 text-left"
+              onClick={() => setListExpanded(!listExpanded)}
+            >
+              <h2 className="font-semibold text-foreground">{t('mantras.choose', 'Choose a mantra')}</h2>
+              <ChevronDown className={`h-4 w-4 text-muted-foreground transition ${listExpanded ? 'rotate-180' : ''}`} />
+            </button>
+            {listExpanded && (
+              <div className="mt-2 space-y-2">
+                {mantras.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-4">{t('mantras.comingSoon', 'More mantras coming soon.')}</p>
+                ) : (
+                  mantras.map((m) => {
+                    const isRecommended = jyotish?.recommendedMantraId === m.id;
+                    return (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => handleMantraSelect(m.id)}
+                        className={`w-full text-left rounded-xl border p-4 flex items-center gap-3 transition ${
+                          selectedMantraId === m.id
+                            ? 'border-primary bg-primary/10'
+                            : isRecommended
+                            ? 'border-primary/50 bg-primary/5'
+                            : 'border-border bg-card/50 hover:bg-muted/30'
+                        }`}
+                      >
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          {isRecommended ? (
+                            <Sparkles className="h-5 w-5 text-primary" />
+                          ) : (
+                            <Music className="h-5 w-5 text-primary" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-foreground truncate">{m.title}</p>
+                            {isRecommended && (
+                              <span className="text-[10px] text-primary font-medium uppercase tracking-wide">Recommended</span>
+                            )}
+                          </div>
+                          {m.duration_seconds > 0 && (
+                            <p className="text-xs text-muted-foreground">{formatDuration(m.duration_seconds)}</p>
+                          )}
+                        </div>
+                        <ChevronRight size={16} className="text-muted-foreground shrink-0" />
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            )}
+          </div>
 
-        <CategorySection title="Planets" mantras={grouped.planet} selectedMantraId={selectedMantraId} onSelect={handleMantraSelect} />
-        <CategorySection title="Deity" mantras={grouped.deity} selectedMantraId={selectedMantraId} onSelect={handleMantraSelect} />
-        <CategorySection title="Intention" mantras={grouped.intention} selectedMantraId={selectedMantraId} onSelect={handleMantraSelect} />
-        <CategorySection title="Karma & Healing" mantras={grouped.karma} selectedMantraId={selectedMantraId} onSelect={handleMantraSelect} />
-        <CategorySection title="Wealth & Abundance" mantras={grouped.wealth} selectedMantraId={selectedMantraId} onSelect={handleMantraSelect} />
-        <CategorySection title="Health & Vitality" mantras={grouped.health} selectedMantraId={selectedMantraId} onSelect={handleMantraSelect} />
-        <CategorySection title="Peace & Calm" mantras={grouped.peace} selectedMantraId={selectedMantraId} onSelect={handleMantraSelect} />
-        <CategorySection title="Protection & Power" mantras={grouped.protection} selectedMantraId={selectedMantraId} onSelect={handleMantraSelect} />
-        <CategorySection title="Spiritual Growth" mantras={grouped.spiritual} selectedMantraId={selectedMantraId} onSelect={handleMantraSelect} />
-        <CategorySection title="General" mantras={grouped.general} selectedMantraId={selectedMantraId} onSelect={handleMantraSelect} />
-      </aside>
+          {/* Category sections (when we have categorized mantras) */}
+          {(jyotish && recommendedMantras.length > 0) || Object.values(grouped).some((arr) => arr.length > 0) ? (
+            <div className="space-y-6">
+              {jyotish && recommendedMantras.length > 0 && (
+                <CategorySection
+                  title={t('mantras.recommended', 'Recommended for You')}
+                  mantras={recommendedMantras}
+                  selectedMantraId={selectedMantraId}
+                  onSelect={handleMantraSelect}
+                  highlight
+                />
+              )}
+              <CategorySection title="Planets" mantras={grouped.planet} selectedMantraId={selectedMantraId} onSelect={handleMantraSelect} />
+              <CategorySection title="Deity" mantras={grouped.deity} selectedMantraId={selectedMantraId} onSelect={handleMantraSelect} />
+              <CategorySection title="Intention" mantras={grouped.intention} selectedMantraId={selectedMantraId} onSelect={handleMantraSelect} />
+              <CategorySection title="Karma & Healing" mantras={grouped.karma} selectedMantraId={selectedMantraId} onSelect={handleMantraSelect} />
+              <CategorySection title="Wealth & Abundance" mantras={grouped.wealth} selectedMantraId={selectedMantraId} onSelect={handleMantraSelect} />
+              <CategorySection title="Health & Vitality" mantras={grouped.health} selectedMantraId={selectedMantraId} onSelect={handleMantraSelect} />
+              <CategorySection title="Peace & Calm" mantras={grouped.peace} selectedMantraId={selectedMantraId} onSelect={handleMantraSelect} />
+              <CategorySection title="Protection & Power" mantras={grouped.protection} selectedMantraId={selectedMantraId} onSelect={handleMantraSelect} />
+              <CategorySection title="Spiritual Growth" mantras={grouped.spiritual} selectedMantraId={selectedMantraId} onSelect={handleMantraSelect} />
+              <CategorySection title="General" mantras={grouped.general} selectedMantraId={selectedMantraId} onSelect={handleMantraSelect} />
+            </div>
+          ) : null}
+        </aside>
 
-      {/* ===============================================
-          RIGHT: PRACTICE AREA
-      =============================================== */}
-      <main>
-        {/* VEDIC GUIDE CARD — only when selected mantra is the recommended one */}
-        {jyotish && selectedMantra?.id === jyotish.recommendedMantraId && (
+        {/* ===============================================
+            RIGHT: PRACTICE AREA
+        =============================================== */}
+        <main className="flex-1 min-w-0">
+        <h2 className="font-semibold text-foreground mb-3">{t('mantras.now', 'Now practicing')}</h2>
+        {/* VEDIC GUIDE CARD — when jyotish exists and user has selected a mantra */}
+        {jyotish && selectedMantra && (
           <Card className="mb-8 bg-primary/5 border-primary/20 backdrop-blur-sm border">
             <CardContent className="p-5">
               <div className="flex gap-4 items-start">
@@ -472,7 +535,8 @@ const Mantras = () => {
             </CardContent>
           </Card>
         )}
-      </main>
+        </main>
+      </div>
 
       <audio ref={audioRef} className="hidden" />
     </div>

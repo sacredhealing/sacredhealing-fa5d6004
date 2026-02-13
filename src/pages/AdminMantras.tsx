@@ -10,6 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import AudioUpload from '@/components/admin/AudioUpload';
+import { MANTRA_CATEGORIES } from '@/lib/mantraCategories';
 
 interface Mantra {
   id: string;
@@ -20,6 +21,7 @@ interface Mantra {
   duration_seconds: number;
   shc_reward: number;
   is_active: boolean;
+  category?: string | null;
 }
 
 const AdminMantras = () => {
@@ -37,6 +39,7 @@ const AdminMantras = () => {
     shc_reward: 111,
     is_active: true,
   });
+  const [category, setCategory] = useState('general');
 
   useEffect(() => {
     fetchMantras();
@@ -64,6 +67,7 @@ const AdminMantras = () => {
       shc_reward: 111,
       is_active: true,
     });
+    setCategory('general');
     setEditingId(null);
     setShowForm(false);
   };
@@ -78,6 +82,7 @@ const AdminMantras = () => {
       shc_reward: mantra.shc_reward,
       is_active: mantra.is_active,
     });
+    setCategory((mantra as { category?: string }).category || 'general');
     setEditingId(mantra.id);
     setShowForm(true);
   };
@@ -91,7 +96,7 @@ const AdminMantras = () => {
     if (editingId) {
       const { error } = await supabase
         .from('mantras')
-        .update(formData)
+        .update({ ...formData, category })
         .eq('id', editingId);
 
       if (error) {
@@ -104,7 +109,7 @@ const AdminMantras = () => {
     } else {
       const { error } = await supabase
         .from('mantras')
-        .insert(formData);
+        .insert({ ...formData, category });
 
       if (error) {
         toast.error('Failed to add mantra');
@@ -188,6 +193,19 @@ const AdminMantras = () => {
               </div>
 
               <div>
+                <Label>Category</Label>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  {MANTRA_CATEGORIES.map((c) => (
+                    <option key={c.id} value={c.id}>{c.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
                 <Label>Description</Label>
                 <Textarea
                   value={formData.description}
@@ -259,6 +277,11 @@ const AdminMantras = () => {
                   <h4 className="font-medium text-foreground truncate">{mantra.title}</h4>
                   <p className="text-sm text-muted-foreground">
                     {Math.floor(mantra.duration_seconds / 60)}:{(mantra.duration_seconds % 60).toString().padStart(2, '0')} • {mantra.shc_reward} SHC
+                    {(mantra as Mantra & { category?: string }).category && (
+                      <span className="ml-2 text-xs text-muted-foreground/80">
+                        • {MANTRA_CATEGORIES.find(c => c.id === (mantra as Mantra & { category?: string }).category)?.label}
+                      </span>
+                    )}
                   </p>
                 </div>
                 <div className="flex gap-2">
