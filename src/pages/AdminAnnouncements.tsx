@@ -109,11 +109,34 @@ export default function AdminAnnouncements() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('announcements').delete().eq('id', id);
+      // First delete related dismissals (due to foreign key constraint)
+      const { error: dismissalsError } = await supabase
+        .from('announcement_dismissals')
+        .delete()
+        .eq('announcement_id', id);
+      
+      if (dismissalsError) {
+        console.warn('Error deleting dismissals (may not exist):', dismissalsError);
+        // Continue anyway - dismissals may not exist
+      }
+
+      // Then delete the announcement
+      const { data, error } = await supabase
+        .from('announcements')
+        .delete()
+        .eq('id', id)
+        .select();
+      
       if (error) {
         console.error('Delete error:', error);
         throw error;
       }
+      
+      if (!data || data.length === 0) {
+        throw new Error('Announcement not found or already deleted');
+      }
+      
+      return data[0];
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-announcements'] });
@@ -123,7 +146,7 @@ export default function AdminAnnouncements() {
       console.error('Delete mutation error:', error);
       toast({ 
         title: 'Error deleting announcement', 
-        description: error.message || 'Failed to delete announcement. Please try again.',
+        description: error.message || 'Failed to delete announcement. Please check your permissions and try again.',
         variant: 'destructive' 
       });
     },
