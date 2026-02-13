@@ -521,10 +521,7 @@ const AdminMantras = () => {
               </div>
 
               <div className="flex items-center gap-2">
-                <Switch
-                  checked={isPremium}
-                  onCheckedChange={setIsPremium}
-                />
+                <Switch checked={isPremium} onCheckedChange={setIsPremium} />
                 <Label>Premium</Label>
               </div>
 
