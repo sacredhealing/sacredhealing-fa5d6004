@@ -75,16 +75,49 @@ async function deleteStuckAnnouncement() {
   for (const ann of announcements) {
     console.log(`\nDeleting announcement: ${ann.title} (${ann.id})...`);
     
-    const { error: deleteError } = await supabase
+    // First delete related dismissals
+    const { error: dismissalsError } = await supabase
+      .from('announcement_dismissals')
+      .delete()
+      .eq('announcement_id', ann.id);
+    
+    if (dismissalsError) {
+      console.warn(`Warning deleting dismissals: ${dismissalsError.message}`);
+    }
+    
+    // Then delete the announcement
+    const { data, error: deleteError } = await supabase
       .from('announcements')
       .delete()
-      .eq('id', ann.id);
+      .eq('id', ann.id)
+      .select();
 
     if (deleteError) {
       console.error(`Error deleting announcement ${ann.id}:`, deleteError);
+      console.error('Full error details:', JSON.stringify(deleteError, null, 2));
     } else {
-      console.log(`✓ Successfully deleted: ${ann.title}`);
+      if (data && data.length > 0) {
+        console.log(`✓ Successfully deleted: ${ann.title}`);
+      } else {
+        console.log(`⚠ No rows deleted - announcement may not exist or already deleted`);
+      }
     }
+  }
+  
+  // Verify deletion
+  console.log('\nVerifying deletion...');
+  const { data: remaining, error: verifyError } = await supabase
+    .from('announcements')
+    .select('id, title')
+    .or('title.ilike.%Mantra & Astrologi%,title.ilike.%mantra & astrologi%,message.ilike.%vediska astrologi%,message.ilike.%Vediska astrologi%');
+  
+  if (verifyError) {
+    console.error('Error verifying:', verifyError);
+  } else if (remaining && remaining.length > 0) {
+    console.error(`❌ FAILED: ${remaining.length} announcement(s) still exist:`);
+    remaining.forEach(a => console.error(`  - ${a.title} (${a.id})`));
+  } else {
+    console.log('✓ Verification passed: No matching announcements found');
   }
 
   console.log('\nDone! All matching announcements have been deleted.');
