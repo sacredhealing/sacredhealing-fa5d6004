@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Music, Play, Pause, RotateCcw, Volume2, ChevronDown, Sparkles } from 'lucide-react';
+import { Music, Play, Pause, RotateCcw, ChevronDown, ChevronRight, Sparkles } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,6 +9,7 @@ import { useSHCBalance } from '@/hooks/useSHCBalance';
 import { toast } from 'sonner';
 import { getMantras, type MantraItem, MANTRA_REPETITIONS } from '@/features/mantras/getMantras';
 import { useJyotishMantraRecommendation } from '@/hooks/useJyotishMantraRecommendation';
+import { MANTRA_CATEGORIES } from '@/lib/mantraCategories';
 
 function getPlayableUrl(url: string): string {
   const driveMatch = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
@@ -36,11 +37,15 @@ const Mantras = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [listExpanded, setListExpanded] = useState(true);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const currentMantraIdRef = useRef<string | null>(null);
 
   const reps = MANTRA_REPETITIONS;
+  const filteredMantras = selectedCategoryId
+    ? mantras.filter((m) => (m.category || 'general') === selectedCategoryId)
+    : mantras;
   const selectedMantra = selectedMantraId ? mantras.find((m) => m.id === selectedMantraId) : null;
 
   // Get Jyotish recommendation
@@ -209,8 +214,68 @@ const Mantras = () => {
         </p>
       </section>
 
+      {/* Vedic Recommendation — at top */}
+      {jyotishRecommendation && (
+        <section className="px-4 mb-4">
+          <Card className="rounded-xl border-cyan-500/20 bg-cyan-500/5 border">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="h-4 w-4 text-cyan-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground mb-2">
+                    {jyotishRecommendation.message}
+                  </p>
+                  <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+                    <span>Duration: {jyotishRecommendation.duration}</span>
+                    <span>Repetitions: {jyotishRecommendation.repetitions}</span>
+                    <span>Best time: {jyotishRecommendation.bestTime}</span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      )}
+
+      {/* Category Grid — horizontal scroll */}
+      <section className="px-4 mb-6">
+        <h2 className="font-semibold text-foreground mb-3">{t('mantras.browseBy', 'Browse by category')}</h2>
+        <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-thin scrollbar-thumb-white/10">
+          <button
+            type="button"
+            onClick={() => setSelectedCategoryId(null)}
+            className={`flex-shrink-0 flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all ${
+              selectedCategoryId === null
+                ? 'border-cyan-500/50 bg-cyan-500/10 text-cyan-300'
+                : 'border-white/5 bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <span className="text-lg">🌟</span>
+            <span className="text-sm font-light whitespace-nowrap">All</span>
+          </button>
+          {MANTRA_CATEGORIES.map((cat) => (
+            <button
+              key={cat.id}
+              type="button"
+              onClick={() => setSelectedCategoryId(cat.id)}
+              className={`flex-shrink-0 flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all ${
+                selectedCategoryId === cat.id
+                  ? 'border-cyan-500/50 bg-cyan-500/10 text-cyan-300'
+                  : 'border-white/5 bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <span className="text-lg">{cat.icon}</span>
+              <span className="text-sm font-light whitespace-nowrap">{cat.label}</span>
+              <ChevronRight size={14} className="text-white/20 flex-shrink-0" />
+            </button>
+          ))}
+        </div>
+      </section>
+
       <div className="px-4 flex flex-col gap-6 md:flex-row md:gap-8">
-        {/* Choose a mantra — list (clickable) */}
+        {/* Choose a mantra — filtered list (clickable) */}
         <section className="flex-shrink-0 md:w-72">
           <button
             type="button"
@@ -222,10 +287,10 @@ const Mantras = () => {
           </button>
           {listExpanded && (
             <div className="mt-2 space-y-2">
-              {mantras.length === 0 ? (
+              {filteredMantras.length === 0 ? (
                 <p className="text-sm text-muted-foreground py-4">{t('mantras.comingSoon', 'More mantras coming soon.')}</p>
               ) : (
-                mantras.map((m) => {
+                filteredMantras.map((m) => {
                   const isRecommended = jyotishRecommendation?.recommendedMantraId === m.id;
                   return (
                     <button
@@ -282,29 +347,6 @@ const Mantras = () => {
                 <p className="text-sm text-muted-foreground text-center mb-6">
                   {t('mantras.guidanceVoice', 'Voice only')}
                 </p>
-
-                {/* Vedic Guide Card - Only show if Jyotish data exists */}
-                {jyotishRecommendation && (
-                  <Card className="rounded-xl border-border bg-primary/5 border-primary/20 mb-6">
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-3 mb-3">
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <Sparkles className="h-4 w-4 text-primary" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground mb-2">
-                            {jyotishRecommendation.message}
-                          </p>
-                          <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
-                            <span>Duration: {jyotishRecommendation.duration}</span>
-                            <span>Repetitions: {jyotishRecommendation.repetitions}</span>
-                            <span>Best time: {jyotishRecommendation.bestTime}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
 
                 <Card className="rounded-xl border-border bg-muted/20 mb-6">
                   <CardContent className="p-4">

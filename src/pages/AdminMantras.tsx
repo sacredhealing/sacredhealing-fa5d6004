@@ -10,6 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import AudioUpload from '@/components/admin/AudioUpload';
+import { MANTRA_CATEGORIES } from '@/lib/mantraCategories';
 
 interface Mantra {
   id: string;
@@ -28,20 +29,6 @@ interface Mantra {
   explanation?: string | null;
   recommended_duration?: string | null;
 }
-
-// Core mantra categories (add mantras/MP3s to each) (spiritually coherent, Jyotish-compatible)
-const MANTRA_CATEGORIES = [
-  { value: 'planet', label: 'Planetary (Jyotish)' },
-  { value: 'deity', label: 'Deity' },
-  { value: 'intention', label: 'Intention' },
-  { value: 'karma', label: 'Karma & Healing' },
-  { value: 'wealth', label: 'Wealth & Abundance' },
-  { value: 'health', label: 'Health & Vitality' },
-  { value: 'peace', label: 'Peace & Calm' },
-  { value: 'protection', label: 'Protection & Power' },
-  { value: 'spiritual', label: 'Spiritual Growth' },
-  { value: 'general', label: 'General / Universal' },
-] as const;
 
 const PLANET_TYPES = [
   { value: 'sun', label: 'Sun (Surya)' },
@@ -301,7 +288,7 @@ const AdminMantras = () => {
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   >
                     {MANTRA_CATEGORIES.map((c) => (
-                      <option key={c.value} value={c.value}>{c.label}</option>
+                      <option key={c.id} value={c.id}>{c.label}</option>
                     ))}
                   </select>
                 </div>
@@ -453,7 +440,7 @@ const AdminMantras = () => {
                     {Math.floor(mantra.duration_seconds / 60)}:{(mantra.duration_seconds % 60).toString().padStart(2, '0')} • {mantra.shc_reward} SHC
                     {mantra.category && (
                       <span className="ml-2 text-xs uppercase text-muted-foreground/80">
-                        • {MANTRA_CATEGORIES.find(c => c.value === mantra.category)?.label ?? mantra.category}
+                        • {MANTRA_CATEGORIES.find(c => c.id === mantra.category)?.label ?? mantra.category}
                       </span>
                     )}
                   </p>
