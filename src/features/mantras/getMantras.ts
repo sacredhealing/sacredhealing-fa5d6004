@@ -11,6 +11,7 @@ export interface MantraItem {
   play_count: number;
   is_active: boolean;
   category?: string | null;
+  planet_type?: string | null;
   /** Fixed repetitions per practice. */
   repetitionsFixed: 108;
 }
@@ -22,7 +23,7 @@ export interface MantraItem {
 export async function getMantras(): Promise<MantraItem[]> {
   const { data } = await supabase
     .from('mantras')
-    .select('id, title, description, audio_url, cover_image_url, duration_seconds, shc_reward, play_count, is_active, category')
+    .select('id, title, description, audio_url, cover_image_url, duration_seconds, shc_reward, play_count, is_active, category, planet_type')
     .eq('is_active', true)
     .order('created_at', { ascending: false });
 
