@@ -10,7 +10,6 @@ import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import AudioUpload from '@/components/admin/AudioUpload';
-import { MANTRA_CATEGORIES } from '@/lib/mantraCategories';
 
 interface Mantra {
   id: string;
@@ -21,52 +20,7 @@ interface Mantra {
   duration_seconds: number;
   shc_reward: number;
   is_active: boolean;
-  category?: string;
-  planet_type?: string | null;
-  deity_name?: string | null;
-  intention_type?: string | null;
-  is_premium?: boolean;
-  explanation?: string | null;
-  recommended_duration?: string | null;
 }
-
-const PLANET_TYPES = [
-  { value: 'sun', label: 'Sun (Surya)' },
-  { value: 'moon', label: 'Moon (Chandra)' },
-  { value: 'mars', label: 'Mars (Mangala)' },
-  { value: 'mercury', label: 'Mercury (Budha)' },
-  { value: 'jupiter', label: 'Jupiter (Guru)' },
-  { value: 'venus', label: 'Venus (Shukra)' },
-  { value: 'saturn', label: 'Saturn (Shani)' },
-  { value: 'rahu', label: 'Rahu' },
-  { value: 'ketu', label: 'Ketu' },
-] as const;
-
-const DEITY_NAMES = [
-  { value: 'shiva', label: 'Shiva' },
-  { value: 'vishnu', label: 'Vishnu' },
-  { value: 'krishna', label: 'Krishna' },
-  { value: 'rama', label: 'Rama' },
-  { value: 'ganesha', label: 'Ganesha' },
-  { value: 'lakshmi', label: 'Lakshmi' },
-  { value: 'saraswati', label: 'Saraswati' },
-  { value: 'durga', label: 'Durga' },
-  { value: 'kali', label: 'Kali' },
-  { value: 'hanuman', label: 'Hanuman' },
-  { value: 'dattatreya', label: 'Dattatreya' },
-  { value: 'guru', label: 'Guru / Lineage' },
-] as const;
-
-const INTENTION_TYPES = [
-  { value: 'clarity', label: 'Clarity' },
-  { value: 'confidence', label: 'Confidence' },
-  { value: 'focus', label: 'Focus' },
-  { value: 'discipline', label: 'Discipline' },
-  { value: 'letting_go', label: 'Letting Go' },
-  { value: 'protection', label: 'Protection' },
-  { value: 'manifestation', label: 'Manifestation' },
-  { value: 'inner_strength', label: 'Inner Strength' },
-] as const;
 
 const AdminMantras = () => {
   const navigate = useNavigate();
@@ -83,13 +37,6 @@ const AdminMantras = () => {
     shc_reward: 111,
     is_active: true,
   });
-  const [category, setCategory] = useState('general');
-  const [planetType, setPlanetType] = useState<string | null>(null);
-  const [deityName, setDeityName] = useState<string | null>(null);
-  const [intentionType, setIntentionType] = useState<string | null>(null);
-  const [isPremium, setIsPremium] = useState(false);
-  const [explanation, setExplanation] = useState('');
-  const [recommendedDuration, setRecommendedDuration] = useState('');
 
   useEffect(() => {
     fetchMantras();
@@ -117,13 +64,6 @@ const AdminMantras = () => {
       shc_reward: 111,
       is_active: true,
     });
-    setCategory('general');
-    setPlanetType(null);
-    setDeityName(null);
-    setIntentionType(null);
-    setIsPremium(false);
-    setExplanation('');
-    setRecommendedDuration('');
     setEditingId(null);
     setShowForm(false);
   };
@@ -138,13 +78,6 @@ const AdminMantras = () => {
       shc_reward: mantra.shc_reward,
       is_active: mantra.is_active,
     });
-    setCategory(mantra.category || 'general');
-    setPlanetType(mantra.planet_type ?? null);
-    setDeityName(mantra.deity_name ?? null);
-    setIntentionType(mantra.intention_type ?? null);
-    setIsPremium(mantra.is_premium ?? false);
-    setExplanation(mantra.explanation || '');
-    setRecommendedDuration(mantra.recommended_duration || '');
     setEditingId(mantra.id);
     setShowForm(true);
   };
@@ -158,16 +91,7 @@ const AdminMantras = () => {
     if (editingId) {
       const { error } = await supabase
         .from('mantras')
-        .update({
-          ...formData,
-          category,
-          planet_type: category === 'planet' ? planetType : null,
-          deity_name: category === 'deity' ? deityName : null,
-          intention_type: category === 'intention' ? intentionType : null,
-          is_premium: isPremium,
-          explanation: explanation || null,
-          recommended_duration: recommendedDuration || null,
-        })
+        .update(formData)
         .eq('id', editingId);
 
       if (error) {
@@ -180,16 +104,7 @@ const AdminMantras = () => {
     } else {
       const { error } = await supabase
         .from('mantras')
-        .insert({
-          ...formData,
-          category,
-          planet_type: category === 'planet' ? planetType : null,
-          deity_name: category === 'deity' ? deityName : null,
-          intention_type: category === 'intention' ? intentionType : null,
-          is_premium: isPremium,
-          explanation: explanation || null,
-          recommended_duration: recommendedDuration || null,
-        });
+        .insert(formData);
 
       if (error) {
         toast.error('Failed to add mantra');
@@ -246,7 +161,7 @@ const AdminMantras = () => {
       <div className="px-4 py-4">
         {/* Add Button */}
         {!showForm && (
-          <Button type="button" onClick={() => setShowForm(true)} className="w-full mb-4">
+          <Button onClick={() => setShowForm(true)} className="w-full mb-4">
             <Plus className="w-4 h-4 mr-2" />
             Add New Mantra
           </Button>
@@ -270,76 +185,6 @@ const AdminMantras = () => {
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   placeholder="Om Namah Shivaya"
                 />
-              </div>
-
-              {/* Category — organized, contextual sub-selects only when needed */}
-              <div className="space-y-3">
-                <div>
-                  <Label>Category</Label>
-                  <select
-                    value={category}
-                    onChange={(e) => {
-                      setCategory(e.target.value);
-                      setPlanetType(null);
-                      setDeityName(null);
-                      setIntentionType(null);
-                    }}
-                    required
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  >
-                    {MANTRA_CATEGORIES.map((c) => (
-                      <option key={c.id} value={c.id}>{c.label}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {category === 'planet' && (
-                  <div>
-                    <Label>Planet (for Jyotish)</Label>
-                    <select
-                      value={planetType ?? ''}
-                      onChange={(e) => setPlanetType(e.target.value || null)}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    >
-                      <option value="">Select planet</option>
-                      {PLANET_TYPES.map((p) => (
-                        <option key={p.value} value={p.value}>{p.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                {category === 'deity' && (
-                  <div>
-                    <Label>Deity</Label>
-                    <select
-                      value={deityName ?? ''}
-                      onChange={(e) => setDeityName(e.target.value || null)}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    >
-                      <option value="">Select deity</option>
-                      {DEITY_NAMES.map((d) => (
-                        <option key={d.value} value={d.value}>{d.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                {category === 'intention' && (
-                  <div>
-                    <Label>Intention Type</Label>
-                    <select
-                      value={intentionType ?? ''}
-                      onChange={(e) => setIntentionType(e.target.value || null)}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    >
-                      <option value="">Select intention</option>
-                      {INTENTION_TYPES.map((i) => (
-                        <option key={i.value} value={i.value}>{i.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
               </div>
 
               <div>
@@ -387,30 +232,6 @@ const AdminMantras = () => {
               </div>
 
               <div className="flex items-center gap-2">
-                <Switch checked={isPremium} onCheckedChange={setIsPremium} />
-                <Label>Premium</Label>
-              </div>
-
-              <div>
-                <Label>Explanation (shown to users)</Label>
-                <Textarea
-                  value={explanation}
-                  onChange={(e) => setExplanation(e.target.value)}
-                  placeholder="Long text explanation for this mantra..."
-                  rows={3}
-                />
-              </div>
-
-              <div>
-                <Label>Recommended duration</Label>
-                <Input
-                  value={recommendedDuration}
-                  onChange={(e) => setRecommendedDuration(e.target.value)}
-                  placeholder="13 Feb 2026 – 1 Apr 2026"
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
                 <Switch
                   checked={formData.is_active}
                   onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
@@ -438,11 +259,6 @@ const AdminMantras = () => {
                   <h4 className="font-medium text-foreground truncate">{mantra.title}</h4>
                   <p className="text-sm text-muted-foreground">
                     {Math.floor(mantra.duration_seconds / 60)}:{(mantra.duration_seconds % 60).toString().padStart(2, '0')} • {mantra.shc_reward} SHC
-                    {mantra.category && (
-                      <span className="ml-2 text-xs uppercase text-muted-foreground/80">
-                        • {MANTRA_CATEGORIES.find(c => c.id === mantra.category)?.label ?? mantra.category}
-                      </span>
-                    )}
                   </p>
                 </div>
                 <div className="flex gap-2">
