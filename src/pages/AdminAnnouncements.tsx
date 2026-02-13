@@ -110,11 +110,22 @@ export default function AdminAnnouncements() {
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from('announcements').delete().eq('id', id);
-      if (error) throw error;
+      if (error) {
+        console.error('Delete error:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-announcements'] });
-      toast({ title: 'Deleted' });
+      toast({ title: 'Deleted', description: 'Announcement has been permanently deleted.' });
+    },
+    onError: (error: Error) => {
+      console.error('Delete mutation error:', error);
+      toast({ 
+        title: 'Error deleting announcement', 
+        description: error.message || 'Failed to delete announcement. Please try again.',
+        variant: 'destructive' 
+      });
     },
   });
 
@@ -339,7 +350,12 @@ export default function AdminAnnouncements() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => deleteMutation.mutate(ann.id)}
+                        onClick={() => {
+                          if (confirm(`Are you sure you want to delete "${ann.title}"? This action cannot be undone.`)) {
+                            deleteMutation.mutate(ann.id);
+                          }
+                        }}
+                        disabled={deleteMutation.isPending}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
