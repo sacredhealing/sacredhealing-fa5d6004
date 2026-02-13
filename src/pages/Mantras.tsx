@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Music, Play, Pause, RotateCcw, Volume2, ChevronDown } from 'lucide-react';
+import { Music, Play, Pause, RotateCcw, Volume2, ChevronDown, Sparkles } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSHCBalance } from '@/hooks/useSHCBalance';
 import { toast } from 'sonner';
 import { getMantras, type MantraItem, MANTRA_REPETITIONS } from '@/features/mantras/getMantras';
+import { useJyotishMantraRecommendation } from '@/hooks/useJyotishMantraRecommendation';
 
 function getPlayableUrl(url: string): string {
   const driveMatch = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
@@ -42,17 +43,34 @@ const Mantras = () => {
   const reps = MANTRA_REPETITIONS;
   const selectedMantra = selectedMantraId ? mantras.find((m) => m.id === selectedMantraId) : null;
 
+  // Get Jyotish recommendation
+  const jyotishRecommendation = useJyotishMantraRecommendation(mantras);
+
   useEffect(() => {
     let cancelled = false;
     getMantras().then((data) => {
       if (!cancelled) {
         setMantras(data);
-        if (data.length > 0 && !selectedMantraId) setSelectedMantraId(data[0].id);
+        // Preselect recommended mantra if available, otherwise first mantra
+        if (data.length > 0 && !selectedMantraId) {
+          const recommendedId = jyotishRecommendation?.recommendedMantraId;
+          setSelectedMantraId(recommendedId && data.find(m => m.id === recommendedId) ? recommendedId : data[0].id);
+        }
       }
       setLoading(false);
     });
     return () => { cancelled = true; };
-  }, []);
+  }, [jyotishRecommendation?.recommendedMantraId]);
+
+  // Update selected mantra when recommendation changes (only if no mantra is currently selected)
+  useEffect(() => {
+    if (jyotishRecommendation?.recommendedMantraId && mantras.length > 0 && !selectedMantraId) {
+      const recommendedMantra = mantras.find(m => m.id === jyotishRecommendation.recommendedMantraId);
+      if (recommendedMantra) {
+        setSelectedMantraId(recommendedMantra.id);
+      }
+    }
+  }, [jyotishRecommendation?.recommendedMantraId, mantras, selectedMantraId]);
 
   const awardMantraReward = async (mantra: MantraItem) => {
     if (!user) return;
@@ -207,28 +225,42 @@ const Mantras = () => {
               {mantras.length === 0 ? (
                 <p className="text-sm text-muted-foreground py-4">{t('mantras.comingSoon', 'More mantras coming soon.')}</p>
               ) : (
-                mantras.map((m) => (
-                  <button
-                    key={m.id}
-                    type="button"
-                    onClick={() => handleMantraSelect(m)}
-                    className={`w-full text-left rounded-xl border p-4 flex items-center gap-3 transition ${
-                      selectedMantraId === m.id
-                        ? 'border-primary bg-primary/10'
-                        : 'border-border bg-card/50 hover:bg-muted/30'
-                    }`}
-                  >
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <Music className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground truncate">{m.title}</p>
-                      {m.duration_seconds > 0 && (
-                        <p className="text-xs text-muted-foreground">{formatDuration(m.duration_seconds)}</p>
-                      )}
-                    </div>
-                  </button>
-                ))
+                mantras.map((m) => {
+                  const isRecommended = jyotishRecommendation?.recommendedMantraId === m.id;
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => handleMantraSelect(m)}
+                      className={`w-full text-left rounded-xl border p-4 flex items-center gap-3 transition ${
+                        selectedMantraId === m.id
+                          ? 'border-primary bg-primary/10'
+                          : isRecommended
+                          ? 'border-primary/50 bg-primary/5'
+                          : 'border-border bg-card/50 hover:bg-muted/30'
+                      }`}
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        {isRecommended ? (
+                          <Sparkles className="h-5 w-5 text-primary" />
+                        ) : (
+                          <Music className="h-5 w-5 text-primary" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-foreground truncate">{m.title}</p>
+                          {isRecommended && (
+                            <span className="text-[10px] text-primary font-medium uppercase tracking-wide">Recommended</span>
+                          )}
+                        </div>
+                        {m.duration_seconds > 0 && (
+                          <p className="text-xs text-muted-foreground">{formatDuration(m.duration_seconds)}</p>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })
               )}
             </div>
           )}
@@ -250,6 +282,29 @@ const Mantras = () => {
                 <p className="text-sm text-muted-foreground text-center mb-6">
                   {t('mantras.guidanceVoice', 'Voice only')}
                 </p>
+
+                {/* Vedic Guide Card - Only show if Jyotish data exists */}
+                {jyotishRecommendation && (
+                  <Card className="rounded-xl border-border bg-primary/5 border-primary/20 mb-6">
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3 mb-3">
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Sparkles className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground mb-2">
+                            {jyotishRecommendation.message}
+                          </p>
+                          <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+                            <span>Duration: {jyotishRecommendation.duration}</span>
+                            <span>Repetitions: {jyotishRecommendation.repetitions}</span>
+                            <span>Best time: {jyotishRecommendation.bestTime}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
                 <Card className="rounded-xl border-border bg-muted/20 mb-6">
                   <CardContent className="p-4">
