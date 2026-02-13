@@ -85,41 +85,50 @@ export function useJyotishMantraRecommendation(mantras: Array<{ id: string; titl
     return null;
   }
 
-  // Map planet to message and best time
-  const planetMapping: Record<string, { message: string; bestTime: string }> = {
+  // Map planet to mantra recommendation
+  const planetMapping: Record<string, { mantraKeywords: string[]; message: string; bestTime: string }> = {
     saturn: {
+      mantraKeywords: ['shani', 'shreem', 'om', 'shanti'],
       message: 'You are currently in a Saturn influence according to your Vedic chart. This mantra is recommended to support balance and stability during this period.',
       bestTime: 'morning',
     },
     moon: {
+      mantraKeywords: ['om', 'shanti', 'peace', 'calm', 'chandra'],
       message: 'You are currently in a Moon influence according to your Vedic chart. This mantra is recommended to support emotional balance and inner peace during this period.',
       bestTime: 'evening',
     },
     rahu: {
+      mantraKeywords: ['om', 'protection', 'grounding', 'shanti'],
       message: 'You are currently in a Rahu influence according to your Vedic chart. This mantra is recommended to support grounding and protection during this period.',
       bestTime: 'morning',
     },
     ketu: {
+      mantraKeywords: ['om', 'spiritual', 'liberation', 'shanti'],
       message: 'You are currently in a Ketu influence according to your Vedic chart. This mantra is recommended to support spiritual growth and liberation during this period.',
       bestTime: 'evening',
     },
     sun: {
+      mantraKeywords: ['om', 'surya', 'vitality', 'strength'],
       message: 'You are currently in a Sun influence according to your Vedic chart. This mantra is recommended to support vitality and inner strength during this period.',
       bestTime: 'morning',
     },
     mars: {
+      mantraKeywords: ['om', 'mangal', 'courage', 'energy'],
       message: 'You are currently in a Mars influence according to your Vedic chart. This mantra is recommended to support courage and balanced energy during this period.',
       bestTime: 'morning',
     },
     mercury: {
+      mantraKeywords: ['om', 'buddha', 'wisdom', 'communication'],
       message: 'You are currently in a Mercury influence according to your Vedic chart. This mantra is recommended to support wisdom and clear communication during this period.',
       bestTime: 'morning',
     },
     jupiter: {
+      mantraKeywords: ['om', 'guru', 'wisdom', 'blessings'],
       message: 'You are currently in a Jupiter influence according to your Vedic chart. This mantra is recommended to support wisdom and spiritual growth during this period.',
       bestTime: 'morning',
     },
     venus: {
+      mantraKeywords: ['om', 'shukra', 'love', 'harmony'],
       message: 'You are currently in a Venus influence according to your Vedic chart. This mantra is recommended to support love and harmony during this period.',
       bestTime: 'evening',
     },
@@ -130,10 +139,11 @@ export function useJyotishMantraRecommendation(mantras: Array<{ id: string; titl
     return null;
   }
 
-  // Find matching mantra by planet_type (preferred) or fallback to category === 'planet'
-  const recommendedMantra = mantras.find(m => 
-    m.category === 'planet' && m.planet_type === currentPlanet
-  ) || mantras.find(m => m.category === 'planet');
+  // Find matching mantra by keywords in title
+  const recommendedMantra = mantras.find(m => {
+    const titleLower = m.title.toLowerCase();
+    return planetInfo.mantraKeywords.some(keyword => titleLower.includes(keyword));
+  });
 
   return {
     planet: currentPlanet,

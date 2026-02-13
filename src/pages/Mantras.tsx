@@ -36,7 +36,6 @@ const Mantras = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [listExpanded, setListExpanded] = useState(true);
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['recommended', 'planet', 'deity', 'intention', 'karma', 'wealth', 'health', 'peace', 'protection', 'general']));
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const currentMantraIdRef = useRef<string | null>(null);
@@ -47,46 +46,6 @@ const Mantras = () => {
   // Get Jyotish recommendation
   const jyotishRecommendation = useJyotishMantraRecommendation(mantras);
 
-  // Group mantras by category
-  const categoryOrder = ['planet', 'deity', 'intention', 'karma', 'wealth', 'health', 'peace', 'protection', 'general'];
-  const categoryLabels: Record<string, string> = {
-    planet: 'Planets',
-    deity: 'Deities',
-    intention: 'Intentions',
-    karma: 'Karma',
-    wealth: 'Wealth',
-    health: 'Health',
-    peace: 'Peace of Mind',
-    protection: 'Protection',
-    general: 'General',
-  };
-
-  const mantrasByCategory = mantras.reduce((acc, mantra) => {
-    const category = mantra.category || 'general';
-    if (!acc[category]) {
-      acc[category] = [];
-    }
-    acc[category].push(mantra);
-    return acc;
-  }, {} as Record<string, MantraItem[]>);
-
-  // Get recommended mantras (planet mantras matching current planet)
-  const recommendedMantras: MantraItem[] = jyotishRecommendation?.planet
-    ? mantras.filter(m => m.category === 'planet' && m.planet_type === jyotishRecommendation.planet)
-    : [];
-
-  const toggleCategory = (category: string) => {
-    setExpandedCategories(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(category)) {
-        newSet.delete(category);
-      } else {
-        newSet.add(category);
-      }
-      return newSet;
-    });
-  };
-
   useEffect(() => {
     let cancelled = false;
     getMantras().then((data) => {
@@ -95,19 +54,15 @@ const Mantras = () => {
         // Preselect recommended mantra if available, otherwise first mantra
         if (data.length > 0 && !selectedMantraId) {
           const recommendedId = jyotishRecommendation?.recommendedMantraId;
-          if (recommendedId && data.find(m => m.id === recommendedId)) {
-            setSelectedMantraId(recommendedId);
-          } else {
-            setSelectedMantraId(data[0].id);
-          }
+          setSelectedMantraId(recommendedId && data.find(m => m.id === recommendedId) ? recommendedId : data[0].id);
         }
       }
       setLoading(false);
     });
     return () => { cancelled = true; };
-  }, []);
+  }, [jyotishRecommendation?.recommendedMantraId]);
 
-  // Update selected mantra when recommendation becomes available (only if no mantra is currently selected)
+  // Update selected mantra when recommendation changes (only if no mantra is currently selected)
   useEffect(() => {
     if (jyotishRecommendation?.recommendedMantraId && mantras.length > 0 && !selectedMantraId) {
       const recommendedMantra = mantras.find(m => m.id === jyotishRecommendation.recommendedMantraId);
@@ -115,7 +70,7 @@ const Mantras = () => {
         setSelectedMantraId(recommendedMantra.id);
       }
     }
-  }, [jyotishRecommendation?.recommendedMantraId, mantras.length, selectedMantraId]);
+  }, [jyotishRecommendation?.recommendedMantraId, mantras, selectedMantraId]);
 
   const awardMantraReward = async (mantra: MantraItem) => {
     if (!user) return;
@@ -266,102 +221,46 @@ const Mantras = () => {
             <ChevronDown className={`h-4 w-4 text-muted-foreground transition ${listExpanded ? 'rotate-180' : ''}`} />
           </button>
           {listExpanded && (
-            <div className="mt-2 space-y-4">
+            <div className="mt-2 space-y-2">
               {mantras.length === 0 ? (
                 <p className="text-sm text-muted-foreground py-4">{t('mantras.comingSoon', 'More mantras coming soon.')}</p>
               ) : (
-                <>
-                  {/* Recommended for You section */}
-                  {jyotishRecommendation && recommendedMantras.length > 0 && (
-                    <div className="space-y-2">
-                      <button
-                        type="button"
-                        onClick={() => toggleCategory('recommended')}
-                        className="flex w-full items-center justify-between py-2 text-left"
-                      >
-                        <h3 className="text-sm font-semibold text-foreground">Recommended for You</h3>
-                        <ChevronDown className={`h-4 w-4 text-muted-foreground transition ${expandedCategories.has('recommended') ? 'rotate-180' : ''}`} />
-                      </button>
-                      {expandedCategories.has('recommended') && (
-                        <div className="space-y-2 pl-2">
-                          {recommendedMantras.map((m) => (
-                            <button
-                              key={m.id}
-                              type="button"
-                              onClick={() => handleMantraSelect(m)}
-                              className={`w-full text-left rounded-xl border p-4 flex items-center gap-3 transition ${
-                                selectedMantraId === m.id
-                                  ? 'border-primary bg-primary/10'
-                                  : 'border-primary/50 bg-primary/5'
-                              }`}
-                            >
-                              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                <Sparkles className="h-5 w-5 text-primary" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <p className="font-medium text-foreground truncate">{m.title}</p>
-                                  <span className="text-[10px] text-primary font-medium uppercase tracking-wide">Recommended</span>
-                                </div>
-                                {m.duration_seconds > 0 && (
-                                  <p className="text-xs text-muted-foreground">{formatDuration(m.duration_seconds)}</p>
-                                )}
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Category sections */}
-                  {categoryOrder.map((category) => {
-                    const categoryMantras = mantrasByCategory[category] || [];
-                    if (categoryMantras.length === 0) return null;
-
-                    return (
-                      <div key={category} className="space-y-2">
-                        <button
-                          type="button"
-                          onClick={() => toggleCategory(category)}
-                          className="flex w-full items-center justify-between py-2 text-left"
-                        >
-                          <h3 className="text-sm font-semibold text-foreground">{categoryLabels[category]}</h3>
-                          <ChevronDown className={`h-4 w-4 text-muted-foreground transition ${expandedCategories.has(category) ? 'rotate-180' : ''}`} />
-                        </button>
-                        {expandedCategories.has(category) && (
-                          <div className="space-y-2 pl-2">
-                            {categoryMantras.map((m) => {
-                              const isRecommended = jyotishRecommendation?.recommendedMantraId === m.id;
-                              return (
-                                <button
-                                  key={m.id}
-                                  type="button"
-                                  onClick={() => handleMantraSelect(m)}
-                                  className={`w-full text-left rounded-xl border p-4 flex items-center gap-3 transition ${
-                                    selectedMantraId === m.id
-                                      ? 'border-primary bg-primary/10'
-                                      : 'border-border bg-card/50 hover:bg-muted/30'
-                                  }`}
-                                >
-                                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                    <Music className="h-5 w-5 text-primary" />
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="font-medium text-foreground truncate">{m.title}</p>
-                                    {m.duration_seconds > 0 && (
-                                      <p className="text-xs text-muted-foreground">{formatDuration(m.duration_seconds)}</p>
-                                    )}
-                                  </div>
-                                </button>
-                              );
-                            })}
-                          </div>
+                mantras.map((m) => {
+                  const isRecommended = jyotishRecommendation?.recommendedMantraId === m.id;
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => handleMantraSelect(m)}
+                      className={`w-full text-left rounded-xl border p-4 flex items-center gap-3 transition ${
+                        selectedMantraId === m.id
+                          ? 'border-primary bg-primary/10'
+                          : isRecommended
+                          ? 'border-primary/50 bg-primary/5'
+                          : 'border-border bg-card/50 hover:bg-muted/30'
+                      }`}
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        {isRecommended ? (
+                          <Sparkles className="h-5 w-5 text-primary" />
+                        ) : (
+                          <Music className="h-5 w-5 text-primary" />
                         )}
                       </div>
-                    );
-                  })}
-                </>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-foreground truncate">{m.title}</p>
+                          {isRecommended && (
+                            <span className="text-[10px] text-primary font-medium uppercase tracking-wide">Recommended</span>
+                          )}
+                        </div>
+                        {m.duration_seconds > 0 && (
+                          <p className="text-xs text-muted-foreground">{formatDuration(m.duration_seconds)}</p>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })
               )}
             </div>
           )}
