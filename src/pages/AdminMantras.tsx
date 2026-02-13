@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import AudioUpload from '@/components/admin/AudioUpload';
@@ -20,6 +21,8 @@ interface Mantra {
   duration_seconds: number;
   shc_reward: number;
   is_active: boolean;
+  category: string;
+  planet_type: string | null;
 }
 
 const AdminMantras = () => {
@@ -36,6 +39,8 @@ const AdminMantras = () => {
     duration_seconds: 180,
     shc_reward: 111,
     is_active: true,
+    category: 'general',
+    planet_type: null as string | null,
   });
 
   useEffect(() => {
@@ -63,6 +68,8 @@ const AdminMantras = () => {
       duration_seconds: 180,
       shc_reward: 111,
       is_active: true,
+      category: 'general',
+      planet_type: null,
     });
     setEditingId(null);
     setShowForm(false);
@@ -77,21 +84,41 @@ const AdminMantras = () => {
       duration_seconds: mantra.duration_seconds,
       shc_reward: mantra.shc_reward,
       is_active: mantra.is_active,
+      category: mantra.category || 'general',
+      planet_type: mantra.planet_type || null,
     });
     setEditingId(mantra.id);
     setShowForm(true);
   };
 
   const handleSave = async () => {
-    if (!formData.title || !formData.audio_url) {
+    if (!formData.title || !formData.audio_url || !formData.category) {
       toast.error('Please fill in required fields');
       return;
+    }
+
+    const saveData: any = {
+      title: formData.title,
+      description: formData.description || null,
+      audio_url: formData.audio_url,
+      cover_image_url: formData.cover_image_url || null,
+      duration_seconds: formData.duration_seconds,
+      shc_reward: formData.shc_reward,
+      is_active: formData.is_active,
+      category: formData.category,
+    };
+
+    // Only include planet_type if category is 'planet'
+    if (formData.category === 'planet' && formData.planet_type) {
+      saveData.planet_type = formData.planet_type;
+    } else {
+      saveData.planet_type = null;
     }
 
     if (editingId) {
       const { error } = await supabase
         .from('mantras')
-        .update(formData)
+        .update(saveData)
         .eq('id', editingId);
 
       if (error) {
@@ -104,7 +131,7 @@ const AdminMantras = () => {
     } else {
       const { error } = await supabase
         .from('mantras')
-        .insert(formData);
+        .insert(saveData);
 
       if (error) {
         toast.error('Failed to add mantra');
@@ -196,6 +223,54 @@ const AdminMantras = () => {
                 />
               </div>
 
+              <div>
+                <Label>Mantra Category *</Label>
+                <Select
+                  value={formData.category}
+                  onValueChange={(value) => setFormData({ ...formData, category: value, planet_type: value !== 'planet' ? null : formData.planet_type })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="planet">Planet</SelectItem>
+                    <SelectItem value="deity">Deity</SelectItem>
+                    <SelectItem value="intention">Intention</SelectItem>
+                    <SelectItem value="karma">Karma</SelectItem>
+                    <SelectItem value="wealth">Wealth</SelectItem>
+                    <SelectItem value="health">Health</SelectItem>
+                    <SelectItem value="peace">Peace of Mind</SelectItem>
+                    <SelectItem value="protection">Protection</SelectItem>
+                    <SelectItem value="general">General</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {formData.category === 'planet' && (
+                <div>
+                  <Label>Planet Type (optional)</Label>
+                  <Select
+                    value={formData.planet_type || ''}
+                    onValueChange={(value) => setFormData({ ...formData, planet_type: value || null })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select planet" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sun">Sun</SelectItem>
+                      <SelectItem value="moon">Moon</SelectItem>
+                      <SelectItem value="mars">Mars</SelectItem>
+                      <SelectItem value="mercury">Mercury</SelectItem>
+                      <SelectItem value="jupiter">Jupiter</SelectItem>
+                      <SelectItem value="venus">Venus</SelectItem>
+                      <SelectItem value="saturn">Saturn</SelectItem>
+                      <SelectItem value="rahu">Rahu</SelectItem>
+                      <SelectItem value="ketu">Ketu</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
               <AudioUpload
                 value={formData.audio_url}
                 onChange={(url) => setFormData({ ...formData, audio_url: url })}
@@ -259,6 +334,7 @@ const AdminMantras = () => {
                   <h4 className="font-medium text-foreground truncate">{mantra.title}</h4>
                   <p className="text-sm text-muted-foreground">
                     {Math.floor(mantra.duration_seconds / 60)}:{(mantra.duration_seconds % 60).toString().padStart(2, '0')} • {mantra.shc_reward} SHC
+                    {mantra.category && ` • ${mantra.category.charAt(0).toUpperCase() + mantra.category.slice(1)}${mantra.planet_type ? ` (${mantra.planet_type})` : ''}`}
                   </p>
                 </div>
                 <div className="flex gap-2">
