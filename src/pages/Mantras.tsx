@@ -52,6 +52,10 @@ const Mantras = () => {
     let category = (mantra.category || 'general').toLowerCase().trim();
     // Normalize category names
     if (category === 'peace of mind' || category === 'peaceofmind') category = 'peace';
+    // Ensure all mantras go to a valid category
+    if (!['planet', 'deity', 'intention', 'karma', 'wealth', 'health', 'peace', 'protection', 'general'].includes(category)) {
+      category = 'general';
+    }
     if (!acc[category]) {
       acc[category] = [];
     }
