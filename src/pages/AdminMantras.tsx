@@ -20,6 +20,8 @@ interface Mantra {
   duration_seconds: number;
   shc_reward: number;
   is_active: boolean;
+  category?: string;
+  planet_type?: string | null;
 }
 
 const AdminMantras = () => {
@@ -37,6 +39,8 @@ const AdminMantras = () => {
     shc_reward: 111,
     is_active: true,
   });
+  const [category, setCategory] = useState('general');
+  const [planetType, setPlanetType] = useState<string | null>(null);
 
   useEffect(() => {
     fetchMantras();
@@ -64,6 +68,8 @@ const AdminMantras = () => {
       shc_reward: 111,
       is_active: true,
     });
+    setCategory('general');
+    setPlanetType(null);
     setEditingId(null);
     setShowForm(false);
   };
@@ -78,6 +84,8 @@ const AdminMantras = () => {
       shc_reward: mantra.shc_reward,
       is_active: mantra.is_active,
     });
+    setCategory(mantra.category || 'general');
+    setPlanetType(mantra.planet_type ?? null);
     setEditingId(mantra.id);
     setShowForm(true);
   };
@@ -91,7 +99,11 @@ const AdminMantras = () => {
     if (editingId) {
       const { error } = await supabase
         .from('mantras')
-        .update(formData)
+        .update({
+          ...formData,
+          category,
+          planet_type: category === 'planet' ? planetType : null,
+        })
         .eq('id', editingId);
 
       if (error) {
@@ -104,7 +116,11 @@ const AdminMantras = () => {
     } else {
       const { error } = await supabase
         .from('mantras')
-        .insert(formData);
+        .insert({
+          ...formData,
+          category,
+          planet_type: category === 'planet' ? planetType : null,
+        });
 
       if (error) {
         toast.error('Failed to add mantra');
@@ -186,6 +202,48 @@ const AdminMantras = () => {
                   placeholder="Om Namah Shivaya"
                 />
               </div>
+
+              <div>
+                <label className="text-sm">Mantra Category</label>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  required
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  <option value="planet">Planet</option>
+                  <option value="deity">Deity</option>
+                  <option value="intention">Intention</option>
+                  <option value="karma">Karma</option>
+                  <option value="wealth">Wealth</option>
+                  <option value="health">Health</option>
+                  <option value="peace">Peace of Mind</option>
+                  <option value="protection">Protection</option>
+                  <option value="general">General</option>
+                </select>
+              </div>
+
+              {category === 'planet' && (
+                <>
+                  <label className="text-sm mt-2">Planet</label>
+                  <select
+                    value={planetType ?? ''}
+                    onChange={(e) => setPlanetType(e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  >
+                    <option value="">Select planet</option>
+                    <option value="sun">Sun</option>
+                    <option value="moon">Moon</option>
+                    <option value="mars">Mars</option>
+                    <option value="mercury">Mercury</option>
+                    <option value="jupiter">Jupiter</option>
+                    <option value="venus">Venus</option>
+                    <option value="saturn">Saturn</option>
+                    <option value="rahu">Rahu</option>
+                    <option value="ketu">Ketu</option>
+                  </select>
+                </>
+              )}
 
               <div>
                 <Label>Description</Label>
