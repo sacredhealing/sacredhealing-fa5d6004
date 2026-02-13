@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -22,6 +22,18 @@ import adamDrum from '@/assets/adam-drum.jpg';
 import lailaAdamPink from '@/assets/laila-adam-pink.jpg';
 
 const Home: React.FC = () => {
+  const [showBanner, setShowBanner] = useState(false);
+
+  useEffect(() => {
+    const seen = localStorage.getItem("installBannerSeen");
+    if (!seen) setShowBanner(true);
+  }, []);
+
+  const handleClose = () => {
+    localStorage.setItem("installBannerSeen", "true");
+    setShowBanner(false);
+  };
+
   const QUICK_ACTIONS = [
     {
       id: "mantra",
@@ -367,6 +379,29 @@ const Home: React.FC = () => {
           </div>
         </div>
       </footer>
+
+      {showBanner && (
+        <div style={{
+          position: "fixed",
+          bottom: "20px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          backgroundColor: "#FF69B4",
+          color: "#fff",
+          padding: "15px 20px",
+          borderRadius: "10px",
+          textAlign: "center",
+          zIndex: 1000
+        }}>
+          <p>Add Sacred Healing to your phone for the best experience!</p>
+          <Link to="/install" style={{ color: "#fff", fontWeight: "bold", textDecoration: "underline" }}>
+            Go to Install Instructions
+          </Link>
+          <button onClick={handleClose} style={{ marginLeft: "10px", background: "transparent", border: "none", color: "#fff", fontWeight: "bold" }}>
+            ✖
+          </button>
+        </div>
+      )}
     </div>
   );
 };
