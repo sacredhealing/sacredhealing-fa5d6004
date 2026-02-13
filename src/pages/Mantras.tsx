@@ -47,9 +47,11 @@ const Mantras = () => {
   // Get Jyotish recommendation
   const jyotishRecommendation = useJyotishMantraRecommendation(mantras);
 
-  // Group mantras by category
+  // Group mantras by category - normalize category names
   const mantrasByCategory = mantras.reduce((acc, mantra) => {
-    const category = (mantra.category || 'general').toLowerCase();
+    let category = (mantra.category || 'general').toLowerCase().trim();
+    // Normalize category names
+    if (category === 'peace of mind' || category === 'peaceofmind') category = 'peace';
     if (!acc[category]) {
       acc[category] = [];
     }
@@ -88,12 +90,10 @@ const Mantras = () => {
     setExpandedCategories(newExpanded);
   };
 
-  // Check if any categories have mantras
-  const hasAnyMantras = mantras.length > 0;
-  const hasCategoriesWithMantras = categoryOrder.some(cat => {
-    if (cat === 'recommended') return recommendedMantras.length > 0;
-    return (mantrasByCategory[cat] || []).length > 0;
-  });
+  // Check if we should use category grouping or fallback to simple list
+  // Use categories if at least one category (besides general) has mantras, OR if general has mantras
+  const hasCategoriesWithMantras = Object.keys(mantrasByCategory).length > 0 && 
+    (mantrasByCategory['general']?.length > 0 || Object.keys(mantrasByCategory).some(cat => cat !== 'general' && mantrasByCategory[cat]?.length > 0));
 
   useEffect(() => {
     let cancelled = false;
@@ -273,39 +273,25 @@ const Mantras = () => {
             <div className="mt-2 space-y-3">
               {mantras.length === 0 ? (
                 <p className="text-sm text-muted-foreground py-4">{t('mantras.comingSoon', 'More mantras coming soon.')}</p>
-              ) : hasCategoriesWithMantras ? (
-                categoryOrder.map((categoryKey) => {
-                  // Skip "Recommended for You" if no Jyotish data or no recommended mantras
-                  if (categoryKey === 'recommended' && (!jyotishRecommendation || recommendedMantras.length === 0)) {
-                    return null;
-                  }
-
-                  const mantrasToShow = categoryKey === 'recommended' 
-                    ? recommendedMantras 
-                    : (mantrasByCategory[categoryKey] || []);
-
-                  if (mantrasToShow.length === 0) {
-                    return null;
-                  }
-
-                  const isExpanded = expandedCategories.has(categoryKey);
-
-                  return (
-                    <div key={categoryKey} className="space-y-2">
+              ) : (
+                <>
+                  {/* Show Recommended section if Jyotish data exists */}
+                  {jyotishRecommendation && recommendedMantras.length > 0 && (
+                    <div className="space-y-2">
                       <button
                         type="button"
-                        onClick={() => toggleCategory(categoryKey)}
+                        onClick={() => toggleCategory('recommended')}
                         className="flex w-full items-center justify-between py-1 text-left"
                       >
                         <h3 className="text-sm font-semibold text-foreground">
-                          {categoryLabels[categoryKey]}
+                          {categoryLabels['recommended']}
                         </h3>
-                        <ChevronDown className={`h-4 w-4 text-muted-foreground transition ${isExpanded ? 'rotate-180' : ''}`} />
+                        <ChevronDown className={`h-4 w-4 text-muted-foreground transition ${expandedCategories.has('recommended') ? 'rotate-180' : ''}`} />
                       </button>
-                      {isExpanded && (
+                      {expandedCategories.has('recommended') && (
                         <div className="space-y-2 pl-2">
-                          {mantrasToShow.map((m) => {
-                            const isRecommended = categoryKey === 'recommended' || jyotishRecommendation?.recommendedMantraId === m.id;
+                          {recommendedMantras.map((m) => {
+                            const isRecommended = true;
                             return (
                               <button
                                 key={m.id}
@@ -314,24 +300,16 @@ const Mantras = () => {
                                 className={`w-full text-left rounded-xl border p-4 flex items-center gap-3 transition ${
                                   selectedMantraId === m.id
                                     ? 'border-primary bg-primary/10'
-                                    : isRecommended
-                                    ? 'border-primary/50 bg-primary/5'
-                                    : 'border-border bg-card/50 hover:bg-muted/30'
+                                    : 'border-primary/50 bg-primary/5'
                                 }`}
                               >
                                 <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                  {isRecommended ? (
-                                    <Sparkles className="h-5 w-5 text-primary" />
-                                  ) : (
-                                    <Music className="h-5 w-5 text-primary" />
-                                  )}
+                                  <Sparkles className="h-5 w-5 text-primary" />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2">
                                     <p className="font-medium text-foreground truncate">{m.title}</p>
-                                    {isRecommended && (
-                                      <span className="text-[10px] text-primary font-medium uppercase tracking-wide">Recommended</span>
-                                    )}
+                                    <span className="text-[10px] text-primary font-medium uppercase tracking-wide">Recommended</span>
                                   </div>
                                   {m.duration_seconds > 0 && (
                                     <p className="text-xs text-muted-foreground">{formatDuration(m.duration_seconds)}</p>
@@ -343,46 +321,73 @@ const Mantras = () => {
                         </div>
                       )}
                     </div>
-                  );
-                }).filter(Boolean)
-              ) : (
-                // Fallback: show all mantras if category grouping fails
-                mantras.map((m) => {
-                  const isRecommended = jyotishRecommendation?.recommendedMantraId === m.id;
-                  return (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() => handleMantraSelect(m)}
-                      className={`w-full text-left rounded-xl border p-4 flex items-center gap-3 transition ${
-                        selectedMantraId === m.id
-                          ? 'border-primary bg-primary/10'
-                          : isRecommended
-                          ? 'border-primary/50 bg-primary/5'
-                          : 'border-border bg-card/50 hover:bg-muted/30'
-                      }`}
-                    >
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        {isRecommended ? (
-                          <Sparkles className="h-5 w-5 text-primary" />
-                        ) : (
-                          <Music className="h-5 w-5 text-primary" />
+                  )}
+                  
+                  {/* Show category sections */}
+                  {categoryOrder.filter(cat => cat !== 'recommended').map((categoryKey) => {
+                    const mantrasToShow = mantrasByCategory[categoryKey] || [];
+                    if (mantrasToShow.length === 0) {
+                      return null;
+                    }
+
+                    const isExpanded = expandedCategories.has(categoryKey);
+
+                    return (
+                      <div key={categoryKey} className="space-y-2">
+                        <button
+                          type="button"
+                          onClick={() => toggleCategory(categoryKey)}
+                          className="flex w-full items-center justify-between py-1 text-left"
+                        >
+                          <h3 className="text-sm font-semibold text-foreground">
+                            {categoryLabels[categoryKey]}
+                          </h3>
+                          <ChevronDown className={`h-4 w-4 text-muted-foreground transition ${isExpanded ? 'rotate-180' : ''}`} />
+                        </button>
+                        {isExpanded && (
+                          <div className="space-y-2 pl-2">
+                            {mantrasToShow.map((m) => {
+                              const isRecommended = jyotishRecommendation?.recommendedMantraId === m.id;
+                              return (
+                                <button
+                                  key={m.id}
+                                  type="button"
+                                  onClick={() => handleMantraSelect(m)}
+                                  className={`w-full text-left rounded-xl border p-4 flex items-center gap-3 transition ${
+                                    selectedMantraId === m.id
+                                      ? 'border-primary bg-primary/10'
+                                      : isRecommended
+                                      ? 'border-primary/50 bg-primary/5'
+                                      : 'border-border bg-card/50 hover:bg-muted/30'
+                                  }`}
+                                >
+                                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                    {isRecommended ? (
+                                      <Sparkles className="h-5 w-5 text-primary" />
+                                    ) : (
+                                      <Music className="h-5 w-5 text-primary" />
+                                    )}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <p className="font-medium text-foreground truncate">{m.title}</p>
+                                      {isRecommended && (
+                                        <span className="text-[10px] text-primary font-medium uppercase tracking-wide">Recommended</span>
+                                      )}
+                                    </div>
+                                    {m.duration_seconds > 0 && (
+                                      <p className="text-xs text-muted-foreground">{formatDuration(m.duration_seconds)}</p>
+                                    )}
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium text-foreground truncate">{m.title}</p>
-                          {isRecommended && (
-                            <span className="text-[10px] text-primary font-medium uppercase tracking-wide">Recommended</span>
-                          )}
-                        </div>
-                        {m.duration_seconds > 0 && (
-                          <p className="text-xs text-muted-foreground">{formatDuration(m.duration_seconds)}</p>
-                        )}
-                      </div>
-                    </button>
-                  );
-                })
+                    );
+                  }).filter(Boolean)}
+                </>
               )}
             </div>
           )}
