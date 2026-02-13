@@ -49,7 +49,7 @@ const Mantras = () => {
 
   // Group mantras by category
   const mantrasByCategory = mantras.reduce((acc, mantra) => {
-    const category = mantra.category || 'general';
+    const category = (mantra.category || 'general').toLowerCase();
     if (!acc[category]) {
       acc[category] = [];
     }
@@ -87,6 +87,13 @@ const Mantras = () => {
     }
     setExpandedCategories(newExpanded);
   };
+
+  // Check if any categories have mantras
+  const hasAnyMantras = mantras.length > 0;
+  const hasCategoriesWithMantras = categoryOrder.some(cat => {
+    if (cat === 'recommended') return recommendedMantras.length > 0;
+    return (mantrasByCategory[cat] || []).length > 0;
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -266,7 +273,7 @@ const Mantras = () => {
             <div className="mt-2 space-y-3">
               {mantras.length === 0 ? (
                 <p className="text-sm text-muted-foreground py-4">{t('mantras.comingSoon', 'More mantras coming soon.')}</p>
-              ) : (
+              ) : hasCategoriesWithMantras ? (
                 categoryOrder.map((categoryKey) => {
                   // Skip "Recommended for You" if no Jyotish data or no recommended mantras
                   if (categoryKey === 'recommended' && (!jyotishRecommendation || recommendedMantras.length === 0)) {
@@ -336,6 +343,44 @@ const Mantras = () => {
                         </div>
                       )}
                     </div>
+                  );
+                }).filter(Boolean)
+              ) : (
+                // Fallback: show all mantras if category grouping fails
+                mantras.map((m) => {
+                  const isRecommended = jyotishRecommendation?.recommendedMantraId === m.id;
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => handleMantraSelect(m)}
+                      className={`w-full text-left rounded-xl border p-4 flex items-center gap-3 transition ${
+                        selectedMantraId === m.id
+                          ? 'border-primary bg-primary/10'
+                          : isRecommended
+                          ? 'border-primary/50 bg-primary/5'
+                          : 'border-border bg-card/50 hover:bg-muted/30'
+                      }`}
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        {isRecommended ? (
+                          <Sparkles className="h-5 w-5 text-primary" />
+                        ) : (
+                          <Music className="h-5 w-5 text-primary" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-foreground truncate">{m.title}</p>
+                          {isRecommended && (
+                            <span className="text-[10px] text-primary font-medium uppercase tracking-wide">Recommended</span>
+                          )}
+                        </div>
+                        {m.duration_seconds > 0 && (
+                          <p className="text-xs text-muted-foreground">{formatDuration(m.duration_seconds)}</p>
+                        )}
+                      </div>
+                    </button>
                   );
                 })
               )}
