@@ -109,46 +109,12 @@ export default function AdminAnnouncements() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      // First delete related dismissals (due to foreign key constraint)
-      const { error: dismissalsError } = await supabase
-        .from('announcement_dismissals')
-        .delete()
-        .eq('announcement_id', id);
-      
-      if (dismissalsError) {
-        console.warn('Error deleting dismissals (may not exist):', dismissalsError);
-        // Continue anyway - dismissals may not exist
-      }
-
-      // Then delete the announcement
-      const { data, error } = await supabase
-        .from('announcements')
-        .delete()
-        .eq('id', id)
-        .select();
-      
-      if (error) {
-        console.error('Delete error:', error);
-        throw error;
-      }
-      
-      if (!data || data.length === 0) {
-        throw new Error('Announcement not found or already deleted');
-      }
-      
-      return data[0];
+      const { error } = await supabase.from('announcements').delete().eq('id', id);
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-announcements'] });
-      toast({ title: 'Deleted', description: 'Announcement has been permanently deleted.' });
-    },
-    onError: (error: Error) => {
-      console.error('Delete mutation error:', error);
-      toast({ 
-        title: 'Error deleting announcement', 
-        description: error.message || 'Failed to delete announcement. Please check your permissions and try again.',
-        variant: 'destructive' 
-      });
+      toast({ title: 'Deleted' });
     },
   });
 
@@ -373,12 +339,7 @@ export default function AdminAnnouncements() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => {
-                          if (confirm(`Are you sure you want to delete "${ann.title}"? This action cannot be undone.`)) {
-                            deleteMutation.mutate(ann.id);
-                          }
-                        }}
-                        disabled={deleteMutation.isPending}
+                        onClick={() => deleteMutation.mutate(ann.id)}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>

@@ -35,27 +35,9 @@ export const AnnouncementPopup: React.FC = () => {
 
     if (error || !announcements?.length) return;
 
-    // First, get dismissed announcements (before filtering by expiry/recurring)
-    // This ensures dismissed announcements never return, even if recurring
-    let dismissedIds = new Set<string>();
-    if (user) {
-      const { data: dismissals } = await supabase
-        .from('announcement_dismissals')
-        .select('announcement_id')
-        .eq('user_id', user.id);
-      dismissedIds = new Set(dismissals?.map(d => d.announcement_id) || []);
-    } else {
-      // For non-logged in users, use localStorage
-      const dismissed = JSON.parse(localStorage.getItem('dismissed_announcements') || '[]');
-      dismissedIds = new Set(dismissed);
-    }
-
-    // Filter by expiry and recurring logic, but exclude dismissed announcements
+    // Filter by expiry and recurring logic
     const now = new Date();
     const validAnnouncements = announcements.filter(a => {
-      // Never show dismissed announcements, regardless of recurring setting
-      if (dismissedIds.has(a.id)) return false;
-      
       // Check if expired
       if (a.expires_at && new Date(a.expires_at) < now) return false;
       
@@ -72,46 +54,48 @@ export const AnnouncementPopup: React.FC = () => {
 
     if (!validAnnouncements.length) return;
 
-    // Get the first unread announcement
-    const unread = validAnnouncements[0];
-    
-    if (unread) {
-      setAnnouncement(unread);
-      setIsVisible(true);
+    // If user is logged in, filter out dismissed announcements
+    if (user) {
+      const { data: dismissals } = await supabase
+        .from('announcement_dismissals')
+        .select('announcement_id')
+        .eq('user_id', user.id);
+
+      const dismissedIds = new Set(dismissals?.map(d => d.announcement_id) || []);
+      const unread = validAnnouncements.find(a => !dismissedIds.has(a.id));
+      
+      if (unread) {
+        setAnnouncement(unread);
+        setIsVisible(true);
+      }
+    } else {
+      // For non-logged in users, use localStorage
+      const dismissed = JSON.parse(localStorage.getItem('dismissed_announcements') || '[]');
+      const unread = validAnnouncements.find(a => !dismissed.includes(a.id));
+      
+      if (unread) {
+        setAnnouncement(unread);
+        setIsVisible(true);
+      }
     }
   };
 
   const handleDismiss = async () => {
     if (!announcement) return;
 
-    // Mark announcement as dismissed
     if (user) {
       await supabase.from('announcement_dismissals').insert({
         user_id: user.id,
         announcement_id: announcement.id,
-      }).catch(() => {
-        // Ignore errors (e.g., duplicate key) - announcement is already dismissed
       });
     } else {
       const dismissed = JSON.parse(localStorage.getItem('dismissed_announcements') || '[]');
-      if (!dismissed.includes(announcement.id)) {
-        dismissed.push(announcement.id);
-        localStorage.setItem('dismissed_announcements', JSON.stringify(dismissed));
-      }
+      dismissed.push(announcement.id);
+      localStorage.setItem('dismissed_announcements', JSON.stringify(dismissed));
     }
 
     setIsVisible(false);
     setAnnouncement(null);
-  };
-
-  const handleLinkClick = () => {
-    if (!announcement?.link_url) return;
-    
-    // Mark as dismissed when user clicks the link
-    handleDismiss();
-    
-    // Open link in new tab
-    window.open(announcement.link_url, '_blank');
   };
 
   if (!isVisible || !announcement) return null;
@@ -193,7 +177,7 @@ export const AnnouncementPopup: React.FC = () => {
           {announcement.link_url && (
             <Button 
               variant="outline" 
-              onClick={handleLinkClick}
+              onClick={() => window.open(announcement.link_url!, '_blank')}
               className="flex items-center gap-2"
             >
               <ExternalLink className="h-4 w-4" />
