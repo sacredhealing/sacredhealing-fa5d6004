@@ -99,7 +99,7 @@ const AdminMantras = () => {
       description: mantra.description || '',
       audio_url: mantra.audio_url,
       cover_image_url: mantra.cover_image_url || '',
-      duration_seconds: mantra.duration_seconds,
+      duration_seconds: mantra.duration_seconds ?? 180,
       shc_reward: mantra.shc_reward,
       is_active: mantra.is_active,
       is_premium: mantra.is_premium ?? false,
@@ -111,14 +111,14 @@ const AdminMantras = () => {
   };
 
   const buildMantraPayload = () => {
-    const duration = Number(formData.duration_seconds);
     const shc = Number(formData.shc_reward);
+    const durationSeconds = Number.isFinite(formData.duration_seconds) && formData.duration_seconds > 0 ? formData.duration_seconds : 180;
     return {
       title: formData.title.trim(),
       description: formData.description?.trim() || null,
       audio_url: formData.audio_url.trim(),
       cover_image_url: formData.cover_image_url?.trim() || null,
-      duration_seconds: Number.isFinite(duration) && duration > 0 ? duration : 180,
+      duration_seconds: durationSeconds,
       shc_reward: Number.isFinite(shc) && shc >= 0 ? shc : 111,
       is_active: Boolean(formData.is_active),
       category: category || 'general',
@@ -244,7 +244,7 @@ const AdminMantras = () => {
                     setCategory(e.target.value);
                     if (e.target.value !== 'planet') setPlanetType('');
                   }}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 text-foreground"
+                  className="flex h-10 w-full min-w-[280px] max-w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 text-foreground"
                 >
                   {ADMIN_MANTRA_CATEGORIES.map((c) => (
                     <option key={c.id} value={c.id}>{c.label}</option>
@@ -258,7 +258,7 @@ const AdminMantras = () => {
                   <select
                     value={planetType}
                     onChange={(e) => setPlanetType(e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 text-foreground"
+                    className="flex h-10 w-full min-w-[280px] max-w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 text-foreground"
                   >
                     <option value="">Select planet...</option>
                     {PLANET_TYPES.map((p) => (
@@ -295,11 +295,17 @@ const AdminMantras = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Duration (seconds)</Label>
+                  <Label>Duration (minutes)</Label>
                   <Input
                     type="number"
-                    value={formData.duration_seconds}
-                    onChange={(e) => setFormData({ ...formData, duration_seconds: parseInt(e.target.value) || 180 })}
+                    min={0.5}
+                    step={0.5}
+                    placeholder="Duration in minutes"
+                    value={formData.duration_seconds / 60}
+                    onChange={(e) => {
+                      const seconds = parseFloat(e.target.value) * 60;
+                      setFormData({ ...formData, duration_seconds: Number.isFinite(seconds) ? seconds : 180 });
+                    }}
                   />
                 </div>
                 <div>
