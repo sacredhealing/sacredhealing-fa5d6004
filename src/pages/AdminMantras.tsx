@@ -110,25 +110,40 @@ const AdminMantras = () => {
     setShowForm(true);
   };
 
+  const buildMantraPayload = () => {
+    const duration = Number(formData.duration_seconds);
+    const shc = Number(formData.shc_reward);
+    return {
+      title: formData.title.trim(),
+      description: formData.description?.trim() || null,
+      audio_url: formData.audio_url.trim(),
+      cover_image_url: formData.cover_image_url?.trim() || null,
+      duration_seconds: Number.isFinite(duration) && duration > 0 ? duration : 180,
+      shc_reward: Number.isFinite(shc) && shc >= 0 ? shc : 111,
+      is_active: Boolean(formData.is_active),
+      category: category || 'general',
+      planet_type: category === 'planet' && planetType?.trim() ? planetType.trim() : null,
+      is_premium: Boolean(formData.is_premium),
+    };
+  };
+
   const handleSave = async () => {
-    if (!formData.title || !formData.audio_url) {
+    if (!formData.title?.trim() || !formData.audio_url?.trim()) {
       toast.error('Please fill in required fields');
       return;
     }
 
+    const payload = buildMantraPayload();
+
     if (editingId) {
       const { error } = await supabase
         .from('mantras')
-        .update({
-          ...formData,
-          category,
-          planet_type: category === 'planet' ? planetType || null : null,
-          is_premium: formData.is_premium,
-        })
+        .update(payload)
         .eq('id', editingId);
 
       if (error) {
-        toast.error('Failed to update mantra');
+        console.error('Mantra update error:', error);
+        toast.error(error.message || 'Failed to update mantra');
       } else {
         toast.success('Mantra updated');
         resetForm();
@@ -137,15 +152,11 @@ const AdminMantras = () => {
     } else {
       const { error } = await supabase
         .from('mantras')
-        .insert({
-          ...formData,
-          category,
-          planet_type: category === 'planet' ? planetType || null : null,
-          is_premium: formData.is_premium,
-        });
+        .insert(payload);
 
       if (error) {
-        toast.error('Failed to add mantra');
+        console.error('Mantra insert error:', error);
+        toast.error(error.message || 'Failed to add mantra');
       } else {
         toast.success('Mantra added');
         resetForm();
