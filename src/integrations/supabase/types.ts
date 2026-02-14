@@ -2680,6 +2680,7 @@ export type Database = {
           duration_seconds: number
           id: string
           is_active: boolean
+          is_premium: boolean
           play_count: number
           shc_reward: number
           title: string
@@ -2692,6 +2693,7 @@ export type Database = {
           duration_seconds?: number
           id?: string
           is_active?: boolean
+          is_premium?: boolean
           play_count?: number
           shc_reward?: number
           title: string
@@ -2704,6 +2706,7 @@ export type Database = {
           duration_seconds?: number
           id?: string
           is_active?: boolean
+          is_premium?: boolean
           play_count?: number
           shc_reward?: number
           title?: string

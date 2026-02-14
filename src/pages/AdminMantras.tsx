@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Music, Trash2, Edit, Save, X } from 'lucide-react';
+import { ArrowLeft, Plus, Music, Trash2, Edit, Save, X, Lock, Unlock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -22,6 +22,7 @@ interface Mantra {
   shc_reward: number;
   is_active: boolean;
   category?: string | null;
+  is_premium?: boolean;
 }
 
 const AdminMantras = () => {
@@ -38,6 +39,7 @@ const AdminMantras = () => {
     duration_seconds: 180,
     shc_reward: 111,
     is_active: true,
+    is_premium: false,
   });
   const [category, setCategory] = useState('general');
 
@@ -66,6 +68,7 @@ const AdminMantras = () => {
       duration_seconds: 180,
       shc_reward: 111,
       is_active: true,
+      is_premium: false,
     });
     setCategory('general');
     setEditingId(null);
@@ -81,6 +84,7 @@ const AdminMantras = () => {
       duration_seconds: mantra.duration_seconds,
       shc_reward: mantra.shc_reward,
       is_active: mantra.is_active,
+      is_premium: mantra.is_premium ?? false,
     });
     setCategory((mantra as { category?: string }).category || 'general');
     setEditingId(mantra.id);
@@ -96,7 +100,7 @@ const AdminMantras = () => {
     if (editingId) {
       const { error } = await supabase
         .from('mantras')
-        .update({ ...formData, category })
+        .update({ ...formData, category, is_premium: formData.is_premium })
         .eq('id', editingId);
 
       if (error) {
@@ -109,7 +113,7 @@ const AdminMantras = () => {
     } else {
       const { error } = await supabase
         .from('mantras')
-        .insert({ ...formData, category });
+        .insert({ ...formData, category, is_premium: formData.is_premium });
 
       if (error) {
         toast.error('Failed to add mantra');
@@ -249,6 +253,35 @@ const AdminMantras = () => {
                 </div>
               </div>
 
+              <div>
+                <Label>Access (membership)</Label>
+                <div className="flex gap-4 mt-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="access"
+                      checked={!formData.is_premium}
+                      onChange={() => setFormData({ ...formData, is_premium: false })}
+                      className="rounded-full border-input"
+                    />
+                    <Unlock className="w-4 h-4 text-muted-foreground" />
+                    <span>Free</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="access"
+                      checked={formData.is_premium}
+                      onChange={() => setFormData({ ...formData, is_premium: true })}
+                      className="rounded-full border-input"
+                    />
+                    <Lock className="w-4 h-4 text-amber-500" />
+                    <span>Premium</span>
+                  </label>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Premium mantras are only available to app members.</p>
+              </div>
+
               <div className="flex items-center gap-2">
                 <Switch
                   checked={formData.is_active}
@@ -274,7 +307,15 @@ const AdminMantras = () => {
                   <Music className="w-5 h-5 text-purple-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-medium text-foreground truncate">{mantra.title}</h4>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h4 className="font-medium text-foreground truncate">{mantra.title}</h4>
+                    {mantra.is_premium && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                        <Lock className="w-3 h-3" />
+                        Premium
+                      </span>
+                    )}
+                  </div>
                   <p className="text-sm text-muted-foreground">
                     {Math.floor(mantra.duration_seconds / 60)}:{(mantra.duration_seconds % 60).toString().padStart(2, '0')} • {mantra.shc_reward} SHC
                     {(mantra as Mantra & { category?: string }).category && (

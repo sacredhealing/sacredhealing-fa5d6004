@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Music, Play, Pause, RotateCcw, Volume2, ChevronDown, Sparkles } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Music, Play, Pause, RotateCcw, Volume2, ChevronDown, Sparkles, Lock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSHCBalance } from '@/hooks/useSHCBalance';
+import { useMembership } from '@/hooks/useMembership';
 import { toast } from 'sonner';
 import { getMantras, type MantraItem, MANTRA_REPETITIONS } from '@/features/mantras/getMantras';
 import { useJyotishMantraRecommendation } from '@/hooks/useJyotishMantraRecommendation';
@@ -26,7 +28,9 @@ function formatDuration(seconds: number): string {
 
 const Mantras = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { user } = useAuth();
+  const { subscribed } = useMembership();
   const { refreshBalance } = useSHCBalance();
 
   const [mantras, setMantras] = useState<MantraItem[]>([]);
@@ -140,9 +144,16 @@ const Mantras = () => {
     audio.play().catch(() => toast.error(t('mantras.playFailed', 'Failed to play audio')));
   };
 
+  const canAccessPremium = subscribed;
+
   const handleStart = () => {
     if (!selectedMantra?.audio_url) {
       toast.error(t('mantras.noAudio', 'No audio available.'));
+      return;
+    }
+    if (selectedMantra.is_premium && !canAccessPremium) {
+      toast.error(t('mantras.premiumRequired', 'Premium mantra — join membership to unlock.'));
+      navigate('/membership');
       return;
     }
     if (count >= reps) setCount(0);
@@ -227,6 +238,7 @@ const Mantras = () => {
               ) : (
                 mantras.map((m) => {
                   const isRecommended = jyotishRecommendation?.recommendedMantraId === m.id;
+                  const locked = m.is_premium && !canAccessPremium;
                   return (
                     <button
                       key={m.id}
@@ -238,19 +250,24 @@ const Mantras = () => {
                           : isRecommended
                           ? 'border-primary/50 bg-primary/5'
                           : 'border-border bg-card/50 hover:bg-muted/30'
-                      }`}
+                      } ${locked ? 'opacity-80' : ''}`}
                     >
                       <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        {isRecommended ? (
+                        {locked ? (
+                          <Lock className="h-5 w-5 text-amber-500" />
+                        ) : isRecommended ? (
                           <Sparkles className="h-5 w-5 text-primary" />
                         ) : (
                           <Music className="h-5 w-5 text-primary" />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <p className="font-medium text-foreground truncate">{m.title}</p>
-                          {isRecommended && (
+                          {m.is_premium && (
+                            <span className="text-[10px] font-medium uppercase tracking-wide text-amber-600 dark:text-amber-400">Premium</span>
+                          )}
+                          {isRecommended && !m.is_premium && (
                             <span className="text-[10px] text-primary font-medium uppercase tracking-wide">Recommended</span>
                           )}
                         </div>
@@ -282,6 +299,23 @@ const Mantras = () => {
                 <p className="text-sm text-muted-foreground text-center mb-6">
                   {t('mantras.guidanceVoice', 'Voice only')}
                 </p>
+
+                {/* Premium lock banner for non-members */}
+                {selectedMantra.is_premium && !canAccessPremium && (
+                  <Card className="mb-6 border-amber-500/30 bg-amber-500/10">
+                    <CardContent className="p-4 flex items-center justify-between gap-4 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <Lock className="h-5 w-5 text-amber-500 shrink-0" />
+                        <p className="text-sm font-medium text-foreground">
+                          {t('mantras.premiumBanner', 'This mantra is for members. Join to unlock.')}
+                        </p>
+                      </div>
+                      <Button variant="default" size="sm" onClick={() => navigate('/membership')}>
+                        {t('mantras.viewMembership', 'View membership')}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Vedic Guide Card - Only show if Jyotish data exists */}
                 {jyotishRecommendation && (
@@ -345,7 +379,12 @@ const Mantras = () => {
 
                     <div className="flex flex-wrap justify-center gap-3">
                       {!isPlaying ? (
-                        <Button size="lg" className="rounded-full gap-2" onClick={handleStart}>
+                        <Button
+                          size="lg"
+                          className="rounded-full gap-2"
+                          onClick={handleStart}
+                          disabled={selectedMantra.is_premium && !canAccessPremium}
+                        >
                           <Play className="h-5 w-5" />
                           {t('mantras.start', 'Start')}
                         </Button>
@@ -374,7 +413,12 @@ const Mantras = () => {
                     <p className="text-muted-foreground mb-6">
                       {t('mantras.completeBody', 'Take a breath. Notice how you feel.')}
                     </p>
-                    <Button size="lg" className="rounded-full gap-2" onClick={() => { setCount(0); setCompleted(false); handleStart(); }}>
+                    <Button
+                      size="lg"
+                      className="rounded-full gap-2"
+                      onClick={() => { setCount(0); setCompleted(false); handleStart(); }}
+                      disabled={selectedMantra.is_premium && !canAccessPremium}
+                    >
                       <Play className="h-5 w-5" />
                       {t('mantras.playAgain', 'Play again')}
                     </Button>
