@@ -2674,37 +2674,46 @@ export type Database = {
       mantras: {
         Row: {
           audio_url: string
+          category: string | null
           cover_image_url: string | null
           created_at: string
           description: string | null
           duration_seconds: number
           id: string
           is_active: boolean
+          is_premium: boolean
           play_count: number
+          planet_type: string | null
           shc_reward: number
           title: string
         }
         Insert: {
           audio_url: string
+          category?: string | null
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
           duration_seconds?: number
           id?: string
           is_active?: boolean
+          is_premium?: boolean
           play_count?: number
+          planet_type?: string | null
           shc_reward?: number
           title: string
         }
         Update: {
           audio_url?: string
+          category?: string | null
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
           duration_seconds?: number
           id?: string
           is_active?: boolean
+          is_premium?: boolean
           play_count?: number
+          planet_type?: string | null
           shc_reward?: number
           title?: string
         }
