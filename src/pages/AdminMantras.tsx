@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Music, Trash2, Edit, Save, X } from 'lucide-react';
+import { ArrowLeft, Plus, Music, Trash2, Edit, Save, X, Lock, Unlock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,22 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import AudioUpload from '@/components/admin/AudioUpload';
 
+/** Exact category list for Admin form only. DB stores category id. */
+const ADMIN_MANTRA_CATEGORIES = [
+  { id: 'planet', label: 'Planets' },
+  { id: 'deity', label: 'Deity' },
+  { id: 'intention', label: 'Intention' },
+  { id: 'karma', label: 'Karma & Healing' },
+  { id: 'wealth', label: 'Wealth & Abundance' },
+  { id: 'health', label: 'Health & Vitality' },
+  { id: 'peace', label: 'Peace & Calm' },
+  { id: 'protection', label: 'Protection & Power' },
+  { id: 'spiritual', label: 'Spiritual Growth' },
+  { id: 'general', label: 'General' },
+] as const;
+
+const PLANET_TYPES = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'] as const;
+
 interface Mantra {
   id: string;
   title: string;
@@ -20,6 +36,9 @@ interface Mantra {
   duration_seconds: number;
   shc_reward: number;
   is_active: boolean;
+  category?: string | null;
+  planet_type?: string | null;
+  is_premium?: boolean;
 }
 
 const AdminMantras = () => {
@@ -36,7 +55,10 @@ const AdminMantras = () => {
     duration_seconds: 180,
     shc_reward: 111,
     is_active: true,
+    is_premium: false,
   });
+  const [category, setCategory] = useState('general');
+  const [planetType, setPlanetType] = useState('');
 
   useEffect(() => {
     fetchMantras();
@@ -63,7 +85,10 @@ const AdminMantras = () => {
       duration_seconds: 180,
       shc_reward: 111,
       is_active: true,
+      is_premium: false,
     });
+    setCategory('general');
+    setPlanetType('');
     setEditingId(null);
     setShowForm(false);
   };
@@ -77,7 +102,10 @@ const AdminMantras = () => {
       duration_seconds: mantra.duration_seconds,
       shc_reward: mantra.shc_reward,
       is_active: mantra.is_active,
+      is_premium: mantra.is_premium ?? false,
     });
+    setCategory((mantra as { category?: string }).category || 'general');
+    setPlanetType((mantra as { planet_type?: string | null }).planet_type || '');
     setEditingId(mantra.id);
     setShowForm(true);
   };
@@ -91,7 +119,12 @@ const AdminMantras = () => {
     if (editingId) {
       const { error } = await supabase
         .from('mantras')
-        .update(formData)
+        .update({
+          ...formData,
+          category,
+          planet_type: category === 'planet' ? planetType || null : null,
+          is_premium: formData.is_premium,
+        })
         .eq('id', editingId);
 
       if (error) {
@@ -104,7 +137,12 @@ const AdminMantras = () => {
     } else {
       const { error } = await supabase
         .from('mantras')
-        .insert(formData);
+        .insert({
+          ...formData,
+          category,
+          planet_type: category === 'planet' ? planetType || null : null,
+          is_premium: formData.is_premium,
+        });
 
       if (error) {
         toast.error('Failed to add mantra');
@@ -188,6 +226,38 @@ const AdminMantras = () => {
               </div>
 
               <div>
+                <Label>Category</Label>
+                <select
+                  value={category}
+                  onChange={(e) => {
+                    setCategory(e.target.value);
+                    if (e.target.value !== 'planet') setPlanetType('');
+                  }}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 text-foreground"
+                >
+                  {ADMIN_MANTRA_CATEGORIES.map((c) => (
+                    <option key={c.id} value={c.id}>{c.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              {category === 'planet' && (
+                <div>
+                  <Label>Planet Type</Label>
+                  <select
+                    value={planetType}
+                    onChange={(e) => setPlanetType(e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 text-foreground"
+                  >
+                    <option value="">Select planet...</option>
+                    {PLANET_TYPES.map((p) => (
+                      <option key={p} value={p}>{p}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div>
                 <Label>Description</Label>
                 <Textarea
                   value={formData.description}
@@ -231,6 +301,35 @@ const AdminMantras = () => {
                 </div>
               </div>
 
+              <div>
+                <Label>Access (membership)</Label>
+                <div className="flex gap-4 mt-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="access"
+                      checked={!formData.is_premium}
+                      onChange={() => setFormData({ ...formData, is_premium: false })}
+                      className="rounded-full border-input"
+                    />
+                    <Unlock className="w-4 h-4 text-muted-foreground" />
+                    <span>Free</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="access"
+                      checked={formData.is_premium}
+                      onChange={() => setFormData({ ...formData, is_premium: true })}
+                      className="rounded-full border-input"
+                    />
+                    <Lock className="w-4 h-4 text-amber-500" />
+                    <span>Premium</span>
+                  </label>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Premium mantras are only available to app members.</p>
+              </div>
+
               <div className="flex items-center gap-2">
                 <Switch
                   checked={formData.is_active}
@@ -256,9 +355,23 @@ const AdminMantras = () => {
                   <Music className="w-5 h-5 text-purple-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-medium text-foreground truncate">{mantra.title}</h4>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h4 className="font-medium text-foreground truncate">{mantra.title}</h4>
+                    {mantra.is_premium && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                        <Lock className="w-3 h-3" />
+                        Premium
+                      </span>
+                    )}
+                  </div>
                   <p className="text-sm text-muted-foreground">
                     {Math.floor(mantra.duration_seconds / 60)}:{(mantra.duration_seconds % 60).toString().padStart(2, '0')} • {mantra.shc_reward} SHC
+                    {mantra.category && (
+                      <span className="ml-2 text-xs text-muted-foreground/80">
+                        • {ADMIN_MANTRA_CATEGORIES.find(c => c.id === mantra.category)?.label}
+                        {mantra.planet_type && <span> ({mantra.planet_type})</span>}
+                      </span>
+                    )}
                   </p>
                 </div>
                 <div className="flex gap-2">
