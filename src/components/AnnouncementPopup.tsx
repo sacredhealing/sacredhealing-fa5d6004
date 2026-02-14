@@ -173,15 +173,11 @@ export const AnnouncementPopup: React.FC = () => {
         )}
 
         <div className="mt-6 flex gap-3 justify-end">
-          {/* Link Button - dismiss announcement when clicked (seen + clicked = disappears) */}
+          {/* Link Button */}
           {announcement.link_url && (
             <Button 
               variant="outline" 
-              onClick={async () => {
-                const url = announcement.link_url!;
-                await handleDismiss();
-                window.open(url, '_blank');
-              }}
+              onClick={() => window.open(announcement.link_url!, '_blank')}
               className="flex items-center gap-2"
             >
               <ExternalLink className="h-4 w-4" />
