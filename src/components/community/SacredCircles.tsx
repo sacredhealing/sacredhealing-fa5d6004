@@ -40,6 +40,8 @@ const SacredCircles = () => {
       return;
     }
     if (circle.type === 'stargate' && !isStargateMember) return;
+    // Fallback Stargate (no DB room yet): show card only; don't open chat
+    if (circle.type === 'stargate' && circle.id === 'fallback-stargate') return;
     if (!canAccessCircle(circle) && circle.type !== 'stargate') return;
 
     if (circle.type !== 'andlig' && !circle.is_member && user) {

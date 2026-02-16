@@ -75,7 +75,7 @@ export const useSacredCircles = () => {
         countMap[m.room_id] = (countMap[m.room_id] || 0) + 1;
       });
 
-      const circlesWithCounts = roomsData?.map(room => ({
+      let circlesWithCounts = roomsData?.map(room => ({
         ...room,
         type: (room.type as SacredCircle['type']) || 'community',
         invite_link: (room as { invite_link?: string | null }).invite_link ?? null,
@@ -83,7 +83,91 @@ export const useSacredCircles = () => {
         is_member: userMemberships.includes(room.id)
       })) || [];
 
-      setCircles(circlesWithCounts);
+      // Create Andlig + Stargate rooms from app if missing (no migration needed; DB only allows type 'community'/'path'/'guide')
+      const hasAndligByName = circlesWithCounts.some(c => c.name === 'Andlig Transformation');
+      const hasStargateByName = circlesWithCounts.some(c => c.name === 'Stargate Community');
+      if (user && (!hasAndligByName || !hasStargateByName)) {
+        if (!hasAndligByName) {
+          await supabase.from('chat_rooms').insert({
+            name: 'Andlig Transformation',
+            type: 'community',
+            path_slug: null,
+            is_premium: true,
+            intention: 'Open to all active subscribers. Connect and grow together.',
+            created_by: user.id
+          }).then(() => {});
+        }
+        if (!hasStargateByName) {
+          await supabase.from('chat_rooms').insert({
+            name: 'Stargate Community',
+            type: 'community',
+            path_slug: null,
+            is_premium: true,
+            intention: 'Private space for Stargate members and invited souls.',
+            created_by: user.id
+          }).then(() => {});
+        }
+        // Refetch so new rooms appear (ignore errors if invite_link column missing)
+        const { data: refetch } = await supabase.from('chat_rooms').select('*').eq('is_active', true).order('created_at', { ascending: true });
+        if (refetch?.length) {
+          const refetchIds = refetch.map(r => r.id);
+          const { data: refetchCounts } = await supabase.from('chat_members').select('room_id').in('room_id', refetchIds);
+          const refetchCountMap: Record<string, number> = {};
+          refetchCounts?.forEach(m => { refetchCountMap[m.room_id] = (refetchCountMap[m.room_id] || 0) + 1; });
+          circlesWithCounts = refetch.map(room => ({
+            ...room,
+            type: (room.type as SacredCircle['type']) || 'community',
+            invite_link: (room as { invite_link?: string | null }).invite_link ?? null,
+            member_count: refetchCountMap[room.id] || 0,
+            is_member: user ? userMemberships.includes(room.id) : false
+          }));
+        }
+      }
+
+      // Treat rooms by name so they show in correct sections and chat works (real room_id)
+      const ANDLIG_INVITE = 'https://t.me/sacredhealing_community';
+      circlesWithCounts = circlesWithCounts.map(c => {
+        if (c.name === 'Andlig Transformation') return { ...c, type: 'andlig' as const, invite_link: c.invite_link ?? ANDLIG_INVITE };
+        if (c.name === 'Stargate Community') return { ...c, type: 'stargate' as const };
+        return c;
+      });
+
+      const hasAndlig = circlesWithCounts.some(c => c.type === 'andlig');
+      const hasStargate = circlesWithCounts.some(c => c.type === 'stargate');
+      const fallbacks: SacredCircle[] = [];
+      if (!hasAndlig) {
+        fallbacks.push({
+          id: 'fallback-andlig',
+          name: 'Andlig Transformation',
+          description: null,
+          type: 'andlig',
+          path_slug: null,
+          is_premium: true,
+          intention: 'Open to all active subscribers. Connect and grow together.',
+          is_locked: false,
+          created_at: new Date().toISOString(),
+          invite_link: ANDLIG_INVITE,
+          member_count: 0,
+          is_member: false
+        });
+      }
+      if (!hasStargate) {
+        fallbacks.push({
+          id: 'fallback-stargate',
+          name: 'Stargate Community',
+          description: null,
+          type: 'stargate',
+          path_slug: null,
+          is_premium: true,
+          intention: 'Private space for Stargate members and invited souls.',
+          is_locked: false,
+          created_at: new Date().toISOString(),
+          invite_link: null,
+          member_count: 0,
+          is_member: false
+        });
+      }
+      setCircles([...circlesWithCounts, ...fallbacks]);
     } catch (error) {
       console.error('Error fetching circles:', error);
     } finally {

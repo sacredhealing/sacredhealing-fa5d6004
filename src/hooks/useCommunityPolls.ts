@@ -38,7 +38,8 @@ export const useCommunityPolls = (roomId: string) => {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching polls:', error);
+      // Tables may not exist if migration not run (e.g. Supabase only via Lovable)
+      setPolls([]);
       setLoading(false);
       return;
     }

@@ -19,11 +19,17 @@ export const useStargateAccess = () => {
       setLoading(false);
       return;
     }
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('stargate_community_members')
       .select('id')
       .eq('user_id', user.id)
       .maybeSingle();
+    // Table may not exist if migration not run (e.g. Supabase only via Lovable)
+    if (error) {
+      setIsManualAdd(false);
+      setLoading(false);
+      return;
+    }
     setIsManualAdd(!!data);
     setLoading(false);
   }, [user]);
