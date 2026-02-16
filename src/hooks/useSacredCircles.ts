@@ -167,7 +167,19 @@ export const useSacredCircles = () => {
           is_member: false
         });
       }
-      setCircles([...circlesWithCounts, ...fallbacks]);
+      const combined = [...circlesWithCounts, ...fallbacks];
+      // Only one of each: Andlig Transformation and Stargate Community; prefer real room over fallback
+      const andligList = combined.filter(c => c.name === 'Andlig Transformation');
+      const stargateList = combined.filter(c => c.name === 'Stargate Community');
+      const otherCircles = combined.filter(c => c.name !== 'Andlig Transformation' && c.name !== 'Stargate Community');
+      const oneAndlig = andligList.find(c => c.id !== 'fallback-andlig') ?? andligList[0];
+      const oneStargate = stargateList.find(c => c.id !== 'fallback-stargate') ?? stargateList[0];
+      const deduped = [
+        ...otherCircles,
+        ...(oneAndlig ? [oneAndlig] : []),
+        ...(oneStargate ? [oneStargate] : [])
+      ];
+      setCircles(deduped);
     } catch (error) {
       console.error('Error fetching circles:', error);
     } finally {
