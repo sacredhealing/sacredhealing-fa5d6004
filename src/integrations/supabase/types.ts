@@ -1143,6 +1143,7 @@ export type Database = {
           description: string | null
           id: string
           intention: string | null
+          invite_link: string | null
           is_active: boolean
           is_locked: boolean | null
           is_premium: boolean | null
@@ -1156,6 +1157,7 @@ export type Database = {
           description?: string | null
           id?: string
           intention?: string | null
+          invite_link?: string | null
           is_active?: boolean
           is_locked?: boolean | null
           is_premium?: boolean | null
@@ -1169,6 +1171,7 @@ export type Database = {
           description?: string | null
           id?: string
           intention?: string | null
+          invite_link?: string | null
           is_active?: boolean
           is_locked?: boolean | null
           is_premium?: boolean | null

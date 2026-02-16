@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSacredCircles, useCircleMessages, SacredCircle, CircleMessage } from '@/hooks/useSacredCircles';
+import { useCommunityPolls, type CommunityPoll } from '@/hooks/useCommunityPolls';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
+import { useStargateAccess } from '@/hooks/useStargateAccess';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   ArrowLeft, Send, Loader2, Users, Lock, Crown, Sparkles, 
-  MessageCircle, Pin, Trash2, MoreVertical, Heart 
+  MessageCircle, Pin, Trash2, MoreVertical, Heart, ExternalLink, DoorOpen 
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { AvatarRequiredAlert } from './AvatarRequiredAlert';
@@ -28,20 +30,23 @@ const SacredCircles = () => {
   const { user } = useAuth();
   const { hasAvatar } = useProfile();
   const { circles, isLoading, canAccessCircle, joinCircle, hasPremium } = useSacredCircles();
+  const { isStargateMember } = useStargateAccess();
   const [selectedCircle, setSelectedCircle] = useState<SacredCircle | null>(null);
   const [profileEditOpen, setProfileEditOpen] = useState(false);
 
   const handleSelectCircle = async (circle: SacredCircle) => {
-    if (!canAccessCircle(circle)) {
+    if (circle.type === 'andlig' && circle.invite_link) {
+      window.open(circle.invite_link, '_blank');
       return;
     }
-    
-    // Auto-join if not a member
-    if (!circle.is_member && user) {
+    if (circle.type === 'stargate' && !isStargateMember) return;
+    if (!canAccessCircle(circle) && circle.type !== 'stargate') return;
+
+    if (circle.type !== 'andlig' && !circle.is_member && user) {
       await joinCircle(circle.id);
     }
-    
-    setSelectedCircle(circle);
+
+    if (circle.type !== 'andlig') setSelectedCircle(circle);
   };
 
   if (selectedCircle) {
@@ -65,6 +70,8 @@ const SacredCircles = () => {
   const communityCircles = circles.filter(c => c.type === 'community');
   const pathCircles = circles.filter(c => c.type === 'path');
   const guideChannels = circles.filter(c => c.type === 'guide');
+  const andligCircles = circles.filter(c => c.type === 'andlig');
+  const stargateCircles = circles.filter(c => c.type === 'stargate');
 
   return (
     <div className="space-y-6">
@@ -122,6 +129,68 @@ const SacredCircles = () => {
         </section>
       )}
 
+      {/* Andlig Transformation: Open to all active subscribers — Open Invite Link */}
+      {andligCircles.length > 0 && (
+        <section>
+          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2 text-foreground">
+            <Sparkles className="h-5 w-5 text-cyan-500" />
+            Andlig Transformation
+          </h3>
+          {andligCircles.map(circle => (
+            <Card
+              key={circle.id}
+              className={`bg-card border-border transition-all duration-200 ${
+                hasPremium ? 'cursor-pointer hover:bg-accent/50 hover:border-cyan-500/30' : 'opacity-60 cursor-not-allowed'
+              }`}
+              onClick={() => hasPremium && circle.invite_link && window.open(circle.invite_link, '_blank')}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                    <MessageCircle className="h-6 w-6 text-cyan-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-foreground truncate">{circle.name}</h3>
+                    {circle.intention && (
+                      <p className="text-sm text-muted-foreground line-clamp-1">{circle.intention}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-1">Open to all active subscribers</p>
+                  </div>
+                  {hasPremium && circle.invite_link ? (
+                    <Button size="sm" variant="outline" className="shrink-0 gap-1">
+                      <ExternalLink className="h-4 w-4" />
+                      Open Invite Link
+                    </Button>
+                  ) : (
+                    <Lock className="h-5 w-5 text-muted-foreground shrink-0" />
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </section>
+      )}
+
+      {/* Stargate Community: Restricted — Enter Private Chat */}
+      {stargateCircles.length > 0 && isStargateMember && (
+        <section>
+          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2 text-foreground">
+            <Crown className="h-5 w-5 text-amber-500" />
+            Stargate Community
+          </h3>
+          {stargateCircles.map(circle => (
+            <CircleCard
+              key={circle.id}
+              circle={circle}
+              onSelect={handleSelectCircle}
+              canAccess={true}
+              actionLabel="Enter Private Chat"
+              actionIcon={<DoorOpen className="h-4 w-4" />}
+            />
+          ))}
+        </section>
+      )}
+
       {/* Path Circles */}
       {pathCircles.length > 0 && (
         <section>
@@ -151,13 +220,16 @@ interface CircleCardProps {
   circle: SacredCircle;
   onSelect: (circle: SacredCircle) => void;
   canAccess: boolean;
+  actionLabel?: string;
+  actionIcon?: React.ReactNode;
 }
 
-const CircleCard = ({ circle, onSelect, canAccess }: CircleCardProps) => {
+const CircleCard = ({ circle, onSelect, canAccess, actionLabel, actionIcon }: CircleCardProps) => {
   const getCircleIcon = () => {
     switch (circle.type) {
       case 'guide': return <Sparkles className="h-6 w-6 text-primary" />;
       case 'path': return <MessageCircle className="h-6 w-6 text-blue-500" />;
+      case 'stargate': return <Crown className="h-6 w-6 text-amber-500" />;
       default: return <Heart className="h-6 w-6 text-pink-500" />;
     }
   };
@@ -198,9 +270,54 @@ const CircleCard = ({ circle, onSelect, canAccess }: CircleCardProps) => {
               )}
             </div>
           </div>
+          {canAccess && actionLabel && (
+            <Button size="sm" variant="outline" className="shrink-0 gap-1">
+              {actionIcon}
+              {actionLabel}
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>
+  );
+};
+
+/** Poll card with percentage bars (soft feedback style) */
+const CommunityPollCard = ({ poll, onVote }: { poll: CommunityPoll; onVote: (pollId: string, optionId: string) => Promise<boolean> }) => {
+  const [voting, setVoting] = useState(false);
+  const hasVoted = !!poll.user_vote_option_id;
+
+  const handleVote = async (optionId: string) => {
+    if (hasVoted || voting) return;
+    setVoting(true);
+    await onVote(poll.id, optionId);
+    setVoting(false);
+  };
+
+  return (
+    <div className="bg-[#1A1A1A] border border-white/5 p-6 rounded-3xl my-4">
+      <h3 className="text-sm font-medium mb-4 text-foreground">{poll.question}</h3>
+      <div className="space-y-3">
+        {poll.options.map((option) => (
+          <button
+            key={option.id}
+            type="button"
+            onClick={() => handleVote(option.id)}
+            disabled={hasVoted || voting}
+            className="w-full relative h-12 bg-white/5 rounded-xl overflow-hidden border border-white/5 hover:border-cyan-500/30 transition-all disabled:opacity-80 disabled:cursor-default"
+          >
+            <div
+              className="absolute inset-0 bg-cyan-500/10 transition-all duration-1000"
+              style={{ width: `${option.percentage ?? 0}%` }}
+            />
+            <div className="relative flex justify-between px-4 items-center h-full text-xs text-foreground">
+              <span>{option.text}</span>
+              <span className="opacity-50">{option.percentage ?? 0}%</span>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
   );
 };
 
@@ -214,8 +331,12 @@ const CircleChat = ({ circle, onBack, hasAvatar }: CircleChatProps) => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { messages, isLoading, sendMessage, pinMessage, deleteMessage, isAdmin } = useCircleMessages(circle.id);
+  const { polls, vote, createPoll, isAdmin: isPollAdmin } = useCommunityPolls(circle.id);
   const [newMessage, setNewMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [showCreatePoll, setShowCreatePoll] = useState(false);
+  const [pollQuestion, setPollQuestion] = useState('');
+  const [pollOptions, setPollOptions] = useState(['', '']);
 
   const handleSend = async () => {
     if (!newMessage.trim() || isSending || !hasAvatar) return;
@@ -235,7 +356,7 @@ const CircleChat = ({ circle, onBack, hasAvatar }: CircleChatProps) => {
   const canPost = circle.type !== 'guide' || isAdmin;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-250px)]">
+    <div className="flex flex-col h-[calc(100vh-250px)] rounded-2xl bg-black/40 backdrop-blur-xl border border-white/5 p-4">
       {/* Header */}
       <div className="flex items-center gap-3 mb-4">
         <Button variant="ghost" size="icon" onClick={onBack}>
@@ -247,7 +368,66 @@ const CircleChat = ({ circle, onBack, hasAvatar }: CircleChatProps) => {
             <p className="text-xs text-muted-foreground line-clamp-1">{circle.intention}</p>
           )}
         </div>
+        {isPollAdmin && (
+          <Button variant="outline" size="sm" onClick={() => setShowCreatePoll(true)}>
+            Create poll
+          </Button>
+        )}
       </div>
+
+      {/* Create Poll Dialog */}
+      {showCreatePoll && (
+        <Card className="mb-4 p-4 bg-card border-border">
+          <h4 className="font-medium mb-2">New poll</h4>
+          <Input
+            placeholder="Question"
+            value={pollQuestion}
+            onChange={(e) => setPollQuestion(e.target.value)}
+            className="mb-2"
+          />
+          {[0, 1, 2, 3].map((i) => (
+            <Input
+              key={i}
+              placeholder={`Option ${i + 1}`}
+              value={pollOptions[i] ?? ''}
+              onChange={(e) => {
+                const next = [...pollOptions];
+                next[i] = e.target.value;
+                setPollOptions(next);
+              }}
+              className="mb-2"
+            />
+          ))}
+          <div className="flex gap-2 mt-2">
+            <Button
+              size="sm"
+              onClick={async () => {
+                const opts = pollOptions.filter(Boolean);
+                if (pollQuestion.trim() && opts.length >= 2 && opts.length <= 4) {
+                  await createPoll(pollQuestion.trim(), opts);
+                  setPollQuestion('');
+                  setPollOptions(['', '']);
+                  setShowCreatePoll(false);
+                }
+              }}
+            >
+              Create
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setShowCreatePoll(false)}>
+              Cancel
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {/* Community Polls */}
+      {polls.length > 0 && (
+        <div className="mb-4 space-y-4">
+          {polls.map((poll) => (
+            <CommunityPollCard key={poll.id} poll={poll} onVote={vote} />
+          ))}
+        </div>
+      )}
 
       {/* Pinned Messages */}
       <AnimatePresence>
@@ -259,12 +439,12 @@ const CircleChat = ({ circle, onBack, hasAvatar }: CircleChatProps) => {
             className="mb-4 space-y-2"
           >
             {pinnedMessages.map(msg => (
-              <Card key={msg.id} className="bg-primary/5 border-primary/20">
+              <Card key={msg.id} className="bg-cyan-500/5 border-cyan-500/30 border">
                 <CardContent className="p-3">
                   <div className="flex items-start gap-2">
-                    <Pin className="h-4 w-4 text-primary mt-0.5" />
+                    <Pin className="h-4 w-4 text-cyan-500 mt-0.5 shrink-0" />
                     <div className="flex-1">
-                      <p className="text-xs font-medium text-primary">{msg.profile?.full_name || 'Guide'}</p>
+                      <p className="text-xs font-medium text-cyan-600 dark:text-cyan-400">{msg.profile?.full_name || 'Guide'}</p>
                       <p className="text-sm text-foreground">{msg.content}</p>
                     </div>
                   </div>

@@ -9,12 +9,13 @@ export interface SacredCircle {
   id: string;
   name: string;
   description: string | null;
-  type: 'community' | 'path' | 'guide';
+  type: 'community' | 'path' | 'guide' | 'andlig' | 'stargate';
   path_slug: string | null;
   is_premium: boolean;
   intention: string | null;
   is_locked: boolean;
   created_at: string;
+  invite_link?: string | null;
   member_count?: number;
   is_member?: boolean;
 }
@@ -76,7 +77,8 @@ export const useSacredCircles = () => {
 
       const circlesWithCounts = roomsData?.map(room => ({
         ...room,
-        type: (room.type as 'community' | 'path' | 'guide') || 'community',
+        type: (room.type as SacredCircle['type']) || 'community',
+        invite_link: (room as { invite_link?: string | null }).invite_link ?? null,
         member_count: countMap[room.id] || 0,
         is_member: userMemberships.includes(room.id)
       })) || [];
@@ -95,7 +97,9 @@ export const useSacredCircles = () => {
 
   const canAccessCircle = (circle: SacredCircle): boolean => {
     if (isAdmin) return true;
-    if (circle.type === 'guide') return isAdmin; // Guide channel is admin-only for posting
+    if (circle.type === 'guide') return true; // Guide visible to all; posting is admin-only
+    if (circle.type === 'stargate') return false; // Stargate access checked separately via useStargateAccess
+    if (circle.type === 'andlig') return isPremium; // Andlig: active subscribers only
     if (circle.is_premium && !isPremium) return false;
     if (circle.is_locked) return false;
     return true;
