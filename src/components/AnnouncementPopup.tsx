@@ -119,8 +119,16 @@ export const AnnouncementPopup: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className={`relative w-full max-w-md bg-gradient-to-br ${getBgColor()} border rounded-2xl p-6 shadow-2xl animate-in zoom-in-95 duration-300 bg-card`}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
+      onClick={handleDismiss}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        className={`relative w-full max-w-md bg-gradient-to-br ${getBgColor()} border rounded-2xl p-6 shadow-2xl animate-in zoom-in-95 duration-300 bg-card`}
+        onClick={(e) => e.stopPropagation()}
+      >
         <Button
           variant="ghost"
           size="icon"
@@ -173,11 +181,15 @@ export const AnnouncementPopup: React.FC = () => {
         )}
 
         <div className="mt-6 flex gap-3 justify-end">
-          {/* Link Button */}
+          {/* Link Button - dismiss on click so announcement never shows again */}
           {announcement.link_url && (
-            <Button 
-              variant="outline" 
-              onClick={() => window.open(announcement.link_url!, '_blank')}
+            <Button
+              variant="outline"
+              onClick={async () => {
+                const url = announcement.link_url!;
+                await handleDismiss();
+                window.open(url, '_blank');
+              }}
               className="flex items-center gap-2"
             >
               <ExternalLink className="h-4 w-4" />
