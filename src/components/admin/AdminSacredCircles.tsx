@@ -475,129 +475,164 @@ const AdminSacredCircles = () => {
 
       {/* Members Dialog */}
       <Dialog open={!!membersCircle} onOpenChange={() => setMembersCircle(null)}>
-        <DialogContent className="max-w-lg w-[90vw] max-h-[85vh] flex flex-col">
-          <DialogHeader className="flex-shrink-0">
-            <DialogTitle>{membersCircle?.name} - Members</DialogTitle>
+        <DialogContent className="max-w-2xl w-[95vw] max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0 pb-4 border-b border-border/40">
+            <DialogTitle className="text-xl flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              {membersCircle?.name} - Manage Members
+            </DialogTitle>
           </DialogHeader>
 
           {membersCircle && (
-            <div className="flex-1 overflow-y-auto space-y-4 pr-2">
-              <Card className="border-border/40">
-                <CardHeader className="py-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <UserPlus className="h-4 w-4" />
-                    Add someone to this group
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="space-y-2">
-                    <Label>User ID (UUID)</Label>
+            <div className="flex-1 overflow-y-auto space-y-6 pr-2 pt-4">
+              {/* Add Member Section - Prominent */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
+                    <UserPlus className="h-4 w-4 text-primary" />
+                  </div>
+                  <h3 className="text-lg font-semibold">Add Member to Group</h3>
+                </div>
+
+                {/* Search by Name - Primary Method */}
+                <Card className="border-primary/30 bg-primary/5">
+                  <CardContent className="p-4 space-y-3">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium flex items-center gap-2">
+                        <Search className="h-4 w-4" />
+                        Search by Name (Recommended)
+                      </Label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={searchName}
+                          onChange={e => {
+                            const v = e.target.value;
+                            setSearchName(v);
+                            if (v.length >= 2) searchProfiles(v);
+                          }}
+                          placeholder="Type name to search..."
+                          className="flex-1"
+                        />
+                        <Button 
+                          onClick={() => searchProfiles(searchName)} 
+                          className="gap-2"
+                          disabled={searchName.trim().length < 2}
+                        >
+                          <Search className="h-4 w-4" />
+                          Search
+                        </Button>
+                      </div>
+                      {searchLoading && (
+                        <div className="text-sm text-muted-foreground flex items-center gap-2 py-2">
+                          <Loader2 className="h-4 w-4 animate-spin" /> Searching users...
+                        </div>
+                      )}
+                      {searchResults.length > 0 && (
+                        <div className="space-y-2 mt-3 max-h-60 overflow-y-auto">
+                          <p className="text-xs font-medium text-muted-foreground mb-2">Found {searchResults.length} user(s):</p>
+                          {searchResults.map(p => (
+                            <div key={p.user_id ?? Math.random()} className="flex items-center justify-between rounded-lg border border-border/50 bg-card p-3 hover:bg-accent/50 transition-colors">
+                              <div className="min-w-0 flex-1">
+                                <div className="text-sm font-medium truncate">{p.full_name || 'Unknown User'}</div>
+                                <div className="text-xs text-muted-foreground truncate font-mono mt-1">{p.user_id}</div>
+                              </div>
+                              <Button
+                                size="sm"
+                                onClick={() => p.user_id && addMember(membersCircle.id, p.user_id)}
+                                className="gap-2 ml-3"
+                                disabled={!p.user_id}
+                              >
+                                <UserPlus className="h-4 w-4" />
+                                Add to Group
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Add by User ID - Alternative Method */}
+                <Card className="border-border/40">
+                  <CardContent className="p-4 space-y-3">
+                    <Label className="text-sm font-medium">Or Add by User ID (UUID)</Label>
                     <div className="flex gap-2">
                       <Input
                         value={addUserId}
                         onChange={e => setAddUserId(e.target.value)}
-                        placeholder="Paste user_id (UUID) here"
+                        placeholder="Paste user_id UUID here..."
+                        className="flex-1 font-mono text-sm"
                       />
-                      <Button onClick={() => addMember(membersCircle.id, addUserId)} className="gap-2">
+                      <Button 
+                        onClick={() => addMember(membersCircle.id, addUserId)} 
+                        className="gap-2"
+                        disabled={!addUserId.trim()}
+                      >
                         <UserPlus className="h-4 w-4" />
                         Add
                       </Button>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Tip: the user can copy their User ID from their profile (or you can find it by searching name below).
+                      💡 Tip: Search by name above is easier. Use User ID only if you have it.
                     </p>
-                  </div>
+                  </CardContent>
+                </Card>
+              </div>
 
-                  <div className="space-y-2">
-                    <Label>Search by name</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        value={searchName}
-                        onChange={e => {
-                          const v = e.target.value;
-                          setSearchName(v);
-                          searchProfiles(v);
-                        }}
-                        placeholder="Type at least 2 letters…"
-                      />
-                      <Button variant="outline" onClick={() => searchProfiles(searchName)} className="gap-2">
-                        <Search className="h-4 w-4" />
-                        Search
-                      </Button>
+              {/* Current Members Section */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+                      <Shield className="h-4 w-4 text-foreground" />
                     </div>
+                    <h3 className="text-lg font-semibold">Current Members</h3>
+                    <Badge variant="secondary" className="ml-2">{members.length}</Badge>
+                  </div>
+                </div>
 
-                    {searchLoading && (
-                      <div className="text-sm text-muted-foreground flex items-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin" /> Searching…
+                <Card className="border-border/40">
+                  <CardContent className="p-4">
+                    {membersLoading ? (
+                      <div className="text-sm text-muted-foreground flex items-center justify-center gap-2 py-8">
+                        <Loader2 className="h-4 w-4 animate-spin" /> Loading members...
                       </div>
-                    )}
-
-                    {searchResults.length > 0 && (
-                      <div className="space-y-2 max-h-48 overflow-y-auto">
-                        {searchResults.map(p => (
-                          <div key={p.user_id ?? Math.random()} className="flex items-center justify-between rounded-md border border-border/40 p-2">
-                            <div className="min-w-0">
-                              <div className="text-sm font-medium truncate">{p.full_name || 'Unknown'}</div>
-                              <div className="text-xs text-muted-foreground truncate">{p.user_id}</div>
+                    ) : members.length === 0 ? (
+                      <div className="text-center py-12">
+                        <Users className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
+                        <p className="text-muted-foreground font-medium">No members yet</p>
+                        <p className="text-xs text-muted-foreground mt-1">Add members using the search above</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2 max-h-80 overflow-y-auto">
+                        {members.map(m => (
+                          <div key={m.id} className="flex items-center justify-between rounded-lg border border-border/50 bg-card p-3 hover:bg-accent/30 transition-colors">
+                            <div className="min-w-0 flex-1">
+                              <div className="text-sm font-medium truncate">
+                                {m.profile?.full_name || 'Unknown User'}
+                              </div>
+                              <div className="text-xs text-muted-foreground truncate font-mono mt-1">{m.user_id}</div>
                             </div>
-                            <Button
-                              size="sm"
-                              onClick={() => p.user_id && addMember(membersCircle.id, p.user_id)}
-                              className="gap-2"
-                              disabled={!p.user_id}
-                            >
-                              <UserPlus className="h-4 w-4" />
-                              Add
-                            </Button>
+                            <div className="flex items-center gap-2 ml-3">
+                              <Badge variant="secondary" className="text-xs">{m.role || 'member'}</Badge>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => removeMember(m.room_id, m.user_id)}
+                                className="gap-2 text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                Remove
+                              </Button>
+                            </div>
                           </div>
                         ))}
                       </div>
                     )}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-border/40">
-                <CardHeader className="py-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Shield className="h-4 w-4" />
-                    Current members
-                    <Badge variant="outline" className="ml-2">{members.length}</Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 max-h-64 overflow-y-auto">
-                  {membersLoading ? (
-                    <div className="text-sm text-muted-foreground flex items-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin" /> Loading members…
-                    </div>
-                  ) : members.length === 0 ? (
-                    <p className="text-muted-foreground text-center py-6">No members yet</p>
-                  ) : (
-                    members.map(m => (
-                      <div key={m.id} className="flex items-center justify-between rounded-md border border-border/40 p-2">
-                        <div className="min-w-0">
-                          <div className="text-sm font-medium truncate">
-                            {m.profile?.full_name || 'Unknown'}
-                          </div>
-                          <div className="text-xs text-muted-foreground truncate">{m.user_id}</div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="secondary" className="text-xs">{m.role || 'member'}</Badge>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => removeMember(m.room_id, m.user_id)}
-                            className="gap-2 text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            Remove
-                          </Button>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           )}
         </DialogContent>
