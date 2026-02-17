@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { 
   Lock, Unlock, Users, Sparkles, MessageCircle, Heart,
-  Trash2, Pin, Edit2, Save, X, Loader2
+  Trash2, Pin, Edit2, Save, X, Loader2, UserPlus, Search, Shield
 } from 'lucide-react';
 import {
   Dialog,
@@ -45,6 +45,24 @@ interface Message {
   };
 }
 
+interface CircleMember {
+  id: string;
+  room_id: string;
+  user_id: string;
+  role: string | null;
+  joined_at: string | null;
+  profile?: {
+    full_name: string | null;
+    avatar_url: string | null;
+  };
+}
+
+interface PublicProfileLite {
+  user_id: string | null;
+  full_name: string | null;
+  avatar_url: string | null;
+}
+
 const AdminSacredCircles = () => {
   const { isAdmin } = useAdminRole();
   const { toast } = useToast();
@@ -53,6 +71,13 @@ const AdminSacredCircles = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [editingCircle, setEditingCircle] = useState<Circle | null>(null);
+  const [membersCircle, setMembersCircle] = useState<Circle | null>(null);
+  const [members, setMembers] = useState<CircleMember[]>([]);
+  const [membersLoading, setMembersLoading] = useState(false);
+  const [addUserId, setAddUserId] = useState('');
+  const [searchName, setSearchName] = useState('');
+  const [searchResults, setSearchResults] = useState<PublicProfileLite[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
 
   const fetchCircles = async () => {
     const { data, error } = await supabase
@@ -61,7 +86,21 @@ const AdminSacredCircles = () => {
       .order('created_at', { ascending: true });
 
     if (!error) {
-      setCircles(data || []);
+      // Dedupe special groups by name (can be created more than once)
+      const rows = (data || []) as Circle[];
+      const oneByName = new Map<string, Circle>();
+      const keep: Circle[] = [];
+      for (const c of rows) {
+        if (c.name === 'Andlig Transformation' || c.name === 'Stargate Community') {
+          if (!oneByName.has(c.name)) oneByName.set(c.name, c);
+        } else {
+          keep.push(c);
+        }
+      }
+      const deduped = [...keep, ...Array.from(oneByName.values())].sort((a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      );
+      setCircles(deduped);
     }
     setIsLoading(false);
   };
@@ -84,6 +123,87 @@ const AdminSacredCircles = () => {
       ...msg,
       profile: profiles?.find(p => p.user_id === msg.user_id)
     })) || []);
+  };
+
+  const fetchMembers = async (roomId: string) => {
+    setMembersLoading(true);
+    try {
+      const { data: memberRows, error } = await supabase
+        .from('chat_members')
+        .select('id, room_id, user_id, role, joined_at')
+        .eq('room_id', roomId)
+        .order('joined_at', { ascending: false });
+
+      if (error) throw error;
+
+      const userIds = [...new Set((memberRows || []).map(m => m.user_id))];
+      const { data: profiles } = await supabase
+        .from('public_profiles')
+        .select('user_id, full_name, avatar_url')
+        .in('user_id', userIds);
+
+      const enriched: CircleMember[] = (memberRows || []).map(m => ({
+        ...m,
+        profile: profiles?.find(p => p.user_id === m.user_id) ?? { full_name: null, avatar_url: null }
+      }));
+      setMembers(enriched);
+    } catch (e) {
+      console.error('Error fetching members:', e);
+      toast({ title: 'Error', description: 'Failed to load members', variant: 'destructive' });
+    } finally {
+      setMembersLoading(false);
+    }
+  };
+
+  const addMember = async (roomId: string, userId: string) => {
+    const trimmed = userId.trim();
+    if (!trimmed) return;
+    const { error } = await supabase.from('chat_members').insert({
+      room_id: roomId,
+      user_id: trimmed,
+      role: 'member'
+    });
+    if (error) {
+      if (error.code === '23505') {
+        toast({ title: 'Already a member' });
+      } else {
+        toast({ title: 'Error', description: 'Failed to add member', variant: 'destructive' });
+      }
+      return;
+    }
+    toast({ title: 'Member added' });
+    setAddUserId('');
+    await fetchMembers(roomId);
+  };
+
+  const removeMember = async (roomId: string, userId: string) => {
+    const { error } = await supabase
+      .from('chat_members')
+      .delete()
+      .eq('room_id', roomId)
+      .eq('user_id', userId);
+    if (error) {
+      toast({ title: 'Error', description: 'Failed to remove member', variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Member removed' });
+    await fetchMembers(roomId);
+  };
+
+  const searchProfiles = async (query: string) => {
+    const q = query.trim();
+    if (q.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    setSearchLoading(true);
+    const { data, error } = await supabase
+      .from('public_profiles')
+      .select('user_id, full_name, avatar_url')
+      .ilike('full_name', `%${q}%`)
+      .limit(10);
+    if (!error) setSearchResults((data || []) as PublicProfileLite[]);
+    setSearchLoading(false);
   };
 
   useEffect(() => {
@@ -208,32 +328,58 @@ const AdminSacredCircles = () => {
                 
                 <div className="flex items-center gap-2">
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
+                    title="View messages (pin/delete)"
                     onClick={() => {
                       setSelectedCircle(circle);
                       fetchMessages(circle.id);
                     }}
+                    className="gap-2"
                   >
                     <MessageCircle className="h-4 w-4" />
+                    Messages
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
+                    title="Add/remove members for this group"
+                    onClick={() => {
+                      setMembersCircle(circle);
+                      setSearchName('');
+                      setSearchResults([]);
+                      setAddUserId('');
+                      fetchMembers(circle.id);
+                    }}
+                    className="gap-2"
+                  >
+                    <Users className="h-4 w-4" />
+                    Members
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    title="Edit name/intention/premium"
                     onClick={() => setEditingCircle(circle)}
+                    className="gap-2"
                   >
                     <Edit2 className="h-4 w-4" />
+                    Edit
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
+                    title={circle.is_locked ? 'Unlock circle' : 'Lock circle'}
                     onClick={() => toggleLock(circle)}
+                    className="gap-2"
                   >
                     {circle.is_locked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+                    {circle.is_locked ? 'Locked' : 'Unlocked'}
                   </Button>
                   <Switch
                     checked={circle.is_active}
                     onCheckedChange={() => toggleActive(circle)}
+                    title={circle.is_active ? 'Visible (toggle to hide)' : 'Hidden (toggle to show)'}
                   />
                 </div>
               </div>
@@ -324,6 +470,136 @@ const AdminSacredCircles = () => {
               ))
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Members Dialog */}
+      <Dialog open={!!membersCircle} onOpenChange={() => setMembersCircle(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{membersCircle?.name} - Members</DialogTitle>
+          </DialogHeader>
+
+          {membersCircle && (
+            <div className="space-y-4">
+              <Card className="border-border/40">
+                <CardHeader className="py-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <UserPlus className="h-4 w-4" />
+                    Add someone to this group
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="space-y-2">
+                    <Label>User ID (UUID)</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={addUserId}
+                        onChange={e => setAddUserId(e.target.value)}
+                        placeholder="Paste user_id (UUID) here"
+                      />
+                      <Button onClick={() => addMember(membersCircle.id, addUserId)} className="gap-2">
+                        <UserPlus className="h-4 w-4" />
+                        Add
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Tip: the user can copy their User ID from their profile (or you can find it by searching name below).
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Search by name</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={searchName}
+                        onChange={e => {
+                          const v = e.target.value;
+                          setSearchName(v);
+                          searchProfiles(v);
+                        }}
+                        placeholder="Type at least 2 letters…"
+                      />
+                      <Button variant="outline" onClick={() => searchProfiles(searchName)} className="gap-2">
+                        <Search className="h-4 w-4" />
+                        Search
+                      </Button>
+                    </div>
+
+                    {searchLoading && (
+                      <div className="text-sm text-muted-foreground flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" /> Searching…
+                      </div>
+                    )}
+
+                    {searchResults.length > 0 && (
+                      <div className="space-y-2">
+                        {searchResults.map(p => (
+                          <div key={p.user_id ?? Math.random()} className="flex items-center justify-between rounded-md border border-border/40 p-2">
+                            <div className="min-w-0">
+                              <div className="text-sm font-medium truncate">{p.full_name || 'Unknown'}</div>
+                              <div className="text-xs text-muted-foreground truncate">{p.user_id}</div>
+                            </div>
+                            <Button
+                              size="sm"
+                              onClick={() => p.user_id && addMember(membersCircle.id, p.user_id)}
+                              className="gap-2"
+                              disabled={!p.user_id}
+                            >
+                              <UserPlus className="h-4 w-4" />
+                              Add
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-border/40">
+                <CardHeader className="py-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Shield className="h-4 w-4" />
+                    Current members
+                    <Badge variant="outline" className="ml-2">{members.length}</Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {membersLoading ? (
+                    <div className="text-sm text-muted-foreground flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" /> Loading members…
+                    </div>
+                  ) : members.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-6">No members yet</p>
+                  ) : (
+                    members.map(m => (
+                      <div key={m.id} className="flex items-center justify-between rounded-md border border-border/40 p-2">
+                        <div className="min-w-0">
+                          <div className="text-sm font-medium truncate">
+                            {m.profile?.full_name || 'Unknown'}
+                          </div>
+                          <div className="text-xs text-muted-foreground truncate">{m.user_id}</div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary" className="text-xs">{m.role || 'member'}</Badge>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeMember(m.room_id, m.user_id)}
+                            className="gap-2 text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Remove
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
