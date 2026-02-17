@@ -396,7 +396,9 @@ export const useCircleMembers = (roomId: string) => {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchMembers = useCallback(async () => {
+    setIsLoading(true);
     try {
+      console.log(`[useCircleMembers] Fetching members for room ${roomId}`);
       const { data: memberRows, error } = await supabase
         .from('chat_members')
         .select('id, room_id, user_id, role, joined_at')
@@ -404,11 +406,18 @@ export const useCircleMembers = (roomId: string) => {
         .order('joined_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching members:', error);
+        console.error('[useCircleMembers] Error fetching chat_members:', error);
+        const errorMsg = error.message || '';
+        // Don't fail silently on recursion - log it
+        if (errorMsg.includes('recursion')) {
+          console.error('[useCircleMembers] RLS recursion detected - need SQL fix');
+        }
         setMembers([]);
         setIsLoading(false);
         return;
       }
+
+      console.log(`[useCircleMembers] Found ${memberRows?.length || 0} member rows`);
 
       if (!memberRows || memberRows.length === 0) {
         setMembers([]);
@@ -417,14 +426,20 @@ export const useCircleMembers = (roomId: string) => {
       }
 
       const userIds = [...new Set(memberRows.map(m => m.user_id).filter(Boolean))];
+      console.log(`[useCircleMembers] Fetching profiles for ${userIds.length} users`);
       let profiles: any[] = [];
       
       if (userIds.length > 0) {
-        const { data: profileData } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from('public_profiles')
           .select('user_id, full_name, avatar_url')
           .in('user_id', userIds);
-        profiles = profileData || [];
+        
+        if (profileError) {
+          console.warn('[useCircleMembers] Profile fetch error (non-fatal):', profileError);
+        } else {
+          profiles = profileData || [];
+        }
       }
 
       const enriched: CircleMember[] = memberRows.map(m => ({
@@ -432,6 +447,7 @@ export const useCircleMembers = (roomId: string) => {
         profile: profiles.find(p => p.user_id === m.user_id) ?? { full_name: null, avatar_url: null, user_id: m.user_id }
       }));
 
+      console.log(`[useCircleMembers] Setting ${enriched.length} members`);
       setMembers(enriched);
     } catch (e) {
       console.error('Error in fetchMembers:', e);
@@ -450,7 +466,11 @@ export const useCircleMembers = (roomId: string) => {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'chat_members', filter: `room_id=eq.${roomId}` },
-        () => fetchMembers()
+        (payload) => {
+          console.log('[useCircleMembers] Realtime update:', payload.eventType);
+          // Small delay to ensure DB commit
+          setTimeout(() => fetchMembers(), 100);
+        }
       )
       .subscribe();
 

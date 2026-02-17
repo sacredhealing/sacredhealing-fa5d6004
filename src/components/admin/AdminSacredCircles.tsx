@@ -171,19 +171,16 @@ const AdminSacredCircles = () => {
         ...m,
         profile: profiles?.find(p => p.user_id === m.user_id) ?? { full_name: null, avatar_url: null, user_id: m.user_id }
       }));
-      console.log(`[fetchMembers] Found ${enriched.length} members for room ${roomId}`);
+      console.log(`[Admin fetchMembers] Found ${enriched.length} members for room ${roomId}:`, enriched.map(m => m.user_id));
       setMembers(enriched);
     } catch (e: any) {
-      console.error('Error fetching members:', e);
-      // Don't show recursion errors to users - they're a DB config issue
+      console.error('[Admin fetchMembers] Error:', e);
       const errorMsg = e?.message || '';
       if (errorMsg.includes('infinite recursion') || errorMsg.includes('recursion')) {
-        console.error('RLS recursion detected - admin needs to run migration fix');
-        // Silently fail - admin should run the SQL fix
+        console.error('[Admin fetchMembers] RLS recursion - need SQL fix');
         setMembers([]);
       } else {
-        // Show other errors
-        toast({ title: 'Error', description: 'Failed to load members. Please refresh.', variant: 'destructive' });
+        console.warn('[Admin fetchMembers] Other error (non-recursion):', errorMsg);
         setMembers([]);
       }
     } finally {
@@ -221,12 +218,23 @@ const AdminSacredCircles = () => {
       
       if (error.code === '23505') {
         toast({ title: 'Already a member' });
-        // Still refresh to show the member in the list
-        await fetchMembers(roomId).catch(e => {
-          if (!e?.message?.includes('recursion')) {
-            console.warn('Could not refresh after duplicate:', e);
-          }
-        });
+        // Force refresh immediately and retry if needed
+        console.log('[addMember] Member already exists, refreshing list...');
+        try {
+          await fetchMembers(roomId);
+          console.log('[addMember] Refresh successful');
+        } catch (e: any) {
+          console.warn('[addMember] First refresh failed, retrying:', e);
+          // Retry after short delay
+          setTimeout(async () => {
+            try {
+              await fetchMembers(roomId);
+              console.log('[addMember] Retry refresh successful');
+            } catch (retryErr) {
+              console.error('[addMember] Retry also failed:', retryErr);
+            }
+          }, 300);
+        }
       } else if (error.code === '23503') {
         toast({ title: 'Error', description: 'Invalid user ID or room ID', variant: 'destructive' });
       } else {
