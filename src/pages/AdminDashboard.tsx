@@ -178,6 +178,13 @@ const adminSections = [
     href: '/admin/vedic-translation',
     color: 'text-amber-500',
   },
+  {
+    title: 'Scriptural Books',
+    description: 'Automated book creation from audio with Sanskrit verse detection',
+    icon: BookOpen,
+    href: '/admin/books',
+    color: 'text-purple-500',
+  },
 ];
 
 const AdminDashboard: React.FC = () => {

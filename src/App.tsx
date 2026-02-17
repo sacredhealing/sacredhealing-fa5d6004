@@ -97,6 +97,8 @@ import AdminPaths from "./pages/AdminPaths";
 import AdminCircles from "./pages/AdminCircles";
 import AdminContentRoadmap from "./pages/AdminContentRoadmap";
 import AdminVedicTranslation from "./pages/AdminVedicTranslation";
+import AdminScripturalBooks from "./pages/AdminScripturalBooks";
+import AdminScripturalBookView from "./pages/AdminScripturalBookView";
 import PostSession from "./pages/PostSession";
 import CreativeSoulSales from "./pages/CreativeSoulSales";
 import CreativeSoulTool from "./pages/CreativeSoulTool";
@@ -217,6 +219,8 @@ function AppRoutes() {
                   <Route path="/admin/music-analytics" element={<AdminMusicAnalytics />} />
                   <Route path="/admin/content-roadmap" element={<AdminContentRoadmap />} />
                   <Route path="/admin/vedic-translation" element={<AdminVedicTranslation />} />
+                  <Route path="/admin/books" element={<AdminScripturalBooks />} />
+                  <Route path="/admin/books/:id" element={<AdminScripturalBookView />} />
                 </Route>
               </Route>
                 <Route path="*" element={<NotFound />} />
