@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
@@ -27,6 +27,14 @@ export interface CircleMessage {
   content: string;
   created_at: string;
   is_pinned: boolean;
+  message_type?: 'text' | 'voice' | 'image' | 'file' | 'video';
+  file_url?: string | null;
+  file_name?: string | null;
+  file_size?: number | null;
+  mime_type?: string | null;
+  duration?: number | null; // For voice notes/videos in seconds
+  thumbnail_url?: string | null;
+  status?: 'pending' | 'sent' | 'error';
   profile?: {
     full_name: string | null;
     avatar_url: string | null;
@@ -261,6 +269,7 @@ export const useCircleMessages = (roomId: string) => {
   const { isAdmin } = useAdminRole();
   const [messages, setMessages] = useState<CircleMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const optimisticMessagesRef = useRef<Map<string, CircleMessage>>(new Map());
 
   const fetchMessages = useCallback(async () => {
     const { data: messagesData, error } = await supabase
@@ -283,10 +292,26 @@ export const useCircleMessages = (roomId: string) => {
     const messagesWithProfiles = messagesData?.map(msg => ({
       ...msg,
       is_pinned: msg.is_pinned || false,
+      message_type: msg.message_type || 'text',
+      status: msg.status || 'sent',
       profile: profiles?.find(p => p.user_id === msg.user_id)
     })) || [];
 
-    setMessages(messagesWithProfiles);
+    // Merge with optimistic messages (replace by ID if exists in DB)
+    const optimisticMap = optimisticMessagesRef.current;
+    const finalMessages = messagesWithProfiles.map(dbMsg => {
+      const optimistic = optimisticMap.get(dbMsg.id);
+      return optimistic ? { ...dbMsg, ...optimistic } : dbMsg;
+    });
+
+    // Add any optimistic messages not yet in DB
+    optimisticMap.forEach((optMsg, tempId) => {
+      if (!finalMessages.find(m => m.id === tempId)) {
+        finalMessages.push(optMsg);
+      }
+    });
+
+    setMessages(finalMessages);
     setIsLoading(false);
   }, [roomId]);
 
@@ -308,18 +333,96 @@ export const useCircleMessages = (roomId: string) => {
     };
   }, [roomId, fetchMessages]);
 
-  const sendMessage = async (content: string) => {
+  const sendMessage = async (
+    content: string,
+    type: 'text' | 'voice' | 'image' | 'file' | 'video' = 'text',
+    fileData?: {
+      file_url?: string;
+      file_name?: string;
+      file_size?: number;
+      mime_type?: string;
+      duration?: number;
+      thumbnail_url?: string;
+    }
+  ) => {
     if (!user) return false;
 
-    const { error } = await supabase
-      .from('chat_messages')
-      .insert({
-        room_id: roomId,
-        user_id: user.id,
-        content
-      });
+    // Generate temporary ID for optimistic update
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const now = new Date().toISOString();
 
-    return !error;
+    // Create optimistic message
+    const optimisticMessage: CircleMessage = {
+      id: tempId,
+      room_id: roomId,
+      user_id: user.id,
+      content,
+      created_at: now,
+      is_pinned: false,
+      message_type: type,
+      status: 'pending',
+      profile: {
+        full_name: user.user_metadata?.full_name || null,
+        avatar_url: user.user_metadata?.avatar_url || null
+      },
+      ...fileData
+    };
+
+    // Add to optimistic messages map
+    optimisticMessagesRef.current.set(tempId, optimisticMessage);
+    
+    // Update UI immediately (optimistic)
+    setMessages(prev => [...prev, optimisticMessage]);
+
+    // Prepare database payload
+    const messageData: any = {
+      room_id: roomId,
+      user_id: user.id,
+      content,
+      message_type: type,
+      status: 'sent'
+    };
+
+    if (fileData) {
+      Object.assign(messageData, fileData);
+    }
+
+    // Send to database
+    const { data, error } = await supabase
+      .from('chat_messages')
+      .insert(messageData)
+      .select()
+      .single();
+
+    if (error) {
+      // Update optimistic message to error state
+      optimisticMessage.status = 'error';
+      optimisticMessagesRef.current.set(tempId, optimisticMessage);
+      setMessages(prev => prev.map(m => m.id === tempId ? optimisticMessage : m));
+      return false;
+    }
+
+    // Replace optimistic message with real one
+    optimisticMessagesRef.current.delete(tempId);
+    if (data) {
+      const userIds = [data.user_id];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, avatar_url')
+        .in('user_id', userIds);
+
+      const realMessage: CircleMessage = {
+        ...data,
+        is_pinned: data.is_pinned || false,
+        message_type: data.message_type || 'text',
+        status: 'sent',
+        profile: profiles?.[0]
+      };
+
+      setMessages(prev => prev.map(m => m.id === tempId ? realMessage : m));
+    }
+
+    return true;
   };
 
   const createPinnedMessage = async (content: string) => {

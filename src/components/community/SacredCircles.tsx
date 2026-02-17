@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSacredCircles, useCircleMessages, useCircleMembers, SacredCircle, CircleMessage } from '@/hooks/useSacredCircles';
+import { TelegramChatInput } from './TelegramChatInput';
+import { VoicePlayer } from './VoicePlayer';
 import { useCommunityPolls, type CommunityPoll } from '@/hooks/useCommunityPolls';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
@@ -15,7 +17,8 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   ArrowLeft, Send, Loader2, Users, Lock, Crown, Sparkles, 
-  MessageCircle, Pin, Trash2, MoreVertical, Heart, ExternalLink, DoorOpen, X
+  MessageCircle, Pin, Trash2, MoreVertical, Heart, ExternalLink, DoorOpen, X,
+  Clock, Check, AlertCircle, FileText, Image as ImageIcon, Video, File
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { AvatarRequiredAlert } from './AvatarRequiredAlert';
@@ -358,7 +361,6 @@ const CircleChat = ({ circle, onBack, hasAvatar }: CircleChatProps) => {
   const { messages, isLoading, sendMessage, pinMessage, deleteMessage, createPinnedMessage, isAdmin } = useCircleMessages(circle.id);
   const { polls, vote, createPoll, isAdmin: isPollAdmin } = useCommunityPolls(circle.id);
   const { members, isLoading: membersLoading } = useCircleMembers(circle.id);
-  const [newMessage, setNewMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [showCreatePoll, setShowCreatePoll] = useState(false);
   const [showMembers, setShowMembers] = useState(false);
@@ -367,15 +369,28 @@ const CircleChat = ({ circle, onBack, hasAvatar }: CircleChatProps) => {
   const [pollQuestion, setPollQuestion] = useState('');
   const [pollOptions, setPollOptions] = useState(['', '']);
 
-  const handleSend = async () => {
-    if (!newMessage.trim() || isSending || !hasAvatar) return;
-    
-    // Guide channel - only admins can post
+  const handleSendText = async (text: string) => {
+    if (!text.trim() || isSending || !hasAvatar) return;
     if (circle.type === 'guide' && !isAdmin) return;
-    
     setIsSending(true);
-    await sendMessage(newMessage.trim());
-    setNewMessage('');
+    await sendMessage(text.trim(), 'text');
+    setIsSending(false);
+  };
+
+  const handleSendVoice = async (audioBlob: Blob, duration: number, fileData: any) => {
+    if (circle.type === 'guide' && !isAdmin) return;
+    setIsSending(true);
+    await sendMessage('Voice message', 'voice', { ...fileData, duration });
+    setIsSending(false);
+  };
+
+  const handleSendFile = async (file: File, fileData: any) => {
+    if (circle.type === 'guide' && !isAdmin) return;
+    setIsSending(true);
+    const isImage = file.type.startsWith('image/');
+    const isVideo = file.type.startsWith('video/');
+    const type = isImage ? 'image' : isVideo ? 'video' : 'file';
+    await sendMessage(file.name, type, fileData);
     setIsSending(false);
   };
 
@@ -385,9 +400,9 @@ const CircleChat = ({ circle, onBack, hasAvatar }: CircleChatProps) => {
   const canPost = circle.type !== 'guide' || isAdmin;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-250px)] rounded-2xl bg-black/40 backdrop-blur-xl border border-white/5 p-4">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-4">
+    <div className="flex flex-col h-[calc(100vh-250px)] rounded-2xl bg-background/30 backdrop-blur-2xl border border-white/10 shadow-2xl p-4">
+      {/* Header with Liquid Glass */}
+      <div className="flex items-center gap-3 mb-4 pb-3 border-b border-white/10 bg-background/20 backdrop-blur-xl rounded-xl p-3 -mx-1">
         <Button variant="ghost" size="icon" onClick={onBack}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
@@ -616,19 +631,17 @@ const CircleChat = ({ circle, onBack, hasAvatar }: CircleChatProps) => {
         )}
       </ScrollArea>
 
-      {/* Input */}
+      {/* Telegram-Grade Input Bar with Liquid Glass */}
       {user && hasAvatar && canPost && (
-        <div className="flex gap-2 mt-4 pt-4 border-t border-border">
-          <Input
+        <div className="mt-4 pt-4 border-t border-white/10">
+          <TelegramChatInput
+            onSendText={handleSendText}
+            onSendVoice={handleSendVoice}
+            onSendFile={handleSendFile}
+            roomId={circle.id}
+            disabled={isSending}
             placeholder="Share from presence..."
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-            className="bg-background"
           />
-          <Button onClick={handleSend} disabled={!newMessage.trim() || isSending}>
-            {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-          </Button>
         </div>
       )}
 
@@ -653,13 +666,106 @@ interface MessageBubbleProps {
 }
 
 const MessageBubble = ({ message, isOwn, isAdmin, onPin, onDelete }: MessageBubbleProps) => {
+  const messageType = message.message_type || 'text';
+  const status = message.status || 'sent';
+
+  const getStatusIcon = () => {
+    switch (status) {
+      case 'pending':
+        return <Clock className="h-3 w-3 opacity-60" />;
+      case 'error':
+        return <AlertCircle className="h-3 w-3 text-destructive" />;
+      default:
+        return <Check className="h-3 w-3 opacity-60" />;
+    }
+  };
+
+  const renderContent = () => {
+    switch (messageType) {
+      case 'voice':
+        return message.file_url ? (
+          <VoicePlayer 
+            audioUrl={message.file_url} 
+            duration={message.duration || undefined}
+            className="w-full"
+          />
+        ) : (
+          <p className="text-sm">Voice message</p>
+        );
+      
+      case 'image':
+        return message.file_url ? (
+          <div className="space-y-2">
+            <img 
+              src={message.file_url} 
+              alt={message.content}
+              className="max-w-full rounded-lg"
+              loading="lazy"
+            />
+            {message.content && message.content !== message.file_name && (
+              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+            )}
+          </div>
+        ) : (
+          <p className="text-sm">{message.content}</p>
+        );
+      
+      case 'video':
+        return message.file_url ? (
+          <div className="space-y-2">
+            <video 
+              src={message.file_url}
+              controls
+              className="max-w-full rounded-lg"
+              poster={message.thumbnail_url || undefined}
+            />
+            {message.content && message.content !== message.file_name && (
+              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+            )}
+          </div>
+        ) : (
+          <p className="text-sm">{message.content}</p>
+        );
+      
+      case 'file':
+        return (
+          <div className="flex items-center gap-3 p-2 bg-background/30 rounded-lg">
+            <File className="h-5 w-5 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">{message.file_name || message.content}</p>
+              {message.file_size && (
+                <p className="text-xs opacity-60">
+                  {(message.file_size / 1024 / 1024).toFixed(2)} MB
+                </p>
+              )}
+            </div>
+            {message.file_url && (
+              <a 
+                href={message.file_url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="shrink-0"
+              >
+                <Button variant="ghost" size="sm">
+                  <ExternalLink className="h-4 w-4" />
+                </Button>
+              </a>
+            )}
+          </div>
+        );
+      
+      default:
+        return <p className="text-sm whitespace-pre-wrap">{message.content}</p>;
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className={`flex gap-2 ${isOwn ? 'flex-row-reverse' : ''}`}
     >
-      <Avatar className="h-8 w-8">
+      <Avatar className="h-8 w-8 shrink-0">
         <AvatarImage src={message.profile?.avatar_url || undefined} />
         <AvatarFallback className="bg-primary/20 text-primary text-xs">
           {message.profile?.full_name?.charAt(0) || 'U'}
@@ -667,19 +773,28 @@ const MessageBubble = ({ message, isOwn, isAdmin, onPin, onDelete }: MessageBubb
       </Avatar>
       <div className="group relative max-w-[70%]">
         <div
-          className={`rounded-lg p-3 ${
+          className={`rounded-2xl p-3 backdrop-blur-sm ${
             isOwn
-              ? 'bg-primary text-primary-foreground'
-              : 'bg-muted text-foreground'
+              ? 'bg-primary/90 text-primary-foreground'
+              : 'bg-muted/80 text-foreground border border-white/10'
           }`}
         >
-          <p className="text-xs font-medium mb-1 opacity-80">
-            {message.profile?.full_name || 'Anonymous'}
-          </p>
-          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-          <p className="text-xs opacity-60 mt-1">
-            {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
-          </p>
+          {!isOwn && (
+            <p className="text-xs font-medium mb-1 opacity-80">
+              {message.profile?.full_name || 'Anonymous'}
+            </p>
+          )}
+          {renderContent()}
+          <div className="flex items-center justify-between mt-2 gap-2">
+            <p className="text-xs opacity-60">
+              {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
+            </p>
+            {isOwn && (
+              <div className="shrink-0">
+                {getStatusIcon()}
+              </div>
+            )}
+          </div>
         </div>
         
         {/* Admin Actions */}
