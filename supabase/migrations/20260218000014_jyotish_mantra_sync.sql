@@ -42,7 +42,13 @@ INSERT INTO public.ui_translations (key_name, en_text, sv_text, category) VALUES
   ('mantras_repetitions', 'Repetitions', 'Repetitioner', 'ui'),
   ('mantras_best_time', 'Best time', 'Bästa tid', 'ui'),
   ('mantras_not_found', 'Not found', 'Hittades inte', 'ui'),
-  ('mantras_not_available', 'Not available', 'Ej tillgänglig', 'ui')
+  ('mantras_not_available', 'Not available', 'Ej tillgänglig', 'ui'),
+  ('mantras_sacred_hour', 'Your Sacred Hour', 'Din Heliga Timme', 'ui'),
+  ('mantras_current_hora', 'Current Hora', 'Nuvarande Hora', 'ui'),
+  ('mantras_remaining', 'Remaining', 'Återstående', 'ui'),
+  ('mantras_day_ruler', 'Day Ruler', 'Dagens Herskare', 'ui'),
+  ('mantras_celestial_match', 'Celestial Constellation Match!', 'Himlakonstellation Match!', 'ui'),
+  ('mantras_celestial_message', 'Your current Hora ({horaPlanet}) matches your Dasha period ({dashaPlanet}). This is a powerful time for mantra practice.', 'Din nuvarande Hora ({horaPlanet}) matchar din Dasha-period ({dashaPlanet}). Detta är en kraftfull tid för mantra-praktik.', 'ui')
 ON CONFLICT (key_name) DO UPDATE SET 
   en_text = EXCLUDED.en_text, 
   sv_text = EXCLUDED.sv_text, 

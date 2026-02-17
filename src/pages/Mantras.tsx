@@ -1,15 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation as useI18nTranslation } from 'react-i18next';
 import { useTranslation } from '@/hooks/useTranslation';
-import { Music, Play, Pause, RotateCcw, Volume2, ChevronDown, Sparkles } from 'lucide-react';
+import { Music, Play, Pause, RotateCcw, Volume2, ChevronDown, Sparkles, Clock, Sunrise } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSHCBalance } from '@/hooks/useSHCBalance';
 import { toast } from 'sonner';
 import { getMantras, type MantraItem, MANTRA_REPETITIONS } from '@/features/mantras/getMantras';
 import { useJyotishMantraRecommendation } from '@/hooks/useJyotishMantraRecommendation';
+import { useHoraWatch } from '@/hooks/useHoraWatch';
+import { useAIVedicReading } from '@/hooks/useAIVedicReading';
+import { normalizePlanetName, type Planet } from '@/lib/jyotishMantraLogic';
+import { getPlanetEmoji } from '@/lib/vedicTypes';
 
 function getPlayableUrl(url: string): string {
   const driveMatch = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
@@ -38,6 +43,7 @@ const Mantras = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [listExpanded, setListExpanded] = useState(true);
+  const [userTimezone, setUserTimezone] = useState<string>('Europe/Stockholm');
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const currentMantraIdRef = useRef<string | null>(null);
@@ -47,6 +53,24 @@ const Mantras = () => {
 
   // Get Jyotish recommendation
   const jyotishRecommendation = useJyotishMantraRecommendation(mantras);
+  const { reading } = useAIVedicReading();
+  
+  // Hora Watch - Calculate current planetary hour
+  const horaWatch = useHoraWatch({
+    timezone: userTimezone,
+  });
+
+  // Extract current Hora planet and Dasha planet for comparison
+  const currentHoraPlanet = horaWatch.calculation?.currentHora?.planet 
+    ? normalizePlanetName(horaWatch.calculation.currentHora.planet) 
+    : null;
+  
+  const dashaPlanet = reading?.personalCompass?.currentDasha?.period
+    ? normalizePlanetName(reading.personalCompass.currentDasha.period.split(' ')[0])
+    : null;
+
+  // Check if current Hora matches Dasha planet (Golden Aura condition)
+  const isCelestialMatch = currentHoraPlanet && dashaPlanet && currentHoraPlanet === dashaPlanet;
 
   useEffect(() => {
     let cancelled = false;
@@ -211,6 +235,77 @@ const Mantras = () => {
         </p>
       </section>
 
+      {/* Planetary Hora Watch - Din Heliga Timme */}
+      {horaWatch.calculation && (
+        <section className="px-4 mb-6">
+          <Card className="rounded-2xl border-border bg-gradient-to-br from-primary/5 via-background to-primary/5 border-primary/20 overflow-hidden">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-primary" />
+                  <h2 className="text-lg font-semibold text-foreground">
+                    {t('mantras_sacred_hour', 'Din Heliga Timme')}
+                  </h2>
+                </div>
+                {currentHoraPlanet && (
+                  <Badge variant="outline" className="border-primary/30 text-primary font-bold text-sm px-3 py-1">
+                    {getPlanetEmoji(currentHoraPlanet)} {currentHoraPlanet}
+                  </Badge>
+                )}
+              </div>
+              
+              {horaWatch.calculation && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">{t('mantras_current_hora', 'Nuvarande Hora')}:</span>
+                    <span className="text-foreground font-medium">
+                      {horaWatch.calculation.currentHora.startTimeStr} - {horaWatch.calculation.currentHora.endTimeStr}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">{t('mantras_remaining', 'Återstående')}:</span>
+                    <span className="text-foreground font-medium font-mono">
+                      {horaWatch.remainingTimeStr}
+                    </span>
+                  </div>
+                  {horaWatch.calculation.dayRuler && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">{t('mantras_day_ruler', 'Dagens Herskare')}:</span>
+                      <span className="text-foreground font-medium">
+                        {getPlanetEmoji(horaWatch.calculation.dayRuler)} {horaWatch.calculation.dayRuler}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </section>
+      )}
+
+      {/* Celestial Recommendation - Golden Aura when Hora matches Dasha */}
+      {isCelestialMatch && dashaPlanet && (
+        <section className="px-4 mb-6">
+          <Card className="rounded-2xl border-2 border-amber-500/50 bg-gradient-to-br from-amber-500/10 via-yellow-500/5 to-amber-500/10 shadow-lg shadow-amber-500/20">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center flex-shrink-0 animate-pulse">
+                  <Sparkles className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-base font-bold text-foreground mb-1">
+                    {t('mantras_celestial_match', 'Himlakonstellation Match!')} ✨
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {t('mantras_celestial_message', `Your current Hora (${currentHoraPlanet}) matches your Dasha period (${dashaPlanet}). This is a powerful time for mantra practice.`)}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      )}
+
       <div className="px-4 flex flex-col gap-6 md:flex-row md:gap-8">
         {/* Choose a mantra — list (clickable) */}
         <section className="flex-shrink-0 md:w-72">
@@ -229,30 +324,53 @@ const Mantras = () => {
               ) : (
                 mantras.map((m) => {
                   const isRecommended = jyotishRecommendation?.recommendedMantraId === m.id;
+                  
+                  // Check if this mantra matches the celestial match planet (Golden Aura)
+                  const mantraPlanet = m.planet_type ? normalizePlanetName(m.planet_type) : null;
+                  const hasGoldenAura = isCelestialMatch && mantraPlanet === dashaPlanet && mantraPlanet === currentHoraPlanet;
+                  
                   return (
                     <button
                       key={m.id}
                       type="button"
                       onClick={() => handleMantraSelect(m)}
-                      className={`w-full text-left rounded-xl border p-4 flex items-center gap-3 transition ${
+                      className={`w-full text-left rounded-xl border p-4 flex items-center gap-3 transition relative overflow-hidden ${
                         selectedMantraId === m.id
                           ? 'border-primary bg-primary/10'
+                          : hasGoldenAura
+                          ? 'border-amber-500/50 bg-gradient-to-r from-amber-500/20 via-yellow-500/10 to-amber-500/20 shadow-lg shadow-amber-500/20'
                           : isRecommended
                           ? 'border-primary/50 bg-primary/5'
                           : 'border-border bg-card/50 hover:bg-muted/30'
                       }`}
                     >
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        {isRecommended ? (
+                      {hasGoldenAura && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-400/20 to-transparent animate-pulse pointer-events-none" />
+                      )}
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 relative z-10 ${
+                        hasGoldenAura 
+                          ? 'bg-gradient-to-br from-amber-400 to-yellow-500' 
+                          : 'bg-primary/10'
+                      }`}>
+                        {hasGoldenAura ? (
+                          <Sparkles className="h-5 w-5 text-white animate-pulse" />
+                        ) : isRecommended ? (
                           <Sparkles className="h-5 w-5 text-primary" />
                         ) : (
-                          <Music className="h-5 w-5 text-primary" />
+                          <Music className={`h-5 w-5 ${hasGoldenAura ? 'text-white' : 'text-primary'}`} />
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-0 relative z-10">
                         <div className="flex items-center gap-2">
-                          <p className="font-medium text-foreground truncate">{m.title}</p>
-                          {isRecommended && (
+                          <p className={`font-medium truncate ${hasGoldenAura ? 'text-amber-900 dark:text-amber-100' : 'text-foreground'}`}>
+                            {m.title}
+                          </p>
+                          {hasGoldenAura && (
+                            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wide animate-pulse">
+                              ✨ GULDEN AURA
+                            </span>
+                          )}
+                          {!hasGoldenAura && isRecommended && (
                             <span className="text-[10px] text-primary font-medium uppercase tracking-wide">Recommended</span>
                           )}
                         </div>
