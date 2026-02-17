@@ -297,7 +297,7 @@ const Mantras = () => {
                     {t('mantras_celestial_match', 'Himlakonstellation Match!')} ✨
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    {t('mantras_celestial_message', `Your current Hora (${currentHoraPlanet}) matches your Dasha period (${dashaPlanet}). This is a powerful time for mantra practice.`)}
+                    {t('mantras_celestial_message', `Your current Hora (${currentHoraPlanet || ''}) matches your Dasha period (${dashaPlanet || ''}). This is a powerful time for mantra practice.`)}
                   </p>
                 </div>
               </div>
