@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSacredCircles, useCircleMessages, SacredCircle, CircleMessage } from '@/hooks/useSacredCircles';
+import { useSacredCircles, useCircleMessages, useCircleMembers, SacredCircle, CircleMessage } from '@/hooks/useSacredCircles';
 import { useCommunityPolls, type CommunityPoll } from '@/hooks/useCommunityPolls';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   ArrowLeft, Send, Loader2, Users, Lock, Crown, Sparkles, 
-  MessageCircle, Pin, Trash2, MoreVertical, Heart, ExternalLink, DoorOpen 
+  MessageCircle, Pin, Trash2, MoreVertical, Heart, ExternalLink, DoorOpen, X
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { AvatarRequiredAlert } from './AvatarRequiredAlert';
@@ -356,9 +356,11 @@ const CircleChat = ({ circle, onBack, hasAvatar }: CircleChatProps) => {
   const { user } = useAuth();
   const { messages, isLoading, sendMessage, pinMessage, deleteMessage, isAdmin } = useCircleMessages(circle.id);
   const { polls, vote, createPoll, isAdmin: isPollAdmin } = useCommunityPolls(circle.id);
+  const { members, isLoading: membersLoading } = useCircleMembers(circle.id);
   const [newMessage, setNewMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [showCreatePoll, setShowCreatePoll] = useState(false);
+  const [showMembers, setShowMembers] = useState(false);
   const [pollQuestion, setPollQuestion] = useState('');
   const [pollOptions, setPollOptions] = useState(['', '']);
 
@@ -387,7 +389,18 @@ const CircleChat = ({ circle, onBack, hasAvatar }: CircleChatProps) => {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">
-          <h2 className="text-lg font-semibold text-foreground">{circle.name}</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-foreground">{circle.name}</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowMembers(!showMembers)}
+              className="h-auto p-1 text-muted-foreground hover:text-foreground"
+            >
+              <Users className="h-4 w-4 mr-1" />
+              <span className="text-xs">{members.length} {members.length === 1 ? 'member' : 'members'}</span>
+            </Button>
+          </div>
           {circle.intention && (
             <p className="text-xs text-muted-foreground line-clamp-1">{circle.intention}</p>
           )}
@@ -398,6 +411,53 @@ const CircleChat = ({ circle, onBack, hasAvatar }: CircleChatProps) => {
           </Button>
         )}
       </div>
+
+      {/* Members List (Telegram-style) */}
+      {showMembers && (
+        <Card className="mb-4 border-border/40 bg-card/50">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-sm flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Members ({members.length})
+              </h3>
+              <Button variant="ghost" size="sm" onClick={() => setShowMembers(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            {membersLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              </div>
+            ) : members.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">No members yet</p>
+            ) : (
+              <ScrollArea className="max-h-64">
+                <div className="space-y-2">
+                  {members.map(m => (
+                    <div key={m.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-accent/30">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={m.profile?.avatar_url || undefined} />
+                        <AvatarFallback className="text-xs">
+                          {m.profile?.full_name?.charAt(0)?.toUpperCase() || '?'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          {m.profile?.full_name || 'Unknown User'}
+                        </p>
+                        {m.role && m.role !== 'member' && (
+                          <Badge variant="secondary" className="text-xs mt-0.5">{m.role}</Badge>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Create Poll Dialog */}
       {showCreatePoll && (

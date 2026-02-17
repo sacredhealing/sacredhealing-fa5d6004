@@ -359,3 +359,86 @@ export const useCircleMessages = (roomId: string) => {
     isAdmin 
   };
 };
+
+export interface CircleMember {
+  id: string;
+  room_id: string;
+  user_id: string;
+  role: string | null;
+  joined_at: string | null;
+  profile?: {
+    full_name: string | null;
+    avatar_url: string | null;
+  };
+}
+
+export const useCircleMembers = (roomId: string) => {
+  const [members, setMembers] = useState<CircleMember[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchMembers = useCallback(async () => {
+    try {
+      const { data: memberRows, error } = await supabase
+        .from('chat_members')
+        .select('id, room_id, user_id, role, joined_at')
+        .eq('room_id', roomId)
+        .order('joined_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching members:', error);
+        setMembers([]);
+        setIsLoading(false);
+        return;
+      }
+
+      if (!memberRows || memberRows.length === 0) {
+        setMembers([]);
+        setIsLoading(false);
+        return;
+      }
+
+      const userIds = [...new Set(memberRows.map(m => m.user_id).filter(Boolean))];
+      let profiles: any[] = [];
+      
+      if (userIds.length > 0) {
+        const { data: profileData } = await supabase
+          .from('public_profiles')
+          .select('user_id, full_name, avatar_url')
+          .in('user_id', userIds);
+        profiles = profileData || [];
+      }
+
+      const enriched: CircleMember[] = memberRows.map(m => ({
+        ...m,
+        profile: profiles.find(p => p.user_id === m.user_id) ?? { full_name: null, avatar_url: null, user_id: m.user_id }
+      }));
+
+      setMembers(enriched);
+    } catch (e) {
+      console.error('Error in fetchMembers:', e);
+      setMembers([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [roomId]);
+
+  useEffect(() => {
+    fetchMembers();
+
+    // Subscribe to realtime updates for members
+    const channel = supabase
+      .channel(`circle-members-${roomId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'chat_members', filter: `room_id=eq.${roomId}` },
+        () => fetchMembers()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [roomId, fetchMembers]);
+
+  return { members, isLoading, refreshMembers: fetchMembers };
+};
