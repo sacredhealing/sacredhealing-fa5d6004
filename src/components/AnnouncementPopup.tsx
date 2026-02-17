@@ -19,6 +19,7 @@ export const AnnouncementPopup: React.FC = () => {
   const { user } = useAuth();
   const [announcement, setAnnouncement] = useState<Announcement | null>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const [recentlyDismissed, setRecentlyDismissed] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchAnnouncement();
@@ -54,46 +55,80 @@ export const AnnouncementPopup: React.FC = () => {
 
     if (!validAnnouncements.length) return;
 
-    // If user is logged in, filter out dismissed announcements
+    // Filter out dismissed announcements (for both logged in and guest users)
+    let dismissedIds: Set<string>;
+    
     if (user) {
-      const { data: dismissals } = await supabase
+      const { data: dismissals, error } = await supabase
         .from('announcement_dismissals')
         .select('announcement_id')
         .eq('user_id', user.id);
-
-      const dismissedIds = new Set(dismissals?.map(d => d.announcement_id) || []);
-      const unread = validAnnouncements.find(a => !dismissedIds.has(a.id));
       
-      if (unread) {
-        setAnnouncement(unread);
-        setIsVisible(true);
+      if (error) {
+        console.error('Error fetching dismissals:', error);
+        dismissedIds = new Set();
+      } else {
+        dismissedIds = new Set(dismissals?.map(d => d.announcement_id) || []);
       }
     } else {
       // For non-logged in users, use localStorage
       const dismissed = JSON.parse(localStorage.getItem('dismissed_announcements') || '[]');
-      const unread = validAnnouncements.find(a => !dismissed.includes(a.id));
-      
-      if (unread) {
-        setAnnouncement(unread);
-        setIsVisible(true);
-      }
+      dismissedIds = new Set(dismissed);
+    }
+
+    // Find first announcement that hasn't been dismissed (including recently dismissed in this session)
+    const unread = validAnnouncements.find(a => 
+      !dismissedIds.has(a.id) && !recentlyDismissed.has(a.id)
+    );
+    
+    if (unread) {
+      setAnnouncement(unread);
+      setIsVisible(true);
+    } else {
+      // No unread announcements
+      setAnnouncement(null);
+      setIsVisible(false);
     }
   };
 
   const handleDismiss = async () => {
     if (!announcement) return;
 
-    if (user) {
-      await supabase.from('announcement_dismissals').insert({
-        user_id: user.id,
-        announcement_id: announcement.id,
-      });
-    } else {
-      const dismissed = JSON.parse(localStorage.getItem('dismissed_announcements') || '[]');
-      dismissed.push(announcement.id);
-      localStorage.setItem('dismissed_announcements', JSON.stringify(dismissed));
+    try {
+      if (user) {
+        // Insert dismissal (UNIQUE constraint handles duplicates)
+        const { error } = await supabase.from('announcement_dismissals').insert({
+          user_id: user.id,
+          announcement_id: announcement.id,
+          dismissed_at: new Date().toISOString()
+        });
+
+        if (error) {
+          // If duplicate (already dismissed), that's fine - ignore
+          if (error.code === '23505') {
+            console.log('Announcement already dismissed');
+          } else {
+            console.error('Error dismissing announcement:', error);
+            // Still hide it locally even if DB insert fails
+          }
+        }
+      } else {
+        const dismissed = JSON.parse(localStorage.getItem('dismissed_announcements') || '[]');
+        if (!dismissed.includes(announcement.id)) {
+          dismissed.push(announcement.id);
+          localStorage.setItem('dismissed_announcements', JSON.stringify(dismissed));
+        }
+      }
+    } catch (err) {
+      console.error('Error in handleDismiss:', err);
     }
 
+    // Mark as recently dismissed to prevent immediate re-show
+    if (announcement) {
+      setRecentlyDismissed(prev => new Set(prev).add(announcement.id));
+    }
+    
+    // Always hide immediately
     setIsVisible(false);
     setAnnouncement(null);
   };
