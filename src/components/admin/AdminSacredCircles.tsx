@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -68,6 +69,7 @@ const AdminSacredCircles = () => {
   const { isAdmin } = useAdminRole();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [circles, setCircles] = useState<Circle[]>([]);
   const [selectedCircle, setSelectedCircle] = useState<Circle | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -183,7 +185,7 @@ const AdminSacredCircles = () => {
         return;
       }
       
-      // Fallback: Query chat_members directly (may fail due to RLS, but we handle gracefully)
+      // Query chat_members directly (is_admin_v3() should bypass RLS recursion)
       const { data: memberRows, error } = await supabase
         .from('chat_members')
         .select('id, room_id, user_id, role, joined_at')
@@ -191,15 +193,18 @@ const AdminSacredCircles = () => {
         .order('joined_at', { ascending: false });
 
       if (error) {
-        // Silently handle recursion errors - admin can still add members
         const errorMsg = error.message || '';
         if (errorMsg.includes('infinite recursion') || errorMsg.includes('recursion')) {
-          console.warn('[Admin fetchMembers] RLS recursion detected - members list unavailable, but admin can still add members');
+          console.error('[Admin fetchMembers] RLS recursion still detected - SQL migration may not have run');
+          toast({
+            title: t('message_error', 'An error occurred'),
+            description: 'Database configuration needed. Please run migration 20260218000012_is_admin_v3_final_fix.sql',
+            variant: 'destructive'
+          });
           setMembers([]);
           setMembersLoading(false);
           return;
         }
-        // For other errors, still show empty list
         console.warn('[Admin fetchMembers] Query error:', errorMsg);
         setMembers([]);
         setMembersLoading(false);
@@ -616,44 +621,48 @@ const AdminSacredCircles = () => {
                     {/* Add Member Section */}
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
-                        <UserPlus className="h-4 w-4 text-primary" />
-                        <h4 className="font-semibold">Add Member</h4>
+                        <UserPlus className="h-5 w-5 text-primary" />
+                        <h4 className="text-lg font-semibold">{t('action_add_member', 'Add Member')}</h4>
                       </div>
 
                       {/* Search by Email */}
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium flex items-center gap-2">
-                          <Mail className="h-4 w-4" />
-                          Search by Email
+                        <Label className="text-base font-semibold flex items-center gap-2" style={{ fontSize: '1rem' }}>
+                          <Mail className="h-5 w-5" />
+                          {t('search_by_email', 'Search by Email')}
                         </Label>
-                        <div className="flex gap-2">
+                        <div className="flex gap-3">
                           <Input
                             type="email"
                             value={addEmail}
                             onChange={e => setAddEmail(e.target.value)}
-                            placeholder="user@example.com"
-                            className="flex-1"
+                            placeholder={t('email_placeholder', 'user@example.com')}
+                            className="flex-1 text-base h-12"
+                            style={{ fontSize: '1rem', minHeight: '48px' }}
                             onKeyDown={e => e.key === 'Enter' && addEmail && searchByEmail(addEmail)}
                           />
                           <Button 
                             onClick={() => addEmail && searchByEmail(addEmail)} 
-                            className="gap-2"
+                            className="gap-2 h-12 px-6 text-base font-semibold bg-primary hover:bg-primary/90"
+                            style={{ fontSize: '1rem', minHeight: '48px', minWidth: '120px' }}
                             disabled={!addEmail.trim() || emailSearchLoading}
                           >
                             {emailSearchLoading ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <Loader2 className="h-5 w-5 animate-spin" />
                             ) : (
-                              <Mail className="h-4 w-4" />
+                              <Mail className="h-5 w-5" />
                             )}
-                            Find
+                            {t('action_find', 'Find')}
                           </Button>
                         </div>
                       </div>
 
                       {/* Search by Name */}
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium">Or Search by Name</Label>
-                        <div className="flex gap-2">
+                        <Label className="text-base font-semibold" style={{ fontSize: '1rem' }}>
+                          {t('search_by_name', 'Or Search by Name')}
+                        </Label>
+                        <div className="flex gap-3">
                           <Input
                             value={searchName}
                             onChange={e => {
@@ -661,13 +670,27 @@ const AdminSacredCircles = () => {
                               setSearchName(v);
                               if (v.length >= 2) searchProfiles(v);
                             }}
-                            placeholder="Type name..."
-                            className="flex-1"
+                            placeholder={t('name_placeholder', 'Type name...')}
+                            className="flex-1 text-base h-12"
+                            style={{ fontSize: '1rem', minHeight: '48px' }}
                           />
+                          <Button
+                            onClick={() => searchProfiles(searchName)}
+                            className="gap-2 h-12 px-6 text-base font-semibold bg-primary hover:bg-primary/90"
+                            style={{ fontSize: '1rem', minHeight: '48px', minWidth: '120px' }}
+                            disabled={searchName.trim().length < 2 || searchLoading}
+                          >
+                            {searchLoading ? (
+                              <Loader2 className="h-5 w-5 animate-spin" />
+                            ) : (
+                              <Search className="h-5 w-5" />
+                            )}
+                            {t('action_search', 'Search')}
+                          </Button>
                         </div>
                         {searchLoading && (
-                          <div className="text-xs text-muted-foreground flex items-center gap-2">
-                            <Loader2 className="h-3 w-3 animate-spin" /> Searching...
+                          <div className="text-sm text-muted-foreground flex items-center gap-2" style={{ fontSize: '1rem' }}>
+                            <Loader2 className="h-4 w-4 animate-spin" /> {t('message_loading', 'Loading...')}
                           </div>
                         )}
                       </div>
@@ -682,7 +705,6 @@ const AdminSacredCircles = () => {
                                 <div className="text-xs text-muted-foreground truncate font-mono">{p.user_id}</div>
                               </div>
                               <Button
-                                size="sm"
                                 onClick={() => {
                                   if (p.user_id) {
                                     addMember(circle.id, p.user_id);
@@ -691,11 +713,12 @@ const AdminSacredCircles = () => {
                                     setAddEmail('');
                                   }
                                 }}
-                                className="gap-2 ml-2"
+                                className="gap-2 ml-2 h-10 px-4 text-base font-semibold bg-primary hover:bg-primary/90"
+                                style={{ fontSize: '1rem', minHeight: '40px' }}
                                 disabled={!p.user_id}
                               >
-                                <UserPlus className="h-3 w-3" />
-                                Add
+                                <UserPlus className="h-4 w-4" />
+                                {t('action_add', 'Add')}
                               </Button>
                             </div>
                           ))}
@@ -704,21 +727,25 @@ const AdminSacredCircles = () => {
 
                       {/* Add by User ID */}
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium">Or Add by User ID (UUID)</Label>
-                        <div className="flex gap-2">
+                        <Label className="text-base font-semibold" style={{ fontSize: '1rem' }}>
+                          {t('add_by_user_id', 'Or Add by User ID (UUID)')}
+                        </Label>
+                        <div className="flex gap-3">
                           <Input
                             value={addUserId}
                             onChange={e => setAddUserId(e.target.value)}
-                            placeholder="Paste UUID here..."
-                            className="flex-1 font-mono text-sm"
+                            placeholder={t('uuid_placeholder', 'Paste UUID here...')}
+                            className="flex-1 font-mono text-base h-12"
+                            style={{ fontSize: '1rem', minHeight: '48px' }}
                           />
                           <Button 
                             onClick={() => addUserId && addMember(circle.id, addUserId)} 
-                            className="gap-2"
+                            className="gap-2 h-12 px-6 text-base font-semibold bg-primary hover:bg-primary/90"
+                            style={{ fontSize: '1rem', minHeight: '48px', minWidth: '120px' }}
                             disabled={!addUserId.trim()}
                           >
-                            <UserPlus className="h-4 w-4" />
-                            Add
+                            <UserPlus className="h-5 w-5" />
+                            {t('action_add', 'Add')}
                           </Button>
                         </div>
                       </div>
@@ -728,27 +755,28 @@ const AdminSacredCircles = () => {
                     <div className="space-y-2 pt-2 border-t border-border/40">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <Shield className="h-4 w-4" />
-                          <h4 className="font-semibold">Current Members</h4>
-                          <Badge variant="secondary">{members.length}</Badge>
+                          <Shield className="h-5 w-5" />
+                          <h4 className="text-lg font-semibold">{t('current_members', 'Current Members')}</h4>
+                          <Badge variant="secondary" className="text-base px-3 py-1">{members.length}</Badge>
                         </div>
                         <Button
                           variant="ghost"
-                          size="sm"
                           onClick={() => fetchMembers(circle.id)}
                           disabled={membersLoading}
-                          className="h-7 gap-1"
-                          title="Refresh member list"
+                          className="h-10 w-10 gap-1"
+                          title={t('refresh_member_list', 'Refresh member list')}
                         >
-                          <RotateCcw className={`h-3 w-3 ${membersLoading ? 'animate-spin' : ''}`} />
+                          <RotateCcw className={`h-5 w-5 ${membersLoading ? 'animate-spin' : ''}`} />
                         </Button>
                       </div>
                       {membersLoading ? (
-                        <div className="text-sm text-muted-foreground flex items-center gap-2 py-4">
-                          <Loader2 className="h-4 w-4 animate-spin" /> Loading...
+                        <div className="text-base text-muted-foreground flex items-center gap-2 py-4" style={{ fontSize: '1rem' }}>
+                          <Loader2 className="h-5 w-5 animate-spin" /> {t('message_loading', 'Loading...')}
                         </div>
                       ) : members.length === 0 ? (
-                        <p className="text-sm text-muted-foreground py-4 text-center">No members yet</p>
+                        <p className="text-base text-muted-foreground py-4 text-center" style={{ fontSize: '1rem' }}>
+                          {t('no_members_yet', 'No members yet')}
+                        </p>
                       ) : (
                         <div className="space-y-2 max-h-64 overflow-y-auto">
                           {members.map(m => (
@@ -761,12 +789,12 @@ const AdminSacredCircles = () => {
                                 <Badge variant="secondary" className="text-xs">{m.role || 'member'}</Badge>
                                 <Button
                                   variant="outline"
-                                  size="sm"
                                   onClick={() => removeMember(m.room_id, m.user_id)}
-                                  className="gap-2 text-destructive h-7"
+                                  className="gap-2 text-destructive h-10 px-4 text-base font-semibold"
+                                  style={{ fontSize: '1rem', minHeight: '40px' }}
                                 >
-                                  <Trash2 className="h-3 w-3" />
-                                  Remove
+                                  <Trash2 className="h-4 w-4" />
+                                  {t('action_remove', 'Remove')}
                                 </Button>
                               </div>
                             </div>

@@ -109,7 +109,23 @@ INSERT INTO public.ui_translations (key_name, en_text, sv_text, category) VALUES
   ('ayurveda_kapha', 'Kapha Dosha', 'Kapha Dosha', 'ayurveda'),
   ('ayurveda_recipe', 'Recipe', 'Recept', 'ayurveda'),
   ('ayurveda_tip', 'Tip', 'Tips', 'ayurveda'),
-  ('ayurveda_balance', 'Balance Your Dosha', 'Balansera din Dosha', 'ayurveda')
+  ('ayurveda_balance', 'Balance Your Dosha', 'Balansera din Dosha', 'ayurveda'),
+  
+  -- Admin Member Management
+  ('action_add_member', 'Add Member', 'Lägg till medlem', 'ui'),
+  ('current_members', 'Current Members', 'Nuvarande medlemmar', 'ui'),
+  ('search_by_email', 'Search by Email', 'Sök efter e-post', 'ui'),
+  ('search_by_name', 'Or Search by Name', 'Eller sök efter namn', 'ui'),
+  ('add_by_user_id', 'Or Add by User ID (UUID)', 'Eller lägg till med användar-ID (UUID)', 'ui'),
+  ('action_find', 'Find', 'Hitta', 'ui'),
+  ('action_search', 'Search', 'Sök', 'ui'),
+  ('action_add', 'Add', 'Lägg till', 'ui'),
+  ('action_remove', 'Remove', 'Ta bort', 'ui'),
+  ('no_members_yet', 'No members yet', 'Inga medlemmar ännu', 'ui'),
+  ('refresh_member_list', 'Refresh member list', 'Uppdatera medlemslista', 'ui'),
+  ('email_placeholder', 'user@example.com', 'användare@exempel.com', 'ui'),
+  ('name_placeholder', 'Type name...', 'Skriv namn...', 'ui'),
+  ('uuid_placeholder', 'Paste UUID here...', 'Klistra in UUID här...', 'ui')
 ON CONFLICT (key_name) DO UPDATE SET
   en_text = EXCLUDED.en_text,
   sv_text = EXCLUDED.sv_text,
