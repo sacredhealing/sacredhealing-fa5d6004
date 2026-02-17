@@ -64,6 +64,14 @@ interface PrivateMessage {
   content: string;
   is_read: boolean;
   created_at: string;
+  message_type?: 'text' | 'voice' | 'image' | 'file' | 'video';
+  file_url?: string | null;
+  file_name?: string | null;
+  file_size?: number | null;
+  mime_type?: string | null;
+  duration?: number | null;
+  thumbnail_url?: string | null;
+  status?: 'pending' | 'sent' | 'error';
   sender_profile?: {
     full_name: string | null;
     avatar_url: string | null;
@@ -434,18 +442,67 @@ export const usePrivateChat = (partnerId: string) => {
     };
   }, [partnerId, user]);
 
-  const sendMessage = async (content: string) => {
+  const sendMessage = async (
+    content: string,
+    type: 'text' | 'voice' | 'image' | 'file' | 'video' = 'text',
+    fileData?: {
+      file_url?: string;
+      file_name?: string;
+      file_size?: number;
+      mime_type?: string;
+      duration?: number;
+      thumbnail_url?: string;
+    }
+  ) => {
     if (!user) return false;
 
-    const { error } = await supabase
-      .from('private_messages')
-      .insert({
-        sender_id: user.id,
-        receiver_id: partnerId,
-        content
-      });
+    // Optimistic update
+    const tempId = `temp-dm-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const now = new Date().toISOString();
+    const optimisticMessage: PrivateMessage = {
+      id: tempId,
+      sender_id: user.id,
+      receiver_id: partnerId,
+      content,
+      created_at: now,
+      is_read: false,
+      message_type: type,
+      status: 'pending',
+      ...fileData
+    };
 
-    return !error;
+    setMessages(prev => [...prev, optimisticMessage]);
+
+    const messageData: any = {
+      sender_id: user.id,
+      receiver_id: partnerId,
+      content,
+      message_type: type,
+      status: 'sent'
+    };
+
+    if (fileData) {
+      Object.assign(messageData, fileData);
+    }
+
+    const { data, error } = await supabase
+      .from('private_messages')
+      .insert(messageData)
+      .select()
+      .single();
+
+    if (error) {
+      optimisticMessage.status = 'error';
+      setMessages(prev => prev.map(m => m.id === tempId ? optimisticMessage : m));
+      return false;
+    }
+
+    // Replace optimistic with real message
+    if (data) {
+      setMessages(prev => prev.map(m => m.id === tempId ? { ...data, status: 'sent' } : m));
+    }
+
+    return true;
   };
 
   return { messages, partnerProfile, isLoading, sendMessage };
