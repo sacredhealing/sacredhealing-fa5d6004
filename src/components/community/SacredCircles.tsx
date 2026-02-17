@@ -8,6 +8,7 @@ import { useStargateAccess } from '@/hooks/useStargateAccess';
 import { useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -354,13 +355,15 @@ interface CircleChatProps {
 const CircleChat = ({ circle, onBack, hasAvatar }: CircleChatProps) => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const { messages, isLoading, sendMessage, pinMessage, deleteMessage, isAdmin } = useCircleMessages(circle.id);
+  const { messages, isLoading, sendMessage, pinMessage, deleteMessage, createPinnedMessage, isAdmin } = useCircleMessages(circle.id);
   const { polls, vote, createPoll, isAdmin: isPollAdmin } = useCommunityPolls(circle.id);
   const { members, isLoading: membersLoading } = useCircleMembers(circle.id);
   const [newMessage, setNewMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [showCreatePoll, setShowCreatePoll] = useState(false);
   const [showMembers, setShowMembers] = useState(false);
+  const [showCreatePinned, setShowCreatePinned] = useState(false);
+  const [pinnedMessageContent, setPinnedMessageContent] = useState('');
   const [pollQuestion, setPollQuestion] = useState('');
   const [pollOptions, setPollOptions] = useState(['', '']);
 
@@ -405,11 +408,19 @@ const CircleChat = ({ circle, onBack, hasAvatar }: CircleChatProps) => {
             <p className="text-xs text-muted-foreground line-clamp-1">{circle.intention}</p>
           )}
         </div>
-        {isPollAdmin && (
-          <Button variant="outline" size="sm" onClick={() => setShowCreatePoll(true)}>
-            Create poll
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {isAdmin && (
+            <Button variant="outline" size="sm" onClick={() => setShowCreatePinned(true)} className="gap-2">
+              <Pin className="h-4 w-4" />
+              Pin Message
+            </Button>
+          )}
+          {isPollAdmin && (
+            <Button variant="outline" size="sm" onClick={() => setShowCreatePoll(true)}>
+              Create poll
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Members List (Telegram-style) */}
@@ -456,6 +467,45 @@ const CircleChat = ({ circle, onBack, hasAvatar }: CircleChatProps) => {
               </ScrollArea>
             )}
           </CardContent>
+        </Card>
+      )}
+
+      {/* Create Pinned Message (Admin) */}
+      {showCreatePinned && isAdmin && (
+        <Card className="mb-4 p-4 bg-card border-cyan-500/30 border">
+          <div className="flex items-center gap-2 mb-2">
+            <Pin className="h-4 w-4 text-cyan-500" />
+            <h4 className="font-medium">Create Pinned Message</h4>
+          </div>
+          <Textarea
+            placeholder="Enter message to pin at the top of chat..."
+            value={pinnedMessageContent}
+            onChange={(e) => setPinnedMessageContent(e.target.value)}
+            className="mb-2 min-h-[80px]"
+          />
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              onClick={async () => {
+                if (pinnedMessageContent.trim()) {
+                  await createPinnedMessage(pinnedMessageContent.trim());
+                  setPinnedMessageContent('');
+                  setShowCreatePinned(false);
+                }
+              }}
+              disabled={!pinnedMessageContent.trim()}
+              className="gap-2"
+            >
+              <Pin className="h-4 w-4" />
+              Pin Message
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => {
+              setShowCreatePinned(false);
+              setPinnedMessageContent('');
+            }}>
+              Cancel
+            </Button>
+          </div>
         </Card>
       )}
 

@@ -322,6 +322,24 @@ export const useCircleMessages = (roomId: string) => {
     return !error;
   };
 
+  const createPinnedMessage = async (content: string) => {
+    if (!user || !isAdmin) return false;
+
+    const { error } = await supabase
+      .from('chat_messages')
+      .insert({
+        room_id: roomId,
+        user_id: user.id,
+        content,
+        is_pinned: true
+      });
+
+    if (!error) {
+      await fetchMessages();
+    }
+    return !error;
+  };
+
   const pinMessage = async (messageId: string, pinned: boolean) => {
     if (!isAdmin) return false;
 
@@ -356,6 +374,7 @@ export const useCircleMessages = (roomId: string) => {
     sendMessage, 
     pinMessage, 
     deleteMessage,
+    createPinnedMessage,
     isAdmin 
   };
 };
