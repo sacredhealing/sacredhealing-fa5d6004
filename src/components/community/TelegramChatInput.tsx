@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
   Send, Mic, Paperclip, Image as ImageIcon, File, X, 
-  Loader2, Waveform, Check, Clock, AlertCircle
+  Loader2, Radio, Check, Clock, AlertCircle
 } from 'lucide-react';
 import { useVoiceRecorder } from '@/hooks/useVoiceRecorder';
 import { useFileUpload } from '@/hooks/useFileUpload';
@@ -137,6 +137,7 @@ export const TelegramChatInput = ({
                       style={{ height: `${height * 100}%`, minHeight: '8px' }}
                     />
                   ))}
+                  <Radio className="h-4 w-4 text-destructive animate-pulse ml-1" />
                 </div>
                 <span className="text-sm font-medium text-destructive">
                   {formatDuration(duration)}
@@ -248,7 +249,7 @@ export const TelegramChatInput = ({
               className="h-12 w-12 rounded-full shrink-0 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 backdrop-blur-sm border border-cyan-400/30 transition-all shadow-lg"
             >
               {isRecording ? (
-                <Waveform className="h-5 w-5 animate-pulse text-destructive" />
+                <Radio className="h-5 w-5 animate-pulse text-destructive" />
               ) : (
                 <Mic className="h-5 w-5 text-cyan-400" />
               )}

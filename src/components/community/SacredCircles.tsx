@@ -790,9 +790,8 @@ const MessageBubble = ({ message, isOwn, isAdmin, onPin, onDelete }: MessageBubb
               {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
             </p>
             {isOwn && (
-              <div className="shrink-0 flex items-center gap-1">
+              <div className="shrink-0">
                 {getStatusIcon()}
-                {status === 'sent' && <Check className="h-3 w-3 opacity-60" />}
               </div>
             )}
           </div>
