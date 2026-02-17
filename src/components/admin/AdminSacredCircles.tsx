@@ -475,13 +475,13 @@ const AdminSacredCircles = () => {
 
       {/* Members Dialog */}
       <Dialog open={!!membersCircle} onOpenChange={() => setMembersCircle(null)}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="max-w-lg w-[90vw] max-h-[85vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>{membersCircle?.name} - Members</DialogTitle>
           </DialogHeader>
 
           {membersCircle && (
-            <div className="space-y-4">
+            <div className="flex-1 overflow-y-auto space-y-4 pr-2">
               <Card className="border-border/40">
                 <CardHeader className="py-3">
                   <CardTitle className="text-base flex items-center gap-2">
@@ -533,7 +533,7 @@ const AdminSacredCircles = () => {
                     )}
 
                     {searchResults.length > 0 && (
-                      <div className="space-y-2">
+                      <div className="space-y-2 max-h-48 overflow-y-auto">
                         {searchResults.map(p => (
                           <div key={p.user_id ?? Math.random()} className="flex items-center justify-between rounded-md border border-border/40 p-2">
                             <div className="min-w-0">
@@ -565,7 +565,7 @@ const AdminSacredCircles = () => {
                     <Badge variant="outline" className="ml-2">{members.length}</Badge>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2">
+                <CardContent className="space-y-2 max-h-64 overflow-y-auto">
                   {membersLoading ? (
                     <div className="text-sm text-muted-foreground flex items-center gap-2">
                       <Loader2 className="h-4 w-4 animate-spin" /> Loading members…
