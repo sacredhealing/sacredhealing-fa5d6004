@@ -4,6 +4,24 @@
 -- When you get access to run SQL (e.g. Supabase Dashboard → SQL Editor), run this once.
 -- =============================================================================
 
+-- ----- CRITICAL FIX: Remove infinite recursion in chat_members policy -----
+DROP POLICY IF EXISTS "Users can view room members for rooms they belong to" ON public.chat_members;
+CREATE POLICY "Users can view room members for accessible rooms"
+ON public.chat_members
+FOR SELECT
+USING (
+  auth.uid() = user_id
+  OR
+  EXISTS (
+    SELECT 1 FROM public.chat_rooms cr
+    WHERE cr.id = chat_members.room_id
+    AND cr.is_active = true
+    AND (cr.is_locked = false OR cr.is_locked IS NULL)
+  )
+  OR
+  public.has_role(auth.uid(), 'admin')
+);
+
 -- ----- Mantras: category, planet_type, is_premium -----
 ALTER TABLE public.mantras ADD COLUMN IF NOT EXISTS category text DEFAULT 'general';
 ALTER TABLE public.mantras ADD COLUMN IF NOT EXISTS planet_type text;
