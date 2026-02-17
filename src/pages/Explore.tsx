@@ -32,6 +32,7 @@ import {
   Trophy,
   Mic2,
   ChevronRight,
+  FileText,
 } from "lucide-react";
 
 function getSubtitleKey(phase: "morning" | "midday" | "evening"): string {
@@ -84,6 +85,7 @@ export default function Explore() {
 
   const exploreItems: LibraryItem[] = useMemo(
     () => [
+      { key: "promptLibrary", title: t("explore.promptLibrary", "Prompt Library"), subtitle: t("explore.promptLibraryDesc", "Single-click templates for instant productivity"), href: "/prompt-library", icon: <FileText className="h-5 w-5" /> },
       { key: "podcast", title: t("explore.podcast", "Podcast"), subtitle: t("explore.podcastDesc", "Streams on Spotify"), href: "/podcast", icon: <Headphones className="h-5 w-5" /> },
       { key: "videos", title: t("explore.videos", "Videos"), subtitle: t("explore.videosDesc", "Watch & learn"), href: "/spiritual-education", icon: <Youtube className="h-5 w-5" /> },
       { key: "creativeSoul", title: t("explore.creativeSoul", "Creative Soul"), subtitle: t("explore.creativeSoulDesc", "Create with AI"), href: "/creative-soul/store", icon: <Sparkles className="h-5 w-5" /> },
@@ -122,9 +124,9 @@ export default function Explore() {
   };
 
   const subtitleMap: Record<string, string> = {
-    start: t(getSubtitleKey(dayPhase), "Begin gently today."),
-    returned: t("explore.presence.returned", "Welcome back — stay with the feeling."),
-    deep: t("explore.presence.deep", "You're in a quiet space now."),
+    start: tI18n(getSubtitleKey(dayPhase), "Begin gently today."),
+    returned: tI18n("explore.presence.returned", "Welcome back — stay with the feeling."),
+    deep: tI18n("explore.presence.deep", "You're in a quiet space now."),
   };
   const subtitle = subtitleMap[presence] ?? subtitleMap.start;
 
