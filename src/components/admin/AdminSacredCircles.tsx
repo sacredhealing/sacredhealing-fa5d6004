@@ -275,6 +275,27 @@ const AdminSacredCircles = () => {
       toast({ title: 'Error', description: 'Admin access required', variant: 'destructive' });
       return;
     }
+
+    const room = circles.find((c) => c.id === roomId);
+    const isStargateRoom = room?.type === 'stargate' || room?.name === 'Stargate Community';
+
+    const ensureStargateAccess = async () => {
+      if (!isStargateRoom) return;
+      const { error: stargateErr } = await supabase
+        .from('stargate_community_members')
+        .upsert(
+          {
+            user_id: trimmed,
+            added_by: user.id,
+            added_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id' }
+        );
+
+      if (stargateErr) {
+        console.warn('[Admin addMember] Failed to grant Stargate access (stargate_community_members):', stargateErr);
+      }
+    };
     
     // Admin verified - proceed with insert (admin policy should allow this)
     const { error } = await supabase.from('chat_members').insert({
@@ -290,6 +311,8 @@ const AdminSacredCircles = () => {
       // Handle gracefully without showing recursion errors
       if (errorMsg.includes('infinite recursion') || errorMsg.includes('recursion')) {
         console.warn('RLS recursion detected - member may still be added, refreshing...');
+        // Still grant Stargate access if needed
+        await ensureStargateAccess();
         // Still try to refresh - member might have been added despite error
         setTimeout(() => fetchMembers(roomId).catch(() => {}), 500);
         toast({ 
@@ -301,6 +324,8 @@ const AdminSacredCircles = () => {
       }
       
       if (error.code === '23505') {
+        // Even if already in chat_members, ensure Stargate access if needed
+        await ensureStargateAccess();
         toast({ title: 'Already a member' });
         // Force refresh immediately and retry if needed
         console.log('[addMember] Member already exists, refreshing list...');
@@ -327,6 +352,9 @@ const AdminSacredCircles = () => {
       return;
     }
     
+    // Success: if this is Stargate, also grant access (bypasses subscription gates)
+    await ensureStargateAccess();
+
     toast({ title: 'Member added successfully' });
     setAddUserId('');
     setAddEmail('');
@@ -364,6 +392,18 @@ const AdminSacredCircles = () => {
     if (error) {
       toast({ title: 'Error', description: 'Failed to remove member', variant: 'destructive' });
       return;
+    }
+
+    const room = circles.find((c) => c.id === roomId);
+    const isStargateRoom = room?.type === 'stargate' || room?.name === 'Stargate Community';
+    if (isStargateRoom) {
+      const { error: stargateErr } = await supabase
+        .from('stargate_community_members')
+        .delete()
+        .eq('user_id', userId);
+      if (stargateErr) {
+        console.warn('[Admin removeMember] Failed to remove Stargate access:', stargateErr);
+      }
     }
     toast({ title: 'Member removed' });
     await fetchMembers(roomId);

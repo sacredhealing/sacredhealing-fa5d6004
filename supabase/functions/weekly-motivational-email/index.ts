@@ -97,7 +97,7 @@ serve(async (req) => {
     // Get mantra categories
     const { data: mantras } = await supabaseClient
       .from('mantras')
-      .select('id, category, planet_type, duration_seconds');
+      .select('id, category, planet_type, duration_minutes, duration_seconds');
 
     const mantraMap = new Map(mantras?.map(m => [m.id, m]) || []);
 
@@ -116,7 +116,9 @@ serve(async (req) => {
 
       const mantra = mantraMap.get(completion.mantra_id);
       if (mantra) {
-        const minutes = (mantra.duration_seconds || 180) / 60;
+        const minutes = (mantra.duration_minutes ?? null) !== null
+          ? Number(mantra.duration_minutes)
+          : (mantra.duration_seconds || 180) / 60;
         const currentMinutes = userPracticeMinutes.get(userId) || 0;
         userPracticeMinutes.set(userId, currentMinutes + minutes);
 

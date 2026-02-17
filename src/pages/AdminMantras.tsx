@@ -10,22 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import AudioUpload from '@/components/admin/AudioUpload';
-
-/** Exact category list for Admin form only. DB stores category id. */
-const ADMIN_MANTRA_CATEGORIES = [
-  { id: 'planet', label: 'Planets' },
-  { id: 'deity', label: 'Deity' },
-  { id: 'intention', label: 'Intention' },
-  { id: 'karma', label: 'Karma & Healing' },
-  { id: 'wealth', label: 'Wealth & Abundance' },
-  { id: 'health', label: 'Health & Vitality' },
-  { id: 'peace', label: 'Peace & Calm' },
-  { id: 'protection', label: 'Protection & Power' },
-  { id: 'spiritual', label: 'Spiritual Growth' },
-  { id: 'general', label: 'General' },
-] as const;
-
-const PLANET_TYPES = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'] as const;
+import { MANTRA_CATEGORIES, PLANET_TYPES, getMantraCategoryLabel } from '@/features/mantras/taxonomy';
 
 interface Mantra {
   id: string;
@@ -33,7 +18,8 @@ interface Mantra {
   description: string | null;
   audio_url: string;
   cover_image_url: string | null;
-  duration_seconds: number;
+  duration_minutes: number | null;
+  duration_seconds?: number | null;
   shc_reward: number;
   is_active: boolean;
   category?: string | null;
@@ -52,7 +38,7 @@ const AdminMantras = () => {
     description: '',
     audio_url: '',
     cover_image_url: '',
-    duration_seconds: 180,
+    duration_minutes: 3,
     shc_reward: 111,
     is_active: true,
     is_premium: false,
@@ -82,7 +68,7 @@ const AdminMantras = () => {
       description: '',
       audio_url: '',
       cover_image_url: '',
-      duration_seconds: 180,
+      duration_minutes: 3,
       shc_reward: 111,
       is_active: true,
       is_premium: false,
@@ -99,7 +85,9 @@ const AdminMantras = () => {
       description: mantra.description || '',
       audio_url: mantra.audio_url,
       cover_image_url: mantra.cover_image_url || '',
-      duration_seconds: mantra.duration_seconds ?? 180,
+      duration_minutes:
+        mantra.duration_minutes ??
+        (mantra.duration_seconds ? Math.max(1, Math.ceil(mantra.duration_seconds / 60)) : 3),
       shc_reward: mantra.shc_reward,
       is_active: mantra.is_active,
       is_premium: mantra.is_premium ?? false,
@@ -112,13 +100,15 @@ const AdminMantras = () => {
 
   const buildMantraPayload = () => {
     const shc = Number(formData.shc_reward);
-    const durationSeconds = Number.isFinite(formData.duration_seconds) && formData.duration_seconds > 0 ? formData.duration_seconds : 180;
+    const durationMinutes = Number.isFinite(formData.duration_minutes) && formData.duration_minutes > 0 ? formData.duration_minutes : 3;
+    const durationSeconds = Math.round(durationMinutes * 60);
     return {
       title: formData.title.trim(),
       description: formData.description?.trim() || null,
       audio_url: formData.audio_url.trim(),
       cover_image_url: formData.cover_image_url?.trim() || null,
-      duration_seconds: durationSeconds,
+      duration_minutes: durationMinutes,
+      duration_seconds: durationSeconds, // keep legacy column populated
       shc_reward: Number.isFinite(shc) && shc >= 0 ? shc : 111,
       is_active: Boolean(formData.is_active),
       category: category || 'general',
@@ -246,7 +236,7 @@ const AdminMantras = () => {
                   }}
                   className="flex h-10 w-full min-w-[280px] max-w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 text-foreground"
                 >
-                  {ADMIN_MANTRA_CATEGORIES.map((c) => (
+                  {MANTRA_CATEGORIES.map((c) => (
                     <option key={c.id} value={c.id}>{c.label}</option>
                   ))}
                 </select>
@@ -298,13 +288,13 @@ const AdminMantras = () => {
                   <Label>Duration (minutes)</Label>
                   <Input
                     type="number"
-                    min={0.5}
-                    step={0.5}
+                    min={1}
+                    step={1}
                     placeholder="Duration in minutes"
-                    value={formData.duration_seconds / 60}
+                    value={formData.duration_minutes}
                     onChange={(e) => {
-                      const seconds = parseFloat(e.target.value) * 60;
-                      setFormData({ ...formData, duration_seconds: Number.isFinite(seconds) ? seconds : 180 });
+                      const minutes = parseInt(e.target.value, 10);
+                      setFormData({ ...formData, duration_minutes: Number.isFinite(minutes) ? minutes : 3 });
                     }}
                   />
                 </div>
@@ -382,10 +372,10 @@ const AdminMantras = () => {
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    {Math.floor(mantra.duration_seconds / 60)}:{(mantra.duration_seconds % 60).toString().padStart(2, '0')} • {mantra.shc_reward} SHC
+                    {(mantra.duration_minutes ?? (mantra.duration_seconds ? Math.max(1, Math.ceil(mantra.duration_seconds / 60)) : 3))} min • {mantra.shc_reward} SHC
                     {mantra.category && (
                       <span className="ml-2 text-xs text-muted-foreground/80">
-                        • {ADMIN_MANTRA_CATEGORIES.find(c => c.id === mantra.category)?.label}
+                        • {getMantraCategoryLabel(mantra.category) || mantra.category}
                         {mantra.planet_type && <span> ({mantra.planet_type})</span>}
                       </span>
                     )}

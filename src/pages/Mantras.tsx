@@ -18,10 +18,9 @@ function getPlayableUrl(url: string): string {
   return url;
 }
 
-function formatDuration(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
-  return `${m}:${s.toString().padStart(2, '0')}`;
+function formatDurationMinutes(minutes: number): string {
+  if (!Number.isFinite(minutes) || minutes <= 0) return '';
+  return minutes === 1 ? '1 min' : `${minutes} min`;
 }
 
 const Mantras = () => {
@@ -254,8 +253,8 @@ const Mantras = () => {
                             <span className="text-[10px] text-primary font-medium uppercase tracking-wide">Recommended</span>
                           )}
                         </div>
-                        {m.duration_seconds > 0 && (
-                          <p className="text-xs text-muted-foreground">{formatDuration(m.duration_seconds)}</p>
+                        {m.duration_minutes > 0 && (
+                          <p className="text-xs text-muted-foreground">{formatDurationMinutes(m.duration_minutes)}</p>
                         )}
                       </div>
                     </button>
