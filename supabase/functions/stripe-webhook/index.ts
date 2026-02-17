@@ -416,6 +416,37 @@ serve(async (req) => {
           }
         }
 
+        // Handle Stargate Membership purchase - add to stargate_community_members
+        if (purchaseType === 'stargate' && userId) {
+          logStep("Processing Stargate membership purchase", { userId });
+          
+          // Check if already a member
+          const { data: existingMember } = await supabaseAdmin
+            .from('stargate_community_members')
+            .select('id')
+            .eq('user_id', userId)
+            .maybeSingle();
+
+          if (!existingMember) {
+            // Add user to Stargate community members
+            const { error: addError } = await supabaseAdmin
+              .from('stargate_community_members')
+              .insert({
+                user_id: userId,
+                added_by: userId, // Self-added via purchase
+                added_at: new Date().toISOString()
+              });
+
+            if (addError) {
+              logStep("Error adding Stargate member", { error: addError.message, userId });
+            } else {
+              logStep("User added to Stargate community", { userId });
+            }
+          } else {
+            logStep("User already in Stargate community", { userId });
+          }
+        }
+
         // Handle Creative Soul Meditation purchase (new structure with plan types)
         const toolSlug = session.metadata?.tool_slug;
         const plan = session.metadata?.plan; // 'lifetime' | 'monthly' | 'single'
@@ -928,6 +959,7 @@ serve(async (req) => {
     }
 
     // Handle subscription lifecycle: grant/revoke Creative Soul access based on payment status
+    // Also handle Stargate membership subscriptions
     if (
       event.type === "customer.subscription.created" ||
       event.type === "customer.subscription.updated" ||
@@ -939,13 +971,76 @@ serve(async (req) => {
       const status = subscription.status; // active, canceled, past_due, unpaid, incomplete...
       const currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
       const subscriptionId = subscription.id;
+      const priceId = subscription.items.data[0]?.price?.id;
 
       logStep(`Subscription ${event.type.replace('customer.subscription.', '')}`, {
         subscriptionId,
         status,
         customerId,
-        currentPeriodEnd
+        currentPeriodEnd,
+        priceId
       });
+
+      // Handle Stargate Membership subscription
+      if (priceId === 'price_1SZqNuAPsnbrivP0ZygF4M88') {
+        // Find user by customer ID
+        const { data: membershipData } = await supabaseAdmin
+          .from('user_memberships')
+          .select('user_id')
+          .eq('stripe_customer_id', customerId)
+          .maybeSingle();
+
+        const userId = membershipData?.user_id || null;
+
+        // Try to find user by email if not found
+        if (!userId && customerId) {
+          const customers = await stripe.customers.retrieve(customerId);
+          if (customers && !customers.deleted && (customers as Stripe.Customer).email) {
+            const { data: userData } = await supabaseAdmin.auth.admin.listUsers();
+            const matchingUser = userData?.users?.find(u => u.email === (customers as Stripe.Customer).email);
+            if (matchingUser) {
+              userId = matchingUser.id;
+            }
+          }
+        }
+
+        if (userId) {
+          const hasActiveAccess = status === "active" || status === "trialing";
+
+          if (hasActiveAccess) {
+            // Add/ensure user is in stargate_community_members
+            const { data: existingMember } = await supabaseAdmin
+              .from('stargate_community_members')
+              .select('id')
+              .eq('user_id', userId)
+              .maybeSingle();
+
+            if (!existingMember) {
+              const { error: addError } = await supabaseAdmin
+                .from('stargate_community_members')
+                .insert({
+                  user_id: userId,
+                  added_by: userId,
+                  added_at: new Date().toISOString()
+                });
+
+              if (addError) {
+                logStep("Error adding Stargate member from subscription", { error: addError.message, userId });
+              } else {
+                logStep("User added to Stargate community from subscription", { userId, subscriptionId });
+              }
+            }
+          } else {
+            // Subscription canceled/failed - remove from stargate_community_members
+            // But only if they were added via subscription (not manually by admin)
+            // We'll keep manually added members even if subscription ends
+            logStep("Stargate subscription inactive", { userId, status });
+            // Note: We don't remove manually added members here
+          }
+        } else {
+          logStep("Could not find user for Stargate subscription", { customerId });
+        }
+      }
 
       // Find user by stripe_customer_id in creative_soul_entitlements
       const { data: ent } = await supabaseAdmin
