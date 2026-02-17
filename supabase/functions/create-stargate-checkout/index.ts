@@ -62,7 +62,8 @@ serve(async (req) => {
       cancel_url: `${req.headers.get("origin")}/stargate?canceled=true`,
       metadata: {
         user_id: user.id,
-        membership_type: "stargate",
+        type: "stargate_membership", // Matches webhook getPurchaseType logic
+        membership_type: "stargate", // Keep for backward compatibility
       },
     });
 
