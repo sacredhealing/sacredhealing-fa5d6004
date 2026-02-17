@@ -36,7 +36,6 @@ export const TelegramChatInput = ({
     duration, 
     audioBlob, 
     audioUrl, 
-    waveform,
     startRecording, 
     stopRecording, 
     reset 
@@ -111,6 +110,12 @@ export const TelegramChatInput = ({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Generate simple waveform bars for visualization
+  const generateWaveform = () => {
+    const bars = 20;
+    return Array.from({ length: bars }, () => Math.random() * 0.8 + 0.2);
+  };
+
   return (
     <div className="relative">
       {/* Liquid Glass Input Bar - Telegram Style */}
@@ -125,7 +130,7 @@ export const TelegramChatInput = ({
             >
               <div className="flex-1 flex items-center gap-2">
                 <div className="flex items-center gap-1">
-                  {waveform.map((height, i) => (
+                  {generateWaveform().map((height, i) => (
                     <div
                       key={i}
                       className="w-1 bg-destructive rounded-full animate-pulse"
