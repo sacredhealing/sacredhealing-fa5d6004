@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { 
   Lock, Unlock, Users, Sparkles, MessageCircle, Heart,
-  Trash2, Pin, Edit2, Save, X, Loader2, UserPlus, Search, Shield, Mail
+  Trash2, Pin, Edit2, Save, X, Loader2, UserPlus, Search, Shield, Mail, RotateCcw
 } from 'lucide-react';
 import {
   Dialog,
@@ -131,6 +131,7 @@ const AdminSacredCircles = () => {
   const fetchMembers = async (roomId: string) => {
     setMembersLoading(true);
     try {
+      console.log(`[Admin fetchMembers] Starting fetch for room ${roomId}, isAdmin: ${isAdmin}`);
       const { data: memberRows, error } = await supabase
         .from('chat_members')
         .select('id, room_id, user_id, role, joined_at')
@@ -138,7 +139,18 @@ const AdminSacredCircles = () => {
         .order('joined_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching chat_members:', error);
+        console.error('[Admin fetchMembers] Supabase error:', error);
+        const errorMsg = error.message || '';
+        // Check for recursion error specifically
+        if (errorMsg.includes('infinite recursion') || errorMsg.includes('recursion')) {
+          console.error('[Admin fetchMembers] RLS RECURSION DETECTED - need to run migration fix');
+          toast({ 
+            title: 'Database configuration needed', 
+            description: 'Please run the RLS fix migration in Supabase SQL Editor to view members', 
+            variant: 'destructive',
+            duration: 5000
+          });
+        }
         throw error;
       }
 
@@ -648,6 +660,16 @@ const AdminSacredCircles = () => {
                           <h4 className="font-semibold">Current Members</h4>
                           <Badge variant="secondary">{members.length}</Badge>
                         </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => fetchMembers(circle.id)}
+                          disabled={membersLoading}
+                          className="h-7 gap-1"
+                          title="Refresh member list"
+                        >
+                          <RotateCcw className={`h-3 w-3 ${membersLoading ? 'animate-spin' : ''}`} />
+                        </Button>
                       </div>
                       {membersLoading ? (
                         <div className="text-sm text-muted-foreground flex items-center gap-2 py-4">
