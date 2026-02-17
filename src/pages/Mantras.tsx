@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation as useI18nTranslation } from 'react-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { Music, Play, Pause, RotateCcw, Volume2, ChevronDown, Sparkles } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,7 @@ function formatDuration(seconds: number): string {
 }
 
 const Mantras = () => {
+  const { t: tI18n } = useI18nTranslation();
   const { t } = useTranslation();
   const { user } = useAuth();
   const { refreshBalance } = useSHCBalance();
@@ -103,7 +105,7 @@ const Mantras = () => {
         description: `Mantra: ${mantra.title}`,
         status: 'completed',
       });
-      toast.success(`+${mantra.shc_reward} SHC ${t('mantras.earned', 'earned')}`);
+      toast.success(`+${mantra.shc_reward} SHC ${tI18n('mantras.earned', 'earned')}`);
       refreshBalance();
     } catch (e) {
       console.error(e);
@@ -137,12 +139,12 @@ const Mantras = () => {
       });
     });
 
-    audio.play().catch(() => toast.error(t('mantras.playFailed', 'Failed to play audio')));
+    audio.play().catch(() => toast.error(tI18n('mantras.playFailed', 'Failed to play audio')));
   };
 
   const handleStart = () => {
     if (!selectedMantra?.audio_url) {
-      toast.error(t('mantras.noAudio', 'No audio available.'));
+      toast.error(tI18n('mantras.noAudio', 'No audio available.'));
       return;
     }
     if (count >= reps) setCount(0);
@@ -202,10 +204,10 @@ const Mantras = () => {
     <div className="min-h-screen bg-background pb-28">
       <section className="px-4 pt-6 pb-4">
         <h1 className="text-2xl font-heading font-bold text-foreground">
-          {t('mantras.title', 'Mantras')}
+          {tI18n('mantras.title', 'Mantras')}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {t('mantras.subtitle', 'Choose one mantra and repeat it 108 times.')}
+          {tI18n('mantras.subtitle', 'Choose one mantra and repeat it 108 times.')}
         </p>
       </section>
 
@@ -217,13 +219,13 @@ const Mantras = () => {
             className="flex w-full items-center justify-between py-2 text-left"
             onClick={() => setListExpanded(!listExpanded)}
           >
-            <h2 className="font-semibold text-foreground">{t('mantras.choose', 'Choose a mantra')}</h2>
+            <h2 className="font-semibold text-foreground">{tI18n('mantras.choose', 'Choose a mantra')}</h2>
             <ChevronDown className={`h-4 w-4 text-muted-foreground transition ${listExpanded ? 'rotate-180' : ''}`} />
           </button>
           {listExpanded && (
             <div className="mt-2 space-y-2">
               {mantras.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4">{t('mantras.comingSoon', 'More mantras coming soon.')}</p>
+                <p className="text-sm text-muted-foreground py-4">{tI18n('mantras.comingSoon', 'More mantras coming soon.')}</p>
               ) : (
                 mantras.map((m) => {
                   const isRecommended = jyotishRecommendation?.recommendedMantraId === m.id;
@@ -268,10 +270,10 @@ const Mantras = () => {
 
         {/* Now practicing — card */}
         <section className="flex-1 min-w-0">
-          <h2 className="font-semibold text-foreground mb-3">{t('mantras.now', 'Now practicing')}</h2>
+          <h2 className="font-semibold text-foreground mb-3">{tI18n('mantras.now', 'Now practicing')}</h2>
           {!selectedMantra ? (
             <Card className="rounded-2xl border-border p-6">
-              <p className="text-muted-foreground text-center">{t('mantras.choose', 'Choose a mantra')}</p>
+              <p className="text-muted-foreground text-center">{tI18n('mantras.choose', 'Choose a mantra')}</p>
             </Card>
           ) : (
             <Card className="rounded-2xl border-border overflow-hidden">
@@ -280,39 +282,91 @@ const Mantras = () => {
                   {selectedMantra.title}
                 </p>
                 <p className="text-sm text-muted-foreground text-center mb-6">
-                  {t('mantras.guidanceVoice', 'Voice only')}
+                  {tI18n('mantras.guidanceVoice', 'Voice only')}
                 </p>
 
-                {/* Vedic Guide Card - Only show if Jyotish data exists */}
+                {/* Vedic Guide Card - Enhanced with Day/Period/Hour recommendations */}
                 {jyotishRecommendation && (
-                  <Card className="rounded-xl border-border bg-primary/5 border-primary/20 mb-6">
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-3 mb-3">
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <Sparkles className="h-4 w-4 text-primary" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground mb-2">
-                            {jyotishRecommendation.message}
-                          </p>
-                          <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
-                            <span>Duration: {jyotishRecommendation.duration}</span>
-                            <span>Repetitions: {jyotishRecommendation.repetitions}</span>
-                            <span>Best time: {jyotishRecommendation.bestTime}</span>
+                  <div className="space-y-4 mb-6">
+                    {/* Primary Recommendation */}
+                    <Card className="rounded-xl border-border bg-primary/5 border-primary/20">
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-3 mb-3">
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                            <Sparkles className="h-4 w-4 text-primary" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground mb-2">
+                              {jyotishRecommendation.message}
+                            </p>
+                            <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+                              <span>{t('mantras_duration', 'Duration')}: {jyotishRecommendation.duration}</span>
+                              <span>{t('mantras_repetitions', 'Repetitions')}: {jyotishRecommendation.repetitions}</span>
+                              <span>{t('mantras_best_time', 'Best time')}: {jyotishRecommendation.bestTime}</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+
+                    {/* Day/Period/Hour Breakdown */}
+                    {(jyotishRecommendation.dayMantraId || jyotishRecommendation.periodMantraId || jyotishRecommendation.horaMantraId) && (
+                      <Card className="rounded-xl border-border bg-muted/10">
+                        <CardContent className="p-4">
+                          <h3 className="text-sm font-semibold text-foreground mb-3">
+                            {t('mantras_cosmic_timing', 'Cosmic Timing Recommendations')}
+                          </h3>
+                          <div className="space-y-2">
+                            {jyotishRecommendation.dayPlanet && (
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="text-muted-foreground">
+                                  {t('mantras_day_mantra', 'Dagens Mantra')} ({jyotishRecommendation.dayPlanet}):
+                                </span>
+                                <span className="text-foreground font-medium">
+                                  {jyotishRecommendation.dayMantraId 
+                                    ? mantras.find(m => m.id === jyotishRecommendation.dayMantraId)?.title || t('mantras_not_found', 'Not found')
+                                    : t('mantras_not_available', 'Not available')}
+                                </span>
+                              </div>
+                            )}
+                            {jyotishRecommendation.periodPlanet && (
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="text-muted-foreground">
+                                  {t('mantras_period_mantra', 'Ditt Period-Mantra')} ({jyotishRecommendation.periodPlanet}):
+                                </span>
+                                <span className="text-foreground font-medium">
+                                  {jyotishRecommendation.periodMantraId 
+                                    ? mantras.find(m => m.id === jyotishRecommendation.periodMantraId)?.title || t('mantras_not_found', 'Not found')
+                                    : t('mantras_not_available', 'Not available')}
+                                </span>
+                              </div>
+                            )}
+                            {jyotishRecommendation.horaPlanet && (
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="text-muted-foreground">
+                                  {t('mantras_hora_mantra', 'Hour Mantra')} ({jyotishRecommendation.horaPlanet}):
+                                </span>
+                                <span className="text-foreground font-medium">
+                                  {jyotishRecommendation.horaMantraId 
+                                    ? mantras.find(m => m.id === jyotishRecommendation.horaMantraId)?.title || t('mantras_not_found', 'Not found')
+                                    : t('mantras_not_available', 'Not available')}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
                 )}
 
                 <Card className="rounded-xl border-border bg-muted/20 mb-6">
                   <CardContent className="p-4">
-                    <p className="font-medium text-foreground mb-2">{t('mantras.instructions.title', 'How to practice')}</p>
+                    <p className="font-medium text-foreground mb-2">{tI18n('mantras.instructions.title', 'How to practice')}</p>
                     <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-                      <li>{t('mantras.instructions.step1', 'Sit comfortably.')}</li>
-                      <li>{t('mantras.instructions.step2', 'Press Start.')}</li>
-                      <li>{t('mantras.instructions.step3', 'Repeat with the recording — 108 times.')}</li>
+                      <li>{tI18n('mantras.instructions.step1', 'Sit comfortably.')}</li>
+                      <li>{tI18n('mantras.instructions.step2', 'Press Start.')}</li>
+                      <li>{tI18n('mantras.instructions.step3', 'Repeat with the recording — 108 times.')}</li>
                     </ol>
                   </CardContent>
                 </Card>
@@ -347,21 +401,21 @@ const Mantras = () => {
                       {!isPlaying ? (
                         <Button size="lg" className="rounded-full gap-2" onClick={handleStart}>
                           <Play className="h-5 w-5" />
-                          {t('mantras.start', 'Start')}
+                          {tI18n('mantras.start', 'Start')}
                         </Button>
                       ) : (
                         <Button variant="outline" size="lg" className="rounded-full gap-2" onClick={handlePause}>
                           <Pause className="h-5 w-5" />
-                          {t('mantras.pause', 'Pause')}
+                          {tI18n('mantras.pause', 'Pause')}
                         </Button>
                       )}
                       <Button variant="outline" size="lg" className="rounded-full gap-2" onClick={handleReset}>
                         <RotateCcw className="h-4 w-4" />
-                        {t('mantras.reset', 'Reset')}
+                        {tI18n('mantras.reset', 'Reset')}
                       </Button>
                       {count > 0 && (
                         <Button variant="ghost" size="lg" className="rounded-full gap-2" onClick={handleRestartFrom1}>
-                          {t('mantras.restartFrom1', 'Restart from 1')}
+                          {tI18n('mantras.restartFrom1', 'Restart from 1')}
                         </Button>
                       )}
                     </div>
@@ -369,14 +423,14 @@ const Mantras = () => {
                 ) : (
                   <div className="text-center py-4">
                     <p className="text-xl font-semibold text-foreground mb-2">
-                      {t('mantras.completeTitle', 'Complete')}
+                      {tI18n('mantras.completeTitle', 'Complete')}
                     </p>
                     <p className="text-muted-foreground mb-6">
-                      {t('mantras.completeBody', 'Take a breath. Notice how you feel.')}
+                      {tI18n('mantras.completeBody', 'Take a breath. Notice how you feel.')}
                     </p>
                     <Button size="lg" className="rounded-full gap-2" onClick={() => { setCount(0); setCompleted(false); handleStart(); }}>
                       <Play className="h-5 w-5" />
-                      {t('mantras.playAgain', 'Play again')}
+                      {tI18n('mantras.playAgain', 'Play again')}
                     </Button>
                   </div>
                 )}

@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useAIVedicReading } from '@/hooks/useAIVedicReading';
 import type { UserProfile } from '@/lib/vedicTypes';
+import { getPlanetOfDay, getPlanetOfHour, normalizePlanetName, mantraMatchesPlanet, type Planet } from '@/lib/jyotishMantraLogic';
 
 export interface JyotishMantraRecommendation {
   planet: string | null;
@@ -12,13 +13,23 @@ export interface JyotishMantraRecommendation {
   repetitions: number;
   bestTime: string;
   recommendedMantraId: string | null;
+  // Enhanced fields for Day/Period/Hour recommendations
+  dayMantraId?: string | null;
+  periodMantraId?: string | null;
+  horaMantraId?: string | null;
+  dayPlanet?: Planet | null;
+  periodPlanet?: Planet | null;
+  horaPlanet?: Planet | null;
 }
 
 /**
  * Hook to get Jyotish-based mantra recommendation
+ * Enhanced with Vara (Day), Dasha (Period), and Hora (Hour) logic
  * Returns null if user has no Jyotish data
  */
-export function useJyotishMantraRecommendation(mantras: Array<{ id: string; title: string }>): JyotishMantraRecommendation | null {
+export function useJyotishMantraRecommendation(
+  mantras: Array<{ id: string; title: string; planet_type?: string | null }>
+): JyotishMantraRecommendation | null {
   const { user } = useAuth();
   const [hasBirthDetails, setHasBirthDetails] = useState(false);
   const [birthDetails, setBirthDetails] = useState<any>(null);
@@ -76,82 +87,94 @@ export function useJyotishMantraRecommendation(mantras: Array<{ id: string; titl
     return null;
   }
 
-  // Extract current planet from dasha or hora
-  const currentPlanet = reading.personalCompass?.currentDasha?.period?.split(' ')[0]?.toLowerCase() ||
-                        reading.horaWatch?.currentHora?.planet?.toLowerCase() ||
-                        null;
+  // 1. VARA LOGIC: Current day planet
+  const dayPlanet = getPlanetOfDay();
+  
+  // 2. DASHA LOGIC: Extract planet from current dasha period
+  const dashaPeriod = reading.personalCompass?.currentDasha?.period || null;
+  const periodPlanet = dashaPeriod 
+    ? normalizePlanetName(dashaPeriod.split(' ')[0])
+    : null;
+  
+  // 3. HORA LOGIC: Current planetary hour (simplified - uses default sunrise)
+  const horaPlanet = getPlanetOfHour();
 
-  if (!currentPlanet) {
+  // Primary recommendation: Use period planet if available, otherwise day planet
+  const primaryPlanet = periodPlanet || dayPlanet;
+
+  if (!primaryPlanet) {
     return null;
   }
 
-  // Map planet to mantra recommendation
-  const planetMapping: Record<string, { mantraKeywords: string[]; message: string; bestTime: string }> = {
-    saturn: {
-      mantraKeywords: ['shani', 'shreem', 'om', 'shanti'],
-      message: 'You are currently in a Saturn influence according to your Vedic chart. This mantra is recommended to support balance and stability during this period.',
+  // Map planet to recommendation message and best time
+  const planetMessages: Record<Planet, { message: string; bestTime: string }> = {
+    Sun: {
+      message: 'You are currently in a Sun influence. This mantra supports vitality and inner strength.',
       bestTime: 'morning',
     },
-    moon: {
-      mantraKeywords: ['om', 'shanti', 'peace', 'calm', 'chandra'],
-      message: 'You are currently in a Moon influence according to your Vedic chart. This mantra is recommended to support emotional balance and inner peace during this period.',
+    Moon: {
+      message: 'You are currently in a Moon influence. This mantra supports emotional balance and inner peace.',
       bestTime: 'evening',
     },
-    rahu: {
-      mantraKeywords: ['om', 'protection', 'grounding', 'shanti'],
-      message: 'You are currently in a Rahu influence according to your Vedic chart. This mantra is recommended to support grounding and protection during this period.',
+    Mars: {
+      message: 'You are currently in a Mars influence. This mantra supports courage and balanced energy.',
       bestTime: 'morning',
     },
-    ketu: {
-      mantraKeywords: ['om', 'spiritual', 'liberation', 'shanti'],
-      message: 'You are currently in a Ketu influence according to your Vedic chart. This mantra is recommended to support spiritual growth and liberation during this period.',
+    Mercury: {
+      message: 'You are currently in a Mercury influence. This mantra supports wisdom and clear communication.',
+      bestTime: 'morning',
+    },
+    Jupiter: {
+      message: 'You are currently in a Jupiter influence. This mantra supports wisdom and spiritual growth.',
+      bestTime: 'morning',
+    },
+    Venus: {
+      message: 'You are currently in a Venus influence. This mantra supports love and harmony.',
       bestTime: 'evening',
     },
-    sun: {
-      mantraKeywords: ['om', 'surya', 'vitality', 'strength'],
-      message: 'You are currently in a Sun influence according to your Vedic chart. This mantra is recommended to support vitality and inner strength during this period.',
+    Saturn: {
+      message: 'You are currently in a Saturn influence. This mantra supports balance and stability.',
       bestTime: 'morning',
     },
-    mars: {
-      mantraKeywords: ['om', 'mangal', 'courage', 'energy'],
-      message: 'You are currently in a Mars influence according to your Vedic chart. This mantra is recommended to support courage and balanced energy during this period.',
+    Rahu: {
+      message: 'You are currently in a Rahu influence. This mantra supports grounding and protection.',
       bestTime: 'morning',
     },
-    mercury: {
-      mantraKeywords: ['om', 'buddha', 'wisdom', 'communication'],
-      message: 'You are currently in a Mercury influence according to your Vedic chart. This mantra is recommended to support wisdom and clear communication during this period.',
-      bestTime: 'morning',
-    },
-    jupiter: {
-      mantraKeywords: ['om', 'guru', 'wisdom', 'blessings'],
-      message: 'You are currently in a Jupiter influence according to your Vedic chart. This mantra is recommended to support wisdom and spiritual growth during this period.',
-      bestTime: 'morning',
-    },
-    venus: {
-      mantraKeywords: ['om', 'shukra', 'love', 'harmony'],
-      message: 'You are currently in a Venus influence according to your Vedic chart. This mantra is recommended to support love and harmony during this period.',
+    Ketu: {
+      message: 'You are currently in a Ketu influence. This mantra supports spiritual growth and liberation.',
       bestTime: 'evening',
     },
   };
 
-  const planetInfo = planetMapping[currentPlanet];
-  if (!planetInfo) {
+  // Find mantras for each planetary influence
+  const dayMantra = mantras.find(m => mantraMatchesPlanet(m, dayPlanet));
+  const periodMantra = periodPlanet ? mantras.find(m => mantraMatchesPlanet(m, periodPlanet)) : null;
+  const horaMantra = horaPlanet ? mantras.find(m => mantraMatchesPlanet(m, horaPlanet)) : null;
+
+  // Primary recommendation: Prefer period mantra, then day mantra, then hora mantra
+  const recommendedMantra = periodMantra || dayMantra || horaMantra;
+  const recommendedPlanet = periodPlanet || dayPlanet || horaPlanet;
+
+  if (!recommendedPlanet || !planetMessages[recommendedPlanet]) {
     return null;
   }
 
-  // Find matching mantra by keywords in title
-  const recommendedMantra = mantras.find(m => {
-    const titleLower = m.title.toLowerCase();
-    return planetInfo.mantraKeywords.some(keyword => titleLower.includes(keyword));
-  });
+  const planetInfo = planetMessages[recommendedPlanet];
 
   return {
-    planet: currentPlanet,
-    dasha: reading.personalCompass?.currentDasha?.period || null,
+    planet: recommendedPlanet.toLowerCase(),
+    dasha: dashaPeriod,
     message: planetInfo.message,
     duration: '40 days',
     repetitions: 108,
     bestTime: planetInfo.bestTime,
     recommendedMantraId: recommendedMantra?.id || null,
+    // Enhanced fields
+    dayMantraId: dayMantra?.id || null,
+    periodMantraId: periodMantra?.id || null,
+    horaMantraId: horaMantra?.id || null,
+    dayPlanet,
+    periodPlanet,
+    horaPlanet,
   };
 }

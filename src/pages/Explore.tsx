@@ -124,9 +124,9 @@ export default function Explore() {
   };
 
   const subtitleMap: Record<string, string> = {
-    start: tI18n(getSubtitleKey(dayPhase), "Begin gently today."),
-    returned: tI18n("explore.presence.returned", "Welcome back — stay with the feeling."),
-    deep: tI18n("explore.presence.deep", "You're in a quiet space now."),
+    start: t(getSubtitleKey(dayPhase), "Begin gently today."),
+    returned: t("explore.presence.returned", "Welcome back — stay with the feeling."),
+    deep: t("explore.presence.deep", "You're in a quiet space now."),
   };
   const subtitle = subtitleMap[presence] ?? subtitleMap.start;
 
