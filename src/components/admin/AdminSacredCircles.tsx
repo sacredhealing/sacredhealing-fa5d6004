@@ -137,22 +137,48 @@ const AdminSacredCircles = () => {
         .eq('room_id', roomId)
         .order('joined_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching chat_members:', error);
+        throw error;
+      }
 
-      const userIds = [...new Set((memberRows || []).map(m => m.user_id))];
-      const { data: profiles } = await supabase
-        .from('public_profiles')
-        .select('user_id, full_name, avatar_url')
-        .in('user_id', userIds);
+      // Handle empty members list
+      if (!memberRows || memberRows.length === 0) {
+        setMembers([]);
+        setMembersLoading(false);
+        return;
+      }
+
+      const userIds = [...new Set((memberRows || []).map(m => m.user_id).filter(Boolean))];
+      
+      // Only fetch profiles if we have userIds
+      let profiles: any[] = [];
+      if (userIds.length > 0) {
+        const { data: profileData, error: profileError } = await supabase
+          .from('public_profiles')
+          .select('user_id, full_name, avatar_url')
+          .in('user_id', userIds);
+        
+        // Don't fail if profiles query fails - just use empty profiles
+        if (!profileError && profileData) {
+          profiles = profileData;
+        } else if (profileError) {
+          console.warn('Could not fetch profiles (may not exist):', profileError);
+        }
+      }
 
       const enriched: CircleMember[] = (memberRows || []).map(m => ({
         ...m,
-        profile: profiles?.find(p => p.user_id === m.user_id) ?? { full_name: null, avatar_url: null }
+        profile: profiles?.find(p => p.user_id === m.user_id) ?? { full_name: null, avatar_url: null, user_id: m.user_id }
       }));
       setMembers(enriched);
-    } catch (e) {
+    } catch (e: any) {
       console.error('Error fetching members:', e);
-      toast({ title: 'Error', description: 'Failed to load members', variant: 'destructive' });
+      // More specific error message
+      const errorMsg = e?.message || 'Failed to load members';
+      toast({ title: 'Error', description: errorMsg, variant: 'destructive' });
+      // Set empty members on error so UI doesn't break
+      setMembers([]);
     } finally {
       setMembersLoading(false);
     }
@@ -160,23 +186,42 @@ const AdminSacredCircles = () => {
 
   const addMember = async (roomId: string, userId: string) => {
     const trimmed = userId.trim();
-    if (!trimmed) return;
+    if (!trimmed) {
+      toast({ title: 'Error', description: 'User ID cannot be empty', variant: 'destructive' });
+      return;
+    }
+    
     const { error } = await supabase.from('chat_members').insert({
       room_id: roomId,
       user_id: trimmed,
       role: 'member'
     });
+    
     if (error) {
+      console.error('Error adding member:', error);
       if (error.code === '23505') {
         toast({ title: 'Already a member' });
+      } else if (error.code === '23503') {
+        toast({ title: 'Error', description: 'Invalid user ID or room ID', variant: 'destructive' });
       } else {
-        toast({ title: 'Error', description: 'Failed to add member', variant: 'destructive' });
+        toast({ title: 'Error', description: error.message || 'Failed to add member', variant: 'destructive' });
       }
       return;
     }
-    toast({ title: 'Member added' });
+    
+    toast({ title: 'Member added successfully' });
     setAddUserId('');
-    await fetchMembers(roomId);
+    setAddEmail('');
+    setSearchResults([]);
+    setSearchName('');
+    
+    // Refresh members list
+    try {
+      await fetchMembers(roomId);
+    } catch (e) {
+      // fetchMembers already shows error toast, but don't fail the add operation
+      console.warn('Could not refresh members list after add:', e);
+    }
   };
 
   const removeMember = async (roomId: string, userId: string) => {
