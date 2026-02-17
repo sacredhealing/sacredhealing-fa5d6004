@@ -47,17 +47,37 @@ serve(async (req) => {
     const fiveDaysAgo = new Date();
     fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
 
-    // Get all users with profiles
+    // Get all users with profiles and emails
+    // Also get email from auth.users if not in profiles
     const { data: profiles, error: profilesError } = await supabaseClient
       .from('profiles')
-      .select('user_id, full_name, email, language')
+      .select('user_id, full_name, email')
       .not('email', 'is', null);
+
+    // If profiles don't have email, fetch from auth.users
+    // Note: This requires service role access
+    const profilesWithEmail = await Promise.all(
+      (profiles || []).map(async (profile) => {
+        if (profile.email) {
+          return { ...profile, language: 'en' as 'sv' | 'en' }; // Default to English
+        }
+        // Try to get email from auth.users (requires service role)
+        const { data: authUser } = await supabaseClient.auth.admin.getUserById(profile.user_id);
+        return {
+          ...profile,
+          email: authUser?.user?.email || null,
+          language: 'en' as 'sv' | 'en'
+        };
+      })
+    );
+
+    const validProfiles = profilesWithEmail.filter(p => p.email);
 
     if (profilesError) {
       throw new Error(`Failed to fetch profiles: ${profilesError.message}`);
     }
 
-    logStep(`Found ${profiles?.length || 0} users with emails`);
+    logStep(`Found ${validProfiles.length} users with emails`);
 
     // Get Stargate members
     const { data: stargateMembers } = await supabaseClient
@@ -129,7 +149,7 @@ serve(async (req) => {
     });
 
     // Segment users
-    profiles?.forEach(profile => {
+    validProfiles.forEach(profile => {
       const userId = profile.user_id;
       const mantraCount = userMantraCounts.get(userId) || 0;
       const practiceMinutes = Math.round(userPracticeMinutes.get(userId) || 0);
