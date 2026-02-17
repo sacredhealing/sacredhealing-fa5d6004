@@ -399,11 +399,27 @@ export const useCircleMembers = (roomId: string) => {
     setIsLoading(true);
     try {
       console.log(`[useCircleMembers] Fetching members for room ${roomId}`);
-      const { data: memberRows, error } = await supabase
-        .from('chat_members')
-        .select('id, room_id, user_id, role, joined_at')
-        .eq('room_id', roomId)
-        .order('joined_at', { ascending: false });
+      
+      // Try RPC function first if available (for admins, bypasses RLS)
+      const { data: rpcData, error: rpcError } = await supabase
+        .rpc('get_room_members', { _room_id: roomId });
+      
+      let memberRows: any[] | null = null;
+      let error: any = null;
+      
+      if (!rpcError && rpcData) {
+        console.log(`[useCircleMembers] RPC function returned ${rpcData.length} members`);
+        memberRows = rpcData;
+      } else {
+        // Fallback to direct query
+        const result = await supabase
+          .from('chat_members')
+          .select('id, room_id, user_id, role, joined_at')
+          .eq('room_id', roomId)
+          .order('joined_at', { ascending: false });
+        memberRows = result.data;
+        error = result.error;
+      }
 
       if (error) {
         console.error('[useCircleMembers] Error fetching chat_members:', error);

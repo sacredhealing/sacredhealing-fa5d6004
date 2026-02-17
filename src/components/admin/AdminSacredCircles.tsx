@@ -132,6 +132,40 @@ const AdminSacredCircles = () => {
     setMembersLoading(true);
     try {
       console.log(`[Admin fetchMembers] Starting fetch for room ${roomId}, isAdmin: ${isAdmin}`);
+      
+      // Try RPC function first (bypasses RLS if available)
+      if (isAdmin) {
+        const { data: rpcData, error: rpcError } = await supabase
+          .rpc('get_room_members', { _room_id: roomId });
+        
+        if (!rpcError && rpcData) {
+          console.log(`[Admin fetchMembers] RPC function returned ${rpcData.length} members`);
+          const userIds = [...new Set((rpcData || []).map((m: any) => m.user_id).filter(Boolean))];
+          
+          let profiles: any[] = [];
+          if (userIds.length > 0) {
+            const { data: profileData } = await supabase
+              .from('public_profiles')
+              .select('user_id, full_name, avatar_url')
+              .in('user_id', userIds);
+            profiles = profileData || [];
+          }
+
+          const enriched: CircleMember[] = (rpcData || []).map((m: any) => ({
+            ...m,
+            profile: profiles?.find(p => p.user_id === m.user_id) ?? { full_name: null, avatar_url: null, user_id: m.user_id }
+          }));
+          
+          console.log(`[Admin fetchMembers] Found ${enriched.length} members via RPC`);
+          setMembers(enriched);
+          setMembersLoading(false);
+          return;
+        } else if (rpcError) {
+          console.warn('[Admin fetchMembers] RPC function not available, falling back to direct query:', rpcError.message);
+        }
+      }
+      
+      // Fallback to direct query
       const { data: memberRows, error } = await supabase
         .from('chat_members')
         .select('id, room_id, user_id, role, joined_at')
@@ -146,9 +180,9 @@ const AdminSacredCircles = () => {
           console.error('[Admin fetchMembers] RLS RECURSION DETECTED - need to run migration fix');
           toast({ 
             title: 'Database configuration needed', 
-            description: 'Please run the RLS fix migration in Supabase SQL Editor to view members', 
+            description: 'Please run QUICK_FIX_FOR_MEMBERS.sql in Supabase SQL Editor to view members', 
             variant: 'destructive',
-            duration: 5000
+            duration: 8000
           });
         }
         throw error;
