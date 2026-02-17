@@ -195,7 +195,8 @@ export const useSacredCircles = () => {
     if (isAdmin) return true;
     if (circle.type === 'guide') return true; // Guide visible to all; posting is admin-only
     if (circle.type === 'stargate') return false; // Stargate access checked separately via useStargateAccess
-    if (circle.type === 'andlig') return isPremium; // Andlig: active subscribers only
+    // Andlig: allow premium OR anyone already added to the room (invite/add flow)
+    if (circle.type === 'andlig') return isPremium || !!circle.is_member;
     if (circle.is_premium && !isPremium) return false;
     if (circle.is_locked) return false;
     return true;

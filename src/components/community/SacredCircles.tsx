@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSacredCircles, useCircleMessages, SacredCircle, CircleMessage } from '@/hooks/useSacredCircles';
 import { useCommunityPolls, type CommunityPoll } from '@/hooks/useCommunityPolls';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useStargateAccess } from '@/hooks/useStargateAccess';
+import { useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -31,25 +32,44 @@ const SacredCircles = () => {
   const { hasAvatar } = useProfile();
   const { circles, isLoading, canAccessCircle, joinCircle, hasPremium } = useSacredCircles();
   const { isStargateMember } = useStargateAccess();
+  const location = useLocation();
   const [selectedCircle, setSelectedCircle] = useState<SacredCircle | null>(null);
   const [profileEditOpen, setProfileEditOpen] = useState(false);
 
+  const andligInviteActive = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    return params.get('join') === 'andlig' || params.get('andlig_invite') === '1';
+  }, [location.search]);
+
   const handleSelectCircle = async (circle: SacredCircle) => {
-    if (circle.type === 'andlig' && circle.invite_link) {
-      window.open(circle.invite_link, '_blank');
-      return;
-    }
     if (circle.type === 'stargate' && !isStargateMember) return;
     // Fallback Stargate (no DB room yet): show card only; don't open chat
     if (circle.type === 'stargate' && circle.id === 'fallback-stargate') return;
-    if (!canAccessCircle(circle) && circle.type !== 'stargate') return;
+    // Andlig can be entered by premium OR if user already added, OR via invite link (?join=andlig)
+    if (circle.type === 'andlig' && !canAccessCircle(circle) && !andligInviteActive) return;
+    if (!canAccessCircle(circle) && circle.type !== 'stargate' && circle.type !== 'andlig') return;
 
-    if (circle.type !== 'andlig' && !circle.is_member && user) {
+    // Auto-join on select (including Andlig for invited users)
+    if (!circle.is_member && user) {
       await joinCircle(circle.id);
     }
 
-    if (circle.type !== 'andlig') setSelectedCircle(circle);
+    setSelectedCircle(circle);
   };
+
+  // If user opens an Andlig invite link, auto-join and open the chat.
+  useEffect(() => {
+    if (!user) return;
+    if (!andligInviteActive) return;
+    if (selectedCircle) return;
+    const circle = circles.find(c => c.type === 'andlig');
+    if (!circle) return;
+    (async () => {
+      if (!circle.is_member) await joinCircle(circle.id);
+      setSelectedCircle(circle);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [andligInviteActive, user, circles]);
 
   if (selectedCircle) {
     return (
@@ -142,9 +162,9 @@ const SacredCircles = () => {
             <Card
               key={circle.id}
               className={`bg-card border-border transition-all duration-200 ${
-                hasPremium ? 'cursor-pointer hover:bg-accent/50 hover:border-cyan-500/30' : 'opacity-60 cursor-not-allowed'
+                (hasPremium || circle.is_member || andligInviteActive) ? 'cursor-pointer hover:bg-accent/50 hover:border-cyan-500/30' : 'opacity-60 cursor-not-allowed'
               }`}
-              onClick={() => hasPremium && circle.invite_link && window.open(circle.invite_link, '_blank')}
+              onClick={() => (hasPremium || circle.is_member || andligInviteActive) && handleSelectCircle(circle)}
             >
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
@@ -156,12 +176,14 @@ const SacredCircles = () => {
                     {circle.intention && (
                       <p className="text-sm text-muted-foreground line-clamp-1">{circle.intention}</p>
                     )}
-                    <p className="text-xs text-muted-foreground mt-1">Open to all active subscribers</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {hasPremium ? 'Subscriber group chat' : circle.is_member ? 'You were added to this group' : 'Invite-only group chat'}
+                    </p>
                   </div>
-                  {hasPremium && circle.invite_link ? (
-                    <Button size="sm" variant="outline" className="shrink-0 gap-1">
-                      <ExternalLink className="h-4 w-4" />
-                      Open Invite Link
+                  {(hasPremium || circle.is_member || andligInviteActive) ? (
+                    <Button size="sm" variant="outline" className="shrink-0 gap-1" onClick={(e) => { e.stopPropagation(); handleSelectCircle(circle); }}>
+                      <DoorOpen className="h-4 w-4" />
+                      Enter Group Chat
                     </Button>
                   ) : (
                     <Lock className="h-5 w-5 text-muted-foreground shrink-0" />
