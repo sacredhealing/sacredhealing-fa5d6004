@@ -1,17 +1,19 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { Home, Play, Music2, Users, Sparkles, Compass, User } from 'lucide-react';
+import { Home, Play, Music2, Users, Sparkles, Compass, User, Sparkles as MantraIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/hooks/useTranslation';
 
+// Simplified Navigation: Clearly labeled icons (Stordalen/Robbins Hospitality)
 const NAV_ITEMS = [
-  { to: '/dashboard', icon: Home, labelKey: 'nav.home' },
-  { to: '/meditations', icon: Play, labelKey: 'nav.meditate' },
-  { to: '/music', icon: Music2, labelKey: 'nav.music' },
-  { to: '/healing', icon: Sparkles, labelKey: 'nav.soul' },
-  { to: '/explore', icon: Compass, labelKey: 'nav.explore' },
-  { to: '/community', icon: Users, labelKey: 'nav.community' },
-  { to: '/profile', icon: User, labelKey: 'nav.profile' },
+  { to: '/dashboard', icon: Home, labelKey: 'nav_home', label: 'Home' },
+  { to: '/meditations', icon: Play, labelKey: 'nav_meditations', label: 'Meditations' },
+  { to: '/mantras', icon: MantraIcon, labelKey: 'nav_mantras', label: 'Mantras' }, // Temple icon for Mantras
+  { to: '/music', icon: Music2, labelKey: 'nav_music', label: 'Music' },
+  { to: '/healing', icon: Sparkles, labelKey: 'header_healing', label: 'Healing' },
+  { to: '/explore', icon: Compass, labelKey: 'nav_explore', label: 'Explore' },
+  { to: '/community', icon: Users, labelKey: 'nav_community', label: 'Community' },
+  { to: '/profile', icon: User, labelKey: 'nav_profile', label: 'Profile' },
 ];
 
 export const BottomNav: React.FC = () => {
@@ -44,8 +46,8 @@ export const BottomNav: React.FC = () => {
                     isActive && 'drop-shadow-[0_0_6px_hsl(var(--primary))]'
                   )}
                 />
-                <span className="text-[9px] xs:text-[10px] font-medium leading-tight">
-                  {t(item.labelKey)}
+                <span className="text-[11px] xs:text-[12px] font-medium leading-tight" style={{ fontSize: '0.75rem' }}>
+                  {t(item.labelKey, item.label)}
                 </span>
               </>
             )}
