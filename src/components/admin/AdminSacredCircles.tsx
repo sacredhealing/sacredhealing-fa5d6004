@@ -175,11 +175,17 @@ const AdminSacredCircles = () => {
       setMembers(enriched);
     } catch (e: any) {
       console.error('Error fetching members:', e);
-      // More specific error message
-      const errorMsg = e?.message || 'Failed to load members';
-      toast({ title: 'Error', description: errorMsg, variant: 'destructive' });
-      // Set empty members on error so UI doesn't break
-      setMembers([]);
+      // Don't show recursion errors to users - they're a DB config issue
+      const errorMsg = e?.message || '';
+      if (errorMsg.includes('infinite recursion') || errorMsg.includes('recursion')) {
+        console.error('RLS recursion detected - admin needs to run migration fix');
+        // Silently fail - admin should run the SQL fix
+        setMembers([]);
+      } else {
+        // Show other errors
+        toast({ title: 'Error', description: 'Failed to load members. Please refresh.', variant: 'destructive' });
+        setMembers([]);
+      }
     } finally {
       setMembersLoading(false);
     }
@@ -200,10 +206,27 @@ const AdminSacredCircles = () => {
     
     if (error) {
       console.error('Error adding member:', error);
+      const errorMsg = error.message || '';
+      
+      // Don't show recursion errors - they're a DB config issue
+      if (errorMsg.includes('infinite recursion') || errorMsg.includes('recursion')) {
+        console.error('RLS recursion detected - admin needs to run migration fix');
+        toast({ 
+          title: 'Database configuration needed', 
+          description: 'Please run the RLS fix migration in Supabase SQL Editor', 
+          variant: 'default' 
+        });
+        return;
+      }
+      
       if (error.code === '23505') {
         toast({ title: 'Already a member' });
         // Still refresh to show the member in the list
-        await fetchMembers(roomId).catch(e => console.warn('Could not refresh after duplicate:', e));
+        await fetchMembers(roomId).catch(e => {
+          if (!e?.message?.includes('recursion')) {
+            console.warn('Could not refresh after duplicate:', e);
+          }
+        });
       } else if (error.code === '23503') {
         toast({ title: 'Error', description: 'Invalid user ID or room ID', variant: 'destructive' });
       } else {
@@ -218,24 +241,26 @@ const AdminSacredCircles = () => {
     setSearchResults([]);
     setSearchName('');
     
-    // Refresh members list immediately after successful add
-    // Use a small delay to ensure DB transaction is committed
-    setTimeout(() => {
-      fetchMembers(roomId).catch(e => {
-        console.error('Failed to refresh members after add:', e);
-        // Retry once after a bit more delay
-        setTimeout(() => {
-          fetchMembers(roomId).catch(err => {
-            console.error('Retry also failed:', err);
-            toast({ 
-              title: 'Member added', 
-              description: 'Refresh the page to see updated member count', 
-              variant: 'default' 
-            });
-          });
-        }, 1000);
-      });
-    }, 200);
+    // Immediately refresh members list (admin bypass ensures it works)
+    // Small delay ensures DB commit
+    setTimeout(async () => {
+      try {
+        await fetchMembers(roomId);
+      } catch (e: any) {
+        const errorMsg = e?.message || '';
+        // Don't retry if it's a recursion error - that needs SQL fix
+        if (!errorMsg.includes('recursion')) {
+          console.warn('First refresh failed, retrying:', e);
+          setTimeout(async () => {
+            try {
+              await fetchMembers(roomId);
+            } catch (retryErr) {
+              console.error('Retry also failed:', retryErr);
+            }
+          }, 500);
+        }
+      }
+    }, 100);
   };
 
   const removeMember = async (roomId: string, userId: string) => {
