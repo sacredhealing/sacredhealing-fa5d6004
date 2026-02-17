@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { 
   Lock, Unlock, Users, Sparkles, MessageCircle, Heart,
-  Trash2, Pin, Edit2, Save, X, Loader2, UserPlus, Search, Shield
+  Trash2, Pin, Edit2, Save, X, Loader2, UserPlus, Search, Shield, Mail
 } from 'lucide-react';
 import {
   Dialog,
@@ -75,9 +75,12 @@ const AdminSacredCircles = () => {
   const [members, setMembers] = useState<CircleMember[]>([]);
   const [membersLoading, setMembersLoading] = useState(false);
   const [addUserId, setAddUserId] = useState('');
+  const [addEmail, setAddEmail] = useState('');
   const [searchName, setSearchName] = useState('');
   const [searchResults, setSearchResults] = useState<PublicProfileLite[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [emailSearchLoading, setEmailSearchLoading] = useState(false);
+  const [expandedCircleId, setExpandedCircleId] = useState<string | null>(null);
 
   const fetchCircles = async () => {
     const { data, error } = await supabase
@@ -204,6 +207,46 @@ const AdminSacredCircles = () => {
       .limit(10);
     if (!error) setSearchResults((data || []) as PublicProfileLite[]);
     setSearchLoading(false);
+  };
+
+  const searchByEmail = async (email: string) => {
+    const e = email.trim().toLowerCase();
+    if (!e || !e.includes('@')) {
+      toast({ title: 'Invalid email', variant: 'destructive' });
+      return;
+    }
+    setEmailSearchLoading(true);
+    try {
+      // Try to find user by email via Edge Function
+      const { data, error } = await supabase.functions.invoke('lookup-user-by-email', {
+        body: { email: e }
+      });
+      if (!error && data?.user_id) {
+        const found: PublicProfileLite = {
+          user_id: data.user_id,
+          full_name: data.full_name || null,
+          avatar_url: data.avatar_url || null
+        };
+        setSearchResults([found]);
+        toast({ title: 'User found!' });
+      } else {
+        toast({ title: 'Email not found. Try searching by name or use User ID.', variant: 'default' });
+        setSearchResults([]);
+      }
+    } catch (err: any) {
+      // If function doesn't exist (404) or other error
+      if (err?.message?.includes('404') || err?.status === 404) {
+        toast({ 
+          title: 'Email lookup requires setup', 
+          description: 'Please use name search or User ID for now. Email lookup can be enabled with a Supabase function.',
+          variant: 'default' 
+        });
+      } else {
+        toast({ title: 'Error searching by email', description: 'Try searching by name instead.', variant: 'destructive' });
+      }
+      setSearchResults([]);
+    }
+    setEmailSearchLoading(false);
   };
 
   useEffect(() => {
@@ -345,16 +388,22 @@ const AdminSacredCircles = () => {
                     size="sm"
                     title="Add/remove members for this group"
                     onClick={() => {
-                      setMembersCircle(circle);
-                      setSearchName('');
-                      setSearchResults([]);
-                      setAddUserId('');
-                      fetchMembers(circle.id);
+                      if (expandedCircleId === circle.id) {
+                        setExpandedCircleId(null);
+                      } else {
+                        setExpandedCircleId(circle.id);
+                        setMembersCircle(circle);
+                        setSearchName('');
+                        setSearchResults([]);
+                        setAddUserId('');
+                        setAddEmail('');
+                        fetchMembers(circle.id);
+                      }
                     }}
                     className="gap-2"
                   >
                     <Users className="h-4 w-4" />
-                    Members
+                    Members {expandedCircleId === circle.id && `(${members.length})`}
                   </Button>
                   <Button
                     variant="outline"
@@ -383,6 +432,165 @@ const AdminSacredCircles = () => {
                   />
                 </div>
               </div>
+
+              {/* Inline Members Section - No Popup! */}
+              {expandedCircleId === circle.id && (
+                <div className="mt-4 pt-4 border-t border-border/40">
+                  <div className="space-y-4">
+                    {/* Add Member Section */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <UserPlus className="h-4 w-4 text-primary" />
+                        <h4 className="font-semibold">Add Member</h4>
+                      </div>
+
+                      {/* Search by Email */}
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium flex items-center gap-2">
+                          <Mail className="h-4 w-4" />
+                          Search by Email
+                        </Label>
+                        <div className="flex gap-2">
+                          <Input
+                            type="email"
+                            value={addEmail}
+                            onChange={e => setAddEmail(e.target.value)}
+                            placeholder="user@example.com"
+                            className="flex-1"
+                            onKeyDown={e => e.key === 'Enter' && addEmail && searchByEmail(addEmail)}
+                          />
+                          <Button 
+                            onClick={() => addEmail && searchByEmail(addEmail)} 
+                            className="gap-2"
+                            disabled={!addEmail.trim() || emailSearchLoading}
+                          >
+                            {emailSearchLoading ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Mail className="h-4 w-4" />
+                            )}
+                            Find
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Search by Name */}
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Or Search by Name</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            value={searchName}
+                            onChange={e => {
+                              const v = e.target.value;
+                              setSearchName(v);
+                              if (v.length >= 2) searchProfiles(v);
+                            }}
+                            placeholder="Type name..."
+                            className="flex-1"
+                          />
+                        </div>
+                        {searchLoading && (
+                          <div className="text-xs text-muted-foreground flex items-center gap-2">
+                            <Loader2 className="h-3 w-3 animate-spin" /> Searching...
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Search Results */}
+                      {searchResults.length > 0 && (
+                        <div className="space-y-2 max-h-48 overflow-y-auto border border-border/40 rounded-md p-2">
+                          {searchResults.map(p => (
+                            <div key={p.user_id ?? Math.random()} className="flex items-center justify-between rounded-md bg-card p-2 hover:bg-accent/30">
+                              <div className="min-w-0 flex-1">
+                                <div className="text-sm font-medium truncate">{p.full_name || 'Unknown'}</div>
+                                <div className="text-xs text-muted-foreground truncate font-mono">{p.user_id}</div>
+                              </div>
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  if (p.user_id) {
+                                    addMember(circle.id, p.user_id);
+                                    setSearchResults([]);
+                                    setSearchName('');
+                                    setAddEmail('');
+                                  }
+                                }}
+                                className="gap-2 ml-2"
+                                disabled={!p.user_id}
+                              >
+                                <UserPlus className="h-3 w-3" />
+                                Add
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Add by User ID */}
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Or Add by User ID (UUID)</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            value={addUserId}
+                            onChange={e => setAddUserId(e.target.value)}
+                            placeholder="Paste UUID here..."
+                            className="flex-1 font-mono text-sm"
+                          />
+                          <Button 
+                            onClick={() => addUserId && addMember(circle.id, addUserId)} 
+                            className="gap-2"
+                            disabled={!addUserId.trim()}
+                          >
+                            <UserPlus className="h-4 w-4" />
+                            Add
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Current Members */}
+                    <div className="space-y-2 pt-2 border-t border-border/40">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Shield className="h-4 w-4" />
+                          <h4 className="font-semibold">Current Members</h4>
+                          <Badge variant="secondary">{members.length}</Badge>
+                        </div>
+                      </div>
+                      {membersLoading ? (
+                        <div className="text-sm text-muted-foreground flex items-center gap-2 py-4">
+                          <Loader2 className="h-4 w-4 animate-spin" /> Loading...
+                        </div>
+                      ) : members.length === 0 ? (
+                        <p className="text-sm text-muted-foreground py-4 text-center">No members yet</p>
+                      ) : (
+                        <div className="space-y-2 max-h-64 overflow-y-auto">
+                          {members.map(m => (
+                            <div key={m.id} className="flex items-center justify-between rounded-md border border-border/40 bg-card p-2">
+                              <div className="min-w-0 flex-1">
+                                <div className="text-sm font-medium truncate">{m.profile?.full_name || 'Unknown'}</div>
+                                <div className="text-xs text-muted-foreground truncate font-mono">{m.user_id}</div>
+                              </div>
+                              <div className="flex items-center gap-2 ml-2">
+                                <Badge variant="secondary" className="text-xs">{m.role || 'member'}</Badge>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => removeMember(m.room_id, m.user_id)}
+                                  className="gap-2 text-destructive h-7"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                  Remove
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         ))}
@@ -473,8 +681,8 @@ const AdminSacredCircles = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Members Dialog */}
-      <Dialog open={!!membersCircle} onOpenChange={() => setMembersCircle(null)}>
+      {/* Members Dialog - Hidden, using inline instead */}
+      <Dialog open={false}>
         <DialogContent className="max-w-2xl w-[95vw] max-h-[90vh] flex flex-col">
           <DialogHeader className="flex-shrink-0 pb-4 border-b border-border/40">
             <DialogTitle className="text-xl flex items-center gap-2">
