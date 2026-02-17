@@ -171,6 +171,7 @@ const AdminSacredCircles = () => {
         ...m,
         profile: profiles?.find(p => p.user_id === m.user_id) ?? { full_name: null, avatar_url: null, user_id: m.user_id }
       }));
+      console.log(`[fetchMembers] Found ${enriched.length} members for room ${roomId}`);
       setMembers(enriched);
     } catch (e: any) {
       console.error('Error fetching members:', e);
@@ -201,6 +202,8 @@ const AdminSacredCircles = () => {
       console.error('Error adding member:', error);
       if (error.code === '23505') {
         toast({ title: 'Already a member' });
+        // Still refresh to show the member in the list
+        await fetchMembers(roomId).catch(e => console.warn('Could not refresh after duplicate:', e));
       } else if (error.code === '23503') {
         toast({ title: 'Error', description: 'Invalid user ID or room ID', variant: 'destructive' });
       } else {
@@ -215,13 +218,24 @@ const AdminSacredCircles = () => {
     setSearchResults([]);
     setSearchName('');
     
-    // Refresh members list
-    try {
-      await fetchMembers(roomId);
-    } catch (e) {
-      // fetchMembers already shows error toast, but don't fail the add operation
-      console.warn('Could not refresh members list after add:', e);
-    }
+    // Refresh members list immediately after successful add
+    // Use a small delay to ensure DB transaction is committed
+    setTimeout(() => {
+      fetchMembers(roomId).catch(e => {
+        console.error('Failed to refresh members after add:', e);
+        // Retry once after a bit more delay
+        setTimeout(() => {
+          fetchMembers(roomId).catch(err => {
+            console.error('Retry also failed:', err);
+            toast({ 
+              title: 'Member added', 
+              description: 'Refresh the page to see updated member count', 
+              variant: 'default' 
+            });
+          });
+        }, 1000);
+      });
+    }, 200);
   };
 
   const removeMember = async (roomId: string, userId: string) => {
