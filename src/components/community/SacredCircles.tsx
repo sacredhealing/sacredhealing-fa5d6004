@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSacredCircles, useCircleMessages, useCircleMembers, SacredCircle, CircleMessage } from '@/hooks/useSacredCircles';
 import { TelegramChatInput } from './TelegramChatInput';
@@ -18,7 +18,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   ArrowLeft, Send, Loader2, Users, Lock, Crown, Sparkles, 
   MessageCircle, Pin, Trash2, MoreVertical, Heart, ExternalLink, DoorOpen, X,
-  Clock, Check, AlertCircle, FileText, Image as ImageIcon, Video, File
+  Clock, Check, AlertCircle, FileText, Image as ImageIcon, Video, File,
+  ChevronDown, Circle
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { AvatarRequiredAlert } from './AvatarRequiredAlert';
@@ -368,6 +369,11 @@ const CircleChat = ({ circle, onBack, hasAvatar }: CircleChatProps) => {
   const [pinnedMessageContent, setPinnedMessageContent] = useState('');
   const [pollQuestion, setPollQuestion] = useState('');
   const [pollOptions, setPollOptions] = useState(['', '']);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const lastReadMessageIdRef = useRef<string | null>(null);
 
   const handleSendText = async (text: string) => {
     if (!text.trim() || isSending || !hasAvatar) return;
@@ -398,6 +404,69 @@ const CircleChat = ({ circle, onBack, hasAvatar }: CircleChatProps) => {
   const regularMessages = messages.filter(m => !m.is_pinned);
 
   const canPost = circle.type !== 'guide' || isAdmin;
+
+  // Scroll to bottom functionality
+  const scrollToBottom = useCallback((smooth = true) => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'end' });
+    }
+  }, []);
+
+  // Track scroll position and unread messages
+  useEffect(() => {
+    if (regularMessages.length === 0) return;
+
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+      setShowScrollToBottom(!isNearBottom);
+
+      // Count unread messages (messages after last read)
+      if (lastReadMessageIdRef.current) {
+        const lastReadIndex = regularMessages.findIndex(m => m.id === lastReadMessageIdRef.current);
+        if (lastReadIndex >= 0) {
+          const unread = regularMessages.slice(lastReadIndex + 1).length;
+          setUnreadCount(unread);
+        }
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [regularMessages]);
+
+  // Auto-scroll to bottom on new messages (if already at bottom)
+  useEffect(() => {
+    if (regularMessages.length > 0 && !showScrollToBottom) {
+      scrollToBottom(false);
+      // Mark as read when scrolled to bottom
+      const lastMessage = regularMessages[regularMessages.length - 1];
+      if (lastMessage && lastMessage.user_id !== user?.id) {
+        lastReadMessageIdRef.current = lastMessage.id;
+        setUnreadCount(0);
+      }
+    }
+  }, [regularMessages.length, showScrollToBottom, scrollToBottom, user]);
+
+  // Jump to unread
+  const jumpToUnread = useCallback(() => {
+    if (lastReadMessageIdRef.current) {
+      const unreadIndex = regularMessages.findIndex(m => m.id === lastReadMessageIdRef.current);
+      if (unreadIndex >= 0) {
+        const unreadElement = document.getElementById(`message-${regularMessages[unreadIndex + 1]?.id}`);
+        if (unreadElement) {
+          unreadElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          lastReadMessageIdRef.current = regularMessages[regularMessages.length - 1]?.id || null;
+          setUnreadCount(0);
+        }
+      }
+    } else {
+      scrollToBottom();
+    }
+  }, [regularMessages, scrollToBottom]);
 
   return (
     <div className="flex flex-col h-[calc(100vh-250px)] rounded-3xl bg-gradient-to-b from-background/40 via-background/30 to-background/40 backdrop-blur-2xl border border-white/10 shadow-2xl p-4">
@@ -604,32 +673,76 @@ const CircleChat = ({ circle, onBack, hasAvatar }: CircleChatProps) => {
         )}
       </AnimatePresence>
 
-      {/* Messages */}
-      <ScrollArea className="flex-1 pr-4">
-        {isLoading ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-primary" />
-          </div>
-        ) : regularMessages.length === 0 ? (
-          <div className="text-center py-8">
-            <Sparkles className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
-            <p className="text-muted-foreground">Be the first to share in this sacred space</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {regularMessages.map((msg) => (
-              <MessageBubble 
-                key={msg.id} 
-                message={msg} 
-                isOwn={msg.user_id === user?.id}
-                isAdmin={isAdmin}
-                onPin={() => pinMessage(msg.id, !msg.is_pinned)}
-                onDelete={() => deleteMessage(msg.id)}
-              />
-            ))}
-          </div>
+      {/* Messages with Fast Scroll */}
+      <div className="relative flex-1">
+        <ScrollArea className="h-full pr-4" ref={messagesContainerRef}>
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          ) : regularMessages.length === 0 ? (
+            <div className="text-center py-8">
+              <Sparkles className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+              <p className="text-muted-foreground">Be the first to share in this sacred space</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {regularMessages.map((msg, index) => (
+                <div key={msg.id} id={`message-${msg.id}`}>
+                  {index > 0 && lastReadMessageIdRef.current === regularMessages[index - 1].id && (
+                    <div className="flex items-center gap-2 my-2 px-2">
+                      <div className="flex-1 border-t border-cyan-500/30" />
+                      <Badge variant="outline" className="text-xs bg-cyan-500/10 text-cyan-400 border-cyan-500/30">
+                        <Circle className="h-2 w-2 mr-1 fill-cyan-400" />
+                        Unread
+                      </Badge>
+                      <div className="flex-1 border-t border-cyan-500/30" />
+                    </div>
+                  )}
+                  <MessageBubble 
+                    message={msg} 
+                    isOwn={msg.user_id === user?.id}
+                    isAdmin={isAdmin}
+                    onPin={() => pinMessage(msg.id, !msg.is_pinned)}
+                    onDelete={() => deleteMessage(msg.id)}
+                  />
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+          )}
+        </ScrollArea>
+
+        {/* Fast Scroll Buttons */}
+        {showScrollToBottom && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="absolute bottom-4 right-6 flex flex-col gap-2"
+          >
+            {unreadCount > 0 && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={jumpToUnread}
+                className="rounded-full bg-cyan-500 hover:bg-cyan-600 shadow-lg h-10 px-4 gap-2"
+              >
+                <Circle className="h-3 w-3 fill-white" />
+                {unreadCount} new
+              </Button>
+            )}
+            <Button
+              variant="default"
+              size="icon"
+              onClick={() => scrollToBottom()}
+              className="rounded-full bg-background/80 backdrop-blur-xl border border-white/10 hover:bg-background/90 shadow-lg h-10 w-10"
+            >
+              <ChevronDown className="h-5 w-5" />
+            </Button>
+          </motion.div>
         )}
-      </ScrollArea>
+      </div>
 
       {/* Telegram-Grade Input Bar with Liquid Glass */}
       {user && hasAvatar && canPost && (
