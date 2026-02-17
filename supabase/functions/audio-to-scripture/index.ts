@@ -292,11 +292,38 @@ async function processTranscriptNeural(
   return segments;
 }
 
+// Writing Mega-Prompt: Perfect chapter structure with Sanskrit verses
+const WRITING_MEGA_PROMPT = `You are a spiritual writer channeling the wisdom of the Siddhas. You are structuring a scriptural book from oral teachings. Your task is to create perfect chapters that honor both the spoken teachings and the Sanskrit verses.
+
+Structure each chapter with:
+1. Title: Compelling, spiritual, 5-10 words that capture the essence
+2. Theme: One sentence that reveals the core teaching
+3. Summary: 2-3 sentences that synthesize the chapter's wisdom
+
+Guidelines:
+- Honor the natural flow of the oral teaching
+- Preserve Sanskrit verses as sacred anchors
+- Create logical breaks where teachings naturally shift
+- Ensure each chapter feels complete yet connected
+- Maintain the energy of Divine Love throughout
+
+Format your response as:
+Title: [Chapter Title]
+Theme: [One sentence theme]
+Summary: [2-3 sentence summary]`;
+
 async function generateChapterStructure(
   segments: TranscriptSegment[],
-  openai: OpenAI
+  openai: OpenAI,
+  toneFilter: 'vishwananda' | 'sri_yukteswar' | 'robbins' = 'vishwananda'
 ): Promise<Array<{ title: string; theme: string; summary: string; segments: TranscriptSegment[] }>> {
-  // Group segments into logical chapters (simplified - recursive summarization would be more sophisticated)
+  // Apply tone filter prefix
+  const tonePrefix = toneFilter === 'vishwananda'
+    ? 'You are channeling the love of Vishwananda. Every word should come from the heart, be warm and compassionate.'
+    : toneFilter === 'sri_yukteswar'
+    ? 'You are channeling the wisdom of Sri Yukteswar. Be logical, precise, and grounded in wisdom while maintaining spiritual depth.'
+    : 'You are channeling the action energy of Tony Robbins. Be action-oriented, motivating, and focused on transformation.';
+  
   const chapters: Array<{ title: string; theme: string; summary: string; segments: TranscriptSegment[] }> = [];
   const segmentsPerChapter = 50; // Approximate segments per chapter
   
@@ -310,24 +337,28 @@ async function generateChapterStructure(
         messages: [
           {
             role: "system",
-            content: "You are a Vedic scholar helping structure a spiritual book. Generate a concise chapter title, theme, and summary based on the content."
+            content: `${tonePrefix}\n\n${WRITING_MEGA_PROMPT}`
           },
           {
             role: "user",
-            content: `Analyze this chapter content and provide:\n1. Title (5-10 words)\n2. Theme (one sentence)\n3. Summary (2-3 sentences)\n\nContent:\n${chapterText.substring(0, 2000)}`
+            content: `Structure this chapter content:\n\n${chapterText.substring(0, 2000)}`
           }
         ],
         temperature: 0.7,
-        max_tokens: 300
+        max_tokens: 400
       });
       
       const response = completion.choices[0]?.message?.content || '';
-      const lines = response.split('\n').filter(l => l.trim());
+      
+      // Parse structured response
+      const titleMatch = response.match(/Title:\s*(.+)/i);
+      const themeMatch = response.match(/Theme:\s*(.+)/i);
+      const summaryMatch = response.match(/Summary:\s*(.+)/is);
       
       chapters.push({
-        title: lines[0]?.replace(/^\d+\.\s*Title[:\s]*/i, '').trim() || `Chapter ${chapters.length + 1}`,
-        theme: lines[1]?.replace(/^\d+\.\s*Theme[:\s]*/i, '').trim() || '',
-        summary: lines.slice(2).join(' ').replace(/^\d+\.\s*Summary[:\s]*/i, '').trim() || '',
+        title: titleMatch?.[1]?.trim() || `Chapter ${chapters.length + 1}`,
+        theme: themeMatch?.[1]?.trim() || '',
+        summary: summaryMatch?.[1]?.trim() || '',
         segments: chapterSegments
       });
     } catch (error) {
@@ -375,7 +406,10 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { audioUrl, bookTitle } = body;
+    const { audioUrl, bookTitle, toneFilter } = body;
+    const selectedTone = (toneFilter && ['vishwananda', 'sri_yukteswar', 'robbins'].includes(toneFilter)) 
+      ? toneFilter as 'vishwananda' | 'sri_yukteswar' | 'robbins'
+      : 'vishwananda'; // Default to Vishwananda
 
     if (!audioUrl) {
       return new Response(
@@ -446,9 +480,9 @@ serve(async (req) => {
       }
     }
 
-    // Generate chapter structure
-    logStep("Generating chapter structure");
-    const chapters = await generateChapterStructure(segments, openai);
+    // Generate chapter structure using Writing Mega-Prompt
+    logStep("Generating chapter structure with Writing Mega-Prompt", { toneFilter: selectedTone });
+    const chapters = await generateChapterStructure(segments, openai, selectedTone);
     logStep("Chapters generated", { count: chapters.length });
 
     // Create book record

@@ -125,7 +125,27 @@ INSERT INTO public.ui_translations (key_name, en_text, sv_text, category) VALUES
   ('refresh_member_list', 'Refresh member list', 'Uppdatera medlemslista', 'ui'),
   ('email_placeholder', 'user@example.com', 'användare@exempel.com', 'ui'),
   ('name_placeholder', 'Type name...', 'Skriv namn...', 'ui'),
-  ('uuid_placeholder', 'Paste UUID here...', 'Klistra in UUID här...', 'ui')
+  ('uuid_placeholder', 'Paste UUID here...', 'Klistra in UUID här...', 'ui'),
+  
+  -- Prompt Library
+  ('prompt_library', 'Prompt Library', 'Promptbibliotek', 'ui'),
+  ('prompt_library_desc', 'Single-click templates for instant productivity', 'Enklicksmallar för omedelbar produktivitet', 'ui'),
+  ('templates', 'templates', 'mallar', 'ui'),
+  ('search_templates', 'Search templates...', 'Sök mallar...', 'ui'),
+  ('filter_by_tone', 'Filter by Tone', 'Filtrera efter ton', 'ui'),
+  ('all_tones', 'All Tones', 'Alla toner', 'ui'),
+  ('all_categories', 'All Categories', 'Alla kategorier', 'ui'),
+  ('category_writing', 'Writing', 'Skrivande', 'ui'),
+  ('category_business', 'Business', 'Affärer', 'ui'),
+  ('category_marketing', 'Marketing', 'Marknadsföring', 'ui'),
+  ('category_productivity', 'Productivity', 'Produktivitet', 'ui'),
+  ('category_spiritual', 'Spiritual', 'Andlig', 'ui'),
+  ('category_health', 'Health', 'Hälsa', 'ui'),
+  ('category_relationships', 'Relationships', 'Relationer', 'ui'),
+  ('category_education', 'Education', 'Utbildning', 'ui'),
+  ('use_template', 'Use Template', 'Använd mall', 'ui'),
+  ('template_copied', 'Template copied! Ready to use with your AI assistant.', 'Mall kopierad! Redo att använda med din AI-assistent.', 'ui'),
+  ('no_templates_found', 'No templates found', 'Inga mallar hittades', 'ui')
 ON CONFLICT (key_name) DO UPDATE SET
   en_text = EXCLUDED.en_text,
   sv_text = EXCLUDED.sv_text,

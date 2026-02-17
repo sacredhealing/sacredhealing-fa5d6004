@@ -66,12 +66,12 @@ export const useScripturalBooks = () => {
     fetchBooks();
   }, [fetchBooks]);
 
-  const createBook = useCallback(async (title: string, audioUrl: string): Promise<string | null> => {
+  const createBook = useCallback(async (title: string, audioUrl: string, toneFilter: 'vishwananda' | 'sri_yukteswar' | 'robbins' = 'vishwananda'): Promise<string | null> => {
     if (!user) return null;
 
     try {
       const { data, error } = await supabase.functions.invoke('audio-to-scripture', {
-        body: { audioUrl, bookTitle: title }
+        body: { audioUrl, bookTitle: title, toneFilter }
       });
 
       if (error) {

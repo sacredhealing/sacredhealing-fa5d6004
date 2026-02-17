@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useScripturalBooks, type ScripturalBook } from '@/hooks/useScripturalBooks';
@@ -16,6 +17,7 @@ const AdminScripturalBooks = () => {
   const [showForm, setShowForm] = useState(false);
   const [bookTitle, setBookTitle] = useState('');
   const [audioUrl, setAudioUrl] = useState('');
+  const [toneFilter, setToneFilter] = useState<'vishwananda' | 'sri_yukteswar' | 'robbins'>('vishwananda');
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleCreateBook = async () => {
@@ -26,7 +28,7 @@ const AdminScripturalBooks = () => {
 
     setIsProcessing(true);
     try {
-      const bookId = await createBook(bookTitle.trim(), audioUrl);
+      const bookId = await createBook(bookTitle.trim(), audioUrl, toneFilter);
       if (bookId) {
         toast.success('Book creation started! Processing may take a few minutes.');
         setShowForm(false);
@@ -85,6 +87,22 @@ const AdminScripturalBooks = () => {
                 />
                 <p className="text-xs text-muted-foreground mt-2">
                   Supports long-form audio (1+ hours). The system will transcribe, detect Sanskrit verses, and structure chapters automatically.
+                </p>
+              </div>
+              <div>
+                <Label>Tone Filter (Siddha-Flow)</Label>
+                <Select value={toneFilter} onValueChange={(value: any) => setToneFilter(value)}>
+                  <SelectTrigger className="h-12 text-base" style={{ fontSize: '1rem', minHeight: '48px' }}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="vishwananda">Vishwananda (Heart-Centered Love)</SelectItem>
+                    <SelectItem value="sri_yukteswar">Sri Yukteswar (Logical Wisdom)</SelectItem>
+                    <SelectItem value="robbins">Robbins (Action Energy)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Choose the energy filter for chapter structuring. Vishwananda: Heart-centered love | Sri Yukteswar: Logical precision | Robbins: Action-oriented transformation.
                 </p>
               </div>
               <div className="flex gap-2">
