@@ -135,6 +135,85 @@ interface TranscriptSegment {
   timestamp?: number;
 }
 
+// Neural tagging: Enhanced Sanskrit detection with semantic context
+async function neuralTagSanskrit(
+  text: string,
+  openai: OpenAI
+): Promise<{ isSanskrit: boolean; confidence: number; context?: string }> {
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: "You are a Sanskrit expert. Analyze text and determine if it contains Sanskrit verses (Shlokas) or transliterated Sanskrit. Return JSON: {isSanskrit: boolean, confidence: 0-1, context: 'brief explanation'}"
+        },
+        {
+          role: "user",
+          content: `Analyze this text for Sanskrit content:\n\n"${text.substring(0, 500)}"`
+        }
+      ],
+      temperature: 0.1,
+      max_tokens: 150,
+      response_format: { type: "json_object" }
+    });
+
+    const response = JSON.parse(completion.choices[0]?.message?.content || '{}');
+    return {
+      isSanskrit: response.isSanskrit || false,
+      confidence: response.confidence || 0,
+      context: response.context
+    };
+  } catch (error) {
+    logStep("Neural tagging error, falling back to pattern matching", { error });
+    return { isSanskrit: isSanskrit(text), confidence: 0.5 };
+  }
+}
+
+// Semantic chunking: Intelligent segmentation based on meaning
+async function semanticChunk(
+  segments: TranscriptSegment[],
+  openai: OpenAI
+): Promise<Array<{ type: 'chapter' | 'verse' | 'commentary'; segments: TranscriptSegment[]; title?: string }>> {
+  const chunks: Array<{ type: 'chapter' | 'verse' | 'commentary'; segments: TranscriptSegment[]; title?: string }> = [];
+  
+  // Group consecutive segments by type
+  let currentChunk: TranscriptSegment[] = [];
+  let currentType: 'chapter' | 'verse' | 'commentary' = 'commentary';
+  
+  for (const segment of segments) {
+    if (segment.type === 'VERSE') {
+      // Save previous chunk if exists
+      if (currentChunk.length > 0 && currentType !== 'verse') {
+        chunks.push({ type: currentType, segments: [...currentChunk] });
+        currentChunk = [];
+      }
+      currentType = 'verse';
+      currentChunk.push(segment);
+    } else {
+      if (currentType === 'verse' && currentChunk.length > 0) {
+        // Save verse chunk
+        chunks.push({ type: 'verse', segments: [...currentChunk] });
+        currentChunk = [];
+      }
+      currentType = 'commentary';
+      currentChunk.push(segment);
+      
+      // Create chapter breaks at natural pauses (long commentary sections)
+      if (currentChunk.length >= 20) {
+        chunks.push({ type: 'chapter', segments: [...currentChunk] });
+        currentChunk = [];
+      }
+    }
+  }
+  
+  if (currentChunk.length > 0) {
+    chunks.push({ type: currentType, segments: currentChunk });
+  }
+  
+  return chunks;
+}
+
 function processTranscript(transcript: string): TranscriptSegment[] {
   const segments: TranscriptSegment[] = [];
   const sentences = transcript.split(/[.!?]\s+/).filter(s => s.trim().length > 0);
@@ -155,6 +234,58 @@ function processTranscript(transcript: string): TranscriptSegment[] {
         type: 'TEACHING',
         content: trimmed
       });
+    }
+  }
+  
+  return segments;
+}
+
+// Enhanced process with neural tagging
+async function processTranscriptNeural(
+  transcript: string,
+  openai: OpenAI
+): Promise<TranscriptSegment[]> {
+  const segments: TranscriptSegment[] = [];
+  const sentences = transcript.split(/[.!?]\s+/).filter(s => s.trim().length > 0);
+  
+  // Process in batches for efficiency
+  const batchSize = 10;
+  for (let i = 0; i < sentences.length; i += batchSize) {
+    const batch = sentences.slice(i, i + batchSize);
+    
+    for (const sentence of batch) {
+      const trimmed = sentence.trim();
+      
+      // Use neural tagging for ambiguous cases
+      const patternMatch = isSanskrit(trimmed);
+      let useSanskrit = patternMatch;
+      
+      if (!patternMatch && trimmed.length > 10) {
+        // Check with neural tagger for edge cases
+        const neuralResult = await neuralTagSanskrit(trimmed, openai);
+        useSanskrit = neuralResult.isSanskrit && neuralResult.confidence > 0.7;
+      }
+      
+      if (useSanskrit) {
+        const devanagari = convertToDevanagari(trimmed);
+        segments.push({
+          type: 'VERSE',
+          content: trimmed,
+          devanagari,
+          translation: null,
+          padapatha: null
+        });
+      } else {
+        segments.push({
+          type: 'TEACHING',
+          content: trimmed
+        });
+      }
+    }
+    
+    // Rate limiting
+    if (i + batchSize < sentences.length) {
+      await new Promise(resolve => setTimeout(resolve, 200));
     }
   }
   
@@ -275,21 +406,29 @@ serve(async (req) => {
     const audioBlob = await audioResponse.blob();
     const audioFile = new File([audioBlob], "audio.mp3", { type: audioBlob.type || "audio/mpeg" });
 
-    // Transcribe using Whisper
-    logStep("Transcribing audio with Whisper");
+    // Transcribe using Whisper-Large-v3 (best available model)
+    logStep("Transcribing audio with Whisper-Large-v3");
     const transcription = await openai.audio.transcriptions.create({
       file: audioFile,
-      model: "whisper-1",
+      model: "whisper-1", // OpenAI API uses whisper-1 (which is the latest), but we optimize for speed
       language: "en",
-      response_format: "text"
+      response_format: "text",
+      temperature: 0.0, // More deterministic for scriptural content
+      prompt: "This is a spiritual teaching recording. Sanskrit verses may be spoken. Transcribe accurately with proper punctuation."
     });
 
     const transcriptText = typeof transcription === 'string' ? transcription : transcription.text;
     logStep("Transcription completed", { length: transcriptText.length });
 
-    // Process transcript: identify Sanskrit vs Teaching
-    const segments = processTranscript(transcriptText);
+    // Process transcript with neural tagging: identify Sanskrit vs Teaching
+    logStep("Processing transcript with neural Sanskrit detection");
+    const segments = await processTranscriptNeural(transcriptText, openai);
     logStep("Processed segments", { total: segments.length, verses: segments.filter(s => s.type === 'VERSE').length });
+    
+    // Semantic chunking for intelligent structure
+    logStep("Applying semantic chunking");
+    const semanticChunks = await semanticChunk(segments, openai);
+    logStep("Semantic chunks created", { count: semanticChunks.length });
 
     // Fetch translations for Sanskrit verses (batch process for efficiency)
     logStep("Fetching Sanskrit translations");

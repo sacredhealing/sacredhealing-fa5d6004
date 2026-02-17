@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Star, Calendar, Heart, Users, MessageCircle, Sparkles, Check, Loader2, ExternalLink } from 'lucide-react';
+import { Star, Calendar, Heart, Users, MessageCircle, Sparkles, Check, Loader2, ExternalLink, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { HiddenWisdomVault } from '@/components/stargate/HiddenWisdomVault';
 
 const StargateMembership = () => {
   const navigate = useNavigate();
@@ -281,45 +283,106 @@ const StargateMembership = () => {
         </div>
       </div>
 
-      {/* CTA Section */}
-      <div className="px-4 py-12">
-        <Card className="max-w-2xl mx-auto p-8 bg-gradient-to-br from-purple-900/30 via-background to-amber-900/20 border-amber-500/30 text-center">
-          <h2 className="text-2xl font-bold text-foreground mb-3">
-            Är du redo att transformera ditt liv?
-          </h2>
-          <p className="text-muted-foreground mb-6">
-            Gå med i Stargate Membership idag och börja din resa mot klarhet, healing och andlig utveckling.
-          </p>
-          
-          <div className="flex items-center justify-center gap-2 mb-6">
-            <span className="text-3xl font-bold text-foreground">$25</span>
-            <span className="text-muted-foreground">/månad</span>
+      {/* Hidden Wisdom Vault (for members) */}
+      {user && (
+        <div className="px-4 py-8">
+          <div className="max-w-4xl mx-auto">
+            <Tabs defaultValue="membership" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="membership">Medlemskap</TabsTrigger>
+                <TabsTrigger value="wisdom">
+                  <BookOpen className="w-4 h-4 mr-2" />
+                  Hidden Wisdom Vault
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="membership" className="mt-6">
+                {/* CTA Section */}
+                <Card className="max-w-2xl mx-auto p-8 bg-gradient-to-br from-purple-900/30 via-background to-amber-900/20 border-amber-500/30 text-center">
+                  <h2 className="text-2xl font-bold text-foreground mb-3">
+                    Är du redo att transformera ditt liv?
+                  </h2>
+                  <p className="text-muted-foreground mb-6">
+                    Gå med i Stargate Membership idag och börja din resa mot klarhet, healing och andlig utveckling.
+                  </p>
+                  
+                  <div className="flex items-center justify-center gap-2 mb-6">
+                    <span className="text-3xl font-bold text-foreground">$25</span>
+                    <span className="text-muted-foreground">/månad</span>
+                  </div>
+                  
+                  <Button 
+                    onClick={handleSubscribe}
+                    disabled={loading}
+                    size="lg"
+                    className="bg-gradient-to-r from-purple-600 to-amber-500 hover:from-purple-700 hover:to-amber-600 text-white px-8"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Laddar...
+                      </>
+                    ) : (
+                      <>
+                        <Star className="w-4 h-4 mr-2" />
+                        Starta Ditt Medlemskap
+                      </>
+                    )}
+                  </Button>
+                  
+                  <p className="text-xs text-muted-foreground mt-4">
+                    Du kan avsluta när som helst. Inga bindningstider.
+                  </p>
+                </Card>
+              </TabsContent>
+              <TabsContent value="wisdom" className="mt-6">
+                <HiddenWisdomVault />
+              </TabsContent>
+            </Tabs>
           </div>
-          
-          <Button 
-            onClick={handleSubscribe}
-            disabled={loading}
-            size="lg"
-            className="bg-gradient-to-r from-purple-600 to-amber-500 hover:from-purple-700 hover:to-amber-600 text-white px-8"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Laddar...
-              </>
-            ) : (
-              <>
-                <Star className="w-4 h-4 mr-2" />
-                Starta Ditt Medlemskap
-              </>
-            )}
-          </Button>
-          
-          <p className="text-xs text-muted-foreground mt-4">
-            Du kan avsluta när som helst. Inga bindningstider.
-          </p>
-        </Card>
-      </div>
+        </div>
+      )}
+
+      {/* CTA Section (for non-members) */}
+      {!user && (
+        <div className="px-4 py-12">
+          <Card className="max-w-2xl mx-auto p-8 bg-gradient-to-br from-purple-900/30 via-background to-amber-900/20 border-amber-500/30 text-center">
+            <h2 className="text-2xl font-bold text-foreground mb-3">
+              Är du redo att transformera ditt liv?
+            </h2>
+            <p className="text-muted-foreground mb-6">
+              Gå med i Stargate Membership idag och börja din resa mot klarhet, healing och andlig utveckling.
+            </p>
+            
+            <div className="flex items-center justify-center gap-2 mb-6">
+              <span className="text-3xl font-bold text-foreground">$25</span>
+              <span className="text-muted-foreground">/månad</span>
+            </div>
+            
+            <Button 
+              onClick={handleSubscribe}
+              disabled={loading}
+              size="lg"
+              className="bg-gradient-to-r from-purple-600 to-amber-500 hover:from-purple-700 hover:to-amber-600 text-white px-8"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Laddar...
+                </>
+              ) : (
+                <>
+                  <Star className="w-4 h-4 mr-2" />
+                  Starta Ditt Medlemskap
+                </>
+              )}
+            </Button>
+            
+            <p className="text-xs text-muted-foreground mt-4">
+              Du kan avsluta när som helst. Inga bindningstider.
+            </p>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };
