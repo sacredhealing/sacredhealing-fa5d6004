@@ -47,26 +47,28 @@ serve(async (req) => {
     const fiveDaysAgo = new Date();
     fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
 
-    // Get all users with profiles and emails
-    // Also get email from auth.users if not in profiles
+    // Get all users with profiles
     const { data: profiles, error: profilesError } = await supabaseClient
       .from('profiles')
-      .select('user_id, full_name, email')
-      .not('email', 'is', null);
+      .select('user_id, full_name, email, preferred_language');
 
-    // If profiles don't have email, fetch from auth.users
-    // Note: This requires service role access
+    if (profilesError) {
+      throw new Error(`Failed to fetch profiles: ${profilesError.message}`);
+    }
+
+    // Get emails from auth.users for profiles without email
     const profilesWithEmail = await Promise.all(
       (profiles || []).map(async (profile) => {
-        if (profile.email) {
-          return { ...profile, language: 'en' as 'sv' | 'en' }; // Default to English
+        let email = profile.email;
+        if (!email) {
+          // Try to get email from auth.users (requires service role)
+          const { data: authUser } = await supabaseClient.auth.admin.getUserById(profile.user_id);
+          email = authUser?.user?.email || null;
         }
-        // Try to get email from auth.users (requires service role)
-        const { data: authUser } = await supabaseClient.auth.admin.getUserById(profile.user_id);
         return {
           ...profile,
-          email: authUser?.user?.email || null,
-          language: 'en' as 'sv' | 'en'
+          email,
+          language: (profile.preferred_language === 'sv' ? 'sv' : 'en') as 'sv' | 'en'
         };
       })
     );
