@@ -118,8 +118,8 @@ export const TelegramChatInput = ({
 
   return (
     <div className="relative">
-      {/* Liquid Glass Input Bar */}
-      <div className="relative bg-background/30 backdrop-blur-xl border border-white/10 rounded-2xl p-2 shadow-2xl">
+      {/* Liquid Glass Input Bar - Telegram Style */}
+      <div className="relative bg-gradient-to-r from-background/40 via-background/30 to-background/40 backdrop-blur-2xl border border-white/10 rounded-3xl p-3 shadow-2xl">
         <AnimatePresence>
           {isRecording ? (
             <motion.div
@@ -185,14 +185,14 @@ export const TelegramChatInput = ({
         </AnimatePresence>
 
         <div className="flex items-end gap-2">
-          {/* File Upload Button */}
+          {/* File Upload Button - Telegram Style */}
           <div className="relative">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => fileInputRef.current?.click()}
               disabled={disabled || isSending}
-              className="h-10 w-10 rounded-full shrink-0"
+              className="h-12 w-12 rounded-full shrink-0 bg-background/20 hover:bg-background/40 backdrop-blur-sm border border-white/10 transition-all"
             >
               <Paperclip className="h-5 w-5" />
             </Button>
@@ -205,14 +205,14 @@ export const TelegramChatInput = ({
             />
           </div>
 
-          {/* Image Upload Button */}
+          {/* Image Upload Button - Telegram Style */}
           <div className="relative">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => imageInputRef.current?.click()}
               disabled={disabled || isSending}
-              className="h-10 w-10 rounded-full shrink-0"
+              className="h-12 w-12 rounded-full shrink-0 bg-background/20 hover:bg-background/40 backdrop-blur-sm border border-white/10 transition-all"
             >
               <ImageIcon className="h-5 w-5" />
             </Button>
@@ -225,17 +225,17 @@ export const TelegramChatInput = ({
             />
           </div>
 
-          {/* Text Input */}
+          {/* Text Input - Telegram Style */}
           <Input
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendText()}
             placeholder={placeholder}
             disabled={disabled || isSending || isRecording}
-            className="flex-1 bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[40px] max-h-32 resize-none"
+            className="flex-1 bg-background/20 backdrop-blur-sm border border-white/10 rounded-2xl px-4 py-3 focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-0 min-h-[48px] max-h-32 resize-none text-base"
           />
 
-          {/* Voice Record Button */}
+          {/* Voice Record / Send Button - Telegram Style */}
           {!text.trim() ? (
             <Button
               variant={isRecording ? "destructive" : "ghost"}
@@ -245,19 +245,19 @@ export const TelegramChatInput = ({
               onTouchStart={handleVoiceRecord}
               onTouchEnd={isRecording ? handleVoiceRecord : undefined}
               disabled={disabled || isSending}
-              className="h-10 w-10 rounded-full shrink-0"
+              className="h-12 w-12 rounded-full shrink-0 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 backdrop-blur-sm border border-cyan-400/30 transition-all shadow-lg"
             >
               {isRecording ? (
-                <Waveform className="h-5 w-5 animate-pulse" />
+                <Waveform className="h-5 w-5 animate-pulse text-destructive" />
               ) : (
-                <Mic className="h-5 w-5" />
+                <Mic className="h-5 w-5 text-cyan-400" />
               )}
             </Button>
           ) : (
             <Button
               onClick={handleSendText}
               disabled={!text.trim() || isSending || disabled}
-              className="h-10 w-10 rounded-full shrink-0"
+              className="h-12 w-12 rounded-full shrink-0 bg-gradient-to-br from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white shadow-lg transition-all"
             >
               {isSending ? (
                 <Loader2 className="h-5 w-5 animate-spin" />

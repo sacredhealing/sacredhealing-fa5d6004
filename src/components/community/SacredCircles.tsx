@@ -400,9 +400,9 @@ const CircleChat = ({ circle, onBack, hasAvatar }: CircleChatProps) => {
   const canPost = circle.type !== 'guide' || isAdmin;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-250px)] rounded-2xl bg-background/30 backdrop-blur-2xl border border-white/10 shadow-2xl p-4">
+    <div className="flex flex-col h-[calc(100vh-250px)] rounded-3xl bg-gradient-to-b from-background/40 via-background/30 to-background/40 backdrop-blur-2xl border border-white/10 shadow-2xl p-4">
       {/* Header with Liquid Glass */}
-      <div className="flex items-center gap-3 mb-4 pb-3 border-b border-white/10 bg-background/20 backdrop-blur-xl rounded-xl p-3 -mx-1">
+      <div className="flex items-center gap-3 mb-4 pb-3 border-b border-white/10 bg-gradient-to-r from-background/30 via-background/20 to-background/30 backdrop-blur-xl rounded-2xl p-3 -mx-1 shadow-lg">
         <Button variant="ghost" size="icon" onClick={onBack}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
@@ -773,10 +773,10 @@ const MessageBubble = ({ message, isOwn, isAdmin, onPin, onDelete }: MessageBubb
       </Avatar>
       <div className="group relative max-w-[70%]">
         <div
-          className={`rounded-2xl p-3 backdrop-blur-sm ${
+          className={`rounded-2xl p-4 backdrop-blur-md shadow-lg transition-all ${
             isOwn
-              ? 'bg-primary/90 text-primary-foreground'
-              : 'bg-muted/80 text-foreground border border-white/10'
+              ? 'bg-gradient-to-br from-cyan-500/90 via-blue-500/90 to-cyan-600/90 text-white border border-cyan-400/30'
+              : 'bg-gradient-to-br from-muted/90 via-muted/80 to-muted/90 text-foreground border border-white/10'
           }`}
         >
           {!isOwn && (
@@ -790,8 +790,9 @@ const MessageBubble = ({ message, isOwn, isAdmin, onPin, onDelete }: MessageBubb
               {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
             </p>
             {isOwn && (
-              <div className="shrink-0">
+              <div className="shrink-0 flex items-center gap-1">
                 {getStatusIcon()}
+                {status === 'sent' && <Check className="h-3 w-3 opacity-60" />}
               </div>
             )}
           </div>
