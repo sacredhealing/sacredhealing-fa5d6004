@@ -77,6 +77,7 @@ export function useSoulMeditateEngine() {
   const audioContextRef = useRef<AudioContext | null>(null);
   const masterGainRef = useRef<GainNode | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
+  const mixerGainRef = useRef<GainNode | null>(null);
   
   // Layer nodes
   const neuralSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
@@ -361,34 +362,34 @@ export function useSoulMeditateEngine() {
 
     // Connect DSP chain
     // Create a mixer gain node to combine all sources before analyser
-    const mixerGain = ctx.createGain();
-    mixerGain.gain.value = 1.0;
+    mixerGainRef.current = ctx.createGain();
+    mixerGainRef.current.gain.value = 1.0;
     
     // All sources -> mixer -> analyser (for visualization) AND direct to processing
-    neuralGainRef.current.connect(mixerGain);
-    atmosphereGainRef.current.connect(mixerGain);
-    solfeggioGainRef.current.connect(mixerGain);
-    binauralGainRef.current.connect(mixerGain);
+    neuralGainRef.current.connect(mixerGainRef.current);
+    atmosphereGainRef.current.connect(mixerGainRef.current);
+    solfeggioGainRef.current.connect(mixerGainRef.current);
+    binauralGainRef.current.connect(mixerGainRef.current);
     
     // Mixer -> analyser (for visualization)
-    mixerGain.connect(analyser);
+    mixerGainRef.current.connect(analyser);
     
     // Mixer -> warmth -> limiter -> master (main audio path)
-    mixerGain.connect(waveShaperRef.current);
+    mixerGainRef.current.connect(waveShaperRef.current);
     waveShaperRef.current.connect(limiterRef.current);
     limiterRef.current.connect(masterGain);
 
     // Parallel reverb (connects to limiter)
-    mixerGain.connect(convolver);
+    mixerGainRef.current.connect(convolver);
     convolver.connect(reverbGainRef.current);
     reverbGainRef.current.connect(limiterRef.current);
 
     // Parallel delay (connects to limiter)
-    mixerGain.connect(delayNodeRef.current);
+    mixerGainRef.current.connect(delayNodeRef.current);
     delayNodeRef.current.connect(delayGainRef.current);
     delayGainRef.current.connect(limiterRef.current);
     
-    console.log('Audio chain initialized with mixer -> analyser -> processing -> master');
+    console.log('Audio chain initialized: sources -> mixer -> analyser/processing -> master');
 
     setIsInitialized(true);
   }, [masterVolume, neuralLayer.volume, atmosphereLayer.volume, dsp]);
