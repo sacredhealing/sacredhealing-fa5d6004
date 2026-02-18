@@ -15,6 +15,7 @@ import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { useMeditationContentLanguage } from "@/features/meditations/useContentLanguage";
 import { useMembership } from "@/hooks/useMembership";
 import { getDayPhase } from "@/utils/postSessionContext";
+import { VastuBanner } from '@/components/vastu/VastuBanner';
 
 import {
   Heart,
@@ -233,6 +234,11 @@ export default function Explore() {
         <VastuBanner />
       </section>
 
+      {/* Vastu Banner */}
+      <section className="mt-8">
+        <VastuBanner />
+      </section>
+
       {/* SECTION: Your Space */}
       <section className="mt-8">
         <h2 className="text-sm font-medium text-white/60 mb-4 tracking-wide uppercase">
@@ -311,6 +317,22 @@ export default function Explore() {
                 </div>
                 <div className="mt-1 text-xs text-purple-100/80">
                   Balance + daily guidance
+                </div>
+              </button>
+
+              <button
+                onClick={() => navigate("/vastu")}
+                className="rounded-2xl px-4 py-4 text-left
+                           bg-gradient-to-r from-purple-600/30 to-purple-500/20
+                           border border-purple-400/40
+                           hover:from-purple-600/50 hover:to-purple-500/40
+                           transition"
+              >
+                <div className="text-sm font-semibold text-white">
+                  Vastu
+                </div>
+                <div className="mt-1 text-xs text-purple-100/80">
+                  Abundance Architect
                 </div>
               </button>
             </div>
