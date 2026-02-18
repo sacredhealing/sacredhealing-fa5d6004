@@ -22,7 +22,7 @@ export const BottomNav: React.FC = () => {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-t border-border/50 safe-area-bottom">
       <div 
-        className="grid grid-cols-7 w-full px-1 py-1"
+        className="grid grid-cols-8 w-full px-0 py-1 gap-0"
         style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}
       >
         {NAV_ITEMS.map((item) => (
