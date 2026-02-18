@@ -109,6 +109,7 @@ import CreativeSoulStore from "./pages/CreativeSoulStore";
 import InviteFriends from "./pages/InviteFriends";
 import VedicAstrology from "./pages/VedicAstrology";
 import Ayurveda from "./pages/Ayurveda";
+import Vastu from "./pages/Vastu";
 import PromptLibrary from "./pages/PromptLibrary";
 import { DebugBanner } from "./components/DebugBanner";
 import { ProfileLanguageSync } from "./components/ProfileLanguageSync";
@@ -183,6 +184,7 @@ function AppRoutes() {
                   <Route path="/invite-friends" element={<InviteFriends />} />
                   <Route path="/vedic-astrology" element={<VedicAstrology />} />
                   <Route path="/ayurveda" element={<Ayurveda />} />
+                  <Route path="/vastu" element={<Vastu />} />
                   <Route path="/prompt-library" element={<PromptLibrary />} />
                   <Route path="/creative-soul" element={<Navigate to="/healing" replace />} />
                   <Route path="/creative-soul-hub" element={<CreativeSoulHub />} />
