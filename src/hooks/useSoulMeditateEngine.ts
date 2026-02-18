@@ -360,28 +360,35 @@ export function useSoulMeditateEngine() {
     limiterRef.current.release.value = 0.05;  // 50ms release (faster recovery)
 
     // Connect DSP chain
-    // Dry signals -> analyser
-    neuralGainRef.current.connect(analyser);
-    atmosphereGainRef.current.connect(analyser);
-    solfeggioGainRef.current.connect(analyser);
-    binauralGainRef.current.connect(analyser);
-
-    // Analyser -> warmth -> limiter -> master
-    analyser.connect(waveShaperRef.current);
+    // Create a mixer gain node to combine all sources before analyser
+    const mixerGain = ctx.createGain();
+    mixerGain.gain.value = 1.0;
+    
+    // All sources -> mixer -> analyser (for visualization) AND direct to processing
+    neuralGainRef.current.connect(mixerGain);
+    atmosphereGainRef.current.connect(mixerGain);
+    solfeggioGainRef.current.connect(mixerGain);
+    binauralGainRef.current.connect(mixerGain);
+    
+    // Mixer -> analyser (for visualization)
+    mixerGain.connect(analyser);
+    
+    // Mixer -> warmth -> limiter -> master (main audio path)
+    mixerGain.connect(waveShaperRef.current);
     waveShaperRef.current.connect(limiterRef.current);
     limiterRef.current.connect(masterGain);
 
     // Parallel reverb (connects to limiter)
-    analyser.connect(convolver);
+    mixerGain.connect(convolver);
     convolver.connect(reverbGainRef.current);
     reverbGainRef.current.connect(limiterRef.current);
 
     // Parallel delay (connects to limiter)
-    analyser.connect(delayNodeRef.current);
+    mixerGain.connect(delayNodeRef.current);
     delayNodeRef.current.connect(delayGainRef.current);
     delayGainRef.current.connect(limiterRef.current);
     
-    console.log('Audio chain initialized with soft-knee limiter');
+    console.log('Audio chain initialized with mixer -> analyser -> processing -> master');
 
     setIsInitialized(true);
   }, [masterVolume, neuralLayer.volume, atmosphereLayer.volume, dsp]);
