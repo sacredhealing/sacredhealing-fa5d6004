@@ -23,10 +23,16 @@ const Vastu = () => {
     );
   }
 
-  // Access rules:
-  // - Admins: always allowed
-  // - Lifetime: tier === 'lifetime'
-  // - Premium monthly/yearly: tier contains 'premium' OR isPremium flag
+  // Give membership data a moment to settle — if tier is undefined
+  // after loading, treat it as still loading rather than no access
+  if (tier === undefined && !isAdmin) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
   const isLifetime = tier === 'lifetime';
   const isPremiumRecurring = !!tier && tier.includes('premium');
   const hasAccess = isAdmin || isLifetime || isPremiumRecurring || isPremium;
