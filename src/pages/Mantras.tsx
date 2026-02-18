@@ -13,7 +13,7 @@ import { getMantras, type MantraItem, MANTRA_REPETITIONS } from '@/features/mant
 import { useJyotishMantraRecommendation } from '@/hooks/useJyotishMantraRecommendation';
 import { useHoraWatch } from '@/hooks/useHoraWatch';
 import { useAIVedicReading } from '@/hooks/useAIVedicReading';
-import { normalizePlanetName, type Planet } from '@/lib/jyotishMantraLogic';
+import { normalizePlanetName, mantraMatchesPlanet, type Planet } from '@/lib/jyotishMantraLogic';
 import { getPlanetEmoji } from '@/lib/vedicTypes';
 
 function getPlayableUrl(url: string): string {
@@ -76,17 +76,41 @@ const Mantras = () => {
     let cancelled = false;
     getMantras().then((data) => {
       if (!cancelled) {
-        setMantras(data);
+        // SRI YUKTESWAR LOGIC: Pin Dasha planet mantras to top
+        const sortedMantras = [...data];
+        if (dashaPlanet) {
+          sortedMantras.sort((a, b) => {
+            const aMatchesDasha = mantraMatchesPlanet(a, dashaPlanet);
+            const bMatchesDasha = mantraMatchesPlanet(b, dashaPlanet);
+            if (aMatchesDasha && !bMatchesDasha) return -1;
+            if (!aMatchesDasha && bMatchesDasha) return 1;
+            return 0;
+          });
+        }
+        setMantras(sortedMantras);
+        
         // Preselect recommended mantra if available, otherwise first mantra
-        if (data.length > 0 && !selectedMantraId) {
+        if (sortedMantras.length > 0 && !selectedMantraId) {
           const recommendedId = jyotishRecommendation?.recommendedMantraId;
-          setSelectedMantraId(recommendedId && data.find(m => m.id === recommendedId) ? recommendedId : data[0].id);
+          const dashaMantraId = dashaPlanet 
+            ? sortedMantras.find(m => mantraMatchesPlanet(m, dashaPlanet))?.id 
+            : null;
+          // Prioritize: Dasha mantra > Recommended > First
+          const preselectedId = dashaMantraId || (recommendedId && sortedMantras.find(m => m.id === recommendedId)?.id) || sortedMantras[0].id;
+          setSelectedMantraId(preselectedId);
         }
       }
       setLoading(false);
+    }).catch((error) => {
+      if (!cancelled) {
+        console.error('Error fetching mantras:', error);
+        // Heart-centered error message (Dan Abramov Retainable UI)
+        toast.error(t('error_mantras_fetch', 'Kunde inte ladda mantras just nu. Var vänlig försök igen om en stund.'));
+        setLoading(false);
+      }
     });
     return () => { cancelled = true; };
-  }, [jyotishRecommendation?.recommendedMantraId]);
+  }, [jyotishRecommendation?.recommendedMantraId, dashaPlanet]);
 
   // Update selected mantra when recommendation changes (only if no mantra is currently selected)
   useEffect(() => {
@@ -131,8 +155,14 @@ const Mantras = () => {
       });
       toast.success(`+${mantra.shc_reward} SHC ${tI18n('mantras.earned', 'earned')}`);
       refreshBalance();
+      // Liquid Glass haptics on success
+      if ('vibrate' in navigator) {
+        navigator.vibrate([10, 50, 10]); // Success pattern
+      }
     } catch (e) {
       console.error(e);
+      // Heart-centered error message (Dan Abramov Retainable UI)
+      toast.error(t('error_mantra_reward', 'Kunde inte registrera belöningen. Din praxis är fortfarande värdefull.'));
     }
   };
 
@@ -163,18 +193,24 @@ const Mantras = () => {
       });
     });
 
-    audio.play().catch(() => toast.error(tI18n('mantras.playFailed', 'Failed to play audio')));
+    audio.play().catch(() => {
+      // Heart-centered error message (Dan Abramov Retainable UI)
+      toast.error(t('error_audio_play', 'Ljudet kunde inte spelas. Kontrollera din internetanslutning och försök igen.'));
+    });
   };
 
   const handleStart = () => {
     if (!selectedMantra?.audio_url) {
-      toast.error(tI18n('mantras.noAudio', 'No audio available.'));
+      // Heart-centered error message (Dan Abramov Retainable UI)
+      toast.error(t('error_no_audio', 'Det finns inget ljud tillgängligt för denna mantra. Välj en annan mantra.'));
       return;
     }
     if (count >= reps) setCount(0);
     if (audioRef.current && currentMantraIdRef.current === selectedMantra.id && count < reps) {
       setIsPlaying(true);
-      audioRef.current.play().catch(() => toast.error(t('mantras.playFailed')));
+      audioRef.current.play().catch(() => {
+        toast.error(t('error_audio_play', 'Ljudet kunde inte spelas. Kontrollera din internetanslutning och försök igen.'));
+      });
       return;
     }
     setIsPlaying(true);
@@ -235,10 +271,10 @@ const Mantras = () => {
         </p>
       </section>
 
-      {/* Planetary Hora Watch - Din Heliga Timme */}
+      {/* Planetary Hora Watch - Din Heliga Timme (Sri Yukteswar Precision) */}
       {horaWatch.calculation && (
         <section className="px-4 mb-6">
-          <Card className="rounded-2xl border-border bg-gradient-to-br from-primary/5 via-background to-primary/5 border-primary/20 overflow-hidden">
+          <Card className="rounded-2xl border-border bg-gradient-to-br from-primary/5 via-background to-primary/5 border-primary/20 overflow-hidden backdrop-blur-sm">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
@@ -248,8 +284,14 @@ const Mantras = () => {
                   </h2>
                 </div>
                 {currentHoraPlanet && (
-                  <Badge variant="outline" className="border-primary/30 text-primary font-bold text-sm px-3 py-1">
+                  <Badge 
+                    variant="outline" 
+                    className={`border-primary/30 text-primary font-bold text-sm px-3 py-1 ${
+                      isCelestialMatch ? 'animate-pulse border-amber-500/50 bg-amber-500/10' : ''
+                    }`}
+                  >
                     {getPlanetEmoji(currentHoraPlanet)} {currentHoraPlanet}
+                    {isCelestialMatch && ' ✨'}
                   </Badge>
                 )}
               </div>
@@ -329,23 +371,47 @@ const Mantras = () => {
                   const mantraPlanet = m.planet_type ? normalizePlanetName(m.planet_type) : null;
                   const hasGoldenAura = isCelestialMatch && mantraPlanet === dashaPlanet && mantraPlanet === currentHoraPlanet;
                   
+                  // Check if this is a Dasha planet mantra (Pin to top)
+                  const isDashaMantra = dashaPlanet && mantraMatchesPlanet(m, dashaPlanet);
+                  
                   return (
                     <button
                       key={m.id}
                       type="button"
-                      onClick={() => handleMantraSelect(m)}
-                      className={`w-full text-left rounded-xl border p-4 flex items-center gap-3 transition relative overflow-hidden ${
+                      onClick={() => {
+                        handleMantraSelect(m);
+                        // Liquid Glass haptics (Dan Abramov Retainable UI)
+                        if ('vibrate' in navigator) {
+                          navigator.vibrate(10); // Subtle haptic feedback
+                        }
+                      }}
+                      className={`w-full text-left rounded-xl border p-4 flex items-center gap-3 transition relative overflow-hidden backdrop-blur-sm ${
                         selectedMantraId === m.id
-                          ? 'border-primary bg-primary/10'
+                          ? 'border-primary bg-primary/10 shadow-lg shadow-primary/20'
                           : hasGoldenAura
                           ? 'border-amber-500/50 bg-gradient-to-r from-amber-500/20 via-yellow-500/10 to-amber-500/20 shadow-lg shadow-amber-500/20'
+                          : isDashaMantra
+                          ? 'border-primary/70 bg-primary/8 shadow-md shadow-primary/10'
                           : isRecommended
                           ? 'border-primary/50 bg-primary/5'
                           : 'border-border bg-card/50 hover:bg-muted/30'
                       }`}
+                      style={{
+                        // Liquid Glass effect
+                        background: selectedMantraId === m.id 
+                          ? 'linear-gradient(135deg, rgba(var(--primary-rgb), 0.1) 0%, rgba(var(--primary-rgb), 0.05) 100%)'
+                          : undefined,
+                      }}
                     >
                       {hasGoldenAura && (
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-400/20 to-transparent animate-pulse pointer-events-none" />
+                      )}
+                      {isDashaMantra && !hasGoldenAura && (
+                        <div className="absolute top-2 right-2">
+                          <Badge variant="outline" className="text-[9px] border-primary/50 text-primary bg-primary/5">
+                            {t('mantras_dasha_pinned', 'Ditt Period')}
+                          </Badge>
+                        </div>
                       )}
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 relative z-10 ${
                         hasGoldenAura 
@@ -517,22 +583,62 @@ const Mantras = () => {
 
                     <div className="flex flex-wrap justify-center gap-3">
                       {!isPlaying ? (
-                        <Button size="lg" className="rounded-full gap-2" onClick={handleStart}>
+                        <Button 
+                          size="lg" 
+                          className="rounded-full gap-2 backdrop-blur-sm bg-primary/90 hover:bg-primary shadow-lg shadow-primary/30" 
+                          onClick={() => {
+                            handleStart();
+                            // Liquid Glass haptics (Dan Abramov Retainable UI)
+                            if ('vibrate' in navigator) {
+                              navigator.vibrate(15);
+                            }
+                          }}
+                        >
                           <Play className="h-5 w-5" />
                           {tI18n('mantras.start', 'Start')}
                         </Button>
                       ) : (
-                        <Button variant="outline" size="lg" className="rounded-full gap-2" onClick={handlePause}>
+                        <Button 
+                          variant="outline" 
+                          size="lg" 
+                          className="rounded-full gap-2 backdrop-blur-sm border-primary/50" 
+                          onClick={() => {
+                            handlePause();
+                            if ('vibrate' in navigator) {
+                              navigator.vibrate(10);
+                            }
+                          }}
+                        >
                           <Pause className="h-5 w-5" />
                           {tI18n('mantras.pause', 'Pause')}
                         </Button>
                       )}
-                      <Button variant="outline" size="lg" className="rounded-full gap-2" onClick={handleReset}>
+                      <Button 
+                        variant="outline" 
+                        size="lg" 
+                        className="rounded-full gap-2 backdrop-blur-sm" 
+                        onClick={() => {
+                          handleReset();
+                          if ('vibrate' in navigator) {
+                            navigator.vibrate([10, 20, 10]);
+                          }
+                        }}
+                      >
                         <RotateCcw className="h-4 w-4" />
                         {tI18n('mantras.reset', 'Reset')}
                       </Button>
                       {count > 0 && (
-                        <Button variant="ghost" size="lg" className="rounded-full gap-2" onClick={handleRestartFrom1}>
+                        <Button 
+                          variant="ghost" 
+                          size="lg" 
+                          className="rounded-full gap-2 backdrop-blur-sm" 
+                          onClick={() => {
+                            handleRestartFrom1();
+                            if ('vibrate' in navigator) {
+                              navigator.vibrate(10);
+                            }
+                          }}
+                        >
                           {tI18n('mantras.restartFrom1', 'Restart from 1')}
                         </Button>
                       )}
@@ -546,7 +652,18 @@ const Mantras = () => {
                     <p className="text-muted-foreground mb-6">
                       {tI18n('mantras.completeBody', 'Take a breath. Notice how you feel.')}
                     </p>
-                    <Button size="lg" className="rounded-full gap-2" onClick={() => { setCount(0); setCompleted(false); handleStart(); }}>
+                    <Button 
+                      size="lg" 
+                      className="rounded-full gap-2 backdrop-blur-sm bg-primary/90 hover:bg-primary shadow-lg shadow-primary/30" 
+                      onClick={() => { 
+                        setCount(0); 
+                        setCompleted(false); 
+                        handleStart();
+                        if ('vibrate' in navigator) {
+                          navigator.vibrate([15, 50, 15]); // Celebration pattern
+                        }
+                      }}
+                    >
                       <Play className="h-5 w-5" />
                       {tI18n('mantras.playAgain', 'Play again')}
                     </Button>

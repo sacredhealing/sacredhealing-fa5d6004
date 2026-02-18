@@ -19,9 +19,10 @@ export function getPlanetOfDay(): Planet {
 }
 
 /**
- * Hora Logic: Planetary hours based on Chaldean order
- * Order: Sun, Venus, Mercury, Moon, Saturn, Jupiter, Mars (repeats)
+ * Hora Logic: Planetary hours based on Chaldean order (Sri Yukteswar Precision)
+ * CORRECT ORDER: Saturn → Jupiter → Mars → Sun → Venus → Mercury → Moon (repeats)
  * Each hora is ~1 hour, starting from sunrise
+ * Day ruler determines the first Hora of the day
  */
 export function getPlanetOfHour(sunriseTime: Date | null = null): Planet | null {
   if (!sunriseTime) {
@@ -34,11 +35,20 @@ export function getPlanetOfHour(sunriseTime: Date | null = null): Planet | null 
   const now = new Date();
   const hoursSinceSunrise = (now.getTime() - sunriseTime.getTime()) / (1000 * 60 * 60);
   
-  // Chaldean order: Sun, Venus, Mercury, Moon, Saturn, Jupiter, Mars
-  const horaOrder: Planet[] = ['Sun', 'Venus', 'Mercury', 'Moon', 'Saturn', 'Jupiter', 'Mars'];
+  // CORRECT Chaldean order: Saturn → Jupiter → Mars → Sun → Venus → Mercury → Moon
+  const horaOrder: Planet[] = ['Saturn', 'Jupiter', 'Mars', 'Sun', 'Venus', 'Mercury', 'Moon'];
+  
+  // Get day ruler (determines first hora)
+  const dayOfWeek = sunriseTime.getDay(); // 0=Sunday, 1=Monday, etc.
+  const dayRulers: Planet[] = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'];
+  const dayRuler = dayRulers[dayOfWeek];
+  
+  // Find starting index based on day ruler
+  const startIndex = horaOrder.indexOf(dayRuler);
+  if (startIndex === -1) return null;
   
   // Each hora is approximately 1 hour
-  const horaIndex = Math.floor(hoursSinceSunrise) % 7;
+  const horaIndex = (startIndex + Math.floor(hoursSinceSunrise)) % 7;
   return horaOrder[horaIndex];
 }
 
