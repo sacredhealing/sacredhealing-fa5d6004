@@ -109,7 +109,8 @@ INSERT INTO public.ui_translations (key_name, en_text, sv_text, category) VALUES
   ('error_no_audio', 'No audio available for this mantra. Please select another mantra.', 'Det finns inget ljud tillgängligt för denna mantra. Välj en annan mantra.', 'ui'),
   ('error_mantra_reward', 'Could not register the reward. Your practice is still valuable.', 'Kunde inte registrera belöningen. Din praxis är fortfarande värdefull.', 'ui'),
   ('error_member_fetch', 'Could not load members right now. The database needs updating. Contact support if the problem persists.', 'Kunde inte ladda medlemmar just nu. Databasen behöver uppdateras. Kontakta support om problemet kvarstår.', 'ui'),
-  ('mantras_dasha_pinned', 'Your Period', 'Ditt Period', 'ui')
+  ('mantras_dasha_pinned', 'Your Period', 'Ditt Period', 'ui'),
+  ('mantras_golden_hour', 'Your Sacred Hour matches your planet! This is a powerful time for mantra practice.', 'Din Heliga Timme matchar din planet! Detta är en kraftfull tid för mantra-praktik.', 'ui')
 ON CONFLICT (key_name) DO UPDATE SET 
   en_text = EXCLUDED.en_text, 
   sv_text = EXCLUDED.sv_text, 

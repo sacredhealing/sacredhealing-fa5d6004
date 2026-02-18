@@ -13,7 +13,7 @@ import { getMantras, type MantraItem, MANTRA_REPETITIONS } from '@/features/mant
 import { useJyotishMantraRecommendation } from '@/hooks/useJyotishMantraRecommendation';
 import { useHoraWatch } from '@/hooks/useHoraWatch';
 import { useAIVedicReading } from '@/hooks/useAIVedicReading';
-import { normalizePlanetName, mantraMatchesPlanet, type Planet } from '@/lib/jyotishMantraLogic';
+import { normalizePlanetName, mantraMatchesPlanet, getPlanetOfDay, type Planet } from '@/lib/jyotishMantraLogic';
 import { getPlanetEmoji } from '@/lib/vedicTypes';
 
 function getPlayableUrl(url: string): string {
@@ -24,10 +24,12 @@ function getPlayableUrl(url: string): string {
   return url;
 }
 
-function formatDuration(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
-  return `${m}:${s.toString().padStart(2, '0')}`;
+// 50+ DEMOGRAPHIC UX: Format duration with 'min' suffix
+function formatDurationMinutes(minutes: number): string {
+  if (!Number.isFinite(minutes) || minutes <= 0) return '';
+  // Always show as "X min" format for clarity
+  const rounded = Math.round(minutes);
+  return rounded === 1 ? '1 min' : `${rounded} min`;
 }
 
 const Mantras = () => {
@@ -69,41 +71,83 @@ const Mantras = () => {
     ? normalizePlanetName(reading.personalCompass.currentDasha.period.split(' ')[0])
     : null;
 
-  // Check if current Hora matches Dasha planet (Golden Aura condition)
+  // SRI YUKTESWAR MANTRA ENGINE: Check if current Hora matches user's planet (Golden Aura)
+  // Also check if Hora matches Dasha planet
   const isCelestialMatch = currentHoraPlanet && dashaPlanet && currentHoraPlanet === dashaPlanet;
+  
+  // Get user's birth planet (if available from reading)
+  const userBirthPlanet = reading?.personalCompass?.birthPlanet 
+    ? normalizePlanetName(reading.personalCompass.birthPlanet)
+    : null;
+  
+  // Golden glow condition: Hora matches user's planet OR Dasha planet
+  const shouldGlowGold = currentHoraPlanet && (
+    (userBirthPlanet && currentHoraPlanet === userBirthPlanet) ||
+    (dashaPlanet && currentHoraPlanet === dashaPlanet)
+  );
 
   useEffect(() => {
     let cancelled = false;
+    
+    // Log table structure for debugging
+    const logTableStructure = async () => {
+      try {
+        const { data: structure } = await supabase.rpc('check_mantras_structure');
+        if (structure) {
+          console.log('[Mantras] Table structure check:', structure);
+        }
+      } catch (err) {
+        console.warn('[Mantras] Could not check table structure:', err);
+      }
+    };
+    
+    logTableStructure();
+    
     getMantras().then((data) => {
       if (!cancelled) {
         // SRI YUKTESWAR LOGIC: Pin Dasha planet mantras to top
+        // Also pin "Mantra of the Day" (weekday planet) to top section
+        const dayPlanet = getPlanetOfDay();
         const sortedMantras = [...data];
-        if (dashaPlanet) {
-          sortedMantras.sort((a, b) => {
-            const aMatchesDasha = mantraMatchesPlanet(a, dashaPlanet);
-            const bMatchesDasha = mantraMatchesPlanet(b, dashaPlanet);
-            if (aMatchesDasha && !bMatchesDasha) return -1;
-            if (!aMatchesDasha && bMatchesDasha) return 1;
-            return 0;
-          });
-        }
+        
+        // Sort: Dasha mantras first, then Day mantras, then others
+        sortedMantras.sort((a, b) => {
+          const aMatchesDasha = dashaPlanet && mantraMatchesPlanet(a, dashaPlanet);
+          const bMatchesDasha = dashaPlanet && mantraMatchesPlanet(b, dashaPlanet);
+          const aMatchesDay = mantraMatchesPlanet(a, dayPlanet);
+          const bMatchesDay = mantraMatchesPlanet(b, dayPlanet);
+          
+          // Dasha mantras first
+          if (aMatchesDasha && !bMatchesDasha) return -1;
+          if (!aMatchesDasha && bMatchesDasha) return 1;
+          
+          // Then Day mantras
+          if (aMatchesDay && !bMatchesDay) return -1;
+          if (!aMatchesDay && bMatchesDay) return 1;
+          
+          return 0;
+        });
+        
         setMantras(sortedMantras);
         
-        // Preselect recommended mantra if available, otherwise first mantra
+        // Preselect: Dasha > Day > Recommended > First
         if (sortedMantras.length > 0 && !selectedMantraId) {
-          const recommendedId = jyotishRecommendation?.recommendedMantraId;
           const dashaMantraId = dashaPlanet 
             ? sortedMantras.find(m => mantraMatchesPlanet(m, dashaPlanet))?.id 
             : null;
-          // Prioritize: Dasha mantra > Recommended > First
-          const preselectedId = dashaMantraId || (recommendedId && sortedMantras.find(m => m.id === recommendedId)?.id) || sortedMantras[0].id;
+          const dayMantraId = sortedMantras.find(m => mantraMatchesPlanet(m, dayPlanet))?.id;
+          const recommendedId = jyotishRecommendation?.recommendedMantraId;
+          
+          const preselectedId = dashaMantraId || dayMantraId || 
+            (recommendedId && sortedMantras.find(m => m.id === recommendedId)?.id) || 
+            sortedMantras[0].id;
           setSelectedMantraId(preselectedId);
         }
       }
       setLoading(false);
     }).catch((error) => {
       if (!cancelled) {
-        console.error('Error fetching mantras:', error);
+        console.error('[Mantras] Error fetching mantras:', error);
         // Heart-centered error message (Dan Abramov Retainable UI)
         toast.error(t('error_mantras_fetch', 'Kunde inte ladda mantras just nu. Var vänlig försök igen om en stund.'));
         setLoading(false);
@@ -274,11 +318,13 @@ const Mantras = () => {
       {/* Planetary Hora Watch - Din Heliga Timme (Sri Yukteswar Precision) */}
       {horaWatch.calculation && (
         <section className="px-4 mb-6">
-          <Card className="rounded-2xl border-border bg-gradient-to-br from-primary/5 via-background to-primary/5 border-primary/20 overflow-hidden backdrop-blur-sm">
+          <Card className={`rounded-2xl border-border bg-gradient-to-br from-primary/5 via-background to-primary/5 border-primary/20 overflow-hidden backdrop-blur-sm ${
+            shouldGlowGold ? 'border-amber-500/50 shadow-lg shadow-amber-500/20' : ''
+          }`}>
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-primary" />
+                  <Clock className={`w-5 h-5 ${shouldGlowGold ? 'text-amber-400 animate-pulse' : 'text-primary'}`} />
                   <h2 className="text-lg font-semibold text-foreground">
                     {t('mantras_sacred_hour', 'Din Heliga Timme')}
                   </h2>
@@ -287,11 +333,11 @@ const Mantras = () => {
                   <Badge 
                     variant="outline" 
                     className={`border-primary/30 text-primary font-bold text-sm px-3 py-1 ${
-                      isCelestialMatch ? 'animate-pulse border-amber-500/50 bg-amber-500/10' : ''
+                      shouldGlowGold ? 'animate-pulse border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400' : ''
                     }`}
                   >
                     {getPlanetEmoji(currentHoraPlanet)} {currentHoraPlanet}
-                    {isCelestialMatch && ' ✨'}
+                    {shouldGlowGold && ' ✨'}
                   </Badge>
                 )}
               </div>
@@ -316,6 +362,13 @@ const Mantras = () => {
                       <span className="text-foreground font-medium">
                         {getPlanetEmoji(horaWatch.calculation.dayRuler)} {horaWatch.calculation.dayRuler}
                       </span>
+                    </div>
+                  )}
+                  {shouldGlowGold && (
+                    <div className="mt-3 pt-3 border-t border-amber-500/20">
+                      <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                        ✨ {t('mantras_golden_hour', 'Din Heliga Timme matchar din planet! Detta är en kraftfull tid för mantra-praktik.')}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -367,12 +420,21 @@ const Mantras = () => {
                 mantras.map((m) => {
                   const isRecommended = jyotishRecommendation?.recommendedMantraId === m.id;
                   
-                  // Check if this mantra matches the celestial match planet (Golden Aura)
+                  // SRI YUKTESWAR MANTRA ENGINE: Check for golden glow conditions
                   const mantraPlanet = m.planet_type ? normalizePlanetName(m.planet_type) : null;
-                  const hasGoldenAura = isCelestialMatch && mantraPlanet === dashaPlanet && mantraPlanet === currentHoraPlanet;
+                  
+                  // Golden Aura: Hora matches user's planet OR Dasha planet
+                  const hasGoldenAura = shouldGlowGold && mantraPlanet === currentHoraPlanet && (
+                    (userBirthPlanet && mantraPlanet === userBirthPlanet) ||
+                    (dashaPlanet && mantraPlanet === dashaPlanet)
+                  );
                   
                   // Check if this is a Dasha planet mantra (Pin to top)
                   const isDashaMantra = dashaPlanet && mantraMatchesPlanet(m, dashaPlanet);
+                  
+                  // Check if this is "Mantra of the Day" (weekday planet)
+                  const dayPlanet = getPlanetOfDay();
+                  const isDayMantra = mantraMatchesPlanet(m, dayPlanet);
                   
                   return (
                     <button
@@ -392,6 +454,8 @@ const Mantras = () => {
                           ? 'border-amber-500/50 bg-gradient-to-r from-amber-500/20 via-yellow-500/10 to-amber-500/20 shadow-lg shadow-amber-500/20'
                           : isDashaMantra
                           ? 'border-primary/70 bg-primary/8 shadow-md shadow-primary/10'
+                          : isDayMantra
+                          ? 'border-primary/60 bg-primary/6 shadow-sm shadow-primary/5'
                           : isRecommended
                           ? 'border-primary/50 bg-primary/5'
                           : 'border-border bg-card/50 hover:bg-muted/30'
@@ -410,6 +474,13 @@ const Mantras = () => {
                         <div className="absolute top-2 right-2">
                           <Badge variant="outline" className="text-[9px] border-primary/50 text-primary bg-primary/5">
                             {t('mantras_dasha_pinned', 'Ditt Period')}
+                          </Badge>
+                        </div>
+                      )}
+                      {isDayMantra && !hasGoldenAura && !isDashaMantra && (
+                        <div className="absolute top-2 right-2">
+                          <Badge variant="outline" className="text-[9px] border-primary/40 text-primary bg-primary/5">
+                            {t('mantras_day_mantra', 'Dagens Mantra')}
                           </Badge>
                         </div>
                       )}
@@ -440,8 +511,8 @@ const Mantras = () => {
                             <span className="text-[10px] text-primary font-medium uppercase tracking-wide">Recommended</span>
                           )}
                         </div>
-                        {m.duration_seconds > 0 && (
-                          <p className="text-xs text-muted-foreground">{formatDuration(m.duration_seconds)}</p>
+                        {m.duration_minutes > 0 && (
+                          <p className="text-xs text-muted-foreground">{formatDurationMinutes(m.duration_minutes)}</p>
                         )}
                       </div>
                     </button>
