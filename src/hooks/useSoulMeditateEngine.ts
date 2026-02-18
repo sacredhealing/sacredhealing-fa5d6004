@@ -338,8 +338,12 @@ export function useSoulMeditateEngine() {
     if (dsp.warmth?.enabled) {
       (waveShaperRef.current as any).curve = createWarmthCurve(dsp.warmth.drive);
     } else {
-      // Linear pass-through when warmth is disabled
-      (waveShaperRef.current as any).curve = null;
+      // Linear pass-through when warmth is disabled - MUST use a linear curve, not null
+      const linearCurve = new Float32Array(44100);
+      for (let i = 0; i < 44100; i++) {
+        linearCurve[i] = (i * 2) / 44100 - 1;
+      }
+      (waveShaperRef.current as any).curve = linearCurve;
     }
     waveShaperRef.current.oversample = '4x';
 
