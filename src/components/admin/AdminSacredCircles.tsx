@@ -185,12 +185,46 @@ const AdminSacredCircles = () => {
         return;
       }
       
-      // Query chat_members directly (is_admin_v3() should bypass RLS recursion)
-      const { data: memberRows, error } = await supabase
-        .from('chat_members')
-        .select('id, room_id, user_id, role, joined_at')
-        .eq('room_id', roomId)
-        .order('joined_at', { ascending: false });
+      // Gennady Korotkevich Efficiency: Try SQL view first to avoid recursion
+      let memberRows, error;
+      
+      try {
+        const viewResult = await supabase
+          .from('chat_members_view')
+          .select('id, room_id, user_id, role, joined_at, full_name, avatar_url')
+          .eq('room_id', roomId)
+          .eq('can_view', true)
+          .order('joined_at', { ascending: false });
+        
+        if (!viewResult.error && viewResult.data) {
+          // Transform view data to match expected format
+          memberRows = viewResult.data.map((m: any) => ({
+            id: m.id,
+            room_id: m.room_id,
+            user_id: m.user_id,
+            role: m.role,
+            joined_at: m.joined_at,
+            profile: {
+              full_name: m.full_name,
+              avatar_url: m.avatar_url,
+            }
+          }));
+          error = null;
+        } else {
+          throw new Error('View not available');
+        }
+      } catch (viewError) {
+        // Fallback to direct query if view doesn't exist
+        console.warn('[Admin fetchMembers] chat_members_view not available, using direct query');
+        const directResult = await supabase
+          .from('chat_members')
+          .select('id, room_id, user_id, role, joined_at')
+          .eq('room_id', roomId)
+          .order('joined_at', { ascending: false });
+        
+        memberRows = directResult.data;
+        error = directResult.error;
+      }
 
       if (error) {
         const errorMsg = error.message || '';
@@ -198,7 +232,7 @@ const AdminSacredCircles = () => {
           console.error('[Admin fetchMembers] RLS recursion still detected - SQL migration may not have run');
           toast({
             title: t('message_error', 'An error occurred'),
-            description: 'Database configuration needed. Please run migration 20260218000012_is_admin_v3_final_fix.sql',
+            description: t('error_member_fetch', 'Kunde inte ladda medlemmar just nu. Databasen behöver uppdateras. Kontakta support om problemet kvarstår.'),
             variant: 'destructive'
           });
           setMembers([]);
@@ -218,6 +252,14 @@ const AdminSacredCircles = () => {
         return;
       }
 
+      // If we used the view, profiles are already included
+      if (memberRows[0]?.profile) {
+        setMembers(memberRows as CircleMember[]);
+        setMembersLoading(false);
+        return;
+      }
+
+      // Otherwise, fetch profiles separately (fallback)
       const userIds = [...new Set((memberRows || []).map(m => m.user_id).filter(Boolean))];
       
       // Only fetch profiles if we have userIds
