@@ -128,7 +128,9 @@ export const useTranslation = () => {
 /**
  * Translation component wrapper for easy usage
  */
+import React from 'react';
+
 export const T: React.FC<{ k: string; fallback?: string }> = ({ k, fallback }) => {
   const { t } = useTranslation();
-  return <>{t(k, fallback)}</>;
+  return React.createElement(React.Fragment, null, t(k, fallback));
 };
