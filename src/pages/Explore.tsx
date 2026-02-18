@@ -15,7 +15,6 @@ import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { useMeditationContentLanguage } from "@/features/meditations/useContentLanguage";
 import { useMembership } from "@/hooks/useMembership";
 import { getDayPhase } from "@/utils/postSessionContext";
-import { VastuBanner } from '@/components/vastu/VastuBanner';
 
 import {
   Heart,
@@ -228,11 +227,6 @@ export default function Explore() {
           onClick={() => navigate("/meditations")}
         />
       ) : null}
-
-      {/* Vastu Banner */}
-      <section className="mt-8">
-        <VastuBanner />
-      </section>
 
       {/* Vastu Banner */}
       <section className="mt-8">
