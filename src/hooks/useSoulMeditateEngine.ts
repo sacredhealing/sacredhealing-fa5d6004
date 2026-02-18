@@ -739,12 +739,18 @@ export function useSoulMeditateEngine() {
 
   // Start solfeggio oscillator
   const startSolfeggio = useCallback(async (hz: number) => {
-    if (!audioContextRef.current || !solfeggioGainRef.current) return;
+    if (!audioContextRef.current || !solfeggioGainRef.current) {
+      console.error('[Solfeggio] Audio context or gain node missing');
+      return;
+    }
 
     // CRITICAL: Resume audio context if suspended (browser autoplay policy)
     if (audioContextRef.current.state === 'suspended') {
+      console.log('[Solfeggio] Resuming suspended audio context');
       await audioContextRef.current.resume();
     }
+
+    console.log('[Solfeggio] Audio context state:', audioContextRef.current.state);
 
     // Stop existing
     if (solfeggioOscRef.current) {
@@ -756,11 +762,19 @@ export function useSoulMeditateEngine() {
     osc.type = 'sine';
     osc.frequency.value = hz;
     osc.connect(solfeggioGainRef.current);
-    osc.start();
-
-    // Set volume immediately for audible tone (5dB lower than II. Meditation Style)
+    
+    // Calculate volume with calibration
+    const targetVolume = solfeggioVolume * QUANTUM_CALIBRATION_LINEAR;
+    console.log('[Solfeggio] Starting oscillator:', hz, 'Hz, volume:', solfeggioVolume, '->', targetVolume);
+    
+    // Set volume BEFORE starting to ensure immediate sound
     solfeggioGainRef.current.gain.cancelScheduledValues(audioContextRef.current.currentTime);
-    solfeggioGainRef.current.gain.setValueAtTime(solfeggioVolume * QUANTUM_CALIBRATION_LINEAR, audioContextRef.current.currentTime);
+    solfeggioGainRef.current.gain.setValueAtTime(targetVolume, audioContextRef.current.currentTime);
+    
+    osc.start();
+    
+    // Verify gain is set correctly
+    console.log('[Solfeggio] Gain node value:', solfeggioGainRef.current.gain.value);
 
     solfeggioOscRef.current = osc;
     setFrequencies(prev => ({ ...prev, solfeggio: { enabled: true, hz } }));
@@ -781,18 +795,32 @@ export function useSoulMeditateEngine() {
 
   // Start binaural beats
   const startBinaural = useCallback(async (carrierHz: number, beatHz: number) => {
-    if (!audioContextRef.current || !binauralGainRef.current || !binauralMergerRef.current) return;
+    if (!audioContextRef.current || !binauralGainRef.current || !binauralMergerRef.current) {
+      console.error('[Binaural] Audio context or gain/merger nodes missing');
+      return;
+    }
 
     // CRITICAL: Resume audio context if suspended (browser autoplay policy)
     if (audioContextRef.current.state === 'suspended') {
+      console.log('[Binaural] Resuming suspended audio context');
       await audioContextRef.current.resume();
     }
+
+    console.log('[Binaural] Audio context state:', audioContextRef.current.state);
 
     // Stop existing
     binauralLeftOscRef.current?.stop();
     binauralRightOscRef.current?.stop();
 
     const ctx = audioContextRef.current;
+    
+    // Calculate volume with calibration
+    const targetVolume = binauralVolume * QUANTUM_CALIBRATION_LINEAR;
+    console.log('[Binaural] Starting binaural beats:', carrierHz, 'Hz carrier,', beatHz, 'Hz beat, volume:', binauralVolume, '->', targetVolume);
+    
+    // Set volume BEFORE creating oscillators
+    binauralGainRef.current.gain.cancelScheduledValues(ctx.currentTime);
+    binauralGainRef.current.gain.setValueAtTime(targetVolume, ctx.currentTime);
     
     // Left ear oscillator
     const leftOsc = ctx.createOscillator();
@@ -819,10 +847,9 @@ export function useSoulMeditateEngine() {
 
     leftOsc.start();
     rightOsc.start();
-
-    // Set volume immediately for audible tone (5dB lower than II. Meditation Style)
-    binauralGainRef.current.gain.cancelScheduledValues(ctx.currentTime);
-    binauralGainRef.current.gain.setValueAtTime(binauralVolume * QUANTUM_CALIBRATION_LINEAR, ctx.currentTime);
+    
+    // Verify gain is set correctly
+    console.log('[Binaural] Gain node value:', binauralGainRef.current.gain.value);
 
     binauralLeftOscRef.current = leftOsc;
     binauralRightOscRef.current = rightOsc;

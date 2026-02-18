@@ -121,8 +121,14 @@ export default function CreativeSoulMeditationTool() {
 
       // CRITICAL: Resume audio context before starting any audio (browser autoplay policy)
       const audioCtx = engine.getAudioContext();
-      if (audioCtx && audioCtx.state === 'suspended') {
-        await audioCtx.resume();
+      if (audioCtx) {
+        console.log('[StartNeuralProcess] Audio context state before resume:', audioCtx.state);
+        if (audioCtx.state === 'suspended') {
+          await audioCtx.resume();
+          console.log('[StartNeuralProcess] Audio context resumed, new state:', audioCtx.state);
+        }
+      } else {
+        console.error('[StartNeuralProcess] Audio context is null!');
       }
 
       // Start solfeggio frequency (healing fundamental) - always start even without neural source
@@ -130,6 +136,9 @@ export default function CreativeSoulMeditationTool() {
       
       // Start binaural beats - always start even without neural source
       await engine.startBinaural(200, brainwaveFreq);
+      
+      // Verify master volume is set
+      console.log('[StartNeuralProcess] Master volume:', engine.masterVolume);
       
       // Toggle play on layers (only if source exists)
       if (engine.neuralLayer.source && !engine.neuralLayer.isPlaying) {
