@@ -228,11 +228,6 @@ export default function Explore() {
         />
       ) : null}
 
-      {/* Vastu Banner */}
-      <section className="mt-8">
-        <VastuBanner />
-      </section>
-
       {/* SECTION: Your Space */}
       <section className="mt-8">
         <h2 className="text-sm font-medium text-white/60 mb-4 tracking-wide uppercase">
