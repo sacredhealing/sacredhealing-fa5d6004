@@ -2676,49 +2676,55 @@ export type Database = {
       }
       mantras: {
         Row: {
-          audio_url: string
-          category: string | null
-          cover_image_url: string | null
-          created_at: string
-          description: string | null
-          duration_seconds: number
           id: string
+          title: string
+          description: string | null
+          audio_url: string
+          cover_image_url: string | null
+          duration_seconds: number
+          duration_minutes: number
+          shc_reward: number
+          play_count: number
           is_active: boolean
           is_premium: boolean
-          play_count: number
+          category: string | null
           planet_type: string | null
-          shc_reward: number
-          title: string
+          created_at: string
+          updated_at: string
         }
         Insert: {
-          audio_url: string
-          category?: string | null
-          cover_image_url?: string | null
-          created_at?: string
-          description?: string | null
-          duration_seconds?: number
           id?: string
+          title: string
+          description?: string | null
+          audio_url: string
+          cover_image_url?: string | null
+          duration_seconds?: number
+          duration_minutes?: number
+          shc_reward?: number
+          play_count?: number
           is_active?: boolean
           is_premium?: boolean
-          play_count?: number
+          category?: string | null
           planet_type?: string | null
-          shc_reward?: number
-          title: string
+          created_at?: string
+          updated_at?: string
         }
         Update: {
-          audio_url?: string
-          category?: string | null
-          cover_image_url?: string | null
-          created_at?: string
-          description?: string | null
-          duration_seconds?: number
           id?: string
+          title?: string
+          description?: string | null
+          audio_url?: string
+          cover_image_url?: string | null
+          duration_seconds?: number
+          duration_minutes?: number
+          shc_reward?: number
+          play_count?: number
           is_active?: boolean
           is_premium?: boolean
-          play_count?: number
+          category?: string | null
           planet_type?: string | null
-          shc_reward?: number
-          title?: string
+          created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
