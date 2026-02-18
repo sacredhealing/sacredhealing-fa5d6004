@@ -186,7 +186,7 @@ function AppRoutes() {
                   <Route path="/ayurveda" element={<Ayurveda />} />
                   <Route path="/vastu" element={<Vastu />} />
                   <Route path="/prompt-library" element={<PromptLibrary />} />
-                  <Route path="/creative-soul" element={<Navigate to="/healing" replace />} />
+                  <Route path="/creative-soul" element={<Navigate to="/creative-soul/store" replace />} />
                   <Route path="/creative-soul-hub" element={<CreativeSoulHub />} />
                   {/* ROUTE DEFINITION: /creative-soul/store renders CreativeSoulStore.tsx */}
                   <Route path="/creative-soul/store" element={<CreativeSoulStore />} />
