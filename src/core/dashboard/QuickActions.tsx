@@ -4,13 +4,13 @@ import { Sparkles } from 'lucide-react';
 
 export const QuickActions: React.FC = () => {
   const handleCreativeSoulClick = () => {
-    // Navigation target: /creative-soul/store
-    window.location.href = '/creative-soul/store';
+    // Navigation target: /healing
+    window.location.href = '/healing';
   };
 
   return (
     <Link
-      to="/creative-soul/store"
+      to="/healing"
       className="flex flex-col items-center gap-2 p-3 rounded-xl bg-muted/30 border border-border/30 hover:bg-muted/50 transition-all duration-300 cursor-pointer"
       onClick={handleCreativeSoulClick}
     >

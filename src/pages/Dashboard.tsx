@@ -55,7 +55,7 @@ const Dashboard: React.FC = () => {
 
   const QUICK_ACTIONS = [
     { id: "mantra", titleKey: "dashboard.mantra", icon: Sparkles, route: "/mantras" },
-    { id: "soul", titleKey: "dashboard.soul", icon: Heart, route: "/creative-soul" },
+    { id: "soul", titleKey: "dashboard.soul", icon: Heart, route: "/healing" },
     { id: "meditate", titleKey: "dashboard.meditate", icon: Play, route: "/meditations" },
   ];
   const { profile: userProfile } = useProfile();
