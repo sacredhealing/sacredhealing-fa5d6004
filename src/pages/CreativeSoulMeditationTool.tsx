@@ -112,11 +112,6 @@ export default function CreativeSoulMeditationTool() {
 
   // Start neural process
   const startNeuralProcess = useCallback(async () => {
-    if (!engine.neuralLayer.source && !engine.atmosphereLayer.source) {
-      toast.error('Neural Source missing. Upload audio or link YouTube stream.');
-      return;
-    }
-
     setIsProcessing(true);
     
     try {
@@ -124,13 +119,19 @@ export default function CreativeSoulMeditationTool() {
         await engine.initialize();
       }
 
-      // Start solfeggio frequency
-      engine.startSolfeggio(healingFreq);
+      // CRITICAL: Resume audio context before starting any audio (browser autoplay policy)
+      const audioCtx = engine.getAudioContext();
+      if (audioCtx && audioCtx.state === 'suspended') {
+        await audioCtx.resume();
+      }
+
+      // Start solfeggio frequency (healing fundamental) - always start even without neural source
+      await engine.startSolfeggio(healingFreq);
       
-      // Start binaural if enabled
-      engine.startBinaural(200, brainwaveFreq);
+      // Start binaural beats - always start even without neural source
+      await engine.startBinaural(200, brainwaveFreq);
       
-      // Toggle play on layers
+      // Toggle play on layers (only if source exists)
       if (engine.neuralLayer.source && !engine.neuralLayer.isPlaying) {
         engine.toggleNeuralPlay();
       }
@@ -140,6 +141,7 @@ export default function CreativeSoulMeditationTool() {
 
       toast.success('DSP Mastering Rack Online');
     } catch (err) {
+      console.error('Audio engine error:', err);
       toast.error('Audio engine ignition failure');
     } finally {
       setIsProcessing(false);

@@ -738,8 +738,13 @@ export function useSoulMeditateEngine() {
   }, [atmosphereLayer.isPlaying]);
 
   // Start solfeggio oscillator
-  const startSolfeggio = useCallback((hz: number) => {
+  const startSolfeggio = useCallback(async (hz: number) => {
     if (!audioContextRef.current || !solfeggioGainRef.current) return;
+
+    // CRITICAL: Resume audio context if suspended (browser autoplay policy)
+    if (audioContextRef.current.state === 'suspended') {
+      await audioContextRef.current.resume();
+    }
 
     // Stop existing
     if (solfeggioOscRef.current) {
@@ -775,8 +780,13 @@ export function useSoulMeditateEngine() {
   }, []);
 
   // Start binaural beats
-  const startBinaural = useCallback((carrierHz: number, beatHz: number) => {
+  const startBinaural = useCallback(async (carrierHz: number, beatHz: number) => {
     if (!audioContextRef.current || !binauralGainRef.current || !binauralMergerRef.current) return;
+
+    // CRITICAL: Resume audio context if suspended (browser autoplay policy)
+    if (audioContextRef.current.state === 'suspended') {
+      await audioContextRef.current.resume();
+    }
 
     // Stop existing
     binauralLeftOscRef.current?.stop();
