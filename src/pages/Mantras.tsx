@@ -76,9 +76,8 @@ const Mantras = () => {
   const isCelestialMatch = currentHoraPlanet && dashaPlanet && currentHoraPlanet === dashaPlanet;
   
   // Get user's birth planet (if available from reading)
-  const userBirthPlanet = reading?.personalCompass?.birthPlanet 
-    ? normalizePlanetName(reading.personalCompass.birthPlanet)
-    : null;
+  // Note: birthPlanet may not be in PersonalCompass, using Dasha planet as primary match
+  const userBirthPlanet = null; // Will be populated when birthPlanet field is added to reading
   
   // Golden glow condition: Hora matches user's planet OR Dasha planet
   const shouldGlowGold = currentHoraPlanet && (
@@ -423,10 +422,11 @@ const Mantras = () => {
                   // SRI YUKTESWAR MANTRA ENGINE: Check for golden glow conditions
                   const mantraPlanet = m.planet_type ? normalizePlanetName(m.planet_type) : null;
                   
-                  // Golden Aura: Hora matches user's planet OR Dasha planet
+                  // Golden Aura: Hora matches Dasha planet (primary match)
+                  // When birthPlanet is available, it will also trigger golden glow
                   const hasGoldenAura = shouldGlowGold && mantraPlanet === currentHoraPlanet && (
-                    (userBirthPlanet && mantraPlanet === userBirthPlanet) ||
-                    (dashaPlanet && mantraPlanet === dashaPlanet)
+                    (dashaPlanet && mantraPlanet === dashaPlanet) ||
+                    (userBirthPlanet && mantraPlanet === userBirthPlanet)
                   );
                   
                   // Check if this is a Dasha planet mantra (Pin to top)
