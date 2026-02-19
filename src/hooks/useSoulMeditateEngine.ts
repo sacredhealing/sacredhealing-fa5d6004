@@ -597,7 +597,7 @@ export function useSoulMeditateEngine() {
       return { ok: false, reason: 'error' as const };
     }
 
-    const SUPABASE_URL = 'https://ssygukfdbtehvtndandn.supabase.co';
+    const SUPABASE_URL = 'https://tdiqrngivbrwkhwcejvv.supabase.co';
     const BUCKET = 'creative-soul-library';
     
     // Fetch available sounds for this style from database (always use the requested styleId)
