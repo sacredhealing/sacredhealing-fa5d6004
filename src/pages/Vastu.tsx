@@ -5,21 +5,22 @@ import { useMembership } from '@/hooks/useMembership';
 import { Navigate } from 'react-router-dom';
 
 const Vastu = () => {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   // useMembership already handles admin check and sets tier='lifetime' + isAdmin=true for admins
   const { tier, isPremium, loading: membershipLoading, isAdmin, adminGranted } = useMembership();
 
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
-
-  // Wait for membership check (which includes admin role check) to finish
-  if (membershipLoading) {
+  // Wait for auth session AND membership check to complete before any routing decisions
+  if (authLoading || membershipLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
     );
+  }
+
+  // Only redirect to auth once we KNOW there is no user
+  if (!user) {
+    return <Navigate to="/auth" replace />;
   }
 
   // Admins and lifetime/premium members have access

@@ -6,9 +6,18 @@ import { useMembership } from '@/hooks/useMembership';
 import type { AyurvedaMembershipLevel } from '@/lib/ayurvedaTypes';
 
 const Ayurveda = () => {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { isAdmin } = useAdminRole();
-  const { isPremium, tier } = useMembership();
+  const { isPremium, tier, loading: membershipLoading } = useMembership();
+
+  // Wait for auth and membership to resolve before rendering
+  if (authLoading || membershipLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
 
   // Map membership tiers to Ayurveda levels - Admins get LIFETIME access
   const getAyurvedaLevel = (): AyurvedaMembershipLevel => {
