@@ -1,150 +1,124 @@
 
-## Root Cause: Three Separate "No Sound" Issues
+## Audio Fix: Sound Not Playing for Healing Hz, Brainwave Target & Neural Source
 
-### Issue 1: Healing Fundamental (Hz) — No Sound on Click
-**What's broken:** Clicking a frequency card in `HealingFrequencySelector` calls `onSelect` → `setHealingFreq` (state only). There is a `useEffect` that would restart the oscillator when `healingFreq` changes, but it checks `engine.frequencies.solfeggio.enabled` first — which is `false` until "Begin Session" is clicked. So the oscillator is **never started by clicking a frequency card**. The frequency only works after "Begin Session" has been pressed first.
+### What the Browser Confirms
 
-**Where it is:** `src/pages/CreativeSoulMeditationTool.tsx` lines 361–366:
-```tsx
-useEffect(() => {
-  if (engine.frequencies.solfeggio.enabled && engine.frequencies.solfeggio.hz !== healingFreq) {
-    engine.stopSolfeggio();
-    engine.startSolfeggio(healingFreq); // ← only fires if already enabled
-  }
-}, [healingFreq, engine]);
+After testing in the live preview, the browser console reveals the exact failure for Binaural (and the same pattern applies to Solfeggio):
+
+```
+[Binaural] Starting binaural beats: 200 Hz carrier, 4 Hz beat, volume: 0.5 -> 0.281...
+[Binaural] Audio context state: running
+[Binaural] Gain node value: 0
 ```
 
-### Issue 2: Neural Brainwave Target — No Sound on Click
-**Same exact problem.** Lines 368–373. `startBinaural` is only called if `engine.frequencies.binaural.enabled` is already `true`.
+The AudioContext IS running. The oscillators ARE started. But **the gain is 0** at the moment it is read back. This means the gain set at line 837 is not sticking — it is being overridden or ignored.
 
-### Issue 3: Neural Source — No Sound on Play Button
-**What's broken:** `engine.toggleNeuralPlay()` pauses/plays `neuralAudioRef.current`, but if the AudioContext is `suspended` (browser autoplay policy — it starts suspended until a user gesture triggers `resume()`), the audio element connected to the AudioContext produces no output. The play button does not call `audioContextRef.current.resume()` before playing.
+### Root Cause (3 bugs)
 
-In `useSoulMeditateEngine.ts` line 727–737:
-```tsx
-const toggleNeuralPlay = useCallback(() => {
-  if (!neuralAudioRef.current) return;
-  if (neuralLayer.isPlaying) {
-    neuralAudioRef.current.pause();
-  } else {
-    audioContextRef.current?.resume(); // ← this IS called, BUT...
-    neuralAudioRef.current.play().catch(console.error);
-  }
-```
-Actually `toggleNeuralPlay` does call `resume()`. The issue here is different: the engine is not initialized when the user first loads a file and hits play. The `loadNeuralSource` auto-initializes if needed (line 433), but if that auto-initialization hasn't completed yet when `toggleNeuralPlay` is called, the audio context may still be `suspended`.
+**Bug 1 & 2 — Binaural & Solfeggio gain stuck at 0**
 
-**The real problem for Neural Source sound**: The engine requires explicit "Initialize" + "Begin Session" to produce sound. But users expect to just drop a file and hit play.
+In `initialize()` (lines 306-310):
+```ts
+solfeggioGainRef.current = ctx.createGain();
+solfeggioGainRef.current.gain.value = 0;  // starts at 0
 
----
-
-### The Fix: Make Frequencies Self-Activating
-
-The correct fix is to change `onSelect` in `HealingFrequencySelector` and `BrainwaveSelector` to **trigger audio immediately** — not just update UI state.
-
-#### Fix in `src/pages/CreativeSoulMeditationTool.tsx`
-
-**1. `handleHealingFreqSelect` — new handler that starts audio:**
-```tsx
-const handleHealingFreqSelect = useCallback(async (freq: number) => {
-  setHealingFreq(freq);
-  
-  // Initialize engine if needed (browser requires user gesture)
-  if (!engine.isInitialized) {
-    await engine.initialize();
-  }
-  
-  // Resume context (browser autoplay policy)
-  const audioCtx = engine.getAudioContext();
-  if (audioCtx?.state === 'suspended') {
-    await audioCtx.resume();
-  }
-  
-  // Stop old and start new frequency immediately
-  engine.stopSolfeggio();
-  await engine.startSolfeggio(freq);
-}, [engine]);
+binauralGainRef.current = ctx.createGain();
+binauralGainRef.current.gain.value = 0;   // starts at 0
 ```
 
-**2. `handleBrainwaveFreqSelect` — new handler that starts audio:**
-```tsx
-const handleBrainwaveFreqSelect = useCallback(async (freq: number) => {
-  setBrainwaveFreq(freq);
-  
-  if (!engine.isInitialized) {
-    await engine.initialize();
-  }
-  
-  const audioCtx = engine.getAudioContext();
-  if (audioCtx?.state === 'suspended') {
-    await audioCtx.resume();
-  }
-  
-  engine.stopBinaural();
-  await engine.startBinaural(200, freq);
-}, [engine]);
+In `startBinaural` (line 836-837):
+```ts
+binauralGainRef.current.gain.cancelScheduledValues(ctx.currentTime);
+binauralGainRef.current.gain.setValueAtTime(targetVolume, ctx.currentTime);
 ```
 
-**3. Pass new handlers to components:**
-```tsx
-<HealingFrequencySelector 
-  activeFrequency={healingFreq} 
-  volume={healingVolume}
-  onSelect={handleHealingFreqSelect}  // ← was: setHealingFreq
-  onVolumeChange={handleHealingVolumeChange}
-/>
-<BrainwaveSelector 
-  activeFrequency={brainwaveFreq} 
-  volume={brainwaveVolume}
-  onSelect={handleBrainwaveFreqSelect}  // ← was: setBrainwaveFreq
-  onVolumeChange={handleBrainwaveVolumeChange}
-/>
+Then at line 860:
+```ts
+binauralMergerRef.current.connect(binauralGainRef.current);
 ```
 
-**4. Fix `handleHealingVolumeChange` and `handleBrainwaveVolumeChange` — they should also initialize if needed:**
-```tsx
-const handleHealingVolumeChange = useCallback(async (vol: number) => {
-  if (!engine.isInitialized) {
-    await engine.initialize();
-  }
-  const audioCtx = engine.getAudioContext();
-  if (audioCtx?.state === 'suspended') await audioCtx.resume();
-  engine.updateSolfeggioVolume(vol);
-  // If not already playing, start the oscillator
-  if (!engine.frequencies.solfeggio.enabled) {
-    await engine.startSolfeggio(healingFreq);
-  }
-}, [engine, healingFreq]);
+The problem: `cancelScheduledValues` + `setValueAtTime` should work, but **there is already a scheduled value at time 0 from initialization**. The `cancelScheduledValues` call cancels automation up to `ctx.currentTime`, but if `ctx.currentTime` is very small (e.g., 0.001), the initial value set during `initialize()` may survive. The fix is to use `gain.value = targetVolume` (direct assignment) which bypasses the automation timeline entirely, followed by `setValueAtTime` for safety.
+
+Additionally, `stopBinaural()` uses `setTargetAtTime(0, ...)` with a 500ms timeout before actually stopping the oscillators — but it also **leaves the gain at 0** with a scheduled ramp. If `startBinaural` is called quickly after `stopBinaural`, the ramp-to-0 automation is still in the timeline and overrides the new `setValueAtTime`.
+
+**Bug 3 — `stopBinaural`/`stopSolfeggio` leave gain automation in place**
+
+```ts
+// stopBinaural (line 876-885):
+binauralGainRef.current.gain.setTargetAtTime(0, audioContextRef.current.currentTime, 0.3);
+setTimeout(() => {
+  binauralLeftOscRef.current?.stop();  // stops after 500ms
+  ...
+}, 500);
 ```
 
-Similarly for `handleBrainwaveVolumeChange`.
+When `handleBrainwaveFreqSelect` calls `engine.stopBinaural()` then immediately `await engine.startBinaural(...)`, the gain still has the `setTargetAtTime(0)` automation running. The `cancelScheduledValues` in `startBinaural` should cancel it — but only if `ctx.currentTime` is past the scheduled start. Since both happen near-simultaneously, the cancel doesn't catch the ramp.
 
-**5. Fix Neural Source play — also ensure AudioContext is resumed:**
-The `toggleNeuralPlay` in the engine already calls `audioContextRef.current?.resume()`, but it's async and not awaited. We need to patch the engine's `toggleNeuralPlay` to await the resume before calling `play()`.
+**The complete fix**: In both `startSolfeggio` and `startBinaural`, replace `cancelScheduledValues` + `setValueAtTime` with a direct `gain.value = targetVolume` assignment first, then call `setValueAtTime`. Also add a small `await` delay (10ms) between `stop` and `start` calls in the handlers to let the previous oscillators fully terminate.
 
-In `src/hooks/useSoulMeditateEngine.ts` lines 727–737, change `toggleNeuralPlay` to:
-```tsx
-const toggleNeuralPlay = useCallback(async () => {
-  if (!neuralAudioRef.current) return;
-  
-  if (neuralLayer.isPlaying) {
-    neuralAudioRef.current.pause();
-  } else {
-    if (audioContextRef.current?.state === 'suspended') {
-      await audioContextRef.current.resume();
-    }
-    await neuralAudioRef.current.play().catch(console.error);
-  }
-  setNeuralLayer(prev => ({ ...prev, isPlaying: !prev.isPlaying }));
-}, [neuralLayer.isPlaying]);
-```
+**Bug 4 — Neural Source no sound on first play**
 
-**6. Remove the now-redundant `useEffect` guards** that check `engine.frequencies.*.enabled` before restarting (lines 361–373). Since the new handlers manage start/stop directly, these effects should be removed to avoid double-starts.
-
----
+The `toggleNeuralPlay` fix from the previous edit is correct (async + await resume). But there's also a Supabase URL in the diff that was changed to a wrong URL (`tdiqrngivbrwkhwcejvv` instead of `ssygukfdbtehvtndandn`). This was reverted but needs confirming. Looking at line 600, it correctly shows `ssygukfdbtehvtndandn` — so that's fine.
 
 ### Files to Modify
 
-| File | Change |
-|---|---|
-| `src/pages/CreativeSoulMeditationTool.tsx` | Add `handleHealingFreqSelect` + `handleBrainwaveFreqSelect` handlers; update `HealingFrequencySelector` + `BrainwaveSelector` props; also fix `handleHealingVolumeChange` / `handleBrainwaveVolumeChange` to auto-initialize |
-| `src/hooks/useSoulMeditateEngine.ts` | Make `toggleNeuralPlay` async and `await` the AudioContext resume before calling `play()` |
+**`src/hooks/useSoulMeditateEngine.ts`** — 3 targeted fixes:
+
+1. **`startSolfeggio` (line ~785-788)**: Replace `cancelScheduledValues` + `setValueAtTime` with direct `gain.value` assignment:
+```ts
+// BEFORE:
+solfeggioGainRef.current.gain.cancelScheduledValues(ctx.currentTime);
+solfeggioGainRef.current.gain.setValueAtTime(targetVolume, audioContextRef.current.currentTime);
+
+// AFTER:
+solfeggioGainRef.current.gain.cancelScheduledValues(0);
+solfeggioGainRef.current.gain.value = targetVolume;  // direct assignment bypasses automation
+```
+
+2. **`startBinaural` (line ~835-837)**: Same fix:
+```ts
+// BEFORE:
+binauralGainRef.current.gain.cancelScheduledValues(ctx.currentTime);
+binauralGainRef.current.gain.setValueAtTime(targetVolume, ctx.currentTime);
+
+// AFTER:
+binauralGainRef.current.gain.cancelScheduledValues(0);
+binauralGainRef.current.gain.value = targetVolume;  // direct assignment
+```
+
+3. **`stopSolfeggio` and `stopBinaural`**: When stopping, also cancel all scheduled values before ramping to 0, so pending automations don't leak into the next `start` call:
+```ts
+// In stopSolfeggio:
+solfeggioGainRef.current.gain.cancelScheduledValues(0);
+solfeggioGainRef.current.gain.setTargetAtTime(0, audioContextRef.current.currentTime, 0.3);
+
+// In stopBinaural:
+binauralGainRef.current.gain.cancelScheduledValues(0);
+binauralGainRef.current.gain.setTargetAtTime(0, audioContextRef.current.currentTime, 0.3);
+```
+
+**`src/pages/CreativeSoulMeditationTool.tsx`** — add a small delay between stop and start:
+
+In `handleHealingFreqSelect`:
+```ts
+engine.stopSolfeggio();
+await new Promise(r => setTimeout(r, 50)); // let old oscillator die
+await engine.startSolfeggio(freq);
+```
+
+In `handleBrainwaveFreqSelect`:
+```ts
+engine.stopBinaural();
+await new Promise(r => setTimeout(r, 50)); // let old oscillator die
+await engine.startBinaural(200, freq);
+```
+
+### Summary
+
+| Fix | File | Lines |
+|-----|------|-------|
+| `cancelScheduledValues(0)` + `gain.value =` in `startSolfeggio` | `useSoulMeditateEngine.ts` | ~785 |
+| `cancelScheduledValues(0)` + `gain.value =` in `startBinaural` | `useSoulMeditateEngine.ts` | ~835 |
+| `cancelScheduledValues(0)` before ramp in `stopSolfeggio` | `useSoulMeditateEngine.ts` | ~799 |
+| `cancelScheduledValues(0)` before ramp in `stopBinaural` | `useSoulMeditateEngine.ts` | ~876 |
+| 50ms delay between stop and start in freq select handlers | `CreativeSoulMeditationTool.tsx` | ~374, ~384 |
