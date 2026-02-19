@@ -143,13 +143,11 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, onEdit
   const [isSpeaking, setIsSpeaking] = useState(false);
   const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
 
-  // Generate reading when user details, time offset, or timezone changes
+  // Generate (or restore from cache) when user/timezone/offset changes
   useEffect(() => {
     if (user.birthDate && user.birthTime && user.birthPlace && !timezoneLoading) {
-      console.log('Triggering Vedic reading generation for:', user.name, 'timezone:', timezone);
       generateReading(user, timeOffset, timezone);
       
-      // Format sync time in user's timezone
       try {
         const targetTime = new Date(Date.now() + timeOffset * 60000);
         setLastSync(targetTime.toLocaleTimeString('en-US', { 
@@ -584,12 +582,7 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, onEdit
 
       {/* Consult Guru - Live Oracle Chat */}
       <div id="consult-guru" />
-      <motion.section 
-        className="space-y-6"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.5 }}
-      >
+      <section className="space-y-6">
         <div className="flex items-center gap-3">
           <div className="w-1 h-8 bg-gradient-to-b from-amber-500 to-purple-500 rounded-full shadow-[0_0_15px_rgba(168,85,247,0.5)]" />
           <h2 className="text-2xl font-bold text-foreground font-serif italic flex items-center gap-2">
@@ -603,7 +596,7 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, onEdit
           )}
         </div>
         <CosmicConsultation user={user} onUpgrade={onUpgrade} />
-      </motion.section>
+      </section>
     </div>
   );
 };
