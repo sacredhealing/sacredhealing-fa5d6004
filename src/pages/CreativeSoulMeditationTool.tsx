@@ -466,6 +466,14 @@ export default function CreativeSoulMeditationTool() {
                 <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/50">
                   Engine Active
                 </Badge>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={engine.playTestTone}
+                  className="text-xs text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10"
+                >
+                  🔊 Test Tone
+                </Button>
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
                   <Volume2 className="w-4 h-4 text-white/60" />
                   <Slider

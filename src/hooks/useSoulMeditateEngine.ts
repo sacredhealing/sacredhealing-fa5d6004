@@ -812,6 +812,15 @@ export function useSoulMeditateEngine() {
 
     solfeggioOscRef.current = osc;
     setFrequencies(prev => ({ ...prev, solfeggio: { enabled: true, hz } }));
+
+    // Diagnostic chain verification
+    console.log('[Solfeggio] Chain check:',
+      'mixer:', mixerGainRef.current?.gain.value,
+      'waveshaper curve:', waveShaperRef.current?.curve?.length,
+      'limiter threshold:', limiterRef.current?.threshold.value,
+      'master:', masterGainRef.current?.gain.value,
+      'ctx.destination channels:', audioContextRef.current?.destination.channelCount
+    );
   }, [solfeggioVolume]);
 
   // Stop solfeggio
@@ -891,6 +900,15 @@ export function useSoulMeditateEngine() {
     binauralRightOscRef.current = rightOsc;
 
     setFrequencies(prev => ({ ...prev, binaural: { enabled: true, carrierHz, beatHz } }));
+
+    // Diagnostic chain verification
+    console.log('[Binaural] Chain check:',
+      'mixer:', mixerGainRef.current?.gain.value,
+      'waveshaper curve:', waveShaperRef.current?.curve?.length,
+      'limiter threshold:', limiterRef.current?.threshold.value,
+      'master:', masterGainRef.current?.gain.value,
+      'ctx.destination channels:', audioContextRef.current?.destination.channelCount
+    );
   }, [binauralVolume]);
 
   // Stop binaural
@@ -1237,6 +1255,29 @@ export function useSoulMeditateEngine() {
     return Math.max(...dawRegions.map(r => r.startTime + r.duration));
   }, [dawRegions, audioBuffer]);
 
+  // Diagnostic: play a test tone DIRECTLY to destination, bypassing all DSP
+  const playTestTone = useCallback(async () => {
+    let ctx = audioContextRef.current;
+    if (!ctx) {
+      ctx = new AudioContext();
+      // Don't store — this is a throwaway test
+    }
+    if (ctx.state === 'suspended') await ctx.resume();
+    
+    console.log('[TEST TONE] Context state:', ctx.state, 'sampleRate:', ctx.sampleRate);
+    console.log('[TEST TONE] Destination:', ctx.destination.numberOfInputs, 'inputs,', ctx.destination.channelCount, 'channels');
+    
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.frequency.value = 440;
+    gain.gain.value = 0.3;
+    osc.connect(gain);
+    gain.connect(ctx.destination); // DIRECT — no mixer, no waveshaper, no limiter
+    osc.start();
+    osc.stop(ctx.currentTime + 2);
+    console.log('[TEST TONE] Playing 440 Hz for 2 seconds — DIRECT to destination');
+  }, []);
+
   return {
     // State
     isInitialized,
@@ -1290,5 +1331,8 @@ export function useSoulMeditateEngine() {
     // Recording support
     getMasterNode,
     getAudioContext,
+    
+    // Diagnostics
+    playTestTone,
   };
 }
