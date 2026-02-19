@@ -782,8 +782,9 @@ export function useSoulMeditateEngine() {
     console.log('[Solfeggio] Starting oscillator:', hz, 'Hz, volume:', solfeggioVolume, '->', targetVolume);
     
     // Set volume BEFORE starting to ensure immediate sound
-    solfeggioGainRef.current.gain.cancelScheduledValues(audioContextRef.current.currentTime);
-    solfeggioGainRef.current.gain.setValueAtTime(targetVolume, audioContextRef.current.currentTime);
+    // Direct assignment bypasses automation timeline (cancelScheduledValues alone may miss values at time 0)
+    solfeggioGainRef.current.gain.cancelScheduledValues(0);
+    solfeggioGainRef.current.gain.value = targetVolume;
     
     osc.start();
     
@@ -797,6 +798,7 @@ export function useSoulMeditateEngine() {
   // Stop solfeggio
   const stopSolfeggio = useCallback(() => {
     if (solfeggioOscRef.current && solfeggioGainRef.current && audioContextRef.current) {
+      solfeggioGainRef.current.gain.cancelScheduledValues(0);
       solfeggioGainRef.current.gain.setTargetAtTime(0, audioContextRef.current.currentTime, 0.3);
       setTimeout(() => {
         solfeggioOscRef.current?.stop();
@@ -833,8 +835,9 @@ export function useSoulMeditateEngine() {
     console.log('[Binaural] Starting binaural beats:', carrierHz, 'Hz carrier,', beatHz, 'Hz beat, volume:', binauralVolume, '->', targetVolume);
     
     // Set volume BEFORE creating oscillators
-    binauralGainRef.current.gain.cancelScheduledValues(ctx.currentTime);
-    binauralGainRef.current.gain.setValueAtTime(targetVolume, ctx.currentTime);
+    // Direct assignment bypasses automation timeline (cancelScheduledValues alone may miss values at time 0)
+    binauralGainRef.current.gain.cancelScheduledValues(0);
+    binauralGainRef.current.gain.value = targetVolume;
     
     // Left ear oscillator
     const leftOsc = ctx.createOscillator();
@@ -874,6 +877,7 @@ export function useSoulMeditateEngine() {
   // Stop binaural
   const stopBinaural = useCallback(() => {
     if (binauralGainRef.current && audioContextRef.current) {
+      binauralGainRef.current.gain.cancelScheduledValues(0);
       binauralGainRef.current.gain.setTargetAtTime(0, audioContextRef.current.currentTime, 0.3);
       setTimeout(() => {
         binauralLeftOscRef.current?.stop();
