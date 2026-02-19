@@ -182,6 +182,7 @@ export function useSoulMeditateEngine() {
   const initialize = useCallback(async () => {
     if (audioContextRef.current) return;
 
+    try {
     const ctx = new AudioContext();
     audioContextRef.current = ctx;
 
@@ -299,6 +300,7 @@ export function useSoulMeditateEngine() {
       bypassGain.gain.value = 1;
       userNoiseGateRef.current = bypassGain;
     }
+    console.log('Noise gate initialization completed (worklet or bypass)');
 
     atmosphereGainRef.current = ctx.createGain();
     atmosphereGainRef.current.gain.value = atmosphereLayer.volume;
@@ -390,8 +392,11 @@ export function useSoulMeditateEngine() {
     delayGainRef.current.connect(limiterRef.current);
     
     console.log('Audio chain initialized: sources -> mixer -> analyser/processing -> master');
-
-    setIsInitialized(true);
+    } catch (e) {
+      console.error('SoulMeditateEngine initialize error:', e);
+    } finally {
+      setIsInitialized(true);
+    }
   }, [masterVolume, neuralLayer.volume, atmosphereLayer.volume, dsp]);
 
   // Create reverb impulse response
