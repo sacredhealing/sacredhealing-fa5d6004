@@ -2,6 +2,33 @@ import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { VedicReading, UserProfile } from '@/lib/vedicTypes';
 
+const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
+
+function getCacheKey(user: UserProfile, timeOffset: number, timezone: string) {
+  return `sh:vedic:reading:${user.name}:${user.birthDate}:${user.birthTime}:${user.birthPlace}:${user.plan}:${timeOffset}:${timezone}`;
+}
+
+function loadFromCache(key: string): VedicReading | null {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const { reading, ts } = JSON.parse(raw);
+    if (Date.now() - ts > CACHE_TTL_MS) {
+      localStorage.removeItem(key);
+      return null;
+    }
+    return reading as VedicReading;
+  } catch {
+    return null;
+  }
+}
+
+function saveToCache(key: string, reading: VedicReading) {
+  try {
+    localStorage.setItem(key, JSON.stringify({ reading, ts: Date.now() }));
+  } catch { /* ignore quota errors */ }
+}
+
 interface UseAIVedicReadingResult {
   reading: VedicReading | null;
   isLoading: boolean;
@@ -16,7 +43,16 @@ export function useAIVedicReading(): UseAIVedicReadingResult {
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const generateReading = useCallback(async (user: UserProfile, timeOffset: number = 0, timezone: string = 'Europe/Stockholm') => {
-    // Abort any previous request
+    // Check cache first – skip API call if fresh data exists
+    const cacheKey = getCacheKey(user, timeOffset, timezone);
+    const cached = loadFromCache(cacheKey);
+    if (cached) {
+      setReading(cached);
+      setError(null);
+      return;
+    }
+
+    // Abort any previous in-flight request
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
@@ -62,7 +98,9 @@ export function useAIVedicReading(): UseAIVedicReadingResult {
         throw new Error('Invalid reading data received');
       }
 
-      setReading(data as VedicReading);
+      const vedicReading = data as VedicReading;
+      saveToCache(cacheKey, vedicReading);
+      setReading(vedicReading);
     } catch (err) {
       // Don't log abort errors
       if (err instanceof Error && err.name === 'AbortError') {

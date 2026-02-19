@@ -339,11 +339,7 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
   }
 
   return (
-    <motion.div 
-      className="flex flex-col h-[600px] bg-slate-950/50 rounded-3xl border border-slate-800/50 overflow-hidden"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-    >
+    <div className="flex flex-col h-[600px] bg-slate-950/50 rounded-3xl border border-slate-800/50 overflow-hidden">
       {/* Chat Header */}
       <div className="px-6 py-4 border-b border-slate-800/50 bg-gradient-to-r from-indigo-900/20 to-purple-900/20">
         <div className="flex items-center gap-3">
@@ -446,6 +442,6 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
           <ActionChip icon="🔱" label="Dharma path" onClick={() => handleSendMessage("What is the highest alignment for my soul this week? No questions, just the path. Use my chart.")} />
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
