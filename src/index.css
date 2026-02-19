@@ -67,37 +67,6 @@
 }
 
 @layer base {
-  /* Universal Accessibility: 16px minimum base font size */
-  html {
-    font-size: 16px; /* Base 16px for accessibility */
-  }
-  
-  body {
-    font-size: 1rem; /* 16px */
-    line-height: 1.6; /* Improved readability */
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-  
-  /* High-contrast headers */
-  h1, h2, h3, h4, h5, h6 {
-    font-weight: 700;
-    line-height: 1.2;
-    color: hsl(var(--foreground));
-  }
-  
-  h1 { font-size: 2.5rem; } /* 40px */
-  h2 { font-size: 2rem; }    /* 32px */
-  h3 { font-size: 1.75rem; } /* 28px */
-  h4 { font-size: 1.5rem; }  /* 24px */
-  h5 { font-size: 1.25rem; }  /* 20px */
-  h6 { font-size: 1.125rem; } /* 18px */
-  
-  /* Ensure all text is readable */
-  p, span, div, label, button, a {
-    font-size: 1rem; /* 16px minimum */
-  }
-  
   /* High contrast for better accessibility */
   :root {
     /* Pure Midnight - #030303 */
