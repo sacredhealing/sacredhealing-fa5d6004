@@ -376,6 +376,7 @@ export default function CreativeSoulMeditationTool() {
     const audioCtx = engine.getAudioContext();
     if (audioCtx?.state === 'suspended') await audioCtx.resume();
     engine.stopSolfeggio();
+    await new Promise(r => setTimeout(r, 50)); // let old oscillator fully terminate
     await engine.startSolfeggio(freq);
   }, [engine]);
 
@@ -385,6 +386,7 @@ export default function CreativeSoulMeditationTool() {
     const audioCtx = engine.getAudioContext();
     if (audioCtx?.state === 'suspended') await audioCtx.resume();
     engine.stopBinaural();
+    await new Promise(r => setTimeout(r, 50)); // let old oscillator fully terminate
     await engine.startBinaural(200, freq);
   }, [engine]);
 
