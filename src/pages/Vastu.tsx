@@ -1,21 +1,20 @@
 import React from 'react';
 import { VastuTool } from '@/components/vastu/VastuTool';
 import { useAuth } from '@/hooks/useAuth';
-import { useAdminRole } from '@/hooks/useAdminRole';
 import { useMembership } from '@/hooks/useMembership';
 import { Navigate } from 'react-router-dom';
 
 const Vastu = () => {
   const { user } = useAuth();
-  const { isAdmin, isLoading: isAdminLoading } = useAdminRole();
-  const { tier, isPremium, loading: membershipLoading } = useMembership();
+  // useMembership already handles admin check and sets tier='lifetime' + isAdmin=true for admins
+  const { tier, isPremium, loading: membershipLoading, isAdmin, adminGranted } = useMembership();
 
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
 
-  // Wait for both hooks to finish loading before checking access
-  if (isAdminLoading || membershipLoading) {
+  // Wait for membership check (which includes admin role check) to finish
+  if (membershipLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
@@ -23,19 +22,10 @@ const Vastu = () => {
     );
   }
 
-  // Give membership data a moment to settle — if tier is undefined
-  // after loading, treat it as still loading rather than no access
-  if (tier === undefined && !isAdmin) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
-  }
-
+  // Admins and lifetime/premium members have access
   const isLifetime = tier === 'lifetime';
   const isPremiumRecurring = !!tier && tier.includes('premium');
-  const hasAccess = isAdmin || isLifetime || isPremiumRecurring || isPremium;
+  const hasAccess = isAdmin || adminGranted || isLifetime || isPremiumRecurring || isPremium;
 
   if (!hasAccess) {
     return <Navigate to="/membership" replace />;
