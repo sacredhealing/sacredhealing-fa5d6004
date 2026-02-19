@@ -470,39 +470,7 @@ export function useSoulMeditateEngine() {
     // Create source node and connect through noise cleanup chain
     const source = audioContextRef.current.createMediaElementSource(audio);
 
-    // Connect through full chain: source -> MONO BALANCER -> noise cleanup -> low cut -> EQ -> noise gate -> gain
-    // User noise gate is LAST in chain to reduce hiss (no stereo change)
-    if (
-      monoSplitterRef.current &&
-      monoMergerRef.current &&
-      noiseHighPassRef.current &&
-      noiseLowPassRef.current &&
-      noiseCompressorRef.current &&
-      lowCutFilterRef.current &&
-      eqWeightRef.current &&
-      eqPresenceRef.current &&
-      eqAirRef.current &&
-      userNoiseGateRef.current &&
-      neuralGainRef.current
-    ) {
-      // First: Stereo-to-Mono Balancer (fixes uneven phone recordings)
-      source.connect(monoSplitterRef.current);
-      monoMergerRef.current.connect(noiseHighPassRef.current);
-      
-      // Noise cleanup -> low cut -> EQ -> user noise gate (last) -> gain
-      noiseHighPassRef.current.connect(noiseLowPassRef.current);
-      noiseLowPassRef.current.connect(noiseCompressorRef.current);
-      noiseCompressorRef.current.connect(lowCutFilterRef.current);
-      lowCutFilterRef.current.connect(eqWeightRef.current);
-      eqWeightRef.current.connect(eqPresenceRef.current);
-      eqPresenceRef.current.connect(eqAirRef.current);
-      eqAirRef.current.connect(userNoiseGateRef.current);
-      userNoiseGateRef.current.connect(neuralGainRef.current);
-      console.log('Full audio chain: MONO -> cleanup -> lowCut -> EQ -> noise gate -> gain');
-    } else {
-      // Fallback: direct connection
-      source.connect(neuralGainRef.current);
-    }
+    source.connect(neuralGainRef.current);
 
     neuralSourceRef.current = source;
 
