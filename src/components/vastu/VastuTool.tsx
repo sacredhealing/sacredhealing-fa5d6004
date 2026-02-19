@@ -14,16 +14,10 @@ export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
   const [currentModule, setCurrentModule] = useState(1);
   const [messages, setMessages] = useState<VastuMessage[]>([]);
   const [isThinking, setIsThinking] = useState(false);
-  const [lastChangeTimestamp, setLastChangeTimestamp] = useState<number | null>(null);
+  
   const [isMasterUnlocked, setIsMasterUnlocked] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const getIntegrationProgress = () => {
-    if (!lastChangeTimestamp) return 0;
-    const elapsedMs = Date.now() - lastChangeTimestamp;
-    const targetMs = 48 * 60 * 60 * 1000;
-    return Math.min(100, (elapsedMs / targetMs) * 100);
-  };
 
   const handleSendMessage = useCallback(async (text: string, images?: string[]) => {
     const userMsg: VastuMessage = {
@@ -114,11 +108,9 @@ export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
 
       if (startMatch) {
         setCurrentModule(parseInt(startMatch[1]));
-        setLastChangeTimestamp(Date.now());
       } else if (completeMatch) {
         const next = Math.min(10, parseInt(completeMatch[1]) + 1);
         setCurrentModule(next);
-        setLastChangeTimestamp(Date.now());
       }
 
     } catch (error) {
@@ -151,7 +143,7 @@ export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
     );
   };
 
-  const integrationProgress = getIntegrationProgress();
+  
 
   return (
     <div className="flex h-[calc(100vh-8rem)] relative overflow-hidden rounded-2xl border border-stone-200 shadow-xl bg-stone-50">
@@ -188,22 +180,6 @@ export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
           <span className="text-stone-300 text-lg">🧭</span>
         </div>
 
-        {/* Integration progress */}
-        {lastChangeTimestamp && (
-          <div className="px-4 py-3 bg-amber-50 border-b border-amber-100">
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider">Energy Integration</span>
-              <span className="text-[10px] font-black text-amber-700">{Math.round(integrationProgress)}%</span>
-            </div>
-            <div className="h-1.5 bg-amber-100 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-amber-500 to-amber-700 rounded-full transition-all"
-                style={{ width: `${integrationProgress}%` }}
-              />
-            </div>
-            <p className="text-[9px] text-stone-500 mt-1">48-hour field integration</p>
-          </div>
-        )}
 
         {/* Modules list */}
         <div className="flex-grow overflow-y-auto p-3 space-y-1.5">
@@ -271,14 +247,6 @@ export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
           >
             {isMasterUnlocked ? '🔓 Lock Course' : '🔒 Unlock All'}
           </button>
-          {lastChangeTimestamp && integrationProgress < 100 && (
-            <button
-              onClick={() => setLastChangeTimestamp(Date.now() - 48 * 60 * 60 * 1000 - 1000)}
-              className="w-full mt-1 py-1.5 text-[9px] text-amber-600 font-bold uppercase tracking-wider hover:text-amber-800 transition-colors"
-            >
-              Skip 48h Wait
-            </button>
-          )}
         </div>
       </aside>
 
@@ -326,38 +294,6 @@ export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
         </div>
       </div>
 
-      {/* 48-hour floating banner */}
-      <AnimatePresence>
-        {lastChangeTimestamp && integrationProgress < 100 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="absolute bottom-24 right-4 z-30 max-w-xs"
-          >
-            <div className="bg-stone-900/90 backdrop-blur-sm rounded-2xl p-4 shadow-2xl border border-amber-800/30">
-              <div className="flex items-start gap-3">
-                <span className="text-amber-400 text-lg flex-shrink-0">⏳</span>
-                <div>
-                  <p className="text-[10px] font-black text-amber-400 uppercase tracking-widest mb-1">
-                    Integration Phase
-                  </p>
-                  <p className="text-[11px] text-stone-300 leading-relaxed">
-                    Allow your adjustments to settle for 48 hours. The field is breathing.
-                  </p>
-                  <div className="mt-2 h-1 bg-stone-700 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-amber-500 rounded-full transition-all"
-                      style={{ width: `${integrationProgress}%` }}
-                    />
-                  </div>
-                  <p className="text-[9px] text-stone-500 mt-1">{Math.round(integrationProgress)}% integrated</p>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };
