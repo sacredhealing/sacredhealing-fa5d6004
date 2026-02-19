@@ -1827,5 +1827,69 @@
     "sharedSuccess": "Delat!",
     "copiedToClipboard": "Framgång kopierad till urklipp!",
     "failedToCopy": "Kunde inte kopiera"
+  },
+  "vastu": {
+    "title": "Vastu Överflödsarkitekt",
+    "subtitle": "Förvandla ditt hem till ett överflödets helgedom genom urgammal Vastu-visdom och modern rumslig design.",
+    "whatIs": "Vad är Vastu?",
+    "description": "Vastu Shastra är den urgamla indiska vetenskapen om arkitektur och rumslig design. Det lär ut hur man anpassar sin fysiska miljö med kosmiska energier för att locka till sig välstånd, hälsa och harmoni.",
+    "courseContent": "Kursinnehåll",
+    "module1": "10 omfattande moduler som täcker alla aspekter av ditt hem",
+    "module2": "AI-driven rumslig analys och rekommendationer",
+    "module3": "Ljudalkemi och mantraöverföringar",
+    "module4": "48-timmars integrationsperioder för energistabilisering",
+    "startCourse": "Börja din Vastu-resa",
+    "banner": {
+      "title": "Vastu Överflödsarkitekt",
+      "badge": "Premiumkurs",
+      "description": "Förvandla ditt hem till ett helgedom av överflöd genom urgammal Vastu-visdom. Lär dig att anpassa ditt hem med kosmiska energier för välstånd, hälsa och harmoni.",
+      "feature1": "10 moduler",
+      "feature2": "AI-analys",
+      "feature3": "Ljudalkemi",
+      "cta": "Starta kurs"
+    }
+  },
+  "ayurveda": {
+    "title": "Ayurveda",
+    "subtitle": "Upptäck din dosha och lev i balans med naturens visdom.",
+    "free": "Gratis",
+    "premium": "Premium",
+    "lifetime": "Livstid",
+    "freeDesc": "Grundläggande dosha-bedömning och livsstilstips",
+    "premiumDesc": "Fullständig personlig plan och AI-vägledning",
+    "lifetimeDesc": "Komplett livstidsåtkomst med AI-doktor",
+    "assessment": "Dosha-bedömning",
+    "guidance": "Daglig vägledning",
+    "aiDoctor": "AI-chatdoktor",
+    "vata": "Vata",
+    "pitta": "Pitta",
+    "kapha": "Kapha",
+    "yourDosha": "Din dosha",
+    "learnMore": "Läs mer"
+  },
+  "vedicAstrology": {
+    "title": "Vedisk astrologi",
+    "subtitle": "Upptäck din kosmiska ritning genom urgammal Jyotish-visdom.",
+    "freeFeatures": "Gratis funktioner",
+    "premiumFeatures": "Premiumfunktioner",
+    "basicChart": "Grundläggande födelsehoroskop",
+    "dailyHoroscope": "Dagligt horoskop",
+    "planetaryPositions": "Planetariska positioner",
+    "detailedReadings": "Detaljerade tolkningar",
+    "transitAnalysis": "Transitanalys",
+    "compatibility": "Kompatibilitetsrapporter",
+    "generateChart": "Skapa mitt horoskop",
+    "viewChart": "Visa fullständigt horoskop",
+    "enterBirthDetails": "Ange födelseuppgifter",
+    "birthDate": "Födelsedatum",
+    "birthTime": "Födelsetid",
+    "birthPlace": "Födelseort",
+    "calculate": "Beräkna"
+  },
+  "announcements": {
+    "newAnnouncement": "Nytt meddelande",
+    "dismiss": "Stäng",
+    "readMore": "Läs mer",
+    "viewAll": "Visa alla meddelanden"
   }
 }

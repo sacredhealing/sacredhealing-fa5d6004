@@ -1878,5 +1878,69 @@
     "sharedSuccess": "Shared successfully!",
     "copiedToClipboard": "Progress copied to clipboard!",
     "failedToCopy": "Failed to copy"
+  },
+  "vastu": {
+    "title": "Vastu Abundance Architect",
+    "subtitle": "Transform your living space into a sanctuary of abundance through ancient Vastu wisdom and modern spatial design.",
+    "whatIs": "What is Vastu?",
+    "description": "Vastu Shastra is the ancient Indian science of architecture and spatial design. It teaches how to align your physical environment with cosmic energies to attract prosperity, health, and harmony.",
+    "courseContent": "Course Content",
+    "module1": "10 comprehensive modules covering every aspect of your home",
+    "module2": "AI-powered spatial analysis and recommendations",
+    "module3": "Sound alchemy and mantra transmissions",
+    "module4": "48-hour integration periods for energy settling",
+    "startCourse": "Begin Your Vastu Journey",
+    "banner": {
+      "title": "Vastu Abundance Architect",
+      "badge": "Premium Course",
+      "description": "Transform your living space into a sanctuary of abundance through ancient Vastu wisdom. Learn to align your home with cosmic energies for prosperity, health, and harmony.",
+      "feature1": "10 Modules",
+      "feature2": "AI Analysis",
+      "feature3": "Sound Alchemy",
+      "cta": "Start Course"
+    }
+  },
+  "ayurveda": {
+    "title": "Ayurveda",
+    "subtitle": "Discover your dosha and live in balance with nature's wisdom.",
+    "free": "Free",
+    "premium": "Premium",
+    "lifetime": "Lifetime",
+    "freeDesc": "Basic dosha assessment and lifestyle tips",
+    "premiumDesc": "Full personalized plan and AI guidance",
+    "lifetimeDesc": "Complete lifetime access with AI doctor",
+    "assessment": "Dosha Assessment",
+    "guidance": "Daily Guidance",
+    "aiDoctor": "AI Chat Doctor",
+    "vata": "Vata",
+    "pitta": "Pitta",
+    "kapha": "Kapha",
+    "yourDosha": "Your Dosha",
+    "learnMore": "Learn More"
+  },
+  "vedicAstrology": {
+    "title": "Vedic Astrology",
+    "subtitle": "Discover your cosmic blueprint through ancient Jyotish wisdom.",
+    "freeFeatures": "Free Features",
+    "premiumFeatures": "Premium Features",
+    "basicChart": "Basic birth chart",
+    "dailyHoroscope": "Daily horoscope",
+    "planetaryPositions": "Planetary positions",
+    "detailedReadings": "Detailed readings",
+    "transitAnalysis": "Transit analysis",
+    "compatibility": "Compatibility reports",
+    "generateChart": "Generate My Chart",
+    "viewChart": "View Full Chart",
+    "enterBirthDetails": "Enter Birth Details",
+    "birthDate": "Birth Date",
+    "birthTime": "Birth Time",
+    "birthPlace": "Birth Place",
+    "calculate": "Calculate"
+  },
+  "announcements": {
+    "newAnnouncement": "New Announcement",
+    "dismiss": "Dismiss",
+    "readMore": "Read more",
+    "viewAll": "View all announcements"
   }
 }

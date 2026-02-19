@@ -15,6 +15,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { usePersistedState } from '@/features/vedic/usePersistedState';
 import type { MembershipTier, UserProfile } from '@/lib/vedicTypes';
+import { useTranslation } from 'react-i18next';
 
 // Map existing DB tiers to new AI tier system
 const mapToAITier = (dbTier: 'basic' | 'premium' | 'master'): MembershipTier => {
@@ -42,6 +43,7 @@ const VedicAstrology: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const { tiers, isLoading, hasAccess, getHighestAccessLevel } = useVedicAstrology();
   const { tier: membershipTier } = useMembership();
   const [birthDetailsDialogOpen, setBirthDetailsDialogOpen] = useState(false);

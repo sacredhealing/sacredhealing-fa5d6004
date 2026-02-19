@@ -10,6 +10,7 @@ import { AyurvedaChatConsultation } from './AyurvedaChatConsultation';
 import { AyurvedaLiveDoctor } from './AyurvedaLiveDoctor';
 import { useAyurvedaAnalysis } from '@/hooks/useAyurvedaAnalysis';
 import type { AyurvedaUserProfile, AyurvedaMembershipLevel } from '@/lib/ayurvedaTypes';
+import { useTranslation } from 'react-i18next';
 
 interface AyurvedaToolProps {
   membershipLevel?: AyurvedaMembershipLevel;
@@ -71,6 +72,7 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
   membershipLevel = 'FREE' as AyurvedaMembershipLevel,
   isAdmin = false
 }) => {
+  const { t } = useTranslation();
   // Admins always get LIFETIME access
   const effectiveMembership = isAdmin ? 'LIFETIME' as AyurvedaMembershipLevel : membershipLevel;
   const [membership, setMembership] = useState<AyurvedaMembershipLevel>(effectiveMembership);
@@ -115,7 +117,7 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
     return (
       <div className="flex flex-col items-center justify-center min-h-[300px]">
         <Loader2 className="w-10 h-10 text-emerald-600 animate-spin" />
-        <p className="mt-4 text-muted-foreground">Loading your Prakriti...</p>
+        <p className="mt-4 text-muted-foreground">{t('common.loading', 'Loading...')}</p>
       </div>
     );
   }
@@ -133,16 +135,16 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
               >
                 <Sparkles className="w-10 h-10" />
               </motion.div>
-              <h1 className="text-4xl md:text-5xl font-serif text-foreground mb-6">Your Sacred Journey Awaits</h1>
+              <h1 className="text-4xl md:text-5xl font-serif text-foreground mb-6">{t('ayurveda.subtitle', 'Your Sacred Journey Awaits')}</h1>
               <p className="text-lg text-muted-foreground mb-10 max-w-2xl leading-relaxed">
-                Experience a digital transformation through ancient wisdom. Our AI-driven Ayurvedic system matches your unique personality and life situation to a personalized healing path.
+                {t('ayurveda.title', 'Experience a digital transformation through ancient wisdom. Our AI-driven Ayurvedic system matches your unique personality and life situation to a personalized healing path.')}
               </p>
               <Button 
                 onClick={() => setActiveTab('assessment')}
                 size="lg"
                 className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-6 px-12 rounded-2xl text-lg"
               >
-                Reveal Your Prakriti <Sparkles className="ml-2 w-5 h-5" />
+                {t('ayurveda.assessment', 'Reveal Your Prakriti')} <Sparkles className="ml-2 w-5 h-5" />
               </Button>
               
               {/* Only show membership selection if not admin (admins have full access) */}
@@ -152,19 +154,19 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
                     level={'FREE' as AyurvedaMembershipLevel}
                     current={membership} 
                     onSelect={setMembership}
-                    features={["Basic Dosha Analysis", "General Daily Routine", "Aura of Wellness"]}
+                    features={[t('ayurveda.freeDesc', 'Basic Dosha Analysis'), t('common.free', 'General Daily Routine'), "Aura of Wellness"]}
                   />
                   <MembershipCard 
                     level={'PREMIUM' as AyurvedaMembershipLevel}
                     current={membership} 
                     onSelect={setMembership}
-                    features={["Personality Matching", "Life Situation Advice", "AI Chat Consultations"]}
+                    features={[t('ayurveda.premiumDesc', 'Personality Matching'), "Life Situation Advice", t('ayurveda.aiDoctor', 'AI Chat Consultations')]}
                   />
                   <MembershipCard 
                     level={'LIFETIME' as AyurvedaMembershipLevel}
                     current={membership} 
                     onSelect={setMembership}
-                    features={["Live Audio AI Doctor", "Deep Vedic Astrology Sync", "Priority Healing Access"]}
+                    features={[t('ayurveda.aiDoctor', 'Live Audio AI Doctor'), "Deep Vedic Astrology Sync", t('ayurveda.lifetimeDesc', 'Priority Healing Access')]}
                   />
                 </div>
               )}
