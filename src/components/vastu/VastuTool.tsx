@@ -3,6 +3,7 @@ import { Sparkles, ChevronDown } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
+import { VastuChat } from './VastuChat';
 
 interface VastuToolProps {
   isAdmin?: boolean;
@@ -95,6 +96,16 @@ export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
               </div>
             </Card>
           ))}
+
+          <div className="mt-10 pt-6">
+            <h2 className="text-2xl font-bold mb-4 text-center">
+              {t('vastu.chatTitle', 'Ask Your Vastu Guide')}
+            </h2>
+            <p className="text-center text-muted-foreground mb-6">
+              {t('vastu.chatSubtitle', 'Get personalised Vastu guidance powered by Sacred Healing AI')}
+            </p>
+            <VastuChat />
+          </div>
         </div>
       )}
     </div>
