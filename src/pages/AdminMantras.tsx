@@ -11,7 +11,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import AudioUpload from '@/components/admin/AudioUpload';
 
-/** Exact category list for Admin form only. DB stores category id. */
 const ADMIN_MANTRA_CATEGORIES = [
   { id: 'planet', label: 'Planets' },
   { id: 'deity', label: 'Deity' },
@@ -65,13 +64,14 @@ const AdminMantras = () => {
   }, []);
 
   const fetchMantras = async () => {
+    // Fetch using explicit column selection to bypass schema cache
     const { data, error } = await supabase
-      .from('mantras')
-      .select('*')
+      .from('mantras' as any)
+      .select('id, title, description, audio_url, cover_image_url, duration_seconds, shc_reward, is_active, is_premium, category, planet_type, created_at')
       .order('created_at', { ascending: false });
 
     if (data) {
-      setMantras(data);
+      setMantras(data as Mantra[]);
     }
     setLoading(false);
   };
@@ -104,15 +104,16 @@ const AdminMantras = () => {
       is_active: mantra.is_active,
       is_premium: mantra.is_premium ?? false,
     });
-    setCategory((mantra as { category?: string }).category || 'general');
-    setPlanetType((mantra as { planet_type?: string | null }).planet_type || '');
+    setCategory((mantra as any).category || 'general');
+    setPlanetType((mantra as any).planet_type || '');
     setEditingId(mantra.id);
     setShowForm(true);
   };
 
   const buildMantraPayload = () => {
     const shc = Number(formData.shc_reward);
-    const durationSeconds = Number.isFinite(formData.duration_seconds) && formData.duration_seconds > 0 ? formData.duration_seconds : 180;
+    const durationSeconds = Number.isFinite(formData.duration_seconds) && formData.duration_seconds > 0
+      ? formData.duration_seconds : 180;
     return {
       title: formData.title.trim(),
       description: formData.description?.trim() || null,
@@ -136,29 +137,30 @@ const AdminMantras = () => {
     const payload = buildMantraPayload();
 
     if (editingId) {
-      const { error } = await supabase
-        .from('mantras')
-        .update(payload)
-        .eq('id', editingId);
+      const { data, error } = await supabase
+        .rpc('update_mantra_admin' as any, { data: { ...payload, id: editingId } });
 
       if (error) {
         console.error('Mantra update error:', error);
         toast.error(error.message || 'Failed to update mantra');
+      } else if (data && typeof data === 'object' && 'success' in data && !data.success) {
+        toast.error((data as any).error || 'Failed to update mantra');
       } else {
         toast.success('Mantra updated');
         resetForm();
         fetchMantras();
       }
     } else {
-      const { error } = await supabase
-        .from('mantras')
-        .insert(payload);
+      const { data, error } = await supabase
+        .rpc('insert_mantra_admin' as any, { data: payload });
 
       if (error) {
         console.error('Mantra insert error:', error);
         toast.error(error.message || 'Failed to add mantra');
+      } else if (data && typeof data === 'object' && 'success' in data && !data.success) {
+        toast.error((data as any).error || 'Failed to add mantra');
       } else {
-        toast.success('Mantra added');
+        toast.success('Mantra added successfully!');
         resetForm();
         fetchMantras();
       }
@@ -167,12 +169,10 @@ const AdminMantras = () => {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this mantra?')) return;
-
     const { error } = await supabase
-      .from('mantras')
+      .from('mantras' as any)
       .delete()
       .eq('id', id);
-
     if (error) {
       toast.error('Failed to delete mantra');
     } else {
@@ -182,19 +182,13 @@ const AdminMantras = () => {
   };
 
   const toggleActive = async (id: string, isActive: boolean) => {
-    const { error } = await supabase
-      .from('mantras')
-      .update({ is_active: !isActive })
-      .eq('id', id);
-
-    if (!error) {
-      fetchMantras();
-    }
+    await supabase
+      .rpc('update_mantra_admin' as any, { data: { id, is_active: !isActive } });
+    fetchMantras();
   };
 
   return (
     <div className="min-h-screen bg-background pb-8">
-      {/* Header */}
       <div className="bg-card border-b border-border px-4 py-4">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
@@ -208,7 +202,6 @@ const AdminMantras = () => {
       </div>
 
       <div className="px-4 py-4">
-        {/* Add Button */}
         {!showForm && (
           <Button onClick={() => setShowForm(true)} className="w-full mb-4">
             <Plus className="w-4 h-4 mr-2" />
@@ -216,7 +209,6 @@ const AdminMantras = () => {
           </Button>
         )}
 
-        {/* Form */}
         {showForm && (
           <Card className="p-4 mb-4">
             <div className="flex justify-between items-center mb-4">
@@ -363,7 +355,6 @@ const AdminMantras = () => {
           </Card>
         )}
 
-        {/* List */}
         <div className="space-y-3">
           {mantras.map((mantra) => (
             <Card key={mantra.id} className={`p-4 ${!mantra.is_active ? 'opacity-50' : ''}`}>
@@ -383,10 +374,10 @@ const AdminMantras = () => {
                   </div>
                   <p className="text-sm text-muted-foreground">
                     {Math.floor(mantra.duration_seconds / 60)}:{(mantra.duration_seconds % 60).toString().padStart(2, '0')} • {mantra.shc_reward} SHC
-                    {mantra.category && (
+                    {(mantra as any).category && (
                       <span className="ml-2 text-xs text-muted-foreground/80">
-                        • {ADMIN_MANTRA_CATEGORIES.find(c => c.id === mantra.category)?.label}
-                        {mantra.planet_type && <span> ({mantra.planet_type})</span>}
+                        • {ADMIN_MANTRA_CATEGORIES.find(c => c.id === (mantra as any).category)?.label}
+                        {(mantra as any).planet_type && <span> ({(mantra as any).planet_type})</span>}
                       </span>
                     )}
                   </p>

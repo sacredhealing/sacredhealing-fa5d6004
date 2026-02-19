@@ -5761,6 +5761,14 @@ export type Database = {
         Args: { email_input: string; name_input?: string }
         Returns: Json
       }
+      insert_mantra_admin: {
+        Args: { data: Json }
+        Returns: Json
+      }
+      update_mantra_admin: {
+        Args: { data: Json }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
