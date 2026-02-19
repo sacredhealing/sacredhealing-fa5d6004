@@ -1,134 +1,150 @@
 
+## Root Cause: Three Separate "No Sound" Issues
 
-## Full Vastu Architect Rebuild — Original Logic + Audio Recording + Photo Upload
+### Issue 1: Healing Fundamental (Hz) — No Sound on Click
+**What's broken:** Clicking a frequency card in `HealingFrequencySelector` calls `onSelect` → `setHealingFreq` (state only). There is a `useEffect` that would restart the oscillator when `healingFreq` changes, but it checks `engine.frequencies.solfeggio.enabled` first — which is `false` until "Begin Session" is clicked. So the oscillator is **never started by clicking a frequency card**. The frequency only works after "Begin Session" has been pressed first.
 
-### What is currently missing vs. the original
-
-The original code was a fully-featured standalone React app with these capabilities that are **completely absent** from the current implementation:
-
-| Feature | Original | Current |
-|---|---|---|
-| Module progress sidebar with locked/unlocked/completed states | ✅ | ❌ |
-| Module navigation (click to jump to a module) | ✅ | ❌ |
-| AI-driven module progression via `[MODULE_START: X]` tags | ✅ | ❌ |
-| 48-hour integration phase tracking with progress bar | ✅ | ❌ |
-| Photo upload (multi-image 360° diagnostic) | ✅ | ❌ |
-| Audio transmission cards with mantra scripts | ✅ | ❌ |
-| Voice/audio recording of mantras | ✅ | ❌ |
-| AI parsing of `[AUDIO: X - Title]` tags to render audio cards | ✅ | ❌ |
-| Welcome screen with prompt suggestions | partial | partial |
-| Multimodal image analysis (send photos to AI) | ✅ | ❌ |
-| Full Siddha system prompt with 10-module logic | ✅ | basic |
-| Master unlock (developer tool for testing) | ✅ | ❌ |
-
----
-
-### Architecture Plan
-
-The current `VastuTool.tsx` + `VastuChat.tsx` split needs to be replaced with a proper architecture that mirrors the original:
-
-```text
-VastuTool.tsx          ← Top-level orchestrator (state, module logic)
-  ├── VastuSidebar     ← Module progress sidebar (desktop only)
-  ├── VastuchatWindow  ← Full chat with image upload + audio cards
-  │     ├── AudioTransmissionCard  ← Mantra recording cards
-  │     └── Message rendering with markdown + audio tag parsing
-  └── Integration48HourBanner  ← Floating 48hr phase indicator
+**Where it is:** `src/pages/CreativeSoulMeditationTool.tsx` lines 361–366:
+```tsx
+useEffect(() => {
+  if (engine.frequencies.solfeggio.enabled && engine.frequencies.solfeggio.hz !== healingFreq) {
+    engine.stopSolfeggio();
+    engine.startSolfeggio(healingFreq); // ← only fires if already enabled
+  }
+}, [healingFreq, engine]);
 ```
 
-The edge function also needs to be upgraded to use the full **Siddha system prompt** with all 10-module logic, Ayadi Calculator, Elemental Alchemy, Marma Points, and Dhwani Kriya protocols, plus support for **image payloads** (multimodal).
+### Issue 2: Neural Brainwave Target — No Sound on Click
+**Same exact problem.** Lines 368–373. `startBinaural` is only called if `engine.frequencies.binaural.enabled` is already `true`.
+
+### Issue 3: Neural Source — No Sound on Play Button
+**What's broken:** `engine.toggleNeuralPlay()` pauses/plays `neuralAudioRef.current`, but if the AudioContext is `suspended` (browser autoplay policy — it starts suspended until a user gesture triggers `resume()`), the audio element connected to the AudioContext produces no output. The play button does not call `audioContextRef.current.resume()` before playing.
+
+In `useSoulMeditateEngine.ts` line 727–737:
+```tsx
+const toggleNeuralPlay = useCallback(() => {
+  if (!neuralAudioRef.current) return;
+  if (neuralLayer.isPlaying) {
+    neuralAudioRef.current.pause();
+  } else {
+    audioContextRef.current?.resume(); // ← this IS called, BUT...
+    neuralAudioRef.current.play().catch(console.error);
+  }
+```
+Actually `toggleNeuralPlay` does call `resume()`. The issue here is different: the engine is not initialized when the user first loads a file and hits play. The `loadNeuralSource` auto-initializes if needed (line 433), but if that auto-initialization hasn't completed yet when `toggleNeuralPlay` is called, the audio context may still be `suspended`.
+
+**The real problem for Neural Source sound**: The engine requires explicit "Initialize" + "Begin Session" to produce sound. But users expect to just drop a file and hit play.
 
 ---
 
-### Files to Create / Modify
+### The Fix: Make Frequencies Self-Activating
 
-#### 1. `supabase/functions/vastu-chat/index.ts` — Full Siddha System Prompt + Image Support
-- Replace the basic system prompt with the complete `SYSTEM_INSTRUCTION` from the original (Siddha Architect, 10 tools, audio tags, module progression tags)
-- Accept `images` array alongside `messages` in the request body
-- When images are present, use Gemini's vision capability (inline image data parts) for multimodal analysis
-- Keep GEMINI_API_KEY (already configured as a secret) — switch to `gemini-2.5-flash` which supports vision
+The correct fix is to change `onSelect` in `HealingFrequencySelector` and `BrainwaveSelector` to **trigger audio immediately** — not just update UI state.
 
-#### 2. `src/components/vastu/VastuTool.tsx` — Full Orchestrator with State
-Replace with the complete `App.tsx` logic from original, adapted for our React/Tailwind stack:
-- `currentModule` state (1–10)
-- `messages` state with `role: 'user' | 'model'`, `text`, `images[]`, `timestamp`
-- `isThinking` state
-- `lastChangeTimestamp` for 48-hour tracking
-- `isMasterUnlocked` developer toggle
-- `unlockedTransmissions` array
-- Module progression detection: parse `[MODULE_START: X]` and `[MODULE_COMPLETE: X]` from AI responses
-- Audio unlock detection: parse `[AUDIO: X - Title]` from AI responses
-- `handleModuleClick(id)` — jump to module via AI message
-- `getIntegrationProgress()` — 0–100% based on 48 hours elapsed
-- Sidebar with all 10 modules, locked/current/completed states
-- Mobile sidebar overlay toggle
-- 48-hour floating status banner (only shown after changes)
+#### Fix in `src/pages/CreativeSoulMeditationTool.tsx`
 
-The 10 modules from the original:
-1. The Home as a Field (Overview)
-2. The Entrance (Receiving)
-3. The Living Room (Circulating)
-4. The Kitchen (Creating)
-5. The North (Money Flow)
-6. The North-East (Grace/Support)
-7. The Bedroom (Holding/Nervous System)
-8. Technology & Mirrors (Amplification)
-9. Storage (Reserves)
-10. Sealing the Field (Maintenance)
+**1. `handleHealingFreqSelect` — new handler that starts audio:**
+```tsx
+const handleHealingFreqSelect = useCallback(async (freq: number) => {
+  setHealingFreq(freq);
+  
+  // Initialize engine if needed (browser requires user gesture)
+  if (!engine.isInitialized) {
+    await engine.initialize();
+  }
+  
+  // Resume context (browser autoplay policy)
+  const audioCtx = engine.getAudioContext();
+  if (audioCtx?.state === 'suspended') {
+    await audioCtx.resume();
+  }
+  
+  // Stop old and start new frequency immediately
+  engine.stopSolfeggio();
+  await engine.startSolfeggio(freq);
+}, [engine]);
+```
 
-#### 3. `src/components/vastu/VastuChat.tsx` — Full Chat Window with Photo Upload + Audio Cards
-Replace with the complete `ChatWindow.tsx` logic from the original:
+**2. `handleBrainwaveFreqSelect` — new handler that starts audio:**
+```tsx
+const handleBrainwaveFreqSelect = useCallback(async (freq: number) => {
+  setBrainwaveFreq(freq);
+  
+  if (!engine.isInitialized) {
+    await engine.initialize();
+  }
+  
+  const audioCtx = engine.getAudioContext();
+  if (audioCtx?.state === 'suspended') {
+    await audioCtx.resume();
+  }
+  
+  engine.stopBinaural();
+  await engine.startBinaural(200, freq);
+}, [engine]);
+```
 
-**Photo upload:**
-- Camera/file button opens `<input type="file" multiple accept="image/*">`
-- Images converted to base64 via `FileReader`
-- Preview thumbnails shown before sending
-- Sent as `images[]` array alongside message text
-- Displayed inline in the message bubble
+**3. Pass new handlers to components:**
+```tsx
+<HealingFrequencySelector 
+  activeFrequency={healingFreq} 
+  volume={healingVolume}
+  onSelect={handleHealingFreqSelect}  // ← was: setHealingFreq
+  onVolumeChange={handleHealingVolumeChange}
+/>
+<BrainwaveSelector 
+  activeFrequency={brainwaveFreq} 
+  volume={brainwaveVolume}
+  onSelect={handleBrainwaveFreqSelect}  // ← was: setBrainwaveFreq
+  onVolumeChange={handleBrainwaveVolumeChange}
+/>
+```
 
-**Audio Transmission Cards** (rendered when AI response contains `[AUDIO: X - Title]`):
-- Card with mantra title and Sound Alchemy layer number
-- "Unveil Script" button — reveals the sacred mantra text
-- "Perform Transmission" button — starts microphone recording via `MediaRecorder` API
-- "Seal Recording" button — stops recording
-- "Review Frequency" button — plays back the recording via `URL.createObjectURL`
-- No upload needed — all local recording
+**4. Fix `handleHealingVolumeChange` and `handleBrainwaveVolumeChange` — they should also initialize if needed:**
+```tsx
+const handleHealingVolumeChange = useCallback(async (vol: number) => {
+  if (!engine.isInitialized) {
+    await engine.initialize();
+  }
+  const audioCtx = engine.getAudioContext();
+  if (audioCtx?.state === 'suspended') await audioCtx.resume();
+  engine.updateSolfeggioVolume(vol);
+  // If not already playing, start the oscillator
+  if (!engine.frequencies.solfeggio.enabled) {
+    await engine.startSolfeggio(healingFreq);
+  }
+}, [engine, healingFreq]);
+```
 
-**Message rendering:**
-- Parse AI text for `[AUDIO: X - Title]` patterns → render `AudioTransmissionCard` inline
-- Strip `[MODULE_START: X]` and `[MODULE_COMPLETE: X]` tags from display text
-- Render markdown (bold, italic, headers, blockquotes, tables) using a simple markdown parser (no new package — use regex-based rendering or a lightweight approach since `react-markdown` isn't installed)
+Similarly for `handleBrainwaveVolumeChange`.
 
-**Input area:**
-- Large styled text input
-- Camera button for photo upload
-- Send button
-- Directional energy hints below (North/Wealth, SE/Energy, SW/Stability, NE/Grace)
-- Welcome screen with "Initiate Path" and "360° Diagnostic" quick-start cards
+**5. Fix Neural Source play — also ensure AudioContext is resumed:**
+The `toggleNeuralPlay` in the engine already calls `audioContextRef.current?.resume()`, but it's async and not awaited. We need to patch the engine's `toggleNeuralPlay` to await the resume before calling `play()`.
 
-#### 4. `src/components/vastu/TransmissionScripts.ts` — Sacred Script Data
-New file with the `TRANSMISSION_SCRIPTS` constant from the original (10 mantra scripts for modules 0–10).
+In `src/hooks/useSoulMeditateEngine.ts` lines 727–737, change `toggleNeuralPlay` to:
+```tsx
+const toggleNeuralPlay = useCallback(async () => {
+  if (!neuralAudioRef.current) return;
+  
+  if (neuralLayer.isPlaying) {
+    neuralAudioRef.current.pause();
+  } else {
+    if (audioContextRef.current?.state === 'suspended') {
+      await audioContextRef.current.resume();
+    }
+    await neuralAudioRef.current.play().catch(console.error);
+  }
+  setNeuralLayer(prev => ({ ...prev, isPlaying: !prev.isPlaying }));
+}, [neuralLayer.isPlaying]);
+```
+
+**6. Remove the now-redundant `useEffect` guards** that check `engine.frequencies.*.enabled` before restarting (lines 361–373). Since the new handlers manage start/stop directly, these effects should be removed to avoid double-starts.
 
 ---
 
-### Transmission Scripts (from original constants)
-All 11 scripts (0–10) covering: OM, GAM, GLAUM, RAM, SHREEM, EEM, LUM, HUM, KREEM, HREEM — each with mantra title and full spoken script for recording.
+### Files to Modify
 
----
-
-### Edge Function: Multimodal Support
-When `images[]` is provided in the request body, the function will:
-1. Build Gemini content parts including both text and `inlineData` image parts
-2. Use `gemini-2.5-flash` model (supports vision)
-3. Append the diagnostic system instruction overlay
-4. Stream the response back the same way
-
----
-
-### Styling Notes
-- Use existing amber/stone color palette (already in VastuChat)
-- Bubble styles: user = `bg-stone-900 text-white rounded-br-none`, AI = `bg-white border rounded-bl-none`
-- Sidebar: `w-64 hidden md:flex` (desktop only)
-- Mobile overlay for sidebar
-- Custom CSS for `vastu-bubble-user`, `vastu-bubble-ai` bubble shapes via inline styles or Tailwind `rounded` variants
-
+| File | Change |
+|---|---|
+| `src/pages/CreativeSoulMeditationTool.tsx` | Add `handleHealingFreqSelect` + `handleBrainwaveFreqSelect` handlers; update `HealingFrequencySelector` + `BrainwaveSelector` props; also fix `handleHealingVolumeChange` / `handleBrainwaveVolumeChange` to auto-initialize |
+| `src/hooks/useSoulMeditateEngine.ts` | Make `toggleNeuralPlay` async and `await` the AudioContext resume before calling `play()` |
