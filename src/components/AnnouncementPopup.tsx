@@ -25,6 +25,28 @@ export const AnnouncementPopup: React.FC = () => {
     fetchAnnouncement();
   }, [user]);
 
+  // Always use localStorage as the source of truth for dismissals (works for guests + as fallback for users)
+  const getLocalDismissed = (): Set<string> => {
+    try {
+      const dismissed = JSON.parse(localStorage.getItem('dismissed_announcements') || '[]');
+      return new Set(dismissed);
+    } catch {
+      return new Set();
+    }
+  };
+
+  const addLocalDismissed = (id: string) => {
+    try {
+      const dismissed = JSON.parse(localStorage.getItem('dismissed_announcements') || '[]');
+      if (!dismissed.includes(id)) {
+        dismissed.push(id);
+        localStorage.setItem('dismissed_announcements', JSON.stringify(dismissed));
+      }
+    } catch {
+      // ignore
+    }
+  };
+
   const fetchAnnouncement = async () => {
     // Get all active announcements
     const { data: announcements, error } = await supabase
@@ -39,53 +61,38 @@ export const AnnouncementPopup: React.FC = () => {
     // Filter by expiry and recurring logic
     const now = new Date();
     const validAnnouncements = announcements.filter(a => {
-      // Check if expired
       if (a.expires_at && new Date(a.expires_at) < now) return false;
-      
-      // For recurring weekly announcements, check if it should show today
       if (a.recurring === 'weekly') {
         const startDay = new Date(a.starts_at).getDay();
-        const todayDay = now.getDay();
-        // Show on the same day of week as the original start date
-        return startDay === todayDay;
+        return startDay === now.getDay();
       }
-      
       return true;
     });
 
     if (!validAnnouncements.length) return;
 
-    // Filter out dismissed announcements (for both logged in and guest users)
-    let dismissedIds: Set<string>;
-    
+    // Build dismissed set: always check localStorage first (covers guests + fallback for users)
+    const dismissedIds = getLocalDismissed();
+
+    // Additionally check DB dismissals for logged-in users
     if (user) {
-      const { data: dismissals, error } = await supabase
+      const { data: dismissals } = await supabase
         .from('announcement_dismissals')
         .select('announcement_id')
         .eq('user_id', user.id);
-      
-      if (error) {
-        console.error('Error fetching dismissals:', error);
-        dismissedIds = new Set();
-      } else {
-        dismissedIds = new Set(dismissals?.map(d => d.announcement_id) || []);
-      }
-    } else {
-      // For non-logged in users, use localStorage
-      const dismissed = JSON.parse(localStorage.getItem('dismissed_announcements') || '[]');
-      dismissedIds = new Set(dismissed);
+
+      dismissals?.forEach(d => dismissedIds.add(d.announcement_id));
     }
 
-    // Find first announcement that hasn't been dismissed (including recently dismissed in this session)
-    const unread = validAnnouncements.find(a => 
+    // Find first announcement not yet dismissed in any storage
+    const unread = validAnnouncements.find(a =>
       !dismissedIds.has(a.id) && !recentlyDismissed.has(a.id)
     );
-    
+
     if (unread) {
       setAnnouncement(unread);
       setIsVisible(true);
     } else {
-      // No unread announcements
       setAnnouncement(null);
       setIsVisible(false);
     }
@@ -94,41 +101,28 @@ export const AnnouncementPopup: React.FC = () => {
   const handleDismiss = async () => {
     if (!announcement) return;
 
-    try {
-      if (user) {
-        // Insert dismissal (UNIQUE constraint handles duplicates)
-        const { error } = await supabase.from('announcement_dismissals').insert({
-          user_id: user.id,
-          announcement_id: announcement.id,
-          dismissed_at: new Date().toISOString()
-        });
+    const id = announcement.id;
 
-        if (error) {
-          // If duplicate (already dismissed), that's fine - ignore
-          if (error.code === '23505') {
-            console.log('Announcement already dismissed');
-          } else {
-            console.error('Error dismissing announcement:', error);
-            // Still hide it locally even if DB insert fails
-          }
+    // Always persist to localStorage immediately (works for guests + as DB fallback)
+    addLocalDismissed(id);
+
+    // Also persist to DB for logged-in users
+    if (user) {
+      supabase.from('announcement_dismissals').insert({
+        user_id: user.id,
+        announcement_id: id,
+        dismissed_at: new Date().toISOString()
+      }).then(({ error }) => {
+        if (error && error.code !== '23505') {
+          console.error('Error saving dismissal to DB:', error);
         }
-      } else {
-        const dismissed = JSON.parse(localStorage.getItem('dismissed_announcements') || '[]');
-        if (!dismissed.includes(announcement.id)) {
-          dismissed.push(announcement.id);
-          localStorage.setItem('dismissed_announcements', JSON.stringify(dismissed));
-        }
-      }
-    } catch (err) {
-      console.error('Error in handleDismiss:', err);
+      });
     }
 
-    // Mark as recently dismissed to prevent immediate re-show
-    if (announcement) {
-      setRecentlyDismissed(prev => new Set(prev).add(announcement.id));
-    }
-    
-    // Always hide immediately
+    // Mark as recently dismissed so it won't reappear this session
+    setRecentlyDismissed(prev => new Set(prev).add(id));
+
+    // Hide immediately
     setIsVisible(false);
     setAnnouncement(null);
   };
