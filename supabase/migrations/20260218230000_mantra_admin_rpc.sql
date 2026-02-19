@@ -1,6 +1,10 @@
 -- Bypass PostgREST schema cache: insert/update mantras via RPC so category, planet_type, is_premium work
 -- even when the API schema cache is stale.
 
+-- Drop existing functions if they exist (to handle parameter changes)
+DROP FUNCTION IF EXISTS public.insert_mantra_admin(jsonb);
+DROP FUNCTION IF EXISTS public.update_mantra_admin(jsonb);
+
 CREATE OR REPLACE FUNCTION public.insert_mantra_admin(data jsonb)
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -85,5 +89,7 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.insert_mantra_admin(jsonb) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.insert_mantra_admin(jsonb) TO service_role;
+GRANT EXECUTE ON FUNCTION public.insert_mantra_admin(jsonb) TO anon;
 GRANT EXECUTE ON FUNCTION public.update_mantra_admin(jsonb) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.update_mantra_admin(jsonb) TO service_role;
+GRANT EXECUTE ON FUNCTION public.update_mantra_admin(jsonb) TO anon;
