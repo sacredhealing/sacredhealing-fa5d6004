@@ -164,10 +164,6 @@ const VedicAstrology: React.FC = () => {
           <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-3 tracking-tight font-serif">
             Akashic Vedic Guide
           </h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed text-lg font-light tracking-wide">
-            Merging the geometric precision of the stars with{' '}
-            <span className="text-blue-400 font-medium">AI-Powered Efficiency</span>.
-          </p>
         </motion.header>
 
         {/* Profile Snapshot Card (basic info about me) */}
@@ -264,27 +260,6 @@ const VedicAstrology: React.FC = () => {
           )}
         </motion.div>
 
-        {/* Primary Consult Guru CTA near top */}
-        <button
-          onClick={() => {
-            if (!hasBirthDetails) {
-              setBirthDetailsDialogOpen(true);
-              return;
-            }
-            scrollTo('consult-guru');
-          }}
-          className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/7 transition"
-        >
-          <div className="text-white font-semibold">Consult the Guru</div>
-          <div className="mt-1 text-sm text-white/60">
-            Ask a question and receive guidance based on your chart.
-          </div>
-          <div className="mt-4">
-            <span className="inline-flex rounded-full bg-white px-4 py-2 text-sm font-semibold text-black">
-              Ask now
-            </span>
-          </div>
-        </button>
 
         {/* Mode Toggle */}
         {hasBirthDetails && activeTier && (
@@ -454,19 +429,6 @@ const VedicAstrology: React.FC = () => {
         )}
       </div>
 
-      {/* Sticky "Consult Guru" CTA for synced users */}
-      {synced && hasBirthDetails && useAIMode && (
-        <div className="fixed bottom-20 right-4 z-50">
-          <Button
-            onClick={() => scrollTo('consult-guru')}
-            className="bg-gradient-to-r from-amber-500 to-purple-600 text-white shadow-lg shadow-purple-500/30 rounded-full px-5 py-3 text-xs font-bold uppercase tracking-wider"
-            size="sm"
-          >
-            <MessageCircle className="w-4 h-4 mr-2" />
-            Consult Guru
-          </Button>
-        </div>
-      )}
     </div>
   );
 };
