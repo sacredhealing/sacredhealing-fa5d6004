@@ -794,9 +794,8 @@ const CourseDetail: React.FC = () => {
           </button>
           {selectedCourseForReview === course.id && (
             <ReviewSection
-              itemId={course.id}
-              itemType="course"
-              onClose={() => setSelectedCourseForReview(null)}
+              contentId={course.id}
+              contentType="course"
             />
           )}
         </Card>
@@ -804,7 +803,7 @@ const CourseDetail: React.FC = () => {
 
       {/* Wealth Course Upsell Modal */}
       {showWealthUpsell && course.id === WEALTH_COURSE_ID && (
-        <WealthCourseUpsell onClose={() => setShowWealthUpsell(false)} />
+        <WealthCourseUpsell isOpen={showWealthUpsell} onOpenChange={(open) => setShowWealthUpsell(open)} />
       )}
 
     </div>

@@ -1143,7 +1143,6 @@ export type Database = {
           description: string | null
           id: string
           intention: string | null
-          invite_link: string | null
           is_active: boolean
           is_locked: boolean | null
           is_premium: boolean | null
@@ -1157,7 +1156,6 @@ export type Database = {
           description?: string | null
           id?: string
           intention?: string | null
-          invite_link?: string | null
           is_active?: boolean
           is_locked?: boolean | null
           is_premium?: boolean | null
@@ -1171,7 +1169,6 @@ export type Database = {
           description?: string | null
           id?: string
           intention?: string | null
-          invite_link?: string | null
           is_active?: boolean
           is_locked?: boolean | null
           is_premium?: boolean | null
@@ -2676,55 +2673,52 @@ export type Database = {
       }
       mantras: {
         Row: {
-          id: string
-          title: string
-          description: string | null
           audio_url: string
+          category: string | null
           cover_image_url: string | null
+          created_at: string
+          description: string | null
           duration_seconds: number
-          duration_minutes: number
-          shc_reward: number
-          play_count: number
+          id: string
           is_active: boolean
           is_premium: boolean
-          category: string | null
           planet_type: string | null
-          created_at: string
-          updated_at: string
+          play_count: number
+          shc_reward: number
+          title: string
+          updated_at: string | null
         }
         Insert: {
-          id?: string
-          title: string
-          description?: string | null
           audio_url: string
+          category?: string | null
           cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
           duration_seconds?: number
-          duration_minutes?: number
-          shc_reward?: number
-          play_count?: number
+          id?: string
           is_active?: boolean
           is_premium?: boolean
-          category?: string | null
           planet_type?: string | null
-          created_at?: string
-          updated_at?: string
+          play_count?: number
+          shc_reward?: number
+          title: string
+          updated_at?: string | null
         }
         Update: {
-          id?: string
-          title?: string
-          description?: string | null
           audio_url?: string
+          category?: string | null
           cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
           duration_seconds?: number
-          duration_minutes?: number
-          shc_reward?: number
-          play_count?: number
+          id?: string
           is_active?: boolean
           is_premium?: boolean
-          category?: string | null
           planet_type?: string | null
-          created_at?: string
-          updated_at?: string
+          play_count?: number
+          shc_reward?: number
+          title?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -5757,18 +5751,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      insert_mantra_admin: { Args: { data: Json }; Returns: Json }
       subscribe_to_newsletter: {
         Args: { email_input: string; name_input?: string }
         Returns: Json
       }
-      insert_mantra_admin: {
-        Args: { data: Json }
-        Returns: Json
-      }
-      update_mantra_admin: {
-        Args: { data: Json }
-        Returns: Json
-      }
+      update_mantra_admin: { Args: { data: Json }; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

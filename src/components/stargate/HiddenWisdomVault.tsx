@@ -39,41 +39,41 @@ const ANGELIC_SPHERE_NAMES: Record<number, string> = {
 };
 
 export const HiddenWisdomVault: React.FC = () => {
-  const { hasAccess } = useStargateAccess();
+  const { isStargateMember } = useStargateAccess();
   const [wisdom, setWisdom] = useState<HiddenWisdom[]>([]);
   const [spheres, setSpheres] = useState<AngelicSphere[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSphere, setSelectedSphere] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!hasAccess) return;
+    if (!isStargateMember) return;
 
     const fetchWisdom = async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('hidden_wisdom_vault')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (!error && data) {
-        setWisdom(data);
+        setWisdom(data as HiddenWisdom[]);
       }
 
-      const { data: sphereData } = await supabase
+      const { data: sphereData } = await (supabase as any)
         .from('angelic_spheres')
         .select('*')
         .order('sphere_number', { ascending: true });
 
       if (sphereData) {
-        setSpheres(sphereData);
+        setSpheres(sphereData as AngelicSphere[]);
       }
 
       setLoading(false);
     };
 
     fetchWisdom();
-  }, [hasAccess]);
+  }, [isStargateMember]);
 
-  if (!hasAccess) {
+  if (!isStargateMember) {
     return (
       <Card className="p-8 text-center">
         <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-4" />

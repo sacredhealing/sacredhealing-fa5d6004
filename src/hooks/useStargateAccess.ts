@@ -25,7 +25,7 @@ export const useStargateAccess = () => {
     }
 
     // Check if manually added by admin
-    const { data: manualMember, error: manualError } = await supabase
+    const { data: manualMember, error: manualError } = await (supabase as any)
       .from('stargate_community_members')
       .select('id')
       .eq('user_id', user.id)

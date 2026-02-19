@@ -31,7 +31,7 @@ export const useCommunityPolls = (roomId: string) => {
 
   const fetchPolls = useCallback(async () => {
     if (!roomId) return;
-    const { data: pollsData, error } = await supabase
+    const { data: pollsData, error } = await (supabase as any)
       .from('community_polls')
       .select('*')
       .eq('room_id', roomId)
@@ -51,13 +51,13 @@ export const useCommunityPolls = (roomId: string) => {
       return;
     }
 
-    const { data: optionsData } = await supabase
+    const { data: optionsData } = await (supabase as any)
       .from('community_poll_options')
       .select('*')
       .in('poll_id', pollIds)
       .order('order_index');
 
-    const { data: votesData } = await supabase
+    const { data: votesData } = await (supabase as any)
       .from('community_poll_votes')
       .select('poll_id, option_id')
       .in('poll_id', pollIds)
@@ -67,7 +67,7 @@ export const useCommunityPolls = (roomId: string) => {
     votesData?.forEach(v => userVoteByPoll.set(v.poll_id, v.option_id));
 
     const optionCounts = new Map<string, number>();
-    const { data: allVotes } = await supabase
+    const { data: allVotes } = await (supabase as any)
       .from('community_poll_votes')
       .select('option_id')
       .in('poll_id', pollIds);
@@ -113,7 +113,7 @@ export const useCommunityPolls = (roomId: string) => {
 
   const vote = async (pollId: string, optionId: string) => {
     if (!user) return false;
-    const { error } = await supabase.from('community_poll_votes').insert({
+    const { error } = await (supabase as any).from('community_poll_votes').insert({
       poll_id: pollId,
       option_id: optionId,
       user_id: user.id,
@@ -128,14 +128,14 @@ export const useCommunityPolls = (roomId: string) => {
 
   const createPoll = async (question: string, optionTexts: string[]) => {
     if (!user || !isAdmin || optionTexts.length < 2 || optionTexts.length > 4) return null;
-    const { data: poll, error: pollError } = await supabase
+    const { data: poll, error: pollError } = await (supabase as any)
       .from('community_polls')
       .insert({ room_id: roomId, question, created_by: user.id })
       .select('id')
       .single();
     if (pollError || !poll) return null;
-    const opts = optionTexts.map((text, i) => ({ poll_id: poll.id, text, order_index: i }));
-    const { error: optsError } = await supabase.from('community_poll_options').insert(opts);
+    const opts = optionTexts.map((text: string, i: number) => ({ poll_id: (poll as any).id, text, order_index: i }));
+    const { error: optsError } = await (supabase as any).from('community_poll_options').insert(opts);
     if (optsError) return null;
     await fetchPolls();
     return poll.id;

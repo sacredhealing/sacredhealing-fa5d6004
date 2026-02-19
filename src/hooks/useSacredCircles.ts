@@ -27,15 +27,15 @@ export interface CircleMessage {
   content: string;
   created_at: string;
   is_pinned: boolean;
-  message_type?: 'text' | 'voice' | 'image' | 'file' | 'video';
+  message_type: 'text' | 'voice' | 'image' | 'file' | 'video';
   file_url?: string | null;
   file_name?: string | null;
   file_size?: number | null;
   mime_type?: string | null;
   duration?: number | null; // For voice notes/videos in seconds
   thumbnail_url?: string | null;
-  status?: 'pending' | 'sent' | 'error';
-  profile?: {
+  status: 'pending' | 'sent' | 'error';
+  profile: {
     full_name: string | null;
     avatar_url: string | null;
   };
@@ -289,12 +289,12 @@ export const useCircleMessages = (roomId: string) => {
       .select('user_id, full_name, avatar_url')
       .in('user_id', userIds);
 
-    const messagesWithProfiles = messagesData?.map(msg => ({
+    const messagesWithProfiles: CircleMessage[] = messagesData?.map(msg => ({
       ...msg,
       is_pinned: msg.is_pinned || false,
-      message_type: msg.message_type || 'text',
-      status: msg.status || 'sent',
-      profile: profiles?.find(p => p.user_id === msg.user_id)
+      message_type: (msg as any).message_type || 'text',
+      status: ((msg as any).status || 'sent') as 'pending' | 'sent' | 'error',
+      profile: profiles?.find(p => p.user_id === msg.user_id) ?? { full_name: null, avatar_url: null }
     })) || [];
 
     // Merge with optimistic messages (replace by ID if exists in DB)
@@ -414,9 +414,9 @@ export const useCircleMessages = (roomId: string) => {
       const realMessage: CircleMessage = {
         ...data,
         is_pinned: data.is_pinned || false,
-        message_type: data.message_type || 'text',
+        message_type: (data as any).message_type || 'text',
         status: 'sent',
-        profile: profiles?.[0]
+        profile: profiles?.[0] ?? { full_name: null, avatar_url: null }
       };
 
       setMessages(prev => prev.map(m => m.id === tempId ? realMessage : m));
@@ -504,15 +504,15 @@ export const useCircleMembers = (roomId: string) => {
       console.log(`[useCircleMembers] Fetching members for room ${roomId}`);
       
       // Try RPC function first if available (for admins, bypasses RLS)
-      const { data: rpcData, error: rpcError } = await supabase
+      const { data: rpcData, error: rpcError } = await (supabase as any)
         .rpc('get_room_members', { _room_id: roomId });
       
       let memberRows: any[] | null = null;
       let error: any = null;
       
       if (!rpcError && rpcData) {
-        console.log(`[useCircleMembers] RPC function returned ${rpcData.length} members`);
-        memberRows = rpcData;
+        console.log(`[useCircleMembers] RPC function returned ${(rpcData as any[]).length} members`);
+        memberRows = rpcData as any[];
       } else {
         // Fallback to direct query
         const result = await supabase

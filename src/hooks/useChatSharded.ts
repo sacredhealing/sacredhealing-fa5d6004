@@ -100,8 +100,9 @@ export const useChatSharded = (roomId: string | null) => {
         .select('user_id, full_name, avatar_url')
         .in('user_id', userIds);
 
-      const messagesWithProfiles = orderedMessages.map(msg => ({
+      const messagesWithProfiles: ChatMessage[] = orderedMessages.map(msg => ({
         ...msg,
+        message_type: (msg as any).message_type || 'text',
         profile: profiles?.find(p => p.user_id === msg.user_id)
       }));
 
