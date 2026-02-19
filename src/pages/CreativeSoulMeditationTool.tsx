@@ -95,14 +95,26 @@ export default function CreativeSoulMeditationTool() {
   const healingVolume = engine.solfeggioVolume;
   const brainwaveVolume = engine.binauralVolume;
 
-  // Update engine frequency volume when sliders change
-  const handleHealingVolumeChange = useCallback((vol: number) => {
+  // Update engine frequency volume when sliders change — also auto-start if not playing
+  const handleHealingVolumeChange = useCallback(async (vol: number) => {
+    if (!engine.isInitialized) await engine.initialize();
+    const audioCtx = engine.getAudioContext();
+    if (audioCtx?.state === 'suspended') await audioCtx.resume();
     engine.updateSolfeggioVolume(vol);
-  }, [engine]);
+    if (!engine.frequencies.solfeggio.enabled) {
+      await engine.startSolfeggio(healingFreq);
+    }
+  }, [engine, healingFreq]);
 
-  const handleBrainwaveVolumeChange = useCallback((vol: number) => {
+  const handleBrainwaveVolumeChange = useCallback(async (vol: number) => {
+    if (!engine.isInitialized) await engine.initialize();
+    const audioCtx = engine.getAudioContext();
+    if (audioCtx?.state === 'suspended') await audioCtx.resume();
     engine.updateBinauralVolume(vol);
-  }, [engine]);
+    if (!engine.frequencies.binaural.enabled) {
+      await engine.startBinaural(200, brainwaveFreq);
+    }
+  }, [engine, brainwaveFreq]);
 
   // Initialize engine on mount
   const handleInitialize = useCallback(async () => {
@@ -357,20 +369,24 @@ export default function CreativeSoulMeditationTool() {
     }
   }, [engine]);
 
-  // Sync frequencies when changed
-  useEffect(() => {
-    if (engine.frequencies.solfeggio.enabled && engine.frequencies.solfeggio.hz !== healingFreq) {
-      engine.stopSolfeggio();
-      engine.startSolfeggio(healingFreq);
-    }
-  }, [healingFreq, engine]);
+  // Self-activating frequency selectors — initialize engine + start audio immediately on click
+  const handleHealingFreqSelect = useCallback(async (freq: number) => {
+    setHealingFreq(freq);
+    if (!engine.isInitialized) await engine.initialize();
+    const audioCtx = engine.getAudioContext();
+    if (audioCtx?.state === 'suspended') await audioCtx.resume();
+    engine.stopSolfeggio();
+    await engine.startSolfeggio(freq);
+  }, [engine]);
 
-  useEffect(() => {
-    if (engine.frequencies.binaural.enabled && engine.frequencies.binaural.beatHz !== brainwaveFreq) {
-      engine.stopBinaural();
-      engine.startBinaural(200, brainwaveFreq);
-    }
-  }, [brainwaveFreq, engine]);
+  const handleBrainwaveFreqSelect = useCallback(async (freq: number) => {
+    setBrainwaveFreq(freq);
+    if (!engine.isInitialized) await engine.initialize();
+    const audioCtx = engine.getAudioContext();
+    if (audioCtx?.state === 'suspended') await audioCtx.resume();
+    engine.stopBinaural();
+    await engine.startBinaural(200, freq);
+  }, [engine]);
 
   // Sync export duration with neural source audio length
   useEffect(() => {
@@ -704,13 +720,13 @@ export default function CreativeSoulMeditationTool() {
             <HealingFrequencySelector 
               activeFrequency={healingFreq} 
               volume={healingVolume}
-              onSelect={setHealingFreq}
+              onSelect={handleHealingFreqSelect}
               onVolumeChange={handleHealingVolumeChange}
             />
             <BrainwaveSelector 
               activeFrequency={brainwaveFreq} 
               volume={brainwaveVolume}
-              onSelect={setBrainwaveFreq}
+              onSelect={handleBrainwaveFreqSelect}
               onVolumeChange={handleBrainwaveVolumeChange}
             />
           </div>

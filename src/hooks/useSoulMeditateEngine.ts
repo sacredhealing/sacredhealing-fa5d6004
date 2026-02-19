@@ -723,15 +723,17 @@ export function useSoulMeditateEngine() {
     return { ok: true };
   }, [initialize, atmosphereLayer.source]);
 
-  // Play/pause neural layer
-  const toggleNeuralPlay = useCallback(() => {
+  // Play/pause neural layer — await AudioContext resume before play (fixes browser autoplay policy)
+  const toggleNeuralPlay = useCallback(async () => {
     if (!neuralAudioRef.current) return;
     
     if (neuralLayer.isPlaying) {
       neuralAudioRef.current.pause();
     } else {
-      audioContextRef.current?.resume();
-      neuralAudioRef.current.play().catch(console.error);
+      if (audioContextRef.current?.state === 'suspended') {
+        await audioContextRef.current.resume();
+      }
+      await neuralAudioRef.current.play().catch(console.error);
     }
     setNeuralLayer(prev => ({ ...prev, isPlaying: !prev.isPlaying }));
   }, [neuralLayer.isPlaying]);
