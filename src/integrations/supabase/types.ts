@@ -5752,6 +5752,7 @@ export type Database = {
         Returns: boolean
       }
       insert_mantra_admin: { Args: { data: Json }; Returns: Json }
+      is_room_member: { Args: { _room_id: string }; Returns: boolean }
       subscribe_to_newsletter: {
         Args: { email_input: string; name_input?: string }
         Returns: Json
