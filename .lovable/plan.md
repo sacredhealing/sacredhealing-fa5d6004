@@ -1,84 +1,105 @@
 
 
-## Fix: Restore Full Audio Chain and Harden Initialization
+## Fix: Add Audio Diagnostic Test Tone and Improve Debugging
 
-### Problem
+### Current Status
 
-Two issues are causing the "no sound" failure:
+After thorough code review and browser testing, the audio chain is correctly wired:
+- `solfeggioGain` and `binauralGain` connect to `mixerGain`
+- `mixerGain` connects to `waveshaper` then `limiter` then `masterGain` then `destination`
+- The oscillator starts with correct frequency and gain (confirmed in browser test logs)
+- AudioContext state is "running"
 
-1. **Critical `initialize()` bug**: If ANY line inside the try block (lines 185-392) throws an error, the `catch` block runs but `finally` still sets `isInitialized = true` AND `audioContextRef.current` is already set. This means:
-   - The gain nodes (solfeggio, binaural, atmosphere, neural) are NEVER created
-   - All subsequent calls to `initialize()` return early at line 183 (`if (audioContextRef.current) return`)
-   - `startSolfeggio` and `startBinaural` silently exit because gain refs are null
-   - This is a permanent failure — the engine can never recover without a page reload
+Yet the user reports no sound. This means either:
+1. An audio node in the processing chain is silently eating the signal
+2. The waveshaper or limiter is behaving unexpectedly
+3. A browser autoplay policy is blocking output despite "running" state
 
-2. **Audio processing chain removed**: The last edit simplified the neural source connection from the full processing chain (mono balancer, noise cleanup, EQ, noise gate) to a direct connection. While this shouldn't break sound, restoring the full chain ensures consistency with the working version from 10 days ago.
+### Plan
 
-### Fix 1 — Make `initialize()` recoverable (most critical)
+#### 1. Add a direct "Test Tone" bypass in `CreativeSoulMeditationTool.tsx`
 
-In `src/hooks/useSoulMeditateEngine.ts`, modify the `initialize` function so that if it fails mid-way, the AudioContext is cleaned up and `isInitialized` remains `false`, allowing a retry:
-
-```text
-Before (broken):
-  try {
-    const ctx = new AudioContext();
-    audioContextRef.current = ctx;
-    // ... 200 lines of node creation ...
-  } catch (e) {
-    console.error(e);
-  } finally {
-    setIsInitialized(true);  // <-- BUG: always sets true even on failure
-  }
-
-After (fixed):
-  try {
-    const ctx = new AudioContext();
-    audioContextRef.current = ctx;
-    // ... 200 lines of node creation ...
-    setIsInitialized(true);  // only set on success
-  } catch (e) {
-    console.error('SoulMeditateEngine initialize error:', e);
-    // Clean up so retry is possible
-    if (audioContextRef.current) {
-      audioContextRef.current.close().catch(() => {});
-      audioContextRef.current = null;
-    }
-    // Do NOT set isInitialized = true
-  }
-```
-
-### Fix 2 — Restore full neural source audio chain
-
-Restore the processing chain in `loadNeuralSource` that was removed in the last diff. This restores the mono balancer, noise cleanup, low-cut filter, 3-band EQ, and noise gate chain that was confirmed working:
+Add a diagnostic button that creates a pure sine tone connected DIRECTLY to `ctx.destination`, bypassing the entire DSP chain. If this plays sound, the problem is in the processing chain. If this doesn't play sound, the problem is in the user's browser/device.
 
 ```text
-source -> monoSplitter -> monoMerger -> noiseHighPass -> noiseLowPass ->
-noiseCompressor -> lowCutFilter -> eqWeight -> eqPresence -> eqAir ->
-userNoiseGate -> neuralGain
+Test Tone button:
+  1. Gets AudioContext from engine (or creates new one)
+  2. Resumes context
+  3. Creates 440 Hz sine oscillator
+  4. Connects directly to ctx.destination (bypasses mixer, waveshaper, limiter, master)
+  5. Sets gain to 0.3
+  6. Plays for 2 seconds
+  7. Logs full diagnostic info (context state, sample rate, destination channels)
 ```
 
-With the direct-connection fallback if any node is null.
+#### 2. Add signal path verification logging in `startSolfeggio`
 
-### Fix 3 — Add AudioContext resume in `initialize()` itself
+After starting the oscillator, log the entire chain status:
+- AudioContext state and sample rate
+- Oscillator frequency value
+- solfeggioGain value and number of connected outputs
+- mixerGain value
+- waveshaper curve length
+- limiter threshold/ratio
+- masterGain value
+- Whether destination has inputs connected
 
-After creating all nodes, explicitly resume the AudioContext at the end of `initialize()` so oscillators can produce sound immediately:
+#### 3. Add a direct oscillator-to-destination fallback
 
-```ts
-// At end of initialize, before setIsInitialized:
-if (ctx.state === 'suspended') {
-  await ctx.resume();
-}
-```
+If the test tone works but the main chain doesn't, add a secondary direct path: `solfeggioGain` also connects directly to `masterGain` (bypassing waveshaper/limiter). This ensures sound reaches the user even if the waveshaper node has an issue.
 
 ### Files to Modify
 
 | File | Change |
 |---|---|
-| `src/hooks/useSoulMeditateEngine.ts` | Move `setIsInitialized(true)` from `finally` into `try` block (end); add cleanup in `catch`; restore full audio chain in `loadNeuralSource`; add `ctx.resume()` at end of initialize |
+| `src/pages/CreativeSoulMeditationTool.tsx` | Add Test Tone diagnostic button in the header area (near Initialize/Engine Active) |
+| `src/hooks/useSoulMeditateEngine.ts` | Add `playTestTone()` method that bypasses all processing; add chain verification logging in `startSolfeggio` and `startBinaural` |
 
 ### Technical Details
 
-- `initialize()` — lines 182-399: restructure try/catch/finally
-- `loadNeuralSource()` — lines 470-473: restore the full chain with if-guard and fallback
-- No other files need changes
+**Test Tone implementation** (in `useSoulMeditateEngine.ts`):
+```ts
+const playTestTone = useCallback(async () => {
+  let ctx = audioContextRef.current;
+  if (!ctx) {
+    ctx = new AudioContext();
+    // Don't store — this is a throwaway test
+  }
+  if (ctx.state === 'suspended') await ctx.resume();
+  
+  console.log('[TEST TONE] Context state:', ctx.state, 'sampleRate:', ctx.sampleRate);
+  console.log('[TEST TONE] Destination:', ctx.destination.numberOfInputs, 'inputs,', ctx.destination.channelCount, 'channels');
+  
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.frequency.value = 440;
+  gain.gain.value = 0.3;
+  osc.connect(gain);
+  gain.connect(ctx.destination); // DIRECT — no mixer, no waveshaper, no limiter
+  osc.start();
+  osc.stop(ctx.currentTime + 2);
+  console.log('[TEST TONE] Playing 440 Hz for 2 seconds — DIRECT to destination');
+}, []);
+```
+
+**Chain verification** (added to end of `startSolfeggio`):
+```ts
+// Diagnostic chain verification
+console.log('[Solfeggio] Chain check:',
+  'mixer:', mixerGainRef.current?.gain.value,
+  'waveshaper:', waveShaperRef.current?.curve?.length,
+  'limiter:', limiterRef.current?.threshold.value,
+  'master:', masterGainRef.current?.gain.value,
+  'ctx.destination channels:', audioContextRef.current.destination.channelCount
+);
+```
+
+**Button in UI** (in `CreativeSoulMeditationTool.tsx`, near the Engine Active badge):
+```tsx
+<Button size="sm" variant="outline" onClick={engine.playTestTone}>
+  Test Tone
+</Button>
+```
+
+This will be a small button, visible only when the engine is initialized. It plays a 2-second 440 Hz beep directly to the speakers. If the user hears this, we know their audio output works and the issue is specifically in the DSP chain.
 
