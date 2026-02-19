@@ -392,10 +392,32 @@ export function useSoulMeditateEngine() {
     delayGainRef.current.connect(limiterRef.current);
     
     console.log('Audio chain initialized: sources -> mixer -> analyser/processing -> master');
+
+    // Ensure AudioContext is running so oscillators can produce sound immediately
+    if (ctx.state === 'suspended') {
+      await ctx.resume();
+      console.log('AudioContext resumed from suspended state');
+    }
+
+    // Only mark as initialized on full success
+    setIsInitialized(true);
     } catch (e) {
       console.error('SoulMeditateEngine initialize error:', e);
-    } finally {
-      setIsInitialized(true);
+      // Clean up so retry is possible
+      if (audioContextRef.current) {
+        audioContextRef.current.close().catch(() => {});
+        audioContextRef.current = null;
+      }
+      // Reset all refs that may have been partially set
+      masterGainRef.current = null;
+      analyserRef.current = null;
+      mixerGainRef.current = null;
+      neuralGainRef.current = null;
+      atmosphereGainRef.current = null;
+      solfeggioGainRef.current = null;
+      binauralGainRef.current = null;
+      limiterRef.current = null;
+      // Do NOT set isInitialized = true — allow retry
     }
   }, [masterVolume, neuralLayer.volume, atmosphereLayer.volume, dsp]);
 
@@ -467,10 +489,34 @@ export function useSoulMeditateEngine() {
 
     neuralAudioRef.current = audio;
 
-    // Create source node and connect through noise cleanup chain
+    // Create source node and connect through full audio processing chain
     const source = audioContextRef.current.createMediaElementSource(audio);
 
-    source.connect(neuralGainRef.current);
+    // Restore full chain: source -> mono balancer -> noise cleanup -> low cut -> EQ -> noise gate -> neuralGain
+    const hasMono = monoSplitterRef.current && monoMergerRef.current;
+    const hasNoise = noiseHighPassRef.current && noiseLowPassRef.current && noiseCompressorRef.current;
+    const hasLowCut = lowCutFilterRef.current;
+    const hasEQ = eqWeightRef.current && eqPresenceRef.current && eqAirRef.current;
+    const hasGate = userNoiseGateRef.current;
+
+    if (hasMono && hasNoise && hasLowCut && hasEQ && hasGate) {
+      // Full professional chain
+      source.connect(monoSplitterRef.current!);
+      monoMergerRef.current!.connect(noiseHighPassRef.current!);
+      noiseHighPassRef.current!.connect(noiseLowPassRef.current!);
+      noiseLowPassRef.current!.connect(noiseCompressorRef.current!);
+      noiseCompressorRef.current!.connect(lowCutFilterRef.current!);
+      lowCutFilterRef.current!.connect(eqWeightRef.current!);
+      eqWeightRef.current!.connect(eqPresenceRef.current!);
+      eqPresenceRef.current!.connect(eqAirRef.current!);
+      eqAirRef.current!.connect(userNoiseGateRef.current!);
+      userNoiseGateRef.current!.connect(neuralGainRef.current!);
+      console.log('Neural source connected through full chain: mono -> noise cleanup -> low cut -> EQ -> gate -> gain');
+    } else {
+      // Fallback: direct connection
+      source.connect(neuralGainRef.current!);
+      console.warn('Neural source using direct connection (some processing nodes unavailable)');
+    }
 
     neuralSourceRef.current = source;
 
