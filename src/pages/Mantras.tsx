@@ -53,10 +53,14 @@ const Mantras = () => {
   const reps = MANTRA_REPETITIONS;
   const selectedMantra = selectedMantraId ? mantras.find((m) => m.id === selectedMantraId) : null;
 
-  // Get Jyotish recommendation
-  const jyotishRecommendation = useJyotishMantraRecommendation(mantras);
-  const { reading } = useAIVedicReading();
-  
+  // Load Vedic reading once — hits localStorage cache instantly after first visit.
+  // generateReading is called inside useJyotishMantraRecommendation when birth details are ready,
+  // but we also expose `reading` here so the mantra sorting logic can use the dasha planet immediately.
+  const { reading, generateReading: generateVedicReading } = useAIVedicReading();
+
+  // Pass the already-loaded reading so the recommendation hook never duplicates the API fetch.
+  const jyotishRecommendation = useJyotishMantraRecommendation(mantras, reading);
+
   // Hora Watch - Calculate current planetary hour
   const horaWatch = useHoraWatch({
     timezone: userTimezone,
