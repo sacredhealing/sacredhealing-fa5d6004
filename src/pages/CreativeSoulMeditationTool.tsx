@@ -622,24 +622,20 @@ export default function CreativeSoulMeditationTool() {
 
         {/* Neural Source Intake - Above Style Grid */}
         <div className="mb-6">
-          <Card className="bg-black/40 backdrop-blur-xl border-white/10">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2 text-white/90">
-                <Layers className="w-4 h-4 text-pink-400" />
-                I. Neural Source Intake
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <NeuralSourceInput
-                layer={engine.neuralLayer}
-                onLoadFile={engine.loadNeuralSource}
-                onLoadUrl={engine.loadNeuralSource}
-                onTogglePlay={engine.toggleNeuralPlay}
-                onVolumeChange={engine.updateNeuralVolume}
-              />
-              <YouTubeLinker onAudioExtracted={handleYouTubeAudio} />
-            </CardContent>
-          </Card>
+          <p className="text-base font-semibold text-white/90 mb-3 flex items-center gap-2">
+            <Layers className="w-4 h-4 text-pink-400" />
+            I. Neural Source Intake
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <NeuralSourceInput
+              layer={engine.neuralLayer}
+              onLoadFile={engine.loadNeuralSource}
+              onLoadUrl={engine.loadNeuralSource}
+              onTogglePlay={engine.toggleNeuralPlay}
+              onVolumeChange={engine.updateNeuralVolume}
+            />
+            <YouTubeLinker onAudioExtracted={handleYouTubeAudio} />
+          </div>
         </div>
 
         {/* Virtual Channel Strip - Vocal Editor */}
@@ -700,29 +696,23 @@ export default function CreativeSoulMeditationTool() {
         {/* Main Grid Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-          {/* Center Column - Frequencies */}
-          <div className="space-y-6">
-            <Card className="bg-black/40 backdrop-blur-xl border-white/10">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base text-white/90">
-                  III. Quantum Calibration
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <HealingFrequencySelector 
-                  activeFrequency={healingFreq} 
-                  volume={healingVolume}
-                  onSelect={setHealingFreq}
-                  onVolumeChange={handleHealingVolumeChange}
-                />
-                <BrainwaveSelector 
-                  activeFrequency={brainwaveFreq} 
-                  volume={brainwaveVolume}
-                  onSelect={setBrainwaveFreq}
-                  onVolumeChange={handleBrainwaveVolumeChange}
-                />
-              </CardContent>
-            </Card>
+        {/* Center Column - Frequencies */}
+          <div className="space-y-4">
+            <div className="px-1">
+              <p className="text-base font-semibold text-white/90 mb-3">III. Quantum Calibration</p>
+            </div>
+            <HealingFrequencySelector 
+              activeFrequency={healingFreq} 
+              volume={healingVolume}
+              onSelect={setHealingFreq}
+              onVolumeChange={handleHealingVolumeChange}
+            />
+            <BrainwaveSelector 
+              activeFrequency={brainwaveFreq} 
+              volume={brainwaveVolume}
+              onSelect={setBrainwaveFreq}
+              onVolumeChange={handleBrainwaveVolumeChange}
+            />
           </div>
 
           {/* Right Column - DSP & Insights */}
