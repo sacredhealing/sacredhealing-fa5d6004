@@ -1,113 +1,363 @@
-import React, { useState } from 'react';
-import { Sparkles, ChevronDown } from 'lucide-react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { useTranslation } from 'react-i18next';
-import { VastuChat } from './VastuChat';
+import React, { useState, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { VastuChatWindow, VastuMessage } from './VastuChat';
+import { MODULES } from './vastuConstants';
+import { toast } from 'sonner';
 
 interface VastuToolProps {
   isAdmin?: boolean;
 }
 
-export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
-  const { t } = useTranslation();
-  const [started, setStarted] = useState(false);
+const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/vastu-chat`;
 
-  const modules = [
-    { number: 1, title: t('vastu.m1Title', 'Foundation & Five Elements'), desc: t('vastu.m1Desc', 'Understand the Pancha Bhutas and how earth, water, fire, air, and space govern your home.') },
-    { number: 2, title: t('vastu.m2Title', 'Entrance & Brahmasthan'), desc: t('vastu.m2Desc', 'Harness the power of the main entrance and the sacred center point of your space.') },
-    { number: 3, title: t('vastu.m3Title', 'Zones & Directions'), desc: t('vastu.m3Desc', 'Map the 16 Vastu zones and align each room with its optimal directional energy.') },
-    { number: 4, title: t('vastu.m4Title', 'AI Spatial Analysis'), desc: t('vastu.m4Desc', 'Upload your floor plan and receive AI-powered Vastu recommendations tailored to your space.') },
-    { number: 5, title: t('vastu.m5Title', 'Sound Alchemy & Mantras'), desc: t('vastu.m5Desc', 'Activate your space with sacred sound frequencies and mantra transmissions.') },
-    { number: 6, title: t('vastu.m6Title', 'Colour & Material Wisdom'), desc: t('vastu.m6Desc', 'Choose colours and materials that amplify the energetic quality of each zone.') },
-    { number: 7, title: t('vastu.m7Title', 'Water & Wealth Corners'), desc: t('vastu.m7Desc', 'Position water elements and wealth activators for maximum abundance flow.') },
-    { number: 8, title: t('vastu.m8Title', 'Sleep & Bedroom Harmonics'), desc: t('vastu.m8Desc', 'Optimise your bedroom orientation and decor for deep rest and rejuvenation.') },
-    { number: 9, title: t('vastu.m9Title', 'Kitchen & Fire Zone'), desc: t('vastu.m9Desc', 'Balance fire energy in the kitchen to support health, digestion, and family harmony.') },
-    { number: 10, title: t('vastu.m10Title', '48-Hour Integration Ritual'), desc: t('vastu.m10Desc', 'Complete the transformation with a guided 48-hour energy-settling integration period.') },
-  ];
+export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
+  const [currentModule, setCurrentModule] = useState(1);
+  const [messages, setMessages] = useState<VastuMessage[]>([]);
+  const [isThinking, setIsThinking] = useState(false);
+  const [lastChangeTimestamp, setLastChangeTimestamp] = useState<number | null>(null);
+  const [isMasterUnlocked, setIsMasterUnlocked] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const getIntegrationProgress = () => {
+    if (!lastChangeTimestamp) return 0;
+    const elapsedMs = Date.now() - lastChangeTimestamp;
+    const targetMs = 48 * 60 * 60 * 1000;
+    return Math.min(100, (elapsedMs / targetMs) * 100);
+  };
+
+  const handleSendMessage = useCallback(async (text: string, images?: string[]) => {
+    const userMsg: VastuMessage = {
+      role: 'user',
+      text,
+      images,
+      timestamp: Date.now(),
+    };
+
+    setMessages((prev) => [...prev, userMsg]);
+    setIsThinking(true);
+
+    let assistantContent = '';
+
+    try {
+      // Build messages for API (convert to role/content format)
+      const apiMessages = [...messages, userMsg].map((m) => ({
+        role: m.role === 'model' ? 'assistant' : 'user',
+        content: m.text,
+      }));
+
+      const response = await fetch(CHAT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: apiMessages, images }),
+      });
+
+      if (!response.ok || !response.body) {
+        if (response.status === 429) {
+          toast.error('Rate limit exceeded. Please try again in a moment.');
+        } else {
+          toast.error('The cosmic connection was interrupted. Please try again.');
+        }
+        setIsThinking(false);
+        return;
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let textBuffer = '';
+
+      // Add empty assistant message to stream into
+      setMessages((prev) => [...prev, { role: 'model', text: '', timestamp: Date.now() }]);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        textBuffer += decoder.decode(value, { stream: true });
+
+        let newlineIndex: number;
+        while ((newlineIndex = textBuffer.indexOf('\n')) !== -1) {
+          let line = textBuffer.slice(0, newlineIndex);
+          textBuffer = textBuffer.slice(newlineIndex + 1);
+
+          if (line.endsWith('\r')) line = line.slice(0, -1);
+          if (line.startsWith(':') || line.trim() === '') continue;
+          if (!line.startsWith('data: ')) continue;
+
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === '[DONE]') break;
+
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+            if (content) {
+              assistantContent += content;
+              setMessages((prev) => {
+                const updated = [...prev];
+                updated[updated.length - 1] = {
+                  role: 'model',
+                  text: assistantContent,
+                  timestamp: Date.now(),
+                };
+                return updated;
+              });
+            }
+          } catch {
+            textBuffer = line + '\n' + textBuffer;
+            break;
+          }
+        }
+      }
+
+      // After full response: detect module progression
+      const startMatch = assistantContent.match(/\[MODULE_START:\s*(\d+)\]/);
+      const completeMatch = assistantContent.match(/\[MODULE_COMPLETE:\s*(\d+)\]/);
+
+      if (startMatch) {
+        setCurrentModule(parseInt(startMatch[1]));
+        setLastChangeTimestamp(Date.now());
+      } else if (completeMatch) {
+        const next = Math.min(10, parseInt(completeMatch[1]) + 1);
+        setCurrentModule(next);
+        setLastChangeTimestamp(Date.now());
+      }
+
+    } catch (error) {
+      console.error('Vastu chat error:', error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'model',
+          text: 'The cosmic connection was interrupted. Please try again.',
+          timestamp: Date.now(),
+        },
+      ]);
+    } finally {
+      setIsThinking(false);
+    }
+  }, [messages]);
+
+  const handleModuleClick = (id: number) => {
+    const isCompleted = id < currentModule;
+    const isCurrent = id === currentModule;
+    const isAvailable = isMasterUnlocked || isCompleted || isCurrent;
+
+    if (!isAvailable) return;
+
+    setIsSidebarOpen(false);
+    setCurrentModule(id);
+    const moduleTitle = MODULES.find((m) => m.id === id)?.title;
+    handleSendMessage(
+      `Architect, I would like to jump directly to Module ${id}: ${moduleTitle}. Please introduce this module, provide the diagnostics, and the abundance guidelines for this space.`
+    );
+  };
+
+  const integrationProgress = getIntegrationProgress();
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="text-center mb-10">
-        <div className="flex items-center justify-center gap-3 mb-4">
-          <Sparkles className="w-8 h-8 text-primary" />
-          <h1 className="text-4xl font-bold">
-            {t('vastu.title', 'Vastu Abundance Architect')}
-          </h1>
+    <div className="flex h-[calc(100vh-8rem)] relative overflow-hidden rounded-2xl border border-stone-200 shadow-xl bg-stone-50">
+      {/* Mobile sidebar overlay */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/40 z-40 md:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Sidebar */}
+      <aside
+        className={`
+          fixed md:relative z-50 md:z-auto top-0 left-0 h-full
+          w-64 bg-stone-50 border-r border-stone-200 flex flex-col
+          transition-transform duration-300
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        `}
+      >
+        {/* Sidebar header */}
+        <div className="p-4 border-b border-stone-200 flex items-center justify-between">
+          <div>
+            <h3 className="font-bold text-stone-800" style={{ fontFamily: 'Georgia, serif' }}>
+              Your Journey
+            </h3>
+            <p className="text-[10px] text-stone-400 uppercase tracking-widest">10-Module Path</p>
+          </div>
+          <span className="text-stone-300 text-lg">🧭</span>
         </div>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          {t('vastu.subtitle', 'Transform your living space into a sanctuary of abundance through ancient Vastu wisdom and modern spatial design.')}
-        </p>
+
+        {/* Integration progress */}
+        {lastChangeTimestamp && (
+          <div className="px-4 py-3 bg-amber-50 border-b border-amber-100">
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider">Energy Integration</span>
+              <span className="text-[10px] font-black text-amber-700">{Math.round(integrationProgress)}%</span>
+            </div>
+            <div className="h-1.5 bg-amber-100 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-amber-500 to-amber-700 rounded-full transition-all"
+                style={{ width: `${integrationProgress}%` }}
+              />
+            </div>
+            <p className="text-[9px] text-stone-500 mt-1">48-hour field integration</p>
+          </div>
+        )}
+
+        {/* Modules list */}
+        <div className="flex-grow overflow-y-auto p-3 space-y-1.5">
+          {MODULES.map((module) => {
+            const isCompleted = module.id < currentModule;
+            const isCurrent = module.id === currentModule;
+            const isAvailable = isMasterUnlocked || isCompleted || isCurrent;
+
+            return (
+              <button
+                key={module.id}
+                disabled={!isAvailable}
+                onClick={() => handleModuleClick(module.id)}
+                className={`w-full text-left p-3 rounded-xl transition-all flex items-start gap-3 border group ${
+                  isCurrent
+                    ? 'bg-amber-50 border-amber-200 shadow-sm ring-1 ring-amber-100'
+                    : isCompleted
+                    ? 'bg-stone-100 border-stone-200 opacity-80'
+                    : isAvailable
+                    ? 'bg-white border-stone-200 hover:border-amber-300 hover:shadow-sm'
+                    : 'bg-stone-50 border-transparent opacity-40 cursor-not-allowed'
+                }`}
+              >
+                <div
+                  className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
+                    isCurrent
+                      ? 'bg-amber-600 text-white'
+                      : isCompleted
+                      ? 'bg-green-600 text-white'
+                      : isAvailable
+                      ? 'bg-stone-200 text-stone-600 group-hover:bg-amber-200 group-hover:text-amber-800'
+                      : 'bg-stone-200 text-stone-400'
+                  }`}
+                >
+                  {isCompleted ? '✓' : module.id}
+                </div>
+                <div className="flex-grow min-w-0">
+                  <p className={`text-[12px] font-semibold leading-tight truncate ${isCurrent ? 'text-stone-900' : 'text-stone-600'}`}>
+                    {module.title}
+                  </p>
+                  {isCurrent && (
+                    <span className="text-[9px] text-amber-700 font-black uppercase tracking-widest mt-0.5 block animate-pulse">
+                      Current Focus
+                    </span>
+                  )}
+                  {!isAvailable && (
+                    <span className="text-[9px] text-stone-400 font-bold uppercase tracking-tight mt-0.5 block">🔒 Locked</span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Developer tools (admin or always for testing) */}
+        <div className="p-3 border-t border-stone-200">
+          <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest mb-2">Dev Tools</p>
+          <button
+            onClick={() => setIsMasterUnlocked((v) => !v)}
+            className={`w-full py-2 px-3 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+              isMasterUnlocked
+                ? 'bg-amber-700 text-white hover:bg-amber-800'
+                : 'bg-stone-200 text-stone-600 hover:bg-stone-300'
+            }`}
+          >
+            {isMasterUnlocked ? '🔓 Lock Course' : '🔒 Unlock All'}
+          </button>
+          {lastChangeTimestamp && integrationProgress < 100 && (
+            <button
+              onClick={() => setLastChangeTimestamp(Date.now() - 48 * 60 * 60 * 1000 - 1000)}
+              className="w-full mt-1 py-1.5 text-[9px] text-amber-600 font-bold uppercase tracking-wider hover:text-amber-800 transition-colors"
+            >
+              Skip 48h Wait
+            </button>
+          )}
+        </div>
+      </aside>
+
+      {/* Main content */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header */}
+        <div className="flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-amber-800 to-stone-900 text-white flex-shrink-0">
+          {/* Mobile hamburger */}
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            className="md:hidden text-white/70 hover:text-white transition-colors p-1"
+          >
+            ☰
+          </button>
+
+          <div className="flex items-center gap-3 flex-1">
+            <div className="w-10 h-10 rounded-full bg-amber-700/40 flex items-center justify-center">
+              <span className="text-xl">🕉</span>
+            </div>
+            <div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-lg font-bold" style={{ fontFamily: 'Georgia, serif' }}>Vastu</span>
+                <span className="text-amber-300 font-light text-sm" style={{ fontFamily: 'Georgia, serif' }}>
+                  Abundance Architect
+                </span>
+              </div>
+              <p className="text-[9px] text-white/50 uppercase tracking-widest">Conscious Space Design</p>
+            </div>
+          </div>
+
+          {/* Module badge */}
+          <div className="text-right hidden sm:block">
+            <p className="text-[9px] text-white/50 uppercase tracking-widest">Module</p>
+            <p className="text-lg font-black text-amber-300">{currentModule} / 10</p>
+          </div>
+        </div>
+
+        {/* Chat window */}
+        <div className="flex-1 min-h-0">
+          <VastuChatWindow
+            messages={messages}
+            onSendMessage={handleSendMessage}
+            isThinking={isThinking}
+          />
+        </div>
       </div>
 
-      {!started ? (
-        <>
-          <Card className="p-8 mb-8">
-            <div className="grid md:grid-cols-2 gap-8">
-              <div>
-                <h2 className="text-2xl font-bold mb-4">
-                  {t('vastu.whatIs', 'What is Vastu?')}
-                </h2>
-                <p className="text-muted-foreground leading-relaxed">
-                  {t('vastu.description', 'Vastu Shastra is the ancient Indian science of architecture and spatial design. It teaches how to align your physical environment with cosmic energies to attract prosperity, health, and harmony.')}
-                </p>
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold mb-4">
-                  {t('vastu.courseContent', 'Course Content')}
-                </h2>
-                <ul className="space-y-2 text-muted-foreground">
-                  <li className="flex items-start gap-2"><span className="text-primary mt-0.5">✦</span>{t('vastu.module1', '10 comprehensive modules covering every aspect of your home')}</li>
-                  <li className="flex items-start gap-2"><span className="text-primary mt-0.5">✦</span>{t('vastu.module2', 'AI-powered spatial analysis and recommendations')}</li>
-                  <li className="flex items-start gap-2"><span className="text-primary mt-0.5">✦</span>{t('vastu.module3', 'Sound alchemy and mantra transmissions')}</li>
-                  <li className="flex items-start gap-2"><span className="text-primary mt-0.5">✦</span>{t('vastu.module4', '48-hour integration periods for energy settling')}</li>
-                </ul>
+      {/* 48-hour floating banner */}
+      <AnimatePresence>
+        {lastChangeTimestamp && integrationProgress < 100 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="absolute bottom-24 right-4 z-30 max-w-xs"
+          >
+            <div className="bg-stone-900/90 backdrop-blur-sm rounded-2xl p-4 shadow-2xl border border-amber-800/30">
+              <div className="flex items-start gap-3">
+                <span className="text-amber-400 text-lg flex-shrink-0">⏳</span>
+                <div>
+                  <p className="text-[10px] font-black text-amber-400 uppercase tracking-widest mb-1">
+                    Integration Phase
+                  </p>
+                  <p className="text-[11px] text-stone-300 leading-relaxed">
+                    Allow your adjustments to settle for 48 hours. The field is breathing.
+                  </p>
+                  <div className="mt-2 h-1 bg-stone-700 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-amber-500 rounded-full transition-all"
+                      style={{ width: `${integrationProgress}%` }}
+                    />
+                  </div>
+                  <p className="text-[9px] text-stone-500 mt-1">{Math.round(integrationProgress)}% integrated</p>
+                </div>
               </div>
             </div>
-          </Card>
-
-          <div className="text-center">
-            <Button
-              size="lg"
-              className="text-lg px-10"
-              onClick={() => setStarted(true)}
-            >
-              {t('vastu.startCourse', 'Begin Your Vastu Journey')}
-              <ChevronDown className="ml-2 w-5 h-5" />
-            </Button>
-          </div>
-        </>
-      ) : (
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold mb-6 text-center">
-            {t('vastu.modulesTitle', 'Your 10-Module Journey')}
-          </h2>
-          {modules.map((mod) => (
-            <Card key={mod.number} className="p-6 hover:shadow-md transition-shadow">
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
-                  {mod.number}
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg mb-1">{mod.title}</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">{mod.desc}</p>
-                </div>
-              </div>
-            </Card>
-          ))}
-
-          <div className="mt-10 pt-6">
-            <h2 className="text-2xl font-bold mb-4 text-center">
-              {t('vastu.chatTitle', 'Ask Your Vastu Guide')}
-            </h2>
-            <p className="text-center text-muted-foreground mb-6">
-              {t('vastu.chatSubtitle', 'Get personalised Vastu guidance powered by Sacred Healing AI')}
-            </p>
-            <VastuChat />
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
