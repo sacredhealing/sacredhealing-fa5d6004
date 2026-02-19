@@ -158,12 +158,12 @@ const AdminSacredCircles = () => {
       }
 
       // Try RPC function first (bypasses RLS if available)
-      const { data: rpcData, error: rpcError } = await supabase
+      const { data: rpcData, error: rpcError } = await (supabase as any)
         .rpc('get_room_members', { _room_id: roomId });
       
       if (!rpcError && rpcData) {
-        console.log(`[Admin fetchMembers] RPC function returned ${rpcData.length} members`);
-        const userIds = [...new Set((rpcData || []).map((m: any) => m.user_id).filter(Boolean))];
+        console.log(`[Admin fetchMembers] RPC function returned ${(rpcData as any[]).length} members`);
+        const userIds: string[] = [...new Set<string>((rpcData as any[] || []).map((m: any) => m.user_id).filter(Boolean))];
         
         let profiles: any[] = [];
         if (userIds.length > 0) {
@@ -174,7 +174,7 @@ const AdminSacredCircles = () => {
           profiles = profileData || [];
         }
 
-        const enriched: CircleMember[] = (rpcData || []).map((m: any) => ({
+        const enriched: CircleMember[] = (rpcData as any[] || []).map((m: any) => ({
           ...m,
           profile: profiles?.find(p => p.user_id === m.user_id) ?? { full_name: null, avatar_url: null, user_id: m.user_id }
         }));
@@ -189,7 +189,7 @@ const AdminSacredCircles = () => {
       let memberRows, error;
       
       try {
-        const viewResult = await supabase
+        const viewResult = await (supabase as any)
           .from('chat_members_view')
           .select('id, room_id, user_id, role, joined_at, full_name, avatar_url')
           .eq('room_id', roomId)
@@ -264,11 +264,12 @@ const AdminSacredCircles = () => {
       
       // Only fetch profiles if we have userIds
       let profiles: any[] = [];
-      if (userIds.length > 0) {
+      const userIdsTyped: string[] = [...new Set<string>((memberRows || []).map((m: any) => m.user_id).filter(Boolean))];
+      if (userIdsTyped.length > 0) {
         const { data: profileData, error: profileError } = await supabase
           .from('public_profiles')
           .select('user_id, full_name, avatar_url')
-          .in('user_id', userIds);
+          .in('user_id', userIdsTyped);
         
         // Don't fail if profiles query fails - just use empty profiles
         if (!profileError && profileData) {

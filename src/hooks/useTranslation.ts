@@ -29,14 +29,14 @@ export const useTranslation = () => {
       }
 
       try {
-        const { data: profile } = await supabase
+        const { data: profile } = await (supabase as any)
           .from('profiles')
           .select('language')
           .eq('user_id', user.id)
           .single();
 
-        if (profile?.language && (profile.language === 'sv' || profile.language === 'en')) {
-          setLanguage(profile.language as Language);
+        if ((profile as any)?.language && ((profile as any).language === 'sv' || (profile as any).language === 'en')) {
+          setLanguage((profile as any).language as Language);
         } else {
           setLanguage('sv'); // Default
         }
@@ -53,7 +53,7 @@ export const useTranslation = () => {
   useEffect(() => {
     const fetchTranslations = async () => {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('ui_translations')
           .select('key_name, en_text, sv_text');
 
@@ -64,7 +64,7 @@ export const useTranslation = () => {
         }
 
         const cache: TranslationCache = {};
-        (data || []).forEach((item) => {
+        ((data || []) as any[]).forEach((item: any) => {
           cache[item.key_name] = language === 'sv' ? item.sv_text : item.en_text;
         });
 
@@ -104,7 +104,7 @@ export const useTranslation = () => {
     }
 
     try {
-      await supabase
+      await (supabase as any)
         .from('profiles')
         .update({ language: newLanguage })
         .eq('user_id', user.id);

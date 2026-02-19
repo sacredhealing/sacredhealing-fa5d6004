@@ -71,7 +71,7 @@ const AdminMantras = () => {
       .order('created_at', { ascending: false });
 
     if (data) {
-      setMantras(data as Mantra[]);
+      setMantras(data as unknown as Mantra[]);
     }
     setLoading(false);
   };

@@ -223,7 +223,7 @@ const Community = () => {
             partnerId={selectedContact.id}
             partnerName={selectedContact.name}
             partnerAvatar={selectedContact.avatar}
-            isBot={selectedContact.isBot}
+            isBot={(selectedContact as any).isBot}
             isOnline={selectedContact.isOnline}
             onBack={handleBack}
             showBackOnDesktop={false}

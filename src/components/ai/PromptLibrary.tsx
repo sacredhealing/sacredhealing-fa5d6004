@@ -88,15 +88,15 @@ export const PromptLibrary: React.FC = () => {
   // Fetch templates
   useEffect(() => {
     const fetchTemplates = async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('ai_templates')
         .select('*')
         .order('is_featured', { ascending: false })
         .order('category', { ascending: true });
 
       if (!error && data) {
-        setTemplates(data);
-        setFilteredTemplates(data);
+        setTemplates(data as AITemplate[]);
+        setFilteredTemplates(data as AITemplate[]);
       }
       setIsLoading(false);
     };
@@ -109,14 +109,14 @@ export const PromptLibrary: React.FC = () => {
     if (!user) return;
 
     const fetchPreference = async () => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from('ai_user_preferences')
         .select('default_tone_filter')
         .eq('user_id', user.id)
         .single();
 
-      if (data?.default_tone_filter) {
-        setUserTonePreference(data.default_tone_filter as any);
+      if ((data as any)?.default_tone_filter) {
+        setUserTonePreference((data as any).default_tone_filter as any);
       }
     };
 
@@ -162,9 +162,9 @@ export const PromptLibrary: React.FC = () => {
     await navigator.clipboard.writeText(fullPrompt);
     
     // Update usage count
-    await supabase
+    await (supabase as any)
       .from('ai_templates')
-      .update({ usage_count: template.usage_count + 1 })
+      .update({ usage_count: (template as any).usage_count + 1 })
       .eq('id', template.id);
 
     toast.success(t('template_copied', 'Template copied! Ready to use with your AI assistant.'));

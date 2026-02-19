@@ -91,7 +91,7 @@ const Mantras = () => {
     // Log table structure for debugging
     const logTableStructure = async () => {
       try {
-        const { data: structure } = await supabase.rpc('check_mantras_structure');
+        const { data: structure } = await (supabase as any).rpc('check_mantras_structure');
         if (structure) {
           console.log('[Mantras] Table structure check:', structure);
         }

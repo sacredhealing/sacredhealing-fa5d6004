@@ -47,7 +47,7 @@ export const useScripturalBooks = () => {
       return;
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('scriptural_books')
       .select('*')
       .eq('author_id', user.id)
@@ -57,7 +57,7 @@ export const useScripturalBooks = () => {
       console.error('Error fetching books:', error);
       setBooks([]);
     } else {
-      setBooks(data || []);
+      setBooks((data || []) as ScripturalBook[]);
     }
     setLoading(false);
   }, [user]);
@@ -106,7 +106,7 @@ export const useBookChapters = (bookId: string | null) => {
       return;
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('book_chapters')
       .select('*')
       .eq('book_id', bookId)
@@ -116,7 +116,7 @@ export const useBookChapters = (bookId: string | null) => {
       console.error('Error fetching chapters:', error);
       setChapters([]);
     } else {
-      setChapters(data || []);
+      setChapters((data || []) as BookChapter[]);
     }
     setLoading(false);
   }, [bookId]);
