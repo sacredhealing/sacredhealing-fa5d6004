@@ -1729,5 +1729,69 @@
     "sharedSuccess": "¡Compartido con éxito!",
     "copiedToClipboard": "¡Progreso copiado al portapapeles!",
     "failedToCopy": "Error al copiar"
+  },
+  "vastu": {
+    "title": "Arquitecto de la Abundancia Vastu",
+    "subtitle": "Transforma tu hogar en un santuario de abundancia a través de la sabiduría ancestral Vastu y el diseño espacial moderno.",
+    "whatIs": "¿Qué es Vastu?",
+    "description": "Vastu Shastra es la antigua ciencia india de la arquitectura y el diseño espacial. Enseña cómo alinear tu entorno físico con las energías cósmicas para atraer prosperidad, salud y armonía.",
+    "courseContent": "Contenido del Curso",
+    "module1": "10 módulos completos que cubren todos los aspectos de tu hogar",
+    "module2": "Análisis espacial y recomendaciones impulsadas por IA",
+    "module3": "Alquimia sonora y transmisiones de mantra",
+    "module4": "Períodos de integración de 48 horas para el asentamiento energético",
+    "startCourse": "Comienza Tu Viaje Vastu",
+    "banner": {
+      "title": "Arquitecto de la Abundancia Vastu",
+      "badge": "Curso Premium",
+      "description": "Transforma tu hogar en un santuario de abundancia a través de la sabiduría ancestral Vastu. Aprende a alinear tu hogar con las energías cósmicas para la prosperidad, salud y armonía.",
+      "feature1": "10 Módulos",
+      "feature2": "Análisis IA",
+      "feature3": "Alquimia Sonora",
+      "cta": "Iniciar Curso"
+    }
+  },
+  "ayurveda": {
+    "title": "Ayurveda",
+    "subtitle": "Descubre tu dosha y vive en equilibrio con la sabiduría de la naturaleza.",
+    "free": "Gratis",
+    "premium": "Premium",
+    "lifetime": "De por vida",
+    "freeDesc": "Evaluación básica de dosha y consejos de estilo de vida",
+    "premiumDesc": "Plan personalizado completo y orientación de IA",
+    "lifetimeDesc": "Acceso completo de por vida con médico IA",
+    "assessment": "Evaluación de Dosha",
+    "guidance": "Orientación Diaria",
+    "aiDoctor": "Médico de Chat IA",
+    "vata": "Vata",
+    "pitta": "Pitta",
+    "kapha": "Kapha",
+    "yourDosha": "Tu Dosha",
+    "learnMore": "Saber más"
+  },
+  "vedicAstrology": {
+    "title": "Astrología Védica",
+    "subtitle": "Descubre tu plano cósmico a través de la antigua sabiduría Jyotish.",
+    "freeFeatures": "Funciones Gratuitas",
+    "premiumFeatures": "Funciones Premium",
+    "basicChart": "Carta natal básica",
+    "dailyHoroscope": "Horóscopo diario",
+    "planetaryPositions": "Posiciones planetarias",
+    "detailedReadings": "Lecturas detalladas",
+    "transitAnalysis": "Análisis de tránsitos",
+    "compatibility": "Informes de compatibilidad",
+    "generateChart": "Generar Mi Carta",
+    "viewChart": "Ver Carta Completa",
+    "enterBirthDetails": "Ingresar Datos de Nacimiento",
+    "birthDate": "Fecha de Nacimiento",
+    "birthTime": "Hora de Nacimiento",
+    "birthPlace": "Lugar de Nacimiento",
+    "calculate": "Calcular"
+  },
+  "announcements": {
+    "newAnnouncement": "Nuevo Anuncio",
+    "dismiss": "Cerrar",
+    "readMore": "Leer más",
+    "viewAll": "Ver todos los anuncios"
   }
 }

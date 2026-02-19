@@ -1641,5 +1641,69 @@
     "sharedSuccess": "Delt!",
     "copiedToClipboard": "Fremgang kopiert til utklippstavle!",
     "failedToCopy": "Kunne ikke kopiere"
+  },
+  "vastu": {
+    "title": "Vastu Overflødarkitekt",
+    "subtitle": "Forvandle hjemmet ditt til et overflødets helligdom gjennom urgammel Vastu-visdom og moderne romlig design.",
+    "whatIs": "Hva er Vastu?",
+    "description": "Vastu Shastra er den eldgamle indiske vitenskapen om arkitektur og romlig design. Den lærer hvordan man justerer det fysiske miljøet med kosmiske energier for å tiltrekke seg velstand, helse og harmoni.",
+    "courseContent": "Kursinnhold",
+    "module1": "10 omfattende moduler som dekker alle aspekter av hjemmet ditt",
+    "module2": "AI-drevet romlig analyse og anbefalinger",
+    "module3": "Lydalkymi og mantraoverføringer",
+    "module4": "48-timers integrasjonsperioder for energistabilisering",
+    "startCourse": "Begynn din Vastu-reise",
+    "banner": {
+      "title": "Vastu Overflødarkitekt",
+      "badge": "Premiumkurs",
+      "description": "Forvandle hjemmet ditt til et helligdom av overflød gjennom urgammel Vastu-visdom. Lær å tilpasse hjemmet ditt med kosmiske energier for velstand, helse og harmoni.",
+      "feature1": "10 moduler",
+      "feature2": "AI-analyse",
+      "feature3": "Lydalkymi",
+      "cta": "Start kurs"
+    }
+  },
+  "ayurveda": {
+    "title": "Ayurveda",
+    "subtitle": "Oppdag din dosha og lev i balanse med naturens visdom.",
+    "free": "Gratis",
+    "premium": "Premium",
+    "lifetime": "Livstid",
+    "freeDesc": "Grunnleggende dosha-vurdering og livsstilstips",
+    "premiumDesc": "Fullstendig personlig plan og AI-veiledning",
+    "lifetimeDesc": "Komplett livstidstilgang med AI-lege",
+    "assessment": "Dosha-vurdering",
+    "guidance": "Daglig veiledning",
+    "aiDoctor": "AI-chat-lege",
+    "vata": "Vata",
+    "pitta": "Pitta",
+    "kapha": "Kapha",
+    "yourDosha": "Din dosha",
+    "learnMore": "Les mer"
+  },
+  "vedicAstrology": {
+    "title": "Vedisk astrologi",
+    "subtitle": "Oppdag din kosmiske plan gjennom urgammel Jyotish-visdom.",
+    "freeFeatures": "Gratis funksjoner",
+    "premiumFeatures": "Premiumfunksjoner",
+    "basicChart": "Grunnleggende fødselshoroskop",
+    "dailyHoroscope": "Daglig horoskop",
+    "planetaryPositions": "Planetariske posisjoner",
+    "detailedReadings": "Detaljerte tolkninger",
+    "transitAnalysis": "Transitanalyse",
+    "compatibility": "Kompatibilitetsrapporter",
+    "generateChart": "Generer mitt horoskop",
+    "viewChart": "Se fullt horoskop",
+    "enterBirthDetails": "Skriv inn fødselsopplysninger",
+    "birthDate": "Fødselsdato",
+    "birthTime": "Fødselstid",
+    "birthPlace": "Fødested",
+    "calculate": "Beregn"
+  },
+  "announcements": {
+    "newAnnouncement": "Ny kunngjøring",
+    "dismiss": "Lukk",
+    "readMore": "Les mer",
+    "viewAll": "Se alle kunngjøringer"
   }
 }
