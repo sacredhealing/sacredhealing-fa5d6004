@@ -14,7 +14,6 @@ import { AmbientSoundToggle } from '@/components/audio/AmbientSoundToggle';
 import { TempleEntrance } from '@/components/dashboard/TempleEntrance';
 import { SriYantraBanner } from '@/components/dashboard/SriYantraBanner';
 import { ThreeGateways } from '@/components/dashboard/ThreeGateways';
-import { DharmaPath, getDharmaPhrase } from '@/components/dashboard/DharmaPath';
 import { WallInscription } from '@/components/dashboard/WallInscription';
 import { getSuccessWindowPhrase } from '@/lib/horaPhrases';
 import { InlineSessionPlayer } from '@/components/dashboard/InlineSessionPlayer';
@@ -200,15 +199,6 @@ const Dashboard: React.FC = () => {
             <ThreeGateways
               horaPlanet={horaPlanet}
               isNight={!horaWatch.calculation?.currentHora?.isDay}
-            />
-          </div>
-
-          {/* The Dharma Path — 21 stepping stones, experiential phrases */}
-          <div className="mb-4 sm:mb-5 animate-slide-up rounded-xl border border-amber-500/15 bg-gradient-to-b from-amber-950/20 to-transparent px-4 py-4">
-            <DharmaPath
-              completedDays={Math.min(streakDays ?? 0, 21)}
-              currentDayActive={!isDayClosed}
-              experientialPhrase={getDharmaPhrase(streakDays ?? 0)}
             />
           </div>
 
