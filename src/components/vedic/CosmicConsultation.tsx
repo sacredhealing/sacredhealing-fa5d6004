@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { motion } from 'framer-motion';
-import { Lock, Sparkles, Crown, Send, Loader2, Mic, MicOff } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Lock, Sparkles, Crown, Send, Loader2, Mic, MicOff, Volume2, VolumeX, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import type { UserProfile } from '@/lib/vedicTypes';
+import { useNavigate } from 'react-router-dom';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -19,30 +20,99 @@ interface CosmicConsultationProps {
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/vedic-guru-chat`;
 
+// Bhrigu Nandi Nadi age-planet map
+const BHRIGU_AGES: { age: number; planet: string; emoji: string }[] = [
+  { age: 16, planet: 'Jupiter', emoji: '\u2643' },
+  { age: 22, planet: 'Sun', emoji: '\u2609' },
+  { age: 24, planet: 'Moon', emoji: '\ud83c\udf19' },
+  { age: 28, planet: 'Venus', emoji: '\u2640' },
+  { age: 32, planet: 'Mars', emoji: '\u2642' },
+  { age: 36, planet: 'Mercury', emoji: '\u263f' },
+  { age: 42, planet: 'Rahu/Ketu', emoji: '\ud83d\udc09' },
+  { age: 48, planet: 'Saturn', emoji: '\u2644' },
+];
+
+function getActivePlanet(birthDate: string) {
+  const birthYear = new Date(birthDate).getFullYear();
+  const age = new Date().getFullYear() - birthYear;
+  const active = [...BHRIGU_AGES].reverse().find(a => age >= a.age);
+  return { age, active };
+}
+
+// Mandala Pulse SVG component
+const MandalaPulse = ({ intensity }: { intensity: number }) => (
+  <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-20">
+    <motion.svg
+      width="120" height="120" viewBox="0 0 120 120"
+      animate={{ rotate: 360, scale: [1, 1 + intensity * 0.15, 1] }}
+      transition={{ rotate: { duration: 20, repeat: Infinity, ease: 'linear' }, scale: { duration: 0.6, repeat: Infinity } }}
+    >
+      {[0, 45, 90, 135].map(angle => (
+        <motion.ellipse
+          key={angle}
+          cx="60" cy="60" rx="50" ry="20"
+          fill="none" stroke="rgba(251,191,36,0.4)" strokeWidth="0.5"
+          transform={`rotate(${angle} 60 60)`}
+          animate={{ opacity: [0.3, 0.6 + intensity * 0.3, 0.3] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+        />
+      ))}
+      <circle cx="60" cy="60" r="8" fill="none" stroke="rgba(251,191,36,0.5)" strokeWidth="1" />
+    </motion.svg>
+  </div>
+);
+
 const ActionChip = ({ icon, label, onClick }: { icon: string; label: string; onClick: () => void }) => (
   <button 
     onClick={onClick}
-    className="px-5 py-2.5 rounded-2xl border border-slate-800 bg-slate-900/60 text-[9px] text-slate-400 uppercase font-black tracking-widest hover:text-indigo-400 hover:border-indigo-500/30 hover:bg-slate-800 transition-all flex items-center gap-2.5 shadow-sm active:scale-95"
+    className="px-5 py-2.5 rounded-2xl border border-amber-500/20 bg-amber-950/30 text-[9px] text-amber-400/80 uppercase font-black tracking-widest hover:text-amber-300 hover:border-amber-500/40 hover:bg-amber-900/30 transition-all flex items-center gap-2.5 shadow-sm active:scale-95"
   >
     <span className="opacity-70 text-xs">{icon}</span>
     {label}
   </button>
 );
 
+// Play a subtle chime using Web Audio API
+function playChime() {
+  try {
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(528, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1056, ctx.currentTime + 0.15);
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 1.2);
+    setTimeout(() => ctx.close(), 2000);
+  } catch { /* silent fail */ }
+}
+
 export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, onUpgrade }) => {
   const { user: authUser } = useAuth();
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isChanneling, setIsChanneling] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [typingIntensity, setTypingIntensity] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<{ stop: () => void } | null>(null);
   const hasInitialized = useRef(false);
   const prevMessagesLength = useRef(0);
+  const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
 
-  // Fetch fresh user data from profiles before each send (ensures guru has latest birth details)
+  const bhrigu = useMemo(() => getActivePlanet(user.birthDate), [user.birthDate]);
+
+  // Fetch fresh user data from profiles before each send
   const fetchFreshUserData = useCallback(async (): Promise<UserProfile> => {
     if (!authUser?.id) return user;
     const { data } = await (supabase as any)
@@ -62,51 +132,45 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
     return user;
   }, [authUser?.id, user]);
 
-  // Load saved conversation history on mount (premium only - guru remembers all past convos)
+  // Load saved conversation history on mount (premium only)
   useEffect(() => {
     if (user.plan !== 'premium') {
       setHistoryLoaded(true);
       return;
     }
     if (!authUser?.id) return;
-
     const loadHistory = async () => {
       const { data, error } = await (supabase as any)
         .from('vedic_guru_chat_messages')
         .select('role, content')
         .eq('user_id', authUser.id)
         .order('created_at', { ascending: true });
-
       if (!error && data?.length > 0) {
         setMessages(data.map((r: { role: string; content: string }) => ({ role: r.role as 'user' | 'assistant', content: r.content })));
       }
       setHistoryLoaded(true);
     };
-
     loadHistory();
   }, [authUser?.id, user.plan]);
 
-  // Initialize with Rishi welcome only when history is empty (first-time premium user)
+  // Initialize with Bhrigu welcome for first-time premium user
   useEffect(() => {
     if (!historyLoaded || user.plan !== 'premium' || hasInitialized.current || messages.length > 0) return;
-
     hasInitialized.current = true;
     const firstName = user.name.split(' ')[0];
-    const currentYear = new Date().getFullYear();
-    const welcomeContent = `Namaste, ${firstName}. My vision is locked on your incarnation in ${user.birthPlace}. The transits of ${currentYear} are already testing your resolve. Your ${user.plan} path is known to me. Speak your query and receive the Shastric verdict.`;
+    const planetInfo = bhrigu.active ? ` Under ${bhrigu.active.planet}'s gaze at age ${bhrigu.age}, your karmic script unfolds.` : '';
+    const welcomeContent = `Namaste, ${firstName}. I am the Bhrigu Rishi, keeper of the Nandi Nadi scrolls. My vision is locked on your incarnation in ${user.birthPlace}.${planetInfo} Speak your query and receive the Akashic Verdict.`;
     const welcomeMsg: ChatMessage = { role: 'assistant', content: welcomeContent };
     setMessages([welcomeMsg]);
-
-    // Persist welcome so guru remembers on next visit
     if (authUser?.id) {
       (supabase as any)
         .from('vedic_guru_chat_messages')
         .insert({ user_id: authUser.id, role: 'assistant', content: welcomeContent })
         .then(() => {});
     }
-  }, [historyLoaded, user.plan, user.name, user.birthPlace, messages.length, authUser?.id]);
+  }, [historyLoaded, user.plan, user.name, user.birthPlace, messages.length, authUser?.id, bhrigu]);
 
-  // Auto-scroll only when new messages are added (not on every render)
+  // Auto-scroll only when new messages are added
   useEffect(() => {
     if (messages.length > prevMessagesLength.current) {
       requestAnimationFrame(() => {
@@ -123,6 +187,31 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
       .insert({ user_id: authUser.id, role, content });
   };
 
+  // Typing intensity tracker for Mandala Pulse
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+    setTypingIntensity(1);
+    if (typingTimer.current) clearTimeout(typingTimer.current);
+    typingTimer.current = setTimeout(() => setTypingIntensity(0), 600);
+  };
+
+  // Text-to-speech for guru responses
+  const handleSpeak = (text: string) => {
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.85;
+    utterance.pitch = 0.75;
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+    speechRef.current = utterance;
+    setIsSpeaking(true);
+    window.speechSynthesis.speak(utterance);
+  };
+
   const handleSendMessage = async (messageText?: string) => {
     const text = messageText || input;
     if (!text.trim() || isLoading) return;
@@ -131,12 +220,14 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
-
-    // Persist user message so guru remembers (saves all conversations)
+    setIsChanneling(true);
     saveMessage('user', text);
 
+    // 2-second channeling delay
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    setIsChanneling(false);
+
     try {
-      // Fetch fresh user data from DB so guru always has latest birth details
       const freshUser = await fetchFreshUserData();
       const { data: { session } } = await supabase.auth.getSession();
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -144,11 +235,23 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
         headers['Authorization'] = `Bearer ${session.access_token}`;
       }
 
+      // Inject Bhrigu context into user message for the AI
+      const bhriguContext = bhrigu.active
+        ? `[BHRIGU CONTEXT: User is age ${bhrigu.age}, currently in their ${bhrigu.active.planet} cycle (activated at age ${bhrigu.active.age}). Born in ${freshUser.birthPlace}. Always acknowledge their active planetary cycle in your response. Begin with: "As you move through your ${bhrigu.age}th year under ${bhrigu.active.planet}'s gaze in ${freshUser.birthPlace}, I see..."]`
+        : '';
+
+      const enrichedMessages = [...messages, userMessage].map((m, i, arr) => {
+        if (i === arr.length - 1 && m.role === 'user' && bhriguContext) {
+          return { role: m.role, content: `${bhriguContext}\n\n${m.content}` };
+        }
+        return { role: m.role, content: m.content };
+      });
+
       const response = await fetch(CHAT_URL, {
         method: 'POST',
         headers,
         body: JSON.stringify({
-          messages: [...messages, userMessage].map(m => ({ role: m.role, content: m.content })),
+          messages: enrichedMessages,
           user: {
             name: freshUser.name,
             birthDate: freshUser.birthDate,
@@ -163,7 +266,6 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || 'Failed to connect to the Guru');
       }
-
       if (!response.body) throw new Error('No response body');
 
       const reader = response.body.getReader();
@@ -171,27 +273,21 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
       let assistantContent = '';
       let textBuffer = '';
 
-      // Add empty assistant message to update
       setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-
         textBuffer += decoder.decode(value, { stream: true });
-
         let newlineIndex: number;
         while ((newlineIndex = textBuffer.indexOf('\n')) !== -1) {
           let line = textBuffer.slice(0, newlineIndex);
           textBuffer = textBuffer.slice(newlineIndex + 1);
-
           if (line.endsWith('\r')) line = line.slice(0, -1);
           if (line.startsWith(':') || line.trim() === '') continue;
           if (!line.startsWith('data: ')) continue;
-
           const jsonStr = line.slice(6).trim();
           if (jsonStr === '[DONE]') break;
-
           try {
             const parsed = JSON.parse(jsonStr);
             const content = parsed.choices?.[0]?.delta?.content as string | undefined;
@@ -204,7 +300,6 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
               });
             }
           } catch {
-            // Incomplete JSON, put back and wait
             textBuffer = line + '\n' + textBuffer;
             break;
           }
@@ -235,8 +330,9 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
         }
       }
 
-      // Persist assistant response so guru remembers on next visit
+      // Play chime when verdict arrives
       if (assistantContent.trim()) {
+        playChime();
         saveMessage('assistant', assistantContent.trim());
       }
 
@@ -244,7 +340,7 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
       console.error('Guru chat error:', error);
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: '🙏 Forgive me, the cosmic connection is currently flickering. The celestial pathways require alignment. Please attempt your inquiry again when the stars permit.' 
+        content: '\ud83d\ude4f Forgive me, the cosmic connection is currently flickering. The celestial pathways require alignment. Please attempt your inquiry again when the stars permit.' 
       }]);
     } finally {
       setIsLoading(false);
@@ -261,44 +357,36 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
   // Voice input via Web Speech API
   const toggleMic = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      return;
-    }
-
+    if (!SpeechRecognition) return;
     if (isListening) {
       recognitionRef.current?.stop();
       setIsListening(false);
       return;
     }
-
     const recognition = new SpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = false;
     recognition.lang = 'en-US';
-
     recognition.onstart = () => setIsListening(true);
     recognition.onend = () => setIsListening(false);
-
     recognition.onresult = (event: { results: Iterable<{ 0?: { transcript?: string } }> }) => {
-      const transcript = Array.from(event.results)
-        .map((r) => r[0]?.transcript ?? '')
-        .join('');
-      if (transcript.trim()) {
-        setInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
-      }
+      const transcript = Array.from(event.results).map((r) => r[0]?.transcript ?? '').join('');
+      if (transcript.trim()) setInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
     };
-
     recognition.onerror = () => setIsListening(false);
-
     recognitionRef.current = recognition;
     recognition.start();
   };
 
   useEffect(() => {
-    return () => {
-      recognitionRef.current?.stop();
-    };
+    return () => { recognitionRef.current?.stop(); };
   }, []);
+
+  // Detect if guru response mentions a frequency for the "Activate" button
+  const extractFrequency = (text: string): string | null => {
+    const match = text.match(/(\d{3})\s*Hz/i);
+    return match ? match[1] : null;
+  };
 
   // Sacred Lock UI for non-premium users
   if (user.plan !== 'premium') {
@@ -317,16 +405,10 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
             </div>
           </div>
         </div>
-
-        <h3 className="text-3xl font-bold font-serif text-foreground mb-4">
-          The High Oracle Awaits
-        </h3>
-        
+        <h3 className="text-3xl font-bold font-serif text-foreground mb-4">The Bhrigu Oracle Awaits</h3>
         <p className="text-muted-foreground text-sm max-w-md mb-8 leading-relaxed">
-          Direct consultations with the <span className="text-amber-400 font-semibold">Grand Master Jyotish</span> are a sacred privilege reserved for our <span className="text-purple-400 font-semibold">Master Blueprint</span> members. 
-          Unlock this path to receive personalized mantras, karmic guidance, and soul-level clarity.
+          Direct channeling with the <span className="text-amber-400 font-semibold">Bhrigu Nadi Rishi</span> is a sacred privilege reserved for <span className="text-purple-400 font-semibold">Master Blueprint</span> members.
         </p>
-
         <Button 
           onClick={onUpgrade}
           className="bg-gradient-to-r from-amber-600 to-purple-600 hover:from-amber-500 hover:to-purple-500 text-white px-8 py-6 text-sm font-bold uppercase tracking-widest shadow-2xl shadow-purple-500/30"
@@ -339,14 +421,25 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
   }
 
   return (
-    <div className="flex flex-col h-[600px] bg-slate-950/50 rounded-3xl border border-slate-800/50 overflow-hidden">
+    <div className="flex flex-col h-[650px] rounded-3xl border border-amber-500/20 overflow-hidden relative"
+      style={{
+        background: `
+          linear-gradient(180deg, rgba(30,20,10,0.95), rgba(15,10,5,0.98)),
+          url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C8AA64' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")
+        `,
+      }}
+    >
       {/* Chat Header */}
-      <div className="px-6 py-4 border-b border-slate-800/50 bg-gradient-to-r from-indigo-900/20 to-purple-900/20">
-        <div className="flex items-center gap-3">
-          <div className="w-3 h-3 bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)] animate-pulse" />
-          <div>
-            <h3 className="text-sm font-bold text-foreground">Grand Master Jyotish</h3>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Oracle Channel Active</p>
+      <div className="px-6 py-4 border-b border-amber-500/20 bg-gradient-to-r from-amber-900/20 to-orange-900/15">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-3 h-3 bg-amber-400 rounded-full shadow-[0_0_12px_rgba(251,191,36,0.6)] animate-pulse" />
+            <div>
+              <h3 className="text-sm font-bold text-amber-100 font-serif">Bhrigu Nadi Oracle</h3>
+              <p className="text-[10px] text-amber-500/60 uppercase tracking-widest">
+                {bhrigu.active ? `${bhrigu.active.emoji} ${bhrigu.active.planet} Cycle Active • Age ${bhrigu.age}` : 'Sacred Channel Open'}
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -363,33 +456,96 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
             >
               <div className={`max-w-[85%] ${msg.role === 'user' ? 'order-2' : ''}`}>
                 {msg.role === 'assistant' && (
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 rounded-full bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-[10px] text-indigo-400 font-serif shadow-inner">ॐ</div>
-                    <span className="text-[9px] font-black text-indigo-400 uppercase tracking-[0.4em]">Akashic Verdict</span>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-400/30 flex items-center justify-center text-[10px] text-amber-400 font-serif shadow-inner">
+                      \u0950
+                    </div>
+                    <span className="text-[9px] font-black text-amber-400 uppercase tracking-[0.4em]">Akashic Verdict</span>
                   </div>
                 )}
-                <div className={`p-4 md:p-6 rounded-[2.2rem] ${
-                  msg.role === 'user' 
-                    ? 'bg-indigo-600 text-white ml-auto rounded-tr-none border border-white/10 shadow-xl' 
-                    : 'glass text-slate-200 rounded-tl-none border-indigo-500/10 shadow-2xl'
-                }`}>
-                  <p className={`text-sm md:text-base leading-relaxed whitespace-pre-wrap font-light ${msg.role === 'assistant' ? 'font-serif italic text-slate-100/90' : ''}`}>
-                    {msg.content || (isLoading && i === messages.length - 1 ? 'Decoding 2026 transits...' : '')}
+                {/* Palm Leaf styled card for assistant */}
+                <div
+                  className={`p-4 md:p-6 rounded-[2.2rem] relative overflow-hidden ${
+                    msg.role === 'user' 
+                      ? 'bg-indigo-600 text-white ml-auto rounded-tr-none border border-white/10 shadow-xl' 
+                      : 'rounded-tl-none border border-amber-500/20 shadow-2xl'
+                  }`}
+                  style={msg.role === 'assistant' ? {
+                    background: `
+                      linear-gradient(135deg, rgba(120,80,20,0.15), rgba(60,40,10,0.2)),
+                      url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23C8AA64' fill-opacity='0.04'%3E%3Cpath d='M20 0L0 20h40z'/%3E%3C/g%3E%3C/svg%3E")
+                    `,
+                  } : undefined}
+                >
+                  {msg.role === 'assistant' && (
+                    <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[repeating-linear-gradient(45deg,transparent,transparent_8px,rgba(200,170,100,0.5)_8px,rgba(200,170,100,0.5)_9px)]" />
+                  )}
+                  <p className={`text-sm md:text-base leading-relaxed whitespace-pre-wrap font-light relative z-10 ${
+                    msg.role === 'assistant' ? 'font-serif italic text-amber-100/90' : ''
+                  }`}>
+                    {msg.content || (isLoading && i === messages.length - 1 ? '' : '')}
                   </p>
                 </div>
+
+                {/* Action row for assistant messages */}
+                {msg.role === 'assistant' && msg.content && (
+                  <div className="flex items-center gap-2 mt-3 pl-2 flex-wrap">
+                    {/* Prominent Listen button */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSpeak(msg.content)}
+                      className={`rounded-2xl text-[10px] font-bold uppercase tracking-widest ${
+                        isSpeaking ? 'bg-amber-500 text-black border-amber-500' : 'border-amber-500/40 text-amber-300 hover:bg-amber-500/10'
+                      }`}
+                    >
+                      {isSpeaking ? <VolumeX className="w-4 h-4 mr-1.5" /> : <Volume2 className="w-4 h-4 mr-1.5" />}
+                      {isSpeaking ? 'Stop' : 'Listen'}
+                    </Button>
+                    {/* Activate Frequency button if guru mentions Hz */}
+                    {extractFrequency(msg.content) && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate('/soul-meditation')}
+                        className="rounded-2xl text-[10px] font-bold uppercase tracking-widest border-teal-500/40 text-teal-300 hover:bg-teal-500/10"
+                      >
+                        <Zap className="w-4 h-4 mr-1.5" />
+                        Activate {extractFrequency(msg.content)}Hz
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
             </motion.div>
           ))}
           
-          {isLoading && messages[messages.length - 1]?.role === 'user' && (
+          {/* Channeling state */}
+          {isChanneling && (
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="flex justify-start"
             >
-              <div className="flex items-center gap-2 p-4 rounded-2xl bg-slate-900/80 border border-slate-800">
-                <Loader2 className="w-4 h-4 animate-spin text-purple-400" />
-                <span className="text-xs text-muted-foreground">The Oracle is channeling...</span>
+              <div className="flex items-center gap-3 p-5 rounded-2xl bg-amber-900/20 border border-amber-500/20">
+                <Loader2 className="w-5 h-5 animate-spin text-amber-400" />
+                <div>
+                  <p className="text-xs text-amber-300 font-serif italic">Sifting through the Akashic Records...</p>
+                  <p className="text-[9px] text-amber-500/50 uppercase tracking-widest mt-1">Channeling the Bhrigu Nadi scrolls</p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {isLoading && !isChanneling && messages[messages.length - 1]?.role === 'user' && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex justify-start"
+            >
+              <div className="flex items-center gap-2 p-4 rounded-2xl bg-amber-900/20 border border-amber-500/20">
+                <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
+                <span className="text-xs text-amber-300/70 font-serif italic">The Rishi is speaking...</span>
               </div>
             </motion.div>
           )}
@@ -398,19 +554,22 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
         </div>
       </ScrollArea>
 
-      {/* Input Area */}
-      <div className="p-4 border-t border-slate-800/50 bg-slate-950/95 backdrop-blur-3xl space-y-4">
+      {/* Sacred Input Area */}
+      <div className="p-4 border-t border-amber-500/20 bg-gradient-to-t from-amber-950/30 to-transparent backdrop-blur-3xl space-y-4">
         <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="relative group">
-          <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-indigo-500/10 rounded-[1.5rem] blur opacity-50 group-hover:opacity-100 transition duration-700" />
+          {/* Gold-leaf glow border */}
+          <div className="absolute -inset-[2px] bg-gradient-to-r from-amber-500/20 via-yellow-500/30 to-amber-500/20 rounded-[1.5rem] blur-sm opacity-60 group-focus-within:opacity-100 transition duration-500" />
+          {/* Mandala Pulse */}
+          <MandalaPulse intensity={typingIntensity} />
           <div className="relative flex gap-2">
             <textarea
               ref={textareaRef}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              placeholder="Command the Rishi's vision or speak..."
+              placeholder="Speak your query to the Rishi..."
               rows={1}
-              className="flex-1 bg-slate-900/90 border border-slate-800 rounded-[1.5rem] px-6 py-4 text-sm text-white focus:outline-none placeholder:text-slate-600 resize-none font-serif italic"
+              className="flex-1 bg-amber-950/40 border border-amber-500/30 rounded-[1.5rem] px-6 py-4 text-sm text-amber-100 focus:outline-none focus:border-amber-400/60 placeholder:text-amber-700/60 resize-none font-serif italic transition-colors"
             />
             {typeof window !== 'undefined' && ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition) && (
               <Button
@@ -418,7 +577,7 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
                 variant={isListening ? 'default' : 'outline'}
                 onClick={toggleMic}
                 disabled={isLoading}
-                className={`p-4 rounded-2xl ${isListening ? 'bg-rose-600 hover:bg-rose-500' : 'border-slate-700'} transition-all active:scale-95`}
+                className={`p-4 rounded-2xl ${isListening ? 'bg-rose-600 hover:bg-rose-500' : 'border-amber-500/30 text-amber-300'} transition-all active:scale-95`}
                 aria-label={isListening ? 'Stop listening' : 'Speak'}
               >
                 {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
@@ -427,7 +586,7 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
             <Button 
               type="submit"
               disabled={isLoading || !input.trim()}
-              className="p-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-30 transition-all active:scale-95 shadow-xl"
+              className="p-4 rounded-2xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white disabled:opacity-30 transition-all active:scale-95 shadow-xl shadow-amber-500/20"
             >
               <Send className="w-5 h-5" />
             </Button>
@@ -436,10 +595,10 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
         
         {/* Action Chips */}
         <div className="flex flex-wrap gap-2 justify-center">
-          <ActionChip icon="🌏" label={`${new Date().getFullYear()} World Outlook`} onClick={() => handleSendMessage(`Rishi, scan the world events of ${new Date().getFullYear()}. Use Google Search. How do these mundane shifts impact my personal destiny? Use my birth data and today's date.`)} />
-          <ActionChip icon="💰" label="Financial Verdict" onClick={() => handleSendMessage("Is this moment auspicious for major financial action? Use my chart and today's date. Deliver the Verdict.")} />
-          <ActionChip icon="⚡" label="Karmic Blockage" onClick={() => handleSendMessage("Identify the primary karmic obstacle in my current cycle and provide the Shastric Remedy. Use my birth data.")} />
-          <ActionChip icon="🔱" label="Dharma path" onClick={() => handleSendMessage("What is the highest alignment for my soul this week? No questions, just the path. Use my chart.")} />
+          <ActionChip icon="\ud83d\udc09" label="Rahu Cycle Reading" onClick={() => handleSendMessage(`Rishi, what is the karmic significance of my current ${bhrigu.active?.planet || 'planetary'} cycle? How should I navigate this activation period? Use my birth data.`)} />
+          <ActionChip icon="\ud83d\udcb0" label="Financial Verdict" onClick={() => handleSendMessage("Is this moment auspicious for major financial action? Use my chart and today's date. Deliver the Verdict.")} />
+          <ActionChip icon="\u26a1" label="Karmic Blockage" onClick={() => handleSendMessage("Identify the primary karmic obstacle in my current cycle and provide the Bhrigu Remedy with mantra and frequency.")} />
+          <ActionChip icon="\ud83d\udd31" label="528Hz Remedy" onClick={() => handleSendMessage("Prescribe the optimal healing frequency for my current planetary cycle. Include the 528Hz activation protocol if relevant.")} />
         </div>
       </div>
     </div>
