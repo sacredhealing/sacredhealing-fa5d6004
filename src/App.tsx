@@ -87,6 +87,7 @@ import AdminAffirmation from "./pages/AdminAffirmation";
 import AdminMusicAnalytics from "./pages/AdminMusicAnalytics";
 import AdminAnalytics from "./pages/AdminAnalytics";
 import Explore from "./pages/Explore";
+import ExplorePage from "./pages/ExplorePage";
 import LibraryAbundance from "./pages/LibraryAbundance";
 import Onboarding from "./pages/Onboarding";
 import SpiritualPaths from "./pages/SpiritualPaths";
@@ -136,6 +137,7 @@ function AppRoutes() {
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/explore" element={<Explore />} />
+                  <Route path="/explore-frequencies" element={<ExplorePage />} />
                   <Route path="/meditations" element={<Meditations />} />
                   <Route path="/courses" element={<Courses />} />
                   <Route path="/courses/:id" element={<CourseDetail />} />
