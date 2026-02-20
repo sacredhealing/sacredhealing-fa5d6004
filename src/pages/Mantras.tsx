@@ -14,6 +14,7 @@ import { getMantras, type MantraItem, MANTRA_REPETITIONS } from '@/features/mant
 import { useJyotishMantraRecommendation } from '@/hooks/useJyotishMantraRecommendation';
 import { useHoraWatch } from '@/hooks/useHoraWatch';
 import { useAIVedicReading } from '@/hooks/useAIVedicReading';
+import { useBhriguPlanet } from '@/hooks/useBhriguPlanet';
 import { normalizePlanetName, mantraMatchesPlanet, getPlanetOfDay, getDailyMantraFromChart, type Planet } from '@/lib/jyotishMantraLogic';
 import { getPlanetEmoji } from '@/lib/vedicTypes';
 
@@ -126,9 +127,7 @@ const Mantras = () => {
     ? normalizePlanetName(horaWatch.calculation.currentHora.planet)
     : null;
 
-  const dashaPlanet = reading?.personalCompass?.currentDasha?.period
-    ? normalizePlanetName(reading.personalCompass.currentDasha.period.split(' ')[0])
-    : null;
+  const dashaPlanet = useBhriguPlanet(reading);
 
   const isCelestialMatch = currentHoraPlanet && dashaPlanet && currentHoraPlanet === dashaPlanet;
   const userBirthPlanet = null;
@@ -190,6 +189,19 @@ const Mantras = () => {
       if (recommendedMantra) setSelectedMantraId(recommendedMantra.id);
     }
   }, [jyotishRecommendation?.recommendedMantraId, mantras, selectedMantraId]);
+
+  // Pre-fetch Remedy track so it plays instantly when user taps "Play {dashaPlanet} Remedy"
+  useEffect(() => {
+    if (!dashaPlanet || mantras.length === 0) return;
+    const remedyMantra = mantras.find(m => m.planet_type && normalizePlanetName(m.planet_type) === dashaPlanet);
+    if (!remedyMantra?.audio_url) return;
+    const url = getPlayableUrl(remedyMantra.audio_url);
+    const preload = new Audio();
+    preload.preload = 'auto';
+    preload.src = url;
+    preload.load();
+    return () => { preload.src = ''; };
+  }, [dashaPlanet, mantras]);
 
   const awardMantraReward = async (mantra: MantraItem) => {
     if (!user) return;

@@ -260,4 +260,4 @@ const HandAnalyzer = () => {
   );
 };
 
-export default HandAnalyzer;
+export default React.memo(HandAnalyzer);

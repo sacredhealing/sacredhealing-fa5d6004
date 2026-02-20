@@ -1,4 +1,4 @@
-import { Suspense, useEffect } from "react";
+import React, { Suspense, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { setNavigator } from "@/utils/navigation";
@@ -50,8 +50,6 @@ import SpiritualEducation from "./pages/SpiritualEducation";
 import Community from "./pages/Community";
 import PrivateSessions from "./pages/PrivateSessions";
 import Membership from "./pages/Membership";
-import Mantras from "./pages/Mantras";
-import MantraPage from "./pages/MantraPage";
 import Shop from "./pages/Shop";
 import ProductDetail from "./pages/ProductDetail";
 import Transformation from "./pages/Transformation";
@@ -87,9 +85,13 @@ import AdminAmbientSounds from "./pages/AdminAmbientSounds";
 import AdminAffirmation from "./pages/AdminAffirmation";
 import AdminMusicAnalytics from "./pages/AdminMusicAnalytics";
 import AdminAnalytics from "./pages/AdminAnalytics";
-import Explore from "./pages/Explore";
-import ExplorePage from "./pages/ExplorePage";
 import LibraryAbundance from "./pages/LibraryAbundance";
+
+const Explore = React.lazy(() => import("./pages/Explore"));
+const SacredSpace = React.lazy(() => import("./pages/SacredSpace"));
+const Mantras = React.lazy(() => import("./pages/Mantras"));
+const MantraPage = React.lazy(() => import("./pages/MantraPage"));
+const ExplorePage = React.lazy(() => import("./pages/ExplorePage"));
 import Onboarding from "./pages/Onboarding";
 import SpiritualPaths from "./pages/SpiritualPaths";
 import PathDetail from "./pages/PathDetail";
@@ -115,11 +117,16 @@ import Ayurveda from "./pages/Ayurveda";
 import Vastu from "./pages/Vastu";
 import PromptLibrary from "./pages/PromptLibrary";
 import HandAnalyzer from "./pages/HandAnalyzer";
-import SacredSpace from "./pages/SacredSpace";
 import AkashicRecords from "./pages/AkashicRecords";
 import { DebugBanner } from "./components/DebugBanner";
 import { ProfileLanguageSync } from "./components/ProfileLanguageSync";
 import "@/lib/performance"; // Initialize performance monitoring
+
+const PageLoader = () => (
+  <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a]">
+    <Loader2 className="h-10 w-10 animate-spin text-[#D4AF37]" aria-hidden />
+  </div>
+);
 
 function AppRoutes() {
   const navigate = useNavigate();
@@ -127,6 +134,7 @@ function AppRoutes() {
     setNavigator(navigate);
   }, [navigate]);
   return (
+    <Suspense fallback={<PageLoader />}>
     <Routes>
       <Route path="/" element={<Auth />} />
       <Route path="/about" element={<About />} />
@@ -240,6 +248,7 @@ function AppRoutes() {
               </Route>
                 <Route path="*" element={<NotFound />} />
     </Routes>
+    </Suspense>
   );
 }
 

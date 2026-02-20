@@ -14,6 +14,7 @@ export const VedicHeader: React.FC<Props> = ({ currentBook }) => {
             src="https://raw.githubusercontent.com/BhaktiMarga/brand-assets/main/logos/BM_Logo_Gold.png"
             alt="Bhakti Marga"
             className="h-12 w-auto opacity-90 brightness-110 mx-auto"
+            loading="lazy"
             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
           />
         </div>

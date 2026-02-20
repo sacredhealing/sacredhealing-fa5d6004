@@ -35,7 +35,7 @@ function isVerseSaved(userId: string, verse: GitaVerse): boolean {
   return saved.some((v) => `${v.chapter}-${v.verse}` === key);
 }
 
-export const GitaCard: React.FC = () => {
+const GitaCardInner: React.FC = () => {
   const { user } = useAuth();
   const { reading } = useAIVedicReading();
   const [savedSet, setSavedSet] = useState<Set<string>>(() => new Set());
@@ -156,3 +156,5 @@ export const GitaCard: React.FC = () => {
     </section>
   );
 };
+
+export const GitaCard = React.memo(GitaCardInner);

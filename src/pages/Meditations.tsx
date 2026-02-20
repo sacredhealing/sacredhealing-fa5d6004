@@ -246,6 +246,7 @@ const Meditations: React.FC = () => {
                   src={selectedPlaylist.cover_image_url}
                   alt={selectedPlaylist.title}
                   className="w-24 h-24 rounded-xl object-cover"
+                  loading="lazy"
                 />
               ) : (
                 <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">

@@ -23,7 +23,7 @@ interface AkashicSiddhaReadingProps {
   isModal?: boolean;
 }
 
-const AkashicSiddhaReading: React.FC<AkashicSiddhaReadingProps> = ({ userHouse = 12, onComplete, isModal = false }) => {
+const AkashicSiddhaReadingComponent: React.FC<AkashicSiddhaReadingProps> = ({ userHouse = 12, onComplete, isModal = false }) => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [readingVisible, setReadingVisible] = useState(false);
   const record = AKASHIC_RECORDS[userHouse] || DEFAULT_RECORD;
@@ -142,4 +142,5 @@ const AkashicSiddhaReading: React.FC<AkashicSiddhaReadingProps> = ({ userHouse =
   );
 };
 
+const AkashicSiddhaReading = React.memo(AkashicSiddhaReadingComponent);
 export default AkashicSiddhaReading;

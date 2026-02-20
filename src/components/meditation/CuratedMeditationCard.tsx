@@ -45,6 +45,7 @@ export const CuratedMeditationCard: React.FC<CuratedMeditationCardProps> = ({
             src={playlist.cover_image_url}
             alt={playlist.title}
             className="w-full h-full object-cover"
+            loading="lazy"
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-primary/20 via-accent/10 to-primary/5 flex items-center justify-center">
