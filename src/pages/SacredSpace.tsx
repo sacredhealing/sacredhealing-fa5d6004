@@ -4,11 +4,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAIVedicReading } from '@/hooks/useAIVedicReading';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { GoldDustParticles } from '@/components/effects/GoldDustParticles';
 import AkashicSiddhaReading from '@/components/vedic/AkashicSiddhaReading';
 import KarmicDebtMeter from '@/components/vedic/KarmicDebtMeter';
-import { BookOpen, Sparkles, Hand, Heart } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { BookOpen, Hand, Lock } from 'lucide-react';
 import type { UserProfile } from '@/lib/vedicTypes';
 
 // Determine house from Jyotish reading (defaults to Ketu's house 12)
@@ -22,8 +22,7 @@ const SacredSpace: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { reading, generateReading } = useAIVedicReading();
-  const [akashicModalOpen, setAkashicModalOpen] = useState(false);
-  const [karmicDebtLevel, setKarmicDebtLevel] = useState(45); // % debt remaining (100 - purified)
+  const [karmicDebtLevel, setKarmicDebtLevel] = useState(58); // % debt remaining → 42% purified (Rahu age 42 reference)
   const [revealedArchetype, setRevealedArchetype] = useState<string | null>(null);
   const [showGoldDust, setShowGoldDust] = useState(false);
 
@@ -73,18 +72,8 @@ const SacredSpace: React.FC = () => {
     }
   };
 
-  const sacredTools = [
-    {
-      id: 'akashic',
-      title: 'Akashic Records',
-      description: 'Access your past life archetype',
-      icon: BookOpen,
-      gradient: 'from-purple-900/60 via-violet-800/40 to-black/60',
-      border: 'border-purple-500/30',
-      glow: 'shadow-purple-500/20',
-      iconColor: 'text-purple-300',
-      iconBg: 'bg-purple-500/20',
-    },
+  const navigate = useNavigate();
+  const hubBottomTools = [
     {
       id: 'hand-analyzer',
       title: 'Hand Analyzer',
@@ -98,28 +87,16 @@ const SacredSpace: React.FC = () => {
       href: '/hand-analyzer',
     },
     {
-      id: 'vedic-astrology',
-      title: 'Vedic Astrology',
-      description: 'Daily influence + blueprint',
-      icon: Sparkles,
-      gradient: 'from-cyan-900/60 via-blue-800/40 to-black/60',
-      border: 'border-cyan-500/30',
-      glow: 'shadow-cyan-500/20',
-      iconColor: 'text-cyan-300',
-      iconBg: 'bg-cyan-500/20',
-      href: '/vedic-astrology',
-    },
-    {
-      id: 'mantras',
-      title: 'Mantras',
-      description: 'Sacred sound healing',
-      icon: Heart,
-      gradient: 'from-rose-900/60 via-pink-800/40 to-black/60',
-      border: 'border-rose-500/30',
-      glow: 'shadow-rose-500/20',
-      iconColor: 'text-rose-300',
-      iconBg: 'bg-rose-500/20',
-      href: '/mantras',
+      id: 'secret-wisdom-vault',
+      title: 'Secret Wisdom Vault',
+      description: 'Saved verses & soul profile',
+      icon: Lock,
+      gradient: 'from-purple-900/60 via-violet-800/40 to-black/60',
+      border: 'border-purple-500/30',
+      glow: 'shadow-purple-500/20',
+      iconColor: 'text-purple-300',
+      iconBg: 'bg-purple-500/20',
+      href: '/explore',
     },
   ];
 
@@ -144,29 +121,32 @@ const SacredSpace: React.FC = () => {
         </p>
       </div>
 
-      {/* Karmic Debt Meter — progress = % purified (debt cleared) */}
+      {/* HUB TOP: Karmic Debt Meter — 42% purified (Rahu age 42 reference) */}
       <div className="mb-8">
         <KarmicDebtMeter progress={Math.round(100 - karmicDebtLevel)} />
       </div>
 
-      {/* Sacred Tools Grid */}
+      {/* HUB MIDDLE: Akashic Siddha Reading (inline) */}
+      <section className="mb-8 rounded-2xl border border-[#D4AF37]/20 bg-black/30 backdrop-blur-sm overflow-hidden">
+        <AkashicSiddhaReading
+          userHouse={userHouse}
+          onComplete={handleAkashicComplete}
+          isModal={false}
+        />
+      </section>
+
+      {/* HUB BOTTOM: Hand Analyzer + Secret Wisdom Vault */}
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-[#D4AF37] mb-4" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
           Sacred Tools
         </h2>
         <div className="grid grid-cols-2 gap-4">
-          {sacredTools.map((tool) => {
+          {hubBottomTools.map((tool) => {
             const Icon = tool.icon;
             return (
               <motion.button
                 key={tool.id}
-                onClick={() => {
-                  if (tool.id === 'akashic') {
-                    setAkashicModalOpen(true);
-                  } else if (tool.href) {
-                    window.location.href = tool.href;
-                  }
-                }}
+                onClick={() => tool.href && navigate(tool.href)}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 className={`relative overflow-hidden rounded-2xl border ${tool.border} bg-gradient-to-br ${tool.gradient} p-5 text-left shadow-lg ${tool.glow} transition-all duration-200`}
@@ -185,19 +165,6 @@ const SacredSpace: React.FC = () => {
           })}
         </div>
       </div>
-
-      {/* Akashic Records Modal */}
-      <Dialog open={akashicModalOpen} onOpenChange={setAkashicModalOpen}>
-        <DialogContent className="max-w-3xl bg-[#0a0a0a] border-[#D4AF37]/30 p-0 overflow-hidden">
-          <div className="relative">
-            <AkashicSiddhaReading 
-              userHouse={userHouse} 
-              onComplete={handleAkashicComplete}
-              isModal={true}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

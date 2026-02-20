@@ -269,7 +269,7 @@ const Mantras = () => {
         </p>
       </header>
 
-      {/* Your Jyotish Remedy Button */}
+      {/* Remedy for [User's Active Planet] — Primary Action with gold glow */}
       {dashaPlanet && reading?.personalCompass?.currentDasha && (
         <section className="px-4 mt-4 mb-4">
           <Button
@@ -279,7 +279,6 @@ const Mantras = () => {
                 toast.error(t('mantras_no_remedy', 'Jyotish remedy not available.'));
                 return;
               }
-              // Find mantra matching the planet
               const remedyMantra = mantras.find(m => {
                 if (!m.planet_type) return false;
                 const mantraPlanet = normalizePlanetName(m.planet_type);
@@ -296,10 +295,10 @@ const Mantras = () => {
                 toast.info(`${dailyMantraText} - ${t('mantras_find_mantra', 'Find this mantra in the list below.')}`);
               }
             }}
-            className="w-full bg-gradient-to-r from-[#D4AF37] to-amber-500 hover:from-[#D4AF37]/90 hover:to-amber-500/90 text-black font-semibold py-3 rounded-xl shadow-lg shadow-[#D4AF37]/30"
+            className="w-full bg-gradient-to-r from-[#D4AF37] to-amber-500 hover:from-[#D4AF37]/90 hover:to-amber-500/90 text-black font-semibold py-3 rounded-xl shadow-lg shadow-[#D4AF37]/30 hover:shadow-[0_0_24px_rgba(212,175,55,0.5)] transition-shadow duration-300 animate-sovereign-pulse"
           >
             <Sparkles className="w-5 h-5 mr-2 inline" />
-            {t('mantras_jyotish_remedy', 'Your Jyotish Remedy')} — {dashaPlanet} Dasha
+            {t('mantras_remedy_for_planet', 'Remedy for')} {dashaPlanet}
           </Button>
         </section>
       )}

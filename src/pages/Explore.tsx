@@ -212,6 +212,19 @@ export default function Explore() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#1a0a2e] via-[#2d1b4e]/30 to-[#1a0a2e] px-4 pb-24 pt-4">
+      {/* Library Header */}
+      <div className="mb-3">
+        <h1 className="text-3xl md:text-4xl font-heading font-bold text-amber-50">
+          {t("explore.title", "Library")}
+        </h1>
+        <p className="text-amber-200/70 mt-1 text-base">{subtitle}</p>
+      </div>
+
+      {/* Gita Oracle — top of Library with Why Today? */}
+      <div className="mb-6">
+        <GitaCard />
+      </div>
+
       {/* Hero Banner — Healing Sounds */}
       <section className="mb-6 -mx-4">
         <button
@@ -258,19 +271,6 @@ export default function Explore() {
           </div>
         </button>
       </section>
-
-      {/* Header */}
-      <div className="mb-3">
-        <h1 className="text-3xl md:text-4xl font-heading font-bold text-amber-50">
-          {t("explore.title", "Library")}
-        </h1>
-        <p className="text-amber-200/70 mt-1 text-base">{subtitle}</p>
-      </div>
-
-      {/* Gita Oracle — moved from Dashboard */}
-      <div className="mb-6">
-        <GitaCard />
-      </div>
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
