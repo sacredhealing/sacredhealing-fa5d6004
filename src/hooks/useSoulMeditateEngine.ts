@@ -185,6 +185,10 @@ export function useSoulMeditateEngine() {
     try {
     const ctx = new AudioContext();
     audioContextRef.current = ctx;
+    // Unlock context on same user gesture (2026 browser autoplay policy)
+    if (ctx.state === 'suspended') {
+      await ctx.resume();
+    }
 
     // Master gain
     const masterGain = ctx.createGain();
@@ -758,13 +762,15 @@ export function useSoulMeditateEngine() {
   }, [neuralLayer.isPlaying]);
 
   // Play/pause atmosphere
-  const toggleAtmospherePlay = useCallback(() => {
+  const toggleAtmospherePlay = useCallback(async () => {
     if (!atmosphereAudioRef.current) return;
     
     if (atmosphereLayer.isPlaying) {
       atmosphereAudioRef.current.pause();
     } else {
-      audioContextRef.current?.resume();
+      if (audioContextRef.current?.state === 'suspended') {
+        await audioContextRef.current.resume();
+      }
       atmosphereAudioRef.current.play().catch(console.error);
     }
     setAtmosphereLayer(prev => ({ ...prev, isPlaying: !prev.isPlaying }));

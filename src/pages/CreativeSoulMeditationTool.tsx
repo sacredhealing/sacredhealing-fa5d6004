@@ -116,9 +116,11 @@ export default function CreativeSoulMeditationTool() {
     }
   }, [engine, brainwaveFreq]);
 
-  // Initialize engine on mount
+  // Initialize engine on user click (never on page load — browser autoplay policy)
   const handleInitialize = useCallback(async () => {
     await engine.initialize();
+    const audioCtx = engine.getAudioContext();
+    if (audioCtx?.state === 'suspended') await audioCtx.resume();
     toast.success('Neural Engine initialized');
   }, [engine]);
 
