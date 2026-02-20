@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation as useI18nTranslation } from 'react-i18next';
 import { useTranslation } from '@/hooks/useTranslation';
-import { Music, Play, Pause, RotateCcw, Volume2, ChevronDown, Sparkles, Clock, Sunrise, Flame } from 'lucide-react';
+import { Music, Play, Pause, RotateCcw, Volume2, ChevronDown, Sparkles, Clock, Sunrise, Moon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -248,115 +248,57 @@ const Mantras = () => {
   return (
     <div className="min-h-screen bg-background pb-28">
 
-      {/* ═══ MINI HORA STATUS BAR ═══ */}
-      {horaWatch.calculation && (
-        <div className={`sticky top-0 z-30 px-4 py-2 backdrop-blur-xl border-b border-white/5 bg-gradient-to-r ${
-          currentHoraPlanet ? getPlanetTheme(currentHoraPlanet).gradient : 'from-primary/10 via-background to-primary/10'
-        }`}>
-          <div className="flex items-center justify-between max-w-2xl mx-auto">
-            <div className="flex items-center gap-2">
-              <Clock className="w-3.5 h-3.5 text-amber-400" />
-              <span className="text-xs font-medium text-white/80">
-                {currentHoraPlanet && PLANET_SYMBOLS[currentHoraPlanet]} {currentHoraPlanet} Hora
-              </span>
-              <span className="text-[10px] text-white/40">•</span>
-              <span className="text-xs text-white/60">Sacred Window</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="h-1.5 w-20 rounded-full bg-white/10 overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-amber-400 to-amber-500 rounded-full transition-all duration-1000"
-                  style={{ width: `${horaWatch.calculation.remainingMs > 0 ? Math.max(5, (horaWatch.remainingMs / (horaWatch.calculation.currentHora.durationMinutes * 60000)) * 100) : 0}%` }}
-                />
-              </div>
-              <span className="text-xs font-mono text-amber-400 font-bold">{horaWatch.remainingTimeStr}</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Header */}
-      <section className="px-4 pt-6 pb-2">
-        <h1 className="text-2xl font-heading font-bold text-foreground">
+      {/* Sacred Header — Celestial Gradient (Deep Indigo to Gold) */}
+      <header className="bg-gradient-to-br from-indigo-950 via-violet-950/90 to-amber-950/80 border-b border-amber-500/20 px-4 pt-6 pb-5">
+        <h1 className="text-2xl font-heading font-bold text-white">
           {tI18n('mantras.title', 'Mantras')}
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-sm text-white/70">
           {tI18n('mantras.subtitle', 'Choose one mantra and repeat it 108 times.')}
         </p>
-      </section>
+      </header>
 
-      {/* ═══ RISHI'S CHOICE BANNER ═══ */}
-      <section className="px-4 mb-4">
-        <Card className="rounded-2xl border-2 border-amber-500/40 bg-gradient-to-br from-amber-950/80 via-yellow-900/30 to-amber-950/60 shadow-xl shadow-amber-500/10 overflow-hidden relative">
-          {/* Breathing golden shimmer */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-400/5 to-transparent animate-pulse pointer-events-none" />
-          <CardContent className="p-4 relative z-10">
-            <div className="flex items-start gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-500/30"
-                style={{ animation: 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}>
-                <Flame className="w-6 h-6 text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="text-sm font-bold text-amber-300 uppercase tracking-wider">Rishi's Choice</h3>
-                  {currentHoraPlanet && (
-                    <span className="text-lg">{PLANET_SYMBOLS[currentHoraPlanet]}</span>
-                  )}
-                </div>
-                <p className="text-sm text-amber-100/80 leading-relaxed">{rishiMessage}</p>
-                {currentHoraPlanet && (
-                  <div className="flex items-center gap-3 mt-2">
-                    <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/40 text-[10px]">
-                      {getPlanetEmoji(currentHoraPlanet)} {currentHoraPlanet} Hora Active
-                    </Badge>
-                    <span className="text-[10px] text-amber-400/60">Success: {getSuccessPercent(currentHoraPlanet)}%</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </section>
-
-      {/* ═══ HORA WATCH DETAIL ═══ */}
+      {/* Din Heliga Timme — floating glass card with rotating Moon/Planet icon */}
       {horaWatch.calculation && (
-        <section className="px-4 mb-6">
-          <Card className={`rounded-2xl border-border bg-gradient-to-br from-primary/5 via-background to-primary/5 border-primary/20 overflow-hidden backdrop-blur-sm ${shouldGlowGold ? 'border-amber-500/50 shadow-lg shadow-amber-500/20' : ''}`}>
-            <CardContent className="p-4">
+        <section className="px-4 mt-6 mb-6">
+          <div className={`relative rounded-2xl border border-white/20 bg-white/5 backdrop-blur-xl overflow-hidden shadow-xl ${shouldGlowGold ? 'border-amber-500/40 shadow-amber-500/20' : 'shadow-black/20'}`}>
+            <div className="p-4">
               <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Clock className={`w-5 h-5 ${shouldGlowGold ? 'text-amber-400 animate-pulse' : 'text-primary'}`} />
-                  <h2 className="text-lg font-semibold text-foreground">{t('mantras_sacred_hour', 'Din Heliga Timme')}</h2>
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-xl bg-white/10 flex items-center justify-center border border-white/10">
+                    <Moon className={`w-6 h-6 text-amber-300/90 animate-[spin_12s_linear_infinite] ${shouldGlowGold ? 'drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]' : ''}`} />
+                  </div>
+                  <h2 className="text-lg font-semibold text-white">{t('mantras_sacred_hour', 'Din Heliga Timme')}</h2>
                 </div>
                 {currentHoraPlanet && (
-                  <Badge variant="outline" className={`border-primary/30 text-primary font-bold text-sm px-3 py-1 ${shouldGlowGold ? 'animate-pulse border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400' : ''}`}>
+                  <Badge variant="outline" className={`border-primary/30 text-primary font-bold text-sm px-3 py-1 ${shouldGlowGold ? 'animate-pulse border-amber-500/50 bg-amber-500/10 text-amber-400' : ''}`}>
                     {getPlanetEmoji(currentHoraPlanet)} {currentHoraPlanet}{shouldGlowGold && ' ✨'}
                   </Badge>
                 )}
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">{t('mantras_current_hora', 'Nuvarande Hora')}:</span>
-                  <span className="text-foreground font-medium">{horaWatch.calculation.currentHora.startTimeStr} - {horaWatch.calculation.currentHora.endTimeStr}</span>
+                  <span className="text-white/60">{t('mantras_current_hora', 'Nuvarande Hora')}:</span>
+                  <span className="text-white font-medium">{horaWatch.calculation.currentHora.startTimeStr} - {horaWatch.calculation.currentHora.endTimeStr}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">{t('mantras_remaining', 'Återstående')}:</span>
-                  <span className="text-foreground font-medium font-mono">{horaWatch.remainingTimeStr}</span>
+                  <span className="text-white/60">{t('mantras_remaining', 'Återstående')}:</span>
+                  <span className="text-white font-medium font-mono">{horaWatch.remainingTimeStr}</span>
                 </div>
                 {horaWatch.calculation.dayRuler && (
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">{t('mantras_day_ruler', 'Dagens Herskare')}:</span>
-                    <span className="text-foreground font-medium">{getPlanetEmoji(horaWatch.calculation.dayRuler)} {horaWatch.calculation.dayRuler}</span>
+                    <span className="text-white/60">{t('mantras_day_ruler', 'Dagens Herskare')}:</span>
+                    <span className="text-white font-medium">{getPlanetEmoji(horaWatch.calculation.dayRuler)} {horaWatch.calculation.dayRuler}</span>
                   </div>
                 )}
                 {shouldGlowGold && (
                   <div className="mt-3 pt-3 border-t border-amber-500/20">
-                    <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">✨ {t('mantras_golden_hour', 'Din Heliga Timme matchar din planet!')}</p>
+                    <p className="text-xs text-amber-400 font-medium">✨ {t('mantras_golden_hour', 'Din Heliga Timme matchar din planet!')}</p>
                   </div>
                 )}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </section>
       )}
 
@@ -592,70 +534,51 @@ const Mantras = () => {
 
                 {!completed ? (
                   <>
-                    {/* ═══ ENHANCED 108 COUNTER with Golden Aura Glow ═══ */}
-                    <div className="flex justify-center mb-6">
-                      <div className="relative w-40 h-40">
-                        {/* Breathing golden aura glow */}
-                        <div
-                          className="absolute inset-[-12px] rounded-full opacity-60 blur-xl pointer-events-none"
-                          style={{
-                            background: `radial-gradient(circle, rgba(251, 191, 36, 0.4) 0%, rgba(245, 158, 11, 0.15) 50%, transparent 70%)`,
-                            animation: 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                          }}
-                        />
-                        {/* Secondary shimmer ring */}
-                        <div
-                          className="absolute inset-[-6px] rounded-full border-2 border-amber-400/20 pointer-events-none"
-                          style={{ animation: 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite', animationDelay: '1.5s' }}
-                        />
-                        <svg className="w-full h-full -rotate-90 relative z-10" viewBox="0 0 36 36">
-                          <path fill="none" stroke="hsl(var(--muted))" strokeWidth="2.5" d="M18 2.5 a 15.5 15.5 0 0 1 0 31 a 15.5 15.5 0 0 1 0 -31" />
+                    {/* 108 Counter — large circle, Golden Light Thread progress ring, elegant serif */}
+                    <div className="flex justify-center mb-8">
+                      <div className="relative w-44 h-44 sm:w-52 sm:h-52">
+                        <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                          <path fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="2.5" d="M18 2.5 a 15.5 15.5 0 0 1 0 31 a 15.5 15.5 0 0 1 0 -31" />
                           <path
                             fill="none"
-                            stroke="url(#goldenGradient)"
-                            strokeWidth="3"
+                            stroke="url(#mantraGoldThread)"
+                            strokeWidth="2.5"
                             strokeDasharray={`${progressPercent * 0.97} 97`}
                             strokeLinecap="round"
+                            className="drop-shadow-[0_0_6px_rgba(212,175,55,0.6)]"
                             d="M18 2.5 a 15.5 15.5 0 0 1 0 31 a 15.5 15.5 0 0 1 0 -31"
-                            style={{ filter: 'drop-shadow(0 0 4px rgba(251, 191, 36, 0.6))' }}
                           />
                           <defs>
-                            <linearGradient id="goldenGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                              <stop offset="0%" stopColor="#f59e0b" />
-                              <stop offset="50%" stopColor="#fbbf24" />
-                              <stop offset="100%" stopColor="#d97706" />
+                            <linearGradient id="mantraGoldThread" x1="0%" y1="0%" x2="100%" y2="100%">
+                              <stop offset="0%" stopColor="#D4AF37" stopOpacity="0.9" />
+                              <stop offset="50%" stopColor="#F5D77A" stopOpacity="1" />
+                              <stop offset="100%" stopColor="#D4AF37" stopOpacity="0.9" />
                             </linearGradient>
                           </defs>
                         </svg>
-                        <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
-                          <span className="text-3xl font-bold text-amber-300 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]"
-                            style={{ animation: count > 0 ? 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite' : 'none' }}>
-                            {count}
-                          </span>
-                          <span className="text-xs text-amber-400/60 font-medium">/ {reps}</span>
-                        </div>
+                        <span className="absolute inset-0 flex items-center justify-center text-2xl sm:text-3xl font-serif text-amber-200/95 tracking-wide" style={{ fontFamily: 'Cinzel, DM Serif Display, serif' }}>{count}/{reps}</span>
                       </div>
                     </div>
 
-                    {/* Controls */}
+                    {/* Controls — Start: Glowing Sovereign Gold with pulse */}
                     <div className="flex flex-wrap justify-center gap-3">
                       {!isPlaying ? (
-                        <Button size="lg" className="rounded-full gap-2 bg-primary/90 hover:bg-primary shadow-lg shadow-primary/30" onClick={() => { handleStart(); if ('vibrate' in navigator) navigator.vibrate(15); }}>
+                        <Button size="lg" className="rounded-full gap-2 bg-[#D4AF37] hover:bg-amber-500 text-black font-bold border border-amber-400/50 animate-sovereign-pulse" onClick={() => { handleStart(); if ('vibrate' in navigator) navigator.vibrate(15); }}>
                           <Play className="h-5 w-5" />
                           {tI18n('mantras.start', 'Start')}
                         </Button>
                       ) : (
-                        <Button variant="outline" size="lg" className="rounded-full gap-2 border-primary/50" onClick={() => { handlePause(); if ('vibrate' in navigator) navigator.vibrate(10); }}>
+                        <Button variant="outline" size="lg" className="rounded-full gap-2 border-amber-500/50 text-amber-200" onClick={() => { handlePause(); if ('vibrate' in navigator) navigator.vibrate(10); }}>
                           <Pause className="h-5 w-5" />
                           {tI18n('mantras.pause', 'Pause')}
                         </Button>
                       )}
-                      <Button variant="outline" size="lg" className="rounded-full gap-2" onClick={() => { handleReset(); if ('vibrate' in navigator) navigator.vibrate([10, 20, 10]); }}>
+                      <Button variant="outline" size="lg" className="rounded-full gap-2 border-white/20 text-white/80" onClick={() => { handleReset(); if ('vibrate' in navigator) navigator.vibrate([10, 20, 10]); }}>
                         <RotateCcw className="h-4 w-4" />
                         {tI18n('mantras.reset', 'Reset')}
                       </Button>
                       {count > 0 && (
-                        <Button variant="ghost" size="lg" className="rounded-full gap-2" onClick={() => { handleRestartFrom1(); if ('vibrate' in navigator) navigator.vibrate(10); }}>
+                        <Button variant="ghost" size="lg" className="rounded-full gap-2 text-white/70" onClick={() => { handleRestartFrom1(); if ('vibrate' in navigator) navigator.vibrate(10); }}>
                           {tI18n('mantras.restartFrom1', 'Restart from 1')}
                         </Button>
                       )}
@@ -665,7 +588,7 @@ const Mantras = () => {
                   <div className="text-center py-4">
                     <p className="text-xl font-semibold text-foreground mb-2">{tI18n('mantras.completeTitle', 'Complete')}</p>
                     <p className="text-muted-foreground mb-6">{tI18n('mantras.completeBody', 'Take a breath. Notice how you feel.')}</p>
-                    <Button size="lg" className="rounded-full gap-2 bg-primary/90 hover:bg-primary shadow-lg shadow-primary/30" onClick={() => { setCount(0); setCompleted(false); handleStart(); if ('vibrate' in navigator) navigator.vibrate([15, 50, 15]); }}>
+                    <Button size="lg" className="rounded-full gap-2 bg-[#D4AF37] hover:bg-amber-500 text-black font-bold border border-amber-400/50 animate-sovereign-pulse" onClick={() => { setCount(0); setCompleted(false); handleStart(); if ('vibrate' in navigator) navigator.vibrate([15, 50, 15]); }}>
                       <Play className="h-5 w-5" />
                       {tI18n('mantras.playAgain', 'Play again')}
                     </Button>

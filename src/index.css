@@ -64,6 +64,29 @@
       background-position: 100% 50%;
     }
   }
+
+  /* Siddha Rishi: Sovereign Gold pulse */
+  .animate-sovereign-pulse {
+    animation: sovereign-pulse 2.5s ease-in-out infinite;
+  }
+  @keyframes sovereign-pulse {
+    0%, 100% { box-shadow: 0 0 12px rgba(212, 175, 55, 0.5), 0 0 24px rgba(212, 175, 55, 0.2); }
+    50% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.7), 0 0 40px rgba(212, 175, 55, 0.3); }
+  }
+
+  /* Nebula background for hero banners */
+  .nebula-bg {
+    background: radial-gradient(ellipse 120% 80% at 20% 20%, rgba(88, 28, 135, 0.5) 0%, transparent 50%),
+      radial-gradient(ellipse 100% 100% at 80% 60%, rgba(30, 27, 75, 0.6) 0%, transparent 50%),
+      radial-gradient(ellipse 80% 60% at 50% 80%, rgba(212, 175, 55, 0.15) 0%, transparent 45%);
+    background-size: 200% 200%;
+    animation: nebula-drift 18s ease-in-out infinite;
+  }
+  @keyframes nebula-drift {
+    0%, 100% { background-position: 0% 0%; }
+    33% { background-position: 100% 50%; }
+    66% { background-position: 50% 100%; }
+  }
 }
 
 @layer base {

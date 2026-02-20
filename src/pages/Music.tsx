@@ -319,13 +319,22 @@ const Music: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen px-4 pt-6 pb-40 max-w-3xl mx-auto">
-      {/* Header */}
-      <header className="mb-4">
-        <h1 className="text-2xl font-heading font-bold text-foreground flex items-center gap-2">
-          <Music2 className="text-primary" /> Music
+    <div className="min-h-screen px-4 pb-40 max-w-3xl mx-auto">
+      {/* Sacred Header — Celestial Gradient (Deep Indigo to Gold) */}
+      <header className="bg-gradient-to-br from-indigo-950 via-violet-950/90 to-amber-950/80 border-b border-amber-500/20 -mx-4 mt-0 px-4 pt-6 pb-5 mb-0">
+        <h1 className="text-2xl font-heading font-bold text-white flex items-center gap-2">
+          <Music2 className="text-amber-300" /> Music
         </h1>
       </header>
+
+      {/* Hero Banner — Current Planetary Sound with moving nebula */}
+      <section className="relative mt-4 rounded-2xl overflow-hidden min-h-[100px] flex items-center justify-center border border-amber-500/30">
+        <div className="absolute inset-0 nebula-bg" />
+        <div className="relative z-10 px-6 py-6 text-center">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-amber-300/80 font-medium">Current Planetary Sound</p>
+          <h2 className="text-xl sm:text-2xl font-serif text-white mt-1" style={{ fontFamily: 'Cinzel, DM Serif Display, serif' }}>Sacred Frequencies</h2>
+        </div>
+      </section>
 
       {/* Subscription Banner */}
       <MusicMembershipBanner />
@@ -347,8 +356,8 @@ const Music: React.FC = () => {
         <ChevronRight size={16} className="text-muted-foreground" />
       </button>
 
-      {/* Start listening — state doorway */}
-      <section className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4">
+      {/* Start listening — Siddha Cards */}
+      <section className="mt-4 rounded-2xl border border-amber-500/20 bg-white/5 p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
             <div className="text-white font-semibold">What do you need right now?</div>
@@ -367,7 +376,7 @@ const Music: React.FC = () => {
                 background: null,
               });
             }}
-            className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80 hover:bg-white/7 transition flex items-center gap-1"
+            className="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200 hover:bg-amber-500/20 transition flex items-center gap-1"
             aria-label="Shuffle picks"
           >
             <Shuffle size={16} />
@@ -376,36 +385,16 @@ const Music: React.FC = () => {
         </div>
 
         {(() => {
-          const moodCards: Array<{ key: MoodKey; title: string; fallback: string }> = [
-            {
-              key: 'calm',
-              title: 'Calm my thoughts',
-              fallback: 'Quiet the mind, soften the body.',
-            },
-            {
-              key: 'comfort',
-              title: 'Feel comfort',
-              fallback: 'Warm support for the heart.',
-            },
-            {
-              key: 'energy',
-              title: 'More energy',
-              fallback: 'Lift and focus without strain.',
-            },
-            {
-              key: 'rest',
-              title: 'Deep rest',
-              fallback: 'Slow down into night.',
-            },
-            {
-              key: 'background',
-              title: 'Silent background',
-              fallback: 'Gentle atmosphere while you live.',
-            },
+          const moodCards: Array<{ key: MoodKey; title: string; fallback: string; frequency: string }> = [
+            { key: 'calm', title: 'Calm my thoughts', fallback: 'Quiet the mind, soften the body.', frequency: '432 Hz' },
+            { key: 'comfort', title: 'Feel comfort', fallback: 'Warm support for the heart.', frequency: '528 Hz' },
+            { key: 'energy', title: 'More energy', fallback: 'Lift and focus without strain.', frequency: '417 Hz' },
+            { key: 'rest', title: 'Deep rest', fallback: 'Slow down into night.', frequency: '396 Hz' },
+            { key: 'background', title: 'Silent background', fallback: 'Gentle atmosphere while you live.', frequency: '432 Hz' },
           ];
 
           return (
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
               {moodCards.map((c) => {
                 const pick = dailyPicks[c.key];
                 const selected = selectedForMood[c.key];
@@ -420,21 +409,22 @@ const Music: React.FC = () => {
                     key={c.key}
                     onClick={() => onMoodClick(c.key)}
                     className={[
-                      'rounded-2xl border p-4 text-left transition-colors transition-shadow relative',
+                      'rounded-2xl border border-amber-500/40 p-5 text-left transition-all relative bg-gradient-to-br from-white/5 to-white/[0.02]',
                       (currentTrack && selected && currentTrack.id === selected.id)
-                        ? 'border-primary/50 bg-white/10 shadow-[0_0_20px_rgba(0,242,254,0.2)]'
-                        : 'border-white/10 bg-white/5 hover:bg-white/7',
+                        ? 'ring-1 ring-amber-400/50 shadow-[0_0_24px_rgba(212,175,55,0.15)]'
+                        : 'hover:border-amber-500/60 hover:bg-white/[0.07]',
                       c.key === 'background' ? 'sm:col-span-2' : '',
                     ].join(' ')}
                   >
-                    <div className="text-white font-semibold">{c.title}</div>
-                    <div className="mt-1 text-sm text-white/60">{line}</div>
+                    <span className="text-[10px] uppercase tracking-widest text-amber-400/80 font-medium">{c.frequency}</span>
+                    <div className="mt-1 font-serif text-white text-lg" style={{ fontFamily: 'DM Serif Display, Cinzel, serif' }}>{c.title}</div>
+                    <div className="mt-2 text-sm text-white/60">{line}</div>
                     {(currentTrack && selected && currentTrack.id === selected.id) && (
                       <>
                         <div className="mt-2 text-xs text-white/60 opacity-70">
                           Others are listening to this today
                         </div>
-                        <div className="mt-1 text-xs text-primary/70 opacity-70">
+                        <div className="mt-1 text-xs text-amber-400/80 opacity-90">
                           Now playing
                         </div>
                       </>
@@ -458,9 +448,10 @@ const Music: React.FC = () => {
           {lastPlayed && (
             <button
               onClick={() => playTrack(lastPlayed, tracks)}
-              className="rounded-2xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/7 transition-colors transition-shadow"
+              className="rounded-2xl border border-amber-500/40 bg-gradient-to-br from-white/5 to-white/[0.02] p-5 text-left hover:border-amber-500/60 hover:bg-white/[0.07] transition-all"
             >
-              <div className="text-white font-semibold">Continue listening</div>
+              <span className="text-[10px] uppercase tracking-widest text-amber-400/80 font-medium">432 Hz</span>
+              <div className="mt-1 font-serif text-white text-lg" style={{ fontFamily: 'DM Serif Display, Cinzel, serif' }}>Continue listening</div>
               <div className="mt-1 text-sm text-white/60">
                 {lastPlayed?.title ?? 'Last played'}
               </div>
@@ -476,12 +467,13 @@ const Music: React.FC = () => {
           {historyTracks.slice(0, 2).map((track, index) => {
             if (track.id === lastPlayed?.id) return null; // Skip if already shown above
             return (
-              <button
-                key={track.id}
-                onClick={() => playTrack(track, tracks)}
-                className="rounded-2xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/7 transition-colors transition-shadow"
-              >
-                <div className="text-white font-semibold">{track.title}</div>
+            <button
+              key={track.id}
+              onClick={() => playTrack(track, tracks)}
+              className="rounded-2xl border border-amber-500/40 bg-gradient-to-br from-white/5 to-white/[0.02] p-5 text-left hover:border-amber-500/60 hover:bg-white/[0.07] transition-all"
+            >
+              <span className="text-[10px] uppercase tracking-widest text-amber-400/80 font-medium">{track.mood === 'meditative' ? '432 Hz' : '528 Hz'}</span>
+              <div className="mt-1 font-serif text-white text-lg" style={{ fontFamily: 'DM Serif Display, Cinzel, serif' }}>{track.title}</div>
                 {track.mood && (
                   <div className="mt-1 text-xs text-white/50">
                     {track.mood}
@@ -493,9 +485,10 @@ const Music: React.FC = () => {
 
           <button
             onClick={playForMe}
-            className="rounded-2xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/7 transition-colors transition-shadow"
+            className="rounded-2xl border border-amber-500/40 bg-gradient-to-br from-white/5 to-white/[0.02] p-5 text-left hover:border-amber-500/60 hover:bg-white/[0.07] transition-all"
           >
-            <div className="text-white font-semibold">The sound that fits now</div>
+            <span className="text-[10px] uppercase tracking-widest text-amber-400/80 font-medium">432 Hz</span>
+            <div className="mt-1 font-serif text-white text-lg" style={{ fontFamily: 'DM Serif Display, Cinzel, serif' }}>The sound that fits now</div>
             <div className="mt-1 text-sm text-white/60">
               Matched to your time of day — no thinking required.
             </div>
@@ -906,11 +899,11 @@ const Music: React.FC = () => {
         )}
       </section>
 
-      {/* Floating CTA: Play something for me */}
+      {/* Floating CTA — Glowing Sovereign Gold */}
       <div className="fixed bottom-20 right-4 z-50">
         <button
           onClick={playForMe}
-          className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-black shadow-lg hover:opacity-90 transition"
+          className="inline-flex items-center gap-2 rounded-full bg-[#D4AF37] px-5 py-3 text-sm font-bold text-black border border-amber-400/50 animate-sovereign-pulse hover:bg-amber-500 transition"
         >
           <Headphones size={16} />
           Play something for me
