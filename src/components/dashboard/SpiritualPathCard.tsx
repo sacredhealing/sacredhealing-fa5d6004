@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { Compass, ChevronRight, Play, Check } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useSpiritualPaths } from '@/hooks/useSpiritualPaths';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -34,9 +33,9 @@ export const SpiritualPathCard: React.FC = () => {
         <Card className="glass-card p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Compass className="w-5 h-5 text-[#00F2FE]" />
+              <Compass className="w-5 h-5 text-amber-400" />
               <h3 className="font-heading font-semibold text-foreground">
-                {t('spiritualPath.yourPath', 'Your Path')}
+                {t('spiritualPath.dharmaPathProgress', 'Dharma Path Progress')}
               </h3>
             </div>
             <Badge variant="outline" className="text-xs">
@@ -54,7 +53,16 @@ export const SpiritualPathCard: React.FC = () => {
               </p>
             </div>
 
-            <Progress value={progressPercent} className="h-2" />
+            <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${progressPercent}%`,
+                  background: 'linear-gradient(90deg, #D4AF37 0%, #F5D77A 50%, #D4AF37 100%)',
+                  boxShadow: '0 0 10px rgba(212,175,55,0.5)',
+                }}
+              />
+            </div>
 
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground">

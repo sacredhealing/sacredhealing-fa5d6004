@@ -260,7 +260,7 @@ export const DailyGuidanceCard: React.FC<DailyGuidanceCardProps> = ({
                       ? onSkipContinuation()
                       : onStartClick?.(activeGuidance, showContinuation ? { isContinuation: true } : undefined)
                   }
-                  className="w-full gap-2 bg-[#00F2FE] hover:bg-[#00D4E0] text-[#000000] shadow-[0_0_30px_rgba(0,242,254,0.4)] hover:shadow-[0_0_40px_rgba(0,242,254,0.5)] border-none transition-all text-sm sm:text-base px-4 sm:px-8 py-3 flex-shrink-0"
+                  className="w-full gap-2 bg-[#D4AF37] hover:bg-amber-500 text-black font-bold shadow-[0_0_20px_rgba(212,175,55,0.4),0_0_30px_rgba(168,85,247,0.15)] hover:shadow-[0_0_28px_rgba(212,175,55,0.5),0_0_40px_rgba(168,85,247,0.2)] border border-amber-400/50 transition-all text-sm sm:text-base px-4 sm:px-8 py-3 flex-shrink-0"
                   style={{ fontWeight: 800 }}
                 >
                   {displayedButtonLabel}

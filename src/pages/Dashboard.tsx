@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Sparkles, Play, Music2, Heart } from 'lucide-react';
 import { SacredFlame } from '@/components/dashboard/SacredFlame';
 import { useProfile } from '@/hooks/useProfile';
+import { useHoraWatch } from '@/hooks/useHoraWatch';
+import { useAIVedicReading } from '@/hooks/useAIVedicReading';
 import { useDailyGuidance } from '@/hooks/useDailyGuidance';
 import { useDailyJourney } from '@/hooks/useDailyJourney';
 import { useDayClosed } from '@/hooks/useDayClosed';
@@ -59,6 +61,8 @@ const Dashboard: React.FC = () => {
     { id: "meditate", titleKey: "dashboard.meditate", icon: Play, route: "/meditations" },
   ];
   const { profile: userProfile } = useProfile();
+  const horaWatch = useHoraWatch({ timezone: 'Europe/Stockholm' });
+  const { reading: vedicReading } = useAIVedicReading();
 
   const currentHour = new Date().getHours();
   const timePhase: 'morning' | 'midday' | 'evening' = currentHour >= 5 && currentHour < 12 ? 'morning' : currentHour >= 12 && currentHour < 17 ? 'midday' : 'evening';
@@ -151,16 +155,67 @@ const Dashboard: React.FC = () => {
       )
     : null;
 
+  const userName = userProfile?.full_name?.split(' ')[0] || 'Adam';
+  const dashaCycle = vedicReading?.personalCompass?.currentDasha?.period?.split(' ')[0] || 'Rahu';
+  const horaPlanet = horaWatch.calculation?.currentHora?.planet || 'Venus';
+  const horaDurationMs = horaWatch.calculation?.currentHora?.durationMinutes
+    ? horaWatch.calculation.currentHora.durationMinutes * 60 * 1000
+    : 1;
+  const successWindowPct = horaWatch.calculation
+    ? Math.round((1 - horaWatch.remainingMs / horaDurationMs) * 100)
+    : 80;
+  const horaIntensity = Math.min(100, Math.max(0, successWindowPct));
+
   return (
     <div className="min-h-screen px-3 sm:px-4 pt-4 sm:pt-6 pb-24">
       <AchievementPopup achievement={newlyUnlocked} onClose={dismissNewlyUnlocked} />
 
-      {/* Header - always visible */}
+      {/* Celestial Sync HUD — replaces step-into-the-day bar */}
+      {horaWatch.calculation && (
+        <section className="mb-4 rounded-2xl border border-amber-500/20 bg-gradient-to-r from-indigo-950/90 via-violet-950/70 to-amber-950/50 px-4 py-3 flex items-center gap-3">
+          <div
+            className="flex-shrink-0 w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center border border-amber-500/30 animate-pulse"
+            style={{ animationDuration: `${2 + (100 - horaIntensity) / 50}s` }}
+          >
+            <svg viewBox="0 0 24 24" className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <circle cx="12" cy="12" r="10" strokeOpacity="0.4" />
+              <path d="M12 2a10 10 0 0 1 0 20" strokeOpacity="0.8" />
+              <path d="M12 2l0 4M12 18l0 4M2 12l4 0M18 12l4 0" />
+              <circle cx="12" cy="12" r="3" fill="currentColor" opacity="0.8" />
+            </svg>
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] uppercase tracking-widest text-amber-400/80 font-medium">Celestial Sync</p>
+            <p className="text-xs sm:text-sm text-white/95 leading-snug mt-0.5">
+              {userName}, your {dashaCycle} Cycle (Age 42) is Active. Current Success Window: {horaPlanet} Hora — {successWindowPct}%.
+            </p>
+          </div>
+        </section>
+      )}
+
+      {/* Quick Oracle — Akashic Verdict for current hour */}
+      <section className="mb-4 rounded-2xl border border-purple-500/20 bg-purple-950/30 px-4 py-3">
+        <p className="text-[10px] uppercase tracking-widest text-purple-400/80 font-medium mb-2">Quick Oracle</p>
+        {vedicReading?.todayInfluence?.wisdomQuote ? (
+          <p className="text-sm font-serif italic text-purple-100/90 leading-relaxed">
+            &ldquo;{vedicReading.todayInfluence.wisdomQuote}&rdquo;
+          </p>
+        ) : (
+          <p className="text-sm text-white/70 leading-relaxed">
+            Align with the current {horaPlanet} Hora for clarity. Get your full Akashic Verdict in Jyotish.
+          </p>
+        )}
+        <Link to="/vedic-astrology" className="inline-block mt-2 text-xs text-amber-400/90 hover:text-amber-300 font-medium">
+          See full verdict →
+        </Link>
+      </section>
+
+      {/* Header - always visible; elegant serif greeting */}
       <header className="flex items-center justify-between mb-4 sm:mb-6 animate-fade-in">
         <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
           <SacredFlame />
           <div className="min-w-0 flex-1">
-            <p className="text-xs sm:text-sm text-muted-foreground">{t(greetingKey)}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground font-serif" style={{ fontFamily: 'Cinzel, DM Serif Display, serif' }}>{t(greetingKey)}</p>
             <h1 className="text-lg sm:text-xl font-heading font-bold text-foreground truncate">
               {userProfile?.full_name || t('dashboard.sacredSoul')}
               <span className="ml-1 text-secondary">✨</span>
@@ -202,17 +257,17 @@ const Dashboard: React.FC = () => {
               {QUICK_ACTIONS.map((action, index) => {
                 const gradients = [
                   'bg-gradient-to-br from-purple-900/40 via-secondary/30 to-purple-800/40',
-                  'bg-gradient-to-br from-primary/30 via-turquoise/20 to-primary/20',
+                  'bg-gradient-to-br from-amber-900/40 via-amber-800/30 to-amber-700/40',
                   'bg-gradient-to-br from-amber-500/30 via-gold/20 to-amber-400/30',
                 ];
                 const glows = [
                   'shadow-[0_0_10px_rgba(167,139,250,0.16)] hover:shadow-[0_0_14px_rgba(167,139,250,0.22)]',
-                  'shadow-[0_0_10px_rgba(0,242,254,0.16)] hover:shadow-[0_0_14px_rgba(0,242,254,0.22)]',
+                  'shadow-[0_0_10px_rgba(212,175,55,0.25)] hover:shadow-[0_0_14px_rgba(168,85,247,0.3)]',
                   'shadow-[0_0_10px_rgba(255,193,7,0.16)] hover:shadow-[0_0_14px_rgba(255,193,7,0.22)]',
                 ];
                 const iconColors = [
                   'text-purple-300',
-                  'text-primary',
+                  'text-amber-300',
                   'text-amber-400',
                 ];
                 return (
@@ -225,7 +280,7 @@ const Dashboard: React.FC = () => {
                       <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       <div className="relative z-10 text-center">
                         <div className="relative inline-block mb-1.5 sm:mb-2">
-                          <action.icon className={`w-7 h-7 sm:w-8 sm:h-8 ${iconColors[index]} mx-auto group-hover:scale-105 transition-transform duration-300`} style={{ filter: `drop-shadow(0 0 5px ${index === 0 ? 'rgba(167,139,250,0.35)' : index === 1 ? 'rgba(0,242,254,0.35)' : 'rgba(255,193,7,0.35)'})` }} />
+                          <action.icon className={`w-7 h-7 sm:w-8 sm:h-8 ${iconColors[index]} mx-auto group-hover:scale-105 transition-transform duration-300`} style={{ filter: `drop-shadow(0 0 5px ${index === 0 ? 'rgba(167,139,250,0.35)' : index === 1 ? 'rgba(212,175,55,0.5)' : 'rgba(255,193,7,0.35)'})` }} />
                         </div>
                         <h3 className="text-xs sm:text-sm font-heading font-bold text-white">{t(action.titleKey)}</h3>
                       </div>
@@ -342,12 +397,12 @@ const Dashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Floating Mantra quick action — visible on Home when idle */}
+      {/* Floating Mantra quick action — Sovereign Gold with purple glow */}
       {flowState === 'idle' && (
         <button
           type="button"
           onClick={() => navigate('/mantras')}
-          className="fixed bottom-20 right-4 z-40 rounded-full h-14 w-14 bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 flex items-center justify-center"
+          className="fixed bottom-20 right-4 z-40 rounded-full h-14 w-14 bg-[#D4AF37] text-black font-bold shadow-[0_0_20px_rgba(212,175,55,0.5),0_0_40px_rgba(168,85,247,0.2)] hover:bg-amber-500 flex items-center justify-center border border-amber-400/50"
           aria-label={t('dashboard.ritualMantra', 'Mantra')}
         >
           <Sparkles className="h-6 w-6" />

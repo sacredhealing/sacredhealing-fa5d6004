@@ -182,15 +182,23 @@ const Breathing: React.FC = () => {
 
   return (
     <div className="min-h-screen pb-24">
-      {/* Header */}
+      {/* Header — Return to Temple always available */}
       <div className="px-4 pt-4 pb-6">
-        <button 
-          onClick={() => navigate(-1)} 
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-4"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm">{t('common.back', 'Back')}</span>
-        </button>
+        <div className="flex items-center gap-3 mb-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-sm">{t('common.back', 'Back')}</span>
+          </button>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="inline-flex items-center gap-2 text-amber-400/90 hover:text-amber-300 transition-colors text-sm font-medium"
+          >
+            <span>Return to Temple</span>
+          </button>
+        </div>
         
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">

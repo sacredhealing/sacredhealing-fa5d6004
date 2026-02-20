@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation as useI18nTranslation } from 'react-i18next';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Music, Play, Pause, RotateCcw, Volume2, ChevronDown, Sparkles, Clock, Sunrise, Moon } from 'lucide-react';
@@ -78,6 +79,7 @@ function getSuccessPercent(planet: string | null): number {
 }
 
 const Mantras = () => {
+  const navigate = useNavigate();
   const { t: tI18n } = useI18nTranslation();
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -248,8 +250,17 @@ const Mantras = () => {
   return (
     <div className="min-h-screen bg-background pb-28">
 
-      {/* Sacred Header — Celestial Gradient (Deep Indigo to Gold) */}
+      {/* Sacred Header — Celestial Gradient; Return to Temple always available */}
       <header className="bg-gradient-to-br from-indigo-950 via-violet-950/90 to-amber-950/80 border-b border-amber-500/20 px-4 pt-6 pb-5">
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <button
+            type="button"
+            onClick={() => navigate('/dashboard')}
+            className="text-sm font-medium text-amber-400/90 hover:text-amber-300 transition-colors"
+          >
+            Return to Temple
+          </button>
+        </div>
         <h1 className="text-2xl font-heading font-bold text-white">
           {tI18n('mantras.title', 'Mantras')}
         </h1>
