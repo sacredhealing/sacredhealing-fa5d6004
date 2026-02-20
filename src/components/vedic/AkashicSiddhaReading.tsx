@@ -9,9 +9,15 @@ import {
   deriveAtmakaraka,
   deriveMountJupiter,
 } from '@/data/siddhaLineage';
-import { getEighthGateInsight } from '@/lib/eighthGateScroll';
-import { getKarmicMilestone } from '@/lib/sovereignFuture';
+import {
+  getEighthGateInsight,
+  deriveRahuKetu,
+  deriveMountMoon,
+} from '@/lib/eighthGateScroll';
+import { getPathToPower } from '@/lib/sovereignFuture';
 import { SoulFrequencyMeter } from './SoulFrequencyMeter';
+import { SiddhaIcon } from './SiddhaIcon';
+import { playPaperTearSound } from '@/utils/paperTearSound';
 
 /** Deep Akashic: Vedic Triad + Multi-Planetary (Ketu/Saturn) + Origin, Mastery, Shadow */
 type AkashicRecord = {
@@ -118,20 +124,28 @@ const DEFAULT_RECORD: AkashicRecord = {
   shadowOfSaturn: 'Saturn’s debt: you once refused to create or silenced another’s voice. That debt now shows as stress in creativity, partnership, and the fear of being unseen.',
 };
 
-/** Parchment scroll — tap to unroll */
+/** Parchment scroll — tap to unroll (with paper-tear sound) */
 function ParchmentScroll({
   title,
   subtitle,
   isUnrolled,
   onUnroll,
+  playSound = true,
   children,
 }: {
   title: string;
   subtitle: string;
   isUnrolled: boolean;
   onUnroll: () => void;
+  playSound?: boolean;
   children: React.ReactNode;
 }) {
+  const handleUnroll = () => {
+    if (!isUnrolled) {
+      if (playSound) playPaperTearSound();
+      onUnroll();
+    }
+  };
   return (
     <motion.div
       layout
@@ -139,7 +153,7 @@ function ParchmentScroll({
     >
       <button
         type="button"
-        onClick={onUnroll}
+        onClick={handleUnroll}
         disabled={isUnrolled}
         className="w-full text-left px-4 py-3 flex items-center justify-between gap-2"
       >
@@ -265,21 +279,34 @@ const AkashicSiddhaReadingComponent: React.FC<AkashicSiddhaReadingProps> = ({
     () => getSiddhaGuide(atmakaraka, mountJupiter),
     [atmakaraka, mountJupiter]
   );
+  const rahuKetu = useMemo(
+    () =>
+      deriveRahuKetu(
+        vedicReading?.personalCompass?.currentDasha?.period,
+        userHouse
+      ),
+    [vedicReading?.personalCompass?.currentDasha?.period, userHouse]
+  );
+  const mountMoon = useMemo(
+    () => deriveMountMoon(palmScan?.palmArchetype ?? null, palmScan?.seed),
+    [palmScan?.palmArchetype, palmScan?.seed]
+  );
   const eighthGateInsight = useMemo(
     () =>
       getEighthGateInsight(
-        atmakaraka,
+        rahuKetu,
+        mountMoon,
         palmScan?.seed ?? vedicReading?.personalCompass?.currentDasha?.period
       ),
-    [atmakaraka, palmScan?.seed, vedicReading?.personalCompass?.currentDasha?.period]
+    [rahuKetu, mountMoon, palmScan?.seed, vedicReading?.personalCompass?.currentDasha?.period]
   );
   const remedyPlanet = useMemo(
     () => remedyPlanetFromRecord(record.remedy),
     [record.remedy]
   );
-  const karmicMilestone = useMemo(
-    () => getKarmicMilestone(remedyPlanet, userHouse, palmScan?.palmArchetype ?? null),
-    [remedyPlanet, userHouse, palmScan?.palmArchetype]
+  const pathToPower = useMemo(
+    () => getPathToPower(remedyPlanet, userHouse, palmScan?.seed),
+    [remedyPlanet, userHouse, palmScan?.seed]
   );
 
   const startReading = () => {
@@ -408,43 +435,62 @@ const AkashicSiddhaReadingComponent: React.FC<AkashicSiddhaReadingProps> = ({
                     The Three Scrolls of the Siddhas
                   </span>
 
-                  {/* Scroll 1: Lineage */}
+                  {/* Scroll 1: The Lineage Identifier */}
                   <ParchmentScroll
-                    title="Scroll of Lineage"
+                    title="The Lineage Identifier"
                     subtitle={siddhaGuide.lineage}
                     isUnrolled={scrollUnrolled[1]}
                     onUnroll={() => setScrollUnrolled((s) => ({ ...s, 1: true }))}
+                    playSound
                   >
-                    <p className="text-white/90 italic mb-2" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
-                      Your Siddha Guide: <strong className="text-[#D4AF37]">{siddhaGuide.guideName}</strong>
-                    </p>
-                    <p className="text-white/85 text-sm leading-relaxed">
-                      The Secret Vow this soul took: &ldquo;{siddhaGuide.secretVow}&rdquo;
-                    </p>
+                    <div className="flex items-start gap-4">
+                      <SiddhaIcon guideName={siddhaGuide.guideName} size={72} className="shrink-0" />
+                      <div>
+                        <p className="text-white/90 italic mb-2" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
+                          Your Siddha Guide: <strong className="text-[#D4AF37]">{siddhaGuide.guideName}</strong>
+                        </p>
+                        <p className="text-white/85 text-sm leading-relaxed">
+                          The Secret Vow this soul took: &ldquo;{siddhaGuide.secretVow}&rdquo;
+                        </p>
+                      </div>
+                    </div>
                   </ParchmentScroll>
 
-                  {/* Scroll 2: 8th Gate */}
+                  {/* Scroll 2: The 8th Gate (Hidden Karma) */}
                   <ParchmentScroll
-                    title="Scroll of the 8th Gate"
-                    subtitle={eighthGateInsight.lineType}
+                    title="The 8th Gate"
+                    subtitle="Shadow Analysis · Hidden Karma"
                     isUnrolled={scrollUnrolled[2]}
                     onUnroll={() => setScrollUnrolled((s) => ({ ...s, 2: true }))}
+                    playSound
                   >
-                    <p className="text-[10px] uppercase tracking-wider text-[#D4AF37]/80 mb-2">Psychic Shadow</p>
-                    <p className="text-white/85 text-sm leading-relaxed">
-                      {eighthGateInsight.psychicShadow}
+                    <p className="text-[10px] uppercase tracking-wider text-[#D4AF37]/80 mb-2">Shadow Analysis</p>
+                    <p className="text-white/85 text-sm leading-relaxed mb-3">
+                      {eighthGateInsight.shadowAnalysis}
+                    </p>
+                    <p className="text-[10px] uppercase tracking-wider text-[#D4AF37]/80 mb-2">Karmic Vow</p>
+                    <p className="text-white/90 font-semibold mb-1">{eighthGateInsight.karmicVow}</p>
+                    <p className="text-white/80 text-sm leading-relaxed mb-3">
+                      {eighthGateInsight.vowExplanation}
+                    </p>
+                    <p className="text-white/75 text-sm italic">
+                      {eighthGateInsight.block2026}
                     </p>
                   </ParchmentScroll>
 
-                  {/* Scroll 3: Sovereign Future */}
+                  {/* Scroll 3: The Sovereign Future */}
                   <ParchmentScroll
                     title="The Sovereign Future"
-                    subtitle="Conditional Prophecy"
+                    subtitle="Path to Power"
                     isUnrolled={scrollUnrolled[3]}
                     onUnroll={() => setScrollUnrolled((s) => ({ ...s, 3: true }))}
+                    playSound
                   >
-                    <p className="text-white/90 text-sm leading-relaxed italic" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
-                      {karmicMilestone}
+                    <p className="text-white/90 text-sm leading-relaxed italic mb-3" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
+                      {pathToPower.prophecy}
+                    </p>
+                    <p className="text-[10px] text-[#D4AF37]/70 mt-2">
+                      {pathToPower.mantraName}: {pathToPower.bhriguMantra}
                     </p>
                   </ParchmentScroll>
                 </section>

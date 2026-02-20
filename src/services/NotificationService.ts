@@ -1,6 +1,7 @@
 // NotificationService.ts - Browser & Capacitor Local Notifications
 
 import { Capacitor } from '@capacitor/core';
+import { getTodaysSiddhaAphorism } from '@/data/siddhaAphorisms';
 
 export type ReminderType = 
   | 'dailyMantra'
@@ -9,7 +10,8 @@ export type ReminderType =
   | 'morningPractice'
   | 'eveningPractice'
   | 'healingJourney'
-  | 'mindfulnessCheckin';
+  | 'mindfulnessCheckin'
+  | 'siddhaWisdom';
 
 interface ScheduledNotification {
   id: number;
@@ -56,6 +58,11 @@ const reminderMessages: Record<ReminderType, string[]> = {
     'Breathe and be present',
     'A moment of mindful awareness',
   ],
+  siddhaWisdom: [
+    'Wisdom from the 18 Siddhars',
+    'A Siddha aphorism awaits',
+    'Ancient wisdom for today',
+  ],
 };
 
 const reminderTitles: Record<ReminderType, string> = {
@@ -66,6 +73,7 @@ const reminderTitles: Record<ReminderType, string> = {
   eveningPractice: 'Evening Practice',
   healingJourney: 'Healing Journey',
   mindfulnessCheckin: 'Mindfulness Check-in',
+  siddhaWisdom: 'Siddha Wisdom',
 };
 
 // Generate a unique numeric ID for each reminder type
@@ -78,12 +86,16 @@ const getNotificationId = (type: ReminderType): number => {
     eveningPractice: 1005,
     healingJourney: 1006,
     mindfulnessCheckin: 1007,
+    siddhaWisdom: 1008,
   };
   return typeIds[type];
 };
 
-// Get a random message for the reminder type
+// Get a random message for the reminder type (Siddha Wisdom uses daily aphorism)
 const getRandomMessage = (type: ReminderType): string => {
+  if (type === 'siddhaWisdom') {
+    return getTodaysSiddhaAphorism();
+  }
   const messages = reminderMessages[type];
   return messages[Math.floor(Math.random() * messages.length)];
 };

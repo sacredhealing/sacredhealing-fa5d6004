@@ -2,7 +2,7 @@ import React, { useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Bell, Moon, Sun, Sparkles, Heart, Leaf, Brain, Clock } from 'lucide-react';
+import { Bell, Moon, Sun, Sparkles, Heart, Leaf, Brain, Clock, ScrollText } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
@@ -26,6 +26,7 @@ interface NotificationPreferences {
   eveningPractice: ReminderSetting;
   healingJourney: ReminderSetting;
   mindfulnessCheckin: ReminderSetting;
+  siddhaWisdom: ReminderSetting;
 }
 
 const defaultPreferences: NotificationPreferences = {
@@ -36,6 +37,7 @@ const defaultPreferences: NotificationPreferences = {
   eveningPractice: { enabled: false, time: '21:00' },
   healingJourney: { enabled: false, time: '10:00' },
   mindfulnessCheckin: { enabled: false, time: '14:00' },
+  siddhaWisdom: { enabled: false, time: '09:00' },
 };
 
 const timeOptions = [
@@ -57,7 +59,8 @@ const formatTime = (time: string) => {
 export const NotificationsDialog: React.FC<NotificationsDialogProps> = ({ open, onOpenChange }) => {
   const [preferences, setPreferences] = React.useState<NotificationPreferences>(() => {
     const saved = localStorage.getItem('notification-preferences');
-    return saved ? JSON.parse(saved) : defaultPreferences;
+    const parsed = saved ? JSON.parse(saved) : {};
+    return { ...defaultPreferences, ...parsed };
   });
 
   // Save preferences and handle notification scheduling
@@ -158,6 +161,13 @@ export const NotificationsDialog: React.FC<NotificationsDialogProps> = ({ open, 
       title: 'Mindfulness Check-in',
       description: 'Observe your mind with kindness',
       defaultTime: 'Optional',
+    },
+    {
+      key: 'siddhaWisdom' as const,
+      icon: ScrollText,
+      title: 'Siddha Wisdom',
+      description: 'Daily aphorism from the 18 Siddhars',
+      defaultTime: 'Morning',
     },
   ];
 

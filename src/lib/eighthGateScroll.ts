@@ -1,92 +1,120 @@
 /**
- * Scroll of the 8th Gate — Girdle of Venus / Ring of Solomon analysis.
- * Reveals the Psychic Shadow: the power the user is currently suppressing.
+ * Scroll of the 8th Gate — Hidden Karma (Shadow Analysis).
+ * Rahu/Ketu placement vs Mount of Moon → Karmic Vow blocking 2026 progress.
  */
 
-export type PalmLineType = 'Girdle of Venus' | 'Ring of Solomon';
+export type KarmicVow =
+  | 'Vow of Poverty'
+  | 'Vow of Silence'
+  | 'Vow of Service'
+  | 'Vow of Celibacy'
+  | 'Vow of Non-Violence'
+  | 'Vow of Truth'
+  | 'Vow of Renunciation'
+  | 'Vow of Devotion';
 
-/** Psychic Shadow insights — the suppressed power, mapped by archetype + house */
 export interface EighthGateInsight {
-  lineType: PalmLineType;
-  psychicShadow: string;
-  powerSuppressed: string;
+  shadowAnalysis: string;
+  karmicVow: KarmicVow;
+  vowExplanation: string;
+  block2026: string;
 }
 
-/** Girdle of Venus = emotional/psychic sensitivity; Ring of Solomon = wisdom/intuition */
-const PSYCHIC_SHADOWS: Record<string, string[]> = {
-  Sun: [
-    'The power to say no and set boundaries. That unexpressed "no" became inner rigidity.',
-    'Your natural authority. You dimmed your light to avoid outshining others.',
-  ],
-  Moon: [
-    'Your need for emotional safety. You hid vulnerability to seem strong.',
-    'The gift of deep feeling. You suppressed tears to avoid being seen as weak.',
-  ],
-  Jupiter: [
-    'The teacher within. You feared being wrong, so you withheld wisdom.',
-    'Your capacity to inspire. You suppressed leadership to avoid responsibility.',
-  ],
-  Ketu: [
-    'The desire for recognition. You hid your light to stay "spiritual."',
-    'Your capacity to merge with the infinite. You fear losing yourself if you surrender.',
-  ],
-  Venus: [
-    'Your voice and desire for beauty. You believed your gift was not enough.',
-    'Creative expression. You silenced yourself waiting for permission.',
-  ],
-  Saturn: [
-    'The right to rest. You over-gave and now resent the weight.',
-    'Joy without guilt. You suppressed pleasure to stay "disciplined."',
-  ],
-  Mars: [
-    'Healthy anger. You turned it inward instead of setting boundaries.',
-    'The warrior spirit. You suppressed courage to keep the peace.',
-  ],
-  Mercury: [
-    'Clear communication. You softened truth to avoid conflict.',
-    'Intellectual authority. You deferred to others to seem humble.',
-  ],
-  Rahu: [
-    'Material ambition. You hid desire to seem detached.',
-    'The right to want more. You suppressed longing to avoid disappointment.',
-  ],
+/** Rahu/Ketu node vs Mount of Moon (subconscious) — derives which vow is active */
+function getRahuKetuVsMoon(
+  rahuKetuNode: 'Rahu' | 'Ketu',
+  mountMoonState: 'strong' | 'developing' | 'blocked',
+  seed?: string
+): { vow: KarmicVow; idx: number } {
+  const vows: KarmicVow[] = [
+    'Vow of Poverty',
+    'Vow of Silence',
+    'Vow of Service',
+    'Vow of Celibacy',
+    'Vow of Non-Violence',
+    'Vow of Truth',
+    'Vow of Renunciation',
+    'Vow of Devotion',
+  ];
+  const n = seed ? seed.split('').reduce((a, c) => a + c.charCodeAt(0), 0) : 0;
+  const base = rahuKetuNode === 'Rahu' ? 0 : 4;
+  const moonMod = mountMoonState === 'strong' ? 0 : mountMoonState === 'developing' ? 1 : 2;
+  const idx = (base + moonMod + (n % 2)) % vows.length;
+  return { vow: vows[idx], idx };
+}
+
+const VOW_EXPLANATIONS: Record<KarmicVow, string> = {
+  'Vow of Poverty': 'You once vowed to reject material comfort to purify the soul. That vow now blocks your ability to receive abundance.',
+  'Vow of Silence': 'You vowed to withhold speech for spiritual discipline. That unexpressed truth now blocks clarity in relationships and career.',
+  'Vow of Service': 'You vowed to give without receiving. The imbalance now blocks your ability to accept help and rest.',
+  'Vow of Celibacy': 'You vowed to transcend desire. That suppression now blocks healthy intimacy and creative life force.',
+  'Vow of Non-Violence': 'You vowed never to assert. That over-softening now blocks boundaries and necessary confrontation.',
+  'Vow of Truth': 'You vowed to speak only absolute truth. That rigidity now blocks compassion and diplomacy.',
+  'Vow of Renunciation': 'You vowed to abandon the world. That dissociation now blocks grounding and material success.',
+  'Vow of Devotion': 'You vowed to merge completely with the divine. That loss of self now blocks healthy ego and self-worth.',
 };
 
-/** Derive Girdle vs Ring from seed (simulated palm reading) */
-export function getLineType(seed?: string): PalmLineType {
-  if (!seed) return 'Girdle of Venus';
-  const n = seed.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-  return n % 2 === 0 ? 'Girdle of Venus' : 'Ring of Solomon';
+const BLOCK_2026: Record<KarmicVow, string> = {
+  'Vow of Poverty': 'Your 2026 financial and creative flow is blocked by the belief that abundance is unspiritual.',
+  'Vow of Silence': 'Your 2026 voice and leadership are blocked by the fear that speaking will cause harm.',
+  'Vow of Service': 'Your 2026 sustainability is blocked by the inability to receive as much as you give.',
+  'Vow of Celibacy': 'Your 2026 creative and relational expansion is blocked by suppressed life force.',
+  'Vow of Non-Violence': 'Your 2026 authority and protection are blocked by the refusal to say no.',
+  'Vow of Truth': 'Your 2026 harmony and partnership are blocked by the need to be right over being kind.',
+  'Vow of Renunciation': 'Your 2026 manifestation and success are blocked by the belief that wanting is wrong.',
+  'Vow of Devotion': 'Your 2026 self-expression is blocked by the belief that your needs do not matter.',
+};
+
+const SHADOW_ANALYSIS: Record<string, string> = {
+  Rahu_strong: 'Rahu on the Mount of Moon: The north node amplifies the subconscious. Your shadow is the hunger for recognition disguised as detachment.',
+  Rahu_developing: 'Rahu touching the Mount of Moon: Desire and spirituality are entangled. The shadow is the belief that wanting more makes you less spiritual.',
+  Rahu_blocked: 'Rahu blocked at the Mount of Moon: Past-life material obsession now manifests as guilt around success. The shadow is self-sabotage.',
+  Ketu_strong: 'Ketu on the Mount of Moon: The south node dissolves the subconscious. Your shadow is the fear of disappearing if you merge fully.',
+  Ketu_developing: 'Ketu touching the Mount of Moon: Liberation and attachment pull in opposite directions. The shadow is the need to be special.',
+  Ketu_blocked: 'Ketu blocked at the Mount of Moon: Past-life escape from responsibility now blocks surrender. The shadow is control masquerading as surrender.',
+};
+
+/** Derive Rahu vs Ketu from Dasha or house */
+export function deriveRahuKetu(dashaPeriod?: string, ketuHouse?: number): 'Rahu' | 'Ketu' {
+  if (dashaPeriod) {
+    const p = dashaPeriod.toLowerCase();
+    if (p.includes('rahu')) return 'Rahu';
+    if (p.includes('ketu')) return 'Ketu';
+  }
+  if (ketuHouse === 12 || ketuHouse === 6) return 'Ketu';
+  if (ketuHouse === 5 || ketuHouse === 11) return 'Rahu';
+  return 'Ketu';
 }
 
-/** Get 8th Gate insight — Psychic Shadow based on Soul Planet (Atmakaraka proxy) */
+/** Derive Mount of Moon state */
+export function deriveMountMoon(
+  palmArchetype?: 'Spiritual Mastery' | 'Karmic Debt' | null,
+  seed?: string
+): 'strong' | 'developing' | 'blocked' {
+  if (palmArchetype === 'Spiritual Mastery') return 'strong';
+  if (palmArchetype === 'Karmic Debt') return 'blocked';
+  if (seed) {
+    const n = seed.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+    if (n % 3 === 0) return 'strong';
+    if (n % 3 === 1) return 'developing';
+    return 'blocked';
+  }
+  return 'developing';
+}
+
+/** Get 8th Gate insight — Shadow Analysis + Karmic Vow blocking 2026 */
 export function getEighthGateInsight(
-  soulPlanet: string,
+  rahuKetu: 'Rahu' | 'Ketu',
+  mountMoon: 'strong' | 'developing' | 'blocked',
   seed?: string
 ): EighthGateInsight {
-  const lineType = getLineType(seed);
-  const planet = normalizePlanet(soulPlanet);
-  const shadows = PSYCHIC_SHADOWS[planet] ?? PSYCHIC_SHADOWS['Ketu'];
-  const idx = seed ? (seed.length % shadows.length) : 0;
-  const psychicShadow = shadows[idx];
-  const powerSuppressed = psychicShadow.split('.')[0] ?? psychicShadow;
+  const { vow } = getRahuKetuVsMoon(rahuKetu, mountMoon, seed);
+  const shadowKey = `${rahuKetu}_${mountMoon}`;
+  const shadowAnalysis = SHADOW_ANALYSIS[shadowKey] ?? SHADOW_ANALYSIS['Ketu_developing'];
   return {
-    lineType,
-    psychicShadow,
-    powerSuppressed,
+    shadowAnalysis,
+    karmicVow: vow,
+    vowExplanation: VOW_EXPLANATIONS[vow],
+    block2026: BLOCK_2026[vow],
   };
-}
-
-function normalizePlanet(p: string): string {
-  const lower = p.toLowerCase();
-  if (lower.includes('sun') || lower.includes('surya')) return 'Sun';
-  if (lower.includes('moon') || lower.includes('chandra')) return 'Moon';
-  if (lower.includes('mars') || lower.includes('mangal')) return 'Mars';
-  if (lower.includes('mercury') || lower.includes('budh')) return 'Mercury';
-  if (lower.includes('jupiter') || lower.includes('guru')) return 'Jupiter';
-  if (lower.includes('venus') || lower.includes('shukra')) return 'Venus';
-  if (lower.includes('saturn') || lower.includes('shani')) return 'Saturn';
-  if (lower.includes('rahu')) return 'Rahu';
-  if (lower.includes('ketu')) return 'Ketu';
-  return 'Ketu';
 }
