@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Sun, Moon, Check, Cloud, Clock, Circle } from 'lucide-react';
+import { Sun, Moon, Check, Cloud, Clock } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { useDailyJourney } from '@/hooks/useDailyJourney';
 import { motion } from 'framer-motion';
@@ -51,11 +51,6 @@ export const DailyRitualCard: React.FC<{ isDayClosed?: boolean; hasCompletedAllT
 
   const activePhaseId = getActivePhaseId(currentHour);
 
-  // Hide when day is closed or all three completed (hero shows in DailyGuidanceCard)
-  if (isDayClosed || hasCompletedAllThree) {
-    return null;
-  }
-
   if (isLoading) {
     return (
       <Card className="glass-card p-4">
@@ -83,15 +78,17 @@ export const DailyRitualCard: React.FC<{ isDayClosed?: boolean; hasCompletedAllT
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           {phases.map((phase, i) => {
             const config = PHASE_CONFIG[phase.id];
-            const isActive = activePhaseId === phase.id && phase.status === 'active';
+            const isCompleted = phase.status === 'completed';
             return (
               <React.Fragment key={phase.id}>
                 {i > 0 && <span className="opacity-50">•</span>}
-                <span
-                  className={
-                    isActive ? 'font-medium text-foreground' : phase.status === 'completed' ? 'text-green-500/90' : ''
-                  }
-                >
+                <span className="flex items-center gap-1">
+                  <span
+                    className={`inline-block w-2 h-2 rounded-full shrink-0 ${
+                      isCompleted ? 'bg-green-500' : 'border border-muted-foreground/60'
+                    }`}
+                    aria-hidden
+                  />
                   {t(`dailyRitual.${phase.id}Short`, phase.id.charAt(0).toUpperCase() + phase.id.slice(1))}
                 </span>
               </React.Fragment>
@@ -117,13 +114,19 @@ export const DailyRitualCard: React.FC<{ isDayClosed?: boolean; hasCompletedAllT
 
           const StatusIcon =
             phase.status === 'completed' ? (
-              <Check className="w-4 h-4 text-green-500" />
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-500/20 ring-2 ring-green-500/50">
+                <Check className="w-4 h-4 text-green-500" />
+              </div>
             ) : phase.status === 'closed' ? (
-              <Circle className="w-4 h-4 text-muted-foreground/60" />
+              <div className="w-8 h-8 rounded-full border-2 border-muted-foreground/50 shrink-0" aria-hidden />
             ) : phase.status === 'upcoming' ? (
-              <Clock className="w-4 h-4 text-muted-foreground/70" />
+              <div className={`flex items-center justify-center w-8 h-8 rounded-full bg-background/50 ${config.iconColor}`}>
+                <Clock className="w-4 h-4" />
+              </div>
             ) : (
-              <Icon className={`w-4 h-4 ${config.iconColor}`} />
+              <div className={`flex items-center justify-center w-8 h-8 rounded-full bg-background/50 ${config.iconColor}`}>
+                <Icon className="w-4 h-4" />
+              </div>
             );
 
           return (
@@ -133,12 +136,10 @@ export const DailyRitualCard: React.FC<{ isDayClosed?: boolean; hasCompletedAllT
               className={`flex items-center gap-3 p-3 rounded-[16px] border transition-colors ${
                 isActive
                   ? 'bg-primary/10 border-primary/30'
-                  : 'bg-white/[0.02] border-primary/20'
+                  : 'bg-white/[0.02] border-white/5'
               }`}
             >
-              <div className={`p-2 rounded-lg bg-background/50 ${config.iconColor}`}>
-                {StatusIcon}
-              </div>
+              {StatusIcon}
 
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-sm text-foreground">{t(config.labelKey)}</p>
