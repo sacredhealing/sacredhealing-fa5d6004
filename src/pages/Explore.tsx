@@ -450,20 +450,24 @@ export default function Explore() {
         />
       </CollapsibleSection>
 
-      {/* Invite Friends */}
-      <div className="rounded-2xl glass-card p-5 mb-6">
-        <h3 className="text-xl md:text-2xl font-heading font-bold text-amber-50 mb-3">{t("dashboard.inviteFriends")}</h3>
-        <p className="text-sm text-muted-foreground mb-4">{t("dashboard.inviteDescription")}</p>
-        <Link to="/invite-friends">
-          <Button className="w-full gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-extrabold shadow-[0_0_30px_rgba(0,242,254,0.4)]">
-            <Users className="w-4 h-4" />
-            {t("dashboard.inviteFriends")}
-          </Button>
-        </Link>
-      </div>
-
       <div className="mt-8">
         <ParamahamsaVishwanandaDailyCard />
+      </div>
+
+      {/* Invite Friends - compact at bottom */}
+      <div className="rounded-xl glass-card p-3 mt-4 mb-6">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h4 className="text-sm font-heading font-bold text-amber-50">{t("dashboard.inviteFriends")}</h4>
+            <p className="text-xs text-muted-foreground truncate">{t("dashboard.inviteDescription")}</p>
+          </div>
+          <Link to="/invite-friends" className="shrink-0">
+            <Button size="sm" className="gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs">
+              <Users className="w-3.5 h-3.5" />
+              Invite
+            </Button>
+          </Link>
+        </div>
       </div>
     </div>
   );
