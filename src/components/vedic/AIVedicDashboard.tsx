@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Zap, Star, Sparkles, CheckCircle, AlertCircle, Quote, Crown, Compass, 
   Briefcase, Heart, Leaf, Coins, Clock, Gem, Target, Brain, Wand2, User, 
-  RefreshCw, Volume2, VolumeX, Timer, MessageCircle, ChevronDown
+  RefreshCw, Volume2, VolumeX, Timer, MessageCircle, ChevronDown, Shield, Navigation, Flame
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -129,6 +129,26 @@ const BlueprintCard = ({ title, preview, content, icon }: { title: string; previ
   );
 };
 
+// Bhrigu Nandi Nadi - Planet Activation Ages
+const BHRIGU_ACTIVATIONS = [
+  { age: 16, planet: 'Jupiter', emoji: '♃', desc: 'Wisdom awakening. Guru energy ignites your path of higher learning and spiritual growth.' },
+  { age: 22, planet: 'Sun', emoji: '☀️', desc: 'Soul identity crystallizes. Your Atma-karaka activates authority and self-expression.' },
+  { age: 24, planet: 'Moon', emoji: '🌙', desc: 'Emotional mastery cycle. Deep intuition and nurturing power reach peak activation.' },
+  { age: 28, planet: 'Venus', emoji: '♀️', desc: 'Creative abundance unlocked. Relationships, art, and material pleasures align with destiny.' },
+  { age: 32, planet: 'Mars', emoji: '♂️', desc: 'Warrior energy peaks. Courage, ambition, and physical vitality drive transformation.' },
+  { age: 36, planet: 'Mercury', emoji: '☿️', desc: 'Intellectual mastery. Communication, business acumen, and analytical power ascend.' },
+  { age: 42, planet: 'Rahu/Ketu', emoji: '🐉', desc: 'Digital expansion and breaking old patterns. The shadow nodes activate karmic liberation.' },
+  { age: 48, planet: 'Saturn', emoji: '\u2644', desc: "Shani's final teaching. Discipline, structure, and karmic harvest define this sovereign phase." },
+];
+
+// Nadi Directional Mapping
+const NADI_DIRECTIONS = [
+  { direction: 'East', houses: '1, 5, 9', icon: '🌅', theme: 'Dharma Trikona', color: 'amber' },
+  { direction: 'South', houses: '2, 6, 10', icon: '🔥', theme: 'Artha Trikona', color: 'rose' },
+  { direction: 'West', houses: '3, 7, 11', icon: '🌊', theme: 'Kama Trikona', color: 'indigo' },
+  { direction: 'North', houses: '4, 8, 12', icon: '❄️', theme: 'Moksha Trikona', color: 'emerald' },
+];
+
 export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, onEditDetails, onUpgrade }) => {
   const { reading, isLoading, error, generateReading } = useAIVedicReading();
   const { timezone, setTimezone, loading: timezoneLoading } = useUserTimezone();
@@ -136,7 +156,21 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, onEdit
   const [timeOffset, setTimeOffset] = useState<number>(0);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [checkedRemedies, setCheckedRemedies] = useState<Record<number, boolean>>({});
+  const [expandedYogaIdx, setExpandedYogaIdx] = useState<number | null>(null);
   const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  // Calculate user's age and active Bhrigu cycle
+  const bhriguData = useMemo(() => {
+    if (!user.birthDate) return null;
+    const birthYear = new Date(user.birthDate).getFullYear();
+    const currentYear = new Date().getFullYear();
+    const age = currentYear - birthYear;
+    // Find active cycle (the one whose age is <= user's age, take the latest)
+    const active = [...BHRIGU_ACTIVATIONS].reverse().find(a => age >= a.age);
+    // Find next cycle
+    const next = BHRIGU_ACTIVATIONS.find(a => a.age > age);
+    return { age, active, next };
+  }, [user.birthDate]);
 
   useEffect(() => {
     if (user.birthDate && user.birthTime && user.birthPlace && !timezoneLoading) {
@@ -274,10 +308,18 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, onEdit
         {/* Akashic Verdict Speech Bubble Banner */}
         {reading.todayInfluence && (
           <motion.div
-            className="relative p-6 rounded-3xl bg-purple-900/15 border border-purple-500/30 shadow-[0_0_40px_rgba(168,85,247,0.15)]"
+            className="relative p-6 rounded-3xl border border-purple-500/30 shadow-[0_0_40px_rgba(168,85,247,0.15)] overflow-hidden"
+            style={{
+              background: `
+                linear-gradient(135deg, rgba(88, 28, 135, 0.15), rgba(30, 27, 75, 0.2)),
+                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")
+              `,
+            }}
             initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
           >
+            {/* Palm leaf texture overlay */}
+            <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(200,170,100,0.3)_10px,rgba(200,170,100,0.3)_11px)]" />
             {/* Speech bubble tail */}
             <div className="absolute -bottom-3 left-10 w-6 h-6 bg-purple-900/15 border-b border-r border-purple-500/30 transform rotate-45" />
             <div className="flex items-start justify-between gap-4">
@@ -492,6 +534,202 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, onEdit
           <div className="p-5 rounded-2xl bg-muted/20 border border-border">
             <h4 className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-2">Primary Timing Peaks</h4>
             <p className="text-sm text-foreground font-medium">{reading.masterBlueprint.timingPeaks}</p>
+          </div>
+        </motion.section>
+      )}
+
+      {/* ══════════ BHRIGU NANDI NADI - PLANET ACTIVATION TRACKER ══════════ */}
+      {bhriguData && (
+        <motion.section className="space-y-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.5 }}>
+          <h2 className="text-[clamp(32px,5vw,50px)] font-black text-orange-300 font-serif leading-tight flex items-center gap-3">
+            <Flame className="w-10 h-10 text-orange-400" />
+            Bhrigu Activation
+          </h2>
+          <p className="text-[11px] text-orange-500/80 font-black uppercase tracking-[0.3em] -mt-3">
+            Nandi Nadi Planetary Progression • Age {bhriguData.age}
+          </p>
+
+          {/* Active Cycle Banner */}
+          {bhriguData.active && (
+            <motion.div
+              className="relative p-6 sm:p-8 rounded-3xl border-2 border-orange-500/40 overflow-hidden"
+              style={{
+                background: 'linear-gradient(135deg, rgba(194, 65, 12, 0.15), rgba(120, 53, 15, 0.1))',
+              }}
+              initial={{ scale: 0.97 }}
+              animate={{ scale: 1 }}
+            >
+              <div className="absolute top-4 right-4 text-6xl opacity-10">{bhriguData.active.emoji}</div>
+              <span className="text-[9px] font-black text-orange-400 uppercase tracking-[0.4em] block mb-2">
+                Active Planetary Cycle
+              </span>
+              <div className="flex items-center gap-4 mb-3">
+                <span className="text-4xl">{bhriguData.active.emoji}</span>
+                <div>
+                  <h3 className="text-2xl sm:text-3xl font-black text-orange-100">
+                    {bhriguData.active.planet} Cycle
+                  </h3>
+                  <p className="text-xs text-orange-300/60 font-bold">
+                    Activated at age {bhriguData.active.age} • You are {bhriguData.age}
+                  </p>
+                </div>
+              </div>
+              <p className="text-sm text-orange-100/80 leading-relaxed italic border-l-2 border-orange-500/40 pl-4">
+                {bhriguData.active.desc}
+              </p>
+              {bhriguData.next && (
+                <div className="mt-4 pt-4 border-t border-orange-500/20">
+                  <p className="text-[10px] text-orange-400/60 uppercase tracking-widest">
+                    Next Activation: <span className="text-orange-300 font-bold">{bhriguData.next.planet}</span> at age {bhriguData.next.age} ({bhriguData.next.age - bhriguData.age} years away)
+                  </p>
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* All Activation Timeline */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {BHRIGU_ACTIVATIONS.map((a) => {
+              const isActive = bhriguData.active?.age === a.age;
+              const isPast = bhriguData.age >= a.age;
+              return (
+                <div
+                  key={a.age}
+                  className={`p-4 rounded-2xl border text-center transition-all ${
+                    isActive
+                      ? 'border-orange-500/60 bg-orange-500/10 shadow-[0_0_20px_rgba(251,146,60,0.15)]'
+                      : isPast
+                      ? 'border-orange-500/20 bg-orange-500/5 opacity-70'
+                      : 'border-border/30 bg-card/30 opacity-40'
+                  }`}
+                >
+                  <span className="text-2xl block mb-1">{a.emoji}</span>
+                  <p className="text-xs font-black text-foreground">{a.planet}</p>
+                  <p className="text-[10px] text-muted-foreground">Age {a.age}</p>
+                  {isActive && <div className="w-2 h-2 bg-orange-400 rounded-full mx-auto mt-2 animate-pulse" />}
+                </div>
+              );
+            })}
+          </div>
+        </motion.section>
+      )}
+
+      {/* ══════════ NADI DIRECTIONAL MAPPING ══════════ */}
+      {user.plan !== 'free' && reading && (
+        <motion.section className="space-y-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.6 }}>
+          <h2 className="text-[clamp(32px,5vw,50px)] font-black text-cyan-300 font-serif leading-tight flex items-center gap-3">
+            <Navigation className="w-10 h-10 text-cyan-400" />
+            Planetary Alliances
+          </h2>
+          <p className="text-[11px] text-cyan-500/80 font-black uppercase tracking-[0.3em] -mt-3">
+            Nadi Directional Mapping • Trikona Analysis
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {NADI_DIRECTIONS.map((nd) => (
+              <div
+                key={nd.direction}
+                className={`p-5 sm:p-6 rounded-3xl border border-${nd.color}-500/30 bg-${nd.color}-500/5 hover:bg-${nd.color}-500/10 transition-all`}
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-3xl">{nd.icon}</span>
+                  <div>
+                    <h4 className="text-sm font-black text-foreground uppercase tracking-wider">{nd.direction}</h4>
+                    <p className="text-[10px] text-muted-foreground">Houses {nd.houses} • {nd.theme}</p>
+                  </div>
+                </div>
+                <p className="text-xs text-foreground/70 italic leading-relaxed border-l-2 border-current pl-3 opacity-80">
+                  {nd.direction === 'East' && 'Jupiter & Venus align here: A soul born for Creative Mastery and Dharmic Leadership.'}
+                  {nd.direction === 'South' && 'Mercury & Saturn converge: Material abundance through disciplined service and analytical precision.'}
+                  {nd.direction === 'West' && 'Mars & Venus interact: Passionate relationships fuel your desire for expansion and social influence.'}
+                  {nd.direction === 'North' && 'Moon & Ketu reside: Deep spiritual liberation through emotional intelligence and mystical surrender.'}
+                </p>
+              </div>
+            ))}
+          </div>
+        </motion.section>
+      )}
+
+      {/* ══════════ ARTIFICIAL YOGA ACTIVATOR ══════════ */}
+      {user.plan === 'premium' && reading?.masterBlueprint && (
+        <motion.section className="space-y-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.7 }}>
+          <h2 className="text-[clamp(32px,5vw,50px)] font-black text-teal-300 font-serif leading-tight flex items-center gap-3">
+            <Shield className="w-10 h-10 text-teal-400" />
+            Yoga Activator
+          </h2>
+          <p className="text-[11px] text-teal-500/80 font-black uppercase tracking-[0.3em] -mt-3">
+            Bhrigu Remedies • Mantra + Frequency + Action
+          </p>
+
+          <div className="space-y-4">
+            {(reading.masterBlueprint.significantYogas || []).map((yoga, i) => (
+              <div key={i} className="rounded-3xl border border-teal-500/20 bg-teal-500/5 overflow-hidden">
+                <button
+                  onClick={() => setExpandedYogaIdx(expandedYogaIdx === i ? null : i)}
+                  className="w-full text-left p-5 sm:p-6 flex items-center justify-between"
+                >
+                  <div>
+                    <h4 className="text-sm font-black text-teal-100 uppercase tracking-wider">{yoga.name}</h4>
+                    <p className="text-[10px] text-muted-foreground mt-1">{yoga.impact}</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[9px] font-black text-teal-400 uppercase tracking-widest hidden sm:inline">
+                      {expandedYogaIdx === i ? 'Close' : 'Activate'}
+                    </span>
+                    <motion.div animate={{ rotate: expandedYogaIdx === i ? 180 : 0 }}>
+                      <ChevronDown className="w-5 h-5 text-teal-400" />
+                    </motion.div>
+                  </div>
+                </button>
+                <AnimatePresence>
+                  {expandedYogaIdx === i && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-5 sm:px-6 pb-6 pt-2 border-t border-teal-500/20 space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                          <div className="p-4 rounded-2xl bg-teal-500/10 border border-teal-500/20 text-center">
+                            <p className="text-[9px] font-black text-teal-400 uppercase tracking-widest mb-2">Beeja Mantra</p>
+                            <p className="text-lg font-serif text-teal-100 italic">
+                              {i % 3 === 0 ? '"Om Hreem Shreem"' : i % 3 === 1 ? '"Om Gam Ganapataye"' : '"Om Namah Shivaya"'}
+                            </p>
+                          </div>
+                          <div className="p-4 rounded-2xl bg-teal-500/10 border border-teal-500/20 text-center">
+                            <p className="text-[9px] font-black text-teal-400 uppercase tracking-widest mb-2">Frequency</p>
+                            <p className="text-lg font-mono text-teal-100">
+                              {i % 3 === 0 ? '528 Hz' : i % 3 === 1 ? '432 Hz' : '741 Hz'}
+                            </p>
+                          </div>
+                          <div className="p-4 rounded-2xl bg-teal-500/10 border border-teal-500/20 text-center">
+                            <p className="text-[9px] font-black text-teal-400 uppercase tracking-widest mb-2">Physical Action</p>
+                            <p className="text-xs text-teal-100">
+                              {i % 3 === 0 ? 'Wear white on Fridays' : i % 3 === 1 ? 'Donate yellow cloth' : 'Fast on Mondays'}
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const mantra = i % 3 === 0 ? 'Om Hreem Shreem' : i % 3 === 1 ? 'Om Gam Ganapataye' : 'Om Namah Shivaya';
+                            handleSpeak(`Bhrigu Remedy for ${yoga.name}. Chant the mantra: ${mantra}. ${yoga.impact}`);
+                          }}
+                          className="w-full border-teal-500/40 text-teal-300 hover:bg-teal-500/10"
+                        >
+                          <Volume2 className="w-4 h-4 mr-2" />
+                          <span className="text-[10px] font-bold uppercase tracking-widest">Speak Remedy Aloud</span>
+                        </Button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ))}
           </div>
         </motion.section>
       )}
