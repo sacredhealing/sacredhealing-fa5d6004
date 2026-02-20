@@ -1,9 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Send, MessageCircle, User, Sparkles, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Send, X, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import type { AyurvedaUserProfile, DoshaProfile } from '@/lib/ayurvedaTypes';
@@ -16,11 +15,47 @@ interface ChatMessage {
 interface AyurvedaChatConsultationProps {
   profile: AyurvedaUserProfile | null;
   dosha: DoshaProfile | null;
+  onClose?: () => void;
 }
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ayurveda-chat`;
 
-export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> = ({ profile, dosha }) => {
+/* ─── PULSE READING ANIMATION ─── */
+const PulseReadingAnimation = () => (
+  <div className="flex flex-col items-center gap-4 py-6">
+    <div className="relative">
+      {[0, 1, 2].map(i => (
+        <motion.div
+          key={i}
+          className="absolute rounded-full"
+          style={{
+            width: 60 + i * 30,
+            height: 60 + i * 30,
+            left: -(i * 15),
+            top: -(i * 15),
+            border: '1px solid rgba(168,85,247,0.3)',
+          }}
+          animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0.1, 0.4] }}
+          transition={{ duration: 2, repeat: Infinity, delay: i * 0.4 }}
+        />
+      ))}
+      <motion.div
+        className="relative w-[60px] h-[60px] rounded-full flex items-center justify-center"
+        style={{
+          background: 'radial-gradient(circle, rgba(168,85,247,0.4), rgba(79,70,229,0.2))',
+          boxShadow: '0 0 30px rgba(168,85,247,0.3)',
+        }}
+        animate={{ scale: [1, 1.05, 1] }}
+        transition={{ duration: 1.5, repeat: Infinity }}
+      >
+        <span className="text-2xl">🔮</span>
+      </motion.div>
+    </div>
+    <p className="text-purple-300/60 text-xs italic mt-4">The Divine Physician reads your pulse...</p>
+  </div>
+);
+
+export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> = ({ profile, dosha, onClose }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -46,9 +81,7 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
     try {
       const response = await fetch(CHAT_URL, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: [...messages, userMsg].map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content })),
           profile,
@@ -57,13 +90,9 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
       });
 
       if (!response.ok || !response.body) {
-        if (response.status === 429) {
-          toast.error('Rate limit exceeded. Please try again in a moment.');
-        } else if (response.status === 402) {
-          toast.error('Usage limits reached. Please try again later.');
-        } else {
-          toast.error('Failed to connect to the healer. Please try again.');
-        }
+        if (response.status === 429) toast.error('Rate limit exceeded. Please try again in a moment.');
+        else if (response.status === 402) toast.error('Usage limits reached. Please try again later.');
+        else toast.error('Failed to connect to the healer. Please try again.');
         setIsLoading(false);
         return;
       }
@@ -72,7 +101,6 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
       const decoder = new TextDecoder();
       let textBuffer = '';
 
-      // Add empty assistant message to update progressively
       setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
 
       while (true) {
@@ -105,7 +133,6 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
               });
             }
           } catch {
-            // Incomplete JSON, wait for more data
             textBuffer = line + '\n' + textBuffer;
             break;
           }
@@ -123,36 +150,62 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
   };
 
   return (
-    <Card className="max-w-4xl mx-auto overflow-hidden border-2 border-emerald-500/20">
-      <div className="bg-gradient-to-r from-emerald-700 to-emerald-800 p-6 text-white">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-emerald-600/50 rounded-2xl flex items-center justify-center">
-            <MessageCircle className="w-6 h-6" />
+    <motion.div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      {/* Backdrop */}
+      <div 
+        className="absolute inset-0"
+        style={{ background: 'rgba(5,2,15,0.92)', backdropFilter: 'blur(20px)' }}
+        onClick={onClose}
+      />
+
+      {/* Chat container */}
+      <motion.div
+        className="relative w-full max-w-2xl mx-4 rounded-3xl overflow-hidden flex flex-col"
+        style={{
+          background: 'linear-gradient(135deg, rgba(20,10,40,0.98), rgba(10,5,25,0.99))',
+          border: '1px solid rgba(168,85,247,0.25)',
+          maxHeight: '85vh',
+          boxShadow: '0 0 60px rgba(168,85,247,0.15)',
+        }}
+        initial={{ scale: 0.9, y: 30 }}
+        animate={{ scale: 1, y: 0 }}
+        transition={{ type: 'spring', damping: 25 }}
+      >
+        {/* Header */}
+        <div className="p-5 flex items-center gap-4" style={{ borderBottom: '1px solid rgba(168,85,247,0.15)' }}>
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.3), rgba(79,70,229,0.2))' }}>
+            <span className="text-lg">🏥</span>
           </div>
-          <div>
-            <h3 className="font-serif text-xl">Ayurvedic AI Consultant</h3>
-            <p className="text-[10px] uppercase opacity-70 tracking-widest">Professional Text Session</p>
+          <div className="flex-1">
+            <h3 className="font-serif text-lg text-white">Dhanvantari — Divine Physician</h3>
+            <p className="text-[10px] uppercase text-purple-400/50 tracking-[0.2em] font-bold">
+              Bhrigu Nadi Enhanced • {dosha?.primary || 'Unknown'} Protocol
+            </p>
           </div>
-          {profile && dosha && (
-            <div className="ml-auto text-right">
-              <p className="text-sm font-medium">{profile.name}</p>
-              <p className="text-xs opacity-70">{dosha.primary} Prakriti</p>
-            </div>
+          {onClose && (
+            <Button variant="ghost" size="icon" onClick={onClose} className="text-purple-400/50 hover:text-white rounded-full">
+              <X className="w-5 h-5" />
+            </Button>
           )}
         </div>
-      </div>
 
-      <CardContent className="p-0">
-        <ScrollArea className="h-[400px] p-6" ref={scrollRef}>
+        {/* Messages */}
+        <ScrollArea className="flex-1 p-5" ref={scrollRef} style={{ minHeight: '300px', maxHeight: '55vh' }}>
           {messages.length === 0 && (
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-center py-12 text-muted-foreground"
+              className="text-center py-12"
             >
-              <Sparkles className="w-12 h-12 mx-auto mb-4 opacity-30" />
-              <p className="text-lg font-serif mb-2">Welcome, Seeker of Balance</p>
-              <p className="text-sm">Ask anything about your health, diet, or daily routine...</p>
+              <div className="text-4xl mb-4">🙏</div>
+              <p className="text-lg font-serif text-purple-200 mb-2">Namaste, Seeker of Balance</p>
+              <p className="text-purple-400/50 text-sm">The Divine Physician awaits your concern...</p>
             </motion.div>
           )}
           
@@ -166,60 +219,54 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
               >
                 <div className={`max-w-[80%] px-4 py-3 rounded-2xl ${
                   msg.role === 'user' 
-                    ? 'bg-emerald-700 text-white rounded-br-none' 
-                    : 'bg-muted border border-border rounded-bl-none'
-                }`}>
+                    ? 'rounded-br-sm text-white'
+                    : 'rounded-bl-sm text-purple-100'
+                }`} style={{
+                  background: msg.role === 'user'
+                    ? 'linear-gradient(135deg, rgba(168,85,247,0.4), rgba(79,70,229,0.3))'
+                    : 'rgba(255,255,255,0.04)',
+                  border: `1px solid ${msg.role === 'user' ? 'rgba(168,85,247,0.3)' : 'rgba(255,255,255,0.06)'}`,
+                }}>
                   <div className="flex items-center gap-2 mb-1">
-                    {msg.role === 'user' ? (
-                      <User className="w-3 h-3" />
-                    ) : (
-                      <Sparkles className="w-3 h-3 text-emerald-600" />
-                    )}
-                    <span className="text-[10px] uppercase tracking-wider opacity-70">
-                      {msg.role === 'user' ? 'You' : 'Doctor'}
+                    {msg.role === 'assistant' && <Sparkles className="w-3 h-3 text-amber-400" />}
+                    <span className="text-[10px] uppercase tracking-wider text-purple-400/50">
+                      {msg.role === 'user' ? 'You' : 'Dhanvantari'}
                     </span>
                   </div>
-                  <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
                 </div>
               </motion.div>
             ))}
             
             {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
-              <div className="flex justify-start">
-                <div className="bg-muted border border-border px-4 py-3 rounded-2xl rounded-bl-none">
-                  <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" />
-                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce [animation-delay:0.1s]" />
-                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce [animation-delay:0.2s]" />
-                  </div>
-                </div>
-              </div>
+              <PulseReadingAnimation />
             )}
           </div>
         </ScrollArea>
 
-        <form onSubmit={handleSend} className="p-4 border-t border-border flex gap-2">
+        {/* Input */}
+        <form onSubmit={handleSend} className="p-4 flex gap-2" style={{ borderTop: '1px solid rgba(168,85,247,0.1)' }}>
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your health concern..."
-            className="flex-1 rounded-xl"
+            placeholder="Describe your concern to the Divine Physician..."
+            className="flex-1 rounded-xl bg-white/5 border-purple-500/15 text-white placeholder:text-purple-400/30 focus:border-purple-400/40"
             disabled={isLoading}
           />
           <Button 
             type="submit" 
             size="icon"
-            className="w-12 h-12 rounded-xl bg-emerald-700 hover:bg-emerald-800"
+            className="w-12 h-12 rounded-xl"
+            style={{
+              background: 'linear-gradient(135deg, rgba(168,85,247,0.5), rgba(79,70,229,0.4))',
+              border: '1px solid rgba(168,85,247,0.3)',
+            }}
             disabled={isLoading || !input.trim()}
           >
-            {isLoading ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <Send className="w-5 h-5" />
-            )}
+            {isLoading ? <Loader2 className="w-5 h-5 animate-spin text-purple-200" /> : <Send className="w-5 h-5 text-purple-200" />}
           </Button>
         </form>
-      </CardContent>
-    </Card>
+      </motion.div>
+    </motion.div>
   );
 };
