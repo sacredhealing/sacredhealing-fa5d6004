@@ -434,20 +434,76 @@ export default function Explore() {
           </div>
         </div>
 
-        {/* CONNECT — keep original style */}
-        <LibrarySection
-          title={t("explore.sectionConnect", "Connect")}
-          subtitle={t("explore.sectionConnectSubtitle", "A place to practice with others")}
-          items={connectItems}
-          initialVisible={4}
-        />
+        {/* CONNECT — gradient rows */}
+        <div className="mb-6">
+          <h3 className="text-xs font-medium text-white/50 uppercase tracking-widest mb-3">
+            {t("explore.sectionConnect", "Connect")}
+          </h3>
+          <div className="grid grid-cols-1 gap-3">
+            {[
+              { key: "community", title: t("explore.community", "Community"), subtitle: t("explore.communityDesc", "Chat with guides & members"), href: "/community", icon: Users, gradient: "from-teal-900/60 via-teal-800/40 to-black/60", border: "border-teal-500/30", iconBg: "bg-teal-500/20", iconColor: "text-teal-300", badge: null },
+              { key: "stargate", title: t("home.stargateMembership", "Stargate Membership"), subtitle: t("home.stargateDesc", "Weekly live sessions, Telegram community"), href: "/stargate", icon: Crown, gradient: "from-purple-900/60 via-violet-800/40 to-black/60", border: "border-purple-500/30", iconBg: "bg-purple-500/20", iconColor: "text-purple-300", badge: t("explore.badgeSwedish", "Swedish") },
+            ].map((card) => {
+              const Icon = card.icon;
+              return (
+                <button key={card.key} onClick={() => navigate(card.href)}
+                  className={`relative overflow-hidden rounded-2xl border ${card.border} bg-gradient-to-r ${card.gradient} px-4 py-4 text-left shadow-md hover:scale-[1.01] transition-transform duration-200`}>
+                  <div className="flex items-center gap-4">
+                    <div className={`w-10 h-10 rounded-xl ${card.iconBg} flex items-center justify-center shrink-0`}>
+                      <Icon className={`w-5 h-5 ${card.iconColor}`} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-semibold text-white">{card.title}</div>
+                      <div className="text-xs text-white/60 mt-0.5">{card.subtitle}</div>
+                    </div>
+                    {card.badge && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/30 text-purple-200 border border-purple-400/40 shrink-0">{card.badge}</span>
+                    )}
+                    <ChevronRight className="w-4 h-4 text-white/30 shrink-0" />
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-        {/* EXPLORE — keep original style */}
-        <LibrarySection
-          title={t("explore.sectionExplore", "Explore")}
-          items={exploreItems}
-          initialVisible={4}
-        />
+        {/* EXPLORE — matching gradient rows */}
+        <div className="mb-6">
+          <h3 className="text-xs font-medium text-white/50 uppercase tracking-widest mb-3">
+            {t("explore.sectionExplore", "Explore")}
+          </h3>
+          <div className="grid grid-cols-1 gap-3">
+            {[
+              { key: "promptLibrary", title: t("explore.promptLibrary", "Prompt Library"), subtitle: t("explore.promptLibraryDesc", "Single-click templates"), href: "/prompt-library", icon: FileText, gradient: "from-slate-800/60 via-slate-700/40 to-black/60", border: "border-slate-500/30", iconBg: "bg-slate-500/20", iconColor: "text-slate-300", badge: null },
+              { key: "podcast", title: t("explore.podcast", "Podcast"), subtitle: t("explore.podcastDesc", "Streams on Spotify"), href: "/podcast", icon: Headphones, gradient: "from-green-900/60 via-green-800/40 to-black/60", border: "border-green-500/30", iconBg: "bg-green-500/20", iconColor: "text-green-300", badge: null },
+              { key: "videos", title: t("explore.videos", "Videos"), subtitle: t("explore.videosDesc", "Watch & learn"), href: "/spiritual-education", icon: Youtube, gradient: "from-red-900/60 via-red-800/40 to-black/60", border: "border-red-500/30", iconBg: "bg-red-500/20", iconColor: "text-red-300", badge: null },
+              { key: "creativeSoul", title: t("explore.creativeSoul", "Creative Soul"), subtitle: t("explore.creativeSoulDesc", "Create with AI"), href: "/creative-soul/store", icon: Sparkles, gradient: "from-fuchsia-900/60 via-pink-800/40 to-black/60", border: "border-fuchsia-500/30", iconBg: "bg-fuchsia-500/20", iconColor: "text-fuchsia-300", badge: null },
+              { key: "shop", title: t("explore.shop", "Shop"), subtitle: t("explore.shopDesc", "Laila's Collection"), href: "/shop", icon: ShoppingBag, gradient: "from-rose-900/60 via-rose-800/40 to-black/60", border: "border-rose-500/30", iconBg: "bg-rose-500/20", iconColor: "text-rose-300", badge: null },
+              { key: "leaderboard", title: t("explore.leaderboard", "Leaderboard"), subtitle: t("explore.leaderboardDesc", "Top earners win monthly"), href: "/leaderboard", icon: Trophy, gradient: "from-yellow-900/60 via-amber-800/40 to-black/60", border: "border-yellow-500/30", iconBg: "bg-yellow-500/20", iconColor: "text-yellow-300", badge: "5,000 SHC" },
+              { key: "abundance", title: t("explore.abundance", "Abundance"), subtitle: t("explore.abundanceDescInner", "Inner abundance & life support"), href: "/library/abundance", icon: Zap, gradient: "from-cyan-900/60 via-cyan-800/40 to-black/60", border: "border-cyan-500/30", iconBg: "bg-cyan-500/20", iconColor: "text-cyan-300", badge: null },
+            ].map((card) => {
+              const Icon = card.icon;
+              return (
+                <button key={card.key} onClick={() => navigate(card.href)}
+                  className={`relative overflow-hidden rounded-2xl border ${card.border} bg-gradient-to-r ${card.gradient} px-4 py-4 text-left shadow-md hover:scale-[1.01] transition-transform duration-200`}>
+                  <div className="flex items-center gap-4">
+                    <div className={`w-10 h-10 rounded-xl ${card.iconBg} flex items-center justify-center shrink-0`}>
+                      <Icon className={`w-5 h-5 ${card.iconColor}`} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-semibold text-white">{card.title}</div>
+                      <div className="text-xs text-white/60 mt-0.5">{card.subtitle}</div>
+                    </div>
+                    {card.badge && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">{card.badge}</span>
+                    )}
+                    <ChevronRight className="w-4 h-4 text-white/30 shrink-0" />
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </CollapsibleSection>
 
       <div className="mt-8">
