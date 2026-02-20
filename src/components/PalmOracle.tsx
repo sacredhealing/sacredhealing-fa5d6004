@@ -76,6 +76,14 @@ export function getHeartLineLeak(seed: string): boolean {
   return Math.abs((h * 1103515245 + 12345) | 0) % 100 < 45;
 }
 
+/** Palm archetype for Bhrigu mantra mapping: Spiritual Mastery (Fire/Ether) or Karmic Debt (Heart Line Leak) */
+export function getPalmArchetype(seed: string): 'Spiritual Mastery' | 'Karmic Debt' | null {
+  if (getHeartLineLeak(seed)) return 'Karmic Debt';
+  const scores = getSiddhaElementScores(seed);
+  if ((scores.Fire >= 22 || scores.Ether >= 22)) return 'Spiritual Mastery';
+  return null;
+}
+
 /** Vata-Pitta-Kapha balance from hand texture/color (seed-based diagnostic) */
 export function getVataPittaKapha(seed: string): { vata: number; pitta: number; kapha: number } {
   let h = 0;

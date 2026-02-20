@@ -10,6 +10,8 @@ export interface VataPittaKapha {
   kapha: number;
 }
 
+export type PalmArchetype = 'Spiritual Mastery' | 'Karmic Debt';
+
 export interface PalmScanResult {
   /** When the scan was completed (ISO string) */
   scannedAt: string;
@@ -17,6 +19,8 @@ export interface PalmScanResult {
   heartLineLeak: boolean;
   /** Dosha balance from hand texture/color (0–100 each, normalized) */
   vataPittaKapha: VataPittaKapha;
+  /** Palm archetype for Bhrigu mapping: Spiritual Mastery + Jupiter → Guru; Karmic Debt + Rahu → Rahu */
+  palmArchetype?: PalmArchetype | null;
   /** Seed used for deterministic analysis */
   seed?: string;
 }

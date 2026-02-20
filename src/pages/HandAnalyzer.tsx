@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import PalmOracle, { getHeartLineLeak, getVataPittaKapha } from '@/components/PalmOracle';
+import PalmOracle, { getHeartLineLeak, getVataPittaKapha, getPalmArchetype } from '@/components/PalmOracle';
 import { setPalmScanResult } from '@/lib/palmScanStore';
 
 const CAMERA_TIMEOUT_MS = 4000;
@@ -173,10 +173,12 @@ const HandAnalyzer = () => {
           setAnalysisResult(true);
           const heartLineLeak = getHeartLineLeak(seed);
           const vataPittaKapha = getVataPittaKapha(seed);
+          const palmArchetype = getPalmArchetype(seed);
           setPalmScanResult({
             scannedAt: new Date().toISOString(),
             heartLineLeak,
             vataPittaKapha,
+            palmArchetype: palmArchetype ?? undefined,
             seed,
           });
         }, 4000);
