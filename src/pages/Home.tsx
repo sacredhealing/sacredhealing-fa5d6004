@@ -147,6 +147,26 @@ const Home: React.FC = () => {
         </div>
       </section>
 
+      {/* Enter the Sacred Space — elegant gold-bordered tile */}
+      <section className="py-6 sm:py-8 bg-background border-b border-border/50">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Link to="/membership">
+            <Card className="relative overflow-hidden border-2 border-[#D4AF37]/60 bg-gradient-to-br from-[#D4AF37]/10 via-amber-900/20 to-[#1a0a2e] hover:border-[#D4AF37] transition-all duration-300 group">
+              <div className="absolute inset-0 bg-gradient-to-r from-[#D4AF37]/5 via-transparent to-[#D4AF37]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative z-10 p-6 sm:p-8 text-center">
+                <Sparkles className="w-8 h-8 sm:w-10 sm:h-10 text-[#D4AF37] mx-auto mb-3 sm:mb-4 group-hover:scale-110 transition-transform drop-shadow-[0_0_10px_rgba(212,175,55,0.5)]" />
+                <h3 className="text-xl sm:text-2xl font-heading font-bold text-[#D4AF37] mb-2" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
+                  Enter the Sacred Space
+                </h3>
+                <p className="text-sm sm:text-base text-white/80 font-serif italic">
+                  Everything in one place. Yours to return to.
+                </p>
+              </div>
+            </Card>
+          </Link>
+        </div>
+      </section>
+
       {/* Quick Actions Section */}
       <section className="py-8 sm:py-12 bg-background border-b border-border/50">
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

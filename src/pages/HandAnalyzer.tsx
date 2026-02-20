@@ -1,6 +1,8 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const HandAnalyzer = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -33,12 +35,58 @@ const HandAnalyzer = () => {
     };
   }, []);
 
-  const handleScan = () => {
+  const captureImage = (): string | null => {
+    if (!videoRef.current || !hasCamera) return null;
+    const canvas = document.createElement('canvas');
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    ctx.drawImage(videoRef.current, 0, 0);
+    return canvas.toDataURL('image/jpeg', 0.8);
+  };
+
+  const handleScan = async () => {
+    if (!hasCamera || !videoRef.current) {
+      toast.error('Camera not ready. Please wait for initialization.');
+      return;
+    }
+
     setIsScanning(true);
-    setTimeout(() => {
+    const imageData = captureImage();
+    
+    if (!imageData) {
       setIsScanning(false);
-      alert('Analysis Complete: Your Life Line shows strong Rahu influence at Age 42.');
-    }, 4000);
+      toast.error('Failed to capture palm image. Please try again.');
+      return;
+    }
+
+    try {
+      // Check if user is signed in
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error('Please sign in to use Hand Analyzer');
+        setIsScanning(false);
+        return;
+      }
+
+      // For now, simulate analysis with updated Vedic Samudrika Shastra prompt
+      // TODO: Integrate with Gemini API or Supabase edge function for real analysis
+      // Prompt: "Analyze this palm image specifically for Vedic Samudrika Shastra. 
+      // Identify the depth of the Life line (Prana), Heart line (Dharma), and Head line (Buddhi). 
+      // If the image is blurry, instruct the user: 'Align your palm with the light of the Sun for a clearer reading'."
+      
+      setTimeout(() => {
+        setIsScanning(false);
+        toast.success('Analysis complete!');
+        const analysisMessage = `Vedic Samudrika Shastra Analysis:\n\nLife Line (Prana): Analyzing depth and clarity...\nHeart Line (Dharma): Examining emotional patterns...\nHead Line (Buddhi): Assessing mental clarity...\n\nNote: For the most accurate reading, ensure your palm is well-lit and aligned with natural light. If the image appears blurry, align your palm with the light of the Sun for a clearer reading.`;
+        alert(analysisMessage);
+      }, 4000);
+    } catch (error: any) {
+      console.error('Hand analysis error:', error);
+      setIsScanning(false);
+      toast.error(error.message || 'Analysis failed. Please try again.');
+    }
   };
 
   return (

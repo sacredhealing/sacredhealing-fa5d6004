@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { ParamahamsaVishwanandaDailyCard } from "@/components/dashboard/ParamahamsaVishwanandaDailyCard";
+import { GitaCard } from "@/components/dashboard/GitaCard";
 import { CollapsibleSection } from "@/features/library/CollapsibleSection";
 import { QuickActionFallback } from "@/features/library/QuickActionFallback";
 import { useQuickActionItems } from "@/features/library/useQuickActionItems";
@@ -264,6 +265,11 @@ export default function Explore() {
           {t("explore.title", "Library")}
         </h1>
         <p className="text-amber-200/70 mt-1 text-base">{subtitle}</p>
+      </div>
+
+      {/* Gita Oracle — moved from Dashboard */}
+      <div className="mb-6">
+        <GitaCard />
       </div>
 
       {/* Quick Actions */}

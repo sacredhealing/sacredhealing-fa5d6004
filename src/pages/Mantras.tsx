@@ -14,7 +14,7 @@ import { getMantras, type MantraItem, MANTRA_REPETITIONS } from '@/features/mant
 import { useJyotishMantraRecommendation } from '@/hooks/useJyotishMantraRecommendation';
 import { useHoraWatch } from '@/hooks/useHoraWatch';
 import { useAIVedicReading } from '@/hooks/useAIVedicReading';
-import { normalizePlanetName, mantraMatchesPlanet, getPlanetOfDay, type Planet } from '@/lib/jyotishMantraLogic';
+import { normalizePlanetName, mantraMatchesPlanet, getPlanetOfDay, getDailyMantraFromChart, type Planet } from '@/lib/jyotishMantraLogic';
 import { getPlanetEmoji } from '@/lib/vedicTypes';
 
 // Planet → vibrant color theme
@@ -268,6 +268,41 @@ const Mantras = () => {
           {tI18n('mantras.subtitle', 'Choose one mantra and repeat it 108 times.')}
         </p>
       </header>
+
+      {/* Your Jyotish Remedy Button */}
+      {dashaPlanet && reading?.personalCompass?.currentDasha && (
+        <section className="px-4 mt-4 mb-4">
+          <Button
+            onClick={() => {
+              const dailyMantraText = getDailyMantraFromChart(reading.personalCompass.currentDasha.period);
+              if (!dailyMantraText) {
+                toast.error(t('mantras_no_remedy', 'Jyotish remedy not available.'));
+                return;
+              }
+              // Find mantra matching the planet
+              const remedyMantra = mantras.find(m => {
+                if (!m.planet_type) return false;
+                const mantraPlanet = normalizePlanetName(m.planet_type);
+                return mantraPlanet === dashaPlanet;
+              });
+              if (remedyMantra) {
+                handleMantraSelect(remedyMantra);
+                if (remedyMantra.audio_url) {
+                  setTimeout(() => handleStart(), 300);
+                } else {
+                  toast.error(t('mantras_no_audio', 'Audio not available for this mantra.'));
+                }
+              } else {
+                toast.info(`${dailyMantraText} - ${t('mantras_find_mantra', 'Find this mantra in the list below.')}`);
+              }
+            }}
+            className="w-full bg-gradient-to-r from-[#D4AF37] to-amber-500 hover:from-[#D4AF37]/90 hover:to-amber-500/90 text-black font-semibold py-3 rounded-xl shadow-lg shadow-[#D4AF37]/30"
+          >
+            <Sparkles className="w-5 h-5 mr-2 inline" />
+            {t('mantras_jyotish_remedy', 'Your Jyotish Remedy')} — {dashaPlanet} Dasha
+          </Button>
+        </section>
+      )}
 
       {/* Din Heliga Timme — floating glass card with rotating Moon/Planet icon */}
       {horaWatch.calculation && (

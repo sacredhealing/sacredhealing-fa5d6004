@@ -117,6 +117,33 @@ export const GitaCard: React.FC = () => {
           <div className="text-[10px] text-[#D4AF37]/50 font-serif" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
             Chapter {verse.chapter}, Verse {verse.verse}
           </div>
+
+          {/* Karmic Alignment Logic */}
+          {currentCycle && reading?.personalCompass?.currentDasha && (
+            <div className="mt-4 pt-4 border-t border-[#D4AF37]/20">
+              <p className="text-xs text-white/70 italic font-serif leading-relaxed" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
+                Karmic Alignment: <span className="text-[#D4AF37]">{currentCycle}</span> is influencing your{' '}
+                <span className="text-[#D4AF37]">
+                  {(() => {
+                    // Map planet to primary house influence (simplified)
+                    const houseMap: Record<string, string> = {
+                      Rahu: '10th House (Career & Karma)',
+                      Ketu: '4th House (Home & Roots)',
+                      Venus: '7th House (Relationships & Partnerships)',
+                      Jupiter: '9th House (Wisdom & Dharma)',
+                      Sun: '1st House (Self & Identity)',
+                      Moon: '4th House (Emotions & Home)',
+                      Mars: '3rd House (Courage & Communication)',
+                      Mercury: '5th House (Intellect & Creativity)',
+                      Saturn: '12th House (Spirituality & Liberation)',
+                    };
+                    return houseMap[currentCycle] || 'Life Path';
+                  })()}
+                </span>
+                , necessitating this wisdom to balance your energy.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </section>
