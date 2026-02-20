@@ -15,12 +15,20 @@ import {
   isSaturnInShadowHouses,
 } from '@/logic/shadowAnalyzer';
 import { getPathToPower } from '@/lib/sovereignFuture';
+import {
+  deriveSunMountProminence,
+  deriveFateLineTrajectory,
+  getNextPowerYear,
+  getSovereignTimeline,
+} from '@/logic/futureCalculator';
 import { SoulFrequencyMeter } from './SoulFrequencyMeter';
 import { SiddhaIcon } from './SiddhaIcon';
 import { playPaperTearSound } from '@/utils/paperTearSound';
 import { playVoiceOfShadow174Hz } from '@/utils/shadowVoiceSound';
 import { playShatteringGlass432Hz } from '@/utils/shatteringGlassSound';
 import { addDailyRemedy } from '@/utils/dailyRemedyStore';
+import { playSovereignFuture963Hz } from '@/utils/sovereignFutureSound';
+import { generateSovereignSealPdf } from '@/utils/sovereignSealPdf';
 import { toast } from 'sonner';
 
 /** Deep Akashic: Vedic Triad + Multi-Planetary (Ketu/Saturn) + Origin, Mastery, Shadow */
@@ -312,6 +320,22 @@ const AkashicSiddhaReadingComponent: React.FC<AkashicSiddhaReadingProps> = ({
     () => getPathToPower(remedyPlanet, userHouse, palmScan?.seed),
     [remedyPlanet, userHouse, palmScan?.seed]
   );
+  const sunMount = useMemo(
+    () => deriveSunMountProminence(palmScan?.seed ?? vedicReading?.personalCompass?.currentDasha?.period),
+    [palmScan?.seed, vedicReading?.personalCompass?.currentDasha?.period]
+  );
+  const fateLine = useMemo(
+    () => deriveFateLineTrajectory(palmScan?.seed ?? vedicReading?.personalCompass?.currentDasha?.period),
+    [palmScan?.seed, vedicReading?.personalCompass?.currentDasha?.period]
+  );
+  const powerYear = useMemo(
+    () => getNextPowerYear(sunMount, fateLine, undefined, palmScan?.seed),
+    [sunMount, fateLine, palmScan?.seed]
+  );
+  const sovereignTimeline = useMemo(
+    () => getSovereignTimeline(powerYear, fateLine, palmScan?.seed),
+    [powerYear, fateLine, palmScan?.seed]
+  );
 
   const startReading = () => {
     setIsSyncing(true);
@@ -396,7 +420,7 @@ const AkashicSiddhaReadingComponent: React.FC<AkashicSiddhaReadingProps> = ({
             <div className={`relative ${manuscriptContent}`}>
               {/* Dim overlay when 8th Gate (Scroll 2) is unrolled — shadow activation */}
               <AnimatePresence>
-                {burnRevealed && scrollUnrolled[2] && (
+                {burnRevealed && scrollUnrolled[2] && !scrollUnrolled[3] && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -406,6 +430,22 @@ const AkashicSiddhaReadingComponent: React.FC<AkashicSiddhaReadingProps> = ({
                     style={{
                       background: 'linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.7) 100%)',
                       mixBlendMode: 'multiply',
+                    }}
+                    aria-hidden
+                  />
+                )}
+              </AnimatePresence>
+              {/* Solar Gold radiance when Scroll 3 (Sovereign Future) is unrolled */}
+              <AnimatePresence>
+                {burnRevealed && scrollUnrolled[3] && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.8 }}
+                    className="absolute inset-0 z-[5] pointer-events-none rounded-b-lg"
+                    style={{
+                      background: 'radial-gradient(ellipse 80% 80% at 50% 20%, rgba(212,175,55,0.25) 0%, rgba(184,134,11,0.1) 40%, transparent 70%)',
                     }}
                     aria-hidden
                   />
@@ -569,20 +609,110 @@ const AkashicSiddhaReadingComponent: React.FC<AkashicSiddhaReadingProps> = ({
                     </div>
                   </ParchmentScroll>
 
-                  {/* Scroll 3: The Sovereign Future */}
+                  {/* Scroll 3: The Sovereign Future — Solar Gold, particles, 963Hz */}
                   <ParchmentScroll
                     title="The Sovereign Future"
                     subtitle="Path to Power"
                     isUnrolled={scrollUnrolled[3]}
-                    onUnroll={() => setScrollUnrolled((s) => ({ ...s, 3: true }))}
-                    playSound
+                    onUnroll={() => {
+                      playPaperTearSound();
+                      playSovereignFuture963Hz();
+                      setScrollUnrolled((s) => ({ ...s, 3: true }));
+                    }}
+                    playSound={false}
                   >
-                    <p className="text-white/90 text-sm leading-relaxed italic mb-3" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
-                      {pathToPower.prophecy}
-                    </p>
-                    <p className="text-[10px] text-[#D4AF37]/70 mt-2">
-                      {pathToPower.mantraName}: {pathToPower.bhriguMantra}
-                    </p>
+                    <div className="relative overflow-hidden">
+                      {/* Falling golden petals / light particles */}
+                      <div className="absolute inset-0 -mx-4 -my-2 pointer-events-none overflow-hidden min-h-[240px]" aria-hidden>
+                        {[...Array(12)].map((_, i) => (
+                          <motion.div
+                            key={i}
+                            className="absolute w-2 h-2 rounded-full bg-[#D4AF37]"
+                            initial={{ opacity: 0.5, top: -10 }}
+                            animate={{
+                              opacity: [0.6, 0.15, 0.5],
+                              top: ['-2%', '102%'],
+                            }}
+                            transition={{
+                              duration: 5 + (i % 4),
+                              repeat: Infinity,
+                              delay: i * 0.35,
+                            }}
+                            style={{
+                              boxShadow: '0 0 8px rgba(212,175,55,0.6)',
+                              left: `${(i * 11) % 92}%`,
+                            }}
+                          />
+                        ))}
+                        <motion.div
+                          className="absolute inset-0 bg-gradient-to-b from-[#D4AF37]/20 via-transparent to-transparent"
+                          animate={{ opacity: [0.3, 0.6, 0.3] }}
+                          transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+                        />
+                      </div>
+                      <div className="relative z-10">
+                        <p className="text-[10px] uppercase tracking-wider text-[#D4AF37]/90 mb-2">Path to Power</p>
+                        <motion.p
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.3, duration: 0.6 }}
+                          className="text-white/95 text-sm leading-relaxed italic mb-3"
+                          style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}
+                        >
+                          {pathToPower.prophecy}
+                        </motion.p>
+                        <p className="text-[10px] text-[#D4AF37]/80 mb-2">
+                          {pathToPower.mantraName}: {pathToPower.bhriguMantra}
+                        </p>
+                        <p className="text-[10px] uppercase tracking-wider text-[#D4AF37]/90 mt-4 mb-2">Your Power Year</p>
+                        <motion.p
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.5 }}
+                          className="text-[#D4AF37] font-semibold mb-1"
+                        >
+                          Age {powerYear}
+                        </motion.p>
+                        <p className="text-white/85 text-sm mb-4">{sovereignTimeline.powerYearMeaning}</p>
+                        <p className="text-[10px] uppercase tracking-wider text-[#D4AF37]/90 mb-2">Sovereign Timeline — Next 3 Karmic Windows</p>
+                        <ul className="space-y-2">
+                          {sovereignTimeline.timeline.map((w, i) => (
+                            <motion.li
+                              key={w.year}
+                              initial={{ opacity: 0, x: -8 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: 0.7 + i * 0.15 }}
+                              className="text-white/90 text-sm"
+                            >
+                              <strong className="text-[#D4AF37]/90">{w.year}</strong>: {w.theme} — {w.focus}
+                            </motion.li>
+                          ))}
+                        </ul>
+                        {burnRevealed && scrollUnrolled[3] && (
+                          <motion.button
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 1.2 }}
+                            type="button"
+                            onClick={() =>
+                              generateSovereignSealPdf({
+                                userName: userName ?? 'Soul',
+                                siddhaGuide,
+                                shadowVowInsight,
+                                pathToPower,
+                                bhriguRemedy: record.remedy,
+                                sovereignTimeline,
+                              })
+                            }
+                            className="mt-4 w-full py-3 px-4 rounded-xl border-2 border-[#D4AF37] bg-[#D4AF37]/20 text-[#D4AF37] font-bold uppercase tracking-wider text-sm flex items-center justify-center gap-2"
+                            style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif', boxShadow: '0 0 20px rgba(212,175,55,0.3)' }}
+                          >
+                            <span aria-hidden>📜</span>
+                            Download Akashic Soul Manuscript
+                          </motion.button>
+                        )}
+                      </div>
+                    </div>
                   </ParchmentScroll>
                 </section>
               )}
