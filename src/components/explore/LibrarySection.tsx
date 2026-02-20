@@ -35,7 +35,7 @@ export function LibrarySection({
   return (
     <div className="mb-6">
       <div className="mb-3">
-        <h3 className="text-base font-heading font-semibold text-foreground">{title}</h3>
+        <h3 className="text-lg md:text-xl font-heading font-bold text-foreground">{title}</h3>
         {subtitle && (
           <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>
         )}

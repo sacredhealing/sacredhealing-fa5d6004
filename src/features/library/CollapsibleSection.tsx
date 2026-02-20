@@ -21,7 +21,7 @@ export function CollapsibleSection({
         className="w-full flex items-center justify-between px-4 py-4 text-left hover:bg-muted/30 transition rounded-2xl"
       >
         <div className="text-left">
-          <div className="text-foreground font-semibold">{title}</div>
+          <div className="text-foreground font-bold text-lg">{title}</div>
           {subtitle ? (
             <div className="text-sm text-muted-foreground mt-1">{subtitle}</div>
           ) : null}
