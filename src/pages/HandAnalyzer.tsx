@@ -14,6 +14,7 @@ const HandAnalyzer = () => {
   const [isScanning, setIsScanning] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<boolean>(false);
   const [analysisSeed, setAnalysisSeed] = useState<string>('');
+  const [analysisImageUrl, setAnalysisImageUrl] = useState<string>('');
   const [transitioningToAkasha, setTransitioningToAkasha] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -105,6 +106,7 @@ const HandAnalyzer = () => {
           setIsScanning(false);
           toast.success('Analysis complete!');
           setAnalysisSeed(imageData.slice(0, 120));
+          setAnalysisImageUrl(imageData);
           setAnalysisResult(true);
         }, 4000);
       } catch (err: unknown) {
@@ -289,7 +291,7 @@ const HandAnalyzer = () => {
               className="bg-[#1a1a1a] border-2 border-[#D4AF37]/50 rounded-2xl p-6 max-w-md w-full max-h-[85vh] overflow-auto shadow-[0_0_40px_rgba(212,175,55,0.2)]"
               onClick={(e) => e.stopPropagation()}
             >
-              <PalmOracle seed={analysisSeed} className="mb-6" />
+              <PalmOracle seed={analysisSeed} handImageUrl={analysisImageUrl} className="mb-6" />
               <button
                 type="button"
                 onClick={handleAnalysisOk}
