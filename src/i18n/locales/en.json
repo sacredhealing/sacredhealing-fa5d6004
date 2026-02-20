@@ -670,6 +670,9 @@
     "featuredCollections": "Featured Collections",
     "goDeeper": "Go deeper (optional)",
     "goDeeperDesc": "When you want something more personal.",
+    "templeGreeting": "The Hall of Stillness",
+    "sacredCommissions": "Sacred Commissions",
+    "sacredCommissionsDesc": "Personal transmissions. When you want something channeled for you alone.",
     "startNow": {
       "titleBusy": "Quick reset",
       "titleHeavy": "Soften what feels heavy",
@@ -682,7 +685,8 @@
       "buttonHeavy": "Start comfort",
       "buttonEngaged": "Start now",
       "buttonCalm": "Start now",
-      "selecting": "Selecting a meditation…"
+      "selecting": "Selecting a meditation…",
+      "lineage": "The lineage awaits your presence."
     },
     "sections": {
       "short": "Short resets",

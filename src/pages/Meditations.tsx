@@ -206,26 +206,24 @@ const Meditations: React.FC = () => {
       />
 
       <div className="min-h-screen px-4 pt-6 pb-24 cave-bg">
-        {/* Header */}
-        <header className="mb-4 animate-fade-in">
-          <h1 className="text-3xl font-heading font-bold text-foreground">
-            {t('meditations.title', 'Meditations')}
+        {/* Header — single elegant greeting + Language Sanctuary (top right) */}
+        <header className="flex items-start justify-between gap-4 mb-4 animate-fade-in">
+          <h1
+            className="text-xl sm:text-2xl font-light text-foreground"
+            style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}
+          >
+            {t('meditations.templeGreeting', 'The Hall of Stillness')}
           </h1>
-          <p className="text-muted-foreground mt-1">
-            {t('meditations.subtitle', 'Find your inner peace')}
-          </p>
+          <LanguageToggle language={language} setLanguage={setLanguage} compact />
         </header>
 
-        {/* START NOW (Second Start) - zero browsing */}
+        {/* START NOW — glowing portal, lineage prompt */}
         <StartNowCard
           item={loading ? null : startNowItem}
           dayPhase={dayPhase}
           userState={userState}
           onStart={onStartNow}
         />
-
-        {/* Language toggle */}
-        <LanguageToggle language={language} setLanguage={setLanguage} />
 
         {selectedPlaylist ? (
           /* Playlist Detail View */
@@ -359,12 +357,9 @@ const Meditations: React.FC = () => {
               {filtered.length === 0 ? (
                 <div className="text-center py-8">
                   <BabajiShadow />
-                  <h3 className="font-semibold text-foreground mb-2 mt-4" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
+                  <h3 className="font-light text-foreground mt-4" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
                     Quiet the mind. The transmission will manifest shortly.
                   </h3>
-                  <p className="text-muted-foreground text-sm max-w-sm mx-auto">
-                    {t('meditations.noMeditationsHint', 'Meditations will be added soon.')}
-                  </p>
                 </div>
               ) : (
                 <>
@@ -438,13 +433,16 @@ const Meditations: React.FC = () => {
 
             <BackToTopFab />
 
-            {/* Go deeper (optional) - paid offerings moved DOWN */}
+            {/* Sacred Commissions — paid offerings */}
             <div className="mt-10">
-              <h2 className="text-lg font-heading font-semibold text-foreground mb-1">
-                {t('meditations.goDeeper', 'Go deeper (optional)')}
+              <h2
+                className="text-lg font-light text-foreground mb-1"
+                style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}
+              >
+                {t('meditations.sacredCommissions', 'Sacred Commissions')}
               </h2>
               <p className="text-sm text-muted-foreground mb-4">
-                {t('meditations.goDeeperDesc', 'When you want something more personal.')}
+                {t('meditations.sacredCommissionsDesc', 'Personal transmissions. When you want something channeled for you alone.')}
               </p>
 
               <MeditationMembershipBanner />

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Crown, Sparkles, Loader2, Check } from 'lucide-react';
+import { Loader2, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -84,29 +84,9 @@ const MeditationMembershipBanner: React.FC = () => {
     );
   }
 
-  // Show active membership badge
+  // Members: banner is completely removed (temple never shows "construction")
   if (membership?.hasMembership) {
-    return (
-      <Card className="p-4 mb-6 bg-gradient-to-br from-purple-500/20 via-primary/10 to-amber-500/20 border-purple-500/50">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-full bg-purple-500/20">
-            <Crown className="w-5 h-5 text-purple-500" />
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-foreground">{t('membership.meditationMember')}</span>
-              <Badge className="bg-purple-500 text-white text-xs">
-                {membership.planType === 'yearly' ? t('membership.yearly') : t('membership.monthly')}
-              </Badge>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {t('membership.unlimitedMeditations')} • 33 SHC {t('membership.perSession')} • {t('membership.renews')} {membership.subscriptionEnd ? new Date(membership.subscriptionEnd).toLocaleDateString() : t('membership.soon')}
-            </p>
-          </div>
-          <Sparkles className="w-5 h-5 text-purple-500" />
-        </div>
-      </Card>
-    );
+    return null;
   }
 
   // Show subscription options with consistent styling
@@ -119,14 +99,14 @@ const MeditationMembershipBanner: React.FC = () => {
 
   return (
     <div className="mb-6">
-      <div className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-purple-500/10 via-primary/5 to-amber-500/10 border border-purple-500/30">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl -mr-16 -mt-16" />
+      <div className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-amber-950/30 via-primary/5 to-amber-500/10 border border-[#D4AF37]/25">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/10 rounded-full blur-3xl -mr-16 -mt-16" />
         
         <div className="relative">
           <div className="flex items-center gap-2 mb-3">
-            <LotusIcon className="w-6 h-6 text-purple-500" />
+            <LotusIcon className="w-6 h-6 text-[#D4AF37]" />
             <h3 className="text-xl font-heading font-bold text-foreground">{t('membership.meditationMembership')}</h3>
-            <Badge className="bg-purple-500 text-white">{t('common.new')}</Badge>
+            <Badge className="bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/40">{t('common.new')}</Badge>
           </div>
           
           <p className="text-sm text-muted-foreground mb-4">
@@ -134,9 +114,11 @@ const MeditationMembershipBanner: React.FC = () => {
           </p>
 
           <div className="grid grid-cols-2 gap-3 mb-4">
-            {/* Monthly Plan */}
-            <div className="p-3 rounded-xl border border-border/50 bg-background/50">
-              <p className="text-xs text-muted-foreground mb-1">{t('membership.monthly')}</p>
+            {/* Monthly Plan — Golden Seal */}
+            <div className="p-3 rounded-xl border border-[#D4AF37]/30 bg-background/50 relative">
+              <span className="absolute -top-1.5 -right-1.5 px-2 py-0.5 rounded text-[10px] font-medium bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/40">
+                {t('membership.monthly')}
+              </span>
               <p className="text-xl font-bold text-foreground">€4.99<span className="text-sm font-normal text-muted-foreground">/{t('membership.mo')}</span></p>
               <Button 
                 size="sm" 
@@ -153,14 +135,14 @@ const MeditationMembershipBanner: React.FC = () => {
               </Button>
             </div>
 
-            {/* Yearly Plan */}
-            <div className="p-3 rounded-xl border-2 border-purple-500/50 bg-purple-500/5 relative">
-              <Badge className="absolute -top-2 -right-2 bg-green-500 text-white text-[10px]">{t('membership.save10')}</Badge>
+            {/* Yearly Plan — Golden Seal */}
+            <div className="p-3 rounded-xl border-2 border-[#D4AF37]/40 bg-[#D4AF37]/5 relative">
+              <Badge className="absolute -top-2 -right-2 bg-[#D4AF37]/30 text-[#D4AF37] border border-[#D4AF37]/40 text-[10px]">{t('membership.save10')}</Badge>
               <p className="text-xs text-muted-foreground mb-1">{t('membership.yearly')}</p>
               <p className="text-xl font-bold text-foreground">€49<span className="text-sm font-normal text-muted-foreground">/{t('membership.yr')}</span></p>
               <Button 
                 size="sm" 
-                className="w-full mt-2 bg-purple-500 hover:bg-purple-600 text-white"
+                className="w-full mt-2 bg-[#D4AF37]/20 hover:bg-[#D4AF37]/30 text-[#D4AF37] border border-[#D4AF37]/40"
                 onClick={() => handleSubscribe('yearly')}
                 disabled={subscribing !== null}
               >

@@ -40,27 +40,30 @@ export function StartNowCard({ item, dayPhase, userState, onStart }: Props) {
   const c = getCopy(t as any, dayPhase, userState);
 
   return (
-    <div
-      className="mt-2 rounded-2xl p-4 bg-[#0a0a0a]/80 backdrop-blur-sm"
-      style={{
-        boxShadow: "0 0 0 1px rgba(212, 175, 55, 0.15), 0 0 24px rgba(212, 175, 55, 0.08)",
-      }}
-    >
-      <div className="text-xl font-semibold text-foreground">{c.title}</div>
-      <div className="mt-1 text-sm text-muted-foreground">{c.subtitle}</div>
+    <div className="mt-2 flex items-center gap-4">
+      {/* Glowing circular portal icon */}
+      <div
+        className="shrink-0 w-14 h-14 rounded-full flex items-center justify-center"
+        style={{
+          background: "radial-gradient(circle at 30% 30%, rgba(212,175,55,0.25), rgba(212,175,55,0.05))",
+          boxShadow: "0 0 0 1px rgba(212,175,55,0.2), 0 0 24px rgba(212,175,55,0.15)",
+        }}
+      >
+        <div
+          className="w-8 h-8 rounded-full border border-[#D4AF37]/50"
+          style={{ boxShadow: "inset 0 0 12px rgba(212,175,55,0.2)" }}
+        />
+      </div>
 
-      <div className="mt-3 flex items-center justify-between gap-3">
-        <div className="text-sm text-muted-foreground font-serif italic" style={{ fontFamily: "Cinzel, DM Serif Display, Georgia, serif" }}>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-serif italic text-amber-200/90" style={{ fontFamily: "Cinzel, DM Serif Display, Georgia, serif" }}>
           {item ? (item.title ?? item.name ?? "") : t("meditations.startNow.lineage", "The lineage awaits your presence.")}
-        </div>
-
+        </p>
         <button
           disabled={!item}
           onClick={() => item && onStart(item)}
-          className={`shrink-0 rounded-full px-5 py-3 text-sm font-semibold transition border
-            ${item
-              ? "border-[#D4AF37] text-[#D4AF37] bg-transparent hover:bg-[#D4AF37]/10"
-              : "border-muted text-muted-foreground cursor-not-allowed bg-transparent"}`}
+          className={`mt-2 rounded-full px-4 py-2 text-sm font-medium transition
+            ${item ? "text-[#D4AF37] hover:bg-[#D4AF37]/10" : "text-muted-foreground cursor-not-allowed"}`}
         >
           {c.button}
         </button>

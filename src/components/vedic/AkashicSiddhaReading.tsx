@@ -1,8 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useMembership } from '@/hooks/useMembership';
 import { generateAkashicCertificatePdf } from '@/utils/akashicCertificatePdf';
+import { getPalmScanResult } from '@/lib/palmScanStore';
+import {
+  getSiddhaGuide,
+  deriveAtmakaraka,
+  deriveMountJupiter,
+} from '@/data/siddhaLineage';
+import { getEighthGateInsight } from '@/lib/eighthGateScroll';
+import { getKarmicMilestone } from '@/lib/sovereignFuture';
+import { SoulFrequencyMeter } from './SoulFrequencyMeter';
 
 /** Deep Akashic: Vedic Triad + Multi-Planetary (Ketu/Saturn) + Origin, Mastery, Shadow */
 type AkashicRecord = {
@@ -109,6 +118,63 @@ const DEFAULT_RECORD: AkashicRecord = {
   shadowOfSaturn: 'Saturn’s debt: you once refused to create or silenced another’s voice. That debt now shows as stress in creativity, partnership, and the fear of being unseen.',
 };
 
+/** Parchment scroll — tap to unroll */
+function ParchmentScroll({
+  title,
+  subtitle,
+  isUnrolled,
+  onUnroll,
+  children,
+}: {
+  title: string;
+  subtitle: string;
+  isUnrolled: boolean;
+  onUnroll: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <motion.div
+      layout
+      className="rounded-lg border border-[#D4AF37]/25 bg-gradient-to-b from-amber-950/40 to-amber-950/10 overflow-hidden"
+    >
+      <button
+        type="button"
+        onClick={onUnroll}
+        disabled={isUnrolled}
+        className="w-full text-left px-4 py-3 flex items-center justify-between gap-2"
+      >
+        <div>
+          <span
+            className="text-xs font-bold uppercase tracking-wider text-[#D4AF37]"
+            style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}
+          >
+            {title}
+          </span>
+          <span className="block text-[10px] text-white/50 mt-0.5">{subtitle}</span>
+        </div>
+        <span className="text-[#D4AF37]/70 text-xs shrink-0">
+          {isUnrolled ? 'Unrolled' : 'Tap to unroll'}
+        </span>
+      </button>
+      <AnimatePresence>
+        {isUnrolled && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
+            className="overflow-hidden"
+          >
+            <div className="px-4 pb-4 pt-0 border-t border-[#D4AF37]/15">
+              {children}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
 /** Year of Karmic Climax — when past-life debt is fully paid (derived from userHouse + birth year hint) */
 function getYearOfKarmicClimax(userHouse: number): number {
   const now = new Date().getFullYear();
@@ -145,6 +211,21 @@ function ketuHouseFromReading(reading: AkashicSiddhaReadingProps['vedicReading']
   return undefined;
 }
 
+/** Extract remedy planet from "Sun Mantra", "Moon Mantra", etc. */
+function remedyPlanetFromRecord(remedy: string): string {
+  const m = remedy.split(' ')[0] ?? '';
+  if (/sun|surya/i.test(m)) return 'Sun';
+  if (/moon|chandra/i.test(m)) return 'Moon';
+  if (/jupiter|guru/i.test(m)) return 'Jupiter';
+  if (/ketu/i.test(m)) return 'Ketu';
+  if (/venus|shukra|saraswati/i.test(m)) return 'Venus';
+  if (/saturn|shani/i.test(m)) return 'Saturn';
+  if (/mars|mangal/i.test(m)) return 'Mars';
+  if (/mercury|budh/i.test(m)) return 'Mercury';
+  if (/rahu/i.test(m)) return 'Rahu';
+  return 'Ketu';
+}
+
 const AkashicSiddhaReadingComponent: React.FC<AkashicSiddhaReadingProps> = ({
   userHouse: userHouseProp = 12,
   saturnHouse: saturnHouseProp,
@@ -159,11 +240,47 @@ const AkashicSiddhaReadingComponent: React.FC<AkashicSiddhaReadingProps> = ({
   const [readingVisible, setReadingVisible] = useState(false);
   const [deepenRevealed, setDeepenRevealed] = useState(false);
   const [burnRevealed, setBurnRevealed] = useState(false);
+  const [scrollUnrolled, setScrollUnrolled] = useState<Record<1 | 2 | 3, boolean>>({
+    1: false,
+    2: false,
+    3: false,
+  });
   const { isPremium } = useMembership();
   const hasFullManuscript = isPremium || hasDeepReadingAccess;
   const userHouse = ketuHouseFromReading(vedicReading) ?? userHouseProp;
   const record = AKASHIC_RECORDS[userHouse] || DEFAULT_RECORD;
   const yearClimax = getYearOfKarmicClimax(userHouse);
+
+  const palmScan = useMemo(() => getPalmScanResult(), []);
+  const atmakaraka = useMemo(
+    () =>
+      deriveAtmakaraka(userHouse, vedicReading?.personalCompass?.currentDasha?.period),
+    [userHouse, vedicReading?.personalCompass?.currentDasha?.period]
+  );
+  const mountJupiter = useMemo(
+    () => deriveMountJupiter(palmScan?.palmArchetype ?? null, palmScan?.seed),
+    [palmScan?.palmArchetype, palmScan?.seed]
+  );
+  const siddhaGuide = useMemo(
+    () => getSiddhaGuide(atmakaraka, mountJupiter),
+    [atmakaraka, mountJupiter]
+  );
+  const eighthGateInsight = useMemo(
+    () =>
+      getEighthGateInsight(
+        atmakaraka,
+        palmScan?.seed ?? vedicReading?.personalCompass?.currentDasha?.period
+      ),
+    [atmakaraka, palmScan?.seed, vedicReading?.personalCompass?.currentDasha?.period]
+  );
+  const remedyPlanet = useMemo(
+    () => remedyPlanetFromRecord(record.remedy),
+    [record.remedy]
+  );
+  const karmicMilestone = useMemo(
+    () => getKarmicMilestone(remedyPlanet, userHouse, palmScan?.palmArchetype ?? null),
+    [remedyPlanet, userHouse, palmScan?.palmArchetype]
+  );
 
   const startReading = () => {
     setIsSyncing(true);
@@ -236,13 +353,14 @@ const AkashicSiddhaReadingComponent: React.FC<AkashicSiddhaReadingProps> = ({
             exit={{ opacity: 0, y: -20 }}
             className={scrollClass}
           >
-            <div className="sticky top-0 z-10 py-2 text-center border-b border-[#D4AF37]/20 bg-[#0a0a0a]/90 backdrop-blur-sm">
+            <div className="sticky top-0 z-10 py-2 px-4 flex items-center justify-between border-b border-[#D4AF37]/20 bg-[#0a0a0a]/90 backdrop-blur-sm">
               <span
                 className="text-[10px] uppercase tracking-[0.4em] text-[#D4AF37]/70"
                 style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}
               >
-                {burnRevealed ? (hasFullManuscript ? 'The Scroll of Time — Full Akashic Manuscript' : 'Akashic Record — Summary') : 'Secret Manuscript'}
+                {burnRevealed ? (hasFullManuscript ? 'Three Scrolls of the Siddhas' : 'Akashic Record — Summary') : 'Secret Manuscript'}
               </span>
+              {burnRevealed && <SoulFrequencyMeter isActive={true} className="shrink-0" />}
             </div>
             <div className={`relative ${manuscriptContent}`}>
               {/* Burn-to-Read parchment overlay */}
@@ -279,6 +397,58 @@ const AkashicSiddhaReadingComponent: React.FC<AkashicSiddhaReadingProps> = ({
                 <p className="text-white/70 mt-1 italic">{record.origin}</p>
                 <p className="text-white/80 mt-3 text-sm leading-relaxed">{record.incarnation}</p>
               </section>
+
+              {/* ——— TRIPLE SCROLL: Three distinct parchments to unroll ——— */}
+              {burnRevealed && (
+                <section className="border-b border-[#D4AF37]/20 pb-6 space-y-3">
+                  <span
+                    className="text-[10px] uppercase tracking-[0.3em] text-[#D4AF37]/60 block mb-3"
+                    style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}
+                  >
+                    The Three Scrolls of the Siddhas
+                  </span>
+
+                  {/* Scroll 1: Lineage */}
+                  <ParchmentScroll
+                    title="Scroll of Lineage"
+                    subtitle={siddhaGuide.lineage}
+                    isUnrolled={scrollUnrolled[1]}
+                    onUnroll={() => setScrollUnrolled((s) => ({ ...s, 1: true }))}
+                  >
+                    <p className="text-white/90 italic mb-2" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
+                      Your Siddha Guide: <strong className="text-[#D4AF37]">{siddhaGuide.guideName}</strong>
+                    </p>
+                    <p className="text-white/85 text-sm leading-relaxed">
+                      The Secret Vow this soul took: &ldquo;{siddhaGuide.secretVow}&rdquo;
+                    </p>
+                  </ParchmentScroll>
+
+                  {/* Scroll 2: 8th Gate */}
+                  <ParchmentScroll
+                    title="Scroll of the 8th Gate"
+                    subtitle={eighthGateInsight.lineType}
+                    isUnrolled={scrollUnrolled[2]}
+                    onUnroll={() => setScrollUnrolled((s) => ({ ...s, 2: true }))}
+                  >
+                    <p className="text-[10px] uppercase tracking-wider text-[#D4AF37]/80 mb-2">Psychic Shadow</p>
+                    <p className="text-white/85 text-sm leading-relaxed">
+                      {eighthGateInsight.psychicShadow}
+                    </p>
+                  </ParchmentScroll>
+
+                  {/* Scroll 3: Sovereign Future */}
+                  <ParchmentScroll
+                    title="The Sovereign Future"
+                    subtitle="Conditional Prophecy"
+                    isUnrolled={scrollUnrolled[3]}
+                    onUnroll={() => setScrollUnrolled((s) => ({ ...s, 3: true }))}
+                  >
+                    <p className="text-white/90 text-sm leading-relaxed italic" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
+                      {karmicMilestone}
+                    </p>
+                  </ParchmentScroll>
+                </section>
+              )}
 
               {/* ——— MEMBERSHIP GATE: Full Manuscript requires Premium or $49 Deep Reading ——— */}
               {!hasFullManuscript && (
