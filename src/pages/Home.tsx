@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { BhagavadGitaOracle } from '@/components/dashboard/BhagavadGitaOracle';
 import { 
   Heart, 
   Music, 
@@ -159,6 +160,13 @@ const Home: React.FC = () => {
               </Link>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Bhagavad Gita Oracle */}
+      <section className="py-8 sm:py-12 bg-background border-b border-border/50">
+        <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <BhagavadGitaOracle />
         </div>
       </section>
 
