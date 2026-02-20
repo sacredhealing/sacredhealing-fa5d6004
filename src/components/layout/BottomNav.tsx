@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Sparkles, Compass, User, HandHeart, Brain } from 'lucide-react';
+import { Home, Sparkles, Compass, User, Brain } from 'lucide-react';
+import MalaBeadsIcon from '@/components/icons/MalaBeadsIcon';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -8,7 +9,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 const NAV_ITEMS = [
   { to: '/dashboard', icon: Home, labelKey: 'nav_home', label: 'Home' },
   { to: '/meditations', icon: Brain, labelKey: 'nav_meditate', label: 'Meditate' },
-  { to: '/mantras', icon: HandHeart, labelKey: 'nav_mantras', label: 'Mantras' },
+  { to: '/mantras', icon: MalaBeadsIcon, labelKey: 'nav_mantras', label: 'Mantras' },
   { to: '/explore', icon: Compass, labelKey: 'nav_library', label: 'Library' },
   { to: '/healing', icon: Sparkles, labelKey: 'header_healing', label: 'Healing' },
   { to: '/profile', icon: User, labelKey: 'nav_profile', label: 'Profile' },
