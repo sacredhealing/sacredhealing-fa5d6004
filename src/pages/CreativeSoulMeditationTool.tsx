@@ -406,94 +406,96 @@ export default function CreativeSoulMeditationTool() {
       {/* Processing Terminal Overlay */}
       <ProcessingTerminal isProcessing={isProcessing} />
 
-      <div className="relative z-10 container mx-auto px-4 py-6 max-w-7xl">
+      <div className="relative z-10 container mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-7xl">
         {/* Header */}
-        <header className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
+        <header className="mb-4 sm:mb-6 space-y-3">
+          <div className="flex items-center gap-3">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate(-1)}
-              className="text-white/60 hover:text-white hover:bg-white/10"
+              className="text-white/60 hover:text-white hover:bg-white/10 shrink-0"
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent leading-tight">
                 Spectral Alchemy
               </h1>
-              <p className="text-xs text-white/50">Neural Production Mastering Suite</p>
+              <p className="text-[10px] sm:text-xs text-white/50">Neural Production Mastering Suite</p>
             </div>
-          </div>
-
-          <div className="flex items-center gap-3">
 
             {!engine.isInitialized ? (
               <Button
                 onClick={handleInitialize}
-                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                size="sm"
+                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shrink-0 text-xs sm:text-sm"
               >
-                <Power className="w-4 h-4 mr-2" />
+                <Power className="w-4 h-4 mr-1" />
                 Initialize
               </Button>
             ) : (
-              <>
-                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/50">
-                  Engine Active
-                </Badge>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={engine.playTestTone}
-                  className="text-xs text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10"
-                >
-                  🔊 Test Tone
-                </Button>
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
-                  <Volume2 className="w-4 h-4 text-white/60" />
-                  <Slider
-                    value={[engine.masterVolume]}
-                    min={0}
-                    max={1}
-                    step={0.01}
-                    onValueChange={([v]) => engine.updateMasterVolume(v)}
-                    className="w-20 [&_[role=slider]]:bg-white"
-                  />
-                  <span className="text-xs text-white/60 w-8">
-                    {Math.round(engine.masterVolume * 100)}%
-                  </span>
-                </div>
-              </>
+              <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/50 shrink-0 text-[10px] sm:text-xs">
+                Engine Active
+              </Badge>
             )}
           </div>
+
+          {/* Engine controls row - only when initialized */}
+          {engine.isInitialized && (
+            <div className="flex items-center gap-2 pl-10 sm:pl-14 flex-wrap">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={engine.playTestTone}
+                className="text-[10px] sm:text-xs text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10 h-7 px-2"
+              >
+                🔊 Test Tone
+              </Button>
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/5 border border-white/10">
+                <Volume2 className="w-3 h-3 sm:w-4 sm:h-4 text-white/60" />
+                <Slider
+                  value={[engine.masterVolume]}
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  onValueChange={([v]) => engine.updateMasterVolume(v)}
+                  className="w-16 sm:w-20 [&_[role=slider]]:bg-white"
+                />
+                <span className="text-[10px] sm:text-xs text-white/60 w-7 tabular-nums">
+                  {Math.round(engine.masterVolume * 100)}%
+                </span>
+              </div>
+            </div>
+          )}
         </header>
 
         {/* Visualizer */}
-        <div className="mb-6 p-1 rounded-2xl bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-cyan-500/20">
-          <div className="bg-black/60 backdrop-blur-xl rounded-xl p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Eye className="w-4 h-4 text-purple-400" />
-                <span className="text-sm text-white/70">Spectral Visualizer</span>
-                <Badge variant="outline" className="text-xs border-white/20">2048 FFT</Badge>
+        <div className="mb-4 sm:mb-6 p-0.5 sm:p-1 rounded-xl sm:rounded-2xl bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-cyan-500/20">
+          <div className="bg-black/60 backdrop-blur-xl rounded-xl p-3 sm:p-4">
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              <div className="flex items-center gap-1.5">
+                <Eye className="w-3.5 h-3.5 text-purple-400" />
+                <span className="text-xs sm:text-sm text-white/70">Spectral Visualizer</span>
+                <Badge variant="outline" className="text-[10px] border-white/20 px-1.5 py-0">2048 FFT</Badge>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-0.5 ml-auto">
                 {(['bars', 'wave', 'radial'] as VisualizerMode[]).map((mode) => (
                   <Button
                     key={mode}
                     variant="ghost"
                     size="sm"
                     onClick={() => setVisualizerMode(mode)}
-                    className={`text-xs capitalize ${
+                    className={`text-[10px] sm:text-xs capitalize h-7 px-2 ${
                       visualizerMode === mode
                         ? 'bg-white/10 text-white'
                         : 'text-white/50 hover:text-white'
                     }`}
                   >
-                    {mode === 'bars' && <Activity className="w-3 h-3 mr-1" />}
-                    {mode === 'wave' && <Waves className="w-3 h-3 mr-1" />}
-                    {mode === 'radial' && <Eye className="w-3 h-3 mr-1" />}
-                    {mode}
+                    {mode === 'bars' && <Activity className="w-3 h-3 sm:mr-1" />}
+                    {mode === 'wave' && <Waves className="w-3 h-3 sm:mr-1" />}
+                    {mode === 'radial' && <Eye className="w-3 h-3 sm:mr-1" />}
+                    <span className="hidden sm:inline">{mode}</span>
                   </Button>
                 ))}
               </div>
@@ -502,18 +504,18 @@ export default function CreativeSoulMeditationTool() {
               frequencyData={engine.analyserData?.frequencyData || null}
               timeData={engine.analyserData?.timeData || null}
               mode={visualizerMode}
-              height={160}
+              height={140}
             />
           </div>
         </div>
 
         {/* Main Controls */}
-        <div className="flex items-center justify-center gap-4 mb-6">
+        <div className="flex items-center justify-center gap-2 sm:gap-4 mb-4 sm:mb-6">
           <Button
             size="lg"
             onClick={togglePlay}
             disabled={!engine.isInitialized}
-            className={`px-8 ${
+            className={`px-4 sm:px-8 text-sm sm:text-base ${
               isPlaying
                 ? 'bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600'
                 : 'bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600'
@@ -521,12 +523,12 @@ export default function CreativeSoulMeditationTool() {
           >
             {isPlaying ? (
               <>
-                <Pause className="w-5 h-5 mr-2" />
+                <Pause className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5" />
                 Stop Session
               </>
             ) : (
               <>
-                <Play className="w-5 h-5 mr-2" />
+                <Play className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5" />
                 Begin Session
               </>
             )}
@@ -537,12 +539,12 @@ export default function CreativeSoulMeditationTool() {
             size="lg"
             onClick={handleExport}
             disabled={!engine.isInitialized || offlineExport.progress.isExporting}
-            className="bg-white/5 border-white/20 text-white hover:bg-white/10"
+            className="bg-white/5 border-white/20 text-white hover:bg-white/10 px-4 sm:px-8 text-sm sm:text-base"
           >
             {offlineExport.progress.isExporting ? (
-              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 animate-spin" />
             ) : (
-              <Zap className="w-5 h-5 mr-2" />
+              <Zap className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5" />
             )}
             Export Master
           </Button>
