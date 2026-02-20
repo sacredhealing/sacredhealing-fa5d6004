@@ -112,3 +112,45 @@ export function mantraMatchesPlanet(
   
   return planetKeywords[planet]?.some(keyword => titleLower.includes(keyword)) || false;
 }
+
+/**
+ * Resonance Logic: Get daily Sanskrit mantra based on active planetary cycle
+ * Returns the specific bija mantra for each planet (Bhrigu Vision)
+ * 
+ * Example usage:
+ * const mantra = getDailyMantra('Rahu'); // Returns "Om Ram Rahave Namah"
+ * const mantra = getDailyMantraFromChart('Rahu Dasha'); // Returns "Om Ram Rahave Namah"
+ */
+export function getDailyMantra(activePlanet: Planet | null): string | null {
+  if (!activePlanet) return null;
+  
+  const mantraMap: Record<Planet, string> = {
+    Rahu: 'Om Ram Rahave Namah',
+    Ketu: 'Om Kem Ketave Namah',
+    Venus: 'Om Shum Shukraya Namah', // Shukra
+    Jupiter: 'Om Brim Brihaspataye Namah', // Guru
+    Sun: 'Om Hrim Suryaya Namah',
+    Moon: 'Om Shrim Chandramase Namah',
+    Mars: 'Om Krim Mangalaya Namah',
+    Mercury: 'Om Budhaya Namah',
+    Saturn: 'Om Sham Shanaye Namah',
+  };
+  
+  return mantraMap[activePlanet] || null;
+}
+
+/**
+ * Get daily mantra from user chart (VedicReading)
+ * Extracts active planet from currentDasha period
+ */
+export function getDailyMantraFromChart(
+  currentDasha: string | null | undefined
+): string | null {
+  if (!currentDasha) return null;
+  
+  // Extract planet from "Rahu Dasha" → "Rahu"
+  const planetName = currentDasha.split(' ')[0];
+  const planet = normalizePlanetName(planetName);
+  
+  return planet ? getDailyMantra(planet) : null;
+}

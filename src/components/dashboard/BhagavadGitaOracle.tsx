@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAIVedicReading } from '@/hooks/useAIVedicReading';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { normalizePlanetName } from '@/lib/jyotishMantraLogic';
+import { normalizePlanetName, getDailyMantraFromChart } from '@/lib/jyotishMantraLogic';
 import { getGitaVerseForCycle, type GitaVerse } from '@/lib/gitaVerses';
 import type { UserProfile } from '@/lib/vedicTypes';
 import { Card, CardContent } from '@/components/ui/card';
@@ -74,6 +74,12 @@ export const BhagavadGitaOracle: React.FC<BhagavadGitaOracleProps> = ({ classNam
   const verse: GitaVerse = useMemo(() => {
     return getGitaVerseForCycle(currentCycle);
   }, [currentCycle]);
+
+  // Get daily mantra for current cycle
+  const dailyMantra = useMemo(() => {
+    if (!reading?.personalCompass?.currentDasha?.period) return null;
+    return getDailyMantraFromChart(reading.personalCompass.currentDasha.period);
+  }, [reading]);
 
   // Generate reading if user has birth details but no reading yet
   useEffect(() => {
@@ -193,6 +199,18 @@ export const BhagavadGitaOracle: React.FC<BhagavadGitaOracleProps> = ({ classNam
           <div className="text-xs text-[#D4AF37]/60 font-serif mt-2" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
             Chapter {verse.chapter}, Verse {verse.verse}
           </div>
+
+          {/* Daily Mantra (Resonance Logic) */}
+          {dailyMantra && (
+            <div className="mt-6 pt-6 border-t border-[#D4AF37]/20">
+              <div className="text-xs text-[#D4AF37]/50 uppercase tracking-wider mb-2 font-serif" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
+                Your Daily Resonance
+              </div>
+              <div className="text-lg md:text-xl font-serif text-[#D4AF37] leading-relaxed" style={{ fontFamily: 'Georgia, serif' }}>
+                {dailyMantra}
+              </div>
+            </div>
+          )}
         </div>
 
         {isTapped && (
