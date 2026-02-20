@@ -10,14 +10,18 @@ import {
   deriveMountJupiter,
 } from '@/data/siddhaLineage';
 import {
-  getEighthGateInsight,
-  deriveRahuKetu,
-  deriveMountMoon,
-} from '@/lib/eighthGateScroll';
+  getShadowVow,
+  deriveHeartLineState,
+  isSaturnInShadowHouses,
+} from '@/logic/shadowAnalyzer';
 import { getPathToPower } from '@/lib/sovereignFuture';
 import { SoulFrequencyMeter } from './SoulFrequencyMeter';
 import { SiddhaIcon } from './SiddhaIcon';
 import { playPaperTearSound } from '@/utils/paperTearSound';
+import { playVoiceOfShadow174Hz } from '@/utils/shadowVoiceSound';
+import { playShatteringGlass432Hz } from '@/utils/shatteringGlassSound';
+import { addDailyRemedy } from '@/utils/dailyRemedyStore';
+import { toast } from 'sonner';
 
 /** Deep Akashic: Vedic Triad + Multi-Planetary (Ketu/Saturn) + Origin, Mastery, Shadow */
 type AkashicRecord = {
@@ -279,26 +283,26 @@ const AkashicSiddhaReadingComponent: React.FC<AkashicSiddhaReadingProps> = ({
     () => getSiddhaGuide(atmakaraka, mountJupiter),
     [atmakaraka, mountJupiter]
   );
-  const rahuKetu = useMemo(
+  const heartLineState = useMemo(
     () =>
-      deriveRahuKetu(
-        vedicReading?.personalCompass?.currentDasha?.period,
-        userHouse
-      ),
-    [vedicReading?.personalCompass?.currentDasha?.period, userHouse]
-  );
-  const mountMoon = useMemo(
-    () => deriveMountMoon(palmScan?.palmArchetype ?? null, palmScan?.seed),
-    [palmScan?.palmArchetype, palmScan?.seed]
-  );
-  const eighthGateInsight = useMemo(
-    () =>
-      getEighthGateInsight(
-        rahuKetu,
-        mountMoon,
+      deriveHeartLineState(
+        palmScan?.heartLineLeak ?? false,
         palmScan?.seed ?? vedicReading?.personalCompass?.currentDasha?.period
       ),
-    [rahuKetu, mountMoon, palmScan?.seed, vedicReading?.personalCompass?.currentDasha?.period]
+    [palmScan?.heartLineLeak, palmScan?.seed, vedicReading?.personalCompass?.currentDasha?.period]
+  );
+  const saturnInShadow = useMemo(
+    () => isSaturnInShadowHouses(saturnHouseProp),
+    [saturnHouseProp]
+  );
+  const shadowVowInsight = useMemo(
+    () =>
+      getShadowVow(
+        saturnInShadow,
+        heartLineState,
+        palmScan?.seed ?? vedicReading?.personalCompass?.currentDasha?.period
+      ),
+    [saturnInShadow, heartLineState, palmScan?.seed, vedicReading?.personalCompass?.currentDasha?.period]
   );
   const remedyPlanet = useMemo(
     () => remedyPlanetFromRecord(record.remedy),
@@ -390,6 +394,23 @@ const AkashicSiddhaReadingComponent: React.FC<AkashicSiddhaReadingProps> = ({
               {burnRevealed && <SoulFrequencyMeter isActive={true} className="shrink-0" />}
             </div>
             <div className={`relative ${manuscriptContent}`}>
+              {/* Dim overlay when 8th Gate (Scroll 2) is unrolled — shadow activation */}
+              <AnimatePresence>
+                {burnRevealed && scrollUnrolled[2] && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.6 }}
+                    className="absolute inset-0 z-[5] pointer-events-none rounded-b-lg"
+                    style={{
+                      background: 'linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.7) 100%)',
+                      mixBlendMode: 'multiply',
+                    }}
+                    aria-hidden
+                  />
+                )}
+              </AnimatePresence>
               {/* Burn-to-Read parchment overlay */}
               <AnimatePresence>
                 {!burnRevealed && (
@@ -456,26 +477,96 @@ const AkashicSiddhaReadingComponent: React.FC<AkashicSiddhaReadingProps> = ({
                     </div>
                   </ParchmentScroll>
 
-                  {/* Scroll 2: The 8th Gate (Hidden Karma) */}
+                  {/* Scroll 2: The 8th Gate (Shadow) — dim, 174Hz, burning smoke, Break the Vow */}
                   <ParchmentScroll
                     title="The 8th Gate"
                     subtitle="Shadow Analysis · Hidden Karma"
                     isUnrolled={scrollUnrolled[2]}
-                    onUnroll={() => setScrollUnrolled((s) => ({ ...s, 2: true }))}
-                    playSound
+                    onUnroll={() => {
+                      playPaperTearSound();
+                      playVoiceOfShadow174Hz();
+                      setScrollUnrolled((s) => ({ ...s, 2: true }));
+                    }}
+                    playSound={false}
                   >
-                    <p className="text-[10px] uppercase tracking-wider text-[#D4AF37]/80 mb-2">Shadow Analysis</p>
-                    <p className="text-white/85 text-sm leading-relaxed mb-3">
-                      {eighthGateInsight.shadowAnalysis}
-                    </p>
-                    <p className="text-[10px] uppercase tracking-wider text-[#D4AF37]/80 mb-2">Karmic Vow</p>
-                    <p className="text-white/90 font-semibold mb-1">{eighthGateInsight.karmicVow}</p>
-                    <p className="text-white/80 text-sm leading-relaxed mb-3">
-                      {eighthGateInsight.vowExplanation}
-                    </p>
-                    <p className="text-white/75 text-sm italic">
-                      {eighthGateInsight.block2026}
-                    </p>
+                    <div className="relative">
+                      {/* Burning smoke — dark gradient with subtle motion */}
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 1.2, ease: 'easeOut' }}
+                        className="absolute inset-0 -mx-4 -my-2 h-[calc(100%+1rem)] min-h-[200px] pointer-events-none overflow-hidden rounded"
+                        aria-hidden
+                      >
+                        <div
+                          className="absolute inset-0 bg-gradient-to-t from-black/90 via-amber-950/40 to-transparent opacity-80"
+                          style={{
+                            backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% 100%, rgba(120,60,0,0.3), transparent)',
+                          }}
+                        />
+                        <motion.div
+                          animate={{
+                            opacity: [0.3, 0.6, 0.3],
+                            scale: [1, 1.05, 1],
+                          }}
+                          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                          className="absolute inset-0 bg-[radial-gradient(ellipse_100%_80%_at_50%_80%,rgba(60,30,0,0.4),transparent_70%)]"
+                        />
+                      </motion.div>
+                      <div className="relative z-10">
+                        <p className="text-[10px] uppercase tracking-wider text-[#D4AF37]/80 mb-2">Shadow Analysis</p>
+                        <motion.p
+                          initial={{ opacity: 0, y: 12 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.4, duration: 0.8 }}
+                          className="text-white/85 text-sm leading-relaxed mb-3"
+                        >
+                          {shadowVowInsight.shadowAnalysis}
+                        </motion.p>
+                        <p className="text-[10px] uppercase tracking-wider text-[#D4AF37]/80 mb-2">The Shadow Vow</p>
+                        <motion.p
+                          initial={{ opacity: 0, y: 12 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.7, duration: 0.8 }}
+                          className="text-white/90 font-semibold mb-1"
+                        >
+                          Vow of {shadowVowInsight.shadowVow}
+                        </motion.p>
+                        <motion.p
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 1, duration: 0.8 }}
+                          className="text-white/80 text-sm leading-relaxed mb-4"
+                        >
+                          {shadowVowInsight.explanation}
+                        </motion.p>
+                        <motion.button
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: 1.4, duration: 0.5 }}
+                          whileHover={{ scale: 1.02, boxShadow: '0 0 24px rgba(212,175,55,0.4)' }}
+                          whileTap={{ scale: 0.98 }}
+                          type="button"
+                          onClick={() => {
+                            addDailyRemedy({
+                              mantra: shadowVowInsight.transmutationMantra,
+                              mantraName: shadowVowInsight.mantraName,
+                              shadowVow: shadowVowInsight.shadowVow,
+                            });
+                            playShatteringGlass432Hz();
+                            toast.success(`${shadowVowInsight.mantraName} added to Daily Remedy list`);
+                          }}
+                          className="w-full py-3 px-4 rounded-xl border-2 border-[#D4AF37] bg-[#D4AF37]/15 text-[#D4AF37] font-bold uppercase tracking-wider text-sm flex items-center justify-center gap-2"
+                          style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif', boxShadow: '0 0 16px rgba(212,175,55,0.25)' }}
+                        >
+                          <span aria-hidden>⚡</span>
+                          Break the Vow
+                        </motion.button>
+                        <p className="text-[10px] text-[#D4AF37]/60 mt-2 text-center">
+                          Adds {shadowVowInsight.mantraName} to your Daily Remedy list
+                        </p>
+                      </div>
+                    </div>
                   </ParchmentScroll>
 
                   {/* Scroll 3: The Sovereign Future */}
