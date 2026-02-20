@@ -10,7 +10,7 @@ import { useDailyGuidance } from '@/hooks/useDailyGuidance';
 import { useDailyJourney } from '@/hooks/useDailyJourney';
 import { useDayClosed } from '@/hooks/useDayClosed';
 import { useReturnVisit } from '@/hooks/useReturnVisit';
-import { useDashboardAutostart, dismissDashboardAutostartForToday } from '@/hooks/useDashboardAutostart';
+import { useDashboardAutostart } from '@/hooks/useDashboardAutostart';
 import { AmbientSoundToggle } from '@/components/audio/AmbientSoundToggle';
 import { DailyGuidanceCard } from '@/components/dashboard/DailyGuidanceCard';
 import { InlineSessionPlayer } from '@/components/dashboard/InlineSessionPlayer';
@@ -118,10 +118,6 @@ const Dashboard: React.FC = () => {
     enabled: flowState === 'idle',
   });
 
-  const onNotNow = useCallback(() => {
-    dismissDashboardAutostartForToday();
-  }, []);
-
   const handleSessionComplete = () => {
     if (!isContinuationCompletion) {
       if (completeSlot === 'morning') completeMorning.mutate(undefined);
@@ -170,46 +166,6 @@ const Dashboard: React.FC = () => {
     <div className="min-h-screen px-3 sm:px-4 pt-4 sm:pt-6 pb-24">
       <AchievementPopup achievement={newlyUnlocked} onClose={dismissNewlyUnlocked} />
 
-      {/* Celestial Sync HUD — replaces step-into-the-day bar */}
-      {horaWatch.calculation && (
-        <section className="mb-4 rounded-2xl border border-amber-500/20 bg-gradient-to-r from-indigo-950/90 via-violet-950/70 to-amber-950/50 px-4 py-3 flex items-center gap-3">
-          <div
-            className="flex-shrink-0 w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center border border-amber-500/30 animate-pulse"
-            style={{ animationDuration: `${2 + (100 - horaIntensity) / 50}s` }}
-          >
-            <svg viewBox="0 0 24 24" className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <circle cx="12" cy="12" r="10" strokeOpacity="0.4" />
-              <path d="M12 2a10 10 0 0 1 0 20" strokeOpacity="0.8" />
-              <path d="M12 2l0 4M12 18l0 4M2 12l4 0M18 12l4 0" />
-              <circle cx="12" cy="12" r="3" fill="currentColor" opacity="0.8" />
-            </svg>
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-[10px] uppercase tracking-widest text-amber-400/80 font-medium">Celestial Sync</p>
-            <p className="text-xs sm:text-sm text-white/95 leading-snug mt-0.5">
-              {userName}, your {dashaCycle} Cycle (Age 42) is Active. Current Success Window: {horaPlanet} Hora — {successWindowPct}%.
-            </p>
-          </div>
-        </section>
-      )}
-
-      {/* Quick Oracle — Akashic Verdict for current hour */}
-      <section className="mb-4 rounded-2xl border border-purple-500/20 bg-purple-950/30 px-4 py-3">
-        <p className="text-[10px] uppercase tracking-widest text-purple-400/80 font-medium mb-2">Quick Oracle</p>
-        {vedicReading?.todayInfluence?.wisdomQuote ? (
-          <p className="text-sm font-serif italic text-purple-100/90 leading-relaxed">
-            &ldquo;{vedicReading.todayInfluence.wisdomQuote}&rdquo;
-          </p>
-        ) : (
-          <p className="text-sm text-white/70 leading-relaxed">
-            Align with the current {horaPlanet} Hora for clarity. Get your full Akashic Verdict in Jyotish.
-          </p>
-        )}
-        <Link to="/vedic-astrology" className="inline-block mt-2 text-xs text-amber-400/90 hover:text-amber-300 font-medium">
-          See full verdict →
-        </Link>
-      </section>
-
       {/* Header - always visible; elegant serif greeting */}
       <header className="flex items-center justify-between mb-4 sm:mb-6 animate-fade-in">
         <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
@@ -239,17 +195,47 @@ const Dashboard: React.FC = () => {
               returnState={returnState}
               streakIncreased={streakIncreased}
             />
-            {!hasCompletedToday && (
-              <button
-                type="button"
-                onClick={onNotNow}
-                className="mt-2 text-xs text-muted-foreground hover:text-foreground/80 transition-colors block ml-auto"
-                style={{ opacity: 0.7 }}
-              >
-                {t('common.notNow')}
-              </button>
-            )}
           </div>
+
+          {/* Celestial Sync — below big banner */}
+          {horaWatch.calculation && (
+            <section className="mb-4 rounded-2xl border border-amber-500/20 bg-gradient-to-r from-indigo-950/90 via-violet-950/70 to-amber-950/50 px-4 py-3 flex items-center gap-3">
+              <div
+                className="flex-shrink-0 w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center border border-amber-500/30 animate-pulse"
+                style={{ animationDuration: `${2 + (100 - horaIntensity) / 50}s` }}
+              >
+                <svg viewBox="0 0 24 24" className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <circle cx="12" cy="12" r="10" strokeOpacity="0.4" />
+                  <path d="M12 2a10 10 0 0 1 0 20" strokeOpacity="0.8" />
+                  <path d="M12 2l0 4M12 18l0 4M2 12l4 0M18 12l4 0" />
+                  <circle cx="12" cy="12" r="3" fill="currentColor" opacity="0.8" />
+                </svg>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] uppercase tracking-widest text-amber-400/80 font-medium">Celestial Sync</p>
+                <p className="text-xs sm:text-sm text-white/95 leading-snug mt-0.5">
+                  {userName}, your {dashaCycle} Cycle (Age 42) is Active. Current Success Window: {horaPlanet} Hora — {successWindowPct}%.
+                </p>
+              </div>
+            </section>
+          )}
+
+          {/* Quick Oracle — below big banner */}
+          <section className="mb-4 rounded-2xl border border-purple-500/20 bg-purple-950/30 px-4 py-3">
+            <p className="text-[10px] uppercase tracking-widest text-purple-400/80 font-medium mb-2">Quick Oracle</p>
+            {vedicReading?.todayInfluence?.wisdomQuote ? (
+              <p className="text-sm font-serif italic text-purple-100/90 leading-relaxed">
+                &ldquo;{vedicReading.todayInfluence.wisdomQuote}&rdquo;
+              </p>
+            ) : (
+              <p className="text-sm text-white/70 leading-relaxed">
+                Align with the current {horaPlanet} Hora for clarity. Get your full Akashic Verdict in Jyotish.
+              </p>
+            )}
+            <Link to="/vedic-astrology" className="inline-block mt-2 text-xs text-amber-400/90 hover:text-amber-300 font-medium">
+              See full verdict →
+            </Link>
+          </section>
 
           {/* Quick Actions Section — compact, visually light, subtle glow */}
           <div className="mb-4 sm:mb-5 animate-slide-up">
