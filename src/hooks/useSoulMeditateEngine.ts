@@ -86,6 +86,8 @@ export function useSoulMeditateEngine() {
   const neuralSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const neuralAudioRef = useRef<HTMLAudioElement | null>(null);
   const neuralGainRef = useRef<GainNode | null>(null);
+  /** BufferSource for neural playback (one-shot: create new node each Play) */
+  const neuralBufferSourceRef = useRef<AudioBufferSourceNode | null>(null);
   
   // Noise cleanup chain for neural source
   const noiseHighPassRef = useRef<BiquadFilterNode | null>(null);
@@ -189,7 +191,9 @@ export function useSoulMeditateEngine() {
     }
 
     try {
-    const ctx = new AudioContext();
+    // Fixed sample rate avoids decode/playback failures when file rate != context default
+    const CtxClass = typeof window !== 'undefined' && (window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext);
+    const ctx = CtxClass ? new (CtxClass as typeof AudioContext)({ sampleRate: 44100 }) : new AudioContext();
     audioContextRef.current = ctx;
     // Unlock context on same user gesture (2026 browser autoplay policy)
     if (ctx.state === 'suspended') {
@@ -477,7 +481,12 @@ export function useSoulMeditateEngine() {
       return false;
     }
 
-    // Clean up previous
+    // Clean up previous (MediaElement + any buffer playback)
+    if (neuralBufferSourceRef.current) {
+      try { neuralBufferSourceRef.current.stop(); } catch (_) {}
+      neuralBufferSourceRef.current.disconnect();
+      neuralBufferSourceRef.current = null;
+    }
     if (neuralAudioRef.current) {
       neuralAudioRef.current.pause();
       neuralAudioRef.current.src = '';
@@ -594,7 +603,7 @@ export function useSoulMeditateEngine() {
       console.error('Failed to upload neural source for export:', e);
     }
 
-    // Convert file to ArrayBuffer and decode; start/buffer status only after this succeeds
+    // Read as ArrayBuffer then decode (required for decodeAudioData; 44.1kHz context avoids sample-rate mismatch)
     try {
       let arrayBuffer: ArrayBuffer;
       if (isUrl) {
@@ -603,7 +612,6 @@ export function useSoulMeditateEngine() {
       } else {
         arrayBuffer = await (file as File).arrayBuffer();
       }
-
       const decodedBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
       setAudioBuffer(decodedBuffer);
       console.log('Neural Buffer Loaded:', decodedBuffer.duration);
@@ -767,20 +775,55 @@ export function useSoulMeditateEngine() {
     return { ok: true };
   }, [initialize, atmosphereLayer.source]);
 
-  // Play/pause neural layer — await AudioContext resume before play (fixes browser autoplay policy)
+  // Play/pause neural layer — buffer playback uses same gain chain as Hz; new BufferSource each Play (one-shot)
   const toggleNeuralPlay = useCallback(async () => {
-    if (!neuralAudioRef.current) return;
-    
-    if (neuralLayer.isPlaying) {
-      neuralAudioRef.current.pause();
-    } else {
-      if (audioContextRef.current?.state === 'suspended') {
-        await audioContextRef.current.resume();
-      }
-      await neuralAudioRef.current.play().catch(console.error);
+    const audioCtx = audioContextRef.current;
+    if (!audioCtx) return;
+
+    // Kickstart: resume if suspended (browser autoplay policy)
+    if (audioCtx.state === 'suspended') {
+      await audioCtx.resume();
     }
-    setNeuralLayer(prev => ({ ...prev, isPlaying: !prev.isPlaying }));
-  }, [neuralLayer.isPlaying]);
+
+    if (neuralLayer.isPlaying) {
+      // Stop: BufferSource (one-shot) or MediaElement
+      if (neuralBufferSourceRef.current) {
+        try { neuralBufferSourceRef.current.stop(); } catch (_) {}
+        neuralBufferSourceRef.current.disconnect();
+        neuralBufferSourceRef.current = null;
+      }
+      if (neuralAudioRef.current) neuralAudioRef.current.pause();
+      setNeuralLayer(prev => ({ ...prev, isPlaying: false }));
+      return;
+    }
+
+    // Play: prefer decoded buffer (same chain as oscillators: neuralGain -> mixer -> masterGain -> destination)
+    const buffer = audioBuffer;
+    if (buffer && neuralGainRef.current) {
+      // Lifecycle: BufferSource can only play once — create a new node every time user clicks Play
+      if (neuralBufferSourceRef.current) {
+        try { neuralBufferSourceRef.current.stop(); } catch (_) {}
+        neuralBufferSourceRef.current.disconnect();
+        neuralBufferSourceRef.current = null;
+      }
+      const source = audioCtx.createBufferSource();
+      source.buffer = buffer;
+      source.loop = true;
+      // Same chain as Hz: source -> neuralGain -> mixer -> masterGain -> destination (wired in initialize)
+      source.connect(neuralGainRef.current);
+      console.log('[Neural] BufferSource -> neuralGain (same masterGain as oscillators)');
+      source.start(0);
+      neuralBufferSourceRef.current = source;
+      setNeuralLayer(prev => ({ ...prev, isPlaying: true }));
+      return;
+    }
+
+    // Fallback: MediaElement (e.g. URL-only source before decode)
+    if (neuralAudioRef.current) {
+      await neuralAudioRef.current.play().catch(console.error);
+      setNeuralLayer(prev => ({ ...prev, isPlaying: true }));
+    }
+  }, [neuralLayer.isPlaying, audioBuffer]);
 
   // Play/pause atmosphere
   const toggleAtmospherePlay = useCallback(async () => {
