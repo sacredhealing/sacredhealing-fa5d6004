@@ -19,9 +19,11 @@ const DEFAULT_RECORD = { title: "The Wandering Gandharva", origin: "Celestial Re
 
 interface AkashicSiddhaReadingProps {
   userHouse?: number;
+  onComplete?: (archetype: string) => void;
+  isModal?: boolean;
 }
 
-const AkashicSiddhaReading: React.FC<AkashicSiddhaReadingProps> = ({ userHouse = 12 }) => {
+const AkashicSiddhaReading: React.FC<AkashicSiddhaReadingProps> = ({ userHouse = 12, onComplete, isModal = false }) => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [readingVisible, setReadingVisible] = useState(false);
   const record = AKASHIC_RECORDS[userHouse] || DEFAULT_RECORD;
@@ -32,14 +34,29 @@ const AkashicSiddhaReading: React.FC<AkashicSiddhaReadingProps> = ({ userHouse =
     setTimeout(() => {
       setIsSyncing(false);
       setReadingVisible(true);
+      // Call onComplete callback when reading is revealed
+      if (onComplete) {
+        onComplete(record.title);
+      }
     }, 4000);
   };
 
+  const handleClose = () => {
+    setReadingVisible(false);
+    setIsSyncing(false);
+  };
+
+  const containerClass = isModal 
+    ? "text-[#D4AF37] font-serif flex flex-col items-center p-6"
+    : "min-h-screen bg-[#0a0a0a] text-[#D4AF37] p-8 font-serif flex flex-col items-center";
+
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-[#D4AF37] p-8 font-serif flex flex-col items-center">
-      <h2 className="text-3xl tracking-widest uppercase mb-12 text-center" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
-        Akashic Record Access
-      </h2>
+    <div className={containerClass}>
+      {!isModal && (
+        <h2 className="text-3xl tracking-widest uppercase mb-12 text-center" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
+          Akashic Record Access
+        </h2>
+      )}
 
       {!readingVisible && !isSyncing && (
         <motion.button
@@ -112,7 +129,7 @@ const AkashicSiddhaReading: React.FC<AkashicSiddhaReadingProps> = ({ userHouse =
             </div>
 
             <button 
-              onClick={() => setReadingVisible(false)}
+              onClick={handleClose}
               className="mt-12 text-xs opacity-40 hover:opacity-100 transition-opacity uppercase tracking-widest"
               style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}
             >

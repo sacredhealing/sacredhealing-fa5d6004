@@ -150,7 +150,7 @@ const Home: React.FC = () => {
       {/* Enter the Sacred Space — elegant gold-bordered tile */}
       <section className="py-6 sm:py-8 bg-background border-b border-border/50">
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Link to="/membership">
+          <Link to="/sacred-space">
             <Card className="relative overflow-hidden border-2 border-[#D4AF37]/60 bg-gradient-to-br from-[#D4AF37]/10 via-amber-900/20 to-[#1a0a2e] hover:border-[#D4AF37] transition-all duration-300 group">
               <div className="absolute inset-0 bg-gradient-to-r from-[#D4AF37]/5 via-transparent to-[#D4AF37]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="relative z-10 p-6 sm:p-8 text-center">

@@ -115,6 +115,7 @@ import Ayurveda from "./pages/Ayurveda";
 import Vastu from "./pages/Vastu";
 import PromptLibrary from "./pages/PromptLibrary";
 import HandAnalyzer from "./pages/HandAnalyzer";
+import SacredSpace from "./pages/SacredSpace";
 import { DebugBanner } from "./components/DebugBanner";
 import { ProfileLanguageSync } from "./components/ProfileLanguageSync";
 import "@/lib/performance"; // Initialize performance monitoring
@@ -134,8 +135,9 @@ function AppRoutes() {
       </Route>
       <Route path="/integrate" element={<PostSession />} />
       <Route element={<ProtectedRoute />}>
-        <Route path="/hand-analyzer" element={<HandAnalyzer />} />
-        <Route element={<AppLayout />}>
+                  <Route path="/hand-analyzer" element={<HandAnalyzer />} />
+                  <Route path="/sacred-space" element={<SacredSpace />} />
+                  <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/explore" element={<Explore />} />
                   <Route path="/explore-frequencies" element={<ExplorePage />} />
