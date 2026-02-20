@@ -42,7 +42,7 @@ export function MeditationSection({
     <div className="mt-4">
       <button
         onClick={() => setSectionOpen((v) => !v)}
-        className="w-full flex items-center justify-between gap-3 p-3 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 transition text-left"
+        className="w-full flex items-center justify-between gap-3 p-3 rounded-xl border border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.06] transition text-left cave-flicker"
       >
         <div>
           <div className="text-lg font-semibold text-foreground">{title}</div>
@@ -78,7 +78,7 @@ export function MeditationSection({
           return (
             <div
               key={m.id ?? m.slug ?? m.title}
-              className="relative overflow-hidden rounded-2xl border border-border bg-muted/30 p-4 hover:bg-muted/50 transition"
+              className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.04] p-4 hover:bg-white/[0.06] transition cave-flicker"
             >
               {m.is_premium && (
                 <div className="absolute top-3 right-3 px-2 py-1 bg-primary/20 rounded-full">

@@ -191,9 +191,11 @@ const CustomMeditationCreation: React.FC = () => {
       <ServiceBannerRow
         icon={Music}
         title={t('meditationCreation.title')}
-        subtitle={`${t('meditationCreation.badge')} • €97-€197`}
+        subtitle={t('meditationCreation.badge')}
         onCtaClick={() => setIsOpen(true)}
         accentColor="amber"
+        variant="sanctuary"
+        priceAboveTitle="€97–€197"
       />
 
       {/* Booking Dialog */}

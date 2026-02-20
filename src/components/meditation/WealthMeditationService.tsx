@@ -60,9 +60,11 @@ const WealthMeditationService: React.FC = () => {
       <ServiceBannerRow
         icon={Zap}
         title={t('wealth.title')}
-        subtitle={`€47 • ${t('wealth.badge')}`}
+        subtitle={t('wealth.badge')}
         onCtaClick={() => setIsOpen(true)}
         accentColor="yellow"
+        variant="sanctuary"
+        priceAboveTitle="€47"
       />
 
       {/* Purchase Dialog */}

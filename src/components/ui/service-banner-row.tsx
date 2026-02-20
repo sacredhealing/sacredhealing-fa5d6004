@@ -12,6 +12,10 @@ export interface ServiceBannerRowProps {
   accentColor?: 'purple' | 'amber' | 'yellow' | 'green';
   showArrow?: boolean;
   className?: string;
+  /** Sanctuary (Babaji's Cave): smoky glass, gold Om, price above title */
+  variant?: 'default' | 'sanctuary';
+  /** When variant=sanctuary, show this as serif price above the title (e.g. "€47") */
+  priceAboveTitle?: string;
 }
 
 const ServiceBannerRow: React.FC<ServiceBannerRowProps> = ({
@@ -23,6 +27,8 @@ const ServiceBannerRow: React.FC<ServiceBannerRowProps> = ({
   accentColor = 'purple',
   showArrow = true,
   className,
+  variant = 'default',
+  priceAboveTitle,
 }) => {
   const accentColors: Record<string, { bg: string; text: string; border: string; button: string }> = {
     purple: {
@@ -53,6 +59,46 @@ const ServiceBannerRow: React.FC<ServiceBannerRowProps> = ({
 
   const colors = accentColors[accentColor];
 
+  if (variant === 'sanctuary') {
+    return (
+      <div
+        className={cn(
+          'flex items-center gap-3 p-4 rounded-xl transition-all cursor-pointer',
+          'bg-white/[0.06] backdrop-blur-md border border-white/[0.08] hover:bg-white/[0.09]',
+          className
+        )}
+        onClick={!ctaText ? onCtaClick : undefined}
+      >
+        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#D4AF37]/10 text-[#D4AF37] text-xl font-serif shrink-0" style={{ fontFamily: 'Georgia, serif' }}>
+          ॐ
+        </div>
+        <div className="flex-1 min-w-0">
+          {priceAboveTitle && (
+            <p className="text-xs font-serif text-[#D4AF37]/90 mb-0.5" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
+              {priceAboveTitle}
+            </p>
+          )}
+          <h4 className="font-semibold text-foreground truncate">{title}</h4>
+          <p className="text-sm text-muted-foreground truncate">{subtitle}</p>
+        </div>
+        {ctaText ? (
+          <Button
+            size="sm"
+            className="border border-[#D4AF37]/60 text-[#D4AF37] bg-transparent hover:bg-[#D4AF37]/10 whitespace-nowrap"
+            onClick={(e) => {
+              e.stopPropagation();
+              onCtaClick();
+            }}
+          >
+            {ctaText}
+          </Button>
+        ) : showArrow ? (
+          <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+        ) : null}
+      </div>
+    );
+  }
+
   return (
     <div
       className={cn(
@@ -63,18 +109,13 @@ const ServiceBannerRow: React.FC<ServiceBannerRowProps> = ({
       )}
       onClick={!ctaText ? onCtaClick : undefined}
     >
-      {/* Icon */}
       <div className={cn('p-2 rounded-full', colors.bg)}>
         <Icon className={cn('w-5 h-5', colors.text)} />
       </div>
-
-      {/* Content */}
       <div className="flex-1 min-w-0">
         <h4 className="font-semibold text-foreground truncate">{title}</h4>
         <p className="text-sm text-muted-foreground truncate">{subtitle}</p>
       </div>
-
-      {/* CTA or Arrow */}
       {ctaText ? (
         <Button
           size="sm"

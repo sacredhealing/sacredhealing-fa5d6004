@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { motion } from 'framer-motion';
 import { Play, Pause, Clock, Sparkles, ArrowLeft, Loader2 } from 'lucide-react';
 import { TranslatedText } from '@/components/TranslatedText';
 import { Button } from '@/components/ui/button';
@@ -36,6 +37,45 @@ interface Meditation {
   shc_reward: number;
   is_premium: boolean;
   play_count: number;
+}
+
+/** Sunya empty state: pulsing Sri Yantra (Mahavatar / transmission) */
+function SunyaEmptyState() {
+  const cx = 50;
+  const cy = 50;
+  const tan52 = 1.28;
+  const downHeights = [22, 17, 12, 7, 2];
+  const downTriangles = downHeights.map((h) => {
+    const halfBase = h * tan52;
+    return `M ${cx - halfBase},${cy - h} L ${cx + halfBase},${cy - h} L ${cx},${cy + h} Z`;
+  });
+  const upHeights = [18, 12, 7, 2];
+  const upTriangles = upHeights.map((h) => {
+    const halfBase = h * tan52;
+    return `M ${cx - halfBase},${cy + h} L ${cx + halfBase},${cy + h} L ${cx},${cy - h} Z`;
+  });
+  return (
+    <motion.div
+      className="inline-flex items-center justify-center"
+      animate={{
+        opacity: [0.6, 1, 0.6],
+        filter: ['drop-shadow(0 0 8px rgba(139, 92, 246, 0.3))', 'drop-shadow(0 0 20px rgba(212, 175, 55, 0.4))', 'drop-shadow(0 0 8px rgba(139, 92, 246, 0.3))'],
+      }}
+      transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+    >
+      <svg viewBox="0 0 100 100" className="w-24 h-24 text-[#D4AF37]/40" preserveAspectRatio="xMidYMid meet">
+        <g fill="none" stroke="currentColor" strokeWidth="0.5" strokeLinejoin="round">
+          {downTriangles.map((d, i) => (
+            <path key={`d-${i}`} d={d} />
+          ))}
+          {upTriangles.map((d, i) => (
+            <path key={`u-${i}`} d={d} />
+          ))}
+        </g>
+        <circle cx={cx} cy={cy} r="2" fill="currentColor" opacity="0.6" />
+      </svg>
+    </motion.div>
+  );
 }
 
 const Meditations: React.FC = () => {
@@ -204,7 +244,7 @@ const Meditations: React.FC = () => {
         onClose={handleThresholdClose}
       />
 
-      <div className="min-h-screen px-4 pt-6 pb-24">
+      <div className="min-h-screen px-4 pt-6 pb-24 cave-bg">
         {/* Header */}
         <header className="mb-4 animate-fade-in">
           <h1 className="text-3xl font-heading font-bold text-foreground">
@@ -275,7 +315,7 @@ const Meditations: React.FC = () => {
                   return (
                     <div
                       key={meditation.id}
-                      className="relative overflow-hidden rounded-2xl bg-gradient-card border border-border/50 p-5 hover:scale-[1.02] transition-transform duration-300"
+                      className="relative overflow-hidden rounded-2xl bg-white/[0.04] border border-white/[0.08] p-5 hover:scale-[1.02] transition-transform duration-300 cave-flicker"
                     >
                       {meditation.is_premium && (
                         <div className="absolute top-3 right-3 px-2 py-1 bg-accent/20 rounded-full">
@@ -355,10 +395,12 @@ const Meditations: React.FC = () => {
               </p>
 
               {filtered.length === 0 ? (
-                <div className="text-center py-12">
-                  <Sparkles className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="font-semibold text-foreground mb-2">{t('meditations.noMeditations', 'No meditations found')}</h3>
-                  <p className="text-muted-foreground text-sm">
+                <div className="text-center py-16">
+                  <SunyaEmptyState />
+                  <h3 className="font-semibold text-foreground mb-2 mt-6" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
+                    Quiet the mind. The transmission will manifest shortly.
+                  </h3>
+                  <p className="text-muted-foreground text-sm max-w-sm mx-auto">
                     {t('meditations.noMeditationsHint', 'Meditations will be added soon.')}
                   </p>
                 </div>

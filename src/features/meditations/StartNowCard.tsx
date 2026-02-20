@@ -30,7 +30,7 @@ function getCopy(t: (key: string, fallback?: string | Record<string, unknown>) =
       ? t("meditations.startNow.buttonBusy", "Start 2 min")
       : userState === "heavy"
       ? t("meditations.startNow.buttonHeavy", "Start comfort")
-      : t("meditations.startNow.buttonCalm", "Start now");
+      : t("meditations.startNow.buttonCalm", "Initiate Practice");
 
   return { title, subtitle, button };
 }
@@ -40,20 +40,27 @@ export function StartNowCard({ item, dayPhase, userState, onStart }: Props) {
   const c = getCopy(t as any, dayPhase, userState);
 
   return (
-    <div className="mt-2 rounded-2xl border border-border bg-muted/30 p-4">
+    <div
+      className="mt-2 rounded-2xl p-4 bg-[#0a0a0a]/80 backdrop-blur-sm"
+      style={{
+        boxShadow: "0 0 0 1px rgba(212, 175, 55, 0.15), 0 0 24px rgba(212, 175, 55, 0.08)",
+      }}
+    >
       <div className="text-xl font-semibold text-foreground">{c.title}</div>
       <div className="mt-1 text-sm text-muted-foreground">{c.subtitle}</div>
 
       <div className="mt-3 flex items-center justify-between gap-3">
-        <div className="text-sm text-muted-foreground">
-          {item ? (item.title ?? item.name ?? "") : t("meditations.startNow.selecting", "Selecting a meditation…")}
+        <div className="text-sm text-muted-foreground font-serif italic" style={{ fontFamily: "Cinzel, DM Serif Display, Georgia, serif" }}>
+          {item ? (item.title ?? item.name ?? "") : t("meditations.startNow.lineage", "The lineage awaits your presence.")}
         </div>
 
         <button
           disabled={!item}
           onClick={() => item && onStart(item)}
-          className={`shrink-0 rounded-full px-5 py-3 text-sm font-semibold transition
-            ${item ? "bg-primary text-primary-foreground hover:opacity-90" : "bg-muted text-muted-foreground cursor-not-allowed"}`}
+          className={`shrink-0 rounded-full px-5 py-3 text-sm font-semibold transition border
+            ${item
+              ? "border-[#D4AF37] text-[#D4AF37] bg-transparent hover:bg-[#D4AF37]/10"
+              : "border-muted text-muted-foreground cursor-not-allowed bg-transparent"}`}
         >
           {c.button}
         </button>
