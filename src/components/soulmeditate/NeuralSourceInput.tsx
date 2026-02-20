@@ -160,21 +160,23 @@ export default function NeuralSourceInput({
   };
 
   return (
-    <Card className="bg-black/40 backdrop-blur-xl border-white/10">
+    <Card className="bg-black/40 backdrop-blur-xl border-white/10 min-h-[320px] md:min-h-0">
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2 text-white/90">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-pink-500/20 to-rose-500/20">
-            <Brain className="w-5 h-5 text-pink-400" />
+        <CardTitle className="text-lg flex flex-col sm:flex-row sm:items-center gap-2 text-white/90">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-pink-500/20 to-rose-500/20">
+              <Brain className="w-5 h-5 text-pink-400" />
+            </div>
+            Neural Source
           </div>
-          Neural Source
           {layer.source && (
-            <Badge variant="outline" className="ml-auto text-xs border-pink-500/30 text-pink-400 max-w-[150px] truncate">
+            <Badge variant="outline" className="text-xs border-pink-500/30 text-pink-400 max-w-full sm:max-w-[180px] truncate sm:ml-auto w-fit">
               {layer.source}
             </Badge>
           )}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 py-4 md:py-0">
         {/* Neural Preprocessing Status */}
         <NeuralPreprocessor 
           isProcessing={isNeuralCleaning && cleaningStage !== 'complete'}

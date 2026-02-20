@@ -53,6 +53,8 @@ const QUANTUM_CALIBRATION_LINEAR = Math.pow(10, -5 / 20); // ≈ 0.562
 // Oscillator gain: 0.7–0.8 range for audible Hz/Binaural without clipping
 const OSCILLATOR_BASE_GAIN = 0.8;
 const OSCILLATOR_GAIN_MAX = 0.85;
+// Neural source +3dB to match oscillators in the same DSP rack
+const NEURAL_GAIN_BOOST_LINEAR = Math.pow(10, 3 / 20); // ≈ 1.412
 
 const BINAURAL_PRESETS = [
   { beatHz: 0.5, label: 'Epsilon (0.5 Hz) – Transcendence' },
@@ -212,9 +214,9 @@ export function useSoulMeditateEngine() {
     analyser.smoothingTimeConstant = 0.8;
     analyserRef.current = analyser;
 
-    // Create layer gains
+    // Create layer gains (neural +3dB default so it matches oscillators in DSP rack)
     neuralGainRef.current = ctx.createGain();
-    neuralGainRef.current.gain.value = neuralLayer.volume;
+    neuralGainRef.current.gain.value = Math.min(0.95, neuralLayer.volume * NEURAL_GAIN_BOOST_LINEAR);
 
     // Create noise cleanup chain for neural source
     // High-pass filter: removes low-frequency rumble/hum (below 80Hz)
@@ -548,8 +550,8 @@ export function useSoulMeditateEngine() {
     if (audioContextRef.current.state === 'suspended') {
       await audioContextRef.current.resume();
     }
-    // Ensure neural gain is audible (never 0)
-    const neuralVol = Math.min(0.85, Math.max(0.01, neuralLayer.volume));
+    // Ensure neural gain is audible; +3dB boost to match oscillators in DSP rack
+    const neuralVol = Math.min(0.95, Math.max(0.01, neuralLayer.volume * NEURAL_GAIN_BOOST_LINEAR));
     neuralGainRef.current.gain.value = neuralVol;
 
     // Set UI source + export metadata
@@ -603,7 +605,7 @@ export function useSoulMeditateEngine() {
       console.error('Failed to upload neural source for export:', e);
     }
 
-    // Read as ArrayBuffer then decode (required for decodeAudioData; 44.1kHz context avoids sample-rate mismatch)
+    // Read as ArrayBuffer then decode (required for decodeAudioData; .m4a/WAV/MP3 compatible; 44.1kHz context avoids sample-rate mismatch)
     try {
       let arrayBuffer: ArrayBuffer;
       if (isUrl) {
@@ -1000,7 +1002,7 @@ export function useSoulMeditateEngine() {
   const clampVolume = (vol: number, maxVol: number = 0.85) => Math.min(Math.max(0, vol), maxVol);
 
   const updateNeuralVolume = useCallback((vol: number) => {
-    const safeVol = clampVolume(vol);
+    const safeVol = Math.min(0.95, clampVolume(vol) * NEURAL_GAIN_BOOST_LINEAR);
     if (neuralGainRef.current) {
       neuralGainRef.current.gain.value = safeVol;
     }

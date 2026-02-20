@@ -171,7 +171,7 @@ export default function VirtualChannelStrip({
                   value={band.value}
                   onChange={(v) => handleBandChange(band.id, v)}
                   isSelected={selectedBand === band.id}
-                  size={100}
+                  size={115}
                 />
               </div>
 
@@ -180,7 +180,7 @@ export default function VirtualChannelStrip({
                 <div className="text-sm font-bold text-white tracking-wider">
                   {band.label} <span className="text-slate-400">({band.frequency})</span>
                 </div>
-                <div className={`text-lg font-mono font-bold mt-1 ${
+                <div className={`text-4xl md:text-6xl font-mono font-bold mt-1 tabular-nums ${
                   band.value > 0 ? 'text-green-400' : 
                   band.value < 0 ? 'text-cyan-400' : 'text-slate-400'
                 }`}>

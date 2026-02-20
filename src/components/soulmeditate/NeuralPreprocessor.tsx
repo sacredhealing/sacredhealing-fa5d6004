@@ -55,40 +55,40 @@ export default function NeuralPreprocessor({
         />
       </div>
 
-      <div className="flex items-center gap-4">
-        {/* Icon */}
-        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-          stage === 'complete' 
-            ? 'bg-cyan-500/20' 
-            : 'bg-cyan-500/10 animate-pulse'
-        }`}>
-          {isProcessing ? (
-            <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />
-          ) : (
-            <Zap className="w-5 h-5 text-cyan-400" />
-          )}
-        </div>
-
-        {/* Status */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-cyan-300">
-              Neural Cleaning{isProcessing ? dots : ''}
-            </span>
-            {stage === 'complete' && (
-              <span className="text-xs bg-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded-full">
-                Ready
-              </span>
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+        {/* Icon + Neural Cleaning status stacked with Regain on mobile */}
+        <div className="flex items-center gap-4 flex-1 min-w-0">
+          <div className={`w-10 h-10 shrink-0 rounded-full flex items-center justify-center ${
+            stage === 'complete' 
+              ? 'bg-cyan-500/20' 
+              : 'bg-cyan-500/10 animate-pulse'
+          }`}>
+            {isProcessing ? (
+              <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />
+            ) : (
+              <Zap className="w-5 h-5 text-cyan-400" />
             )}
           </div>
-          <p className="text-xs text-cyan-400/70 font-mono truncate">
-            {STAGE_LABELS[stage] || 'Processing...'}
-          </p>
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-medium text-cyan-300">
+                Neural Cleaning{isProcessing ? dots : ''}
+              </span>
+              {stage === 'complete' && (
+                <span className="text-xs bg-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded-full">
+                  Ready
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-cyan-400/70 font-mono truncate">
+              {STAGE_LABELS[stage] || 'Processing...'}
+            </p>
+          </div>
         </div>
 
-        {/* Pre-Gain Readout */}
+        {/* Pre-Gain (Regain) badge — stacked below on mobile so it doesn't overlap filename */}
         {(stage === 'complete' || stage === 'limiting') && autoGainDb !== 0 && (
-          <div className="flex items-center gap-2 bg-black/40 rounded-lg px-3 py-2 border border-cyan-500/20">
+          <div className="flex items-center gap-2 bg-black/40 rounded-lg px-3 py-2 border border-cyan-500/20 w-fit shrink-0">
             <Volume2 className="w-4 h-4 text-cyan-400" />
             <div className="text-right">
               <div className="text-[10px] text-cyan-400/60 uppercase tracking-wider">Pre-Gain</div>

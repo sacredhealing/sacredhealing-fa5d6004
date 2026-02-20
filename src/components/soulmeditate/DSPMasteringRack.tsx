@@ -23,7 +23,7 @@ export default function DSPMasteringRack({ dsp, onUpdate }: DSPMasteringRackProp
           DSP Mastering Rack
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-8">
         {/* Reverb */}
         <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
           <div className="flex items-center justify-between">
@@ -83,8 +83,8 @@ export default function DSPMasteringRack({ dsp, onUpdate }: DSPMasteringRackProp
           )}
         </div>
 
-        {/* Delay */}
-        <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
+        {/* Delay — extra padding to prevent accidental clicks */}
+        <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4 mt-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500/20 to-teal-500/20 flex items-center justify-center">
