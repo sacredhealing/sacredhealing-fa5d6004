@@ -294,6 +294,7 @@ export default function CreativeSoulMeditationTool() {
         setExportAccessLoading(false);
         return;
       }
+      // Admin/Producer always has full Spectral Alchemy access
       if (isAdmin) {
         setHasExportAccess(true);
         setExportAccessLoading(false);

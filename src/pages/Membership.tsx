@@ -63,6 +63,14 @@ const Membership = () => {
     discount_value: number;
   } | null>(null);
 
+  // Store product intent for post-checkout redirect (e.g. Akashic Deep Reading)
+  useEffect(() => {
+    const product = searchParams.get('product');
+    if (product === 'akashic') {
+      try { sessionStorage.setItem('membership_product_intent', 'akashic'); } catch {}
+    }
+  }, [searchParams]);
+
   // Handle success/cancel from Stripe
   useEffect(() => {
     const success = searchParams.get('success');
@@ -70,15 +78,22 @@ const Membership = () => {
     const tierParam = searchParams.get('tier');
 
     if (success === 'true') {
+      const productIntent = (() => { try { return sessionStorage.getItem('membership_product_intent'); } catch { return null; } })();
+      if (productIntent === 'akashic') {
+        try { sessionStorage.removeItem('membership_product_intent'); } catch {}
+        refreshMembership();
+        toast.success('Your Akashic Record is now unlocked. Download your Certificate of Origin.');
+        navigate('/akashic-records?unlocked=1');
+        return;
+      }
       toast.success(`Welcome to ${tierParam || 'Premium'}! Your membership is now active.`);
       refreshMembership();
-      // Clean up URL
       window.history.replaceState({}, '', '/membership');
     } else if (canceled === 'true') {
       toast.info('Checkout was canceled. No charges were made.');
       window.history.replaceState({}, '', '/membership');
     }
-  }, [searchParams, refreshMembership]);
+  }, [searchParams, refreshMembership, navigate]);
 
   useEffect(() => {
     fetchTiers();

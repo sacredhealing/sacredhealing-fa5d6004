@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useMembership } from '@/hooks/useMembership';
+import { generateAkashicCertificatePdf } from '@/utils/akashicCertificatePdf';
 
 /** Deep Akashic: Vedic Triad + Multi-Planetary (Ketu/Saturn) + Origin, Mastery, Shadow */
 type AkashicRecord = {
@@ -124,6 +125,12 @@ interface AkashicSiddhaReadingProps {
   vedicReading?: { personalCompass?: { currentDasha?: { period?: string } }; masterBlueprint?: { soulMap12Houses?: string } } | null;
   onComplete?: (archetype: string) => void;
   isModal?: boolean;
+  /** Purchased high-ticket $49 reveal — unlocks full manuscript + Certificate of Origin */
+  hasDeepReadingAccess?: boolean;
+  /** Show Download Certificate of Origin PDF button (when hasDeepReadingAccess) */
+  showCertificateDownload?: boolean;
+  /** User display name for Certificate title */
+  userName?: string;
 }
 
 /** Derive Ketu house from Dasha period name if possible (e.g. Ketu → 12, Moon → 4) */
@@ -144,12 +151,16 @@ const AkashicSiddhaReadingComponent: React.FC<AkashicSiddhaReadingProps> = ({
   vedicReading,
   onComplete,
   isModal = false,
+  hasDeepReadingAccess = false,
+  showCertificateDownload = false,
+  userName,
 }) => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [readingVisible, setReadingVisible] = useState(false);
   const [deepenRevealed, setDeepenRevealed] = useState(false);
   const [burnRevealed, setBurnRevealed] = useState(false);
   const { isPremium } = useMembership();
+  const hasFullManuscript = isPremium || hasDeepReadingAccess;
   const userHouse = ketuHouseFromReading(vedicReading) ?? userHouseProp;
   const record = AKASHIC_RECORDS[userHouse] || DEFAULT_RECORD;
   const yearClimax = getYearOfKarmicClimax(userHouse);
@@ -230,7 +241,7 @@ const AkashicSiddhaReadingComponent: React.FC<AkashicSiddhaReadingProps> = ({
                 className="text-[10px] uppercase tracking-[0.4em] text-[#D4AF37]/70"
                 style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}
               >
-                {burnRevealed ? (isPremium ? 'The Scroll of Time — Full Akashic Manuscript' : 'Akashic Record — Summary') : 'Secret Manuscript'}
+                {burnRevealed ? (hasFullManuscript ? 'The Scroll of Time — Full Akashic Manuscript' : 'Akashic Record — Summary') : 'Secret Manuscript'}
               </span>
             </div>
             <div className={`relative ${manuscriptContent}`}>
@@ -269,8 +280,8 @@ const AkashicSiddhaReadingComponent: React.FC<AkashicSiddhaReadingProps> = ({
                 <p className="text-white/80 mt-3 text-sm leading-relaxed">{record.incarnation}</p>
               </section>
 
-              {/* ——— MEMBERSHIP GATE: Full Manuscript is Premium Universal ——— */}
-              {!isPremium && (
+              {/* ——— MEMBERSHIP GATE: Full Manuscript requires Premium or $49 Deep Reading ——— */}
+              {!hasFullManuscript && (
                 <section className="py-6">
                   <div className="rounded-xl border-2 border-[#D4AF37]/50 bg-[#D4AF37]/5 p-6 text-center">
                     <h4
@@ -293,8 +304,8 @@ const AkashicSiddhaReadingComponent: React.FC<AkashicSiddhaReadingProps> = ({
                 </section>
               )}
 
-              {/* ——— PREMIUM: Full Akashic Manuscript (PDF-style) ——— */}
-              {isPremium && (
+              {/* ——— FULL MANUSCRIPT: Premium or $49 Deep Reading ——— */}
+              {hasFullManuscript && (
                 <>
                   {/* The Akashic Origin — where you came from */}
                   <section>
@@ -514,6 +525,22 @@ const AkashicSiddhaReadingComponent: React.FC<AkashicSiddhaReadingProps> = ({
                       )}
                     </AnimatePresence>
                   </section>
+
+                  {/* Certificate of Origin — downloadable PDF with gold seal */}
+                  {showCertificateDownload && userName && (
+                    <section className="pt-6 border-t border-[#D4AF37]/20">
+                      <button
+                        type="button"
+                        onClick={() => generateAkashicCertificatePdf(userName, record, yearClimax)}
+                        className="w-full px-6 py-4 rounded-xl border-2 border-[#D4AF37] bg-[#D4AF37]/15 text-[#D4AF37] text-sm font-bold uppercase tracking-wider hover:bg-[#D4AF37]/25 transition-colors flex items-center justify-center gap-2"
+                        style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}
+                      >
+                        <span aria-hidden>📜</span>
+                        Download Certificate of Origin — PDF
+                      </button>
+                      <p className="text-[10px] text-[#D4AF37]/60 text-center mt-2">The {userName} Akashic Record: A Siddha Transmission</p>
+                    </section>
+                  )}
                 </>
               )}
 

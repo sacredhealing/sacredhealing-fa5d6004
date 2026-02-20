@@ -43,6 +43,7 @@ const SacredRevealGate: React.FC<SacredRevealGateProps> = ({ open, onOpenChange 
           >
             Unlock My Soul&apos;s Origin — $49
           </Button>
+          <p className="text-center text-purple-200/80 text-xs mt-3">Premium Members save 20% on all Akashic Deep Readings.</p>
           <div className="mt-4 pt-4 border-t border-purple-500/20">
             <p className="text-xs text-purple-200/80 mb-3">Or choose the Master Bundle</p>
             <Button
