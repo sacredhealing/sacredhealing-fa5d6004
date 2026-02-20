@@ -101,6 +101,8 @@ interface MusicPlayerContextType {
   refreshPurchases: () => Promise<void>;
   checkSubscription: () => Promise<void>;
   stopTrack: () => void;
+  /** True while showing Gita verse overlay (meditation session transition) */
+  showGitaTransition: boolean;
 }
 
 const MusicPlayerContext = createContext<MusicPlayerContextType | null>(null);
@@ -132,6 +134,8 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [likedIds, setLikedIds] = useState<string[]>([]);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [currentQueueIndex, setCurrentQueueIndex] = useState(0);
+  const [showGitaTransition, setShowGitaTransition] = useState(false);
+  const gitaTransitionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const playStartTimeRef = useRef<number>(0);
   const completedThresholdForIdRef = useRef<string | null>(null);
   const devForceEndTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -432,6 +436,11 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   }, [toast]);
 
   const stopTrack = useCallback(() => {
+    if (gitaTransitionTimeoutRef.current) {
+      clearTimeout(gitaTransitionTimeoutRef.current);
+      gitaTransitionTimeoutRef.current = null;
+    }
+    setShowGitaTransition(false);
     if (devForceEndTimeoutRef.current) {
       clearTimeout(devForceEndTimeoutRef.current);
       devForceEndTimeoutRef.current = null;
@@ -476,6 +485,16 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     // Reset music track when playing meditation/healing
     setCurrentTrack(null);
+
+    // Show Gita verse overlay for meditation (Fade & Zoom from Akasha)
+    if (audio.contentType === 'meditation') {
+      if (gitaTransitionTimeoutRef.current) clearTimeout(gitaTransitionTimeoutRef.current);
+      setShowGitaTransition(true);
+      gitaTransitionTimeoutRef.current = setTimeout(() => {
+        setShowGitaTransition(false);
+        gitaTransitionTimeoutRef.current = null;
+      }, 2800);
+    }
     
     const audioUrl = audio.audio_url;
     audioRef.current = new Audio(audioUrl);
@@ -629,6 +648,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       refreshPurchases,
       checkSubscription,
       stopTrack,
+      showGitaTransition,
     }}>
       {children}
     </MusicPlayerContext.Provider>

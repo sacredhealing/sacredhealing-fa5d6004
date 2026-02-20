@@ -21,6 +21,7 @@ import { SpiritualPathCard } from '@/components/dashboard/SpiritualPathCard';
 import { BreathingJourneysCard } from '@/components/dashboard/BreathingJourneysCard';
 import { HealingJourneysCard } from '@/components/dashboard/HealingJourneysCard';
 import { PositiveMeCard } from '@/components/dashboard/PositiveMeCard';
+import { GitaCard } from '@/components/dashboard/GitaCard';
 import { JourneyTimeline } from '@/components/dashboard/JourneyTimeline';
 import { ShareableProgressCard } from '@/components/achievements/ShareableProgressCard';
 import { AchievementPopup } from '@/components/achievements/AchievementPopup';
@@ -225,6 +226,9 @@ const Dashboard: React.FC = () => {
         </div>
         <AmbientSoundToggle />
       </header>
+
+      {/* Gita Oracle — immediately below header */}
+      <GitaCard />
 
       {/* State: idle - Daily Guidance Card + restored sections */}
       {flowState === 'idle' && (

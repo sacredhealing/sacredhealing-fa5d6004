@@ -9,6 +9,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { SHCProvider } from "@/contexts/SHCContext";
 import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
+import { GitaTransitionOverlay } from "@/components/dashboard/GitaTransitionOverlay";
 import { AmbientAudioProvider } from "@/contexts/AmbientAudioContext";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -244,6 +245,7 @@ const App = () => (
       <TooltipProvider>
         <SHCProvider>
           <MusicPlayerProvider>
+            <GitaTransitionOverlay />
             <AmbientAudioProvider>
               <Toaster />
               <Sonner />
