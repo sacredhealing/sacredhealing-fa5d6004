@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Timer, Sunrise, Sunset, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { useHoraWatch } from '@/hooks/useHoraWatch';
 import { getPlanetEmoji, getEnergyGradient, getSuccessColor, type HoraEnergyType } from '@/lib/vedicTypes';
 
@@ -15,130 +16,72 @@ interface AccurateHoraWatchProps {
   };
 }
 
-// Calculate success rating based on birth chart interaction (simplified)
 function calculateSuccessRating(planet: string, birthChart?: AccurateHoraWatchProps['userBirthChart']): number {
-  // Base ratings for each planet
   const baseRatings: Record<string, number> = {
-    Jupiter: 85,
-    Venus: 80,
-    Mercury: 70,
-    Moon: 65,
-    Sun: 75,
-    Mars: 55,
-    Saturn: 45,
+    Jupiter: 85, Venus: 80, Mercury: 70, Moon: 65, Sun: 75, Mars: 55, Saturn: 45,
   };
-  
   let rating = baseRatings[planet] || 60;
-  
-  // Adjust based on birth chart if available
   if (birthChart) {
-    // Jupiter/Venus in chart = better Jupiter/Venus horas
-    if (birthChart.moonSign?.toLowerCase().includes('sagittarius') || 
-        birthChart.moonSign?.toLowerCase().includes('pisces')) {
+    if (birthChart.moonSign?.toLowerCase().includes('sagittarius') || birthChart.moonSign?.toLowerCase().includes('pisces')) {
       if (planet === 'Jupiter') rating += 10;
     }
-    if (birthChart.moonSign?.toLowerCase().includes('taurus') || 
-        birthChart.moonSign?.toLowerCase().includes('libra')) {
+    if (birthChart.moonSign?.toLowerCase().includes('taurus') || birthChart.moonSign?.toLowerCase().includes('libra')) {
       if (planet === 'Venus') rating += 10;
     }
   }
-  
   return Math.min(100, Math.max(0, rating));
 }
 
-// Determine energy type based on planet
 function getEnergyType(planet: string): HoraEnergyType {
   const auspicious = ['Jupiter', 'Venus', 'Mercury'];
   const inauspicious = ['Saturn', 'Mars'];
-  
   if (auspicious.includes(planet)) return 'Auspicious';
   if (inauspicious.includes(planet)) return 'Inauspicious';
   return 'Neutral';
 }
 
-// Success Meter Circle Component
-const SuccessMeter = ({ rating }: { rating: number }) => {
-  const circumference = 2 * Math.PI * 58;
-  const strokeDashoffset = circumference - (circumference * rating) / 100;
-  
+// Progress Ring for remaining time
+const ProgressRing = ({ remainingMs, totalMs, remainingTime }: { remainingMs: number; totalMs: number; remainingTime: string }) => {
+  const radius = 52;
+  const circumference = 2 * Math.PI * radius;
+  const progress = Math.max(0, Math.min(1, remainingMs / totalMs));
+  const strokeDashoffset = circumference * (1 - progress);
+  const isUrgent = remainingMs < 5 * 60 * 1000;
+
   return (
-    <div className="relative w-32 h-32 flex-shrink-0">
-      <svg className="w-full h-full transform -rotate-90">
-        <circle 
-          cx="64" cy="64" r="58" 
-          stroke="currentColor" 
-          strokeWidth="8" 
-          fill="transparent" 
-          className="text-muted/20" 
-        />
-        <motion.circle 
-          cx="64" cy="64" r="58" 
-          stroke="currentColor" 
-          strokeWidth="8" 
-          fill="transparent" 
+    <div className="relative w-36 h-36 flex-shrink-0">
+      <svg className="w-full h-full transform -rotate-90" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r={radius} stroke="hsl(var(--muted) / 0.15)" strokeWidth="10" fill="transparent" />
+        <motion.circle
+          cx="60" cy="60" r={radius}
+          stroke={isUrgent ? 'hsl(0 72% 51%)' : 'hsl(var(--primary))'}
+          strokeWidth="10"
+          fill="transparent"
           strokeDasharray={circumference}
           initial={{ strokeDashoffset: circumference }}
           animate={{ strokeDashoffset }}
-          transition={{ duration: 1.5, ease: "easeOut" }}
-          className={getSuccessColor(rating)}
+          transition={{ duration: 1, ease: 'easeOut' }}
           strokeLinecap="round"
+          className="drop-shadow-[0_0_8px_hsl(var(--primary)/0.5)]"
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <motion.span 
-          className="text-2xl font-bold text-foreground"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-        >
-          {rating}%
-        </motion.span>
-        <span className="text-[8px] text-muted-foreground font-bold uppercase">Success</span>
+        <span className={`font-mono text-xl font-black ${isUrgent ? 'text-rose-400 animate-pulse' : 'text-foreground'}`}>
+          {remainingTime}
+        </span>
+        <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">remaining</span>
       </div>
     </div>
   );
 };
 
-// Countdown Timer Component
-const CountdownTimer = ({ remainingTime, remainingMs }: { remainingTime: string; remainingMs: number }) => {
-  const isUrgent = remainingMs < 5 * 60 * 1000; // Less than 5 minutes
-  
-  return (
-    <div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${
-      isUrgent 
-        ? 'bg-rose-500/20 border border-rose-500/30' 
-        : 'bg-primary/10 border border-primary/20'
-    }`}>
-      <Clock className={`w-4 h-4 ${isUrgent ? 'text-rose-400 animate-pulse' : 'text-primary'}`} />
-      <span className={`font-mono text-lg font-bold ${isUrgent ? 'text-rose-400' : 'text-foreground'}`}>
-        {remainingTime}
-      </span>
-      <span className="text-[9px] text-muted-foreground uppercase">remaining</span>
-    </div>
-  );
-};
-
-// Upcoming Hora Card
-const UpcomingHoraCard = ({ 
-  planet, 
-  startTime, 
-  successRating 
-}: { 
-  planet: string; 
-  startTime: string; 
-  successRating: number;
-}) => (
-  <div className="flex items-center justify-between p-3 rounded-2xl bg-background/40 hover:bg-primary/5 transition-all group">
-    <div className="flex items-center gap-3">
-      <span className="text-xl">{getPlanetEmoji(planet)}</span>
-      <div>
-        <p className="text-xs font-bold text-foreground">{planet}</p>
-        <p className="text-[9px] text-muted-foreground font-bold">{startTime}</p>
-      </div>
-    </div>
-    <div className={`text-[10px] font-bold ${getSuccessColor(successRating)}`}>
-      {successRating}%
-    </div>
+// Horizontal Scroll Mini Card for upcoming horas
+const UpcomingMiniCard = ({ planet, startTime, successRating }: { planet: string; startTime: string; successRating: number }) => (
+  <div className="flex-shrink-0 w-28 p-4 rounded-2xl bg-card/60 border border-border/40 hover:border-amber-500/30 transition-all text-center space-y-2">
+    <span className="text-3xl block">{getPlanetEmoji(planet)}</span>
+    <p className="text-xs font-bold text-foreground truncate">{planet}</p>
+    <p className="text-[10px] text-muted-foreground font-mono">{startTime}</p>
+    <span className={`text-xs font-black ${getSuccessColor(successRating)}`}>{successRating}%</span>
   </div>
 );
 
@@ -147,31 +90,15 @@ export const AccurateHoraWatch: React.FC<AccurateHoraWatchProps> = ({
   timeOffset = 0,
   userBirthChart,
 }) => {
-  const { 
-    calculation, 
-    remainingTimeStr, 
-    remainingMs, 
-    isLoading,
-    recalculate,
-  } = useHoraWatch({
-    timezone,
-    timeOffset,
-  });
+  const { calculation, remainingTimeStr, remainingMs, isLoading } = useHoraWatch({ timezone, timeOffset });
   
-  // Memoize derived values
   const horaData = useMemo(() => {
     if (!calculation) return null;
-    
     const { currentHora, upcomingHoras, sunrise, sunset, dayRuler } = calculation;
     const successRating = calculateSuccessRating(currentHora.planet, userBirthChart);
     const energyType = getEnergyType(currentHora.planet);
-    
     return {
-      currentHora: {
-        ...currentHora,
-        successRating,
-        energyType,
-      },
+      currentHora: { ...currentHora, successRating, energyType },
       upcomingHoras: upcomingHoras.map(hora => ({
         ...hora,
         successRating: calculateSuccessRating(hora.planet, userBirthChart),
@@ -180,6 +107,7 @@ export const AccurateHoraWatch: React.FC<AccurateHoraWatchProps> = ({
       sunrise: sunrise.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
       sunset: sunset.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
       dayRuler,
+      totalDurationMs: (currentHora.durationMinutes || 60) * 60 * 1000,
     };
   }, [calculation, userBirthChart]);
   
@@ -187,107 +115,109 @@ export const AccurateHoraWatch: React.FC<AccurateHoraWatchProps> = ({
     return (
       <div className="flex items-center justify-center py-12">
         <div className="flex flex-col items-center gap-4">
-          <motion.div 
-            className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          />
+          <motion.div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full" animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} />
           <p className="text-sm text-muted-foreground">Calculating Hora...</p>
         </div>
       </div>
     );
   }
   
-  const { currentHora, upcomingHoras, sunrise, sunset, dayRuler } = horaData;
+  const { currentHora, upcomingHoras, sunrise, sunset, dayRuler, totalDurationMs } = horaData;
+  const energyColor = currentHora.energyType === 'Auspicious' ? 'emerald' : currentHora.energyType === 'Neutral' ? 'amber' : 'rose';
   
   return (
     <div className="space-y-6">
-      {/* Sun Times Info Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 p-3 rounded-xl bg-background/50 border border-border/50">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2">
-            <Sunrise className="w-4 h-4 text-amber-400" />
-            <span className="text-xs text-muted-foreground">Sunrise:</span>
-            <span className="text-xs font-bold text-foreground">{sunrise}</span>
+      {/* 1. DAY RULER GLOWING BANNER */}
+      <motion.div
+        className="relative overflow-hidden rounded-3xl border border-amber-500/30 bg-gradient-to-r from-amber-900/20 via-purple-900/20 to-amber-900/20 p-6"
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-amber-500/10 blur-[60px]" />
+        <div className="flex items-center gap-5">
+          <div className="w-20 h-20 rounded-full bg-amber-500/10 border-2 border-amber-500/40 flex items-center justify-center shadow-[0_0_30px_rgba(245,158,11,0.3)]">
+            <span className="text-4xl">{getPlanetEmoji(dayRuler)}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Sunset className="w-4 h-4 text-orange-400" />
-            <span className="text-xs text-muted-foreground">Sunset:</span>
-            <span className="text-xs font-bold text-foreground">{sunset}</span>
+          <div>
+            <p className="text-[10px] font-black text-amber-400/70 uppercase tracking-[0.4em]">Day Ruler</p>
+            <h2 className="text-4xl font-black text-amber-100 font-serif">{dayRuler}</h2>
+          </div>
+          <div className="ml-auto hidden sm:flex items-center gap-4 text-xs">
+            <div className="flex items-center gap-1.5 text-amber-300/70">
+              <Sunrise className="w-4 h-4" />
+              <span className="font-bold">{sunrise}</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-orange-300/70">
+              <Sunset className="w-4 h-4" />
+              <span className="font-bold">{sunset}</span>
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">Day Ruler:</span>
-          <span className="text-xs font-bold text-foreground">{getPlanetEmoji(dayRuler)} {dayRuler}</span>
+        {/* Mobile sunrise/sunset */}
+        <div className="flex sm:hidden items-center gap-4 text-xs mt-3 pl-1">
+          <div className="flex items-center gap-1.5 text-amber-300/70">
+            <Sunrise className="w-3.5 h-3.5" />
+            <span className="font-bold">{sunrise}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-orange-300/70">
+            <Sunset className="w-3.5 h-3.5" />
+            <span className="font-bold">{sunset}</span>
+          </div>
         </div>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Main Watch Card */}
-        <div className="md:col-span-2 relative group">
-          <div className={`absolute -inset-0.5 bg-gradient-to-br ${getEnergyGradient(currentHora.energyType)} rounded-[2.5rem] blur opacity-20 group-hover:opacity-30 transition duration-1000`}></div>
-          <div className="relative p-10 rounded-3xl bg-card/80 backdrop-blur-sm border border-border/50 h-full overflow-hidden">
-            <div className="flex flex-col md:flex-row gap-8">
-              {/* Success Meter Circle */}
-              <SuccessMeter rating={currentHora.successRating} />
+      </motion.div>
 
-              <div className="flex-1 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-3xl font-bold text-foreground">{currentHora.planet}</h3>
-                  <div className="text-4xl">{getPlanetEmoji(currentHora.planet)}</div>
-                </div>
-                
-                <div className="flex flex-wrap items-center gap-3">
-                  <Badge 
-                    variant="outline" 
-                    className={`text-[10px] ${
-                      currentHora.energyType === 'Auspicious' 
-                        ? 'border-emerald-500/30 text-emerald-400' 
-                        : currentHora.energyType === 'Neutral'
-                        ? 'border-amber-500/30 text-amber-400'
-                        : 'border-rose-500/30 text-rose-400'
-                    }`}
-                  >
-                    {currentHora.energyType} • {currentHora.startTimeStr} - {currentHora.endTimeStr}
-                  </Badge>
-                  
-                  {/* Duration Badge */}
-                  <Badge variant="secondary" className="text-[9px]">
-                    ~{currentHora.durationMinutes} min {currentHora.isDay ? '☀️' : '🌙'}
-                  </Badge>
-                </div>
+      {/* CURRENT HORA with PROGRESS RING */}
+      <div className="relative group">
+        <div className={`absolute -inset-0.5 bg-gradient-to-br ${getEnergyGradient(currentHora.energyType)} rounded-[2.5rem] blur opacity-20 group-hover:opacity-30 transition duration-1000`} />
+        <div className="relative p-6 sm:p-8 rounded-3xl bg-card/80 backdrop-blur-sm border border-border/50 overflow-hidden">
+          <div className="flex flex-col sm:flex-row items-center gap-6">
+            {/* Progress Ring */}
+            <ProgressRing remainingMs={remainingMs} totalMs={totalDurationMs} remainingTime={remainingTimeStr} />
 
-                {/* Countdown Timer */}
-                <CountdownTimer remainingTime={remainingTimeStr} remainingMs={remainingMs} />
-
-                <p className="text-sm text-muted-foreground leading-relaxed italic">
-                  "{currentHora.ruler}"
-                </p>
-                
-                <div className="flex flex-wrap gap-2 pt-2">
-                  {currentHora.bestFor.slice(0, 3).map((item, i) => (
-                    <span key={i} className="px-3 py-1 bg-primary/10 border border-primary/20 rounded-lg text-[10px] text-primary font-bold uppercase tracking-widest">
-                      {item}
-                    </span>
-                  ))}
+            <div className="flex-1 space-y-3 text-center sm:text-left">
+              <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-2">
+                <div className="flex items-center gap-3">
+                  <span className="text-4xl">{getPlanetEmoji(currentHora.planet)}</span>
+                  <h3 className="text-3xl font-black text-foreground">{currentHora.planet}</h3>
                 </div>
+                <Badge
+                  variant="outline"
+                  className={`text-[10px] font-bold border-${energyColor}-500/30 text-${energyColor}-400`}
+                >
+                  {currentHora.energyType}
+                </Badge>
+              </div>
+
+              <p className="text-xs text-muted-foreground font-mono">
+                {currentHora.startTimeStr} — {currentHora.endTimeStr} • ~{currentHora.durationMinutes} min {currentHora.isDay ? '☀️' : '🌙'}
+              </p>
+
+              <p className="text-sm text-muted-foreground italic leading-relaxed">"{currentHora.ruler}"</p>
+              
+              <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
+                {currentHora.bestFor.slice(0, 3).map((item, i) => (
+                  <span key={i} className="px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-xl text-[10px] text-primary font-black uppercase tracking-widest">
+                    {item}
+                  </span>
+                ))}
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Upcoming Flux List */}
-        <div className="bg-card/50 border border-border/50 rounded-3xl p-6 space-y-3">
-          <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.3em] mb-4">Upcoming Flow</h4>
-          {upcomingHoras.map((hora, i) => (
-            <UpcomingHoraCard 
-              key={i} 
-              planet={hora.planet} 
-              startTime={hora.startTimeStr}
-              successRating={hora.successRating}
-            />
-          ))}
-        </div>
+      {/* 3. UPCOMING FLOW - Horizontal Scrolling Mini Cards */}
+      <div>
+        <h4 className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-4 pl-1">Upcoming Flow</h4>
+        <ScrollArea className="w-full">
+          <div className="flex gap-3 pb-4">
+            {upcomingHoras.map((hora, i) => (
+              <UpcomingMiniCard key={i} planet={hora.planet} startTime={hora.startTimeStr} successRating={hora.successRating} />
+            ))}
+          </div>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
       </div>
     </div>
   );
