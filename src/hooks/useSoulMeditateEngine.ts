@@ -524,6 +524,14 @@ export function useSoulMeditateEngine() {
 
     neuralSourceRef.current = source;
 
+    // Unlock context on same user gesture (2026 autoplay policy) so neural playback can start
+    if (audioContextRef.current.state === 'suspended') {
+      await audioContextRef.current.resume();
+    }
+    // Ensure neural gain is audible (never 0)
+    const neuralVol = Math.min(0.85, Math.max(0.01, neuralLayer.volume));
+    neuralGainRef.current.gain.value = neuralVol;
+
     // Set UI source + export metadata
     if (typeof file === 'string') {
       setNeuralLayer((prev) => ({
@@ -587,6 +595,7 @@ export function useSoulMeditateEngine() {
       
       const decodedBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
       setAudioBuffer(decodedBuffer);
+      console.log('Neural Buffer Loaded:', decodedBuffer.duration);
       
       // Create initial region spanning the entire audio
       const initialRegion: AudioRegion = {
