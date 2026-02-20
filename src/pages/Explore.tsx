@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { ParamahamsaVishwanandaDailyCard } from "@/components/dashboard/ParamahamsaVishwanandaDailyCard";
 import { LibrarySection, type LibraryItem } from "@/components/explore/LibrarySection";
 import { CollapsibleSection } from "@/features/library/CollapsibleSection";
@@ -34,7 +35,6 @@ import {
   FileText,
   Wind,
   Baby,
-  Hand,
 } from "lucide-react";
 
 function getSubtitleKey(phase: "morning" | "midday" | "evening"): string {
@@ -181,7 +181,7 @@ export default function Explore() {
   const { playUniversalAudio } = useMusicPlayer();
   const { allAudioItems } = useQuickActionItems();
   const { language: meditationLanguage } = useMeditationContentLanguage();
-  useMembership(); // presence / membership state if needed later
+  const { isPremium: isPaid } = useMembership();
   const [showFallback, setShowFallback] = useState(false);
   const presence = usePresenceState();
 
@@ -226,60 +226,13 @@ export default function Explore() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a0a2e] via-[#2d1b4e]/30 to-[#1a0a2e] px-4 pb-24 pt-4">
-      {/* Hero Banner — Healing Sounds */}
-      <section className="mb-6 -mx-4">
-        <button
-          onClick={() => navigate("/music")}
-          className="relative w-full overflow-hidden rounded-2xl border border-amber-500/30 bg-gradient-to-br from-purple-900/80 via-amber-900/40 to-[#1a0a2e] p-6 text-left shadow-[0_0_40px_rgba(251,191,36,0.15)]"
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 via-transparent to-purple-500/10" />
-          <div className="relative z-10 flex items-center gap-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-amber-500/20 border border-amber-400/40">
-              <Music2 className="h-8 w-8 text-amber-300" />
-            </div>
-            <div>
-              <h2 className="text-2xl md:text-3xl font-bold text-amber-100 tracking-tight">
-                {t("explore.healingSounds", "Healing Sounds")}
-              </h2>
-              <p className="mt-1 text-sm text-amber-200/80">
-                {t("explore.healingSoundsDesc", "Sacred frequencies for body and soul")}
-              </p>
-            </div>
-            <ChevronRight className="ml-auto h-6 w-6 text-amber-300/80" />
-          </div>
-        </button>
-      </section>
-
-      {/* Community Circle card */}
-      <section className="mb-6">
-        <button
-          onClick={() => navigate("/community")}
-          className="relative w-full overflow-hidden rounded-2xl border border-purple-400/30 bg-gradient-to-br from-purple-800/50 via-purple-700/30 to-[#1a0a2e] p-5 text-left"
-        >
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-purple-500/30 border border-purple-400/40">
-              <Users className="h-6 w-6 text-purple-200" />
-            </div>
-            <div>
-              <h3 className="text-xl md:text-2xl font-bold text-white">
-                {t("explore.communityCircle", "Community Circle")}
-              </h3>
-              <p className="mt-0.5 text-sm text-white/70">
-                {t("explore.communityCircleDesc", "Connect with guides and members")}
-              </p>
-            </div>
-            <ChevronRight className="ml-auto h-5 w-5 text-purple-300" />
-          </div>
-        </button>
-      </section>
-
+    <div className="px-4 pb-24 pt-4">
       {/* Header */}
       <div className="mb-3">
-        <h1 className="text-3xl md:text-4xl font-heading font-bold text-amber-50">
+        <h1 className="text-2xl font-heading font-semibold text-foreground">
           {t("explore.title", "Library")}
         </h1>
-        <p className="text-amber-200/70 mt-1 text-base">{subtitle}</p>
+        <p className="text-white/60 mt-1 text-sm">{subtitle}</p>
       </div>
 
       {/* Quick Actions */}
@@ -325,7 +278,7 @@ export default function Explore() {
 
       {/* Your Space */}
       <section className="mt-8">
-        <h2 className="text-xl md:text-2xl font-bold text-amber-100 mb-4 tracking-wide">Your Space</h2>
+        <h2 className="text-sm font-medium text-white/60 mb-4 tracking-wide uppercase">Your Space</h2>
         <div className="relative overflow-hidden rounded-3xl border border-purple-500/30 bg-gradient-to-br from-purple-900/30 via-purple-800/20 to-black">
           <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-fuchsia-500/10 to-purple-500/10 opacity-60" />
           <button onClick={() => navigate("/membership")} className="relative z-10 w-full p-6 text-left hover:bg-white/5 transition">
@@ -349,19 +302,12 @@ export default function Explore() {
                 { label: "Vedic Astrology", desc: "Daily influence + blueprint", href: "/vedic-astrology" },
                 { label: "Ayurveda", desc: "Balance + daily guidance", href: "/ayurveda" },
                 { label: "Vastu", desc: "Abundance Architect", href: "/vastu" },
-                { label: "Hand Analyzer", desc: "Sovereign palm reading", href: "/hand-analyzer", Icon: Hand },
-              ].map((item) => {
-                const Icon = "Icon" in item ? item.Icon : null;
-                return (
-                  <button key={item.href} onClick={() => navigate(item.href)} className="rounded-2xl px-4 py-4 text-left bg-gradient-to-r from-purple-600/30 to-purple-500/20 border border-purple-400/40 hover:from-purple-600/50 hover:to-purple-500/40 transition flex items-center gap-3">
-                    {Icon && <Icon className="h-5 w-5 text-amber-300 shrink-0" />}
-                    <div>
-                      <div className="text-sm font-semibold text-white">{item.label}</div>
-                      <div className="mt-1 text-xs text-purple-100/80">{item.desc}</div>
-                    </div>
-                  </button>
-                );
-              })}
+              ].map((item) => (
+                <button key={item.href} onClick={() => navigate(item.href)} className="rounded-2xl px-4 py-4 text-left bg-gradient-to-r from-purple-600/30 to-purple-500/20 border border-purple-400/40 hover:from-purple-600/50 hover:to-purple-500/40 transition">
+                  <div className="text-sm font-semibold text-white">{item.label}</div>
+                  <div className="mt-1 text-xs text-purple-100/80">{item.desc}</div>
+                </button>
+              ))}
             </div>
             <div className="mt-4 flex items-center justify-between">
               <button onClick={() => navigate("/library")} className="text-sm text-purple-200 hover:text-white transition underline underline-offset-4">Open Library</button>
@@ -379,7 +325,7 @@ export default function Explore() {
       >
         {/* START — 2x2 glowing grid */}
         <div className="mb-6">
-          <h3 className="text-lg md:text-xl font-bold text-amber-100 mb-3">
+          <h3 className="text-xs font-medium text-white/50 uppercase tracking-widest mb-3">
             {t("explore.sectionStart", "Start")}
           </h3>
           <div className="grid grid-cols-2 gap-3">
@@ -405,7 +351,7 @@ export default function Explore() {
 
         {/* DEEPEN — warm horizontal scroll cards */}
         <div className="mb-6">
-          <h3 className="text-lg md:text-xl font-bold text-amber-100 mb-3">
+          <h3 className="text-xs font-medium text-white/50 uppercase tracking-widest mb-3">
             {t("explore.sectionDeepen", "Deepen")}
           </h3>
           <div className="grid grid-cols-1 gap-3">
@@ -434,40 +380,93 @@ export default function Explore() {
           </div>
         </div>
 
-        {/* CONNECT — keep original style */}
-        <LibrarySection
-          title={t("explore.sectionConnect", "Connect")}
-          subtitle={t("explore.sectionConnectSubtitle", "A place to practice with others")}
-          items={connectItems}
-          initialVisible={4}
-        />
+        {/* CONNECT — matching gradient rows */}
+        <div className="mb-6">
+          <h3 className="text-xs font-medium text-white/50 uppercase tracking-widest mb-1">
+            {t("explore.sectionConnect", "Connect")}
+          </h3>
+          <p className="text-xs text-white/40 mb-3">{t("explore.sectionConnectSubtitle", "A place to practice with others")}</p>
+          <div className="grid grid-cols-1 gap-3">
+            {[
+              { key: "community", title: t("explore.community", "Community"), subtitle: t("explore.communityDesc", "Chat with guides & members"), href: "/community", icon: Users, gradient: "from-teal-900/60 via-teal-800/40 to-black/60", border: "border-teal-500/30", iconBg: "bg-teal-500/20", iconColor: "text-teal-300", badge: null },
+              { key: "stargate", title: t("home.stargateMembership", "Stargate Membership"), subtitle: t("home.stargateDesc", "Weekly live sessions, Telegram community"), href: "/stargate", icon: Crown, gradient: "from-purple-900/60 via-violet-800/40 to-black/60", border: "border-purple-500/30", iconBg: "bg-purple-500/20", iconColor: "text-purple-300", badge: t("explore.badgeSwedish", "Swedish") },
+            ].map((card) => {
+              const Icon = card.icon;
+              return (
+                <button key={card.key} onClick={() => navigate(card.href)}
+                  className={`relative overflow-hidden rounded-2xl border ${card.border} bg-gradient-to-r ${card.gradient} px-4 py-4 text-left shadow-md hover:scale-[1.01] transition-transform duration-200`}>
+                  <div className="flex items-center gap-4">
+                    <div className={`w-10 h-10 rounded-xl ${card.iconBg} flex items-center justify-center shrink-0`}>
+                      <Icon className={`w-5 h-5 ${card.iconColor}`} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-semibold text-white">{card.title}</div>
+                      <div className="text-xs text-white/60 mt-0.5">{card.subtitle}</div>
+                    </div>
+                    {card.badge && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/30 text-purple-200 border border-purple-400/40 shrink-0">{card.badge}</span>
+                    )}
+                    <ChevronRight className="w-4 h-4 text-white/30 shrink-0" />
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-        {/* EXPLORE — keep original style */}
-        <LibrarySection
-          title={t("explore.sectionExplore", "Explore")}
-          items={exploreItems}
-          initialVisible={4}
-        />
+        {/* EXPLORE — matching gradient rows */}
+        <div className="mb-6">
+          <h3 className="text-xs font-medium text-white/50 uppercase tracking-widest mb-3">
+            {t("explore.sectionExplore", "Explore")}
+          </h3>
+          <div className="grid grid-cols-1 gap-3">
+            {[
+              { key: "promptLibrary", title: t("explore.promptLibrary", "Prompt Library"), subtitle: t("explore.promptLibraryDesc", "Single-click templates"), href: "/prompt-library", icon: FileText, gradient: "from-slate-800/60 via-slate-700/40 to-black/60", border: "border-slate-500/30", iconBg: "bg-slate-500/20", iconColor: "text-slate-300", badge: null },
+              { key: "podcast", title: t("explore.podcast", "Podcast"), subtitle: t("explore.podcastDesc", "Streams on Spotify"), href: "/podcast", icon: Headphones, gradient: "from-green-900/60 via-green-800/40 to-black/60", border: "border-green-500/30", iconBg: "bg-green-500/20", iconColor: "text-green-300", badge: null },
+              { key: "videos", title: t("explore.videos", "Videos"), subtitle: t("explore.videosDesc", "Watch & learn"), href: "/spiritual-education", icon: Youtube, gradient: "from-red-900/60 via-red-800/40 to-black/60", border: "border-red-500/30", iconBg: "bg-red-500/20", iconColor: "text-red-300", badge: null },
+              { key: "creativeSoul", title: t("explore.creativeSoul", "Creative Soul"), subtitle: t("explore.creativeSoulDesc", "Create with AI"), href: "/creative-soul/store", icon: Sparkles, gradient: "from-fuchsia-900/60 via-pink-800/40 to-black/60", border: "border-fuchsia-500/30", iconBg: "bg-fuchsia-500/20", iconColor: "text-fuchsia-300", badge: null },
+              { key: "shop", title: t("explore.shop", "Shop"), subtitle: t("explore.shopDesc", "Laila's Collection"), href: "/shop", icon: ShoppingBag, gradient: "from-rose-900/60 via-rose-800/40 to-black/60", border: "border-rose-500/30", iconBg: "bg-rose-500/20", iconColor: "text-rose-300", badge: null },
+              { key: "leaderboard", title: t("explore.leaderboard", "Leaderboard"), subtitle: t("explore.leaderboardDesc", "Top earners win monthly"), href: "/leaderboard", icon: Trophy, gradient: "from-yellow-900/60 via-amber-800/40 to-black/60", border: "border-yellow-500/30", iconBg: "bg-yellow-500/20", iconColor: "text-yellow-300", badge: "5,000 SHC" },
+              { key: "abundance", title: t("explore.abundance", "Abundance"), subtitle: t("explore.abundanceDescInner", "Inner abundance & life support"), href: "/library/abundance", icon: Zap, gradient: "from-cyan-900/60 via-cyan-800/40 to-black/60", border: "border-cyan-500/30", iconBg: "bg-cyan-500/20", iconColor: "text-cyan-300", badge: null },
+            ].map((card) => {
+              const Icon = card.icon;
+              return (
+                <button key={card.key} onClick={() => navigate(card.href)}
+                  className={`relative overflow-hidden rounded-2xl border ${card.border} bg-gradient-to-r ${card.gradient} px-4 py-4 text-left shadow-md hover:scale-[1.01] transition-transform duration-200`}>
+                  <div className="flex items-center gap-4">
+                    <div className={`w-10 h-10 rounded-xl ${card.iconBg} flex items-center justify-center shrink-0`}>
+                      <Icon className={`w-5 h-5 ${card.iconColor}`} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-semibold text-white">{card.title}</div>
+                      <div className="text-xs text-white/60 mt-0.5">{card.subtitle}</div>
+                    </div>
+                    {card.badge && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">{card.badge}</span>
+                    )}
+                    <ChevronRight className="w-4 h-4 text-white/30 shrink-0" />
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </CollapsibleSection>
+
+      {/* Invite Friends */}
+      <div className="rounded-2xl glass-card p-5 mb-6">
+        <h3 className="text-base font-heading font-semibold text-foreground mb-3">{t("dashboard.inviteFriends")}</h3>
+        <p className="text-sm text-muted-foreground mb-4">{t("dashboard.inviteDescription")}</p>
+        <Link to="/invite-friends">
+          <Button className="w-full gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-extrabold shadow-[0_0_30px_rgba(0,242,254,0.4)]">
+            <Users className="w-4 h-4" />
+            {t("dashboard.inviteFriends")}
+          </Button>
+        </Link>
+      </div>
 
       <div className="mt-8">
         <ParamahamsaVishwanandaDailyCard />
-      </div>
-
-      {/* Invite Friends - compact at bottom */}
-      <div className="rounded-xl glass-card p-3 mt-4 mb-6">
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <h4 className="text-sm font-heading font-bold text-amber-50">{t("dashboard.inviteFriends")}</h4>
-            <p className="text-xs text-muted-foreground truncate">{t("dashboard.inviteDescription")}</p>
-          </div>
-          <Link to="/invite-friends" className="shrink-0">
-            <Button size="sm" className="gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs">
-              <Users className="w-3.5 h-3.5" />
-              Invite
-            </Button>
-          </Link>
-        </div>
       </div>
     </div>
   );
