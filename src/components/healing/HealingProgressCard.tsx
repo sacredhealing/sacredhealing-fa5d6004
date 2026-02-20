@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import { Play, Flame, Target, Music, Heart, Sparkles, TrendingUp, Calendar } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { useHealingProgress } from '@/hooks/useHealingProgress';
 
 interface HealingProgressCardProps {
@@ -46,7 +45,7 @@ export const HealingProgressCard: React.FC<HealingProgressCardProps> = ({ varian
               </div>
               <div>
                 <h3 className="font-semibold text-foreground text-sm">{tSafe('healing.journeyTitle', 'Your journey')}</h3>
-                <p className="text-xs text-muted-foreground">{tSafe('healing.level', 'Level')} {healingLevel}</p>
+                <p className="text-xs text-muted-foreground">{healingLevel === 1 ? tSafe('healing.initiationLevel', 'Initiation Level') : `${tSafe('healing.level', 'Level')} ${healingLevel}`}</p>
               </div>
             </div>
             <div className="flex items-center gap-1 text-accent">
@@ -55,7 +54,12 @@ export const HealingProgressCard: React.FC<HealingProgressCardProps> = ({ varian
             </div>
           </div>
           
-          <Progress value={progressToNextLevel} className="h-2 mb-2" />
+          <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden mb-2">
+            <div
+              className="h-full rounded-full glowing-filament transition-all duration-500"
+              style={{ width: `${progressToNextLevel}%` }}
+            />
+          </div>
           
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>{totalSessions} {tSafe('healing.sessionsCount', 'sessions')}</span>
@@ -81,11 +85,16 @@ export const HealingProgressCard: React.FC<HealingProgressCardProps> = ({ varian
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <Target className="w-5 h-5 text-purple-400" />
-            <span className="font-medium text-foreground">{tSafe('healing.level', 'Level')} {healingLevel}</span>
+            <span className="font-medium text-foreground">{healingLevel === 1 ? tSafe('healing.initiationLevel', 'Initiation Level') : `${tSafe('healing.level', 'Level')} ${healingLevel}`}</span>
           </div>
           <span className="text-sm text-muted-foreground">{progressToNextLevel.toFixed(0)}%</span>
         </div>
-        <Progress value={progressToNextLevel} className="h-3" />
+        <div className="h-3 w-full rounded-full bg-white/10 overflow-hidden">
+          <div
+            className="h-full rounded-full glowing-filament transition-all duration-500"
+            style={{ width: `${progressToNextLevel}%` }}
+          />
+        </div>
         <p className="text-xs text-muted-foreground mt-1">
           {5 - (totalSessions % 5)} {tSafe('healing.moreSessionsToLevel', 'more sessions to reach Level')} {healingLevel + 1}
         </p>

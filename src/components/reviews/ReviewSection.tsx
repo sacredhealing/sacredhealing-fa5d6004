@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Star, MessageSquare, Gift, Trash2, User } from 'lucide-react';
+import { Star, MessageSquare, Gift, Trash2, User, Feather } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -114,7 +114,14 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
                 className="bg-[#00F2FE] text-black font-extrabold hover:bg-[#00D4E0] shadow-[0_0_20px_rgba(0,242,254,0.4)] border-0"
                 onClick={() => setShowForm(true)}
               >
-                {t('reviews.writeReview')}
+                {contentType === 'healing' ? (
+                  <>
+                    <Feather className="w-4 h-4 mr-2 text-[#D4AF37]" />
+                    Share your Transmission
+                  </>
+                ) : (
+                  t('reviews.writeReview')
+                )}
               </Button>
             </div>
           </CardContent>
@@ -125,7 +132,16 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
       {showForm && !userReview && (
         <Card className="bg-card/50 border-border/50">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">{t('reviews.writeReview')}</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2">
+              {contentType === 'healing' ? (
+                <>
+                  <Feather className="w-4 h-4 text-[#D4AF37]" />
+                  Share your Transmission
+                </>
+              ) : (
+                t('reviews.writeReview')
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">

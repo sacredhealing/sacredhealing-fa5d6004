@@ -373,24 +373,44 @@ const Healing: React.FC = () => {
             <HealingLanguageToggle language={language} setLanguage={setLanguage} />
           </section>
 
-          <Card className="bg-gradient-to-r from-primary/30 to-pink-500/30 border-none text-center overflow-hidden">
-          <CardContent className="py-10 px-6">
-            <Sparkles className="w-12 h-12 text-primary mx-auto mb-4" />
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
-              {tSafe('healing.pageTitle', '30 Days of Sacred Support')}
-            </h1>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              {tSafe('healing.pageSubtitle', 'Calm, guided sessions and transmissions. Just listen and rest.')}
-            </p>
-            <Button
-              size="lg"
-              className="mt-6 bg-primary text-primary-foreground hover:bg-primary/90"
-              onClick={startRecommendedSession}
-            >
-              <Play className="w-5 h-5 mr-2" />
-              {tSafe('healing.ctaStartSession', 'Start a session')}
-            </Button>
-          </CardContent>
+          {/* Sacred Portal Hero — Kriya Purple, Flower of Life, Sovereign Gold CTA */}
+          <Card className="relative border-none text-center overflow-hidden bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900">
+            <div className="absolute inset-0 opacity-[0.07]" aria-hidden>
+              <svg viewBox="0 0 200 200" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
+                <defs>
+                  <pattern id="flower-of-life" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <circle cx="20" cy="20" r="8" fill="none" stroke="white" strokeWidth="0.5" />
+                    <circle cx="20" cy="20" r="16" fill="none" stroke="white" strokeWidth="0.35" />
+                    <circle cx="20" cy="4" r="8" fill="none" stroke="white" strokeWidth="0.35" />
+                    <circle cx="34" cy="20" r="8" fill="none" stroke="white" strokeWidth="0.35" />
+                    <circle cx="20" cy="36" r="8" fill="none" stroke="white" strokeWidth="0.35" />
+                    <circle cx="6" cy="20" r="8" fill="none" stroke="white" strokeWidth="0.35" />
+                    <circle cx="27" cy="10" r="8" fill="none" stroke="white" strokeWidth="0.35" />
+                    <circle cx="13" cy="10" r="8" fill="none" stroke="white" strokeWidth="0.35" />
+                    <circle cx="27" cy="30" r="8" fill="none" stroke="white" strokeWidth="0.35" />
+                    <circle cx="13" cy="30" r="8" fill="none" stroke="white" strokeWidth="0.35" />
+                  </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#flower-of-life)" />
+              </svg>
+            </div>
+            <CardContent className="relative py-10 px-6">
+              <Sparkles className="w-12 h-12 text-amber-200/90 mx-auto mb-4" />
+              <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">
+                {tSafe('healing.pageTitle', '30 Days of Sacred Support')}
+              </h1>
+              <p className="text-white/80 max-w-2xl mx-auto">
+                {tSafe('healing.pageSubtitle', 'Calm, guided sessions and transmissions. Just listen and rest.')}
+              </p>
+              <Button
+                size="lg"
+                className="mt-6 bg-[#D4AF37] text-black font-semibold hover:bg-[#c4a030] animate-sovereign-white-pulse"
+                onClick={startRecommendedSession}
+              >
+                <Play className="w-5 h-5 mr-2" />
+                {tSafe('healing.ctaStartSession', 'Start a session')}
+              </Button>
+            </CardContent>
           </Card>
 
           <div className="text-center text-sm text-muted-foreground">
@@ -422,7 +442,7 @@ const Healing: React.FC = () => {
                 {tSafe('healing.recommendedForYou', 'Recommended for you')}
               </h2>
               <div className="grid gap-3">
-                {sessions.recommended.map((audio) => (
+                {sessions.recommended.map((audio, idx) => (
                   <SessionRow
                     key={audio.id}
                     audio={audio as HealingAudio}
@@ -435,6 +455,8 @@ const Healing: React.FC = () => {
                     onPurchase={handlePurchaseAudio}
                     isProcessing={isProcessing}
                     tSafe={tSafe}
+                    showResonanceIcon
+                    isSoulBlueprintMatch={idx === 0}
                   />
                 ))}
               </div>
@@ -590,7 +612,7 @@ const Healing: React.FC = () => {
             <Card className="border-border">
               <CardContent className="pt-6 pb-6">
                 <div className="text-center mb-6">
-                  <h2 className="text-xl font-bold text-foreground mb-2">{tSafe('healing.choosePlanTitle', 'Choose your plan')}</h2>
+                  <h2 className="text-xl font-bold text-foreground mb-2">{tSafe('healing.chooseDurationTitle', 'Choose how long you want to practice')}</h2>
                   <p className="text-sm text-muted-foreground">{tSafe('healing.choosePlanSubtitle', 'Unlock all sessions for your chosen period.')}</p>
                 </div>
                 <div className="flex flex-wrap justify-center gap-3">
@@ -598,7 +620,7 @@ const Healing: React.FC = () => {
                     <Button
                       key={plan.id}
                       size="lg"
-                      className="bg-[#00F2FE] text-black font-extrabold hover:bg-[#00D4E0] border-0"
+                      className={`bg-[#00F2FE] text-black font-extrabold hover:bg-[#00D4E0] border-0 transition-shadow ${selectedPlan?.id === plan.id ? 'violet-aura ring-2 ring-violet-400 ring-offset-2 ring-offset-background' : ''}`}
                       onClick={() => openPaymentModal(plan)}
                       disabled={isProcessing}
                     >
@@ -681,6 +703,8 @@ function SessionRow({
   onPurchase,
   isProcessing,
   tSafe,
+  showResonanceIcon = false,
+  isSoulBlueprintMatch = false,
 }: {
   audio: HealingAudio;
   isPlaying: boolean;
@@ -692,11 +716,18 @@ function SessionRow({
   onPurchase: (a: HealingAudio, m: 'shc' | 'stripe') => void;
   isProcessing: boolean;
   tSafe: (key: string, fallback: string) => string;
+  showResonanceIcon?: boolean;
+  isSoulBlueprintMatch?: boolean;
 }) {
+  const [hovered, setHovered] = useState(false);
   const owned = isAdmin || ownedAudioIds.has(audio.id);
   const hasAccess = isAdmin || owned || hasHealingAccess;
   return (
-    <Card className="p-4">
+    <Card
+      className="p-4 group"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       <div className="flex items-center gap-4">
         <button
           type="button"
@@ -706,9 +737,29 @@ function SessionRow({
           {!hasAccess && <Lock className="w-4 h-4 text-muted-foreground absolute -top-1 -right-1" />}
           {isPlaying ? <Pause className="w-5 h-5 text-primary" /> : <Play className="w-5 h-5 text-primary ml-1" />}
         </button>
-        <div className="flex-1">
-          <h3 className="font-medium text-foreground">{audio.title}</h3>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="font-medium text-foreground">{audio.title}</h3>
+            {showResonanceIcon && (
+              <span
+                className={`inline-flex items-center text-amber-400/90 transition-transform duration-300 ${hovered ? 'scale-110 animate-pulse' : ''}`}
+                title="Resonance"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                  <path d="M9 18V5l12-2v13" />
+                  <path d="m9 9 12-2" />
+                  <circle cx="6" cy="18" r="3" />
+                  <circle cx="18" cy="16" r="3" />
+                </svg>
+              </span>
+            )}
+            {isSoulBlueprintMatch && (
+              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-200 border border-amber-500/40">
+                Soul Blueprint
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-0.5">
             <Clock className="w-3 h-3" />
             <span>{formatDuration(audio.duration_seconds)}</span>
             {hasAccess ? (
