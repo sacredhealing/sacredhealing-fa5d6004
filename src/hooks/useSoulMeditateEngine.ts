@@ -77,6 +77,15 @@ const ATMOSPHERE_LIBRARY = [
   { id: 'zen', label: 'Zen Garden', icon: '🎋', description: 'Wind chimes & flowing water' },
 ];
 
+/** Universal file reader: File or URL → ArrayBuffer for decodeAudioData (MP3, M4A, WAV, FLAC, etc.) */
+async function readFileAsArrayBuffer(file: File | string, fileUrl: string, isUrl: boolean): Promise<ArrayBuffer> {
+  if (isUrl) {
+    const response = await fetch(fileUrl);
+    return response.arrayBuffer();
+  }
+  return (file as File).arrayBuffer();
+}
+
 export function useSoulMeditateEngine() {
   // Audio context and nodes
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -90,6 +99,8 @@ export function useSoulMeditateEngine() {
   const neuralGainRef = useRef<GainNode | null>(null);
   /** BufferSource for neural playback (one-shot: create new node each Play) */
   const neuralBufferSourceRef = useRef<AudioBufferSourceNode | null>(null);
+  /** Gain compensation (1.2) between BufferSource and neuralGain for low-volume fix */
+  const neuralBufferGainRef = useRef<GainNode | null>(null);
   
   // Noise cleanup chain for neural source
   const noiseHighPassRef = useRef<BiquadFilterNode | null>(null);
@@ -193,9 +204,9 @@ export function useSoulMeditateEngine() {
     }
 
     try {
-    // Fixed sample rate avoids decode/playback failures when file rate != context default
+    // Use hardware default sample rate (44100 or 48000) to prevent silent playback on high-end / 50+ hearing aids
     const CtxClass = typeof window !== 'undefined' && (window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext);
-    const ctx = CtxClass ? new (CtxClass as typeof AudioContext)({ sampleRate: 44100 }) : new AudioContext();
+    const ctx = CtxClass ? new (CtxClass as typeof AudioContext)() : new AudioContext();
     audioContextRef.current = ctx;
     // Unlock context on same user gesture (2026 browser autoplay policy)
     if (ctx.state === 'suspended') {
@@ -484,6 +495,10 @@ export function useSoulMeditateEngine() {
     }
 
     // Clean up previous (MediaElement + any buffer playback)
+    if (neuralBufferGainRef.current) {
+      neuralBufferGainRef.current.disconnect();
+      neuralBufferGainRef.current = null;
+    }
     if (neuralBufferSourceRef.current) {
       try { neuralBufferSourceRef.current.stop(); } catch (_) {}
       neuralBufferSourceRef.current.disconnect();
@@ -605,15 +620,9 @@ export function useSoulMeditateEngine() {
       console.error('Failed to upload neural source for export:', e);
     }
 
-    // Read as ArrayBuffer then decode (required for decodeAudioData; .m4a/WAV/MP3 compatible; 44.1kHz context avoids sample-rate mismatch)
+    // Universal file reader: File → ArrayBuffer (format-agnostic; MP3, M4A, WAV, FLAC, etc.)
     try {
-      let arrayBuffer: ArrayBuffer;
-      if (isUrl) {
-        const response = await fetch(fileUrl);
-        arrayBuffer = await response.arrayBuffer();
-      } else {
-        arrayBuffer = await (file as File).arrayBuffer();
-      }
+      const arrayBuffer = await readFileAsArrayBuffer(file, fileUrl, isUrl);
       const decodedBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
       setAudioBuffer(decodedBuffer);
       console.log('Neural Buffer Loaded:', decodedBuffer.duration);
@@ -788,7 +797,11 @@ export function useSoulMeditateEngine() {
     }
 
     if (neuralLayer.isPlaying) {
-      // Stop: BufferSource (one-shot) or MediaElement
+      // Stop: BufferSource + gain compensation node, or MediaElement
+      if (neuralBufferGainRef.current) {
+        neuralBufferGainRef.current.disconnect();
+        neuralBufferGainRef.current = null;
+      }
       if (neuralBufferSourceRef.current) {
         try { neuralBufferSourceRef.current.stop(); } catch (_) {}
         neuralBufferSourceRef.current.disconnect();
@@ -799,10 +812,13 @@ export function useSoulMeditateEngine() {
       return;
     }
 
-    // Play: prefer decoded buffer (same chain as oscillators: neuralGain -> mixer -> masterGain -> destination)
+    // Play: decoded buffer → Gain Compensation (1.2) → neuralGain → mixer → Spectral (EQ, Reverb, Echo) → destination
     const buffer = audioBuffer;
     if (buffer && neuralGainRef.current) {
-      // Lifecycle: BufferSource can only play once — create a new node every time user clicks Play
+      if (neuralBufferGainRef.current) {
+        neuralBufferGainRef.current.disconnect();
+        neuralBufferGainRef.current = null;
+      }
       if (neuralBufferSourceRef.current) {
         try { neuralBufferSourceRef.current.stop(); } catch (_) {}
         neuralBufferSourceRef.current.disconnect();
@@ -811,9 +827,12 @@ export function useSoulMeditateEngine() {
       const source = audioCtx.createBufferSource();
       source.buffer = buffer;
       source.loop = true;
-      // Same chain as Hz: source -> neuralGain -> mixer -> masterGain -> destination (wired in initialize)
-      source.connect(neuralGainRef.current);
-      console.log('[Neural] BufferSource -> neuralGain (same masterGain as oscillators)');
+      const gainComp = audioCtx.createGain();
+      gainComp.gain.value = 1.2;
+      source.connect(gainComp);
+      gainComp.connect(neuralGainRef.current);
+      neuralBufferGainRef.current = gainComp;
+      console.log('[Neural] BufferSource -> gain(1.2) -> neuralGain -> Spectral (EQ/Reverb/Echo) -> destination');
       source.start(0);
       neuralBufferSourceRef.current = source;
       setNeuralLayer(prev => ({ ...prev, isPlaying: true }));

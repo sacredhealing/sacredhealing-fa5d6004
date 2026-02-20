@@ -169,9 +169,9 @@ export default function NeuralSourceInput({
             </div>
             Neural Source
           </div>
-          {layer.source && (
-            <Badge variant="outline" className="text-xs border-pink-500/30 text-pink-400 max-w-full sm:max-w-[180px] truncate sm:ml-auto w-fit">
-              {layer.source}
+          {(layer.source || isLoading) && (
+            <Badge variant="outline" className="text-xs border-pink-500/30 text-pink-400 max-w-full sm:max-w-[180px] truncate sm:ml-auto w-fit min-w-0 overflow-hidden text-ellipsis">
+              {layer.source || 'Loading…'}
             </Badge>
           )}
         </CardTitle>
@@ -252,23 +252,24 @@ export default function NeuralSourceInput({
           </div>
         </div>
 
-        {/* Playback controls */}
-        {layer.source && (
+        {/* Playback controls — Play icon always visible (even when loading) */}
+        {(layer.source || isLoading) && (
           <div className="flex items-center gap-4 pt-2 border-t border-white/10">
             <Button
               variant="outline"
               size="icon"
+              disabled={isLoading}
               className={`shrink-0 transition-all ${
                 layer.isPlaying
                   ? 'bg-pink-500/20 border-pink-500/50 text-pink-400'
                   : 'bg-white/5 border-white/10 text-white/60 hover:text-white'
-              }`}
+              } ${isLoading ? 'opacity-90' : ''}`}
               onClick={onTogglePlay}
             >
-              {layer.isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+              {isLoading ? <Play className="w-5 h-5" /> : layer.isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
             </Button>
             
-            <div className="flex-1 space-y-1">
+            <div className="flex-1 space-y-1 min-w-0">
               <div className="flex justify-between text-xs">
                 <span className="text-white/60">Source Volume</span>
                 <span className="text-white/80">{Math.round(layer.volume * 100)}%</span>
@@ -280,6 +281,7 @@ export default function NeuralSourceInput({
                 step={0.01}
                 onValueChange={([v]) => onVolumeChange(v)}
                 className="[&_[role=slider]]:bg-pink-500"
+                disabled={isLoading}
               />
             </div>
 
@@ -288,6 +290,7 @@ export default function NeuralSourceInput({
               size="icon"
               className="shrink-0 text-white/40 hover:text-white/60"
               onClick={() => onLoadUrl('')}
+              disabled={isLoading}
             >
               <X className="w-4 h-4" />
             </Button>
