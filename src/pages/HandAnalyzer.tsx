@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+/** 3-second hard reset: if no stream by then, show Manual Upload so user can continue the reading */
 const CAMERA_TIMEOUT_MS = 3000;
 
 const HandAnalyzer = () => {
@@ -186,13 +187,13 @@ const HandAnalyzer = () => {
             </button>
             {showGalleryFallback && (
               <>
-                <p className="text-white/50 text-sm mt-4 mb-2">Camera taking too long?</p>
+                <p className="text-white/50 text-sm mt-4 mb-2">Lens stuck? Use Manual Upload to continue your reading.</p>
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   className="text-[#D4AF37] border border-[#D4AF37] px-6 py-2 rounded-full hover:bg-[#D4AF37]/10 transition-colors"
                 >
-                  Upload from Gallery
+                  Manual Upload
                 </button>
               </>
             )}
@@ -256,7 +257,7 @@ const HandAnalyzer = () => {
             disabled={isScanning}
             className="w-auto px-6 py-3 rounded-full border-2 border-[#D4AF37] bg-[#D4AF37]/10 text-[#D4AF37] font-serif text-sm uppercase tracking-wider disabled:opacity-50"
           >
-            Upload from Gallery
+            Manual Upload
           </motion.button>
         ) : (
           <motion.button
@@ -276,7 +277,7 @@ const HandAnalyzer = () => {
       {/* STATUS TEXT */}
       <div className="absolute bottom-36 left-0 right-0 text-center">
         <p className="text-[#D4AF37] text-xs uppercase tracking-[0.3em]">
-          {isScanning ? 'Deciphering Soul Lines...' : hasCamera ? 'Align Palm within the Mandala' : showGalleryFallback ? 'Or upload a palm image' : 'Initializing Lens...'}
+          {isScanning ? 'Deciphering Soul Lines...' : hasCamera ? 'Align Palm within the Mandala' : showGalleryFallback ? 'Or use Manual Upload' : 'Initializing Lens...'}
         </p>
       </div>
     </div>
