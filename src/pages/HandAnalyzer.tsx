@@ -3,23 +3,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import PalmOracle from '@/components/PalmOracle';
 
 const CAMERA_TIMEOUT_MS = 4000;
-
-const ANALYSIS_MESSAGE = `Vedic Samudrika Shastra Analysis:
-
-Life Line (Prana): Analyzing depth and clarity...
-Heart Line (Dharma): Examining emotional patterns...
-Head Line (Buddhi): Assessing mental clarity...
-
-Note: For the most accurate reading, ensure your palm is well-lit and aligned with natural light. If the image appears blurry, align your palm with the light of the Sun for a clearer reading.`;
 
 const HandAnalyzer = () => {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
-  const [analysisResult, setAnalysisResult] = useState<string | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<boolean>(false);
+  const [analysisSeed, setAnalysisSeed] = useState<string>('');
   const [transitioningToAkasha, setTransitioningToAkasha] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -97,7 +91,7 @@ const HandAnalyzer = () => {
 
   const runAnalysis = (imageData: string) => {
     setIsScanning(true);
-    setAnalysisResult(null);
+    setAnalysisResult(false);
     setTransitioningToAkasha(false);
     (async () => {
       try {
@@ -110,7 +104,8 @@ const HandAnalyzer = () => {
         setTimeout(() => {
           setIsScanning(false);
           toast.success('Analysis complete!');
-          setAnalysisResult(ANALYSIS_MESSAGE);
+          setAnalysisSeed(imageData.slice(0, 120));
+          setAnalysisResult(true);
         }, 4000);
       } catch (err: unknown) {
         setIsScanning(false);
@@ -120,7 +115,7 @@ const HandAnalyzer = () => {
   };
 
   const handleAnalysisOk = () => {
-    setAnalysisResult(null);
+    setAnalysisResult(false);
     setTransitioningToAkasha(true);
     setTimeout(() => {
       navigate('/akashic-records');
@@ -277,7 +272,7 @@ const HandAnalyzer = () => {
         </p>
       </div>
 
-      {/* Analysis result modal — OK triggers transition to Akashic */}
+      {/* Deep Palm Analysis modal — OK triggers transition to Akashic */}
       <AnimatePresence>
         {analysisResult && (
           <motion.div
@@ -291,17 +286,16 @@ const HandAnalyzer = () => {
               initial={{ scale: 0.95 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.95 }}
-              className="bg-[#1a1a1a] border-2 border-[#D4AF37]/50 rounded-2xl p-6 max-w-md w-full max-h-[80vh] overflow-auto shadow-[0_0_40px_rgba(212,175,55,0.2)]"
+              className="bg-[#1a1a1a] border-2 border-[#D4AF37]/50 rounded-2xl p-6 max-w-md w-full max-h-[85vh] overflow-auto shadow-[0_0_40px_rgba(212,175,55,0.2)]"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-[#D4AF37] font-serif text-lg font-bold mb-3">Vedic Samudrika Shastra Analysis</h3>
-              <pre className="text-white/90 text-sm whitespace-pre-wrap font-sans mb-6">{analysisResult}</pre>
+              <PalmOracle seed={analysisSeed} className="mb-6" />
               <button
                 type="button"
                 onClick={handleAnalysisOk}
                 className="w-full py-3 rounded-xl bg-[#D4AF37] text-black font-bold uppercase text-sm tracking-wider hover:bg-[#D4AF37]/90 transition-colors"
               >
-                OK
+                OK — Continue to Akashic Decoder
               </button>
             </motion.div>
           </motion.div>
