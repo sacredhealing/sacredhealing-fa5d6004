@@ -1,6 +1,16 @@
 import React, { useMemo, useState } from 'react';
 
 /**
+ * 18-Siddha lineage Master — 15 specific points for AI analysis.
+ */
+export const MASTER_PALM_18_SIDDHA_PROMPT = `You are an 18-Siddha lineage Master. Analyze the palm for 15 specific points:
+- 3 primary lines: Life, Head, Heart.
+- 4 secondary lines: Fate, Sun, Mercury, Health.
+- 7 mounts: Jupiter, Saturn, Apollo/Sun, Mercury, Venus, Moon, Mars (upper/lower).
+- The thumb's logic/will ratio (phalange proportions).
+Do not give general advice. Report only what you read from the palm.`;
+
+/**
  * Master Siddha Palm Analysis — Samudrika Shastra.
  * Analyze with extreme precision: lines (Ojas, Siddhis, Karmic Leaks) and mounts (Jupiter, Saturn, Venus).
  */
@@ -57,6 +67,24 @@ function getMountPositions(seed: string) {
     saturn: { cx: 50 + r(6), cy: 38 + r(6) },
     venus: { cx: 26 + r(6), cy: 52 + r(8) },
   };
+}
+
+/** Heart Line Leak — deterministic from seed for Bhrigu/Mantra sync (e.g. recommend Anahata) */
+export function getHeartLineLeak(seed: string): boolean {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = ((h << 5) - h + seed.charCodeAt(i)) | 0;
+  return Math.abs((h * 1103515245 + 12345) | 0) % 100 < 45;
+}
+
+/** Vata-Pitta-Kapha balance from hand texture/color (seed-based diagnostic) */
+export function getVataPittaKapha(seed: string): { vata: number; pitta: number; kapha: number } {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = ((h << 5) - h + seed.charCodeAt(i)) | 0;
+  const r = () => (Math.abs((h = (h * 1103515245 + 12345) | 0) % 100) / 100);
+  const raw = [r(), r(), r()];
+  const sum = raw.reduce((a, b) => a + b, 0) || 1;
+  const norm = raw.map((v) => Math.round((v / sum) * 100));
+  return { vata: norm[0], pitta: norm[1], kapha: norm[2] };
 }
 
 export interface PalmOracleProps {

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useMembership } from '@/hooks/useMembership';
 
-/** Deep Akashic: Vedic Triad + Soul Occupation, Unfinished Lesson, 8th House Shadow, Transmutation Path */
+/** Deep Akashic: Vedic Triad + Multi-Planetary (Ketu/Saturn) + Origin, Mastery, Shadow */
 type AkashicRecord = {
   title: string;
   origin: string;
@@ -12,14 +12,16 @@ type AkashicRecord = {
   incarnation: string;
   saturnDebt: string;
   eighthHouseGift: string;
-  /** The Soul's Occupation — e.g. Alchemist, Warrior-Monk, Sacred Dancer */
   soulOccupation: string;
-  /** The Unfinished Lesson — why you took birth in this era (e.g. 2026) */
   unfinishedLesson: string;
-  /** The 8th House Shadow — secret power suppressed in last life causing current blocks */
   eighthHouseShadow: string;
-  /** The Transmutation Path — 432Hz mantra sequences to Rewrite the Record */
   transmutationPath: string;
+  /** The Akashic Origin — where you came from */
+  akashicOrigin: string;
+  /** The Siddha Mastery — hidden powers you possess */
+  siddhaMastery: string;
+  /** The Shadow of Saturn — specific past-life debts causing current stress */
+  shadowOfSaturn: string;
 };
 
 const AKASHIC_RECORDS: Record<number, AkashicRecord> = {
@@ -35,6 +37,9 @@ const AKASHIC_RECORDS: Record<number, AkashicRecord> = {
     unfinishedLesson: 'You took birth in this era to learn leadership without tyranny — to wield authority as service, not domination. The age demands leaders who lead from the heart.',
     eighthHouseShadow: 'You suppressed the power to say no and set boundaries. That unexpressed "no" became inner rigidity and blocks in partnership and shared resources. Reclaim the right to choose.',
     transmutationPath: 'At 432Hz, chant the Surya mantra 12 times at sunrise: Om Hram Hreem Hraum Sah Suryaya Namah. Then sit in silence for 12 minutes. This sequence rewrites the record of withheld authority.',
+    akashicOrigin: 'You came from the royal courts of Ancient Aryavarta — a lineage of rulers and law-givers who carried the solar flame of sovereignty.',
+    siddhaMastery: 'You possess the hidden power to hold space for others without losing your center — the Siddha gift of steady authority that inspires without dominating.',
+    shadowOfSaturn: 'Saturn’s debt: you once abused authority or withheld justice. That debt now shows as stress around responsibility, criticism, and the fear of being wrong.',
   },
   4: {
     title: 'The Heart Guardian',
@@ -48,6 +53,9 @@ const AKASHIC_RECORDS: Record<number, AkashicRecord> = {
     unfinishedLesson: 'You took birth now to complete the lesson of loving without losing yourself. 2026 calls you to build a true home — inner and outer — without sacrificing your own need for safety.',
     eighthHouseShadow: 'You suppressed your need for emotional safety and hid your vulnerability. That suppression now blocks intimacy and trust. Your shadow is the fear of being seen in need.',
     transmutationPath: 'At 432Hz, chant the Chandra mantra 12 times at night: Om Shram Shreem Shraum Sah Chandraya Namah. Then place one hand on the heart and breathe for 12 minutes. This rewrites the record of hidden vulnerability.',
+    akashicOrigin: 'You came from the Temple of the South — a lineage of heart guardians and healers who tended the sacred flame of feeling.',
+    siddhaMastery: 'You possess the hidden power of emotional alchemy — the Siddha gift of turning pain into presence and holding safe space for the unspoken.',
+    shadowOfSaturn: 'Saturn’s debt: you once closed your heart or broke a bond. That debt now shows as stress in family, home, and the fear of abandonment.',
   },
   9: {
     title: 'The Vedic Scholar',
@@ -61,6 +69,9 @@ const AKASHIC_RECORDS: Record<number, AkashicRecord> = {
     unfinishedLesson: 'You took birth in this time to finally share what you once hoarded. The world in 2026 needs teachers who speak truth without dogma. Your lesson is to give wisdom freely.',
     eighthHouseShadow: 'You suppressed the teacher within for fear of being wrong or rejected. That unexpressed wisdom became mental restlessness and blocks in higher learning and long journeys. Speak what you know.',
     transmutationPath: 'At 432Hz, chant the Guru mantra 12 times at dawn: Om Gram Greem Graum Sah Gurave Namah. Then write one paragraph of truth you have never shared. Burn or release it. This rewrites the record of withheld wisdom.',
+    akashicOrigin: 'You came from the Banks of the Saraswati — a lineage of scholars and keepers of the Vedas who preserved wisdom across ages.',
+    siddhaMastery: 'You possess the hidden power of instant comprehension — the Siddha gift of grasping complex truths and transmitting them with clarity.',
+    shadowOfSaturn: 'Saturn’s debt: you once withheld knowledge or misused teaching. That debt now shows as stress in career, higher education, and the fear of being judged.',
   },
   12: {
     title: 'The Himalayan Mystic',
@@ -74,6 +85,9 @@ const AKASHIC_RECORDS: Record<number, AkashicRecord> = {
     unfinishedLesson: 'You took birth now to bring the cave into the marketplace. 2026 asks you to serve without losing your connection to the void. The unfinished lesson is solitude in action.',
     eighthHouseShadow: 'You suppressed the desire for recognition and hid your light. That suppression now blocks liberation and surrender — you fear losing yourself if you merge. The shadow is the need to be special.',
     transmutationPath: 'At 432Hz, chant the Ketu mantra 12 times in a dark or dim space: Om Stram Streem Straum Sah Ketave Namah. Then sit with the intention to disappear for 12 minutes. This rewrites the record of hidden light.',
+    akashicOrigin: 'You came from the Mount Kailash range — a lineage of mystics and renunciates who sought liberation in the high caves.',
+    siddhaMastery: 'You possess the hidden power of dissolution — the Siddha gift of releasing attachment and touching the void without fear.',
+    shadowOfSaturn: 'Saturn’s debt: you once escaped responsibility or hid from service. That debt now shows as stress in solitude, loss, and the fear of insignificance.',
   },
 };
 
@@ -89,6 +103,9 @@ const DEFAULT_RECORD: AkashicRecord = {
   unfinishedLesson: 'You took birth in this era to ground your creativity in form. 2026 invites you to offer your art without waiting for permission. The lesson is to create for the sake of creation.',
   eighthHouseShadow: 'You suppressed your voice and your desire for beauty. That suppression now blocks transformation and shared resources. The shadow is the belief that your gift is not enough.',
   transmutationPath: 'At 432Hz, chant the Saraswati mantra 12 times: Om Aim Saraswatyai Namah. Then sing or hum one note for 12 minutes. This rewrites the record of silenced creativity.',
+  akashicOrigin: 'You came from the Celestial Realms — a lineage of bards and dancers who carried the frequency of beauty across worlds.',
+  siddhaMastery: 'You possess the hidden power of resonance — the Siddha gift of moving others through sound, story, and presence.',
+  shadowOfSaturn: 'Saturn’s debt: you once refused to create or silenced another’s voice. That debt now shows as stress in creativity, partnership, and the fear of being unseen.',
 };
 
 /** Year of Karmic Climax — when past-life debt is fully paid (derived from userHouse + birth year hint) */
@@ -99,20 +116,41 @@ function getYearOfKarmicClimax(userHouse: number): number {
 }
 
 interface AkashicSiddhaReadingProps {
+  /** Ketu's house (1–12) — from Jyotish; drives archetype/origin */
   userHouse?: number;
+  /** Saturn's house (1–12) — from Jyotish; refines Shadow of Saturn */
+  saturnHouse?: number;
+  /** Optional Vedic reading for multi-planetary bridge */
+  vedicReading?: { personalCompass?: { currentDasha?: { period?: string } }; masterBlueprint?: { soulMap12Houses?: string } } | null;
   onComplete?: (archetype: string) => void;
   isModal?: boolean;
 }
 
+/** Derive Ketu house from Dasha period name if possible (e.g. Ketu → 12, Moon → 4) */
+function ketuHouseFromReading(reading: AkashicSiddhaReadingProps['vedicReading']): number | undefined {
+  const period = reading?.personalCompass?.currentDasha?.period;
+  if (!period) return undefined;
+  const p = period.toLowerCase();
+  if (p.startsWith('ketu')) return 12;
+  if (p.startsWith('moon')) return 4;
+  if (p.startsWith('jupiter')) return 9;
+  if (p.startsWith('sun')) return 1;
+  return undefined;
+}
+
 const AkashicSiddhaReadingComponent: React.FC<AkashicSiddhaReadingProps> = ({
-  userHouse = 12,
+  userHouse: userHouseProp = 12,
+  saturnHouse: saturnHouseProp,
+  vedicReading,
   onComplete,
   isModal = false,
 }) => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [readingVisible, setReadingVisible] = useState(false);
   const [deepenRevealed, setDeepenRevealed] = useState(false);
+  const [burnRevealed, setBurnRevealed] = useState(false);
   const { isPremium } = useMembership();
+  const userHouse = ketuHouseFromReading(vedicReading) ?? userHouseProp;
   const record = AKASHIC_RECORDS[userHouse] || DEFAULT_RECORD;
   const yearClimax = getYearOfKarmicClimax(userHouse);
 
@@ -192,10 +230,27 @@ const AkashicSiddhaReadingComponent: React.FC<AkashicSiddhaReadingProps> = ({
                 className="text-[10px] uppercase tracking-[0.4em] text-[#D4AF37]/70"
                 style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}
               >
-                {isPremium ? 'The Scroll of Time — Full Akashic Manuscript' : 'Akashic Record — Summary'}
+                {burnRevealed ? (isPremium ? 'The Scroll of Time — Full Akashic Manuscript' : 'Akashic Record — Summary') : 'Secret Manuscript'}
               </span>
             </div>
-            <div className={manuscriptContent}>
+            <div className={`relative ${manuscriptContent}`}>
+              {/* Burn-to-Read parchment overlay */}
+              <AnimatePresence>
+                {!burnRevealed && (
+                  <motion.button
+                    type="button"
+                    initial={{ opacity: 1 }}
+                    exit={{ opacity: 0, transition: { duration: 0.8 } }}
+                    className="absolute inset-0 z-20 flex flex-col items-center justify-center rounded-b-lg bg-gradient-to-b from-amber-950/98 via-amber-900/95 to-black/98 border-b-2 border-[#D4AF37]/30"
+                    onClick={() => setBurnRevealed(true)}
+                    style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}
+                  >
+                    <span className="text-[#D4AF37]/90 text-4xl mb-4" aria-hidden>🔥</span>
+                    <span className="text-[#D4AF37] text-sm font-bold uppercase tracking-[0.3em] mb-2">Secret Manuscript</span>
+                    <span className="text-white/80 text-xs uppercase tracking-widest">Touch to burn & reveal</span>
+                  </motion.button>
+                )}
+              </AnimatePresence>
               {/* ——— FREE: Summary (always visible) ——— */}
               <section className="border-b border-[#D4AF37]/20 pb-6">
                 <span
@@ -241,6 +296,54 @@ const AkashicSiddhaReadingComponent: React.FC<AkashicSiddhaReadingProps> = ({
               {/* ——— PREMIUM: Full Akashic Manuscript (PDF-style) ——— */}
               {isPremium && (
                 <>
+                  {/* The Akashic Origin — where you came from */}
+                  <section>
+                    <h4
+                      className="text-xs font-bold uppercase tracking-widest text-[#D4AF37]/90 mb-2"
+                      style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}
+                    >
+                      The Akashic Origin
+                    </h4>
+                    <p
+                      className="text-white/90 text-lg leading-relaxed italic"
+                      style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}
+                    >
+                      {record.akashicOrigin}
+                    </p>
+                  </section>
+
+                  {/* The Siddha Mastery — hidden powers */}
+                  <section>
+                    <h4
+                      className="text-xs font-bold uppercase tracking-widest text-[#D4AF37]/90 mb-2"
+                      style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}
+                    >
+                      The Siddha Mastery
+                    </h4>
+                    <p
+                      className="text-white/90 text-lg leading-relaxed"
+                      style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}
+                    >
+                      {record.siddhaMastery}
+                    </p>
+                  </section>
+
+                  {/* The Shadow of Saturn — past-life debts causing current stress */}
+                  <section>
+                    <h4
+                      className="text-xs font-bold uppercase tracking-widest text-[#D4AF37]/90 mb-2"
+                      style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}
+                    >
+                      The Shadow of Saturn
+                    </h4>
+                    <p
+                      className="text-white/90 text-lg leading-relaxed"
+                      style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}
+                    >
+                      {record.shadowOfSaturn}
+                    </p>
+                  </section>
+
                   {/* The Soul's Occupation */}
                   <section>
                     <h4

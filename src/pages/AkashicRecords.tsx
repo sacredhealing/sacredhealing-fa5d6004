@@ -1,11 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import AkashicSiddhaReading from '@/components/vedic/AkashicSiddhaReading';
+import { useAIVedicReading } from '@/hooks/useAIVedicReading';
 
-/** Full-page Akashic Decoder — linked from Your Space (palm → Archetype record). */
+/** Full-page Akashic Decoder — linked from palm (Multi-Planetary: Ketu + Saturn). */
 const AkashicRecords: React.FC = () => {
   const navigate = useNavigate();
-  const userHouse = 12; // Default Ketu's house; can derive from useAIVedicReading().reading later if needed
+  const { reading } = useAIVedicReading();
+  const userHouse = 12; // Default Ketu house when no reading
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#D4AF37]">
@@ -24,7 +26,7 @@ const AkashicRecords: React.FC = () => {
         <p className="text-sm text-white/70 mb-4 font-serif italic">
           Lines detected on your palm match the Archetype record in the Akasha.
         </p>
-        <AkashicSiddhaReading userHouse={userHouse} isModal={false} />
+        <AkashicSiddhaReading userHouse={userHouse} vedicReading={reading} isModal={false} />
       </div>
     </div>
   );

@@ -3,9 +3,71 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import PalmOracle from '@/components/PalmOracle';
+import PalmOracle, { getHeartLineLeak, getVataPittaKapha } from '@/components/PalmOracle';
+import { setPalmScanResult } from '@/lib/palmScanStore';
 
 const CAMERA_TIMEOUT_MS = 4000;
+
+/** Neural Map — glowing Life, Head, Heart paths over the camera feed during scan */
+const LIFE_PATH = 'M 22,28 Q 28,36 26,72';
+const HEAD_PATH = 'M 22,48 Q 38,44 52,50';
+const HEART_PATH = 'M 22,36 Q 42,30 62,38';
+
+const NeuralMapOverlay: React.FC<{ active: boolean }> = ({ active }) => {
+  if (!active) return null;
+  return (
+    <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+      <svg
+        className="absolute w-full h-full text-[#D4AF37] opacity-70"
+        viewBox="0 0 100 100"
+        preserveAspectRatio="xMidYMid meet"
+      >
+        <defs>
+          <filter id="neural-glow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="1.2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+        <motion.path
+          d={LIFE_PATH}
+          fill="none"
+          stroke="rgba(212,175,55,0.95)"
+          strokeWidth="1.2"
+          strokeLinecap="round"
+          filter="url(#neural-glow)"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: 1.4, ease: 'easeInOut' }}
+        />
+        <motion.path
+          d={HEAD_PATH}
+          fill="none"
+          stroke="rgba(212,175,55,0.9)"
+          strokeWidth="1"
+          strokeLinecap="round"
+          filter="url(#neural-glow)"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: 1.4, delay: 0.3, ease: 'easeInOut' }}
+        />
+        <motion.path
+          d={HEART_PATH}
+          fill="none"
+          stroke="rgba(212,175,55,0.9)"
+          strokeWidth="1"
+          strokeLinecap="round"
+          filter="url(#neural-glow)"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: 1.4, delay: 0.6, ease: 'easeInOut' }}
+        />
+      </svg>
+    </div>
+  );
+};
 
 const HandAnalyzer = () => {
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -103,11 +165,20 @@ const HandAnalyzer = () => {
           return;
         }
         setTimeout(() => {
+          const seed = imageData.slice(0, 120);
           setIsScanning(false);
           toast.success('Analysis complete!');
-          setAnalysisSeed(imageData.slice(0, 120));
+          setAnalysisSeed(seed);
           setAnalysisImageUrl(imageData);
           setAnalysisResult(true);
+          const heartLineLeak = getHeartLineLeak(seed);
+          const vataPittaKapha = getVataPittaKapha(seed);
+          setPalmScanResult({
+            scannedAt: new Date().toISOString(),
+            heartLineLeak,
+            vataPittaKapha,
+            seed,
+          });
         }, 4000);
       } catch (err: unknown) {
         setIsScanning(false);
@@ -180,6 +251,8 @@ const HandAnalyzer = () => {
         {!error && !isInitializing && stream && (
           <div className="relative w-full h-full">
             <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover opacity-60" />
+            {/* Neural Map overlay — glowing SVG paths (Life, Head, Heart) drawn as camera scans */}
+            <NeuralMapOverlay active={isScanning} />
             {/* Golden Hand Overlay for Calibration */}
             <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-40">
               <svg width="200" height="300" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="0.5">
@@ -188,7 +261,7 @@ const HandAnalyzer = () => {
             </div>
             <div className="absolute bottom-6 w-full text-center">
               <p className="text-white text-[10px] uppercase tracking-widest bg-black/50 py-2 inline-block px-4 rounded-full">
-                Align Palm with Golden Outline
+                {isScanning ? 'Neural Map active — 15 points' : 'Align Palm with Golden Outline'}
               </p>
             </div>
           </div>
@@ -291,7 +364,33 @@ const HandAnalyzer = () => {
               className="bg-[#1a1a1a] border-2 border-[#D4AF37]/50 rounded-2xl p-6 max-w-md w-full max-h-[85vh] overflow-auto shadow-[0_0_40px_rgba(212,175,55,0.2)]"
               onClick={(e) => e.stopPropagation()}
             >
-              <PalmOracle seed={analysisSeed} handImageUrl={analysisImageUrl} className="mb-6" />
+              <PalmOracle seed={analysisSeed} handImageUrl={analysisImageUrl} className="mb-4" />
+              {/* Vata-Pitta-Kapha from hand texture/color */}
+              {analysisSeed && (() => {
+                const vpk = getVataPittaKapha(analysisSeed);
+                return (
+                  <section className="mb-6 rounded-xl border border-[#D4AF37]/30 bg-[#D4AF37]/5 p-4">
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-[#D4AF37]/90 mb-3">Vata–Pitta–Kapha balance</h4>
+                    <p className="text-white/70 text-xs mb-2">From hand texture and color</p>
+                    <div className="space-y-2">
+                      {(['vata', 'pitta', 'kapha'] as const).map((d) => (
+                        <div key={d} className="flex items-center gap-2">
+                          <span className="text-white/80 text-sm w-12 capitalize">{d}</span>
+                          <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+                            <motion.div
+                              className="h-full bg-[#D4AF37] rounded-full"
+                              initial={{ width: 0 }}
+                              animate={{ width: `${vpk[d]}%` }}
+                              transition={{ duration: 0.8 }}
+                            />
+                          </div>
+                          <span className="text-[#D4AF37] text-sm font-mono w-8">{vpk[d]}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                );
+              })()}
               <button
                 type="button"
                 onClick={handleAnalysisOk}

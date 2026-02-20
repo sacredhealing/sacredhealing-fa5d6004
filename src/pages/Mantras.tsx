@@ -17,6 +17,7 @@ import { useAIVedicReading } from '@/hooks/useAIVedicReading';
 import { useBhriguPlanet } from '@/hooks/useBhriguPlanet';
 import { normalizePlanetName, mantraMatchesPlanet, getPlanetOfDay, getDailyMantraFromChart, type Planet } from '@/lib/jyotishMantraLogic';
 import { getPlanetEmoji } from '@/lib/vedicTypes';
+import { getPalmScanResult } from '@/lib/palmScanStore';
 
 // Planet → vibrant color theme
 const PLANET_THEMES: Record<string, {
@@ -97,21 +98,30 @@ function getPrescribedMantraText(dashaPeriod: string | undefined | null): string
   return planet ? (DASHA_MANTRA_DISPLAY[planet] || getDailyMantraFromChart(dashaPeriod)) : null;
 }
 
-/** Bhrigu Samhita Holy Remedy card — memoized to avoid stutter during Bhrigu calculation */
+/** Match mantra for 432Hz Heart-Healing (Anahata) — palm scan Heart Line Leak recommendation */
+function findHeartHealingMantra(mantras: MantraItem[]): MantraItem | undefined {
+  return mantras.find((m) => /heart|anahata|432.*heart/i.test(m.title) || (m.description && /heart|anahata/i.test(m.description)));
+}
+
+/** Bhrigu Samhita Holy Remedy card — memoized; highlights 432Hz Heart-Healing (Anahata) when palm scan shows Heart Line Leak */
 const BhriguRemedyCard = React.memo<{
   activeDasha: Planet | null;
   prescribedText: string | null;
   onPlayRemedy: () => void;
   t: (key: string, fallback?: string) => string;
-}>(({ activeDasha, prescribedText, onPlayRemedy }) => (
+  heartLineLeak?: boolean;
+  onPlayHeartHealing?: () => void;
+  heartHealingMantraTitle?: string | null;
+}>(({ activeDasha, prescribedText, onPlayRemedy, heartLineLeak, onPlayHeartHealing, heartHealingMantraTitle }) => (
   <section className="px-4 mt-4 mb-4">
     <Card
-      className={`relative overflow-hidden rounded-2xl border-2 border-[#D4AF37] bg-gradient-to-br from-[#D4AF37]/10 via-amber-950/40 to-black/60 shadow-[0_0_24px_rgba(212,175,55,0.25)] ${!activeDasha ? 'animate-sovereign-pulse' : ''}`}
+      className={`relative overflow-hidden rounded-2xl border-2 border-[#D4AF37] bg-gradient-to-br from-[#D4AF37]/10 via-amber-950/40 to-black/60 shadow-[0_0_24px_rgba(212,175,55,0.25)] ${!activeDasha ? 'animate-sovereign-pulse' : ''} ${heartLineLeak ? 'ring-2 ring-rose-400/50' : ''}`}
       style={{
-        boxShadow: '0 0 0 2px rgba(212,175,55,0.4), 0 0 20px rgba(212,175,55,0.2), 0 0 40px rgba(212,175,55,0.1)',
+        boxShadow: heartLineLeak
+          ? '0 0 0 2px rgba(212,175,55,0.4), 0 0 20px rgba(212,175,55,0.2), 0 0 40px rgba(244,63,94,0.15)'
+          : '0 0 0 2px rgba(212,175,55,0.4), 0 0 20px rgba(212,175,55,0.2), 0 0 40px rgba(212,175,55,0.1)',
       }}
     >
-      {/* Bhrigu Samhita palm-leaf icon in corner */}
       <div className="absolute top-3 right-3 text-[#D4AF37]/80" aria-hidden>
         <Leaf className="w-6 h-6" strokeWidth={1.5} />
       </div>
@@ -120,6 +130,23 @@ const BhriguRemedyCard = React.memo<{
           <Sparkles className="w-5 h-5 text-[#D4AF37]" />
           <span className="text-xs font-semibold uppercase tracking-widest text-[#D4AF37]">Bhrigu Samhita</span>
         </div>
+        {heartLineLeak && (
+          <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-400/30">
+            <p className="text-xs font-bold uppercase tracking-wider text-rose-300 mb-1">From your palm scan</p>
+            <p className="text-sm text-white/90 mb-2">432Hz Heart-Healing (Anahata) Mantra recommended</p>
+            {onPlayHeartHealing && (
+              <Button
+                onClick={onPlayHeartHealing}
+                variant="outline"
+                size="sm"
+                className="w-full border-rose-400/50 text-rose-200 hover:bg-rose-500/20"
+              >
+                <Play className="w-3 h-3 mr-2 inline" />
+                {heartHealingMantraTitle ? `Play ${heartHealingMantraTitle}` : 'Play Heart-Healing Mantra'}
+              </Button>
+            )}
+          </div>
+        )}
         {activeDasha && prescribedText ? (
           <>
             <h2 className="text-lg font-bold text-white mb-2 pr-8">Holy Remedy</h2>
@@ -181,6 +208,11 @@ const Mantras = () => {
     : null;
 
   const dashaPlanet = useBhriguPlanet(reading);
+
+  const palmScan = getPalmScanResult();
+  const heartLineLeak = palmScan?.heartLineLeak ?? false;
+  const heartHealingMantra = findHeartHealingMantra(mantras);
+  const heartHealingMantraTitle = heartHealingMantra?.title ?? null;
 
   const isCelestialMatch = currentHoraPlanet && dashaPlanet && currentHoraPlanet === dashaPlanet;
   const userBirthPlanet = null;
@@ -370,6 +402,17 @@ const Mantras = () => {
           }
         }}
         t={t}
+        heartLineLeak={heartLineLeak}
+        onPlayHeartHealing={
+          heartLineLeak && heartHealingMantra
+            ? () => {
+                handleMantraSelect(heartHealingMantra);
+                if (heartHealingMantra.audio_url) setTimeout(() => handleStart(), 300);
+                else toast.error(t('mantras_no_audio', 'Audio not available for this mantra.'));
+              }
+            : undefined
+        }
+        heartHealingMantraTitle={heartHealingMantraTitle}
       />
       </section>
 
