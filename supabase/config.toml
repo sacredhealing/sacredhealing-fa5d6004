@@ -176,3 +176,6 @@ verify_jwt = false
 
 [functions.guide-chat]
 verify_jwt = true
+
+[functions.send-akashic-purchase-email]
+verify_jwt = true

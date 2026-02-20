@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 const STORAGE_KEY = 'akashic_reveal_purchased';
 
-/** Tracks whether user has purchased the high-ticket Akashic Deep Reading ($49). */
-export function useAkashicAccess(): { hasAccess: boolean; setAccess: () => void } {
+/** Tracks whether user has purchased the high-ticket Akashic Deep Reading ($49). Uses localStorage + akashic_readings (My Records) for permanent access. */
+export function useAkashicAccess(userId?: string | null): { hasAccess: boolean; setAccess: () => void } {
   const [searchParams, setSearchParams] = useSearchParams();
   const [hasAccess, setHasAccessState] = useState(false);
 
@@ -15,17 +16,34 @@ export function useAkashicAccess(): { hasAccess: boolean; setAccess: () => void 
         localStorage.setItem(STORAGE_KEY, '1');
       } catch {}
       setHasAccessState(true);
-      // Clean URL
       searchParams.delete('unlocked');
       setSearchParams(searchParams, { replace: true });
       return;
     }
-    try {
-      setHasAccessState(localStorage.getItem(STORAGE_KEY) === '1');
-    } catch {
-      setHasAccessState(false);
-    }
-  }, [searchParams, setSearchParams]);
+
+    const checkAccess = async () => {
+      try {
+        if (localStorage.getItem(STORAGE_KEY) === '1') {
+          setHasAccessState(true);
+          return;
+        }
+        if (userId) {
+          const { data } = await supabase
+            .from('akashic_readings')
+            .select('id')
+            .eq('user_id', userId)
+            .maybeSingle();
+          setHasAccessState(!!data);
+        } else {
+          setHasAccessState(false);
+        }
+      } catch {
+        setHasAccessState(false);
+      }
+    };
+
+    checkAccess();
+  }, [searchParams, setSearchParams, userId]);
 
   const setAccess = () => {
     try {

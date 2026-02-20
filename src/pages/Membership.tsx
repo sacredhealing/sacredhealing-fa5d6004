@@ -83,7 +83,7 @@ const Membership = () => {
         try { sessionStorage.removeItem('membership_product_intent'); } catch {}
         refreshMembership();
         toast.success('Your Akashic Record is now unlocked. Download your Certificate of Origin.');
-        navigate('/akashic-records?unlocked=1');
+        navigate('/akashic-reading/initiating');
         return;
       }
       toast.success(`Welcome to ${tierParam || 'Premium'}! Your membership is now active.`);

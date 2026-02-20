@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Flame, Flower2, Star, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield, Scale, LayoutDashboard, Megaphone, Crown, Pencil, Banknote, Lock } from 'lucide-react';
+import { Flame, Flower2, Star, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield, Scale, LayoutDashboard, Megaphone, Crown, Pencil, Banknote, Lock, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LanguageSelector } from '@/components/LanguageSelector';
@@ -14,6 +14,7 @@ import { useAdminRole } from '@/hooks/useAdminRole';
 import { useAIVedicReading } from '@/hooks/useAIVedicReading';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
 import { useCertificates } from '@/hooks/useCertificates';
+import { useAkashicAccess } from '@/hooks/useAkashicAccess';
 import { CertificateCard } from '@/components/certificates/CertificateCard';
 import { NotificationsDialog } from '@/components/profile/NotificationsDialog';
 import { AppearanceDialog } from '@/components/profile/AppearanceDialog';
@@ -31,6 +32,7 @@ const Profile: React.FC = () => {
   const { toast } = useToast();
   const { isAdmin } = useAdminRole();
   const { certificates, isLoading: certificatesLoading, downloadCertificate, shareCertificate } = useCertificates();
+  const { hasAccess: hasAkashicRecord } = useAkashicAccess(user?.id);
   const { reading: vedicReading } = useAIVedicReading();
 
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -214,6 +216,28 @@ const Profile: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {/* My Records — Akashic Reading */}
+      {hasAkashicRecord && (
+        <div className="mb-8 animate-slide-up">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-heading font-semibold text-foreground">{t('profile.myRecords', 'My Records')}</h2>
+          </div>
+          <button
+            onClick={() => navigate('/akashic-reading/full')}
+            className="w-full flex items-center gap-4 p-4 rounded-2xl border border-[#D4AF37]/30 bg-[rgba(212,175,55,0.06)] hover:bg-[rgba(212,175,55,0.1)] transition-all text-left"
+          >
+            <div className="w-12 h-12 rounded-xl bg-[#D4AF37]/20 flex items-center justify-center">
+              <FileText size={24} className="text-[#D4AF37]" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-foreground">Your Akashic Record</p>
+              <p className="text-xs text-muted-foreground">15-page Soul Manuscript • Certificate of Origin</p>
+            </div>
+            <ChevronRight size={20} className="text-[#D4AF37]/70 shrink-0" />
+          </button>
+        </div>
+      )}
 
       {/* Certificates */}
       {certificates.length > 0 && (

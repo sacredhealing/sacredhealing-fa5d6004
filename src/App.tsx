@@ -118,6 +118,8 @@ import Vastu from "./pages/Vastu";
 import PromptLibrary from "./pages/PromptLibrary";
 import HandAnalyzer from "./pages/HandAnalyzer";
 import AkashicRecords from "./pages/AkashicRecords";
+import AkashicReadingInitiating from "./pages/AkashicReadingInitiating";
+import AkashicReadingFull from "./pages/AkashicReadingFull";
 import { DebugBanner } from "./components/DebugBanner";
 import { ProfileLanguageSync } from "./components/ProfileLanguageSync";
 import "@/lib/performance"; // Initialize performance monitoring
@@ -202,6 +204,8 @@ function AppRoutes() {
                   <Route path="/invite-friends" element={<InviteFriends />} />
                   <Route path="/vedic-astrology" element={<VedicAstrology />} />
                   <Route path="/akashic-records" element={<AkashicRecords />} />
+                  <Route path="/akashic-reading/initiating" element={<AkashicReadingInitiating />} />
+                  <Route path="/akashic-reading/full" element={<AkashicReadingFull />} />
                   <Route path="/ayurveda" element={<Ayurveda />} />
                   <Route path="/vastu" element={<Vastu />} />
                   <Route path="/prompt-library" element={<PromptLibrary />} />

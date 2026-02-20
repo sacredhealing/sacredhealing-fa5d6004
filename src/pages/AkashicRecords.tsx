@@ -14,7 +14,7 @@ const AkashicRecords: React.FC = () => {
   const { reading } = useAIVedicReading();
   const { user } = useAuth();
   const { isPremium } = useMembership();
-  const { hasAccess } = useAkashicAccess();
+  const { hasAccess } = useAkashicAccess(user?.id);
   const userHouse = 12; // Default Ketu house when no reading
   const userName = (user?.user_metadata?.full_name as string) || user?.email?.split('@')[0] || 'Soul';
 
