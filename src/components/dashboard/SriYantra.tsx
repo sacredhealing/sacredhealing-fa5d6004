@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 interface SriYantraProps {
   className?: string;
   style?: React.CSSProperties;
+  variant?: 'default' | 'gold';
 }
 
 /**
@@ -12,12 +13,17 @@ interface SriYantraProps {
  * (4 upward/Shiva, 5 downward/Shakti) forming 43 smaller triangles,
  * 8 inner + 16 outer lotus petals, central bindu.
  */
-export const SriYantra: React.FC<SriYantraProps> = ({ className, style }) => {
+export const SriYantra: React.FC<SriYantraProps> = ({ className, style, variant = 'default' }) => {
   const cx = 100;
   const cy = 100;
-  const stroke = "rgba(0, 242, 254, 0.45)";
-  const strokeLight = "rgba(0, 242, 254, 0.3)";
-  const strokeThin = "rgba(0, 242, 254, 0.2)";
+  const isGold = variant === 'gold';
+  const stroke = isGold ? "rgba(212, 175, 55, 0.5)" : "rgba(0, 242, 254, 0.45)";
+  const strokeLight = isGold ? "rgba(212, 175, 55, 0.35)" : "rgba(0, 242, 254, 0.3)";
+  const strokeThin = isGold ? "rgba(212, 175, 55, 0.25)" : "rgba(0, 242, 254, 0.2)";
+  const binduColor = isGold ? "rgba(212, 175, 55, 0.7)" : "rgba(0, 242, 254, 0.7)";
+  const binduColorInner = isGold ? "rgba(212, 175, 55, 0.95)" : "rgba(0, 242, 254, 0.95)";
+  const glowColor = isGold ? "rgba(212, 175, 55, 0.5)" : "rgba(0, 242, 254, 0.45)";
+  const glowColor2 = isGold ? "rgba(139, 92, 246, 0.2)" : "rgba(139, 92, 246, 0.15)";
 
   // Base angle ~52° (golden ratio), tan(52°) ≈ 1.28
   const tan52 = 1.28;
@@ -66,13 +72,16 @@ export const SriYantra: React.FC<SriYantraProps> = ({ className, style }) => {
 
   return (
     <div className={cn("relative", className)} style={style}>
-      {/* Outer cyan glow */}
+      {/* Outer glow */}
       <motion.div
         className="absolute inset-[-40%] rounded-full"
         style={{
-          background:
-            "radial-gradient(circle, rgba(0, 242, 254, 0.45) 0%, rgba(0, 242, 254, 0.2) 40%, transparent 70%)",
-          filter: "blur(30px) drop-shadow(0 0 40px rgba(0, 242, 254, 0.5))",
+          background: isGold
+            ? "radial-gradient(circle, rgba(212, 175, 55, 0.5) 0%, rgba(212, 175, 55, 0.2) 40%, transparent 70%)"
+            : "radial-gradient(circle, rgba(0, 242, 254, 0.45) 0%, rgba(0, 242, 254, 0.2) 40%, transparent 70%)",
+          filter: isGold
+            ? `blur(30px) drop-shadow(0 0 40px ${glowColor})`
+            : "blur(30px) drop-shadow(0 0 40px rgba(0, 242, 254, 0.5))",
         }}
         animate={{
           scale: [1, 1.2, 1],
@@ -139,16 +148,17 @@ export const SriYantra: React.FC<SriYantraProps> = ({ className, style }) => {
         </g>
 
         {/* Central bindu (cosmic point) */}
-        <circle cx={cx} cy={cy} r="4" fill="rgba(0, 242, 254, 0.7)" />
-        <circle cx={cx} cy={cy} r="2" fill="rgba(0, 242, 254, 0.95)" />
+        <circle cx={cx} cy={cy} r="4" fill={binduColor} />
+        <circle cx={cx} cy={cy} r="2" fill={binduColorInner} />
       </motion.svg>
 
       {/* Center pulsing glow */}
       <motion.div
         className="absolute inset-[40%] rounded-full"
         style={{
-          background:
-            "radial-gradient(circle, rgba(0, 242, 254, 0.4) 0%, rgba(139, 92, 246, 0.15) 50%, transparent 70%)",
+          background: isGold
+            ? `radial-gradient(circle, ${glowColor} 0%, ${glowColor2} 50%, transparent 70%)`
+            : "radial-gradient(circle, rgba(0, 242, 254, 0.4) 0%, rgba(139, 92, 246, 0.15) 50%, transparent 70%)",
           filter: "blur(8px)",
         }}
         animate={{

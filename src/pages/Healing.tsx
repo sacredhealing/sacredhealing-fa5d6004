@@ -2,13 +2,14 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast as sonnerToast } from 'sonner';
-import { Sparkles, Play, Pause, Lock, Download, Heart, Clock, Music, CheckCircle, Star, CreditCard, Wallet, ChevronDown, ChevronUp, Crown } from 'lucide-react';
+import { Sparkles, Play, Pause, Lock, Download, Heart, Clock, Music, CheckCircle, Star, CreditCard, Wallet, ChevronDown, ChevronUp, Crown, Key } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet';
+import { SriYantra } from '@/components/dashboard/SriYantra';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ReviewSection } from '@/components/reviews/ReviewSection';
@@ -58,7 +59,8 @@ function formatEnergyExchange(priceUsd: number): string {
   return `Exchange: $${priceUsd} / ${sek}kr`;
 }
 
-const DIRECT_HEALING_HERO_IMAGE = 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=1200&q=80';
+// Producer studio image: high-end microphone or glowing synthesizer
+const DIRECT_HEALING_HERO_IMAGE = 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=1200&q=80';
 
 const faqTranslations: Record<string, { question: string; answer: string }[]> = {
   en: [
@@ -387,22 +389,25 @@ const Healing: React.FC = () => {
             <HealingLanguageToggle language={language} setLanguage={setLanguage} />
           </section>
 
-          {/* Direct Healing Transmission — Session booking hero */}
-          <section className="rounded-2xl overflow-hidden" style={{ boxShadow: '0 0 0 10px rgba(212, 175, 55, 0.35), 0 0 40px rgba(212, 175, 55, 0.2)' }}>
+          {/* Direct Healing Transmission — Producer studio hero */}
+          <section className="rounded-2xl overflow-hidden border-2 border-[#D4AF37]" style={{ boxShadow: '0 0 30px rgba(212, 175, 55, 0.2)' }}>
             <div className="relative aspect-[21/9] min-h-[180px] bg-muted">
               <img
                 src={DIRECT_HEALING_HERO_IMAGE}
                 alt=""
                 className="absolute inset-0 w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-              <div className="absolute inset-0 flex flex-col justify-end p-6 text-left">
-                <h2 className="text-2xl md:text-3xl font-bold text-white mb-1">Direct Healing Transmission</h2>
-                <p className="text-white/90 text-sm md:text-base max-w-xl mb-4">
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
+              <div className="absolute inset-0 flex flex-col justify-center items-center p-6 text-center">
+                <h2 className="text-2xl md:text-3xl font-bold text-white mb-2" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
+                  Direct Healing Transmission
+                </h2>
+                <p className="text-white/90 text-sm md:text-base max-w-xl mb-6">
                   Personalized Alchemical Sound Healing with Adam. Limited Sacred Windows available.
                 </p>
                 <Link to="/private-sessions">
-                  <Button size="lg" className="bg-[#D4AF37] text-black font-semibold hover:bg-[#c4a030] animate-sovereign-white-pulse">
+                  <Button size="lg" className="bg-[#D4AF37] text-black font-semibold hover:bg-[#c4a030]">
+                    <Sparkles className="w-5 h-5 mr-2" />
                     Book Your Session
                   </Button>
                 </Link>
@@ -410,30 +415,17 @@ const Healing: React.FC = () => {
             </div>
           </section>
 
-          {/* Sacred Portal Hero — Kriya Purple, Flower of Life, Sovereign Gold CTA */}
-          <Card className="relative border-none text-center overflow-hidden bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900">
-            <div className="absolute inset-0 opacity-[0.07]" aria-hidden>
-              <svg viewBox="0 0 200 200" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
-                <defs>
-                  <pattern id="flower-of-life" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
-                    <circle cx="20" cy="20" r="8" fill="none" stroke="white" strokeWidth="0.5" />
-                    <circle cx="20" cy="20" r="16" fill="none" stroke="white" strokeWidth="0.35" />
-                    <circle cx="20" cy="4" r="8" fill="none" stroke="white" strokeWidth="0.35" />
-                    <circle cx="34" cy="20" r="8" fill="none" stroke="white" strokeWidth="0.35" />
-                    <circle cx="20" cy="36" r="8" fill="none" stroke="white" strokeWidth="0.35" />
-                    <circle cx="6" cy="20" r="8" fill="none" stroke="white" strokeWidth="0.35" />
-                    <circle cx="27" cy="10" r="8" fill="none" stroke="white" strokeWidth="0.35" />
-                    <circle cx="13" cy="10" r="8" fill="none" stroke="white" strokeWidth="0.35" />
-                    <circle cx="27" cy="30" r="8" fill="none" stroke="white" strokeWidth="0.35" />
-                    <circle cx="13" cy="30" r="8" fill="none" stroke="white" strokeWidth="0.35" />
-                  </pattern>
-                </defs>
-                <rect width="100%" height="100%" fill="url(#flower-of-life)" />
-              </svg>
-            </div>
+          {/* Sacred Portal Hero — Deep Midnight Violet, Glowing Sri Yantra, Sovereign Gold CTA */}
+          <Card className="relative border-none text-center overflow-hidden bg-[#1a0b2e]">
             <CardContent className="relative py-10 px-6">
-              <Sparkles className="w-12 h-12 text-amber-200/90 mx-auto mb-4" />
-              <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">
+              <div className="flex items-center justify-center mb-6">
+                <div className="w-40 h-40 md:w-56 md:h-56 relative">
+                  <div className="absolute inset-0" style={{ filter: 'drop-shadow(0 0 50px rgba(212, 175, 55, 0.5))' }}>
+                    <SriYantra className="w-full h-full" variant="gold" />
+                  </div>
+                </div>
+              </div>
+              <h1 className="text-3xl md:text-4xl font-bold text-white mb-3" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
                 {tSafe('healing.pageTitle', '30 Days of Sacred Support')}
               </h1>
               <p className="text-white/80 max-w-2xl mx-auto">
@@ -441,10 +433,10 @@ const Healing: React.FC = () => {
               </p>
               <Button
                 size="lg"
-                className="mt-6 bg-[#D4AF37] text-black font-semibold hover:bg-[#c4a030] animate-sovereign-white-pulse"
+                className="mt-6 bg-[#D4AF37] text-black font-semibold hover:bg-[#c4a030]"
                 onClick={startRecommendedSession}
               >
-                <Play className="w-5 h-5 mr-2" />
+                <Sparkles className="w-5 h-5 mr-2" />
                 {tSafe('healing.ctaStartSession', 'Start a session')}
               </Button>
             </CardContent>
