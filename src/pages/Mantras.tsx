@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation as useI18nTranslation } from 'react-i18next';
 import { useTranslation } from '@/hooks/useTranslation';
-import { Music, Play, Pause, RotateCcw, Volume2, ChevronDown, Sparkles, Clock, Sunrise, Moon } from 'lucide-react';
+import { Music, Play, Pause, RotateCcw, Volume2, ChevronDown, Sparkles, Clock, Sunrise, Moon, Leaf } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -96,6 +96,59 @@ function getPrescribedMantraText(dashaPeriod: string | undefined | null): string
   const planet = normalizePlanetName(dashaPeriod.split(' ')[0]);
   return planet ? (DASHA_MANTRA_DISPLAY[planet] || getDailyMantraFromChart(dashaPeriod)) : null;
 }
+
+/** Bhrigu Samhita Holy Remedy card — memoized to avoid stutter during Bhrigu calculation */
+const BhriguRemedyCard = React.memo<{
+  activeDasha: Planet | null;
+  prescribedText: string | null;
+  onPlayRemedy: () => void;
+  t: (key: string, fallback?: string) => string;
+}>(({ activeDasha, prescribedText, onPlayRemedy }) => (
+  <section className="px-4 mt-4 mb-4">
+    <Card
+      className={`relative overflow-hidden rounded-2xl border-2 border-[#D4AF37] bg-gradient-to-br from-[#D4AF37]/10 via-amber-950/40 to-black/60 shadow-[0_0_24px_rgba(212,175,55,0.25)] ${!activeDasha ? 'animate-sovereign-pulse' : ''}`}
+      style={{
+        boxShadow: '0 0 0 2px rgba(212,175,55,0.4), 0 0 20px rgba(212,175,55,0.2), 0 0 40px rgba(212,175,55,0.1)',
+      }}
+    >
+      {/* Bhrigu Samhita palm-leaf icon in corner */}
+      <div className="absolute top-3 right-3 text-[#D4AF37]/80" aria-hidden>
+        <Leaf className="w-6 h-6" strokeWidth={1.5} />
+      </div>
+      <CardContent className="p-5">
+        <div className="flex items-center gap-2 mb-2">
+          <Sparkles className="w-5 h-5 text-[#D4AF37]" />
+          <span className="text-xs font-semibold uppercase tracking-widest text-[#D4AF37]">Bhrigu Samhita</span>
+        </div>
+        {activeDasha && prescribedText ? (
+          <>
+            <h2 className="text-lg font-bold text-white mb-2 pr-8">Holy Remedy</h2>
+            <p className="text-sm text-white/70 mb-2">{activeDasha} Remedy</p>
+            <p className="text-xl font-serif text-[#D4AF37] mb-4 tracking-wide pr-2" style={{ fontFamily: 'Georgia, Cinzel, serif' }}>
+              {prescribedText}
+            </p>
+            <Button
+              onClick={onPlayRemedy}
+              className="w-full bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-black font-semibold py-2.5 rounded-xl border border-[#D4AF37] shadow-lg shadow-[#D4AF37]/30"
+            >
+              <Play className="w-4 h-4 mr-2 inline" />
+              Play {activeDasha} Remedy
+            </Button>
+          </>
+        ) : (
+          <div className="py-2 pr-8">
+            <p className="text-[#D4AF37]/90 text-sm animate-pulse" style={{ animationDuration: '2s' }}>
+              Calculating your Soul&apos;s Frequency...
+            </p>
+            <p className="text-white/50 text-xs mt-1">Bhrigu calculation in progress</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  </section>
+));
+
+BhriguRemedyCard.displayName = 'BhriguRemedyCard';
 
 const Mantras = () => {
   const navigate = useNavigate();
@@ -278,10 +331,10 @@ const Mantras = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-28">
+    <div className="min-h-screen bg-background pb-28 overflow-x-hidden overflow-y-auto">
 
       {/* Sacred Header — Celestial Gradient; Return to Temple always available */}
-      <header className="bg-gradient-to-br from-indigo-950 via-violet-950/90 to-amber-950/80 border-b border-amber-500/20 px-4 pt-6 pb-5">
+      <header className="bg-gradient-to-br from-indigo-950 via-violet-950/90 to-amber-950/80 border-b border-amber-500/20 px-4 pt-6 pb-5 shrink-0">
         <div className="flex items-center justify-between gap-3 mb-3">
           <button
             type="button"
@@ -299,50 +352,26 @@ const Mantras = () => {
         </p>
       </header>
 
-      {/* Din Heliga Kur (Your Holy Remedy) — primary card from active Dasha */}
-      {dashaPlanet && reading?.personalCompass?.currentDasha && (() => {
-        const prescribedText = getPrescribedMantraText(reading.personalCompass.currentDasha.period);
-        if (!prescribedText) return null;
-        return (
-          <section className="px-4 mt-4 mb-4">
-            <Card
-              className="relative overflow-hidden rounded-2xl border-2 border-[#D4AF37] bg-gradient-to-br from-[#D4AF37]/10 via-amber-950/40 to-black/60 shadow-[0_0_24px_rgba(212,175,55,0.25)] animate-sovereign-pulse"
-              style={{ boxShadow: '0 0 0 1px rgba(212,175,55,0.3), 0 0 20px rgba(212,175,55,0.2)' }}
-            >
-              <CardContent className="p-5">
-                <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="w-5 h-5 text-[#D4AF37]" />
-                  <span className="text-xs font-semibold uppercase tracking-widest text-[#D4AF37]">Prescribed</span>
-                </div>
-                <h2 className="text-lg font-bold text-white mb-2">Din Heliga Kur</h2>
-                <p className="text-sm text-white/70 mb-4">Your Holy Remedy — from your current {dashaPlanet} Dasha</p>
-                <p className="text-xl font-serif text-[#D4AF37] mb-4 tracking-wide" style={{ fontFamily: 'Georgia, Cinzel, serif' }}>
-                  {prescribedText}
-                </p>
-                <Button
-                  onClick={() => {
-                    const remedyMantra = mantras.find(m => {
-                      if (!m.planet_type) return false;
-                      return normalizePlanetName(m.planet_type) === dashaPlanet;
-                    });
-                    if (remedyMantra) {
-                      handleMantraSelect(remedyMantra);
-                      if (remedyMantra.audio_url) setTimeout(() => handleStart(), 300);
-                      else toast.error(t('mantras_no_audio', 'Audio not available for this mantra.'));
-                    } else {
-                      toast.info(`${prescribedText} — ${t('mantras_find_mantra', 'Find this mantra in the list below.')}`);
-                    }
-                  }}
-                  className="w-full bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-black font-semibold py-2.5 rounded-xl border border-[#D4AF37] shadow-lg shadow-[#D4AF37]/30"
-                >
-                  <Play className="w-4 h-4 mr-2 inline" />
-                  Play {dashaPlanet} Remedy
-                </Button>
-              </CardContent>
-            </Card>
-          </section>
-        );
-      })()}
+      {/* Bhrigu Jyotish Holy Remedy — index 0, always visible at top of scroll view */}
+      <section className="shrink-0 overflow-visible" aria-label="Bhrigu Holy Remedy">
+      <BhriguRemedyCard
+        activeDasha={dashaPlanet}
+        prescribedText={reading?.personalCompass?.currentDasha?.period ? getPrescribedMantraText(reading.personalCompass.currentDasha.period) : null}
+        onPlayRemedy={() => {
+          if (!dashaPlanet) return;
+          const prescribedText = reading?.personalCompass?.currentDasha?.period ? getPrescribedMantraText(reading.personalCompass.currentDasha.period) : null;
+          const remedyMantra = mantras.find(m => m.planet_type && normalizePlanetName(m.planet_type) === dashaPlanet);
+          if (remedyMantra) {
+            handleMantraSelect(remedyMantra);
+            if (remedyMantra.audio_url) setTimeout(() => handleStart(), 300);
+            else toast.error(t('mantras_no_audio', 'Audio not available for this mantra.'));
+          } else if (prescribedText) {
+            toast.info(`${prescribedText} — ${t('mantras_find_mantra', 'Find this mantra in the list below.')}`);
+          }
+        }}
+        t={t}
+      />
+      </section>
 
       {/* Din Heliga Timme — floating glass card with rotating Moon/Planet icon */}
       {horaWatch.calculation && (

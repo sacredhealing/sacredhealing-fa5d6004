@@ -6,11 +6,21 @@ import { toast } from 'sonner';
 
 const CAMERA_TIMEOUT_MS = 4000;
 
+const ANALYSIS_MESSAGE = `Vedic Samudrika Shastra Analysis:
+
+Life Line (Prana): Analyzing depth and clarity...
+Heart Line (Dharma): Examining emotional patterns...
+Head Line (Buddhi): Assessing mental clarity...
+
+Note: For the most accurate reading, ensure your palm is well-lit and aligned with natural light. If the image appears blurry, align your palm with the light of the Sun for a clearer reading.`;
+
 const HandAnalyzer = () => {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState<string | null>(null);
+  const [transitioningToAkasha, setTransitioningToAkasha] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -87,6 +97,8 @@ const HandAnalyzer = () => {
 
   const runAnalysis = (imageData: string) => {
     setIsScanning(true);
+    setAnalysisResult(null);
+    setTransitioningToAkasha(false);
     (async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -98,14 +110,22 @@ const HandAnalyzer = () => {
         setTimeout(() => {
           setIsScanning(false);
           toast.success('Analysis complete!');
-          const analysisMessage = `Vedic Samudrika Shastra Analysis:\n\nLife Line (Prana): Analyzing depth and clarity...\nHeart Line (Dharma): Examining emotional patterns...\nHead Line (Buddhi): Assessing mental clarity...\n\nNote: For the most accurate reading, ensure your palm is well-lit and aligned with natural light. If the image appears blurry, align your palm with the light of the Sun for a clearer reading.`;
-          alert(analysisMessage);
+          setAnalysisResult(ANALYSIS_MESSAGE);
         }, 4000);
       } catch (err: unknown) {
         setIsScanning(false);
         toast.error(err instanceof Error ? err.message : 'Analysis failed. Please try again.');
       }
     })();
+  };
+
+  const handleAnalysisOk = () => {
+    setAnalysisResult(null);
+    setTransitioningToAkasha(true);
+    setTimeout(() => {
+      navigate('/akashic-records');
+      setTransitioningToAkasha(false);
+    }, 1500);
   };
 
   const handleScan = () => {
@@ -256,6 +276,59 @@ const HandAnalyzer = () => {
           {isScanning ? 'Deciphering Soul Lines...' : hasCamera ? 'Align Palm with Golden Outline' : error ? 'Upload a palm photo or try again' : 'Initializing Siddha Lens...'}
         </p>
       </div>
+
+      {/* Analysis result modal — OK triggers transition to Akashic */}
+      <AnimatePresence>
+        {analysisResult && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4"
+            onClick={(e) => e.target === e.currentTarget && handleAnalysisOk()}
+          >
+            <motion.div
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.95 }}
+              className="bg-[#1a1a1a] border-2 border-[#D4AF37]/50 rounded-2xl p-6 max-w-md w-full max-h-[80vh] overflow-auto shadow-[0_0_40px_rgba(212,175,55,0.2)]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-[#D4AF37] font-serif text-lg font-bold mb-3">Vedic Samudrika Shastra Analysis</h3>
+              <pre className="text-white/90 text-sm whitespace-pre-wrap font-sans mb-6">{analysisResult}</pre>
+              <button
+                type="button"
+                onClick={handleAnalysisOk}
+                className="w-full py-3 rounded-xl bg-[#D4AF37] text-black font-bold uppercase text-sm tracking-wider hover:bg-[#D4AF37]/90 transition-colors"
+              >
+                OK
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Scanning the Akasha — 1.5s then redirect to Akashic Decoder */}
+      <AnimatePresence>
+        {transitioningToAkasha && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[101] flex flex-col items-center justify-center bg-black/95"
+          >
+            <p className="text-[#D4AF37] text-sm uppercase tracking-widest mb-6 animate-pulse">Scanning the Akasha...</p>
+            <div className="w-64 h-1.5 bg-white/10 rounded-full overflow-hidden">
+              <motion.div
+                className="h-full bg-[#D4AF37] rounded-full"
+                initial={{ width: '0%' }}
+                animate={{ width: '100%' }}
+                transition={{ duration: 1.5, ease: 'linear' }}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

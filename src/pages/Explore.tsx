@@ -341,14 +341,15 @@ export default function Explore() {
           <div className="relative z-10 px-6 pb-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
-                { label: "Akashic Decoder", desc: "Lines on your palm match the Archetype record in the Akasha.", href: "/akashic-records", Icon: Leaf },
+                { label: "Akashic Decoder", desc: "Lines on your palm match the Archetype record in the Akasha.", href: "/akashic-records", Icon: Leaf, premium: true },
                 { label: "Vedic Astrology", desc: "Daily influence + Akashic Records", href: "/vedic-astrology", openAkashic: true },
                 { label: "Ayurveda", desc: "Balance + daily guidance", href: "/ayurveda" },
                 { label: "Vastu", desc: "Abundance Architect", href: "/vastu" },
-                { label: "Hand Analyzer", desc: "Sovereign palm reading", href: "/hand-analyzer", Icon: Hand },
+                { label: "Palm & Akashic Oracle", desc: "Sovereign palm reading → Akashic verdict", href: "/hand-analyzer", Icon: Hand },
               ].map((item) => {
                 const Icon = "Icon" in item ? item.Icon : null;
                 const openAkashic = "openAkashic" in item && item.openAkashic;
+                const premium = "premium" in item && item.premium;
                 return (
                   <button
                     key={item.href}
@@ -356,8 +357,13 @@ export default function Explore() {
                     className="rounded-2xl px-4 py-4 text-left bg-gradient-to-r from-purple-600/30 to-purple-500/20 border border-purple-400/40 hover:from-purple-600/50 hover:to-purple-500/40 transition flex items-center gap-3"
                   >
                     {Icon && <Icon className={`h-5 w-5 shrink-0 ${item.href === "/akashic-records" ? "text-[#D4AF37]" : "text-amber-300"}`} />}
-                    <div>
-                      <div className="text-sm font-semibold text-white">{item.label}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-semibold text-white">{item.label}</span>
+                        {premium && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/40 font-semibold uppercase tracking-wider">Premium</span>
+                        )}
+                      </div>
                       <div className="mt-1 text-xs text-purple-100/80">{item.desc}</div>
                     </div>
                   </button>
