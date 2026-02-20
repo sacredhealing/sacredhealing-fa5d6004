@@ -1,111 +1,81 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-/** 3-second hard reset: if no stream by then, show Manual Upload so user can continue the reading */
-const CAMERA_TIMEOUT_MS = 3000;
+const CAMERA_TIMEOUT_MS = 4000;
 
 const HandAnalyzer = () => {
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isInitializing, setIsInitializing] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
-  const [hasCamera, setHasCamera] = useState(false);
-  const [error, setError] = useState('');
-  const [showGalleryFallback, setShowGalleryFallback] = useState(false);
-  const [cameraLoading, setCameraLoading] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const cameraReadyRef = useRef(false);
   const navigate = useNavigate();
 
   const startCamera = async () => {
-    setError('');
-    setCameraLoading(true);
-    setShowGalleryFallback(false);
+    setIsInitializing(true);
+    setError(null);
+    cameraReadyRef.current = false;
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    setStream(null);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
-      });
+      const constraints: MediaStreamConstraints = {
+        video: {
+          facingMode: 'environment',
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+      };
+      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+      streamRef.current = mediaStream;
+      cameraReadyRef.current = true;
+      setStream(mediaStream);
       if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await new Promise<void>((resolve, reject) => {
-          if (!videoRef.current) return reject(new Error('No video ref'));
-          videoRef.current.onloadedmetadata = () => resolve();
-          videoRef.current.onerror = () => reject(new Error('Video load error'));
-        });
-        setHasCamera(true);
+        videoRef.current.srcObject = mediaStream;
       }
-      setCameraLoading(false);
+      setIsInitializing(false);
     } catch (err) {
-      console.error(err);
-      setError('Camera Access Denied. Please enable permissions or use Upload from Gallery.');
-      setCameraLoading(false);
+      console.error('Camera Error:', err);
+      setError('Permission denied or camera in use.');
+      setIsInitializing(false);
     }
   };
 
   useEffect(() => {
-    let cancelled = false;
-    let timeoutId: ReturnType<typeof setTimeout>;
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setError('Camera not supported in this browser.');
+      setIsInitializing(false);
+      return () => {};
+    }
+    startCamera();
 
-    const init = async () => {
-      if (!navigator.mediaDevices?.getUserMedia) {
-        setError('Camera not supported in this browser.');
-        setCameraLoading(false);
-        return;
-      }
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-        if (cancelled) {
-          stream.getTracks().forEach((t) => t.stop());
-          return;
-        }
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.onloadedmetadata = () => {
-            if (!cancelled) {
-              setHasCamera(true);
-              setCameraLoading(false);
-            }
-          };
-          videoRef.current.onerror = () => {
-            if (!cancelled) {
-              setError('Camera stream failed.');
-              setCameraLoading(false);
-            }
-          };
-        } else {
-          setCameraLoading(false);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError('Camera access denied. Use Upload from Gallery below.');
-          setCameraLoading(false);
-        }
-      }
-    };
-
-    init();
-
-    timeoutId = setTimeout(() => {
-      if (!cancelled) {
-        setCameraLoading(false);
-        setShowGalleryFallback(true);
+    const timer = setTimeout(() => {
+      if (!cameraReadyRef.current) {
+        setIsInitializing(false);
+        setError('Camera bridge timed out. Please upload a clear photo of your palm.');
       }
     }, CAMERA_TIMEOUT_MS);
 
     return () => {
-      cancelled = true;
-      clearTimeout(timeoutId);
-      const stream = videoRef.current?.srcObject as MediaStream | null;
-      stream?.getTracks().forEach((t) => t.stop());
+      clearTimeout(timer);
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
     };
   }, []);
 
+  // When stream becomes available, clear initializing (safety)
   useEffect(() => {
-    if (hasCamera) setShowGalleryFallback(false);
-  }, [hasCamera]);
+    if (stream) setIsInitializing(false);
+  }, [stream]);
 
   const captureImage = (): string | null => {
-    if (!videoRef.current || !hasCamera) return null;
+    if (!videoRef.current || !stream) return null;
     const canvas = document.createElement('canvas');
     canvas.width = videoRef.current.videoWidth;
     canvas.height = videoRef.current.videoHeight;
@@ -131,15 +101,15 @@ const HandAnalyzer = () => {
           const analysisMessage = `Vedic Samudrika Shastra Analysis:\n\nLife Line (Prana): Analyzing depth and clarity...\nHeart Line (Dharma): Examining emotional patterns...\nHead Line (Buddhi): Assessing mental clarity...\n\nNote: For the most accurate reading, ensure your palm is well-lit and aligned with natural light. If the image appears blurry, align your palm with the light of the Sun for a clearer reading.`;
           alert(analysisMessage);
         }, 4000);
-      } catch (error: unknown) {
+      } catch (err: unknown) {
         setIsScanning(false);
-        toast.error(error instanceof Error ? error.message : 'Analysis failed. Please try again.');
+        toast.error(err instanceof Error ? err.message : 'Analysis failed. Please try again.');
       }
     })();
   };
 
   const handleScan = () => {
-    if (hasCamera && videoRef.current) {
+    if (stream && videoRef.current) {
       const imageData = captureImage();
       if (!imageData) {
         toast.error('Failed to capture palm image. Please try again.');
@@ -148,7 +118,7 @@ const HandAnalyzer = () => {
       runAnalysis(imageData);
       return;
     }
-    toast.error('Camera not ready. Please wait or use Upload from Gallery.');
+    toast.error('Camera not ready. Please wait or upload a photo.');
   };
 
   const handleGalleryUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -163,6 +133,8 @@ const HandAnalyzer = () => {
     e.target.value = '';
   };
 
+  const hasCamera = !!stream && !error;
+
   return (
     <div className="min-h-screen bg-black text-white relative overflow-hidden font-serif">
       {/* HEADER */}
@@ -175,51 +147,55 @@ const HandAnalyzer = () => {
 
       {/* CAMERA VIEWPORT */}
       <div className="absolute inset-0 flex items-center justify-center">
-        {!hasCamera ? (
-          <div className="text-center p-10">
-            <p className="text-white/60 mb-4">{error || 'Initializing Lens...'}</p>
+        {/* 1. INITIALIZING STATE */}
+        {isInitializing && (
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+              className="w-12 h-12 border-2 border-t-[#D4AF37] border-transparent rounded-full mb-4"
+            />
+            <p className="text-[#D4AF37] tracking-widest text-xs uppercase animate-pulse">Initializing Siddha Lens...</p>
+          </div>
+        )}
+
+        {/* 2. CAMERA VIEW */}
+        {!error && !isInitializing && stream && (
+          <div className="relative w-full h-full">
+            <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover opacity-60" />
+            {/* Golden Hand Overlay for Calibration */}
+            <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-40">
+              <svg width="200" height="300" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="0.5">
+                <path d="M18 11V7a2 2 0 00-4 0v3m0 0V5a2 2 0 00-4 0v5m0 0V3a2 2 0 00-4 0v9m0 0V9a2 2 0 00-4 0v7a8 8 0 0016 0v-5" />
+              </svg>
+            </div>
+            <div className="absolute bottom-6 w-full text-center">
+              <p className="text-white text-[10px] uppercase tracking-widest bg-black/50 py-2 inline-block px-4 rounded-full">
+                Align Palm with Golden Outline
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* 3. ERROR / FALLBACK STATE */}
+        {error && (
+          <div className="flex flex-col items-center p-10 text-center">
+            <p className="text-white/60 text-sm mb-6">{error}</p>
+            <button
+              type="button"
+              className="px-8 py-3 bg-[#D4AF37] text-black rounded-full font-bold uppercase text-xs"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              Upload Palm Photo
+            </button>
             <button
               type="button"
               onClick={startCamera}
-              className="text-[#D4AF37] border border-[#D4AF37] px-6 py-2 rounded-full hover:bg-[#D4AF37]/10 transition-colors mb-3"
+              className="mt-4 text-[#D4AF37] text-[10px] uppercase underline"
             >
-              Reset Camera
+              Try Again
             </button>
-            {showGalleryFallback && (
-              <>
-                <p className="text-white/50 text-sm mt-4 mb-2">Lens stuck? Use Manual Upload to continue your reading.</p>
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="text-[#D4AF37] border border-[#D4AF37] px-6 py-2 rounded-full hover:bg-[#D4AF37]/10 transition-colors"
-                >
-                  Manual Upload
-                </button>
-              </>
-            )}
           </div>
-        ) : (
-          <>
-            <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover opacity-60" />
-            {/* Golden Hand silhouette — calibration overlay for Siddha scan */}
-            <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-              <svg viewBox="0 0 200 240" className="w-72 max-h-[75vh] shrink-0" aria-hidden>
-                <defs>
-                  <linearGradient id="goldHand" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#D4AF37" stopOpacity="0.35" />
-                    <stop offset="100%" stopColor="#D4AF37" stopOpacity="0.15" />
-                  </linearGradient>
-                </defs>
-                {/* Palm + fingers outline */}
-                <ellipse cx="100" cy="130" rx="52" ry="58" fill="url(#goldHand)" stroke="#D4AF37" strokeWidth="2" opacity="0.9" />
-                <ellipse cx="100" cy="45" rx="18" ry="32" fill="url(#goldHand)" stroke="#D4AF37" strokeWidth="1.5" opacity="0.8" />
-                <ellipse cx="62" cy="75" rx="14" ry="38" fill="url(#goldHand)" stroke="#D4AF37" strokeWidth="1.5" opacity="0.8" />
-                <ellipse cx="138" cy="75" rx="14" ry="38" fill="url(#goldHand)" stroke="#D4AF37" strokeWidth="1.5" opacity="0.8" />
-                <ellipse cx="45" cy="115" rx="12" ry="42" fill="url(#goldHand)" stroke="#D4AF37" strokeWidth="1.5" opacity="0.8" />
-                <ellipse cx="155" cy="115" rx="12" ry="42" fill="url(#goldHand)" stroke="#D4AF37" strokeWidth="1.5" opacity="0.8" />
-              </svg>
-            </div>
-          </>
         )}
 
         {/* MANDALA OVERLAY — only when camera active */}
@@ -249,7 +225,7 @@ const HandAnalyzer = () => {
 
       {/* ACTION BUTTON */}
       <div className="absolute bottom-12 left-0 right-0 flex justify-center z-50">
-        {showGalleryFallback && !hasCamera ? (
+        {error ? (
           <motion.button
             type="button"
             whileTap={{ scale: 0.9 }}
@@ -257,7 +233,7 @@ const HandAnalyzer = () => {
             disabled={isScanning}
             className="w-auto px-6 py-3 rounded-full border-2 border-[#D4AF37] bg-[#D4AF37]/10 text-[#D4AF37] font-serif text-sm uppercase tracking-wider disabled:opacity-50"
           >
-            Manual Upload
+            Upload Palm Photo
           </motion.button>
         ) : (
           <motion.button
@@ -277,7 +253,7 @@ const HandAnalyzer = () => {
       {/* STATUS TEXT */}
       <div className="absolute bottom-36 left-0 right-0 text-center">
         <p className="text-[#D4AF37] text-xs uppercase tracking-[0.3em]">
-          {isScanning ? 'Deciphering Soul Lines...' : hasCamera ? 'Align Palm within the Mandala' : showGalleryFallback ? 'Or use Manual Upload' : 'Initializing Lens...'}
+          {isScanning ? 'Deciphering Soul Lines...' : hasCamera ? 'Align Palm with Golden Outline' : error ? 'Upload a palm photo or try again' : 'Initializing Siddha Lens...'}
         </p>
       </div>
     </div>
