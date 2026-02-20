@@ -5,10 +5,10 @@ import { useAIVedicReading } from '@/hooks/useAIVedicReading';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Card } from '@/components/ui/card';
 import { GoldDustParticles } from '@/components/effects/GoldDustParticles';
 import AkashicSiddhaReading from '@/components/vedic/AkashicSiddhaReading';
-import { BookOpen, Sparkles, Hand, Heart, Zap } from 'lucide-react';
+import KarmicDebtMeter from '@/components/vedic/KarmicDebtMeter';
+import { BookOpen, Sparkles, Hand, Heart } from 'lucide-react';
 import type { UserProfile } from '@/lib/vedicTypes';
 
 // Determine house from Jyotish reading (defaults to Ketu's house 12)
@@ -18,70 +18,12 @@ function getUserHouse(reading: any): number {
   return 12;
 }
 
-// Karmic Debt Meter Component
-interface KarmicDebtMeterProps {
-  debtLevel: number; // 0-100
-  archetype?: string;
-}
-
-const KarmicDebtMeter: React.FC<KarmicDebtMeterProps> = ({ debtLevel, archetype }) => {
-  const getDebtColor = (level: number) => {
-    if (level < 30) return 'from-emerald-500/20 to-teal-500/20';
-    if (level < 60) return 'from-amber-500/20 to-orange-500/20';
-    return 'from-rose-500/20 to-red-500/20';
-  };
-
-  const getDebtLabel = (level: number) => {
-    if (level < 30) return 'Light Karma';
-    if (level < 60) return 'Moderate Karma';
-    return 'Deep Karma';
-  };
-
-  return (
-    <Card className="p-6 bg-gradient-to-br from-purple-900/30 via-violet-800/20 to-black border-purple-500/30">
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-bold text-[#D4AF37]" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
-            Karmic Debt Meter
-          </h3>
-          {archetype && (
-            <span className="text-xs uppercase tracking-widest text-[#D4AF37]/70" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
-              {archetype}
-            </span>
-          )}
-        </div>
-        
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-white/70" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
-              {getDebtLabel(debtLevel)}
-            </span>
-            <span className="text-[#D4AF37]" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
-              {debtLevel}%
-            </span>
-          </div>
-          
-          <div className="relative h-3 bg-black/40 rounded-full overflow-hidden border border-[#D4AF37]/20">
-            <motion.div
-              className={`h-full bg-gradient-to-r ${getDebtColor(debtLevel)}`}
-              initial={{ width: 0 }}
-              animate={{ width: `${debtLevel}%` }}
-              transition={{ duration: 1, ease: 'easeOut' }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse" />
-          </div>
-        </div>
-      </div>
-    </Card>
-  );
-};
-
 const SacredSpace: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { reading, generateReading } = useAIVedicReading();
   const [akashicModalOpen, setAkashicModalOpen] = useState(false);
-  const [karmicDebtLevel, setKarmicDebtLevel] = useState(45); // Initial debt level
+  const [karmicDebtLevel, setKarmicDebtLevel] = useState(45); // % debt remaining (100 - purified)
   const [revealedArchetype, setRevealedArchetype] = useState<string | null>(null);
   const [showGoldDust, setShowGoldDust] = useState(false);
 
@@ -202,9 +144,9 @@ const SacredSpace: React.FC = () => {
         </p>
       </div>
 
-      {/* Karmic Debt Meter */}
+      {/* Karmic Debt Meter — progress = % purified (debt cleared) */}
       <div className="mb-8">
-        <KarmicDebtMeter debtLevel={karmicDebtLevel} archetype={revealedArchetype || undefined} />
+        <KarmicDebtMeter progress={Math.round(100 - karmicDebtLevel)} />
       </div>
 
       {/* Sacred Tools Grid */}
