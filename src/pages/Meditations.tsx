@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
 import { Play, Pause, Clock, Sparkles, ArrowLeft, Loader2 } from 'lucide-react';
+import BabajiShadow from '@/components/meditation/BabajiShadow';
 import { TranslatedText } from '@/components/TranslatedText';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -37,45 +37,6 @@ interface Meditation {
   shc_reward: number;
   is_premium: boolean;
   play_count: number;
-}
-
-/** Sunya empty state: pulsing Sri Yantra (Mahavatar / transmission) */
-function SunyaEmptyState() {
-  const cx = 50;
-  const cy = 50;
-  const tan52 = 1.28;
-  const downHeights = [22, 17, 12, 7, 2];
-  const downTriangles = downHeights.map((h) => {
-    const halfBase = h * tan52;
-    return `M ${cx - halfBase},${cy - h} L ${cx + halfBase},${cy - h} L ${cx},${cy + h} Z`;
-  });
-  const upHeights = [18, 12, 7, 2];
-  const upTriangles = upHeights.map((h) => {
-    const halfBase = h * tan52;
-    return `M ${cx - halfBase},${cy + h} L ${cx + halfBase},${cy + h} L ${cx},${cy - h} Z`;
-  });
-  return (
-    <motion.div
-      className="inline-flex items-center justify-center"
-      animate={{
-        opacity: [0.6, 1, 0.6],
-        filter: ['drop-shadow(0 0 8px rgba(139, 92, 246, 0.3))', 'drop-shadow(0 0 20px rgba(212, 175, 55, 0.4))', 'drop-shadow(0 0 8px rgba(139, 92, 246, 0.3))'],
-      }}
-      transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-    >
-      <svg viewBox="0 0 100 100" className="w-24 h-24 text-[#D4AF37]/40" preserveAspectRatio="xMidYMid meet">
-        <g fill="none" stroke="currentColor" strokeWidth="0.5" strokeLinejoin="round">
-          {downTriangles.map((d, i) => (
-            <path key={`d-${i}`} d={d} />
-          ))}
-          {upTriangles.map((d, i) => (
-            <path key={`u-${i}`} d={d} />
-          ))}
-        </g>
-        <circle cx={cx} cy={cy} r="2" fill="currentColor" opacity="0.6" />
-      </svg>
-    </motion.div>
-  );
 }
 
 const Meditations: React.FC = () => {
@@ -395,9 +356,9 @@ const Meditations: React.FC = () => {
               </p>
 
               {filtered.length === 0 ? (
-                <div className="text-center py-16">
-                  <SunyaEmptyState />
-                  <h3 className="font-semibold text-foreground mb-2 mt-6" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
+                <div className="text-center py-8">
+                  <BabajiShadow />
+                  <h3 className="font-semibold text-foreground mb-2 mt-4" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
                     Quiet the mind. The transmission will manifest shortly.
                   </h3>
                   <p className="text-muted-foreground text-sm max-w-sm mx-auto">
