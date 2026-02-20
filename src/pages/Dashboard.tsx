@@ -12,6 +12,7 @@ import { useReturnVisit } from '@/hooks/useReturnVisit';
 import { useDashboardAutostart } from '@/hooks/useDashboardAutostart';
 import { AmbientSoundToggle } from '@/components/audio/AmbientSoundToggle';
 import { TempleEntrance } from '@/components/dashboard/TempleEntrance';
+import { SriYantraBanner } from '@/components/dashboard/SriYantraBanner';
 import { ThreeGateways } from '@/components/dashboard/ThreeGateways';
 import { DharmaPath, getDharmaPhrase } from '@/components/dashboard/DharmaPath';
 import { WallInscription } from '@/components/dashboard/WallInscription';
@@ -177,6 +178,11 @@ const Dashboard: React.FC = () => {
       {/* State: idle - Daily Guidance Card + restored sections */}
       {flowState === 'idle' && (
         <>
+          {/* Sri Yantra Banner — glowing teal focal point with evening message */}
+          <div className="mb-4 sm:mb-5 animate-slide-up">
+            <SriYantraBanner />
+          </div>
+
           {/* The Entrance — Sacred Geometry focal point, minimal text, optional CTA */}
           <div className="mb-4 sm:mb-5 animate-slide-up">
             <TempleEntrance
