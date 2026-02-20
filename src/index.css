@@ -149,7 +149,13 @@
     @apply border-border;
   }
 
-  html, body, #root {
+  html {
+    min-height: 100vh;
+    /* Prevent white flash: dark background at document root */
+    background: #030303;
+  }
+
+  body, #root {
     min-height: 100vh;
   }
 
@@ -161,6 +167,11 @@
       radial-gradient(ellipse at 15% 20%, rgba(30, 27, 75, 0.7) 0%, transparent 50%),
       #030303;
     background-attachment: fixed;
+  }
+
+  /* Ensure React root never shows white (e.g. before mount or on error) */
+  #root {
+    background: inherit;
   }
 
   h1, h2, h3, h4, h5, h6 {

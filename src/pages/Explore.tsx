@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { ParamahamsaVishwanandaDailyCard } from "@/components/dashboard/ParamahamsaVishwanandaDailyCard";
-import { LibrarySection, type LibraryItem } from "@/components/explore/LibrarySection";
 import { CollapsibleSection } from "@/features/library/CollapsibleSection";
 import { QuickActionFallback } from "@/features/library/QuickActionFallback";
 import { useQuickActionItems } from "@/features/library/useQuickActionItems";
@@ -162,21 +161,6 @@ export default function Explore() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const dayPhase = getDayPhase();
-
-  const connectItems: LibraryItem[] = useMemo(() => [
-    { key: "community", title: t("explore.community", "Community"), subtitle: t("explore.communityDesc", "Chat with guides & members"), href: "/community", icon: <Users className="h-5 w-5" /> },
-    { key: "stargate", title: t("home.stargateMembership", "Stargate Membership"), subtitle: t("home.stargateDesc", "Weekly live sessions, Telegram community"), href: "/stargate", icon: <Crown className="h-5 w-5" />, badge: t("explore.badgeSwedish", "Swedish") },
-  ], [t]);
-
-  const exploreItems: LibraryItem[] = useMemo(() => [
-    { key: "promptLibrary", title: t("explore.promptLibrary", "Prompt Library"), subtitle: t("explore.promptLibraryDesc", "Single-click templates for instant productivity"), href: "/prompt-library", icon: <FileText className="h-5 w-5" /> },
-    { key: "podcast", title: t("explore.podcast", "Podcast"), subtitle: t("explore.podcastDesc", "Streams on Spotify"), href: "/podcast", icon: <Headphones className="h-5 w-5" /> },
-    { key: "videos", title: t("explore.videos", "Videos"), subtitle: t("explore.videosDesc", "Watch & learn"), href: "/spiritual-education", icon: <Youtube className="h-5 w-5" /> },
-    { key: "creativeSoul", title: t("explore.creativeSoul", "Creative Soul"), subtitle: t("explore.creativeSoulDesc", "Create with AI"), href: "/creative-soul/store", icon: <Sparkles className="h-5 w-5" /> },
-    { key: "shop", title: t("explore.shop", "Shop"), subtitle: t("explore.shopDesc", "Laila's Collection"), href: "/shop", icon: <ShoppingBag className="h-5 w-5" /> },
-    { key: "leaderboard", title: t("explore.leaderboard", "Leaderboard"), subtitle: t("explore.leaderboardDesc", "Top earners win monthly"), href: "/leaderboard", icon: <Trophy className="h-5 w-5" />, badge: "5,000 SHC" },
-    { key: "abundance", title: t("explore.abundance", "Abundance"), subtitle: t("explore.abundanceDescInner", "Inner abundance & life support"), href: "/library/abundance", icon: <Zap className="h-5 w-5" /> },
-  ], [t]);
 
   const { playUniversalAudio } = useMusicPlayer();
   const { allAudioItems } = useQuickActionItems();
@@ -371,7 +355,7 @@ export default function Explore() {
         </div>
       </section>
 
-      {/* Explore Everything — upgraded visual sections */}
+      {/* Explore everything — Connect & Explore as gradient rows (from Downloads) */}
       <CollapsibleSection
         title={t("explore.exploreEverything", "Explore everything")}
         subtitle={t("explore.exploreEverythingSubtitle", "Open when you feel ready.")}
@@ -403,7 +387,7 @@ export default function Explore() {
           </div>
         </div>
 
-        {/* DEEPEN — warm horizontal scroll cards */}
+        {/* DEEPEN — warm horizontal cards */}
         <div className="mb-6">
           <h3 className="text-lg md:text-xl font-bold text-amber-100 mb-3">
             {t("explore.sectionDeepen", "Deepen")}
