@@ -524,6 +524,11 @@ export function useSoulMeditateEngine() {
     }
 
     neuralAudioRef.current = audio;
+    if (audioContextRef.current?.state === 'suspended') {
+      await audioContextRef.current.resume();
+    }
+    audio.play().catch(() => {});
+    setNeuralLayer(prev => ({ ...prev, isPlaying: true }));
 
     // Start source only after element is ready (and after decodeAudioData below for buffer path)
     audio.addEventListener('canplaythrough', () => {

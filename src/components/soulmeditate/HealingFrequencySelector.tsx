@@ -69,6 +69,12 @@ export default function HealingFrequencySelector({
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Volume Control */}
+        {volume < 0.1 && (
+          <div className="text-xs text-amber-400/80 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2 flex items-center gap-2">
+            <span>⚡</span>
+            <span>Move slider to activate frequency</span>
+          </div>
+        )}
         <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
           <Volume2 className={`w-4 h-4 shrink-0 ${chakraStyle?.icon || 'text-cyan-400'}`} />
           <div className="flex-1 space-y-1">
