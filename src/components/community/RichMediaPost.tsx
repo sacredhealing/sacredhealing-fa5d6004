@@ -75,8 +75,8 @@ const RichMediaPost = ({
   };
 
   return (
-    <Card className="bg-card border-border">
-      <CardContent className="p-4">
+    <Card className="bg-[rgba(212,175,55,0.02)] border border-[rgba(212,175,55,0.1)] backdrop-blur-[1px]">
+      <CardContent className="p-4 relative" style={{ backgroundImage: 'linear-gradient(180deg, rgba(255,255,255,0.015) 0%, transparent 30%)' }}>
         {/* Post Header */}
         <div className="flex items-center gap-3 mb-3">
           <Avatar className="h-10 w-10">
@@ -183,16 +183,17 @@ const RichMediaPost = ({
           </a>
         )}
 
-        {/* Actions */}
-        <div className="flex items-center gap-4 pt-2 border-t border-border">
+        {/* Actions - Sacred Notes: heart-beat like button */}
+        <div className="flex items-center gap-4 pt-2 border-t border-[rgba(212,175,55,0.1)]">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => hasAvatar && onLike(post.id)}
             disabled={!hasAvatar}
-            className={post.user_liked ? 'text-red-500' : 'text-muted-foreground'}
+            className={`relative min-w-[4rem] ${post.user_liked ? 'text-rose-400' : 'text-muted-foreground'}`}
+            style={post.user_liked ? { animation: 'heartbeat-glow 1.2s ease-in-out infinite' } as React.CSSProperties : undefined}
           >
-            <Heart className={`h-4 w-4 mr-1 ${post.user_liked ? 'fill-current' : ''}`} />
+            <Heart className={`h-4 w-4 mr-1 ${post.user_liked ? 'fill-current drop-shadow-[0_0_8px_rgba(244,63,94,0.6)]' : ''}`} />
             {post.likes_count}
           </Button>
           <Collapsible open={isCommentsOpen} onOpenChange={() => onToggleComments(post.id)}>

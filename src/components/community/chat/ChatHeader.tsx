@@ -8,6 +8,8 @@ interface ChatHeaderProps {
   avatar: string | null;
   isOnline?: boolean;
   isBot?: boolean;
+  /** Show Sovereign Badge (Gold ॐ) for Premium/Stargate members */
+  isPremium?: boolean;
   lastSeen?: string;
   onBack?: () => void;
   showBackOnDesktop?: boolean;
@@ -18,6 +20,7 @@ const ChatHeader = ({
   avatar,
   isOnline = false,
   isBot = false,
+  isPremium = false,
   lastSeen,
   onBack,
   showBackOnDesktop = false
@@ -46,6 +49,9 @@ const ChatHeader = ({
         <div className="ml-3">
           <h2 className="font-bold text-foreground text-sm leading-tight flex items-center gap-2">
             {name}
+            {isPremium && (
+              <span className="text-[#D4AF37] text-base font-normal" title="Sovereign / Premium">ॐ</span>
+            )}
             {isBot && (
               <Badge variant="secondary" className="text-[9px] px-1 py-0 uppercase font-normal">
                 Bot

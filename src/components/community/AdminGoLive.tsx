@@ -40,9 +40,9 @@ const AdminGoLive = () => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="w-full bg-red-500 hover:bg-red-600 text-white">
+        <Button className="w-full text-white border-0 shadow-[0_0_20px_rgba(147,51,234,0.3),0_0_0_1px_rgba(212,175,55,0.2)] hover:shadow-[0_0_28px_rgba(147,51,234,0.4),0_0_0_1px_rgba(212,175,55,0.35)]" style={{ background: 'linear-gradient(135deg, #6d28d9 0%, #7c3aed 35%, #D4AF37 70%, #b45309 100%)' }}>
           <Video className="h-4 w-4 mr-2" />
-          Go Live
+          {t('community.enterSacredSpace', 'Enter the Sacred Space (Go Live)')}
         </Button>
       </DialogTrigger>
       <DialogContent className="w-[95vw] max-w-lg sm:max-w-xl md:max-w-2xl max-h-[85vh] overflow-y-auto mx-auto">
@@ -90,7 +90,8 @@ const AdminGoLive = () => {
               <Button
                 onClick={handleStartStream}
                 disabled={!title.trim() || isStarting}
-                className="w-full bg-red-500 hover:bg-red-600"
+                className="w-full text-white border-0 shadow-[0_0_20px_rgba(147,51,234,0.3)] hover:opacity-95"
+                style={{ background: 'linear-gradient(135deg, #6d28d9 0%, #7c3aed 40%, #D4AF37 100%)' }}
               >
                 {isStarting ? (
                   <>
@@ -100,7 +101,7 @@ const AdminGoLive = () => {
                 ) : (
                   <>
                     <Video className="h-4 w-4 mr-2" />
-                    Go Live Now
+                    {t('community.enterSacredSpace', 'Enter the Sacred Space (Go Live)')}
                   </>
                 )}
               </Button>

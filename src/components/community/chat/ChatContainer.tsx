@@ -23,6 +23,10 @@ interface ChatContainerProps {
   partnerAvatar: string | null;
   isBot?: boolean;
   isOnline?: boolean;
+  /** Show Celestial Portal (nebula) background for Stargate Community */
+  isStargateRoom?: boolean;
+  /** Show Sovereign Badge (ॐ) next to partner name */
+  partnerIsPremium?: boolean;
   onBack?: () => void;
   showBackOnDesktop?: boolean;
 }
@@ -33,9 +37,12 @@ const ChatContainer = ({
   partnerAvatar,
   isBot = false,
   isOnline = true,
+  isStargateRoom: isStargateRoomProp,
+  partnerIsPremium = false,
   onBack,
   showBackOnDesktop = false
 }: ChatContainerProps) => {
+  const isStargateRoom = isStargateRoomProp ?? partnerName.toLowerCase().includes('stargate');
   const { user } = useAuth();
   const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -200,15 +207,18 @@ const ChatContainer = ({
         avatar={partnerAvatar}
         isOnline={isOnline}
         isBot={isBot}
+        isPremium={partnerIsPremium}
         onBack={onBack}
         showBackOnDesktop={showBackOnDesktop}
       />
 
-      {/* Messages Area */}
+      {/* Messages Area - Celestial Portal for Stargate */}
       <div
         ref={scrollAreaRef}
         className="flex-1 overflow-y-auto p-4 md:p-6 relative"
-        style={{
+        style={isStargateRoom ? {
+          background: 'radial-gradient(ellipse 120% 80% at 20% 20%, rgba(88, 28, 135, 0.25) 0%, transparent 45%), radial-gradient(ellipse 100% 100% at 80% 60%, rgba(30, 27, 75, 0.35) 0%, transparent 45%), radial-gradient(circle at 50% 50%, hsl(var(--muted) / 0.3) 0%, hsl(var(--background)) 100%)'
+        } : {
           backgroundImage: 'radial-gradient(circle at 50% 50%, hsl(var(--muted)) 0%, hsl(var(--background)) 100%)'
         }}
       >

@@ -145,10 +145,10 @@ const CommunityChannels: React.FC = () => {
         return (
           <Card
             key={channel.id}
-            className={`p-4 border transition-all ${
+            className={`p-4 transition-all bg-[rgba(212,175,55,0.03)] ${
               channel.user_joined
-                ? 'bg-primary/5 border-primary/20'
-                : 'hover:border-primary/30'
+                ? 'border border-[rgba(212,175,55,0.2)] shadow-[0_0_20px_rgba(212,175,55,0.06),0_0_0_1px_rgba(147,51,234,0.12)]'
+                : 'border border-white/10 hover:border-[rgba(212,175,55,0.15)]'
             }`}
           >
             <CardContent className="p-0">

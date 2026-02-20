@@ -28,8 +28,10 @@ const ChatListItem = ({
   return (
     <div
       onClick={onClick}
-      className={`flex items-center p-3 cursor-pointer transition-all duration-200 hover:bg-muted/50 rounded-xl mx-2 mb-1 ${
-        isActive ? 'bg-muted' : ''
+      className={`flex items-center p-3 cursor-pointer transition-all duration-200 rounded-xl mx-2 mb-1 ${
+        isActive
+          ? 'bg-[rgba(212,175,55,0.03)] border border-[rgba(212,175,55,0.25)] shadow-[0_0_20px_rgba(212,175,55,0.08),0_0_0_1px_rgba(147,51,234,0.15)]'
+          : 'bg-[rgba(212,175,55,0.03)] border border-transparent hover:border-white/10 hover:shadow-[0_0_12px_rgba(212,175,55,0.05)]'
       }`}
     >
       <div className="relative">

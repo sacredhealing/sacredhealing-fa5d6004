@@ -162,6 +162,18 @@ const Community = () => {
 
         {/* Main Content - always visible for content tabs */}
         <div className="flex flex-col flex-1 min-h-0 overflow-auto p-4">
+          {/* Resonance HUD - Collective Vibration */}
+          <div className="mb-6 rounded-2xl border border-[rgba(212,175,55,0.15)] bg-[rgba(212,175,55,0.03)] px-4 py-3 backdrop-blur-sm">
+            <div className="h-0.5 w-full rounded-full bg-white/10 overflow-hidden mb-2">
+              <div
+                className="h-full w-full rounded-full bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-90 animate-sangha-pulse"
+                style={{ boxShadow: '0 0 12px rgba(212,175,55,0.5)' }}
+              />
+            </div>
+            <p className="text-sm text-white/80 text-center">
+              {t('community.resonanceHud', '108 Souls currently in Divine Resonance. Your presence adds to the light.')}
+            </p>
+          </div>
           {tabContent}
         </div>
       </div>

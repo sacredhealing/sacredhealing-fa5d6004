@@ -140,7 +140,10 @@ const CommunityFeed = () => {
             {SEEDED_REFLECTIONS.map((item) => (
               <div
                 key={item.id}
-                className="rounded-2xl border border-white/8 bg-white/[0.03] p-5"
+                className="rounded-2xl border border-[rgba(212,175,55,0.12)] bg-[rgba(212,175,55,0.03)] p-5 relative"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E"), linear-gradient(135deg, rgba(255,255,255,0.02) 0%25, transparent 50%25)`,
+                }}
               >
                 <h3 className="font-medium text-white/90 text-sm">{item.title}</h3>
                 <p className="mt-1.5 text-sm text-white/55 leading-relaxed">{item.body}</p>
@@ -157,7 +160,10 @@ const CommunityFeed = () => {
           posts.map((post) => (
             <div
               key={post.id}
-              className="rounded-2xl border border-white/8 bg-white/[0.03] overflow-hidden"
+              className="rounded-2xl border border-[rgba(212,175,55,0.12)] bg-[rgba(212,175,55,0.03)] overflow-hidden relative"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E"), linear-gradient(135deg, rgba(255,255,255,0.02) 0%25, transparent 50%25)`,
+              }}
             >
               <RichMediaPost
                 post={post}
