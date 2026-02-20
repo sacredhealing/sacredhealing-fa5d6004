@@ -1,10 +1,10 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, Camera, Loader2, Heart, Brain, Sparkles, Upload } from "lucide-react";
+import { ArrowLeft, Camera, Loader2, Heart, Brain, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-type Phase = "idle" | "camera" | "scanning" | "results";
+type Phase = "camera" | "scanning" | "results";
 
 const GOLDEN_MANDALA_SVG = (
   <svg viewBox="0 0 200 200" className="w-48 h-48 md:w-64 md:h-64 pointer-events-none" aria-hidden>
@@ -79,68 +79,38 @@ export default function HandAnalyzer() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  const [phase, setPhase] = useState<Phase>("idle");
+  const [phase, setPhase] = useState<Phase>("camera");
   const [capturedDataUrl, setCapturedDataUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [scanProgress, setScanProgress] = useState(0);
-  const [cameraFailureCount, setCameraFailureCount] = useState(0);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const stopStream = useCallback(() => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-  }, []);
-
-  const startCameraOnGesture = useCallback(async () => {
+  const startCamera = useCallback(async () => {
     setError(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { exact: "environment" },
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
+        video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: false,
       });
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
-      setPhase("camera");
-    } catch (e: unknown) {
-      const err = e instanceof Error ? e : new Error(String(e));
-      const code = err.name || "UnknownError";
-      const msg = err.message || "Unknown error";
-      setError(`${code}: ${msg}`);
-      setCameraFailureCount((prev) => prev + 1);
+    } catch (e) {
+      setError(t("handAnalyzer.cameraError", "Camera access is needed. Please allow and try again."));
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
+    if (phase === "camera") {
+      startCamera();
+    }
     return () => {
-      stopStream();
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
+      }
     };
-  }, [stopStream]);
-
-  const handleUploadPhoto = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !file.type.startsWith("image/")) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
-      setCapturedDataUrl(dataUrl);
-      setError(null);
-      setPhase("scanning");
-      setScanProgress(0);
-    };
-    reader.readAsDataURL(file);
-    e.target.value = "";
-  }, []);
+  }, [phase, startCamera]);
 
   const capture = useCallback(() => {
     const video = videoRef.current;
@@ -182,12 +152,11 @@ export default function HandAnalyzer() {
   }, [phase]);
 
   const reset = useCallback(() => {
-    stopStream();
     setCapturedDataUrl(null);
     setScanProgress(0);
-    setError(null);
-    setPhase("idle");
-  }, [stopStream]);
+    setPhase("camera");
+    startCamera();
+  }, [startCamera]);
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-[#1a0a2e]">
@@ -204,50 +173,6 @@ export default function HandAnalyzer() {
 
       {/* Main area */}
       <div className="flex-1 relative overflow-hidden">
-        {/* Idle: START SCAN (camera only on user gesture) + optional UPLOAD PHOTO after 2 failures */}
-        {phase === "idle" && (
-          <>
-            <div className="absolute inset-0 bg-[#1a0a2e]" />
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 px-4">
-              <div className="text-amber-400/90 drop-shadow-[0_0_20px_rgba(251,191,36,0.4)]">
-                {GOLDEN_MANDALA_SVG}
-              </div>
-              {error && (
-                <div className="w-full max-w-md rounded-xl bg-red-900/90 text-red-100 px-4 py-3 text-sm font-mono break-all border border-red-500/30">
-                  {error}
-                </div>
-              )}
-              <Button
-                onClick={startCameraOnGesture}
-                className="bg-amber-500 hover:bg-amber-400 text-black font-bold px-8 py-6 rounded-2xl shadow-[0_0_30px_rgba(251,191,36,0.4)] border border-amber-400/50"
-              >
-                <Camera className="w-6 h-6 mr-2" />
-                {t("handAnalyzer.startScan", "START SCAN")}
-              </Button>
-              {cameraFailureCount >= 2 && (
-                <>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleUploadPhoto}
-                  />
-                  <Button
-                    variant="outline"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="border-amber-500/50 text-amber-200 hover:bg-amber-500/20 px-6 py-4"
-                  >
-                    <Upload className="w-5 h-5 mr-2" />
-                    {t("handAnalyzer.uploadPhoto", "UPLOAD PHOTO")}
-                  </Button>
-                </>
-              )}
-            </div>
-          </>
-        )}
-
-        {/* Camera: live feed + Capture */}
         {phase === "camera" && (
           <>
             <video
@@ -263,7 +188,7 @@ export default function HandAnalyzer() {
               </div>
             </div>
             {error && (
-              <div className="absolute bottom-24 left-4 right-4 rounded-xl bg-red-900/90 text-red-100 px-4 py-3 text-sm font-mono break-all border border-red-500/30">
+              <div className="absolute bottom-24 left-4 right-4 rounded-xl bg-red-900/80 text-red-100 px-4 py-3 text-sm">
                 {error}
               </div>
             )}
