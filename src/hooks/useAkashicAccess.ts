@@ -1,15 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useAdminRole } from './useAdminRole';
 
 const STORAGE_KEY = 'akashic_reveal_purchased';
 
-/** Tracks whether user has purchased the high-ticket Akashic Deep Reading ($49). Uses localStorage + akashic_readings (My Records) for permanent access. */
+/** Tracks whether user has purchased the high-ticket Akashic Deep Reading ($49). Uses localStorage + akashic_readings (My Records) for permanent access. Admins have full access. */
 export function useAkashicAccess(userId?: string | null): { hasAccess: boolean; setAccess: () => void } {
   const [searchParams, setSearchParams] = useSearchParams();
   const [hasAccess, setHasAccessState] = useState(false);
+  const { isAdmin } = useAdminRole();
 
   useEffect(() => {
+    if (isAdmin) {
+      setHasAccessState(true);
+      return;
+    }
+
     const unlocked = searchParams.get('unlocked');
     if (unlocked === '1' || unlocked === 'akashic') {
       try {
@@ -43,7 +50,7 @@ export function useAkashicAccess(userId?: string | null): { hasAccess: boolean; 
     };
 
     checkAccess();
-  }, [searchParams, setSearchParams, userId]);
+  }, [searchParams, setSearchParams, userId, isAdmin]);
 
   const setAccess = () => {
     try {
