@@ -51,11 +51,11 @@ export const SriYantraBanner: React.FC<SriYantraBannerProps> = ({
 
         {showRestCta && (
           <>
-            <p
-              className="text-white font-bold text-base sm:text-lg leading-relaxed mb-4 uppercase tracking-wide"
-              style={{ letterSpacing: '0.02em' }}
-            >
+            <p className="text-white font-bold text-base sm:text-lg leading-relaxed mb-2">
               {t('guidance.eveningIntegration', 'Your mind is settling beneath the surface. Sleep will continue the process.')}
+            </p>
+            <p className="text-amber-500 sm:text-amber-400 text-sm sm:text-base font-medium mb-4">
+              {t('guidance.eveningIntegrationSubtext', 'Tomorrow may begin differently.')}
             </p>
             <div className="flex flex-col items-center gap-2 w-full">
               <Button
@@ -65,6 +65,9 @@ export const SriYantraBanner: React.FC<SriYantraBannerProps> = ({
                 {t('guidance.integrationButtonEvening', 'Enter rest')}
                 <ArrowRight className="w-4 h-4" />
               </Button>
+              <p className="text-sm text-foreground/90">
+                {t('dashboard.continuationAnchorEvening', 'Tomorrow morning will begin softer.')}
+              </p>
               <button
                 type="button"
                 onClick={onSkipContinuation}
