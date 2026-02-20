@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { 
@@ -20,7 +20,7 @@ import {
   Download,
   Loader2,
   Layers,
-  Scissors,
+  
   X,
   CheckCircle2,
   AlertCircle,
@@ -39,20 +39,12 @@ import SpectralInsights from '@/components/soulmeditate/SpectralInsights';
 import StyleGrid, { MeditationStyle } from '@/components/soulmeditate/StyleGrid';
 import HealingFrequencySelector from '@/components/soulmeditate/HealingFrequencySelector';
 import BrainwaveSelector from '@/components/soulmeditate/BrainwaveSelector';
-import YouTubeLinker from '@/components/soulmeditate/YouTubeLinker';
+
 import ProcessingTerminal from '@/components/soulmeditate/ProcessingTerminal';
 import VirtualChannelStrip from '@/components/soulmeditate/VirtualChannelStrip';
 import AudioDAW from '@/components/soulmeditate/AudioDAW';
 
 type VisualizerMode = 'bars' | 'wave' | 'radial';
-type StemMode = 'full_mix' | 'vocals_only' | 'music_only' | 'stems_all';
-
-const STEM_OPTIONS = [
-  { value: 'full_mix', label: 'Full Mix' },
-  { value: 'vocals_only', label: 'Vocals Only' },
-  { value: 'music_only', label: 'Music Only' },
-  { value: 'stems_all', label: 'All Stems' },
-];
 
 function formatTime(seconds: number): string {
   const mins = Math.floor(seconds / 60);
@@ -78,7 +70,7 @@ export default function CreativeSoulMeditationTool() {
   const [activeStyle, setActiveStyle] = useState<MeditationStyle>('indian');
   const [healingFreq, setHealingFreq] = useState(432);
   const [brainwaveFreq, setBrainwaveFreq] = useState(10);
-  const [stemMode, setStemMode] = useState<StemMode>('full_mix');
+  
   const [isProcessing, setIsProcessing] = useState(false);
   const [exportDuration, setExportDuration] = useState(300); // Default, will be overridden by neural source
   const [exportResult, setExportResult] = useState<{ blob: Blob; format: 'wav' | 'mp3'; url: string } | null>(null);
@@ -288,11 +280,6 @@ export default function CreativeSoulMeditationTool() {
     }
   }, [exportResult, offlineExport, exportDuration]);
 
-  // Handle YouTube extracted audio
-  const handleYouTubeAudio = useCallback((url: string, title: string) => {
-    engine.loadNeuralSource(url);
-    toast.success(`Loaded: ${title}`);
-  }, [engine]);
 
   // Check export access: lifetime = forever, monthly = until period end, single = after payment
   const hasValidEntitlement = (ent: { has_access: boolean; plan?: string }) => {
@@ -440,20 +427,6 @@ export default function CreativeSoulMeditationTool() {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Stem Mode Selector */}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
-              <Scissors className="w-4 h-4 text-cyan-400" />
-              <Select value={stemMode} onValueChange={(v) => setStemMode(v as StemMode)}>
-                <SelectTrigger className="w-[120px] h-7 text-xs bg-transparent border-0 text-cyan-400">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {STEM_OPTIONS.map(opt => (
-                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
 
             {!engine.isInitialized ? (
               <Button
@@ -662,7 +635,7 @@ export default function CreativeSoulMeditationTool() {
               onTogglePlay={engine.toggleNeuralPlay}
               onVolumeChange={engine.updateNeuralVolume}
             />
-            <YouTubeLinker onAudioExtracted={handleYouTubeAudio} />
+            
           </div>
         </div>
 

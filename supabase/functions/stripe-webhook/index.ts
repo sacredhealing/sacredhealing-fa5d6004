@@ -990,7 +990,7 @@ serve(async (req) => {
           .eq('stripe_customer_id', customerId)
           .maybeSingle();
 
-        const userId = membershipData?.user_id || null;
+        let userId = membershipData?.user_id || null;
 
         // Try to find user by email if not found
         if (!userId && customerId) {

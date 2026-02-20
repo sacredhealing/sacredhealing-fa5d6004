@@ -75,10 +75,6 @@ serve(async (req) => {
 
     const validProfiles = profilesWithEmail.filter(p => p.email);
 
-    if (profilesError) {
-      throw new Error(`Failed to fetch profiles: ${profilesError.message}`);
-    }
-
     logStep(`Found ${validProfiles.length} users with emails`);
 
     // Get Stargate members
