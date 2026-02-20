@@ -78,6 +78,24 @@ function getSuccessPercent(planet: string | null): number {
   return HORA_SUCCESS_RATINGS[planet] || 75;
 }
 
+// Din Heliga Kur — prescribed mantra text by Dasha (user-requested display form)
+const DASHA_MANTRA_DISPLAY: Record<string, string> = {
+  Jupiter: 'Om Gurave Namaha',
+  Rahu: 'Om Ram Rahave Namah',
+  Venus: 'Om Shum Shukraya Namah',
+  Sun: 'Om Hrim Suryaya Namah',
+  Moon: 'Om Shrim Chandramase Namah',
+  Mars: 'Om Krim Mangalaya Namah',
+  Mercury: 'Om Budhaya Namah',
+  Saturn: 'Om Sham Shanaye Namah',
+  Ketu: 'Om Kem Ketave Namah',
+};
+function getPrescribedMantraText(dashaPeriod: string | undefined | null): string | null {
+  if (!dashaPeriod) return null;
+  const planet = normalizePlanetName(dashaPeriod.split(' ')[0]);
+  return planet ? (DASHA_MANTRA_DISPLAY[planet] || getDailyMantraFromChart(dashaPeriod)) : null;
+}
+
 const Mantras = () => {
   const navigate = useNavigate();
   const { t: tI18n } = useI18nTranslation();
@@ -269,39 +287,50 @@ const Mantras = () => {
         </p>
       </header>
 
-      {/* Sacred Remedy — Play [Planet] Remedy (Jyotish Dasha) */}
-      {dashaPlanet && reading?.personalCompass?.currentDasha && (
-        <section className="px-4 mt-4 mb-4">
-          <Button
-            onClick={() => {
-              const dailyMantraText = getDailyMantraFromChart(reading.personalCompass.currentDasha.period);
-              if (!dailyMantraText) {
-                toast.error(t('mantras_no_remedy', 'Jyotish remedy not available.'));
-                return;
-              }
-              const remedyMantra = mantras.find(m => {
-                if (!m.planet_type) return false;
-                const mantraPlanet = normalizePlanetName(m.planet_type);
-                return mantraPlanet === dashaPlanet;
-              });
-              if (remedyMantra) {
-                handleMantraSelect(remedyMantra);
-                if (remedyMantra.audio_url) {
-                  setTimeout(() => handleStart(), 300);
-                } else {
-                  toast.error(t('mantras_no_audio', 'Audio not available for this mantra.'));
-                }
-              } else {
-                toast.info(`${dailyMantraText} - ${t('mantras_find_mantra', 'Find this mantra in the list below.')}`);
-              }
-            }}
-            className="w-full bg-gradient-to-r from-[#D4AF37] to-amber-500 hover:from-[#D4AF37]/90 hover:to-amber-500/90 text-black font-semibold py-3 rounded-xl shadow-lg shadow-[#D4AF37]/30 hover:shadow-[0_0_24px_rgba(212,175,55,0.5)] transition-shadow duration-300 animate-sovereign-pulse"
-          >
-            <Sparkles className="w-5 h-5 mr-2 inline" />
-            Play {dashaPlanet} Remedy
-          </Button>
-        </section>
-      )}
+      {/* Din Heliga Kur (Your Holy Remedy) — primary card from active Dasha */}
+      {dashaPlanet && reading?.personalCompass?.currentDasha && (() => {
+        const prescribedText = getPrescribedMantraText(reading.personalCompass.currentDasha.period);
+        if (!prescribedText) return null;
+        return (
+          <section className="px-4 mt-4 mb-4">
+            <Card
+              className="relative overflow-hidden rounded-2xl border-2 border-[#D4AF37] bg-gradient-to-br from-[#D4AF37]/10 via-amber-950/40 to-black/60 shadow-[0_0_24px_rgba(212,175,55,0.25)] animate-sovereign-pulse"
+              style={{ boxShadow: '0 0 0 1px rgba(212,175,55,0.3), 0 0 20px rgba(212,175,55,0.2)' }}
+            >
+              <CardContent className="p-5">
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="w-5 h-5 text-[#D4AF37]" />
+                  <span className="text-xs font-semibold uppercase tracking-widest text-[#D4AF37]">Prescribed</span>
+                </div>
+                <h2 className="text-lg font-bold text-white mb-2">Din Heliga Kur</h2>
+                <p className="text-sm text-white/70 mb-4">Your Holy Remedy — from your current {dashaPlanet} Dasha</p>
+                <p className="text-xl font-serif text-[#D4AF37] mb-4 tracking-wide" style={{ fontFamily: 'Georgia, Cinzel, serif' }}>
+                  {prescribedText}
+                </p>
+                <Button
+                  onClick={() => {
+                    const remedyMantra = mantras.find(m => {
+                      if (!m.planet_type) return false;
+                      return normalizePlanetName(m.planet_type) === dashaPlanet;
+                    });
+                    if (remedyMantra) {
+                      handleMantraSelect(remedyMantra);
+                      if (remedyMantra.audio_url) setTimeout(() => handleStart(), 300);
+                      else toast.error(t('mantras_no_audio', 'Audio not available for this mantra.'));
+                    } else {
+                      toast.info(`${prescribedText} — ${t('mantras_find_mantra', 'Find this mantra in the list below.')}`);
+                    }
+                  }}
+                  className="w-full bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-black font-semibold py-2.5 rounded-xl border border-[#D4AF37] shadow-lg shadow-[#D4AF37]/30"
+                >
+                  <Play className="w-4 h-4 mr-2 inline" />
+                  Play {dashaPlanet} Remedy
+                </Button>
+              </CardContent>
+            </Card>
+          </section>
+        );
+      })()}
 
       {/* Din Heliga Timme — floating glass card with rotating Moon/Planet icon */}
       {horaWatch.calculation && (

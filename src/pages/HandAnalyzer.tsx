@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-const CAMERA_TIMEOUT_MS = 5000;
+const CAMERA_TIMEOUT_MS = 3000;
 
 const HandAnalyzer = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -84,7 +84,12 @@ const HandAnalyzer = () => {
 
     init();
 
-    timeoutId = setTimeout(() => setShowGalleryFallback(true), CAMERA_TIMEOUT_MS);
+    timeoutId = setTimeout(() => {
+      if (!cancelled) {
+        setCameraLoading(false);
+        setShowGalleryFallback(true);
+      }
+    }, CAMERA_TIMEOUT_MS);
 
     return () => {
       cancelled = true;
@@ -177,7 +182,7 @@ const HandAnalyzer = () => {
               onClick={startCamera}
               className="text-[#D4AF37] border border-[#D4AF37] px-6 py-2 rounded-full hover:bg-[#D4AF37]/10 transition-colors mb-3"
             >
-              Retry Connection
+              Reset Camera
             </button>
             {showGalleryFallback && (
               <>
