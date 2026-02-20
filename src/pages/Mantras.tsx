@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation as useI18nTranslation } from 'react-i18next';
 import { useTranslation } from '@/hooks/useTranslation';
-import { Music, Play, Pause, RotateCcw, Volume2, ChevronDown, Sparkles, Clock, Sunrise } from 'lucide-react';
+import { Music, Play, Pause, RotateCcw, Volume2, ChevronDown, Sparkles, Clock, Sunrise, Flame } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -37,6 +37,23 @@ const PLANET_THEMES: Record<string, {
   default: { gradient: 'from-cyan-900/60 via-cyan-800/40 to-black/60',      border: 'border-cyan-500/40',    iconBg: 'bg-cyan-500/20',    iconColor: 'text-cyan-300',    glow: 'shadow-cyan-500/20',    badge: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' },
 };
 
+// Planet Sanskrit mantra names for Rishi's Choice
+const PLANET_MANTRA_NAMES: Record<string, string> = {
+  Sun: 'Surya', Moon: 'Chandra', Mars: 'Mangal', Mercury: 'Budha',
+  Jupiter: 'Guru', Venus: 'Shukra', Saturn: 'Shani', Rahu: 'Rahu', Ketu: 'Ketu',
+};
+
+// Planetary symbol characters
+const PLANET_SYMBOLS: Record<string, string> = {
+  Sun: '☉', Moon: '☽', Mars: '♂', Mercury: '☿', Jupiter: '♃',
+  Venus: '♀', Saturn: '♄', Rahu: '☊', Ketu: '☋',
+};
+
+// Hora success ratings per planet (simplified model)
+const HORA_SUCCESS_RATINGS: Record<string, number> = {
+  Sun: 82, Moon: 78, Mars: 70, Mercury: 85, Jupiter: 92, Venus: 88, Saturn: 65, Rahu: 60, Ketu: 55,
+};
+
 function getPlanetTheme(planetType?: string | null) {
   if (!planetType) return PLANET_THEMES.default;
   const normalized = planetType.charAt(0).toUpperCase() + planetType.slice(1).toLowerCase();
@@ -53,6 +70,11 @@ function formatDurationMinutes(minutes: number): string {
   if (!Number.isFinite(minutes) || minutes <= 0) return '';
   const rounded = Math.round(minutes);
   return rounded === 1 ? '1 min' : `${rounded} min`;
+}
+
+function getSuccessPercent(planet: string | null): number {
+  if (!planet) return 75;
+  return HORA_SUCCESS_RATINGS[planet] || 75;
 }
 
 const Mantras = () => {
@@ -94,6 +116,15 @@ const Mantras = () => {
     (userBirthPlanet && currentHoraPlanet === userBirthPlanet) ||
     (dashaPlanet && currentHoraPlanet === dashaPlanet)
   );
+
+  // Build Rishi's Choice message
+  const rishiPlanet = currentHoraPlanet || dashaPlanet || getPlanetOfDay();
+  const rishiSanskrit = PLANET_MANTRA_NAMES[rishiPlanet] || rishiPlanet;
+  const rishiMessage = currentHoraPlanet
+    ? `Master, the current ${currentHoraPlanet} Hora favors your creative soul. Recite the ${rishiSanskrit} Mantra now.`
+    : dashaPlanet
+    ? `Your ${dashaPlanet} Dasha period calls for the ${rishiSanskrit} Mantra. Align with your karmic frequency.`
+    : `Today's ${rishiPlanet} energy guides your practice. Chant Om ${rishiSanskrit}aya Namaha.`;
 
   useEffect(() => {
     let cancelled = false;
@@ -217,8 +248,35 @@ const Mantras = () => {
   return (
     <div className="min-h-screen bg-background pb-28">
 
+      {/* ═══ MINI HORA STATUS BAR ═══ */}
+      {horaWatch.calculation && (
+        <div className={`sticky top-0 z-30 px-4 py-2 backdrop-blur-xl border-b border-white/5 bg-gradient-to-r ${
+          currentHoraPlanet ? getPlanetTheme(currentHoraPlanet).gradient : 'from-primary/10 via-background to-primary/10'
+        }`}>
+          <div className="flex items-center justify-between max-w-2xl mx-auto">
+            <div className="flex items-center gap-2">
+              <Clock className="w-3.5 h-3.5 text-amber-400" />
+              <span className="text-xs font-medium text-white/80">
+                {currentHoraPlanet && PLANET_SYMBOLS[currentHoraPlanet]} {currentHoraPlanet} Hora
+              </span>
+              <span className="text-[10px] text-white/40">•</span>
+              <span className="text-xs text-white/60">Sacred Window</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-1.5 w-20 rounded-full bg-white/10 overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-amber-400 to-amber-500 rounded-full transition-all duration-1000"
+                  style={{ width: `${horaWatch.calculation.remainingMs > 0 ? Math.max(5, (horaWatch.remainingMs / (horaWatch.calculation.currentHora.durationMinutes * 60000)) * 100) : 0}%` }}
+                />
+              </div>
+              <span className="text-xs font-mono text-amber-400 font-bold">{horaWatch.remainingTimeStr}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
-      <section className="px-4 pt-6 pb-4">
+      <section className="px-4 pt-6 pb-2">
         <h1 className="text-2xl font-heading font-bold text-foreground">
           {tI18n('mantras.title', 'Mantras')}
         </h1>
@@ -227,7 +285,40 @@ const Mantras = () => {
         </p>
       </section>
 
-      {/* Hora Watch */}
+      {/* ═══ RISHI'S CHOICE BANNER ═══ */}
+      <section className="px-4 mb-4">
+        <Card className="rounded-2xl border-2 border-amber-500/40 bg-gradient-to-br from-amber-950/80 via-yellow-900/30 to-amber-950/60 shadow-xl shadow-amber-500/10 overflow-hidden relative">
+          {/* Breathing golden shimmer */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-400/5 to-transparent animate-pulse pointer-events-none" />
+          <CardContent className="p-4 relative z-10">
+            <div className="flex items-start gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-500/30"
+                style={{ animation: 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}>
+                <Flame className="w-6 h-6 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-sm font-bold text-amber-300 uppercase tracking-wider">Rishi's Choice</h3>
+                  {currentHoraPlanet && (
+                    <span className="text-lg">{PLANET_SYMBOLS[currentHoraPlanet]}</span>
+                  )}
+                </div>
+                <p className="text-sm text-amber-100/80 leading-relaxed">{rishiMessage}</p>
+                {currentHoraPlanet && (
+                  <div className="flex items-center gap-3 mt-2">
+                    <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/40 text-[10px]">
+                      {getPlanetEmoji(currentHoraPlanet)} {currentHoraPlanet} Hora Active
+                    </Badge>
+                    <span className="text-[10px] text-amber-400/60">Success: {getSuccessPercent(currentHoraPlanet)}%</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* ═══ HORA WATCH DETAIL ═══ */}
       {horaWatch.calculation && (
         <section className="px-4 mb-6">
           <Card className={`rounded-2xl border-border bg-gradient-to-br from-primary/5 via-background to-primary/5 border-primary/20 overflow-hidden backdrop-blur-sm ${shouldGlowGold ? 'border-amber-500/50 shadow-lg shadow-amber-500/20' : ''}`}>
@@ -290,7 +381,7 @@ const Mantras = () => {
 
       <div className="px-4 flex flex-col gap-6 md:flex-row md:gap-8">
 
-        {/* Mantra List — vibrant planet cards */}
+        {/* Mantra List — vibrant planet cards with symbols + success % */}
         <section className="flex-shrink-0 md:w-80">
           <button
             type="button"
@@ -317,6 +408,8 @@ const Mantras = () => {
                   const isDayMantra = mantraMatchesPlanet(m, getPlanetOfDay());
                   const isSelected = selectedMantraId === m.id;
                   const theme = getPlanetTheme(m.planet_type);
+                  const planetSymbol = mantraPlanet ? PLANET_SYMBOLS[mantraPlanet] : null;
+                  const successPct = getSuccessPercent(mantraPlanet);
 
                   return (
                     <button
@@ -336,17 +429,21 @@ const Mantras = () => {
                     >
                       {/* Glow overlay when selected */}
                       {isSelected && !hasGoldenAura && (
-                        <div className={`absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent pointer-events-none`} />
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent pointer-events-none" />
                       )}
                       {hasGoldenAura && (
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-400/20 to-transparent animate-pulse pointer-events-none" />
                       )}
 
-                      {/* Planet icon */}
+                      {/* Planet icon with symbol */}
                       <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 relative z-10 ${
                         hasGoldenAura ? 'bg-gradient-to-br from-amber-400 to-yellow-500' : theme.iconBg
                       }`}>
-                        {hasGoldenAura ? (
+                        {planetSymbol ? (
+                          <span className={`text-lg font-bold ${hasGoldenAura ? 'text-white' : theme.iconColor}`}>
+                            {planetSymbol}
+                          </span>
+                        ) : hasGoldenAura ? (
                           <Sparkles className="h-5 w-5 text-white animate-pulse" />
                         ) : isRecommended ? (
                           <Sparkles className={`h-5 w-5 ${theme.iconColor}`} />
@@ -364,9 +461,17 @@ const Mantras = () => {
                         <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                           {m.planet_type && (
                             <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${theme.badge}`}>
-                              {getPlanetEmoji(m.planet_type)} {m.planet_type}
+                              {planetSymbol || getPlanetEmoji(m.planet_type)} {m.planet_type}
                             </span>
                           )}
+                          {/* Success % from Hora */}
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${
+                            successPct >= 80 ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                            : successPct >= 60 ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                            : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                          }`}>
+                            {successPct}% ✦
+                          </span>
                           {isDashaMantra && !hasGoldenAura && (
                             <span className="text-[10px] px-2 py-0.5 rounded-full border bg-primary/20 text-primary border-primary/40 font-medium">
                               {t('mantras_dasha_pinned', 'Ditt Period')}
@@ -409,9 +514,12 @@ const Mantras = () => {
               <div className={`bg-gradient-to-r ${selectedTheme.gradient} px-6 pt-6 pb-4`}>
                 <p className="text-xl font-bold text-white text-center">{selectedMantra.title}</p>
                 {selectedMantra.planet_type && (
-                  <div className="flex justify-center mt-2">
+                  <div className="flex justify-center mt-2 gap-2">
                     <span className={`text-xs px-3 py-1 rounded-full border font-medium ${selectedTheme.badge}`}>
-                      {getPlanetEmoji(selectedMantra.planet_type)} {selectedMantra.planet_type} Mantra
+                      {PLANET_SYMBOLS[normalizePlanetName(selectedMantra.planet_type) || ''] || getPlanetEmoji(selectedMantra.planet_type)} {selectedMantra.planet_type} Mantra
+                    </span>
+                    <span className="text-xs px-3 py-1 rounded-full border bg-white/10 text-white/70 border-white/20 font-medium">
+                      🎵 Sacred Reverb
                     </span>
                   </div>
                 )}
@@ -484,14 +592,48 @@ const Mantras = () => {
 
                 {!completed ? (
                   <>
-                    {/* Progress Ring */}
+                    {/* ═══ ENHANCED 108 COUNTER with Golden Aura Glow ═══ */}
                     <div className="flex justify-center mb-6">
-                      <div className="relative w-28 h-28">
-                        <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                          <path fill="none" stroke="hsl(var(--muted))" strokeWidth="3" d="M18 2.5 a 15.5 15.5 0 0 1 0 31 a 15.5 15.5 0 0 1 0 -31" />
-                          <path fill="none" stroke="hsl(var(--primary))" strokeWidth="3" strokeDasharray={`${progressPercent * 0.97} 97`} strokeLinecap="round" d="M18 2.5 a 15.5 15.5 0 0 1 0 31 a 15.5 15.5 0 0 1 0 -31" />
+                      <div className="relative w-40 h-40">
+                        {/* Breathing golden aura glow */}
+                        <div
+                          className="absolute inset-[-12px] rounded-full opacity-60 blur-xl pointer-events-none"
+                          style={{
+                            background: `radial-gradient(circle, rgba(251, 191, 36, 0.4) 0%, rgba(245, 158, 11, 0.15) 50%, transparent 70%)`,
+                            animation: 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                          }}
+                        />
+                        {/* Secondary shimmer ring */}
+                        <div
+                          className="absolute inset-[-6px] rounded-full border-2 border-amber-400/20 pointer-events-none"
+                          style={{ animation: 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite', animationDelay: '1.5s' }}
+                        />
+                        <svg className="w-full h-full -rotate-90 relative z-10" viewBox="0 0 36 36">
+                          <path fill="none" stroke="hsl(var(--muted))" strokeWidth="2.5" d="M18 2.5 a 15.5 15.5 0 0 1 0 31 a 15.5 15.5 0 0 1 0 -31" />
+                          <path
+                            fill="none"
+                            stroke="url(#goldenGradient)"
+                            strokeWidth="3"
+                            strokeDasharray={`${progressPercent * 0.97} 97`}
+                            strokeLinecap="round"
+                            d="M18 2.5 a 15.5 15.5 0 0 1 0 31 a 15.5 15.5 0 0 1 0 -31"
+                            style={{ filter: 'drop-shadow(0 0 4px rgba(251, 191, 36, 0.6))' }}
+                          />
+                          <defs>
+                            <linearGradient id="goldenGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                              <stop offset="0%" stopColor="#f59e0b" />
+                              <stop offset="50%" stopColor="#fbbf24" />
+                              <stop offset="100%" stopColor="#d97706" />
+                            </linearGradient>
+                          </defs>
                         </svg>
-                        <span className="absolute inset-0 flex items-center justify-center text-lg font-semibold text-foreground">{count}/{reps}</span>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
+                          <span className="text-3xl font-bold text-amber-300 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]"
+                            style={{ animation: count > 0 ? 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite' : 'none' }}>
+                            {count}
+                          </span>
+                          <span className="text-xs text-amber-400/60 font-medium">/ {reps}</span>
+                        </div>
                       </div>
                     </div>
 
