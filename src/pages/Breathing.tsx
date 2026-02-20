@@ -230,21 +230,21 @@ const Breathing: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Sacred Geometry Breathing Guide */}
-        <Card className="bg-gradient-to-br from-purple-900/30 to-violet-900/20 border-purple-500/30 overflow-hidden">
+        {/* Siddha Kriya Portal */}
+        <Card className="bg-gradient-to-br from-purple-900/30 to-violet-900/20 border-purple-500/30 overflow-visible">
           <CardHeader className="text-center pb-2">
             <CardTitle className="text-lg flex items-center justify-center gap-2">
               <Sparkles className="w-5 h-5 text-purple-400" />
-              Sacred Geometry Breathing
+              Siddha Kriya Portal
             </CardTitle>
             <p className="text-sm text-muted-foreground">
-              Follow the expanding circle for a calm, meditative breath
+              Sync breath with the orb. Awaken the Kundalini, release the Karma.
             </p>
           </CardHeader>
           <CardContent className="py-8">
-            <SacredBreathingGuide 
-              inhaleSeconds={4} 
-              exhaleSeconds={4} 
+            <SacredBreathingGuide
+              inhaleSeconds={4}
+              exhaleSeconds={4}
             />
           </CardContent>
         </Card>

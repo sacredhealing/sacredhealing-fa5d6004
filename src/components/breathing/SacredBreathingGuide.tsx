@@ -10,93 +10,39 @@ interface SacredBreathingGuideProps {
   autoStart?: boolean;
 }
 
-// Sacred Geometry SVG - Flower of Life pattern
-const SacredGeometryIcon: React.FC<{ glowing: boolean; scale: number }> = ({ glowing, scale }) => {
+/** Faint rotating Sri Yantra (9 triangles + bindu) for inside the orb */
+const SriYantraInOrb: React.FC = () => {
+  const cx = 50;
+  const cy = 50;
+  const tan52 = 1.28;
+  const downHeights = [26, 20, 14, 8, 2.5];
+  const downTriangles = downHeights.map((h) => {
+    const halfBase = h * tan52;
+    return `M ${cx - halfBase},${cy - h} L ${cx + halfBase},${cy - h} L ${cx},${cy + h} Z`;
+  });
+  const upHeights = [22, 15, 9, 3];
+  const upTriangles = upHeights.map((h) => {
+    const halfBase = h * tan52;
+    return `M ${cx - halfBase},${cy + h} L ${cx + halfBase},${cy + h} L ${cx},${cy - h} Z`;
+  });
   return (
-    <motion.svg
-      viewBox="0 0 100 100"
-      className="w-20 h-20"
-      animate={{ 
-        scale,
-        filter: glowing ? 'drop-shadow(0 0 12px rgba(168, 85, 247, 0.8))' : 'drop-shadow(0 0 4px rgba(168, 85, 247, 0.3))',
-      }}
-      transition={{ duration: 0.5, ease: 'easeInOut' }}
+    <motion.div
+      className="absolute inset-0 flex items-center justify-center pointer-events-none"
+      animate={{ rotate: 360 }}
+      transition={{ duration: 24, repeat: Infinity, ease: 'linear' }}
     >
-      {/* Central circle */}
-      <motion.circle
-        cx="50"
-        cy="50"
-        r="15"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1"
-        className="text-purple-400"
-        animate={{ opacity: glowing ? 1 : 0.6 }}
-      />
-      
-      {/* Six surrounding circles (Flower of Life pattern) */}
-      {[0, 60, 120, 180, 240, 300].map((angle, i) => {
-        const x = 50 + 15 * Math.cos((angle * Math.PI) / 180);
-        const y = 50 + 15 * Math.sin((angle * Math.PI) / 180);
-        return (
-          <motion.circle
-            key={i}
-            cx={x}
-            cy={y}
-            r="15"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1"
-            className="text-purple-400"
-            animate={{ 
-              opacity: glowing ? 1 : 0.5,
-              strokeWidth: glowing ? 1.5 : 1,
-            }}
-            transition={{ delay: i * 0.05 }}
-          />
-        );
-      })}
-      
-      {/* Outer ring */}
-      <motion.circle
-        cx="50"
-        cy="50"
-        r="30"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="0.5"
-        className="text-purple-300"
-        animate={{ opacity: glowing ? 0.8 : 0.3 }}
-      />
-      
-      {/* Inner hexagon */}
-      <motion.polygon
-        points="50,35 62.99,42.5 62.99,57.5 50,65 37.01,57.5 37.01,42.5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1"
-        className="text-violet-400"
-        animate={{ 
-          opacity: glowing ? 1 : 0.4,
-          scale: glowing ? 1 : 0.95,
-        }}
-        style={{ transformOrigin: 'center' }}
-      />
-      
-      {/* Center dot */}
-      <motion.circle
-        cx="50"
-        cy="50"
-        r="3"
-        className="text-white"
-        fill="currentColor"
-        animate={{ 
-          opacity: glowing ? 1 : 0.6,
-          scale: glowing ? 1.2 : 1,
-        }}
-        style={{ transformOrigin: 'center' }}
-      />
-    </motion.svg>
+      <svg viewBox="0 0 100 100" className="w-[70%] h-[70%] opacity-[0.12]" preserveAspectRatio="xMidYMid meet">
+        <g fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="0.4" strokeLinejoin="round">
+          {downTriangles.map((d, i) => (
+            <path key={`d-${i}`} d={d} />
+          ))}
+          {upTriangles.map((d, i) => (
+            <path key={`u-${i}`} d={d} />
+          ))}
+        </g>
+        <circle cx={cx} cy={cy} r="1.5" fill="rgba(255,255,255,0.3)" />
+      </svg>
+    </motion.div>
   );
 };
 
@@ -136,22 +82,21 @@ export const SacredBreathingGuide: React.FC<SacredBreathingGuideProps> = ({
 
     const totalDuration = cycleDuration;
     const inhaleEnd = (inhaleSeconds / (inhaleSeconds + exhaleSeconds)) * 100;
-    const interval = 50; // Update every 50ms for smooth animation
+    const interval = 50;
     let elapsed = 0;
 
     const timer = setInterval(() => {
       elapsed += interval;
       const cycleProgress = (elapsed % totalDuration) / totalDuration * 100;
-      
+
       setProgress(cycleProgress);
-      
+
       if (cycleProgress < inhaleEnd) {
         setPhase('inhale');
       } else {
         setPhase('exhale');
       }
-      
-      // Count cycles
+
       if (elapsed > 0 && elapsed % totalDuration < interval) {
         setCycleCount(prev => prev + 1);
       }
@@ -160,92 +105,70 @@ export const SacredBreathingGuide: React.FC<SacredBreathingGuideProps> = ({
     return () => clearInterval(timer);
   }, [isActive, inhaleSeconds, exhaleSeconds, cycleDuration]);
 
-  // Calculate circle scale based on phase and progress
-  const getCircleScale = () => {
-    if (!isActive || phase === 'idle') return 1;
-    
-    const inhaleEnd = (inhaleSeconds / (inhaleSeconds + exhaleSeconds)) * 100;
-    
-    if (phase === 'inhale') {
-      // Expand from 1 to 1.4 during inhale
-      const inhaleProgress = progress / inhaleEnd;
-      return 1 + (inhaleProgress * 0.4);
-    } else {
-      // Contract from 1.4 to 1 during exhale
-      const exhaleProgress = (progress - inhaleEnd) / (100 - inhaleEnd);
-      return 1.4 - (exhaleProgress * 0.4);
-    }
-  };
+  const orbScale = !isActive || phase === 'idle' ? 1 : phase === 'inhale' ? 1.5 : 1;
+  const inhaleEnd = (inhaleSeconds / (inhaleSeconds + exhaleSeconds)) * 100;
+  const phaseDuration = phase === 'inhale'
+    ? (inhaleEnd / 100) * cycleDuration / 1000
+    : ((100 - inhaleEnd) / 100) * cycleDuration / 1000;
 
-  const circleScale = getCircleScale();
-  const isGlowing = phase === 'inhale';
-
-  const phaseText = {
+  const sacredPrompt = {
     idle: 'Begin when ready',
-    inhale: 'Breathe In...',
-    exhale: 'Breathe Out...',
+    inhale: 'Awaken the Kundalini...',
+    exhale: 'Release the Karma...',
   };
 
   return (
-    <div className="flex flex-col items-center">
-      {/* Main Breathing Circle */}
-      <div className="relative flex items-center justify-center mb-6">
-        {/* Outer glow rings */}
-        <motion.div
-          className="absolute inset-0 rounded-full"
-          style={{
-            background: `radial-gradient(circle, 
-              hsla(270, 60%, 50%, ${isGlowing ? 0.15 : 0.05}) 0%, 
-              transparent 70%
-            )`,
-          }}
-          animate={{
-            scale: circleScale * 1.5,
-            opacity: isGlowing ? 1 : 0.5,
-          }}
-          transition={{ duration: 0.3, ease: 'easeOut' }}
-        />
-        
-        {/* Main pulsing circle */}
+    <div className="relative flex flex-col items-center min-h-[420px]">
+      {/* Particle field (gold dust / Ojas) */}
+      <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none -mx-2">
+        {Array.from({ length: 24 }).map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 rounded-full bg-amber-400/40"
+            style={{
+              left: `${(i * 7 + 3) % 100}%`,
+              bottom: '-10%',
+            }}
+            animate={{
+              y: [0, -420],
+              opacity: [0, 0.6, 0],
+            }}
+            transition={{
+              duration: 8 + (i % 4),
+              repeat: Infinity,
+              delay: i * 0.4,
+              ease: 'linear',
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Deep Violet Glowing Orb + Sri Yantra */}
+      <div className="relative flex items-center justify-center my-6">
         <motion.div
           className="relative w-56 h-56 rounded-full flex items-center justify-center"
-          animate={{
-            scale: circleScale,
-          }}
-          transition={{ 
-            duration: phase === 'inhale' ? inhaleSeconds : exhaleSeconds,
+          animate={{ scale: orbScale }}
+          transition={{
+            duration: phaseDuration,
             ease: 'easeInOut',
           }}
           style={{
             background: `
-              radial-gradient(circle at 30% 30%, 
-                hsla(280, 70%, 60%, 0.3) 0%, 
-                hsla(260, 60%, 40%, 0.2) 50%, 
-                hsla(250, 50%, 25%, 0.3) 100%
+              radial-gradient(circle at 35% 35%,
+                rgba(139, 92, 246, 0.5) 0%,
+                rgba(88, 28, 135, 0.4) 40%,
+                rgba(59, 7, 100, 0.5) 100%
               )
             `,
-            boxShadow: isGlowing 
-              ? '0 0 60px rgba(168, 85, 247, 0.4), inset 0 0 40px rgba(168, 85, 247, 0.2)'
-              : '0 0 30px rgba(168, 85, 247, 0.2), inset 0 0 20px rgba(168, 85, 247, 0.1)',
-            border: '1px solid rgba(168, 85, 247, 0.3)',
+            boxShadow: '0 0 60px rgba(88, 28, 135, 0.6), 0 0 100px rgba(139, 92, 246, 0.3), inset 0 0 50px rgba(139, 92, 246, 0.2)',
+            border: '1px solid rgba(139, 92, 246, 0.4)',
           }}
         >
-          {/* Sacred Geometry Icon */}
-          <SacredGeometryIcon glowing={isGlowing} scale={isGlowing ? 1.1 : 1} />
+          <SriYantraInOrb />
         </motion.div>
-
-        {/* Rotating outer ring */}
-        <motion.div
-          className="absolute w-64 h-64 rounded-full border border-purple-500/20"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-          style={{
-            borderStyle: 'dashed',
-          }}
-        />
       </div>
 
-      {/* Phase Text */}
+      {/* Sacred counter — serif prompts */}
       <AnimatePresence mode="wait">
         <motion.p
           key={phase}
@@ -253,13 +176,13 @@ export const SacredBreathingGuide: React.FC<SacredBreathingGuideProps> = ({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.3 }}
-          className="text-lg font-medium text-purple-200 mb-2 h-7"
+          className="text-lg font-serif text-purple-200 mb-1 h-8 flex items-center justify-center"
+          style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}
         >
-          {phaseText[phase]}
+          {sacredPrompt[phase]}
         </motion.p>
       </AnimatePresence>
 
-      {/* Cycle counter */}
       {isActive && (
         <motion.p
           initial={{ opacity: 0 }}
@@ -275,18 +198,18 @@ export const SacredBreathingGuide: React.FC<SacredBreathingGuideProps> = ({
         {!isActive ? (
           <Button
             onClick={startBreathing}
-            className="bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-600 hover:to-violet-700"
+            className="bg-[#D4AF37] text-black font-semibold hover:bg-[#c4a030] animate-kriya-commence-pulse"
           >
             <Play className="w-4 h-4 mr-2" />
-            Start Breathing
+            Begin the Kriya
           </Button>
         ) : (
           <>
-            <Button onClick={stopBreathing} variant="outline">
+            <Button onClick={stopBreathing} variant="outline" size="sm">
               <Pause className="w-4 h-4 mr-2" />
               Pause
             </Button>
-            <Button onClick={resetBreathing} variant="ghost">
+            <Button onClick={resetBreathing} variant="ghost" size="sm">
               <RotateCcw className="w-4 h-4 mr-2" />
               Reset
             </Button>
@@ -294,10 +217,23 @@ export const SacredBreathingGuide: React.FC<SacredBreathingGuideProps> = ({
         )}
       </div>
 
-      {/* Timing info */}
-      <p className="text-xs text-muted-foreground mt-4">
-        {inhaleSeconds}s inhale · {exhaleSeconds}s exhale
-      </p>
+      {/* Seal the Practice — discreet bottom */}
+      {isActive && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="mt-8 w-full flex justify-center"
+        >
+          <button
+            type="button"
+            onClick={stopBreathing}
+            className="py-2.5 px-6 rounded-full border border-amber-500/30 text-amber-200/90 text-sm font-serif hover:bg-amber-500/10 hover:border-amber-500/50 transition-colors"
+            style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}
+          >
+            Seal the Practice
+          </button>
+        </motion.div>
+      )}
     </div>
   );
 };
