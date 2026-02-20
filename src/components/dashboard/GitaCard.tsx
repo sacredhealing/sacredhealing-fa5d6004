@@ -118,10 +118,10 @@ export const GitaCard: React.FC = () => {
             Chapter {verse.chapter}, Verse {verse.verse}
           </div>
 
-          {/* Why Today? — Rahu dasha / current cycle */}
+          {/* Why Today — Rishi Insight */}
           <div className="mt-3 pt-3 border-t border-[#D4AF37]/15">
-            <p className="text-xs text-white/60 italic font-serif" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
-              Why Today? Because your current {currentCycle || 'Rahu'} dasha creates illusion, this verse anchors you in Truth.
+            <p className="text-xs text-white/60 italic font-serif leading-relaxed" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
+              Rishi Insight: This verse aligns with your {currentCycle || 'Rahu'} transit, providing the specific mental frequency needed to transmute today&apos;s karmic load.
             </p>
           </div>
 

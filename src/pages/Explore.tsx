@@ -3,8 +3,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ParamahamsaVishwanandaDailyCard } from "@/components/dashboard/ParamahamsaVishwanandaDailyCard";
 import { GitaCard } from "@/components/dashboard/GitaCard";
+import AkashicSiddhaReading from "@/components/vedic/AkashicSiddhaReading";
 import { CollapsibleSection } from "@/features/library/CollapsibleSection";
 import { QuickActionFallback } from "@/features/library/QuickActionFallback";
 import { useQuickActionItems } from "@/features/library/useQuickActionItems";
@@ -168,7 +170,9 @@ export default function Explore() {
   const { language: meditationLanguage } = useMeditationContentLanguage();
   useMembership(); // presence / membership state if needed later
   const [showFallback, setShowFallback] = useState(false);
+  const [akashicOpen, setAkashicOpen] = useState(false);
   const presence = usePresenceState();
+  const userHouse = 12; // Ketu's house default; can derive from useAIVedicReading().reading later
 
   const onQuick = (key: "calm" | "heart" | "pause" | "sleep") => {
     if (key === "pause") {
@@ -336,14 +340,19 @@ export default function Explore() {
           <div className="relative z-10 px-6 pb-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
-                { label: "Vedic Astrology", desc: "Daily influence + blueprint", href: "/vedic-astrology" },
+                { label: "Vedic Astrology", desc: "Daily influence + Akashic Records", href: "/vedic-astrology", openAkashic: true },
                 { label: "Ayurveda", desc: "Balance + daily guidance", href: "/ayurveda" },
                 { label: "Vastu", desc: "Abundance Architect", href: "/vastu" },
                 { label: "Hand Analyzer", desc: "Sovereign palm reading", href: "/hand-analyzer", Icon: Hand },
               ].map((item) => {
                 const Icon = "Icon" in item ? item.Icon : null;
+                const openAkashic = "openAkashic" in item && item.openAkashic;
                 return (
-                  <button key={item.href} onClick={() => navigate(item.href)} className="rounded-2xl px-4 py-4 text-left bg-gradient-to-r from-purple-600/30 to-purple-500/20 border border-purple-400/40 hover:from-purple-600/50 hover:to-purple-500/40 transition flex items-center gap-3">
+                  <button
+                    key={item.href}
+                    onClick={() => (openAkashic ? setAkashicOpen(true) : navigate(item.href))}
+                    className="rounded-2xl px-4 py-4 text-left bg-gradient-to-r from-purple-600/30 to-purple-500/20 border border-purple-400/40 hover:from-purple-600/50 hover:to-purple-500/40 transition flex items-center gap-3"
+                  >
                     {Icon && <Icon className="h-5 w-5 text-amber-300 shrink-0" />}
                     <div>
                       <div className="text-sm font-semibold text-white">{item.label}</div>
@@ -360,6 +369,13 @@ export default function Explore() {
           </div>
         </div>
       </section>
+
+      {/* Akashic Siddha Reading — opened from Vedic Astrology tile */}
+      <Dialog open={akashicOpen} onOpenChange={setAkashicOpen}>
+        <DialogContent className="max-w-3xl bg-[#0a0a0a] border-[#D4AF37]/30 p-0 overflow-hidden">
+          <AkashicSiddhaReading userHouse={userHouse} isModal />
+        </DialogContent>
+      </Dialog>
 
       {/* Explore everything — Connect & Explore as gradient rows (from Downloads) */}
       <CollapsibleSection

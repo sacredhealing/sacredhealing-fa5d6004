@@ -269,7 +269,7 @@ const Mantras = () => {
         </p>
       </header>
 
-      {/* Remedy for [User's Active Planet] — Primary Action with gold glow */}
+      {/* Sacred Remedy — Play [Planet] Remedy (Jyotish Dasha) */}
       {dashaPlanet && reading?.personalCompass?.currentDasha && (
         <section className="px-4 mt-4 mb-4">
           <Button
@@ -298,7 +298,7 @@ const Mantras = () => {
             className="w-full bg-gradient-to-r from-[#D4AF37] to-amber-500 hover:from-[#D4AF37]/90 hover:to-amber-500/90 text-black font-semibold py-3 rounded-xl shadow-lg shadow-[#D4AF37]/30 hover:shadow-[0_0_24px_rgba(212,175,55,0.5)] transition-shadow duration-300 animate-sovereign-pulse"
           >
             <Sparkles className="w-5 h-5 mr-2 inline" />
-            {t('mantras_remedy_for_planet', 'Remedy for')} {dashaPlanet}
+            Play {dashaPlanet} Remedy
           </Button>
         </section>
       )}
