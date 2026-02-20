@@ -50,6 +50,9 @@ const SOLFEGGIO_FREQUENCIES = [
 
 // III. Quantum Calibration is 5dB lower than II. Meditation Style & Neural Source
 const QUANTUM_CALIBRATION_LINEAR = Math.pow(10, -5 / 20); // ≈ 0.562
+// Oscillator gain: 0.7–0.8 range for audible Hz/Binaural without clipping
+const OSCILLATOR_BASE_GAIN = 0.8;
+const OSCILLATOR_GAIN_MAX = 0.85;
 
 const BINAURAL_PRESETS = [
   { beatHz: 0.5, label: 'Epsilon (0.5 Hz) – Transcendence' },
@@ -178,9 +181,12 @@ export function useSoulMeditateEngine() {
     noiseGateEnabled: true,
   });
 
-  // Initialize audio context
+  // Initialize audio context (once per session; re-calling does not reset volume)
   const initialize = useCallback(async () => {
-    if (audioContextRef.current) return;
+    if (audioContextRef.current) {
+      console.log('[Engine] AudioContext already exists, skip re-init (preserves volume)');
+      return;
+    }
 
     try {
     const ctx = new AudioContext();
@@ -493,7 +499,12 @@ export function useSoulMeditateEngine() {
 
     neuralAudioRef.current = audio;
 
-    // Create source node and connect through full audio processing chain
+    // Start source only after element is ready (and after decodeAudioData below for buffer path)
+    audio.addEventListener('canplaythrough', () => {
+      console.log('Neural source element ready to play (same chain as oscillators: neuralGain -> mixer -> masterGain -> destination)');
+    }, { once: true });
+
+    // Create source node and connect through same masterGain chain as oscillators
     const source = audioContextRef.current.createMediaElementSource(audio);
 
     // Restore full chain: source -> mono balancer -> noise cleanup -> low cut -> EQ -> noise gate -> neuralGain
@@ -504,7 +515,7 @@ export function useSoulMeditateEngine() {
     const hasGate = userNoiseGateRef.current;
 
     if (hasMono && hasNoise && hasLowCut && hasEQ && hasGate) {
-      // Full professional chain
+      // Full professional chain; neuralGain feeds same mixer -> masterGain as oscillators
       source.connect(monoSplitterRef.current!);
       monoMergerRef.current!.connect(noiseHighPassRef.current!);
       noiseHighPassRef.current!.connect(noiseLowPassRef.current!);
@@ -515,11 +526,11 @@ export function useSoulMeditateEngine() {
       eqPresenceRef.current!.connect(eqAirRef.current!);
       eqAirRef.current!.connect(userNoiseGateRef.current!);
       userNoiseGateRef.current!.connect(neuralGainRef.current!);
-      console.log('Neural source connected through full chain: mono -> noise cleanup -> low cut -> EQ -> gate -> gain');
+      console.log('Neural source connected: same chain as oscillators (neuralGain -> mixer -> masterGain -> destination)');
     } else {
-      // Fallback: direct connection
+      // Fallback: direct to neuralGain (same mixer -> masterGain as oscillators)
       source.connect(neuralGainRef.current!);
-      console.warn('Neural source using direct connection (some processing nodes unavailable)');
+      console.warn('Neural source direct to neuralGain (same masterGain chain as oscillators)');
     }
 
     neuralSourceRef.current = source;
@@ -583,7 +594,7 @@ export function useSoulMeditateEngine() {
       console.error('Failed to upload neural source for export:', e);
     }
 
-    // Load audio buffer for DAW editing
+    // Convert file to ArrayBuffer and decode; start/buffer status only after this succeeds
     try {
       let arrayBuffer: ArrayBuffer;
       if (isUrl) {
@@ -592,10 +603,11 @@ export function useSoulMeditateEngine() {
       } else {
         arrayBuffer = await (file as File).arrayBuffer();
       }
-      
+
       const decodedBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
       setAudioBuffer(decodedBuffer);
       console.log('Neural Buffer Loaded:', decodedBuffer.duration);
+      console.log('Neural source buffer status: decoded, hit engine, duration', decodedBuffer.duration, 's');
       
       // Create initial region spanning the entire audio
       const initialRegion: AudioRegion = {
@@ -811,12 +823,11 @@ export function useSoulMeditateEngine() {
     osc.frequency.value = hz;
     osc.connect(solfeggioGainRef.current);
     
-    // Calculate volume with calibration
-    const targetVolume = solfeggioVolume * QUANTUM_CALIBRATION_LINEAR;
+    // Boosted gain (0.7–0.8 range) so oscillators are audible; cap to avoid clip
+    const targetVolume = Math.min(OSCILLATOR_GAIN_MAX, solfeggioVolume * OSCILLATOR_BASE_GAIN);
     console.log('[Solfeggio] Starting oscillator:', hz, 'Hz, volume:', solfeggioVolume, '->', targetVolume);
     
     // Set volume BEFORE starting to ensure immediate sound
-    // Direct assignment bypasses automation timeline (cancelScheduledValues alone may miss values at time 0)
     solfeggioGainRef.current.gain.cancelScheduledValues(0);
     solfeggioGainRef.current.gain.value = targetVolume;
     
@@ -873,12 +884,11 @@ export function useSoulMeditateEngine() {
 
     const ctx = audioContextRef.current;
     
-    // Calculate volume with calibration
-    const targetVolume = binauralVolume * QUANTUM_CALIBRATION_LINEAR;
+    // Boosted gain (0.7–0.8 range) so binaural is audible; cap to avoid clip
+    const targetVolume = Math.min(OSCILLATOR_GAIN_MAX, binauralVolume * OSCILLATOR_BASE_GAIN);
     console.log('[Binaural] Starting binaural beats:', carrierHz, 'Hz carrier,', beatHz, 'Hz beat, volume:', binauralVolume, '->', targetVolume);
     
     // Set volume BEFORE creating oscillators
-    // Direct assignment bypasses automation timeline (cancelScheduledValues alone may miss values at time 0)
     binauralGainRef.current.gain.cancelScheduledValues(0);
     binauralGainRef.current.gain.value = targetVolume;
     
@@ -963,7 +973,7 @@ export function useSoulMeditateEngine() {
   }, []);
 
   const updateSolfeggioVolume = useCallback((vol: number) => {
-    const safeVol = clampVolume(vol, 0.7) * QUANTUM_CALIBRATION_LINEAR; // 5dB lower than II
+    const safeVol = Math.min(OSCILLATOR_GAIN_MAX, vol * OSCILLATOR_BASE_GAIN);
     if (solfeggioGainRef.current && frequencies.solfeggio.enabled) {
       solfeggioGainRef.current.gain.value = safeVol;
     }
@@ -971,7 +981,7 @@ export function useSoulMeditateEngine() {
   }, [frequencies.solfeggio.enabled]);
 
   const updateBinauralVolume = useCallback((vol: number) => {
-    const safeVol = clampVolume(vol, 0.7) * QUANTUM_CALIBRATION_LINEAR; // 5dB lower than II
+    const safeVol = Math.min(OSCILLATOR_GAIN_MAX, vol * OSCILLATOR_BASE_GAIN);
     if (binauralGainRef.current && frequencies.binaural.enabled) {
       binauralGainRef.current.gain.value = safeVol;
     }
