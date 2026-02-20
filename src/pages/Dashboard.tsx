@@ -177,9 +177,12 @@ const Dashboard: React.FC = () => {
       {/* State: idle - Daily Guidance Card + restored sections */}
       {flowState === 'idle' && (
         <>
-          {/* Sri Yantra Banner — glowing teal focal point with evening message */}
+          {/* Sri Yantra Banner — glowing teal focal point, CTA when day complete */}
           <div className="mb-4 sm:mb-5 animate-slide-up">
-            <SriYantraBanner />
+            <SriYantraBanner
+              showRestCta={hasCompletedAllThree && !isDayClosed}
+              onSkipContinuation={markDayClosed}
+            />
           </div>
 
           {/* The Entrance — Sacred Geometry focal point, minimal text, optional CTA */}
@@ -191,6 +194,7 @@ const Dashboard: React.FC = () => {
               returnState={returnState}
               streakIncreased={streakIncreased}
               successWindowText={getSuccessWindowPhrase(horaPlanet)}
+              restCtaInBanner={hasCompletedAllThree && !isDayClosed}
             />
           </div>
 

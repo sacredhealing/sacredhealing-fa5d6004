@@ -20,6 +20,8 @@ interface TempleEntranceProps {
   returnState?: ReturnState;
   streakIncreased?: boolean;
   successWindowText: string;
+  /** When true, rest CTA (text + Enter rest + Not now) is shown in Sri Yantra banner instead */
+  restCtaInBanner?: boolean;
 }
 
 function getContinuationSuggestion(
@@ -69,6 +71,7 @@ export const TempleEntrance: React.FC<TempleEntranceProps> = ({
   returnState = null,
   streakIncreased = false,
   successWindowText,
+  restCtaInBanner = false,
 }) => {
   const { t } = useTranslation();
   const { guidance, isLoading, lastCompleted, hasCompletedAllThree, timeOfDay, streakDays, userState } = useDailyGuidance();
@@ -140,14 +143,16 @@ export const TempleEntrance: React.FC<TempleEntranceProps> = ({
     >
       <SacredGeometryFocal className="mb-4" />
 
-      <p
-        className="text-base sm:text-lg font-serif text-amber-100/95 text-center max-w-md leading-relaxed mb-2"
-        style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}
-      >
-        {displayText}
-      </p>
+      {!restCtaInBanner && (
+        <p
+          className="text-base sm:text-lg font-serif text-amber-100/95 text-center max-w-md leading-relaxed mb-2"
+          style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}
+        >
+          {displayText}
+        </p>
+      )}
 
-      {isNextDayReturn && streakIncreased && (
+      {isNextDayReturn && streakIncreased && !restCtaInBanner && (
         <p className="text-xs text-amber-400/90 text-center mb-3">
           {t('dashboard.returnNextDayStreakSubtext', 'Consistency is transforming your inner rhythm.')}
         </p>
@@ -159,7 +164,7 @@ export const TempleEntrance: React.FC<TempleEntranceProps> = ({
         </div>
       )}
 
-      {(onStartClick || (isCloseButton && onSkipContinuation)) && !isDayClosed && (
+      {(onStartClick || (isCloseButton && onSkipContinuation)) && !isDayClosed && !restCtaInBanner && (
         <div className="flex flex-col items-center gap-2 mt-2">
           <Button
             onClick={() =>
