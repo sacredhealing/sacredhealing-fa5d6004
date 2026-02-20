@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { toast as sonnerToast } from 'sonner';
-import { Sparkles, Play, Pause, Lock, Download, Heart, Clock, Music, CheckCircle, Star, CreditCard, Wallet, ChevronDown, ChevronUp } from 'lucide-react';
+import { Sparkles, Play, Pause, Lock, Download, Heart, Clock, Music, CheckCircle, Star, CreditCard, Wallet, ChevronDown, ChevronUp, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ReviewSection } from '@/components/reviews/ReviewSection';
@@ -49,6 +51,14 @@ const HEALING_PLANS: HealingPlan[] = [
   { id: '14_day', name: '14 days', price: 147, days: 14 },
   { id: '30_day', name: '30 days', price: 197, days: 30 },
 ];
+
+/** Rishi-style energy exchange: "Exchange: $50 / 550kr" (USD → SEK ~11) */
+function formatEnergyExchange(priceUsd: number): string {
+  const sek = Math.round(priceUsd * 11);
+  return `Exchange: $${priceUsd} / ${sek}kr`;
+}
+
+const DIRECT_HEALING_HERO_IMAGE = 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=1200&q=80';
 
 const faqTranslations: Record<string, { question: string; answer: string }[]> = {
   en: [
@@ -100,6 +110,8 @@ const Healing: React.FC = () => {
   const [shortExpanded, setShortExpanded] = useState(false);
   const [deepExpanded, setDeepExpanded] = useState(false);
   const [testimonialsExpanded, setTestimonialsExpanded] = useState(false);
+  const [upgradeSheetOpen, setUpgradeSheetOpen] = useState(false);
+  const [resonatingTicker, setResonatingTicker] = useState({ count: 32, title: 'Abundance Activation', isPremium: true });
 
   const { playUniversalAudio, currentAudio, isPlaying: playerIsPlaying } = useMusicPlayer();
 
@@ -119,6 +131,8 @@ const Healing: React.FC = () => {
   const recommendedIds = new Set(sessions.recommended.map((a) => a.id));
   const shortOnly = sessions.shortSessions.filter((a) => !recommendedIds.has(a.id));
   const deepOnly = sessions.deepSessions.filter((a) => !recommendedIds.has(a.id));
+  const freeSessions = useMemo(() => sessions.allInLanguage.filter((a) => a.is_free), [sessions.allInLanguage]);
+  const premiumSessions = useMemo(() => sessions.allInLanguage.filter((a) => !a.is_free), [sessions.allInLanguage]);
 
   const isHealingPlaying = (audioId: string) =>
     currentAudio?.id === audioId && currentAudio?.contentType === 'healing' && playerIsPlaying;
@@ -373,6 +387,29 @@ const Healing: React.FC = () => {
             <HealingLanguageToggle language={language} setLanguage={setLanguage} />
           </section>
 
+          {/* Direct Healing Transmission — Session booking hero */}
+          <section className="rounded-2xl overflow-hidden" style={{ boxShadow: '0 0 0 10px rgba(212, 175, 55, 0.35), 0 0 40px rgba(212, 175, 55, 0.2)' }}>
+            <div className="relative aspect-[21/9] min-h-[180px] bg-muted">
+              <img
+                src={DIRECT_HEALING_HERO_IMAGE}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+              <div className="absolute inset-0 flex flex-col justify-end p-6 text-left">
+                <h2 className="text-2xl md:text-3xl font-bold text-white mb-1">Direct Healing Transmission</h2>
+                <p className="text-white/90 text-sm md:text-base max-w-xl mb-4">
+                  Personalized Alchemical Sound Healing with Adam. Limited Sacred Windows available.
+                </p>
+                <Link to="/private-sessions">
+                  <Button size="lg" className="bg-[#D4AF37] text-black font-semibold hover:bg-[#c4a030] animate-sovereign-white-pulse">
+                    Book Your Session
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </section>
+
           {/* Sacred Portal Hero — Kriya Purple, Flower of Life, Sovereign Gold CTA */}
           <Card className="relative border-none text-center overflow-hidden bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900">
             <div className="absolute inset-0 opacity-[0.07]" aria-hidden>
@@ -435,14 +472,29 @@ const Healing: React.FC = () => {
             </CardContent>
           </Card>
 
-            {sessions.recommended.length > 0 && (
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                <Star className="w-5 h-5 text-primary" />
-                {tSafe('healing.recommendedForYou', 'Recommended for you')}
-              </h2>
-              <div className="grid gap-3">
-                {sessions.recommended.map((audio, idx) => (
+          {/* Now Resonating — live feed ticker */}
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 px-4 py-2.5">
+            <p className="text-sm text-foreground/90 text-center">
+              <span className="font-medium text-amber-200">{resonatingTicker.count} Souls</span>
+              {' are currently listening to '}
+              <span className="font-medium text-foreground">&quot;{resonatingTicker.title}&quot;</span>
+              {resonatingTicker.isPremium && <span className="text-amber-400/90"> (Premium)</span>}
+            </p>
+          </div>
+
+          {/* Tiered Audio Engine: Sacred Frequencies (Free) | Temple Transmissions (Premium) */}
+          <Tabs defaultValue="free" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-2 h-11 bg-muted/50">
+              <TabsTrigger value="free" className="data-[state=active]:bg-background">
+                Sacred Frequencies
+              </TabsTrigger>
+              <TabsTrigger value="premium" className="data-[state=active]:bg-background">
+                Temple Transmissions
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="free" className="space-y-3 mt-4">
+              {freeSessions.length > 0 ? (
+                freeSessions.map((audio) => (
                   <SessionRow
                     key={audio.id}
                     audio={audio as HealingAudio}
@@ -455,83 +507,48 @@ const Healing: React.FC = () => {
                     onPurchase={handlePurchaseAudio}
                     isProcessing={isProcessing}
                     tSafe={tSafe}
-                    showResonanceIcon
-                    isSoulBlueprintMatch={idx === 0}
+                    formatEnergyExchange={formatEnergyExchange}
+                    isPremiumTier={false}
+                    onRequestUpgrade={() => {}}
                   />
-                ))}
-              </div>
-            </div>
-          )}
-
-            {shortOnly.length > 0 && (
-            <div className="space-y-4">
-              <button
-                type="button"
-                className="w-full flex items-center justify-between text-left"
-                onClick={() => setShortExpanded(!shortExpanded)}
-              >
-                <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                  <Music className="w-5 h-5 text-primary" />
-                  {tSafe('healing.shortSessions', 'Short Sessions')}
-                </h2>
-                {shortExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-              </button>
-              {shortExpanded && (
-                <div className="grid gap-3">
-                  {shortOnly.map((audio) => (
-                    <SessionRow
-                      key={audio.id}
-                      audio={audio as HealingAudio}
-                      isPlaying={isHealingPlaying(audio.id)}
-                      onTogglePlay={togglePlay}
-                      formatDuration={formatDuration}
-                      isAdmin={isAdmin}
-                      ownedAudioIds={ownedAudioIds}
-                      hasHealingAccess={hasHealingAccess}
-                      onPurchase={handlePurchaseAudio}
-                      isProcessing={isProcessing}
-                      tSafe={tSafe}
-                    />
-                  ))}
-                </div>
+                ))
+              ) : (
+                <Card className="border-border">
+                  <CardContent className="py-8 text-center text-muted-foreground">
+                    {tSafe('healing.noFreeSessions', 'No free sessions in this language yet.')}
+                  </CardContent>
+                </Card>
               )}
-            </div>
-          )}
-
-          {deepOnly.length > 0 && (
-            <div className="space-y-4">
-              <button
-                type="button"
-                className="w-full flex items-center justify-between text-left"
-                onClick={() => setDeepExpanded(!deepExpanded)}
-              >
-                <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-primary" />
-                  {tSafe('healing.deepSessions', 'Deep Sessions')}
-                </h2>
-                {deepExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-              </button>
-              {deepExpanded && (
-                <div className="grid gap-3">
-                  {deepOnly.map((audio) => (
-                    <SessionRow
-                      key={audio.id}
-                      audio={audio as HealingAudio}
-                      isPlaying={isHealingPlaying(audio.id)}
-                      onTogglePlay={togglePlay}
-                      formatDuration={formatDuration}
-                      isAdmin={isAdmin}
-                      ownedAudioIds={ownedAudioIds}
-                      hasHealingAccess={hasHealingAccess}
-                      onPurchase={handlePurchaseAudio}
-                      isProcessing={isProcessing}
-                      tSafe={tSafe}
-                    />
-                  ))}
-                </div>
+            </TabsContent>
+            <TabsContent value="premium" className="space-y-3 mt-4">
+              {premiumSessions.length > 0 ? (
+                premiumSessions.map((audio) => (
+                  <SessionRow
+                    key={audio.id}
+                    audio={audio as HealingAudio}
+                    isPlaying={isHealingPlaying(audio.id)}
+                    onTogglePlay={togglePlay}
+                    formatDuration={formatDuration}
+                    isAdmin={isAdmin}
+                    ownedAudioIds={ownedAudioIds}
+                    hasHealingAccess={hasHealingAccess}
+                    onPurchase={handlePurchaseAudio}
+                    isProcessing={isProcessing}
+                    tSafe={tSafe}
+                    formatEnergyExchange={formatEnergyExchange}
+                    isPremiumTier
+                    onRequestUpgrade={() => setUpgradeSheetOpen(true)}
+                  />
+                ))
+              ) : (
+                <Card className="border-border">
+                  <CardContent className="py-8 text-center text-muted-foreground">
+                    {tSafe('healing.noPremiumSessions', 'No premium transmissions in this language yet.')}
+                  </CardContent>
+                </Card>
               )}
-            </div>
-          )}
+            </TabsContent>
+          </Tabs>
 
           <Button variant="outline" className="w-full" onClick={() => navigate('/meditations')}>
             {tSafe('healing.viewAllSessions', 'View all sessions')}
@@ -688,6 +705,52 @@ const Healing: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Upgrade to Sovereign — slide-up modal for premium */}
+      <Sheet open={upgradeSheetOpen} onOpenChange={setUpgradeSheetOpen}>
+        <SheetContent side="bottom" className="rounded-t-2xl border-t border-amber-500/30 bg-gradient-to-b from-background to-amber-950/20">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2 text-xl">
+              <Crown className="w-6 h-6 text-[#D4AF37]" />
+              Upgrade to Sovereign
+            </SheetTitle>
+            <SheetDescription>
+              Unlock Temple Transmissions and all premium sound healing sessions. Choose your sacred window below.
+            </SheetDescription>
+          </SheetHeader>
+          <div className="grid gap-3 py-6">
+            {HEALING_PLANS.map((plan) => (
+              <Button
+                key={plan.id}
+                size="lg"
+                className="w-full bg-[#D4AF37] text-black font-semibold hover:bg-[#c4a030]"
+                onClick={() => {
+                  setUpgradeSheetOpen(false);
+                  openPaymentModal(plan);
+                }}
+                disabled={isProcessing}
+              >
+                {plan.days} {tSafe('common.days', 'days')} — {formatEnergyExchange(plan.price)}
+              </Button>
+            ))}
+            <Button
+              size="lg"
+              variant="outline"
+              className="w-full border-amber-500/50 text-foreground"
+              onClick={() => {
+                setUpgradeSheetOpen(false);
+                handleSubscriptionStripe();
+              }}
+              disabled={isProcessing}
+            >
+              {tSafe('healing.ongoing', 'Ongoing')}
+            </Button>
+          </div>
+          <SheetFooter className="flex-row justify-center sm:justify-center">
+            <p className="text-xs text-muted-foreground">Energy exchanges support the lineage and future transmissions.</p>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </>
   );
 };
@@ -705,6 +768,9 @@ function SessionRow({
   tSafe,
   showResonanceIcon = false,
   isSoulBlueprintMatch = false,
+  formatEnergyExchange,
+  isPremiumTier = false,
+  onRequestUpgrade,
 }: {
   audio: HealingAudio;
   isPlaying: boolean;
@@ -718,10 +784,24 @@ function SessionRow({
   tSafe: (key: string, fallback: string) => string;
   showResonanceIcon?: boolean;
   isSoulBlueprintMatch?: boolean;
+  formatEnergyExchange?: (priceUsd: number) => string;
+  isPremiumTier?: boolean;
+  onRequestUpgrade?: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
   const owned = isAdmin || ownedAudioIds.has(audio.id);
   const hasAccess = isAdmin || owned || hasHealingAccess;
+  const isLockedPremium = isPremiumTier && !hasAccess;
+  const priceLabel = formatEnergyExchange ? formatEnergyExchange(audio.price_usd) : `$${audio.price_usd}`;
+
+  const handlePlayClick = () => {
+    if (isLockedPremium && onRequestUpgrade) {
+      onRequestUpgrade();
+      return;
+    }
+    onTogglePlay(audio);
+  };
+
   return (
     <Card
       className="p-4 group"
@@ -731,11 +811,17 @@ function SessionRow({
       <div className="flex items-center gap-4">
         <button
           type="button"
-          onClick={() => onTogglePlay(audio)}
+          onClick={handlePlayClick}
           className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center hover:bg-primary/30 transition-colors relative"
         >
-          {!hasAccess && <Lock className="w-4 h-4 text-muted-foreground absolute -top-1 -right-1" />}
-          {isPlaying ? <Pause className="w-5 h-5 text-primary" /> : <Play className="w-5 h-5 text-primary ml-1" />}
+          {isLockedPremium && (
+            <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-amber-500/90 text-black" title="Stargate — Premium">
+              <Lock className="w-3 h-3" />
+            </span>
+          )}
+          {!hasAccess && !isLockedPremium && <Lock className="w-4 h-4 text-muted-foreground absolute -top-1 -right-1" />}
+          {hasAccess && isPlaying ? <Pause className="w-5 h-5 text-primary" /> : <Play className="w-5 h-5 text-primary ml-1" />}
+          {isLockedPremium && <Play className="w-5 h-5 text-primary/70 ml-1" />}
         </button>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
@@ -765,7 +851,7 @@ function SessionRow({
             {hasAccess ? (
               <span className="text-green-500 font-medium">• {tSafe('healing.owned', 'Owned')}</span>
             ) : (
-              <span className="text-primary font-medium">• ${audio.price_usd}</span>
+              <span className="text-primary font-medium">• {priceLabel}</span>
             )}
           </div>
         </div>
@@ -773,14 +859,22 @@ function SessionRow({
           <Button variant="ghost" size="icon">
             <Download className="w-4 h-4" />
           </Button>
+        ) : isLockedPremium ? (
+          <Button
+            size="sm"
+            className="bg-[#D4AF37] text-black font-semibold border-0"
+            onClick={onRequestUpgrade}
+          >
+            Unlock
+          </Button>
         ) : (
           <Button
             size="sm"
-            className="bg-[#00F2FE] text-black font-extrabold border-0"
+            className="bg-[#00F2FE] text-black font-extrabold border-0 text-xs whitespace-nowrap max-w-[140px]"
             onClick={() => onPurchase(audio, 'stripe')}
             disabled={isProcessing}
           >
-            ${audio.price_usd}
+            {priceLabel}
           </Button>
         )}
       </div>
