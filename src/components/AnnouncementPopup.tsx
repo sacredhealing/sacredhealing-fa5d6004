@@ -19,8 +19,6 @@ export const AnnouncementPopup: React.FC = () => {
   const { user } = useAuth();
   const [announcement, setAnnouncement] = useState<Announcement | null>(null);
   const [isVisible, setIsVisible] = useState(false);
-  const [recentlyDismissed, setRecentlyDismissed] = useState<Set<string>>(new Set());
-
   useEffect(() => {
     fetchAnnouncement();
   }, [user]);
@@ -86,7 +84,7 @@ export const AnnouncementPopup: React.FC = () => {
 
     // Find first announcement not yet dismissed in any storage
     const unread = validAnnouncements.find(a =>
-      !dismissedIds.has(a.id) && !recentlyDismissed.has(a.id)
+      !dismissedIds.has(a.id)
     );
 
     if (unread) {
@@ -118,9 +116,6 @@ export const AnnouncementPopup: React.FC = () => {
         }
       });
     }
-
-    // Mark as recently dismissed so it won't reappear this session
-    setRecentlyDismissed(prev => new Set(prev).add(id));
 
     // Hide immediately
     setIsVisible(false);
