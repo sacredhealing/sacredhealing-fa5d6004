@@ -6,16 +6,10 @@ import { useProfile } from '@/hooks/useProfile';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Heart, MessageCircle, Send, Loader2 } from 'lucide-react';
+import { Heart, MessageCircle, Send, Loader2, ChevronDown, ChevronUp, Settings } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Input } from '@/components/ui/input';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
 import { AvatarRequiredAlert } from './AvatarRequiredAlert';
 import { ProfileEditDialog } from '@/components/profile/ProfileEditDialog';
 import AdminPostCreator from './AdminPostCreator';
@@ -35,11 +29,10 @@ const CommunityFeed = () => {
   const [expandedPost, setExpandedPost] = useState<string | null>(null);
   const [profileEditOpen, setProfileEditOpen] = useState(false);
   const [diaryRefreshKey, setDiaryRefreshKey] = useState(0);
+  const [adminOpen, setAdminOpen] = useState(false);
   const { entries: diaryEntries, isLoading: diaryLoading } = useDiaryEntries(diaryRefreshKey);
 
-  const handleDiaryCreated = () => {
-    setDiaryRefreshKey(prev => prev + 1);
-  };
+  const handleDiaryCreated = () => setDiaryRefreshKey(prev => prev + 1);
 
   const SEEDED_REFLECTIONS = [
     { id: 'seed-1', title: t('community.seededReflections.oneWordCheckIn.title'), body: t('community.seededReflections.oneWordCheckIn.body') },
@@ -49,92 +42,81 @@ const CommunityFeed = () => {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-8">
+      <div className="flex justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {/* Header - Community title */}
-      <div className="mb-2">
-        <h1 className="text-2xl font-semibold text-white">{t('community.title')}</h1>
-        <p className="text-sm text-white/60 mt-1">
-          {t('community.subtitle')}
-        </p>
+    <div className="space-y-5 pb-8">
+
+      {/* Header */}
+      <div className="pt-2">
+        <h1 className="text-2xl font-semibold text-white">{t('community.title', 'Community')}</h1>
+        <p className="text-sm text-white/50 mt-1">{t('community.subtitle', 'A shared space to connect, reflect, and grow together.')}</p>
       </div>
 
-      {/* Live Indicator Banner - Prominent when admins are live */}
-      <LiveStreamList />
-
-      {/* Avatar Required Alert */}
+      {/* Avatar alert */}
       {user && !hasAvatar && (
         <AvatarRequiredAlert onUploadClick={() => setProfileEditOpen(true)} />
       )}
 
-      {/* Admin Go Live Button - Only for admins */}
+      {/* Live streams — shown prominently but only when live */}
+      <LiveStreamList />
+
+      {/* Admin tools — collapsed behind a subtle toggle */}
       {isAdmin && (
-        <AdminGoLive />
+        <div className="rounded-2xl border border-white/8 overflow-hidden">
+          <button
+            onClick={() => setAdminOpen(!adminOpen)}
+            className="w-full flex items-center justify-between px-4 py-3 text-white/40 hover:text-white/70 hover:bg-white/5 transition text-sm"
+          >
+            <div className="flex items-center gap-2">
+              <Settings className="w-4 h-4" />
+              <span>Admin tools</span>
+            </div>
+            {adminOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
+          {adminOpen && (
+            <div className="px-4 pb-4 space-y-3 border-t border-white/8 pt-3">
+              <AdminGoLive />
+              <AdminPostCreator onPostCreated={fetchPosts} />
+              <AdminDiaryCreator onDiaryCreated={handleDiaryCreated} />
+            </div>
+          )}
+        </div>
       )}
 
-      {/* Admin Post Creator - Only visible to admins */}
-      {isAdmin && (
-        <AdminPostCreator onPostCreated={fetchPosts} />
-      )}
-
-      {/* Admin Diary Creator - Only visible to admins */}
-      {isAdmin && (
-        <AdminDiaryCreator onDiaryCreated={handleDiaryCreated} />
-      )}
-
-      {/* ===================== */}
-      {/* ADMIN DIARY SECTION */}
-      {/* ===================== */}
+      {/* Diary entries — warm intimate cards */}
       {!diaryLoading && diaryEntries.length > 0 && (
-        <section className="mb-8 space-y-4">
-          <h2 className="text-xs uppercase tracking-widest text-white/40 px-1">
+        <section className="space-y-3">
+          <p className="text-xs uppercase tracking-widest text-white/30 px-1">
             {t('community.diary.fromTheSpace', 'From the Space')}
-          </h2>
-
+          </p>
           {diaryEntries.map((entry) => (
             <div
               key={entry.id}
-              className="rounded-2xl border border-white/10 bg-white/[0.03] p-5"
+              className="rounded-2xl border border-amber-500/15 bg-gradient-to-br from-amber-950/30 via-orange-950/20 to-black/40 p-5"
             >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-white">
-                    {entry.title}
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-sm font-medium text-amber-100/90">{entry.title}</span>
+                {entry.type === 'daily' && (
+                  <span className="text-[10px] bg-amber-500/15 text-amber-300/80 px-2 py-0.5 rounded-full border border-amber-500/20">
+                    {t('community.diary.today', 'Today')}
                   </span>
-                  {entry.type === "daily" && (
-                    <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full">
-                      {t('community.diary.today', 'Today')}
-                    </span>
-                  )}
-                </div>
-                <span className="text-[10px] uppercase tracking-wider text-white/40">
-                  {entry.type}
-                </span>
+                )}
               </div>
-
-              <p className="text-sm text-white/70 leading-relaxed">
-                {entry.body}
-              </p>
-
+              <p className="text-sm text-white/65 leading-relaxed">{entry.body}</p>
               <div className="mt-4 flex items-center justify-between">
-                <span className="text-[11px] text-white/30">
-                  {t('community.diary.sharedBy', 'Shared by the Sacred Healing team')}
+                <span className="text-[11px] text-white/25">
+                  {t('community.diary.sharedBy', 'Sacred Healing team')}
                 </span>
-
-                <button 
-                  className="text-xs text-purple-400 hover:text-purple-300 transition"
-                  onClick={() => toast({ 
-                    title: t('community.comingSoon'), 
-                    description: t('community.replyAvailableSoon') 
-                  })}
+                <button
+                  className="text-xs text-amber-400/60 hover:text-amber-300 transition"
+                  onClick={() => toast({ title: t('community.comingSoon'), description: t('community.replyAvailableSoon') })}
                 >
-                  {t('community.diary.comment', 'Comment')}
+                  {t('community.diary.comment', 'Reflect')} 🙏
                 </button>
               </div>
             </div>
@@ -142,55 +124,57 @@ const CommunityFeed = () => {
         </section>
       )}
 
-      {/* Feed Posts */}
+      {/* Posts feed */}
       <div className="space-y-4">
         {posts.length === 0 ? (
-          <div className="space-y-4">
-            {/* Empty state message */}
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center">
-              <p className="text-white/80 text-sm">
-                {isAdmin 
-                  ? t('community.emptyStateAdmin')
-                  : t('community.emptyStateMember')}
+          <div className="space-y-3">
+            {/* Warm empty state */}
+            <div className="rounded-2xl border border-white/8 bg-gradient-to-br from-violet-950/20 to-black/40 p-6 text-center">
+              <p className="text-2xl mb-2">🙏</p>
+              <p className="text-white/70 text-sm leading-relaxed">
+                {isAdmin ? t('community.emptyStateAdmin') : t('community.emptyStateMember')}
               </p>
             </div>
-            
-            {/* Seeded reflections for empty state */}
+
+            {/* Seeded reflections */}
             {SEEDED_REFLECTIONS.map((item) => (
-              <Card key={item.id} className="bg-white/5 border-white/10">
-                <CardContent className="p-4">
-                  <h3 className="font-semibold text-white">{item.title}</h3>
-                  <p className="mt-1 text-sm text-white/70">{item.body}</p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-3 border-white/20 text-white/80 hover:bg-white/10"
-                    onClick={() => toast({ title: t('community.comingSoon'), description: t('community.replyAvailableSoon') })}
-                  >
-                    {t('community.reply')}
-                  </Button>
-                </CardContent>
-              </Card>
+              <div
+                key={item.id}
+                className="rounded-2xl border border-white/8 bg-white/[0.03] p-5"
+              >
+                <h3 className="font-medium text-white/90 text-sm">{item.title}</h3>
+                <p className="mt-1.5 text-sm text-white/55 leading-relaxed">{item.body}</p>
+                <button
+                  className="mt-3 text-xs text-violet-400/70 hover:text-violet-300 transition"
+                  onClick={() => toast({ title: t('community.comingSoon'), description: t('community.replyAvailableSoon') })}
+                >
+                  {t('community.reply', 'Reflect')} ✨
+                </button>
+              </div>
             ))}
           </div>
         ) : (
           posts.map((post) => (
-            <RichMediaPost
+            <div
               key={post.id}
-              post={post}
-              onLike={likePost}
-              onToggleComments={(postId) =>
-                setExpandedPost(expandedPost === postId ? null : postId)
-              }
-              isCommentsOpen={expandedPost === post.id}
-              hasAvatar={hasAvatar}
+              className="rounded-2xl border border-white/8 bg-white/[0.03] overflow-hidden"
             >
-              <PostComments
-                postId={post.id}
-                onCommentAdded={fetchPosts}
+              <RichMediaPost
+                post={post}
+                onLike={likePost}
+                onToggleComments={(postId) =>
+                  setExpandedPost(expandedPost === postId ? null : postId)
+                }
+                isCommentsOpen={expandedPost === post.id}
                 hasAvatar={hasAvatar}
-              />
-            </RichMediaPost>
+              >
+                <PostComments
+                  postId={post.id}
+                  onCommentAdded={fetchPosts}
+                  hasAvatar={hasAvatar}
+                />
+              </RichMediaPost>
+            </div>
           ))
         )}
       </div>
@@ -200,7 +184,15 @@ const CommunityFeed = () => {
   );
 };
 
-const PostComments = ({ postId, onCommentAdded, hasAvatar }: { postId: string; onCommentAdded: () => void; hasAvatar: boolean }) => {
+const PostComments = ({
+  postId,
+  onCommentAdded,
+  hasAvatar,
+}: {
+  postId: string;
+  onCommentAdded: () => void;
+  hasAvatar: boolean;
+}) => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { comments, isLoading, addComment } = usePostComments(postId);
@@ -211,48 +203,50 @@ const PostComments = ({ postId, onCommentAdded, hasAvatar }: { postId: string; o
     if (!newComment.trim() || isSubmitting || !hasAvatar) return;
     setIsSubmitting(true);
     const success = await addComment(newComment.trim());
-    if (success) {
-      setNewComment('');
-      onCommentAdded();
-    }
+    if (success) { setNewComment(''); onCommentAdded(); }
     setIsSubmitting(false);
   };
 
   return (
-    <div className="space-y-3 border-t border-border pt-4">
+    <div className="space-y-3 border-t border-white/8 pt-4 px-4 pb-4">
       {user && hasAvatar && (
         <div className="flex gap-2">
-          <Input
-            placeholder={t('community.writeComment')}
+          <input
+            className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-white/20 transition"
+            placeholder={t('community.writeComment', 'Share a reflection...')}
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
+            onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
           />
-          <Button size="sm" onClick={handleSubmit} disabled={!newComment.trim() || isSubmitting}>
-            <Send className="h-4 w-4" />
-          </Button>
+          <button
+            onClick={handleSubmit}
+            disabled={!newComment.trim() || isSubmitting}
+            className="w-9 h-9 rounded-xl bg-violet-600/40 hover:bg-violet-600/60 text-white flex items-center justify-center transition disabled:opacity-30"
+          >
+            {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          </button>
         </div>
       )}
 
       {isLoading ? (
         <div className="flex justify-center py-2">
-          <Loader2 className="h-4 w-4 animate-spin" />
+          <Loader2 className="h-4 w-4 animate-spin text-white/30" />
         </div>
       ) : comments.length === 0 ? (
-        <p className="text-sm text-muted-foreground text-center py-2">{t('community.noComments')}</p>
+        <p className="text-xs text-white/30 text-center py-2">{t('community.noComments', 'No reflections yet')}</p>
       ) : (
         comments.map((comment) => (
-          <div key={comment.id} className="flex gap-2">
-            <Avatar className="h-8 w-8">
+          <div key={comment.id} className="flex gap-3">
+            <Avatar className="h-7 w-7 border border-white/10 flex-shrink-0">
               <AvatarImage src={comment.profile?.avatar_url || undefined} />
-              <AvatarFallback className="bg-primary/20 text-primary text-xs">
+              <AvatarFallback className="bg-violet-900/40 text-white text-xs">
                 {comment.profile?.full_name?.charAt(0) || 'U'}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1 bg-muted rounded-lg p-2">
-              <p className="text-sm font-medium text-foreground">{comment.profile?.full_name || t('community.anonymous')}</p>
-              <p className="text-sm text-foreground">{comment.content}</p>
-              <p className="text-xs text-muted-foreground mt-1">
+            <div className="flex-1 bg-white/[0.04] rounded-xl px-3 py-2">
+              <p className="text-xs font-medium text-white/70 mb-0.5">{comment.profile?.full_name || t('community.anonymous')}</p>
+              <p className="text-sm text-white/80 leading-relaxed">{comment.content}</p>
+              <p className="text-[10px] text-white/30 mt-1">
                 {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
               </p>
             </div>
