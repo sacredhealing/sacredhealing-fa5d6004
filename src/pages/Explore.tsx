@@ -38,7 +38,9 @@ import {
   Baby,
   Hand,
   Leaf,
+  Eye,
 } from "lucide-react";
+import SacredRevealGate from "@/components/SacredRevealGate";
 
 function getSubtitleKey(phase: "morning" | "midday" | "evening"): string {
   switch (phase) {
@@ -172,6 +174,7 @@ export default function Explore() {
   useMembership(); // presence / membership state if needed later
   const [showFallback, setShowFallback] = useState(false);
   const [akashicOpen, setAkashicOpen] = useState(false);
+  const [sacredRevealOpen, setSacredRevealOpen] = useState(false);
   const presence = usePresenceState();
   const userHouse = 12; // Ketu's house default; can derive from useAIVedicReading().reading later
 
@@ -341,25 +344,44 @@ export default function Explore() {
           <div className="relative z-10 px-6 pb-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
-                { label: "Akashic Decoder", desc: "Lines on your palm match the Archetype record in the Akasha.", href: "/akashic-records", Icon: Leaf, premium: true },
-                { label: "Vedic Astrology", desc: "Daily influence + Akashic Records", href: "/vedic-astrology", openAkashic: true },
+                { label: "Akashic Decoder", desc: "Personalized transmission — unlock your 15-page soul manuscript.", href: "/akashic-records", Icon: Eye, akashicHighTicket: true },
+                { label: "Vedic Astrology", desc: "Daily influence + Akashic Records", href: "/vedic-astrology", openAkashic: true, premium: true },
+                { label: "Mantra Library", desc: "Sacred sounds for daily practice", href: "/mantras", Icon: Music2, premium: true },
                 { label: "Ayurveda", desc: "Balance + daily guidance", href: "/ayurveda" },
                 { label: "Vastu", desc: "Abundance Architect", href: "/vastu" },
-                { label: "Palm & Akashic Oracle", desc: "Sovereign palm reading → Akashic verdict", href: "/hand-analyzer", Icon: Hand },
+                { label: "Palm & Akashic Oracle", desc: "Basic hand analysis (Lines only) → Akashic verdict", href: "/hand-analyzer", Icon: Hand, premium: true },
               ].map((item) => {
                 const Icon = "Icon" in item ? item.Icon : null;
                 const openAkashic = "openAkashic" in item && item.openAkashic;
                 const premium = "premium" in item && item.premium;
+                const akashicHighTicket = "akashicHighTicket" in item && item.akashicHighTicket;
+                const onClick = akashicHighTicket
+                  ? () => setSacredRevealOpen(true)
+                  : openAkashic
+                    ? () => setAkashicOpen(true)
+                    : () => navigate(item.href);
+                const isAkashicTile = akashicHighTicket;
                 return (
                   <button
-                    key={item.href}
-                    onClick={() => (openAkashic ? setAkashicOpen(true) : navigate(item.href))}
-                    className="rounded-2xl px-4 py-4 text-left bg-gradient-to-r from-purple-600/30 to-purple-500/20 border border-purple-400/40 hover:from-purple-600/50 hover:to-purple-500/40 transition flex items-center gap-3"
+                    key={item.label}
+                    onClick={onClick}
+                    className={`rounded-2xl px-4 py-4 text-left transition flex items-center gap-3 ${
+                      isAkashicTile
+                        ? "bg-gradient-to-r from-[#4a1a6b] via-[#6b2d8a] to-[#4a1a6b] border-2 border-purple-400/60 hover:border-purple-300/80 shadow-[0_0_20px_rgba(139,92,246,0.25)] hover:shadow-[0_0_28px_rgba(139,92,246,0.35)]"
+                        : "bg-gradient-to-r from-purple-600/30 to-purple-500/20 border border-purple-400/40 hover:from-purple-600/50 hover:to-purple-500/40"
+                    }`}
                   >
-                    {Icon && <Icon className={`h-5 w-5 shrink-0 ${item.href === "/akashic-records" ? "text-[#D4AF37]" : "text-amber-300"}`} />}
+                    {Icon && (
+                      <span className={`shrink-0 flex items-center justify-center rounded-xl p-1.5 ${isAkashicTile ? "bg-purple-500/30 shadow-[0_0_12px_rgba(168,85,247,0.5)]" : ""}`}>
+                        <Icon className={`h-5 w-5 ${isAkashicTile ? "text-purple-200" : "text-amber-300"}`} />
+                      </span>
+                    )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-sm font-semibold text-white">{item.label}</span>
+                        {isAkashicTile && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/40 text-purple-100 border border-purple-400/60 font-semibold uppercase tracking-wider">Secret</span>
+                        )}
                         {premium && (
                           <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/40 font-semibold uppercase tracking-wider">Premium</span>
                         )}
@@ -384,6 +406,9 @@ export default function Explore() {
           <AkashicSiddhaReading userHouse={userHouse} isModal />
         </DialogContent>
       </Dialog>
+
+      {/* Sacred Reveal — High-Ticket gate when tapping Akashic Decoder */}
+      <SacredRevealGate open={sacredRevealOpen} onOpenChange={setSacredRevealOpen} />
 
       {/* Explore everything — Connect & Explore as gradient rows (from Downloads) */}
       <CollapsibleSection
