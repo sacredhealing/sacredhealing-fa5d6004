@@ -1,18 +1,21 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Sparkles, Compass, User, Brain } from 'lucide-react';
-import MalaBeadsIcon from '@/components/icons/MalaBeadsIcon';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
+import TempleGateIcon from '@/components/icons/TempleGateIcon';
+import ThirdEyeIcon from '@/components/icons/ThirdEyeIcon';
+import MalaBeadsIcon from '@/components/icons/MalaBeadsIcon';
+import PalmLeafIcon from '@/components/icons/PalmLeafIcon';
+import AlchemicalStarIcon from '@/components/icons/AlchemicalStarIcon';
+import AtmaIcon from '@/components/icons/AtmaIcon';
 
-// Bottom tabs: Home, Explore, Healing, Profile (Community & Music live inside Explore)
 const NAV_ITEMS = [
-  { to: '/dashboard', icon: Home, labelKey: 'nav_home', label: 'Home' },
-  { to: '/meditations', icon: Brain, labelKey: 'nav_meditate', label: 'Meditate' },
+  { to: '/dashboard', icon: TempleGateIcon, labelKey: 'nav_home', label: 'Home' },
+  { to: '/meditations', icon: ThirdEyeIcon, labelKey: 'nav_meditate', label: 'Meditate' },
   { to: '/mantras', icon: MalaBeadsIcon, labelKey: 'nav_mantras', label: 'Mantras' },
-  { to: '/explore', icon: Compass, labelKey: 'nav_library', label: 'Library' },
-  { to: '/healing', icon: Sparkles, labelKey: 'header_healing', label: 'Healing' },
-  { to: '/profile', icon: User, labelKey: 'nav_profile', label: 'Profile' },
+  { to: '/explore', icon: PalmLeafIcon, labelKey: 'nav_library', label: 'Library' },
+  { to: '/healing', icon: AlchemicalStarIcon, labelKey: 'header_healing', label: 'Healing' },
+  { to: '/profile', icon: AtmaIcon, labelKey: 'nav_profile', label: 'Profile' },
 ];
 
 export const BottomNav: React.FC = () => {
@@ -20,7 +23,7 @@ export const BottomNav: React.FC = () => {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#1a0a2e]/95 backdrop-blur-xl border-t border-amber-500/20 safe-area-bottom">
-<div
+      <div
         className="grid grid-cols-6 w-full px-0 py-1 gap-0"
         style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}
       >
@@ -32,8 +35,8 @@ export const BottomNav: React.FC = () => {
               cn(
                 'flex flex-col items-center justify-center gap-0.5 py-2 rounded-lg transition-all duration-200',
                 isActive
-                  ? 'text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.5)]'
-                  : 'text-muted-foreground hover:text-foreground active:text-foreground'
+                  ? 'text-[#D4AF37] drop-shadow-[0_0_8px_rgba(212,175,55,0.6)] scale-110'
+                  : 'text-[#D4AF37]/40 hover:text-[#D4AF37]/70 active:text-[#D4AF37]/70'
               )
             }
           >
@@ -41,11 +44,11 @@ export const BottomNav: React.FC = () => {
               <>
                 <item.icon
                   className={cn(
-                    'w-5 h-5 shrink-0',
-                    isActive && 'drop-shadow-[0_0_6px_hsl(var(--primary))]'
+                    'w-5 h-5 shrink-0 transition-all duration-200',
+                    isActive && 'drop-shadow-[0_0_6px_rgba(212,175,55,0.5)]'
                   )}
                 />
-                <span className="text-[11px] xs:text-[12px] font-medium leading-tight" style={{ fontSize: '0.75rem' }}>
+                <span className="text-[11px] font-medium leading-tight" style={{ fontSize: '0.75rem' }}>
                   {t(item.labelKey, item.label)}
                 </span>
               </>
