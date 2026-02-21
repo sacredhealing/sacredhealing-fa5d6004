@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { SriYantra } from './SriYantra';
 import { BreathingAnchor } from './BreathingAnchor';
 import { useDailyGuidance } from '@/hooks/useDailyGuidance';
@@ -114,19 +113,15 @@ export const TempleEntrance: React.FC<TempleEntranceProps> = ({
     ? getContinuationSuggestion(lastCompleted, tFn)
     : null;
   const activeGuidance = showContinuation && continuationGuidance ? continuationGuidance : guidance;
-  const isCloseButton = showAllComplete && allCompleteGuidance;
+  const isCloseButton = !!(showAllComplete && allCompleteGuidance);
 
   if (isLoading) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col items-center py-6"
-      >
-        <Skeleton className="w-full h-64 mb-4" />
+      <div className="flex flex-col items-center py-6 px-4">
+        <Skeleton className="w-80 h-80 rounded-full mb-4" />
         <Skeleton className="h-5 w-48 mb-2" />
         <Skeleton className="h-4 w-32" />
-      </motion.div>
+      </div>
     );
   }
 
@@ -137,40 +132,40 @@ export const TempleEntrance: React.FC<TempleEntranceProps> = ({
       transition={{ duration: 0.5 }}
       className="flex flex-col items-center"
     >
-      {/* Sri Yantra — ALWAYS shown, full bleed edge to edge */}
-      <div className="relative w-full flex justify-center overflow-hidden">
+      {/* Sri Yantra — ALWAYS visible, large fixed size, centered */}
+      <motion.div
+        animate={{ scale: [1, 1.02, 1], opacity: [0.9, 1, 0.9] }}
+        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+        className="relative w-full"
+        style={{ height: '320px' }}
+      >
+        {/* Gold glow behind */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: 'radial-gradient(ellipse 80% 60% at 50% 40%, rgba(212,175,55,0.12) 0%, transparent 70%)',
+            background: 'radial-gradient(ellipse 70% 70% at 50% 50%, rgba(212,175,55,0.15) 0%, transparent 70%)',
           }}
         />
-        <motion.div
-          className="w-full"
-          animate={{ scale: [1, 1.02, 1], opacity: [0.9, 1, 0.9] }}
-          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-        >
-          <SriYantra
-            variant="gold"
-            className="w-full h-auto"
-            style={{
-              filter: 'drop-shadow(0 0 24px rgba(212,175,55,0.5)) drop-shadow(0 0 48px rgba(212,175,55,0.2))',
-            }}
-          />
-        </motion.div>
-      </div>
+        <SriYantra
+          variant="gold"
+          className="absolute inset-0 w-full h-full"
+          style={{
+            filter: 'drop-shadow(0 0 24px rgba(212,175,55,0.5)) drop-shadow(0 0 48px rgba(212,175,55,0.2))',
+          }}
+        />
+      </motion.div>
 
-      {/* Text + buttons — always shown directly under yantra */}
-      <div className="px-6 pt-4 pb-6 w-full flex flex-col items-center text-center">
+      {/* Text + buttons */}
+      <div className="px-6 pt-2 pb-6 w-full flex flex-col items-center text-center">
         <p
-          className="text-base sm:text-lg text-amber-100/95 text-center max-w-md leading-relaxed mb-2"
+          className="text-base sm:text-lg text-amber-100/95 max-w-md leading-relaxed mb-2"
           style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif', letterSpacing: '0.06em' }}
         >
           {displayText}
         </p>
 
         {isNextDayReturn && streakIncreased && (
-          <p className="text-xs text-amber-400/80 text-center mb-3 tracking-wide">
+          <p className="text-xs text-amber-400/80 mb-3 tracking-wide">
             {t('dashboard.returnNextDayStreakSubtext', 'Consistency is transforming your inner rhythm.')}
           </p>
         )}
@@ -181,7 +176,6 @@ export const TempleEntrance: React.FC<TempleEntranceProps> = ({
           </div>
         )}
 
-        {/* Buttons — shown unless day is fully closed */}
         {!isDayClosed && (onStartClick || (isCloseButton && onSkipContinuation)) && (
           <div className="flex flex-col items-center gap-2 mt-3 w-full max-w-xs">
             <button
