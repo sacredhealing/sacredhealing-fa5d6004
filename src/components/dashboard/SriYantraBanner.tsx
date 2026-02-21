@@ -44,19 +44,51 @@ export const SriYantraBanner: React.FC<SriYantraBannerProps> = ({
           />
         </div>
 
-        {/* Text directly under yantra, no gap */}
+        {/* MORNING: text + button directly under yantra */}
+        {!showRestCta && (
+          <div className="px-6 pb-7 pt-4 w-full">
+            <p className="text-white font-bold text-base sm:text-lg leading-relaxed mb-1 text-center">
+              {t('guidance.morningIntention', 'The morning has opened a space within you. Let the day reveal what it touches.')}
+            </p>
+            <p className="text-amber-400 text-sm font-medium mb-5 text-center">
+              {t('guidance.morningSubtext', 'Notice what feels softer than usual.')}
+            </p>
+            <div className="flex flex-col items-center gap-2 w-full">
+              <button
+                type="button"
+                onClick={onSkipContinuation}
+                className="w-full bg-[#D4AF37] hover:bg-amber-500 text-black font-bold px-6 py-3 rounded-full text-sm flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-colors"
+              >
+                {t('guidance.stepIntoDay', 'Step into the day')}
+                <ArrowRight className="w-4 h-4" />
+              </button>
+              <p className="text-xs text-white/40">
+                {t('dashboard.continuationAnchorMorning', "Tonight, you'll close the day differently.")}
+              </p>
+              <button
+                type="button"
+                onClick={onSkipContinuation}
+                className="text-xs text-white/30 hover:text-white/60 transition-colors"
+              >
+                {t('common.notNow', 'Not now')}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* EVENING: rest CTA */}
         {showRestCta && (
-          <div className="px-6 pb-7 pt-3 w-full">
-            <p className="text-white font-bold text-base sm:text-lg leading-relaxed mb-1.5">
+          <div className="px-6 pb-7 pt-4 w-full">
+            <p className="text-white font-bold text-base sm:text-lg leading-relaxed mb-1.5 text-center">
               {t('guidance.eveningIntegration', 'Your mind is settling beneath the surface. Sleep will continue the process.')}
             </p>
-            <p className="text-amber-500 sm:text-amber-400 text-sm sm:text-base font-medium mb-5">
+            <p className="text-amber-400 text-sm font-medium mb-5 text-center">
               {t('guidance.eveningIntegrationSubtext', 'Tomorrow may begin differently.')}
             </p>
             <div className="flex flex-col items-center gap-2 w-full">
               <Button
                 onClick={onSkipContinuation}
-                className="w-full gap-2 bg-[#D4AF37] hover:bg-amber-500 text-black font-bold shadow-[0_0_20px_rgba(212,175,55,0.4)] border border-amber-400/50 px-6 py-3 text-sm"
+                className="w-full gap-2 bg-[#D4AF37] hover:bg-amber-500 text-black font-bold shadow-[0_0_20px_rgba(212,175,55,0.4)] border border-amber-400/50 px-6 py-3 text-sm rounded-full"
               >
                 {t('guidance.integrationButtonEvening', 'Enter rest')}
                 <ArrowRight className="w-4 h-4" />
@@ -69,7 +101,7 @@ export const SriYantraBanner: React.FC<SriYantraBannerProps> = ({
                 onClick={onSkipContinuation}
                 className="text-xs text-muted-foreground hover:text-foreground/80"
               >
-                {t('common.notNow')}
+                {t('common.notNow', 'Not now')}
               </button>
             </div>
           </div>
