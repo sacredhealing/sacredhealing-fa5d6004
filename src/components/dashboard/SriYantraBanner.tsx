@@ -34,10 +34,10 @@ export const SriYantraBanner: React.FC<SriYantraBannerProps> = ({
 
       <div className="relative flex flex-col items-center text-center">
         {/* Sri Yantra — large, nearly full width */}
-        <div className="w-full max-w-xs sm:max-w-sm mx-auto px-6 pt-6">
+        <div className="w-72 h-72 sm:w-80 sm:h-80 mx-auto pt-4">
           <SriYantra
             variant="default"
-            className="w-full h-auto"
+            className="w-full h-full"
             style={{
               filter: 'drop-shadow(0 0 24px rgba(0, 242, 254, 0.65)) drop-shadow(0 0 48px rgba(0, 242, 254, 0.3))',
             }}
