@@ -17,6 +17,7 @@ import { useMeditationContentLanguage } from "@/features/meditations/useContentL
 import { useMembership } from "@/hooks/useMembership";
 import { useAuth } from "@/hooks/useAuth";
 import { useAkashicAccess } from "@/hooks/useAkashicAccess";
+import { useAdminRole } from "@/hooks/useAdminRole";
 import { getDayPhase } from "@/utils/postSessionContext";
 
 import {
@@ -176,6 +177,7 @@ export default function Explore() {
   useMembership(); // presence / membership state if needed later
   const { user } = useAuth();
   const { hasAccess: hasAkashicAccess } = useAkashicAccess(user?.id);
+  const { isAdmin } = useAdminRole();
   const [showFallback, setShowFallback] = useState(false);
   const [akashicOpen, setAkashicOpen] = useState(false);
   const [sacredRevealOpen, setSacredRevealOpen] = useState(false);
@@ -360,7 +362,7 @@ export default function Explore() {
                 const premium = "premium" in item && item.premium;
                 const akashicHighTicket = "akashicHighTicket" in item && item.akashicHighTicket;
                 const onClick = akashicHighTicket
-                  ? () => (hasAkashicAccess ? navigate(item.href) : setSacredRevealOpen(true))
+                  ? () => (isAdmin ? navigate('/akashic-reading/full') : hasAkashicAccess ? navigate(item.href) : setSacredRevealOpen(true))
                   : openAkashic
                     ? () => setAkashicOpen(true)
                     : () => navigate(item.href);
