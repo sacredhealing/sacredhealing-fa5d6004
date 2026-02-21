@@ -66,7 +66,7 @@ export function useAIVedicReading(): UseAIVedicReadingResult {
       console.log('Generating Vedic reading for:', user.name, 'timeOffset:', timeOffset, 'timezone:', timezone);
       
       const { data, error: fnError } = await supabase.functions.invoke('generate-vedic-reading', {
-        body: { user, timeOffset, timezone },
+        body: { user, timeOffset, timezone, userId },
       });
 
       console.log('Vedic reading response:', { data, fnError });

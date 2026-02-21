@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AkashicSiddhaReading from '@/components/vedic/AkashicSiddhaReading';
 import { useAIVedicReading } from '@/hooks/useAIVedicReading';
@@ -15,13 +15,43 @@ const AKASHIC_RECORDS: Record<number, { title: string; remedy: string }> = {
 
 const DEFAULT_RECORD = { title: 'The Wandering Gandharva', remedy: 'Saraswati Mantra' };
 
+/** Derive house from birth date day (1-12). */
+function houseFromBirthDate(birthDate: string | null): number {
+  if (!birthDate) return 12;
+  const day = new Date(birthDate).getDate();
+  return ((day - 1) % 12) + 1;
+}
+
 /** Full 15-page manuscript after purchase — Deep Siddha Logic + Certificate of Origin PDF. */
 const AkashicReadingFull: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { reading } = useAIVedicReading();
   const { hasAccess, isLoading } = useAkashicAccess(user?.id);
-  const userHouse = 12;
+  const [userHouse, setUserHouse] = useState(12);
+
+  // Fetch user_house from akashic_readings or derive from birth_date
+  useEffect(() => {
+    if (!user?.id || !hasAccess) return;
+    const resolve = async () => {
+      const { data: record } = await (supabase as any)
+        .from('akashic_readings')
+        .select('user_house')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (record?.user_house != null) {
+        setUserHouse(record.user_house);
+        return;
+      }
+      const { data: profile } = await (supabase as any)
+        .from('profiles')
+        .select('birth_date')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      setUserHouse(houseFromBirthDate(profile?.birth_date ?? null));
+    };
+    resolve();
+  }, [user?.id, hasAccess]);
   const userName = (user?.user_metadata?.full_name as string) || user?.email?.split('@')[0] || 'Soul';
   const emailSentRef = useRef(false);
   const record = AKASHIC_RECORDS[userHouse] || DEFAULT_RECORD;

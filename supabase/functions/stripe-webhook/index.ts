@@ -40,6 +40,7 @@ const getPurchaseType = (metadata: Record<string, string>): string | null => {
     if (metadata.service_type) return 'meditation';
     return 'affirmation';
   }
+  if (metadata.product === 'akashic_deep_reading') return 'akashic';
   return null;
 };
 
@@ -66,6 +67,7 @@ const getProductName = (metadata: Record<string, string> | null): string => {
     if (metadata.service_type) return `Custom Meditation - ${metadata.package_type}`;
     return `Affirmation - ${metadata.package_type}`;
   }
+  if (metadata.product === 'akashic_deep_reading') return 'Akashic Deep Reading';
   return 'Stripe Purchase';
 };
 
@@ -413,6 +415,26 @@ serve(async (req) => {
               .eq('status', 'pending');
 
             logStep("Commission processed", { referrerId, commissionSHC });
+          }
+        }
+
+        // Handle Akashic Deep Reading purchase - grant permanent access
+        if (session.metadata?.product === 'akashic_deep_reading' && userId) {
+          logStep("Processing Akashic Deep Reading purchase", { userId });
+          const { error: akashicError } = await supabaseAdmin
+            .from('akashic_readings')
+            .upsert(
+              {
+                user_id: userId,
+                user_house: 12,
+                updated_at: new Date().toISOString(),
+              },
+              { onConflict: 'user_id', ignoreDuplicates: false }
+            );
+          if (akashicError) {
+            logStep("Error upserting akashic_readings", { error: akashicError.message, userId });
+          } else {
+            logStep("Akashic reading access granted", { userId });
           }
         }
 

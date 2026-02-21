@@ -1,9 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AkashicReveal from '@/components/vedic/AkashicReveal';
+import { AkashicCryptoModal } from '@/components/vedic/AkashicCryptoModal';
+import AkashicReadingFull from '@/pages/AkashicReadingFull';
 import { useAkashicAccess } from '@/hooks/useAkashicAccess';
 import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
+import { useAdminRole } from '@/hooks/useAdminRole';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 /** Full-page Akashic Decoder — linked from palm (Multi-Planetary: Ketu + Saturn). */
 const AkashicRecords: React.FC = () => {
@@ -11,13 +16,39 @@ const AkashicRecords: React.FC = () => {
   const { user } = useAuth();
   const { isPremium } = useMembership();
   const { hasAccess, isLoading } = useAkashicAccess(user?.id);
+  const { isAdmin, isLoading: adminLoading } = useAdminRole();
+  const [cryptoModalOpen, setCryptoModalOpen] = useState(false);
 
-  const handleInitiateReveal = () => {
-    navigate('/membership?product=akashic');
+  const originalPrice = 49;
+  const discountedPrice = isPremium ? 39.2 : originalPrice;
+
+  const handleStripeCheckout = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('create-akashic-checkout', {
+        body: {
+          isPremium,
+          origin: window.location.origin,
+        },
+      });
+      if (error) throw error;
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL received');
+      }
+    } catch (err) {
+      console.error('Checkout error:', err);
+      toast.error('Checkout failed. Please try again.');
+    }
   };
 
+  // Admin: render full reading inline directly (no gate)
+  if (!adminLoading && isAdmin) {
+    return <AkashicReadingFull />;
+  }
+
   // Show loading while checking — NEVER redirect or render content until loading is complete
-  if (isLoading) {
+  if (isLoading || adminLoading) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#D4AF37]" />
@@ -73,7 +104,18 @@ const AkashicRecords: React.FC = () => {
         <h1 className="text-lg font-serif font-semibold tracking-wide">Akashic Decoder</h1>
       </div>
       <div className="p-4 pb-24">
-        <AkashicReveal isPremium={!!isPremium} onInitiate={handleInitiateReveal} />
+        <AkashicReveal
+          isPremium={!!isPremium}
+          discountedPrice={discountedPrice}
+          onStripeCheckout={handleStripeCheckout}
+          onCryptoClick={() => setCryptoModalOpen(true)}
+        />
+        <AkashicCryptoModal
+          open={cryptoModalOpen}
+          onOpenChange={setCryptoModalOpen}
+          amount={discountedPrice}
+          userId={user?.id ?? ''}
+        />
       </div>
     </div>
   );

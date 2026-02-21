@@ -1,7 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles } from 'lucide-react';
 
-const AkashicReveal = ({ isPremium, onInitiate }: { isPremium: boolean; onInitiate: () => void }) => {
+interface AkashicRevealProps {
+  isPremium: boolean;
+  discountedPrice: number;
+  onStripeCheckout: () => void | Promise<void>;
+  onCryptoClick: () => void;
+}
+
+const AkashicReveal = ({ isPremium, discountedPrice, onStripeCheckout, onCryptoClick }: AkashicRevealProps) => {
   const [showContent, setShowContent] = useState(false);
 
   useEffect(() => {
@@ -44,12 +51,28 @@ const AkashicReveal = ({ isPremium, onInitiate }: { isPremium: boolean; onInitia
           </p>
         </div>
 
-        <button
-          onClick={onInitiate}
-          className="w-full max-w-md bg-cyan-400 hover:bg-cyan-300 text-black font-black py-5 rounded-full text-lg tracking-[0.2em] transition-all transform hover:scale-105 shadow-[0_0_25px_rgba(34,211,238,0.4)]"
-        >
-          INITIATE THE REVEAL — $49
-        </button>
+        <div className="space-y-4">
+          {isPremium && (
+            <div className="inline-block px-4 py-1 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] text-sm">
+              ✨ Premium Member — 20% Discount Applied
+            </div>
+          )}
+          {isPremium && (
+            <p className="text-white/50 line-through text-lg">$49.00</p>
+          )}
+          <button
+            onClick={onStripeCheckout}
+            className="w-full max-w-md mx-auto block px-8 py-5 bg-gradient-to-r from-[#D4AF37] to-[#B8962E] text-black font-bold rounded-full text-lg uppercase tracking-widest hover:opacity-90 transition"
+          >
+            INITIATE THE REVEAL — ${discountedPrice.toFixed(2)}
+          </button>
+          <button
+            onClick={onCryptoClick}
+            className="w-full max-w-md mx-auto block px-8 py-4 border border-[#D4AF37]/50 text-[#D4AF37] font-semibold rounded-full text-base uppercase tracking-wider hover:bg-[#D4AF37]/10 transition"
+          >
+            PAY WITH CRYPTO — ${discountedPrice.toFixed(2)}
+          </button>
+        </div>
 
         <p className="mt-8 text-[10px] tracking-[0.3em] text-cyan-400 uppercase">
           {isPremium ? 'Premium Discount Applied' : 'Universal Premium Membership includes all Deep Decodings'}
