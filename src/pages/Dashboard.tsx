@@ -12,7 +12,6 @@ import { useReturnVisit } from '@/hooks/useReturnVisit';
 import { useDashboardAutostart } from '@/hooks/useDashboardAutostart';
 import { AmbientSoundToggle } from '@/components/audio/AmbientSoundToggle';
 import { TempleEntrance } from '@/components/dashboard/TempleEntrance';
-import { SriYantraBanner } from '@/components/dashboard/SriYantraBanner';
 import { ThreeGateways } from '@/components/dashboard/ThreeGateways';
 import { WallInscription } from '@/components/dashboard/WallInscription';
 import { getSuccessWindowPhrase } from '@/lib/horaPhrases';
@@ -158,12 +157,13 @@ const Dashboard: React.FC = () => {
   const successWindowPct = horaWatch.calculation
     ? Math.round((1 - horaWatch.remainingMs / horaDurationMs) * 100)
     : 80;
+
   return (
-    <div className="min-h-screen px-3 sm:px-4 pt-4 sm:pt-6 pb-24">
+    <div className="min-h-screen pb-24">
       <AchievementPopup achievement={newlyUnlocked} onClose={dismissNewlyUnlocked} />
 
-      {/* Header - no streak flame; minimal greeting */}
-      <header className="flex items-center justify-between mb-3 sm:mb-4 animate-fade-in">
+      {/* Header */}
+      <header className="flex items-center justify-between px-3 sm:px-4 pt-4 sm:pt-6 mb-3 sm:mb-4 animate-fade-in">
         <div className="min-w-0 flex-1">
           <p className="text-xs sm:text-sm text-muted-foreground font-serif" style={{ fontFamily: 'Cinzel, DM Serif Display, serif' }}>{t(greetingKey)}</p>
           <h1 className="text-lg sm:text-xl font-heading font-bold text-foreground truncate">
@@ -174,18 +174,9 @@ const Dashboard: React.FC = () => {
         <AmbientSoundToggle />
       </header>
 
-      {/* State: idle - Daily Guidance Card + restored sections */}
       {flowState === 'idle' && (
         <>
-          {/* Sri Yantra Banner — glowing teal focal point, CTA when day complete */}
-          <div className="mb-4 sm:mb-5 animate-slide-up">
-            <SriYantraBanner
-              showRestCta={hasCompletedAllThree && !isDayClosed}
-              onSkipContinuation={markDayClosed}
-            />
-          </div>
-
-          {/* The Entrance — Sacred Geometry focal point, minimal text, optional CTA */}
+          {/* TempleEntrance — full bleed, no side padding */}
           <div className="mb-4 sm:mb-5 animate-slide-up">
             <TempleEntrance
               onStartClick={handleStartSession}
@@ -198,110 +189,112 @@ const Dashboard: React.FC = () => {
             />
           </div>
 
-          {/* The Inner Sanctum — Three Gateways */}
-          <div className="mb-4 sm:mb-5 animate-slide-up">
-            <ThreeGateways
-              horaPlanet={horaPlanet}
-              isNight={!horaWatch.calculation?.currentHora?.isDay}
-            />
-          </div>
+          {/* Rest of page — padded */}
+          <div className="px-3 sm:px-4 space-y-4">
 
-          {/* The Oracle & Sync — Wall Inscription (expandable) */}
-          <div className="mb-4 sm:mb-5 animate-slide-up">
-            <WallInscription
-              userName={userName}
-              dashaCycle={dashaCycle}
-              horaPlanet={horaPlanet}
-              successWindowPct={successWindowPct}
-              wisdomQuote={vedicReading?.todayInfluence?.wisdomQuote ?? null}
-            />
-          </div>
+            {/* Three Gateways */}
+            <div className="animate-slide-up">
+              <ThreeGateways
+                horaPlanet={horaPlanet}
+                isNight={!horaWatch.calculation?.currentHora?.isDay}
+              />
+            </div>
 
-          {/* Daily routine — optional, visually softened */}
-          <div className="pt-6 border-t border-border/50 space-y-4 mb-6 animate-slide-up">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              {t('dashboard.dailyRoutineSection', 'Daily routine')}
-            </p>
-            <DailyRitualCard
-              isDayClosed={isDayClosed}
-              hasCompletedAllThree={hasCompletedAllThree}
-            />
-            <SpiritualPathCard />
-          </div>
+            {/* Wall Inscription */}
+            <div className="animate-slide-up">
+              <WallInscription
+                userName={userName}
+                dashaCycle={dashaCycle}
+                horaPlanet={horaPlanet}
+                successWindowPct={successWindowPct}
+                wisdomQuote={vedicReading?.todayInfluence?.wisdomQuote ?? null}
+              />
+            </div>
 
-          {/* Collapsed: More practices */}
-          <div className="mb-4 animate-slide-up">
-            <SectionCollapse
-              title={t('dashboard.morePractices')}
-              description={t('dashboard.morePracticesDesc')}
-              defaultOpen={false}
-            >
-              <div className="space-y-4">
-                <BreathingJourneysCard />
-                <HealingJourneysCard />
-              </div>
-            </SectionCollapse>
-          </div>
+            {/* Daily routine */}
+            <div className="pt-6 border-t border-border/50 space-y-4 animate-slide-up">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                {t('dashboard.dailyRoutineSection', 'Daily routine')}
+              </p>
+              <DailyRitualCard
+                isDayClosed={isDayClosed}
+                hasCompletedAllThree={hasCompletedAllThree}
+              />
+              <SpiritualPathCard />
+            </div>
 
-          {/* Collapsed: Progress & achievements */}
-          <div className="mb-6 animate-slide-up">
-            <SectionCollapse
-              title={t('dashboard.progressAchievements')}
-              description={t('dashboard.progressAchievementsDesc')}
-              defaultOpen={false}
-            >
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <PositiveMeCard />
-                  <JourneyTimeline />
+            {/* More practices */}
+            <div className="animate-slide-up">
+              <SectionCollapse
+                title={t('dashboard.morePractices')}
+                description={t('dashboard.morePracticesDesc')}
+                defaultOpen={false}
+              >
+                <div className="space-y-4">
+                  <BreathingJourneysCard />
+                  <HealingJourneysCard />
                 </div>
+              </SectionCollapse>
+            </div>
 
-                {achievements.length > 0 && (
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-lg font-heading font-semibold text-foreground">
-                        {t('dashboard.achievements')}
-                      </h2>
-                      <span className="text-xs text-muted-foreground">
-                        {userAchievements.length}/{achievements.length}
-                      </span>
-                    </div>
-                    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                      {achievements.slice(0, 6).map((achievement) => {
-                        const progress = getAchievementProgress(achievement);
-                        const translated = translateAchievement(achievement.slug, t, achievement.name, achievement.description || '');
-                        return (
-                          <div key={achievement.id} className="flex-shrink-0">
-                            <AchievementBadge
-                              name={translated.name}
-                              description={translated.description}
-                              iconName={achievement.icon_name}
-                              badgeColor={achievement.badge_color}
-                              unlocked={progress.unlocked}
-                              unlockedAt={progress.unlockedAt}
-                              shcReward={achievement.shc_reward}
-                              size="sm"
-                              progressText={progress.progressText}
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
+            {/* Progress & achievements */}
+            <div className="mb-6 animate-slide-up">
+              <SectionCollapse
+                title={t('dashboard.progressAchievements')}
+                description={t('dashboard.progressAchievementsDesc')}
+                defaultOpen={false}
+              >
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <PositiveMeCard />
+                    <JourneyTimeline />
                   </div>
-                )}
-
-                <ShareableProgressCard
-                  onShare={() => trackShare({ shareType: 'progress_card', platform: 'native' })}
-                />
-              </div>
-            </SectionCollapse>
+                  {achievements.length > 0 && (
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-lg font-heading font-semibold text-foreground">
+                          {t('dashboard.achievements')}
+                        </h2>
+                        <span className="text-xs text-muted-foreground">
+                          {userAchievements.length}/{achievements.length}
+                        </span>
+                      </div>
+                      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                        {achievements.slice(0, 6).map((achievement) => {
+                          const progress = getAchievementProgress(achievement);
+                          const translated = translateAchievement(achievement.slug, t, achievement.name, achievement.description || '');
+                          return (
+                            <div key={achievement.id} className="flex-shrink-0">
+                              <AchievementBadge
+                                name={translated.name}
+                                description={translated.description}
+                                iconName={achievement.icon_name}
+                                badgeColor={achievement.badge_color}
+                                unlocked={progress.unlocked}
+                                unlockedAt={progress.unlockedAt}
+                                shcReward={achievement.shc_reward}
+                                size="sm"
+                                progressText={progress.progressText}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                  <ShareableProgressCard
+                    onShare={() => trackShare({ shareType: 'progress_card', platform: 'native' })}
+                  />
+                </div>
+              </SectionCollapse>
+            </div>
           </div>
         </>
       )}
 
-      {/* State: in_session - Inline Session Player */}
+      {/* In session */}
       {flowState === 'in_session' && activeGuidance && (
-        <div className="mb-6 animate-slide-up">
+        <div className="px-3 sm:px-4 mb-6 animate-slide-up">
           <InlineSessionPlayer
             sessionType={activeGuidance.session_type}
             sessionId={activeGuidance.session_id}
@@ -312,9 +305,9 @@ const Dashboard: React.FC = () => {
         </div>
       )}
 
-      {/* State: completed - Reflection + Affirmation + Recommendations */}
+      {/* Completed */}
       {flowState === 'completed' && (
-        <div className="mb-6 animate-slide-up">
+        <div className="px-3 sm:px-4 mb-6 animate-slide-up">
           <CompletionResponse
             onDone={handleDone}
             completedSession={completedSession}
@@ -323,7 +316,7 @@ const Dashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Floating Mantra quick action — Sovereign Gold with purple glow */}
+      {/* Floating Mantra button */}
       {flowState === 'idle' && (
         <button
           type="button"
