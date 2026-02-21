@@ -1,46 +1,23 @@
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import AkashicReveal from '@/components/vedic/AkashicReveal';
-import AkashicSiddhaReading from '@/components/vedic/AkashicSiddhaReading';
-import { useAIVedicReading } from '@/hooks/useAIVedicReading';
 import { useAkashicAccess } from '@/hooks/useAkashicAccess';
 import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
-import { useAdminRole } from '@/hooks/useAdminRole';
 
 /** Full-page Akashic Decoder — linked from palm (Multi-Planetary: Ketu + Saturn). */
 const AkashicRecords: React.FC = () => {
   const navigate = useNavigate();
-  const { reading } = useAIVedicReading();
   const { user } = useAuth();
   const { isPremium } = useMembership();
-  const { hasAccess, isLoading: akashicLoading } = useAkashicAccess(user?.id);
-  const { isAdmin, isLoading: adminLoading } = useAdminRole();
-  const userHouse = 12; // Default Ketu house when no reading
-  const userName = (user?.user_metadata?.full_name as string) || user?.email?.split('@')[0] || 'Soul';
-
-  // Admin redirect: skip this gate page entirely (only after admin check completes)
-  useEffect(() => {
-    if (!adminLoading && isAdmin) {
-      navigate('/akashic-reading/full', { replace: true });
-    }
-  }, [isAdmin, adminLoading, navigate]);
-
-  // Redirect users with access to full reading (only after access check completes)
-  useEffect(() => {
-    if (!akashicLoading && hasAccess && !isAdmin) {
-      navigate('/akashic-reading/full', { replace: true });
-    }
-  }, [hasAccess, akashicLoading, isAdmin, navigate]);
-
-  const showTeaser = !akashicLoading && !hasAccess && !isAdmin;
+  const { hasAccess, isLoading } = useAkashicAccess(user?.id);
 
   const handleInitiateReveal = () => {
     navigate('/membership?product=akashic');
   };
 
-  // Wait for access check before rendering — prevents redirect loop
-  if (akashicLoading || adminLoading) {
+  // Show loading while checking — NEVER redirect or render content until loading is complete
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#D4AF37]" />
@@ -49,6 +26,39 @@ const AkashicRecords: React.FC = () => {
     );
   }
 
+  // If user has access (or admin — hook returns true for admins), show CTA to open reading
+  // Use Link instead of navigate() to avoid redirect loop from separate hook instances
+  if (hasAccess) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] text-[#D4AF37]">
+        <div className="sticky top-0 z-10 flex items-center gap-4 border-b border-[#D4AF37]/20 bg-[#0a0a0a]/95 backdrop-blur px-4 py-3">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="text-[#D4AF37] text-xl font-serif"
+            aria-label="Go back"
+          >
+            ←
+          </button>
+          <h1 className="text-lg font-serif font-semibold tracking-wide">Akashic Decoder</h1>
+        </div>
+        <div className="flex flex-col items-center justify-center gap-6 p-4 min-h-[calc(100vh-120px)]">
+          <h2 className="text-2xl font-serif font-bold text-center">Your Akashic Record is Ready</h2>
+          <p className="text-white/70 text-center max-w-md">
+            Your soul manuscript has been decoded. View your complete 15-page Akashic reading.
+          </p>
+          <Link
+            to="/akashic-reading/full"
+            className="px-8 py-4 bg-[#D4AF37] text-black font-bold rounded-full text-lg hover:bg-[#D4AF37]/90 transition"
+          >
+            Open Your Reading
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // No access — show gate/purchase content
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#D4AF37]">
       <div className="sticky top-0 z-10 flex items-center gap-4 border-b border-[#D4AF37]/20 bg-[#0a0a0a]/95 backdrop-blur px-4 py-3">
@@ -63,18 +73,7 @@ const AkashicRecords: React.FC = () => {
         <h1 className="text-lg font-serif font-semibold tracking-wide">Akashic Decoder</h1>
       </div>
       <div className="p-4 pb-24">
-        {showTeaser ? (
-          <AkashicReveal isPremium={!!isPremium} onInitiate={handleInitiateReveal} />
-        ) : (
-          <AkashicSiddhaReading
-            userHouse={userHouse}
-            vedicReading={reading}
-            isModal={false}
-            hasDeepReadingAccess={true}
-            showCertificateDownload={true}
-            userName={userName}
-          />
-        )}
+        <AkashicReveal isPremium={!!isPremium} onInitiate={handleInitiateReveal} />
       </div>
     </div>
   );
