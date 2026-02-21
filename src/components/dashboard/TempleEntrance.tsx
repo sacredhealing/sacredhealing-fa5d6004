@@ -7,7 +7,7 @@ import { BreathingAnchor } from './BreathingAnchor';
 import { useDailyGuidance } from '@/hooks/useDailyGuidance';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTranslation } from 'react-i18next';
-import { getCompletionGuidance, getAllCompleteGuidance, getIntegrationButtonLabel, getAdaptiveHero } from '@/lib/sacredGuidanceMessages';
+import { getCompletionGuidance, getAllCompleteGuidance, getIntegrationButtonLabel } from '@/lib/sacredGuidanceMessages';
 import type { DailyGuidance } from '@/hooks/useDailyGuidance';
 import type { ReturnState } from '@/hooks/useReturnVisit';
 
@@ -69,7 +69,7 @@ export const TempleEntrance: React.FC<TempleEntranceProps> = ({
   restCtaInBanner = false,
 }) => {
   const { t } = useTranslation();
-  const { guidance, isLoading, lastCompleted, hasCompletedAllThree, timeOfDay, streakDays, userState } = useDailyGuidance();
+  const { guidance, isLoading, lastCompleted, hasCompletedAllThree, streakDays, userState } = useDailyGuidance();
   const [breathingDone, setBreathingDone] = useState(false);
 
   const hasCompletedToday = lastCompleted !== null;
@@ -121,9 +121,9 @@ export const TempleEntrance: React.FC<TempleEntranceProps> = ({
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col items-center py-6 sm:py-8"
+        className="flex flex-col items-center py-6"
       >
-        <Skeleton className="w-64 h-64 rounded-full mb-4" />
+        <Skeleton className="w-full h-64 mb-4" />
         <Skeleton className="h-5 w-48 mb-2" />
         <Skeleton className="h-4 w-32" />
       </motion.div>
@@ -135,18 +135,16 @@ export const TempleEntrance: React.FC<TempleEntranceProps> = ({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="flex flex-col items-center -mx-4"
+      className="flex flex-col items-center"
     >
-      {/* Teal glow behind yantra */}
-      <div className="relative w-full flex justify-center">
+      {/* Sri Yantra — ALWAYS shown, full bleed edge to edge */}
+      <div className="relative w-full flex justify-center overflow-hidden">
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: 'radial-gradient(ellipse 80% 60% at 50% 40%, rgba(0, 242, 254, 0.12) 0%, transparent 70%)',
+            background: 'radial-gradient(ellipse 80% 60% at 50% 40%, rgba(212,175,55,0.12) 0%, transparent 70%)',
           }}
         />
-
-        {/* Sri Yantra — full bleed, edge to edge */}
         <motion.div
           className="w-full"
           animate={{ scale: [1, 1.02, 1], opacity: [0.9, 1, 0.9] }}
@@ -162,57 +160,56 @@ export const TempleEntrance: React.FC<TempleEntranceProps> = ({
         </motion.div>
       </div>
 
-      {/* Text + buttons — directly under yantra, no gap */}
-      {!restCtaInBanner && (
-        <div className="px-6 pt-4 pb-6 w-full flex flex-col items-center text-center">
-          <p
-            className="text-base sm:text-lg text-amber-100/95 text-center max-w-md leading-relaxed mb-2"
-            style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif', letterSpacing: '0.06em' }}
-          >
-            {displayText}
+      {/* Text + buttons — always shown directly under yantra */}
+      <div className="px-6 pt-4 pb-6 w-full flex flex-col items-center text-center">
+        <p
+          className="text-base sm:text-lg text-amber-100/95 text-center max-w-md leading-relaxed mb-2"
+          style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif', letterSpacing: '0.06em' }}
+        >
+          {displayText}
+        </p>
+
+        {isNextDayReturn && streakIncreased && (
+          <p className="text-xs text-amber-400/80 text-center mb-3 tracking-wide">
+            {t('dashboard.returnNextDayStreakSubtext', 'Consistency is transforming your inner rhythm.')}
           </p>
+        )}
 
-          {isNextDayReturn && streakIncreased && (
-            <p className="text-xs text-amber-400/80 text-center mb-3 tracking-wide">
-              {t('dashboard.returnNextDayStreakSubtext', 'Consistency is transforming your inner rhythm.')}
-            </p>
-          )}
+        {isSameDayReturn && !breathingDone && (
+          <div className="flex justify-center py-3 mb-2">
+            <BreathingAnchor durationSeconds={3} onComplete={() => setBreathingDone(true)} compact />
+          </div>
+        )}
 
-          {isSameDayReturn && !breathingDone && (
-            <div className="flex justify-center py-3 mb-2">
-              <BreathingAnchor durationSeconds={3} onComplete={() => setBreathingDone(true)} compact />
-            </div>
-          )}
+        {/* Buttons — shown unless day is fully closed */}
+        {!isDayClosed && (onStartClick || (isCloseButton && onSkipContinuation)) && (
+          <div className="flex flex-col items-center gap-2 mt-3 w-full max-w-xs">
+            <button
+              type="button"
+              onClick={() =>
+                isCloseButton && onSkipContinuation
+                  ? onSkipContinuation()
+                  : onStartClick?.(activeGuidance, showContinuation ? { isContinuation: true } : undefined)
+              }
+              className="w-full bg-[#D4AF37] hover:bg-amber-500 text-black font-bold px-6 py-3 rounded-full text-sm flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(212,175,55,0.4)] border border-amber-400/50 transition-colors"
+              style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif', letterSpacing: '0.05em' }}
+            >
+              {displayedButtonLabel}
+              {!isCloseButton && <ArrowRight className="w-4 h-4" />}
+            </button>
 
-          {(onStartClick || (isCloseButton && onSkipContinuation)) && !isDayClosed && (
-            <div className="flex flex-col items-center gap-2 mt-3 w-full max-w-xs">
+            {showContinuation && onSkipContinuation && (
               <button
                 type="button"
-                onClick={() =>
-                  isCloseButton && onSkipContinuation
-                    ? onSkipContinuation()
-                    : onStartClick?.(activeGuidance, showContinuation ? { isContinuation: true } : undefined)
-                }
-                className="w-full bg-[#D4AF37] hover:bg-amber-500 text-black font-bold px-6 py-3 rounded-full text-sm flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(212,175,55,0.4)] border border-amber-400/50 transition-colors"
-                style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif', letterSpacing: '0.05em' }}
+                onClick={onSkipContinuation}
+                className="text-xs text-white/30 hover:text-white/60 transition-colors"
               >
-                {displayedButtonLabel}
-                {!isCloseButton && <ArrowRight className="w-4 h-4" />}
+                {t('common.notNow')}
               </button>
-
-              {showContinuation && onSkipContinuation && (
-                <button
-                  type="button"
-                  onClick={onSkipContinuation}
-                  className="text-xs text-white/30 hover:text-white/60 transition-colors"
-                >
-                  {t('common.notNow')}
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-      )}
+            )}
+          </div>
+        )}
+      </div>
     </motion.div>
   );
 };
