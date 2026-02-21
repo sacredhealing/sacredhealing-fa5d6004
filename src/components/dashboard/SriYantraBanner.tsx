@@ -5,14 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { SriYantra } from './SriYantra';
 import { Button } from '@/components/ui/button';
 
-/**
- * Dark banner with glowing teal Sri Yantra.
- * When showRestCta: displays text, "Enter rest" button, and "Not now" link.
- */
 interface SriYantraBannerProps {
-  /** When true, show the rest CTA (text + Enter rest button + Not now) */
   showRestCta?: boolean;
-  /** Called when user taps "Enter rest" or "Not now" */
   onSkipContinuation?: () => void;
 }
 
@@ -27,34 +21,36 @@ export const SriYantraBanner: React.FC<SriYantraBannerProps> = ({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="rounded-2xl bg-[#0a0a0a] border border-white/5 overflow-hidden px-6 py-8 sm:py-10 relative"
+      className="rounded-2xl bg-[#0a0a0a] border border-white/5 overflow-hidden relative"
     >
-      {/* Subtle teal glow around top */}
+      {/* Teal glow */}
       <div
-        className="absolute top-0 left-0 right-0 h-1/2 pointer-events-none"
+        className="absolute top-0 left-0 right-0 h-2/3 pointer-events-none"
         style={{
-          background: 'radial-gradient(ellipse 80% 100% at 50% 0%, rgba(0, 242, 254, 0.15) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse 80% 100% at 50% 0%, rgba(0, 242, 254, 0.18) 0%, transparent 70%)',
         }}
         aria-hidden
       />
 
       <div className="relative flex flex-col items-center text-center">
-        <div className="w-24 h-24 sm:w-28 sm:h-28 mb-6 flex-shrink-0">
+        {/* Sri Yantra — large, nearly full width */}
+        <div className="w-full max-w-xs sm:max-w-sm mx-auto px-6 pt-6">
           <SriYantra
             variant="default"
-            className="w-full h-full"
+            className="w-full h-auto"
             style={{
-              filter: 'drop-shadow(0 0 20px rgba(0, 242, 254, 0.6)) drop-shadow(0 0 40px rgba(0, 242, 254, 0.3))',
+              filter: 'drop-shadow(0 0 24px rgba(0, 242, 254, 0.65)) drop-shadow(0 0 48px rgba(0, 242, 254, 0.3))',
             }}
           />
         </div>
 
+        {/* Text directly under yantra, no gap */}
         {showRestCta && (
-          <>
-            <p className="text-white font-bold text-base sm:text-lg leading-relaxed mb-2">
+          <div className="px-6 pb-7 pt-3 w-full">
+            <p className="text-white font-bold text-base sm:text-lg leading-relaxed mb-1.5">
               {t('guidance.eveningIntegration', 'Your mind is settling beneath the surface. Sleep will continue the process.')}
             </p>
-            <p className="text-amber-500 sm:text-amber-400 text-sm sm:text-base font-medium mb-4">
+            <p className="text-amber-500 sm:text-amber-400 text-sm sm:text-base font-medium mb-5">
               {t('guidance.eveningIntegrationSubtext', 'Tomorrow may begin differently.')}
             </p>
             <div className="flex flex-col items-center gap-2 w-full">
@@ -76,7 +72,7 @@ export const SriYantraBanner: React.FC<SriYantraBannerProps> = ({
                 {t('common.notNow')}
               </button>
             </div>
-          </>
+          </div>
         )}
       </div>
     </motion.div>
