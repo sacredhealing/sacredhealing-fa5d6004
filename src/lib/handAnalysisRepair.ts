@@ -83,7 +83,7 @@ export async function getUniqueTransmission(targetUserId: string): Promise<Siddh
       rahuCycle: null,
     });
 
-    const { error: upsertError } = await supabase
+    const { error: upsertError } = await (supabase as any)
       .from('akashic_readings')
       .upsert(
         {

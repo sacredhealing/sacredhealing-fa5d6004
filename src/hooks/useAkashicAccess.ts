@@ -35,7 +35,7 @@ export function useAkashicAccess(userId?: string | null): { hasAccess: boolean; 
           return;
         }
         if (userId) {
-          const { data } = await supabase
+          const { data } = await (supabase as any)
             .from('akashic_readings')
             .select('id')
             .eq('user_id', userId)
