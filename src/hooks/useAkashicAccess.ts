@@ -9,9 +9,12 @@ const STORAGE_KEY = 'akashic_reveal_purchased';
 export function useAkashicAccess(userId?: string | null): { hasAccess: boolean; setAccess: () => void } {
   const [searchParams, setSearchParams] = useSearchParams();
   const [hasAccess, setHasAccessState] = useState(false);
-  const { isAdmin } = useAdminRole();
+  const { isAdmin, isLoading: adminLoading } = useAdminRole();
 
   useEffect(() => {
+    // Wait for admin role check to finish before deciding
+    if (adminLoading) return;
+
     if (isAdmin) {
       setHasAccessState(true);
       return;
@@ -50,7 +53,7 @@ export function useAkashicAccess(userId?: string | null): { hasAccess: boolean; 
     };
 
     checkAccess();
-  }, [searchParams, setSearchParams, userId, isAdmin]);
+  }, [searchParams, setSearchParams, userId, isAdmin, adminLoading]);
 
   const setAccess = () => {
     try {
