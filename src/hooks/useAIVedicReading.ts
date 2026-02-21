@@ -4,8 +4,9 @@ import type { VedicReading, UserProfile } from '@/lib/vedicTypes';
 
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 
-function getCacheKey(user: UserProfile, timeOffset: number, timezone: string) {
-  return `sh:vedic:reading:${user.name}:${user.birthDate}:${user.birthTime}:${user.birthPlace}:${user.plan}:${timeOffset}:${timezone}`;
+function getCacheKey(user: UserProfile, timeOffset: number, timezone: string, userId?: string | null) {
+  const uid = userId ?? 'anon';
+  return `sh:vedic:reading:${uid}:${user.name}:${user.birthDate}:${user.birthTime}:${user.birthPlace}:${user.plan}:${timeOffset}:${timezone}`;
 }
 
 function loadFromCache(key: string): VedicReading | null {
@@ -33,7 +34,7 @@ interface UseAIVedicReadingResult {
   reading: VedicReading | null;
   isLoading: boolean;
   error: string | null;
-  generateReading: (user: UserProfile, timeOffset?: number, timezone?: string) => Promise<void>;
+  generateReading: (user: UserProfile, timeOffset?: number, timezone?: string, userId?: string | null) => Promise<void>;
 }
 
 export function useAIVedicReading(): UseAIVedicReadingResult {
@@ -42,9 +43,9 @@ export function useAIVedicReading(): UseAIVedicReadingResult {
   const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const generateReading = useCallback(async (user: UserProfile, timeOffset: number = 0, timezone: string = 'Europe/Stockholm') => {
-    // Check cache first – skip API call if fresh data exists
-    const cacheKey = getCacheKey(user, timeOffset, timezone);
+  const generateReading = useCallback(async (user: UserProfile, timeOffset: number = 0, timezone: string = 'Europe/Stockholm', userId?: string | null) => {
+    // Check cache first – skip API call if fresh data exists (cache is per-user)
+    const cacheKey = getCacheKey(user, timeOffset, timezone, userId);
     const cached = loadFromCache(cacheKey);
     if (cached) {
       setReading(cached);

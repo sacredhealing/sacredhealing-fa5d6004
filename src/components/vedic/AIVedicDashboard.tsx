@@ -20,6 +20,7 @@ import { HoraDateTimePicker } from './HoraDateTimePicker';
 
 interface AIVedicDashboardProps {
   user: UserProfile;
+  userId?: string | null;
   onEditDetails?: () => void;
   onUpgrade?: () => void;
 }
@@ -149,7 +150,7 @@ const NADI_DIRECTIONS = [
   { direction: 'North', houses: '4, 8, 12', icon: '❄️', theme: 'Moksha Trikona', color: 'emerald' },
 ];
 
-export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, onEditDetails, onUpgrade }) => {
+export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId, onEditDetails, onUpgrade }) => {
   const { reading, isLoading, error, generateReading } = useAIVedicReading();
   const { timezone, setTimezone, loading: timezoneLoading } = useUserTimezone();
   const [lastSync, setLastSync] = useState<string>("");
@@ -174,7 +175,7 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, onEdit
 
   useEffect(() => {
     if (user.birthDate && user.birthTime && user.birthPlace && !timezoneLoading) {
-      generateReading(user, timeOffset, timezone);
+      generateReading(user, timeOffset, timezone, userId);
       try {
         const targetTime = new Date(Date.now() + timeOffset * 60000);
         setLastSync(targetTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: timezone }));
@@ -182,7 +183,7 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, onEdit
         setLastSync(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }));
       }
     }
-  }, [user.plan, user.birthDate, user.birthTime, user.birthPlace, timeOffset, timezone, timezoneLoading]);
+  }, [user.plan, user.birthDate, user.birthTime, user.birthPlace, timeOffset, timezone, timezoneLoading, userId]);
 
   const handleTimeOffsetChange = (value: number[]) => setTimeOffset(value[0]);
 
@@ -223,7 +224,7 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, onEdit
           <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-foreground mb-2">Celestial Sync Failed</h3>
           <p className="text-muted-foreground text-sm">{error}</p>
-          <Button onClick={() => generateReading(user, timeOffset)} className="mt-4">Retry Reading</Button>
+          <Button onClick={() => generateReading(user, timeOffset, undefined, userId)} className="mt-4">Retry Reading</Button>
         </CardContent>
       </Card>
     );
@@ -254,7 +255,7 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, onEdit
               Adjust Birth Data
             </Button>
           )}
-          <Button variant="ghost" size="sm" onClick={() => generateReading(user, timeOffset, timezone)} disabled={isLoading} className="h-8">
+          <Button variant="ghost" size="sm" onClick={() => generateReading(user, timeOffset, timezone, userId)} disabled={isLoading} className="h-8">
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
           </Button>
         </div>

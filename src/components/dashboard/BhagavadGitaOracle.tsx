@@ -100,7 +100,7 @@ export const BhagavadGitaOracle: React.FC<BhagavadGitaOracleProps> = ({ classNam
               birthPlace: data.birth_place,
               plan: 'compass',
             };
-            await generateReading(userProfile);
+            await generateReading(userProfile, 0, 'Europe/Stockholm', user.id);
           }
         } catch (error) {
           console.error('Error fetching birth details for Gita Oracle:', error);

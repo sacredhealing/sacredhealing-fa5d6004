@@ -50,7 +50,7 @@ const SacredSpace: React.FC = () => {
               birthPlace: data.birth_place,
               plan: 'compass', // Default plan
             };
-            await generateReading(userProfile);
+            await generateReading(userProfile, 0, 'Europe/Stockholm', user.id);
           }
         } catch (error) {
           console.error('Error generating reading:', error);

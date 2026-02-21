@@ -326,6 +326,7 @@ const VedicAstrology: React.FC = () => {
             {useAIMode && userProfile ? (
               <AIVedicDashboard 
                 user={userProfile} 
+                userId={user?.id}
                 onEditDetails={() => setBirthDetailsDialogOpen(true)} 
                 onUpgrade={() => navigate('/membership')}
               />

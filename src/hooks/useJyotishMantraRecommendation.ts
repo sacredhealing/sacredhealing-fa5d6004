@@ -146,7 +146,7 @@ export function useJyotishMantraRecommendation(
         birthPlace: birthDetails.birth_place,
         plan: 'compass',
       };
-      generateReading(userProfile);
+      generateReading(userProfile, 0, 'Europe/Stockholm', user?.id ?? undefined);
     }
   }, [hasBirthDetails, birthDetails, reading, generateReading, externalReading]);
 

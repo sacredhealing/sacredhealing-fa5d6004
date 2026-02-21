@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Camera } from 'lucide-react';
 import PalmOracle, { getHeartLineLeak, getVataPittaKapha, getPalmArchetype } from '@/components/PalmOracle';
 import { setPalmScanResult } from '@/lib/palmScanStore';
 
@@ -80,6 +81,7 @@ const HandAnalyzer = () => {
   const [transitioningToAkasha, setTransitioningToAkasha] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const cameraReadyRef = useRef(false);
   const navigate = useNavigate();
@@ -315,31 +317,48 @@ const HandAnalyzer = () => {
         )}
       </div>
 
-      {/* ACTION BUTTON */}
-      <div className="absolute bottom-12 left-0 right-0 flex justify-center z-50">
-        {error ? (
+      {/* ACTION BUTTONS — Take Photo (camera) + Upload always visible */}
+      <div className="absolute bottom-12 left-0 right-0 flex flex-col items-center gap-3 z-50 px-4">
+        <div className="flex items-center gap-3">
+          {hasCamera && (
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.9 }}
+              onClick={handleScan}
+              disabled={isScanning}
+              className={`w-20 h-20 rounded-full border-4 ${isScanning ? 'border-white/20' : 'border-[#D4AF37]'} flex items-center justify-center bg-black/40 backdrop-blur-md`}
+              aria-label={isScanning ? 'Scanning' : 'Capture from camera'}
+            >
+              <div className={`w-14 h-14 rounded-full ${isScanning ? 'bg-white/20' : 'bg-[#D4AF37] shadow-[0_0_20px_#D4AF37]'}`} />
+            </motion.button>
+          )}
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.9 }}
+            onClick={() => cameraInputRef.current?.click()}
+            disabled={isScanning}
+            className="flex items-center gap-2 px-5 py-3 rounded-full bg-[#D4AF37] text-black font-bold text-sm uppercase tracking-wider disabled:opacity-50"
+          >
+            <Camera className="w-5 h-5" />
+            Take Photo
+          </motion.button>
           <motion.button
             type="button"
             whileTap={{ scale: 0.9 }}
             onClick={() => fileInputRef.current?.click()}
             disabled={isScanning}
-            className="w-auto px-6 py-3 rounded-full border-2 border-[#D4AF37] bg-[#D4AF37]/10 text-[#D4AF37] font-serif text-sm uppercase tracking-wider disabled:opacity-50"
+            className="flex items-center gap-2 px-5 py-3 rounded-full border-2 border-[#D4AF37]/50 text-[#D4AF37] font-semibold text-sm uppercase tracking-wider disabled:opacity-50"
           >
-            Upload Palm Photo
+            Upload
           </motion.button>
-        ) : (
-          <motion.button
-            type="button"
-            whileTap={{ scale: 0.9 }}
-            onClick={handleScan}
-            disabled={isScanning || !hasCamera}
-            className={`w-20 h-20 rounded-full border-4 ${isScanning ? 'border-white/20' : 'border-[#D4AF37]'} flex items-center justify-center bg-black/40 backdrop-blur-md`}
-            aria-label={isScanning ? 'Scanning' : 'Scan palm'}
-          >
-            <div className={`w-14 h-14 rounded-full ${isScanning ? 'bg-white/20' : 'bg-[#D4AF37] shadow-[0_0_20px_#D4AF37]'}`} />
-          </motion.button>
+        </div>
+        {(!hasCamera || error) && (
+          <p className="text-[10px] text-[#D4AF37]/70 uppercase tracking-wider text-center">
+            {error ? 'Use Take Photo or Upload a palm image' : 'Camera starting… or use Take Photo / Upload'}
+          </p>
         )}
       </div>
+      <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleGalleryUpload} />
       <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleGalleryUpload} />
 
       {/* STATUS TEXT */}
