@@ -9,7 +9,7 @@ interface SacredGeometryFocalProps {
 
 export const SacredGeometryFocal: React.FC<SacredGeometryFocalProps> = ({ className = '' }) => (
   <motion.div
-    className={`relative flex items-center justify-center ${className}`}
+    className={`relative flex items-center justify-center w-full ${className}`}
     animate={{
       scale: [1, 1.02, 1],
       opacity: [0.9, 1, 0.9],
@@ -20,7 +20,7 @@ export const SacredGeometryFocal: React.FC<SacredGeometryFocalProps> = ({ classN
       ease: 'easeInOut',
     }}
   >
-    <div className="w-20 h-20 sm:w-24 sm:h-24">
+    <div className="w-72 h-72 sm:w-80 sm:h-80">
       <SriYantra variant="gold" />
     </div>
   </motion.div>
