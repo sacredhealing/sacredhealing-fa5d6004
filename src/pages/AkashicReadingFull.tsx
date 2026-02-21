@@ -30,7 +30,7 @@ const AkashicReadingFull: React.FC = () => {
   useEffect(() => {
     if (!user?.id || !hasAccess) return;
     const saveRecord = async () => {
-      const { error } = await supabase.from('akashic_readings').upsert(
+      const { error } = await (supabase as any).from('akashic_readings').upsert(
         {
           user_id: user.id,
           user_house: userHouse,
