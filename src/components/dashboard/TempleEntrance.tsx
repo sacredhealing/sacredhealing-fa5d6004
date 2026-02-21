@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { SacredGeometryFocal } from './SacredGeometryFocal';
+import { SriYantra } from './SriYantra';
 import { BreathingAnchor } from './BreathingAnchor';
 import { useDailyGuidance } from '@/hooks/useDailyGuidance';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -20,7 +20,6 @@ interface TempleEntranceProps {
   returnState?: ReturnState;
   streakIncreased?: boolean;
   successWindowText: string;
-  /** When true, rest CTA (text + Enter rest + Not now) is shown in Sri Yantra banner instead */
   restCtaInBanner?: boolean;
 }
 
@@ -60,10 +59,6 @@ function getContinuationSuggestion(
   }
 }
 
-/**
- * The Entrance — Sacred Geometry focal point, minimal text, optional CTA.
- * Replaces the "Your day is complete" hero with a digital sanctum.
- */
 export const TempleEntrance: React.FC<TempleEntranceProps> = ({
   onStartClick,
   isDayClosed = false,
@@ -109,6 +104,7 @@ export const TempleEntrance: React.FC<TempleEntranceProps> = ({
     : showContinuation && lastCompleted
       ? getIntegrationButtonLabel(lastCompleted, tFn)
       : guidance.button_label ?? t('dashboard.startJourney', 'Start Journey');
+
   const displayedButtonLabel =
     !hasCompletedToday && userState && userState !== 'calm'
       ? t(`guidance.adaptiveCta.${userState}.button`, guidance.button_label ?? '')
@@ -127,7 +123,7 @@ export const TempleEntrance: React.FC<TempleEntranceProps> = ({
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col items-center py-6 sm:py-8"
       >
-        <Skeleton className="w-24 h-24 rounded-full mb-4" />
+        <Skeleton className="w-64 h-64 rounded-full mb-4" />
         <Skeleton className="h-5 w-48 mb-2" />
         <Skeleton className="h-4 w-32" />
       </motion.div>
@@ -139,52 +135,81 @@ export const TempleEntrance: React.FC<TempleEntranceProps> = ({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="flex flex-col items-center py-4 sm:py-6"
+      className="flex flex-col items-center -mx-4"
     >
-      <SacredGeometryFocal className="mb-4" />
+      {/* Teal glow behind yantra */}
+      <div className="relative w-full flex justify-center">
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: 'radial-gradient(ellipse 80% 60% at 50% 40%, rgba(0, 242, 254, 0.12) 0%, transparent 70%)',
+          }}
+        />
 
-      {!restCtaInBanner && (
-        <p
-          className="text-base sm:text-lg font-serif text-amber-100/95 text-center max-w-md leading-relaxed mb-2"
-          style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}
+        {/* Sri Yantra — full bleed, edge to edge */}
+        <motion.div
+          className="w-full"
+          animate={{ scale: [1, 1.02, 1], opacity: [0.9, 1, 0.9] }}
+          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
         >
-          {displayText}
-        </p>
-      )}
+          <SriYantra
+            variant="gold"
+            className="w-full h-auto"
+            style={{
+              filter: 'drop-shadow(0 0 24px rgba(212,175,55,0.5)) drop-shadow(0 0 48px rgba(212,175,55,0.2))',
+            }}
+          />
+        </motion.div>
+      </div>
 
-      {isNextDayReturn && streakIncreased && !restCtaInBanner && (
-        <p className="text-xs text-amber-400/90 text-center mb-3">
-          {t('dashboard.returnNextDayStreakSubtext', 'Consistency is transforming your inner rhythm.')}
-        </p>
-      )}
-
-      {isSameDayReturn && !breathingDone && (
-        <div className="flex justify-center py-3 mb-2">
-          <BreathingAnchor durationSeconds={3} onComplete={() => setBreathingDone(true)} compact />
-        </div>
-      )}
-
-      {(onStartClick || (isCloseButton && onSkipContinuation)) && !isDayClosed && !restCtaInBanner && (
-        <div className="flex flex-col items-center gap-2 mt-2">
-          <Button
-            onClick={() =>
-              isCloseButton && onSkipContinuation
-                ? onSkipContinuation()
-                : onStartClick?.(activeGuidance, showContinuation ? { isContinuation: true } : undefined)
-            }
-            className="gap-2 bg-[#D4AF37] hover:bg-amber-500 text-black font-bold shadow-[0_0_20px_rgba(212,175,55,0.4)] border border-amber-400/50 px-6 py-2.5 text-sm"
+      {/* Text + buttons — directly under yantra, no gap */}
+      {!restCtaInBanner && (
+        <div className="px-6 pt-4 pb-6 w-full flex flex-col items-center text-center">
+          <p
+            className="text-base sm:text-lg text-amber-100/95 text-center max-w-md leading-relaxed mb-2"
+            style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif', letterSpacing: '0.06em' }}
           >
-            {displayedButtonLabel}
-            {!isCloseButton && <ArrowRight className="w-4 h-4" />}
-          </Button>
-          {showContinuation && onSkipContinuation && (
-            <button
-              type="button"
-              onClick={onSkipContinuation}
-              className="text-xs text-muted-foreground hover:text-foreground/80"
-            >
-              {t('common.notNow')}
-            </button>
+            {displayText}
+          </p>
+
+          {isNextDayReturn && streakIncreased && (
+            <p className="text-xs text-amber-400/80 text-center mb-3 tracking-wide">
+              {t('dashboard.returnNextDayStreakSubtext', 'Consistency is transforming your inner rhythm.')}
+            </p>
+          )}
+
+          {isSameDayReturn && !breathingDone && (
+            <div className="flex justify-center py-3 mb-2">
+              <BreathingAnchor durationSeconds={3} onComplete={() => setBreathingDone(true)} compact />
+            </div>
+          )}
+
+          {(onStartClick || (isCloseButton && onSkipContinuation)) && !isDayClosed && (
+            <div className="flex flex-col items-center gap-2 mt-3 w-full max-w-xs">
+              <button
+                type="button"
+                onClick={() =>
+                  isCloseButton && onSkipContinuation
+                    ? onSkipContinuation()
+                    : onStartClick?.(activeGuidance, showContinuation ? { isContinuation: true } : undefined)
+                }
+                className="w-full bg-[#D4AF37] hover:bg-amber-500 text-black font-bold px-6 py-3 rounded-full text-sm flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(212,175,55,0.4)] border border-amber-400/50 transition-colors"
+                style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif', letterSpacing: '0.05em' }}
+              >
+                {displayedButtonLabel}
+                {!isCloseButton && <ArrowRight className="w-4 h-4" />}
+              </button>
+
+              {showContinuation && onSkipContinuation && (
+                <button
+                  type="button"
+                  onClick={onSkipContinuation}
+                  className="text-xs text-white/30 hover:text-white/60 transition-colors"
+                >
+                  {t('common.notNow')}
+                </button>
+              )}
+            </div>
           )}
         </div>
       )}
