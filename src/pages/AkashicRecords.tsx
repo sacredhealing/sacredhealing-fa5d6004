@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AkashicSiddhaReading from '@/components/vedic/AkashicSiddhaReading';
 import { useAIVedicReading } from '@/hooks/useAIVedicReading';
 import { useAkashicAccess } from '@/hooks/useAkashicAccess';
 import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
+import { useAdminRole } from '@/hooks/useAdminRole';
 import { Button } from '@/components/ui/button';
 import { Sparkles } from 'lucide-react';
 
@@ -15,10 +16,18 @@ const AkashicRecords: React.FC = () => {
   const { user } = useAuth();
   const { isPremium } = useMembership();
   const { hasAccess } = useAkashicAccess(user?.id);
+  const { isAdmin, isLoading: adminLoading } = useAdminRole();
   const userHouse = 12; // Default Ketu house when no reading
   const userName = (user?.user_metadata?.full_name as string) || user?.email?.split('@')[0] || 'Soul';
 
-  const showTeaser = !hasAccess;
+  // Admin redirect: skip this gate page entirely
+  useEffect(() => {
+    if (!adminLoading && isAdmin) {
+      navigate('/akashic-reading/full', { replace: true });
+    }
+  }, [isAdmin, adminLoading, navigate]);
+
+  const showTeaser = !hasAccess && !isAdmin;
 
   const handleInitiateReveal = () => {
     navigate('/membership?product=akashic');
