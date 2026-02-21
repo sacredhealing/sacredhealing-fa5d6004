@@ -15,6 +15,8 @@ import { usePresenceState } from "@/features/presence/usePresenceState";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { useMeditationContentLanguage } from "@/features/meditations/useContentLanguage";
 import { useMembership } from "@/hooks/useMembership";
+import { useAuth } from "@/hooks/useAuth";
+import { useAkashicAccess } from "@/hooks/useAkashicAccess";
 import { getDayPhase } from "@/utils/postSessionContext";
 
 import {
@@ -172,6 +174,8 @@ export default function Explore() {
   const { allAudioItems } = useQuickActionItems();
   const { language: meditationLanguage } = useMeditationContentLanguage();
   useMembership(); // presence / membership state if needed later
+  const { user } = useAuth();
+  const { hasAccess: hasAkashicAccess } = useAkashicAccess(user?.id);
   const [showFallback, setShowFallback] = useState(false);
   const [akashicOpen, setAkashicOpen] = useState(false);
   const [sacredRevealOpen, setSacredRevealOpen] = useState(false);
@@ -356,7 +360,7 @@ export default function Explore() {
                 const premium = "premium" in item && item.premium;
                 const akashicHighTicket = "akashicHighTicket" in item && item.akashicHighTicket;
                 const onClick = akashicHighTicket
-                  ? () => setSacredRevealOpen(true)
+                  ? () => (hasAkashicAccess ? navigate(item.href) : setSacredRevealOpen(true))
                   : openAkashic
                     ? () => setAkashicOpen(true)
                     : () => navigate(item.href);
