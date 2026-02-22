@@ -350,13 +350,13 @@ export default function Explore() {
           <div className="relative z-10 px-6 pb-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
-                { label: "Akashic Decoder", desc: "Personalized transmission — unlock your 15-page soul manuscript.", href: "/akashic-records", Icon: Eye, akashicHighTicket: true },
+                { label: "Akashic Decoder", desc: "Personalized transmission — unlock your 15-page soul manuscript.", href: "/akashic-records", Icon: Eye, akashicHighTicket: true, adminOnly: true },
                 { label: "Vedic Astrology", desc: "Daily influence + Akashic Records", href: "/vedic-astrology", Icon: Star, premium: true },
                 { label: "Mantra Library", desc: "Sacred sounds for daily practice", href: "/mantras", Icon: Music2, premium: true },
                 { label: "Ayurveda", desc: "Balance + daily guidance", href: "/ayurveda" },
                 { label: "Vastu", desc: "Abundance Architect", href: "/vastu" },
-                { label: "Palm & Akashic Oracle", desc: "Basic hand analysis (Lines only) → Akashic verdict", href: "/hand-analyzer", Icon: Hand, premium: true },
-              ].map((item) => {
+                { label: "Palm & Akashic Oracle", desc: "Basic hand analysis (Lines only) → Akashic verdict", href: "/hand-analyzer", Icon: Hand, premium: true, adminOnly: true },
+              ].filter((item) => !("adminOnly" in item && item.adminOnly) || isAdmin).map((item) => {
                 const Icon = "Icon" in item ? item.Icon : null;
                 const openAkashic = "openAkashic" in item && item.openAkashic;
                 const premium = "premium" in item && item.premium;
