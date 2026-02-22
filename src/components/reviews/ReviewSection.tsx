@@ -39,7 +39,7 @@ const StarRating: React.FC<{
             size={size}
             className={`${
               star <= (hovered || rating)
-                ? 'fill-accent text-accent'
+                ? 'fill-[#D4AF37] text-[#D4AF37]'
                 : 'text-muted-foreground/30'
             } transition-colors`}
           />
@@ -84,7 +84,7 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
       {/* Header with rating summary */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <MessageSquare className="w-5 h-5 text-primary" />
+          <MessageSquare className="w-5 h-5 text-[#D4AF37]" />
           <h3 className="font-heading font-semibold text-foreground">
             {t('reviews.title')}
           </h3>
@@ -99,11 +99,11 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
 
       {/* Reward Banner */}
       {user && !userReview && (
-        <Card className="bg-gradient-to-r from-accent/10 to-primary/10 border-accent/30">
+        <Card className="bg-[#D4AF37]/5 border-[#D4AF37]/20">
           <CardContent className="py-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
-                <Gift className="w-5 h-5 text-accent" />
+              <div className="w-10 h-10 rounded-full bg-[#D4AF37]/15 flex items-center justify-center">
+                <Gift className="w-5 h-5 text-[#D4AF37]" />
               </div>
               <div className="flex-1">
                 <p className="font-medium text-foreground">{t('reviews.earnReward')}</p>
@@ -111,12 +111,12 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
               </div>
               <Button 
                 size="sm"
-                className="bg-[#00F2FE] text-black font-extrabold hover:bg-[#00D4E0] shadow-[0_0_20px_rgba(0,242,254,0.4)] border-0"
+                className="bg-[#D4AF37] text-black font-bold hover:bg-[#c4a030] border-0"
                 onClick={() => setShowForm(true)}
               >
                 {contentType === 'healing' ? (
                   <>
-                    <Feather className="w-4 h-4 mr-2 text-[#D4AF37]" />
+                    <Feather className="w-4 h-4 mr-2" />
                     Share your Transmission
                   </>
                 ) : (
@@ -130,7 +130,7 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
 
       {/* Review Form */}
       {showForm && !userReview && (
-        <Card className="bg-card/50 border-border/50">
+        <Card className="bg-card/50 border-[#D4AF37]/15">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
               {contentType === 'healing' ? (
@@ -154,7 +154,7 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
                 placeholder={t('reviews.titlePlaceholder')}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="bg-background/50"
+                className="bg-background/50 border-[#D4AF37]/15 focus:border-[#D4AF37]/40"
               />
               
               <Textarea
@@ -162,15 +162,19 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 rows={3}
-                className="bg-background/50"
+                className="bg-background/50 border-[#D4AF37]/15 focus:border-[#D4AF37]/40"
                 required
               />
               
               <div className="flex gap-2">
-                <Button type="submit" disabled={isSubmitting || !comment.trim()}>
+                <Button 
+                  type="submit" 
+                  disabled={isSubmitting || !comment.trim()}
+                  className="bg-[#D4AF37] text-black font-bold hover:bg-[#c4a030] border-0"
+                >
                   {isSubmitting ? t('common.loading') : t('reviews.submit')}
                 </Button>
-                <Button type="button" variant="ghost" onClick={() => setShowForm(false)}>
+                <Button type="button" variant="ghost" onClick={() => setShowForm(false)} className="text-muted-foreground hover:text-foreground">
                   {t('common.cancel')}
                 </Button>
               </div>
@@ -181,11 +185,11 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
 
       {/* User's existing review */}
       {userReview && (
-        <Card className="bg-primary/5 border-primary/30">
+        <Card className="bg-[#D4AF37]/5 border-[#D4AF37]/20">
           <CardContent className="py-4">
             <div className="flex items-start justify-between mb-2">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-primary">{t('reviews.yourReview')}</span>
+                <span className="text-sm font-medium text-[#D4AF37]">{t('reviews.yourReview')}</span>
                 <StarRating rating={userReview.rating} size={14} />
               </div>
               <Button 
@@ -208,17 +212,17 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
       {/* Reviews List */}
       {isLoading ? (
         <div className="flex justify-center py-8">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#D4AF37]"></div>
         </div>
       ) : reviews.length === 0 ? (
-        <Card className="bg-card/30 border-border/30">
+        <Card className="bg-card/30 border-[#D4AF37]/10">
           <CardContent className="py-8 text-center">
-            <MessageSquare className="w-10 h-10 mx-auto text-muted-foreground/50 mb-2" />
+            <MessageSquare className="w-10 h-10 mx-auto text-[#D4AF37]/30 mb-2" />
             <p className="text-muted-foreground">{t('reviews.noReviews')}</p>
             {user && !userReview && (
               <Button 
                 variant="link" 
-                className="mt-2"
+                className="mt-2 text-[#D4AF37]"
                 onClick={() => setShowForm(true)}
               >
                 {t('reviews.beFirst')}
@@ -231,11 +235,11 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
           {reviews
             .filter(r => r.id !== userReview?.id)
             .map((review) => (
-            <Card key={review.id} className="bg-card/30 border-border/30">
+            <Card key={review.id} className="bg-card/30 border-[#D4AF37]/10">
               <CardContent className="py-4">
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                    <User size={16} className="text-muted-foreground" />
+                  <div className="w-8 h-8 rounded-full bg-[#D4AF37]/10 flex items-center justify-center">
+                    <User size={16} className="text-[#D4AF37]/60" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
@@ -261,10 +265,10 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
 
       {/* CTA for non-logged in users */}
       {!user && (
-        <Card className="bg-muted/20 border-border/30">
+        <Card className="bg-muted/20 border-[#D4AF37]/10">
           <CardContent className="py-4 text-center">
             <p className="text-sm text-muted-foreground mb-2">{t('reviews.signInToReview')}</p>
-            <Button variant="outline" size="sm" onClick={() => window.location.href = '/auth'}>
+            <Button variant="outline" size="sm" onClick={() => window.location.href = '/auth'} className="border-[#D4AF37]/30 text-[#D4AF37] hover:bg-[#D4AF37]/10">
               {t('auth.signIn')}
             </Button>
           </CardContent>
