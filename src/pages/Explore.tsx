@@ -154,16 +154,6 @@ const DEEPEN_CARDS = [
     iconColor: "text-yellow-200",
     iconBg: "bg-yellow-400/20",
   },
-  {
-    key: "pregnancy",
-    href: "/pregnancy-program",
-    icon: Baby,
-    gradient: "from-pink-900/60 via-pink-800/40 to-black/60",
-    border: "border-pink-500/30",
-    glow: "shadow-pink-500/20",
-    iconColor: "text-pink-300",
-    iconBg: "bg-pink-500/20",
-  },
 ];
 
 export default function Explore() {
@@ -221,7 +211,6 @@ export default function Explore() {
     privateSessions: { title: t("explore.privateSessions", "Private Sessions"), subtitle: t("explore.privateSessionsDesc", "1-on-1 with Adam or Laila") },
     affirmationSoundtrack: { title: t("explore.affirmationSoundtrack", "Affirmation Soundtrack"), subtitle: t("explore.affirmationSoundtrackDesc", "Personalized for you") },
     certification: { title: t("home.practitionerCert", "Practitioner Certification"), subtitle: t("home.certDesc", "Become a certified practitioner") },
-    pregnancy: { title: t("pregnancy.title", "Sacred Pregnancy"), subtitle: t("pregnancy.subtitle", "Support on your journey") },
   };
 
   return (
@@ -486,7 +475,7 @@ export default function Explore() {
           </h3>
           <div className="grid grid-cols-1 gap-3">
             {[
-              { key: "community", title: t("explore.community", "Community"), subtitle: t("explore.communityDesc", "Chat with guides & members"), href: "/community", icon: Users, gradient: "from-teal-900/60 via-teal-800/40 to-black/60", border: "border-teal-500/30", iconBg: "bg-teal-500/20", iconColor: "text-teal-300", badge: null },
+              
               { key: "stargate", title: t("home.stargateMembership", "Stargate Membership"), subtitle: t("home.stargateDesc", "Weekly live sessions, Telegram community"), href: "/stargate", icon: Crown, gradient: "from-purple-900/60 via-violet-800/40 to-black/60", border: "border-purple-500/30", iconBg: "bg-purple-500/20", iconColor: "text-purple-300", badge: t("explore.badgeSwedish", "Swedish") },
             ].map((card) => {
               const Icon = card.icon;
@@ -519,7 +508,7 @@ export default function Explore() {
           </h3>
           <div className="grid grid-cols-1 gap-3">
             {[
-              { key: "promptLibrary", title: t("explore.promptLibrary", "Prompt Library"), subtitle: t("explore.promptLibraryDesc", "Single-click templates"), href: "/prompt-library", icon: FileText, gradient: "from-slate-800/60 via-slate-700/40 to-black/60", border: "border-slate-500/30", iconBg: "bg-slate-500/20", iconColor: "text-slate-300", badge: null },
+              
               { key: "podcast", title: t("explore.podcast", "Podcast"), subtitle: t("explore.podcastDesc", "Streams on Spotify"), href: "/podcast", icon: Headphones, gradient: "from-green-900/60 via-green-800/40 to-black/60", border: "border-green-500/30", iconBg: "bg-green-500/20", iconColor: "text-green-300", badge: null },
               { key: "videos", title: t("explore.videos", "Videos"), subtitle: t("explore.videosDesc", "Watch & learn"), href: "/spiritual-education", icon: Youtube, gradient: "from-red-900/60 via-red-800/40 to-black/60", border: "border-red-500/30", iconBg: "bg-red-500/20", iconColor: "text-red-300", badge: null },
               { key: "creativeSoul", title: t("explore.creativeSoul", "Creative Soul"), subtitle: t("explore.creativeSoulDesc", "Create with AI"), href: "/creative-soul/store", icon: Sparkles, gradient: "from-fuchsia-900/60 via-pink-800/40 to-black/60", border: "border-fuchsia-500/30", iconBg: "bg-fuchsia-500/20", iconColor: "text-fuchsia-300", badge: null },
