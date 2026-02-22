@@ -286,7 +286,44 @@ const Auth: React.FC = () => {
             />
           </div>
 
-          <Button type="submit" size="xl" className="w-full mt-6" disabled={isSubmitting}>
+          {isLogin && (
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!email) {
+                    toast({
+                      title: t('auth.missingFields'),
+                      description: 'Please enter your email address first.',
+                      variant: 'destructive'
+                    });
+                    return;
+                  }
+                  try {
+                    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                      redirectTo: `${window.location.origin}/reset-password`
+                    });
+                    if (error) throw error;
+                    toast({
+                      title: 'Check your email',
+                      description: 'A password reset link has been sent to your email.'
+                    });
+                  } catch (err: any) {
+                    toast({
+                      title: 'Error',
+                      description: err?.message || 'Could not send reset email.',
+                      variant: 'destructive'
+                    });
+                  }
+                }}
+                className="text-sm text-primary hover:underline"
+              >
+                Forgot password?
+              </button>
+            </div>
+          )}
+
+          <Button type="submit" size="xl" className="w-full mt-4" disabled={isSubmitting}>
             {isSubmitting ? (
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : (

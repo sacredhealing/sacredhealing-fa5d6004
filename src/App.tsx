@@ -20,6 +20,7 @@ import { ProtectedRoute } from "./components/layout/ProtectedRoute";
 import { AuthOnlyRoute } from "./components/layout/AuthOnlyRoute";
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import Meditations from "./pages/Meditations";
 import Courses from "./pages/Courses";
@@ -141,6 +142,7 @@ function AppRoutes() {
       <Route path="/" element={<Auth />} />
       <Route path="/about" element={<About />} />
       <Route path="/auth" element={<Auth />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route element={<AuthOnlyRoute />}>
         <Route path="/onboarding" element={<Onboarding />} />
       </Route>
