@@ -99,24 +99,26 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
 
       {/* Reward Banner */}
       {user && !userReview && (
-        <Card className="bg-[#D4AF37]/5 border-[#D4AF37]/20">
-          <CardContent className="py-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#D4AF37]/15 flex items-center justify-center">
-                <Gift className="w-5 h-5 text-[#D4AF37]" />
-              </div>
-              <div className="flex-1">
-                <p className="font-medium text-foreground">{t('reviews.earnReward')}</p>
-                <p className="text-sm text-muted-foreground">{t('reviews.rewardDescription')}</p>
+        <Card className="bg-[#D4AF37]/5 border-[#D4AF37]/20 overflow-hidden">
+          <CardContent className="py-4 px-4 sm:px-6">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-3">
+              <div className="flex items-start gap-3 min-w-0">
+                <div className="shrink-0 w-10 h-10 rounded-full bg-[#D4AF37]/15 flex items-center justify-center">
+                  <Gift className="w-5 h-5 text-[#D4AF37]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-foreground">{t('reviews.earnReward')}</p>
+                  <p className="text-sm text-muted-foreground">{t('reviews.rewardDescription')}</p>
+                </div>
               </div>
               <Button 
                 size="sm"
-                className="bg-[#D4AF37] text-black font-bold hover:bg-[#c4a030] border-0"
+                className="shrink-0 w-full sm:w-auto bg-[#D4AF37] text-black font-bold hover:bg-[#c4a030] border-0"
                 onClick={() => setShowForm(true)}
               >
                 {contentType === 'healing' ? (
                   <>
-                    <Feather className="w-4 h-4 mr-2" />
+                    <Feather className="w-4 h-4 mr-2 shrink-0" />
                     Share your Transmission
                   </>
                 ) : (
