@@ -68,8 +68,8 @@ type LangKey = 'en' | 'sv' | 'no' | 'es';
 
 const tx: Record<LangKey, Record<string, string>> = {
   en: {
-    heroTitle: '15 Years of Healing. One Infinite Connection.',
-    heroSubtitle: 'Through the grace of Mahavatar Babaji and Paramahamsa Vishwananda, enter a sanctified field where miracles are the natural state of existence.',
+    heroTitle: '15 Years of Healing — One Infinite Connection',
+    heroSubtitle: 'Through the grace of Mahavatar Babaji and the 18 Siddha Masters, enter a sanctified field where miracles are the natural state of existence.',
     heroCta: 'Begin Your Transformation',
     statementTitle: 'The Evolution of Grace',
     statementBody: 'For 15 years, I have walked the path of the healer, serving as a bridge for those seeking balance. Through the sacred initiation of Atma Kriya Yoga and a direct connection to the lineage of Mahavatar Babaji and the 18 Siddhas, my work has evolved.\n\nI no longer simply treat the body; I recalibrate the soul. By merging the ancient science of the masters with the modern power of vibrational sound, I facilitate a \'Silent Transmission.\' This is surgery without a scalpel — performed in the Akasha, governed by Divine Grace, and delivered through the heart.',
@@ -79,7 +79,7 @@ const tx: Record<LangKey, Record<string, string>> = {
     howCard2Title: 'The 30-Day Blueprint',
     howCard2Body: 'Your physical body takes 30 days to catch up to the soul\'s new vibration. During this time, Siddha energy re-codes your cells 24/7. My music acts as the carrier wave.',
     howCard3Title: 'Sonic Alchemy',
-    howCard3Body: 'As a producer, I weave sacred Beeja mantras and 963Hz frequencies into healing music. Your transformation happens while you simply listen.',
+    howCard3Body: 'As a producer, I weave sacred Beeja mantras and healing frequencies into music. Your transformation happens while you simply listen.',
     compTitle: 'Why This Is Different',
     compLeft: 'Traditional Therapy',
     compRight: 'Siddha Healing',
@@ -134,8 +134,8 @@ const tx: Record<LangKey, Record<string, string>> = {
     viewAll: 'View all sessions',
   },
   sv: {
-    heroTitle: '15 År av Helande. En Oändlig Förbindelse.',
-    heroSubtitle: 'Genom Mahavatar Babajis och Paramahamsa Vishwanandas nåd, träd in i ett helgat fält där mirakel är det naturliga tillståndet.',
+    heroTitle: '15 År av Helande — En Oändlig Förbindelse',
+    heroSubtitle: 'Genom Mahavatar Babajis och de 18 Siddha-mästarnas nåd, träd in i ett helgat fält där mirakel är det naturliga tillståndet.',
     heroCta: 'Påbörja Din Transformation',
     statementTitle: 'Nådens Evolution',
     statementBody: 'I 15 år har jag vandrat helarens väg, som en bro för dem som söker balans. Genom den heliga initiationen av Atma Kriya Yoga och en direkt koppling till Mahavatar Babajis och de 18 Siddhornas linje har mitt arbete utvecklats.\n\nJag behandlar inte längre bara kroppen; jag kalibrerar om själen. Genom att sammanföra mästarnas urgamla vetenskap med den moderna kraften av vibrationellt ljud, underlättar jag en \'Tyst Transmission.\' Detta är kirurgi utan skalpell — utförd i Akasha, styrd av Gudomlig Nåd, och levererad genom hjärtat.',
@@ -145,7 +145,7 @@ const tx: Record<LangKey, Record<string, string>> = {
     howCard2Title: '30-dagars Blåkopian',
     howCard2Body: 'Din fysiska kropp behöver 30 dagar för att komma ikapp själens nya vibration. Under denna tid omkodar Siddha-energi dina celler dygnet runt.',
     howCard3Title: 'Sonisk Alkemi',
-    howCard3Body: 'Som producent väver jag heliga Beeja-mantran och 963Hz-frekvenser in i helande musik. Din transformation sker medan du bara lyssnar.',
+    howCard3Body: 'Som producent väver jag heliga Beeja-mantran och helande frekvenser in i musik. Din transformation sker medan du bara lyssnar.',
     compTitle: 'Varför Detta Är Annorlunda',
     compLeft: 'Traditionell Terapi',
     compRight: 'Siddha-Helande',
@@ -200,8 +200,8 @@ const tx: Record<LangKey, Record<string, string>> = {
     viewAll: 'Visa alla sessioner',
   },
   no: {
-    heroTitle: '15 År med Helbredelse. Én Uendelig Forbindelse.',
-    heroSubtitle: 'Gjennom nåden til Mahavatar Babaji og Paramahamsa Vishwananda, tre inn i et hellig felt der mirakler er den naturlige tilstanden.',
+    heroTitle: '15 År med Helbredelse — Én Uendelig Forbindelse',
+    heroSubtitle: 'Gjennom nåden til Mahavatar Babaji og de 18 Siddha-mestrene, tre inn i et hellig felt der mirakler er den naturlige tilstanden.',
     heroCta: 'Start Din Transformasjon',
     statementTitle: 'Nådens Evolusjon',
     statementBody: 'I 15 år har jeg gått helerens vei, som en bro for de som søker balanse. Gjennom den hellige innvielsen av Atma Kriya Yoga og en direkte forbindelse til Mahavatar Babajis og de 18 Siddhaenes linje, har arbeidet mitt utviklet seg.\n\nJeg behandler ikke lenger bare kroppen; jeg rekalibrerer sjelen. Ved å forene mesterne\'s eldgamle vitenskap med den moderne kraften av vibrasjonell lyd, fasiliterer jeg en \'Stille Transmisjon.\' Dette er kirurgi uten skalpell.',
@@ -211,7 +211,7 @@ const tx: Record<LangKey, Record<string, string>> = {
     howCard2Title: '30-dagers Blåkopi',
     howCard2Body: 'Kroppen trenger 30 dager for å innhente sjelens nye vibrasjon. Siddha-energi omkoder cellene dine døgnet rundt.',
     howCard3Title: 'Sonisk Alkymi',
-    howCard3Body: 'Som produsent vever jeg hellige Beeja-mantraer og 963Hz-frekvenser inn i helbredende musikk.',
+    howCard3Body: 'Som produsent vever jeg hellige Beeja-mantraer og helbredende frekvenser inn i musikk.',
     compTitle: 'Hvorfor Dette Er Annerledes',
     compLeft: 'Tradisjonell Terapi', compRight: 'Siddha-Helbredelse',
     comp1L: 'Snakke om fortiden', comp1R: 'Rense fortiden i Akasha',
@@ -241,15 +241,15 @@ const tx: Record<LangKey, Record<string, string>> = {
     seeMore: 'Se flere', seeLess: 'Se færre', noSessions: 'Ingen økter på dette språket ennå.', viewAll: 'Vis alle økter',
   },
   es: {
-    heroTitle: '15 Años de Sanación. Una Conexión Infinita.',
-    heroSubtitle: 'A través de la gracia de Mahavatar Babaji y Paramahamsa Vishwananda, entra en un campo sagrado donde los milagros son el estado natural.',
+    heroTitle: '15 Años de Sanación — Una Conexión Infinita',
+    heroSubtitle: 'A través de la gracia de Mahavatar Babaji y los 18 Maestros Siddha, entra en un campo sagrado donde los milagros son el estado natural.',
     heroCta: 'Comienza Tu Transformación',
     statementTitle: 'La Evolución de la Gracia',
     statementBody: 'Durante 15 años, he caminado el sendero del sanador, sirviendo como puente para quienes buscan equilibrio. A través de la iniciación sagrada del Atma Kriya Yoga y una conexión directa con el linaje de Mahavatar Babaji y los 18 Siddhas, mi trabajo ha evolucionado.\n\nYa no trato simplemente el cuerpo; recalibro el alma. Al fusionar la ciencia ancestral de los maestros con el poder moderno del sonido vibracional, facilito una \'Transmisión Silenciosa.\' Esto es cirugía sin bisturí.',
     howTitle: 'El Poder de la Transmisión Silenciosa',
     howCard1Title: 'La Resonancia', howCard1Body: 'Al reservar, la frecuencia de tu alma se integra en mi Atma Kriya Yoga diario.',
     howCard2Title: 'El Plan de 30 Días', howCard2Body: 'Tu cuerpo necesita 30 días para alcanzar la nueva vibración del alma.',
-    howCard3Title: 'Alquimia Sónica', howCard3Body: 'Como productor, tejo mantras Beeja sagrados y frecuencias de 963Hz en la música sanadora.',
+    howCard3Title: 'Alquimia Sónica', howCard3Body: 'Como productor, tejo mantras Beeja sagrados y frecuencias sanadoras en la música.',
     compTitle: 'Por Qué Esto Es Diferente',
     compLeft: 'Terapia Tradicional', compRight: 'Sanación Siddha',
     comp1L: 'Hablar del pasado', comp1R: 'Limpiar el pasado en el Akasha',
@@ -489,7 +489,8 @@ const Healing: React.FC = () => {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 space-y-16 pb-24">
 
           {/* Language toggle */}
-          <section className="flex flex-wrap items-center gap-3 rounded-xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 px-4 py-3">
+          <section className="flex flex-wrap items-center gap-3 rounded-xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 px-4 py-2.5">
+            <span className="text-[#D4AF37]/70 text-sm font-medium">Language</span>
             <HealingLanguageToggle language={language} setLanguage={setLanguage} />
           </section>
 
@@ -536,22 +537,16 @@ const Healing: React.FC = () => {
             <h2 className="text-xl sm:text-2xl font-bold text-center text-[#D4AF37]" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
               {T.compTitle}
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 rounded-2xl border border-[#D4AF37]/20 overflow-hidden">
-              {/* Headers */}
-              <div className="p-4 bg-white/5 border-b border-[#D4AF37]/10">
-                <p className="text-white/40 text-sm font-semibold uppercase tracking-wider">{T.compLeft}</p>
-              </div>
-              <div className="p-4 bg-[#D4AF37]/10 border-b border-[#D4AF37]/20">
-                <p className="text-[#D4AF37] text-sm font-semibold uppercase tracking-wider">{T.compRight}</p>
-              </div>
-              {/* Rows */}
+            <div className="space-y-3">
               {[
                 [T.comp1L, T.comp1R], [T.comp2L, T.comp2R], [T.comp3L, T.comp3R], [T.comp4L, T.comp4R],
               ].map(([left, right], i) => (
-                <React.Fragment key={i}>
-                  <div className="p-4 border-b border-white/5 text-white/40 text-sm">{left}</div>
-                  <div className="p-4 border-b border-[#D4AF37]/10 bg-[#D4AF37]/5 text-[#D4AF37] text-sm font-medium">{right}</div>
-                </React.Fragment>
+                <div key={i} className="rounded-xl border border-[#D4AF37]/15 bg-[#111] overflow-hidden">
+                  <div className="px-4 py-2.5 text-white/35 text-sm line-through decoration-white/20">{left}</div>
+                  <div className="px-4 py-3 bg-[#D4AF37]/8 text-[#D4AF37] text-sm font-medium border-t border-[#D4AF37]/10">
+                    → {right}
+                  </div>
+                </div>
               ))}
             </div>
           </section>
@@ -572,7 +567,19 @@ const Healing: React.FC = () => {
             </div>
           </section>
 
-          <HealingProgressCard variant="full" />
+          {/* Journey card - collapsible on mobile */}
+          <details className="rounded-xl border border-[#D4AF37]/15 bg-[#111] overflow-hidden group">
+            <summary className="flex items-center justify-between p-4 cursor-pointer list-none">
+              <div className="flex items-center gap-3">
+                <Sparkles className="w-5 h-5 text-[#D4AF37]" />
+                <span className="font-semibold text-white text-sm">Your Healing Journey</span>
+              </div>
+              <ChevronDown className="w-4 h-4 text-[#D4AF37]/50 group-open:rotate-180 transition-transform" />
+            </summary>
+            <div className="px-4 pb-4">
+              <HealingProgressCard variant="full" />
+            </div>
+          </details>
 
           {/* ========== SECTION 5: MEDITATIONS ========== */}
           <section className="space-y-6">
