@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useMemo } from 'react';
+import React, { useEffect, useState, useRef, useMemo, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Zap, Star, Sparkles, CheckCircle, AlertCircle, Quote, Crown, Compass, 
@@ -15,14 +15,15 @@ import { Label } from '@/components/ui/label';
 import { useAIVedicReading } from '@/hooks/useAIVedicReading';
 import type { UserProfile, HoraInfo } from '@/lib/vedicTypes';
 import { getPlanetEmoji, getEnergyGradient, getSuccessColor } from '@/lib/vedicTypes';
-import { CosmicConsultation } from './CosmicConsultation';
 import { TimezoneSelector, useUserTimezone } from './TimezoneSelector';
-import { AccurateHoraWatch } from './AccurateHoraWatch';
 import { HoraDateTimePicker } from './HoraDateTimePicker';
 import { HoraNotificationBanner } from './HoraNotificationBanner';
 import { TempleSection } from './TempleSection';
 import { useHoraNotification } from '@/hooks/useHoraNotification';
 import { useHoraWatch } from '@/hooks/useHoraWatch';
+
+const CosmicConsultation = lazy(() => import('./CosmicConsultation').then((m) => ({ default: m.CosmicConsultation })));
+const AccurateHoraWatch = lazy(() => import('./AccurateHoraWatch').then((m) => ({ default: m.AccurateHoraWatch })));
 
 interface AIVedicDashboardProps {
   user: UserProfile;
@@ -287,7 +288,9 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
           )}
         </div>
 
-        <AccurateHoraWatch timezone={timezone} timeOffset={timeOffset} userBirthChart={{}} />
+        <Suspense fallback={<div className="p-4 text-amber-400/50 font-serif text-sm">Loading Hora Watch…</div>}>
+          <AccurateHoraWatch timezone={timezone} timeOffset={timeOffset} userBirthChart={{}} />
+        </Suspense>
       </TempleSection>
 
       {/* ══════════ GURU ORACLE with SPEECH BUBBLE ══════════ */}
@@ -336,7 +339,9 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
           </motion.div>
         )}
 
-        <CosmicConsultation user={user} onUpgrade={onUpgrade} />
+        <Suspense fallback={<div className="p-4 text-amber-400/50 font-serif text-sm">Loading Guru Chat…</div>}>
+          <CosmicConsultation user={user} onUpgrade={onUpgrade} />
+        </Suspense>
       </TempleSection>
 
       {/* ══════════ COSMIC PULSE (Nakshatra) ══════════ */}

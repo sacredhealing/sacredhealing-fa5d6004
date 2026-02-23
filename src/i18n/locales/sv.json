@@ -1884,7 +1884,8 @@
     "birthDate": "Födelsedatum",
     "birthTime": "Födelsetid",
     "birthPlace": "Födelseort",
-    "calculate": "Beräkna"
+    "calculate": "Beräkna",
+    "guruChatPlaceholder": "Tala din fråga till Rishin..."
   },
   "announcements": {
     "newAnnouncement": "Nytt meddelande",

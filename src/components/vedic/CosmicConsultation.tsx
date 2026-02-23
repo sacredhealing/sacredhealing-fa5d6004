@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import type { UserProfile } from '@/lib/vedicTypes';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -94,6 +95,8 @@ function playChime() {
 export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, onUpgrade }) => {
   const { user: authUser } = useAuth();
   const navigate = useNavigate();
+  const { i18n, t } = useTranslation();
+  const userLanguage = (user as UserProfile & { language?: string }).language || i18n.language || 'en';
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -103,6 +106,7 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [typingIntensity, setTypingIntensity] = useState(0);
   const [isFullPage, setIsFullPage] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<{ stop: () => void } | null>(null);
@@ -112,6 +116,21 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
   const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   const bhrigu = useMemo(() => getActivePlanet(user.birthDate), [user.birthDate]);
+
+  const wasMobileRef = useRef(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const check = () => {
+      const mobile = mq.matches;
+      setIsMobileView(mobile);
+      if (mobile && !wasMobileRef.current) setIsFullPage(true);
+      if (!mobile) setIsFullPage(false);
+      wasMobileRef.current = mobile;
+    };
+    check();
+    mq.addEventListener('change', check);
+    return () => mq.removeEventListener('change', check);
+  }, []);
 
   // Fetch fresh user data from profiles before each send
   const fetchFreshUserData = useCallback(async (): Promise<UserProfile> => {
@@ -259,7 +278,9 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
             birthTime: freshUser.birthTime,
             birthPlace: freshUser.birthPlace,
             plan: freshUser.plan,
+            language: userLanguage,
           },
+          language: userLanguage,
         }),
       });
 
@@ -355,7 +376,8 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
     }
   };
 
-  // Voice input via Web Speech API
+  // Voice input via Web Speech API — continuous mode for long recording, respect user language
+  const speechLang = userLanguage === 'sv' ? 'sv-SE' : 'en-US';
   const toggleMic = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
@@ -365,13 +387,16 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
       return;
     }
     const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = 'en-US';
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = speechLang;
     recognition.onstart = () => setIsListening(true);
     recognition.onend = () => setIsListening(false);
-    recognition.onresult = (event: { results: Iterable<{ 0?: { transcript?: string } }> }) => {
-      const transcript = Array.from(event.results).map((r) => r[0]?.transcript ?? '').join('');
+    recognition.onresult = (event: { results: Iterable<{ 0?: { transcript?: string }; isFinal?: boolean }> }) => {
+      const transcript = Array.from(event.results)
+        .filter((r) => r[0]?.transcript)
+        .map((r) => r[0]!.transcript!)
+        .join(' ');
       if (transcript.trim()) setInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
     };
     recognition.onerror = () => setIsListening(false);
@@ -425,7 +450,7 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
     <div
       className={`flex flex-col rounded-3xl border border-amber-500/20 overflow-hidden relative transition-all duration-500 ${
         isFullPage ? 'fixed inset-0 z-50 h-screen' : 'h-[500px]'
-      }`}
+      } ${isMobileView ? 'pb-safe' : ''}`}
       style={{
         background: `
           linear-gradient(180deg, rgba(30,20,10,0.95), rgba(15,10,5,0.98)),
@@ -574,15 +599,15 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
           <div className="absolute -inset-[2px] bg-gradient-to-r from-amber-500/20 via-yellow-500/30 to-amber-500/20 rounded-[1.5rem] blur-sm opacity-60 group-focus-within:opacity-100 transition duration-500" />
           {/* Mandala Pulse */}
           <MandalaPulse intensity={typingIntensity} />
-          <div className="relative flex gap-2">
+          <div className="relative flex items-end gap-2">
             <textarea
               ref={textareaRef}
               value={input}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              placeholder="Speak your query to the Rishi..."
+              placeholder={t('vedicAstrology.guruChatPlaceholder')}
               rows={1}
-              className="flex-1 bg-amber-950/40 border border-amber-500/30 rounded-[1.5rem] px-6 py-4 text-sm text-amber-100 focus:outline-none focus:border-amber-400/60 placeholder:text-amber-700/60 resize-none font-serif italic transition-colors"
+              className="flex-1 min-h-[48px] max-h-[120px] bg-amber-950/40 border border-amber-500/30 rounded-[1.5rem] px-4 sm:px-6 py-3 sm:py-4 text-sm text-amber-100 focus:outline-none focus:border-amber-400/60 placeholder:text-amber-700/60 resize-none font-serif italic transition-colors"
             />
             {typeof window !== 'undefined' && ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition) && (
               <Button
@@ -590,7 +615,7 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
                 variant={isListening ? 'default' : 'outline'}
                 onClick={toggleMic}
                 disabled={isLoading}
-                className={`p-4 rounded-2xl ${isListening ? 'bg-rose-600 hover:bg-rose-500' : 'border-amber-500/30 text-amber-300'} transition-all active:scale-95`}
+                className={`min-w-[44px] min-h-[44px] w-12 h-12 p-0 rounded-full flex items-center justify-center shrink-0 ${isListening ? 'bg-rose-600 hover:bg-rose-500' : 'border-amber-500/30 text-amber-300'} transition-all active:scale-95`}
                 aria-label={isListening ? 'Stop listening' : 'Speak'}
               >
                 {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
@@ -599,15 +624,15 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
             <Button 
               type="submit"
               disabled={isLoading || !input.trim()}
-              className="p-4 rounded-2xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white disabled:opacity-30 transition-all active:scale-95 shadow-xl shadow-amber-500/20"
+              className="min-w-[44px] min-h-[44px] w-12 h-12 p-0 rounded-full flex items-center justify-center shrink-0 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white disabled:opacity-30 transition-all active:scale-95 shadow-xl shadow-amber-500/20"
             >
               <Send className="w-5 h-5" />
             </Button>
           </div>
         </form>
         
-        {/* Action Chips */}
-        <div className="flex flex-wrap gap-2 justify-center">
+        {/* Action Chips — horizontal scroll on mobile */}
+        <div className="flex gap-2 justify-center flex-wrap overflow-x-auto pb-1 scrollbar-hide min-h-[44px] items-center">
           <ActionChip icon="🐉" label="Rahu Cycle Reading" onClick={() => handleSendMessage(`Rishi, what is the karmic significance of my current ${bhrigu.active?.planet || 'planetary'} cycle? How should I navigate this activation period? Use my birth data.`)} />
           <ActionChip icon="💰" label="Financial Verdict" onClick={() => handleSendMessage("Is this moment auspicious for major financial action? Use my chart and today's date. Deliver the Verdict.")} />
           <ActionChip icon="⚡" label="Karmic Blockage" onClick={() => handleSendMessage("Identify the primary karmic obstacle in my current cycle and provide the Bhrigu Remedy with mantra and frequency.")} />

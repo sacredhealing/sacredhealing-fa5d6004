@@ -1943,7 +1943,8 @@
     "birthDate": "Birth Date",
     "birthTime": "Birth Time",
     "birthPlace": "Birth Place",
-    "calculate": "Calculate"
+    "calculate": "Calculate",
+    "guruChatPlaceholder": "Speak your query to the Rishi..."
   },
   "announcements": {
     "newAnnouncement": "New Announcement",

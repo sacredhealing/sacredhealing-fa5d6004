@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Sparkles, Star, Crown, Lock, CheckCircle, User, Calendar, Compass, Zap, MessageCircle, Clock, Eye, Timer, BookOpen } from 'lucide-react';
+import { Sparkles, Star, Crown, Lock, CheckCircle, User, Calendar, Zap } from 'lucide-react';
 import { useVedicAstrology } from '@/hooks/useVedicAstrology';
 import { useMembership } from '@/hooks/useMembership';
 import { useAuth } from '@/hooks/useAuth';
@@ -27,18 +27,6 @@ const mapToAITier = (dbTier: 'basic' | 'premium' | 'master'): MembershipTier => 
     case 'master': return 'premium';
     default: return 'free';
   }
-};
-
-const SECTION_NAV = [
-  { id: 'overview', label: 'Overview', icon: Eye },
-  { id: 'consult-guru', label: 'Guru', icon: MessageCircle },
-  { id: 'hora', label: 'Hora', icon: Timer },
-  { id: 'nakshatra', label: 'Nakshatra', icon: Star },
-  { id: 'blueprint', label: 'Blueprint', icon: BookOpen },
-] as const;
-
-const scrollTo = (id: string) => {
-  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 };
 
 const VedicAstrology: React.FC = () => {
@@ -325,30 +313,7 @@ const VedicAstrology: React.FC = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Sticky Section Nav (jump between major sections) */}
-        {hasBirthDetails && activeTier && useAIMode && (
-          <motion.div
-            className="sticky top-0 z-50 mb-6"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.15 }}
-          >
-            <div className="flex bg-slate-950/80 backdrop-blur-xl border border-slate-800 p-1.5 rounded-2xl gap-1 shadow-2xl overflow-x-auto">
-              {SECTION_NAV.map(({ id, label, icon: Icon }) => (
-                <button
-                  key={id}
-                  onClick={() => scrollTo(id)}
-                  className="flex-1 flex items-center justify-center py-2.5 px-3 rounded-xl text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-all duration-200 whitespace-nowrap"
-                >
-                  <Icon className="w-3.5 h-3.5 mr-1.5" />
-                  {label}
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {/* Active Tier Content */}
+        {/* Active Tier Content — collapsible sections only, no tabs */}
         {activeTier && (
           <motion.div
             key={`${activeTier}-${useAIMode}`}
