@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 
 interface Balance {
@@ -18,109 +19,109 @@ interface Transaction {
   created_at: string;
 }
 
+async function fetchBalance(userId: string): Promise<Balance> {
+  const { data, error } = await supabase
+    .from('user_balances')
+    .select('balance, total_earned, total_spent')
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return { balance: 0, total_earned: 0, total_spent: 0 };
+  return {
+    balance: Number(data.balance),
+    total_earned: Number(data.total_earned),
+    total_spent: Number(data.total_spent),
+  };
+}
+
+async function fetchTransactions(userId: string): Promise<Transaction[]> {
+  const { data, error } = await supabase
+    .from('shc_transactions')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(20);
+  if (error) throw error;
+  return (data ?? []) as Transaction[];
+}
+
 export const useSHCBalance = () => {
-  const [balance, setBalance] = useState<Balance | null>(null);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const fetchBalance = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+  const balanceQuery = useQuery({
+    queryKey: ['shc-balance', user?.id],
+    queryFn: () => fetchBalance(user!.id),
+    enabled: !!user?.id,
+  });
 
-    const { data, error } = await supabase
-      .from('user_balances')
-      .select('balance, total_earned, total_spent')
-      .eq('user_id', user.id)
-      .maybeSingle();
+  const transactionsQuery = useQuery({
+    queryKey: ['shc-transactions', user?.id],
+    queryFn: () => fetchTransactions(user!.id),
+    enabled: !!user?.id,
+  });
 
-    if (error) {
-      console.error('Error fetching balance:', error);
-      return;
-    }
+  const invalidateBalance = () => {
+    queryClient.invalidateQueries({ queryKey: ['shc-balance', user?.id] });
+    queryClient.invalidateQueries({ queryKey: ['shc-transactions', user?.id] });
+  };
 
-    setBalance(data ? {
-      balance: Number(data.balance),
-      total_earned: Number(data.total_earned),
-      total_spent: Number(data.total_spent)
-    } : { balance: 0, total_earned: 0, total_spent: 0 });
-  }, []);
-
-  const fetchTransactions = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data, error } = await supabase
-      .from('shc_transactions')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(20);
-
-    if (error) {
-      console.error('Error fetching transactions:', error);
-      return;
-    }
-
-    setTransactions(data as Transaction[]);
-  }, []);
-
-  useEffect(() => {
-    const loadData = async () => {
-      setIsLoading(true);
-      await Promise.all([fetchBalance(), fetchTransactions()]);
-      setIsLoading(false);
-    };
-
-    loadData();
-  }, [fetchBalance, fetchTransactions]);
-
-  const withdrawSHC = useCallback(async (amount: number, walletAddress?: string) => {
-    try {
+  const withdrawMutation = useMutation({
+    mutationFn: async ({ amount, walletAddress }: { amount: number; walletAddress?: string }) => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
-
       const response = await supabase.functions.invoke('shc-transfer', {
         body: { action: 'withdraw', amount, walletAddress },
       });
-
       if (response.error) throw response.error;
-
+    },
+    onSuccess: (_, { amount }) => {
+      toast({ title: 'Withdrawal successful', description: `${amount} SHC sent to your wallet` });
+      invalidateBalance();
+    },
+    onError: (error: Error) => {
       toast({
-        title: "Withdrawal successful",
-        description: `${amount} SHC sent to your wallet`
+        title: 'Withdrawal failed',
+        description: error.message || 'Failed to process withdrawal',
+        variant: 'destructive',
       });
+    },
+  });
 
-      await Promise.all([fetchBalance(), fetchTransactions()]);
-      return true;
-    } catch (error: any) {
-      toast({
-        title: "Withdrawal failed",
-        description: error.message || "Failed to process withdrawal",
-        variant: "destructive"
-      });
-      return false;
-    }
-  }, [toast, fetchBalance, fetchTransactions]);
-
-  const earnSHC = useCallback(async (amount: number, description: string) => {
-    try {
+  const earnMutation = useMutation({
+    mutationFn: async ({ amount, description }: { amount: number; description: string }) => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
-
       const response = await supabase.functions.invoke('shc-transfer', {
         body: { action: 'earn', amount, description },
       });
-
       if (response.error) throw response.error;
+    },
+    onSuccess: () => invalidateBalance(),
+  });
 
-      await Promise.all([fetchBalance(), fetchTransactions()]);
+  const withdrawSHC = async (amount: number, walletAddress?: string) => {
+    try {
+      await withdrawMutation.mutateAsync({ amount, walletAddress });
       return true;
-    } catch (error: any) {
-      console.error('Earn SHC error:', error);
+    } catch {
       return false;
     }
-  }, [fetchBalance, fetchTransactions]);
+  };
+
+  const earnSHC = async (amount: number, description: string) => {
+    try {
+      await earnMutation.mutateAsync({ amount, description });
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const balance = balanceQuery.data ?? null;
+  const transactions = transactionsQuery.data ?? [];
+  const isLoading = balanceQuery.isLoading || transactionsQuery.isLoading;
 
   return {
     balance,
@@ -128,7 +129,7 @@ export const useSHCBalance = () => {
     isLoading,
     withdrawSHC,
     earnSHC,
-    refreshBalance: fetchBalance,
-    refreshTransactions: fetchTransactions
+    refreshBalance: () => queryClient.invalidateQueries({ queryKey: ['shc-balance', user?.id] }),
+    refreshTransactions: () => queryClient.invalidateQueries({ queryKey: ['shc-transactions', user?.id] }),
   };
 };

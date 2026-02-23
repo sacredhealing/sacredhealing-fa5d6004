@@ -1,44 +1,41 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
+async function getSession(): Promise<Session | null> {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session;
+}
+
 export const useAuth = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
+
+  const { data: session, isLoading } = useQuery({
+    queryKey: ['auth-user'],
+    queryFn: getSession,
+    staleTime: 0,
+    gcTime: 5 * 60 * 1000,
+  });
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setIsLoading(false);
-      }
-    );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setIsLoading(false);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      queryClient.invalidateQueries({ queryKey: ['auth-user'] });
     });
-
     return () => subscription.unsubscribe();
-  }, []);
+  }, [queryClient]);
+
+  const user: User | null = session?.user ?? null;
 
   const signUp = async (email: string, password: string, fullName?: string) => {
     const redirectUrl = `${window.location.origin}/dashboard`;
-    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: redirectUrl,
-        data: {
-          full_name: fullName
-        }
-      }
+        data: { full_name: fullName },
+      },
     });
     return { data, error };
   };
@@ -46,7 +43,7 @@ export const useAuth = () => {
   const signIn = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
-      password
+      password,
     });
     return { data, error };
   };
@@ -58,11 +55,11 @@ export const useAuth = () => {
 
   return {
     user,
-    session,
+    session: session ?? null,
     isLoading,
     isAuthenticated: !!session,
     signUp,
     signIn,
-    signOut
+    signOut,
   };
 };
