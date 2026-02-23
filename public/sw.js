@@ -1,9 +1,10 @@
-const CACHE_NAME = 'sacred-healing-v3';
+const CACHE_NAME = 'sacred-healing-v4';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/icon-192x192.png',
   '/icon-master.png',
+  '/icon-master-512.webp',
   '/icon-512x512.png',
   '/manifest.json',
   '/noiseGateProcessor.js'
