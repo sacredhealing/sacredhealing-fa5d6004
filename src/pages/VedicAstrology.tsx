@@ -49,11 +49,12 @@ const VedicAstrology: React.FC = () => {
   const { tiers, isLoading, hasAccess, getHighestAccessLevel } = useVedicAstrology();
   const { tier: membershipTier } = useMembership();
   const [birthDetailsDialogOpen, setBirthDetailsDialogOpen] = useState(false);
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
 
   const userKey = user?.id ?? 'anon';
   const lsKey = (k: string) => `sh:vedic:${userKey}:${k}`;
 
-  // Persisted state (survives unmount / navigation)
+  // Default: free → Classic, paid → AI-Powered. Persisted so paid users keep their choice.
   const [useAIMode, setUseAIMode] = usePersistedState<boolean>(lsKey('aiMode'), true);
   const [syncState, setSyncState] = usePersistedState<{ status: 'idle' | 'synced' | 'error'; lastSyncedAt?: string }>(
     lsKey('sync'),
@@ -117,6 +118,19 @@ const VedicAstrology: React.FC = () => {
   }, [getHighestAccessLevel, hasAccess, searchParams]);
 
   const isPaid = membershipTier !== 'free';
+
+  // Free users always see Classic (cannot switch to AI without upgrading)
+  useEffect(() => {
+    if (!isPaid && useAIMode) setUseAIMode(false);
+  }, [isPaid, useAIMode, setUseAIMode]);
+
+  const handleModeSwitch = (toAi: boolean) => {
+    if (toAi && !isPaid) {
+      setShowUpgradeDialog(true);
+      return;
+    }
+    setUseAIMode(toAi);
+  };
 
   // Create UserProfile for AI Dashboard
   const userProfile: UserProfile | null = hasBirthDetails && activeTier ? {
@@ -249,27 +263,27 @@ const VedicAstrology: React.FC = () => {
         </motion.div>
 
 
-        {/* Mode Toggle */}
+        {/* Mode Toggle — free users see AI button but get upgrade prompt on click */}
         {hasBirthDetails && activeTier && (
           <div className="flex justify-center mb-4">
-            <div className="inline-flex bg-muted/30 rounded-lg p-1 border border-border">
+            <div className="inline-flex bg-amber-950/30 rounded-lg p-1 border border-amber-900/30">
               <button
-                onClick={() => setUseAIMode(true)}
+                onClick={() => handleModeSwitch(true)}
                 className={`px-4 py-2 rounded-md text-xs font-medium transition-all ${
-                  useAIMode 
-                    ? 'bg-primary text-primary-foreground shadow-sm' 
-                    : 'text-muted-foreground hover:text-foreground'
+                  useAIMode
+                    ? 'bg-amber-600 text-black shadow-sm'
+                    : 'text-amber-200/70 hover:text-amber-100'
                 }`}
               >
                 <Zap className="w-3 h-3 inline mr-1" />
                 AI-Powered
               </button>
               <button
-                onClick={() => setUseAIMode(false)}
+                onClick={() => handleModeSwitch(false)}
                 className={`px-4 py-2 rounded-md text-xs font-medium transition-all ${
-                  !useAIMode 
-                    ? 'bg-primary text-primary-foreground shadow-sm' 
-                    : 'text-muted-foreground hover:text-foreground'
+                  !useAIMode
+                    ? 'bg-amber-600 text-black shadow-sm'
+                    : 'text-amber-200/70 hover:text-amber-100'
                 }`}
               >
                 <Star className="w-3 h-3 inline mr-1" />
@@ -278,6 +292,38 @@ const VedicAstrology: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* Upgrade prompt when free user clicks AI-Powered */}
+        <Dialog open={showUpgradeDialog} onOpenChange={setShowUpgradeDialog}>
+          <DialogContent className="bg-[#0d0d14] border-amber-900/30 text-amber-100 max-w-md">
+            <DialogHeader>
+              <DialogTitle className="font-serif text-2xl text-amber-200">
+                🔱 Unlock AI-Powered Vedic Guidance
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <p className="text-amber-100/70 font-serif text-sm leading-relaxed">
+                Access the Bhrigu Nadi Oracle, personalized AI readings, Soul Blueprint analysis, Yoga Activator, and more.
+              </p>
+              <ul className="space-y-2 text-amber-200/60 text-sm font-serif">
+                <li>✦ AI Guru Chat with Bhrigu Rishi Oracle</li>
+                <li>✦ Personalized Soul Blueprint & Karma Analysis</li>
+                <li>✦ Planetary Yoga Activation Protocols</li>
+                <li>✦ Real-time Hora Notifications</li>
+                <li>✦ Deep Nakshatra & Dasha Insights</li>
+              </ul>
+              <Button
+                onClick={() => {
+                  setShowUpgradeDialog(false);
+                  navigate('/membership');
+                }}
+                className="w-full bg-gradient-to-r from-amber-600 to-amber-500 text-black font-semibold hover:opacity-90"
+              >
+                Upgrade to Premium →
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Sticky Section Nav (jump between major sections) */}
         {hasBirthDetails && activeTier && useAIMode && (
@@ -319,11 +365,9 @@ const VedicAstrology: React.FC = () => {
                 onUpgrade={() => navigate('/membership')}
               />
             ) : (
-              <Card className="border-2 border-primary/30">
-                <CardContent className="p-6">
-                  <DailyVedicInsight tier={activeTier} />
-                </CardContent>
-              </Card>
+              <div className="rounded-2xl border border-amber-900/20 bg-[#0d0d14]/80 p-4 sm:p-6">
+                <DailyVedicInsight tier={activeTier} />
+              </div>
             )}
           </motion.div>
         )}
