@@ -26,6 +26,7 @@ export function useUserDailyState() {
 
   const { data: stateData, isLoading } = useQuery({
     queryKey: ['user-daily-state', user?.id],
+    staleTime: 30 * 1000,
     queryFn: async (): Promise<{
       state: UserDailyState;
       last7DaysSessions: number;

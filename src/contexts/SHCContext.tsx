@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -35,8 +36,8 @@ export const useSHC = () => {
 
 export const SHCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, session } = useAuth();
+  const queryClient = useQueryClient();
   const [balance, setBalance] = useState<Balance | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const hasUpdatedStreak = useRef(false);
 
@@ -65,99 +66,30 @@ export const SHCProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } : { balance: 0, total_earned: 0, total_spent: 0 });
   }, [user]);
 
-  const fetchProfile = useCallback(async () => {
-    if (!user) {
-      setProfile(null);
-      return;
-    }
+  const getProfileFromCache = useCallback((): Profile | null => {
+    if (!user?.id) return null;
+    const cached = queryClient.getQueryData<{ streak_days: number; last_login_date: string | null }>(['profile', user.id]);
+    if (cached) return { streak_days: cached.streak_days, last_login_date: cached.last_login_date ?? null };
+    return null;
+  }, [queryClient, user?.id]);
 
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('streak_days, last_login_date')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Error fetching profile:', error);
-      return;
-    }
-
-    setProfile(data);
-  }, [user]);
-
-  const updateStreak = useCallback(async () => {
-    if (!user || hasUpdatedStreak.current) return;
-    
-    hasUpdatedStreak.current = true;
-
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('streak_days, last_login_date')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    if (!profileData) return;
-
-    const today = new Date().toISOString().split('T')[0];
-    const lastLogin = profileData.last_login_date;
-
-    if (lastLogin === today) {
-      // Already logged in today, no update needed
-      return;
-    }
-
-    let newStreak = profileData.streak_days;
-
-    if (lastLogin) {
-      const lastDate = new Date(lastLogin);
-      const todayDate = new Date(today);
-      const diffTime = todayDate.getTime() - lastDate.getTime();
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-      if (diffDays === 1) {
-        // Consecutive day - increment streak
-        newStreak = profileData.streak_days + 1;
-      } else if (diffDays > 1) {
-        // Missed a day - reset streak
-        newStreak = 1;
-      }
-    } else {
-      // First login ever
-      newStreak = 1;
-    }
-
-    // Update profile with new streak and login date
-    const { error } = await supabase
-      .from('profiles')
-      .update({ 
-        streak_days: newStreak, 
-        last_login_date: today 
-      })
-      .eq('user_id', user.id);
-
-    if (!error) {
-      setProfile(prev => prev ? { ...prev, streak_days: newStreak, last_login_date: today } : null);
-      
-      // Award streak bonuses at milestones
-      if (newStreak === 3 && profileData.streak_days < 3) {
-        await earnSHC(10, '3-day streak bonus!');
-        toast.success('🔥 3-day streak! +10 SHC bonus!');
-      } else if (newStreak === 7 && profileData.streak_days < 7) {
-        await earnSHC(25, '7-day streak bonus!');
-        toast.success('🔥 7-day streak! +25 SHC bonus!');
-      } else if (newStreak === 14 && profileData.streak_days < 14) {
-        await earnSHC(50, '14-day streak bonus!');
-        toast.success('🔥 14-day streak! +50 SHC bonus!');
-      } else if (newStreak === 30 && profileData.streak_days < 30) {
-        await earnSHC(100, '30-day streak bonus!');
-        toast.success('🔥 30-day streak! +100 SHC bonus!');
-      } else if (newStreak > 1) {
-        // Small daily bonus for maintaining streak (5 SHC per day after day 1)
-        await earnSHC(5, `Day ${newStreak} streak bonus`);
-        toast.success(`🔥 ${newStreak} day streak! +5 SHC`);
-      }
-    }
-  }, [user]);
+  const fetchProfileForStreak = useCallback(async (): Promise<Profile | null> => {
+    if (!user?.id) return null;
+    const data = await queryClient.fetchQuery({
+      queryKey: ['profile', user.id],
+      queryFn: async () => {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('user_id, full_name, avatar_url, bio, streak_days, preferred_language, last_login_date, total_referrals')
+          .eq('user_id', user.id)
+          .single();
+        return profileData;
+      },
+      staleTime: 5 * 60 * 1000,
+    });
+    if (!data) return null;
+    return { streak_days: (data as { streak_days: number }).streak_days, last_login_date: (data as { last_login_date: string | null }).last_login_date ?? null };
+  }, [user?.id, queryClient]);
 
   const earnSHC = useCallback(async (amount: number, description: string) => {
     if (!session) return false;
@@ -169,7 +101,6 @@ export const SHCProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       if (error) throw error;
 
-      // Optimistic update
       setBalance(prev => prev ? {
         ...prev,
         balance: prev.balance + amount,
@@ -183,6 +114,71 @@ export const SHCProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [session]);
 
+  const updateStreak = useCallback(async () => {
+    if (!user || hasUpdatedStreak.current) return;
+
+    hasUpdatedStreak.current = true;
+
+    let profileData: Profile | null = getProfileFromCache();
+    if (!profileData) {
+      profileData = await fetchProfileForStreak();
+    }
+    if (!profileData) return;
+
+    const today = new Date().toISOString().split('T')[0];
+    const lastLogin = profileData.last_login_date;
+
+    if (lastLogin === today) {
+      return;
+    }
+
+    let newStreak = profileData.streak_days;
+
+    if (lastLogin) {
+      const lastDate = new Date(lastLogin);
+      const todayDate = new Date(today);
+      const diffTime = todayDate.getTime() - lastDate.getTime();
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 1) {
+        newStreak = profileData.streak_days + 1;
+      } else if (diffDays > 1) {
+        newStreak = 1;
+      }
+    } else {
+      newStreak = 1;
+    }
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        streak_days: newStreak,
+        last_login_date: today
+      })
+      .eq('user_id', user.id);
+
+    if (!error) {
+      queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
+
+      if (newStreak === 3 && profileData.streak_days < 3) {
+        await earnSHC(10, '3-day streak bonus!');
+        toast.success('🔥 3-day streak! +10 SHC bonus!');
+      } else if (newStreak === 7 && profileData.streak_days < 7) {
+        await earnSHC(25, '7-day streak bonus!');
+        toast.success('🔥 7-day streak! +25 SHC bonus!');
+      } else if (newStreak === 14 && profileData.streak_days < 14) {
+        await earnSHC(50, '14-day streak bonus!');
+        toast.success('🔥 14-day streak! +50 SHC bonus!');
+      } else if (newStreak === 30 && profileData.streak_days < 30) {
+        await earnSHC(100, '30-day streak bonus!');
+        toast.success('🔥 30-day streak! +100 SHC bonus!');
+      } else if (newStreak > 1) {
+        await earnSHC(5, `Day ${newStreak} streak bonus`);
+        toast.success(`🔥 ${newStreak} day streak! +5 SHC`);
+      }
+    }
+  }, [user, getProfileFromCache, fetchProfileForStreak, queryClient, earnSHC]);
+
   const addOptimisticBalance = useCallback((amount: number) => {
     setBalance(prev => prev ? {
       ...prev,
@@ -192,29 +188,24 @@ export const SHCProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   const refreshBalance = useCallback(async () => {
-    await Promise.all([fetchBalance(), fetchProfile()]);
-  }, [fetchBalance, fetchProfile]);
+    await fetchBalance();
+  }, [fetchBalance]);
 
-  // Initial load
   useEffect(() => {
     if (user) {
       setIsLoading(true);
-      Promise.all([fetchBalance(), fetchProfile()])
-        .finally(() => setIsLoading(false));
-      
-      // Update streak on initial load
+      fetchBalance().finally(() => setIsLoading(false));
+
       setTimeout(() => {
         updateStreak();
       }, 0);
     } else {
       setBalance(null);
-      setProfile(null);
       setIsLoading(false);
       hasUpdatedStreak.current = false;
     }
-  }, [user, fetchBalance, fetchProfile, updateStreak]);
+  }, [user, fetchBalance, updateStreak]);
 
-  // Real-time subscription for balance updates
   useEffect(() => {
     if (!user) return;
 
@@ -244,6 +235,8 @@ export const SHCProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       supabase.removeChannel(channel);
     };
   }, [user]);
+
+  const profile = user ? getProfileFromCache() : null;
 
   return (
     <SHCContext.Provider value={{

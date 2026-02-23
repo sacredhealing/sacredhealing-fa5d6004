@@ -88,7 +88,10 @@ const Dashboard: React.FC = () => {
   const [isContinuationCompletion, setIsContinuationCompletion] = useState(false);
 
   useEffect(() => {
-    checkAchievements();
+    const timer = setTimeout(() => {
+      checkAchievements();
+    }, 5000);
+    return () => clearTimeout(timer);
   }, [checkAchievements]);
 
   const handleStartSession = useCallback((g: DailyGuidance, options?: { isContinuation?: boolean }) => {

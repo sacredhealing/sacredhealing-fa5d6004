@@ -54,12 +54,14 @@ export const useSHCBalance = () => {
     queryKey: ['shc-balance', user?.id],
     queryFn: () => fetchBalance(user!.id),
     enabled: !!user?.id,
+    staleTime: 30 * 1000,
   });
 
   const transactionsQuery = useQuery({
     queryKey: ['shc-transactions', user?.id],
     queryFn: () => fetchTransactions(user!.id),
     enabled: !!user?.id,
+    staleTime: 30 * 1000,
   });
 
   const invalidateBalance = () => {

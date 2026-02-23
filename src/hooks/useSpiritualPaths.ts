@@ -64,6 +64,7 @@ export const useSpiritualPaths = () => {
       if (error) throw error;
       return data as SpiritualPath[];
     },
+    staleTime: 5 * 60 * 1000,
   });
 
   const userProgressQuery = useQuery({
@@ -80,6 +81,7 @@ export const useSpiritualPaths = () => {
       return data as UserPathProgress[];
     },
     enabled: !!user,
+    staleTime: 5 * 60 * 1000,
   });
 
   const getPathBySlug = async (slug: string): Promise<SpiritualPath | null> => {

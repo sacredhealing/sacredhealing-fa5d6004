@@ -48,7 +48,7 @@ export const useDailyJourney = () => {
   const today = new Date().toISOString().split('T')[0];
 
   const todayActivityQuery = useQuery({
-    queryKey: ['daily-activity', user?.id, today],
+    queryKey: ['user-daily-activities', user?.id, today],
     queryFn: async () => {
       if (!user) return null;
 
@@ -63,10 +63,11 @@ export const useDailyJourney = () => {
       return data as DailyActivity | null;
     },
     enabled: !!user,
+    staleTime: 30 * 1000,
   });
 
   const goalsQuery = useQuery({
-    queryKey: ['user-goals', user?.id],
+    queryKey: ['user-spiritual-goals', user?.id],
     queryFn: async () => {
       if (!user) return [];
 
@@ -80,6 +81,7 @@ export const useDailyJourney = () => {
       return data;
     },
     enabled: !!user,
+    staleTime: 5 * 60 * 1000,
   });
 
   const createOrUpdateActivity = async (updates: Partial<DailyActivity>) => {
@@ -116,8 +118,7 @@ export const useDailyJourney = () => {
       await earnSHC(15, 'Morning practice completed');
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['daily-activity'] });
-      queryClient.invalidateQueries({ queryKey: ['daily-guidance-activity'] });
+      queryClient.invalidateQueries({ queryKey: ['user-daily-activities'] });
       queryClient.invalidateQueries({ queryKey: ['user-daily-state'] });
     },
   });
@@ -132,8 +133,7 @@ export const useDailyJourney = () => {
       await earnSHC(10, 'Midday mindfulness completed');
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['daily-activity'] });
-      queryClient.invalidateQueries({ queryKey: ['daily-guidance-activity'] });
+      queryClient.invalidateQueries({ queryKey: ['user-daily-activities'] });
       queryClient.invalidateQueries({ queryKey: ['user-daily-state'] });
     },
   });
@@ -150,8 +150,7 @@ export const useDailyJourney = () => {
       await earnSHC(20, 'Evening reset completed');
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['daily-activity'] });
-      queryClient.invalidateQueries({ queryKey: ['daily-guidance-activity'] });
+      queryClient.invalidateQueries({ queryKey: ['user-daily-activities'] });
       queryClient.invalidateQueries({ queryKey: ['user-daily-state'] });
     },
   });
@@ -161,7 +160,7 @@ export const useDailyJourney = () => {
       await createOrUpdateActivity({ mood_morning: mood });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['daily-activity'] });
+      queryClient.invalidateQueries({ queryKey: ['user-daily-activities'] });
     },
   });
 

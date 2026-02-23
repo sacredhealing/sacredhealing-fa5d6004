@@ -38,6 +38,7 @@ export const useJournal = () => {
       return data as JournalEntry[];
     },
     enabled: !!user,
+    staleTime: 5 * 60 * 1000,
   });
 
   const todayEntryQuery = useQuery({
@@ -57,6 +58,7 @@ export const useJournal = () => {
       return data as JournalEntry | null;
     },
     enabled: !!user,
+    staleTime: 30 * 1000,
   });
 
   const createEntry = useMutation({

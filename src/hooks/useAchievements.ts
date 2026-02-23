@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
 
 interface Achievement {
   id: string;
@@ -81,74 +82,100 @@ async function fetchUserMilestones(userId: string): Promise<UserMilestone[]> {
   return (data ?? []) as unknown as UserMilestone[];
 }
 
-async function fetchUserStats(userId: string): Promise<{
-  streakDays: number;
-  totalSessions: number;
-  meditationCount: number;
-  referrals: number;
-}> {
-  const [profileRes, meditationRes, musicRes, mantraRes] = await Promise.all([
-    supabase.from("profiles").select("streak_days, total_referrals").eq("user_id", userId).single(),
-    supabase.from("meditation_completions").select("*", { count: "exact", head: true }).eq("user_id", userId),
-    supabase.from("music_completions").select("*", { count: "exact", head: true }).eq("user_id", userId),
-    supabase.from("mantra_completions").select("*", { count: "exact", head: true }).eq("user_id", userId),
-  ]);
-
-  const profile = profileRes.data as { streak_days?: number; total_referrals?: number } | null;
-  const streakDays = profile?.streak_days ?? 0;
-  const referrals = profile?.total_referrals ?? 0;
-  const meditationCount = meditationRes.count ?? 0;
-  const musicCount = musicRes.count ?? 0;
-  const mantraCount = mantraRes.count ?? 0;
-  const totalSessions = meditationCount + musicCount + mantraCount;
-
-  return { streakDays, totalSessions, meditationCount, referrals };
-}
-
 export const useAchievements = () => {
   const { user } = useAuth();
+  const { profile: sharedProfile } = useProfile();
   const queryClient = useQueryClient();
   const [newlyUnlocked, setNewlyUnlocked] = useState<Achievement | null>(null);
 
   const achievementsQuery = useQuery({
     queryKey: ["achievements"],
     queryFn: fetchAchievements,
+    staleTime: 5 * 60 * 1000,
   });
   const milestonesQuery = useQuery({
     queryKey: ["milestones"],
     queryFn: fetchMilestones,
+    staleTime: 5 * 60 * 1000,
   });
   const userAchievementsQuery = useQuery({
     queryKey: ["user-achievements", user?.id],
     queryFn: () => fetchUserAchievements(user!.id),
     enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
   });
   const userMilestonesQuery = useQuery({
     queryKey: ["user-milestones", user?.id],
     queryFn: () => fetchUserMilestones(user!.id),
     enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
   });
-  const userStatsQuery = useQuery({
-    queryKey: ["user-achievement-stats", user?.id],
-    queryFn: () => fetchUserStats(user!.id),
+
+  const meditationCountQuery = useQuery({
+    queryKey: ["meditation-completions-count", user?.id],
+    queryFn: async () => {
+      if (!user) return 0;
+      const { count } = await supabase
+        .from("meditation_completions")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id);
+      return count ?? 0;
+    },
     enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
+  });
+  const musicCountQuery = useQuery({
+    queryKey: ["music-completions-count", user?.id],
+    queryFn: async () => {
+      if (!user) return 0;
+      const { count } = await supabase
+        .from("music_completions")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id);
+      return count ?? 0;
+    },
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
+  });
+  const mantraCountQuery = useQuery({
+    queryKey: ["mantra-completions-count", user?.id],
+    queryFn: async () => {
+      if (!user) return 0;
+      const { count } = await supabase
+        .from("mantra_completions")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id);
+      return count ?? 0;
+    },
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
   });
 
   const achievements = achievementsQuery.data ?? [];
   const milestones = milestonesQuery.data ?? [];
   const userAchievements = userAchievementsQuery.data ?? [];
   const userMilestones = userMilestonesQuery.data ?? [];
-  const userStats = userStatsQuery.data ?? {
-    streakDays: 0,
-    totalSessions: 0,
-    meditationCount: 0,
-    referrals: 0,
+
+  const meditationCount = meditationCountQuery.data ?? 0;
+  const musicCount = musicCountQuery.data ?? 0;
+  const mantraCount = mantraCountQuery.data ?? 0;
+  const totalSessions = meditationCount + musicCount + mantraCount;
+  const userStats = {
+    streakDays: sharedProfile?.streak_days ?? 0,
+    totalSessions,
+    meditationCount,
+    referrals: sharedProfile?.total_referrals ?? 0,
   };
 
   const loading =
     achievementsQuery.isLoading ||
     milestonesQuery.isLoading ||
-    (!!user && (userAchievementsQuery.isLoading || userMilestonesQuery.isLoading || userStatsQuery.isLoading));
+    (!!user &&
+      (userAchievementsQuery.isLoading ||
+        userMilestonesQuery.isLoading ||
+        meditationCountQuery.isLoading ||
+        musicCountQuery.isLoading ||
+        mantraCountQuery.isLoading));
 
   const checkAchievements = useCallback(async () => {
     if (!user) return;
@@ -161,11 +188,15 @@ export const useAchievements = () => {
         setNewlyUnlocked(data.newAchievements[0]);
         queryClient.invalidateQueries({ queryKey: ["user-achievements", user.id] });
         queryClient.invalidateQueries({ queryKey: ["user-milestones", user.id] });
-        queryClient.invalidateQueries({ queryKey: ["user-achievement-stats", user.id] });
+        queryClient.invalidateQueries({ queryKey: ["meditation-completions-count", user.id] });
+        queryClient.invalidateQueries({ queryKey: ["music-completions-count", user.id] });
+        queryClient.invalidateQueries({ queryKey: ["mantra-completions-count", user.id] });
       }
       if (data?.newMilestones?.length > 0) {
         queryClient.invalidateQueries({ queryKey: ["user-milestones", user.id] });
-        queryClient.invalidateQueries({ queryKey: ["user-achievement-stats", user.id] });
+        queryClient.invalidateQueries({ queryKey: ["meditation-completions-count", user.id] });
+        queryClient.invalidateQueries({ queryKey: ["music-completions-count", user.id] });
+        queryClient.invalidateQueries({ queryKey: ["mantra-completions-count", user.id] });
       }
       return data;
     } catch (err) {
@@ -224,7 +255,9 @@ export const useAchievements = () => {
   const refetch = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ["user-achievements", user?.id] });
     queryClient.invalidateQueries({ queryKey: ["user-milestones", user?.id] });
-    queryClient.invalidateQueries({ queryKey: ["user-achievement-stats", user?.id] });
+    queryClient.invalidateQueries({ queryKey: ["meditation-completions-count", user?.id] });
+    queryClient.invalidateQueries({ queryKey: ["music-completions-count", user?.id] });
+    queryClient.invalidateQueries({ queryKey: ["mantra-completions-count", user?.id] });
   }, [queryClient, user?.id]);
 
   return {

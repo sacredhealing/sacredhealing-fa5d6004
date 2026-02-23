@@ -10,12 +10,14 @@ export interface Profile {
   bio: string | null;
   streak_days: number;
   preferred_language: string | null;
+  last_login_date: string | null;
+  total_referrals?: number;
 }
 
 async function fetchProfile(userId: string): Promise<Profile | null> {
   const { data, error } = await supabase
     .from('profiles')
-    .select('user_id, full_name, avatar_url, bio, streak_days, preferred_language')
+    .select('user_id, full_name, avatar_url, bio, streak_days, preferred_language, last_login_date, total_referrals')
     .eq('user_id', userId)
     .single();
 
@@ -36,6 +38,7 @@ export const useProfile = () => {
     queryKey: ['profile', user?.id],
     queryFn: () => fetchProfile(user!.id),
     enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
   });
 
   const updatePreferredLanguageMutation = useMutation({

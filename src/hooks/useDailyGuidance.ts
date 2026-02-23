@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
 import { useUserDailyState } from '@/hooks/useUserDailyState';
 import { getAdaptiveGuidance } from '@/lib/sacredGuidanceMessages';
 
@@ -134,53 +135,42 @@ export function getDailyGuidance(params: {
 
 export function useDailyGuidance() {
   const { user } = useAuth();
+  const { profile } = useProfile();
   const today = new Date().toISOString().split('T')[0];
 
   const { data: activity, isLoading: activityLoading } = useQuery({
-    queryKey: ['daily-guidance-activity', user?.id, today],
+    queryKey: ['user-daily-activities', user?.id, today],
     queryFn: async () => {
       if (!user) return null;
       const { data } = await supabase
         .from('user_daily_activities')
-        .select('morning_completed, midday_completed, evening_completed')
+        .select('*')
         .eq('user_id', user.id)
         .eq('activity_date', today)
         .maybeSingle();
-      return data;
+      return data as { morning_completed?: boolean; midday_completed?: boolean; evening_completed?: boolean } | null;
     },
     enabled: !!user,
-  });
-
-  const { data: profile, isLoading: profileLoading } = useQuery({
-    queryKey: ['daily-guidance-profile', user?.id],
-    queryFn: async () => {
-      if (!user) return null;
-      const { data } = await supabase
-        .from('profiles')
-        .select('streak_days')
-        .eq('user_id', user.id)
-        .single();
-      return data as { streak_days: number } | null;
-    },
-    enabled: !!user,
+    staleTime: 30 * 1000,
   });
 
   const { data: goals, isLoading: goalsLoading } = useQuery({
-    queryKey: ['daily-guidance-goals', user?.id],
+    queryKey: ['user-spiritual-goals', user?.id],
     queryFn: async () => {
       if (!user) return [];
       const { data } = await supabase
         .from('user_spiritual_goals')
-        .select('goal_type')
+        .select('*')
         .eq('user_id', user.id)
         .order('priority');
       return (data || []) as { goal_type: string }[];
     },
     enabled: !!user,
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: pathProgress, isLoading: pathLoading } = useQuery({
-    queryKey: ['daily-guidance-path', user?.id],
+    queryKey: ['user-active-path', user?.id],
     queryFn: async () => {
       if (!user) return null;
       const { data: progress } = await supabase
@@ -198,9 +188,10 @@ export function useDailyGuidance() {
       return path ? { path_id: progress.path_id, slug: path.slug } : null;
     },
     enabled: !!user,
+    staleTime: 5 * 60 * 1000,
   });
 
-  const isLoading = activityLoading || profileLoading || goalsLoading || pathLoading;
+  const isLoading = activityLoading || goalsLoading || pathLoading;
 
   const { userState } = useUserDailyState();
   const timeOfDay = getTimeOfDay();

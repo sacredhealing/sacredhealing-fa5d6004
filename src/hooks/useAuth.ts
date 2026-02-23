@@ -14,7 +14,7 @@ export const useAuth = () => {
   const { data: session, isLoading } = useQuery({
     queryKey: ['auth-user'],
     queryFn: getSession,
-    staleTime: 0,
+    staleTime: 60 * 1000,
     gcTime: 5 * 60 * 1000,
   });
 
