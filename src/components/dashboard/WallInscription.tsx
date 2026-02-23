@@ -27,9 +27,9 @@ export const WallInscription: React.FC<WallInscriptionProps> = ({
 
   return (
     <motion.div
-      className="rounded-xl border border-amber-500/20 bg-gradient-to-r from-amber-950/30 via-violet-950/20 to-amber-950/30 overflow-hidden"
+      className="rounded-xl border border-[#D4AF37]/10 bg-[#D4AF37]/5 overflow-hidden"
       initial={false}
-      animate={{ borderColor: expanded ? 'rgba(212,175,55,0.4)' : 'rgba(212,175,55,0.2)' }}
+      animate={{ borderColor: expanded ? 'rgba(212,175,55,0.2)' : 'rgba(212,175,55,0.1)' }}
       transition={{ duration: 0.3 }}
     >
       <button
@@ -37,7 +37,7 @@ export const WallInscription: React.FC<WallInscriptionProps> = ({
         className="w-full px-4 py-3 flex items-center justify-between gap-3 text-left"
       >
         <p
-          className="text-xs sm:text-sm font-serif italic text-amber-200/90 leading-snug flex-1 min-w-0 truncate"
+          className="text-xs sm:text-sm font-serif italic text-[#D4AF37]/50 leading-snug flex-1 min-w-0 truncate"
           style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}
         >
           {oneLiner}
@@ -68,9 +68,9 @@ export const WallInscription: React.FC<WallInscriptionProps> = ({
               </div>
               {/* Quick Oracle */}
               <div>
-                <p className="text-[10px] uppercase tracking-[0.2em] text-purple-400/70 mb-1">Quick Oracle</p>
+                <p className="text-[10px] uppercase tracking-[0.2em] text-[#D4AF37]/70 mb-1">Quick Oracle</p>
                 {wisdomQuote ? (
-                  <p className="text-sm font-serif italic text-purple-100/90 leading-relaxed">
+                  <p className="text-sm font-serif italic text-amber-100/90 leading-relaxed">
                     &ldquo;{wisdomQuote}&rdquo;
                   </p>
                 ) : (

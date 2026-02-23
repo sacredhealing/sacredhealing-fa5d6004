@@ -95,6 +95,7 @@ const Dashboard: React.FC = () => {
     setActiveGuidance(g);
     setFlowState('in_session');
     setIsContinuationCompletion(options?.isContinuation ?? false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
   const todaySession = useMemo(() => {
@@ -211,10 +212,10 @@ const Dashboard: React.FC = () => {
               />
             </div>
 
-            {/* Daily routine */}
-            <div className="pt-6 border-t border-border/50 space-y-4 animate-slide-up">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                {t('dashboard.dailyRoutineSection', 'Daily routine')}
+            {/* Daily Practice */}
+            <div className="pt-6 border-t border-[#D4AF37]/10 space-y-4 animate-slide-up">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-[rgba(212,175,55,0.4)]" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
+                {t('dashboard.dailyRoutineSection', 'Daily Practice')}
               </p>
               <DailyRitualCard
                 isDayClosed={isDayClosed}
@@ -252,7 +253,7 @@ const Dashboard: React.FC = () => {
                   {achievements.length > 0 && (
                     <div>
                       <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-heading font-semibold text-foreground">
+                        <h2 className="text-lg font-semibold text-foreground" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
                           {t('dashboard.achievements')}
                         </h2>
                         <span className="text-xs text-muted-foreground">
@@ -321,7 +322,7 @@ const Dashboard: React.FC = () => {
         <button
           type="button"
           onClick={() => navigate('/mantras')}
-          className="fixed bottom-20 right-4 z-40 rounded-full h-14 w-14 bg-[#D4AF37] text-black font-bold shadow-[0_0_20px_rgba(212,175,55,0.5),0_0_40px_rgba(168,85,247,0.2)] hover:bg-amber-500 flex items-center justify-center border border-amber-400/50"
+          className="fixed bottom-20 right-4 z-40 rounded-full h-14 w-14 bg-[#D4AF37] text-black font-bold shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:bg-amber-500 flex items-center justify-center border border-amber-400/50"
           aria-label={t('dashboard.ritualMantra', 'Mantra')}
         >
           <Sparkles className="h-6 w-6" />

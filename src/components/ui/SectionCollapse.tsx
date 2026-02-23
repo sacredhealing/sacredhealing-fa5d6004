@@ -12,11 +12,11 @@ export function SectionCollapse({ title, description, defaultOpen = false, child
   return (
     <details
       open={defaultOpen}
-      className="group rounded-2xl border border-border bg-card/50 backdrop-blur-sm overflow-hidden"
+      className="group rounded-2xl border border-[#D4AF37]/10 bg-card/50 backdrop-blur-sm overflow-hidden"
     >
       <summary className="list-none cursor-pointer select-none px-5 py-4 flex items-center justify-between gap-3 min-h-[48px] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50">
         <div className="min-w-0 flex-1">
-          <div className="text-base font-semibold text-foreground">{title}</div>
+          <div className="text-base font-semibold text-foreground" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>{title}</div>
           {description ? (
             <div className="text-sm text-muted-foreground mt-0.5">{description}</div>
           ) : null}

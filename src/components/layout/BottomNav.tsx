@@ -22,7 +22,7 @@ export const BottomNav: React.FC = () => {
   const { t } = useTranslation();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#1a0a2e]/95 backdrop-blur-xl border-t border-amber-500/20 safe-area-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0D0D1A]/95 backdrop-blur-xl border-t border-[#D4AF37]/10 safe-area-bottom">
       <div
         className="grid grid-cols-6 w-full px-0 py-1 gap-0"
         style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}
@@ -35,8 +35,8 @@ export const BottomNav: React.FC = () => {
               cn(
                 'flex flex-col items-center justify-center gap-0.5 py-2 rounded-lg transition-all duration-200',
                 isActive
-                  ? 'text-[#D4AF37] drop-shadow-[0_0_8px_rgba(212,175,55,0.6)] scale-110'
-                  : 'text-[#D4AF37]/40 hover:text-[#D4AF37]/70 active:text-[#D4AF37]/70'
+                  ? 'text-[#D4AF37] drop-shadow-[0_0_8px_rgba(212,175,55,0.5)]'
+                  : 'text-[#6B5F50] hover:text-[#D4AF37]/80 active:text-[#D4AF37]/80'
               )
             }
           >

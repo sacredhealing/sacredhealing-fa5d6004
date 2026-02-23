@@ -34,7 +34,7 @@ export const SpiritualPathCard: React.FC = () => {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Compass className="w-5 h-5 text-amber-400" />
-              <h3 className="font-heading font-semibold text-foreground">
+              <h3 className="font-semibold text-foreground" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
                 {t('spiritualPath.dharmaPathProgress', 'Dharma Path Progress')}
               </h3>
             </div>
@@ -45,7 +45,7 @@ export const SpiritualPathCard: React.FC = () => {
 
           <div className="space-y-3">
             <div>
-              <p className="font-medium text-foreground">
+              <p className="font-medium text-foreground font-serif" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
                 {t(`spiritualPath.paths.${activePath.slug.replace(/-/g, '_')}.title`, activePath.title)}
               </p>
               <p className="text-xs text-muted-foreground">
@@ -69,7 +69,10 @@ export const SpiritualPathCard: React.FC = () => {
                 {t('spiritualPath.progressComplete', { percent: progressPercent, defaultValue: `${progressPercent}% complete` })}
               </span>
               <Link to={`/paths/${activePath.slug}`}>
-                <Button size="sm" variant="spiritual" className="text-xs h-8">
+                <Button
+                  size="sm"
+                  className="text-xs h-8 bg-gradient-to-r from-[#D4AF37] to-[#C4943A] text-black font-semibold rounded-full px-4 hover:brightness-110 border-0"
+                >
                   <Play className="w-3 h-3 mr-1" />
                   {t('spiritualPath.continueDayWithNumber', { day: activeProgress.current_day, defaultValue: `Continue Day ${activeProgress.current_day}` })}
                 </Button>
@@ -92,7 +95,7 @@ export const SpiritualPathCard: React.FC = () => {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Compass className="w-5 h-5 text-amber-400" />
-          <h3 className="font-heading font-semibold text-foreground">
+          <h3 className="font-semibold text-foreground" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
             {t('spiritualPath.startJourney', 'Start Your Journey')}
           </h3>
         </div>
@@ -116,7 +119,7 @@ export const SpiritualPathCard: React.FC = () => {
           </div>
           
           <div className="flex-1 min-w-0">
-            <p className="font-medium text-foreground text-sm">
+            <p className="font-medium text-foreground text-sm font-serif" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
               {t(`spiritualPath.paths.${recommendedPath.slug.replace(/-/g, '_')}.title`, recommendedPath.title)}
             </p>
             <p className="text-xs text-muted-foreground line-clamp-1">
