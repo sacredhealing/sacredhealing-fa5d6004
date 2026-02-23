@@ -20,6 +20,7 @@ import { TimezoneSelector, useUserTimezone } from './TimezoneSelector';
 import { AccurateHoraWatch } from './AccurateHoraWatch';
 import { HoraDateTimePicker } from './HoraDateTimePicker';
 import { HoraNotificationBanner } from './HoraNotificationBanner';
+import { TempleSection } from './TempleSection';
 import { useHoraNotification } from '@/hooks/useHoraNotification';
 import { useHoraWatch } from '@/hooks/useHoraWatch';
 
@@ -247,41 +248,12 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
       {horaNotificationMessage && (
         <HoraNotificationBanner message={horaNotificationMessage} onDismiss={dismissHoraNotification} />
       )}
-      {/* Cosmic Sync Status Header */}
       <div id="overview" />
-      <motion.div 
-        className="flex flex-wrap items-center justify-between gap-4 p-5 rounded-3xl bg-card/50 backdrop-blur-md border border-border/50"
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div className="flex items-center gap-4">
-          <div className="w-3 h-3 bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)] animate-pulse" />
-          <div>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Cosmic Coordinate Sync</p>
-            <p className="text-xs text-foreground font-mono">{lastSync} | {user.name}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          {onEditDetails && (
-            <Button variant="outline" size="sm" onClick={onEditDetails} className="text-[10px] font-bold uppercase tracking-widest h-8">
-              Adjust Birth Data
-            </Button>
-          )}
-          <Button variant="ghost" size="sm" onClick={() => generateReading(user, timeOffset, timezone, userId)} disabled={isLoading} className="h-8">
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-          </Button>
-        </div>
-      </motion.div>
 
       {/* ══════════ HORA WATCH ══════════ */}
       <div id="hora" />
-      <motion.section className="space-y-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        <h2 className="text-[clamp(32px,5vw,50px)] font-black text-amber-300 font-serif leading-tight flex items-center gap-3">
-          <Timer className="w-10 h-10 text-amber-400" />
-          Hora Watch
-        </h2>
-        <p className="text-[11px] text-amber-500/80 font-black uppercase tracking-[0.3em] -mt-3">Planetary Success Timing • Dr. Pillai Method</p>
+      <TempleSection title="Hora Watch" icon="⏱️" defaultOpen={false}>
+        <p className="text-[11px] text-amber-500/80 font-black uppercase tracking-[0.3em] mb-4">Planetary Success Timing • Dr. Pillai Method</p>
 
         <div className="flex flex-col gap-4">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -316,17 +288,13 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
         </div>
 
         <AccurateHoraWatch timezone={timezone} timeOffset={timeOffset} userBirthChart={{}} />
-      </motion.section>
+      </TempleSection>
 
       {/* ══════════ GURU ORACLE with SPEECH BUBBLE ══════════ */}
       <div id="consult-guru" />
-      <section className="space-y-6">
-        <h2 className="text-[clamp(32px,5vw,50px)] font-black text-purple-300 font-serif leading-tight flex items-center gap-3">
-          <MessageCircle className="w-10 h-10 text-purple-400" />
-          Consult the Guru
-        </h2>
+      <TempleSection title="Consult the Guru" icon="💬" defaultOpen={false}>
         {user.plan === 'premium' && (
-          <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-[10px] uppercase tracking-widest">
+          <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-[10px] uppercase tracking-widest mb-4">
             Oracle Active
           </Badge>
         )}
@@ -369,15 +337,11 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
         )}
 
         <CosmicConsultation user={user} onUpgrade={onUpgrade} />
-      </section>
+      </TempleSection>
 
       {/* ══════════ COSMIC PULSE (Nakshatra) ══════════ */}
       <div id="nakshatra" />
-      <motion.section className="space-y-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}>
-        <h2 className="text-[clamp(32px,5vw,50px)] font-black text-purple-300 font-serif leading-tight">
-          Cosmic Pulse
-        </h2>
-
+      <TempleSection title="Cosmic Pulse" icon="🌙" defaultOpen={false}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2 p-6 sm:p-8 rounded-3xl bg-card/80 backdrop-blur-sm border border-purple-500/30">
             <span className="text-[11px] font-black text-purple-400 uppercase tracking-widest block mb-1">Nakshatra Focus</span>
@@ -423,14 +387,11 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
             </p>
           </div>
         </div>
-      </motion.section>
+      </TempleSection>
 
       {/* ══════════ 4 ETERNAL PILLARS (Compass Tier) ══════════ */}
       {user.plan !== 'free' && reading.personalCompass && (
-        <motion.section className="space-y-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}>
-          <h2 className="text-[clamp(32px,5vw,50px)] font-black text-indigo-300 font-serif leading-tight">
-            The 4 Eternal Pillars
-          </h2>
+        <TempleSection title="The 4 Eternal Pillars" icon="🏛️" defaultOpen={false}>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <CompassCard icon={Briefcase} title="Career" content={reading.personalCompass.career} />
             <CompassCard icon={Heart} title="Harmony" content={reading.personalCompass.relationship} />
@@ -456,18 +417,13 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
               </div>
             </div>
           </div>
-        </motion.section>
+        </TempleSection>
       )}
 
       {/* ══════════ SOUL BLUEPRINT - TAPPABLE CARD GRID ══════════ */}
       <div id="blueprint" />
       {user.plan === 'premium' && reading.masterBlueprint && (
-        <motion.section className="space-y-8" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.4 }}>
-          <h2 className="text-[clamp(32px,5vw,50px)] font-black text-amber-300 font-serif leading-tight flex items-center gap-3">
-            <Crown className="w-10 h-10 text-amber-400" />
-            Soul Blueprint
-          </h2>
-
+        <TempleSection title="Soul Blueprint" icon="👑" defaultOpen={false}>
           {/* Tappable Card Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <BlueprintCard
@@ -558,20 +514,16 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
 
           {/* Timing Peaks */}
           <div className="p-5 rounded-2xl bg-muted/20 border border-border">
-            <h4 className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-2">Primary Timing Peaks</h4>
-            <p className="text-sm text-foreground font-medium">{reading.masterBlueprint.timingPeaks}</p>
+<h4 className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-2">Primary Timing Peaks</h4>
+          <p className="text-sm text-foreground font-medium">{reading.masterBlueprint.timingPeaks}</p>
           </div>
-        </motion.section>
+        </TempleSection>
       )}
 
       {/* ══════════ BHRIGU NANDI NADI - PLANET ACTIVATION TRACKER ══════════ */}
       {bhriguData && (
-        <motion.section className="space-y-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.5 }}>
-          <h2 className="text-[clamp(32px,5vw,50px)] font-black text-orange-300 font-serif leading-tight flex items-center gap-3">
-            <Flame className="w-10 h-10 text-orange-400" />
-            Bhrigu Activation
-          </h2>
-          <p className="text-[11px] text-orange-500/80 font-black uppercase tracking-[0.3em] -mt-3">
+        <TempleSection title="Bhrigu Activation" icon="🔱" defaultOpen={false}>
+          <p className="text-[11px] text-orange-500/80 font-black uppercase tracking-[0.3em] mb-4">
             Nandi Nadi Planetary Progression • Age {bhriguData.age}
           </p>
 
@@ -637,17 +589,13 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
               );
             })}
           </div>
-        </motion.section>
+        </TempleSection>
       )}
 
       {/* ══════════ NADI DIRECTIONAL MAPPING ══════════ */}
       {user.plan !== 'free' && reading && (
-        <motion.section className="space-y-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.6 }}>
-          <h2 className="text-[clamp(32px,5vw,50px)] font-black text-cyan-300 font-serif leading-tight flex items-center gap-3">
-            <Navigation className="w-10 h-10 text-cyan-400" />
-            Planetary Alliances
-          </h2>
-          <p className="text-[11px] text-cyan-500/80 font-black uppercase tracking-[0.3em] -mt-3">
+        <TempleSection title="Planetary Alliances" icon="🧭" defaultOpen={false}>
+          <p className="text-[11px] text-cyan-500/80 font-black uppercase tracking-[0.3em] mb-4">
             Nadi Directional Mapping • Trikona Analysis
           </p>
 
@@ -673,17 +621,13 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
               </div>
             ))}
           </div>
-        </motion.section>
+        </TempleSection>
       )}
 
       {/* ══════════ ARTIFICIAL YOGA ACTIVATOR ══════════ */}
       {user.plan === 'premium' && reading?.masterBlueprint && (
-        <motion.section className="space-y-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.7 }}>
-          <h2 className="text-[clamp(32px,5vw,50px)] font-black text-teal-300 font-serif leading-tight flex items-center gap-3">
-            <Shield className="w-10 h-10 text-teal-400" />
-            Yoga Activator
-          </h2>
-          <p className="text-[11px] text-teal-500/80 font-black uppercase tracking-[0.3em] -mt-3">
+        <TempleSection title="Yoga Activator" icon="🕉️" defaultOpen={false}>
+          <p className="text-[11px] text-teal-500/80 font-black uppercase tracking-[0.3em] mb-4">
             Bhrigu Remedies • Mantra + Frequency + Action
           </p>
 
@@ -757,7 +701,7 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
               </div>
             ))}
           </div>
-        </motion.section>
+        </TempleSection>
       )}
     </div>
   );
