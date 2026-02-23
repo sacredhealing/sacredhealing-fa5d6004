@@ -194,8 +194,8 @@ Include 4 upcoming horas after the current one in the upcomingHoras array.`;
       
       console.log(`Trying model: ${geminiModel}`);
       
-      try {
-        response = await fetch(apiUrl, {
+      const makeRequest = async () => {
+        return await fetch(apiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -216,21 +216,28 @@ Include 4 upcoming horas after the current one in the upcomingHoras array.`;
             ],
           }),
         });
+      };
+
+      try {
+        response = await makeRequest();
         
         if (response.ok) {
           usedModel = geminiModel;
           console.log(`Success with model: ${geminiModel}`);
           break;
         } else if (response.status === 429) {
-          return new Response(JSON.stringify({ error: "Rate limit exceeded, please try again later." }), {
-            status: 429,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
+          console.log(`Model ${geminiModel} rate limited (429), waiting 2s before trying next model...`);
+          await response.text(); // consume body
+          response = null;
+          lastError = "Rate limit exceeded";
+          // Wait before trying next model
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          continue;
         } else {
           const errorText = await response.text();
           console.log(`Model ${geminiModel} failed with ${response.status}: ${errorText.substring(0, 200)}`);
           lastError = errorText;
-          response = null; // Reset for next attempt
+          response = null;
         }
       } catch (fetchError) {
         console.log(`Model ${geminiModel} fetch error:`, fetchError);
