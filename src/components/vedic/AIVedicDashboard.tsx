@@ -10,6 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { useAIVedicReading } from '@/hooks/useAIVedicReading';
 import type { UserProfile, HoraInfo } from '@/lib/vedicTypes';
 import { getPlanetEmoji, getEnergyGradient, getSuccessColor } from '@/lib/vedicTypes';
@@ -17,6 +19,9 @@ import { CosmicConsultation } from './CosmicConsultation';
 import { TimezoneSelector, useUserTimezone } from './TimezoneSelector';
 import { AccurateHoraWatch } from './AccurateHoraWatch';
 import { HoraDateTimePicker } from './HoraDateTimePicker';
+import { HoraNotificationBanner } from './HoraNotificationBanner';
+import { useHoraNotification } from '@/hooks/useHoraNotification';
+import { useHoraWatch } from '@/hooks/useHoraWatch';
 
 interface AIVedicDashboardProps {
   user: UserProfile;
@@ -158,7 +163,12 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [checkedRemedies, setCheckedRemedies] = useState<Record<number, boolean>>({});
   const [expandedYogaIdx, setExpandedYogaIdx] = useState<number | null>(null);
+  const [horaNotifyEnabled, setHoraNotifyEnabled] = useState(false);
   const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  const { calculation } = useHoraWatch({ timezone, timeOffset });
+  const currentHoraPlanet = calculation?.currentHora?.planet;
+  const { message: horaNotificationMessage, dismiss: dismissHoraNotification } = useHoraNotification(currentHoraPlanet, horaNotifyEnabled);
 
   // Calculate user's age and active Bhrigu cycle
   const bhriguData = useMemo(() => {
@@ -233,7 +243,10 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
   if (!reading) return null;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-12">
+    <div className="max-w-4xl mx-auto space-y-12 relative">
+      {horaNotificationMessage && (
+        <HoraNotificationBanner message={horaNotificationMessage} onDismiss={dismissHoraNotification} />
+      )}
       {/* Cosmic Sync Status Header */}
       <div id="overview" />
       <motion.div 
@@ -276,6 +289,18 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
           </div>
 
           <HoraDateTimePicker timeOffset={timeOffset} onTimeOffsetChange={(v) => setTimeOffset(v)} />
+
+          <div className="flex items-center justify-between p-4 rounded-2xl bg-amber-900/10 border border-amber-500/20">
+            <Label htmlFor="hora-notify" className="text-sm font-serif text-amber-200/80 cursor-pointer">
+              Notify me when Hora changes
+            </Label>
+            <Switch
+              id="hora-notify"
+              checked={horaNotifyEnabled}
+              onCheckedChange={setHoraNotifyEnabled}
+              className="data-[state=checked]:bg-amber-500/30"
+            />
+          </div>
 
           {user.plan !== 'free' && (
             <div className="bg-background/80 border border-border p-5 rounded-3xl shadow-2xl space-y-4">

@@ -377,6 +377,58 @@
       0 0 60px hsl(var(--primary) / 0.3);
   }
 
+  /* Vedic temple — incense smoke ambient animation */
+  .incense-smoke {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .smoke-wisp {
+    position: absolute;
+    bottom: -20%;
+    width: 2px;
+    height: 100px;
+    background: linear-gradient(
+      to top,
+      transparent,
+      rgba(212, 168, 83, 0.03),
+      rgba(212, 168, 83, 0.06),
+      rgba(212, 168, 83, 0.03),
+      transparent
+    );
+    filter: blur(20px);
+    animation: rise 12s ease-in infinite;
+  }
+
+  .smoke-wisp:nth-child(1) { left: 20%; animation-delay: 0s; animation-duration: 14s; }
+  .smoke-wisp:nth-child(2) { left: 50%; animation-delay: 3s; animation-duration: 11s; }
+  .smoke-wisp:nth-child(3) { left: 80%; animation-delay: 6s; animation-duration: 16s; }
+  .smoke-wisp:nth-child(4) { left: 35%; animation-delay: 9s; animation-duration: 13s; }
+
+  @keyframes rise {
+    0% {
+      transform: translateY(0) scaleX(1);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    50% {
+      transform: translateY(-50vh) scaleX(3);
+      opacity: 0.6;
+    }
+    100% {
+      transform: translateY(-110vh) scaleX(5);
+      opacity: 0;
+    }
+  }
+
   .btn-glow-turquoise {
     box-shadow: 
       0 0 20px hsl(var(--primary) / 0.4),

@@ -11,6 +11,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { BirthDetailsForm } from '@/components/vedic/BirthDetailsForm';
 import { AIVedicDashboard } from '@/components/vedic/AIVedicDashboard';
 import { DailyVedicInsight } from '@/components/vedic/DailyVedicInsight';
+import { IncenseSmoke } from '@/components/vedic/IncenseSmoke';
+import { SacredHeader } from '@/components/vedic/SacredHeader';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { usePersistedState } from '@/features/vedic/usePersistedState';
@@ -143,12 +145,13 @@ const VedicAstrology: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#020617] relative overflow-hidden">
-      {/* Midnight Temple Background */}
+    <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
+      {/* Temple background + incense smoke */}
       <div className="fixed inset-0 -z-10">
-        <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-purple-600/5 blur-[120px] animate-pulse" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-600/5 blur-[100px]" />
+        <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-amber-900/10 blur-[120px]" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-amber-950/10 blur-[100px]" />
       </div>
+      <IncenseSmoke />
 
       <div className="container max-w-4xl mx-auto py-6 px-4 pb-24">
         {/* Header */}
@@ -174,51 +177,36 @@ const VedicAstrology: React.FC = () => {
           className="mb-6"
         >
           {hasBirthDetails ? (
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-4">
-              <div className="flex items-center gap-3 mb-1">
-                <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                <span className="font-semibold text-foreground text-sm">
-                  {birthDetails?.birth_name || 'Your Chart'}
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground ml-7">
-                {(birthDetails?.birth_place || 'Unknown location')} • {birthDetails?.birth_date} {birthDetails?.birth_time}
-              </p>
-              <div className="mt-3 flex items-center justify-between ml-7">
-                <span className="text-[10px] text-muted-foreground/60">
-                  {synced && lastSyncedAt
-                    ? `Synced • ${new Date(lastSyncedAt).toLocaleString()}`
-                    : 'Not synced yet'}
-                </span>
-                <Dialog open={birthDetailsDialogOpen} onOpenChange={setBirthDetailsDialogOpen}>
-                  <DialogTrigger asChild>
-                    <button className="text-[10px] text-muted-foreground hover:text-foreground transition-colors">
-                      Edit details
-                    </button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card/95 backdrop-blur-xl">
-                    <DialogHeader>
-                      <DialogTitle>Update Birth Details</DialogTitle>
-                    </DialogHeader>
-                    <BirthDetailsForm
-                      initialData={birthDetails}
-                      onSaved={() => {
-                        setBirthDetailsDialogOpen(false);
-                        fetchBirthDetails();
-                        setSyncState({ status: 'synced', lastSyncedAt: new Date().toISOString() });
-                        setSyncError(null);
-                      }}
-                    />
-                  </DialogContent>
-                </Dialog>
-              </div>
-              {syncError ? (
-                <div className="mt-3 text-[10px] text-red-400 ml-7">
-                  {syncError}
-                </div>
-              ) : null}
-            </div>
-          ) : (
+            <SacredHeader
+              name={birthDetails?.birth_name || 'Your Chart'}
+              birthData={{
+                location: birthDetails?.birth_place || 'Unknown location',
+                date: birthDetails?.birth_date || '',
+                time: birthDetails?.birth_time || '',
+              }}
+              syncTime={synced && lastSyncedAt ? new Date(lastSyncedAt).toLocaleString() : 'Not synced yet'}
+              onAdjustBirthData={() => setBirthDetailsDialogOpen(true)}
+            />
+          ) : null}
+          {hasBirthDetails && (
+            <Dialog open={birthDetailsDialogOpen} onOpenChange={setBirthDetailsDialogOpen}>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card/95 backdrop-blur-xl">
+                <DialogHeader>
+                  <DialogTitle>Update Birth Details</DialogTitle>
+                </DialogHeader>
+                <BirthDetailsForm
+                  initialData={birthDetails}
+                  onSaved={() => {
+                    setBirthDetailsDialogOpen(false);
+                    fetchBirthDetails();
+                    setSyncState({ status: 'synced', lastSyncedAt: new Date().toISOString() });
+                    setSyncError(null);
+                  }}
+                />
+              </DialogContent>
+            </Dialog>
+          )}
+          {!hasBirthDetails && (
             <Card className="border-2 border-primary/30 bg-gradient-to-br from-blue-500/5 to-purple-500/5 backdrop-blur-sm">
               <CardContent className="p-6">
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4">

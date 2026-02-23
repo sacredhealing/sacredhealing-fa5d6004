@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Lock, Sparkles, Crown, Send, Loader2, Mic, MicOff, Volume2, VolumeX, Zap } from 'lucide-react';
+import { Lock, Sparkles, Crown, Send, Loader2, Mic, MicOff, Volume2, VolumeX, Zap, Maximize2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/hooks/useAuth';
@@ -20,16 +20,16 @@ interface CosmicConsultationProps {
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/vedic-guru-chat`;
 
-// Bhrigu Nandi Nadi age-planet map
+// Bhrigu Nandi Nadi age-planet map (use actual emoji characters for display)
 const BHRIGU_AGES: { age: number; planet: string; emoji: string }[] = [
-  { age: 16, planet: 'Jupiter', emoji: '\u2643' },
-  { age: 22, planet: 'Sun', emoji: '\u2609' },
-  { age: 24, planet: 'Moon', emoji: '\ud83c\udf19' },
-  { age: 28, planet: 'Venus', emoji: '\u2640' },
-  { age: 32, planet: 'Mars', emoji: '\u2642' },
-  { age: 36, planet: 'Mercury', emoji: '\u263f' },
-  { age: 42, planet: 'Rahu/Ketu', emoji: '\ud83d\udc09' },
-  { age: 48, planet: 'Saturn', emoji: '\u2644' },
+  { age: 16, planet: 'Jupiter', emoji: '♃' },
+  { age: 22, planet: 'Sun', emoji: '☀' },
+  { age: 24, planet: 'Moon', emoji: '🌙' },
+  { age: 28, planet: 'Venus', emoji: '♀' },
+  { age: 32, planet: 'Mars', emoji: '♂' },
+  { age: 36, planet: 'Mercury', emoji: '☿' },
+  { age: 42, planet: 'Rahu/Ketu', emoji: '🐉' },
+  { age: 48, planet: 'Saturn', emoji: '♄' },
 ];
 
 function getActivePlanet(birthDate: string) {
@@ -102,7 +102,8 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [typingIntensity, setTypingIntensity] = useState(0);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isFullPage, setIsFullPage] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<{ stop: () => void } | null>(null);
   const hasInitialized = useRef(false);
@@ -170,11 +171,11 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
     }
   }, [historyLoaded, user.plan, user.name, user.birthPlace, messages.length, authUser?.id, bhrigu]);
 
-  // Auto-scroll only when new messages are added
+  // Auto-scroll only when new messages are added (not on every keystroke)
   useEffect(() => {
     if (messages.length > prevMessagesLength.current) {
       requestAnimationFrame(() => {
-        scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
       });
     }
     prevMessagesLength.current = messages.length;
@@ -340,7 +341,7 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
       console.error('Guru chat error:', error);
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: '\ud83d\ude4f Forgive me, the cosmic connection is currently flickering. The celestial pathways require alignment. Please attempt your inquiry again when the stars permit.' 
+        content: '🙏 Forgive me, the cosmic connection is currently flickering. The celestial pathways require alignment. Please attempt your inquiry again when the stars permit.' 
       }]);
     } finally {
       setIsLoading(false);
@@ -421,7 +422,10 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
   }
 
   return (
-    <div className="flex flex-col h-[650px] rounded-3xl border border-amber-500/20 overflow-hidden relative"
+    <div
+      className={`flex flex-col rounded-3xl border border-amber-500/20 overflow-hidden relative transition-all duration-500 ${
+        isFullPage ? 'fixed inset-0 z-50 h-screen' : 'h-[500px]'
+      }`}
       style={{
         background: `
           linear-gradient(180deg, rgba(30,20,10,0.95), rgba(15,10,5,0.98)),
@@ -430,7 +434,7 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
       }}
     >
       {/* Chat Header */}
-      <div className="px-6 py-4 border-b border-amber-500/20 bg-gradient-to-r from-amber-900/20 to-orange-900/15">
+      <div className="flex-shrink-0 px-6 py-4 border-b border-amber-500/20 bg-gradient-to-r from-amber-900/20 to-orange-900/15">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-3 h-3 bg-amber-400 rounded-full shadow-[0_0_12px_rgba(251,191,36,0.6)] animate-pulse" />
@@ -441,12 +445,21 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
               </p>
             </div>
           </div>
+          <button
+            type="button"
+            onClick={() => setIsFullPage(!isFullPage)}
+            className="text-amber-400/70 hover:text-amber-300 text-sm transition-colors flex items-center gap-1.5"
+            aria-label={isFullPage ? 'Exit Focus Mode' : 'Focus Mode'}
+          >
+            {isFullPage ? <><X className="w-4 h-4" /> Exit Focus Mode</> : <><Maximize2 className="w-4 h-4" /> Focus Mode</>}
+          </button>
         </div>
       </div>
 
-      {/* Messages Area */}
-      <ScrollArea className="flex-1 p-6">
-        <div className="space-y-6">
+      {/* Messages Area — fixed height, internal scroll only */}
+      <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+        <ScrollArea className="flex-1 overflow-y-auto scroll-smooth p-6">
+          <div className="space-y-6">
           {messages.map((msg, i) => (
             <motion.div 
               key={i}
@@ -458,7 +471,7 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
                 {msg.role === 'assistant' && (
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-400/30 flex items-center justify-center text-[10px] text-amber-400 font-serif shadow-inner">
-                      \u0950
+                      ॐ
                     </div>
                     <span className="text-[9px] font-black text-amber-400 uppercase tracking-[0.4em]">Akashic Verdict</span>
                   </div>
@@ -550,12 +563,12 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
             </motion.div>
           )}
           
-          <div ref={scrollRef} />
+          <div ref={messagesEndRef} />
         </div>
-      </ScrollArea>
+        </ScrollArea>
 
-      {/* Sacred Input Area */}
-      <div className="p-4 border-t border-amber-500/20 bg-gradient-to-t from-amber-950/30 to-transparent backdrop-blur-3xl space-y-4">
+      {/* Sacred Input Area — sticky bottom */}
+      <div className="flex-shrink-0 sticky bottom-0 p-4 border-t border-amber-500/20 bg-[#0a0a0f] bg-gradient-to-t from-amber-950/30 to-transparent backdrop-blur-3xl space-y-4">
         <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="relative group">
           {/* Gold-leaf glow border */}
           <div className="absolute -inset-[2px] bg-gradient-to-r from-amber-500/20 via-yellow-500/30 to-amber-500/20 rounded-[1.5rem] blur-sm opacity-60 group-focus-within:opacity-100 transition duration-500" />
@@ -595,11 +608,12 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
         
         {/* Action Chips */}
         <div className="flex flex-wrap gap-2 justify-center">
-          <ActionChip icon="\ud83d\udc09" label="Rahu Cycle Reading" onClick={() => handleSendMessage(`Rishi, what is the karmic significance of my current ${bhrigu.active?.planet || 'planetary'} cycle? How should I navigate this activation period? Use my birth data.`)} />
-          <ActionChip icon="\ud83d\udcb0" label="Financial Verdict" onClick={() => handleSendMessage("Is this moment auspicious for major financial action? Use my chart and today's date. Deliver the Verdict.")} />
-          <ActionChip icon="\u26a1" label="Karmic Blockage" onClick={() => handleSendMessage("Identify the primary karmic obstacle in my current cycle and provide the Bhrigu Remedy with mantra and frequency.")} />
-          <ActionChip icon="\ud83d\udd31" label="528Hz Remedy" onClick={() => handleSendMessage("Prescribe the optimal healing frequency for my current planetary cycle. Include the 528Hz activation protocol if relevant.")} />
+          <ActionChip icon="🐉" label="Rahu Cycle Reading" onClick={() => handleSendMessage(`Rishi, what is the karmic significance of my current ${bhrigu.active?.planet || 'planetary'} cycle? How should I navigate this activation period? Use my birth data.`)} />
+          <ActionChip icon="💰" label="Financial Verdict" onClick={() => handleSendMessage("Is this moment auspicious for major financial action? Use my chart and today's date. Deliver the Verdict.")} />
+          <ActionChip icon="⚡" label="Karmic Blockage" onClick={() => handleSendMessage("Identify the primary karmic obstacle in my current cycle and provide the Bhrigu Remedy with mantra and frequency.")} />
+          <ActionChip icon="🔱" label="528Hz Remedy" onClick={() => handleSendMessage("Prescribe the optimal healing frequency for my current planetary cycle. Include the 528Hz activation protocol if relevant.")} />
         </div>
+      </div>
       </div>
     </div>
   );
