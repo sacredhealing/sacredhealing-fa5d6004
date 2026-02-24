@@ -25,6 +25,28 @@ import { selectStartNowItem } from '@/features/meditations/startNowSelector';
 import { filterByMeditationLanguage, buildSections } from '@/features/meditations/groupAndFilter';
 import { MeditationSection } from '@/features/meditations/MeditationSection';
 import { BackToTopFab } from '@/features/meditations/BackToTopFab';
+import { useJyotishProfile } from '@/hooks/useJyotishProfile';
+
+const JyotishMeditationCard = () => {
+  const jyotish = useJyotishProfile();
+  if (jyotish.isLoading) return null;
+
+  return (
+    <div className="mx-4 mb-4 p-4 rounded-2xl bg-gradient-to-r from-amber-900/20 to-purple-900/20 border border-amber-800/20">
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-amber-400">&#x1F549;&#xFE0F;</span>
+        <span className="text-sm font-serif text-amber-300 uppercase tracking-wider">
+          Jyotish Meditation Guidance
+        </span>
+      </div>
+      <p className="text-sm text-amber-100/70">
+        Your <strong className="text-amber-200">{jyotish.mahadasha} Mahadasha</strong> period recommends{' '}
+        <strong className="text-amber-200">{jyotish.meditationType}</strong>.{' '}
+        Focus on {jyotish.karmaFocus} for deepest benefit.
+      </p>
+    </div>
+  );
+};
 
 interface Meditation {
   id: string;
@@ -216,6 +238,8 @@ const Meditations: React.FC = () => {
           </h1>
           <LanguageToggle language={language} setLanguage={setLanguage} compact />
         </header>
+
+        <JyotishMeditationCard />
 
         {/* START NOW — glowing portal, lineage prompt */}
         <StartNowCard

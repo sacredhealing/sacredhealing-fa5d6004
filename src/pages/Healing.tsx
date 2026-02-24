@@ -22,6 +22,30 @@ import { useMusicPlayer, UniversalAudioItem } from '@/contexts/MusicPlayerContex
 import { useHealingMeditationLanguage } from '@/hooks/useHealingMeditationLanguage';
 import { HealingLanguageToggle } from '@/features/healing/HealingLanguageToggle';
 import { getHealingSessions, type HealingSessionItem } from '@/features/healing/getHealingSessions';
+import { useJyotishProfile } from '@/hooks/useJyotishProfile';
+
+const JyotishHealingCard = () => {
+  const jyotish = useJyotishProfile();
+  if (jyotish.isLoading) return null;
+
+  return (
+    <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-amber-900/20 to-emerald-900/20 border border-amber-800/20">
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-emerald-400">&#x1F531;</span>
+        <span className="text-sm font-serif text-amber-300 uppercase tracking-wider">
+          Vedic Healing Insight
+        </span>
+      </div>
+      <p className="text-sm text-amber-100/70 mb-1">
+        During your <strong className="text-amber-200">{jyotish.mahadasha}/{jyotish.antardasha}</strong> period,{' '}
+        <strong className="text-amber-200">{jyotish.doshaImbalance}</strong> may occur.
+      </p>
+      <p className="text-sm text-amber-100/50">
+        {jyotish.healingFocus} can help restore balance during your {jyotish.bhriguCycle} cycle.
+      </p>
+    </div>
+  );
+};
 
 // ============================================================
 // TYPES
@@ -493,6 +517,8 @@ const Healing: React.FC = () => {
             <span className="text-[#D4AF37]/70 text-sm font-medium">Language</span>
             <HealingLanguageToggle language={language} setLanguage={setLanguage} />
           </section>
+
+          <JyotishHealingCard />
 
           <MeditationMembershipBanner />
 

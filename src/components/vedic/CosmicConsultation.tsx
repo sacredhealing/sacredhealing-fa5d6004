@@ -505,7 +505,7 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
                 <div
                   className={`p-4 md:p-6 rounded-[2.2rem] relative overflow-hidden ${
                     msg.role === 'user' 
-                      ? 'bg-indigo-600 text-white ml-auto rounded-tr-none border border-white/10 shadow-xl' 
+                      ? 'bg-amber-900/30 text-amber-100 ml-auto rounded-tr-none border border-amber-700/20 shadow-xl'
                       : 'rounded-tl-none border border-amber-500/20 shadow-2xl'
                   }`}
                   style={msg.role === 'assistant' ? {
