@@ -4,7 +4,6 @@ import { ArrowLeft, Upload, Send, Trash2, UserPlus, Mail, Users, Download, Searc
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -29,17 +28,11 @@ const AdminEmailList = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [showEmailDialog, setShowEmailDialog] = useState(false);
   const [importing, setImporting] = useState(false);
-  const [sending, setSending] = useState(false);
   
   // Add subscriber form
   const [newEmail, setNewEmail] = useState('');
   const [newName, setNewName] = useState('');
-  
-  // Email form
-  const [emailSubject, setEmailSubject] = useState('');
-  const [emailContent, setEmailContent] = useState('');
 
   useEffect(() => {
     fetchSubscribers();
@@ -193,41 +186,8 @@ const AdminEmailList = () => {
     URL.revokeObjectURL(url);
   };
 
-  const handleSendBulkEmail = async () => {
-    if (!emailSubject.trim() || !emailContent.trim()) {
-      toast.error('Subject and content are required');
-      return;
-    }
 
-    const activeCount = subscribers.filter(s => s.is_active).length;
-    if (!confirm(`Send email to ${activeCount} active subscribers?`)) return;
 
-    setSending(true);
-
-    try {
-      const { data, error } = await supabase.functions.invoke('send-bulk-email', {
-        body: {
-          subject: emailSubject,
-          htmlContent: emailContent,
-        },
-      });
-
-      if (error) throw error;
-
-      toast.success(`Email sent to ${data.sent} subscribers`);
-      if (data.errors > 0) {
-        toast.warning(`${data.errors} emails failed to send`);
-      }
-      setShowEmailDialog(false);
-      setEmailSubject('');
-      setEmailContent('');
-    } catch (error) {
-      console.error('Send email error:', error);
-      toast.error('Failed to send emails');
-    } finally {
-      setSending(false);
-    }
-  };
 
   const filteredSubscribers = subscribers.filter(s =>
     s.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -330,45 +290,10 @@ const AdminEmailList = () => {
             Export
           </Button>
 
-          <Dialog open={showEmailDialog} onOpenChange={setShowEmailDialog}>
-            <DialogTrigger asChild>
-              <Button size="sm" variant="default">
-                <Send className="w-4 h-4 mr-2" />
-                Send Email
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-lg">
-              <DialogHeader>
-                <DialogTitle>Send Email to All Subscribers</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <p className="text-sm text-muted-foreground">
-                  This will send an email to {activeCount} active subscribers.
-                  Use {"{{name}}"} to personalize with subscriber name.
-                </p>
-                <div>
-                  <Label>Subject *</Label>
-                  <Input
-                    value={emailSubject}
-                    onChange={(e) => setEmailSubject(e.target.value)}
-                    placeholder="Your email subject"
-                  />
-                </div>
-                <div>
-                  <Label>Content (HTML) *</Label>
-                  <Textarea
-                    value={emailContent}
-                    onChange={(e) => setEmailContent(e.target.value)}
-                    placeholder="<h1>Hello {{name}}</h1><p>Your message here...</p>"
-                    rows={8}
-                  />
-                </div>
-                <Button onClick={handleSendBulkEmail} disabled={sending} className="w-full">
-                  {sending ? 'Sending...' : `Send to ${activeCount} Subscribers`}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <Button size="sm" variant="default" onClick={() => navigate('/admin/send-email')}>
+            <Send className="w-4 h-4 mr-2" />
+            Send Email
+          </Button>
 
           <Button size="sm" variant="ghost" onClick={fetchSubscribers}>
             <RefreshCw className="w-4 h-4" />

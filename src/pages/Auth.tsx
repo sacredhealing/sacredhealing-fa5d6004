@@ -186,6 +186,16 @@ const Auth: React.FC = () => {
               description: t('auth.welcomeBonus')
             });
           }
+
+          // Send welcome email
+          try {
+            await supabase.functions.invoke('send-welcome-email', {
+              body: { email, name },
+            });
+          } catch (welcomeErr) {
+            console.error('Welcome email error:', welcomeErr);
+          }
+
           navigate('/dashboard');
         }
       }
