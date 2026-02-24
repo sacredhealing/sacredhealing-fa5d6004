@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion';
 import { Lock, Sparkles, Crown, Send, Loader2, Mic, MicOff, Volume2, VolumeX, Zap, Maximize2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import type { UserProfile } from '@/lib/vedicTypes';
@@ -449,7 +448,7 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
   return (
     <div
       className={`flex flex-col rounded-3xl border border-amber-500/20 overflow-hidden relative transition-all duration-500 ${
-        isFullPage ? 'fixed inset-0 z-50 h-screen' : 'h-[500px]'
+        isFullPage ? 'fixed inset-0 z-50 h-screen max-h-[100dvh]' : 'h-[500px] min-h-0'
       } ${isMobileView ? 'pb-safe' : ''}`}
       style={{
         background: `
@@ -458,8 +457,8 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
         `,
       }}
     >
-      {/* Chat Header */}
-      <div className="flex-shrink-0 px-6 py-4 border-b border-amber-500/20 bg-gradient-to-r from-amber-900/20 to-orange-900/15">
+      {/* Chat Header — never shrinks */}
+      <div className="flex-shrink-0 px-4 sm:px-6 py-3 sm:py-4 border-b border-amber-500/20 bg-gradient-to-r from-amber-900/20 to-orange-900/15">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-3 h-3 bg-amber-400 rounded-full shadow-[0_0_12px_rgba(251,191,36,0.6)] animate-pulse" />
@@ -473,7 +472,7 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
           <button
             type="button"
             onClick={() => setIsFullPage(!isFullPage)}
-            className="text-amber-400/70 hover:text-amber-300 text-sm transition-colors flex items-center gap-1.5"
+            className="text-amber-400/70 hover:text-amber-300 text-sm transition-colors flex items-center gap-1.5 shrink-0"
             aria-label={isFullPage ? 'Exit Focus Mode' : 'Focus Mode'}
           >
             {isFullPage ? <><X className="w-4 h-4" /> Exit Focus Mode</> : <><Maximize2 className="w-4 h-4" /> Focus Mode</>}
@@ -481,9 +480,9 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
         </div>
       </div>
 
-      {/* Messages Area — fixed height, internal scroll only */}
+      {/* Messages area: flex-1 min-h-0 so it shrinks; overflow-y-auto so only this part scrolls */}
       <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-        <ScrollArea className="flex-1 overflow-y-auto scroll-smooth p-6">
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth p-4 sm:p-6">
           <div className="space-y-6">
           {messages.map((msg, i) => (
             <motion.div 
@@ -590,10 +589,10 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
           
           <div ref={messagesEndRef} />
         </div>
-        </ScrollArea>
+        </div>
 
-      {/* Sacred Input Area — sticky bottom */}
-      <div className="flex-shrink-0 sticky bottom-0 p-4 border-t border-amber-500/20 bg-[#0a0a0f] bg-gradient-to-t from-amber-950/30 to-transparent backdrop-blur-3xl space-y-4">
+      {/* Input area — flex-shrink-0 so it stays at bottom of chat container, no page scroll */}
+      <div className="flex-shrink-0 p-3 sm:p-4 border-t border-amber-500/20 bg-[#0d0d14] bg-gradient-to-t from-amber-950/30 to-transparent backdrop-blur-sm space-y-3 sm:space-y-4">
         <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="relative group">
           {/* Gold-leaf glow border */}
           <div className="absolute -inset-[2px] bg-gradient-to-r from-amber-500/20 via-yellow-500/30 to-amber-500/20 rounded-[1.5rem] blur-sm opacity-60 group-focus-within:opacity-100 transition duration-500" />
