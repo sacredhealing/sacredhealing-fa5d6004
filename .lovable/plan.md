@@ -1,42 +1,47 @@
 
 
-# Fix: "Step into the Day" Button Not Working
+# Fix: Simple Text Email Editor (No HTML Required)
 
-## Root Cause
+## Problem
+The current "Send Email" page asks for "Content (HTML)" and expects raw HTML code like `<h1>Hello</h1>`. You just want to paste plain text and send it.
 
-The previous fix added `navigate(g.session_id)` at the top of `handleStartSession`, which causes two critical problems:
+## Solution
+Replace the HTML textarea with a simple plain-text editor that automatically converts your text into a nicely formatted email behind the scenes.
 
-1. **Auto-redirect on page load**: The `useDashboardAutostart` hook calls `openSession` after 450ms. Since all guidance objects have a `session_id` starting with `/`, the dashboard immediately navigates the user away to `/ritual` or `/breathing` before they even see the page. This makes the button appear "broken" because the user is being auto-redirected.
+### What Changes
 
-2. **Broken completion tracking**: The early `return` skips setting `flowState`, `activeGuidance`, and `isContinuationCompletion`, so when users return from the session page, the "completed" state is never triggered and daily progress isn't recorded.
+**1. Rename the field**
+- Change label from "Content (HTML) *" to "Message *"
+- Update placeholder to just show normal text like "Hello {{name}}, your message here..."
+- Remove the `font-mono` styling so it looks like a normal text box
 
-## Fix Plan
+**2. Auto-convert text to email HTML**
+- When you type plain text, the system will automatically:
+  - Wrap paragraphs in proper email formatting
+  - Convert line breaks into spacing
+  - Apply Sacred Healing branding (logo, colors, footer)
+- You don't need to know any HTML
 
-### 1. Revert `handleStartSession` to use the inline player (Dashboard.tsx)
+**3. Keep personalization simple**
+- You can still use `{{name}}` and `{{email}}` in your text
+- The hint text stays but is simplified
 
-Remove the `navigate()` logic added in the last change. Restore the original behavior that sets `flowState = 'in_session'` and renders the `InlineSessionPlayer` inside the dashboard. This was the intended design.
+**4. Update the preview**
+- Preview will show the final styled email exactly as subscribers will see it
+- Includes the Sacred Healing header and footer automatically
 
-### 2. Fix `InlineSessionPlayer` to handle route-based sessions (if needed)
+**5. Update the edge function**
+- The `send-bulk-email` function will accept plain text and wrap it in a branded email template server-side
+- This ensures all emails look professional and consistent
 
-If specific session types (like `morning_ritual` pointing to `/ritual`) aren't supported by the inline player, add support by either:
-- Embedding the ritual content within `InlineSessionPlayer`
-- Or providing a "Go to practice" button inside the inline player that navigates to the route while preserving the completion callback
-
-### 3. Prevent autostart from navigating away
-
-Update the autostart hook's `openSession` callback to only set `flowState` (inline player mode), never navigate away from the dashboard.
-
-## Technical Changes
+### Technical Details
 
 | File | Change |
 |------|--------|
-| `src/pages/Dashboard.tsx` | Revert `handleStartSession` to remove `navigate()` call; restore inline player flow |
-| `src/components/dashboard/InlineSessionPlayer.tsx` | Verify it can handle all `session_type` values from guidance (ritual, breathing, meditation, path) |
+| `src/pages/AdminSendEmail.tsx` | Replace HTML textarea with plain text input; auto-wrap content in email template for preview; send plain text to edge function |
+| `supabase/functions/send-bulk-email/index.ts` | Add email template wrapper that converts plain text into styled HTML email with Sacred Healing branding |
 
-## Expected Result
-
-- Dashboard loads without auto-redirecting
-- Clicking "Step into the day" opens the inline session player on the dashboard
-- Completing a session properly triggers the completion flow and records daily progress
-- The button label and guidance text remain contextual based on time of day
-
+### Result
+- You type or paste normal text
+- The system handles all formatting automatically
+- Every email arrives looking professional with your branding
