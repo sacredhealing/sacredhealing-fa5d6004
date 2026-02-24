@@ -17,7 +17,22 @@ const AdminSendEmail = () => {
   const [showPreview, setShowPreview] = useState(false);
 
   const [subject, setSubject] = useState('');
-  const [htmlContent, setHtmlContent] = useState('');
+  const [message, setMessage] = useState('');
+
+  const wrapInTemplate = (text: string) => {
+    const paragraphs = text.split(/\n\n+/).map(p => 
+      `<p style="margin:0 0 16px;line-height:1.6;color:#333333;">${p.replace(/\n/g, '<br/>')}</p>`
+    ).join('');
+    return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f4f1ec;font-family:Georgia,serif;">
+<div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:8px;overflow:hidden;margin-top:20px;margin-bottom:20px;">
+<div style="background:linear-gradient(135deg,#8B5E3C,#A0522D);padding:30px;text-align:center;">
+<h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:normal;letter-spacing:1px;">Sacred Healing</h1>
+</div>
+<div style="padding:30px 35px;">${paragraphs}</div>
+<div style="background:#f4f1ec;padding:20px;text-align:center;font-size:12px;color:#999;">
+<p style="margin:0;">Sacred Healing &bull; Spiritual Growth &amp; Wellness</p>
+</div></div></body></html>`;
+  };
 
   useEffect(() => {
     const fetchCount = async () => {
@@ -31,8 +46,8 @@ const AdminSendEmail = () => {
   }, []);
 
   const handleSend = async () => {
-    if (!subject.trim() || !htmlContent.trim()) {
-      toast.error('Subject and content are required');
+    if (!subject.trim() || !message.trim()) {
+      toast.error('Subject and message are required');
       return;
     }
 
@@ -41,7 +56,7 @@ const AdminSendEmail = () => {
     setSending(true);
     try {
       const { data, error } = await supabase.functions.invoke('send-bulk-email', {
-        body: { subject, htmlContent },
+        body: { subject, plainText: message },
       });
 
       if (error) throw error;
@@ -51,7 +66,7 @@ const AdminSendEmail = () => {
         toast.warning(`${data.errors} emails failed to send`);
       }
       setSubject('');
-      setHtmlContent('');
+      setMessage('');
     } catch (error) {
       console.error('Send email error:', error);
       toast.error('Failed to send emails');
@@ -93,7 +108,6 @@ const AdminSendEmail = () => {
           <code className="bg-muted px-1 rounded text-xs">{'{{email}}'}</code> for their email.
         </p>
 
-        {/* Subject */}
         <div className="space-y-2">
           <Label className="text-foreground font-medium">Subject *</Label>
           <Input
@@ -104,35 +118,32 @@ const AdminSendEmail = () => {
           />
         </div>
 
-        {/* Content */}
         <div className="space-y-2">
-          <Label className="text-foreground font-medium">Content (HTML) *</Label>
+          <Label className="text-foreground font-medium">Message *</Label>
           <Textarea
-            value={htmlContent}
-            onChange={(e) => setHtmlContent(e.target.value)}
-            placeholder={'<h1>Hello {{name}}</h1>\n<p>Your message here...</p>'}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder={'Hello {{name}},\n\nYour message here...\n\nWarm regards,\nSacred Healing'}
             rows={14}
-            className="font-mono text-sm"
+            className="text-sm"
           />
         </div>
 
-        {/* Preview toggle */}
-        {htmlContent && (
+        {message && (
           <div className="space-y-2">
             <Button variant="outline" size="sm" onClick={() => setShowPreview(!showPreview)}>
               <Eye className="w-4 h-4 mr-2" />
               {showPreview ? 'Hide Preview' : 'Show Preview'}
             </Button>
             {showPreview && (
-              <Card className="p-4 overflow-auto max-h-80">
-                <p className="text-xs text-muted-foreground mb-2">Subject: {subject}</p>
-                <Separator className="mb-3" />
+              <Card className="p-0 overflow-auto max-h-[500px]">
                 <div
-                  className="prose prose-sm dark:prose-invert max-w-none"
                   dangerouslySetInnerHTML={{
-                    __html: htmlContent
-                      .replace(/\{\{name\}\}/g, 'John')
-                      .replace(/\{\{email\}\}/g, 'john@example.com'),
+                    __html: wrapInTemplate(
+                      message
+                        .replace(/\{\{name\}\}/g, 'John')
+                        .replace(/\{\{email\}\}/g, 'john@example.com')
+                    ),
                   }}
                 />
               </Card>
@@ -140,8 +151,7 @@ const AdminSendEmail = () => {
           </div>
         )}
 
-        {/* Send button */}
-        <Button onClick={handleSend} disabled={sending || !subject.trim() || !htmlContent.trim()} className="w-full h-12 text-base">
+        <Button onClick={handleSend} disabled={sending || !subject.trim() || !message.trim()} className="w-full h-12 text-base">
           {sending ? 'Sending...' : `Send to ${activeCount} Subscribers`}
         </Button>
       </div>
