@@ -121,6 +121,13 @@ export function useSoulMeditateEngine() {
   // Low cut filter (100Hz high-pass)
   const lowCutFilterRef = useRef<BiquadFilterNode | null>(null);
 
+  // Soft-shelf de-esser at 7.2kHz (tames sibilance without dulling)
+  const deEsserFilterRef = useRef<BiquadFilterNode | null>(null);
+  const deEsserEnabled = useRef(true);
+
+  // Transparent mode: auto-lower compression for pre-mastered sources
+  const transparentModeRef = useRef(false);
+
   // User-controllable noise gate (AudioWorklet) - professional envelope-following gate
   const userNoiseGateRef = useRef<AudioNode | null>(null);
   
@@ -304,6 +311,14 @@ export function useSoulMeditateEngine() {
     eqAirRef.current.gain.value = eqSettings.air;
     
     console.log('3-Band Parametric EQ initialized: Weight(400Hz), Presence(4kHz), Air(10kHz+)');
+
+    // Soft-shelf De-Esser at 7.2kHz: reduces sibilance ("S" harshness) without muffling
+    deEsserFilterRef.current = ctx.createBiquadFilter();
+    deEsserFilterRef.current.type = 'peaking';
+    deEsserFilterRef.current.frequency.value = 7200;
+    deEsserFilterRef.current.Q.value = 2.5;      // Narrow Q targets sibilant range
+    deEsserFilterRef.current.gain.value = -4;     // -4dB cut at 7.2kHz
+    console.log('De-Esser initialized: -4dB peaking at 7.2kHz (Q=2.5)');
 
     // Professional noise gate (AudioWorklet) - envelope-following with attack/release
     try {
@@ -538,11 +553,12 @@ export function useSoulMeditateEngine() {
     // Create source node and connect through same masterGain chain as oscillators
     const source = audioContextRef.current.createMediaElementSource(audio);
 
-    // Restore full chain: source -> mono balancer -> noise cleanup -> low cut -> EQ -> noise gate -> neuralGain
+    // Restore full chain: source -> mono balancer -> noise cleanup -> low cut -> EQ -> de-esser -> noise gate -> neuralGain
     const hasMono = monoSplitterRef.current && monoMergerRef.current;
     const hasNoise = noiseHighPassRef.current && noiseLowPassRef.current && noiseCompressorRef.current;
     const hasLowCut = lowCutFilterRef.current;
     const hasEQ = eqWeightRef.current && eqPresenceRef.current && eqAirRef.current;
+    const hasDeEsser = deEsserFilterRef.current;
     const hasGate = userNoiseGateRef.current;
 
     if (hasMono && hasNoise && hasLowCut && hasEQ && hasGate) {
@@ -555,9 +571,15 @@ export function useSoulMeditateEngine() {
       lowCutFilterRef.current!.connect(eqWeightRef.current!);
       eqWeightRef.current!.connect(eqPresenceRef.current!);
       eqPresenceRef.current!.connect(eqAirRef.current!);
-      eqAirRef.current!.connect(userNoiseGateRef.current!);
+      // De-esser sits after EQ, before gate
+      if (hasDeEsser) {
+        eqAirRef.current!.connect(deEsserFilterRef.current!);
+        deEsserFilterRef.current!.connect(userNoiseGateRef.current!);
+      } else {
+        eqAirRef.current!.connect(userNoiseGateRef.current!);
+      }
       userNoiseGateRef.current!.connect(neuralGainRef.current!);
-      console.log('Neural source connected: same chain as oscillators (neuralGain -> mixer -> masterGain -> destination)');
+      console.log('Neural source connected: mono -> noise cleanup -> EQ -> de-esser(7.2kHz) -> gate -> neuralGain');
     } else {
       // Fallback: direct to neuralGain (same mixer -> masterGain as oscillators)
       source.connect(neuralGainRef.current!);
@@ -631,6 +653,38 @@ export function useSoulMeditateEngine() {
       const decodedBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
       setAudioBuffer(decodedBuffer);
       console.log('Neural Buffer Loaded:', decodedBuffer.duration);
+
+      // === TRANSPARENT MODE: Detect pre-mastered/high-quality sources ===
+      // Analyze RMS and dynamic range; if source is already well-mastered,
+      // lower compression ratio to 1.2:1 to preserve life/dynamics
+      const channelData = decodedBuffer.getChannelData(0);
+      let sumSq = 0;
+      let peak = 0;
+      const sampleCount = Math.min(channelData.length, decodedBuffer.sampleRate * 10); // Analyze first 10s
+      for (let i = 0; i < sampleCount; i++) {
+        const abs = Math.abs(channelData[i]);
+        sumSq += channelData[i] * channelData[i];
+        if (abs > peak) peak = abs;
+      }
+      const rms = Math.sqrt(sumSq / sampleCount);
+      const dynamicRangeDb = 20 * Math.log10(peak / Math.max(rms, 0.0001));
+      const isPreMastered = dynamicRangeDb < 12 && rms > 0.05; // Low dynamic range + loud RMS = mastered
+      transparentModeRef.current = isPreMastered;
+
+      if (isPreMastered && noiseCompressorRef.current) {
+        // Transparent mode: gentle compression preserves source dynamics
+        noiseCompressorRef.current.ratio.value = 1.2;
+        noiseCompressorRef.current.threshold.value = -12;
+        noiseCompressorRef.current.knee.value = 30;
+        console.log(`[Transparent Mode] ON — DR: ${dynamicRangeDb.toFixed(1)}dB, RMS: ${rms.toFixed(3)} → ratio 1.2:1`);
+      } else if (noiseCompressorRef.current) {
+        // Standard mode: full processing for raw recordings
+        noiseCompressorRef.current.ratio.value = 4;
+        noiseCompressorRef.current.threshold.value = -50;
+        noiseCompressorRef.current.knee.value = 40;
+        console.log(`[Transparent Mode] OFF — DR: ${dynamicRangeDb.toFixed(1)}dB, RMS: ${rms.toFixed(3)} → ratio 4:1`);
+      }
+
       console.log('Neural source buffer status: decoded, hit engine, duration', decodedBuffer.duration, 's');
       
       // Create initial region spanning the entire audio
@@ -1372,6 +1426,18 @@ export function useSoulMeditateEngine() {
     console.log('[TEST TONE] Playing 440 Hz for 2 seconds — DIRECT to destination');
   }, []);
 
+  // Toggle de-esser on/off
+  const toggleDeEsser = useCallback((enabled: boolean) => {
+    deEsserEnabled.current = enabled;
+    if (deEsserFilterRef.current) {
+      deEsserFilterRef.current.gain.value = enabled ? -4 : 0; // -4dB cut or bypass
+      console.log(`[De-Esser] ${enabled ? 'ON (-4dB @ 7.2kHz)' : 'OFF (bypass)'}`);
+    }
+  }, []);
+
+  // Check if transparent mode is active
+  const isTransparentMode = transparentModeRef.current;
+
   return {
     // State
     isInitialized,
@@ -1425,6 +1491,10 @@ export function useSoulMeditateEngine() {
     // Recording support
     getMasterNode,
     getAudioContext,
+    
+    // Vocal Processing
+    toggleDeEsser,
+    isTransparentMode,
     
     // Diagnostics
     playTestTone,
