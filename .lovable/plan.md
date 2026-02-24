@@ -1,29 +1,42 @@
 
 
-## Remove Stem Mode Dropdown and YouTube Neural Link
+# Fix: "Step into the Day" Button Not Working
 
-Based on the screenshots, two UI elements need to be removed from the meditation tool page:
+## Root Cause
 
-1. **"Full Mix" stem mode dropdown** (with Vocals Only, Music Only, All Stems options) -- the cyan dropdown in the top toolbar
-2. **"YouTube Neural Link" section** -- the card with YouTube URL input and CONVERT button
+The previous fix added `navigate(g.session_id)` at the top of `handleStartSession`, which causes two critical problems:
 
-### Changes in `src/pages/CreativeSoulMeditationTool.tsx`
+1. **Auto-redirect on page load**: The `useDashboardAutostart` hook calls `openSession` after 450ms. Since all guidance objects have a `session_id` starting with `/`, the dashboard immediately navigates the user away to `/ritual` or `/breathing` before they even see the page. This makes the button appear "broken" because the user is being auto-redirected.
 
-- **Remove the stem mode dropdown** (lines 443-456): Delete the entire `div` containing the Scissors icon and Select component
-- **Remove the `YouTubeLinker` usage** (line 665): Delete `<YouTubeLinker onAudioExtracted={handleYouTubeAudio} />`
-- **Clean up unused imports and state**:
-  - Remove `YouTubeLinker` import (line 42)
-  - Remove `Scissors` from lucide-react imports
-  - Remove `StemMode` type (line 48)
-  - Remove `STEM_OPTIONS` constant (lines 50-55)
-  - Remove `stemMode` / `setStemMode` state (line 81)
-  - Remove `Select`, `SelectTrigger`, `SelectContent`, `SelectItem` imports if no longer used elsewhere
-  - Remove `handleYouTubeAudio` handler if it exists
+2. **Broken completion tracking**: The early `return` skips setting `flowState`, `activeGuidance`, and `isContinuationCompletion`, so when users return from the session page, the "completed" state is never triggered and daily progress isn't recorded.
 
-The `YouTubeLinker` component file itself (`src/components/soulmeditate/YouTubeLinker.tsx`) will be kept in the codebase but simply unused.
+## Fix Plan
 
-### Build error fixes (unrelated but blocking)
+### 1. Revert `handleStartSession` to use the inline player (Dashboard.tsx)
 
-- **`supabase/functions/stripe-webhook/index.ts` line 1002**: Fix `const userId` reassignment -- change to `let userId`
-- **`supabase/functions/weekly-motivational-email/index.ts` line 79**: Fix type narrowing for `profilesError`
+Remove the `navigate()` logic added in the last change. Restore the original behavior that sets `flowState = 'in_session'` and renders the `InlineSessionPlayer` inside the dashboard. This was the intended design.
+
+### 2. Fix `InlineSessionPlayer` to handle route-based sessions (if needed)
+
+If specific session types (like `morning_ritual` pointing to `/ritual`) aren't supported by the inline player, add support by either:
+- Embedding the ritual content within `InlineSessionPlayer`
+- Or providing a "Go to practice" button inside the inline player that navigates to the route while preserving the completion callback
+
+### 3. Prevent autostart from navigating away
+
+Update the autostart hook's `openSession` callback to only set `flowState` (inline player mode), never navigate away from the dashboard.
+
+## Technical Changes
+
+| File | Change |
+|------|--------|
+| `src/pages/Dashboard.tsx` | Revert `handleStartSession` to remove `navigate()` call; restore inline player flow |
+| `src/components/dashboard/InlineSessionPlayer.tsx` | Verify it can handle all `session_type` values from guidance (ritual, breathing, meditation, path) |
+
+## Expected Result
+
+- Dashboard loads without auto-redirecting
+- Clicking "Step into the day" opens the inline session player on the dashboard
+- Completing a session properly triggers the completion flow and records daily progress
+- The button label and guidance text remain contextual based on time of day
 
