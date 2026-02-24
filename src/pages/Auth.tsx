@@ -13,7 +13,7 @@ import { AppDisclaimer } from '@/components/AppDisclaimer';
 
 const Auth: React.FC = () => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [searchParams] = useSearchParams();
   const referralCode = searchParams.get('ref');
   const { signIn, signUp, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -190,7 +190,7 @@ const Auth: React.FC = () => {
           // Send welcome email
           try {
             await supabase.functions.invoke('send-welcome-email', {
-              body: { email, name },
+              body: { email, name, language: i18n.language },
             });
           } catch (welcomeErr) {
             console.error('Welcome email error:', welcomeErr);
