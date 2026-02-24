@@ -46,7 +46,6 @@ export default function SpectralInsights({
       setInsights(data.insights);
     } catch (err) {
       console.error('Failed to generate insights:', err);
-      // Fallback to local insights
       setInsights(generateLocalInsights(frequencies, dsp, atmosphereId));
       toast.info('Using local analysis engine');
     } finally {
@@ -55,13 +54,13 @@ export default function SpectralInsights({
   }, [frequencies, dsp, atmosphereId, neuralSource]);
 
   return (
-    <Card className="bg-black/40 backdrop-blur-xl border-white/10">
+    <Card className="bg-[#0B0112]/60 backdrop-blur-xl border-amber-900/30">
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2 text-white/90">
+        <CardTitle className="text-lg flex items-center gap-2 text-amber-100/90">
           <div className="p-2 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20">
             <Sparkles className="w-5 h-5 text-amber-400" />
           </div>
-          Spectral Insights
+          Alchemical Insight
           <Badge variant="outline" className="ml-auto text-xs border-amber-500/30 text-amber-400">
             AI Analysis
           </Badge>
@@ -73,15 +72,15 @@ export default function SpectralInsights({
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center">
               <Sparkles className="w-8 h-8 text-amber-400" />
             </div>
-            <p className="text-sm text-white/60 mb-4">
-              Analyze the neuro-acoustic benefits of your current meditation mix
+            <p className="text-sm text-amber-200/60 mb-4">
+              Reveal the sacred properties of your alchemical mix
             </p>
             <Button
               onClick={generateInsights}
-              className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
+              className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white"
             >
               <Sparkles className="w-4 h-4 mr-2" />
-              Generate Insights
+              Reveal Insights
             </Button>
           </div>
         )}
@@ -89,47 +88,32 @@ export default function SpectralInsights({
         {isLoading && (
           <div className="flex flex-col items-center py-8">
             <Loader2 className="w-8 h-8 text-amber-400 animate-spin mb-3" />
-            <p className="text-sm text-white/60">Analyzing spectral patterns...</p>
+            <p className="text-sm text-amber-200/60">Divining sacred patterns...</p>
           </div>
         )}
 
         {insights && !isLoading && (
           <div className="space-y-4">
             <div className="p-3 rounded-lg bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20">
-              <h3 className="font-semibold text-white/90 mb-1">{insights.title}</h3>
+              <h3 className="font-semibold text-amber-100/90 mb-1">{insights.title}</h3>
             </div>
 
             <div className="grid gap-3">
-              <InsightCard
-                icon={<Brain className="w-4 h-4" />}
-                title="Neurological Effects"
-                content={insights.neurological}
-                color="violet"
-              />
-              <InsightCard
-                icon={<Heart className="w-4 h-4" />}
-                title="Emotional Benefits"
-                content={insights.emotional}
-                color="pink"
-              />
-              <InsightCard
-                icon={<Zap className="w-4 h-4" />}
-                title="Spiritual Alignment"
-                content={insights.spiritual}
-                color="cyan"
-              />
+              <InsightCard icon={<Brain className="w-4 h-4" />} title="Neurological Effects" content={insights.neurological} color="amber" />
+              <InsightCard icon={<Heart className="w-4 h-4" />} title="Emotional Benefits" content={insights.emotional} color="orange" />
+              <InsightCard icon={<Zap className="w-4 h-4" />} title="Spiritual Alignment" content={insights.spiritual} color="gold" />
             </div>
 
-            <div className="p-3 rounded-lg bg-white/5 border border-white/10">
-              <div className="text-xs text-white/50 mb-1">Recommendation</div>
-              <p className="text-sm text-white/80">{insights.recommendation}</p>
+            <div className="p-3 rounded-lg bg-amber-900/10 border border-amber-900/20">
+              <div className="text-xs text-amber-200/50 mb-1">Recommendation</div>
+              <p className="text-sm text-amber-200/80">{insights.recommendation}</p>
             </div>
 
             <Button
               variant="outline"
               size="sm"
               onClick={generateInsights}
-              className="w-full bg-white/5 border-white/10 text-white/70 hover:text-white"
+              className="w-full bg-amber-900/10 border-amber-900/30 text-amber-200/70 hover:text-amber-200"
             >
               <RefreshCw className="w-4 h-4 mr-2" />
               Refresh Analysis
@@ -150,12 +134,12 @@ function InsightCard({
   icon: React.ReactNode;
   title: string;
   content: string;
-  color: 'violet' | 'pink' | 'cyan';
+  color: 'amber' | 'orange' | 'gold';
 }) {
   const colors = {
-    violet: 'from-violet-500/20 to-purple-500/20 border-violet-500/30 text-violet-400',
-    pink: 'from-pink-500/20 to-rose-500/20 border-pink-500/30 text-pink-400',
-    cyan: 'from-cyan-500/20 to-teal-500/20 border-cyan-500/30 text-cyan-400',
+    amber: 'from-amber-500/20 to-yellow-500/20 border-amber-500/30 text-amber-400',
+    orange: 'from-orange-500/20 to-amber-500/20 border-orange-500/30 text-orange-400',
+    gold: 'from-yellow-500/20 to-amber-500/20 border-yellow-500/30 text-yellow-400',
   };
 
   return (
@@ -164,7 +148,7 @@ function InsightCard({
         {icon}
         <span className="text-xs font-medium">{title}</span>
       </div>
-      <p className="text-xs text-white/70">{content}</p>
+      <p className="text-xs text-amber-200/70">{content}</p>
     </div>
   );
 }
@@ -189,7 +173,7 @@ function buildInsightPrompt(
   if (dsp.reverb.enabled) {
     parts.push(`Reverb: ${dsp.reverb.decay}s decay`);
   }
-  if (dsp.warmth.enabled) {
+  if (dsp.warmth?.enabled) {
     parts.push(`Harmonic warmth: ${Math.round(dsp.warmth.drive * 100)}% drive`);
   }
 
@@ -225,7 +209,7 @@ function generateLocalInsights(
     40: 'peak cognitive performance',
   };
 
-  let title = 'Meditation Mix Analysis';
+  let title = 'Alchemical Analysis';
   let neurological = 'This configuration promotes relaxation and mental clarity.';
   let emotional = 'Gentle emotional regulation and stress reduction.';
   let spiritual = 'Opens pathways for inner reflection.';
@@ -233,7 +217,7 @@ function generateLocalInsights(
 
   if (frequencies.solfeggio.enabled) {
     const effect = solfeggioEffects[frequencies.solfeggio.hz] || 'healing frequencies';
-    title = `${frequencies.solfeggio.hz} Hz Solfeggio Healing Session`;
+    title = `${frequencies.solfeggio.hz} Hz Sacred Alchemy Session`;
     neurological = `The ${frequencies.solfeggio.hz} Hz frequency promotes ${effect}. Neural pathways associated with healing and restoration are activated.`;
     spiritual = `This frequency aligns with ${effect}, facilitating deep spiritual connection.`;
   }
@@ -246,7 +230,7 @@ function generateLocalInsights(
   }
 
   if (dsp.reverb.enabled && dsp.reverb.decay > 2) {
-    emotional += ' The spacious reverb creates a sense of expansiveness and safety.';
+    emotional += ' The sacred reverb creates a sense of temple expansiveness and safety.';
   }
 
   if (atmosphereId) {
