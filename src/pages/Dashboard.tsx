@@ -95,11 +95,17 @@ const Dashboard: React.FC = () => {
   }, [checkAchievements]);
 
   const handleStartSession = useCallback((g: DailyGuidance, options?: { isContinuation?: boolean }) => {
+    // If the guidance has a valid route, navigate to it directly
+    if (g.session_id && g.session_id.startsWith('/')) {
+      navigate(g.session_id);
+      return;
+    }
+    // Fallback to inline player
     setActiveGuidance(g);
     setFlowState('in_session');
     setIsContinuationCompletion(options?.isContinuation ?? false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
+  }, [navigate]);
 
   const todaySession = useMemo(() => {
     if (isLoading || !guidance?.session_id) return null;
