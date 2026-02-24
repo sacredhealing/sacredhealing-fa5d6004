@@ -9,14 +9,28 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+function wrapInTemplate(text: string): string {
+  const paragraphs = text.split(/\n\n+/).map(p =>
+    `<p style="margin:0 0 16px;line-height:1.6;color:#333333;">${p.replace(/\n/g, '<br/>')}</p>`
+  ).join('');
+  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f4f1ec;font-family:Georgia,serif;">
+<div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:8px;overflow:hidden;margin-top:20px;margin-bottom:20px;">
+<div style="background:linear-gradient(135deg,#8B5E3C,#A0522D);padding:30px;text-align:center;">
+<h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:normal;letter-spacing:1px;">Sacred Healing</h1>
+</div>
+<div style="padding:30px 35px;">${paragraphs}</div>
+<div style="background:#f4f1ec;padding:20px;text-align:center;font-size:12px;color:#999;">
+<p style="margin:0;">Sacred Healing &bull; Spiritual Growth &amp; Wellness</p>
+</div></div></body></html>`;
+}
+
 interface BulkEmailRequest {
   subject: string;
-  htmlContent: string;
-  textContent?: string;
+  plainText?: string;
+  htmlContent?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -27,21 +41,22 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Get the authorization header to verify user is authenticated
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       throw new Error("No authorization header");
     }
 
-    const { subject, htmlContent, textContent }: BulkEmailRequest = await req.json();
+    const { subject, plainText, htmlContent }: BulkEmailRequest = await req.json();
 
-    if (!subject || !htmlContent) {
-      throw new Error("Subject and HTML content are required");
+    if (!subject || (!plainText && !htmlContent)) {
+      throw new Error("Subject and content are required");
     }
+
+    // Use plainText wrapped in template, or fall back to raw htmlContent
+    const finalHtml = plainText ? wrapInTemplate(plainText) : htmlContent!;
 
     console.log("Fetching active subscribers...");
 
-    // Get all active subscribers
     const { data: subscribers, error: fetchError } = await supabaseClient
       .from("email_subscribers")
       .select("email, name")
@@ -61,7 +76,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Sending emails to ${subscribers.length} subscribers...`);
 
-    // Send emails in batches to avoid rate limits
     const batchSize = 10;
     let sentCount = 0;
     let errorCount = 0;
@@ -69,10 +83,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     for (let i = 0; i < subscribers.length; i += batchSize) {
       const batch = subscribers.slice(i, i + batchSize);
-      
+
       const emailPromises = batch.map(async (subscriber) => {
         try {
-          const personalizedHtml = htmlContent
+          const personalizedHtml = finalHtml
             .replace(/{{name}}/g, subscriber.name || "Friend")
             .replace(/{{email}}/g, subscriber.email);
 
@@ -81,9 +95,8 @@ const handler = async (req: Request): Promise<Response> => {
             to: [subscriber.email],
             subject: subject,
             html: personalizedHtml,
-            text: textContent || undefined,
           });
-          
+
           sentCount++;
           console.log(`Email sent to: ${subscriber.email}`);
         } catch (err) {
@@ -96,7 +109,6 @@ const handler = async (req: Request): Promise<Response> => {
 
       await Promise.all(emailPromises);
 
-      // Small delay between batches to avoid rate limiting
       if (i + batchSize < subscribers.length) {
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
