@@ -1,18 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { Waves, Zap, VolumeX } from 'lucide-react';
-import AnalogKnob from './AnalogKnob';
-
-interface EQBand {
-  id: string;
-  label: string;
-  frequency: string;
-  value: number;
-  advice: string;
-  focus: string;
-}
+import { Waves, Zap, Sparkles } from 'lucide-react';
 
 interface VirtualChannelStripProps {
   sourceName?: string;
@@ -25,42 +15,22 @@ interface VirtualChannelStripProps {
     presence: number;
     air: number;
   };
-  /** Noise gate - professional envelope-following gate */
   noiseGate?: {
-    threshold: number;   // -80 to -10 dB
-    attack: number;     // 1-50 ms
-    release: number;   // 50-500 ms
-    range: number;     // -96 to -6 dB reduction when closed
+    threshold: number;
+    attack: number;
+    release: number;
+    range: number;
     enabled: boolean;
   };
   onNoiseGateChange?: (params: { threshold?: number; attack?: number; release?: number; range?: number; enabled?: boolean }) => void;
 }
 
-const DEFAULT_BANDS: EQBand[] = [
-  {
-    id: 'weight',
-    label: 'WEIGHT',
-    frequency: '400HZ',
-    value: -0.5,
-    advice: 'SLIGHT CUT RECOMMENDED FOR CLARITY.',
-    focus: 'Boxy',
-  },
-  {
-    id: 'presence',
-    label: 'PRESENCE',
-    frequency: '4KHZ',
-    value: 3,
-    advice: '"BOOST HELPS THE VOICE STAND OUT IN THE MIX."',
-    focus: 'Clarity',
-  },
-  {
-    id: 'air',
-    label: 'AIR',
-    frequency: '10KHZ+',
-    value: 1,
-    advice: '"CAREFUL: TOO MUCH BOOST MAKES \'S\' SOUNDS PIERCING."',
-    focus: 'Sheen/Sibilance',
-  },
+// Tonal Balance presets replace the 3-band parametric EQ
+const TONAL_PRESETS = [
+  { id: 'warm', label: 'Warm', icon: '🔥', weight: 2, presence: -1, air: -2, description: 'Rich, full-bodied tone' },
+  { id: 'bright', label: 'Bright', icon: '✨', weight: -1, presence: 3, air: 2, description: 'Clear, present, airy' },
+  { id: 'grounded', label: 'Grounded', icon: '🌍', weight: 3, presence: 0, air: -3, description: 'Deep, earthy resonance' },
+  { id: 'ethereal', label: 'Ethereal', icon: '🌙', weight: -2, presence: 1, air: 4, description: 'Shimmering, celestial sheen' },
 ];
 
 export default function VirtualChannelStrip({
@@ -73,66 +43,59 @@ export default function VirtualChannelStrip({
   noiseGate,
   onNoiseGateChange,
 }: VirtualChannelStripProps) {
-  // Initialize bands with external values or defaults
-  const [bands, setBands] = useState<EQBand[]>(() => {
-    const initial = [...DEFAULT_BANDS];
-    if (eqValues) {
-      initial[0].value = eqValues.weight;
-      initial[1].value = eqValues.presence;
-      initial[2].value = eqValues.air;
-    }
-    return initial;
-  });
-  const [selectedBand, setSelectedBand] = useState<string | null>('weight');
+  const [activePreset, setActivePreset] = useState<string | null>(null);
 
-  // Sync with external EQ values when they change
-  useEffect(() => {
-    if (eqValues) {
-      setBands(prev => prev.map(band => {
-        switch (band.id) {
-          case 'weight': return { ...band, value: eqValues.weight };
-          case 'presence': return { ...band, value: eqValues.presence };
-          case 'air': return { ...band, value: eqValues.air };
-          default: return band;
-        }
-      }));
-    }
-  }, [eqValues?.weight, eqValues?.presence, eqValues?.air]);
+  // Convert noise gate 4 params to single "Purity" value (0-100)
+  // Purity 0% = gate off, Purity 100% = max gating with natural 50ms release
+  const purityValue = noiseGate?.enabled 
+    ? Math.round(Math.abs((noiseGate.threshold + 80) / 70) * 100)
+    : 0;
 
-  const handleBandChange = (bandId: string, value: number) => {
-    setBands(prev => prev.map(band => 
-      band.id === bandId ? { ...band, value } : band
-    ));
-    // Call the engine's EQ update function
-    onEqChange?.(bandId, value);
+  const handlePurityChange = (value: number) => {
+    if (!onNoiseGateChange) return;
+    if (value === 0) {
+      onNoiseGateChange({ enabled: false });
+    } else {
+      // Map 0-100 to threshold -80 to -10
+      const threshold = -80 + (value / 100) * 70;
+      onNoiseGateChange({
+        enabled: true,
+        threshold,
+        attack: 10,       // Fixed natural attack
+        release: 50,      // Fixed 50ms release to prevent clipping words
+        range: -60,       // Fixed gentle range
+      });
+    }
   };
 
-  const formatDb = (value: number) => {
-    if (value === 0) return '0dB';
-    return value > 0 ? `+${value.toFixed(1)}dB` : `${value.toFixed(1)}dB`;
+  const handlePresetSelect = (preset: typeof TONAL_PRESETS[0]) => {
+    setActivePreset(preset.id);
+    onEqChange?.('weight', preset.weight);
+    onEqChange?.('presence', preset.presence);
+    onEqChange?.('air', preset.air);
   };
 
   return (
-    <Card className="bg-slate-950 border-slate-800/50 overflow-hidden">
-      <CardContent className="p-6">
+    <Card className="bg-[#0B0112]/60 backdrop-blur-xl border-amber-900/30 overflow-hidden">
+      <CardContent className="p-4 sm:p-6">
         {/* Header */}
-        <div className="flex items-start justify-between mb-8">
+        <div className="flex items-start justify-between mb-6">
           <div className="space-y-1">
-            <h3 className="text-lg font-bold text-white tracking-wide uppercase">
+            <h3 className="text-base sm:text-lg font-bold text-amber-100 tracking-wide uppercase">
               {sourceName}
             </h3>
-            <p className="text-xs text-cyan-400 font-medium tracking-widest">
-              VIRTUAL CHANNEL STRIP • NEURAL POST-CLEANING
+            <p className="text-xs text-amber-400/80 font-medium tracking-widest">
+              SACRED REFINEMENT • TONAL ALCHEMY
             </p>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {/* Auto-Gain Badge */}
-            <div className="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2">
-              <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">
-                Auto-Gain (Normalization)
+            <div className="bg-[#0B0112]/80 border border-amber-900/30 rounded-lg px-3 py-1.5">
+              <div className="text-[10px] text-amber-400/60 uppercase tracking-wider mb-0.5">
+                Auto-Gain
               </div>
-              <div className="text-lg font-mono font-bold text-cyan-400">
+              <div className="text-sm font-mono font-bold text-amber-400">
                 {autoGainDb > 0 ? '+' : ''}{autoGainDb.toFixed(1)} dB
               </div>
             </div>
@@ -140,154 +103,81 @@ export default function VirtualChannelStrip({
             {/* Low Cut Toggle */}
             <Button
               onClick={onLowCutToggle}
-              className={`h-auto py-3 px-5 font-bold text-sm uppercase tracking-wider transition-all ${
+              size="sm"
+              className={`text-xs uppercase tracking-wider transition-all ${
                 lowCutEnabled
-                  ? 'bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/30'
-                  : 'bg-slate-800 hover:bg-slate-700 text-slate-400 border border-slate-700'
+                  ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-lg shadow-amber-600/30'
+                  : 'bg-amber-900/20 hover:bg-amber-900/30 text-amber-400/60 border border-amber-900/30'
               }`}
             >
-              100Hz Low Cut: {lowCutEnabled ? 'Active' : 'Off'}
+              100Hz Cut: {lowCutEnabled ? 'On' : 'Off'}
             </Button>
           </div>
         </div>
 
-        {/* EQ Modules */}
-        <div className="grid grid-cols-3 gap-8">
-          {bands.map((band) => (
-            <div 
-              key={band.id}
-              className="flex flex-col items-center"
-              onClick={() => setSelectedBand(band.id)}
-            >
-              {/* Knob Container */}
-              <div 
-                className={`p-4 rounded-xl transition-all cursor-pointer ${
-                  selectedBand === band.id 
-                    ? 'bg-pink-500/10 border-2 border-pink-500/40' 
-                    : 'bg-transparent border-2 border-transparent hover:border-slate-700'
-                }`}
-              >
-                <AnalogKnob
-                  value={band.value}
-                  onChange={(v) => handleBandChange(band.id, v)}
-                  isSelected={selectedBand === band.id}
-                  size={115}
-                />
-              </div>
-
-              {/* Label */}
-              <div className="mt-4 text-center">
-                <div className="text-sm font-bold text-white tracking-wider">
-                  {band.label} <span className="text-slate-400">({band.frequency})</span>
-                </div>
-                <div className={`text-4xl md:text-6xl font-mono font-bold mt-1 tabular-nums ${
-                  band.value > 0 ? 'text-green-400' : 
-                  band.value < 0 ? 'text-cyan-400' : 'text-slate-400'
-                }`}>
-                  {formatDb(band.value)}
-                </div>
-              </div>
-
-              {/* Advice Tray */}
-              <div className="mt-4 w-full bg-slate-900/80 rounded-lg p-3 border border-slate-800">
-                <p className="text-[11px] text-slate-400 italic text-center leading-relaxed uppercase tracking-wide">
-                  {band.advice}
-                </p>
-              </div>
-            </div>
-          ))}
+        {/* Tonal Balance Presets */}
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="w-4 h-4 text-amber-400" />
+            <span className="text-xs text-amber-200/70 uppercase tracking-widest font-bold">Tonal Balance</span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {TONAL_PRESETS.map((preset) => {
+              const isActive = activePreset === preset.id;
+              return (
+                <button
+                  key={preset.id}
+                  onClick={() => handlePresetSelect(preset)}
+                  className={`p-3 rounded-xl text-left transition-all border ${
+                    isActive
+                      ? 'bg-gradient-to-br from-amber-500/20 to-orange-500/20 border-amber-500/50 shadow-lg shadow-amber-500/10'
+                      : 'bg-amber-900/10 border-amber-900/20 hover:border-amber-500/30'
+                  }`}
+                >
+                  <div className="text-xl mb-1">{preset.icon}</div>
+                  <div className={`text-sm font-bold ${isActive ? 'text-amber-200' : 'text-amber-200/70'}`}>
+                    {preset.label}
+                  </div>
+                  <p className="text-[10px] text-amber-200/40 mt-0.5">{preset.description}</p>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Professional Noise Gate - envelope-following, last in chain */}
+        {/* Purity Slider (Simplified Noise Gate) */}
         {onNoiseGateChange && noiseGate && (
-          <div className="mt-6 pt-4 border-t border-slate-800/50 space-y-4">
+          <div className="pt-4 border-t border-amber-900/20 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <VolumeX className="w-4 h-4 text-slate-400" />
-                <span className="text-slate-400 uppercase tracking-wider text-xs font-bold">Noise Gate</span>
+                <Waves className="w-4 h-4 text-amber-400/70" />
+                <span className="text-amber-200/70 uppercase tracking-wider text-xs font-bold">Purity</span>
               </div>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => onNoiseGateChange({ enabled: !noiseGate.enabled })}
-                className={`text-xs font-mono ${noiseGate.enabled ? 'text-cyan-400' : 'text-slate-500'}`}
-              >
-                {noiseGate.enabled ? 'ON' : 'OFF'}
-              </Button>
+              <span className="text-xs text-amber-400 font-mono">{purityValue}%</span>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <div className="flex justify-between text-[10px] mb-0.5">
-                  <span className="text-slate-500">Threshold</span>
-                  <span className="text-cyan-400 font-mono">{noiseGate.threshold} dB</span>
-                </div>
-                <Slider
-                  value={[noiseGate.threshold]}
-                  onValueChange={([v]) => onNoiseGateChange({ threshold: v })}
-                  min={-80}
-                  max={-10}
-                  step={1}
-                  className="w-full"
-                />
-              </div>
-              <div>
-                <div className="flex justify-between text-[10px] mb-0.5">
-                  <span className="text-slate-500">Range</span>
-                  <span className="text-cyan-400 font-mono">{noiseGate.range} dB</span>
-                </div>
-                <Slider
-                  value={[noiseGate.range]}
-                  onValueChange={([v]) => onNoiseGateChange({ range: v })}
-                  min={-96}
-                  max={-24}
-                  step={1}
-                  className="w-full"
-                />
-              </div>
-              <div>
-                <div className="flex justify-between text-[10px] mb-0.5">
-                  <span className="text-slate-500">Attack</span>
-                  <span className="text-cyan-400 font-mono">{noiseGate.attack} ms</span>
-                </div>
-                <Slider
-                  value={[noiseGate.attack]}
-                  onValueChange={([v]) => onNoiseGateChange({ attack: v })}
-                  min={1}
-                  max={50}
-                  step={1}
-                  className="w-full"
-                />
-              </div>
-              <div>
-                <div className="flex justify-between text-[10px] mb-0.5">
-                  <span className="text-slate-500">Release</span>
-                  <span className="text-cyan-400 font-mono">{noiseGate.release} ms</span>
-                </div>
-                <Slider
-                  value={[noiseGate.release]}
-                  onValueChange={([v]) => onNoiseGateChange({ release: v })}
-                  min={50}
-                  max={500}
-                  step={5}
-                  className="w-full"
-                />
-              </div>
-            </div>
-            <p className="text-[10px] text-slate-500 italic">
-              Envelope-following gate • Reduces hiss in quiet sections • Last in chain
+            <Slider
+              value={[purityValue]}
+              onValueChange={([v]) => handlePurityChange(v)}
+              min={0}
+              max={100}
+              step={1}
+              className="[&_[role=slider]]:bg-amber-500"
+            />
+            <p className="text-[10px] text-amber-200/40 italic">
+              Gently removes background noise • 0% = Off, 100% = Maximum purity
             </p>
           </div>
         )}
 
-        {/* Footer Info */}
-        <div className="mt-6 pt-4 border-t border-slate-800/50 flex items-center justify-between text-xs text-slate-500">
+        {/* Footer */}
+        <div className="mt-4 pt-3 border-t border-amber-900/20 flex items-center justify-between text-xs text-amber-200/40">
           <div className="flex items-center gap-2">
             <Waves className="w-3 h-3" />
-            <span>3-Band Parametric EQ • 48kHz Processing</span>
+            <span>Tonal Alchemy • 48kHz</span>
           </div>
           <div className="flex items-center gap-2">
-            <Zap className="w-3 h-3 text-cyan-500" />
-            <span className="text-cyan-500">Neural Engine Active</span>
+            <Zap className="w-3 h-3 text-amber-500" />
+            <span className="text-amber-500">Engine Active</span>
           </div>
         </div>
       </CardContent>
