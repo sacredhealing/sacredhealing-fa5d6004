@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { AyurvedaUserProfile, DoshaProfile } from '@/lib/ayurvedaTypes';
 import { getDoshaEmoji } from '@/lib/ayurvedaTypes';
+import { useJyotishProfile } from '@/hooks/useJyotishProfile';
 
 interface DoshaDashboardProps {
   profile: AyurvedaUserProfile;
@@ -105,6 +106,7 @@ export const DoshaDashboard: React.FC<DoshaDashboardProps> = ({
   isPremium = false
 }) => {
   const [syncing, setSyncing] = useState(false);
+  const jyotish = useJyotishProfile();
 
   useEffect(() => {
     onFetchGuidance();
@@ -175,6 +177,35 @@ export const DoshaDashboard: React.FC<DoshaDashboardProps> = ({
             <DoshaOrb name="Pitta" value={dosha.pitta} color="#f59e0b" glowColor="#d97706" delay={0.2} />
             <DoshaOrb name="Kapha" value={dosha.kapha} color="#34d399" glowColor="#10b981" delay={0.4} />
           </div>
+
+          {/* ─── JYOTISH DOSHA INSIGHT ─── */}
+          {!jyotish.isLoading && (
+            <motion.div
+              className="mt-6 p-4 rounded-2xl"
+              style={{
+                background: 'linear-gradient(135deg, rgba(217,170,0,0.08), rgba(168,85,247,0.06))',
+                border: '1px solid rgba(217,170,0,0.15)',
+              }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="w-4 h-4 text-amber-400" />
+                <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-amber-300/80">
+                  Jyotish Dosha Sync
+                </span>
+              </div>
+              <p className="text-purple-200/70 text-sm leading-relaxed">
+                Your <span className="text-amber-300 font-bold">{jyotish.mahadasha} Mahadasha</span> aligns with{' '}
+                <span className="text-purple-300 font-bold">{jyotish.primaryDosha}</span> constitution.{' '}
+                Current karma focus: <span className="text-amber-200/90 italic">{jyotish.karmaFocus}</span>.
+                {jyotish.doshaImbalance && (
+                  <> Watch for <span className="text-rose-300/80">{jyotish.doshaImbalance}</span> during this transit.</>
+                )}
+              </p>
+            </motion.div>
+          )}
 
           <AnimatePresence>
             {syncing && (

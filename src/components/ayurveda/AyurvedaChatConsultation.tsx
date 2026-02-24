@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import type { AyurvedaUserProfile, DoshaProfile } from '@/lib/ayurvedaTypes';
+import { useJyotishProfile } from '@/hooks/useJyotishProfile';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -60,6 +61,7 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const jyotish = useJyotishProfile();
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -79,6 +81,17 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
     let assistantContent = '';
 
     try {
+      const jyotishContext = !jyotish.isLoading ? [
+        `Nakshatra: ${jyotish.nakshatra}`,
+        `Moon Sign: ${jyotish.moonSign}`,
+        `Mahadasha: ${jyotish.mahadasha}`,
+        `Antardasha: ${jyotish.antardasha}`,
+        `Jyotish Dosha: ${jyotish.primaryDosha}`,
+        `Dosha Imbalance: ${jyotish.doshaImbalance}`,
+        `Karma Focus: ${jyotish.karmaFocus}`,
+        jyotish.activeYogas.length > 0 ? `Active Yogas: ${jyotish.activeYogas.join(', ')}` : null,
+      ].filter(Boolean).join('; ') : undefined;
+
       const response = await fetch(CHAT_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -86,6 +99,8 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
           messages: [...messages, userMsg].map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content })),
           profile,
           dosha,
+          jyotishContext,
+          language: jyotish.language || 'en',
         }),
       });
 
