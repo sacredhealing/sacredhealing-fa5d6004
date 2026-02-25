@@ -54,7 +54,7 @@ export default function CreativeSoulMeditationTool() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  const { isAdmin } = useAdminRole();
+  const { isAdmin, isLoading: adminLoading } = useAdminRole();
   const engine = useSoulMeditateEngine();
   const offlineExport = useOfflineExport();
   
@@ -280,6 +280,8 @@ export default function CreativeSoulMeditationTool() {
         setExportAccessLoading(false);
         return;
       }
+      // Wait for admin role to resolve before evaluating access
+      if (adminLoading) return;
       if (isAdmin) {
         setHasExportAccess(true);
         setExportAccessLoading(false);
@@ -305,7 +307,7 @@ export default function CreativeSoulMeditationTool() {
       }
     };
     checkAccess();
-  }, [user, isAdmin, searchParams.get('payment')]);
+  }, [user, isAdmin, adminLoading, searchParams.get('payment')]);
 
   // Auto-load atmosphere when style changes
   useEffect(() => {
