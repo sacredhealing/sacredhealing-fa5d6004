@@ -340,7 +340,7 @@ export default function Explore() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
                 { label: "Akashic Decoder", desc: "Personalized transmission — unlock your 15-page soul manuscript.", href: "/akashic-records", Icon: Eye, akashicHighTicket: true, adminOnly: true },
-                { label: "Vedic Astrology", desc: "Daily influence + Akashic Records", href: "/vedic-astrology", Icon: Star, premium: true },
+                { label: "Vedic Astrology", desc: "🔱 Daily Jyotish influence + Akashic Records", href: "/vedic-astrology", Icon: Sparkles, premium: true },
                 { label: "Mantra Library", desc: "Sacred sounds for daily practice", href: "/mantras", Icon: Music2, premium: true },
                 { label: "Ayurveda", desc: "Balance + daily guidance", href: "/ayurveda" },
                 { label: "Vastu", desc: "Abundance Architect", href: "/vastu" },
