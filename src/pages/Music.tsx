@@ -12,6 +12,28 @@ import { useCuratedPlaylists, CuratedPlaylist } from '@/hooks/useCuratedPlaylist
 import MusicMembershipBanner from '@/components/music/MusicMembershipBanner';
 import { useAuth } from '@/hooks/useAuth';
 import { selectTrackForMood, type MoodKey, getTrackIdSafe, getTrackLabel } from '@/features/music/selectTrackForMood';
+import { useJyotishProfile } from '@/hooks/useJyotishProfile';
+
+const JyotishMusicCard = () => {
+  const jyotish = useJyotishProfile();
+  if (jyotish.isLoading) return null;
+  return (
+    <div className="mx-0 mb-4 p-4 rounded-2xl bg-gradient-to-r from-amber-900/20 to-indigo-900/20 border border-amber-800/20">
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-indigo-400">🎵</span>
+        <span className="text-sm font-serif text-amber-300 uppercase tracking-wider">
+          Cosmic Sound Prescription
+        </span>
+      </div>
+      <p className="text-sm text-amber-100/70">
+        Your <strong className="text-amber-200">{jyotish.mahadasha}</strong> period resonates with{' '}
+        <strong className="text-amber-200">{jyotish.musicRaga}</strong> and{' '}
+        <strong className="text-amber-200">{jyotish.musicFrequency}</strong>.{' '}
+        Listen to these to balance your {jyotish.primaryDosha} energy.
+      </p>
+    </div>
+  );
+};
 interface Playlist {
   id: string;
   name: string;
@@ -335,6 +357,8 @@ const Music: React.FC = () => {
           <h2 className="text-xl sm:text-2xl font-serif text-white mt-1" style={{ fontFamily: 'Cinzel, DM Serif Display, serif' }}>Sacred Frequencies</h2>
         </div>
       </section>
+
+      <JyotishMusicCard />
 
       {/* Subscription Banner */}
       <MusicMembershipBanner />
