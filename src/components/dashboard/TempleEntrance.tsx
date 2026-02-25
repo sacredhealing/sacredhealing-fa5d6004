@@ -136,7 +136,7 @@ export const TempleEntrance: React.FC<TempleEntranceProps> = ({
       <motion.div
         animate={{ scale: [1, 1.02, 1], opacity: [0.9, 1, 0.9] }}
         transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-        className="relative w-full"
+        className="relative w-full pointer-events-none"
         style={{ height: '320px' }}
       >
         {/* Gold glow behind */}
@@ -156,7 +156,7 @@ export const TempleEntrance: React.FC<TempleEntranceProps> = ({
       </motion.div>
 
       {/* Text + buttons */}
-      <div className="px-6 pt-2 pb-6 w-full flex flex-col items-center text-center">
+      <div className="relative z-10 px-6 pt-2 pb-6 w-full flex flex-col items-center text-center">
         <p
           className="text-base sm:text-lg text-amber-100/95 max-w-md leading-relaxed mb-2"
           style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif', letterSpacing: '0.06em' }}
