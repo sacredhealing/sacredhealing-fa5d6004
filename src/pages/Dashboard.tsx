@@ -183,7 +183,7 @@ const Dashboard: React.FC = () => {
           {/* TempleEntrance — full bleed, no side padding */}
           <div className="mb-4 sm:mb-5 animate-slide-up">
             <TempleEntrance
-              onStartClick={handleStartSession}
+              onStartClick={() => navigate('/breathing')}
               isDayClosed={isDayClosed}
               onSkipContinuation={() => markDayClosed()}
               returnState={returnState}
