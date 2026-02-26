@@ -35,7 +35,11 @@ function textOf(item: any) {
 }
 
 export function filterByMeditationLanguage(items: any[], lang: ContentLanguage) {
-  return items.filter((it) => getItemLanguage(it) === lang);
+  return items.filter((it) => {
+    const itemLang = getItemLanguage(it);
+    // Include items that match the selected language OR have unknown language (fallback)
+    return itemLang === lang || itemLang === "unknown";
+  });
 }
 
 export function sectionForItem(item: any): MeditationSectionKey {
