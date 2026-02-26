@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
   },
   optimizeDeps: {
-    include: ["ethers", "react", "react-dom", "@tanstack/react-query"],
+    include: ["ethers"],
   },
   build: {
     commonjsOptions: {
@@ -46,6 +46,5 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
-    dedupe: ["react", "react-dom"],
   },
 }));
