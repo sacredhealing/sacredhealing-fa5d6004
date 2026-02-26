@@ -1,20 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Play, Pause, Clock, Sparkles, ArrowLeft, Loader2 } from 'lucide-react';
+import { Play, Pause, Clock, Sparkles, ArrowLeft, Loader2, Compass } from 'lucide-react';
 import BabajiShadow from '@/components/meditation/BabajiShadow';
 import { TranslatedText } from '@/components/TranslatedText';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import CustomMeditationBooking from '@/components/meditation/CustomMeditationBooking';
-import CustomMeditationCreation from '@/components/meditation/CustomMeditationCreation';
-import WealthMeditationService from '@/components/meditation/WealthMeditationService';
-import MeditationMembershipBanner from '@/components/meditation/MeditationMembershipBanner';
-import { CuratedMeditationCard } from '@/components/meditation/CuratedMeditationCard';
-import { IntentionThreshold, IntentionType } from '@/components/meditation/IntentionThreshold';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { useCuratedPlaylists, CuratedPlaylist } from '@/hooks/useCuratedPlaylists';
 import { useMusicPlayer, UniversalAudioItem } from '@/contexts/MusicPlayerContext';
 import { useUserDailyState } from '@/hooks/useUserDailyState';
 import { getDayPhase } from '@/utils/postSessionContext';
@@ -22,30 +15,14 @@ import { StartNowCard } from '@/features/meditations/StartNowCard';
 import { LanguageToggle } from '@/features/meditations/LanguageToggle';
 import { useMeditationContentLanguage } from '@/features/meditations/useContentLanguage';
 import { selectStartNowItem } from '@/features/meditations/startNowSelector';
-import { filterByMeditationLanguage, buildSections } from '@/features/meditations/groupAndFilter';
 import { MeditationSection } from '@/features/meditations/MeditationSection';
 import { BackToTopFab } from '@/features/meditations/BackToTopFab';
 import { useJyotishProfile } from '@/hooks/useJyotishProfile';
-
-const JyotishMeditationCard = () => {
-  const jyotish = useJyotishProfile();
-  if (jyotish.isLoading || !jyotish.mahadasha || jyotish.mahadasha === 'Jupiter' && !jyotish.nakshatra) return null;
-  return (
-    <div className="mx-0 mb-4 p-4 rounded-2xl bg-gradient-to-r from-amber-900/20 to-purple-900/20 border border-amber-800/20">
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-amber-400">🕉️</span>
-        <span className="text-sm font-serif text-amber-300 uppercase tracking-wider">
-          Jyotish Meditation Guidance
-        </span>
-      </div>
-      <p className="text-sm text-amber-100/70">
-        Your <strong className="text-amber-200">{jyotish.mahadasha} Mahadasha</strong> period recommends{' '}
-        <strong className="text-amber-200">{jyotish.meditationType}</strong>.{' '}
-        Focus on {jyotish.karmaFocus} for deepest benefit.
-      </p>
-    </div>
-  );
-};
+import { IntentionThreshold, IntentionType } from '@/components/meditation/IntentionThreshold';
+import MeditationMembershipBanner from '@/components/meditation/MeditationMembershipBanner';
+import WealthMeditationService from '@/components/meditation/WealthMeditationService';
+import CustomMeditationBooking from '@/components/meditation/CustomMeditationBooking';
+import CustomMeditationCreation from '@/components/meditation/CustomMeditationCreation';
 
 interface Meditation {
   id: string;
@@ -58,7 +35,32 @@ interface Meditation {
   shc_reward: number;
   is_premium: boolean;
   play_count: number;
+  language?: string;
 }
+
+const JyotishMeditationCard = () => {
+  const jyotish = useJyotishProfile();
+  if (jyotish.isLoading || !jyotish.mahadasha) return null;
+  return (
+    <div className="mx-0 mb-8 p-6 rounded-3xl bg-gradient-to-br from-[#2d1b4e]/40 to-[#0f051a]/60 border border-[#D4AF37]/20 shadow-xl relative overflow-hidden group">
+      <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-30 transition-opacity">
+        <Compass size={80} className="text-[#D4AF37]" />
+      </div>
+      <div className="relative z-10">
+        <div className="flex items-center gap-3 mb-3">
+          <Sparkles className="text-[#D4AF37] w-4 h-4" />
+          <span className="text-[10px] font-black font-serif text-[#D4AF37] uppercase tracking-[0.3em]">
+            Celestial Guidance
+          </span>
+        </div>
+        <p className="text-sm text-stone-200 leading-relaxed italic">
+          Your <strong className="text-[#D4AF37] font-bold">{jyotish.mahadasha} Mahadasha</strong> cycle suggests focus on{' '}
+          <strong className="text-white underline decoration-[#D4AF37]/40">{jyotish.meditationType || 'Deep Stillness'}</strong> for soul alignment.
+        </p>
+      </div>
+    </div>
+  );
+};
 
 const Meditations: React.FC = () => {
   const { t } = useTranslation();
@@ -66,88 +68,61 @@ const Meditations: React.FC = () => {
   const { language, setLanguage } = useMeditationContentLanguage();
   const { userState } = useUserDailyState();
   const dayPhase = getDayPhase();
-
   const [searchParams] = useSearchParams();
+
   const [meditations, setMeditations] = useState<Meditation[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Intention threshold state
   const [showThreshold, setShowThreshold] = useState(false);
   const [pendingMeditation, setPendingMeditation] = useState<Meditation | null>(null);
-  const [currentIntention, setCurrentIntention] = useState<IntentionType | null>(null);
-
-  // Curated playlists
-  const { playlists: curatedPlaylists, getPlaylistItems } = useCuratedPlaylists('meditation');
-  const [selectedPlaylist, setSelectedPlaylist] = useState<CuratedPlaylist | null>(null);
-  const [playlistMeditations, setPlaylistMeditations] = useState<Meditation[]>([]);
 
   useEffect(() => {
     fetchMeditations();
   }, []);
 
   const fetchMeditations = async () => {
-    const { data } = await supabase
-      .from('meditations')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (data) {
-      setMeditations(data);
+    try {
+      const { data, error } = await supabase
+        .from('meditations')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setMeditations(data || []);
+    } catch (err) {
+      console.error("Error fetching meditations:", err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  // Filter by meditation content language
-  const filtered = useMemo(
-    () => filterByMeditationLanguage(meditations, language),
-    [meditations, language]
-  );
+  // Logic: Filter by language then build sections manually to ensure 'healing' works
+  const filtered = useMemo(() => {
+    return meditations.filter(m => {
+      const medLang = (m as any).language || 'en';
+      return medLang === language;
+    });
+  }, [meditations, language]);
 
-  const sections = useMemo(() => buildSections(filtered), [filtered]);
+  const sections = useMemo(() => {
+    return {
+      short: filtered.filter(m => m.duration_minutes <= 5),
+      morning: filtered.filter(m => m.category?.toLowerCase() === 'morning'),
+      sleep: filtered.filter(m => m.category?.toLowerCase() === 'sleep'),
+      healing: filtered.filter(m => m.category?.toLowerCase() === 'healing'),
+      focus: filtered.filter(m => m.category?.toLowerCase() === 'focus'),
+      nature: filtered.filter(m => m.category?.toLowerCase() === 'nature'),
+      all: filtered
+    };
+  }, [filtered]);
 
-  // Start Now: one-tap selection (no browsing)
   const startNowItem = useMemo(() => {
     return selectStartNowItem(meditations, { dayPhase, userState, language });
   }, [meditations, dayPhase, userState, language]);
 
-  // Handle payment success/cancel
-  useEffect(() => {
-    const success = searchParams.get('success');
-    const wealthSuccess = searchParams.get('wealth_success');
-    const cancelled = searchParams.get('cancelled');
-    const membershipSuccess = searchParams.get('membership_success');
-    const membershipCancelled = searchParams.get('membership_cancelled');
-
-    if (success === 'true') {
-      toast.success(t('meditations.paymentSuccess', 'Payment successful! Adam will begin channeling your meditation.'));
-    } else if (wealthSuccess === 'true') {
-      toast.success(t('meditations.wealthSuccess', 'Payment successful! Check your email for the 108 affirmations.'));
-    } else if (membershipSuccess) {
-      toast.success(t('meditations.membershipSuccess', 'Welcome to Meditation Membership! Your subscription is now active.'));
-    } else if (cancelled === 'true' || membershipCancelled === 'true') {
-      toast.info(t('meditations.paymentCancelled', 'Payment was cancelled'));
-    }
-  }, [searchParams, t]);
-
-  // Check if a meditation is currently playing via the unified player
-  const isCurrentlyPlaying = (meditationId: string) => {
-    return currentAudio?.id === meditationId && currentAudio?.contentType === 'meditation' && isPlaying;
-  };
-
-  // Get progress for a meditation from unified player
-  const getMeditationProgress = (meditationId: string) => {
-    if (currentAudio?.id === meditationId && currentAudio?.contentType === 'meditation') {
-      return playerProgress;
-    }
-    return 0;
-  };
-
-  // Actual audio playback logic - uses unified player
   const startPlayback = async (meditation: Meditation) => {
     const audioItem: UniversalAudioItem = {
       id: meditation.id,
       title: meditation.title,
-      artist: 'Sacred Healing',
+      artist: 'Siddha Healing',
       audio_url: meditation.audio_url,
       cover_image_url: meditation.cover_image_url,
       duration_seconds: meditation.duration_minutes * 60,
@@ -157,329 +132,127 @@ const Meditations: React.FC = () => {
     };
 
     playUniversalAudio(audioItem);
-
-    await supabase
-      .from('meditations')
-      .update({ play_count: meditation.play_count + 1 })
-      .eq('id', meditation.id);
+    await supabase.from('meditations').update({ play_count: (meditation.play_count || 0) + 1 }).eq('id', meditation.id);
   };
 
-  // Start Now: one tap, no threshold (second-start UX)
-  const onStartNow = (item: any) => {
-    const m = item as Meditation;
-    startPlayback(m);
-  };
-
-  // Opens the intention threshold before starting (library flow)
   const initiatePlay = (meditation: Meditation) => {
     if (currentAudio?.id === meditation.id && currentAudio?.contentType === 'meditation') {
-      const audioItem: UniversalAudioItem = {
-        id: meditation.id,
-        title: meditation.title,
-        artist: 'Sacred Healing',
-        audio_url: meditation.audio_url,
-        cover_image_url: meditation.cover_image_url,
-        duration_seconds: meditation.duration_minutes * 60,
-        shc_reward: meditation.shc_reward,
-        contentType: 'meditation',
-        originalData: meditation,
-      };
-      playUniversalAudio(audioItem);
+      playUniversalAudio({ ...currentAudio }); // Resume
       return;
     }
-
     setPendingMeditation(meditation);
     setShowThreshold(true);
   };
 
-  const handleIntentionSelected = (intention: IntentionType) => {
-    setCurrentIntention(intention);
-    setShowThreshold(false);
-
-    if (pendingMeditation) {
-      startPlayback(pendingMeditation);
-      setPendingMeditation(null);
-    }
-  };
-
-  const handleThresholdClose = () => {
-    setShowThreshold(false);
-    if (pendingMeditation) {
-      startPlayback(pendingMeditation);
-      setPendingMeditation(null);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-[#0f051a]">
+      <Loader2 className="w-8 h-8 animate-spin text-[#D4AF37]" />
+    </div>
+  );
 
   return (
-    <>
+    <div className="min-h-screen px-4 pt-8 pb-32 selection:bg-[#D4AF37]/30"
+         style={{ background: 'radial-gradient(circle at 50% 0%, #1a0b2e 0%, #0f051a 100%)' }}>
+      
       <IntentionThreshold
         isOpen={showThreshold}
-        onSelectIntention={handleIntentionSelected}
-        onClose={handleThresholdClose}
+        onSelectIntention={() => {
+          if (pendingMeditation) startPlayback(pendingMeditation);
+          setShowThreshold(false);
+          setPendingMeditation(null);
+        }}
+        onClose={() => setShowThreshold(false)}
       />
 
-      <div className="min-h-screen px-4 pt-6 pb-24 cave-bg">
-        {/* Header — single elegant greeting + Language Sanctuary (top right) */}
-        <header className="flex items-start justify-between gap-4 mb-4 animate-fade-in">
-          <h1
-            className="text-xl sm:text-2xl font-light text-foreground"
-            style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}
-          >
-            {t('meditations.templeGreeting', 'The Hall of Stillness')}
+      <header className="flex justify-between items-center mb-8">
+        <div className="flex flex-col">
+          <h1 className="text-2xl font-light text-white tracking-widest uppercase" style={{ fontFamily: 'Cinzel, serif' }}>
+            Hall of Stillness
           </h1>
-          <LanguageToggle language={language} setLanguage={setLanguage} compact />
-        </header>
+          <span className="text-[9px] text-[#D4AF37]/50 uppercase tracking-[0.4em] mt-1">The Sacred Void</span>
+        </div>
+        <LanguageToggle language={language} setLanguage={setLanguage} compact />
+      </header>
 
-        {/* START NOW — glowing portal, lineage prompt */}
-        <StartNowCard
-          item={loading ? null : startNowItem}
-          dayPhase={dayPhase}
-          userState={userState}
-          onStart={onStartNow}
+      <StartNowCard
+        item={startNowItem}
+        dayPhase={dayPhase}
+        userState={userState}
+        onStart={(item) => startPlayback(item as Meditation)}
+      />
+
+      <JyotishMeditationCard />
+
+      <div className="space-y-10">
+        <MeditationSection
+          title="Healing Sanctuary"
+          subtitle="Transmissions to support what is tender."
+          items={sections.healing}
+          defaultExpanded={sections.healing.length > 0}
+          onPlay={initiatePlay}
+          isCurrentlyPlaying={(id) => currentAudio?.id === id && isPlaying}
+          getProgress={(id) => currentAudio?.id === id ? playerProgress : 0}
+          isPlaying={isPlaying}
         />
 
-        <JyotishMeditationCard />
+        <MeditationSection
+          title="Morning Resonance"
+          subtitle="Align with the emerging light."
+          items={sections.morning}
+          onPlay={initiatePlay}
+          isCurrentlyPlaying={(id) => currentAudio?.id === id && isPlaying}
+          getProgress={(id) => currentAudio?.id === id ? playerProgress : 0}
+          isPlaying={isPlaying}
+        />
 
-        {selectedPlaylist ? (
-          /* Playlist Detail View */
-          <>
-            <div className="flex items-center gap-2 mb-4 mt-6">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => { setSelectedPlaylist(null); setPlaylistMeditations([]); }}
-              >
-                <ArrowLeft size={16} className="mr-1" /> Back
-              </Button>
-            </div>
+        <MeditationSection
+          title="Nidra & Sleep"
+          subtitle="Dissolve into the deep peace."
+          items={sections.sleep}
+          onPlay={initiatePlay}
+          isCurrentlyPlaying={(id) => currentAudio?.id === id && isPlaying}
+          getProgress={(id) => currentAudio?.id === id ? playerProgress : 0}
+          isPlaying={isPlaying}
+        />
 
-            <div className="flex gap-4 mb-6">
-              {selectedPlaylist.cover_image_url ? (
-                <img
-                  src={selectedPlaylist.cover_image_url}
-                  alt={selectedPlaylist.title}
-                  className="w-24 h-24 rounded-xl object-cover"
-                  loading="lazy"
-                />
-              ) : (
-                <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                  <Sparkles size={32} className="text-muted-foreground" />
-                </div>
-              )}
-              <div className="flex-1">
-                <h2 className="text-xl font-bold">{selectedPlaylist.title}</h2>
-                {selectedPlaylist.description && (
-                  <p className="text-sm text-muted-foreground mt-1">{selectedPlaylist.description}</p>
-                )}
-                <p className="text-xs text-muted-foreground mt-2">
-                  {selectedPlaylist.track_count} sessions • {Math.floor(selectedPlaylist.total_duration / 60)} min
-                </p>
-              </div>
-            </div>
+        <MeditationSection
+          title="Deep Focus"
+          subtitle="Sharpen the arrow of attention."
+          items={sections.focus}
+          onPlay={initiatePlay}
+          isCurrentlyPlaying={(id) => currentAudio?.id === id && isPlaying}
+          getProgress={(id) => currentAudio?.id === id ? playerProgress : 0}
+          isPlaying={isPlaying}
+        />
 
-            <div className="space-y-4">
-              {playlistMeditations.length === 0 ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : (
-                playlistMeditations.map((meditation) => {
-                  const isMeditationPlaying = isCurrentlyPlaying(meditation.id);
-                  const currentProgress = getMeditationProgress(meditation.id);
-
-                  return (
-                    <div
-                      key={meditation.id}
-                      className="relative overflow-hidden rounded-2xl bg-white/[0.04] border border-white/[0.08] p-5 hover:scale-[1.02] transition-transform duration-300 cave-flicker"
-                    >
-                      {meditation.is_premium && (
-                        <div className="absolute top-3 right-3 px-2 py-1 bg-accent/20 rounded-full">
-                          <span className="text-xs font-medium text-accent">{t('meditations.premium', 'Premium')}</span>
-                        </div>
-                      )}
-                      <div className="flex items-center gap-4">
-                        <button
-                          onClick={() => initiatePlay(meditation)}
-                          className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center glow-purple hover:scale-110 transition-transform"
-                        >
-                          {isMeditationPlaying ? (
-                            <Pause size={24} className="text-primary" />
-                          ) : (
-                            <Play size={24} className="text-primary ml-1" />
-                          )}
-                        </button>
-                        <div className="flex-1">
-                          <h3 className="font-heading font-semibold text-foreground">
-                            <TranslatedText>{meditation.title}</TranslatedText>
-                          </h3>
-                          <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <Clock size={14} />
-                              {meditation.duration_minutes} min
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Sparkles size={14} className="text-accent" />
-                              +{meditation.shc_reward} SHC
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      {isPlaying && (
-                        <div className="mt-4">
-                          <Progress value={currentProgress} className="h-1" />
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </>
-        ) : (
-          /* Main Browse View - Library */
-          <>
-            {/* Curated Playlists */}
-            {curatedPlaylists.length > 0 && (
-              <div className="mt-6 mb-6">
-                <h2 className="text-lg font-heading font-semibold text-foreground mb-4">
-                  {t('meditations.featuredCollections', 'Featured collections')}
-                </h2>
-                <div className="grid grid-cols-1 gap-4">
-                  {curatedPlaylists.map(playlist => (
-                    <CuratedMeditationCard
-                      key={playlist.id}
-                      playlist={playlist}
-                      onClick={async () => {
-                        setSelectedPlaylist(playlist);
-                        const items = await getPlaylistItems(playlist.id);
-                        setPlaylistMeditations(items as Meditation[]);
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Progressive disclosure sections */}
-            <div className="mt-6">
-              <h2 className="text-lg font-heading font-semibold text-foreground mb-1">
-                {t('meditations.allMeditations', 'All meditations')}
-              </h2>
-              <p className="text-sm text-muted-foreground mb-4">
-                {t('meditations.sectionsSubtitle', 'Curated by intention. Expand when you feel ready.')}
-              </p>
-
-              {filtered.length === 0 ? (
-                <div className="text-center py-8">
-                  <BabajiShadow />
-                  <h3 className="font-light text-foreground mt-4" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
-                    Quiet the mind. The transmission will manifest shortly.
-                  </h3>
-                </div>
-              ) : (
-                <>
-                  <MeditationSection
-                    title={t('meditations.sections.short', 'Short resets')}
-                    subtitle={t('meditations.sections.shortDesc', '2–5 minutes. Easy to begin.')}
-                    items={sections.short}
-                    defaultExpanded
-                    onPlay={initiatePlay}
-                    isCurrentlyPlaying={isCurrentlyPlaying}
-                    getProgress={getMeditationProgress}
-                    isPlaying={isPlaying}
-                  />
-                  <MeditationSection
-                    title={t('meditations.sections.morning', 'Morning')}
-                    subtitle={t('meditations.sections.morningDesc', 'Start your day gently.')}
-                    items={sections.morning}
-                    onPlay={initiatePlay}
-                    isCurrentlyPlaying={isCurrentlyPlaying}
-                    getProgress={getMeditationProgress}
-                    isPlaying={isPlaying}
-                  />
-                  <MeditationSection
-                    title={t('meditations.sections.sleep', 'Sleep')}
-                    subtitle={t('meditations.sections.sleepDesc', 'Unwind the body and mind.')}
-                    items={sections.sleep}
-                    onPlay={initiatePlay}
-                    isCurrentlyPlaying={isCurrentlyPlaying}
-                    getProgress={getMeditationProgress}
-                    isPlaying={isPlaying}
-                  />
-                  <MeditationSection
-                    title={t('meditations.sections.healing', 'Healing')}
-                    subtitle={t('meditations.sections.healingDesc', "Support what's tender.")}
-                    items={sections.healing}
-                    onPlay={initiatePlay}
-                    isCurrentlyPlaying={isCurrentlyPlaying}
-                    getProgress={getMeditationProgress}
-                    isPlaying={isPlaying}
-                  />
-                  <MeditationSection
-                    title={t('meditations.sections.focus', 'Focus')}
-                    subtitle={t('meditations.sections.focusDesc', 'Clear and steady attention.')}
-                    items={sections.focus}
-                    onPlay={initiatePlay}
-                    isCurrentlyPlaying={isCurrentlyPlaying}
-                    getProgress={getMeditationProgress}
-                    isPlaying={isPlaying}
-                  />
-                  <MeditationSection
-                    title={t('meditations.sections.nature', 'Nature')}
-                    subtitle={t('meditations.sections.natureDesc', 'Ground in the presence of earth.')}
-                    items={sections.nature}
-                    onPlay={initiatePlay}
-                    isCurrentlyPlaying={isCurrentlyPlaying}
-                    getProgress={getMeditationProgress}
-                    isPlaying={isPlaying}
-                  />
-                  <MeditationSection
-                    title={t('meditations.sections.more', 'More')}
-                    subtitle={t('meditations.sections.moreDesc', 'Explore when you feel ready.')}
-                    items={sections.all}
-                    onPlay={initiatePlay}
-                    isCurrentlyPlaying={isCurrentlyPlaying}
-                    getProgress={getMeditationProgress}
-                    isPlaying={isPlaying}
-                  />
-                </>
-              )}
-            </div>
-
-            <BackToTopFab />
-
-            {/* Sacred Commissions — paid offerings */}
-            <div className="mt-10">
-              <h2
-                className="text-lg font-light text-foreground mb-1"
-                style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}
-              >
-                {t('meditations.sacredCommissions', 'Sacred Commissions')}
-              </h2>
-              <p className="text-sm text-muted-foreground mb-4">
-                {t('meditations.sacredCommissionsDesc', 'Personal transmissions. When you want something channeled for you alone.')}
-              </p>
-
-              <MeditationMembershipBanner />
-
-              <div className="space-y-3 mt-4">
-                <WealthMeditationService />
-                <CustomMeditationBooking />
-                <CustomMeditationCreation />
-              </div>
-            </div>
-          </>
-        )}
+        <MeditationSection
+          title="Earth Grounding"
+          subtitle="Meditations with the presence of Nature."
+          items={sections.nature}
+          onPlay={initiatePlay}
+          isCurrentlyPlaying={(id) => currentAudio?.id === id && isPlaying}
+          getProgress={(id) => currentAudio?.id === id ? playerProgress : 0}
+          isPlaying={isPlaying}
+        />
       </div>
-    </>
+
+      <div className="mt-20 border-t border-white/5 pt-12">
+        <h2 className="text-xl font-light text-white tracking-widest uppercase mb-2" style={{ fontFamily: 'Cinzel, serif' }}>
+          Sacred Commissions
+        </h2>
+        <p className="text-xs text-stone-500 mb-8 tracking-wide">Personal transmissions channeled specifically for your soul.</p>
+        
+        <MeditationMembershipBanner />
+        
+        <div className="grid gap-4 mt-6">
+          <WealthMeditationService />
+          <CustomMeditationBooking />
+          <CustomMeditationCreation />
+        </div>
+      </div>
+
+      <BackToTopFab />
+    </div>
   );
 };
 
