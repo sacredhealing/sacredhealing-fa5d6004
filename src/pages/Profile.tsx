@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Flame, Flower2, Star, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield, Scale, LayoutDashboard, Megaphone, Crown, Pencil, Banknote, Lock, FileText } from 'lucide-react';
+import { 
+  Flame, Flower2, Star, Settings, LogOut, ChevronRight, Wallet, Bell, 
+  Moon, Shield, Scale, LayoutDashboard, Megaphone, Crown, Pencil, 
+  Banknote, Lock, FileText, Globe, Clock, Info, HelpCircle, Smartphone
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LanguageSelector } from '@/components/LanguageSelector';
@@ -24,14 +28,14 @@ import { ProfileEditDialog } from '@/components/profile/ProfileEditDialog';
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user, signOut } = useAuth();
   const { walletAddress, connectWallet } = usePhantomWallet();
   const { balance, profile: shcProfile } = useSHC();
   const { profile } = useProfile();
   const { toast } = useToast();
   const { isAdmin } = useAdminRole();
-  const { certificates, isLoading: certificatesLoading, downloadCertificate, shareCertificate } = useCertificates();
+  const { certificates, downloadCertificate, shareCertificate } = useCertificates();
   const { hasAccess: hasAkashicRecord } = useAkashicAccess(user?.id);
   const { reading: vedicReading } = useAIVedicReading();
 
@@ -40,326 +44,219 @@ const Profile: React.FC = () => {
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileEditOpen, setProfileEditOpen] = useState(false);
+  const [showWalletInfo, setShowWalletInfo] = useState(false);
+  const [showAppGuide, setShowAppGuide] = useState(false);
 
-  const badges = [
-    { id: 1, emoji: '🧘', titleKey: 'badges.firstMeditation', earned: true },
-    { id: 2, emoji: '🔥', titleKey: 'badges.sevenDayStreak', earned: true },
-    { id: 3, emoji: '📚', titleKey: 'badges.courseComplete', earned: true },
-    { id: 4, emoji: '🌟', titleKey: 'badges.thirtyDayStreak', earned: false },
-    { id: 5, emoji: '👑', titleKey: 'badges.premiumMember', earned: false },
-    { id: 6, emoji: '🎯', titleKey: 'badges.hundredSessions', earned: false },
-  ];
+  // Practice Time State
+  const [sadhanaTime, setSadhanaTime] = useState(localStorage.getItem('sadhanaTime') || '05:00');
+
+  const handleSadhanaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSadhanaTime(e.target.value);
+    localStorage.setItem('sadhanaTime', e.target.value);
+    toast({ title: t('profile.timeUpdated', 'Practice Time Set'), description: `${e.target.value}` });
+  };
 
   const handleSignOut = async () => {
     await signOut();
-    toast({
-      title: t('profile.signOut'),
-      description: t('profile.seeYouSoon')
-    });
     navigate('/');
   };
 
-  const dashaCycle = vedicReading?.personalCompass?.currentDasha?.period?.split(' ')[0] || 'Rahu';
-  const soulLabel = t('profile.soulRecordLabel', `Age 42 • ${dashaCycle} Cycle Active • Soul Frequency: 528Hz`);
-
-  // Sacred Folders for Dharma Configuration
-  const physicalSanctuary = [
-    { icon: Bell, label: t('profile.notifications'), sublabel: t('profile.dailyReminders'), onClick: () => setNotificationsOpen(true) },
-    { icon: Moon, label: t('profile.appearance'), sublabel: t('profile.darkMode'), onClick: () => setAppearanceOpen(true) },
-    { icon: Shield, label: t('profile.privacy'), sublabel: t('profile.dataAndSecurity'), onClick: () => setPrivacyOpen(true) },
-  ];
-  const abundanceLineage = [
-    { icon: Banknote, label: t('profile.walletEarningsAdvanced', 'Wallet & Earnings (Advanced)'), sublabel: t('profile.walletEarningsDesc', 'SHC, affiliate, income streams'), onClick: () => navigate('/income-streams') },
-    { icon: Megaphone, label: t('profile.promoteEarn'), sublabel: t('profile.promoteEarnDesc'), onClick: () => navigate('/income-streams/affiliate') },
-    { icon: Wallet, label: t('wallet.connectWallet'), sublabel: walletAddress ? `${walletAddress.slice(0,4)}...${walletAddress.slice(-4)}` : t('profile.web3Wallet'), onClick: connectWallet },
-    ...(isAdmin ? [{ icon: LayoutDashboard, label: t('admin.title'), sublabel: t('admin.manageContent'), onClick: () => navigate('/admin') }] : []),
-  ];
-  const theCovenant = [
-    { icon: Scale, label: t('settings.legal.title'), sublabel: t('settings.legal.subtitle'), onClick: () => navigate('/legal') },
-    { icon: Settings, label: t('profile.settings'), sublabel: t('profile.appPreferences'), onClick: () => setSettingsOpen(true) },
-  ];
-
   const userName = user?.user_metadata?.full_name || t('dashboard.sacredSoul');
-  const userEmail = user?.email || '';
+  
+  // Custom Membership Naming
+  const getMembershipLevel = () => {
+    if (isAdmin) return "Siddha Lineage Holder";
+    if (profile?.membership_type === 'lifetime') return "Jivanmukta";
+    if (profile?.membership_type === 'yearly') return "Siddha Adept";
+    return "Sadhaka Seeker";
+  };
 
   return (
-    <div className="min-h-screen px-4 pt-6">
-      {/* Soul Header - Bhrigu Soul Record */}
-      <div className="flex flex-col items-center mb-8 animate-fade-in">
-        <div className="relative flex justify-center">
-          {/* Golden Halo */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-28 h-28 rounded-full bg-[#D4AF37]/20 blur-xl animate-sangha-pulse" style={{ boxShadow: '0 0 40px rgba(212,175,55,0.4)' }} />
-          </div>
-          <div className="relative w-24 h-24 rounded-full p-[2px] border border-[#D4AF37]/40" style={{ boxShadow: '0 0 24px rgba(212,175,55,0.35), inset 0 0 20px rgba(212,175,55,0.1)' }}>
-            <Avatar className="w-full h-full rounded-full border-2 border-background">
+    <div className="min-h-screen bg-[#0f051a] text-stone-200 px-4 pt-6 pb-32 font-serif overflow-x-hidden">
+      
+      {/* Top Header & Language */}
+      <div className="flex justify-between items-center mb-10">
+        <h1 className="text-xl tracking-[0.2em] uppercase text-[#D4AF37] font-light">Personal Chamber</h1>
+        <div className="scale-90 origin-right">
+          <LanguageSelector />
+        </div>
+      </div>
+
+      {/* Profile & Badge Section */}
+      <div className="flex flex-col items-center mb-12">
+        <div className="relative">
+          <div className="absolute inset-0 bg-[#D4AF37]/20 blur-2xl rounded-full animate-pulse" />
+          <div className="relative w-32 h-32 rounded-full p-1 border-2 border-[#D4AF37]/50 shadow-[0_0_30px_rgba(212,175,55,0.2)]">
+            <Avatar className="w-full h-full rounded-full">
               <AvatarImage src={profile?.avatar_url || undefined} />
-              <AvatarFallback className="bg-background text-4xl text-foreground">
-                {userName?.charAt(0) || '🧘'}
-              </AvatarFallback>
+              <AvatarFallback className="bg-[#1a0b2e] text-3xl">{userName?.charAt(0)}</AvatarFallback>
             </Avatar>
+            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-[#D4AF37] text-[#0f051a] px-3 py-0.5 rounded-full text-[10px] font-bold tracking-tighter uppercase whitespace-nowrap border border-[#0f051a]">
+              {getMembershipLevel()}
+            </div>
           </div>
-          <button
-            onClick={() => setProfileEditOpen(true)}
-            className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-[#D4AF37] flex items-center justify-center text-[#0f051a] hover:bg-[#D4AF37]/90 transition-colors shadow-[0_0_12px_rgba(212,175,55,0.5)]"
-          >
-            <Pencil size={14} />
+          <button onClick={() => setProfileEditOpen(true)} className="absolute top-0 right-0 p-2 bg-white/5 rounded-full border border-white/10">
+            <Pencil size={14} className="text-[#D4AF37]" />
           </button>
         </div>
+        <h2 className="mt-6 text-2xl font-light tracking-wide">{userName}</h2>
+        <p className="text-[#D4AF37]/70 text-xs italic mt-1 tracking-widest uppercase">Rohini Nakshatra • Jupiter Influence</p>
+      </div>
 
-        <h1 className="mt-4 text-2xl font-heading font-bold text-foreground">{userName}</h1>
-        <p className="text-sm text-[#D4AF37]/90 mt-1 text-center max-w-sm">{soulLabel}</p>
-        <p className="text-muted-foreground text-xs mt-1">{userEmail}</p>
+      {/* Practice Time Adjustment */}
+      <div className="mb-10 p-5 rounded-2xl bg-white/[0.03] border border-[#D4AF37]/20">
+        <div className="flex items-center gap-3 mb-4">
+          <Clock className="text-[#D4AF37]" size={20} />
+          <h3 className="text-sm font-semibold tracking-widest uppercase">{t('profile.sadhanaTime', 'Daily Practice Time')}</h3>
+        </div>
+        <input 
+          type="time" 
+          value={sadhanaTime}
+          onChange={handleSadhanaChange}
+          className="w-full bg-[#1a0b2e] border border-white/10 rounded-xl p-3 text-xl text-center text-white focus:border-[#D4AF37] outline-none transition-all"
+        />
+        <p className="text-[10px] text-stone-500 mt-2 text-center uppercase tracking-tighter">Adjust your dashboard practice reminder</p>
+      </div>
 
-        {profile?.bio && (
-          <p className="mt-2 text-sm text-muted-foreground text-center max-w-xs">{profile.bio}</p>
-        )}
-
-        {/* Sacred Counters - Flame, Lotus, Star */}
-        <div className="flex gap-10 mt-6">
-          <div className="flex flex-col items-center">
-            <Flame className="w-6 h-6 text-[#D4AF37] mb-1" style={{ filter: 'drop-shadow(0 0 6px rgba(212,175,55,0.5))' }} />
-            <p className="text-xl font-heading font-bold text-[#D4AF37]">{shcProfile?.streak_days ?? 0}</p>
-            <p className="text-xs text-muted-foreground">{t('profile.streak')}</p>
+      {/* Wisdom Grid */}
+      <div className="grid grid-cols-2 gap-4 mb-12">
+        {['Music', 'Meditation', 'Mantra', 'Healing', 'Vastu', 'Ayurveda', 'Jyotish'].map((item) => (
+          <div key={item} className="p-4 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col items-center justify-center hover:bg-white/[0.05] transition-all cursor-pointer group">
+            <span className="text-[10px] uppercase tracking-[0.2em] text-stone-500 group-hover:text-[#D4AF37] transition-colors">{item}</span>
           </div>
-          <div className="flex flex-col items-center">
-            <Flower2 className="w-6 h-6 text-[#D4AF37] mb-1" style={{ filter: 'drop-shadow(0 0 6px rgba(212,175,55,0.5))' }} />
-            <p className="text-xl font-heading font-bold text-[#D4AF37]">
-              <AnimatedCounter value={balance?.balance ?? 0} />
-            </p>
-            <p className="text-xs text-muted-foreground">{t('profile.balance')}</p>
-          </div>
-          <div className="flex flex-col items-center">
-            <Star className="w-6 h-6 text-[#D4AF37] mb-1" style={{ filter: 'drop-shadow(0 0 6px rgba(212,175,55,0.5))' }} />
-            <p className="text-xl font-heading font-bold text-[#D4AF37]">{badges.filter(b => b.earned).length}</p>
-            <p className="text-xs text-muted-foreground">{t('profile.badges')}</p>
+        ))}
+      </div>
+
+      {/* Wallet Guidance Button */}
+      <button 
+        onClick={() => setShowWalletInfo(!showWalletInfo)}
+        className="w-full mb-4 p-5 rounded-2xl bg-indigo-950/20 border border-indigo-500/30 flex items-center justify-between group"
+      >
+        <div className="flex items-center gap-4">
+          <Wallet className="text-indigo-400" />
+          <div className="text-left">
+            <p className="text-sm font-bold text-indigo-100 uppercase tracking-widest">Web3 Portal</p>
+            <p className="text-xs text-indigo-400/70">{walletAddress ? 'Wallet Linked' : 'What is Phantom?'}</p>
           </div>
         </div>
+        <ChevronRight className={`text-indigo-400 transition-transform ${showWalletInfo ? 'rotate-90' : ''}`} />
+      </button>
 
-        {/* Your Space + orientation (above badges) */}
-        <div className="mt-4 grid gap-3">
-          {/* Your Space */}
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <div className="text-white font-semibold">{t('profile.yourSacredSpace.title')}</div>
-            <div className="mt-2 text-sm text-white/70 whitespace-pre-line">
-              {t('profile.yourSacredSpace.description')}
-            </div>
+      {showWalletInfo && (
+        <div className="mb-8 p-5 rounded-2xl bg-indigo-950/10 border border-indigo-500/20 text-sm leading-relaxed text-indigo-200/80 animate-in fade-in slide-in-from-top-2">
+          <p className="mb-3 font-bold text-indigo-300">Phantom is your secure digital vault.</p>
+          <p className="mb-4">It allows you to own your digital assets and spiritual badges. To connect:</p>
+          <ol className="list-decimal list-inside space-y-2 mb-4 text-xs">
+            <li>Download the Phantom App/Extension.</li>
+            <li>Create a new wallet (Save your recovery phrase!).</li>
+            <li>Click 'Connect' below to link your lineage.</li>
+          </ol>
+          <Button onClick={connectWallet} className="w-full bg-indigo-600 hover:bg-indigo-500">Connect Phantom</Button>
+        </div>
+      )}
+
+      {/* App Guide Button */}
+      <button 
+        onClick={() => setShowAppGuide(!showAppGuide)}
+        className="w-full mb-12 p-5 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-between"
+      >
+        <div className="flex items-center gap-4 text-left">
+          <Smartphone className="text-[#D4AF37]" />
+          <div>
+            <p className="text-sm font-bold uppercase tracking-widest">How this app works</p>
+            <p className="text-xs text-stone-500">Android & iPhone Guidance</p>
           </div>
+        </div>
+        <ChevronRight className={showAppGuide ? 'rotate-90' : ''} />
+      </button>
 
-          {/* How to use */}
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <div className="text-white font-semibold">{t('profile.howToUse.title')}</div>
-            <div className="mt-2 text-sm text-white/70 grid gap-2">
-              <div>{t('profile.howToUse.step1')}</div>
-              <div>{t('profile.howToUse.step2')}</div>
-              <div>{t('profile.howToUse.step3')}</div>
-            </div>
+      {showAppGuide && (
+        <div className="mb-12 space-y-4 animate-in fade-in">
+          <div className="p-4 rounded-xl border border-white/5 bg-white/[0.01]">
+            <h4 className="text-[#D4AF37] text-xs font-bold uppercase mb-2">Install on iPhone (Safari)</h4>
+            <p className="text-xs text-stone-400 italic">Tap the 'Share' icon (square with arrow) → Scroll down → Tap 'Add to Home Screen'.</p>
           </div>
+          <div className="p-4 rounded-xl border border-white/5 bg-white/[0.01]">
+            <h4 className="text-[#D4AF37] text-xs font-bold uppercase mb-2">Install on Android (Chrome)</h4>
+            <p className="text-xs text-stone-400 italic">Tap the three dots (⋮) → Tap 'Install app' or 'Add to home screen'.</p>
+          </div>
+        </div>
+      )}
 
-          {/* What each tab does (collapsed) */}
-          <details className="rounded-2xl border border-white/10 bg-white/5 p-4 group">
-            <summary className="cursor-pointer text-white font-semibold list-none flex items-center justify-between">
-              {t('profile.whatEachTabDoes.title')}
-              <ChevronRight className="w-4 h-4 text-white/60 group-open:rotate-90 transition-transform" />
-            </summary>
-            <div className="mt-3 text-sm text-white/70 grid gap-2">
-              <div>{t('profile.whatEachTabDoes.home')}</div>
-              <div>{t('profile.whatEachTabDoes.meditate')}</div>
-              <div>{t('profile.whatEachTabDoes.music')}</div>
-              <div>{t('profile.whatEachTabDoes.soul')}</div>
-              <div>{t('profile.whatEachTabDoes.library')}</div>
-              <div>{t('profile.whatEachTabDoes.community')}</div>
+      {/* About Us - The Guides */}
+      <div className="mb-16 border-t border-white/5 pt-12">
+        <h3 className="text-center text-[#D4AF37] uppercase tracking-[0.3em] text-[10px] mb-10">The Siddha Lineage Guides</h3>
+        <div className="space-y-12">
+          {/* Adam */}
+          <div className="text-center flex flex-col items-center">
+            <div className="w-24 h-24 rounded-full border border-[#D4AF37]/40 p-1 mb-4">
+              <img src="/adam-face.jpg" className="w-full h-full rounded-full grayscale hover:grayscale-0 transition-all duration-700 object-cover" alt="Adam" />
             </div>
-          </details>
-
-          {/* Reassurance */}
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <div className="text-white font-semibold">{t('profile.whatIsHappening.title')}</div>
-            <div className="mt-2 text-sm text-white/70 whitespace-pre-line">
-              {t('profile.whatIsHappening.description')}
+            <h4 className="text-lg font-light tracking-widest text-white">Adam Kritagya Das</h4>
+            <p className="text-[10px] text-[#D4AF37] uppercase tracking-widest mb-4">Healer of the Siddha Lineage</p>
+            <p className="text-xs leading-relaxed text-stone-400 max-w-xs italic">
+              Helping people transform through healing touch, sound, and light. Adam guides seekers through Soul Purpose Analysis and the wisdom of the Rohini nakshatra.
+            </p>
+          </div>
+          {/* Laila */}
+          <div className="text-center flex flex-col items-center">
+            <div className="w-24 h-24 rounded-full border border-[#D4AF37]/40 p-1 mb-4">
+              <img src="/laila-face.jpg" className="w-full h-full rounded-full grayscale hover:grayscale-0 transition-all duration-700 object-cover" alt="Laila" />
             </div>
+            <h4 className="text-lg font-light tracking-widest text-white">Laila Karaveera Nivasini Dasi</h4>
+            <p className="text-[10px] text-[#D4AF37] uppercase tracking-widest mb-4">The Singing Healer</p>
+            <p className="text-xs leading-relaxed text-stone-400 max-w-xs italic">
+              Yoga teacher and conduit for Nada Yoga. Laila channels healing vibrations to reorganize the emotional body and invite restorative peace.
+            </p>
+          </div>
+          {/* Lineage Text */}
+          <div className="text-center px-4 pt-4">
+            <p className="text-[10px] text-stone-500 uppercase tracking-widest">Devotees of</p>
+            <p className="text-sm text-[#D4AF37]/80 font-light mt-1">The Lineage of Paramahamsa Vishwananda & Mahavatar Babaji</p>
           </div>
         </div>
       </div>
 
-      {/* Badge Vault - Mystical Seals */}
-      <div className="mb-8 animate-slide-up">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-heading font-semibold text-foreground">{t('profile.badges')}</h2>
-          <button className="text-sm text-[#D4AF37] hover:text-[#D4AF37]/80">{t('common.viewAll')}</button>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          {badges.map((badge) => (
-            <div
-              key={badge.id}
-              className={`relative rounded-2xl text-center border transition-all p-5 ${
-                badge.earned
-                  ? 'bg-[rgba(212,175,55,0.06)] border-[#D4AF37]/30 shadow-[0_0_20px_rgba(212,175,55,0.15),inset_0_0_20px_rgba(212,175,55,0.03)]'
-                  : 'bg-white/[0.03] border-white/10 opacity-70'
-              }`}
-            >
-              {!badge.earned && (
-                <div className="absolute top-2 right-2">
-                  <Lock className="w-4 h-4 text-white/40" />
-                </div>
-              )}
-              <span className={`block text-4xl mb-2 ${badge.earned ? 'drop-shadow-[0_0_12px_rgba(212,175,55,0.4)]' : 'grayscale opacity-60'}`}>
-                {badge.emoji}
-              </span>
-              <p className={`text-xs font-medium ${badge.earned ? 'text-foreground' : 'text-muted-foreground'}`}>
-                {t(badge.titleKey)}
-              </p>
-              {badge.earned && (
-                <span className="absolute bottom-2 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-[#D4AF37]/50" />
-              )}
-            </div>
+      {/* Settings Sections - Simplified */}
+      <div className="space-y-4 mb-12">
+        <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
+          <h3 className="text-[10px] uppercase tracking-widest text-[#D4AF37] mb-4">Sanctuary Settings</h3>
+          {[
+            { icon: Bell, label: t('profile.notifications'), onClick: () => setNotificationsOpen(true) },
+            { icon: Moon, label: t('profile.appearance'), onClick: () => setAppearanceOpen(true) },
+            { icon: Shield, label: t('profile.privacy'), onClick: () => setPrivacyOpen(true) },
+            { icon: Settings, label: t('profile.settings'), onClick: () => setSettingsOpen(true) },
+          ].map((item) => (
+            <button key={item.label} onClick={item.onClick} className="w-full flex items-center justify-between py-3 hover:px-2 transition-all">
+              <div className="flex items-center gap-4">
+                <item.icon size={18} className="text-stone-500" />
+                <span className="text-sm">{item.label}</span>
+              </div>
+              <ChevronRight size={14} className="text-stone-700" />
+            </button>
           ))}
         </div>
+        <button onClick={handleSignOut} className="w-full py-4 text-sm text-red-400/60 uppercase tracking-widest">Sign Out</button>
       </div>
 
-      {/* My Records — Akashic Reading */}
-      {hasAkashicRecord && (
-        <div className="mb-8 animate-slide-up">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-heading font-semibold text-foreground">{t('profile.myRecords', 'My Records')}</h2>
+      {/* Fixed Membership Bar */}
+      <div className="fixed bottom-0 left-0 w-full p-4 bg-[#0f051a]/90 backdrop-blur-xl border-t border-white/10 z-50">
+        <div className="flex flex-col gap-2">
+          <div className="flex justify-between text-[10px] text-[#D4AF37] uppercase tracking-tighter px-2 mb-1">
+            <span>Monthly: €19</span>
+            <span className="font-bold underline">Yearly: €120</span>
+            <span>Lifetime: €495</span>
           </div>
-          <button
-            onClick={() => navigate('/akashic-reading/full')}
-            className="w-full flex items-center gap-4 p-4 rounded-2xl border border-[#D4AF37]/30 bg-[rgba(212,175,55,0.06)] hover:bg-[rgba(212,175,55,0.1)] transition-all text-left"
+          <Button 
+            onClick={() => navigate('/membership')}
+            className="w-full bg-[#D4AF37] text-[#0f051a] font-bold rounded-xl py-6 shadow-[0_0_30px_rgba(212,175,55,0.3)]"
           >
-            <div className="w-12 h-12 rounded-xl bg-[#D4AF37]/20 flex items-center justify-center">
-              <FileText size={24} className="text-[#D4AF37]" />
-            </div>
-            <div className="flex-1">
-              <p className="font-semibold text-foreground">Your Akashic Record</p>
-              <p className="text-xs text-muted-foreground">15-page Soul Manuscript • Certificate of Origin</p>
-            </div>
-            <ChevronRight size={20} className="text-[#D4AF37]/70 shrink-0" />
-          </button>
-        </div>
-      )}
-
-      {/* Certificates */}
-      {certificates.length > 0 && (
-        <div className="mb-8 animate-slide-up" style={{ animationDelay: '0.05s' }}>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-heading font-semibold text-foreground">{t('profile.certificates')}</h2>
-          </div>
-          <div className="space-y-3">
-            {certificates.map((certificate) => (
-              <CertificateCard
-                key={certificate.id}
-                certificate={certificate}
-                onDownload={downloadCertificate}
-                onShare={shareCertificate}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Language Selector */}
-      <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-        <h2 className="text-lg font-heading font-semibold text-foreground mb-3">{t('profile.language')}</h2>
-        <LanguageSelector />
-      </div>
-
-      {/* Dharma Configuration - Sacred Folders */}
-      <div className="space-y-4 animate-slide-up" style={{ animationDelay: '0.25s' }}>
-        <div className="rounded-2xl border border-[#D4AF37]/25 bg-white/[0.04] backdrop-blur-xl p-4 shadow-[0_0_20px_rgba(0,0,0,0.2)]">
-          <h3 className="text-sm font-semibold text-[#D4AF37]/90 mb-3 px-1">{t('profile.sacredFolder.physicalSanctuary', 'Physical Sanctuary')}</h3>
-          <div className="space-y-1">
-            {physicalSanctuary.map((item) => (
-              <button key={item.label} onClick={item.onClick} className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-left">
-                <div className="w-9 h-9 rounded-full bg-[rgba(212,175,55,0.15)] flex items-center justify-center">
-                  <item.icon size={18} className="text-[#D4AF37]/90" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium text-foreground text-sm">{item.label}</p>
-                  <p className="text-xs text-muted-foreground">{item.sublabel}</p>
-                </div>
-                <ChevronRight size={18} className="text-muted-foreground shrink-0" />
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="rounded-2xl border border-[#D4AF37]/25 bg-white/[0.04] backdrop-blur-xl p-4 shadow-[0_0_20px_rgba(0,0,0,0.2)]">
-          <h3 className="text-sm font-semibold text-[#D4AF37]/90 mb-3 px-1">{t('profile.sacredFolder.abundanceLineage', 'Abundance & Lineage')}</h3>
-          <div className="space-y-1">
-            {abundanceLineage.map((item) => (
-              <button key={item.label} onClick={item.onClick} className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-left">
-                <div className="w-9 h-9 rounded-full bg-[rgba(212,175,55,0.15)] flex items-center justify-center">
-                  <item.icon size={18} className="text-[#D4AF37]/90" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium text-foreground text-sm">{item.label}</p>
-                  <p className="text-xs text-muted-foreground">{item.sublabel}</p>
-                </div>
-                <ChevronRight size={18} className="text-muted-foreground shrink-0" />
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="rounded-2xl border border-[#D4AF37]/25 bg-white/[0.04] backdrop-blur-xl p-4 shadow-[0_0_20px_rgba(0,0,0,0.2)]">
-          <h3 className="text-sm font-semibold text-[#D4AF37]/90 mb-3 px-1">{t('profile.sacredFolder.theCovenant', 'The Covenant')}</h3>
-          <div className="space-y-1">
-            {theCovenant.map((item) => (
-              <button key={item.label} onClick={item.onClick} className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-left">
-                <div className="w-9 h-9 rounded-full bg-[rgba(212,175,55,0.15)] flex items-center justify-center">
-                  <item.icon size={18} className="text-[#D4AF37]/90" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium text-foreground text-sm">{item.label}</p>
-                  <p className="text-xs text-muted-foreground">{item.sublabel}</p>
-                </div>
-                <ChevronRight size={18} className="text-muted-foreground shrink-0" />
-              </button>
-            ))}
-            <button onClick={handleSignOut} className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-destructive/10 transition-all text-left mt-2 border-t border-white/10 pt-3">
-              <div className="w-9 h-9 rounded-full bg-destructive/20 flex items-center justify-center">
-                <LogOut size={18} className="text-destructive" />
-              </div>
-              <div className="flex-1">
-                <p className="font-medium text-destructive text-sm">{t('profile.signOut')}</p>
-              </div>
-              <ChevronRight size={18} className="text-destructive/70 shrink-0" />
-            </button>
-          </div>
+            UPGRADE TO UNIVERSAL PREMIUM
+          </Button>
         </div>
       </div>
 
-      {/* Sovereign Initiation - Deep Space banner */}
-      <div className="mb-8 mt-8 animate-slide-up" style={{ animationDelay: '0.3s' }}>
-        <div
-          className="relative overflow-hidden rounded-2xl border border-[#D4AF37]/20 p-6 cursor-pointer transition-all"
-          style={{
-            background: 'linear-gradient(135deg, #0f051a 0%, #1a0b2e 25%, #2d1b4e 50%, #1a0b2e 75%, #0f051a 100%)',
-            boxShadow: '0 0 40px rgba(88,28,135,0.3), inset 0 0 60px rgba(0,0,0,0.3)',
-          }}
-          onClick={() => navigate('/membership')}
-        >
-          <div className="absolute inset-0 opacity-30 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(147,51,234,0.4), transparent 60%)' }} />
-          <div className="relative flex flex-col items-center text-center">
-            <Crown className="w-10 h-10 text-[#D4AF37]/80 mb-3" style={{ filter: 'drop-shadow(0 0 8px rgba(212,175,55,0.4))' }} />
-            <h3 className="font-bold text-lg text-foreground">{t('profile.ascendUniversal', 'Ascend to Universal Premium. Unlock the Full Bhrigu Samhita.')}</h3>
-            <p className="text-sm text-muted-foreground mt-2 max-w-xs">
-              {t('profile.unlockFeatures')}
-            </p>
-            <Button
-              size="lg"
-              className="mt-4 w-full max-w-xs bg-[#D4AF37] text-[#0f051a] font-bold border-0 shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:bg-[#D4AF37]/95 hover:shadow-[0_0_28px_rgba(212,175,55,0.5)] animate-sangha-pulse"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate('/membership');
-              }}
-            >
-              {t('common.upgradeNow')}
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Dialogs */}
+      {/* Existing Dialogs */}
       <NotificationsDialog open={notificationsOpen} onOpenChange={setNotificationsOpen} />
       <AppearanceDialog open={appearanceOpen} onOpenChange={setAppearanceOpen} />
       <PrivacyDialog open={privacyOpen} onOpenChange={setPrivacyOpen} />
