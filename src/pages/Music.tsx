@@ -13,6 +13,7 @@ import MusicMembershipBanner from '@/components/music/MusicMembershipBanner';
 import { useAuth } from '@/hooks/useAuth';
 import { selectTrackForMood, type MoodKey, getTrackIdSafe, getTrackLabel } from '@/features/music/selectTrackForMood';
 import { useJyotishProfile } from '@/hooks/useJyotishProfile';
+import { ResonancePanel } from '@/components/resonance/UniversalResonanceEngine';
 
 const JyotishMusicCard = () => {
   const jyotish = useJyotishProfile();
@@ -341,6 +342,7 @@ const Music: React.FC = () => {
   }
 
   return (
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
     <div className="min-h-screen px-4 pb-40 max-w-3xl mx-auto">
       {/* Sacred Header — Celestial Gradient (Deep Indigo to Gold) */}
       <header className="bg-gradient-to-br from-indigo-950 via-violet-950/90 to-amber-950/80 border-b border-amber-500/20 -mx-4 mt-0 px-4 pt-6 pb-5 mb-0">
@@ -933,6 +935,10 @@ const Music: React.FC = () => {
           Play something for me
         </button>
       </div>
+    </div>
+      <aside className="hidden lg:block">
+        <ResonancePanel page="Music" />
+      </aside>
     </div>
   );
 };

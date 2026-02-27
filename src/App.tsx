@@ -10,6 +10,7 @@ import { SHCProvider } from "@/contexts/SHCContext";
 import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
 import { GitaTransitionOverlay } from "@/components/dashboard/GitaTransitionOverlay";
 import { AmbientAudioProvider } from "@/contexts/AmbientAudioContext";
+import { ResonanceProvider } from '@/components/resonance/UniversalResonanceEngine';
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { Loader2 } from "lucide-react";
@@ -280,9 +281,11 @@ const App = () => (
                   </div>
                 }
               >
+              <ResonanceProvider userEmail="sacredhealingvibe@gmail.com">
                 <BrowserRouter>
                   <AppRoutes />
                 </BrowserRouter>
+              </ResonanceProvider>
               </Suspense>
             </AmbientAudioProvider>
           </MusicPlayerProvider>
