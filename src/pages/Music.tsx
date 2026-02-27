@@ -13,7 +13,7 @@ import MusicMembershipBanner from '@/components/music/MusicMembershipBanner';
 import { useAuth } from '@/hooks/useAuth';
 import { selectTrackForMood, type MoodKey, getTrackIdSafe, getTrackLabel } from '@/features/music/selectTrackForMood';
 import { useJyotishProfile } from '@/hooks/useJyotishProfile';
-import { ResonancePanel } from '@/components/resonance/UniversalResonanceEngine';
+import { GatedResonancePanel } from '@/components/resonance/UniversalResonanceEngine';
 
 const JyotishMusicCard = () => {
   const jyotish = useJyotishProfile();
@@ -936,8 +936,8 @@ const Music: React.FC = () => {
         </button>
       </div>
     </div>
-      <aside className="hidden lg:block">
-        <ResonancePanel page="Music" />
+      <aside className="mt-6 lg:mt-0">
+        <GatedResonancePanel page="Music" />
       </aside>
     </div>
   );
