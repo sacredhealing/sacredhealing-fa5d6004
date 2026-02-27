@@ -368,3 +368,34 @@ export function ResonancePanel({ page }: { page: PageName }) {
     </>
   );
 }
+
+// Gated wrapper: only renders for premium members / admins
+export function GatedResonancePanel({ page }: { page: PageName }) {
+  // We import these lazily to avoid circular deps - consumers must have auth context
+  const [show, setShow] = useState(false);
+  const [checked, setChecked] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { supabase } = await import('@/integrations/supabase/client');
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user || cancelled) { setChecked(true); return; }
+
+        // Check admin
+        const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' });
+        if (isAdmin === true) { setShow(true); setChecked(true); return; }
+
+        // Check premium membership
+        const { data } = await supabase.functions.invoke('check-membership-subscription');
+        if (data?.subscribed && data?.tier !== 'free') { setShow(true); }
+        setChecked(true);
+      } catch { setChecked(true); }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  if (!checked || !show) return null;
+  return <ResonancePanel page={page} />;
+}
