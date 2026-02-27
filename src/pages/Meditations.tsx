@@ -26,6 +26,7 @@ import { filterByMeditationLanguage, buildSections } from '@/features/meditation
 import { MeditationSection } from '@/features/meditations/MeditationSection';
 import { BackToTopFab } from '@/features/meditations/BackToTopFab';
 import { useJyotishProfile } from '@/hooks/useJyotishProfile';
+import { ResonancePanel } from '@/components/resonance/UniversalResonanceEngine';
 
 const JyotishMeditationCard = () => {
   const jyotish = useJyotishProfile();
@@ -219,7 +220,9 @@ const Meditations: React.FC = () => {
   }
 
   return (
-    <>
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
+      <div>
+      <>
       <IntentionThreshold
         isOpen={showThreshold}
         onSelectIntention={handleIntentionSelected}
@@ -480,6 +483,11 @@ const Meditations: React.FC = () => {
         )}
       </div>
     </>
+      </div>
+      <aside className="hidden lg:block">
+        <ResonancePanel page="Meditation" />
+      </aside>
+    </div>
   );
 };
 

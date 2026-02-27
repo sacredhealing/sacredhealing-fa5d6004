@@ -23,6 +23,7 @@ import { useHealingMeditationLanguage } from '@/hooks/useHealingMeditationLangua
 import { HealingLanguageToggle } from '@/features/healing/HealingLanguageToggle';
 import { getHealingSessions, type HealingSessionItem } from '@/features/healing/getHealingSessions';
 import { useJyotishProfile } from '@/hooks/useJyotishProfile';
+import { ResonancePanel } from '@/components/resonance/UniversalResonanceEngine';
 
 const JyotishHealingCard = () => {
   const jyotish = useJyotishProfile();
@@ -471,6 +472,8 @@ const Healing: React.FC = () => {
   // RENDER
   // ============================================================
   return (
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
+    <div>
     <>
       <IntentionThreshold isOpen={showThreshold} onSelectIntention={handleIntentionSelected} onClose={handleThresholdClose} />
 
@@ -783,6 +786,11 @@ const Healing: React.FC = () => {
         </SheetContent>
       </Sheet>
     </>
+    </div>
+      <aside className="hidden lg:block">
+        <ResonancePanel page="Healing" />
+      </aside>
+    </div>
   );
 };
 
