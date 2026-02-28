@@ -1,896 +1,501 @@
-import React, {
-  createContext, useContext, useState, useEffect, useRef,
-  type ReactNode, type CSSProperties,
-} from 'react';
-import { Home, Lock, Zap, Map, ChevronDown, Check, Star, Globe, Sparkles, Activity } from 'lucide-react';
+import React, { useState, useEffect, useRef, createContext, useContext, useCallback, ReactNode } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '@/integrations/supabase/client';
 
-// ─────────────────────────────────────────────────────────────
-// 1. SITE REGISTRY (23 sites)
-// ─────────────────────────────────────────────────────────────
-export type SiteCategory = 'Supreme' | 'Earth' | 'Temporal' | 'Ancient' | 'Galactic';
-export type VisualEffect =
-  | 'kailash_shimmer' | 'gold_pulse' | 'red_vortex' | 'solar_ripples'
-  | 'avalon_mist' | 'torsion_field' | 'dreamtime' | 'ancestral'
-  | 'solar_sync' | 'crystal_lake' | 'ka_gold' | 'zero_point'
-  | 'violet_ray' | 'water_flow' | 'kriya_light'
-  | 'lotus_petals' | 'saffron_shield'
-  | 'tropical_aqua' | 'liquid_geometry'
-  | 'diamond_sparkle' | 'double_sun' | 'violet_grid' | 'white_fire';
+// ─────────────────────────────────────────────────────────────────────────────
+// TYPES
+// ─────────────────────────────────────────────────────────────────────────────
 
-export interface SacredSite {
+type SiteCategory = 'Supreme' | 'Temporal' | 'LostCiv' | 'Galactic' | 'Earth';
+
+interface SacredSite {
   id: string;
   name: string;
-  subtitle?: string;
+  subtitle: string;
   category: SiteCategory;
-  multiplier?: number;
   color: string;
-  glow: string;         // rgba for box-shadow
-  reach: number | 'Infinite';
-  resonance?: string;
-  focus: string;
-  instruction: string;
-  experience: string;
-  visualEffect: VisualEffect;
-  signature?: string;
-  // Globe position (percentage of globe canvas, 0-100)
-  globeX: number;
-  globeY: number;
+  glow: string;
+  bgFrom: string;
+  frequency: number;
+  emoji: string;
+  multiplier?: string;
+  effect: string;
 }
 
-export const ALL_SITES: SacredSite[] = [
-  // ── SUPREME ──────────────────────────────────────────────
-  {
-    id:'kailash', name:'Mount Kailash', subtitle:'Supreme Portal · 13X',
-    category:'Supreme', multiplier:13,
-    color:'#7B61FF', glow:'rgba(123,97,255,0.55)', reach:100,
-    resonance:'7.83Hz Schumann', focus:'Moksha / Total Purification',
-    instruction:'Feel the axis of the cosmos running through your spine. You are the mountain.',
-    experience:'Trembling stillness. The mind dissolves. Moksha beckons.',
-    visualEffect:'kailash_shimmer', globeX:68, globeY:28,
-  },
-  {
-    id:'glastonbury', name:'Glastonbury', subtitle:'Avalon — Heart Gate',
-    category:'Supreme', color:'#00FF7F', glow:'rgba(0,255,127,0.45)', reach:40,
-    resonance:'Heart-Gate Activation', focus:'Divine Love & Emotional Restoration',
-    instruction:'Open your chest like a flower. Feel all barriers dissolve in green light.',
-    experience:'Warmth flooding the heart. Ancient grief releasing.',
-    visualEffect:'avalon_mist', globeX:46, globeY:22,
-  },
-  {
-    id:'sedona', name:'Sedona Vortex', subtitle:'Red Rock Spiral',
-    category:'Supreme', color:'#FF4500', glow:'rgba(255,69,0,0.5)', reach:35,
-    resonance:'Magnetic Spiral', focus:'Psychic Vision & Ability Activation',
-    instruction:'Spin your awareness clockwise from the base of your skull. Open the third eye.',
-    experience:'Visions. Electrical tingling in the forehead.',
-    visualEffect:'red_vortex', globeX:18, globeY:30,
-  },
-  {
-    id:'titicaca', name:'Lake Titicaca', subtitle:'Solar Birthplace',
-    category:'Supreme', color:'#FFD700', glow:'rgba(255,215,0,0.5)', reach:45,
-    resonance:'Sacral Birthplace Frequency', focus:'Creative Rebirth & Manifestation',
-    instruction:'Breathe golden light into your sacral center. You are birthing a new reality.',
-    experience:'Creative energy surging. Visions of golden water.',
-    visualEffect:'solar_ripples', globeX:26, globeY:58,
-  },
-  // ── EARTH (original 11) ───────────────────────────────────
-  {
-    id:'giza', name:'Giza Pyramids', category:'Earth',
-    color:'#FFD700', glow:'rgba(255,215,0,0.45)', reach:50,
-    resonance:'Torsion Field', focus:'Spinal Alignment',
-    instruction:'Visualize a golden pillar of light passing through your spine from crown to root.',
-    experience:'A sense of vertical alignment and profound structural integrity.',
-    visualEffect:'torsion_field', globeX:57, globeY:32,
-  },
-  {
-    id:'arunachala', name:'Arunachala', category:'Earth',
-    color:'#F5DEB3', glow:'rgba(245,222,179,0.4)', reach:45,
-    resonance:'Stillness Field', focus:'Self-Inquiry / Silence',
-    instruction:'Rest in the "I AM" presence. Let all thoughts dissolve into the source.',
-    experience:'The mind becoming quiet and the heart expanding.',
-    visualEffect:'gold_pulse', globeX:65, globeY:38,
-  },
-  {
-    id:'uluru', name:'Uluru', category:'Earth',
-    color:'#B22222', glow:'rgba(178,34,34,0.45)', reach:40,
-    resonance:'Dreamtime Frequency', focus:'Grounding / Ancestral DNA',
-    instruction:"Sink deep into the red earth. Feel your roots touching the planet's core.",
-    experience:'Intense grounding; a feeling of being held by the Earth.',
-    visualEffect:'dreamtime', globeX:77, globeY:64,
-  },
-  {
-    id:'zimbabwe', name:'Great Zimbabwe', category:'Earth',
-    color:'#8B4513', glow:'rgba(139,69,19,0.45)', reach:40,
-    resonance:'Ancient Stone', focus:'Ancestral Strength',
-    instruction:"Feel the strength of the ancient stones grounding you into the Earth's core.",
-    experience:'A feeling of ancestral support and solid foundation.',
-    visualEffect:'ancestral', globeX:58, globeY:58,
-  },
-  {
-    id:'machu_picchu', name:'Machu Picchu', category:'Earth',
-    color:'#FFA500', glow:'rgba(255,165,0,0.45)', reach:35,
-    resonance:'Solar Sync', focus:'Solar Vitality',
-    instruction:'Breathe the golden sun into your Solar Plexus. Feel your power expanding.',
-    experience:'A surge of vitality and manifestation energy.',
-    visualEffect:'solar_sync', globeX:24, globeY:55,
-  },
-  {
-    id:'mansarovar', name:'Lake Mansarovar', category:'Earth',
-    color:'#00CED1', glow:'rgba(0,206,209,0.45)', reach:30,
-    resonance:'Crystalline Lake', focus:'Mental Detox',
-    instruction:'Visualize the crystal-clear Himalayan waters purifying your Crown chakra.',
-    experience:'Mental clarity and a sense of pure, high-altitude air.',
-    visualEffect:'crystal_lake', globeX:67, globeY:30,
-  },
-  {
-    id:'luxor', name:'Luxor Temples', subtitle:'Molten Gold · 528Hz',
-    category:'Earth', color:'#FFCC00', glow:'rgba(255,204,0,0.5)', reach:30,
-    resonance:'Alchemical Gold 528Hz', focus:'Ka / Hand Activation · Vitality Healer',
-    instruction:'Breathe in the warm, alchemical gold light. Hold your palms open.',
-    experience:'A warm, solid sensation; feeling rebuilt from the inside out.',
-    visualEffect:'ka_gold', globeX:56, globeY:34,
-  },
-  {
-    id:'samadhi', name:'Samadhi', category:'Earth',
-    color:'#E6E6FA', glow:'rgba(230,230,250,0.35)', reach:25,
-    resonance:'Zero-Point Field', focus:'Aura Repair',
-    instruction:'Merge your awareness with the infinite void.',
-    experience:'A feeling of dissolving into the infinite.',
-    visualEffect:'zero_point', globeX:66, globeY:25,
-  },
-  {
-    id:'shasta', name:'Mount Shasta', category:'Earth',
-    color:'#DA70D6', glow:'rgba(218,112,214,0.45)', reach:20,
-    resonance:'Violet Ray', focus:'Light-Body Sync',
-    instruction:'Visualize a violet flame surrounding your body, burning away dense energies.',
-    experience:'A cool, breezy feeling in the aura; lifting of heavy emotional weights.',
-    visualEffect:'violet_ray', globeX:16, globeY:28,
-  },
-  {
-    id:'lourdes', name:'Lourdes Grotto', category:'Earth',
-    color:'#ADD8E6', glow:'rgba(173,216,230,0.4)', reach:20,
-    resonance:'Divine Water', focus:'Physical Restoration',
-    instruction:'Imagine pure, healing water flowing through your heart and blood vessels.',
-    experience:'A soothing, cooling sensation throughout the body.',
-    visualEffect:'water_flow', globeX:47, globeY:25,
-  },
-  {
-    id:'babaji', name:"Babaji's Cave", category:'Earth',
-    color:'#C8C8FF', glow:'rgba(200,200,255,0.4)', reach:20,
-    resonance:'Kriya Sync', focus:'Kriya / Deep Sync',
-    instruction:'Focus on the Third Eye and breathe "up and down" the spine slowly.',
-    experience:'Deep stillness and a sense of timeless presence.',
-    visualEffect:'kriya_light', globeX:64, globeY:32,
-  },
-  // ── TEMPORAL ─────────────────────────────────────────────
-  {
-    id:'vrindavan', name:'Ancient Vrindavan', subtitle:'Era of Krishna',
-    category:'Temporal', color:'#1E90FF', glow:'rgba(30,144,255,0.5)', reach:75,
-    resonance:'Premananda Frequency', focus:'Premananda — Supreme Bliss',
-    instruction:'Chant His name softly in your heart. The flute is always playing.',
-    experience:'Waves of inexplicable love and joy. Peacock feathers in the mind.',
-    visualEffect:'lotus_petals', globeX:65, globeY:34,
-  },
-  {
-    id:'ayodhya', name:'Ancient Ayodhya', subtitle:'Era of Rama & Hanuman',
-    category:'Temporal', color:'#FFA500', glow:'rgba(255,165,0,0.5)', reach:75,
-    resonance:'Dharma Shield', focus:'Dharma & Divine Protection',
-    instruction:'Chant "Jai Shri Ram" internally. Feel an orange shield of protection around you.',
-    experience:'Unshakeable strength. A golden shield of protection envelops you.',
-    visualEffect:'saffron_shield', globeX:65, globeY:33,
-  },
-  // ── ANCIENT ──────────────────────────────────────────────
-  {
-    id:'lemuria', name:'Lemuria (Mu)', subtitle:'Lost Civilization',
-    category:'Ancient', color:'#40E0D0', glow:'rgba(64,224,208,0.45)', reach:60,
-    resonance:'Heartbeat Pulse', focus:'Maternal Creation & Emotional Purity',
-    instruction:'Feel the warm ocean beneath you. Let your heart lead every breath.',
-    experience:'A feeling of primal safety, warmth, and belonging.',
-    visualEffect:'tropical_aqua', globeX:25, globeY:50,
-  },
-  {
-    id:'atlantis', name:'Atlantis (Poseidia)', subtitle:'Lost Civilization',
-    category:'Ancient', color:'#4169E1', glow:'rgba(65,105,225,0.5)', reach:60,
-    resonance:'Crystal Technology', focus:'Advanced Crystal Technology & Mental Breakthroughs',
-    instruction:'Visualize a perfect crystal at your third eye. Feel the geometric activation.',
-    experience:'Rapid mental clarity. Geometric light patterns in the mind.',
-    visualEffect:'liquid_geometry', globeX:38, globeY:28,
-  },
-  // ── GALACTIC ─────────────────────────────────────────────
-  {
-    id:'pleiades', name:'Pleiades', subtitle:'Star System — Diamond Light',
-    category:'Galactic', color:'#E0FFFF', glow:'rgba(224,255,255,0.45)', reach:'Infinite',
-    resonance:'Diamond White Light', focus:'Starlight Harmony & Creative Production',
-    instruction:'Look inward at the star behind your eyes. Feel the stardust in your cells.',
-    experience:'A shower of diamond light. Creativity igniting in every cell.',
-    visualEffect:'diamond_sparkle', globeX:50, globeY:50,
-  },
-  {
-    id:'sirius', name:'Sirius', subtitle:'The Blue Star — Royal Wisdom',
-    category:'Galactic', color:'#4169E1', glow:'rgba(65,105,225,0.55)', reach:'Infinite',
-    resonance:'Royal Blue Initiation', focus:'Initiation & Ancient High-Wisdom',
-    instruction:'See two blue suns rising in your mind. Receive the ancient initiation.',
-    experience:'Sudden knowing. Ancient memories awakening. Royal dignity.',
-    visualEffect:'double_sun', globeX:50, globeY:50,
-  },
-  {
-    id:'arcturus', name:'Arcturus', subtitle:'Cellular Regeneration',
-    category:'Galactic', color:'#9932CC', glow:'rgba(153,50,204,0.55)', reach:'Infinite',
-    resonance:'10Hz Alpha Grid', focus:'Cellular Regeneration & High-Speed Healing',
-    instruction:'Breathe violet light into every cell. The grid is activating your DNA.',
-    experience:'Physical tingling everywhere. Deep cellular repair in process.',
-    visualEffect:'violet_grid', globeX:50, globeY:50,
-  },
-  {
-    id:'lyra', name:'Lyra', subtitle:'The Felines — Sound of Creation',
-    category:'Galactic', color:'#FFFFFF', glow:'rgba(255,255,255,0.4)', reach:'Infinite',
-    resonance:'Original Sound of Creation', focus:'Original Sound / Frequency of Creation',
-    instruction:'Listen for the silence beneath all sound. That is the original note of creation.',
-    experience:'White fire at the edges of reality. Pure tone in the mind.',
-    visualEffect:'white_fire', globeX:50, globeY:50,
-  },
+interface ResonanceState {
+  activeSiteId: string;
+  isLocked: boolean;
+  intensity: number;
+  userEmail: string | null;
+}
+
+interface ResonanceCtx {
+  state: ResonanceState;
+  site: SacredSite;
+  activate: (id: string) => void;
+  setIntensity: (v: number) => void;
+  toggleLock: () => void;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 23 SACRED SITES
+// ─────────────────────────────────────────────────────────────────────────────
+
+const SITES: SacredSite[] = [
+  { id:'KAILASH',      name:'Mount Kailash',   subtitle:'13X Supreme Axis',              category:'Supreme',  color:'#7B61FF', glow:'rgba(123,97,255,0.4)',   bgFrom:'#1a0d4e', frequency:7.83,  emoji:'🕉️',  multiplier:'13X', effect:'kailash_shimmer' },
+  { id:'GLASTONBURY',  name:'Glastonbury',      subtitle:'Avalon Tor',                    category:'Supreme',  color:'#00FF7F', glow:'rgba(0,255,127,0.3)',    bgFrom:'#001a0d', frequency:60,    emoji:'🌿',               effect:'avalon_mist' },
+  { id:'SEDONA',       name:'Sedona',           subtitle:'Red Rock Vortex',               category:'Supreme',  color:'#FF4500', glow:'rgba(255,69,0,0.3)',     bgFrom:'#3d0e00', frequency:40,    emoji:'🔴',               effect:'red_vortex' },
+  { id:'TITICACA',     name:'Lake Titicaca',    subtitle:'Solar Portal',                  category:'Supreme',  color:'#FFD700', glow:'rgba(255,215,0,0.3)',    bgFrom:'#2a2000', frequency:432,   emoji:'☀️',               effect:'solar_ripples' },
+  { id:'VRINDAVAN',    name:'Vrindavan',        subtitle:'Krishna Era · Peacock Blue',    category:'Temporal', color:'#1E90FF', glow:'rgba(30,144,255,0.3)',   bgFrom:'#001a3d', frequency:528,   emoji:'🪷',               effect:'lotus_petals' },
+  { id:'AYODHYA',      name:'Ayodhya',          subtitle:'Rama / Hanuman · Saffron Shield',category:'Temporal',color:'#FF9933', glow:'rgba(255,153,51,0.4)',   bgFrom:'#2a1500', frequency:396,   emoji:'🏹',               effect:'saffron_shield' },
+  { id:'ATLANTIS',     name:'Atlantis',         subtitle:'Crystal Technology',            category:'LostCiv',  color:'#0050FF', glow:'rgba(0,100,200,0.3)',    bgFrom:'#000820', frequency:741,   emoji:'🔷',               effect:'liquid_geometry' },
+  { id:'LEMURIA',      name:'Lemuria',          subtitle:'Mother Mu · Tropical Aqua',     category:'LostCiv',  color:'#40E0D0', glow:'rgba(64,224,208,0.3)',   bgFrom:'#001a1a', frequency:285,   emoji:'🌊',               effect:'tropical_aqua' },
+  { id:'PLEIADES',     name:'Pleiades',         subtitle:'Star Cluster · Diamond Light',  category:'Galactic', color:'#E0FFFF', glow:'rgba(224,255,255,0.3)',  bgFrom:'#0a1020', frequency:963,   emoji:'✨',               effect:'diamond_sparkle' },
+  { id:'SIRIUS',       name:'Sirius',           subtitle:'Blue Lodge · Double Sun',       category:'Galactic', color:'#4169E1', glow:'rgba(65,105,225,0.3)',   bgFrom:'#050a20', frequency:852,   emoji:'⭐',               effect:'double_sun' },
+  { id:'ARCTURUS',     name:'Arcturus',         subtitle:'Violet Grid · 10Hz Alpha',      category:'Galactic', color:'#9932CC', glow:'rgba(153,50,204,0.3)',   bgFrom:'#1a0030', frequency:10,    emoji:'💜',               effect:'violet_grid' },
+  { id:'LYRA',         name:'Lyra',             subtitle:'White Fire · Sound of Creation',category:'Galactic', color:'#FFFFFF', glow:'rgba(255,255,255,0.2)', bgFrom:'#0f0f1a', frequency:174,   emoji:'🎵',               effect:'white_fire' },
+  { id:'GIZA',         name:'Giza',             subtitle:'Torsion Power · Flower of Life',category:'Earth',    color:'#B8860B', glow:'rgba(184,134,11,0.3)',   bgFrom:'#1a1000', frequency:40,    emoji:'🔺',               effect:'torsion_field' },
+  { id:'LUXOR',        name:'Luxor',            subtitle:'Molten Gold · Living Light',    category:'Earth',    color:'#D4AF37', glow:'rgba(212,175,55,0.4)',   bgFrom:'#1a1400', frequency:417,   emoji:'⚜️',               effect:'ka_gold' },
+  { id:'MACHU_PICCHU', name:'Machu Picchu',     subtitle:'Sun Gate · Solar Hitch',        category:'Earth',    color:'#228B22', glow:'rgba(34,139,34,0.3)',    bgFrom:'#0a1500', frequency:639,   emoji:'🏔️',               effect:'solar_sync' },
+  { id:'MT_SHASTA',    name:'Mt. Shasta',       subtitle:'Lenticular Flow · White Pings', category:'Earth',    color:'#F0FFFF', glow:'rgba(240,255,255,0.2)', bgFrom:'#0a1520', frequency:528,   emoji:'🗻',               effect:'crystal_lake' },
+  { id:'ARUNACHALA',   name:'Arunachala',       subtitle:'The Stillness · Zero Motion',   category:'Earth',    color:'#FF8C00', glow:'rgba(255,140,0,0.3)',    bgFrom:'#2a1000', frequency:0,     emoji:'🔶',               effect:'zero_point' },
+  { id:'ULURU',        name:'Uluru',            subtitle:'Red Ochre · Earth Heartbeat',   category:'Earth',    color:'#8B0000', glow:'rgba(139,0,0,0.3)',      bgFrom:'#1a0000', frequency:7.83,  emoji:'🟤',               effect:'red_ochre' },
+  { id:'LOURDES',      name:'Lourdes',          subtitle:'Healing Spring · Blue Waters',  category:'Earth',    color:'#ADD8E6', glow:'rgba(173,216,230,0.3)', bgFrom:'#001525', frequency:285,   emoji:'💧',               effect:'water_flow' },
+  { id:'MANSAROVAR',   name:'Mansarovar',       subtitle:'Mirror Lake · Perfect Reflection',category:'Earth',  color:'#AFEEEE', glow:'rgba(175,238,238,0.25)',bgFrom:'#001a1a', frequency:432,   emoji:'🪞',               effect:'mirror_lake' },
+  { id:'SAMADHI',      name:'Samadhi',          subtitle:'Etheric Trails · Pure Awareness',category:'Earth',   color:'#E6E6FA', glow:'rgba(230,230,250,0.2)', bgFrom:'#0a0a1a', frequency:963,   emoji:'🌌',               effect:'etheric_trails' },
+  { id:'ZIMBABWE',     name:'Zimbabwe',         subtitle:'Granite Wall · Ancient Code',   category:'Earth',    color:'#696969', glow:'rgba(105,105,105,0.3)', bgFrom:'#0f0f0f', frequency:174,   emoji:'🗿',               effect:'granite_wall' },
+  { id:'BABAJI_CAVE',  name:'Babaji Cave',      subtitle:'Crystal Frost · Drift Mode',    category:'Earth',    color:'#F8F8FF', glow:'rgba(248,248,255,0.2)', bgFrom:'#0a0a15', frequency:741,   emoji:'❄️',               effect:'crystal_frost' },
 ];
 
-// Group sites by category
-export const SITE_GROUPS = {
-  Supreme: ALL_SITES.filter(s => s.category === 'Supreme'),
-  Earth:   ALL_SITES.filter(s => s.category === 'Earth'),
-  Temporal:ALL_SITES.filter(s => s.category === 'Temporal'),
-  Ancient: ALL_SITES.filter(s => s.category === 'Ancient'),
-  Galactic:ALL_SITES.filter(s => s.category === 'Galactic'),
+const SITE_MAP = Object.fromEntries(SITES.map(s => [s.id, s]));
+
+const CAT_COLOR: Record<SiteCategory, string> = {
+  Supreme: '#D4AF37', Temporal: '#FF9933', LostCiv: '#40E0D0', Galactic: '#9932CC', Earth: '#4caf50',
 };
 
-// ─────────────────────────────────────────────────────────────
-// 2. GLOBAL CONTEXT
-// ─────────────────────────────────────────────────────────────
-const ADMIN_EMAILS = ['sacredhealingvibe@gmail.com'];
+// ─────────────────────────────────────────────────────────────────────────────
+// CSS EFFECT MAP — all 23 effects
+// ─────────────────────────────────────────────────────────────────────────────
 
-interface GlobalResonanceState {
-  activeSite: SacredSite;
-  setActiveSite: (s: SacredSite) => void;
-  intensity: number;
-  setIntensity: (v: number) => void;
-  isTempleLocked: boolean;
-  setTempleLocked: (v: boolean) => void;
-  access: { isAdmin: boolean; hasPremium: boolean; hasTemple: boolean };
-  isSyncing: boolean;
+function buildCSS(site: SacredSite): string {
+  const c = site.color;
+  const g = site.glow;
+
+  const base = `
+    :root { --rc: ${c}; --rg: ${g}; }
+    .resonance-border { border-color: ${c}40 !important; }
+  `;
+
+  const fx: Record<string, string> = {
+    kailash_shimmer: `
+      @keyframes km { 0%,100%{transform:translate(0,0)} 25%{transform:translate(.5px,0)} 50%{transform:translate(0,-.5px)} 75%{transform:translate(-.5px,0)} }
+      @keyframes kaur { 0%,100%{opacity:.15} 50%{opacity:.4} }
+      body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse at 50% 0%,${c}22 0%,transparent 60%);animation:kaur 4s ease-in-out infinite}
+      #root{animation:km .128s linear infinite}`,
+    saffron_shield: `
+      @keyframes sp{0%,100%{opacity:.12}50%{opacity:.28}}
+      body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;box-shadow:inset 0 0 120px ${c}55;background:radial-gradient(ellipse at 50% 50%,transparent 40%,${c}22 100%);border:3px solid ${c}40;animation:sp 3s ease-in-out infinite}`,
+    lotus_petals: `
+      @keyframes lf{0%{transform:translateY(-10vh) rotate(0deg);opacity:0}10%{opacity:.8}90%{opacity:.6}100%{transform:translateY(110vh) translateX(30px) rotate(360deg);opacity:0}}
+      .lotus-petal{position:fixed;font-size:20px;pointer-events:none;z-index:1;animation:lf linear infinite}`,
+    red_vortex: `
+      @keyframes vs{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+      body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:conic-gradient(from 0deg,transparent,${c}11,transparent,${c}08,transparent);animation:vs 8s linear infinite}`,
+    solar_ripples: `
+      @keyframes sr{0%{transform:scale(1);opacity:.5}100%{transform:scale(2.5);opacity:0}}
+      body::after{content:'';position:fixed;bottom:10%;right:10%;width:200px;height:200px;border-radius:50%;border:2px solid ${c}60;pointer-events:none;z-index:0;animation:sr 3s ease-out infinite}`,
+    avalon_mist: `
+      @keyframes am{0%,100%{transform:translateX(-5px);opacity:.3}50%{transform:translateX(5px);opacity:.5}}
+      body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse at 30% 60%,${c}15 0%,transparent 50%),radial-gradient(ellipse at 70% 30%,${c}10 0%,transparent 40%);animation:am 6s ease-in-out infinite}`,
+    diamond_sparkle: `
+      @keyframes ds{0%,100%{opacity:0;transform:scale(0)}50%{opacity:1;transform:scale(1)}}
+      body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background-image:radial-gradient(${c}80 1px,transparent 1px);background-size:60px 60px;animation:ds 4s ease-in-out infinite}`,
+    liquid_geometry: `
+      @keyframes lg{from{transform:translate(-50%,-50%) rotate(0deg)}to{transform:translate(-50%,-50%) rotate(360deg)}}
+      body::before{content:'';position:fixed;top:50%;left:50%;width:min(80vw,500px);height:min(80vw,500px);pointer-events:none;z-index:0;opacity:.07;background:repeating-conic-gradient(from 0deg,${c}40 0deg 1deg,transparent 1deg 60deg);animation:lg 30s linear infinite;border-radius:50%}`,
+    tropical_aqua: `
+      @keyframes ta{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+      body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:linear-gradient(135deg,${c}08,#FF69B408,${c}05);background-size:400% 400%;animation:ta 8s ease infinite}`,
+    violet_grid: `
+      @keyframes vg{0%,100%{opacity:.07}50%{opacity:.18}}
+      body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(${c}20 1px,transparent 1px),linear-gradient(90deg,${c}20 1px,transparent 1px);background-size:40px 40px;animation:vg .1s ease-in-out infinite}`,
+    white_fire: `
+      @keyframes wf{0%,100%{clip-path:polygon(0 100%,5% 70%,0 40%,8% 0,12% 40%,8% 70%,15% 100%)}50%{clip-path:polygon(0 100%,3% 60%,7% 30%,12% 0,18% 35%,12% 65%,15% 100%)}}
+      body::before{content:'';position:fixed;left:0;top:0;bottom:0;width:30px;pointer-events:none;z-index:0;background:linear-gradient(to top,${c}00,${c}30,${c}10);animation:wf 2s ease-in-out infinite}
+      body::after{content:'';position:fixed;right:0;top:0;bottom:0;width:30px;pointer-events:none;z-index:0;background:linear-gradient(to top,${c}00,${c}30,${c}10);animation:wf 2.3s ease-in-out infinite}`,
+    torsion_field: `
+      @keyframes tf{from{transform:translate(-50%,-50%) rotate(0deg)}to{transform:translate(-50%,-50%) rotate(360deg)}}
+      body::before{content:'';position:fixed;top:50%;left:50%;width:min(90vw,600px);height:min(90vw,600px);pointer-events:none;z-index:0;opacity:.06;background:repeating-conic-gradient(${c}30 0deg 30deg,transparent 30deg 60deg);animation:tf 20s linear infinite;border-radius:50%}`,
+    ka_gold: `
+      @keyframes kg{0%,100%{filter:brightness(1)}50%{filter:brightness(1.12)}}
+      body{animation:kg 3s ease-in-out infinite}
+      body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse at 50% 100%,${c}20 0%,transparent 60%)}`,
+    double_sun: `
+      @keyframes lf2{0%,100%{opacity:.15;transform:scale(1)}50%{opacity:.35;transform:scale(1.1)}}
+      body::before{content:'';position:fixed;top:15%;right:15%;width:100px;height:100px;border-radius:50%;background:radial-gradient(circle,${c}60 0%,${c}00 70%);pointer-events:none;z-index:0;animation:lf2 4s ease-in-out infinite}
+      body::after{content:'';position:fixed;top:18%;right:25%;width:60px;height:60px;border-radius:50%;background:radial-gradient(circle,${c}40 0%,${c}00 70%);pointer-events:none;z-index:0;animation:lf2 4s ease-in-out infinite .5s}`,
+    water_flow: `
+      body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:linear-gradient(180deg,${c}06 0%,transparent 40%);background-image:repeating-linear-gradient(0deg,${c}08 0px,transparent 2px,transparent 30px)}`,
+    mirror_lake: `
+      body::after{content:'';position:fixed;bottom:0;left:0;right:0;height:40%;pointer-events:none;z-index:0;background:linear-gradient(to bottom,transparent,${c}08);opacity:.3}`,
+    etheric_trails: `
+      *{transition:all .15s ease !important}
+      body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse at 50% 50%,${c}05 0%,transparent 70%)}`,
+    granite_wall: `
+      body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background-image:repeating-linear-gradient(0deg,${c}08 0px,transparent 1px,transparent 20px),repeating-linear-gradient(90deg,${c}05 0px,transparent 1px,transparent 30px)}`,
+    solar_sync: `
+      @keyframes ss{0%{top:10%;right:10%}50%{top:30%;right:20%}100%{top:10%;right:10%}}
+      body::before{content:'';position:fixed;width:80px;height:80px;border-radius:50%;background:radial-gradient(circle,${c}50 0%,transparent 70%);pointer-events:none;z-index:0;animation:ss 10s ease-in-out infinite}`,
+    crystal_lake: `
+      @keyframes ping2{0%{transform:scale(1);opacity:.8}100%{transform:scale(3);opacity:0}}
+      body::before{content:'';position:fixed;top:20%;left:50%;width:20px;height:20px;border-radius:50%;background:${c};pointer-events:none;z-index:0;animation:ping2 2s ease-out infinite;transform:translate(-50%,-50%)}`,
+    zero_point: `
+      body *{animation:none !important;transition:none !important}
+      body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse at 50% 50%,${c}10 0%,transparent 70%)}`,
+    red_ochre: `
+      body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse at 50% 80%,${c}15 0%,transparent 60%)}
+      button,[role=button]{transition:transform .4s cubic-bezier(.68,-.55,.27,1.55) !important}`,
+    crystal_frost: `
+      @keyframes drift{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+      body{animation:drift 6s ease-in-out infinite}
+      body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse at 50% 50%,${c}08 0%,transparent 70%)}`,
+  };
+
+  return base + (fx[site.effect] || '');
 }
 
-const GlobalCtx = createContext<GlobalResonanceState | null>(null);
+// ─────────────────────────────────────────────────────────────────────────────
+// AUDIO INJECTOR
+// ─────────────────────────────────────────────────────────────────────────────
 
-export function useGlobalResonance() {
-  const c = useContext(GlobalCtx);
-  if (!c) throw new Error('Wrap your app with <GlobalResonanceProvider>');
+class FreqInjector {
+  private ctx: AudioContext | null = null;
+  private osc: OscillatorNode | null = null;
+  private gain: GainNode | null = null;
+
+  start(hz: number, pct: number) {
+    if (hz === 0) { this.stop(); return; }
+    try {
+      if (!this.ctx) this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      this.stop();
+      this.osc = this.ctx.createOscillator();
+      this.gain = this.ctx.createGain();
+      this.osc.type = 'sine';
+      this.osc.frequency.value = hz;
+      this.gain.gain.value = (pct / 100) * 0.025; // ultra-subtle carrier
+      this.osc.connect(this.gain);
+      this.gain.connect(this.ctx.destination);
+      this.osc.start();
+    } catch {}
+  }
+
+  stop() {
+    try { this.osc?.stop(); this.osc?.disconnect(); this.gain?.disconnect(); this.osc = null; this.gain = null; } catch {}
+  }
+
+  setGain(pct: number) { if (this.gain) this.gain.gain.value = (pct / 100) * 0.025; }
+}
+
+const freq = new FreqInjector();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GLOBAL RESONANCE CONTEXT
+// ─────────────────────────────────────────────────────────────────────────────
+
+const ResonanceContext = createContext<ResonanceCtx | null>(null);
+export const useResonance = () => {
+  const c = useContext(ResonanceContext);
+  if (!c) throw new Error('Must be inside GlobalResonanceProvider');
   return c;
-}
+};
 
-export function GlobalResonanceProvider({
-  children,
-  userEmail,
-}: { children: ReactNode; userEmail?: string | null }) {
-  const isAdmin = !!userEmail && ADMIN_EMAILS.includes(userEmail);
-  const access = { isAdmin, hasPremium: isAdmin || false, hasTemple: isAdmin || false };
+const SK = 'shc_resonance_v5';
+const load = (): ResonanceState => {
+  try { const r = localStorage.getItem(SK); if (r) return JSON.parse(r); } catch {}
+  return { activeSiteId: 'KAILASH', isLocked: false, intensity: 95, userEmail: null };
+};
+const save = (s: ResonanceState) => { try { localStorage.setItem(SK, JSON.stringify(s)); } catch {} };
 
-  const [activeSite, setActiveSiteRaw] = useState<SacredSite>(ALL_SITES[0]);
-  const [intensity, setIntensity]      = useState(100);
-  const [isTempleLocked, setTempleLocked] = useState(false);
-  const [isSyncing, setIsSyncing]      = useState(false);
+export function GlobalResonanceProvider({ children, userEmail }: { children: ReactNode; userEmail?: string | null }) {
+  const [state, setState] = useState<ResonanceState>(() => ({ ...load(), userEmail: userEmail ?? null }));
+  const site = SITE_MAP[state.activeSiteId] ?? SITES[0];
 
-  const setActiveSite = (s: SacredSite) => {
-    setActiveSiteRaw(s);
-    setIsSyncing(true);
-    setTimeout(() => setIsSyncing(false), 900);
-  };
-
-  return (
-    <GlobalCtx.Provider value={{ activeSite, setActiveSite, intensity, setIntensity, isTempleLocked, setTempleLocked, access, isSyncing }}>
-      {children}
-    </GlobalCtx.Provider>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────
-// 3. SITE VISUAL EFFECT OVERLAY
-//    Drop <SiteEffectOverlay /> on Meditation, Mantra, Music, Healing pages
-//    It renders the ambient background effect for the active site — no UI chrome
-// ─────────────────────────────────────────────────────────────
-export function SiteEffectOverlay() {
-  const { activeSite, intensity } = useGlobalResonance();
-  const opacity = intensity / 100;
-
-  const effect = activeSite.visualEffect;
-
-  return (
-    <>
-      <style>{`
-        @keyframes shimmer    { 0%,100%{opacity:0.6} 50%{opacity:1} }
-        @keyframes vortexSpin { from{transform:rotate(0deg) scale(1)} 50%{transform:rotate(180deg) scale(1.08)} to{transform:rotate(360deg) scale(1)} }
-        @keyframes ripple     { 0%{transform:scale(0.8);opacity:0.7} 100%{transform:scale(2.5);opacity:0} }
-        @keyframes lotusFloat { 0%{transform:translateY(-10px) rotate(0deg);opacity:0} 20%{opacity:0.8} 80%{opacity:0.6} 100%{transform:translateY(110vh) rotate(360deg);opacity:0} }
-        @keyframes gridPulse  { 0%,100%{opacity:0.35} 50%{opacity:0.75} }
-        @keyframes whiteFire  { 0%,100%{opacity:0.5;transform:scaleX(1)} 50%{opacity:0.9;transform:scaleX(1.03)} }
-        @keyframes doubleGlow { 0%,100%{opacity:0.6} 50%{opacity:1} }
-        @keyframes sparkle    { 0%,100%{opacity:0;transform:scale(0)} 50%{opacity:1;transform:scale(1)} }
-        @keyframes saffron    { 0%,100%{opacity:0.25} 50%{opacity:0.55} }
-        @keyframes aquaHeart  { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
-      `}</style>
-
-      {/* Base ambient glow — every site */}
-      <div style={{
-        position:'fixed', inset:0, pointerEvents:'none', zIndex:0,
-        background:`radial-gradient(ellipse 70% 55% at 50% 5%, ${activeSite.color}${Math.round(opacity * 28).toString(16).padStart(2,'0')} 0%, transparent 65%)`,
-        transition:'background 1.2s ease',
-      }} />
-
-      {/* ── PER-EFFECT LAYERS ── */}
-
-      {/* KAILASH: 7.83Hz shimmer — concentric violet rings */}
-      {effect === 'kailash_shimmer' && (
-        <div style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:0, overflow:'hidden' }}>
-          {[...Array(4)].map((_, i) => (
-            <div key={i} style={{
-              position:'absolute', left:'50%', top:'30%',
-              width:`${200 + i*80}px`, height:`${200 + i*80}px`,
-              marginLeft:`${-(100+i*40)}px`, marginTop:`${-(100+i*40)}px`,
-              border:`1px solid rgba(123,97,255,${0.5 - i*0.1})`,
-              borderRadius:'50%',
-              animation:`shimmer ${2.5 + i*0.4}s ease-in-out ${i*0.3}s infinite`,
-              boxShadow:`0 0 ${12+i*6}px rgba(123,97,255,0.3)`,
-              opacity: opacity * 0.9,
-            }} />
-          ))}
-        </div>
-      )}
-
-      {/* SEDONA: Red vortex spiral */}
-      {effect === 'red_vortex' && (
-        <div style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:0, display:'flex', alignItems:'center', justifyContent:'center', opacity }}>
-          <div style={{ width:400, height:400, borderRadius:'50%', border:'2px solid rgba(255,69,0,0.35)', animation:'vortexSpin 8s linear infinite', boxShadow:'0 0 60px rgba(255,69,0,0.2)' }} />
-          <div style={{ position:'absolute', width:250, height:250, borderRadius:'50%', border:'1px solid rgba(255,69,0,0.25)', animation:'vortexSpin 5s linear infinite reverse' }} />
-        </div>
-      )}
-
-      {/* SOLAR RIPPLES: Lake Titicaca / solar sites */}
-      {(effect === 'solar_ripples' || effect === 'solar_sync') && (
-        <div style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:0, overflow:'hidden' }}>
-          {[...Array(3)].map((_, i) => (
-            <div key={i} style={{
-              position:'absolute', left:'50%', top:'50%',
-              width:`${80+i*60}px`, height:`${80+i*60}px`,
-              marginLeft:`${-(40+i*30)}px`, marginTop:`${-(40+i*30)}px`,
-              borderRadius:'50%',
-              border:`2px solid rgba(255,215,0,0.4)`,
-              animation:`ripple 3s ease-out ${i*1}s infinite`,
-              opacity: opacity * 0.7,
-            }} />
-          ))}
-        </div>
-      )}
-
-      {/* LOTUS PETALS: Vrindavan */}
-      {effect === 'lotus_petals' && (
-        <div style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:0, overflow:'hidden', opacity }}>
-          {[...Array(12)].map((_, i) => (
-            <div key={i} style={{
-              position:'absolute',
-              left:`${8 + (i * 8)}%`,
-              top: '-5%',
-              fontSize:`${14 + (i%3)*6}px`,
-              animation:`lotusFloat ${6 + (i%4)*2}s ease-in ${i * 0.6}s infinite`,
-              filter:`drop-shadow(0 0 4px rgba(30,144,255,0.6))`,
-            }}>
-              🪷
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* SAFFRON SHIELD: Ayodhya */}
-      {effect === 'saffron_shield' && (
-        <div style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
-          <div style={{
-            width:'85vw', height:'85vw', maxWidth:500, maxHeight:500,
-            borderRadius:'50%',
-            background:'radial-gradient(circle, rgba(255,165,0,0.12) 0%, rgba(255,69,0,0.06) 50%, transparent 75%)',
-            border:'2px solid rgba(255,165,0,0.3)',
-            animation:'saffron 3s ease-in-out infinite',
-            boxShadow:'0 0 80px rgba(255,165,0,0.15)',
-            opacity,
-          }} />
-        </div>
-      )}
-
-      {/* TROPICAL AQUA: Lemuria */}
-      {effect === 'tropical_aqua' && (
-        <div style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:0, opacity }}>
-          <div style={{
-            position:'absolute', inset:0,
-            background:'radial-gradient(ellipse 100% 60% at 50% 100%, rgba(64,224,208,0.15) 0%, transparent 60%)',
-            animation:'aquaHeart 4s ease-in-out infinite',
-          }} />
-        </div>
-      )}
-
-      {/* LIQUID GEOMETRY: Atlantis — Metatron's Cube */}
-      {effect === 'liquid_geometry' && (
-        <div style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:0, display:'flex', alignItems:'center', justifyContent:'center', opacity: opacity * 0.5 }}>
-          {[...Array(6)].map((_, i) => (
-            <div key={i} style={{
-              position:'absolute',
-              width:'180px', height:'180px',
-              border:'1px solid rgba(65,105,225,0.4)',
-              borderRadius:'4px',
-              transform:`rotate(${i*30}deg)`,
-              animation:`shimmer ${3+i*0.5}s ease-in-out ${i*0.2}s infinite`,
-            }} />
-          ))}
-        </div>
-      )}
-
-      {/* DIAMOND SPARKLE: Pleiades */}
-      {effect === 'diamond_sparkle' && (
-        <div style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:0, overflow:'hidden', opacity }}>
-          {[...Array(20)].map((_, i) => (
-            <div key={i} style={{
-              position:'absolute',
-              left:`${Math.random()*100}%`, top:`${Math.random()*100}%`,
-              width:'4px', height:'4px', borderRadius:'50%',
-              background:'white', boxShadow:'0 0 6px white',
-              animation:`sparkle ${1.5 + (i%5)*0.4}s ease-in-out ${(i%7)*0.3}s infinite`,
-            }} />
-          ))}
-        </div>
-      )}
-
-      {/* DOUBLE SUN: Sirius */}
-      {effect === 'double_sun' && (
-        <div style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:0, opacity }}>
-          <div style={{ position:'absolute', left:'25%', top:'15%', width:120, height:120, borderRadius:'50%', background:'radial-gradient(circle, rgba(65,105,225,0.5) 0%, transparent 70%)', animation:'doubleGlow 3s ease-in-out infinite' }} />
-          <div style={{ position:'absolute', right:'20%', top:'20%', width:80, height:80, borderRadius:'50%', background:'radial-gradient(circle, rgba(65,105,225,0.4) 0%, transparent 70%)', animation:'doubleGlow 3s ease-in-out 1.5s infinite' }} />
-        </div>
-      )}
-
-      {/* VIOLET GRID: Arcturus */}
-      {effect === 'violet_grid' && (
-        <div style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:0, opacity: opacity * 0.55 }}>
-          <div style={{
-            position:'absolute', inset:0,
-            backgroundImage:'linear-gradient(rgba(153,50,204,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(153,50,204,0.3) 1px, transparent 1px)',
-            backgroundSize:'40px 40px',
-            animation:'gridPulse 2s ease-in-out infinite',
-          }} />
-        </div>
-      )}
-
-      {/* WHITE FIRE: Lyra */}
-      {effect === 'white_fire' && (
-        <div style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:0, opacity }}>
-          {['top','bottom','left','right'].map(side => (
-            <div key={side} style={{
-              position:'absolute',
-              [side]:0,
-              ...(side==='top'||side==='bottom' ? { left:0, right:0, height:'12vh' } : { top:0, bottom:0, width:'6vw' }),
-              background: side==='top' ? 'linear-gradient(to bottom, rgba(255,255,255,0.25), transparent)'
-                        : side==='bottom' ? 'linear-gradient(to top, rgba(255,255,255,0.2), transparent)'
-                        : side==='left' ? 'linear-gradient(to right, rgba(255,255,255,0.2), transparent)'
-                        : 'linear-gradient(to left, rgba(255,255,255,0.2), transparent)',
-              animation:`whiteFire ${2+['top','bottom','left','right'].indexOf(side)*0.3}s ease-in-out infinite`,
-            }} />
-          ))}
-        </div>
-      )}
-    </>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────
-// 4. MINI GLOBE COMPONENT
-// ─────────────────────────────────────────────────────────────
-function MiniGlobe({ site, intensity }: { site: SacredSite; intensity: number }) {
-  const isGalactic = site.category === 'Galactic';
-
-  return (
-    <div style={{ position:'relative', width:'100%', paddingBottom:'100%', maxWidth:300, margin:'0 auto' }}>
-      <div style={{ position:'absolute', inset:0 }}>
-        {/* Globe background */}
-        <div style={{
-          position:'absolute', inset:0, borderRadius:'50%',
-          background: isGalactic
-            ? 'radial-gradient(circle at 35% 35%, #0a0a2e 0%, #000010 60%, #000005 100%)'
-            : 'radial-gradient(circle at 35% 35%, #1a2a4a 0%, #0d1829 55%, #060d14 100%)',
-          border:`1px solid ${site.color}44`,
-          boxShadow:`0 0 40px ${site.glow}, inset 0 0 30px rgba(0,0,0,0.8)`,
-          overflow:'hidden',
-        }}>
-          {/* Grid lines */}
-          {!isGalactic && (
-            <>
-              {/* Latitude lines */}
-              {[25,45,65,80].map(y => (
-                <div key={y} style={{ position:'absolute', left:0, right:0, top:`${y}%`, height:1, background:'rgba(255,255,255,0.06)' }} />
-              ))}
-              {/* Longitude lines */}
-              {[20,40,60,80].map(x => (
-                <div key={x} style={{ position:'absolute', top:0, bottom:0, left:`${x}%`, width:1, background:'rgba(255,255,255,0.06)' }} />
-              ))}
-            </>
-          )}
-
-          {isGalactic && (
-            /* Star field for galactic sites */
-            <>
-              {[...Array(30)].map((_, i) => (
-                <div key={i} style={{
-                  position:'absolute',
-                  left:`${(i*37)%95+2}%`, top:`${(i*53)%90+2}%`,
-                  width: i%5===0 ? '3px' : '1px',
-                  height: i%5===0 ? '3px' : '1px',
-                  borderRadius:'50%', background:'white',
-                  opacity: 0.3 + (i%7)*0.1,
-                  boxShadow: i%5===0 ? '0 0 4px white' : 'none',
-                }} />
-              ))}
-            </>
-          )}
-
-          {/* Site dot — or for galactic: center star */}
-          <div style={{
-            position:'absolute',
-            left: isGalactic ? '50%' : `${site.globeX}%`,
-            top:  isGalactic ? '50%' : `${site.globeY}%`,
-            transform:'translate(-50%,-50%)',
-            zIndex:2,
-          }}>
-            <div style={{
-              width: site.multiplier ? 14 : 10,
-              height: site.multiplier ? 14 : 10,
-              borderRadius:'50%',
-              background: site.color,
-              boxShadow:`0 0 ${12 + intensity/10}px ${site.color}`,
-            }} />
-            {/* Pulse ring */}
-            <div style={{
-              position:'absolute', inset:-8,
-              borderRadius:'50%',
-              border:`1px solid ${site.color}`,
-              opacity:0.5,
-              animation:'siteRingPulse 2s ease-out infinite',
-            }} />
-          </div>
-
-          {/* Reach radius visualization */}
-          {site.reach !== 'Infinite' && (
-            <div style={{
-              position:'absolute',
-              left:`${site.globeX}%`, top:`${site.globeY}%`,
-              transform:'translate(-50%,-50%)',
-              width:`${(site.reach as number) * 1.8}px`,
-              height:`${(site.reach as number) * 1.8}px`,
-              borderRadius:'50%',
-              border:`1px dashed ${site.color}55`,
-              background:`${site.color}08`,
-              maxWidth:'80%', maxHeight:'80%',
-            }} />
-          )}
-
-          {/* Other site dots (dimmed) */}
-          {ALL_SITES.filter(s => s.id !== site.id && s.category !== 'Galactic').slice(0,8).map(s => (
-            <div key={s.id} style={{
-              position:'absolute',
-              left:`${s.globeX}%`, top:`${s.globeY}%`,
-              transform:'translate(-50%,-50%)',
-              width:5, height:5, borderRadius:'50%',
-              background:s.color, opacity:0.3,
-            }} />
-          ))}
-
-          {/* Connection lines from active site to nearby sites (only for Earth/Supreme) */}
-          {!isGalactic && (
-            <svg style={{ position:'absolute', inset:0, width:'100%', height:'100%' }} viewBox="0 0 100 100" preserveAspectRatio="none">
-              {ALL_SITES.filter(s => s.id !== site.id && s.category !== 'Galactic').slice(0,4).map(s => (
-                <line key={s.id}
-                  x1={site.globeX} y1={site.globeY}
-                  x2={s.globeX} y2={s.globeY}
-                  stroke={site.color} strokeOpacity="0.15" strokeWidth="0.4"
-                  strokeDasharray="1 2"
-                />
-              ))}
-            </svg>
-          )}
-        </div>
-
-        {/* Atmospheric glow ring */}
-        <div style={{
-          position:'absolute', inset:-8, borderRadius:'50%',
-          background:`radial-gradient(circle, transparent 48%, ${site.color}22 65%, transparent 75%)`,
-        }} />
-      </div>
-
-      <style>{`
-        @keyframes siteRingPulse { 0%{transform:translate(-50%,-50%) scale(1);opacity:0.6} 100%{transform:translate(-50%,-50%) scale(2.5);opacity:0} }
-      `}</style>
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────
-// 5. SITE CARD BUTTON
-// ─────────────────────────────────────────────────────────────
-function SiteCard({ site, active, onClick }: { site: SacredSite; active: boolean; onClick: () => void }) {
-  return (
-    <button onClick={onClick} style={{
-      display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
-      gap:4, padding:'10px 6px',
-      borderRadius:14,
-      border:`1px solid ${active ? site.color : 'rgba(255,255,255,0.08)'}`,
-      background: active ? `${site.color}18` : 'rgba(255,255,255,0.03)',
-      boxShadow: active ? `0 0 16px ${site.glow}` : 'none',
-      cursor:'pointer', transition:'all 0.25s',
-      fontFamily:"'Cinzel','Palatino Linotype',Georgia,serif",
-    }}>
-      <div style={{ width:8, height:8, borderRadius:'50%', background: site.color, boxShadow:`0 0 6px ${site.color}`, flexShrink:0 }} />
-      <span style={{ fontSize:8, fontWeight:700, letterSpacing:'0.04em', textTransform:'uppercase', color: active ? site.color : 'rgba(255,255,255,0.4)', textAlign:'center', lineHeight:1.2 }}>
-        {site.name.split(' ')[0]}
-        {site.multiplier && <span style={{ display:'block', fontSize:7, color:site.color }}>{site.multiplier}X</span>}
-      </span>
-    </button>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────
-// 6. UPSELL MODAL
-// ─────────────────────────────────────────────────────────────
-function TempleUpsellModal({ onClose }: { onClose: () => void }) {
-  return (
-    <div style={{ position:'fixed', inset:0, zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}>
-      <div onClick={onClose} style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.92)', backdropFilter:'blur(10px)' }} />
-      <div style={{ position:'relative', width:'100%', maxWidth:340, background:'#0a0505', border:'2px solid #D4AF37', borderRadius:24, padding:30, textAlign:'center', fontFamily:"'Cinzel','Palatino Linotype',Georgia,serif" }}>
-        <button onClick={onClose} style={{ position:'absolute', top:14, right:16, background:'none', border:'none', cursor:'pointer', color:'rgba(212,175,55,0.4)', fontSize:18 }}>✕</button>
-        <Home size={32} style={{ color:'#D4AF37', marginBottom:14 }} />
-        <h3 style={{ margin:'0 0 8px', fontSize:17, fontWeight:300, letterSpacing:'0.2em', textTransform:'uppercase', color:'#D4AF37' }}>Temple Home License</h3>
-        <p style={{ fontSize:11, color:'rgba(212,175,55,0.55)', lineHeight:1.7, margin:'0 0 18px' }}>
-          Lock this planetary energy into your home 24/7. All 23 sites. Unlimited reach.
-        </p>
-        <div style={{ background:'rgba(0,0,0,0.5)', borderRadius:12, padding:14, textAlign:'left', marginBottom:18 }}>
-          {['24/7 House Anchor — Cloud Locked','All 23 Sacred Sites Unlocked','Spatial Heat Map','Admin Access Override'].map(f => (
-            <div key={f} style={{ display:'flex', alignItems:'center', gap:8, padding:'5px 0', fontSize:11, color:'rgba(212,175,55,0.8)' }}>
-              <Check size={10} color="#D4AF37" /> {f}
-            </div>
-          ))}
-        </div>
-        <button onClick={onClose} style={{ width:'100%', padding:'13px 0', borderRadius:12, background:'#D4AF37', color:'#000', fontWeight:700, fontSize:12, letterSpacing:'0.12em', textTransform:'uppercase', border:'none', cursor:'pointer', fontFamily:'inherit', marginBottom:10 }}>
-          Activate for €499
-        </button>
-        <button onClick={onClose} style={{ background:'none', border:'none', cursor:'pointer', fontSize:10, color:'rgba(212,175,55,0.35)', letterSpacing:'0.1em', textTransform:'uppercase', fontFamily:'inherit' }}>
-          Continue Without
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────
-// 7. MAIN SANCTUARY DASHBOARD
-//    Add this to your Library page
-// ─────────────────────────────────────────────────────────────
-export function SanctuaryDashboard() {
-  const { activeSite, setActiveSite, intensity, setIntensity, isTempleLocked, setTempleLocked, access, isSyncing } = useGlobalResonance();
-
-  const [activeCategory, setActiveCategory] = useState<SiteCategory>('Supreme');
-  const [showUpsell, setShowUpsell] = useState(false);
-  const [anchorTimer, setAnchorTimer] = useState('');
-  const anchorStart = useRef<Date | null>(null);
-
-  // Temple lock timer
+  // CSS injection
   useEffect(() => {
-    if (!isTempleLocked) { setAnchorTimer(''); anchorStart.current = null; return; }
-    if (!anchorStart.current) anchorStart.current = new Date();
-    const iv = setInterval(() => {
-      const s = Math.floor((Date.now() - anchorStart.current!.getTime()) / 1000);
-      setAnchorTimer(`${Math.floor(s/3600)}h ${Math.floor((s%3600)/60)}m ${s%60}s`);
-    }, 1000);
-    return () => clearInterval(iv);
-  }, [isTempleLocked]);
+    let el = document.getElementById('shc-res-css') as HTMLStyleElement;
+    if (!el) { el = document.createElement('style'); el.id = 'shc-res-css'; document.head.appendChild(el); }
+    el.textContent = buildCSS(site);
+    return () => { if (el) el.textContent = ''; };
+  }, [site]);
 
-  const handleAnchor = () => {
-    if (!access.hasTemple) { setShowUpsell(true); return; }
-    setTempleLocked(!isTempleLocked);
-  };
+  // Audio injection
+  useEffect(() => {
+    if (state.isLocked) freq.start(site.frequency, state.intensity);
+    else freq.stop();
+    return () => freq.stop();
+  }, [state.isLocked, site.frequency, state.intensity]);
 
-  const categories: SiteCategory[] = ['Supreme', 'Earth', 'Temporal', 'Ancient', 'Galactic'];
-  const categoryColors: Record<SiteCategory, string> = {
-    Supreme:'#7B61FF', Earth:'#D4AF37', Temporal:'#1E90FF', Ancient:'#40E0D0', Galactic:'#E0FFFF'
-  };
-  const categoryIcons: Record<SiteCategory, string> = {
-    Supreme:'♛', Earth:'⊕', Temporal:'⟳', Ancient:'◈', Galactic:'✦'
-  };
+  // Supabase cloud-anchor (24/7 persistence)
+  useEffect(() => {
+    if (!state.userEmail) return;
+    const upsert = async () => {
+      try {
+        await (supabase as any).from('user_resonance_state').upsert({
+          email: state.userEmail,
+          active_site_id: state.activeSiteId,
+          intensity: state.intensity,
+          is_locked: state.isLocked,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'email' });
+      } catch {}
+    };
+    upsert();
+  }, [state.activeSiteId, state.isLocked, state.intensity, state.userEmail]);
+
+  // Load from cloud on mount
+  useEffect(() => {
+    if (!userEmail) return;
+    (async () => {
+      try {
+        const { data } = await (supabase as any).from('user_resonance_state').select('*').eq('email', userEmail).single();
+        if (data) setState(p => ({ ...p, activeSiteId: data.active_site_id ?? p.activeSiteId, intensity: data.intensity ?? p.intensity, isLocked: data.is_locked ?? false }));
+      } catch {}
+    })();
+  }, [userEmail]);
+
+  const activate = useCallback((id: string) => setState(p => { const n = { ...p, activeSiteId: id }; save(n); return n; }), []);
+  const setIntensity = useCallback((v: number) => { freq.setGain(v); setState(p => { const n = { ...p, intensity: v }; save(n); return n; }); }, []);
+  const toggleLock = useCallback(() => setState(p => { const n = { ...p, isLocked: !p.isLocked }; save(n); return n; }), []);
 
   return (
-    <>
-      <style>{`
-        .sd * { box-sizing: border-box; }
-        @keyframes sdPulse  { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(1.04)} }
-        @keyframes sdGlow   { 0%,100%{box-shadow:0 0 30px rgba(212,175,55,0.1)} 50%{box-shadow:0 0 60px rgba(212,175,55,0.25)} }
-        @keyframes sdSpin   { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-        .sd-cat:hover       { opacity: 1 !important; }
-        .sd-anchor:hover    { opacity: 0.88 !important; }
-        input[type=range].sd-range { -webkit-appearance:none; width:100%; height:4px; border-radius:99px; outline:none; cursor:pointer; }
-        input[type=range].sd-range::-webkit-slider-thumb { -webkit-appearance:none; width:20px; height:20px; border-radius:50%; cursor:pointer; }
-      `}</style>
+    <ResonanceContext.Provider value={{ state, site, activate, setIntensity, toggleLock }}>
+      <ParticleLayer site={site} active={state.isLocked} />
+      {children}
+    </ResonanceContext.Provider>
+  );
+}
 
-      <div className="sd" style={{
-        background:'rgba(0,0,0,0.6)',
-        backdropFilter:'blur(20px)',
-        WebkitBackdropFilter:'blur(20px)',
-        border:'1px solid rgba(212,175,55,0.2)',
-        borderRadius:24,
-        overflow:'hidden',
-        fontFamily:"'Cinzel','Palatino Linotype',Georgia,serif",
-        animation:'sdGlow 5s ease-in-out infinite',
-      }}>
+// ─────────────────────────────────────────────────────────────────────────────
+// PARTICLE LAYER (lotus petals / sparkles / mist)
+// ─────────────────────────────────────────────────────────────────────────────
 
-        {/* ── HEADER ── */}
-        <div style={{ padding:'24px 20px 16px', textAlign:'center', borderBottom:'1px solid rgba(212,175,55,0.1)', background:'rgba(0,0,0,0.3)', position:'relative' }}>
-          <h1 style={{ margin:'0 0 4px', fontSize:22, fontWeight:300, letterSpacing:'0.25em', textTransform:'uppercase', color:'#D4AF37' }}>
+function ParticleLayer({ site, active }: { site: SacredSite; active: boolean }) {
+  const needsParticles = active && ['lotus_petals', 'diamond_sparkle', 'avalon_mist'].includes(site.effect);
+  if (!needsParticles) return null;
+  const emoji = site.effect === 'lotus_petals' ? '🪷' : site.effect === 'diamond_sparkle' ? '✨' : '🌿';
+  return (
+    <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 1, overflow: 'hidden' }}>
+      {Array.from({ length: 9 }, (_, i) => (
+        <div key={i} className="lotus-petal"
+          style={{ left: `${5 + i * 10}%`, animationDelay: `${i * 1.1}s`, animationDuration: `${6 + i * 0.7}s` }}>
+          {emoji}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ACTIVE SITE BADGE (floats on all pages while locked)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function ActiveSiteBadge() {
+  const { state, site } = useResonance();
+  if (!state.isLocked) return null;
+  return (
+    <div className="fixed bottom-20 right-4 z-50 flex items-center gap-2 px-3 py-2 rounded-full text-xs font-bold uppercase tracking-wider backdrop-blur-md border"
+      style={{ background: 'rgba(0,0,0,0.8)', borderColor: site.color + '60', color: site.color, boxShadow: `0 0 16px ${site.glow}` }}>
+      <span className="relative flex h-2 w-2">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: site.color }} />
+        <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: site.color }} />
+      </span>
+      {site.emoji} {site.name}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MINI GLOBE
+// ─────────────────────────────────────────────────────────────────────────────
+
+function Globe({ site }: { site: SacredSite }) {
+  return (
+    <div className="relative w-full h-56 rounded-2xl overflow-hidden border border-white/10 flex items-center justify-center mb-6"
+      style={{ background: `radial-gradient(circle, ${site.color}12 0%, #050505 70%)` }}>
+      {/* Grid lines */}
+      <div className="absolute inset-0 opacity-10"
+        style={{ backgroundImage: `linear-gradient(${site.color}40 1px,transparent 1px),linear-gradient(90deg,${site.color}40 1px,transparent 1px)`, backgroundSize: '28px 28px' }} />
+      {/* Rings */}
+      <motion.div animate={{ rotate: 360 }} transition={{ duration: 22, repeat: Infinity, ease: 'linear' }}
+        className="absolute w-44 h-44 rounded-full border border-dashed" style={{ borderColor: site.color + '30' }} />
+      <motion.div animate={{ rotate: -360 }} transition={{ duration: 14, repeat: Infinity, ease: 'linear' }}
+        className="absolute w-28 h-28 rounded-full border" style={{ borderColor: site.color + '25' }} />
+      {/* Portal */}
+      <motion.div animate={{ scale: [1, 1.07, 1], opacity: [0.85, 1, 0.85] }} transition={{ duration: 3, repeat: Infinity }}
+        className="z-10 w-20 h-20 rounded-full border-2 flex items-center justify-center bg-black/60 backdrop-blur-md"
+        style={{ borderColor: site.color, boxShadow: `0 0 28px ${site.glow}` }}>
+        <span className="text-3xl">{site.emoji}</span>
+      </motion.div>
+      {/* Frequency label */}
+      <div className="absolute bottom-3 left-0 right-0 text-center text-[10px] uppercase tracking-widest" style={{ color: site.color + '99' }}>
+        {site.category} · {site.frequency > 0 ? `${site.frequency}Hz` : 'Zero Point'}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN SANCTUARY HUB COMPONENT
+// ─────────────────────────────────────────────────────────────────────────────
+
+const CATS: Array<SiteCategory | 'All'> = ['All', 'Supreme', 'Temporal', 'LostCiv', 'Galactic', 'Earth'];
+
+export function SanctuaryHub() {
+  const { state, site, activate, setIntensity, toggleLock } = useResonance();
+  const [filter, setFilter] = useState<SiteCategory | 'All'>('All');
+
+  const visible = filter === 'All' ? SITES : SITES.filter(s => s.category === filter);
+
+  return (
+    <div className="min-h-screen bg-[#050505] text-white pb-24 select-none" style={{ fontFamily: 'Georgia, serif' }}>
+
+      {/* ── HEADER ── */}
+      <div className="flex justify-between items-center px-5 pt-6 pb-4">
+        <div>
+          <h1 className="text-xl font-bold tracking-widest uppercase" style={{ color: '#D4AF37' }}>
             Sanctuary Dashboard
           </h1>
-          <div style={{ fontSize:9, letterSpacing:'0.25em', textTransform:'uppercase', color:'rgba(212,175,55,0.45)', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
-            <div style={{ width:5, height:5, borderRadius:'50%', background: isSyncing ? '#fbbf24' : '#10b981', animation: isSyncing ? 'sdPulse 1s infinite' : 'none' }} />
-            {isSyncing ? 'Syncing...' : 'Global Grid Active'} · {ALL_SITES.length} Sites
-          </div>
-          {access.isAdmin && (
-            <div style={{ position:'absolute', top:16, right:16, fontSize:8, color:'#D4AF37', border:'1px solid rgba(212,175,55,0.4)', padding:'2px 8px', borderRadius:4, letterSpacing:'0.12em' }}>ADMIN</div>
-          )}
+          <p className="text-[10px] opacity-35 tracking-widest uppercase mt-0.5">23 Sacred Sites · Global Resonance</p>
         </div>
-
-        <div style={{ padding:'18px 18px 4px', display:'flex', flexDirection:'column', gap:20 }}>
-
-          {/* ── MINI GLOBE ── */}
-          <div>
-            <MiniGlobe site={activeSite} intensity={intensity} />
-            {/* Globe label */}
-            <div style={{ textAlign:'center', marginTop:10 }}>
-              <div style={{ fontSize:15, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color: activeSite.color }}>
-                {activeSite.name}
-              </div>
-              {activeSite.subtitle && (
-                <div style={{ fontSize:9, color:'rgba(212,175,55,0.5)', letterSpacing:'0.15em', marginTop:3 }}>
-                  {activeSite.subtitle}
-                </div>
-              )}
-              <div style={{ fontSize:9, color:'rgba(255,255,255,0.3)', letterSpacing:'0.1em', marginTop:4 }}>
-                {activeSite.category.toUpperCase()} · {activeSite.reach === 'Infinite' ? '∞ Non-Local' : `${activeSite.reach}m Reach`}
-                {activeSite.resonance && ` · ${activeSite.resonance}`}
-              </div>
-              {/* Phase-lock status */}
-              <div style={{ fontSize:9, color:'rgba(212,175,55,0.6)', letterSpacing:'0.15em', marginTop:5, display:'flex', alignItems:'center', justifyContent:'center', gap:5 }}>
-                <div style={{ width:4, height:4, borderRadius:'50%', background:'#10b981', boxShadow:'0 0 4px #10b981', animation:'sdPulse 2s infinite' }} />
-                {Math.round(intensity)}% Phase-Locked · {activeSite.signature || 'AXIS MUNDI'} Resonance
-              </div>
-            </div>
-          </div>
-
-          {/* ── CATEGORY TABS ── */}
-          <div style={{ display:'flex', gap:6, overflowX:'auto', paddingBottom:2 }}>
-            {categories.map(cat => (
-              <button key={cat} className="sd-cat" onClick={() => setActiveCategory(cat)} style={{
-                flexShrink:0, padding:'7px 12px', borderRadius:99,
-                border:`1px solid ${activeCategory===cat ? categoryColors[cat] : 'rgba(255,255,255,0.1)'}`,
-                background: activeCategory===cat ? `${categoryColors[cat]}18` : 'transparent',
-                color: activeCategory===cat ? categoryColors[cat] : 'rgba(255,255,255,0.35)',
-                fontSize:9, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase',
-                cursor:'pointer', transition:'all 0.2s', fontFamily:'inherit',
-                opacity: activeCategory===cat ? 1 : 0.6,
-              }}>
-                {categoryIcons[cat]} {cat}
-              </button>
-            ))}
-          </div>
-
-          {/* ── SITE GRID ── */}
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8 }}>
-            {(SITE_GROUPS[activeCategory] || []).map(site => (
-              <SiteCard key={site.id} site={site} active={activeSite.id === site.id} onClick={() => setActiveSite(site)} />
-            ))}
-          </div>
-
-          {/* ── INTENSITY ── */}
-          <div>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
-              <span style={{ fontSize:10, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'rgba(212,175,55,0.7)' }}>
-                <Zap size={12} style={{ marginRight:5, verticalAlign:'middle' }} />
-                {access.hasTemple ? 'Intensity Master Slider' : 'Aura Intensity'}
-              </span>
-              <span style={{ fontSize:15, fontWeight:700, color:'#D4AF37', fontFamily:'monospace' }}>{intensity}%</span>
-            </div>
-            <input
-              type="range" min={0} max={100} value={intensity}
-              onChange={e => setIntensity(+e.target.value)}
-              className="sd-range"
-              style={{
-                background:`linear-gradient(to right, ${activeSite.color} ${intensity}%, rgba(255,255,255,0.12) ${intensity}%)`,
-                accentColor: activeSite.color,
-              } as CSSProperties}
-            />
-          </div>
-
-          {/* ── SITE INSTRUCTION ── */}
-          <div style={{ background:`${activeSite.color}0a`, border:`1px solid ${activeSite.color}28`, borderRadius:14, padding:14 }}>
-            <div style={{ fontSize:9, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color: activeSite.color, marginBottom:8, display:'flex', alignItems:'center', gap:6 }}>
-              <Sparkles size={11} /> Sacred Instruction
-            </div>
-            <p style={{ fontSize:12, color:'rgba(255,255,255,0.75)', margin:'0 0 8px', lineHeight:1.7 }}>
-              {activeSite.instruction}
-            </p>
-            <p style={{ fontSize:10, fontStyle:'italic', color:'rgba(212,175,55,0.5)', margin:0 }}>
-              {activeSite.experience}
-            </p>
-          </div>
-
-          {/* ── TEMPLE LOCK ── */}
-          <div style={{
-            padding:16, borderRadius:16,
-            border:`1px solid ${isTempleLocked ? '#D4AF37' : 'rgba(212,175,55,0.18)'}`,
-            background: isTempleLocked ? 'rgba(212,175,55,0.07)' : 'rgba(0,0,0,0.3)',
-            boxShadow: isTempleLocked ? '0 0 30px rgba(212,175,55,0.15)' : 'none',
-            transition:'all 0.4s',
+        <div className="px-3 py-1.5 rounded-full border text-[10px] uppercase tracking-widest font-bold transition-all duration-500"
+          style={{
+            borderColor: state.isLocked ? '#D4AF37' : 'rgba(255,255,255,0.15)',
+            color: state.isLocked ? '#D4AF37' : 'rgba(255,255,255,0.3)',
+            boxShadow: state.isLocked ? '0 0 12px rgba(212,175,55,0.3)' : 'none',
           }}>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-              <div>
-                <div style={{ fontSize:13, fontWeight:700, color:'#D4AF37', marginBottom:4, display:'flex', alignItems:'center', gap:6 }}>
-                  <Home size={14} /> Temple Lock · 24/7
-                </div>
-                <div style={{ fontSize:9, color:'rgba(212,175,55,0.45)', letterSpacing:'0.1em' }}>
-                  {isTempleLocked ? `Active ${anchorTimer} · ${activeSite.name}` : 'Lock your home energy field permanently'}
-                </div>
-              </div>
-              <button onClick={handleAnchor} style={{
-                padding:'9px 16px', borderRadius:12, fontSize:10, fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase',
-                border:`1px solid ${isTempleLocked ? '#D4AF37' : 'rgba(212,175,55,0.35)'}`,
-                background: isTempleLocked ? '#D4AF37' : 'transparent',
-                color: isTempleLocked ? '#000' : 'rgba(212,175,55,0.7)',
-                cursor:'pointer', fontFamily:'inherit', transition:'all 0.2s',
-              }}>
-                {isTempleLocked ? '🟡 Locked' : 'Activate'}
-                {!access.hasTemple && <Lock size={8} style={{ marginLeft:4, verticalAlign:'middle' }} />}
-              </button>
-            </div>
-          </div>
+          {state.isLocked ? '⚡ Cloud-Anchor Active' : '○ Device Standby'}
+        </div>
+      </div>
 
-          {/* ── STATUS BAR ── */}
-          <div style={{ padding:'10px 0 14px', borderTop:'1px solid rgba(212,175,55,0.08)', display:'flex', justifyContent:'center', fontSize:8, color:'rgba(212,175,55,0.35)', letterSpacing:'0.1em', textTransform:'uppercase', textAlign:'center', lineHeight:1.8 }}>
-            {`Temple Home License: ${access.hasTemple ? '✓ Active' : 'Inactive'} · 24/7 House Anchor ${isTempleLocked ? 'Enabled' : 'Disabled'} · ${activeSite.reach === 'Infinite' ? '∞' : activeSite.reach+'m'} Reach · ${access.isAdmin ? 'Admin Access' : 'Member'}`}
+      {/* ── GLOBE ── */}
+      <div className="px-4">
+        <Globe site={site} />
+      </div>
+
+      {/* ── ACTIVE SITE CARD ── */}
+      <div className="px-4 mb-5">
+        <div className="rounded-2xl p-4 border transition-all duration-500"
+          style={{ background: `${site.color}0a`, borderColor: `${site.color}30`, boxShadow: `0 0 20px ${site.glow}` }}>
+          <div className="flex items-center gap-3">
+            <span className="text-3xl">{site.emoji}</span>
+            <div className="flex-1 min-w-0">
+              <div className="font-bold tracking-wide truncate" style={{ color: site.color }}>
+                {site.name}
+                {site.multiplier && <span className="ml-2 text-[10px] bg-white/10 px-2 py-0.5 rounded-full">{site.multiplier}</span>}
+              </div>
+              <div className="text-[11px] opacity-45 mt-0.5 truncate">{site.subtitle}</div>
+            </div>
+            <div className="text-right flex-shrink-0">
+              <div className="text-[11px] font-bold" style={{ color: CAT_COLOR[site.category] }}>{site.category}</div>
+              <div className="text-[10px] opacity-35">{site.frequency > 0 ? `${site.frequency}Hz` : 'Stillness'}</div>
+            </div>
           </div>
         </div>
       </div>
 
-      {showUpsell && <TempleUpsellModal onClose={() => setShowUpsell(false)} />}
-    </>
-  );
-}
+      {/* ── CATEGORY FILTER ── */}
+      <div className="px-4 mb-4">
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          {CATS.map(cat => {
+            const isActive = filter === cat;
+            const col = cat === 'All' ? '#D4AF37' : CAT_COLOR[cat as SiteCategory];
+            return (
+              <button key={cat} onClick={() => setFilter(cat)}
+                className="flex-shrink-0 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all"
+                style={{
+                  borderColor: isActive ? col : 'rgba(255,255,255,0.1)',
+                  background: isActive ? `${col}18` : 'transparent',
+                  color: isActive ? col : 'rgba(255,255,255,0.35)',
+                }}>
+                {cat}
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
-// ─────────────────────────────────────────────────────────────
-// 8. COMPACT SITE INDICATOR
-//    Small floating badge — use on Meditation/Mantra/Music/Healing pages
-//    Shows which site is active without the full dashboard
-// ─────────────────────────────────────────────────────────────
-export function ActiveSiteBadge() {
-  const { activeSite, intensity, isSyncing } = useGlobalResonance();
-  return (
-    <div style={{
-      display:'inline-flex', alignItems:'center', gap:8,
-      padding:'8px 14px', borderRadius:99,
-      background:'rgba(0,0,0,0.6)',
-      backdropFilter:'blur(12px)',
-      border:`1px solid ${activeSite.color}55`,
-      boxShadow:`0 0 16px ${activeSite.glow}`,
-      fontFamily:"'Cinzel','Palatino Linotype',Georgia,serif",
-      transition:'all 0.5s',
-    }}>
-      <div style={{ width:7, height:7, borderRadius:'50%', background: activeSite.color, boxShadow:`0 0 6px ${activeSite.color}`, animation: isSyncing ? 'sdPulse 1s infinite' : 'none', flexShrink:0 }} />
-      <span style={{ fontSize:10, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color: activeSite.color }}>
-        {activeSite.name}
-      </span>
-      <span style={{ fontSize:9, color:'rgba(212,175,55,0.5)' }}>· {intensity}%</span>
+      {/* ── SITE GRID ── */}
+      <div className="px-4 mb-6">
+        <div className="grid grid-cols-2 gap-3">
+          <AnimatePresence mode="popLayout">
+            {visible.map(s => {
+              const isActive = state.activeSiteId === s.id;
+              return (
+                <motion.button key={s.id} layout
+                  initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.92 }}
+                  transition={{ duration: 0.2 }}
+                  onClick={() => activate(s.id)}
+                  className="relative rounded-xl p-3 text-left border transition-all duration-300"
+                  style={{
+                    background: isActive ? `${s.color}14` : 'rgba(255,255,255,0.025)',
+                    borderColor: isActive ? `${s.color}55` : 'rgba(255,255,255,0.07)',
+                    boxShadow: isActive ? `0 0 18px ${s.glow}` : 'none',
+                  }}>
+                  {isActive && <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: s.color }} />}
+                  <div className="text-xl mb-1">{s.emoji}</div>
+                  <div className="text-xs font-bold leading-tight" style={{ color: isActive ? s.color : 'rgba(255,255,255,0.75)' }}>{s.name}</div>
+                  <div className="text-[9px] opacity-35 mt-0.5 leading-tight line-clamp-1">{s.subtitle}</div>
+                  {s.multiplier && <div className="mt-1 text-[9px] font-black" style={{ color: s.color }}>{s.multiplier}</div>}
+                </motion.button>
+              );
+            })}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* ── CONTROLS ── */}
+      <div className="px-4 space-y-3">
+        {/* Intensity */}
+        <div className="rounded-2xl p-4 border border-white/[0.07] bg-white/[0.025]">
+          <div className="flex justify-between mb-3 text-[10px] uppercase tracking-widest">
+            <span className="opacity-35">Vibrational Intensity</span>
+            <span className="font-bold" style={{ color: site.color }}>{state.intensity}% Activation</span>
+          </div>
+          <input type="range" min={0} max={100} value={state.intensity}
+            onChange={e => setIntensity(Number(e.target.value))}
+            className="w-full" style={{ accentColor: site.color }} />
+          <div className="flex justify-between text-[9px] opacity-20 mt-1">
+            <span>Dormant</span><span>Full Activation</span>
+          </div>
+        </div>
+
+        {/* Temple Lock */}
+        <motion.button onClick={toggleLock} whileTap={{ scale: 0.98 }}
+          className="w-full py-4 rounded-xl border-2 font-bold uppercase tracking-[0.2em] text-sm transition-all duration-500"
+          style={state.isLocked ? {
+            background: site.color, borderColor: site.color, color: '#000',
+            boxShadow: `0 0 30px ${site.glow}, 0 0 60px ${site.glow}`,
+          } : {
+            background: 'transparent', borderColor: `${site.color}40`, color: site.color,
+          }}>
+          {state.isLocked ? `🔒 Temple Locked 24/7 — ${site.name}` : `⚡ Activate 24/7 Home Anchor`}
+        </motion.button>
+
+        <AnimatePresence>
+          {state.isLocked && (
+            <motion.p initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+              className="text-center text-[10px] opacity-40 uppercase tracking-widest">
+              {site.frequency > 0 ? `${site.frequency}Hz` : 'Zero Point'} · Coating all audio · Persisted 24/7
+            </motion.p>
+          )}
+        </AnimatePresence>
+      </div>
+
+      <p className="text-[9px] text-center text-gray-700 mt-8 uppercase tracking-widest px-4">
+        Temple Home License · 23 Sites · Admin Access · sacredhealingvibe@gmail.com
+      </p>
     </div>
   );
 }
+
+export default SanctuaryHub;
