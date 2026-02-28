@@ -59,7 +59,6 @@ function getSubtitleKey(phase: "morning" | "midday" | "evening"): string {
   }
 }
 
-// Visual card configs for Start section — warm, sacred gradients
 const START_CARDS = [
   {
     key: "meditations",
@@ -107,7 +106,6 @@ const START_CARDS = [
   },
 ];
 
-// Visual card configs for Deepen section — warm amber/gold tones
 const DEEPEN_CARDS = [
   {
     key: "courses",
@@ -177,7 +175,7 @@ export default function Explore() {
   const [akashicOpen, setAkashicOpen] = useState(false);
   const [sacredRevealOpen, setSacredRevealOpen] = useState(false);
   const presence = usePresenceState();
-  const userHouse = 12; // Ketu's house default; can derive from useAIVedicReading().reading later
+  const userHouse = 12;
 
   const onQuick = (key: "calm" | "heart" | "pause" | "sleep") => {
     if (key === "pause") {
@@ -202,7 +200,6 @@ export default function Explore() {
   const firstActionTitle = presence === "start" ? t("explore.intent.calm", "Calm my mind") : t("explore.presence.continueGently", "Continue gently");
   const firstActionSubtitle = presence === "start" ? t("explore.intent.calmDesc", "A short reset (2–3 min)") : t("explore.presence.stayWithState", "Stay with this state");
 
-  // i18n labels for cards
   const startLabels: Record<string, { title: string; subtitle: string }> = {
     meditations: { title: t("explore.meditations", "Meditations"), subtitle: t("explore.meditationsDesc", "Find your inner peace") },
     breathing: { title: t("explore.breathing", "Breathing"), subtitle: t("explore.breathingDesc", "Calm & energize") },
@@ -220,7 +217,6 @@ export default function Explore() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#1a0a2e] via-[#2d1b4e]/30 to-[#1a0a2e] px-4 pb-24 pt-4">
-      {/* Library Header */}
       <div className="mb-3">
         <h1 className="text-3xl md:text-4xl font-heading font-bold text-amber-50">
           {t("explore.title", "Library")}
@@ -228,12 +224,10 @@ export default function Explore() {
         <p className="text-amber-200/70 mt-1 text-base">{subtitle}</p>
       </div>
 
-      {/* Gita Oracle — top of Library with Why Today? */}
       <div className="mb-6">
         <GitaCard />
       </div>
 
-      {/* Hero Banner — Healing Sounds */}
       <section className="mb-6 -mx-4">
         <button
           onClick={() => navigate("/music")}
@@ -254,27 +248,9 @@ export default function Explore() {
             </div>
             <ChevronRight className="ml-auto h-6 w-6 text-amber-300/80" />
           </div>
-        </button> {/* --- SIDDHA-SOMA QUANTUM APOTHECARY --- */}
-{isAdmin && (
-  <button
-    onClick={() => window.open('https://your-github-username.github.io/siddha-soma-apothecary/', '_blank')}
-    className="rounded-2xl px-4 py-4 text-left transition flex items-center gap-3 bg-gradient-to-r from-amber-600/30 to-amber-500/20 border-2 border-amber-400/60 hover:border-amber-300/80 shadow-[0_0_20px_rgba(251,191,36,0.25)]"
-  >
-    <span className="shrink-0 flex items-center justify-center rounded-xl p-1.5 bg-amber-500/30 shadow-[0_0_12px_rgba(251,191,36,0.5)]">
-      <Zap className="h-5 w-5 text-amber-200" />
-    </span>
-    <div className="flex-1 min-w-0">
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-sm font-semibold text-white">Quantum Apothecary</span>
-        <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/40 text-amber-100 border border-amber-400/60 font-semibold uppercase tracking-wider">Admin</span>
-      </div>
-      <div className="mt-1 text-xs text-amber-100/80">Launch the 2050 Siddha-Soma Activation Tool.</div>
-    </div>
-  </button>
-)}
+        </button>
       </section>
 
-      {/* Community Circle card */}
       <section className="mb-6">
         <button
           onClick={() => navigate("/community")}
@@ -297,7 +273,6 @@ export default function Explore() {
         </button>
       </section>
 
-      {/* Quick Actions */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
         <button onClick={() => navigate("/meditations")} className="rounded-2xl border border-border/50 bg-card/50 px-4 py-4 text-left hover:bg-muted/30 transition">
           <div className="flex items-center gap-3">
@@ -306,294 +281,4 @@ export default function Explore() {
             <span className="text-muted-foreground">›</span>
           </div>
         </button>
-        <button onClick={() => navigate("/healing")} className="rounded-2xl border border-border/50 bg-card/50 px-4 py-4 text-left hover:bg-muted/30 transition">
-          <div className="flex items-center gap-3">
-            <span className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20"><Heart className="h-5 w-5 text-primary" /></span>
-            <div className="flex-1"><div className="font-semibold text-foreground">{t("explore.intent.heal", "Soften the heart")}</div><div className="text-sm text-muted-foreground">{t("explore.intent.healDesc", "Gentle support when it feels heavy")}</div></div>
-            <span className="text-muted-foreground">›</span>
-          </div>
-        </button>
-        <button onClick={() => onQuick("pause")} className="rounded-2xl border border-border/50 bg-card/50 px-4 py-4 text-left hover:bg-muted/30 transition">
-          <div className="flex items-center gap-3">
-            <span className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20"><Zap className="h-5 w-5 text-primary" /></span>
-            <div className="flex-1"><div className="font-semibold text-foreground">{t("explore.intent.pause", "Take a small pause")}</div><div className="text-sm text-muted-foreground">{t("explore.intent.pauseDesc", "One-minute breath reset")}</div></div>
-            <span className="text-muted-foreground">›</span>
-          </div>
-        </button>
-        <button onClick={() => navigate("/meditations")} className="rounded-2xl border border-border/50 bg-card/50 px-4 py-4 text-left hover:bg-muted/30 transition">
-          <div className="flex items-center gap-3">
-            <span className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20"><Moon className="h-5 w-5 text-primary" /></span>
-            <div className="flex-1"><div className="font-semibold text-foreground">{t("explore.intent.sleep", "Sleep deeply")}</div><div className="text-sm text-muted-foreground">{t("explore.intent.sleepDesc", "Unwind into rest")}</div></div>
-            <span className="text-muted-foreground">›</span>
-          </div>
-        </button>
-      </div>
-
-      {showFallback && (
-        <QuickActionFallback
-          title={t("explore.fallback.title", "New sessions are arriving")}
-          body={t("explore.fallback.body", "Your library is still being filled.")}
-          buttonLabel={t("explore.fallback.button", "Browse meditations")}
-          onClick={() => navigate("/meditations")}
-        />
-      )}
-
-      {/* Your Space */}
-      <section className="mt-8">
-        <h2 className="text-xl md:text-2xl font-bold text-amber-100 mb-4 tracking-wide">Your Space</h2>
-        <div className="relative overflow-hidden rounded-3xl border border-purple-500/30 bg-gradient-to-br from-purple-900/30 via-purple-800/20 to-black">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-fuchsia-500/10 to-purple-500/10 opacity-60" />
-          <button onClick={() => navigate("/membership")} className="relative z-10 w-full p-6 text-left hover:bg-white/5 transition">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-2xl bg-purple-500/20 border border-purple-400/30"><Sparkles size={24} className="text-purple-300" /></div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-semibold text-white">Your Space</h3>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/30 text-purple-200 border border-purple-400/40">Active</span>
-                  </div>
-                  <p className="text-sm text-white/70 mt-1">Everything included for you — choose where to enter.</p>
-                </div>
-              </div>
-              <div className="p-2 rounded-full bg-purple-500/20 border border-purple-400/30"><ChevronRight size={20} className="text-purple-200" /></div>
-            </div>
-          </button>
-          <div className="relative z-10 px-6 pb-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {[
-                { label: "Akashic Decoder", desc: "Personalized transmission — unlock your 15-page soul manuscript.", href: "/akashic-records", Icon: Eye, akashicHighTicket: true, adminOnly: true },
-                { label: "Vedic Astrology", desc: "🔱 Daily Jyotish influence + Akashic Records", href: "/vedic-astrology", Icon: Sparkles, premium: true },
-                { label: "Mantra Library", desc: "Sacred sounds for daily practice", href: "/mantras", Icon: Music2, premium: true },
-                { label: "Ayurveda", desc: "Balance + daily guidance", href: "/ayurveda" },
-                { label: "Vastu", desc: "Abundance Architect", href: "/vastu" },
-                { label: "Palm & Akashic Oracle", desc: "Basic hand analysis (Lines only) → Akashic verdict", href: "/hand-analyzer", Icon: Hand, premium: true, adminOnly: true },
-              ].filter((item) => !("adminOnly" in item && item.adminOnly) || isAdmin).map((item) => {
-                const Icon = "Icon" in item ? item.Icon : null;
-                const openAkashic = "openAkashic" in item && item.openAkashic;
-                const premium = "premium" in item && item.premium;
-                const akashicHighTicket = "akashicHighTicket" in item && item.akashicHighTicket;
-                const onClick = akashicHighTicket
-                  ? () => (isAdmin ? navigate('/akashic-reading/full') : hasAkashicAccess ? navigate(item.href) : setSacredRevealOpen(true))
-                  : openAkashic
-                    ? () => setAkashicOpen(true)
-                    : () => navigate(item.href);
-                const isAkashicTile = akashicHighTicket;
-                return (
-                  <button
-                    key={item.label}
-                    onClick={onClick}
-                    className={`rounded-2xl px-4 py-4 text-left transition flex items-center gap-3 ${
-                      isAkashicTile
-                        ? "bg-gradient-to-r from-[#4a1a6b] via-[#6b2d8a] to-[#4a1a6b] border-2 border-purple-400/60 hover:border-purple-300/80 shadow-[0_0_20px_rgba(139,92,246,0.25)] hover:shadow-[0_0_28px_rgba(139,92,246,0.35)]"
-                        : "bg-gradient-to-r from-purple-600/30 to-purple-500/20 border border-purple-400/40 hover:from-purple-600/50 hover:to-purple-500/40"
-                    }`}
-                  >
-                    {Icon && (
-                      <span className={`shrink-0 flex items-center justify-center rounded-xl p-1.5 ${isAkashicTile ? "bg-purple-500/30 shadow-[0_0_12px_rgba(168,85,247,0.5)]" : ""}`}>
-                        <Icon className={`h-5 w-5 ${isAkashicTile ? "text-purple-200" : "text-amber-300"}`} />
-                      </span>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-semibold text-white">{item.label}</span>
-                        {isAkashicTile && (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/40 text-purple-100 border border-purple-400/60 font-semibold uppercase tracking-wider">Secret</span>
-                        )}
-                        {premium && (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/40 font-semibold uppercase tracking-wider">Premium</span>
-                        )}
-                      </div>
-                      <div className="mt-1 text-xs text-purple-100/80">{item.desc}</div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-            <div className="mt-4 flex items-center justify-between">
-              <button onClick={() => navigate("/library")} className="text-sm text-purple-200 hover:text-white transition underline underline-offset-4">Open Library</button>
-              <button onClick={() => navigate("/membership")} className="text-sm text-purple-200 hover:text-white transition underline underline-offset-4">Manage</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Sanctuary Dashboard — admin & premium only */}
-      {(isAdmin || isPremium) && (
-        <section className="mt-8">
-          <GlobalResonanceProvider userEmail="sacredhealingvibe@gmail.com">
-            <SiteEffectOverlay />
-            <div className="rounded-3xl border border-purple-500/20 bg-gradient-to-b from-[#060010] to-black overflow-hidden">
-              <div className="max-w-[480px] mx-auto p-4">
-                <SanctuaryDashboard />
-              </div>
-            </div>
-          </GlobalResonanceProvider>
-        </section>
-      )}
-
-      <Dialog open={akashicOpen} onOpenChange={setAkashicOpen}>
-        <DialogContent className="max-w-3xl bg-[#0a0a0a] border-[#D4AF37]/30 p-0 overflow-hidden">
-          <AkashicSiddhaReading userHouse={userHouse} isModal />
-        </DialogContent>
-      </Dialog>
-
-      {/* Sacred Reveal — High-Ticket gate when tapping Akashic Decoder */}
-      <SacredRevealGate open={sacredRevealOpen} onOpenChange={setSacredRevealOpen} />
-
-      {/* Explore everything — Connect & Explore as gradient rows (from Downloads) */}
-      <CollapsibleSection
-        title={t("explore.exploreEverything", "Explore everything")}
-        subtitle={t("explore.exploreEverythingSubtitle", "Open when you feel ready.")}
-        defaultOpen={false}
-      >
-        {/* START — 2x2 glowing grid */}
-        <div className="mb-6">
-          <h3 className="text-lg md:text-xl font-bold text-amber-100 mb-3">
-            {t("explore.sectionStart", "Start")}
-          </h3>
-          <div className="grid grid-cols-2 gap-3">
-            {START_CARDS.map((card) => {
-              const Icon = card.icon;
-              const label = startLabels[card.key];
-              return (
-                <button
-                  key={card.key}
-                  onClick={() => navigate(card.href)}
-                  className={`relative overflow-hidden rounded-2xl border ${card.border} bg-gradient-to-br ${card.gradient} p-4 text-left shadow-lg ${card.glow} hover:scale-[1.02] transition-transform duration-200`}
-                >
-                  <div className={`w-9 h-9 rounded-xl ${card.iconBg} flex items-center justify-center mb-3`}>
-                    <Icon className={`w-5 h-5 ${card.iconColor}`} />
-                  </div>
-                  <div className="text-sm font-semibold text-white">{label.title}</div>
-                  <div className="text-xs text-white/60 mt-0.5">{label.subtitle}</div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* DEEPEN — warm horizontal cards */}
-        <div className="mb-6">
-          <h3 className="text-lg md:text-xl font-bold text-amber-100 mb-3">
-            {t("explore.sectionDeepen", "Deepen")}
-          </h3>
-          <div className="grid grid-cols-1 gap-3">
-            {DEEPEN_CARDS.map((card) => {
-              const Icon = card.icon;
-              const label = deepenLabels[card.key];
-              return (
-                <button
-                  key={card.key}
-                  onClick={() => navigate(card.href)}
-                  className={`relative overflow-hidden rounded-2xl border ${card.border} bg-gradient-to-r ${card.gradient} px-4 py-4 text-left shadow-md hover:scale-[1.01] transition-transform duration-200`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-xl ${card.iconBg} flex items-center justify-center shrink-0`}>
-                      <Icon className={`w-5 h-5 ${card.iconColor}`} />
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-sm font-semibold text-white">{label.title}</div>
-                      <div className="text-xs text-white/60 mt-0.5">{label.subtitle}</div>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-white/30 shrink-0" />
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* CONNECT — gradient rows */}
-        <div className="mb-6">
-          <h3 className="text-xs font-medium text-white/50 uppercase tracking-widest mb-3">
-            {t("explore.sectionConnect", "Connect")}
-          </h3>
-          <div className="grid grid-cols-1 gap-3">
-            {[
-              
-              { key: "stargate", title: t("home.stargateMembership", "Stargate Membership"), subtitle: t("home.stargateDesc", "Weekly live sessions, Telegram community"), href: "/stargate", icon: Crown, gradient: "from-purple-900/60 via-violet-800/40 to-black/60", border: "border-purple-500/30", iconBg: "bg-purple-500/20", iconColor: "text-purple-300", badge: t("explore.badgeSwedish", "Swedish") },
-            ].map((card) => {
-              const Icon = card.icon;
-              return (
-                <button key={card.key} onClick={() => navigate(card.href)}
-                  className={`relative overflow-hidden rounded-2xl border ${card.border} bg-gradient-to-r ${card.gradient} px-4 py-4 text-left shadow-md hover:scale-[1.01] transition-transform duration-200`}>
-                  <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-xl ${card.iconBg} flex items-center justify-center shrink-0`}>
-                      <Icon className={`w-5 h-5 ${card.iconColor}`} />
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-sm font-semibold text-white">{card.title}</div>
-                      <div className="text-xs text-white/60 mt-0.5">{card.subtitle}</div>
-                    </div>
-                    {card.badge && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/30 text-purple-200 border border-purple-400/40 shrink-0">{card.badge}</span>
-                    )}
-                    <ChevronRight className="w-4 h-4 text-white/30 shrink-0" />
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* EXPLORE — matching gradient rows */}
-        <div className="mb-6">
-          <h3 className="text-xs font-medium text-white/50 uppercase tracking-widest mb-3">
-            {t("explore.sectionExplore", "Explore")}
-          </h3>
-          <div className="grid grid-cols-1 gap-3">
-            {[
-              
-              { key: "podcast", title: t("explore.podcast", "Podcast"), subtitle: t("explore.podcastDesc", "Streams on Spotify"), href: "/podcast", icon: Headphones, gradient: "from-green-900/60 via-green-800/40 to-black/60", border: "border-green-500/30", iconBg: "bg-green-500/20", iconColor: "text-green-300", badge: null },
-              { key: "videos", title: t("explore.videos", "Videos"), subtitle: t("explore.videosDesc", "Watch & learn"), href: "/spiritual-education", icon: Youtube, gradient: "from-red-900/60 via-red-800/40 to-black/60", border: "border-red-500/30", iconBg: "bg-red-500/20", iconColor: "text-red-300", badge: null },
-              { key: "creativeSoul", title: t("explore.creativeSoul", "Creative Soul"), subtitle: t("explore.creativeSoulDesc", "Create with AI"), href: "/creative-soul/store", icon: Sparkles, gradient: "from-fuchsia-900/60 via-pink-800/40 to-black/60", border: "border-fuchsia-500/30", iconBg: "bg-fuchsia-500/20", iconColor: "text-fuchsia-300", badge: null },
-              { key: "shop", title: t("explore.shop", "Shop"), subtitle: t("explore.shopDesc", "Laila's Collection"), href: "/shop", icon: ShoppingBag, gradient: "from-rose-900/60 via-rose-800/40 to-black/60", border: "border-rose-500/30", iconBg: "bg-rose-500/20", iconColor: "text-rose-300", badge: null },
-              { key: "leaderboard", title: t("explore.leaderboard", "Leaderboard"), subtitle: t("explore.leaderboardDesc", "Top earners win monthly"), href: "/leaderboard", icon: Trophy, gradient: "from-yellow-900/60 via-amber-800/40 to-black/60", border: "border-yellow-500/30", iconBg: "bg-yellow-500/20", iconColor: "text-yellow-300", badge: "5,000 SHC" },
-              { key: "abundance", title: t("explore.abundance", "Abundance"), subtitle: t("explore.abundanceDescInner", "Inner abundance & life support"), href: "/library/abundance", icon: Zap, gradient: "from-cyan-900/60 via-cyan-800/40 to-black/60", border: "border-cyan-500/30", iconBg: "bg-cyan-500/20", iconColor: "text-cyan-300", badge: null },
-            ].map((card) => {
-              const Icon = card.icon;
-              return (
-                <button key={card.key} onClick={() => navigate(card.href)}
-                  className={`relative overflow-hidden rounded-2xl border ${card.border} bg-gradient-to-r ${card.gradient} px-4 py-4 text-left shadow-md hover:scale-[1.01] transition-transform duration-200`}>
-                  <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-xl ${card.iconBg} flex items-center justify-center shrink-0`}>
-                      <Icon className={`w-5 h-5 ${card.iconColor}`} />
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-sm font-semibold text-white">{card.title}</div>
-                      <div className="text-xs text-white/60 mt-0.5">{card.subtitle}</div>
-                    </div>
-                    {card.badge && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">{card.badge}</span>
-                    )}
-                    <ChevronRight className="w-4 h-4 text-white/30 shrink-0" />
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </CollapsibleSection>
-
-      <div className="mt-8">
-        <ParamahamsaVishwanandaDailyCard />
-      </div>
-
-      {/* Invite Friends - compact at bottom */}
-      <div className="rounded-xl glass-card p-3 mt-4 mb-6">
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <h4 className="text-sm font-heading font-bold text-amber-50">{t("dashboard.inviteFriends")}</h4>
-            <p className="text-xs text-muted-foreground truncate">{t("dashboard.inviteDescription")}</p>
-          </div>
-          <Link to="/invite-friends" className="shrink-0">
-            <Button size="sm" className="gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs">
-              <Users className="w-3.5 h-3.5" />
-              Invite
-            </Button>
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-}
+        <button onClick={() => navigate("/healing")} className="rounded-2xl border border-border/50 bg-card/50 px-4 py-4 text-left hover:bg-muted
