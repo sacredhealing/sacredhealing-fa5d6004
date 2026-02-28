@@ -22,6 +22,7 @@ import { DebugBanner } from "./components/DebugBanner";
 import { ProfileLanguageSync } from "./components/ProfileLanguageSync";
 import "@/lib/performance";
 
+// Lazy-loaded page components
 const About = React.lazy(() => import("./pages/About"));
 const Auth = React.lazy(() => import("./pages/Auth"));
 const ResetPassword = React.lazy(() => import("./pages/ResetPassword"));
