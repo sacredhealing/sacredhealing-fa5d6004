@@ -1,17 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&family=DM+Serif+Display:ital@0;1&family=Cinzel:wght@400;500;600;700&family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400&display=swap');
-
 @import "tailwindcss";
 
 @theme {
   /* Font families */
   --font-family-sans: 'Inter', sans-serif;
   --font-family-heading: 'Poppins', sans-serif;
-  
+
   /* Container */
   --container-center: true;
   --container-padding: 1rem;
   --container-screen-2xl: 1400px;
-  
+
   /* Colors - using CSS variables from :root */
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
@@ -32,600 +31,171 @@
   --color-popover-foreground: hsl(var(--popover-foreground));
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
-  
+
   /* Border radius */
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
---color-sacred-gold: #D4AF37;
---color-space-black: #050505;
---color-kailash-violet: #7B61FF;
---color-ayodhya-saffron: #FF9933;
---color-vrindavan-blue: #1E90FF;
---color-sirius-indigo: #4169E1;
---color-arcturus-violet: #9932CC;
---color-giza-gold: #B8860B;
---color-lemuria-aqua: #40E0D0;
-```"}
+
+  /* Sacred Healing Site Palette */
+  --color-sacred-gold: #D4AF37;
+  --color-space-black: #050505;
+  --color-kailash-violet: #7B61FF;
+  --color-ayodhya-saffron: #FF9933;
+  --color-vrindavan-blue: #1E90FF;
+  --color-sirius-indigo: #4169E1;
+  --color-arcturus-violet: #9932CC;
+  --color-giza-gold: #B8860B;
+  --color-lemuria-aqua: #40E0D0;
+  --color-sedona-red: #FF4500;
+  --color-titicaca-solar: #FFD700;
+  --color-atlantis-navy: #0050FF;
+  --color-lyra-white: #F8F8FF;
+  --color-lourdes-blue: #ADD8E6;
+}
 
 /* Cursor interactions for Creative Soul */
 @layer utilities {
-  .cursor-fancy {
-    @apply cursor-pointer transition-all duration-300;
-  }
-  
-  .cursor-fancy:hover {
-    @apply transform scale-105;
-  }
-  
-  .animate-gradient {
-    background-size: 200% auto;
-    animation: gradient 3s ease infinite;
-  }
-  
-  @keyframes gradient {
-    0%, 100% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-  }
-
-  /* Siddha Rishi: Sovereign Gold pulse */
-  .animate-sovereign-pulse {
-    animation: sovereign-pulse 2.5s ease-in-out infinite;
-  }
+  .cursor-fancy { @apply cursor-pointer transition-all duration-300; }
+  .cursor-fancy:hover { @apply transform scale-105; }
+  .animate-gradient { background-size: 200% auto; animation: gradient 3s ease infinite; }
+  @keyframes gradient { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+  .animate-sovereign-pulse { animation: sovereign-pulse 2.5s ease-in-out infinite; }
   @keyframes sovereign-pulse {
-    0%, 100% { box-shadow: 0 0 12px rgba(212, 175, 55, 0.5), 0 0 24px rgba(212, 175, 55, 0.2); }
-    50% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.7), 0 0 40px rgba(212, 175, 55, 0.3); }
+    0%, 100% { box-shadow: 0 0 12px rgba(212,175,55,0.5), 0 0 24px rgba(212,175,55,0.2); }
+    50% { box-shadow: 0 0 20px rgba(212,175,55,0.7), 0 0 40px rgba(212,175,55,0.3); }
   }
-
-  /* Sangha Resonance HUD - golden pulsating line */
   @keyframes sangha-pulse {
-    0%, 100% { opacity: 0.7; box-shadow: 0 0 8px rgba(212, 175, 55, 0.4); }
-    50% { opacity: 1; box-shadow: 0 0 16px rgba(212, 175, 55, 0.7); }
+    0%, 100% { opacity: 0.7; box-shadow: 0 0 8px rgba(212,175,55,0.4); }
+    50% { opacity: 1; box-shadow: 0 0 16px rgba(212,175,55,0.7); }
   }
-  .animate-sangha-pulse {
-    animation: sangha-pulse 2.5s ease-in-out infinite;
-  }
-
-  /* Heart-beat like button - pulsating pink glow */
-  @keyframes heartbeat-glow {
-    0%, 100% { filter: drop-shadow(0 0 4px rgba(244, 63, 94, 0.4)); }
-    50% { filter: drop-shadow(0 0 12px rgba(244, 63, 94, 0.7)); }
-  }
-
-  /* Sovereign Gold button - white-glow pulse (Healing hero) */
+  .animate-sangha-pulse { animation: sangha-pulse 2.5s ease-in-out infinite; }
   @keyframes sovereign-white-pulse {
-    0%, 100% { box-shadow: 0 0 16px rgba(212, 175, 55, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.3); }
-    50% { box-shadow: 0 0 28px rgba(255, 255, 255, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.5); }
+    0%, 100% { box-shadow: 0 0 16px rgba(212,175,55,0.5), 0 0 0 1px rgba(255,255,255,0.3); }
+    50% { box-shadow: 0 0 28px rgba(255,255,255,0.4), 0 0 0 1px rgba(255,255,255,0.5); }
   }
-  .animate-sovereign-white-pulse {
-    animation: sovereign-white-pulse 2s ease-in-out infinite;
-  }
-
-  /* Kriya Commence button - 0 0 20px #D4AF37 pulse */
+  .animate-sovereign-white-pulse { animation: sovereign-white-pulse 2s ease-in-out infinite; }
   @keyframes kriya-commence-pulse {
-    0%, 100% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.5); }
-    50% { box-shadow: 0 0 32px rgba(212, 175, 55, 0.8); }
+    0%, 100% { box-shadow: 0 0 20px rgba(212,175,55,0.5); }
+    50% { box-shadow: 0 0 32px rgba(212,175,55,0.8); }
   }
-  .animate-kriya-commence-pulse {
-    animation: kriya-commence-pulse 2s ease-in-out infinite;
-  }
-
-  /* Violet Aura for ritual timer active selection */
-  .violet-aura {
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.5), 0 0 40px rgba(139, 92, 246, 0.2);
-  }
-
-  /* Glowing Filament - liquid gold thread (Healing progress) */
+  .animate-kriya-commence-pulse { animation: kriya-commence-pulse 2s ease-in-out infinite; }
+  .violet-aura { box-shadow: 0 0 20px rgba(139,92,246,0.5), 0 0 40px rgba(139,92,246,0.2); }
   @keyframes filament-glow {
-    0%, 100% { box-shadow: 0 0 8px rgba(212, 175, 55, 0.5), 0 0 16px rgba(212, 175, 55, 0.2); }
-    50% { box-shadow: 0 0 14px rgba(212, 175, 55, 0.7), 0 0 28px rgba(212, 175, 55, 0.3); }
+    0%, 100% { box-shadow: 0 0 8px rgba(212,175,55,0.5), 0 0 16px rgba(212,175,55,0.2); }
+    50% { box-shadow: 0 0 14px rgba(212,175,55,0.7), 0 0 28px rgba(212,175,55,0.3); }
   }
-  .glowing-filament {
-    background: linear-gradient(90deg, #D4AF37 0%, #F5D77A 50%, #D4AF37 100%);
-    animation: filament-glow 2.5s ease-in-out infinite;
-  }
-
-  /* Babaji's Cave — firelight flicker on cards */
+  .glowing-filament { background: linear-gradient(90deg,#D4AF37 0%,#F5D77A 50%,#D4AF37 100%); animation: filament-glow 2.5s ease-in-out infinite; }
   @keyframes cave-flicker {
-    0%, 100% { box-shadow: 0 0 12px rgba(212, 175, 55, 0.08), 0 0 24px rgba(139, 92, 246, 0.06); }
-    25% { box-shadow: 0 0 16px rgba(212, 175, 55, 0.12), 0 0 28px rgba(139, 92, 246, 0.08); }
-    50% { box-shadow: 0 0 10px rgba(212, 175, 55, 0.06), 0 0 20px rgba(139, 92, 246, 0.05); }
-    75% { box-shadow: 0 0 18px rgba(212, 175, 55, 0.1), 0 0 30px rgba(139, 92, 246, 0.07); }
+    0%,100%{box-shadow:0 0 12px rgba(212,175,55,.08),0 0 24px rgba(139,92,246,.06)}
+    25%{box-shadow:0 0 16px rgba(212,175,55,.12),0 0 28px rgba(139,92,246,.08)}
+    50%{box-shadow:0 0 10px rgba(212,175,55,.06),0 0 20px rgba(139,92,246,.05)}
+    75%{box-shadow:0 0 18px rgba(212,175,55,.1),0 0 30px rgba(139,92,246,.07)}
   }
-  .cave-flicker {
-    animation: cave-flicker 4s ease-in-out infinite;
-  }
-
-  /* Cave page — deep stone background */
-  .cave-bg {
-    background-color: #0a0a0a;
-    background-image: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(88, 28, 135, 0.12) 0%, transparent 50%),
-      radial-gradient(ellipse 60% 40% at 80% 60%, rgba(139, 92, 246, 0.06) 0%, transparent 45%);
-  }
-
-  /* Nebula background for hero banners */
-  .nebula-bg {
-    background: radial-gradient(ellipse 120% 80% at 20% 20%, rgba(88, 28, 135, 0.5) 0%, transparent 50%),
-      radial-gradient(ellipse 100% 100% at 80% 60%, rgba(30, 27, 75, 0.6) 0%, transparent 50%),
-      radial-gradient(ellipse 80% 60% at 50% 80%, rgba(212, 175, 55, 0.15) 0%, transparent 45%);
-    background-size: 200% 200%;
-    animation: nebula-drift 18s ease-in-out infinite;
-  }
-  @keyframes nebula-drift {
-    0%, 100% { background-position: 0% 0%; }
-    33% { background-position: 100% 50%; }
-    66% { background-position: 50% 100%; }
-  }
+  .cave-flicker { animation: cave-flicker 4s ease-in-out infinite; }
+  .cave-bg { background-color:#0a0a0a; background-image:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(88,28,135,.12) 0%,transparent 50%),radial-gradient(ellipse 60% 40% at 80% 60%,rgba(139,92,246,.06) 0%,transparent 45%); }
+  .nebula-bg { background:radial-gradient(ellipse 120% 80% at 20% 20%,rgba(88,28,135,.5) 0%,transparent 50%),radial-gradient(ellipse 100% 100% at 80% 60%,rgba(30,27,75,.6) 0%,transparent 50%),radial-gradient(ellipse 80% 60% at 50% 80%,rgba(212,175,55,.15) 0%,transparent 45%); background-size:200% 200%; animation:nebula-drift 18s ease-in-out infinite; }
+  @keyframes nebula-drift { 0%,100%{background-position:0% 0%} 33%{background-position:100% 50%} 66%{background-position:50% 100%} }
 }
 
 @layer base {
-  /* High contrast for better accessibility */
   :root {
-    /* Pure Midnight - #030303 */
-    --background: 0 0% 1%;
-    --foreground: 0 0% 100%;
-
-    --card: 270 30% 6%;
-    --card-foreground: 0 0% 100%;
-
-    --popover: 270 30% 5%;
-    --popover-foreground: 0 0% 100%;
-
-    /* Sacred Gold - unified dashboard palette */
-    --primary: 43 74% 49%;
-    --primary-foreground: 0 0% 0%;
-
-    /* Spiritual Purple (supporting accent) */
-    --secondary: 271 76% 53%;
-    --secondary-foreground: 0 0% 100%;
-
-    --muted: 270 20% 10%;
-    /* Higher contrast for muted text - improved from 65% to 80% */
-    --muted-foreground: 215 16% 80%;
-
-    --accent: 51 100% 50%;
-    --accent-foreground: 0 0% 2%;
-
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 270 20% 15%;
-    --input: 270 20% 10%;
-    --ring: 43 74% 49%;
-
-    --radius: 1.5rem;
-
-    /* Custom tokens */
-    --purple: 271 76% 53%;
-    --purple-glow: 271 76% 70%;
-    --gold: 51 100% 50%;
-    --gold-glow: 51 100% 70%;
-    /* Glowing Turquoise #00F2FE */
-    --turquoise: 186 100% 50%;
-    --turquoise-glow: 186 100% 70%;
-    --indigo: 245 60% 35%;
-    --violet: 280 70% 40%;
-    
-    /* Pure Midnight #030303 with Deep Indigo #1e1b4b radial in top-left */
-    --gradient-sanctuary: radial-gradient(ellipse at 15% 20%, rgba(30, 27, 75, 0.7) 0%, transparent 50%), #030303;
-    --gradient-spiritual: linear-gradient(135deg, hsl(271 76% 53%) 0%, hsl(271 76% 30%) 50%, #030303 100%);
-    --gradient-gold: linear-gradient(135deg, hsl(51 100% 50%) 0%, hsl(51 100% 40%) 100%);
-    --gradient-healing: linear-gradient(135deg, hsl(186 100% 50%) 0%, hsl(271 76% 53%) 100%);
-    --gradient-card: linear-gradient(145deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
-    --gradient-glow: radial-gradient(circle at center, hsl(186 100% 50% / 0.3) 0%, transparent 70%);
-
-    /* Glassmorphism - premium depth */
-    --glass-bg: rgba(255, 255, 255, 0.02);
-    --glass-border: rgba(212, 175, 55, 0.15);
-    --glass-blur: 25px;
-
-    /* Shadows with Turquoise glow */
-    --shadow-purple: 0 0 30px hsl(271 76% 53% / 0.4);
-    --shadow-gold: 0 0 30px hsl(51 100% 50% / 0.4);
-    --shadow-turquoise: 0 0 25px hsl(186 100% 50% / 0.5);
-    --shadow-glow-soft: 0 0 20px hsl(186 100% 50% / 0.25);
-
-    --sidebar-background: 255 50% 6%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 43 74% 49%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 260 35% 12%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 260 30% 18%;
-    --sidebar-ring: 43 74% 49%;
+    --background:0 0% 1%;--foreground:0 0% 100%;--card:270 30% 6%;--card-foreground:0 0% 100%;
+    --popover:270 30% 5%;--popover-foreground:0 0% 100%;--primary:43 74% 49%;--primary-foreground:0 0% 0%;
+    --secondary:271 76% 53%;--secondary-foreground:0 0% 100%;--muted:270 20% 10%;--muted-foreground:215 16% 80%;
+    --accent:51 100% 50%;--accent-foreground:0 0% 2%;--destructive:0 84% 60%;--destructive-foreground:0 0% 98%;
+    --border:270 20% 15%;--input:270 20% 10%;--ring:43 74% 49%;--radius:1.5rem;
+    --purple:271 76% 53%;--purple-glow:271 76% 70%;--gold:51 100% 50%;--gold-glow:51 100% 70%;
+    --turquoise:186 100% 50%;--turquoise-glow:186 100% 70%;--indigo:245 60% 35%;--violet:280 70% 40%;
+    --gradient-sanctuary:radial-gradient(ellipse at 15% 20%,rgba(30,27,75,.7) 0%,transparent 50%),#030303;
+    --gradient-spiritual:linear-gradient(135deg,hsl(271 76% 53%) 0%,hsl(271 76% 30%) 50%,#030303 100%);
+    --gradient-gold:linear-gradient(135deg,hsl(51 100% 50%) 0%,hsl(51 100% 40%) 100%);
+    --gradient-healing:linear-gradient(135deg,hsl(186 100% 50%) 0%,hsl(271 76% 53%) 100%);
+    --gradient-card:linear-gradient(145deg,rgba(255,255,255,.03) 0%,rgba(255,255,255,.01) 100%);
+    --gradient-glow:radial-gradient(circle at center,hsl(186 100% 50% / .3) 0%,transparent 70%);
+    --glass-bg:rgba(255,255,255,.02);--glass-border:rgba(212,175,55,.15);--glass-blur:25px;
+    --shadow-purple:0 0 30px hsl(271 76% 53% / .4);--shadow-gold:0 0 30px hsl(51 100% 50% / .4);
+    --shadow-turquoise:0 0 25px hsl(186 100% 50% / .5);--shadow-glow-soft:0 0 20px hsl(186 100% 50% / .25);
+    --sidebar-background:255 50% 6%;--sidebar-foreground:0 0% 98%;--sidebar-primary:43 74% 49%;
+    --sidebar-primary-foreground:0 0% 100%;--sidebar-accent:260 35% 12%;--sidebar-accent-foreground:0 0% 98%;
+    --sidebar-border:260 30% 18%;--sidebar-ring:43 74% 49%;
   }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-
-  html {
-    min-height: 100vh;
-    /* Prevent white flash: dark background at document root */
-    background: #030303;
-  }
-
-  body, #root {
-    min-height: 100vh;
-  }
-
-  body {
-    @apply text-foreground font-sans antialiased;
-    font-family: 'Inter', sans-serif;
-    /* Pure Midnight #030303 with Deep Indigo #1e1b4b radial in top-left */
-    background: 
-      radial-gradient(ellipse at 15% 20%, rgba(30, 27, 75, 0.7) 0%, transparent 50%),
-      #030303;
-    background-attachment: fixed;
-  }
-
-  /* Ensure React root never shows white (e.g. before mount or on error) */
-  #root {
-    background: inherit;
-  }
-
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Poppins', sans-serif;
-    @apply text-white;
-  }
+  * { @apply border-border; }
+  html { min-height:100vh; background:#030303; }
+  body,#root { min-height:100vh; }
+  body { @apply text-foreground font-sans antialiased; font-family:'Inter',sans-serif; background:radial-gradient(ellipse at 15% 20%,rgba(30,27,75,.7) 0%,transparent 50%),#030303; background-attachment:fixed; }
+  #root { background:inherit; }
+  h1,h2,h3,h4,h5,h6 { font-family:'Poppins',sans-serif; @apply text-white; }
 }
 
 @layer utilities {
-  .font-heading {
-    font-family: 'Poppins', sans-serif;
-  }
-
-  .text-gradient-spiritual {
-    background: linear-gradient(135deg, hsl(var(--purple)) 0%, hsl(var(--turquoise)) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .text-gradient-gold {
-    background: linear-gradient(135deg, hsl(var(--gold)) 0%, hsl(var(--gold-glow)) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .bg-gradient-spiritual {
-    background: var(--gradient-spiritual);
-  }
-
-  .bg-gradient-sanctuary {
-    background: var(--gradient-sanctuary);
-    background-attachment: fixed;
-  }
-
-  .bg-gradient-card {
-    background: var(--gradient-card);
-  }
-
-  .bg-gradient-healing {
-    background: var(--gradient-healing);
-  }
-
-  /* Glassmorphism utilities - premium depth with gradient stroke */
-  .glass {
-    background: rgba(255, 255, 255, 0.02);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
-    border: 0.5px solid rgba(255, 255, 255, 0.1);
-    border-radius: 24px;
-    position: relative;
-  }
-
-  .glass-card {
-    background: rgba(255, 255, 255, 0.02);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
-    border: 1px solid rgba(212, 175, 55, 0.1);
-    border-radius: 24px;
-    padding: 32px;
-    position: relative;
-  }
-
-  .glass-card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 24px;
-    padding: 0.5px;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(212, 175, 55, 0.1) 50%, transparent 100%);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
-  }
-
-  .glass-subtle {
-    background: rgba(255, 255, 255, 0.02);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(0, 242, 254, 0.1);
-    border-radius: 24px;
-  }
-
-  .glow-purple {
-    box-shadow: var(--shadow-purple);
-  }
-
-  .glow-gold {
-    box-shadow: var(--shadow-gold);
-  }
-
-  .glow-turquoise {
-    box-shadow: 0 0 20px hsl(var(--primary) / 0.4);
-  }
-
-  .glow-soft {
-    box-shadow: 0 0 20px hsl(var(--primary) / 0.25);
-  }
-
-  /* Button glow effect - primary */
-  .btn-glow {
-    box-shadow: 
-      0 0 20px hsl(var(--primary) / 0.4),
-      0 0 40px hsl(var(--primary) / 0.2);
-    border: none;
-    transition: box-shadow 0.3s ease;
-  }
-
-  .btn-glow:hover {
-    box-shadow: 
-      0 0 30px hsl(var(--primary) / 0.6),
-      0 0 60px hsl(var(--primary) / 0.3);
-  }
-
-  /* Vedic temple — incense smoke ambient animation */
-  .incense-smoke {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 0;
-    overflow: hidden;
-  }
-
-  .smoke-wisp {
-    position: absolute;
-    bottom: -20%;
-    width: 2px;
-    height: 100px;
-    background: linear-gradient(
-      to top,
-      transparent,
-      rgba(212, 168, 83, 0.03),
-      rgba(212, 168, 83, 0.06),
-      rgba(212, 168, 83, 0.03),
-      transparent
-    );
-    filter: blur(20px);
-    animation: rise 12s ease-in infinite;
-  }
-
-  .smoke-wisp:nth-child(1) { left: 20%; animation-delay: 0s; animation-duration: 14s; }
-  .smoke-wisp:nth-child(2) { left: 50%; animation-delay: 3s; animation-duration: 11s; }
-  .smoke-wisp:nth-child(3) { left: 80%; animation-delay: 6s; animation-duration: 16s; }
-  .smoke-wisp:nth-child(4) { left: 35%; animation-delay: 9s; animation-duration: 13s; }
-
-  @keyframes rise {
-    0% {
-      transform: translateY(0) scaleX(1);
-      opacity: 0;
-    }
-    10% {
-      opacity: 1;
-    }
-    50% {
-      transform: translateY(-50vh) scaleX(3);
-      opacity: 0.6;
-    }
-    100% {
-      transform: translateY(-110vh) scaleX(5);
-      opacity: 0;
-    }
-  }
-
-  .btn-glow-turquoise {
-    box-shadow: 
-      0 0 20px hsl(var(--primary) / 0.4),
-      0 0 40px hsl(var(--primary) / 0.2);
-    border: none;
-    transition: box-shadow 0.3s ease;
-  }
-
-  .btn-glow-turquoise:hover {
-    box-shadow: 
-      0 0 30px hsl(var(--primary) / 0.6),
-      0 0 60px hsl(var(--primary) / 0.3);
-  }
-
-  .btn-glow-gold {
-    box-shadow: 
-      0 0 20px hsl(var(--gold) / 0.35),
-      0 0 40px hsl(var(--gold) / 0.2);
-    border: none;
-    transition: box-shadow 0.3s ease;
-  }
-
-  .btn-glow-gold:hover {
-    box-shadow: 
-      0 0 30px hsl(var(--gold) / 0.5),
-      0 0 60px hsl(var(--gold) / 0.3);
-  }
-
-  .animate-float {
-    animation: float 6s ease-in-out infinite;
-  }
-
-  .animate-pulse-slow {
-    animation: pulse-slow 4s ease-in-out infinite;
-  }
-
-  .animate-glow {
-    animation: glow 3s ease-in-out infinite;
-  }
-
-  .animate-spin-slow {
-    animation: spin 20s linear infinite;
-  }
-
-  .animate-fade-in {
-    animation: fade-in 0.5s ease-out forwards;
-  }
-
-  .animate-slide-up {
-    animation: slide-up 0.6s ease-out forwards;
-  }
-
-  /* Sacred Healing Academy Certification */
-  .bg-turquoise-gradient {
-    background: linear-gradient(135deg, #0d9488, #2dd4bf);
-  }
-  .bg-gold-gradient {
-    background: linear-gradient(135deg, #fbbf24, #fde68a);
-  }
-  .text-gold-gradient {
-    background: linear-gradient(135deg, #fbbf24, #fde68a);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  .serif {
-    font-family: 'DM Serif Display', serif;
-  }
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 8px;
-  }
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.02);
-  }
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
-    border: 2px solid transparent;
-    background-clip: content-box;
-  }
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(45, 212, 191, 0.3);
-    border: 2px solid transparent;
-    background-clip: content-box;
-  }
-  .animate-in {
-    animation-duration: 1s;
-    animation-fill-mode: both;
-  }
-  .fade-in {
-    animation-name: fade-in;
-  }
-  .zoom-in {
-    animation-name: zoom-in;
-  }
-  .slide-in-from-bottom-12 {
-    animation-name: slide-in-from-bottom-12;
-  }
-  .duration-1000 {
-    animation-duration: 1s;
-  }
-  .ease-out {
-    animation-timing-function: ease-out;
-  }
-  .border-3 {
-    border-width: 3px;
-  }
-
-  /* Vedic Translation Tool */
-  .cinzel {
-    font-family: 'Cinzel', serif;
-  }
-  .sacred-gold {
-    color: var(--theme-accent, #b48c35);
-  }
-  .sacred-gold-glow {
-    text-shadow: 0 0 12px var(--theme-glow, rgba(180, 140, 53, 0.25));
-  }
-  .royal-card {
-    background: rgba(15, 23, 42, 0.8);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(180, 140, 53, 0.1);
-    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
-  }
-  .slide-in-from-left-4 {
-    animation-name: slide-in-from-left-4;
-  }
+  .font-heading { font-family:'Poppins',sans-serif; }
+  .text-gradient-spiritual { background:linear-gradient(135deg,hsl(var(--purple)) 0%,hsl(var(--turquoise)) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .text-gradient-gold { background:linear-gradient(135deg,hsl(var(--gold)) 0%,hsl(var(--gold-glow)) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .bg-gradient-spiritual{background:var(--gradient-spiritual);}
+  .bg-gradient-sanctuary{background:var(--gradient-sanctuary);background-attachment:fixed;}
+  .bg-gradient-card{background:var(--gradient-card);}
+  .bg-gradient-healing{background:var(--gradient-healing);}
+  .glass{background:rgba(255,255,255,.02);backdrop-filter:blur(25px);-webkit-backdrop-filter:blur(25px);border:.5px solid rgba(255,255,255,.1);border-radius:24px;position:relative;}
+  .glass-card{background:rgba(255,255,255,.02);backdrop-filter:blur(25px);-webkit-backdrop-filter:blur(25px);border:1px solid rgba(212,175,55,.1);border-radius:24px;padding:32px;position:relative;}
+  .glass-card::before{content:'';position:absolute;inset:0;border-radius:24px;padding:.5px;background:linear-gradient(135deg,rgba(255,255,255,.1) 0%,rgba(212,175,55,.1) 50%,transparent 100%);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}
+  .glass-subtle{background:rgba(255,255,255,.02);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(0,242,254,.1);border-radius:24px;}
+  .glow-purple{box-shadow:var(--shadow-purple);}
+  .glow-gold{box-shadow:var(--shadow-gold);}
+  .glow-turquoise{box-shadow:0 0 20px hsl(var(--primary)/.4);}
+  .glow-soft{box-shadow:0 0 20px hsl(var(--primary)/.25);}
+  .btn-glow{box-shadow:0 0 20px hsl(var(--primary)/.4),0 0 40px hsl(var(--primary)/.2);border:none;transition:box-shadow .3s ease;}
+  .btn-glow:hover{box-shadow:0 0 30px hsl(var(--primary)/.6),0 0 60px hsl(var(--primary)/.3);}
+  .btn-glow-turquoise{box-shadow:0 0 20px hsl(var(--primary)/.4),0 0 40px hsl(var(--primary)/.2);border:none;transition:box-shadow .3s ease;}
+  .btn-glow-turquoise:hover{box-shadow:0 0 30px hsl(var(--primary)/.6),0 0 60px hsl(var(--primary)/.3);}
+  .btn-glow-gold{box-shadow:0 0 20px hsl(var(--gold)/.35),0 0 40px hsl(var(--gold)/.2);border:none;transition:box-shadow .3s ease;}
+  .btn-glow-gold:hover{box-shadow:0 0 30px hsl(var(--gold)/.5),0 0 60px hsl(var(--gold)/.3);}
+  .incense-smoke{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden;}
+  .smoke-wisp{position:absolute;bottom:-20%;width:2px;height:100px;background:linear-gradient(to top,transparent,rgba(212,168,83,.03),rgba(212,168,83,.06),rgba(212,168,83,.03),transparent);filter:blur(20px);animation:rise 12s ease-in infinite;}
+  .smoke-wisp:nth-child(1){left:20%;animation-delay:0s;animation-duration:14s;}
+  .smoke-wisp:nth-child(2){left:50%;animation-delay:3s;animation-duration:11s;}
+  .smoke-wisp:nth-child(3){left:80%;animation-delay:6s;animation-duration:16s;}
+  .smoke-wisp:nth-child(4){left:35%;animation-delay:9s;animation-duration:13s;}
+  @keyframes rise{0%{transform:translateY(0) scaleX(1);opacity:0}10%{opacity:1}50%{transform:translateY(-50vh) scaleX(3);opacity:.6}100%{transform:translateY(-110vh) scaleX(5);opacity:0}}
+  .animate-float{animation:float 6s ease-in-out infinite;}
+  .animate-pulse-slow{animation:pulse-slow 4s ease-in-out infinite;}
+  .animate-glow{animation:glow 3s ease-in-out infinite;}
+  .animate-spin-slow{animation:spin 20s linear infinite;}
+  .animate-fade-in{animation:fade-in .5s ease-out forwards;}
+  .animate-slide-up{animation:slide-up .6s ease-out forwards;}
+  .bg-turquoise-gradient{background:linear-gradient(135deg,#0d9488,#2dd4bf);}
+  .bg-gold-gradient{background:linear-gradient(135deg,#fbbf24,#fde68a);}
+  .text-gold-gradient{background:linear-gradient(135deg,#fbbf24,#fde68a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+  .serif{font-family:'DM Serif Display',serif;}
+  .custom-scrollbar::-webkit-scrollbar{width:8px;}
+  .custom-scrollbar::-webkit-scrollbar-track{background:rgba(255,255,255,.02);}
+  .custom-scrollbar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:20px;border:2px solid transparent;background-clip:content-box;}
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover{background:rgba(45,212,191,.3);border:2px solid transparent;background-clip:content-box;}
+  .animate-in{animation-duration:1s;animation-fill-mode:both;}
+  .fade-in{animation-name:fade-in;}
+  .zoom-in{animation-name:zoom-in;}
+  .slide-in-from-bottom-12{animation-name:slide-in-from-bottom-12;}
+  .duration-1000{animation-duration:1s;}
+  .ease-out{animation-timing-function:ease-out;}
+  .border-3{border-width:3px;}
+  .cinzel{font-family:'Cinzel',serif;}
+  .sacred-gold{color:var(--theme-accent,#b48c35);}
+  .sacred-gold-glow{text-shadow:0 0 12px var(--theme-glow,rgba(180,140,53,.25));}
+  .royal-card{background:rgba(15,23,42,.8);backdrop-filter:blur(12px);border:1px solid rgba(180,140,53,.1);box-shadow:0 10px 40px -10px rgba(0,0,0,.5);}
+  .slide-in-from-left-4{animation-name:slide-in-from-left-4;}
 }
 
-@keyframes slide-in-from-left-4 {
-  from {
-    opacity: 0;
-    transform: translateX(-1rem);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes zoom-in {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes slide-in-from-bottom-12 {
-  from {
-    opacity: 0;
-    transform: translateY(3rem);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-
-@keyframes pulse-slow {
-  0%, 100% { opacity: 0.6; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.05); }
-}
-
-@keyframes glow {
-  0%, 100% { box-shadow: 0 0 20px hsl(271 76% 53% / 0.4); }
-  50% { box-shadow: 0 0 40px hsl(271 76% 53% / 0.6); }
-}
-
-@keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes slide-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes shimmer {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(100%); }
-}
+@keyframes slide-in-from-left-4{from{opacity:0;transform:translateX(-1rem)}to{opacity:1;transform:translateX(0)}}
+@keyframes zoom-in{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+@keyframes slide-in-from-bottom-12{from{opacity:0;transform:translateY(3rem)}to{opacity:1;transform:translateY(0)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes pulse-slow{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}
+@keyframes glow{0%,100%{box-shadow:0 0 20px hsl(271 76% 53% / .4)}50%{box-shadow:0 0 40px hsl(271 76% 53% / .6)}}
+@keyframes fade-in{from{opacity:0}to{opacity:1}}
+@keyframes slide-up{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shimmer{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
