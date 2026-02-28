@@ -31,6 +31,7 @@ export interface SacredSite {
   instruction: string;
   experience: string;
   visualEffect: VisualEffect;
+  signature?: string;
   // Globe position (percentage of globe canvas, 0-100)
   globeX: number;
   globeY: number;

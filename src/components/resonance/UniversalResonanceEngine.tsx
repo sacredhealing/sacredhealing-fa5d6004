@@ -575,3 +575,35 @@ const cBody: React.CSSProperties = {
 const cHint: React.CSSProperties = {
   fontSize:10, fontStyle:'italic', color:'rgba(212,175,55,0.58)', margin:0,
 };
+
+// ─── Gated wrapper: only renders for admin or premium members ───
+import { useAdminRole } from '@/hooks/useAdminRole';
+
+export const GatedResonancePanel: React.FC<{ page: PageName }> = ({ page }) => {
+  const { isAdmin, isLoading: adminLoading } = useAdminRole();
+  const [hasPremium, setHasPremium] = useState(false);
+  const [memberLoading, setMemberLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { supabase } = await import('@/integrations/supabase/client');
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) { setMemberLoading(false); return; }
+        const { data } = await supabase.functions.invoke('check-membership-subscription');
+        if (!cancelled && data) {
+          const tier = data.tier || data.membership_tier || 'free';
+          setHasPremium(tier !== 'free');
+        }
+      } catch { /* ignore */ }
+      if (!cancelled) setMemberLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  if (adminLoading || memberLoading) return null;
+  if (!isAdmin && !hasPremium) return null;
+
+  return <ResonancePanel page={page} />;
+};
