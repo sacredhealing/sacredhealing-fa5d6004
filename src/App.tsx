@@ -10,7 +10,7 @@ import { SHCProvider } from "@/contexts/SHCContext";
 import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
 import { GitaTransitionOverlay } from "@/components/dashboard/GitaTransitionOverlay";
 import { AmbientAudioProvider } from "@/contexts/AmbientAudioContext";
-import { ResonanceProvider } from '@/components/resonance/UniversalResonanceEngine';
+import { GlobalResonanceProvider } from '@/components/resonance/GlobalResonanceHub';
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { Loader2 } from "lucide-react";
@@ -22,7 +22,6 @@ import { DebugBanner } from "./components/DebugBanner";
 import { ProfileLanguageSync } from "./components/ProfileLanguageSync";
 import "@/lib/performance";
 
-// Lazy-loaded page components
 const About = React.lazy(() => import("./pages/About"));
 const Auth = React.lazy(() => import("./pages/Auth"));
 const ResetPassword = React.lazy(() => import("./pages/ResetPassword"));
@@ -137,9 +136,7 @@ const PageLoader = () => (
 
 function AppRoutes() {
   const navigate = useNavigate();
-  useEffect(() => {
-    setNavigator(navigate);
-  }, [navigate]);
+  useEffect(() => { setNavigator(navigate); }, [navigate]);
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
@@ -274,12 +271,12 @@ const App = () => (
               <Sonner />
               <DebugBanner />
               <ProfileLanguageSync />
-              <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#030303]" style={{ background: "radial-gradient(ellipse at 15% 20%, rgba(30, 27, 75, 0.7) 0%, transparent 50%), #030303" }}><Loader2 className="w-10 h-10 animate-spin text-[#00F2FE]" /></div>}>
-                <ResonanceProvider userEmail="sacredhealingvibe@gmail.com">
+              <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#030303]"><Loader2 className="w-10 h-10 animate-spin text-[#00F2FE]" /></div>}>
+                <GlobalResonanceProvider userEmail="sacredhealingvibe@gmail.com">
                   <BrowserRouter>
                     <AppRoutes />
                   </BrowserRouter>
-                </ResonanceProvider>
+                </GlobalResonanceProvider>
               </Suspense>
             </AmbientAudioProvider>
           </MusicPlayerProvider>
