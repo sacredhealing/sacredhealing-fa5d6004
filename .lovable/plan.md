@@ -1,20 +1,24 @@
 
 
-## Build Error Fixes
+## Problem
 
-There are 5 build errors to fix across 2 root causes:
+The user is on `/explore` (renders `Explore.tsx`) and cannot see the GlobalResonanceHub / SanctuaryDashboard. It currently only exists on `/library` (renders `Library.tsx`). The user wants it visible on the Explore page, gated to admin and premium members only.
 
-### Error 1: `GatedResonancePanel` does not exist
-The previous edit was supposed to add a `GatedResonancePanel` export to `UniversalResonanceEngine.tsx` but it was never actually created. Four pages import it: `Healing.tsx`, `Mantras.tsx`, `Meditations.tsx`, `Music.tsx`.
+## Plan
 
-**Fix:** Add `GatedResonancePanel` as an exported wrapper component in `UniversalResonanceEngine.tsx`. It will check admin role (via `useAdminRole`) and membership status (via `useMembership`) before rendering `ResonancePanel`. If not authorized, render nothing.
+### Step 1: Add SanctuaryDashboard to `src/pages/Explore.tsx`
 
-### Error 2: `signature` property missing on `SacredSite` in `GlobalResonanceHub.tsx`
-Line 766 references `activeSite.signature` but the `SacredSite` interface in that file does not include a `signature` field.
+- Import `GlobalResonanceProvider`, `SiteEffectOverlay`, and `SanctuaryDashboard` from `@/components/resonance/GlobalResonanceHub`
+- Import `useAdminRole` (already imported) and `useMembership` (already imported)
+- After the existing "Your Space" section (~line 396), add a new section that renders `SanctuaryDashboard` wrapped in `GlobalResonanceProvider` — only visible when `isAdmin || isPremium`
+- Gate with: `const { isPremium } = useMembership();` (already called) and `isAdmin` (already available)
+- The section will show `SiteEffectOverlay` + `SanctuaryDashboard` in a styled container, matching the page's dark gradient theme
 
-**Fix:** Add `signature?: string` to the `SacredSite` interface in `GlobalResonanceHub.tsx`, and add `signature` values to each site in `ALL_SITES` that should have one (or use a fallback like `'AXIS MUNDI'` which the code already does with `|| 'AXIS MUNDI'`). The simplest fix is just adding the optional property to the interface since the code already handles the missing case with `|| 'AXIS MUNDI'`.
+### Step 2: Extract `isPremium` from existing `useMembership()` call
 
-### Steps
-1. Add `signature?: string` to the `SacredSite` interface in `GlobalResonanceHub.tsx`
-2. Add exported `GatedResonancePanel` component to `UniversalResonanceEngine.tsx` that gates on admin/premium access
+- Line 167 currently calls `useMembership()` without destructuring. Change to `const { isPremium } = useMembership();`
+
+### No other files changed
+
+Only `Explore.tsx` is modified. No existing code is removed — only additions.
 
