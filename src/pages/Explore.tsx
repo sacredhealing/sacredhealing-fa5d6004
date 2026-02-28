@@ -44,6 +44,11 @@ import {
   Eye,
 } from "lucide-react";
 import SacredRevealGate from "@/components/SacredRevealGate";
+import {
+  GlobalResonanceProvider,
+  SanctuaryDashboard,
+  SiteEffectOverlay,
+} from '@/components/resonance/GlobalResonanceHub';
 
 function getSubtitleKey(phase: "morning" | "midday" | "evening"): string {
   switch (phase) {
@@ -164,7 +169,7 @@ export default function Explore() {
   const { playUniversalAudio } = useMusicPlayer();
   const { allAudioItems } = useQuickActionItems();
   const { language: meditationLanguage } = useMeditationContentLanguage();
-  useMembership(); // presence / membership state if needed later
+  const { isPremium } = useMembership();
   const { user } = useAuth();
   const { hasAccess: hasAkashicAccess } = useAkashicAccess(user?.id);
   const { isAdmin } = useAdminRole();
@@ -395,7 +400,20 @@ export default function Explore() {
         </div>
       </section>
 
-      {/* Akashic Siddha Reading — opened from Vedic Astrology tile */}
+      {/* Sanctuary Dashboard — admin & premium only */}
+      {(isAdmin || isPremium) && (
+        <section className="mt-8">
+          <GlobalResonanceProvider userEmail="sacredhealingvibe@gmail.com">
+            <SiteEffectOverlay />
+            <div className="rounded-3xl border border-purple-500/20 bg-gradient-to-b from-[#060010] to-black overflow-hidden">
+              <div className="max-w-[480px] mx-auto p-4">
+                <SanctuaryDashboard />
+              </div>
+            </div>
+          </GlobalResonanceProvider>
+        </section>
+      )}
+
       <Dialog open={akashicOpen} onOpenChange={setAkashicOpen}>
         <DialogContent className="max-w-3xl bg-[#0a0a0a] border-[#D4AF37]/30 p-0 overflow-hidden">
           <AkashicSiddhaReading userHouse={userHouse} isModal />
