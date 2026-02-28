@@ -1,24 +1,28 @@
 
 
-## Problem
+## Understanding
 
-The user is on `/explore` (renders `Explore.tsx`) and cannot see the GlobalResonanceHub / SanctuaryDashboard. It currently only exists on `/library` (renders `Library.tsx`). The user wants it visible on the Explore page, gated to admin and premium members only.
+- **Sanctuary Dashboard** (on Explore/Library pages) = requires €499 Temple Home License OR admin
+- **ResonancePanel** (on Music, Mantra, Healing, Meditation pages) = available to premium members and admin
+- Currently the Explore page shows SanctuaryDashboard to `isAdmin || isPremium` which is too broad — it should require the Temple Home License (€499), not just premium
 
-## Plan
+## Changes
 
-### Step 1: Add SanctuaryDashboard to `src/pages/Explore.tsx`
+### 1. Fix Explore.tsx gating for SanctuaryDashboard
 
-- Import `GlobalResonanceProvider`, `SiteEffectOverlay`, and `SanctuaryDashboard` from `@/components/resonance/GlobalResonanceHub`
-- Import `useAdminRole` (already imported) and `useMembership` (already imported)
-- After the existing "Your Space" section (~line 396), add a new section that renders `SanctuaryDashboard` wrapped in `GlobalResonanceProvider` — only visible when `isAdmin || isPremium`
-- Gate with: `const { isPremium } = useMembership();` (already called) and `isAdmin` (already available)
-- The section will show `SiteEffectOverlay` + `SanctuaryDashboard` in a styled container, matching the page's dark gradient theme
+Change the condition from `(isAdmin || isPremium)` to only show for admin (since there's no Temple License purchase tracking yet) or add a `hasTempleLicense` check. Since the Temple Home License is a one-time €499 purchase and the existing `UniversalResonanceEngine.tsx` already has `hasTempleLicense` in its access model, the Sanctuary on Explore should be gated to **admin only** (or users who purchased the license).
 
-### Step 2: Extract `isPremium` from existing `useMembership()` call
+For now, gate to **admin only** on Explore, since there's no Stripe product/purchase tracking for the €499 license yet. Add a visible upsell card for premium users showing the €499 Sanctuary upgrade option.
 
-- Line 167 currently calls `useMembership()` without destructuring. Change to `const { isPremium } = useMembership();`
+### 2. Ensure ResonancePanel works for premium on 4 content pages
 
-### No other files changed
+The `GatedResonancePanel` in `UniversalResonanceEngine.tsx` already gates on admin or non-free membership. Verify this is working correctly — no code changes needed here.
 
-Only `Explore.tsx` is modified. No existing code is removed — only additions.
+### 3. Add Sanctuary upsell card on Explore for premium (non-admin) users
+
+Show a promotional card when `isPremium && !isAdmin` explaining the €499 Temple Home License, linking to a purchase flow or contact page.
+
+### Steps
+1. Update Explore.tsx: change `(isAdmin || isPremium)` to `isAdmin` for SanctuaryDashboard rendering
+2. Add a €499 Sanctuary upsell card for premium users who don't have admin access, shown in the same spot
 
