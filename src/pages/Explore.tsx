@@ -254,7 +254,24 @@ export default function Explore() {
             </div>
             <ChevronRight className="ml-auto h-6 w-6 text-amber-300/80" />
           </div>
-        </button>
+        </button> {/* --- SIDDHA-SOMA QUANTUM APOTHECARY --- */}
+{isAdmin && (
+  <button
+    onClick={() => window.open('https://your-github-username.github.io/siddha-soma-apothecary/', '_blank')}
+    className="rounded-2xl px-4 py-4 text-left transition flex items-center gap-3 bg-gradient-to-r from-amber-600/30 to-amber-500/20 border-2 border-amber-400/60 hover:border-amber-300/80 shadow-[0_0_20px_rgba(251,191,36,0.25)]"
+  >
+    <span className="shrink-0 flex items-center justify-center rounded-xl p-1.5 bg-amber-500/30 shadow-[0_0_12px_rgba(251,191,36,0.5)]">
+      <Zap className="h-5 w-5 text-amber-200" />
+    </span>
+    <div className="flex-1 min-w-0">
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-sm font-semibold text-white">Quantum Apothecary</span>
+        <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/40 text-amber-100 border border-amber-400/60 font-semibold uppercase tracking-wider">Admin</span>
+      </div>
+      <div className="mt-1 text-xs text-amber-100/80">Launch the 2050 Siddha-Soma Activation Tool.</div>
+    </div>
+  </button>
+)}
       </section>
 
       {/* Community Circle card */}
