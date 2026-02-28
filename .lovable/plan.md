@@ -1,47 +1,20 @@
 
 
-# Fix: Simple Text Email Editor (No HTML Required)
+## Build Error Fixes
 
-## Problem
-The current "Send Email" page asks for "Content (HTML)" and expects raw HTML code like `<h1>Hello</h1>`. You just want to paste plain text and send it.
+There are 5 build errors to fix across 2 root causes:
 
-## Solution
-Replace the HTML textarea with a simple plain-text editor that automatically converts your text into a nicely formatted email behind the scenes.
+### Error 1: `GatedResonancePanel` does not exist
+The previous edit was supposed to add a `GatedResonancePanel` export to `UniversalResonanceEngine.tsx` but it was never actually created. Four pages import it: `Healing.tsx`, `Mantras.tsx`, `Meditations.tsx`, `Music.tsx`.
 
-### What Changes
+**Fix:** Add `GatedResonancePanel` as an exported wrapper component in `UniversalResonanceEngine.tsx`. It will check admin role (via `useAdminRole`) and membership status (via `useMembership`) before rendering `ResonancePanel`. If not authorized, render nothing.
 
-**1. Rename the field**
-- Change label from "Content (HTML) *" to "Message *"
-- Update placeholder to just show normal text like "Hello {{name}}, your message here..."
-- Remove the `font-mono` styling so it looks like a normal text box
+### Error 2: `signature` property missing on `SacredSite` in `GlobalResonanceHub.tsx`
+Line 766 references `activeSite.signature` but the `SacredSite` interface in that file does not include a `signature` field.
 
-**2. Auto-convert text to email HTML**
-- When you type plain text, the system will automatically:
-  - Wrap paragraphs in proper email formatting
-  - Convert line breaks into spacing
-  - Apply Sacred Healing branding (logo, colors, footer)
-- You don't need to know any HTML
+**Fix:** Add `signature?: string` to the `SacredSite` interface in `GlobalResonanceHub.tsx`, and add `signature` values to each site in `ALL_SITES` that should have one (or use a fallback like `'AXIS MUNDI'` which the code already does with `|| 'AXIS MUNDI'`). The simplest fix is just adding the optional property to the interface since the code already handles the missing case with `|| 'AXIS MUNDI'`.
 
-**3. Keep personalization simple**
-- You can still use `{{name}}` and `{{email}}` in your text
-- The hint text stays but is simplified
+### Steps
+1. Add `signature?: string` to the `SacredSite` interface in `GlobalResonanceHub.tsx`
+2. Add exported `GatedResonancePanel` component to `UniversalResonanceEngine.tsx` that gates on admin/premium access
 
-**4. Update the preview**
-- Preview will show the final styled email exactly as subscribers will see it
-- Includes the Sacred Healing header and footer automatically
-
-**5. Update the edge function**
-- The `send-bulk-email` function will accept plain text and wrap it in a branded email template server-side
-- This ensures all emails look professional and consistent
-
-### Technical Details
-
-| File | Change |
-|------|--------|
-| `src/pages/AdminSendEmail.tsx` | Replace HTML textarea with plain text input; auto-wrap content in email template for preview; send plain text to edge function |
-| `supabase/functions/send-bulk-email/index.ts` | Add email template wrapper that converts plain text into styled HTML email with Sacred Healing branding |
-
-### Result
-- You type or paste normal text
-- The system handles all formatting automatically
-- Every email arrives looking professional with your branding
