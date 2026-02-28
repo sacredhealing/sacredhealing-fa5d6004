@@ -39,7 +39,16 @@
   --radius-sm: calc(var(--radius) - 4px);
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
-}
+--color-sacred-gold: #D4AF37;
+--color-space-black: #050505;
+--color-kailash-violet: #7B61FF;
+--color-ayodhya-saffron: #FF9933;
+--color-vrindavan-blue: #1E90FF;
+--color-sirius-indigo: #4169E1;
+--color-arcturus-violet: #9932CC;
+--color-giza-gold: #B8860B;
+--color-lemuria-aqua: #40E0D0;
+```"}
 
 /* Cursor interactions for Creative Soul */
 @layer utilities {
