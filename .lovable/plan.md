@@ -1,28 +1,47 @@
 
 
-## Understanding
+# Fix: Simple Text Email Editor (No HTML Required)
 
-- **Sanctuary Dashboard** (on Explore/Library pages) = requires €499 Temple Home License OR admin
-- **ResonancePanel** (on Music, Mantra, Healing, Meditation pages) = available to premium members and admin
-- Currently the Explore page shows SanctuaryDashboard to `isAdmin || isPremium` which is too broad — it should require the Temple Home License (€499), not just premium
+## Problem
+The current "Send Email" page asks for "Content (HTML)" and expects raw HTML code like `<h1>Hello</h1>`. You just want to paste plain text and send it.
 
-## Changes
+## Solution
+Replace the HTML textarea with a simple plain-text editor that automatically converts your text into a nicely formatted email behind the scenes.
 
-### 1. Fix Explore.tsx gating for SanctuaryDashboard
+### What Changes
 
-Change the condition from `(isAdmin || isPremium)` to only show for admin (since there's no Temple License purchase tracking yet) or add a `hasTempleLicense` check. Since the Temple Home License is a one-time €499 purchase and the existing `UniversalResonanceEngine.tsx` already has `hasTempleLicense` in its access model, the Sanctuary on Explore should be gated to **admin only** (or users who purchased the license).
+**1. Rename the field**
+- Change label from "Content (HTML) *" to "Message *"
+- Update placeholder to just show normal text like "Hello {{name}}, your message here..."
+- Remove the `font-mono` styling so it looks like a normal text box
 
-For now, gate to **admin only** on Explore, since there's no Stripe product/purchase tracking for the €499 license yet. Add a visible upsell card for premium users showing the €499 Sanctuary upgrade option.
+**2. Auto-convert text to email HTML**
+- When you type plain text, the system will automatically:
+  - Wrap paragraphs in proper email formatting
+  - Convert line breaks into spacing
+  - Apply Sacred Healing branding (logo, colors, footer)
+- You don't need to know any HTML
 
-### 2. Ensure ResonancePanel works for premium on 4 content pages
+**3. Keep personalization simple**
+- You can still use `{{name}}` and `{{email}}` in your text
+- The hint text stays but is simplified
 
-The `GatedResonancePanel` in `UniversalResonanceEngine.tsx` already gates on admin or non-free membership. Verify this is working correctly — no code changes needed here.
+**4. Update the preview**
+- Preview will show the final styled email exactly as subscribers will see it
+- Includes the Sacred Healing header and footer automatically
 
-### 3. Add Sanctuary upsell card on Explore for premium (non-admin) users
+**5. Update the edge function**
+- The `send-bulk-email` function will accept plain text and wrap it in a branded email template server-side
+- This ensures all emails look professional and consistent
 
-Show a promotional card when `isPremium && !isAdmin` explaining the €499 Temple Home License, linking to a purchase flow or contact page.
+### Technical Details
 
-### Steps
-1. Update Explore.tsx: change `(isAdmin || isPremium)` to `isAdmin` for SanctuaryDashboard rendering
-2. Add a €499 Sanctuary upsell card for premium users who don't have admin access, shown in the same spot
+| File | Change |
+|------|--------|
+| `src/pages/AdminSendEmail.tsx` | Replace HTML textarea with plain text input; auto-wrap content in email template for preview; send plain text to edge function |
+| `supabase/functions/send-bulk-email/index.ts` | Add email template wrapper that converts plain text into styled HTML email with Sacred Healing branding |
 
+### Result
+- You type or paste normal text
+- The system handles all formatting automatically
+- Every email arrives looking professional with your branding

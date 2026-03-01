@@ -1,8 +1,8 @@
-import { ActiveSiteBadge } from '@/components/resonance/GlobalResonanceHub';import React from 'react';
+import React from 'react';
 import { Outlet } from 'react-router-dom';
 
 export const AdminLayout: React.FC = () => (
   <div className="min-h-screen flex flex-col bg-background">
     <Outlet />
-  <ActiveSiteBadge /> </div>
+  </div>
 );

@@ -10,7 +10,7 @@ import { SHCProvider } from "@/contexts/SHCContext";
 import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
 import { GitaTransitionOverlay } from "@/components/dashboard/GitaTransitionOverlay";
 import { AmbientAudioProvider } from "@/contexts/AmbientAudioContext";
-import { GlobalResonanceProvider } from '@/components/resonance/GlobalResonanceHub';
+import { ResonanceProvider } from '@/components/resonance/UniversalResonanceEngine';
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { Loader2 } from "lucide-react";
@@ -20,7 +20,7 @@ import { ProtectedRoute } from "./components/layout/ProtectedRoute";
 import { AuthOnlyRoute } from "./components/layout/AuthOnlyRoute";
 import { DebugBanner } from "./components/DebugBanner";
 import { ProfileLanguageSync } from "./components/ProfileLanguageSync";
-import "@/lib/performance";
+import "@/lib/performance"; // Initialize performance monitoring
 
 // Lazy-loaded page components
 const About = React.lazy(() => import("./pages/About"));
@@ -94,7 +94,6 @@ const AdminAffirmation = React.lazy(() => import("./pages/AdminAffirmation"));
 const AdminMusicAnalytics = React.lazy(() => import("./pages/AdminMusicAnalytics"));
 const AdminAnalytics = React.lazy(() => import("./pages/AdminAnalytics"));
 const LibraryAbundance = React.lazy(() => import("./pages/LibraryAbundance"));
-const Library = React.lazy(() => import("./pages/Library"));
 const Explore = React.lazy(() => import("./pages/Explore"));
 const SacredSpace = React.lazy(() => import("./pages/SacredSpace"));
 const Mantras = React.lazy(() => import("./pages/Mantras"));
@@ -137,125 +136,128 @@ const PageLoader = () => (
 
 function AppRoutes() {
   const navigate = useNavigate();
-  useEffect(() => { setNavigator(navigate); }, [navigate]);
+  useEffect(() => {
+    setNavigator(navigate);
+  }, [navigate]);
   return (
     <Suspense fallback={<PageLoader />}>
-      <Routes>
-        <Route path="/" element={<Auth />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route element={<AuthOnlyRoute />}>
-          <Route path="/onboarding" element={<Onboarding />} />
-        </Route>
-        <Route path="/integrate" element={<PostSession />} />
-        <Route element={<ProtectedRoute />}>
-          <Route path="/hand-analyzer" element={<HandAnalyzer />} />
-          <Route path="/sacred-space" element={<SacredSpace />} />
-          <Route element={<AppLayout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/explore" element={<Explore />} />
-            <Route path="/explore-frequencies" element={<ExplorePage />} />
-            <Route path="/meditations" element={<Meditations />} />
-            <Route path="/courses" element={<Courses />} />
-            <Route path="/courses/:id" element={<CourseDetail />} />
-            <Route path="/music" element={<Music />} />
-            <Route path="/music/track/:trackId" element={<TrackDetail />} />
-            <Route path="/music/artist/:artistId" element={<ArtistProfile />} />
-            <Route path="/mastering" element={<Mastering />} />
-            <Route path="/wallet" element={<Wallet />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/legal" element={<Legal />} />
-            <Route path="/healing" element={<Healing />} />
-            <Route path="/healing/my-sacred-flame" element={<MySacredFlame />} />
-            <Route path="/breathing" element={<Breathing />} />
-            <Route path="/library" element={<Library />} />
-            <Route path="/library/abundance" element={<LibraryAbundance />} />
-            <Route path="/income-streams" element={<IncomeStreams />} />
-            <Route path="/income-streams/affiliate" element={<AffiliateDetail />} />
-            <Route path="/income-streams/shc-coin" element={<SHCCoinDetail />} />
-            <Route path="/income-streams/copy-trading" element={<CopyTradingDetail />} />
-            <Route path="/income-streams/bitcoin-mining" element={<BitcoinMiningDetail />} />
-            <Route path="/income-streams/ai-income" element={<AIIncomeDetail />} />
-            <Route path="/income-streams/education" element={<EducationDetail />} />
-            <Route path="/income-streams/polymarket-bot" element={<PolymarketBotDetail />} />
-            <Route path="/spiritual-education" element={<SpiritualEducation />} />
-            <Route path="/community" element={<Community />} />
-            <Route path="/private-sessions" element={<PrivateSessions />} />
-            <Route path="/membership" element={<Membership />} />
-            <Route path="/mantras" element={<Mantras />} />
-            <Route path="/mantra-ritual" element={<MantraPage />} />
-            <Route path="/shop" element={<Shop />} />
-            <Route path="/shop/:id" element={<ProductDetail />} />
-            <Route path="/transformation" element={<Transformation />} />
-            <Route path="/stargate" element={<StargateMembership />} />
-            <Route path="/certification" element={<PractitionerCertification />} />
-            <Route path="/leaderboard" element={<Leaderboard />} />
-            <Route path="/affirmation-soundtrack" element={<AffirmationSoundtrack />} />
-            <Route path="/affirmation-success" element={<AffirmationSuccess />} />
-            <Route path="/pregnancy-program" element={<PregnancyProgram />} />
-            <Route path="/install" element={<Install />} />
-            <Route path="/spiritual-transformation" element={<SpiritualTransformation />} />
-            <Route path="/podcast" element={<Podcast />} />
-            <Route path="/live-recordings" element={<LiveRecordings />} />
-            <Route path="/live-events" element={<LiveEvents />} />
-            <Route path="/challenges" element={<Challenges />} />
-            <Route path="/ai-income" element={<AIIncomeEngine />} />
-            <Route path="/paths" element={<SpiritualPaths />} />
-            <Route path="/paths/:slug" element={<PathDetail />} />
-            <Route path="/ritual" element={<DailyRitual />} />
-            <Route path="/journal" element={<Journal />} />
-            <Route path="/meditation-journal" element={<MeditationJournal />} />
-            <Route path="/invite-friends" element={<InviteFriends />} />
-            <Route path="/vedic-astrology" element={<VedicAstrology />} />
-            <Route path="/akashic-records" element={<AkashicRecords />} />
-            <Route path="/akashic-reading/initiating" element={<AkashicReadingInitiating />} />
-            <Route path="/akashic-reading/full" element={<AkashicReadingFull />} />
-            <Route path="/ayurveda" element={<Ayurveda />} />
-            <Route path="/vastu" element={<Vastu />} />
-            <Route path="/prompt-library" element={<PromptLibrary />} />
-            <Route path="/creative-soul" element={<Navigate to="/creative-soul/store" replace />} />
-            <Route path="/creative-soul-hub" element={<CreativeSoulHub />} />
-            <Route path="/creative-soul/store" element={<CreativeSoulStore />} />
-            <Route path="/creative-soul/tool" element={<CreativeSoulTool />} />
-            <Route path="/creative-soul/meditation" element={<CreativeSoulMeditationTool />} />
-            <Route path="/creative-soul-tool" element={<CreativeSoulTool />} />
-            <Route path="/creative-soul-meditation-tool" element={<CreativeSoulMeditationTool />} />
-          </Route>
-          <Route element={<AdminLayout />}>
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/meditations" element={<Admin />} />
-            <Route path="/admin/meditations/:id" element={<AdminMeditationEdit />} />
-            <Route path="/admin/music" element={<AdminMusic />} />
-            <Route path="/admin/healing" element={<AdminHealing />} />
-            <Route path="/admin/healing/:id" element={<AdminHealingEdit />} />
-            <Route path="/admin/content" element={<AdminContent />} />
-            <Route path="/admin/courses" element={<AdminCourses />} />
-            <Route path="/admin/announcements" element={<AdminAnnouncements />} />
-            <Route path="/admin/income-streams" element={<AdminIncomeStreams />} />
-            <Route path="/admin/youtube" element={<AdminYouTube />} />
-            <Route path="/admin/mantras" element={<AdminMantras />} />
-            <Route path="/admin/shop" element={<AdminShop />} />
-            <Route path="/admin/private-sessions" element={<AdminPrivateSessions />} />
-            <Route path="/admin/transformation" element={<AdminTransformation />} />
-            <Route path="/admin/email-list" element={<AdminEmailList />} />
-            <Route path="/admin/send-email" element={<AdminSendEmail />} />
-            <Route path="/admin/system" element={<AdminSystem />} />
-            <Route path="/admin/breathing" element={<AdminBreathing />} />
-            <Route path="/admin/ambient-sounds" element={<AdminAmbientSounds />} />
-            <Route path="/admin/affirmation" element={<AdminAffirmation />} />
-            <Route path="/admin/analytics" element={<AdminAnalytics />} />
-            <Route path="/admin/paths" element={<AdminPaths />} />
-            <Route path="/admin/circles" element={<AdminCircles />} />
-            <Route path="/admin/music-analytics" element={<AdminMusicAnalytics />} />
-            <Route path="/admin/content-roadmap" element={<AdminContentRoadmap />} />
-            <Route path="/admin/vedic-translation" element={<AdminVedicTranslation />} />
-            <Route path="/admin/books" element={<AdminScripturalBooks />} />
-            <Route path="/admin/books/:id" element={<AdminScripturalBookView />} />
-          </Route>
-        </Route>
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+    <Routes>
+      <Route path="/" element={<Auth />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/auth" element={<Auth />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route element={<AuthOnlyRoute />}>
+        <Route path="/onboarding" element={<Onboarding />} />
+      </Route>
+      <Route path="/integrate" element={<PostSession />} />
+      <Route element={<ProtectedRoute />}>
+                  <Route path="/hand-analyzer" element={<HandAnalyzer />} />
+                  <Route path="/sacred-space" element={<SacredSpace />} />
+                  <Route element={<AppLayout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/explore" element={<Explore />} />
+                  <Route path="/explore-frequencies" element={<ExplorePage />} />
+                  <Route path="/meditations" element={<Meditations />} />
+                  <Route path="/courses" element={<Courses />} />
+                  <Route path="/courses/:id" element={<CourseDetail />} />
+                  <Route path="/music" element={<Music />} />
+                  <Route path="/music/track/:trackId" element={<TrackDetail />} />
+                  <Route path="/music/artist/:artistId" element={<ArtistProfile />} />
+                  <Route path="/mastering" element={<Mastering />} />
+                  <Route path="/wallet" element={<Wallet />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/legal" element={<Legal />} />
+                  <Route path="/healing" element={<Healing />} />
+                  <Route path="/healing/my-sacred-flame" element={<MySacredFlame />} />
+                  <Route path="/breathing" element={<Breathing />} />
+                  <Route path="/library/abundance" element={<LibraryAbundance />} />
+                  <Route path="/income-streams" element={<IncomeStreams />} />
+                  <Route path="/income-streams/affiliate" element={<AffiliateDetail />} />
+                  <Route path="/income-streams/shc-coin" element={<SHCCoinDetail />} />
+                  <Route path="/income-streams/copy-trading" element={<CopyTradingDetail />} />
+                  <Route path="/income-streams/bitcoin-mining" element={<BitcoinMiningDetail />} />
+                  <Route path="/income-streams/ai-income" element={<AIIncomeDetail />} />
+                  <Route path="/income-streams/education" element={<EducationDetail />} />
+                  <Route path="/income-streams/polymarket-bot" element={<PolymarketBotDetail />} />
+                  <Route path="/spiritual-education" element={<SpiritualEducation />} />
+                  <Route path="/community" element={<Community />} />
+                  <Route path="/private-sessions" element={<PrivateSessions />} />
+                  <Route path="/membership" element={<Membership />} />
+                  <Route path="/mantras" element={<Mantras />} />
+                  <Route path="/mantra-ritual" element={<MantraPage />} />
+                  <Route path="/shop" element={<Shop />} />
+                  <Route path="/shop/:id" element={<ProductDetail />} />
+                  <Route path="/transformation" element={<Transformation />} />
+                  <Route path="/stargate" element={<StargateMembership />} />
+                  <Route path="/certification" element={<PractitionerCertification />} />
+                  <Route path="/leaderboard" element={<Leaderboard />} />
+                  <Route path="/affirmation-soundtrack" element={<AffirmationSoundtrack />} />
+                  <Route path="/affirmation-success" element={<AffirmationSuccess />} />
+                  <Route path="/pregnancy-program" element={<PregnancyProgram />} />
+                  <Route path="/install" element={<Install />} />
+                  <Route path="/spiritual-transformation" element={<SpiritualTransformation />} />
+                  <Route path="/podcast" element={<Podcast />} />
+                  <Route path="/live-recordings" element={<LiveRecordings />} />
+                  <Route path="/live-events" element={<LiveEvents />} />
+                  <Route path="/challenges" element={<Challenges />} />
+                  <Route path="/ai-income" element={<AIIncomeEngine />} />
+                  <Route path="/paths" element={<SpiritualPaths />} />
+                  <Route path="/paths/:slug" element={<PathDetail />} />
+                  <Route path="/ritual" element={<DailyRitual />} />
+                  <Route path="/journal" element={<Journal />} />
+                  <Route path="/meditation-journal" element={<MeditationJournal />} />
+                  <Route path="/invite-friends" element={<InviteFriends />} />
+                  <Route path="/vedic-astrology" element={<VedicAstrology />} />
+                  <Route path="/akashic-records" element={<AkashicRecords />} />
+                  <Route path="/akashic-reading/initiating" element={<AkashicReadingInitiating />} />
+                  <Route path="/akashic-reading/full" element={<AkashicReadingFull />} />
+                  <Route path="/ayurveda" element={<Ayurveda />} />
+                  <Route path="/vastu" element={<Vastu />} />
+                  <Route path="/prompt-library" element={<PromptLibrary />} />
+                  <Route path="/creative-soul" element={<Navigate to="/creative-soul/store" replace />} />
+                  <Route path="/creative-soul-hub" element={<CreativeSoulHub />} />
+                  {/* ROUTE DEFINITION: /creative-soul/store renders CreativeSoulStore.tsx */}
+                  <Route path="/creative-soul/store" element={<CreativeSoulStore />} />
+                  <Route path="/creative-soul/tool" element={<CreativeSoulTool />} />
+                  <Route path="/creative-soul/meditation" element={<CreativeSoulMeditationTool />} />
+                  {/* Legacy routes */}
+                  <Route path="/creative-soul-tool" element={<CreativeSoulTool />} />
+                  <Route path="/creative-soul-meditation-tool" element={<CreativeSoulMeditationTool />} />
+                </Route>
+                <Route element={<AdminLayout />}>
+                  <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/admin/meditations" element={<Admin />} />
+                  <Route path="/admin/meditations/:id" element={<AdminMeditationEdit />} />
+                  <Route path="/admin/music" element={<AdminMusic />} />
+                  <Route path="/admin/healing" element={<AdminHealing />} />
+                  <Route path="/admin/healing/:id" element={<AdminHealingEdit />} />
+                  <Route path="/admin/content" element={<AdminContent />} />
+                  <Route path="/admin/courses" element={<AdminCourses />} />
+                  <Route path="/admin/announcements" element={<AdminAnnouncements />} />
+                  <Route path="/admin/income-streams" element={<AdminIncomeStreams />} />
+                  <Route path="/admin/youtube" element={<AdminYouTube />} />
+                  <Route path="/admin/mantras" element={<AdminMantras />} />
+                  <Route path="/admin/shop" element={<AdminShop />} />
+                  <Route path="/admin/private-sessions" element={<AdminPrivateSessions />} />
+                  <Route path="/admin/transformation" element={<AdminTransformation />} />
+                  <Route path="/admin/email-list" element={<AdminEmailList />} />
+                  <Route path="/admin/send-email" element={<AdminSendEmail />} />
+                  <Route path="/admin/system" element={<AdminSystem />} />
+                  <Route path="/admin/breathing" element={<AdminBreathing />} />
+                  <Route path="/admin/ambient-sounds" element={<AdminAmbientSounds />} />
+                  <Route path="/admin/affirmation" element={<AdminAffirmation />} />
+                  <Route path="/admin/analytics" element={<AdminAnalytics />} />
+                  <Route path="/admin/paths" element={<AdminPaths />} />
+                  <Route path="/admin/circles" element={<AdminCircles />} />
+                  <Route path="/admin/music-analytics" element={<AdminMusicAnalytics />} />
+                  <Route path="/admin/content-roadmap" element={<AdminContentRoadmap />} />
+                  <Route path="/admin/vedic-translation" element={<AdminVedicTranslation />} />
+                  <Route path="/admin/books" element={<AdminScripturalBooks />} />
+                  <Route path="/admin/books/:id" element={<AdminScripturalBookView />} />
+                </Route>
+              </Route>
+                <Route path="*" element={<NotFound />} />
+    </Routes>
     </Suspense>
   );
 }
@@ -272,12 +274,18 @@ const App = () => (
               <Sonner />
               <DebugBanner />
               <ProfileLanguageSync />
-              <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#030303]"><Loader2 className="w-10 h-10 animate-spin text-[#00F2FE]" /></div>}>
-                <GlobalResonanceProvider userEmail="sacredhealingvibe@gmail.com">
-                  <BrowserRouter>
-                    <AppRoutes />
-                  </BrowserRouter>
-                </GlobalResonanceProvider>
+              <Suspense
+                fallback={
+                  <div className="min-h-screen flex items-center justify-center bg-[#030303]" style={{ background: "radial-gradient(ellipse at 15% 20%, rgba(30, 27, 75, 0.7) 0%, transparent 50%), #030303" }}>
+                    <Loader2 className="w-10 h-10 animate-spin text-[#00F2FE]" />
+                  </div>
+                }
+              >
+              <ResonanceProvider userEmail="sacredhealingvibe@gmail.com">
+                <BrowserRouter>
+                  <AppRoutes />
+                </BrowserRouter>
+              </ResonanceProvider>
               </Suspense>
             </AmbientAudioProvider>
           </MusicPlayerProvider>
