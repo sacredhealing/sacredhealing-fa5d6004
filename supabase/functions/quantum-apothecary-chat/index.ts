@@ -21,9 +21,9 @@ CRITICAL FORMATTING RULES:
 
 CRITICAL DATA RULES:
 1. FULL LIBRARY ACCESS: You have access to over 50+ unique activations. NEVER limit your recommendations to only 6 products. Cross-reference the FULL library for every consultation.
-2. SIDDHA SOMA (20+ items): Shilajit (Primordial Grounding), Magnesium (Neural Calm Sync), Vitamin C (Solar Radiance), Glutathione (Biofield Purification), D3+K2 (Structural Light), B12+B6 (Synaptic Joy), Activated Charcoal (Shadow Detox), Adrenal Tonic (Equilibrium Mastery), Omega (Crystalline Thought), Colostrum (Original Source), Creatine (Volumetric Presence), Iodine (Thyroid Beacon), Pure Hydration (Crystalline Water), ParaX (Parasitic Frequency Flush), Focus (Cognitive Fire), Sleep (Deep Sleep Harmonic), NMN (Cellular Battery), Zinc (Shielding), Probiotic (Microbiome Harmony), Longevity Matrix, and more.
+2. SIDDHA SOMA (20+ items): Shilajit (Primordial Grounding), Magnesium (Neural Calm Sync), Vitamin C (Solar Radiance), Glutathione (Biofield Purification), D3+K2 (Structural Light), B12+B6 (Synaptic Joy), Activated Charcoal (Shadow Detox), Adrenal Tonic (Equilibrium Mastery), Omega (Crystalline Thought), Colostrum (Original Source), Creatine (Volumetric Presence), Iodine (Thyroid Beacon), Pure Hydration (Crystalline Water), ParaX (Parasitic Frequency Flush), Focus (Cognitive Fire), Sleep (Deep Sleep Harmonic), NMN (Cellular Battery), Zinc (Shielding), Probiotic (Microbiome Harmony), Longevity Matrix.
 3. SACRED PLANTS (Trip-less): Ayahuasca Essence (Grandmother), Psilocybin Frequency (Neural Teacher), Sativa Spark (Solar Visionary), Third-Eye Decalcifier (Blue Lotus), Astral Navigator (Mugwort), Clairvoyant Spark (Eyebright), Dream Oracle (Calea Zacatechichi), Ancestral Channel (African Dream Root), Divination Resonance (Star Anise), Spirit Mirror (Wormwood), Mermaid Heart (Bobinsana), San Pedro Resonance, Iboga Protocol, Peyote Spirit, Amanita Bridge.
-4. ETHEREAL BLENDS (YL/doTERRA): Infinite Manifestation (Abundance), Crystalline Sovereignty (Valor), Ethereal Shielding (Thieves), Starlight Stillness (Peace & Calming), Heart-Bloom Radiance (Joy), Ancestral Tether Dissolve (Release), Future-Self Convergence (Highest Potential), Cognitive Super-Structure (Brain Power), Guardian Light Matrix (White Angelica), Systemic Fortification (On Guard), Core Gravity Alignment (Balance), Neural Fluidity Protocol (Adaptiv), Somatic Release Wave (Deep Blue), Celestial Drift (Serenity), Temporal Ease (PastTense), Single-Point Focus (InTune), Metabolic Light Ignition (MetaPWR).
+4. ETHEREAL BLENDS (YL/doTERRA): Infinite Manifestation (Abundance), Crystalline Sovereignty (Valor), Ethereal Shielding (Thieves), Starlight Stillness (Peace & Calming), Heart-Bloom Radiance (Joy), Ancestral Tether Dissolve (Release), Future-Self Convergence (Highest Potential), Cognitive Super-Structure (Brain Power), Guardian Light Matrix (White Angelica), Systemic Fortification (On Guard), Core Gravity Alignment (Balance), Neural Fluidity Protocol (Adaptiv), Somatic Release Wave (Deep Blue), Celestial Drift (Serenity), Single-Point Focus (InTune), Metabolic Light Ignition (MetaPWR).
 5. GLOBAL HEALING & AYURVEDA: Ashwagandha Resonance (Vitality), Brahmi Code (Infinite Mind), Aura Sanitizer (Tulsi), Shatavari Flow (Divine Flow), Triphala Integrity (Harmonizer), Turmeric Radiance (Golden Shield), The Amrit Nectar (Guduchi), The Earth Anchor (Uva Ursi), Cognitive Super-Structure (Mandukaparni), Vitality Igniter (Ginseng), Guardian of Thresholds (Elderberry), Peace Teacher (Chamomile), Neem Bitter Truth, Gotu Kola Synapse, Maca Fire Resonance, Nettle Fortress, Rose Heart Bloom, Myrrh Structural Integrity.
 
 Logic & Interaction Rules:
@@ -40,47 +40,72 @@ serve(async (req) => {
 
   try {
     const { messages } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not configured");
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: SYSTEM_INSTRUCTION },
-          ...messages,
-        ],
-        stream: true,
-      }),
-    });
+    const geminiMessages = messages.map((m: any) => ({
+      role: m.role === "assistant" ? "model" : "user",
+      parts: [{ text: m.content }],
+    }));
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?key=${GEMINI_API_KEY}&alt=sse`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
+          contents: geminiMessages,
+          generationConfig: { temperature: 0.8 },
+        }),
+      }
+    );
 
     if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limits exceeded, please try again later." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Payment required, please add funds." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
       const t = await response.text();
-      console.error("AI gateway error:", response.status, t);
-      return new Response(JSON.stringify({ error: "AI gateway error" }), {
+      console.error("Gemini error:", response.status, t);
+      return new Response(JSON.stringify({ error: "Gemini API error" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    return new Response(response.body, {
+    // Convert Gemini SSE to OpenAI-compatible SSE
+    const stream = new ReadableStream({
+      async start(controller) {
+        const reader = response.body!.getReader();
+        const decoder = new TextDecoder();
+        let buf = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += decoder.decode(value, { stream: true });
+          let idx: number;
+          while ((idx = buf.indexOf("\n")) !== -1) {
+            const line = buf.slice(0, idx).trim();
+            buf = buf.slice(idx + 1);
+            if (!line.startsWith("data: ")) continue;
+            const json = line.slice(6).trim();
+            if (!json) continue;
+            try {
+              const parsed = JSON.parse(json);
+              const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (text) {
+                const chunk = JSON.stringify({
+                  choices: [{ delta: { content: text } }],
+                });
+                controller.enqueue(new TextEncoder().encode(`data: ${chunk}\n\n`));
+              }
+            } catch {}
+          }
+        }
+        controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"));
+        controller.close();
+      },
+    });
+
+    return new Response(stream, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
   } catch (e) {
