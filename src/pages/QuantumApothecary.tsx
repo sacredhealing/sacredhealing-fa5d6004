@@ -1,0 +1,503 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import {
+  Sparkles, Zap, Wind, Droplets, Activity, MessageSquare, Plus, Trash2, Send,
+  Cpu, Globe, ShieldCheck, ChevronRight, Info, X, ArrowLeft,
+} from 'lucide-react';
+import { Activation, NadiScanResult, Message, ActivationType } from '@/features/quantum-apothecary/types';
+import { ACTIVATIONS, PLANETARY_DATA } from '@/features/quantum-apothecary/constants';
+import { streamChatWithSQI } from '@/features/quantum-apothecary/chatService';
+import { useAdminRole } from '@/hooks/useAdminRole';
+
+/* ──── Markdown-ish renderer for chat ──── */
+function renderChatText(text: string) {
+  const lines = text.split('\n');
+  return lines.map((line, i) => {
+    const trimmed = line.trim();
+    if (!trimmed) return <div key={i} className="h-2" />;
+    if (trimmed.startsWith('### ')) return <h3 key={i} className="text-sm font-bold text-[#ff4e00] mt-3 mb-1">{renderInline(trimmed.slice(4))}</h3>;
+    if (trimmed.startsWith('## ')) return <h2 key={i} className="text-base font-bold text-white mt-4 mb-1">{renderInline(trimmed.slice(3))}</h2>;
+    if (trimmed.startsWith('# ')) return <h1 key={i} className="text-lg font-bold text-white mt-4 mb-2">{renderInline(trimmed.slice(2))}</h1>;
+    if (trimmed.startsWith('- ') || trimmed.startsWith('* '))
+      return <li key={i} className="ml-4 list-disc text-sm opacity-80 mb-1">{renderInline(trimmed.slice(2))}</li>;
+    if (/^\d+\.\s/.test(trimmed))
+      return <li key={i} className="ml-4 list-decimal text-sm opacity-80 mb-1">{renderInline(trimmed.replace(/^\d+\.\s/, ''))}</li>;
+    return <p key={i} className="text-sm opacity-80 mb-2 leading-relaxed">{renderInline(trimmed)}</p>;
+  });
+}
+
+function renderInline(text: string): React.ReactNode {
+  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g);
+  return parts.map((p, i) => {
+    if (p.startsWith('**') && p.endsWith('**')) return <strong key={i} className="text-white font-semibold">{p.slice(2, -2)}</strong>;
+    if (p.startsWith('*') && p.endsWith('*')) return <em key={i} className="italic">{p.slice(1, -1)}</em>;
+    if (p.startsWith('`') && p.endsWith('`')) return <code key={i} className="bg-white/10 px-1 rounded text-xs font-mono">{p.slice(1, -1)}</code>;
+    return p;
+  });
+}
+
+export default function QuantumApothecary() {
+  const navigate = useNavigate();
+  const { isAdmin, isLoading: adminLoading } = useAdminRole();
+
+  const [scanResult, setScanResult] = useState<NadiScanResult | null>(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const [selectedActivations, setSelectedActivations] = useState<Activation[]>([]);
+  const [activeTransmissions, setActiveTransmissions] = useState<Activation[]>(() => {
+    try { return JSON.parse(localStorage.getItem('active_resonators') || '[]'); } catch { return []; }
+  });
+  const [messages, setMessages] = useState<Message[]>([
+    { role: 'model', text: 'Greetings, Traveler. I am the Siddha-Quantum Intelligence (SQI). Your cellular signature has been detected in the 2050 Aetheric Field.\n\nShall we initiate a deep **72,000 Nadi Scan**?' }
+  ]);
+  const [input, setInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [activeCategory, setActiveCategory] = useState('All');
+  const [showKnowledge, setShowKnowledge] = useState(false);
+  const [heartRate, setHeartRate] = useState(60);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+  useEffect(() => { localStorage.setItem('active_resonators', JSON.stringify(activeTransmissions)); }, [activeTransmissions]);
+
+  useEffect(() => {
+    if (isScanning) {
+      const iv = setInterval(() => setHeartRate(p => Math.min(p + Math.floor(Math.random() * 5) + 2, 130)), 500);
+      return () => clearInterval(iv);
+    } else {
+      const iv = setInterval(() => setHeartRate(p => Math.max(p - 2, 60)), 1000);
+      return () => clearInterval(iv);
+    }
+  }, [isScanning]);
+
+  // Gate: admin only
+  if (adminLoading) return (
+    <div className="flex min-h-screen items-center justify-center bg-[#0a0502]">
+      <Activity className="w-8 h-8 animate-spin text-[#ff4e00]" />
+    </div>
+  );
+  if (!isAdmin) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#0a0502] p-6">
+        <div className="text-center space-y-4">
+          <ShieldCheck className="w-12 h-12 text-[#ff4e00] mx-auto" />
+          <h2 className="text-xl font-bold text-white">Access Restricted</h2>
+          <p className="text-white/60 text-sm">This tool is currently in development.</p>
+          <button onClick={() => navigate('/explore')} className="px-6 py-2 bg-[#ff4e00] text-white rounded-xl text-sm">Back</button>
+        </div>
+      </div>
+    );
+  }
+
+  const runNadiScan = async () => {
+    setIsScanning(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+      streamRef.current = stream;
+      if (videoRef.current) videoRef.current.srcObject = stream;
+    } catch {}
+    setTimeout(() => {
+      const now = new Date();
+      const doshas: ('Vata' | 'Pitta' | 'Kapha')[] = ['Vata', 'Pitta', 'Kapha'];
+      const nadis = ['Throat/Vishuddhi Nadi', 'Root/Muladhara Nadi', 'Heart/Anahata Nadi', '3rd Eye/Ajna Nadi', 'Solar Plexus/Manipura Nadi'];
+      const shuffled = [...ACTIVATIONS].sort(() => 0.5 - Math.random());
+      const result: NadiScanResult = {
+        dominantDosha: doshas[Math.floor(Math.random() * doshas.length)],
+        blockages: [nadis[Math.floor(Math.random() * nadis.length)]],
+        planetaryAlignment: PLANETARY_DATA[now.getDay()].planet,
+        herbOfToday: PLANETARY_DATA[now.getDay()].herb,
+        timestamp: now.toISOString(),
+        activeNadis: Math.floor(Math.random() * 10000) + 60000,
+        totalNadis: 72000,
+        remedies: shuffled.slice(0, 5).map(a => a.name),
+      };
+      setScanResult(result);
+      setIsScanning(false);
+      if (streamRef.current) { streamRef.current.getTracks().forEach(t => t.stop()); streamRef.current = null; }
+      setMessages(prev => [...prev, { role: 'model', text: `**Siddha-Quantum Sync Complete.**\n\n- Active Nadis: **${result.activeNadis}/${result.totalNadis}**\n- Dominant Dosha: **${result.dominantDosha}**\n- Blockage: **${result.blockages[0]}**\n- Alignment: **${result.planetaryAlignment}**\n\n**Quantum Remedies prepared:**\n${result.remedies.map(r => `- ${r}`).join('\n')}\n\nShall we transmit these light-codes?` }]);
+    }, 5000);
+  };
+
+  const handleSendMessage = async () => {
+    if (!input.trim()) return;
+    const userMsg: Message = { role: 'user', text: input };
+    const allMsgs = [...messages, userMsg];
+    setMessages(allMsgs);
+    setInput('');
+    setIsTyping(true);
+
+    let assistantSoFar = '';
+    const upsert = (chunk: string) => {
+      assistantSoFar += chunk;
+      setMessages(prev => {
+        const last = prev[prev.length - 1];
+        if (last?.role === 'model' && prev.length === allMsgs.length + 1) {
+          return prev.map((m, i) => i === prev.length - 1 ? { ...m, text: assistantSoFar } : m);
+        }
+        return [...prev, { role: 'model', text: assistantSoFar }];
+      });
+    };
+
+    try {
+      await streamChatWithSQI(allMsgs, upsert, () => setIsTyping(false));
+    } catch (e) {
+      console.error(e);
+      setMessages(prev => [...prev, { role: 'model', text: 'Transmission error. The Quantum Link is unstable.' }]);
+      setIsTyping(false);
+    }
+  };
+
+  const addActivation = (act: Activation) => {
+    if (selectedActivations.length >= 5 || selectedActivations.find(a => a.id === act.id)) return;
+    setSelectedActivations([...selectedActivations, act]);
+  };
+
+  const transmitCocktail = () => {
+    if (selectedActivations.length === 0) return;
+    const newT = [...activeTransmissions];
+    selectedActivations.forEach(act => { if (!newT.find(t => t.id === act.id)) newT.push(act); });
+    setActiveTransmissions(newT);
+    setMessages(prev => [...prev, { role: 'model', text: `**Initiating Quantum Transmission:**\n\n${selectedActivations.map(a => `- ${a.name}`).join('\n')}\n\nUploading Aetheric Codes to your cellular matrix…\n\nThese frequencies are now **locked 24/7** until manually dissolved.` }]);
+    setSelectedActivations([]);
+  };
+
+  const applyRemedies = () => {
+    if (!scanResult) return;
+    const remediesToApply = ACTIVATIONS.filter(a => scanResult.remedies.includes(a.name));
+    const newT = [...activeTransmissions];
+    remediesToApply.forEach(act => { if (!newT.find(t => t.id === act.id)) newT.push(act); });
+    setActiveTransmissions(newT);
+    setMessages(prev => [...prev, { role: 'model', text: `**Applying Siddha Remedies:**\n\n${scanResult.remedies.map(r => `- ${r}`).join('\n')}\n\nScalar Wave Entanglement complete. **Frequencies locked 24/7.**` }]);
+  };
+
+  return (
+    <div className="relative min-h-screen bg-[#0a0502] text-white/90 overflow-x-hidden pb-24">
+      {/* Atmosphere */}
+      <div className="fixed inset-0 z-0 pointer-events-none opacity-40" style={{
+        background: 'radial-gradient(circle at 50% 30%, #3a1510 0%, transparent 60%), radial-gradient(circle at 10% 80%, #ff4e00 0%, transparent 50%), radial-gradient(circle at 90% 20%, #818cf8 0%, transparent 40%)',
+        filter: 'blur(80px)',
+      }} />
+
+      {/* Nadi SVG overlay */}
+      <svg className={`fixed inset-0 z-0 pointer-events-none w-full h-full ${activeTransmissions.length > 0 ? 'opacity-40' : 'opacity-10'}`}>
+        <defs>
+          <filter id="qa-glow">
+            <feGaussianBlur stdDeviation={activeTransmissions.length > 0 ? '4' : '1'} result="coloredBlur"/>
+            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <g filter="url(#qa-glow)" stroke={activeTransmissions.length > 0 ? '#ff4e00' : 'rgba(255,255,255,0.3)'} strokeWidth={activeTransmissions.length > 0 ? '2' : '1'} fill="none">
+          <path d="M200,50 Q250,200 200,400 Q150,600 200,750" className={`nadi-line ${activeTransmissions.length > 0 ? 'active' : ''}`}/>
+          <path d="M400,50 Q350,200 400,400 Q450,600 400,750" className={`nadi-line ${activeTransmissions.length > 0 ? 'active' : ''}`}/>
+          <path d="M100,300 Q300,350 500,300" className={`nadi-line ${activeTransmissions.length > 0 ? 'active' : ''}`}/>
+        </g>
+      </svg>
+
+      {/* Main Content */}
+      <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-6 py-4">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <button onClick={() => navigate('/explore')} className="p-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition">
+              <ArrowLeft size={18} />
+            </button>
+            <div className="w-10 h-10 bg-gradient-to-br from-[#ff4e00] to-[#ff8c00] rounded-2xl flex items-center justify-center shadow-lg shadow-[#ff4e00]/20">
+              <Cpu size={20} />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold tracking-tight">Quantum Apothecary</h1>
+              <p className="text-[10px] text-white/40 uppercase tracking-widest">Est. 2050 · Siddha-Quantum Interface</p>
+            </div>
+          </div>
+          <button onClick={() => setShowKnowledge(true)} className="p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition">
+            <Info size={16} />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* LEFT: Scan + Mixer + Active */}
+          <div className="space-y-4">
+            {/* Nadi Scan */}
+            <div className="rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] p-5">
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <h2 className="text-sm font-bold">Digital Nadi Scan</h2>
+                  <p className="text-[10px] text-white/40">72,000 Channels Monitoring</p>
+                </div>
+                <div className="flex items-center gap-1 text-[#ff4e00]">
+                  <Activity size={14} />
+                  <span className="text-xs font-mono">{heartRate} BPM</span>
+                </div>
+              </div>
+
+              {scanResult ? (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <div className="text-center">
+                      <p className="text-[10px] text-white/40">Active Nadis</p>
+                      <p className="text-2xl font-bold text-[#ff4e00]">{scanResult.activeNadis}</p>
+                      <p className="text-[10px] text-white/30">/ 72,000</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-white/5 rounded-xl p-3">
+                      <p className="text-[10px] text-white/40">Dosha</p>
+                      <p className="text-sm font-bold">{scanResult.dominantDosha}</p>
+                    </div>
+                    <div className="bg-white/5 rounded-xl p-3">
+                      <p className="text-[10px] text-white/40">Alignment</p>
+                      <p className="text-sm font-bold">{scanResult.planetaryAlignment}</p>
+                    </div>
+                  </div>
+                  <div className="bg-white/5 rounded-xl p-3">
+                    <p className="text-[10px] text-white/40 mb-2">Siddha Remedies (5)</p>
+                    <div className="flex flex-wrap gap-1">
+                      {scanResult.remedies.map((r, i) => (
+                        <span key={i} className="text-[10px] px-2 py-1 rounded-full bg-[#ff4e00]/10 border border-[#ff4e00]/20 text-[#ff4e00]">{r}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={applyRemedies} className="flex-1 py-3 bg-[#ff4e00] text-white rounded-2xl text-xs font-bold uppercase tracking-wider hover:bg-[#ff6a00] transition">Apply Remedies</button>
+                    <button onClick={runNadiScan} className="flex-1 py-3 bg-white/5 border border-white/10 rounded-2xl text-xs font-bold uppercase tracking-wider hover:bg-white/10 transition">Rescan</button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8 space-y-4">
+                  {isScanning ? (
+                    <>
+                      <Activity size={32} className="mx-auto text-[#ff4e00] animate-pulse" />
+                      <div className="relative w-full h-40 rounded-2xl overflow-hidden bg-black/40">
+                        <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover opacity-30" />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="space-y-2">
+                      <Globe size={32} className="mx-auto text-white/20" />
+                      <p className="text-xs text-white/40">Awaiting Handshake</p>
+                    </div>
+                  )}
+                  <button onClick={runNadiScan} disabled={isScanning} className="w-full py-3 bg-[#ff4e00] text-white rounded-2xl text-xs font-bold uppercase tracking-wider hover:bg-[#ff6a00] transition disabled:opacity-50">
+                    {isScanning ? `Scanning... HR: ${heartRate}bpm` : 'Initiate Scan'}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Mixer */}
+            <div className="rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] p-5">
+              <div className="flex justify-between items-center mb-3">
+                <h2 className="text-sm font-bold">Aetheric Mixer</h2>
+                <span className="text-[10px] text-white/40">{selectedActivations.length}/5 Slots</span>
+              </div>
+              <div className="min-h-[60px] rounded-2xl bg-white/[0.02] border border-dashed border-white/10 p-3 mb-3">
+                {selectedActivations.length === 0 ? (
+                  <div className="flex items-center gap-2 justify-center text-white/20 py-2">
+                    <Plus size={14} />
+                    <span className="text-[10px]">Select activations from the library</span>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {selectedActivations.map(act => (
+                      <div key={act.id} className="flex items-center justify-between group">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full" style={{ background: act.color }} />
+                          <span className="text-xs font-medium">{act.name}</span>
+                        </div>
+                        <button onClick={() => setSelectedActivations(s => s.filter(a => a.id !== act.id))} className="p-1 opacity-0 group-hover:opacity-100 hover:text-red-400 transition"><Trash2 size={12} /></button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <button onClick={transmitCocktail} disabled={selectedActivations.length === 0} className="w-full py-3 bg-[#ff4e00] text-white rounded-2xl text-xs font-bold uppercase tracking-wider hover:bg-[#ff6a00] transition disabled:opacity-30">
+                Transmit Code
+              </button>
+            </div>
+
+            {/* Active Transmissions */}
+            <div className="rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] p-5">
+              <div className="flex justify-between items-center mb-3">
+                <div className="flex items-center gap-2">
+                  <Zap size={14} className="text-[#ff4e00]" />
+                  <h2 className="text-sm font-bold">Active Transmissions</h2>
+                </div>
+                <span className="text-[10px] px-2 py-1 rounded-full bg-green-500/20 text-green-400 border border-green-500/30 animate-pulse">24/7 Live</span>
+              </div>
+              <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+                {activeTransmissions.length === 0 ? (
+                  <div className="text-center py-4 text-white/20">
+                    <ShieldCheck size={20} className="mx-auto mb-1" />
+                    <p className="text-[10px]">No Active Frequencies</p>
+                  </div>
+                ) : (
+                  activeTransmissions.map(act => (
+                    <div key={act.id} className="flex items-center justify-between p-2 rounded-xl bg-white/[0.02] border border-white/5 group">
+                      <div className="flex items-center gap-2">
+                        <div className="relative">
+                          <div className="w-3 h-3 rounded-full" style={{ background: act.color }} />
+                          <div className="absolute inset-0 rounded-full animate-ping" style={{ background: act.color, opacity: 0.3 }} />
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium">{act.name}</p>
+                          <p className="text-[9px] text-white/30">Resonating...</p>
+                        </div>
+                      </div>
+                      <button onClick={() => setActiveTransmissions(t => t.filter(x => x.id !== act.id))} className="p-1 text-white/20 hover:text-red-400 transition" title="Dissolve">
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT: Library + Chat */}
+          <div className="space-y-4">
+            {/* Library */}
+            <div className="rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] p-5">
+              <div className="mb-3">
+                <h2 className="text-sm font-bold">Frequency Library</h2>
+                <p className="text-[10px] text-white/40">Select essences for your transmission</p>
+              </div>
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                {['All', 'Sacred Plant', 'Siddha Soma', 'Essential Oil', 'Ayurvedic Herb'].map(type => (
+                  <button key={type} onClick={() => setActiveCategory(type)} className={`text-[9px] uppercase tracking-tight px-2.5 py-1.5 border rounded-md transition ${
+                    activeCategory === type
+                      ? 'bg-[#ff4e00] border-[#ff4e00] text-white shadow-[0_0_15px_rgba(255,78,0,0.3)]'
+                      : 'bg-white/5 border-white/10 opacity-60 hover:opacity-100'
+                  }`}>{type}</button>
+                ))}
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto custom-scrollbar">
+                {ACTIVATIONS
+                  .filter(act => activeCategory === 'All' || act.type === activeCategory)
+                  .map(act => (
+                    <button key={act.id} onClick={() => addActivation(act)} disabled={!!selectedActivations.find(a => a.id === act.id)}
+                      className="text-left p-3 bg-white/5 border border-white/5 hover:border-[#ff4e00]/40 hover:bg-[#ff4e00]/5 transition rounded-2xl disabled:opacity-30 relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-16 h-16 rounded-full opacity-10" style={{ background: act.color, filter: 'blur(20px)' }} />
+                      <p className="text-xs font-bold relative">{act.name}</p>
+                      <p className="text-[10px] text-white/40 relative mt-0.5">{act.benefit}</p>
+                    </button>
+                  ))}
+              </div>
+            </div>
+
+            {/* Chat */}
+            <div className="rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] overflow-hidden flex flex-col" style={{ height: 480 }}>
+              <div className="p-4 border-b border-white/5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#ff4e00] to-[#ff8c00] flex items-center justify-center">
+                    <MessageSquare size={14} />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold">SQI Online</p>
+                    <div className="flex items-center gap-1">
+                      <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                      <span className="text-[9px] text-white/40">Neural Sync: 98%</span>
+                    </div>
+                  </div>
+                </div>
+                <Cpu size={14} className="text-white/20" />
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+                {messages.map((msg, i) => (
+                  <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[90%] p-3 rounded-2xl ${
+                      msg.role === 'user'
+                        ? 'bg-[#ff4e00]/20 border border-[#ff4e00]/30 rounded-br-sm'
+                        : 'bg-white/5 border border-white/5 rounded-bl-sm'
+                    }`}>
+                      <div className="markdown-body">{renderChatText(msg.text)}</div>
+                    </div>
+                  </motion.div>
+                ))}
+                {isTyping && (
+                  <div className="flex justify-start">
+                    <div className="bg-white/5 border border-white/5 rounded-2xl rounded-bl-sm p-3">
+                      <div className="flex gap-1">
+                        <div className="w-1.5 h-1.5 bg-[#ff4e00] rounded-full animate-bounce" />
+                        <div className="w-1.5 h-1.5 bg-[#ff4e00] rounded-full animate-bounce" style={{ animationDelay: '0.15s' }} />
+                        <div className="w-1.5 h-1.5 bg-[#ff4e00] rounded-full animate-bounce" style={{ animationDelay: '0.3s' }} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div ref={chatEndRef} />
+              </div>
+
+              <div className="p-3 border-t border-white/5">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={input}
+                    onChange={e => setInput(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
+                    placeholder="Communicate with the SQI..."
+                    className="flex-1 bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-[#ff4e00]/50 transition placeholder:text-white/20"
+                  />
+                  <button onClick={handleSendMessage} disabled={!input.trim() || isTyping}
+                    className="px-4 bg-[#ff4e00] rounded-xl text-white hover:bg-[#ff6a00] transition disabled:opacity-30">
+                    <Send size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Knowledge Modal */}
+      <AnimatePresence>
+        {showKnowledge && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }}
+              className="bg-[#0a0502] border border-white/10 rounded-3xl max-w-lg w-full max-h-[80vh] overflow-y-auto p-6 space-y-6">
+              <div className="flex justify-between items-start">
+                <h2 className="text-lg font-bold">Siddha-Quantum Intelligence</h2>
+                <button onClick={() => setShowKnowledge(false)} className="p-2 hover:bg-white/5 rounded-full"><X size={16} /></button>
+              </div>
+              {[
+                { t: 'What is this?', d: 'Apothecary 2050 is a Bio-Resonance Frequency Delivery Platform. It bypasses physical ingestion to deliver the "informational signature" of herbs and sacred plants directly into the human biofield via Scalar Wave Entanglement.' },
+                { t: 'The 72,000 Nadi Scan', d: 'We map the Quantum Flow of every single meridian. Dark crimson pulses indicate "Spiritual Friction" (Blockages), while bright white bursts show where your "Siddhis" (Powers) are awakening.' },
+                { t: '24/7 Persistent Transmission', d: 'Once a mix is toggled ON, the app uses a persistent background frequency loop to maintain the transmission. This ensures the frequency stays locked into your biofield until manually dissolved — even if you close the app or lose internet.' },
+                { t: 'Siddha Wisdom', d: 'We bridge the ancient wisdom of the 18 Siddhars with hyper-advanced neural-mapping. Healing occurs at the speed of thought.' },
+              ].map(s => (
+                <div key={s.t} className="bg-white/5 rounded-2xl p-4">
+                  <h3 className="text-sm font-bold mb-2">{s.t}</h3>
+                  <p className="text-xs text-white/60 leading-relaxed">{s.d}</p>
+                </div>
+              ))}
+              <button onClick={() => setShowKnowledge(false)} className="w-full py-3 bg-[#ff4e00] text-white rounded-2xl text-xs font-bold uppercase tracking-widest">Return to Aether</button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <style>{`
+        .nadi-line {
+          stroke-dasharray: 1000;
+          stroke-dashoffset: 1000;
+          animation: draw 10s linear infinite;
+          filter: drop-shadow(0 0 2px currentColor);
+          opacity: 0.3;
+          transition: all 0.5s ease;
+        }
+        .nadi-line.active {
+          opacity: 1;
+          stroke-width: 2;
+          filter: drop-shadow(0 0 8px currentColor);
+        }
+        @keyframes draw { to { stroke-dashoffset: 0; } }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+      `}</style>
+    </div>
+  );
+}
