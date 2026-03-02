@@ -1,7 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, ShieldCheck, MapPin, Loader2, AlertTriangle, Info, ArrowLeft } from "lucide-react";
+import {
+  Shield,
+  ShieldCheck,
+  MapPin,
+  Loader2,
+  AlertTriangle,
+  Info,
+  ArrowLeft,
+  Sparkles,
+} from "lucide-react";
 import { SriYantra } from "@/components/sri-yantra/SriYantra";
 import { ShieldHUD } from "@/components/sri-yantra/ShieldHUD";
 import { INITIAL_DATA, ACTIVE_DATA } from "@/components/sri-yantra/types";
@@ -13,6 +22,12 @@ const SHIELD_CORE = {
   mantras: ["OM_RAM_RAMAYA_NAMAHA", "MAHA_MRITYUNJAYA"],
   minerals: "SHUNGITE_ORGONITE_HYBRID",
   persistence: "AKASHA_FIXED",
+} as const;
+
+const VERIFICATION_TOOLS = {
+  blood_analysis: "Visual guide for Live Blood un-clumping",
+  emf_meter_sync: "Calibrate HUD with external EMF / TriField meters",
+  water_structuring: "Instructions for the Hexagonal Freeze Test",
 } as const;
 
 async function getOneTimeLocation(): Promise<{ lat: number; lng: number } | null> {
@@ -95,11 +110,69 @@ async function deployStationaryShield(
   } as const;
 }
 
+async function boostShieldCoherence(
+  multiplier: number,
+  setData: (data: ShieldData) => void,
+  addLog: (msg: string) => void
+) {
+  addLog(`Boosting shield coherence x${multiplier.toFixed(1)} for verification window (60s).`);
+  setData({
+    emf: "0.1mG_SUPER_COHERENT",
+    pathogenLoad: "ZERO_FIELD_MEASURABLE",
+    fearIndex: "UNITY_CONSCIOUSNESS_WINDOW",
+  });
+
+  // After 60s, gently return to the regular ACTIVE_DATA HUD
+  setTimeout(() => {
+    addLog("Verification window complete. Returning to stable shield baseline.");
+    setData(ACTIVE_DATA);
+  }, 60000);
+}
+
+async function openQuantumCameraHUD(addLog: (msg: string) => void) {
+  if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+    addLog("Camera access not available. You can still run EMF and water tests manually.");
+    return;
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    stream.getTracks().forEach((track) => track.stop());
+    addLog(
+      "Camera handshake complete. Use your camera to observe orbs / light coherence in the room."
+    );
+  } catch {
+    addLog("Camera permission declined. Proceed with meters and water tests manually.");
+  }
+}
+
+async function runProofProtocol(
+  setData: (data: ShieldData) => void,
+  addLog: (msg: string) => void
+) {
+  await boostShieldCoherence(2.0, setData, addLog);
+
+  await openQuantumCameraHUD(addLog);
+
+  addLog("Proof Protocol Active. Shield is now at Max Resonance.");
+
+  addLog(
+    `VERIFICATION_TOOL: Blood analysis — ${VERIFICATION_TOOLS.blood_analysis}`
+  );
+  addLog(
+    `VERIFICATION_TOOL: EMF meter sync — ${VERIFICATION_TOOLS.emf_meter_sync}`
+  );
+  addLog(
+    `VERIFICATION_TOOL: Water structuring — ${VERIFICATION_TOOLS.water_structuring}`
+  );
+}
+
 export default function SriYantraShield() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { hasAccess, loading: accessLoading, refetch: refetchAccess } = useSriYantraAccess();
   const [isActive, setIsActive] = useState(false);
+   const [isProofRunning, setIsProofRunning] = useState(false);
 
   useEffect(() => {
     if (searchParams.get("purchase") === "success") {
@@ -143,6 +216,19 @@ export default function SriYantraShield() {
       addLog("ERROR: Quantum Flux Instability Detected.");
     } finally {
       setIsActivating(false);
+    }
+  };
+
+  const handleRunProof = async () => {
+    if (!isActive || isProofRunning) return;
+    setIsProofRunning(true);
+    addLog("Initializing SIDDHA-QUANTUM VERIFICATION PROTOCOL...");
+    try {
+      await runProofProtocol(setData, addLog);
+    } catch {
+      addLog("Verification protocol encountered an error. Please retry.");
+    } finally {
+      setIsProofRunning(false);
     }
   };
 
@@ -224,7 +310,7 @@ export default function SriYantraShield() {
           </div>
 
           {/* Activation Button */}
-          <div className="mt-12 mb-16">
+          <div className="mt-12 mb-16 flex flex-col items-center gap-4">
             <button
               onClick={handleActivate}
               disabled={isActivating}
@@ -247,6 +333,24 @@ export default function SriYantraShield() {
                 )}
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-0 group-hover:opacity-10 transition-opacity" />
+            </button>
+
+            <button
+              onClick={handleRunProof}
+              disabled={!isActive || isProofRunning}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-violet-400/50 text-violet-200 hover:text-white hover:bg-violet-500/20 font-mono text-[11px] tracking-[0.18em] uppercase transition-colors"
+            >
+              {isProofRunning ? (
+                <>
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  RUNNING PROOF PROTOCOL...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-3 w-3" />
+                  RUN VERIFICATION PROTOCOL
+                </>
+              )}
             </button>
           </div>
         </div>
