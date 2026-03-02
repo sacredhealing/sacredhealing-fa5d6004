@@ -119,9 +119,29 @@ export default function TempleHome() {
   if (!isAdmin) {
     return (
       <div className="min-h-screen bg-[#0a0502] flex flex-col items-center justify-center text-white/60 gap-4 p-8">
-        <Lock className="h-12 w-12 text-[#D4AF37]/40" />
-        <p className="text-center">This sacred space is not yet open.</p>
-        <button onClick={() => navigate('/explore')} className="text-[#D4AF37] text-sm">← Return to Library</button>
+        <Lock className="h-12 w-12 text-[#D4AF37]/60" />
+        <p className="text-center text-sm max-w-md">
+          <span className="font-semibold text-[#D4AF37]">Temple Home is currently locked.</span>{" "}
+          This 24/7 house-anchored engine is reserved for Temple Home License holders and admins.
+        </p>
+        <p className="text-center text-xs text-[#D4AF37]/80">
+          Unlock permanently for <span className="font-semibold text-[#D4AF37]">€499</span>{" "}
+          (Stripe / Crypto) and gain full Temple access.
+        </p>
+        <div className="flex flex-col items-center gap-3 mt-2">
+          <button
+            onClick={() => navigate('/shop')}
+            className="px-6 py-3 rounded-full border border-[#D4AF37]/60 text-xs uppercase tracking-[0.2em] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black transition-colors"
+          >
+            Unlock Temple Home — €499
+          </button>
+          <button
+            onClick={() => navigate('/explore')}
+            className="text-[#D4AF37] text-xs opacity-80 hover:opacity-100"
+          >
+            ← Return to Library
+          </button>
+        </div>
       </div>
     );
   }
