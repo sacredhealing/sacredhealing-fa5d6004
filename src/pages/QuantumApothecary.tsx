@@ -116,7 +116,7 @@ export default function QuantumApothecary() {
       setScanResult(result);
       setIsScanning(false);
       if (streamRef.current) { streamRef.current.getTracks().forEach(t => t.stop()); streamRef.current = null; }
-      setMessages(prev => [...prev, { role: 'model', text: `**Siddha-Quantum Sync Complete.**\n\n- Active Nadis: **${result.activeNadis}/${result.totalNadis}**\n- Dominant Dosha: **${result.dominantDosha}**\n- Blockage: **${result.blockages[0]}**\n- Alignment: **${result.planetaryAlignment}**\n\n**Quantum Remedies prepared:**\n${result.remedies.map(r => `- ${r}`).join('\n')}\n\nShall we transmit these light-codes?` }]);
+      setMessages(prev => [...prev, { role: 'model', text: `**Siddha-Quantum Sync Complete.**\n\n- Active Nadis: **${result.activeNadis}/${result.totalNadis}**\n- Dominant Dosha: **${result.dominantDosha}**\n- Blockage: **${result.blockages[0]}**\n- Alignment: **${result.planetaryAlignment}**\n- Herb of Today: **${result.herbOfToday}**\n\n**Quantum Remedies prepared:**\n${result.remedies.map(r => `- ${r}`).join('\n')}\n\nShall we transmit these light-codes?` }]);
     }, 5000);
   };
 
@@ -250,6 +250,10 @@ export default function QuantumApothecary() {
                       <p className="text-[10px] text-white/40">Alignment</p>
                       <p className="text-sm font-bold">{scanResult.planetaryAlignment}</p>
                     </div>
+                  </div>
+                  <div className="rounded-xl p-3 border border-emerald-500/40 bg-emerald-950/20">
+                    <p className="text-[10px] text-emerald-400/80 uppercase tracking-wider font-semibold mb-1">Herb of Today</p>
+                    <p className="text-sm font-medium text-white/90">{scanResult.herbOfToday}</p>
                   </div>
                   <div className="bg-white/5 rounded-xl p-3">
                     <p className="text-[10px] text-white/40 mb-2">Siddha Remedies (5)</p>
