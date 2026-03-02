@@ -800,7 +800,7 @@ const Healing: React.FC = () => {
 function SessionRow({ audio, isPlaying, onTogglePlay, formatDuration, isAdmin, ownedAudioIds, hasHealingAccess, onPurchase, isProcessing, T, formatEnergyExchange, isPremiumTier = false, onRequestUpgrade }: {
   audio: HealingAudio; isPlaying: boolean; onTogglePlay: (a: HealingAudio) => void; formatDuration: (s: number) => string; isAdmin: boolean; ownedAudioIds: Set<string>; hasHealingAccess: boolean; onPurchase: (a: HealingAudio, m: 'shc' | 'stripe') => void; isProcessing: boolean; T: Record<string, string>; formatEnergyExchange: (p: number) => string; isPremiumTier?: boolean; onRequestUpgrade?: () => void;
 }) {
-  const hasAccess = isAdmin || ownedAudioIds.has(audio.id) || hasHealingAccess;
+  const hasAccess = isAdmin || audio.is_free || ownedAudioIds.has(audio.id) || hasHealingAccess;
   const isLockedPremium = isPremiumTier && !hasAccess;
   const priceLabel = formatEnergyExchange(audio.price_usd);
 
@@ -812,7 +812,6 @@ function SessionRow({ audio, isPlaying, onTogglePlay, formatDuration, isAdmin, o
         className="w-12 h-12 rounded-full bg-[#D4AF37]/10 flex items-center justify-center hover:bg-[#D4AF37]/20 transition relative shrink-0"
       >
         {isLockedPremium && <Lock className="w-3 h-3 text-[#D4AF37] absolute -top-1 -right-1" />}
-        {!hasAccess && !isLockedPremium && <Lock className="w-3 h-3 text-white/30 absolute -top-1 -right-1" />}
         {hasAccess && isPlaying ? <Pause className="w-5 h-5 text-[#D4AF37]" /> : <Play className="w-5 h-5 text-[#D4AF37] ml-0.5" />}
       </button>
       <div className="flex-1 min-w-0">
