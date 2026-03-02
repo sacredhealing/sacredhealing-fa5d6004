@@ -15,7 +15,7 @@ export async function streamChatWithSQI(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkaXFybmdpdmJyd2tod2NlanZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwNTY0NDEsImV4cCI6MjA4MzYzMjQ0MX0.ErxtdRS1pDj06gF7-dDvNtjm-ENDSZpRO-FKT_9DiB8',
     },
     body: JSON.stringify({ messages: apiMessages }),
   });
