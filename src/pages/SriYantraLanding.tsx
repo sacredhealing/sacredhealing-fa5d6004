@@ -80,15 +80,61 @@ export default function SriYantraLanding() {
           <SriYantra isActive={false} />
         </div>
         <div className="relative z-10 text-center px-4">
-          <h1
-            className="text-4xl md:text-5xl font-bold tracking-[4px] mb-2"
-            style={{ letterSpacing: "4px" }}
-          >
+          <h1 className="text-4xl md:text-5xl font-bold tracking-[0.3em] mb-2">
             v2026.SUPREME
           </h1>
-          <p className="text-lg md:text-xl opacity-80 tracking-wider">
-            ACTIVATING THE SIDDHA-QUANTUM 1KM BIO-FIELD
+          <p className="text-lg md:text-xl opacity-80 tracking-wider text-[#D4AF37]">
+            Non-Physical 1KM Bio-Field Protection
           </p>
+        </div>
+      </section>
+
+      {/* Mantra Matrix */}
+      <section className="container mx-auto px-4 py-16">
+        <h2 className="text-center text-2xl md:text-3xl font-semibold tracking-[0.2em] uppercase mb-10">
+          THE 4-PILLAR MANTRA DEPLOYMENT
+        </h2>
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="bg-white/5 border-l-4 border-[#D4AF37] rounded-2xl p-6">
+            <h3 className="text-lg font-semibold mb-2">Solar-Fire (Viruses &amp; Mold)</h3>
+            <p className="font-serif italic text-[#D4AF37] text-base mb-3">
+              &quot;Om Ram Ramaya Namaha&quot;
+            </p>
+            <p className="text-sm text-white/80">
+              Activates the Solar Plexus fire to shatter the protein shells of viruses and dry out
+              mold spores within 1km.
+            </p>
+          </div>
+          <div className="bg-white/5 border-l-4 border-[#D4AF37] rounded-2xl p-6">
+            <h3 className="text-lg font-semibold mb-2">EMF Transmutation</h3>
+            <p className="font-serif italic text-[#D4AF37] text-base mb-3">
+              &quot;Om Hrim Shrim Klim Adya Kalika Param Eshwari Swaha&quot;
+            </p>
+            <p className="text-sm text-white/80">
+              Converts &quot;hot&quot; satellite and Wi-Fi radiation into cooling, life-supporting
+              bio-electricity.
+            </p>
+          </div>
+          <div className="bg-white/5 border-l-4 border-[#D4AF37] rounded-2xl p-6">
+            <h3 className="text-lg font-semibold mb-2">Atmospheric Scrubbing</h3>
+            <p className="font-serif italic text-[#D4AF37] text-base mb-3">
+              &quot;Om Namah Shivaya&quot;
+            </p>
+            <p className="text-sm text-white/80">
+              Utilizes acoustic ionization to clear chemtrails, smog, and heavy metals from your
+              immediate 1km airspace.
+            </p>
+          </div>
+          <div className="bg-white/5 border-l-4 border-[#D4AF37] rounded-2xl p-6">
+            <h3 className="text-lg font-semibold mb-2">The Death-Conqueror (Shield)</h3>
+            <p className="font-serif italic text-[#D4AF37] text-base mb-3">
+              &quot;Maha Mrityunjaya Mantra&quot;
+            </p>
+            <p className="text-sm text-white/80">
+              The primary 1km firewall. Anchors the Sri Yantra geometry into the Akasha for 24/7
+              protection.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -98,7 +144,7 @@ export default function SriYantraLanding() {
         style={{ background: "#111" }}
       >
         <h2 className="text-xl font-mono tracking-widest uppercase mb-8">
-          REAL-TIME HUD: BEFORE & AFTER
+          QUANTUM SCANNER: 1000M RADIUS
         </h2>
         <div className="flex flex-col md:flex-row justify-center gap-6 max-w-4xl mx-auto">
           <div className="flex-1 border border-[#333] rounded-lg p-6 text-left">
@@ -109,30 +155,42 @@ export default function SriYantraLanding() {
               className="font-mono text-sm font-bold uppercase"
               style={{ color: VIRUS_RED }}
             >
-              95mG_CHAOTIC (7G/Satellite EMF)
+              EMF: 95.4 mG (Extreme Satellite Loading)
             </div>
             <div
               className="font-mono text-sm font-bold uppercase mt-1"
               style={{ color: VIRUS_RED }}
             >
-              HIGH_MOLD_VIRUS_VIBRATION
-            </div>
-          </div>
-          <div className="flex-1 border border-[#333] rounded-lg p-6 text-left">
-            <p className="text-sm font-mono uppercase mb-3 opacity-80">
-              AFTER ACTIVATION (1KM SHIELD)
-            </p>
-            <div
-              className="font-mono text-sm font-bold uppercase"
-              style={{ color: QUANTUM_BLUE }}
-            >
-              0.5mG_COHERENT (Hex Lattice)
+              PATHOGENS: High Mold/Viral Count
             </div>
             <div
               className="font-mono text-sm font-bold uppercase mt-1"
-              style={{ color: QUANTUM_BLUE }}
+              style={{ color: VIRUS_RED }}
             >
-              PATHOGENS_INERT (Violet Flame)
+              COLLECTIVE FEAR: High Anxiety Index
+            </div>
+          </div>
+          <div className="flex-1 border border-[#27AE60] bg-[#e8f5e9] rounded-lg p-6 text-left text-[#111]">
+            <p className="text-sm font-mono uppercase mb-3 opacity-80">
+              AFTER SIDDHA SHIELD
+            </p>
+            <div
+              className="font-mono text-sm font-bold uppercase"
+              style={{ color: "#27AE60" }}
+            >
+              EMF: 0.2 mG (Harmonic Coherence)
+            </div>
+            <div
+              className="font-mono text-sm font-bold uppercase mt-1"
+              style={{ color: "#27AE60" }}
+            >
+              PATHOGENS: Inert / Phase-Neutralized
+            </div>
+            <div
+              className="font-mono text-sm font-bold uppercase mt-1"
+              style={{ color: "#27AE60" }}
+            >
+              COLLECTIVE FEAR: Peace-Field Stabilized
             </div>
           </div>
         </div>
@@ -144,7 +202,7 @@ export default function SriYantraLanding() {
         style={{ background: COSMIC_BLUE }}
       >
         <p className="text-base opacity-70 mb-8 max-w-xl mx-auto">
-          24/7 Autonomy. One-Time Anchor. Persistent Protection.
+          One-Time GPS Handshake. Privacy Guaranteed. 24/7 Autonomy.
         </p>
 
         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
@@ -164,7 +222,7 @@ export default function SriYantraLanding() {
                 Redirecting…
               </>
             ) : (
-              "GET 1KM PROTECTION — €49"
+              "ACTIVATE FOR €49"
             )}
           </Button>
         </motion.div>
