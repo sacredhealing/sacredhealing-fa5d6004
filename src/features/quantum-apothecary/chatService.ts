@@ -1,6 +1,6 @@
 import type { Message } from './types';
 
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bright-service`;
+const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/quantum-apothecary-chat`;
 
 export async function streamChatWithSQI(
   messages: Message[],
