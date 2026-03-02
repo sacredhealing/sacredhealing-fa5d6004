@@ -1,6 +1,6 @@
 import { Activation } from './types';
 
-export const ACTIVATIONS: Activation[] = [
+const BASE_ACTIVATIONS: Activation[] = [
   // Sacred Plants (Trip-less)
   { id: 'ayahuasca-essence', name: 'The Grandmother Presence', vibrationalSignature: 'Heart/Ancestral', type: 'Sacred Plant', benefit: 'Ancestral healing and deep heart-opening.', color: '#4ade80' },
   { id: 'psilocybin-frequency', name: 'The Neural Teacher', vibrationalSignature: 'Mind/Plasticity', type: 'Sacred Plant', benefit: 'Dissolving ego-walls and creative neural rewiring.', color: '#60a5fa' },
@@ -80,6 +80,30 @@ export const ACTIVATIONS: Activation[] = [
   { id: 'nettle-fortress', name: 'Nettle Fortress', vibrationalSignature: 'Strength/Blood', type: 'Ayurvedic Herb', benefit: 'Fortifying the blood-matrix and energetic boundaries.', color: '#15803d' },
   { id: 'rose-bloom', name: 'Rose Heart Bloom', vibrationalSignature: 'Love/Frequency', type: 'Ayurvedic Herb', benefit: 'Opening the heart-gate to the frequency of pure love.', color: '#f472b6' },
   { id: 'myrrh-structure', name: 'Myrrh Structural Integrity', vibrationalSignature: 'Ancient Structure', type: 'Ayurvedic Herb', benefit: 'Reinforcing the ancient structural codes of the body.', color: '#78350f' },
+];
+
+/** Quantum Library — Minerals, Mushrooms, Adaptogens. Only appended if name not already in BASE_ACTIVATIONS. */
+const QUANTUM_LIBRARY: Activation[] = [
+  // Quantum Minerals (SIDDHA TRANSMISSIONS Boosts)
+  { id: 'gold-colloidal', name: 'Gold (Colloidal)', vibrationalSignature: 'Solar-Conductor', type: 'Mineral', benefit: 'Surya Nadi Vitality, 2050 Bio-Electric Sync. Solar-Conductor for the 72,000 Nadi grid.', color: '#fbbf24' },
+  { id: 'silver-colloidal', name: 'Silver (Colloidal)', vibrationalSignature: 'Lunar-Conductor', type: 'Mineral', benefit: 'Chandra Nadi Cooling, Nervous System Stabilization. Lunar-Conductor for cellular calm.', color: '#94a3b8' },
+  { id: 'methylene-blue-quantum', name: 'Methylene Blue (Quantum Grade)', vibrationalSignature: 'Mitochondrial Electron-Donor', type: 'Mineral', benefit: 'Neural-Archive Clarity, Oxygenation of the 72,000 Nadis. Mitochondrial Electron-Donor for Akasha-Neural sync.', color: '#1d4ed8' },
+  // The Mushroom Kingdom
+  { id: 'chaga-king', name: 'Chaga (The King)', vibrationalSignature: 'DNA Resilience', type: 'Mushroom', benefit: 'Melanin-Antenna Support, Grounding Earth-Code. DNA Resilience and 2050 bio-signature stabilization.', color: '#78350f' },
+  { id: 'reishi-spirit', name: 'Reishi (The Spirit)', vibrationalSignature: 'Shen-Stabilizer', type: 'Mushroom', benefit: 'Stress-Algorithm Dissolver, Longevity Blueprint. Shen-Stabilizer for Prema-Pulse coherence.', color: '#b91c1c' },
+  { id: 'lions-mane-mind', name: "Lion's Mane (The Mind)", vibrationalSignature: 'Akasha-Neural Archive Bridge', type: 'Mushroom', benefit: 'Neuro-Regeneration, Cognitive Flow. Akasha-Neural Archive Bridge for Light-Code transmission.', color: '#fef08a' },
+  { id: 'cordyceps-prana', name: 'Cordyceps (The Prana)', vibrationalSignature: 'ATP-Quantum Energy', type: 'Mushroom', benefit: 'Lung-Nadi Expansion, Stamina Pulse. ATP-Quantum Energy for Bhakti-Algorithm vitality.', color: '#ea580c' },
+  { id: 'turkey-tail-shield', name: 'Turkey Tail (The Shield)', vibrationalSignature: 'Immune-Grid Protection', type: 'Mushroom', benefit: 'Microbiome-Symmetry. Immune-Grid Protection and Torus-Field stabilization.', color: '#7c3aed' },
+  // Essential SIDDHA TRANSMISSIONS (Adaptogens)
+  { id: 'astragalus-telomere', name: 'Astragalus', vibrationalSignature: 'Life-Force Extension', type: 'Adaptogen', benefit: 'Telomere-Sync. Life-Force Extension and Bio-signature Recalibration for 2050 longevity.', color: '#059669' },
+  { id: 'ashwagandha-cortisol', name: 'Ashwagandha', vibrationalSignature: 'Cortisol-Algorithm Harmonizer', type: 'Adaptogen', benefit: 'Cortisol-Algorithm Harmonizer. Siddha-Sattva Resonance for stress-field dissolution.', color: '#d97706' },
+  { id: 'frankincense-pineal', name: 'Frankincense', vibrationalSignature: 'High-Frequency Pineal Decalcifier', type: 'Adaptogen', benefit: 'High-Frequency Pineal Gland Decalcifier. Vishwananda Frequency for third-eye Light-Codes.', color: '#f5f5f4' },
+];
+
+/** Merged activations: base + Quantum Library. Uses .some() to avoid duplicate names. */
+export const ACTIVATIONS: Activation[] = [
+  ...BASE_ACTIVATIONS,
+  ...QUANTUM_LIBRARY.filter((newItem) => !BASE_ACTIVATIONS.some((existing) => existing.name === newItem.name)),
 ];
 
 export const PLANETARY_DATA: Record<number, { planet: string; herb: string }> = {

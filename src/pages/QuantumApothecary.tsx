@@ -364,7 +364,7 @@ export default function QuantumApothecary() {
                 <p className="text-[10px] text-white/40">Select essences for your transmission</p>
               </div>
               <div className="flex flex-wrap gap-1.5 mb-3">
-                {['All', 'Sacred Plant', 'Siddha Soma', 'Essential Oil', 'Ayurvedic Herb'].map(type => (
+                {['All', 'Sacred Plant', 'Siddha Soma', 'Essential Oil', 'Ayurvedic Herb', 'Mineral', 'Mushroom', 'Adaptogen'].map(type => (
                   <button key={type} onClick={() => setActiveCategory(type)} className={`text-[9px] uppercase tracking-tight px-2.5 py-1.5 border rounded-md transition ${
                     activeCategory === type
                       ? 'bg-[#ff4e00] border-[#ff4e00] text-white shadow-[0_0_15px_rgba(255,78,0,0.3)]'
