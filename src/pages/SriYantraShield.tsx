@@ -30,6 +30,8 @@ const VERIFICATION_TOOLS = {
   water_structuring: "Instructions for the Hexagonal Freeze Test",
 } as const;
 
+const SHIELD_STORAGE_KEY = "sri_yantra_shield_active_v1";
+
 async function getOneTimeLocation(): Promise<{ lat: number; lng: number } | null> {
   if (typeof navigator === "undefined" || !("geolocation" in navigator)) {
     return null;
@@ -172,7 +174,15 @@ export default function SriYantraShield() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { hasAccess, loading: accessLoading, refetch: refetchAccess } = useSriYantraAccess();
   const [isActive, setIsActive] = useState(false);
-   const [isProofRunning, setIsProofRunning] = useState(false);
+  const [isProofRunning, setIsProofRunning] = useState(false);
+  const [isActivating, setIsActivating] = useState(false);
+  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [data, setData] = useState<ShieldData>(INITIAL_DATA);
+  const [logs, setLogs] = useState<string[]>([]);
+
+  const addLog = (msg: string) => {
+    setLogs((prev) => [msg, ...prev].slice(0, 5));
+  };
 
   useEffect(() => {
     if (searchParams.get("purchase") === "success") {
@@ -180,6 +190,22 @@ export default function SriYantraShield() {
       refetchAccess();
     }
   }, [searchParams, setSearchParams, refetchAccess]);
+
+  // Restore shield state locally so it remains active if the user closes the app
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const stored = window.localStorage.getItem(SHIELD_STORAGE_KEY);
+      if (stored === "true") {
+        setIsActive(true);
+        setData(ACTIVE_DATA);
+        addLog("Shield state restored: PROTECTION_ACTIVE from previous session.");
+      }
+    } catch {
+      // Ignore storage errors
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (accessLoading) {
     return (
@@ -192,26 +218,32 @@ export default function SriYantraShield() {
   if (!hasAccess) {
     return <SriYantraLanding />;
   }
-  const [isActivating, setIsActivating] = useState(false);
-  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [data, setData] = useState<ShieldData>(INITIAL_DATA);
-  const [logs, setLogs] = useState<string[]>([]);
-
-  const addLog = (msg: string) => {
-    setLogs((prev) => [msg, ...prev].slice(0, 5));
-  };
 
   const handleActivate = async () => {
     if (isActive) {
       setIsActive(false);
       setData(INITIAL_DATA);
       addLog("Shield Deactivated. Reverting to local chaotic field.");
+      try {
+        if (typeof window !== "undefined") {
+          window.localStorage.removeItem(SHIELD_STORAGE_KEY);
+        }
+      } catch {
+        // ignore
+      }
       return;
     }
 
     setIsActivating(true);
     try {
       await deployStationaryShield(setLocation, setData, addLog, setIsActive);
+      try {
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem(SHIELD_STORAGE_KEY, "true");
+        }
+      } catch {
+        // ignore
+      }
     } catch {
       addLog("ERROR: Quantum Flux Instability Detected.");
     } finally {
