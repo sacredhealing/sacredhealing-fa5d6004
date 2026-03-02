@@ -38,6 +38,7 @@ const Admin: React.FC = () => {
   const [category, setCategory] = useState('general');
   const [isPremium, setIsPremium] = useState(false);
   const [shcReward, setShcReward] = useState('5');
+  const [language, setLanguage] = useState<'en' | 'sv'>('en');
   const [audioFile, setAudioFile] = useState<File | null>(null);
 
   useEffect(() => {
@@ -156,8 +157,9 @@ const Admin: React.FC = () => {
           audio_url: publicUrl,
           category,
           is_premium: isPremium,
-          shc_reward: parseInt(shcReward)
-        });
+          shc_reward: parseInt(shcReward),
+          language,
+        } as any);
 
       if (insertError) throw insertError;
 
@@ -173,6 +175,7 @@ const Admin: React.FC = () => {
       setCategory('general');
       setIsPremium(false);
       setShcReward('5');
+      setLanguage('en');
       setAudioFile(null);
       
       // Refresh list
@@ -439,7 +442,19 @@ Rest in this peaceful state. When you're ready, gently open your eyes, knowing y
                   min="0"
                   className="bg-muted/50"
                 />
-              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm text-muted-foreground mb-1">Language</label>
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value as 'en' | 'sv')}
+                className="w-full h-10 px-3 rounded-md bg-muted/50 border border-border text-foreground"
+              >
+                <option value="en">English</option>
+                <option value="sv">Svenska</option>
+              </select>
+            </div>
             </div>
             
             <div>

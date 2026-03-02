@@ -2881,7 +2881,9 @@ export type Database = {
           duration_minutes: number
           id: string
           is_premium: boolean
+          language: string
           play_count: number
+          script_text: string | null
           shc_reward: number
           title: string
         }
@@ -2894,7 +2896,9 @@ export type Database = {
           duration_minutes?: number
           id?: string
           is_premium?: boolean
+          language?: string
           play_count?: number
+          script_text?: string | null
           shc_reward?: number
           title: string
         }
@@ -2907,7 +2911,9 @@ export type Database = {
           duration_minutes?: number
           id?: string
           is_premium?: boolean
+          language?: string
           play_count?: number
+          script_text?: string | null
           shc_reward?: number
           title?: string
         }

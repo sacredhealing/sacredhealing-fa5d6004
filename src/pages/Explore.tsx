@@ -42,6 +42,8 @@ import {
   Hand,
   Leaf,
   Eye,
+  Cpu,
+  Home,
 } from "lucide-react";
 import SacredRevealGate from "@/components/SacredRevealGate";
 
@@ -344,6 +346,8 @@ export default function Explore() {
                 { label: "Mantra Library", desc: "Sacred sounds for daily practice", href: "/mantras", Icon: Music2, premium: true },
                 { label: "Ayurveda", desc: "Balance + daily guidance", href: "/ayurveda" },
                 { label: "Vastu", desc: "Abundance Architect", href: "/vastu" },
+                { label: "Quantum Apothecary", desc: "2050 Siddha-Quantum bio-resonance platform", href: "/quantum-apothecary", Icon: Cpu, adminOnly: true },
+                { label: "Temple Home", desc: "24/7 Sacred Site resonance anchor", href: "/temple-home", Icon: Home, adminOnly: true },
                 { label: "Palm & Akashic Oracle", desc: "Basic hand analysis (Lines only) → Akashic verdict", href: "/hand-analyzer", Icon: Hand, premium: true, adminOnly: true },
               ].filter((item) => !("adminOnly" in item && item.adminOnly) || isAdmin).map((item) => {
                 const Icon = "Icon" in item ? item.Icon : null;

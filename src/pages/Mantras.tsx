@@ -19,6 +19,7 @@ import { normalizePlanetName, mantraMatchesPlanet, getPlanetOfDay, getDailyMantr
 import { getPlanetEmoji } from '@/lib/vedicTypes';
 import { getPalmScanResult } from '@/lib/palmScanStore';
 import BhriguCard from '@/components/BhriguCard';
+import { GatedResonancePanel } from '@/components/resonance/UniversalResonanceEngine';
 
 // Planet → vibrant color theme
 const PLANET_THEMES: Record<string, {
@@ -292,6 +293,7 @@ const Mantras = () => {
   }
 
   return (
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
     <div className="min-h-screen bg-background pb-28 overflow-x-hidden overflow-y-auto">
 
       {/* Sacred Header — Celestial Gradient; Return to Temple always available */}
@@ -689,6 +691,10 @@ const Mantras = () => {
       </div>
 
       <audio ref={audioRef} className="hidden" />
+    </div>
+      <aside className="mt-6 lg:mt-0">
+        <GatedResonancePanel page="Mantra" />
+      </aside>
     </div>
   );
 };
