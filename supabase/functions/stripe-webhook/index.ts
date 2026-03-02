@@ -23,6 +23,7 @@ const PRICE_TO_PRODUCT: Record<string, { type: string; name: string }> = {
 // Maps checkout metadata types to affiliate purchase types
 const getPurchaseType = (metadata: Record<string, string>): string | null => {
   if (metadata.purchase_type === 'meditation_audio') return 'meditation_audio';
+  if (metadata.product_type === 'sri_yantra_shield') return 'sri_yantra_shield';
   if (metadata.purchase_type === 'creative_tool' || metadata.tool_id) return 'creative_tool';
   if (metadata.purchase_type === 'bot_deposit' || metadata.purchase_type === 'bot_premium' || metadata.purchase_type === 'bot_feature') return 'bot';
   if (metadata.type === 'meditation_membership') return 'meditation';
@@ -49,6 +50,7 @@ const getProductName = (metadata: Record<string, string> | null): string => {
   if (!metadata) return 'Stripe Purchase';
   
   if (metadata.purchase_type === 'meditation_audio') return 'Creative Soul Meditation';
+  if (metadata.product_type === 'sri_yantra_shield') return metadata.product_name || 'Sri Yantra Universal Protection Shield';
   if (metadata.purchase_type === 'creative_tool' || metadata.tool_name) return metadata.tool_name || 'Creative Soul Tool';
   if (metadata.purchase_type === 'bot_deposit') return `Bot Deposit - $${metadata.amount || '0'}`;
   if (metadata.purchase_type === 'bot_premium') return `Bot Premium - ${metadata.feature || 'monthly'}`;
@@ -435,6 +437,27 @@ serve(async (req) => {
             logStep("Error upserting akashic_readings", { error: akashicError.message, userId });
           } else {
             logStep("Akashic reading access granted", { userId });
+          }
+        }
+
+        // Handle Sri Yantra Shield purchase - grant lifetime access
+        if (purchaseType === 'sri_yantra_shield' && userId) {
+          logStep("Processing Sri Yantra Shield purchase", { userId });
+          const { error: sriError } = await supabaseAdmin
+            .from('sri_yantra_access')
+            .upsert(
+              {
+                user_id: userId,
+                has_access: true,
+                stripe_session_id: session.id,
+                updated_at: new Date().toISOString(),
+              },
+              { onConflict: 'user_id' }
+            );
+          if (sriError) {
+            logStep("Error upserting sri_yantra_access", { error: sriError.message, userId });
+          } else {
+            logStep("Sri Yantra Shield access granted", { userId });
           }
         }
 

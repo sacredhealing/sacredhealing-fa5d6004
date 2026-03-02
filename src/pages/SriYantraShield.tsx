@@ -1,11 +1,13 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, ShieldCheck, MapPin, Loader2, AlertTriangle, Info, ArrowLeft } from "lucide-react";
 import { SriYantra } from "@/components/sri-yantra/SriYantra";
 import { ShieldHUD } from "@/components/sri-yantra/ShieldHUD";
 import { INITIAL_DATA, ACTIVE_DATA } from "@/components/sri-yantra/types";
 import type { ShieldData } from "@/components/sri-yantra/types";
+import { useSriYantraAccess } from "@/hooks/useSriYantraAccess";
+import SriYantraLanding from "@/pages/SriYantraLanding";
 
 const SHIELD_CORE = {
   mantras: ["OM_RAM_RAMAYA_NAMAHA", "MAHA_MRITYUNJAYA"],
@@ -95,7 +97,28 @@ async function deployStationaryShield(
 
 export default function SriYantraShield() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { hasAccess, loading: accessLoading, refetch: refetchAccess } = useSriYantraAccess();
   const [isActive, setIsActive] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("purchase") === "success") {
+      setSearchParams({}, { replace: true });
+      refetchAccess();
+    }
+  }, [searchParams, setSearchParams, refetchAccess]);
+
+  if (accessLoading) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-blue-400" />
+      </div>
+    );
+  }
+
+  if (!hasAccess) {
+    return <SriYantraLanding />;
+  }
   const [isActivating, setIsActivating] = useState(false);
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [data, setData] = useState<ShieldData>(INITIAL_DATA);
