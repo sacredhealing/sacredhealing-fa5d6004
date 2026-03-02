@@ -244,7 +244,7 @@ export default function Explore() {
             </div>
             <div>
               <h2 className="text-2xl md:text-3xl font-bold text-amber-100 tracking-tight">
-                {t("explore.healingSounds", "Healing Sounds")}
+                {t("explore.healingSounds", "Healing Music")}
               </h2>
               <p className="mt-1 text-sm text-amber-200/80">
                 {t("explore.healingSoundsDesc", "Sacred frequencies for body and soul")}
