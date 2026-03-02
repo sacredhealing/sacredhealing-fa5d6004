@@ -127,13 +127,19 @@ const AdminAccessGrantTab = () => {
     setSubmitting(true);
 
     try {
+      // Database currently enforces access_type IN ('membership','course','path','program')
+      // Map extended UI types (like sri_yantra_shield) to 'program' for storage,
+      // while still performing any feature-specific upserts separately.
+      const allowedTypes = new Set(['membership', 'course', 'path', 'program']);
+      const dbAccessType = allowedTypes.has(accessType) ? accessType : 'program';
+
       const accessIdValue =
         accessType === 'course' || accessType === 'path' ? (accessId || null) : null;
 
       const { error } = await supabase.from('admin_granted_access').insert({
         user_id: selectedUser.user_id,
-        access_type: accessType,
-        access_id: accessIdValue,
+        access_type: dbAccessType,
+        access_id: accessIdValue ?? (allowedTypes.has(accessType) ? null : accessType),
         tier: accessType === 'membership' ? tier : null,
         granted_by: user.id,
         notes: notes || null,
