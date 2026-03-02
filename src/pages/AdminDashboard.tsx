@@ -24,13 +24,21 @@ import {
   Map,
   MessageCircle,
   Volume2,
-  Languages
+  Languages,
+  Gift
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 
 const adminSections = [
+  {
+    title: 'Grant Access',
+    description: 'Give users free access to courses, membership, Sri Yantra, Creative Soul & more',
+    icon: Gift,
+    href: '/admin/grant-access',
+    color: 'text-amber-500',
+  },
   {
     title: 'Announcements',
     description: 'Send notices and updates to all users',

@@ -71,70 +71,80 @@ export default function SriYantraLanding() {
     >
       {/* Hero */}
       <section
-        className="relative min-h-[100vh] flex items-center justify-center overflow-hidden"
+        className="relative flex flex-col items-center justify-center overflow-hidden px-4 py-16 md:py-20"
         style={{
-          background: "radial-gradient(circle, #2A1B3D 0%, #0A0F1E 100%)",
+          background: "radial-gradient(circle at top, #1B2735 0%, #0A0F1E 100%)",
         }}
       >
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.15] scale-150 rotate-15">
+        <div className="mb-6 h-40 w-40 rounded-full border border-white/20 bg-white/5 flex items-center justify-center shadow-[0_0_40px_rgba(212,175,55,0.4)]">
           <SriYantra isActive={false} />
         </div>
-        <div className="relative z-10 text-center px-4">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-[0.3em] mb-2">
-            v2026.SUPREME
-          </h1>
-          <p className="text-lg md:text-xl opacity-80 tracking-wider text-[#D4AF37]">
-            Non-Physical 1KM Bio-Field Protection
-          </p>
-        </div>
+        <h1 className="text-3xl md:text-4xl font-bold tracking-[0.3em] mb-2 text-center">
+          v2026.SUPREME
+        </h1>
+        <p className="text-lg md:text-xl text-center" style={{ color: SIDDHA_GOLD }}>
+          ACTIVATING THE SIDDHA-QUANTUM 1KM BIO-FIELD
+        </p>
       </section>
 
-      {/* Mantra Matrix */}
-      <section className="container mx-auto px-4 py-16">
-        <h2 className="text-center text-2xl md:text-3xl font-semibold tracking-[0.2em] uppercase mb-10">
-          THE 4-PILLAR MANTRA DEPLOYMENT
-        </h2>
-        <div className="grid gap-6 md:grid-cols-2">
-          <div className="bg-white/5 border-l-4 border-[#D4AF37] rounded-2xl p-6">
-            <h3 className="text-lg font-semibold mb-2">Solar-Fire (Viruses &amp; Mold)</h3>
-            <p className="font-serif italic text-[#D4AF37] text-base mb-3">
-              &quot;Om Ram Ramaya Namaha&quot;
-            </p>
-            <p className="text-sm text-white/80">
-              Activates the Solar Plexus fire to shatter the protein shells of viruses and dry out
-              mold spores within 1km.
-            </p>
-          </div>
-          <div className="bg-white/5 border-l-4 border-[#D4AF37] rounded-2xl p-6">
-            <h3 className="text-lg font-semibold mb-2">EMF Transmutation</h3>
-            <p className="font-serif italic text-[#D4AF37] text-base mb-3">
-              &quot;Om Hrim Shrim Klim Adya Kalika Param Eshwari Swaha&quot;
-            </p>
-            <p className="text-sm text-white/80">
-              Converts &quot;hot&quot; satellite and Wi-Fi radiation into cooling, life-supporting
-              bio-electricity.
-            </p>
-          </div>
-          <div className="bg-white/5 border-l-4 border-[#D4AF37] rounded-2xl p-6">
-            <h3 className="text-lg font-semibold mb-2">Atmospheric Scrubbing</h3>
-            <p className="font-serif italic text-[#D4AF37] text-base mb-3">
-              &quot;Om Namah Shivaya&quot;
-            </p>
-            <p className="text-sm text-white/80">
-              Utilizes acoustic ionization to clear chemtrails, smog, and heavy metals from your
-              immediate 1km airspace.
-            </p>
-          </div>
-          <div className="bg-white/5 border-l-4 border-[#D4AF37] rounded-2xl p-6">
-            <h3 className="text-lg font-semibold mb-2">The Death-Conqueror (Shield)</h3>
-            <p className="font-serif italic text-[#D4AF37] text-base mb-3">
-              &quot;Maha Mrityunjaya Mantra&quot;
-            </p>
-            <p className="text-sm text-white/80">
-              The primary 1km firewall. Anchors the Sri Yantra geometry into the Akasha for 24/7
-              protection.
-            </p>
-          </div>
+      {/* Anchor + Mantra Codes */}
+      <section className="max-w-5xl mx-auto grid gap-8 md:grid-cols-2 px-4 md:px-[10%] py-10">
+        <div className="bg-white/5 border border-yellow-500/30 rounded-2xl p-6 md:p-8">
+          <h3 className="text-lg md:text-xl font-semibold mb-3">
+            1. THE 1000M SRI YANTRA ANCHOR
+          </h3>
+          <p className="text-sm md:text-base text-white/80">
+            <span className="font-semibold">One-Time GPS Lock:</span> Privacy-First Stationary
+            Shield. The app anchors the Bindu (center point) to your coordinates once, then shuts
+            off GPS. The field remains fixed in the Akasha 24/7.
+          </p>
+          <hr className="my-5 border-white/10" />
+          <h3 className="text-lg md:text-xl font-semibold mb-3">MINERAL RESONANCE MATRIX</h3>
+          <p className="text-sm md:text-base text-white/80">
+            <span className="font-semibold">Elite Shungite + Orgonite:</span> Our 2050 technology
+            uses the non-physical vibrational signature of Shungite Fullerenes to absorb EMF and
+            Orgonite to pump constant Positive Orgone Radiation (POR) across the 1km radius.
+          </p>
+        </div>
+
+        <div className="bg-white/5 border border-yellow-500/30 rounded-2xl p-6 md:p-8">
+          <h3 className="text-lg md:text-xl font-semibold mb-4">
+            2. SIDDHA FREQUENCY &amp; MANTRA CODES
+          </h3>
+          <ul className="space-y-4 text-sm md:text-base">
+            <li className="border-b border-white/10 pb-3">
+              <p className="font-serif italic text-[15px]" style={{ color: SIDDHA_GOLD }}>
+                OM RAM RAMAYA NAMAHA
+              </p>
+              <p className="text-white/80">
+                Solar-Fire Pathogen Killer (Mold, Viruses, Parasites).
+              </p>
+            </li>
+            <li className="border-b border-white/10 pb-3">
+              <p className="font-serif italic text-[15px]" style={{ color: SIDDHA_GOLD }}>
+                OM HRIM SHRIM KLIM ADYA KALIKA...
+              </p>
+              <p className="text-white/80">
+                EMF Transmutation: Chaotic 7G to Coherent Field Memory.
+              </p>
+            </li>
+            <li className="border-b border-white/10 pb-3">
+              <p className="font-serif italic text-[15px]" style={{ color: SIDDHA_GOLD }}>
+                OM NAMAH SHIVAYA
+              </p>
+              <p className="text-white/80">
+                Atmospheric Scrubbing (Chemtrails / Pollution Deletion).
+              </p>
+            </li>
+            <li>
+              <p className="font-serif italic text-[15px]" style={{ color: SIDDHA_GOLD }}>
+                MAHA MRITYUNJAYA
+              </p>
+              <p className="text-white/80">
+                1km Boundary Protection &amp; Akashic Grounding.
+              </p>
+            </li>
+          </ul>
         </div>
       </section>
 
@@ -155,20 +165,9 @@ export default function SriYantraLanding() {
               className="font-mono text-sm font-bold uppercase"
               style={{ color: VIRUS_RED }}
             >
-              EMF: 95.4 mG (Extreme Satellite Loading)
+              Chaotic EMF spikes, active pathogens, fear spikes.
             </div>
-            <div
-              className="font-mono text-sm font-bold uppercase mt-1"
-              style={{ color: VIRUS_RED }}
-            >
-              PATHOGENS: High Mold/Viral Count
-            </div>
-            <div
-              className="font-mono text-sm font-bold uppercase mt-1"
-              style={{ color: VIRUS_RED }}
-            >
-              COLLECTIVE FEAR: High Anxiety Index
-            </div>
+            <div className="mt-3 h-24 rounded-md bg-[radial-gradient(circle_at_center,rgba(239,68,68,0.4)_0,transparent_60%)] border border-red-500/40" />
           </div>
           <div className="flex-1 border border-[#27AE60] bg-[#e8f5e9] rounded-lg p-6 text-left text-[#111]">
             <p className="text-sm font-mono uppercase mb-3 opacity-80">
@@ -178,20 +177,9 @@ export default function SriYantraLanding() {
               className="font-mono text-sm font-bold uppercase"
               style={{ color: "#27AE60" }}
             >
-              EMF: 0.2 mG (Harmonic Coherence)
+              Harmonic coherence, inert neutralized mold / viruses.
             </div>
-            <div
-              className="font-mono text-sm font-bold uppercase mt-1"
-              style={{ color: "#27AE60" }}
-            >
-              PATHOGENS: Inert / Phase-Neutralized
-            </div>
-            <div
-              className="font-mono text-sm font-bold uppercase mt-1"
-              style={{ color: "#27AE60" }}
-            >
-              COLLECTIVE FEAR: Peace-Field Stabilized
-            </div>
+            <div className="mt-3 h-24 rounded-md bg-[radial-gradient(circle_at_center,rgba(34,197,94,0.45)_0,transparent_60%)] border border-emerald-500/60" />
           </div>
         </div>
       </section>
@@ -202,7 +190,8 @@ export default function SriYantraLanding() {
         style={{ background: COSMIC_BLUE }}
       >
         <p className="text-base opacity-70 mb-8 max-w-xl mx-auto">
-          One-Time GPS Handshake. Privacy Guaranteed. 24/7 Autonomy.
+          Test with any EMF meter to see spike stabilization. Perform a Water Freeze Test to see
+          hexagonal symmetry. Experience Live Blood unclumping in 20 minutes.
         </p>
 
         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
@@ -222,13 +211,13 @@ export default function SriYantraLanding() {
                 Redirecting…
               </>
             ) : (
-              "ACTIVATE FOR €49"
+              "GET 24/7 1KM PROTECTION - €49 (STRIPE / CRYPTO)"
             )}
           </Button>
         </motion.div>
 
         <p className="mt-8 text-sm opacity-50">
-          Accepted: STRIPE / BTC / ETH
+          Accepted: VISA, MC, BTC, ETH
         </p>
       </section>
 

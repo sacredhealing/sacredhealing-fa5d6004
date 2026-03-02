@@ -88,6 +88,7 @@ const AIIncomeDetail = React.lazy(() => import("./pages/income-streams/AIIncomeD
 const EducationDetail = React.lazy(() => import("./pages/income-streams/EducationDetail"));
 const PolymarketBotDetail = React.lazy(() => import("./pages/income-streams/PolymarketBotDetail"));
 const AdminSystem = React.lazy(() => import("./pages/AdminSystem"));
+const AdminGrantAccess = React.lazy(() => import("./pages/AdminGrantAccess"));
 const AdminBreathing = React.lazy(() => import("./pages/AdminBreathing"));
 const AdminAmbientSounds = React.lazy(() => import("./pages/AdminAmbientSounds"));
 const AdminAffirmation = React.lazy(() => import("./pages/AdminAffirmation"));
@@ -232,6 +233,7 @@ function AppRoutes() {
                 </Route>
                 <Route element={<AdminLayout />}>
                   <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/admin/grant-access" element={<AdminGrantAccess />} />
                   <Route path="/admin/meditations" element={<Admin />} />
                   <Route path="/admin/meditations/:id" element={<AdminMeditationEdit />} />
                   <Route path="/admin/music" element={<AdminMusic />} />

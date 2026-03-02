@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Gift, Search, X, Crown, BookOpen, Compass, Sparkles, Trash2 } from 'lucide-react';
+import { Gift, Search, X, Crown, BookOpen, Compass, Sparkles, Trash2, Shield, Headphones, Music2, Heart, Radio, Zap, Gem } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -49,6 +49,14 @@ const ACCESS_TYPES = [
   { value: 'course', label: 'Course', icon: BookOpen },
   { value: 'path', label: 'Spiritual Path', icon: Compass },
   { value: 'program', label: 'Program', icon: Sparkles },
+  { value: 'sri_yantra_shield', label: 'Sri Yantra Shield (1km Bio-Field)', icon: Shield },
+  { value: 'creative_soul', label: 'Creative Soul Tool', icon: Sparkles },
+  { value: 'creative_soul_meditation', label: 'Creative Soul Meditation', icon: Headphones },
+  { value: 'stargate', label: 'Stargate Community', icon: Gem },
+  { value: 'healing', label: 'Healing Programs', icon: Heart },
+  { value: 'meditation_membership', label: 'Meditation Membership', icon: Radio },
+  { value: 'music_membership', label: 'Music Membership', icon: Music2 },
+  { value: 'transformation', label: 'Transformation Programs', icon: Zap },
 ];
 
 const MEMBERSHIP_TIERS = [
@@ -105,12 +113,13 @@ const AdminAccessGrantTab = () => {
       return MEMBERSHIP_TIERS.find(t => t.value === access.tier)?.label || access.tier;
     }
     if (access.access_type === 'course') {
-      return courses.find(c => c.id === access.access_id)?.title || 'All Courses';
+      return courses.find(c => c.id === access.access_id)?.title || access.access_id || 'All Courses';
     }
     if (access.access_type === 'path') {
-      return paths.find(p => p.id === access.access_id)?.title || 'All Paths';
+      return paths.find(p => p.id === access.access_id)?.title || access.access_id || 'All Paths';
     }
-    return access.access_id || 'All Access';
+    const typeConfig = ACCESS_TYPES.find(t => t.value === access.access_type);
+    return typeConfig?.label || access.access_id || access.access_type;
   };
 
   const grantAccess = async () => {
@@ -118,10 +127,13 @@ const AdminAccessGrantTab = () => {
     setSubmitting(true);
 
     try {
+      const accessIdValue =
+        accessType === 'course' || accessType === 'path' ? (accessId || null) : null;
+
       const { error } = await supabase.from('admin_granted_access').insert({
         user_id: selectedUser.user_id,
         access_type: accessType,
-        access_id: accessType === 'membership' ? null : accessId || null,
+        access_id: accessIdValue,
         tier: accessType === 'membership' ? tier : null,
         granted_by: user.id,
         notes: notes || null,
@@ -129,6 +141,21 @@ const AdminAccessGrantTab = () => {
       });
 
       if (error) throw error;
+
+      if (accessType === 'sri_yantra_shield') {
+        const { error: sriError } = await supabase.from('sri_yantra_access').upsert(
+          {
+            user_id: selectedUser.user_id,
+            has_access: true,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id' }
+        );
+        if (sriError) {
+          console.warn('admin_granted_access saved but sri_yantra_access upsert failed:', sriError);
+          toast.warning(`Access granted, but Sri Yantra table update failed: ${sriError.message}`);
+        }
+      }
 
       toast.success(`Access granted to ${selectedUser.full_name || 'user'}`);
       setSelectedUser(null);
