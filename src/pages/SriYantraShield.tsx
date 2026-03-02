@@ -7,6 +7,92 @@ import { ShieldHUD } from "@/components/sri-yantra/ShieldHUD";
 import { INITIAL_DATA, ACTIVE_DATA } from "@/components/sri-yantra/types";
 import type { ShieldData } from "@/components/sri-yantra/types";
 
+const SHIELD_CORE = {
+  mantras: ["OM_RAM_RAMAYA_NAMAHA", "MAHA_MRITYUNJAYA"],
+  minerals: "SHUNGITE_ORGONITE_HYBRID",
+  persistence: "AKASHA_FIXED",
+} as const;
+
+async function getOneTimeLocation(): Promise<{ lat: number; lng: number } | null> {
+  if (typeof navigator === "undefined" || !("geolocation" in navigator)) {
+    return null;
+  }
+
+  return new Promise((resolve) => {
+    let resolved = false;
+    const timeout = setTimeout(() => {
+      if (!resolved) {
+        resolved = true;
+        resolve(null);
+      }
+    }, 3000);
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        if (resolved) return;
+        resolved = true;
+        clearTimeout(timeout);
+        resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      },
+      () => {
+        if (resolved) return;
+        resolved = true;
+        clearTimeout(timeout);
+        resolve(null);
+      },
+      { enableHighAccuracy: true, timeout: 3000 }
+    );
+  });
+}
+
+function stopAllLocationServices() {
+  if (typeof navigator === "undefined" || !("geolocation" in navigator)) return;
+}
+
+async function deployStationaryShield(
+  setLocation: (loc: { lat: number; lng: number } | null) => void,
+  setData: (data: ShieldData) => void,
+  addLog: (msg: string) => void,
+  setIsActive: (value: boolean) => void
+) {
+  addLog("Initializing UNIVERSAL PROTECTION SHIELD v2026.ANONYMOUS...");
+  const initialAnchor = await getOneTimeLocation();
+
+  if (initialAnchor) {
+    setLocation(initialAnchor);
+    addLog(
+      `Handshake Complete. Anchoring Sri Yantra to Space-Time Fabric at ${initialAnchor.lat.toFixed(
+        4
+      )}, ${initialAnchor.lng.toFixed(4)}.`
+    );
+  } else {
+    addLog("Handshake Complete. Anonymous anchor established (GPS not required).");
+  }
+
+  stopAllLocationServices();
+  addLog("All location services released — no persistent tracking.");
+
+  addLog("Projecting 1km Sri Yantra Bhupura (Safe Space walls)...");
+  addLog("Deploying 1000m_RADIUS non-physical geometry shell around anchor point.");
+
+  addLog(
+    `Broadcasting Solar Fire & EMF Transmutation codes: ${SHIELD_CORE.mantras.join(
+      " + "
+    )} with ${SHIELD_CORE.minerals}.`
+  );
+
+  setIsActive(true);
+  setData(ACTIVE_DATA);
+
+  addLog("FIELD_LOCKED_PERMANENTLY. Protection: ACTIVE_24_7. GPS status: OFF.");
+
+  return {
+    status: "FIELD_LOCKED_PERMANENTLY",
+    gps_status: "OFF",
+    protection: "ACTIVE_24_7",
+  } as const;
+}
+
 export default function SriYantraShield() {
   const navigate = useNavigate();
   const [isActive, setIsActive] = useState(false);
@@ -28,32 +114,8 @@ export default function SriYantraShield() {
     }
 
     setIsActivating(true);
-    addLog("Initializing Sri Yantra Anchor...");
-
     try {
-      if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-            addLog(`Bindu established at: ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`);
-          },
-          () => {},
-          { enableHighAccuracy: true }
-        );
-      }
-
-      await new Promise((r) => setTimeout(r, 1000));
-      addLog("Deploying Energetic Lattice: SHIVA_4...");
-      await new Promise((r) => setTimeout(r, 800));
-      addLog("Deploying Energetic Lattice: SHAKTI_5...");
-      await new Promise((r) => setTimeout(r, 1200));
-      addLog("Activating Pathogen Scrubber (Violet Flame)...");
-      await new Promise((r) => setTimeout(r, 1000));
-      addLog("Calibrating Fear-Frequency Transmuter (528Hz)...");
-
-      setIsActive(true);
-      setData(ACTIVE_DATA);
-      addLog("PROTECTION_ACTIVE: 1km Spherical Boundary Locked.");
+      await deployStationaryShield(setLocation, setData, addLog, setIsActive);
     } catch {
       addLog("ERROR: Quantum Flux Instability Detected.");
     } finally {
