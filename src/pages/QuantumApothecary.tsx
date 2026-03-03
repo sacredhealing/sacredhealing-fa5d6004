@@ -402,43 +402,45 @@ export default function QuantumApothecary() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
-        {messages.map((msg, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
-            <div
-              className={`max-w-[90%] p-3 rounded-2xl ${
-                msg.role === 'user'
-                  ? 'bg-[#ff4e00]/20 border border-[#ff4e00]/30 rounded-br-sm'
-                  : 'bg-white/5 border border-white/5 rounded-bl-sm'
-              }`}
+      <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+        <div className="flex flex-col justify-end min-h-full space-y-3">
+          {messages.map((msg, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              <div className="markdown-body">{renderChatText(msg.text)}</div>
-            </div>
-          </motion.div>
-        ))}
-        {isTyping && (
-          <div className="flex justify-start">
-            <div className="bg-white/5 border border-white/5 rounded-2xl rounded-bl-sm p-3">
-              <div className="flex gap-1">
-                <div className="w-1.5 h-1.5 bg-[#ff4e00] rounded-full animate-bounce" />
-                <div
-                  className="w-1.5 h-1.5 bg-[#ff4e00] rounded-full animate-bounce"
-                  style={{ animationDelay: '0.15s' }}
-                />
-                <div
-                  className="w-1.5 h-1.5 bg-[#ff4e00] rounded-full animate-bounce"
-                  style={{ animationDelay: '0.3s' }}
-                />
+              <div
+                className={`max-w-[90%] p-3 rounded-2xl ${
+                  msg.role === 'user'
+                    ? 'bg-[#ff4e00]/20 border border-[#ff4e00]/30 rounded-br-sm'
+                    : 'bg-white/5 border border-white/5 rounded-bl-sm'
+                }`}
+              >
+                <div className="markdown-body">{renderChatText(msg.text)}</div>
+              </div>
+            </motion.div>
+          ))}
+          {isTyping && (
+            <div className="flex justify-start">
+              <div className="bg-white/5 border border-white/5 rounded-2xl rounded-bl-sm p-3">
+                <div className="flex gap-1">
+                  <div className="w-1.5 h-1.5 bg-[#ff4e00] rounded-full animate-bounce" />
+                  <div
+                    className="w-1.5 h-1.5 bg-[#ff4e00] rounded-full animate-bounce"
+                    style={{ animationDelay: '0.15s' }}
+                  />
+                  <div
+                    className="w-1.5 h-1.5 bg-[#ff4e00] rounded-full animate-bounce"
+                    style={{ animationDelay: '0.3s' }}
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        )}
-        <div ref={chatEndRef} />
+          )}
+          <div ref={chatEndRef} />
+        </div>
       </div>
 
       <div
