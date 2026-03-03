@@ -166,7 +166,7 @@ export default function Explore() {
   const { playUniversalAudio } = useMusicPlayer();
   const { allAudioItems } = useQuickActionItems();
   const { language: meditationLanguage } = useMeditationContentLanguage();
-  useMembership(); // presence / membership state if needed later
+  const { isPremium } = useMembership(); // presence / membership + premium state
   const { user } = useAuth();
   const { hasAccess: hasAkashicAccess } = useAkashicAccess(user?.id);
   const { isAdmin } = useAdminRole();
@@ -348,6 +348,7 @@ export default function Explore() {
                 { label: "Vastu", desc: "Abundance Architect", href: "/vastu" },
                 { label: "Quantum Apothecary", desc: "2050 Siddha-Quantum bio-resonance platform", href: "/quantum-apothecary", Icon: Cpu, adminOnly: true },
                 { label: "Virtual Pilgrimage", desc: "24/7 Sacred Site resonance anchor", href: "/temple-home", adminOnly: true },
+                { label: "Digital Nadi", desc: "Camera-based Nāḍī pulse scan and healing recommendations", href: "/digital-nadi" },
                 { label: "Sri Yantra Universal Protection Shield", desc: "Geometric resonance & quantum flux monitoring — v2.6.GLOBAL", href: "/sri-yantra-shield", Icon: Shield },
                 { label: "Palm & Akashic Oracle", desc: "Basic hand analysis (Lines only) → Akashic verdict", href: "/hand-analyzer", Icon: Hand, premium: true, adminOnly: true },
               ].filter((item) => !("adminOnly" in item && item.adminOnly) || isAdmin).map((item) => {
@@ -359,7 +360,9 @@ export default function Explore() {
                   ? () => (isAdmin ? navigate('/akashic-reading/full') : hasAkashicAccess ? navigate(item.href) : setSacredRevealOpen(true))
                   : openAkashic
                     ? () => setAkashicOpen(true)
-                    : () => navigate(item.href);
+                    : item.label === 'Digital Nadi'
+                      ? () => (isAdmin || isPremium ? navigate(item.href) : navigate('/membership?product=digital-nadi'))
+                      : () => navigate(item.href);
                 const isAkashicTile = akashicHighTicket;
                 return (
                   <button

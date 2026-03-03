@@ -63,11 +63,11 @@ const Membership = () => {
     discount_value: number;
   } | null>(null);
 
-  // Store product intent for post-checkout redirect (e.g. Akashic Deep Reading)
+  // Store product intent for post-checkout redirect (e.g. Akashic Deep Reading, Digital Nāḍī)
   useEffect(() => {
     const product = searchParams.get('product');
-    if (product === 'akashic') {
-      try { sessionStorage.setItem('membership_product_intent', 'akashic'); } catch {}
+    if (product === 'akashic' || product === 'digital-nadi') {
+      try { sessionStorage.setItem('membership_product_intent', product); } catch {}
     }
   }, [searchParams]);
 
@@ -84,6 +84,12 @@ const Membership = () => {
         refreshMembership();
         toast.success('Your Akashic Record is now unlocked. Download your Certificate of Origin.');
         navigate('/akashic-reading/initiating');
+        return;
+      } else if (productIntent === 'digital-nadi') {
+        try { sessionStorage.removeItem('membership_product_intent'); } catch {}
+        refreshMembership();
+        toast.success('Your Premium Membership is active. Digital Nāḍī is now unlocked.');
+        navigate('/digital-nadi');
         return;
       }
       toast.success(`Welcome to ${tierParam || 'Premium'}! Your membership is now active.`);
