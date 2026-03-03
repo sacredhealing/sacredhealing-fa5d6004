@@ -12,6 +12,7 @@ export async function streamChatWithSQI(
   onDelta: (chunk: string) => void,
   onDone: () => void,
   userImage?: UserImagePayload,
+  userId?: string | null,
 ) {
   // Only send the last 10 messages for context to keep prompts efficient
   const recent = messages.slice(-10);
@@ -21,12 +22,15 @@ export async function streamChatWithSQI(
     content: m.text,
   }));
 
-  const body: { messages: typeof apiMessages; userImage?: UserImagePayload } = {
+  const body: { messages: typeof apiMessages; userImage?: UserImagePayload; userId?: string | null } = {
     messages: apiMessages,
   };
   if (userImage?.base64 && userImage?.mimeType) {
     body.userImage = userImage;
   }
+   if (userId) {
+     body.userId = userId;
+   }
 
   const resp = await fetch(CHAT_URL, {
     method: 'POST',

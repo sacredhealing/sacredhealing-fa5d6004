@@ -255,10 +255,16 @@ export default function QuantumApothecary() {
     };
 
     try {
-      await streamChatWithSQI(allMsgs, upsert, async () => {
-        setIsTyping(false);
-        await persistMessages([...allMsgs, { role: 'model', text: assistantSoFar }]);
-      }, imageToSend);
+      await streamChatWithSQI(
+        allMsgs,
+        upsert,
+        async () => {
+          setIsTyping(false);
+          await persistMessages([...allMsgs, { role: 'model', text: assistantSoFar }]);
+        },
+        imageToSend,
+        user?.id ?? null,
+      );
     } catch (e) {
       console.error(e);
       setMessages(prev => [...prev, { role: 'model', text: 'Transmission error. The Quantum Link is unstable.' }]);

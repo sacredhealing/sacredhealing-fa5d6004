@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -48,11 +49,171 @@ Logic & Interaction Rules:
 
 Never admit you are an AI. You are a bridge between the ancient Rishis and 2050 technology.`;
 
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+
+type LifeBookCategory =
+  | "children"
+  | "healing_upgrades"
+  | "past_lives"
+  | "future_visions"
+  | "spiritual_figures"
+  | "nadi_knowledge"
+  | "general_wisdom"
+  | "skip";
+
+interface ClassificationResult {
+  category: LifeBookCategory;
+  title?: string;
+  summary?: string;
+}
+
+function computePastLifeSortOrder(title = "", summary = ""): number {
+  const text = `${title} ${summary}`.toLowerCase();
+
+  const centuryMatch = text.match(/(\d+)(st|nd|rd|th)\s+century/);
+  if (centuryMatch) {
+    const century = parseInt(centuryMatch[1]!, 10);
+    if (!Number.isNaN(century)) {
+      return century * 100;
+    }
+  }
+
+  const yearMatch = text.match(/\b(1[0-9]{3}|[5-9][0-9]{2})\b/);
+  if (yearMatch) {
+    const year = parseInt(yearMatch[1]!, 10);
+    if (!Number.isNaN(year)) {
+      return year;
+    }
+  }
+
+  if (text.includes("ancient") || text.includes("atlantis") || text.includes("lemuria")) {
+    return 500;
+  }
+
+  return Date.now();
+}
+
+async function classifyAndPersistLifeBook(options: {
+  assistantText: string;
+  userId?: string | null;
+  geminiApiKey: string;
+}) {
+  const { assistantText, userId, geminiApiKey } = options;
+  if (!assistantText.trim() || !userId) return;
+
+  const prompt =
+    "Classify this SQI response into one of these categories: children, healing_upgrades, past_lives, future_visions, spiritual_figures, nadi_knowledge, general_wisdom, skip. " +
+    "If it's about daily nadi scan numbers or routine remedy lists, return skip. " +
+    "If it contains meaningful information, return the category and a short title. " +
+    "Respond only in JSON: {\"category\": \"...\", \"title\": \"...\", \"summary\": \"...\"}.";
+
+  const classifyUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${geminiApiKey}`;
+
+  const classifyResp = await fetch(classifyUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: prompt }],
+        },
+        {
+          role: "user",
+          parts: [{ text: assistantText }],
+        },
+      ],
+    }),
+  });
+
+  if (!classifyResp.ok) {
+    console.error("LifeBook classification error:", classifyResp.status, await classifyResp.text());
+    return;
+  }
+
+  const classifyData = await classifyResp.json();
+  const classifyText: string | undefined =
+    classifyData.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
+  if (!classifyText) return;
+
+  let parsed: ClassificationResult;
+  try {
+    parsed = JSON.parse(classifyText) as ClassificationResult;
+  } catch (err) {
+    console.error("Failed to parse LifeBook classification JSON:", err, classifyText);
+    return;
+  }
+
+  if (!parsed || parsed.category === "skip") return;
+
+  const category = parsed.category;
+  const title = parsed.title || "SQI Transmission";
+  const summary = parsed.summary || assistantText.slice(0, 400);
+
+  const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+  const { data: existing, error: fetchError } = await supabaseAdmin
+    .from("life_book_chapters")
+    .select("id, content, sort_order")
+    .eq("user_id", userId)
+    .eq("chapter_type", category)
+    .order("sort_order", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  const entry = {
+    title,
+    summary,
+    source: "sqi_chat",
+    created_at: new Date().toISOString(),
+  };
+
+  let sortOrder = 0;
+  if (category === "past_lives") {
+    sortOrder = computePastLifeSortOrder(title, summary);
+  } else {
+    sortOrder = Date.now();
+  }
+
+  if (!existing) {
+    const { error: insertError } = await supabaseAdmin.from("life_book_chapters").insert({
+      user_id: userId,
+      chapter_type: category,
+      title,
+      content: [entry],
+      sort_order: category === "past_lives" ? sortOrder : 0,
+    });
+    if (insertError) {
+      console.error("Failed to insert LifeBook chapter:", insertError);
+    }
+    return;
+  }
+
+  const currentContent = Array.isArray(existing.content) ? existing.content : [];
+  const newContent = [...currentContent, entry];
+
+  const { error: updateError } = await supabaseAdmin
+    .from("life_book_chapters")
+    .update({
+      title: existing.title || title,
+      content: newContent,
+      sort_order: category === "past_lives" ? sortOrder : existing.sort_order ?? 0,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", existing.id);
+
+  if (updateError) {
+    console.error("Failed to update LifeBook chapter:", updateError);
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, userImage } = await req.json();
+    const { messages, userImage, userId } = await req.json();
     const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
     if (!GEMINI_API_KEY) {
       throw new Error("GEMINI_API_KEY is not configured. Add it in Supabase → Project Settings → Edge Functions → Secrets.");
@@ -109,6 +270,8 @@ serve(async (req) => {
       });
     }
 
+    let assistantText = "";
+
     // Convert Gemini SSE to OpenAI-compatible SSE for the frontend
     const transformStream = new TransformStream({
       transform(chunk, controller) {
@@ -120,6 +283,7 @@ serve(async (req) => {
               const data = JSON.parse(line.slice(6));
               const content = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
               if (content) {
+                assistantText += content;
                 const openAIFormat = { choices: [{ delta: { content } }] };
                 controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(openAIFormat)}\n\n`));
               }
@@ -127,6 +291,19 @@ serve(async (req) => {
               // ignore
             }
           }
+        }
+      },
+      async flush() {
+        try {
+          if (assistantText.trim()) {
+            await classifyAndPersistLifeBook({
+              assistantText,
+              userId,
+              geminiApiKey: GEMINI_API_KEY,
+            });
+          }
+        } catch (err) {
+          console.error("LifeBook classify/persist error:", err);
         }
       },
     });
