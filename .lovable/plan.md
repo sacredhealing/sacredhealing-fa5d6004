@@ -1,47 +1,54 @@
 
 
-# Fix: Simple Text Email Editor (No HTML Required)
+## Welcome Email: Gap Analysis and Fix Plan
 
-## Problem
-The current "Send Email" page asks for "Content (HTML)" and expects raw HTML code like `<h1>Hello</h1>`. You just want to paste plain text and send it.
+### Current State vs. Specification
 
-## Solution
-Replace the HTML textarea with a simple plain-text editor that automatically converts your text into a nicely formatted email behind the scenes.
+The **deployed** `send-welcome-email/index.ts` is the **old version** and is missing almost everything from your specification:
 
-### What Changes
+| Feature | Spec | Deployed |
+|---|---|---|
+| IP geolocation | Yes | **Missing** |
+| RESEND_API_KEY check | 503 if missing | **No check** — Resend created at top level blindly |
+| Localized greeting | Per-language (Hej/Hello/Hola/Hei) | **Hardcoded "Hej"** for all languages |
+| Localized CTA in template | Per-language field | Inline ternary (works but fragile) |
+| Step-by-step logging | 7 steps with prefix | **Only 1 console.log** |
+| Resend error handling | Check `result.error` | **No check** — fire and forget |
+| Spanish country codes | 20+ countries mapped | **Missing** |
+| Auth.tsx error logging | Log `welcomeData?.error` | Only catches thrown errors, not response errors |
 
-**1. Rename the field**
-- Change label from "Content (HTML) *" to "Message *"
-- Update placeholder to just show normal text like "Hello {{name}}, your message here..."
-- Remove the `font-mono` styling so it looks like a normal text box
+### Plan
 
-**2. Auto-convert text to email HTML**
-- When you type plain text, the system will automatically:
-  - Wrap paragraphs in proper email formatting
-  - Convert line breaks into spacing
-  - Apply Sacred Healing branding (logo, colors, footer)
-- You don't need to know any HTML
+**1. Replace `send-welcome-email/index.ts` with the full version**
 
-**3. Keep personalization simple**
-- You can still use `{{name}}` and `{{email}}` in your text
-- The hint text stays but is simplified
+Use the complete implementation from your README spec (which matches the code you provided earlier in this conversation). Key changes:
+- Move `Resend` instantiation inside the handler, after a key length check (return 503 if missing)
+- Add IP detection from `x-forwarded-for` / `x-real-ip`
+- Add geolocation via `ip-api.com` to resolve `countryCode`
+- Map country to language: Spanish countries → `es`, NO → `no`, SE → `sv`, else `en`; fall back to client `language` param if no IP
+- Add `greeting` and `cta` fields to each template (no more hardcoded "Hej")
+- Add 7-step logging with `[send-welcome-email]` prefix
+- Check `result.error` from Resend and return 500 with message
+- Wrap send in try/catch for exceptions
 
-**4. Update the preview**
-- Preview will show the final styled email exactly as subscribers will see it
-- Includes the Sacred Healing header and footer automatically
+**2. Update Auth.tsx to log response errors**
 
-**5. Update the edge function**
-- The `send-bulk-email` function will accept plain text and wrap it in a branded email template server-side
-- This ensures all emails look professional and consistent
+Currently line 191-197 only catches thrown errors. Add logging for the invoke response:
+```
+const { data: welcomeData, error: welcomeErr } = await supabase.functions.invoke(...)
+if (welcomeErr) console.error('Welcome email invoke error:', welcomeErr);
+if (welcomeData?.error) console.error('Welcome email send error:', welcomeData.error);
+```
 
-### Technical Details
+**3. Deploy the edge function**
 
-| File | Change |
-|------|--------|
-| `src/pages/AdminSendEmail.tsx` | Replace HTML textarea with plain text input; auto-wrap content in email template for preview; send plain text to edge function |
-| `supabase/functions/send-bulk-email/index.ts` | Add email template wrapper that converts plain text into styled HTML email with Sacred Healing branding |
+Call `deploy_edge_functions` for `send-welcome-email` to push the updated code.
 
-### Result
-- You type or paste normal text
-- The system handles all formatting automatically
-- Every email arrives looking professional with your branding
+**4. No config.toml change needed** — `verify_jwt = false` is already set.
+
+**5. No secret changes needed** — `RESEND_API_KEY` is already configured in secrets.
+
+### Files Touched
+- `supabase/functions/send-welcome-email/index.ts` — full rewrite
+- `src/pages/Auth.tsx` — improved error logging (~3 lines)
+
