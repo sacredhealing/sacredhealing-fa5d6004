@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Flame, Flower2, Star, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield, Scale, LayoutDashboard, Megaphone, Crown, Pencil, Banknote, Lock, FileText } from 'lucide-react';
+import { Flame, Flower2, Star, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield, Scale, LayoutDashboard, Megaphone, Crown, Pencil, Banknote, Lock, FileText, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LanguageSelector } from '@/components/LanguageSelector';
@@ -21,6 +21,34 @@ import { AppearanceDialog } from '@/components/profile/AppearanceDialog';
 import { PrivacyDialog } from '@/components/profile/PrivacyDialog';
 import { SettingsDialog } from '@/components/profile/SettingsDialog';
 import { ProfileEditDialog } from '@/components/profile/ProfileEditDialog';
+import { supabase } from '@/integrations/supabase/client';
+
+type LifeBookCategory =
+  | 'children'
+  | 'healing_upgrades'
+  | 'past_lives'
+  | 'future_visions'
+  | 'spiritual_figures'
+  | 'nadi_knowledge'
+  | 'general_wisdom';
+
+interface LifeBookEntry {
+  title?: string;
+  summary?: string;
+  source?: string;
+  created_at?: string;
+}
+
+interface LifeBookChapter {
+  id: string;
+  user_id: string;
+  chapter_type: LifeBookCategory;
+  title: string | null;
+  content: LifeBookEntry[];
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
@@ -40,6 +68,8 @@ const Profile: React.FC = () => {
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileEditOpen, setProfileEditOpen] = useState(false);
+  const [lifeBookChapters, setLifeBookChapters] = useState<LifeBookChapter[]>([]);
+  const [lifeBookLoading, setLifeBookLoading] = useState(false);
 
   const badges = [
     { id: 1, emoji: '🧘', titleKey: 'badges.firstMeditation', earned: true },
@@ -61,6 +91,143 @@ const Profile: React.FC = () => {
 
   const dashaCycle = vedicReading?.personalCompass?.currentDasha?.period?.split(' ')[0] || 'Rahu';
   const soulLabel = t('profile.soulRecordLabel', `Age 42 • ${dashaCycle} Cycle Active • Soul Frequency: 528Hz`);
+
+  useEffect(() => {
+    const loadLifeBook = async () => {
+      if (!user?.id) {
+        setLifeBookChapters([]);
+        return;
+      }
+      setLifeBookLoading(true);
+      const { data, error } = await supabase
+        .from('life_book_chapters')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('chapter_type', { ascending: true });
+      if (!error && data) {
+        const typed = (data as unknown as LifeBookChapter[]).map((ch) => ({
+          ...ch,
+          content: Array.isArray(ch.content) ? ch.content : [],
+        }));
+        setLifeBookChapters(typed);
+      }
+      setLifeBookLoading(false);
+    };
+    loadLifeBook();
+  }, [user?.id]);
+
+  const orderedLifeBook = useMemo(() => {
+    const chapterOrder: LifeBookCategory[] = [
+      'children',
+      'healing_upgrades',
+      'past_lives',
+      'future_visions',
+      'spiritual_figures',
+      'nadi_knowledge',
+      'general_wisdom',
+    ];
+
+    const byType: Record<LifeBookCategory, LifeBookChapter | null> = {
+      children: null,
+      healing_upgrades: null,
+      past_lives: null,
+      future_visions: null,
+      spiritual_figures: null,
+      nadi_knowledge: null,
+      general_wisdom: null,
+    };
+
+    for (const chapter of lifeBookChapters) {
+      if (byType[chapter.chapter_type] == null) {
+        byType[chapter.chapter_type] = chapter;
+      } else {
+        const merged = byType[chapter.chapter_type]!;
+        merged.content = [...(merged.content || []), ...(chapter.content || [])];
+      }
+    }
+
+    const sortEntriesChronologically = (entries: LifeBookEntry[]) =>
+      [...entries].sort((a, b) => {
+        const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return ta - tb;
+      });
+
+    return chapterOrder
+      .map((type) => {
+        const chapter = byType[type];
+        if (!chapter || !chapter.content || chapter.content.length === 0) return null;
+        return {
+          ...chapter,
+          content: sortEntriesChronologically(chapter.content),
+        };
+      })
+      .filter(Boolean) as LifeBookChapter[];
+  }, [lifeBookChapters]);
+
+  const groupedLifeBook = useMemo(() => {
+    const result: {
+      chapter_type: LifeBookCategory;
+      chapter_title: string;
+      groups: { figureKey: string; entries: LifeBookEntry[] }[];
+    }[] = [];
+
+    const labelForType = (type: LifeBookCategory): string => {
+      switch (type) {
+        case 'children':
+          return 'Children';
+        case 'healing_upgrades':
+          return 'Healing Upgrades';
+        case 'past_lives':
+          return 'Past Lives';
+        case 'future_visions':
+          return 'Future Visions';
+        case 'spiritual_figures':
+          return 'Spiritual Figures';
+        case 'nadi_knowledge':
+          return 'Nadi Knowledge';
+        case 'general_wisdom':
+          return 'General Wisdom';
+        default:
+          return type;
+      }
+    };
+
+    const figureKeyFromTitle = (title?: string) => {
+      if (!title) return 'General';
+      const trimmed = title.trim();
+      const separators = [':', ' - ', ' — ', '–'];
+      for (const sep of separators) {
+        const idx = trimmed.indexOf(sep);
+        if (idx > 0) {
+          return trimmed.slice(0, idx).trim();
+        }
+      }
+      const words = trimmed.split(' ');
+      if (words.length <= 2) return trimmed;
+      return `${words[0]} ${words[1]}`;
+    };
+
+    for (const chapter of orderedLifeBook) {
+      const groupsMap = new Map<string, LifeBookEntry[]>();
+      for (const entry of chapter.content || []) {
+        const key = figureKeyFromTitle(entry.title);
+        if (!groupsMap.has(key)) groupsMap.set(key, []);
+        groupsMap.get(key)!.push(entry);
+      }
+      const groups = Array.from(groupsMap.entries()).map(([figureKey, entries]) => ({
+        figureKey,
+        entries,
+      }));
+      result.push({
+        chapter_type: chapter.chapter_type,
+        chapter_title: labelForType(chapter.chapter_type),
+        groups,
+      });
+    }
+
+    return result;
+  }, [orderedLifeBook]);
 
   // Sacred Folders for Dharma Configuration
   const physicalSanctuary = [
@@ -236,6 +403,142 @@ const Profile: React.FC = () => {
             </div>
             <ChevronRight size={20} className="text-[#D4AF37]/70 shrink-0" />
           </button>
+        </div>
+      )}
+
+      {/* Life Book - Your Life Reading */}
+      {user && (
+        <div className="mb-8 animate-slide-up" style={{ animationDelay: '0.08s' }}>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-[rgba(212,175,55,0.18)] flex items-center justify-center border border-[#D4AF37]/40">
+                <BookOpen className="w-5 h-5 text-[#D4AF37]" />
+              </div>
+              <div>
+                <h2 className="text-lg font-heading font-semibold text-foreground">Your Life Reading</h2>
+                <p className="text-xs text-muted-foreground">
+                  SQI insights, woven into a living manuscript of your soul.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div
+            className="relative rounded-3xl border border-white/10 bg-gradient-to-br from-[#050209] via-[#0b0515] to-[#140b26] overflow-hidden shadow-[0_0_40px_rgba(15,23,42,0.8)]"
+          >
+            <div className="pointer-events-none absolute inset-0 opacity-60">
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    'radial-gradient(circle at 0% 0%, rgba(212,175,55,0.16), transparent 60%), radial-gradient(circle at 100% 100%, rgba(59,130,246,0.18), transparent 60%)',
+                }}
+              />
+              <div
+                className="absolute inset-0"
+                style={{
+                  backgroundImage:
+                    'radial-gradient(circle at 20% 0%, rgba(148,163,184,0.22) 0, transparent 55%), repeating-linear-gradient(90deg, rgba(148,163,184,0.06), rgba(148,163,184,0.06) 1px, transparent 1px, transparent 12px)',
+                  mixBlendMode: 'soft-light',
+                  opacity: 0.5,
+                }}
+              />
+            </div>
+
+            <div className="relative flex flex-col md:flex-row">
+              {/* Chapter Tabs */}
+              <div className="md:w-44 border-b md:border-b-0 md:border-r border-white/10 bg-white/5/40 backdrop-blur-xl p-4 space-y-2">
+                {lifeBookLoading && (
+                  <div className="h-8 rounded-xl bg-white/10 animate-pulse mb-2" />
+                )}
+                {!lifeBookLoading && groupedLifeBook.length === 0 && (
+                  <p className="text-xs text-white/50">
+                    As you journey with SQI, key transmissions will begin to appear here as living chapters.
+                  </p>
+                )}
+                {groupedLifeBook.map((chapter) => (
+                  <div
+                    key={chapter.chapter_type}
+                    className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-white/80"
+                  >
+                    <div className="font-semibold tracking-wide uppercase text-[10px] text-[#D4AF37]/90">
+                      {chapter.chapter_title}
+                    </div>
+                    <div className="mt-1 text-[10px] text-white/50">
+                      {chapter.groups.reduce((acc, g) => acc + g.entries.length, 0)} entries
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Chapter Content */}
+              <div className="flex-1 p-4 md:p-6 space-y-4 max-h-[420px] overflow-y-auto custom-scrollbar">
+                {lifeBookLoading && (
+                  <div className="space-y-3">
+                    <div className="h-6 w-40 rounded bg-white/10 animate-pulse" />
+                    <div className="h-24 rounded-2xl bg-white/5 animate-pulse" />
+                    <div className="h-24 rounded-2xl bg-white/5 animate-pulse" />
+                  </div>
+                )}
+
+                {!lifeBookLoading && groupedLifeBook.map((chapter) => (
+                  <div key={chapter.chapter_type} className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1 h-6 rounded-full bg-[#D4AF37]" />
+                      <h3 className="text-sm font-semibold tracking-wide text-white/90 uppercase">
+                        {chapter.chapter_title}
+                      </h3>
+                    </div>
+                    <div className="grid gap-3">
+                      {chapter.groups.map((group) => (
+                        <div
+                          key={group.figureKey}
+                          className="rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-md p-3 sm:p-4"
+                        >
+                          <div className="flex items-center justify-between gap-2 mb-2">
+                            <p className="text-xs font-semibold text-white/90">
+                              {group.figureKey}
+                            </p>
+                            <span className="text-[10px] text-white/40">
+                              {group.entries.length} transmission{group.entries.length > 1 ? 's' : ''}
+                            </span>
+                          </div>
+                          <div className="space-y-2">
+                            {group.entries.map((entry, idx) => (
+                              <div key={idx} className="border-t border-white/10 pt-2 first:border-t-0 first:pt-0">
+                                <div className="flex items-center justify-between gap-2">
+                                  <p className="text-xs font-medium text-white/80">
+                                    {entry.title || 'Untitled Transmission'}
+                                  </p>
+                                  {entry.created_at && (
+                                    <span className="text-[10px] text-white/40">
+                                      {new Date(entry.created_at).toLocaleDateString()}
+                                    </span>
+                                  )}
+                                </div>
+                                {entry.summary && (
+                                  <p className="mt-1 text-[11px] leading-relaxed text-white/65">
+                                    {entry.summary}
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+
+                {!lifeBookLoading && groupedLifeBook.length === 0 && (
+                  <p className="text-xs text-white/70 max-w-md">
+                    When SQI reveals something truly essential about your children, healing path, past lives, or
+                    future visions, those transmissions will be gently written here as a sacred digital manuscript.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
