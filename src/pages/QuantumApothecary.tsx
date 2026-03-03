@@ -128,9 +128,8 @@ export default function QuantumApothecary() {
   }, [user]);
 
   const openChatFullscreenIfMobile = () => {
-    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-      setIsChatFullscreen(true);
-    }
+    // Disabled fullscreen overlay for chat; keep chat static at bottom of page
+    return;
   };
 
   // Gate: admin only
@@ -361,12 +360,7 @@ export default function QuantumApothecary() {
 
   const renderChatPanel = () => (
     <div
-      className={
-        isChatFullscreen
-          ? 'fixed inset-0 z-50 flex flex-col bg-[#0a0502] h-[100dvh]'
-          : 'rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] overflow-hidden flex flex-col'
-      }
-      style={isChatFullscreen ? undefined : { height: 480 }}
+      className="rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] overflow-hidden flex flex-col min-h-[60vh]"
     >
       <div className="p-4 border-b border-white/5 flex items-center justify-between">
         <div className="flex items-center gap-3">
