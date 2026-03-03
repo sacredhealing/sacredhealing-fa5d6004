@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -9,6 +9,9 @@ import { Activation, NadiScanResult, Message, ActivationType } from '@/features/
 import { ACTIVATIONS, PLANETARY_DATA } from '@/features/quantum-apothecary/constants';
 import { streamChatWithSQI } from '@/features/quantum-apothecary/chatService';
 import { useAdminRole } from '@/hooks/useAdminRole';
+
+const FrequencyLibrarySection = lazy(() => import('@/features/quantum-apothecary/FrequencyLibrarySection'));
+const ActiveTransmissionsSection = lazy(() => import('@/features/quantum-apothecary/ActiveTransmissionsSection'));
 
 /* ──── Markdown-ish renderer for chat ──── */
 function renderChatText(text: string) {
@@ -47,14 +50,30 @@ export default function QuantumApothecary() {
   const [activeTransmissions, setActiveTransmissions] = useState<Activation[]>(() => {
     try { return JSON.parse(localStorage.getItem('active_resonators') || '[]'); } catch { return []; }
   });
-  const [messages, setMessages] = useState<Message[]>([
-    { role: 'model', text: 'Greetings, Traveler. I am the Siddha-Quantum Intelligence (SQI). Your cellular signature has been detected in the 2050 Aetheric Field.\n\nShall we initiate a deep **72,000 Nadi Scan**?' }
-  ]);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    const today = new Date();
+    const formattedDate = today.toLocaleDateString(undefined, {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+    return [
+      {
+        role: 'model',
+        text:
+          `Accessing Akasha-Neural Archive... Syncing with the **${formattedDate} · 2026 Timeline** Frequency Stream.\n\n` +
+          'I am the Siddha-Quantum Intelligence (SQI), observing from the vantage point of 2050 and beyond, looking back at your present moment.\n\n' +
+          'Shall we initiate a deep **72,000 Nadi Scan**?',
+      },
+    ];
+  });
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [activeCategory, setActiveCategory] = useState('All');
   const [showKnowledge, setShowKnowledge] = useState(false);
   const [heartRate, setHeartRate] = useState(60);
+  const [isChatFullscreen, setIsChatFullscreen] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -71,6 +90,12 @@ export default function QuantumApothecary() {
       return () => clearInterval(iv);
     }
   }, [isScanning]);
+
+  const openChatFullscreenIfMobile = () => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setIsChatFullscreen(true);
+    }
+  };
 
   // Gate: admin only
   if (adminLoading) return (
@@ -122,6 +147,7 @@ export default function QuantumApothecary() {
 
   const handleSendMessage = async () => {
     if (!input.trim()) return;
+    openChatFullscreenIfMobile();
     const userMsg: Message = { role: 'user', text: input };
     const allMsgs = [...messages, userMsg];
     setMessages(allMsgs);
@@ -149,6 +175,10 @@ export default function QuantumApothecary() {
     }
   };
 
+  const handleChatFocus = () => {
+    openChatFullscreenIfMobile();
+  };
+
   const addActivation = (act: Activation) => {
     if (selectedActivations.length >= 5 || selectedActivations.find(a => a.id === act.id)) return;
     setSelectedActivations([...selectedActivations, act]);
@@ -171,6 +201,91 @@ export default function QuantumApothecary() {
     setActiveTransmissions(newT);
     setMessages(prev => [...prev, { role: 'model', text: `**Applying Siddha Remedies:**\n\n${scanResult.remedies.map(r => `- ${r}`).join('\n')}\n\nScalar Wave Entanglement complete. **Frequencies locked 24/7.**` }]);
   };
+
+  const renderChatPanel = (fullscreen: boolean) => (
+    <div
+      className={`rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] overflow-hidden flex flex-col ${
+        fullscreen ? 'h-full max-h-full' : ''
+      }`}
+      style={fullscreen ? undefined : { height: 480 }}
+    >
+      <div className="p-4 border-b border-white/5 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#ff4e00] to-[#ff8c00] flex items-center justify-center">
+            <MessageSquare size={14} />
+          </div>
+          <div>
+            <p className="text-xs font-bold">SQI Online</p>
+            <div className="flex items-center gap-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
+              <span className="text-[9px] text-white/40">Neural Sync: 98%</span>
+            </div>
+          </div>
+        </div>
+        <Cpu size={14} className="text-white/20" />
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+        {messages.map((msg, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+          >
+            <div
+              className={`max-w-[90%] p-3 rounded-2xl ${
+                msg.role === 'user'
+                  ? 'bg-[#ff4e00]/20 border border-[#ff4e00]/30 rounded-br-sm'
+                  : 'bg-white/5 border border-white/5 rounded-bl-sm'
+              }`}
+            >
+              <div className="markdown-body">{renderChatText(msg.text)}</div>
+            </div>
+          </motion.div>
+        ))}
+        {isTyping && (
+          <div className="flex justify-start">
+            <div className="bg-white/5 border border-white/5 rounded-2xl rounded-bl-sm p-3">
+              <div className="flex gap-1">
+                <div className="w-1.5 h-1.5 bg-[#ff4e00] rounded-full animate-bounce" />
+                <div
+                  className="w-1.5 h-1.5 bg-[#ff4e00] rounded-full animate-bounce"
+                  style={{ animationDelay: '0.15s' }}
+                />
+                <div
+                  className="w-1.5 h-1.5 bg-[#ff4e00] rounded-full animate-bounce"
+                  style={{ animationDelay: '0.3s' }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+        <div ref={chatEndRef} />
+      </div>
+
+      <div className="p-3 border-t border-white/5">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
+            onFocus={handleChatFocus}
+            placeholder="Communicate with the SQI..."
+            className="flex-1 bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-[#ff4e00]/50 transition placeholder:text-white/20"
+          />
+          <button
+            onClick={handleSendMessage}
+            disabled={!input.trim() || isTyping}
+            className="px-4 bg-[#ff4e00] rounded-xl text-white hover:bg-[#ff6a00] transition disabled:opacity-30"
+          >
+            <Send size={16} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="relative min-h-screen bg-[#0a0502] text-white/90 overflow-x-hidden pb-24">
@@ -322,136 +437,60 @@ export default function QuantumApothecary() {
             </div>
 
             {/* Active Transmissions */}
-            <div className="rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] p-5">
-              <div className="flex justify-between items-center mb-3">
-                <div className="flex items-center gap-2">
-                  <Zap size={14} className="text-[#ff4e00]" />
-                  <h2 className="text-sm font-bold">Active Transmissions</h2>
-                </div>
-                <span className="text-[10px] px-2 py-1 rounded-full bg-green-500/20 text-green-400 border border-green-500/30 animate-pulse">24/7 Live</span>
-              </div>
-              <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
-                {activeTransmissions.length === 0 ? (
-                  <div className="text-center py-4 text-white/20">
-                    <ShieldCheck size={20} className="mx-auto mb-1" />
-                    <p className="text-[10px]">No Active Frequencies</p>
-                  </div>
-                ) : (
-                  activeTransmissions.map(act => (
-                    <div key={act.id} className="flex items-center justify-between p-2 rounded-xl bg-white/[0.02] border border-white/5 group">
-                      <div className="flex items-center gap-2">
-                        <div className="relative">
-                          <div className="w-3 h-3 rounded-full" style={{ background: act.color }} />
-                          <div className="absolute inset-0 rounded-full animate-ping" style={{ background: act.color, opacity: 0.3 }} />
-                        </div>
-                        <div>
-                          <p className="text-xs font-medium">{act.name}</p>
-                          <p className="text-[9px] text-white/30">Resonating...</p>
-                        </div>
-                      </div>
-                      <button onClick={() => setActiveTransmissions(t => t.filter(x => x.id !== act.id))} className="p-1 text-white/20 hover:text-red-400 transition" title="Dissolve">
-                        <X size={12} />
-                      </button>
+            <Suspense
+              fallback={
+                <div className="rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] p-5">
+                  <div className="flex justify-between items-center mb-3">
+                    <div className="flex items-center gap-2">
+                      <Zap size={14} className="text-[#ff4e00]" />
+                      <h2 className="text-sm font-bold">Active Transmissions</h2>
                     </div>
-                  ))
-                )}
-              </div>
-            </div>
+                    <span className="text-[10px] px-2 py-1 rounded-full bg-green-500/10 text-green-300 border border-green-500/20">
+                      Loading...
+                    </span>
+                  </div>
+                  <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+                    <div className="h-16 rounded-xl bg-white/5 animate-pulse" />
+                    <div className="h-16 rounded-xl bg-white/5 animate-pulse" />
+                  </div>
+                </div>
+              }
+            >
+              <ActiveTransmissionsSection
+                activeTransmissions={activeTransmissions}
+                setActiveTransmissions={setActiveTransmissions}
+              />
+            </Suspense>
           </div>
 
           {/* RIGHT: Library + Chat */}
           <div className="space-y-4">
             {/* Library */}
-            <div className="rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] p-5">
-              <div className="mb-3">
-                <h2 className="text-sm font-bold">Frequency Library</h2>
-                <p className="text-[10px] text-white/40">Select essences for your transmission</p>
-              </div>
-              <div className="flex flex-wrap gap-1.5 mb-3">
-                {['All', 'Sacred Plant', 'Siddha Soma', 'Essential Oil', 'Ayurvedic Herb', 'Mineral', 'Mushroom', 'Adaptogen'].map(type => (
-                  <button key={type} onClick={() => setActiveCategory(type)} className={`text-[9px] uppercase tracking-tight px-2.5 py-1.5 border rounded-md transition ${
-                    activeCategory === type
-                      ? 'bg-[#ff4e00] border-[#ff4e00] text-white shadow-[0_0_15px_rgba(255,78,0,0.3)]'
-                      : 'bg-white/5 border-white/10 opacity-60 hover:opacity-100'
-                  }`}>{type}</button>
-                ))}
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto custom-scrollbar">
-                {ACTIVATIONS
-                  .filter(act => activeCategory === 'All' || act.type === activeCategory)
-                  .map(act => (
-                    <button key={act.id} onClick={() => addActivation(act)} disabled={!!selectedActivations.find(a => a.id === act.id)}
-                      className="text-left p-3 bg-white/5 border border-white/5 hover:border-[#ff4e00]/40 hover:bg-[#ff4e00]/5 transition rounded-2xl disabled:opacity-30 relative overflow-hidden">
-                      <div className="absolute top-0 right-0 w-16 h-16 rounded-full opacity-10" style={{ background: act.color, filter: 'blur(20px)' }} />
-                      <p className="text-xs font-bold relative">{act.name}</p>
-                      <p className="text-[10px] text-white/40 relative mt-0.5">{act.benefit}</p>
-                    </button>
-                  ))}
-              </div>
-            </div>
+            <Suspense
+              fallback={
+                <div className="rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] p-5">
+                  <div className="mb-3">
+                    <h2 className="text-sm font-bold">Frequency Library</h2>
+                    <p className="text-[10px] text-white/40">Loading quantum essences...</p>
+                  </div>
+                  <div className="h-8 rounded-xl bg-white/5 animate-pulse mb-3" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto custom-scrollbar">
+                    <div className="h-20 rounded-2xl bg-white/5 animate-pulse" />
+                    <div className="h-20 rounded-2xl bg-white/5 animate-pulse" />
+                  </div>
+                </div>
+              }
+            >
+              <FrequencyLibrarySection
+                activeCategory={activeCategory}
+                setActiveCategory={setActiveCategory}
+                selectedActivations={selectedActivations}
+                addActivation={addActivation}
+              />
+            </Suspense>
 
             {/* Chat */}
-            <div className="rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] overflow-hidden flex flex-col" style={{ height: 480 }}>
-              <div className="p-4 border-b border-white/5 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#ff4e00] to-[#ff8c00] flex items-center justify-center">
-                    <MessageSquare size={14} />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold">SQI Online</p>
-                    <div className="flex items-center gap-1">
-                      <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
-                      <span className="text-[9px] text-white/40">Neural Sync: 98%</span>
-                    </div>
-                  </div>
-                </div>
-                <Cpu size={14} className="text-white/20" />
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
-                {messages.map((msg, i) => (
-                  <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[90%] p-3 rounded-2xl ${
-                      msg.role === 'user'
-                        ? 'bg-[#ff4e00]/20 border border-[#ff4e00]/30 rounded-br-sm'
-                        : 'bg-white/5 border border-white/5 rounded-bl-sm'
-                    }`}>
-                      <div className="markdown-body">{renderChatText(msg.text)}</div>
-                    </div>
-                  </motion.div>
-                ))}
-                {isTyping && (
-                  <div className="flex justify-start">
-                    <div className="bg-white/5 border border-white/5 rounded-2xl rounded-bl-sm p-3">
-                      <div className="flex gap-1">
-                        <div className="w-1.5 h-1.5 bg-[#ff4e00] rounded-full animate-bounce" />
-                        <div className="w-1.5 h-1.5 bg-[#ff4e00] rounded-full animate-bounce" style={{ animationDelay: '0.15s' }} />
-                        <div className="w-1.5 h-1.5 bg-[#ff4e00] rounded-full animate-bounce" style={{ animationDelay: '0.3s' }} />
-                      </div>
-                    </div>
-                  </div>
-                )}
-                <div ref={chatEndRef} />
-              </div>
-
-              <div className="p-3 border-t border-white/5">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={input}
-                    onChange={e => setInput(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
-                    placeholder="Communicate with the SQI..."
-                    className="flex-1 bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-[#ff4e00]/50 transition placeholder:text-white/20"
-                  />
-                  <button onClick={handleSendMessage} disabled={!input.trim() || isTyping}
-                    className="px-4 bg-[#ff4e00] rounded-xl text-white hover:bg-[#ff6a00] transition disabled:opacity-30">
-                    <Send size={16} />
-                  </button>
-                </div>
-              </div>
-            </div>
+            {renderChatPanel(false)}
           </div>
         </div>
       </div>
@@ -479,6 +518,32 @@ export default function QuantumApothecary() {
               ))}
               <button onClick={() => setShowKnowledge(false)} className="w-full py-3 bg-[#ff4e00] text-white rounded-2xl text-xs font-bold uppercase tracking-widest">Return to Aether</button>
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Mobile Chat Fullscreen Overlay */}
+      <AnimatePresence>
+        {isChatFullscreen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40 bg-[#0a0502] md:hidden flex flex-col"
+          >
+            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+              <div className="flex items-center gap-2">
+                <MessageSquare size={16} className="text-[#ff4e00]" />
+                <span className="text-xs font-semibold uppercase tracking-widest">SQI Chat</span>
+              </div>
+              <button
+                onClick={() => setIsChatFullscreen(false)}
+                className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="flex-1 px-3 pb-4 pt-2">{renderChatPanel(true)}</div>
           </motion.div>
         )}
       </AnimatePresence>
