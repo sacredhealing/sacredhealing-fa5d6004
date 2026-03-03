@@ -7,7 +7,10 @@ export async function streamChatWithSQI(
   onDelta: (chunk: string) => void,
   onDone: () => void,
 ) {
-  const apiMessages = messages.map(m => ({
+  // Only send the last 10 messages for context to keep prompts efficient
+  const recent = messages.slice(-10);
+
+  const apiMessages = recent.map(m => ({
     role: m.role === 'model' ? 'assistant' : 'user',
     content: m.text,
   }));

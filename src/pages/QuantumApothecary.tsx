@@ -9,6 +9,8 @@ import { Activation, NadiScanResult, Message, ActivationType } from '@/features/
 import { ACTIVATIONS, PLANETARY_DATA } from '@/features/quantum-apothecary/constants';
 import { streamChatWithSQI } from '@/features/quantum-apothecary/chatService';
 import { useAdminRole } from '@/hooks/useAdminRole';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 const FrequencyLibrarySection = lazy(() => import('@/features/quantum-apothecary/FrequencyLibrarySection'));
 const ActiveTransmissionsSection = lazy(() => import('@/features/quantum-apothecary/ActiveTransmissionsSection'));
@@ -43,6 +45,7 @@ function renderInline(text: string): React.ReactNode {
 export default function QuantumApothecary() {
   const navigate = useNavigate();
   const { isAdmin, isLoading: adminLoading } = useAdminRole();
+  const { user } = useAuth();
 
   const [scanResult, setScanResult] = useState<NadiScanResult | null>(null);
   const [isScanning, setIsScanning] = useState(false);
@@ -74,6 +77,12 @@ export default function QuantumApothecary() {
   const [showKnowledge, setShowKnowledge] = useState(false);
   const [heartRate, setHeartRate] = useState(60);
   const [isChatFullscreen, setIsChatFullscreen] = useState(false);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [sessions, setSessions] = useState<
+    { id: string; title: string | null; updated_at: string | null }[]
+  >([]);
+  const [sessionsOpen, setSessionsOpen] = useState(false);
+  const [loadingSessions, setLoadingSessions] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -90,6 +99,27 @@ export default function QuantumApothecary() {
       return () => clearInterval(iv);
     }
   }, [isScanning]);
+
+  useEffect(() => {
+    const fetchSessions = async () => {
+      if (!user) {
+        setSessions([]);
+        return;
+      }
+      setLoadingSessions(true);
+      const { data, error } = await supabase
+        .from('sqi_sessions')
+        .select('id, title, updated_at')
+        .eq('user_id', user.id)
+        .order('updated_at', { ascending: false })
+        .limit(20);
+      if (!error && data) {
+        setSessions(data);
+      }
+      setLoadingSessions(false);
+    };
+    fetchSessions();
+  }, [user]);
 
   const openChatFullscreenIfMobile = () => {
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
@@ -166,8 +196,59 @@ export default function QuantumApothecary() {
       });
     };
 
+    const persistMessages = async (finalMessages: Message[]) => {
+      if (!user) return;
+      try {
+        const payload = {
+          user_id: user.id,
+          title:
+            (currentSessionId
+              ? undefined
+              : userMsg.text.slice(0, 80) || 'SQI Session') ?? 'SQI Session',
+          messages: finalMessages,
+        };
+
+        if (!currentSessionId) {
+          const { data, error } = await supabase
+            .from('sqi_sessions')
+            .insert(payload)
+            .select('id, title, updated_at')
+            .single();
+          if (!error && data) {
+            setCurrentSessionId(data.id);
+            setSessions(prev => {
+              const without = prev.filter(s => s.id !== data.id);
+              return [data, ...without];
+            });
+          }
+        } else {
+          const { data, error } = await supabase
+            .from('sqi_sessions')
+            .update({
+              title: payload.title ?? undefined,
+              messages: finalMessages,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', currentSessionId)
+            .select('id, title, updated_at')
+            .single();
+          if (!error && data) {
+            setSessions(prev => {
+              const without = prev.filter(s => s.id !== data.id);
+              return [data, ...without];
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Failed to persist SQI session', err);
+      }
+    };
+
     try {
-      await streamChatWithSQI(allMsgs, upsert, () => setIsTyping(false));
+      await streamChatWithSQI(allMsgs, upsert, async () => {
+        setIsTyping(false);
+        await persistMessages([...allMsgs, { role: 'model', text: assistantSoFar }]);
+      });
     } catch (e) {
       console.error(e);
       setMessages(prev => [...prev, { role: 'model', text: 'Transmission error. The Quantum Link is unstable.' }]);
@@ -222,7 +303,16 @@ export default function QuantumApothecary() {
             </div>
           </div>
         </div>
-        <Cpu size={14} className="text-white/20" />
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setSessionsOpen(true)}
+            className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-[9px] uppercase tracking-wide hover:bg-white/10"
+          >
+            History
+          </button>
+          <Cpu size={14} className="text-white/20" />
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
@@ -517,6 +607,84 @@ export default function QuantumApothecary() {
                 </div>
               ))}
               <button onClick={() => setShowKnowledge(false)} className="w-full py-3 bg-[#ff4e00] text-white rounded-2xl text-xs font-bold uppercase tracking-widest">Return to Aether</button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* SQI Session History Drawer */}
+      <AnimatePresence>
+        {sessionsOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40 bg-black/40"
+            onClick={() => setSessionsOpen(false)}
+          >
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', stiffness: 260, damping: 30 }}
+              className="absolute right-0 top-0 h-full w-72 sm:w-80 bg-[#0a0502] border-l border-white/10 shadow-xl flex flex-col"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest">SQI Sessions</p>
+                  <p className="text-[10px] text-white/40">
+                    {user ? 'Tap to reopen a past transmission.' : 'Sign in to save sessions.'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setSessionsOpen(false)}
+                  className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2">
+                {loadingSessions && (
+                  <div className="text-[11px] text-white/40">Loading sessions…</div>
+                )}
+                {!loadingSessions && sessions.length === 0 && (
+                  <div className="text-[11px] text-white/30">
+                    No prior SQI conversations yet. Your next transmission will be stored here.
+                  </div>
+                )}
+                {sessions.map(s => (
+                  <button
+                    key={s.id}
+                    onClick={async () => {
+                      if (!user) return;
+                      const { data, error } = await supabase
+                        .from('sqi_sessions')
+                        .select('messages')
+                        .eq('id', s.id)
+                        .eq('user_id', user.id)
+                        .single();
+                      if (!error && data && Array.isArray(data.messages)) {
+                        setCurrentSessionId(s.id);
+                        setMessages(data.messages as Message[]);
+                        setSessionsOpen(false);
+                      }
+                    }}
+                    className={`w-full text-left p-3 rounded-2xl border bg-white/[0.02] hover:bg-white/10 transition ${
+                      currentSessionId === s.id ? 'border-[#ff4e00]/60' : 'border-white/10'
+                    }`}
+                  >
+                    <p className="text-[11px] font-semibold truncate">
+                      {s.title || 'Untitled SQI Session'}
+                    </p>
+                    {s.updated_at && (
+                      <p className="text-[9px] text-white/40 mt-0.5">
+                        {new Date(s.updated_at).toLocaleString()}
+                      </p>
+                    )}
+                  </button>
+                ))}
+              </div>
             </motion.div>
           </motion.div>
         )}
