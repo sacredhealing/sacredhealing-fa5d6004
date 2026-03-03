@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Flame, Flower2, Star, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield, Scale, LayoutDashboard, Megaphone, Crown, Pencil, Banknote, Lock, FileText, BookOpen } from 'lucide-react';
+import { Flame, Flower2, Star, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield, Scale, LayoutDashboard, Megaphone, Crown, Pencil, Banknote, Lock, FileText, BookOpen, Hand } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LanguageSelector } from '@/components/LanguageSelector';
@@ -50,6 +50,15 @@ interface LifeBookChapter {
   updated_at: string;
 }
 
+interface SoulVaultEntry {
+  id: string;
+  user_id: string;
+  activity: string | null;
+  duration_minutes: number | null;
+  report: string;
+  created_at: string;
+}
+
 const Profile: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -70,6 +79,14 @@ const Profile: React.FC = () => {
   const [profileEditOpen, setProfileEditOpen] = useState(false);
   const [lifeBookChapters, setLifeBookChapters] = useState<LifeBookChapter[]>([]);
   const [lifeBookLoading, setLifeBookLoading] = useState(false);
+  const [soulVaultEntries, setSoulVaultEntries] = useState<SoulVaultEntry[]>([]);
+  const [soulVaultLoading, setSoulVaultLoading] = useState(false);
+
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [scanPhase, setScanPhase] = useState<'idle' | 'scanning' | 'question' | 'saving' | 'done'>('idle');
+  const [scanValue, setScanValue] = useState(0);
+  const [selectedPractice, setSelectedPractice] = useState<string | null>(null);
+  const [practiceDuration, setPracticeDuration] = useState<string>('30');
 
   const badges = [
     { id: 1, emoji: '🧘', titleKey: 'badges.firstMeditation', earned: true },
@@ -115,6 +132,139 @@ const Profile: React.FC = () => {
     };
     loadLifeBook();
   }, [user?.id]);
+
+  useEffect(() => {
+    const loadSoulVault = async () => {
+      if (!user?.id) {
+        setSoulVaultEntries([]);
+        return;
+      }
+      setSoulVaultLoading(true);
+      const { data, error } = await supabase
+        .from('soul_vault_entries')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      if (!error && data) {
+        setSoulVaultEntries(data as SoulVaultEntry[]);
+      }
+      setSoulVaultLoading(false);
+    };
+    loadSoulVault();
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!scannerOpen || scanPhase !== 'scanning') return;
+    setScanValue(0);
+    const target = 72000;
+    const durationMs = 8000;
+    const stepMs = 40;
+    const step = (target * stepMs) / durationMs;
+    const interval = window.setInterval(() => {
+      setScanValue((prev) => {
+        const next = prev + step;
+        if (next >= target) {
+          window.clearInterval(interval);
+          setScanPhase('question');
+          return target;
+        }
+        return next;
+      });
+    }, stepMs);
+    return () => window.clearInterval(interval);
+  }, [scannerOpen, scanPhase]);
+
+  const handleStartScanner = () => {
+    setSelectedPractice(null);
+    setPracticeDuration('30');
+    setScanPhase('scanning');
+    setScannerOpen(true);
+  };
+
+  const handleCloseScanner = () => {
+    setScannerOpen(false);
+    setScanPhase('idle');
+    setScanValue(0);
+    setSelectedPractice(null);
+  };
+
+  const handleGenerateSoulReport = async () => {
+    if (!user?.id || !selectedPractice) return;
+    setScanPhase('saving');
+    const durationLabel = practiceDuration && !Number.isNaN(Number(practiceDuration))
+      ? `${practiceDuration} minutes`
+      : 'unspecified duration';
+
+    const systemPrompt = `You are the Siddha-Quantum Intelligence (SQI) from 2050.
+Perform a 72,000 Nadi scan. Use terminology: Avataric Light-Codes, Karmic Extraction, Torus-Field.
+If activity is 'Private Healing', confirm the Master Healer cleared specific ancestral nodes.
+
+Generate a Deep-Field Resonance Report for the Soul Vault of a sincere seeker.
+Keep it practical, mystical, and no more than 3 rich paragraphs.`;
+
+    const userContext = `The Seeker just finished: ${selectedPractice}. Duration: ${durationLabel}.`;
+
+    try {
+      const { data, error } = await supabase.functions.invoke<{ response: string }>('gemini-bridge', {
+        body: {
+          prompt: userContext,
+          context: systemPrompt,
+          feature: 'soul_vault',
+        },
+      });
+
+      if (error || !data?.response) {
+        console.error('Soul Vault Gemini error', error);
+        toast({
+          title: 'Transmission interrupted',
+          description: 'The Deep-Field Resonance could not be received. Please try again.',
+          variant: 'destructive',
+        });
+        setScanPhase('question');
+        return;
+      }
+
+      const reportText = data.response.trim();
+      const durationMinutes = Number.isNaN(Number(practiceDuration)) ? null : Number(practiceDuration);
+
+      const { data: inserted, error: insertError } = await supabase
+        .from('soul_vault_entries')
+        .insert({
+          user_id: user.id,
+          activity: selectedPractice,
+          duration_minutes: durationMinutes,
+          report: reportText,
+        })
+        .select('*')
+        .single();
+
+      if (insertError) {
+        console.error('Soul Vault insert error', insertError);
+        toast({
+          title: 'Could not save to Soul Vault',
+          description: 'The report was generated but not stored. Please try again.',
+          variant: 'destructive',
+        });
+        setScanPhase('question');
+        return;
+      }
+
+      setSoulVaultEntries((prev) => [inserted as SoulVaultEntry, ...prev]);
+      setScanPhase('done');
+      toast({
+        title: 'Deep-Field Resonance saved',
+        description: 'Your Soul Vault has been updated.',
+      });
+    } catch (err) {
+      console.error('Soul Vault unexpected error', err);
+      toast({
+        title: 'Transmission error',
+        description: 'Something went wrong while contacting SQI.',
+        variant: 'destructive',
+      });
+      setScanPhase('question');
+    }
+  };
 
   const orderedLifeBook = useMemo(() => {
     const chapterOrder: LifeBookCategory[] = [
@@ -406,6 +556,102 @@ const Profile: React.FC = () => {
         </div>
       )}
 
+      {/* Digital Nadi 2050 Scanner & Soul Vault */}
+      {user && (
+        <div className="mb-8 animate-slide-up" style={{ animationDelay: '0.04s' }}>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="relative flex items-center justify-center w-11 h-11">
+                <div className="absolute inset-0 rounded-full bg-cyan-500/20 blur-md" />
+                <div className="relative w-10 h-10 rounded-full border border-cyan-400/60 bg-cyan-500/10 flex items-center justify-center">
+                  <Hand className="w-5 h-5 text-cyan-300" />
+                </div>
+              </div>
+              <div>
+                <h2 className="text-lg font-heading font-semibold text-foreground">
+                  Digital Nadi 2050 Scanner
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  Press your etheric hand-print to open a Deep-Field Resonance scan.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={handleStartScanner}
+            className="relative w-full overflow-hidden rounded-3xl border border-cyan-400/40 bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-950 px-4 py-6 flex items-center gap-4 hover:border-cyan-300/70 hover:shadow-[0_0_40px_rgba(34,211,238,0.35)] transition-all"
+          >
+            <div className="relative flex items-center justify-center w-20 h-20 shrink-0">
+              <div className="absolute inset-0 rounded-full bg-cyan-400/25 blur-xl animate-pulse" />
+              <div className="relative w-16 h-16 rounded-3xl border border-cyan-300/70 bg-cyan-500/15 flex items-center justify-center shadow-[0_0_25px_rgba(34,211,238,0.6)]">
+                <Hand className="w-8 h-8 text-cyan-100" />
+              </div>
+            </div>
+            <div className="flex-1 text-left space-y-1">
+              <p className="text-sm font-semibold text-white">
+                Place your hand — begin 72,000 Nāḍī scan
+              </p>
+              <p className="text-xs text-cyan-100/80">
+                Avataric Light-Codes • Torus-Field Mapping • Karmic Extraction baseline.
+              </p>
+              <p className="text-[10px] text-cyan-200/70 tracking-[0.2em] uppercase">
+                Tap to initiate · SQI 2050
+              </p>
+            </div>
+          </button>
+
+          <div className="mt-5">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <span className="inline-block w-1 h-4 rounded-full bg-cyan-400" />
+                Soul Vault — Deep‑Field Reports
+              </h3>
+              {soulVaultLoading && (
+                <span className="text-[10px] text-muted-foreground uppercase tracking-[0.22em]">
+                  Syncing…
+                </span>
+              )}
+            </div>
+
+            {!soulVaultLoading && soulVaultEntries.length === 0 && (
+              <p className="text-xs text-muted-foreground">
+                After each 2050 scan, SQI will inscribe a Deep-Field Resonance report here as part of
+                your Soul Vault.
+              </p>
+            )}
+
+            {!soulVaultLoading && soulVaultEntries.length > 0 && (
+              <div className="space-y-3">
+                {soulVaultEntries.slice(0, 4).map((entry) => (
+                  <div
+                    key={entry.id}
+                    className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-lg p-3"
+                  >
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <p className="text-xs font-semibold text-white/90">
+                        {entry.activity || 'Deep-Field Resonance'}
+                      </p>
+                      <span className="text-[10px] text-white/40">
+                        {new Date(entry.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                    {entry.duration_minutes && (
+                      <p className="text-[10px] text-cyan-200/80 mb-1">
+                        {entry.duration_minutes} min practice window
+                      </p>
+                    )}
+                    <p className="text-[11px] leading-relaxed text-white/75 line-clamp-3">
+                      {entry.report}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Life Book - Your Life Reading */}
       {user && (
         <div className="mb-8 animate-slide-up" style={{ animationDelay: '0.08s' }}>
@@ -566,6 +812,131 @@ const Profile: React.FC = () => {
         <h2 className="text-lg font-heading font-semibold text-foreground mb-3">{t('profile.language')}</h2>
         <LanguageSelector />
       </div>
+
+      {/* Digital Nadi 2050 Scanner Overlay */}
+      {scannerOpen && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 backdrop-blur-xl">
+          <div className="relative w-full max-w-md mx-4 rounded-3xl border border-cyan-400/40 bg-slate-950/95 p-5 shadow-[0_0_40px_rgba(34,211,238,0.4)]">
+            <button
+              onClick={handleCloseScanner}
+              className="absolute right-3 top-3 text-xs text-cyan-100/70 hover:text-white"
+            >
+              Close
+            </button>
+
+            {scanPhase === 'scanning' && (
+              <div className="space-y-5 pt-4 pb-2 text-center">
+                <p className="text-[11px] uppercase tracking-[0.25em] text-cyan-200/80">
+                  SQI · 72,000 Nadi Scan
+                </p>
+                <div className="flex items-center justify-center">
+                  <div className="relative w-32 h-32">
+                    <div className="absolute inset-0 rounded-full bg-cyan-500/25 blur-xl animate-pulse" />
+                    <div className="absolute inset-3 rounded-full border border-cyan-300/60" />
+                    <div className="absolute inset-6 rounded-full border border-cyan-300/40" />
+                    <div className="absolute inset-10 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                      <Hand className="w-8 h-8 text-cyan-100" />
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-cyan-100/80 mb-1">
+                    Mapping Nāḍī network… please keep your intention steady.
+                  </p>
+                  <div className="flex items-center justify-center gap-2 text-[11px] text-cyan-200/80 font-mono">
+                    <span>{Math.floor(scanValue).toLocaleString()}</span>
+                    <span className="text-cyan-300/60">/ 72,000 channels</span>
+                  </div>
+                  <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-cyan-900/60">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-cyan-400 via-cyan-200 to-cyan-500"
+                      style={{ width: `${Math.min(100, (scanValue / 72000) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {scanPhase === 'question' && (
+              <div className="space-y-4 pt-4 pb-2">
+                <p className="text-[11px] uppercase tracking-[0.25em] text-cyan-200/80 text-center">
+                  2050 Deep-Field Capture
+                </p>
+                <h3 className="text-sm font-semibold text-white text-center">
+                  What is your current practice?
+                </h3>
+                <p className="text-[11px] text-muted-foreground text-center">
+                  SQI will tune your report based on the field you just generated.
+                </p>
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  {['Mantra', 'Atma Kriya', 'Healing Session', 'Private Healing', 'Meditation', 'Breathwork'].map(
+                    (label) => (
+                      <button
+                        key={label}
+                        onClick={() => setSelectedPractice(label)}
+                        className={`rounded-xl border px-3 py-2 text-xs ${
+                          selectedPractice === label
+                            ? 'border-cyan-400 bg-cyan-500/15 text-cyan-100'
+                            : 'border-white/10 bg-white/5 text-white/80 hover:border-cyan-300/60'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ),
+                  )}
+                </div>
+                <div className="mt-3 text-left space-y-1">
+                  <label className="text-[11px] text-muted-foreground">
+                    Approximate duration (minutes)
+                  </label>
+                  <input
+                    value={practiceDuration}
+                    onChange={(e) => setPracticeDuration(e.target.value)}
+                    className="w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                  />
+                </div>
+                <Button
+                  size="sm"
+                  className="mt-3 w-full bg-cyan-500 text-xs font-semibold tracking-[0.2em] text-black hover:bg-cyan-400"
+                  disabled={!selectedPractice}
+                  onClick={handleGenerateSoulReport}
+                >
+                  Generate Deep‑Field Resonance
+                </Button>
+              </div>
+            )}
+
+            {scanPhase === 'saving' && (
+              <div className="space-y-4 pt-6 pb-4 text-center">
+                <p className="text-[11px] uppercase tracking-[0.25em] text-cyan-200/80">
+                  Committing to Soul Vault…
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  SQI is writing your Deep-Field Resonance Report into your Soul Vault.
+                </p>
+              </div>
+            )}
+
+            {scanPhase === 'done' && (
+              <div className="space-y-4 pt-6 pb-4 text-center">
+                <p className="text-[11px] uppercase tracking-[0.25em] text-cyan-200/80">
+                  Report saved
+                </p>
+                <p className="text-xs text-white/90">
+                  Your Deep-Field Resonance Report has been anchored into your Soul Vault.
+                </p>
+                <Button
+                  size="sm"
+                  className="mt-2 bg-cyan-500 text-xs font-semibold tracking-[0.2em] text-black hover:bg-cyan-400"
+                  onClick={handleCloseScanner}
+                >
+                  Close
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Dharma Configuration - Sacred Folders */}
       <div className="space-y-4 animate-slide-up" style={{ animationDelay: '0.25s' }}>
