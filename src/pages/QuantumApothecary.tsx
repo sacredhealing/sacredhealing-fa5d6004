@@ -128,7 +128,7 @@ export default function QuantumApothecary() {
   }, [user]);
 
   const openChatFullscreenIfMobile = () => {
-    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
       setIsChatFullscreen(true);
     }
   };
@@ -359,15 +359,26 @@ export default function QuantumApothecary() {
     setMessages(prev => [...prev, { role: 'model', text: `**Applying Siddha Remedies:**\n\n${scanResult.remedies.map(r => `- ${r}`).join('\n')}\n\nScalar Wave Entanglement complete. **Frequencies locked 24/7.**` }]);
   };
 
-  const renderChatPanel = (fullscreen: boolean) => (
+  const renderChatPanel = () => (
     <div
-      className={`rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] overflow-hidden flex flex-col ${
-        fullscreen ? 'h-full max-h-full' : ''
-      }`}
-      style={fullscreen ? undefined : { height: 480 }}
+      className={
+        isChatFullscreen
+          ? 'fixed inset-0 z-50 flex flex-col bg-[#0a0502] h-[100dvh]'
+          : 'rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] overflow-hidden flex flex-col'
+      }
+      style={isChatFullscreen ? undefined : { height: 480 }}
     >
       <div className="p-4 border-b border-white/5 flex items-center justify-between">
         <div className="flex items-center gap-3">
+          {isChatFullscreen && (
+            <button
+              type="button"
+              onClick={() => setIsChatFullscreen(false)}
+              className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition"
+            >
+              <X size={14} className="text-white/80" />
+            </button>
+          )}
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#ff4e00] to-[#ff8c00] flex items-center justify-center">
             <MessageSquare size={14} />
           </div>
@@ -430,7 +441,10 @@ export default function QuantumApothecary() {
         <div ref={chatEndRef} />
       </div>
 
-      <div className="p-3 border-t border-white/5">
+      <div
+        className="p-3 border-t border-white/5"
+        style={isChatFullscreen ? { paddingBottom: 'env(safe-area-inset-bottom, 16px)' } : undefined}
+      >
         <input
           ref={fileInputRef}
           type="file"
@@ -703,7 +717,7 @@ export default function QuantumApothecary() {
             </Suspense>
 
             {/* Chat */}
-            {renderChatPanel(false)}
+            {renderChatPanel()}
           </div>
         </div>
       </div>
@@ -809,152 +823,6 @@ export default function QuantumApothecary() {
                 ))}
               </div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Mobile Chat Fullscreen Overlay */}
-      <AnimatePresence>
-        {isChatFullscreen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 bg-[#0a0502] md:hidden flex flex-col h-[100dvh] w-screen"
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setIsChatFullscreen(false)}
-                  className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition"
-                >
-                  <X size={16} className="text-white/80" />
-                </button>
-                <div className="flex items-center gap-2">
-                  <MessageSquare size={16} className="text-[#ff4e00]" />
-                  <span className="text-xs font-semibold uppercase tracking-widest">SQI Chat</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 text-[10px] text-white/50">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                <span>Neural Sync: 98%</span>
-              </div>
-            </div>
-
-            {/* Messages area */}
-            <div className="flex-1 overflow-y-auto px-3 pt-2 pb-28 custom-scrollbar">
-              <div className="space-y-3">
-                {messages.map((msg, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-[90%] p-3 rounded-2xl ${
-                        msg.role === 'user'
-                          ? 'bg-[#ff4e00]/20 border border-[#ff4e00]/30 rounded-br-sm'
-                          : 'bg-white/5 border border-white/5 rounded-bl-sm'
-                      }`}
-                    >
-                      <div className="markdown-body">{renderChatText(msg.text)}</div>
-                    </div>
-                  </motion.div>
-                ))}
-                {isTyping && (
-                  <div className="flex justify-start">
-                    <div className="bg-white/5 border border-white/5 rounded-2xl rounded-bl-sm p-3">
-                      <div className="flex gap-1">
-                        <div className="w-1.5 h-1.5 bg-[#ff4e00] rounded-full animate-bounce" />
-                        <div
-                          className="w-1.5 h-1.5 bg-[#ff4e00] rounded-full animate-bounce"
-                          style={{ animationDelay: '0.15s' }}
-                        />
-                        <div
-                          className="w-1.5 h-1.5 bg-[#ff4e00] rounded-full animate-bounce"
-                          style={{ animationDelay: '0.3s' }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-                <div ref={chatEndRef} />
-              </div>
-            </div>
-
-            {/* Fixed input at bottom with safe-area padding */}
-            <div
-              className="fixed bottom-0 left-0 right-0 border-t border-white/10 bg-[#050308]/95 backdrop-blur-xl px-3 pt-2"
-              style={{ paddingBottom: 'env(safe-area-inset-bottom, 16px)' }}
-            >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleImageSelect}
-              />
-              {pendingImage && (
-                <div className="flex items-center gap-2 mb-2">
-                  <img
-                    src={`data:${pendingImage.mimeType};base64,${pendingImage.base64}`}
-                    alt="Attached"
-                    className="h-10 w-10 rounded-lg object-cover border border-white/20"
-                  />
-                  <span className="text-[10px] text-white/50">Image attached</span>
-                  <button
-                    type="button"
-                    onClick={() => setPendingImage(null)}
-                    className="ml-auto p-1 rounded bg-white/10 hover:bg-red-500/20 text-white/60 hover:text-red-400"
-                  >
-                    <X size={12} />
-                  </button>
-                </div>
-              )}
-              <div className="flex gap-2 items-center pb-2">
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="p-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition shrink-0"
-                  title="Upload or take photo"
-                >
-                  <Camera size={16} className="text-white/70" />
-                </button>
-                <button
-                  type="button"
-                  onClick={startVoiceInput}
-                  className={`p-2.5 rounded-xl border transition shrink-0 ${
-                    isRecording
-                      ? 'bg-red-500/20 border-red-500/50 text-red-400 animate-pulse'
-                      : 'bg-white/5 border-white/10 hover:bg-white/10 text-white/70'
-                  }`}
-                  title={isRecording ? 'Listening…' : 'Voice input'}
-                >
-                  <Mic size={16} />
-                </button>
-                {isRecording && (
-                  <span className="text-[10px] text-red-400 font-medium shrink-0">Listening…</span>
-                )}
-                <input
-                  type="text"
-                  value={input}
-                  onChange={e => setInput(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
-                  onFocus={handleChatFocus}
-                  placeholder="Communicate with the SQI..."
-                  className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-[#ff4e00]/50 transition placeholder:text-white/20"
-                />
-                <button
-                  onClick={() => handleSendMessage()}
-                  disabled={(!input.trim() && !pendingImage) || isTyping}
-                  className="px-4 py-2.5 bg-[#ff4e00] rounded-xl text-white hover:bg-[#ff6a00] transition disabled:opacity-30 shrink-0"
-                >
-                  <Send size={16} />
-                </button>
-              </div>
-            </div>
           </motion.div>
         )}
       </AnimatePresence>
