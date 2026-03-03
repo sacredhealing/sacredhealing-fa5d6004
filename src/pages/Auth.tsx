@@ -194,8 +194,9 @@ const Auth: React.FC = () => {
             });
             if (welcomeErr) {
               console.error('[Auth] Welcome email invoke error:', welcomeErr);
-            } else if (welcomeData?.error) {
-              console.warn('[Auth] Welcome email returned error:', welcomeData.error);
+            }
+            if (welcomeData?.error) {
+              console.error('[Auth] Welcome email returned error:', welcomeData.error);
             }
           } catch (welcomeErr) {
             console.error('[Auth] Welcome email exception:', welcomeErr);
