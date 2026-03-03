@@ -52,16 +52,30 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages } = await req.json();
+    const { messages, userImage } = await req.json();
     const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
     if (!GEMINI_API_KEY) {
       throw new Error("GEMINI_API_KEY is not configured. Add it in Supabase → Project Settings → Edge Functions → Secrets.");
     }
 
-    const geminiMessages = (messages || []).map((m: { role: string; content: string }) => ({
-      role: m.role === "assistant" ? "model" : "user",
-      parts: [{ text: m.content || "" }],
-    }));
+    const rawMessages = messages || [];
+    const geminiMessages = rawMessages.map((m: { role: string; content: string }, i: number) => {
+      const isLastUser = i === rawMessages.length - 1 && m.role === "user";
+      const parts: { text?: string; inline_data?: { mime_type: string; data: string } }[] = [];
+      if (isLastUser && userImage?.base64 && userImage?.mimeType) {
+        parts.push({
+          inline_data: {
+            mime_type: userImage.mimeType || "image/jpeg",
+            data: userImage.base64,
+          },
+        });
+      }
+      parts.push({ text: m.content || "" });
+      return {
+        role: m.role === "assistant" ? "model" : "user",
+        parts,
+      };
+    });
 
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:streamGenerateContent?key=${GEMINI_API_KEY}&alt=sse`;
 

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
   Sparkles, Zap, Wind, Droplets, Activity, MessageSquare, Plus, Trash2, Send,
-  Cpu, Globe, ShieldCheck, ChevronRight, Info, X, ArrowLeft,
+  Cpu, Globe, ShieldCheck, ChevronRight, Info, X, ArrowLeft, Camera, Mic,
 } from 'lucide-react';
 import { Activation, NadiScanResult, Message, ActivationType } from '@/features/quantum-apothecary/types';
 import { ACTIVATIONS, PLANETARY_DATA } from '@/features/quantum-apothecary/constants';
@@ -86,6 +86,12 @@ export default function QuantumApothecary() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const recognitionRef = useRef<{ stop: () => void } | null>(null);
+  const voiceTranscriptRef = useRef('');
+
+  const [pendingImage, setPendingImage] = useState<{ base64: string; mimeType: string } | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
   useEffect(() => { localStorage.setItem('active_resonators', JSON.stringify(activeTransmissions)); }, [activeTransmissions]);
@@ -175,13 +181,17 @@ export default function QuantumApothecary() {
     }, 5000);
   };
 
-  const handleSendMessage = async () => {
-    if (!input.trim()) return;
+  const handleSendMessage = async (overrideText?: string) => {
+    const text = (overrideText ?? input).trim();
+    if (!text && !pendingImage) return;
     openChatFullscreenIfMobile();
-    const userMsg: Message = { role: 'user', text: input };
+    const displayText = text || (pendingImage ? '[Image attached]' : '');
+    const userMsg: Message = { role: 'user', text: displayText };
     const allMsgs = [...messages, userMsg];
     setMessages(allMsgs);
     setInput('');
+    const imageToSend = pendingImage ?? undefined;
+    setPendingImage(null);
     setIsTyping(true);
 
     let assistantSoFar = '';
@@ -248,7 +258,7 @@ export default function QuantumApothecary() {
       await streamChatWithSQI(allMsgs, upsert, async () => {
         setIsTyping(false);
         await persistMessages([...allMsgs, { role: 'model', text: assistantSoFar }]);
-      });
+      }, imageToSend);
     } catch (e) {
       console.error(e);
       setMessages(prev => [...prev, { role: 'model', text: 'Transmission error. The Quantum Link is unstable.' }]);
@@ -258,6 +268,66 @@ export default function QuantumApothecary() {
 
   const handleChatFocus = () => {
     openChatFullscreenIfMobile();
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      const base64 = dataUrl.includes(',') ? dataUrl.split(',')[1]! : dataUrl;
+      setPendingImage({ base64, mimeType: file.type || 'image/jpeg' });
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const startVoiceInput = () => {
+    const SpeechRecognition = (window as unknown as { SpeechRecognition?: new () => SpeechRecognition; webkitSpeechRecognition?: new () => SpeechRecognition }).SpeechRecognition
+      || (window as unknown as { webkitSpeechRecognition?: new () => SpeechRecognition }).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+    if (isRecording && recognitionRef.current) {
+      recognitionRef.current.stop();
+      return;
+    }
+    voiceTranscriptRef.current = input;
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      let final = '';
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i]!.transcript;
+        if (event.results[i]!.isFinal) final += transcript;
+        else interim += transcript;
+      }
+      if (final) {
+        voiceTranscriptRef.current = (voiceTranscriptRef.current + final).trim();
+        setInput(voiceTranscriptRef.current);
+        recognition.stop();
+        setIsRecording(false);
+        recognitionRef.current = null;
+        const textToSend = voiceTranscriptRef.current;
+        if (textToSend) setTimeout(() => handleSendMessage(textToSend), 0);
+      } else if (interim) {
+        const soFar = voiceTranscriptRef.current + interim;
+        setInput(soFar);
+      }
+    };
+    recognition.onend = () => {
+      setIsRecording(false);
+      recognitionRef.current = null;
+    };
+    recognition.onerror = () => {
+      setIsRecording(false);
+      recognitionRef.current = null;
+    };
+    recognition.start();
+    recognitionRef.current = recognition;
+    setIsRecording(true);
   };
 
   const addActivation = (act: Activation) => {
@@ -355,7 +425,54 @@ export default function QuantumApothecary() {
       </div>
 
       <div className="p-3 border-t border-white/5">
-        <div className="flex gap-2">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleImageSelect}
+        />
+        {pendingImage && (
+          <div className="flex items-center gap-2 mb-2">
+            <img
+              src={`data:${pendingImage.mimeType};base64,${pendingImage.base64}`}
+              alt="Attached"
+              className="h-10 w-10 rounded-lg object-cover border border-white/20"
+            />
+            <span className="text-[10px] text-white/50">Image attached</span>
+            <button
+              type="button"
+              onClick={() => setPendingImage(null)}
+              className="ml-auto p-1 rounded bg-white/10 hover:bg-red-500/20 text-white/60 hover:text-red-400"
+            >
+              <X size={12} />
+            </button>
+          </div>
+        )}
+        <div className="flex gap-2 items-center">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="p-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition shrink-0"
+            title="Upload or take photo"
+          >
+            <Camera size={16} className="text-white/70" />
+          </button>
+          <button
+            type="button"
+            onClick={startVoiceInput}
+            className={`p-2.5 rounded-xl border transition shrink-0 ${
+              isRecording
+                ? 'bg-red-500/20 border-red-500/50 text-red-400 animate-pulse'
+                : 'bg-white/5 border-white/10 hover:bg-white/10 text-white/70'
+            }`}
+            title={isRecording ? 'Listening…' : 'Voice input'}
+          >
+            <Mic size={16} />
+          </button>
+          {isRecording && (
+            <span className="text-[10px] text-red-400 font-medium shrink-0">Listening…</span>
+          )}
           <input
             type="text"
             value={input}
@@ -363,12 +480,12 @@ export default function QuantumApothecary() {
             onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
             onFocus={handleChatFocus}
             placeholder="Communicate with the SQI..."
-            className="flex-1 bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-[#ff4e00]/50 transition placeholder:text-white/20"
+            className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-[#ff4e00]/50 transition placeholder:text-white/20"
           />
           <button
-            onClick={handleSendMessage}
-            disabled={!input.trim() || isTyping}
-            className="px-4 bg-[#ff4e00] rounded-xl text-white hover:bg-[#ff6a00] transition disabled:opacity-30"
+            onClick={() => handleSendMessage()}
+            disabled={(!input.trim() && !pendingImage) || isTyping}
+            className="px-4 py-2.5 bg-[#ff4e00] rounded-xl text-white hover:bg-[#ff6a00] transition disabled:opacity-30 shrink-0"
           >
             <Send size={16} />
           </button>

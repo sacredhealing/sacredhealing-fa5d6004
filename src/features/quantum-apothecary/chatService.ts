@@ -2,10 +2,16 @@ import type { Message } from './types';
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/quantum-apothecary-chat`;
 
+export interface UserImagePayload {
+  base64: string;
+  mimeType: string;
+}
+
 export async function streamChatWithSQI(
   messages: Message[],
   onDelta: (chunk: string) => void,
   onDone: () => void,
+  userImage?: UserImagePayload,
 ) {
   // Only send the last 10 messages for context to keep prompts efficient
   const recent = messages.slice(-10);
@@ -15,13 +21,20 @@ export async function streamChatWithSQI(
     content: m.text,
   }));
 
+  const body: { messages: typeof apiMessages; userImage?: UserImagePayload } = {
+    messages: apiMessages,
+  };
+  if (userImage?.base64 && userImage?.mimeType) {
+    body.userImage = userImage;
+  }
+
   const resp = await fetch(CHAT_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
     },
-    body: JSON.stringify({ messages: apiMessages }),
+    body: JSON.stringify(body),
   });
 
   if (!resp.ok || !resp.body) {
