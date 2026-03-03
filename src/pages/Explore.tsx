@@ -43,7 +43,6 @@ import {
   Leaf,
   Eye,
   Cpu,
-  Home,
   Shield,
 } from "lucide-react";
 import SacredRevealGate from "@/components/SacredRevealGate";
@@ -348,7 +347,7 @@ export default function Explore() {
                 { label: "Ayurveda", desc: "Balance + daily guidance", href: "/ayurveda" },
                 { label: "Vastu", desc: "Abundance Architect", href: "/vastu" },
                 { label: "Quantum Apothecary", desc: "2050 Siddha-Quantum bio-resonance platform", href: "/quantum-apothecary", Icon: Cpu, adminOnly: true },
-                { label: "Temple Home", desc: "24/7 Sacred Site resonance anchor", href: "/temple-home", Icon: Home, adminOnly: true },
+                { label: "Virtual Pilgrimage", desc: "24/7 Sacred Site resonance anchor", href: "/temple-home", adminOnly: true },
                 { label: "Sri Yantra Universal Protection Shield", desc: "Geometric resonance & quantum flux monitoring — v2.6.GLOBAL", href: "/sri-yantra-shield", Icon: Shield },
                 { label: "Palm & Akashic Oracle", desc: "Basic hand analysis (Lines only) → Akashic verdict", href: "/hand-analyzer", Icon: Hand, premium: true, adminOnly: true },
               ].filter((item) => !("adminOnly" in item && item.adminOnly) || isAdmin).map((item) => {

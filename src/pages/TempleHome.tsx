@@ -10,8 +10,10 @@ import { useAuth } from '@/hooks/useAuth';
 import TempleGateIcon from '@/components/icons/TempleGateIcon';
 
 // ─── Data ───────────────────────────────────────────────────────────────────
+// SACRED HEALING: SITE REGISTRY V2.0 — Galactic, Temporal, Lost Civilizations, Supreme Earth
 
 const SACRED_SITES = [
+  // Original Earth sites (unchanged)
   { id: 'giza', name: 'Giza', focus: 'Spinal Alignment', reach: 50, color: '#FFD700' },
   { id: 'arunachala', name: 'Arunachala', focus: 'Self-Inquiry/Silence', reach: 45, color: '#F5DEB3' },
   { id: 'samadhi', name: 'Samadhi', focus: 'Aura Repair', reach: 25, color: '#E6E6FA' },
@@ -23,6 +25,22 @@ const SACRED_SITES = [
   { id: 'shasta', name: 'Mount Shasta', focus: 'Light-Body Sync', reach: 20, color: '#DA70D6' },
   { id: 'luxor', name: 'Luxor Temples', focus: 'Ka/Hand Activation', reach: 30, color: '#FFCC00' },
   { id: 'uluru', name: 'Uluru', focus: 'Grounding/Ancestral DNA', reach: 40, color: '#B22222' },
+  // Supreme Earth (Site Registry V2.0)
+  { id: 'kailash_13x', name: 'Mount Kailash', focus: 'Moksha / Total Purification', reach: 100, color: '#7B61FF' },
+  { id: 'glastonbury', name: 'Glastonbury (Avalon)', focus: 'Divine Love & Emotional Restoration', reach: 40, color: '#00FF7F' },
+  { id: 'sedona', name: 'Sedona Vortex', focus: 'Psychic Vision & Ability Activation', reach: 35, color: '#FF4500' },
+  { id: 'titicaca', name: 'Lake Titicaca', focus: 'Creative Rebirth & Manifestation', reach: 45, color: '#FFD700' },
+  // Ancient Holy Eras (Temporal)
+  { id: 'vrindavan_krsna', name: 'Ancient Vrindavan (Era of Krishna)', focus: 'Premananda (Supreme Bliss)', reach: 75, color: '#1E90FF' },
+  { id: 'ayodhya_rama', name: 'Ancient Ayodhya (Era of Rama & Hanuman)', focus: 'Dharma & Divine Protection Shield', reach: 75, color: '#FFA500' },
+  // Lost Civilizations
+  { id: 'lemuria', name: 'Lemuria (Mu)', focus: 'Maternal Creation & Emotional Purity', reach: 60, color: '#40E0D0' },
+  { id: 'atlantis', name: 'Atlantis (Poseidia)', focus: 'Advanced Crystal Technology & Mental Breakthroughs', reach: 60, color: '#000080' },
+  // Galactic Star Nations
+  { id: 'pleiades', name: 'Pleiades Star System', focus: 'Starlight Harmony & Creative Production', reach: 100, color: '#E0FFFF' },
+  { id: 'sirius', name: 'Sirius (The Blue Star)', focus: 'Initiation & Ancient High-Wisdom', reach: 100, color: '#4169E1' },
+  { id: 'arcturus', name: 'Arcturus', focus: 'Cellular Regeneration & High-Speed Healing', reach: 100, color: '#9932CC' },
+  { id: 'lyra', name: 'Lyra (The Felines)', focus: 'Original Sound/Frequency of Creation', reach: 100, color: '#FFFFFF' },
 ];
 
 const SITE_DB: Record<string, { title: string; primaryBenefit: string; instruction: string; experience: string; signature: string }> = {
@@ -37,6 +55,19 @@ const SITE_DB: Record<string, { title: string; primaryBenefit: string; instructi
   shasta: { title: 'Mount Shasta', primaryBenefit: 'Light-Body Sync', instruction: 'Visualize a violet flame surrounding your body.', experience: "A 'cool,' breezy feeling in the aura.", signature: 'LIGHT_BODY_SYNC' },
   luxor: { title: 'Luxor Temples', primaryBenefit: 'Ka/Hand Activation', instruction: 'Breathe in the warm, alchemical gold light.', experience: "A warm, solid sensation in the physical body.", signature: 'KA_ACTIVATION' },
   uluru: { title: 'Uluru', primaryBenefit: 'Grounding/Ancestral DNA', instruction: 'Sink deep into the red earth.', experience: "Intense grounding; a feeling of being 'held' by the Earth.", signature: 'DREAMTIME_SYNC' },
+  // Site Registry V2.0 — Supreme, Temporal, Ancient, Galactic
+  kailash_13x: { title: 'Mount Kailash', primaryBenefit: 'Moksha / Total Purification', instruction: 'Tune to 7.83 Hz (Schumann). Visualize the sacred peak; allow all karmic layers to dissolve into the void.', experience: 'Shimmering violet clarity; a sense of total purification and liberation.', signature: 'KAILASH_SHIMMER' },
+  glastonbury: { title: 'Glastonbury (Avalon)', primaryBenefit: 'Divine Love & Emotional Restoration', instruction: 'Open the heart gate. Breathe emerald light into the chest; feel the Avalon mist softening old wounds.', experience: 'Heart-Gate activation; emotional restoration and divine love.', signature: 'AVALON_MIST' },
+  sedona: { title: 'Sedona Vortex', primaryBenefit: 'Psychic Vision & Ability Activation', instruction: 'Align with the magnetic spiral. Focus at the Third Eye; let the red-rock energy amplify inner sight.', experience: 'Magnetic spiral activation; heightened psychic vision.', signature: 'SEDONA_VORTEX' },
+  titicaca: { title: 'Lake Titicaca', primaryBenefit: 'Creative Rebirth & Manifestation', instruction: 'Connect to the sacral birthplace. Solar gold ripples support new creation and manifestation.', experience: 'Solar gold ripples; creative rebirth and manifestation energy.', signature: 'SOLAR_RIPPLES' },
+  vrindavan_krsna: { title: 'Ancient Vrindavan (Era of Krishna)', primaryBenefit: 'Premananda (Supreme Bliss)', instruction: 'Rest in the peacock-blue field of divine play; allow falling lotus petals to carry you into supreme bliss.', experience: 'Premananda; falling lotus petals and supreme bliss.', signature: 'FALLING_LOTUS' },
+  ayodhya_rama: { title: 'Ancient Ayodhya (Era of Rama & Hanuman)', primaryBenefit: 'Dharma & Divine Protection Shield', instruction: 'Invoke the golden shield of dharma; feel Rama and Hanuman anchoring protection around your field.', experience: 'Golden shield aura; dharma and divine protection.', signature: 'GOLDEN_SHIELD_AURA' },
+  lemuria: { title: 'Lemuria (Mu)', primaryBenefit: 'Maternal Creation & Emotional Purity', instruction: 'Sink into turquoise waters; allow maternal creation energy and emotional purity to restore the heart.', experience: 'Tropical soft glow; maternal creation and emotional purity.', signature: 'TROPICAL_SOFT_GLOW' },
+  atlantis: { title: 'Atlantis (Poseidia)', primaryBenefit: 'Advanced Crystal Technology & Mental Breakthroughs', instruction: 'Merge with deep navy crystal light; let liquid light geometry unlock mental breakthroughs.', experience: 'Liquid light geometry; crystal technology and mental clarity.', signature: 'LIQUID_LIGHT_GEOMETRY' },
+  pleiades: { title: 'Pleiades Star System', primaryBenefit: 'Starlight Harmony & Creative Production', instruction: 'Receive diamond-white starlight; non-local reach. Allow creative production to flow from cosmic harmony.', experience: 'Diamond sparkle; starlight harmony and creative flow.', signature: 'DIAMOND_SPARKLE' },
+  sirius: { title: 'Sirius (The Blue Star)', primaryBenefit: 'Initiation & Ancient High-Wisdom', instruction: 'Attune to the Blue Star; open to initiation and ancient high-wisdom. Double-sun flare in the inner vision.', experience: 'Double sun flare; initiation and ancient wisdom.', signature: 'DOUBLE_SUN_FLARE' },
+  arcturus: { title: 'Arcturus', primaryBenefit: 'Cellular Regeneration & High-Speed Healing', instruction: 'Let electric violet grid pulse through the body; support cellular regeneration and high-speed healing.', experience: 'Violet grid pulse; cellular regeneration and healing.', signature: 'VIOLET_GRID_PULSE' },
+  lyra: { title: 'Lyra (The Felines)', primaryBenefit: 'Original Sound/Frequency of Creation', instruction: 'Merge with pure white light; the original sound and frequency of creation. Non-local, infinite reach.', experience: 'White light fire; original creative frequency.', signature: 'WHITE_LIGHT_FIRE' },
 };
 
 const MODES = [
