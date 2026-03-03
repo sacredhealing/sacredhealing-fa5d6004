@@ -349,6 +349,7 @@ export default function Explore() {
                 { label: "Quantum Apothecary", desc: "2050 Siddha-Quantum bio-resonance platform", href: "/quantum-apothecary", Icon: Cpu, adminOnly: true },
                 { label: "Virtual Pilgrimage", desc: "24/7 Sacred Site resonance anchor", href: "/temple-home", adminOnly: true },
                 { label: "Digital Nadi", desc: "Camera-based Nāḍī pulse scan and healing recommendations", href: "/digital-nadi" },
+                { label: "Vayu Protocol", desc: "2060 Siddha atmospheric engineering · Golden Torus & Sapphire Icosahedron", href: "/vayu-protocol" },
                 { label: "Sri Yantra Universal Protection Shield", desc: "Geometric resonance & quantum flux monitoring — v2.6.GLOBAL", href: "/sri-yantra-shield", Icon: Shield },
                 { label: "Palm & Akashic Oracle", desc: "Basic hand analysis (Lines only) → Akashic verdict", href: "/hand-analyzer", Icon: Hand, premium: true, adminOnly: true },
               ].filter((item) => !("adminOnly" in item && item.adminOnly) || isAdmin).map((item) => {
