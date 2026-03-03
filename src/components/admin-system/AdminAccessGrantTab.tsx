@@ -149,7 +149,7 @@ const AdminAccessGrantTab = () => {
       if (error) throw error;
 
       if (accessType === 'sri_yantra_shield') {
-        const { error: sriError } = await supabase.from('sri_yantra_access').upsert(
+        const { error: sriError } = await (supabase.from('sri_yantra_access' as any) as any).upsert(
           {
             user_id: selectedUser.user_id,
             has_access: true,

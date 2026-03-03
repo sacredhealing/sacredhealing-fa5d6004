@@ -21,12 +21,12 @@ export function useSriYantraAccess() {
       return;
     }
 
-    const { data, error } = await supabase
-      .from("sri_yantra_access")
+    const { data, error } = await (supabase
+      .from("sri_yantra_access" as any)
       .select("has_access")
       .eq("user_id", user.id)
       .eq("has_access", true)
-      .maybeSingle();
+      .maybeSingle() as any);
 
     if (!error && data?.has_access) {
       setHasPurchasedAccess(true);
