@@ -1,16 +1,22 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const templates: Record<string, { subject: string; body: string; footer: string }> = {
+/** Spanish-speaking country codes (ISO 3166-1 alpha-2) for welcome email language. */
+const SPANISH_COUNTRY_CODES = new Set([
+  "ES", "MX", "AR", "BO", "CL", "CO", "CR", "CU", "DO", "EC", "SV", "GQ", "GT", "HN", "NI", "PA", "PY", "PE", "PR", "UY", "VE",
+]);
+
+type LangCode = "en" | "es" | "no" | "sv";
+
+const templates: Record<LangCode, { subject: string; greeting: string; body: string; footer: string; cta: string }> = {
   sv: {
     subject: "Välkommen hem till Sacred Healing ✨ Din resa börjar här",
+    greeting: "Hej",
     body: `<p>Vad roligt att du har hittat till Sacred Healing! Du är nu en del av en växande community där vi förenas genom mantran, uråldrig visdom och djupgående healing.</p>
 <p>Som en av de första medlemmarna i appen har du nu tillgång till ett unikt universum som vi fyller på med nytt material varje vecka.</p>
 
@@ -37,9 +43,11 @@ const templates: Record<string, { subject: string; body: string; footer: string 
 </ul>
 <p>Vi finns här för att stötta din resa mot sinnesro och självupptäckt. Tveka inte att skriva till oss i chatten!</p>`,
     footer: "Med ljus och tacksamhet,<br/><strong>Adam, Kritagya Das & Laila, Karaveera Nivasini Dasi</strong>",
+    cta: "Öppna Sacred Healing",
   },
   en: {
     subject: "Welcome home to Sacred Healing ✨ Your journey begins here",
+    greeting: "Hello",
     body: `<p>How wonderful that you've found Sacred Healing! You are now part of a growing community united through mantras, ancient wisdom, and deep healing.</p>
 <p>As one of the first members of the app, you now have access to a unique universe that we fill with new material every week.</p>
 
@@ -66,9 +74,11 @@ const templates: Record<string, { subject: string; body: string; footer: string 
 </ul>
 <p>We're here to support your journey toward peace and self-discovery. Don't hesitate to reach out in the chat!</p>`,
     footer: "With light and gratitude,<br/><strong>Adam, Kritagya Das & Laila, Karaveera Nivasini Dasi</strong>",
+    cta: "Open Sacred Healing",
   },
   es: {
     subject: "Bienvenido a Sacred Healing ✨ Tu viaje comienza aquí",
+    greeting: "Hola",
     body: `<p>¡Qué alegría que hayas encontrado Sacred Healing! Ahora eres parte de una comunidad en crecimiento unida a través de mantras, sabiduría ancestral y sanación profunda.</p>
 <p>Como uno de los primeros miembros de la app, tienes acceso a un universo único que llenamos con nuevo material cada semana.</p>
 
@@ -95,9 +105,11 @@ const templates: Record<string, { subject: string; body: string; footer: string 
 </ul>
 <p>Estamos aquí para apoyar tu viaje hacia la paz y el autodescubrimiento. ¡No dudes en escribirnos en el chat!</p>`,
     footer: "Con luz y gratitud,<br/><strong>Adam, Kritagya Das & Laila, Karaveera Nivasini Dasi</strong>",
+    cta: "Abrir Sacred Healing",
   },
   no: {
     subject: "Velkommen hjem til Sacred Healing ✨ Reisen din begynner her",
+    greeting: "Hei",
     body: `<p>Så flott at du har funnet Sacred Healing! Du er nå en del av et voksende fellesskap forent gjennom mantraer, eldgammel visdom og dyp healing.</p>
 <p>Som en av de første medlemmene i appen har du nå tilgang til et unikt univers som vi fyller med nytt materiale hver uke.</p>
 
@@ -124,13 +136,25 @@ const templates: Record<string, { subject: string; body: string; footer: string 
 </ul>
 <p>Vi er her for å støtte reisen din mot sinnsro og selvoppdagelse. Ikke nøl med å skrive til oss i chatten!</p>`,
     footer: "Med lys og takknemlighet,<br/><strong>Adam, Kritagya Das & Laila, Karaveera Nivasini Dasi</strong>",
+    cta: "Åpne Sacred Healing",
   },
 };
 
-function resolveLanguage(lang?: string): string {
+/** Resolve language from country code (IP geolocation). Spanish countries → es, Norway → no, Sweden → sv, else en. */
+function languageFromCountryCode(countryCode: string | null): LangCode {
+  if (!countryCode) return "en";
+  const cc = countryCode.toUpperCase();
+  if (SPANISH_COUNTRY_CODES.has(cc)) return "es";
+  if (cc === "NO") return "no";
+  if (cc === "SE") return "sv";
+  return "en";
+}
+
+/** Fallback: resolve from client-provided language (e.g. i18n). */
+function resolveLanguageFromClient(lang?: string): LangCode {
   if (!lang) return "en";
   const code = lang.toLowerCase().split("-")[0];
-  if (code in templates) return code;
+  if (code === "es" || code === "no" || code === "sv" || code === "en") return code as LangCode;
   if (code === "nb" || code === "nn") return "no";
   return "en";
 }
@@ -140,30 +164,91 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  try {
-    const { email, name, language } = await req.json();
+  const step = (msg: string, data?: Record<string, unknown>) => {
+    console.log(`[send-welcome-email] ${msg}`, data ? JSON.stringify(data) : "");
+  };
 
-    if (!email) {
-      throw new Error("Email is required");
+  try {
+    step("Step 1: Request received");
+
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendApiKey || resendApiKey.length < 10) {
+      step("Step 0: RESEND_API_KEY missing or invalid – cannot send email");
+      return new Response(
+        JSON.stringify({ error: "Email service not configured (RESEND_API_KEY)" }),
+        { status: 503, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
-    const displayName = name || "Friend";
-    const lang = resolveLanguage(language);
-    const t = templates[lang];
+    const body = await req.json().catch(() => ({})) as { email?: string; name?: string; language?: string };
+    const email = body?.email;
+    const name = body?.name;
+    const clientLanguage = body?.language;
 
+    if (!email || typeof email !== "string") {
+      step("Step 1: Validation failed – email required");
+      return new Response(
+        JSON.stringify({ error: "Email is required" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    step("Step 1: Parsed body", { email, hasName: !!name, clientLanguage });
+
+    // --- IP detection ---
+    const forwarded = req.headers.get("x-forwarded-for");
+    const realIp = req.headers.get("x-real-ip");
+    const rawIp = forwarded?.split(/\s*,\s*/)[0]?.trim() || realIp?.trim() || null;
+    step("Step 2: IP detection", { rawIp, hasForwarded: !!forwarded, hasRealIp: !!realIp });
+
+    let countryCode: string | null = null;
+    if (rawIp && rawIp !== "127.0.0.1" && !rawIp.startsWith("::")) {
+      try {
+        const geoUrl = `http://ip-api.com/json/${encodeURIComponent(rawIp)}?fields=countryCode,status`;
+        const geoRes = await fetch(geoUrl);
+        const geo = await geoRes.json() as { status?: string; countryCode?: string };
+        if (geo?.status === "success" && geo?.countryCode) {
+          countryCode = geo.countryCode;
+          step("Step 3: Geolocation success", { countryCode });
+        } else {
+          step("Step 3: Geolocation failed or limited", { geo });
+        }
+      } catch (geoErr) {
+        step("Step 3: Geolocation request error", { error: String(geoErr) });
+      }
+    } else {
+      step("Step 3: No IP or local IP – skipping geolocation");
+    }
+
+    const langFromGeo = languageFromCountryCode(countryCode);
+    const langFromClient = resolveLanguageFromClient(clientLanguage);
+    const lang: LangCode = countryCode ? langFromGeo : langFromClient;
+    step("Step 4: Language selection", { countryCode, langFromGeo, langFromClient, selected: lang });
+
+    const t = templates[lang];
+    if (!t) {
+      step("Step 5: Template missing for lang", { lang });
+      return new Response(
+        JSON.stringify({ error: "Unsupported language" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+    step("Step 5: Template selected", { lang, subject: t.subject });
+
+    const displayName = (name && String(name).trim()) || "Friend";
     const html = `
       <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:600px;margin:0 auto;background:#0a0a0a;color:#e0e0e0;padding:40px 30px;border-radius:12px;">
         <div style="text-align:center;margin-bottom:24px;">
           <h1 style="color:#c9a96e;font-size:28px;margin:0 0 4px;">Sacred Healing</h1>
         </div>
-        <p style="font-size:16px;line-height:1.6;color:#e0e0e0;">Hej ${displayName},</p>
+        <p style="font-size:16px;line-height:1.6;color:#e0e0e0;">${t.greeting} ${displayName},</p>
         <hr style="border:none;border-top:1px solid #222;margin:20px 0;" />
         <div style="font-size:15px;line-height:1.7;color:#b0b0b0;">
           ${t.body}
         </div>
         <div style="text-align:center;margin:32px 0;">
           <a href="https://sacredhealing.lovable.app/dashboard" style="background:linear-gradient(135deg,#c9a96e,#a67c3d);color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px;">
-            ${lang === "sv" ? "Öppna Sacred Healing" : lang === "es" ? "Abrir Sacred Healing" : lang === "no" ? "Åpne Sacred Healing" : "Open Sacred Healing"}
+            ${t.cta}
           </a>
         </div>
         <hr style="border:none;border-top:1px solid #222;margin:24px 0;" />
@@ -171,23 +256,41 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `;
 
-    await resend.emails.send({
-      from: "Sacred Healing <onboarding@resend.dev>",
-      to: [email],
-      subject: t.subject,
-      html,
-    });
+    const resend = new Resend(resendApiKey);
+    step("Step 6: Calling Resend API", { to: email, subject: t.subject, lang });
 
-    console.log(`Welcome email sent to ${email} in language: ${lang}`);
+    try {
+      const result = await resend.emails.send({
+        from: "Sacred Healing <onboarding@resend.dev>",
+        to: [email],
+        subject: t.subject,
+        html,
+      });
 
+      if (result.error) {
+        step("Step 7: Resend returned error", { error: result.error });
+        console.error("[send-welcome-email] Resend error:", result.error);
+        return new Response(
+          JSON.stringify({ error: result.error.message || "Email send failed" }),
+          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      step("Step 7: Welcome email sent successfully", { email, lang, id: (result as { data?: { id?: string } })?.data?.id });
+      return new Response(
+        JSON.stringify({ success: true }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    } catch (sendErr: unknown) {
+      step("Step 7: Exception during send", { error: String(sendErr) });
+      console.error("[send-welcome-email] Send exception:", sendErr);
+      throw sendErr;
+    }
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("[send-welcome-email] Error:", error);
     return new Response(
-      JSON.stringify({ success: true }),
-      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
-  } catch (error: any) {
-    console.error("Error sending welcome email:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: message }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }

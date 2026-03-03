@@ -187,13 +187,18 @@ const Auth: React.FC = () => {
             });
           }
 
-          // Send welcome email
+          // Send welcome email (language chosen by edge function from IP geolocation; client language used as fallback)
           try {
-            await supabase.functions.invoke('send-welcome-email', {
+            const { data: welcomeData, error: welcomeErr } = await supabase.functions.invoke('send-welcome-email', {
               body: { email, name, language: i18n.language },
             });
+            if (welcomeErr) {
+              console.error('[Auth] Welcome email invoke error:', welcomeErr);
+            } else if (welcomeData?.error) {
+              console.warn('[Auth] Welcome email returned error:', welcomeData.error);
+            }
           } catch (welcomeErr) {
-            console.error('Welcome email error:', welcomeErr);
+            console.error('[Auth] Welcome email exception:', welcomeErr);
           }
 
           navigate('/dashboard');
