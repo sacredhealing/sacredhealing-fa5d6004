@@ -493,6 +493,10 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
             from { background-position: 0 0; }
             to { background-position: 1000px 1000px; }
           }
+          @keyframes waveFlow {
+            from { transform: translateX(0); }
+            to { transform: translateX(-100px); }
+          }
         `}</style>
 
         {/* SQI 2050 Membership Tiers — Vibration Levels */}
@@ -789,6 +793,67 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               ))}
             </div>
           </div>
+
+          {/* 4. Bio-Signature Report (Post-Scantion) */}
+          {scanPhase === 'done' && (
+            <div className="mt-8">
+              <div className="w-full max-w-lg mx-auto p-8 rounded-[50px] bg-black/90 border border-cyan-500/30 backdrop-blur-3xl shadow-[0_0_100px_rgba(6,182,212,0.1)]">
+                {/* Header: Frequency Grounding */}
+                <div className="text-center mb-10">
+                  <div className="inline-block px-4 py-1 rounded-full border border-cyan-500/20 text-cyan-400 text-[8px] font-black uppercase tracking-[0.3em] mb-4">
+                    Scantion Complete
+                  </div>
+                  <h2 className="text-white text-3xl font-black tracking-tighter">Bio-Signature Report</h2>
+                  <p className="text-white/40 text-[10px] mt-2 italic">
+                    Neural alignment verified at 528Hz Resonance
+                  </p>
+                </div>
+
+                {/* The Prana-Waveform Visualization */}
+                <div className="relative h-32 w-full mb-12 flex items-center justify-center overflow-hidden">
+                  <div className="absolute inset-0 bg-[radial-gradient(circle,_rgba(6,182,212,0.1)_0%,_transparent_70%)]" />
+                  <svg width="100%" height="60" className="opacity-80">
+                    <path
+                      d="M0 30 Q 50 10, 100 30 T 200 30 T 300 30 T 400 30"
+                      fill="none"
+                      stroke="#22d3ee"
+                      strokeWidth="2"
+                      className="animate-[waveFlow_4s_linear_infinite]"
+                    />
+                  </svg>
+                </div>
+
+                {/* Siddha-Insights Grid */}
+                <div className="grid grid-cols-3 gap-4 mb-10">
+                  {[
+                    { label: 'Ojas', val: '88%', color: '#D4AF37' },
+                    { label: 'Tejas', val: '92%', color: '#22d3ee' },
+                    { label: 'Prana', val: '98%', color: '#a855f7' },
+                  ].map((item) => (
+                    <div
+                      key={item.label}
+                      className="text-center p-4 rounded-3xl bg-white/[0.03] border border-white/5"
+                    >
+                      <span className="text-[7px] text-white/40 uppercase tracking-widest block mb-1">
+                        {item.label}
+                      </span>
+                      <span className="text-lg font-black" style={{ color: item.color }}>
+                        {item.val}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Action: Save to Akashic Record */}
+                <button
+                  type="button"
+                  className="w-full py-5 rounded-full bg-cyan-500 text-black font-black text-xs tracking-[0.3em] uppercase shadow-[0_10px_30px_rgba(6,182,212,0.3)] hover:scale-105 transition-transform"
+                >
+                  Commit to Akashic Record
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Soul Vault — Deep‑Field Reports */}
           <div className="mt-8">
