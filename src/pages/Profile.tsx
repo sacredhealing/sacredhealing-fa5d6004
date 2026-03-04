@@ -450,7 +450,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               }}
             />
             <img
-              src={profile?.sri_yantra_url || '/sri-yantra-portal.png'}
+              src={profile?.sri_yantra_url || 'https://inline-image-placeholder.com/sri-yantra-sqi-2050'}
               alt="Siddha-Quantum Sri Yantra"
               className="relative z-10 w-full h-full object-contain"
               style={{ filter: 'drop-shadow(0 0 20px rgba(212,175,55,0.8))' }}
@@ -465,6 +465,55 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
             </p>
           </div>
         </section>
+
+        {/* SQI 2050 Membership Tiers — Vibration Levels */}
+        <div className="w-full max-w-xl mx-auto mt-5 mb-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {[
+            {
+              name: 'Atma-Seed',
+              price: 'Free',
+              desc: 'Basic 72,000 Nāḍī scan',
+              tag: 'Entry Frequency',
+            },
+            {
+              name: 'Prana-Flow',
+              price: '19€ / mo',
+              desc: 'Universal Audio Library access',
+              tag: 'Sonic Vibration',
+            },
+            {
+              name: 'Siddha-Quantum',
+              price: '45€ / mo',
+              desc: 'Premium healing & advanced scantions',
+              tag: 'Siddha Field',
+            },
+            {
+              name: 'Akasha-Infinity',
+              price: 'Lifetime',
+              desc: 'Karmic Release · Lifetime access',
+              tag: 'Eternal Node',
+            },
+          ].map((tier) => (
+            <div
+              key={tier.name}
+              className="relative overflow-hidden rounded-2xl border border-white/15 bg-white/[0.03] backdrop-blur-xl p-3"
+            >
+              <div className="absolute inset-0 pointer-events-none opacity-40 bg-gradient-to-br from-[#D4AF37]/10 via-slate-900/30 to-slate-900/80" />
+              <div className="relative flex flex-col gap-1 text-left">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-xs font-semibold tracking-[0.22em] uppercase text-[#D4AF37]">
+                    {tier.name}
+                  </h3>
+                  <span className="text-[10px] text-[#D4AF37]/80 uppercase tracking-[0.18em]">
+                    {tier.tag}
+                  </span>
+                </div>
+                <p className="text-[0.7rem] text-white/70">{tier.desc}</p>
+                <p className="mt-1 text-[0.7rem] font-semibold text-[#D4AF37]">{tier.price}</p>
+              </div>
+            </div>
+          ))}
+        </div>
 
         {/* Sacred Counters - Flame, Lotus, Star */}
         <div className="flex gap-10 mt-6">
@@ -505,13 +554,6 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
             </div>
           </details>
 
-          {/* Reassurance */}
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <div className="text-white font-semibold">{t('profile.whatIsHappening.title')}</div>
-            <div className="mt-2 text-sm text-white/70 whitespace-pre-line">
-              {t('profile.whatIsHappening.description')}
-            </div>
-          </div>
         </div>
       </div>
 
