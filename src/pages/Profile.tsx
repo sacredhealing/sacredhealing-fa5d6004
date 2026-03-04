@@ -497,6 +497,10 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
             from { transform: translateX(0); }
             to { transform: translateX(-100px); }
           }
+          @keyframes flamePulse {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(212,175,55,0.4)); }
+            50% { transform: scale(1.12); filter: drop-shadow(0 0 18px rgba(212,175,55,0.8)); }
+          }
         `}</style>
 
         {/* SQI 2050 Membership Tiers — Vibration Levels */}
@@ -719,9 +723,16 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                 <div className="bg-black/80 backdrop-blur-3xl rounded-[46px] p-8 text-center relative z-10">
                   <div className="absolute inset-0 bg-cyan-500/5 animate-pulse" />
                   <div className="relative mb-6 flex justify-center">
-                    <div className="w-20 h-20 rounded-full border-2 border-cyan-400/30 flex items-center justify-center group-hover:border-cyan-400 transition-all duration-700 relative">
+                    <div
+                      className="w-20 h-20 rounded-full border-2 border-cyan-400/30 flex items-center justify-center group-hover:border-cyan-400 transition-all duration-700 relative"
+                      style={{ filter: 'drop-shadow(0 0 15px rgba(212,175,55,0.5))' }}
+                    >
                       <div className="w-12 h-12 bg-cyan-400/20 rounded-full animate-ping" />
-                      <span className="absolute text-cyan-400 text-2xl">✋</span>
+                      <img
+                        src="/Gemini_Generated_Image_r8p4r8p4r8p4r8p4.jpg"
+                        className="w-16 h-16 object-contain animate-[flamePulse_4s_ease-in-out_infinite]"
+                        alt="Agni-Flame"
+                      />
                     </div>
                   </div>
                   <h3 className="text-white text-xl font-bold tracking-tight">Digital Nadi 2050 Scanner</h3>
