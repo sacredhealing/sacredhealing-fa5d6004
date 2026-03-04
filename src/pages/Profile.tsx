@@ -435,22 +435,52 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           <p className="mt-2 text-sm text-muted-foreground text-center max-w-xs">{profile.bio}</p>
         )}
 
-        {/* Full-width Breathing Portal — Sri Yantra + overlay stats */}
-        <section className="w-full max-w-xl mx-auto mt-4">
-          <div className="relative w-full rounded-[40px] overflow-hidden border border-[#D4AF37]/30 aspect-[4/3] bg-black">
+        {/* SQI 2050: Floating Sri Yantra Portal */}
+        <section className="relative w-full flex flex-col items-center justify-center overflow-visible py-10">
+          {/* The Scalar Glow Layer */}
+          <div className="absolute w-[150%] h-[150%] bg-[radial-gradient(circle,_rgba(212,175,55,0.15)_0%,_transparent_70%)] animate-pulse pointer-events-none" aria-hidden />
+
+          {/* The Breathing Geometry */}
+          <div className="relative w-64 h-64 md:w-80 md:h-80">
             <img
               src={profile?.sri_yantra_url || '/Gemini_Generated_Image_57v0zm57v0zm57v0.jpg'}
               alt="Siddha-Quantum Sri Yantra"
-              className="w-full h-full object-cover opacity-70 scale-105 animate-[portalPulse_15s_ease-in-out_infinite]"
+              className="w-full h-full object-contain mix-blend-screen animate-[portalBreath_12s_ease-in-out_infinite]"
+              style={{
+                maskImage: 'radial-gradient(circle, black 40%, transparent 80%)',
+                WebkitMaskImage: 'radial-gradient(circle, black 40%, transparent 80%)',
+              }}
             />
+
+            {/* Floating Data Layer */}
+            <div className="absolute inset-0 flex flex-col justify-center items-center text-center pointer-events-none">
+              <div className="text-[#D4AF37] tracking-[0.4em] text-[9px] font-black uppercase opacity-80 mb-2">
+                Universal Premium
+              </div>
+              <div className="w-12 h-px bg-[#D4AF37]/30 mb-4" />
+              <div className="flex gap-6 mt-20">
+                <div className="flex flex-col">
+                  <span className="text-[#D4AF37] text-lg font-bold">{shcProfile?.streak_days ?? 0}</span>
+                  <span className="text-white/30 text-[7px] tracking-widest uppercase">Streak</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[#D4AF37] text-lg font-bold">{balance?.balance ?? 0}</span>
+                  <span className="text-white/30 text-[7px] tracking-widest uppercase">Balance</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[#D4AF37] text-lg font-bold">{badges.filter((b) => b.earned).length}</span>
+                  <span className="text-white/30 text-[7px] tracking-widest uppercase">Badges</span>
+                </div>
+              </div>
+            </div>
           </div>
-          <style>{`
-            @keyframes portalPulse {
-              0%, 100% { transform: scale(1.0); filter: brightness(0.6); }
-              50% { transform: scale(1.1); filter: brightness(0.8); }
-            }
-          `}</style>
         </section>
+        <style>{`
+          @keyframes portalBreath {
+            0%, 100% { transform: scale(0.9) rotate(0deg); filter: brightness(0.8) drop-shadow(0 0 10px rgba(212,175,55,0.3)); }
+            50% { transform: scale(1.05) rotate(1deg); filter: brightness(1.1) drop-shadow(0 0 30px rgba(212,175,55,0.6)); }
+          }
+        `}</style>
 
         {/* SQI 2050 Membership Tiers — Vibration Levels */}
         <div className="w-full max-w-xl mx-auto mt-5 mb-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
