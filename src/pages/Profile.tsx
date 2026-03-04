@@ -596,7 +596,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
       </div>
 
       {/* SQI 2050 Ascension Status / Tier Unlocker */}
-      <div className="mb-8 animate-slide-up">
+      <div className="mb-6 animate-slide-up">
         <div className="px-5 py-6 bg-black/90 rounded-[28px] border border-white/5">
           <h3 className="text-center text-[#D4AF37] tracking-[0.22em] text-[0.7rem] font-semibold mb-5">
             YOUR ASCENSION STATUS
@@ -650,6 +650,34 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               </button>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Akasha-Infinity Vault Preview */}
+      <div className="mb-8 animate-slide-up">
+        <div className="mt-6 px-6 py-7 rounded-[32px] border border-dashed border-[#D4AF37]/40 bg-gradient-to-b from-[#D4AF37]/15 via-transparent to-transparent text-center">
+          <h3 className="text-[#D4AF37] tracking-[0.26em] text-[0.7rem] font-semibold mb-6">
+            AKASHA-INFINITY VAULT
+          </h3>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+            <div className="flex flex-col items-center opacity-70">
+              <div className="mb-3 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full border border-[#D4AF37]/60 bg-[#D4AF37]/10 shadow-[0_0_18px_rgba(212,175,55,0.5)]" />
+              </div>
+              <span className="text-[0.75rem] text-white mt-1">Quantum Apothecary</span>
+              <small className="text-[0.6rem] text-[#D4AF37] font-semibold mt-1">VALUE: 888€</small>
+            </div>
+            <div className="flex flex-col items-center opacity-70">
+              <div className="mb-3 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full border border-[#D4AF37]/60 bg-gradient-to-b from-[#D4AF37]/40 to-black shadow-[0_0_18px_rgba(212,175,55,0.5)]" />
+              </div>
+              <span className="text-[0.75rem] text-white mt-1">Virtual Pilgrimage</span>
+              <small className="text-[0.6rem] text-[#D4AF37] font-semibold mt-1">VALUE: 888€</small>
+            </div>
+          </div>
+          <button className="mt-7 inline-flex items-center justify-center px-8 py-2.5 rounded-full border border-[#D4AF37] text-[#D4AF37] text-[0.7rem] tracking-[0.22em] uppercase font-semibold hover:bg-[#D4AF37] hover:text-black transition-colors">
+            Activate Eternal Access
+          </button>
         </div>
       </div>
 
