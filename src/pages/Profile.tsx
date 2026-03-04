@@ -403,37 +403,40 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
     scanPhase === 'done' ? 1 : scanPhase === 'scanning' ? 0.75 : 0.5;
 
   return (
-    <div className="min-h-screen px-4 pt-6">
-      {/* Soul Header - Bhrigu Soul Record / Avataric Blueprint */}
-      <div className="flex flex-col items-center py-8 mb-8 animate-fade-in text-center">
-        <div className="relative flex justify-center">
-          {/* Golden Halo */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-28 h-28 rounded-full bg-[#D4AF37]/20 blur-xl animate-sangha-pulse" style={{ boxShadow: '0 0 40px rgba(212,175,55,0.4)' }} />
-          </div>
-          <div className="relative w-24 h-24 rounded-full p-[2px] border border-[#D4AF37]/40" style={{ boxShadow: '0 0 24px rgba(212,175,55,0.35), inset 0 0 20px rgba(212,175,55,0.1)' }}>
-            <Avatar className="w-full h-full rounded-full border-2 border-background">
-              <AvatarImage src={profile?.avatar_url || undefined} />
-              <AvatarFallback className="bg-background text-4xl text-foreground">
-                {userName?.charAt(0) || '🧘'}
-              </AvatarFallback>
-            </Avatar>
-          </div>
-          <button
-            onClick={() => setProfileEditOpen(true)}
-            className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-[#D4AF37] flex items-center justify-center text-[#0f051a] hover:bg-[#D4AF37]/90 transition-colors shadow-[0_0_12px_rgba(212,175,55,0.5)]"
-          >
-            <Pencil size={14} />
-          </button>
-        </div>
+    <div className="relative min-h-screen bg-[#020617] overflow-x-hidden">
+      {/* Cosmic background */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,_#1e293b_0%,_transparent_50%)]" aria-hidden />
+      <div className="absolute inset-0 opacity-30 animate-pulse bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]" aria-hidden />
 
-        <h1 className="mt-4 text-3xl font-heading font-bold text-foreground tracking-[-0.03em]">
-          {userName}
-        </h1>
+      <div className="relative z-10 px-4 pt-6 flex flex-col items-center">
+        {/* Soul Header - Avatar with Soul-Frequency Glow */}
+        <div className="flex flex-col items-center py-8 mb-4 animate-fade-in text-center">
+          <div className="relative mb-2">
+            <div className="absolute -inset-4 bg-[#D4AF37]/20 blur-2xl rounded-full animate-sangha-pulse" />
+            <div className="relative w-24 h-24 rounded-full p-[2px] border border-[#D4AF37]/40" style={{ boxShadow: '0 0 24px rgba(212,175,55,0.35), inset 0 0 20px rgba(212,175,55,0.1)' }}>
+              <Avatar className="w-full h-full rounded-full border-2 border-background">
+                <AvatarImage src={profile?.avatar_url || undefined} />
+                <AvatarFallback className="bg-background text-4xl text-foreground">
+                  {userName?.charAt(0) || '🧘'}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+            <button
+              onClick={() => setProfileEditOpen(true)}
+              className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-[#D4AF37] flex items-center justify-center text-[#0f051a] hover:bg-[#D4AF37]/90 transition-colors shadow-[0_0_12px_rgba(212,175,55,0.5)]"
+            >
+              <Pencil size={14} />
+            </button>
+          </div>
 
-        {profile?.bio && (
-          <p className="mt-2 text-sm text-muted-foreground text-center max-w-xs">{profile.bio}</p>
-        )}
+          <h1 className="text-3xl font-heading font-bold text-white tracking-tight">{userName}</h1>
+          <div className="text-[#D4AF37] text-[10px] tracking-[0.3em] font-bold uppercase mt-1 opacity-80">
+            Soul Frequency: 528Hz
+          </div>
+
+          {profile?.bio && (
+            <p className="mt-3 text-sm text-muted-foreground text-center max-w-xs">{profile.bio}</p>
+          )}
 
         {/* SQI 2050: Floating Alive Portal */}
         <section className="relative w-full flex flex-col items-center justify-center py-12 overflow-hidden">
