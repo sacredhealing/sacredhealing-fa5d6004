@@ -2485,6 +2485,39 @@ export type Database = {
           },
         ]
       }
+      life_book_chapters: {
+        Row: {
+          chapter_type: string
+          content: Json
+          created_at: string
+          id: string
+          sort_order: number
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          chapter_type: string
+          content?: Json
+          created_at?: string
+          id?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          chapter_type?: string
+          content?: Json
+          created_at?: string
+          id?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       live_event_rsvps: {
         Row: {
           created_at: string
