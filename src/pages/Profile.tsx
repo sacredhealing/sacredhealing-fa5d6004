@@ -437,7 +437,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           <p className="mt-2 text-sm text-muted-foreground text-center max-w-xs">{profile.bio}</p>
         )}
 
-        {/* Full-width Breathing Portal — Sri Yantra + stats */}
+        {/* Full-width Breathing Portal — Sri Yantra + overlay stats */}
         <section className="w-full max-w-xl mx-auto mt-4">
           <div className="relative w-full rounded-[40px] overflow-hidden border border-[#D4AF37]/30 aspect-[4/3] bg-black">
             <img
@@ -445,31 +445,31 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               alt="Siddha-Quantum Sri Yantra"
               className="w-full h-full object-cover opacity-70 scale-105 animate-[portalPulse_15s_ease-in-out_infinite]"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent flex flex-col justify-end items-center pb-8">
-              <div className="text-[#D4AF37] tracking-[0.3em] text-[10px] font-bold mb-2 uppercase drop-shadow-[0_0_10px_rgba(212,175,55,0.6)]">
+            <div className="absolute bottom-0 inset-x-0 px-4 pb-5 pt-8 bg-gradient-to-t from-black via-black/60 to-transparent flex flex-col items-center">
+              <div className="text-[#D4AF37] tracking-[0.3em] text-[10px] font-bold mb-1 uppercase drop-shadow-[0_0_10px_rgba(212,175,55,0.6)]">
                 UNIVERSAL PREMIUM: ACTIVE
               </div>
-              <div className="text-[0.6rem] text-white/60 uppercase mb-2">
-                Nadi-Scan Sync: 98% [Pre/Post Scantion: INITIATED]
+              <div className="text-[0.6rem] text-white/60 uppercase mb-3">
+                Nadi-Scan Sync: 98%
               </div>
-              <div className="flex gap-8 border-t border-[#D4AF37]/20 pt-4 w-4/5 justify-center text-[8px] tracking-[0.22em] uppercase">
+              <div className="flex gap-8 border-t border-[#D4AF37]/20 pt-3 w-4/5 justify-center text-[8px] tracking-[0.22em] uppercase">
                 <div className="text-center">
-                  <span className="text-[#D4AF37] text-xl font-bold block">
+                  <strong className="text-[#D4AF37] text-xl font-bold block">
                     {shcProfile?.streak_days ?? 0}
-                  </span>
-                  <span className="text-white/40">Streak</span>
+                  </strong>
+                  <p className="text-white/40 m-0">Streak</p>
                 </div>
                 <div className="text-center">
-                  <span className="text-[#D4AF37] text-xl font-bold block">
+                  <strong className="text-[#D4AF37] text-xl font-bold block">
                     {balance?.balance ?? 0}
-                  </span>
-                  <span className="text-white/40">Balance</span>
+                  </strong>
+                  <p className="text-white/40 m-0">Balance</p>
                 </div>
                 <div className="text-center">
-                  <span className="text-[#D4AF37] text-xl font-bold block">
+                  <strong className="text-[#D4AF37] text-xl font-bold block">
                     {badges.filter((b) => b.earned).length}
-                  </span>
-                  <span className="text-white/40">Badges</span>
+                  </strong>
+                  <p className="text-white/40 m-0">Badges</p>
                 </div>
               </div>
             </div>
