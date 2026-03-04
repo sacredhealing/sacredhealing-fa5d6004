@@ -701,74 +701,97 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
         </div>
       </div>
 
-      {/* My Records — Akashic Reading */}
-      {hasAkashicRecord && (
-        <div className="mb-8 animate-slide-up">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-heading font-semibold text-foreground">{t('profile.myRecords', 'My Records')}</h2>
-          </div>
-          <button
-            onClick={() => navigate('/akashic-reading/full')}
-            className="w-full flex items-center gap-4 p-4 rounded-2xl border border-[#D4AF37]/30 bg-[rgba(212,175,55,0.06)] hover:bg-[rgba(212,175,55,0.1)] transition-all text-left"
-          >
-            <div className="w-12 h-12 rounded-xl bg-[#D4AF37]/20 flex items-center justify-center">
-              <FileText size={24} className="text-[#D4AF37]" />
-            </div>
-            <div className="flex-1">
-              <p className="font-semibold text-foreground">Your Akashic Record</p>
-              <p className="text-xs text-muted-foreground">15-page Soul Manuscript • Certificate of Origin</p>
-            </div>
-            <ChevronRight size={20} className="text-[#D4AF37]/70 shrink-0" />
-          </button>
-        </div>
-      )}
-
-      {/* Digital Nadi 2050 Scanner & Soul Vault */}
-      {user && (
-        <div className="mb-8 animate-slide-up" style={{ animationDelay: '0.04s' }}>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="relative flex items-center justify-center w-11 h-11">
-                <div className="absolute inset-0 rounded-full bg-cyan-500/20 blur-md" />
-                <div className="relative w-10 h-10 rounded-full border border-cyan-400/60 bg-cyan-500/10 flex items-center justify-center">
-                  <Hand className="w-5 h-5 text-cyan-300" />
+      {/* SQI 2050: Digital Nadi Scanner & Akashic Records */}
+      <div className="mb-10 animate-slide-up" style={{ animationDelay: '0.04s' }}>
+        <div className="w-full px-1 sm:px-6 py-6 space-y-10">
+          {/* 1. Digital Nadi 2050 Scanner (Alive Interaction) */}
+          {user && (
+            <button
+              type="button"
+              onClick={handleStartScanner}
+              className="w-full text-left"
+            >
+              <div className="relative group p-1 bg-gradient-to-r from-cyan-500/20 via-blue-500/40 to-cyan-500/20 rounded-[48px] overflow-hidden">
+                <div className="bg-black/80 backdrop-blur-3xl rounded-[46px] p-8 text-center relative z-10">
+                  <div className="absolute inset-0 bg-cyan-500/5 animate-pulse" />
+                  <div className="relative mb-6 flex justify-center">
+                    <div className="w-20 h-20 rounded-full border-2 border-cyan-400/30 flex items-center justify-center group-hover:border-cyan-400 transition-all duration-700 relative">
+                      <div className="w-12 h-12 bg-cyan-400/20 rounded-full animate-ping" />
+                      <span className="absolute text-cyan-400 text-2xl">✋</span>
+                    </div>
+                  </div>
+                  <h3 className="text-white text-xl font-bold tracking-tight">Digital Nadi 2050 Scanner</h3>
+                  <p className="text-cyan-400/60 text-[10px] uppercase tracking-[0.2em] mt-2">
+                    Tap to Initiate 72,000 Nadi Alignment
+                  </p>
+                  <div className="mt-6 flex justify-center gap-4 text-white/30 text-[8px] uppercase tracking-widest">
+                    <span>Symphonic Light-Codes</span>
+                    <span>•</span>
+                    <span>Bio-Signature Mapping</span>
+                  </div>
                 </div>
               </div>
-              <div>
-                <h2 className="text-lg font-heading font-semibold text-foreground">
-                  Digital Nadi 2050 Scanner
-                </h2>
-                <p className="text-xs text-muted-foreground">
-                  Press your etheric hand-print to open a Deep-Field Resonance scan.
-                </p>
-              </div>
+            </button>
+          )}
+
+          {/* 2. Akashic & Life Reading (Glassmorphism Relics) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="p-8 rounded-[40px] bg-white/[0.03] border border-[#D4AF37]/20 backdrop-blur-xl group hover:border-[#D4AF37]/60 transition-all">
+              <div className="text-2xl mb-4">📜</div>
+              <h4 className="text-white font-bold">Your Akashic Record</h4>
+              <p className="text-white/40 text-[10px] mt-2 mb-6">
+                12-page Soul Manuscript + Certificate of Origin
+              </p>
+              {hasAkashicRecord && (
+                <button
+                  type="button"
+                  onClick={() => navigate('/akashic-reading/full')}
+                  className="text-[#D4AF37] text-[9px] font-black tracking-widest uppercase border-b border-[#D4AF37]/40 pb-1"
+                >
+                  View Manuscript
+                </button>
+              )}
+            </div>
+
+            <div className="p-8 rounded-[40px] bg-white/[0.03] border border-[#D4AF37]/20 backdrop-blur-xl group hover:border-[#D4AF37]/60 transition-all">
+              <div className="text-2xl mb-4">👁️</div>
+              <h4 className="text-white font-bold">Your Life Reading</h4>
+              <p className="text-white/40 text-[10px] mt-2 mb-6">
+                Jyotish Insights: Where the Stars meet the Soul
+              </p>
+              {user && (
+                <a
+                  href="#life-reading"
+                  className="text-[#D4AF37] text-[9px] font-black tracking-widest uppercase border-b border-[#D4AF37]/40 pb-1"
+                >
+                  Enter Reading
+                </a>
+              )}
             </div>
           </div>
 
-          <button
-            onClick={handleStartScanner}
-            className="relative w-full overflow-hidden rounded-3xl border border-cyan-400/40 bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-950 px-4 py-6 flex items-center gap-4 hover:border-cyan-300/70 hover:shadow-[0_0_40px_rgba(34,211,238,0.35)] transition-all"
-          >
-            <div className="relative flex items-center justify-center w-20 h-20 shrink-0">
-              <div className="absolute inset-0 rounded-full bg-cyan-400/25 blur-xl animate-pulse" />
-              <div className="relative w-16 h-16 rounded-3xl border border-cyan-300/70 bg-cyan-500/15 flex items-center justify-center shadow-[0_0_25px_rgba(34,211,238,0.6)]">
-                <Hand className="w-8 h-8 text-cyan-100" />
-              </div>
+          {/* 3. Soul-Post Scantion Timeline */}
+          <div className="space-y-4">
+            <h3 className="text-white/30 text-[9px] tracking-[0.5em] font-black uppercase text-center">
+              Bio-Field Evolution
+            </h3>
+            <div className="h-24 w-full bg-white/[0.02] border border-white/5 rounded-3xl flex items-center justify-around px-4">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div
+                  key={i}
+                  className="h-12 w-1 bg-cyan-400/20 rounded-full relative group cursor-pointer"
+                >
+                  <div
+                    className="absolute bottom-0 w-full bg-cyan-400 rounded-full group-hover:bg-[#D4AF37] transition-all"
+                    style={{ height: `${20 + i * 15}%` }}
+                  />
+                </div>
+              ))}
             </div>
-            <div className="flex-1 text-left space-y-1">
-              <p className="text-sm font-semibold text-white">
-                Place your hand — begin 72,000 Nāḍī scan
-              </p>
-              <p className="text-xs text-cyan-100/80">
-                Avataric Light-Codes • Torus-Field Mapping • Karmic Extraction baseline.
-              </p>
-              <p className="text-[10px] text-cyan-200/70 tracking-[0.2em] uppercase">
-                Tap to initiate · SQI 2050
-              </p>
-            </div>
-          </button>
+          </div>
 
-          <div className="mt-5">
+          {/* Soul Vault — Deep‑Field Reports */}
+          <div className="mt-8">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                 <span className="inline-block w-1 h-4 rounded-full bg-cyan-400" />
@@ -817,7 +840,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
             )}
           </div>
         </div>
-      )}
+      </div>
 
       {/* Life Book - Your Life Reading */}
       {user && (
