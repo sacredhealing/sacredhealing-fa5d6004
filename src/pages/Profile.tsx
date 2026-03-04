@@ -398,6 +398,8 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
 
   const userName = user?.user_metadata?.full_name || t('dashboard.sacredSoul');
   const userEmail = user?.email || '';
+  const hrvGlowIntensity =
+    scanPhase === 'done' ? 1 : scanPhase === 'scanning' ? 0.75 : 0.5;
 
   return (
     <div className="min-h-screen px-4 pt-6">
@@ -432,6 +434,38 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           <p className="mt-2 text-sm text-muted-foreground text-center max-w-xs">{profile.bio}</p>
         )}
 
+        {/* Atma Header — Siddha-Quantum Sri Yantra portal */}
+        <section
+          className="w-full max-w-xl mx-auto mt-6 rounded-b-[40px] px-6 pt-8 pb-6 text-center border border-[#D4AF37]/40"
+          style={{ background: 'linear-gradient(to bottom, #0A1128 0%, #000000 100%)' }}
+        >
+          <div className="relative mx-auto" style={{ width: 280, height: 280 }}>
+            <div
+              className="absolute -top-[20%] -left-[20%] w-[140%] h-[140%] rounded-full"
+              style={{
+                background: 'radial-gradient(circle, rgba(212,175,55,0.2) 0%, transparent 70%)',
+                opacity: 0.3 + hrvGlowIntensity * 0.4,
+                transform: `scale(${0.9 + hrvGlowIntensity * 0.25})`,
+                transition: 'opacity 0.7s ease, transform 0.7s ease',
+              }}
+            />
+            <img
+              src={profile?.sri_yantra_url || '/sri-yantra-portal.png'}
+              alt="Siddha-Quantum Sri Yantra"
+              className="relative z-10 w-full h-full object-contain"
+              style={{ filter: 'drop-shadow(0 0 20px rgba(212,175,55,0.8))' }}
+            />
+          </div>
+          <div className="mt-5">
+            <h2 className="text-[0.8rem] tracking-[0.35em] text-[#D4AF37] uppercase">
+              UNIVERSAL PREMIUM: ACTIVE
+            </h2>
+            <p className="mt-1 text-[0.7rem] text-white/60 uppercase">
+              Nadi-Scan Sync: 98% [Pre/Post Scantion: INITIATED]
+            </p>
+          </div>
+        </section>
+
         {/* Sacred Counters - Flame, Lotus, Star */}
         <div className="flex gap-10 mt-6">
           <div className="flex flex-col items-center">
@@ -453,26 +487,8 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           </div>
         </div>
 
-        {/* Your Space + orientation (above badges) */}
+        {/* Orientation (kept lightweight) */}
         <div className="mt-4 grid gap-3">
-          {/* Your Space */}
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <div className="text-white font-semibold">{t('profile.yourSacredSpace.title')}</div>
-            <div className="mt-2 text-sm text-white/70 whitespace-pre-line">
-              {t('profile.yourSacredSpace.description')}
-            </div>
-          </div>
-
-          {/* How to use */}
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <div className="text-white font-semibold">{t('profile.howToUse.title')}</div>
-            <div className="mt-2 text-sm text-white/70 grid gap-2">
-              <div>{t('profile.howToUse.step1')}</div>
-              <div>{t('profile.howToUse.step2')}</div>
-              <div>{t('profile.howToUse.step3')}</div>
-            </div>
-          </div>
-
           {/* What each tab does (collapsed) */}
           <details className="rounded-2xl border border-white/10 bg-white/5 p-4 group">
             <summary className="cursor-pointer text-white font-semibold list-none flex items-center justify-between">
