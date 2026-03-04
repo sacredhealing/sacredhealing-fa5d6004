@@ -403,10 +403,10 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
     scanPhase === 'done' ? 1 : scanPhase === 'scanning' ? 0.75 : 0.5;
 
   return (
-    <div className="relative min-h-screen bg-[#020617] overflow-x-hidden">
+    <div className="relative min-h-screen bg-[#050505] overflow-x-hidden">
       {/* Cosmic background */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,_#1e293b_0%,_transparent_50%)]" aria-hidden />
-      <div className="absolute inset-0 opacity-30 animate-pulse bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]" aria-hidden />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,_#D4AF3715_0%,_transparent_60%)]" aria-hidden />
+      <div className="absolute inset-0 opacity-20 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] animate-[subtleMove_100s_linear_infinite]" aria-hidden />
 
       <div className="relative z-10 px-4 pt-6 flex flex-col items-center">
         {/* Soul Header - Avatar with Soul-Frequency Glow */}
@@ -430,56 +430,68 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           </div>
 
           <h1 className="text-3xl font-heading font-bold text-white tracking-tight">{userName}</h1>
-          <div className="text-[#D4AF37] text-[10px] tracking-[0.3em] font-bold uppercase mt-1 opacity-80">
-            Soul Frequency: 528Hz
+          <div className="flex items-center justify-center gap-3 mt-2">
+            <span className="text-[#D4AF37] text-[10px] font-black tracking-[0.3em] uppercase opacity-70">
+              528Hz Resonance
+            </span>
+            <div className="w-1 h-1 bg-[#D4AF37]/40 rounded-full" />
+            <span className="text-white/40 text-[9px] tracking-widest uppercase">Rahu Active</span>
           </div>
 
           {profile?.bio && (
             <p className="mt-3 text-sm text-muted-foreground text-center max-w-xs">{profile.bio}</p>
           )}
 
-        {/* SQI 2050: Floating Alive Portal */}
-        <section className="relative w-full flex flex-col items-center justify-center py-12 overflow-hidden">
-          {/* The Scalar Glow Background */}
-          <div className="absolute w-[300px] h-[300px] bg-[#D4AF37]/10 blur-[80px] rounded-full animate-pulse" aria-hidden />
-
-          {/* The Sri Yantra Circle (dissolves the horizontal box) */}
-          <div className="relative w-72 h-72 md:w-96 md:h-96 rounded-full overflow-hidden border border-[#D4AF37]/20">
-            <img
-              src={profile?.sri_yantra_url || '/Gemini_Generated_Image_57v0zm57v0zm57v0.jpg'}
-              alt="Siddha-Quantum Sri Yantra"
-              className="w-full h-full object-cover scale-110 animate-[portalBreath_15s_ease-in-out_infinite]"
-              style={{ filter: 'brightness(1.1) saturate(1.2)' }}
-            />
-            {/* Inner Vignette to keep it soft */}
-            <div className="absolute inset-0 shadow-[inset_0_0_60px_rgba(0,0,0,1)]" />
-          </div>
-
-          {/* Unified Stats (floating below the geometry) */}
-          <div className="mt-8 text-center">
-            <div className="text-[#D4AF37] tracking-[0.5em] text-[10px] font-black uppercase mb-6 opacity-70">
-              Universal Premium Status
+        {/* SQI 2050: Floating Sri Yantra (Dashboard-Style Motion) */}
+        <section className="relative my-12 w-full max-w-sm aspect-square flex items-center justify-center">
+          <div className="absolute inset-0 bg-[radial-gradient(circle,_rgba(212,175,55,0.08)_0%,_transparent_75%)] animate-pulse" />
+          <img
+            src={profile?.sri_yantra_url || '/Gemini_Generated_Image_57v0zm57v0zm57v0.jpg'}
+            alt="Siddha-Quantum Sri Yantra"
+            className="w-[85%] h-[85%] object-contain mix-blend-screen opacity-90 animate-[siddhiSpin_90s_linear_infinite]"
+            style={{
+              maskImage: 'radial-gradient(circle, black 40%, transparent 85%)',
+              WebkitMaskImage: 'radial-gradient(circle, black 40%, transparent 85%)',
+            }}
+          />
+          {/* Dynamic Overlay Text */}
+          <div className="absolute bottom-[-10%] flex flex-col items-center">
+            <div className="text-[#D4AF37] text-[9px] font-black tracking-[0.5em] uppercase mb-4 shadow-sm">
+              Universal Premium
             </div>
-            <div className="flex gap-12 border-t border-[#D4AF37]/10 pt-6 justify-center">
-              <div className="flex flex-col">
-                <span className="text-[#D4AF37] text-2xl font-bold">{shcProfile?.streak_days ?? 0}</span>
-                <span className="text-white/30 text-[8px] tracking-widest uppercase">Streak</span>
+            <div className="flex gap-10 items-center">
+              <div className="text-center group cursor-pointer">
+                <span className="text-[#D4AF37] text-2xl font-bold block transition-transform group-hover:scale-110">
+                  {shcProfile?.streak_days ?? 0}
+                </span>
+                <label className="text-white/30 text-[7px] tracking-widest uppercase font-bold">Streak</label>
               </div>
-              <div className="flex flex-col">
-                <span className="text-[#D4AF37] text-2xl font-bold">{balance?.balance ?? 0}</span>
-                <span className="text-white/30 text-[8px] tracking-widest uppercase">Balance</span>
+              <div className="h-8 w-px bg-white/5" />
+              <div className="text-center group cursor-pointer">
+                <span className="text-[#D4AF37] text-2xl font-bold block transition-transform group-hover:scale-110">
+                  {balance?.balance ?? 0}
+                </span>
+                <label className="text-white/30 text-[7px] tracking-widest uppercase font-bold">Balance</label>
               </div>
-              <div className="flex flex-col">
-                <span className="text-[#D4AF37] text-2xl font-bold">{badges.filter((b) => b.earned).length}</span>
-                <span className="text-white/30 text-[8px] tracking-widest uppercase">Badges</span>
+              <div className="h-8 w-px bg-white/5" />
+              <div className="text-center group cursor-pointer">
+                <span className="text-[#D4AF37] text-2xl font-bold block transition-transform group-hover:scale-110">
+                  {badges.filter((b) => b.earned).length}
+                </span>
+                <label className="text-white/30 text-[7px] tracking-widest uppercase font-bold">Badges</label>
               </div>
             </div>
           </div>
         </section>
         <style>{`
-          @keyframes portalBreath {
-            0%, 100% { transform: scale(1.1); filter: brightness(1); }
-            50% { transform: scale(1.25); filter: brightness(1.3); }
+          @keyframes siddhiSpin {
+            from { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.1); }
+            to { transform: rotate(360deg) scale(1); }
+          }
+          @keyframes subtleMove {
+            from { background-position: 0 0; }
+            to { background-position: 1000px 1000px; }
           }
         `}</style>
 
