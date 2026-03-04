@@ -541,69 +541,53 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
         
       </div>
 
-      {/* Badge Vault - Mystical Seals / Siddhi Grid */}
+      {/* SQI 2050 Siddhi-Relic Component */}
       <div className="mb-8 animate-slide-up">
-        <div className="flex items-center justify-between mb-3 px-1">
-          <h2 className="text-lg font-heading font-semibold text-foreground">
-            {t('profile.badges')}
-          </h2>
-        </div>
-        <div className="flex gap-4 px-2 py-3 overflow-x-auto no-scrollbar">
-          {/* 7‑Day Streak Siddhi */}
-          <div
-            className={`min-w-[140px] rounded-2xl border px-4 py-4 text-center backdrop-blur-md ${
-              (shcProfile?.streak_days ?? 0) >= 7
-                ? 'bg-[rgba(212,175,55,0.05)] border-[#D4AF37]/60'
-                : 'bg-white/[0.03] border-[#D4AF37]/20'
-            }`}
-          >
-            <div className="h-[60px] flex items-center justify-center mb-3">
-              <div
-                className="animate-[agniPulse_2s_ease-in-out_infinite]"
-                style={{
-                  width: 30,
-                  height: 30,
-                  background: '#D4AF37',
-                  borderRadius: '50% 0 50% 50%',
-                  transform: 'rotate(-45deg)',
-                  boxShadow: '0 0 15px #D4AF37',
-                }}
-              />
-            </div>
-            <h3 className="text-white text-[0.7rem] tracking-[0.08em] opacity-80 uppercase">
-              7‑Day Streak
-            </h3>
-            <div className="w-[30px] h-[2px] bg-[#D4AF37] mt-2 mx-auto rounded-[2px]" />
+        <div className="w-full px-4 sm:px-6 py-6">
+          <div className="flex justify-between items-end mb-6">
+            <h2 className="text-[#D4AF37] tracking-[0.2em] text-xs font-bold uppercase">
+              Vedic Siddhis
+            </h2>
+            <button className="text-white/40 text-[10px] uppercase tracking-widest hover:text-[#D4AF37] transition-colors">
+              View All
+            </button>
           </div>
 
-          {/* Premium Siddhi (locked) */}
-          <div className="min-w-[140px] rounded-2xl border px-4 py-4 text-center backdrop-blur-md bg-white/[0.02] border-white/10 opacity-80">
-            <div className="h-[60px] flex items-center justify-center mb-3">
-              <div
-                className="grayscale opacity-60"
-                style={{
-                  width: 30,
-                  height: 22,
-                  borderRadius: '50% 50% 0 0',
-                  border: '2px solid #D4AF37',
-                  borderBottom: 'none',
-                  boxShadow: '0 0 10px rgba(212,175,55,0.4)',
-                }}
-              />
+          <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
+            {/* Siddhi: The Gold Bindu (First Meditation) */}
+            <div className="min-w-[140px] bg-white/[0.03] backdrop-blur-md border border-[#D4AF37]/20 rounded-3xl p-5 text-center transition-all hover:bg-[#D4AF37]/10">
+              <div className="h-16 flex items-center justify-center mb-4">
+                <div className="w-4 h-4 bg-[#D4AF37] rounded-full shadow-[0_0_20px_#D4AF37] animate-pulse" />
+              </div>
+              <div className="text-white text-[10px] font-medium tracking-wide">The Gold Bindu</div>
+              <div className="w-6 h-px bg-[#D4AF37]/50 mx-auto mt-2" />
             </div>
-            <h3 className="text-white text-[0.7rem] tracking-[0.08em] opacity-80 uppercase">
-              Premium Siddhi
-            </h3>
-            <div className="mt-2 text-[0.6rem] tracking-[0.16em] text-white/40 uppercase">
-              Locked
+
+            {/* Siddhi: The Agni-Flame (7-Day Streak) */}
+            <div className="min-w-[140px] bg-[#D4AF37]/10 backdrop-blur-md border border-[#D4AF37]/50 rounded-3xl p-5 text-center shadow-[0_0_30px_rgba(212,175,55,0.1)]">
+              <div className="h-16 flex items-center justify-center mb-4">
+                <div className="w-8 h-8 bg-[#D4AF37] rounded-full rounded-tr-none rotate-45 shadow-[0_0_25px_#D4AF37] animate-[flameSway_3s_ease-in-out_infinite]" />
+              </div>
+              <div className="text-white text-[10px] font-medium tracking-wide">Agni-Flame</div>
+              <div className="w-6 h-px bg-[#D4AF37] mx-auto mt-2" />
+            </div>
+
+            {/* Siddhi: Locked Relic (Dimmed Aura) */}
+            <div className="min-w-[140px] bg-white/[0.02] border border-white/5 rounded-3xl p-5 text-center opacity-40 grayscale">
+              <div className="h-16 flex items-center justify-center mb-4">
+                <div className="w-10 h-10 border-2 border-dashed border-white/20 rounded-full flex items-center justify-center">
+                  <span className="text-[10px] tracking-tighter">LOCKED</span>
+                </div>
+              </div>
+              <div className="text-white/60 text-[10px] font-medium tracking-wide">Solar Crown</div>
             </div>
           </div>
         </div>
         <style>{`
           .no-scrollbar::-webkit-scrollbar { display: none; }
-          @keyframes agniPulse {
-            0%, 100% { transform: rotate(-45deg) scale(1); opacity: 0.8; }
-            50% { transform: rotate(-45deg) scale(1.2); opacity: 1; }
+          @keyframes flameSway {
+            0%, 100% { transform: rotate(40deg) scale(1); }
+            50% { transform: rotate(50deg) scale(1.1); }
           }
         `}</style>
       </div>
