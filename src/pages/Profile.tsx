@@ -450,7 +450,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               }}
             />
             <img
-              src={profile?.sri_yantra_url || 'https://inline-image-placeholder.com/sri-yantra-sqi-2050'}
+              src={profile?.sri_yantra_url || '/Gemini_Generated_Image_57v0zm57v0zm57v0.jpg'}
               alt="Siddha-Quantum Sri Yantra"
               className="relative z-10 w-full h-full object-contain"
               style={{ filter: 'drop-shadow(0 0 20px rgba(212,175,55,0.8))' }}
@@ -496,9 +496,19 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           ].map((tier) => (
             <div
               key={tier.name}
-              className="relative overflow-hidden rounded-2xl border border-white/15 bg-white/[0.03] backdrop-blur-xl p-3"
+              className={
+                tier.name === 'Siddha-Quantum'
+                  ? 'relative overflow-hidden rounded-2xl border border-[#D4AF37]/60 bg-white/[0.08] backdrop-blur-2xl p-3 shadow-[0_0_32px_rgba(212,175,55,0.45)] scale-[1.02]'
+                  : 'relative overflow-hidden rounded-2xl border border-white/15 bg-white/[0.03] backdrop-blur-xl p-3'
+              }
             >
-              <div className="absolute inset-0 pointer-events-none opacity-40 bg-gradient-to-br from-[#D4AF37]/10 via-slate-900/30 to-slate-900/80" />
+              <div
+                className={
+                  tier.name === 'Siddha-Quantum'
+                    ? 'absolute inset-0 pointer-events-none opacity-70 bg-gradient-to-br from-[#D4AF37]/35 via-slate-900/40 to-slate-900/90'
+                    : 'absolute inset-0 pointer-events-none opacity-40 bg-gradient-to-br from-[#D4AF37]/10 via-slate-900/30 to-slate-900/80'
+                }
+              />
               <div className="relative flex flex-col gap-1 text-left">
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="text-xs font-semibold tracking-[0.22em] uppercase text-[#D4AF37]">
