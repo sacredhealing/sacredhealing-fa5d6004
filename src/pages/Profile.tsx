@@ -403,8 +403,16 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
 
   return (
     <div className="min-h-screen px-4 pt-6">
-      {/* Soul Header - Bhrigu Soul Record */}
-      <div className="flex flex-col items-center mb-8 animate-fade-in">
+      {/* Soul Header - Bhrigu Soul Record / Avataric Blueprint */}
+      <div
+        className="flex flex-col items-center mb-8 animate-fade-in text-center"
+        style={{
+          background:
+            'radial-gradient(circle at top, rgba(212,175,55,0.1) 0%, transparent 70%)',
+          padding: '40px 20px',
+          borderRadius: '32px',
+        }}
+      >
         <div className="relative flex justify-center">
           {/* Golden Halo */}
           <div className="absolute inset-0 flex items-center justify-center">
