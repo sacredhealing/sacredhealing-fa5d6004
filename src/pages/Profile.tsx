@@ -1105,47 +1105,92 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
         </div>
       )}
 
-      {/* Dharma Configuration - Sacred Folders */}
-      <div className="space-y-4 animate-slide-up" style={{ animationDelay: '0.25s' }}>
-        <div className="rounded-2xl border border-[#D4AF37]/25 bg-white/[0.04] backdrop-blur-xl p-4 shadow-[0_0_20px_rgba(0,0,0,0.2)]">
-          <h3 className="text-sm font-semibold text-[#D4AF37]/90 mb-3 px-1">{t('profile.sacredFolder.physicalSanctuary', 'Physical Sanctuary')}</h3>
-          <div className="space-y-1">
+      {/* SQI 2050: The Sanctuary & Abundance Grid */}
+      <div className="w-full px-6 space-y-10 pb-24 animate-slide-up" style={{ animationDelay: '0.25s' }}>
+        {/* Physical Sanctuary (Settings Cluster) */}
+        <section className="space-y-4">
+          <h3 className="text-[#D4AF37] text-[9px] tracking-[0.5em] font-black uppercase opacity-60 ml-2">
+            {t('profile.sacredFolder.physicalSanctuary', 'Physical Sanctuary')}
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {physicalSanctuary.map((item) => (
-              <button key={item.label} onClick={item.onClick} className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-left">
-                <div className="w-9 h-9 rounded-full bg-[rgba(212,175,55,0.15)] flex items-center justify-center">
-                  <item.icon size={18} className="text-[#D4AF37]/90" />
+              <button
+                key={item.label}
+                onClick={item.onClick}
+                className="p-5 rounded-3xl bg-white/[0.02] border border-white/5 hover:border-[#D4AF37]/40 transition-all flex items-center justify-between group cursor-pointer backdrop-blur-md"
+              >
+                <span className="text-white/70 text-xs font-medium tracking-wide group-hover:text-white">
+                  {item.label}
+                </span>
+                <div className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-[#D4AF37]/20">
+                  <div className="w-1 h-1 bg-white/40 rounded-full group-hover:bg-[#D4AF37]" />
                 </div>
-                <div className="flex-1">
-                  <p className="font-medium text-foreground text-sm">{item.label}</p>
-                  <p className="text-xs text-muted-foreground">{item.sublabel}</p>
-                </div>
-                <ChevronRight size={18} className="text-muted-foreground shrink-0" />
               </button>
             ))}
           </div>
-        </div>
-        <div className="rounded-2xl border border-[#D4AF37]/25 bg-white/[0.04] backdrop-blur-xl p-4 shadow-[0_0_20px_rgba(0,0,0,0.2)]">
-          <h3 className="text-sm font-semibold text-[#D4AF37]/90 mb-3 px-1">{t('profile.sacredFolder.abundanceLineage', 'Abundance & Lineage')}</h3>
-          <div className="space-y-1">
+        </section>
+
+        {/* Abundance & Lineage (Wealth/Web3 Cluster) */}
+        <section className="space-y-4">
+          <h3 className="text-[#D4AF37] text-[9px] tracking-[0.5em] font-black uppercase opacity-60 ml-2">
+            {t('profile.sacredFolder.abundanceLineage', 'Abundance & Lineage')}
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {abundanceLineage.map((item) => (
-              <button key={item.label} onClick={item.onClick} className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-left">
-                <div className="w-9 h-9 rounded-full bg-[rgba(212,175,55,0.15)] flex items-center justify-center">
-                  <item.icon size={18} className="text-[#D4AF37]/90" />
+              <button
+                key={item.label}
+                onClick={item.onClick}
+                className="p-6 rounded-[32px] bg-gradient-to-br from-white/[0.04] to-transparent border border-white/10 text-center hover:border-[#D4AF37]/50 transition-all group"
+              >
+                <div className="text-xl mb-2 opacity-50 group-hover:opacity-100 group-hover:scale-110 transition-all">
+                  ✨
                 </div>
-                <div className="flex-1">
-                  <p className="font-medium text-foreground text-sm">{item.label}</p>
-                  <p className="text-xs text-muted-foreground">{item.sublabel}</p>
-                </div>
-                <ChevronRight size={18} className="text-muted-foreground shrink-0" />
+                <div className="text-white text-[9px] font-black tracking-widest uppercase">{item.label}</div>
               </button>
             ))}
           </div>
+        </section>
+
+        {/* The Bhrigu Samhita Portal (Upgrade Section) */}
+        <div
+          className="relative p-10 rounded-[48px] overflow-hidden text-center group cursor-pointer border border-[#D4AF37]/20"
+          onClick={() => navigate('/membership')}
+        >
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30 animate-pulse" />
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-900/40 via-transparent to-purple-900/40" />
+
+          <div className="relative z-10">
+            <div className="text-[#D4AF37] text-2xl mb-4">👑</div>
+            <h4 className="text-white text-lg font-bold tracking-tight">
+              {t('profile.ascendUniversal', 'Ascend to Universal Premium')}
+            </h4>
+            <p className="text-white/50 text-[10px] mt-2 mb-6">
+              {t('profile.unlockFeatures', 'Unlock the full Bhrigu Samhita and All Healing Courses')}
+            </p>
+            <button
+              className="bg-[#D4AF37] text-black text-[10px] font-black px-10 py-3 rounded-full tracking-[0.2em] shadow-[0_0_20px_rgba(212,175,55,0.4)] group-hover:scale-105 transition-all"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate('/membership');
+              }}
+            >
+              {t('common.upgradeNow', 'UPGRADE NOW')}
+            </button>
+          </div>
         </div>
-        <div className="rounded-2xl border border-[#D4AF37]/25 bg-white/[0.04] backdrop-blur-xl p-4 shadow-[0_0_20px_rgba(0,0,0,0.2)]">
-          <h3 className="text-sm font-semibold text-[#D4AF37]/90 mb-3 px-1">{t('profile.sacredFolder.theCovenant', 'The Covenant')}</h3>
-          <div className="space-y-1">
+
+        {/* The Covenant and Sign Out remain as functional controls */}
+        <section className="space-y-4">
+          <h3 className="text-[#D4AF37] text-[9px] tracking-[0.5em] font-black uppercase opacity-60 ml-2">
+            {t('profile.sacredFolder.theCovenant', 'The Covenant')}
+          </h3>
+          <div className="space-y-1 rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-md p-4">
             {theCovenant.map((item) => (
-              <button key={item.label} onClick={item.onClick} className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-left">
+              <button
+                key={item.label}
+                onClick={item.onClick}
+                className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-left"
+              >
                 <div className="w-9 h-9 rounded-full bg-[rgba(212,175,55,0.15)] flex items-center justify-center">
                   <item.icon size={18} className="text-[#D4AF37]/90" />
                 </div>
@@ -1156,7 +1201,10 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                 <ChevronRight size={18} className="text-muted-foreground shrink-0" />
               </button>
             ))}
-            <button onClick={handleSignOut} className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-destructive/10 transition-all text-left mt-2 border-t border-white/10 pt-3">
+            <button
+              onClick={handleSignOut}
+              className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-destructive/10 transition-all text-left mt-2 border-t border-white/10 pt-3"
+            >
               <div className="w-9 h-9 rounded-full bg-destructive/20 flex items-center justify-center">
                 <LogOut size={18} className="text-destructive" />
               </div>
@@ -1166,7 +1214,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               <ChevronRight size={18} className="text-destructive/70 shrink-0" />
             </button>
           </div>
-        </div>
+        </section>
       </div>
 
       {/* Dialogs */}
