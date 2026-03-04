@@ -404,15 +404,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   return (
     <div className="min-h-screen px-4 pt-6">
       {/* Soul Header - Bhrigu Soul Record / Avataric Blueprint */}
-      <div
-        className="flex flex-col items-center mb-8 animate-fade-in text-center"
-        style={{
-          background:
-            'radial-gradient(circle at top, rgba(212,175,55,0.1) 0%, transparent 70%)',
-          padding: '40px 20px',
-          borderRadius: '32px',
-        }}
-      >
+      <div className="flex flex-col items-center py-8 mb-8 animate-fade-in text-center">
         <div className="relative flex justify-center">
           {/* Golden Halo */}
           <div className="absolute inset-0 flex items-center justify-center">
@@ -434,56 +426,60 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           </button>
         </div>
 
-        <h1 className="mt-4 text-2xl font-heading font-bold text-foreground">{userName}</h1>
-        <p className="text-sm text-[#D4AF37]/90 mt-1 text-center max-w-sm">{soulLabel}</p>
-        <p className="text-muted-foreground text-xs mt-1">{userEmail}</p>
+        <h1 className="mt-4 text-3xl font-heading font-bold text-foreground tracking-[-0.03em]">
+          {userName}
+        </h1>
+        <p className="text-sm text-[#D4AF37] mt-1 text-center max-w-sm font-medium">
+          {soulLabel}
+        </p>
 
         {profile?.bio && (
           <p className="mt-2 text-sm text-muted-foreground text-center max-w-xs">{profile.bio}</p>
         )}
 
-        {/* Atma Portal Container — Full-bleed Sri Yantra with stats */}
-        <section className="w-full max-w-xl mx-auto mt-6">
-          <div className="relative w-[90%] mx-auto aspect-[4/3] rounded-[32px] border border-[#D4AF37]/40 overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.9)] bg-black">
-            <div className="absolute inset-0">
-              <img
-                src={profile?.sri_yantra_url || '/Gemini_Generated_Image_57v0zm57v0zm57v0.jpg'}
-                alt="Siddha-Quantum Sri Yantra"
-                className="w-full h-full object-cover object-center contrast-[1.1] brightness-[0.9]"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-transparent/0 to-transparent/0" />
-            </div>
-
-            <div className="absolute bottom-5 inset-x-0 z-10 text-center px-4">
-              <h2 className="text-[0.75rem] tracking-[0.25rem] text-[#D4AF37] uppercase drop-shadow-[0_0_10px_rgba(212,175,55,0.5)]">
+        {/* Full-width Breathing Portal — Sri Yantra + stats */}
+        <section className="w-full max-w-xl mx-auto mt-4">
+          <div className="relative w-full rounded-[40px] overflow-hidden border border-[#D4AF37]/30 aspect-[4/3] bg-black">
+            <img
+              src={profile?.sri_yantra_url || '/Gemini_Generated_Image_57v0zm57v0zm57v0.jpg'}
+              alt="Siddha-Quantum Sri Yantra"
+              className="w-full h-full object-cover opacity-70 scale-105 animate-[portalPulse_15s_ease-in-out_infinite]"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent flex flex-col justify-end items-center pb-8">
+              <div className="text-[#D4AF37] tracking-[0.3em] text-[10px] font-bold mb-2 uppercase drop-shadow-[0_0_10px_rgba(212,175,55,0.6)]">
                 UNIVERSAL PREMIUM: ACTIVE
-              </h2>
-              <p className="mt-1 text-[0.6rem] text-white/60 uppercase">
+              </div>
+              <div className="text-[0.6rem] text-white/60 uppercase mb-2">
                 Nadi-Scan Sync: 98% [Pre/Post Scantion: INITIATED]
-              </p>
-
-              <div className="mt-3 flex justify-center gap-8 border-t border-[#D4AF37]/30 pt-3 text-[0.6rem] uppercase tracking-[0.12em]">
+              </div>
+              <div className="flex gap-8 border-t border-[#D4AF37]/20 pt-4 w-4/5 justify-center text-[8px] tracking-[0.22em] uppercase">
                 <div className="text-center">
-                  <span className="block text-[1.1rem] font-semibold text-[#D4AF37]">
+                  <span className="text-[#D4AF37] text-xl font-bold block">
                     {shcProfile?.streak_days ?? 0}
                   </span>
-                  <small className="text-white/60">Streak</small>
+                  <span className="text-white/40">Streak</span>
                 </div>
                 <div className="text-center">
-                  <span className="block text-[1.1rem] font-semibold text-[#D4AF37]">
+                  <span className="text-[#D4AF37] text-xl font-bold block">
                     {balance?.balance ?? 0}
                   </span>
-                  <small className="text-white/60">Balance</small>
+                  <span className="text-white/40">Balance</span>
                 </div>
                 <div className="text-center">
-                  <span className="block text-[1.1rem] font-semibold text-[#D4AF37]">
+                  <span className="text-[#D4AF37] text-xl font-bold block">
                     {badges.filter((b) => b.earned).length}
                   </span>
-                  <small className="text-white/60">Badges</small>
+                  <span className="text-white/40">Badges</span>
                 </div>
               </div>
             </div>
           </div>
+          <style>{`
+            @keyframes portalPulse {
+              0%, 100% { transform: scale(1.0); filter: brightness(0.6); }
+              50% { transform: scale(1.1); filter: brightness(0.8); }
+            }
+          `}</style>
         </section>
 
         {/* SQI 2050 Membership Tiers — Vibration Levels */}
