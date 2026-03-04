@@ -434,35 +434,48 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           <p className="mt-2 text-sm text-muted-foreground text-center max-w-xs">{profile.bio}</p>
         )}
 
-        {/* Atma Anchor Card — Siddha-Quantum Sri Yantra portal */}
+        {/* Atma Portal Container — Full-bleed Sri Yantra with stats */}
         <section className="w-full max-w-xl mx-auto mt-6">
-          <div
-            className="relative w-full max-w-[450px] h-[350px] mx-auto rounded-[40px] border border-[#D4AF37]/30 overflow-hidden bg-black"
-          >
-            <div className="absolute inset-0 z-[1]">
+          <div className="relative w-[90%] mx-auto aspect-[4/3] rounded-[32px] border border-[#D4AF37]/40 overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.9)] bg-black">
+            <div className="absolute inset-0">
               <img
                 src={profile?.sri_yantra_url || '/Gemini_Generated_Image_57v0zm57v0zm57v0.jpg'}
                 alt="Siddha-Quantum Sri Yantra"
-                className="w-full h-full object-cover object-center saturate-[1.2] contrast-[1.1] animate-[portalBreath_8s_ease-in-out_infinite]"
+                className="w-full h-full object-cover object-center contrast-[1.1] brightness-[0.9]"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/40" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-transparent/0 to-transparent/0" />
             </div>
 
-            <div className="absolute bottom-8 inset-x-0 z-[2] text-center">
-              <h2 className="text-[0.85rem] tracking-[0.25rem] text-[#D4AF37] uppercase drop-shadow-[0_0_10px_rgba(212,175,55,0.5)]">
+            <div className="absolute bottom-5 inset-x-0 z-10 text-center px-4">
+              <h2 className="text-[0.75rem] tracking-[0.25rem] text-[#D4AF37] uppercase drop-shadow-[0_0_10px_rgba(212,175,55,0.5)]">
                 UNIVERSAL PREMIUM: ACTIVE
               </h2>
-              <p className="mt-2 text-[0.65rem] text-white/70 uppercase">
+              <p className="mt-1 text-[0.6rem] text-white/60 uppercase">
                 Nadi-Scan Sync: 98% [Pre/Post Scantion: INITIATED]
               </p>
+
+              <div className="mt-3 flex justify-center gap-8 border-t border-[#D4AF37]/30 pt-3 text-[0.6rem] uppercase tracking-[0.12em]">
+                <div className="text-center">
+                  <span className="block text-[1.1rem] font-semibold text-[#D4AF37]">
+                    {shcProfile?.streak_days ?? 0}
+                  </span>
+                  <small className="text-white/60">Streak</small>
+                </div>
+                <div className="text-center">
+                  <span className="block text-[1.1rem] font-semibold text-[#D4AF37]">
+                    {balance?.balance ?? 0}
+                  </span>
+                  <small className="text-white/60">Balance</small>
+                </div>
+                <div className="text-center">
+                  <span className="block text-[1.1rem] font-semibold text-[#D4AF37]">
+                    {badges.filter((b) => b.earned).length}
+                  </span>
+                  <small className="text-white/60">Badges</small>
+                </div>
+              </div>
             </div>
           </div>
-          <style>{`
-            @keyframes portalBreath {
-              0%, 100% { transform: scale(1.0); }
-              50% { transform: scale(1.08); }
-            }
-          `}</style>
         </section>
 
         {/* SQI 2050 Membership Tiers — Vibration Levels */}
