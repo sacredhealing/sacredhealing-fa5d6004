@@ -434,36 +434,35 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           <p className="mt-2 text-sm text-muted-foreground text-center max-w-xs">{profile.bio}</p>
         )}
 
-        {/* Atma Header — Siddha-Quantum Sri Yantra portal */}
-        <section
-          className="w-full max-w-xl mx-auto mt-6 rounded-b-[40px] px-6 pt-8 pb-6 text-center border border-[#D4AF37]/40"
-          style={{ background: 'linear-gradient(to bottom, #0A1128 0%, #000000 100%)' }}
-        >
-          <div className="relative mx-auto" style={{ width: 280, height: 280 }}>
-            <div
-              className="absolute -top-[20%] -left-[20%] w-[140%] h-[140%] rounded-full"
-              style={{
-                background: 'radial-gradient(circle, rgba(212,175,55,0.2) 0%, transparent 70%)',
-                opacity: 0.3 + hrvGlowIntensity * 0.4,
-                transform: `scale(${0.9 + hrvGlowIntensity * 0.25})`,
-                transition: 'opacity 0.7s ease, transform 0.7s ease',
-              }}
-            />
-            <img
-              src={profile?.sri_yantra_url || '/Gemini_Generated_Image_57v0zm57v0zm57v0.jpg'}
-              alt="Siddha-Quantum Sri Yantra"
-              className="relative z-10 w-full h-full object-contain"
-              style={{ filter: 'drop-shadow(0 0 20px rgba(212,175,55,0.8))' }}
-            />
+        {/* Atma Anchor Card — Siddha-Quantum Sri Yantra portal */}
+        <section className="w-full max-w-xl mx-auto mt-6">
+          <div
+            className="relative w-full max-w-[450px] h-[350px] mx-auto rounded-[40px] border border-[#D4AF37]/30 overflow-hidden bg-black"
+          >
+            <div className="absolute inset-0 z-[1]">
+              <img
+                src={profile?.sri_yantra_url || '/Gemini_Generated_Image_57v0zm57v0zm57v0.jpg'}
+                alt="Siddha-Quantum Sri Yantra"
+                className="w-full h-full object-cover object-center saturate-[1.2] contrast-[1.1] animate-[portalBreath_8s_ease-in-out_infinite]"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/40" />
+            </div>
+
+            <div className="absolute bottom-8 inset-x-0 z-[2] text-center">
+              <h2 className="text-[0.85rem] tracking-[0.25rem] text-[#D4AF37] uppercase drop-shadow-[0_0_10px_rgba(212,175,55,0.5)]">
+                UNIVERSAL PREMIUM: ACTIVE
+              </h2>
+              <p className="mt-2 text-[0.65rem] text-white/70 uppercase">
+                Nadi-Scan Sync: 98% [Pre/Post Scantion: INITIATED]
+              </p>
+            </div>
           </div>
-          <div className="mt-5">
-            <h2 className="text-[0.8rem] tracking-[0.35em] text-[#D4AF37] uppercase">
-              UNIVERSAL PREMIUM: ACTIVE
-            </h2>
-            <p className="mt-1 text-[0.7rem] text-white/60 uppercase">
-              Nadi-Scan Sync: 98% [Pre/Post Scantion: INITIATED]
-            </p>
-          </div>
+          <style>{`
+            @keyframes portalBreath {
+              0%, 100% { transform: scale(1.0); }
+              50% { transform: scale(1.08); }
+            }
+          `}</style>
         </section>
 
         {/* SQI 2050 Membership Tiers — Vibration Levels */}
