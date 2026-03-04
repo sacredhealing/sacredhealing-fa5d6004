@@ -1150,37 +1150,6 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
         </div>
       </div>
 
-      {/* Sovereign Initiation - Deep Space banner */}
-      <div className="mb-8 mt-8 animate-slide-up" style={{ animationDelay: '0.3s' }}>
-        <div
-          className="relative overflow-hidden rounded-2xl border border-[#D4AF37]/20 p-6 cursor-pointer transition-all"
-          style={{
-            background: 'linear-gradient(135deg, #0f051a 0%, #1a0b2e 25%, #2d1b4e 50%, #1a0b2e 75%, #0f051a 100%)',
-            boxShadow: '0 0 40px rgba(88,28,135,0.3), inset 0 0 60px rgba(0,0,0,0.3)',
-          }}
-          onClick={() => navigate('/membership')}
-        >
-          <div className="absolute inset-0 opacity-30 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(147,51,234,0.4), transparent 60%)' }} />
-          <div className="relative flex flex-col items-center text-center">
-            <Crown className="w-10 h-10 text-[#D4AF37]/80 mb-3" style={{ filter: 'drop-shadow(0 0 8px rgba(212,175,55,0.4))' }} />
-            <h3 className="font-bold text-lg text-foreground">{t('profile.ascendUniversal', 'Ascend to Universal Premium. Unlock the Full Bhrigu Samhita.')}</h3>
-            <p className="text-sm text-muted-foreground mt-2 max-w-xs">
-              {t('profile.unlockFeatures')}
-            </p>
-            <Button
-              size="lg"
-              className="mt-4 w-full max-w-xs bg-[#D4AF37] text-[#0f051a] font-bold border-0 shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:bg-[#D4AF37]/95 hover:shadow-[0_0_28px_rgba(212,175,55,0.5)] animate-sangha-pulse"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate('/membership');
-              }}
-            >
-              {t('common.upgradeNow')}
-            </Button>
-          </div>
-        </div>
-      </div>
-
       {/* Dialogs */}
       <NotificationsDialog open={notificationsOpen} onOpenChange={setNotificationsOpen} />
       <AppearanceDialog open={appearanceOpen} onOpenChange={setAppearanceOpen} />
