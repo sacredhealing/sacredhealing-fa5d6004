@@ -583,39 +583,71 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
         </div>
       </div>
 
-      {/* Badge Vault - Mystical Seals */}
+      {/* Badge Vault - Mystical Seals / Siddhi Grid */}
       <div className="mb-8 animate-slide-up">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-heading font-semibold text-foreground">{t('profile.badges')}</h2>
-          <button className="text-sm text-[#D4AF37] hover:text-[#D4AF37]/80">{t('common.viewAll')}</button>
+        <div className="flex items-center justify-between mb-3 px-1">
+          <h2 className="text-lg font-heading font-semibold text-foreground">
+            {t('profile.badges')}
+          </h2>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          {badges.map((badge) => (
-            <div
-              key={badge.id}
-              className={`relative rounded-2xl text-center border transition-all p-5 ${
-                badge.earned
-                  ? 'bg-[rgba(212,175,55,0.06)] border-[#D4AF37]/30 shadow-[0_0_20px_rgba(212,175,55,0.15),inset_0_0_20px_rgba(212,175,55,0.03)]'
-                  : 'bg-white/[0.03] border-white/10 opacity-70'
-              }`}
-            >
-              {!badge.earned && (
-                <div className="absolute top-2 right-2">
-                  <Lock className="w-4 h-4 text-white/40" />
-                </div>
-              )}
-              <span className={`block text-4xl mb-2 ${badge.earned ? 'drop-shadow-[0_0_12px_rgba(212,175,55,0.4)]' : 'grayscale opacity-60'}`}>
-                {badge.emoji}
-              </span>
-              <p className={`text-xs font-medium ${badge.earned ? 'text-foreground' : 'text-muted-foreground'}`}>
-                {t(badge.titleKey)}
-              </p>
-              {badge.earned && (
-                <span className="absolute bottom-2 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-[#D4AF37]/50" />
-              )}
+        <div className="flex gap-4 px-2 py-3 overflow-x-auto no-scrollbar">
+          {/* 7‑Day Streak Siddhi */}
+          <div
+            className={`min-w-[140px] rounded-2xl border px-4 py-4 text-center backdrop-blur-md ${
+              (shcProfile?.streak_days ?? 0) >= 7
+                ? 'bg-[rgba(212,175,55,0.05)] border-[#D4AF37]/60'
+                : 'bg-white/[0.03] border-[#D4AF37]/20'
+            }`}
+          >
+            <div className="h-[60px] flex items-center justify-center mb-3">
+              <div
+                className="animate-[agniPulse_2s_ease-in-out_infinite]"
+                style={{
+                  width: 30,
+                  height: 30,
+                  background: '#D4AF37',
+                  borderRadius: '50% 0 50% 50%',
+                  transform: 'rotate(-45deg)',
+                  boxShadow: '0 0 15px #D4AF37',
+                }}
+              />
             </div>
-          ))}
+            <h3 className="text-white text-[0.7rem] tracking-[0.08em] opacity-80 uppercase">
+              7‑Day Streak
+            </h3>
+            <div className="w-[30px] h-[2px] bg-[#D4AF37] mt-2 mx-auto rounded-[2px]" />
+          </div>
+
+          {/* Premium Siddhi (locked) */}
+          <div className="min-w-[140px] rounded-2xl border px-4 py-4 text-center backdrop-blur-md bg-white/[0.02] border-white/10 opacity-80">
+            <div className="h-[60px] flex items-center justify-center mb-3">
+              <div
+                className="grayscale opacity-60"
+                style={{
+                  width: 30,
+                  height: 22,
+                  borderRadius: '50% 50% 0 0',
+                  border: '2px solid #D4AF37',
+                  borderBottom: 'none',
+                  boxShadow: '0 0 10px rgba(212,175,55,0.4)',
+                }}
+              />
+            </div>
+            <h3 className="text-white text-[0.7rem] tracking-[0.08em] opacity-80 uppercase">
+              Premium Siddhi
+            </h3>
+            <div className="mt-2 text-[0.6rem] tracking-[0.16em] text-white/40 uppercase">
+              Locked
+            </div>
+          </div>
         </div>
+        <style>{`
+          .no-scrollbar::-webkit-scrollbar { display: none; }
+          @keyframes agniPulse {
+            0%, 100% { transform: rotate(-45deg) scale(1); opacity: 0.8; }
+            50% { transform: rotate(-45deg) scale(1.2); opacity: 1; }
+          }
+        `}</style>
       </div>
 
       {/* My Records — Akashic Reading */}
