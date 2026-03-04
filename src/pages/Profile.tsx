@@ -435,50 +435,48 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           <p className="mt-2 text-sm text-muted-foreground text-center max-w-xs">{profile.bio}</p>
         )}
 
-        {/* SQI 2050: Floating Sri Yantra Portal */}
-        <section className="relative w-full flex flex-col items-center justify-center overflow-visible py-10">
-          {/* The Scalar Glow Layer */}
-          <div className="absolute w-[150%] h-[150%] bg-[radial-gradient(circle,_rgba(212,175,55,0.15)_0%,_transparent_70%)] animate-pulse pointer-events-none" aria-hidden />
+        {/* SQI 2050: Floating Alive Portal */}
+        <section className="relative w-full flex flex-col items-center justify-center py-12 overflow-hidden">
+          {/* The Scalar Glow Background */}
+          <div className="absolute w-[300px] h-[300px] bg-[#D4AF37]/10 blur-[80px] rounded-full animate-pulse" aria-hidden />
 
-          {/* The Breathing Geometry */}
-          <div className="relative w-64 h-64 md:w-80 md:h-80">
+          {/* The Sri Yantra Circle (dissolves the horizontal box) */}
+          <div className="relative w-72 h-72 md:w-96 md:h-96 rounded-full overflow-hidden border border-[#D4AF37]/20">
             <img
               src={profile?.sri_yantra_url || '/Gemini_Generated_Image_57v0zm57v0zm57v0.jpg'}
               alt="Siddha-Quantum Sri Yantra"
-              className="w-full h-full object-contain mix-blend-screen animate-[portalBreath_12s_ease-in-out_infinite]"
-              style={{
-                maskImage: 'radial-gradient(circle, black 40%, transparent 80%)',
-                WebkitMaskImage: 'radial-gradient(circle, black 40%, transparent 80%)',
-              }}
+              className="w-full h-full object-cover scale-110 animate-[portalBreath_15s_ease-in-out_infinite]"
+              style={{ filter: 'brightness(1.1) saturate(1.2)' }}
             />
+            {/* Inner Vignette to keep it soft */}
+            <div className="absolute inset-0 shadow-[inset_0_0_60px_rgba(0,0,0,1)]" />
+          </div>
 
-            {/* Floating Data Layer */}
-            <div className="absolute inset-0 flex flex-col justify-center items-center text-center pointer-events-none">
-              <div className="text-[#D4AF37] tracking-[0.4em] text-[9px] font-black uppercase opacity-80 mb-2">
-                Universal Premium
+          {/* Unified Stats (floating below the geometry) */}
+          <div className="mt-8 text-center">
+            <div className="text-[#D4AF37] tracking-[0.5em] text-[10px] font-black uppercase mb-6 opacity-70">
+              Universal Premium Status
+            </div>
+            <div className="flex gap-12 border-t border-[#D4AF37]/10 pt-6 justify-center">
+              <div className="flex flex-col">
+                <span className="text-[#D4AF37] text-2xl font-bold">{shcProfile?.streak_days ?? 0}</span>
+                <span className="text-white/30 text-[8px] tracking-widest uppercase">Streak</span>
               </div>
-              <div className="w-12 h-px bg-[#D4AF37]/30 mb-4" />
-              <div className="flex gap-6 mt-20">
-                <div className="flex flex-col">
-                  <span className="text-[#D4AF37] text-lg font-bold">{shcProfile?.streak_days ?? 0}</span>
-                  <span className="text-white/30 text-[7px] tracking-widest uppercase">Streak</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[#D4AF37] text-lg font-bold">{balance?.balance ?? 0}</span>
-                  <span className="text-white/30 text-[7px] tracking-widest uppercase">Balance</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[#D4AF37] text-lg font-bold">{badges.filter((b) => b.earned).length}</span>
-                  <span className="text-white/30 text-[7px] tracking-widest uppercase">Badges</span>
-                </div>
+              <div className="flex flex-col">
+                <span className="text-[#D4AF37] text-2xl font-bold">{balance?.balance ?? 0}</span>
+                <span className="text-white/30 text-[8px] tracking-widest uppercase">Balance</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[#D4AF37] text-2xl font-bold">{badges.filter((b) => b.earned).length}</span>
+                <span className="text-white/30 text-[8px] tracking-widest uppercase">Badges</span>
               </div>
             </div>
           </div>
         </section>
         <style>{`
           @keyframes portalBreath {
-            0%, 100% { transform: scale(0.9) rotate(0deg); filter: brightness(0.8) drop-shadow(0 0 10px rgba(212,175,55,0.3)); }
-            50% { transform: scale(1.05) rotate(1deg); filter: brightness(1.1) drop-shadow(0 0 30px rgba(212,175,55,0.6)); }
+            0%, 100% { transform: scale(1.1); filter: brightness(1); }
+            50% { transform: scale(1.25); filter: brightness(1.3); }
           }
         `}</style>
 
