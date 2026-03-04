@@ -429,9 +429,6 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
         <h1 className="mt-4 text-3xl font-heading font-bold text-foreground tracking-[-0.03em]">
           {userName}
         </h1>
-        <p className="text-sm text-[#D4AF37] mt-1 text-center max-w-sm font-medium">
-          {soulLabel}
-        </p>
 
         {profile?.bio && (
           <p className="mt-2 text-sm text-muted-foreground text-center max-w-xs">{profile.bio}</p>
@@ -541,46 +538,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           ))}
         </div>
 
-        {/* Sacred Counters - Flame, Lotus, Star */}
-        <div className="flex gap-10 mt-6">
-          <div className="flex flex-col items-center">
-            <Flame className="w-6 h-6 text-[#D4AF37] mb-1" style={{ filter: 'drop-shadow(0 0 6px rgba(212,175,55,0.5))' }} />
-            <p className="text-xl font-heading font-bold text-[#D4AF37]">{shcProfile?.streak_days ?? 0}</p>
-            <p className="text-xs text-muted-foreground">{t('profile.streak')}</p>
-          </div>
-          <div className="flex flex-col items-center">
-            <Flower2 className="w-6 h-6 text-[#D4AF37] mb-1" style={{ filter: 'drop-shadow(0 0 6px rgba(212,175,55,0.5))' }} />
-            <p className="text-xl font-heading font-bold text-[#D4AF37]">
-              <AnimatedCounter value={balance?.balance ?? 0} />
-            </p>
-            <p className="text-xs text-muted-foreground">{t('profile.balance')}</p>
-          </div>
-          <div className="flex flex-col items-center">
-            <Star className="w-6 h-6 text-[#D4AF37] mb-1" style={{ filter: 'drop-shadow(0 0 6px rgba(212,175,55,0.5))' }} />
-            <p className="text-xl font-heading font-bold text-[#D4AF37]">{badges.filter(b => b.earned).length}</p>
-            <p className="text-xs text-muted-foreground">{t('profile.badges')}</p>
-          </div>
-        </div>
-
-        {/* Orientation (kept lightweight) */}
-        <div className="mt-4 grid gap-3">
-          {/* What each tab does (collapsed) */}
-          <details className="rounded-2xl border border-white/10 bg-white/5 p-4 group">
-            <summary className="cursor-pointer text-white font-semibold list-none flex items-center justify-between">
-              {t('profile.whatEachTabDoes.title')}
-              <ChevronRight className="w-4 h-4 text-white/60 group-open:rotate-90 transition-transform" />
-            </summary>
-            <div className="mt-3 text-sm text-white/70 grid gap-2">
-              <div>{t('profile.whatEachTabDoes.home')}</div>
-              <div>{t('profile.whatEachTabDoes.meditate')}</div>
-              <div>{t('profile.whatEachTabDoes.music')}</div>
-              <div>{t('profile.whatEachTabDoes.soul')}</div>
-              <div>{t('profile.whatEachTabDoes.library')}</div>
-              <div>{t('profile.whatEachTabDoes.community')}</div>
-            </div>
-          </details>
-
-        </div>
+        
       </div>
 
       {/* Badge Vault - Mystical Seals / Siddhi Grid */}
