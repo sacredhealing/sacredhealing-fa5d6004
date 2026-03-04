@@ -564,6 +564,64 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
         `}</style>
       </div>
 
+      {/* SQI 2050 Ascension Status / Tier Unlocker */}
+      <div className="mb-8 animate-slide-up">
+        <div className="px-5 py-6 bg-black/90 rounded-[28px] border border-white/5">
+          <h3 className="text-center text-[#D4AF37] tracking-[0.22em] text-[0.7rem] font-semibold mb-5">
+            YOUR ASCENSION STATUS
+          </h3>
+
+          <div className="flex gap-4 overflow-x-auto pb-3 no-scrollbar">
+            {/* Active Tier — Prana-Flow */}
+            <div className="min-w-[260px] bg-white/[0.03] border border-[#D4AF37]/40 rounded-3xl p-5">
+              <div className="flex items-center gap-2 text-[0.7rem] text-[#D4AF37] font-semibold mb-2">
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#D4AF37] text-black text-[0.6rem]">
+                  ✓
+                </span>
+                <span>Prana-Flow Active</span>
+              </div>
+              <ul className="list-none mt-3 space-y-2">
+                <li className="text-white/80 text-[0.8rem]">Full Vedic Jyotish Chat</li>
+                <li className="text-white/80 text-[0.8rem]">Vastu Home Alignment</li>
+                <li className="text-white/80 text-[0.8rem]">Universal Audio Library</li>
+              </ul>
+            </div>
+
+            {/* Next Tier — Siddha-Quantum */}
+            <div className="min-w-[260px] bg-white/[0.03] border border-[#D4AF37]/30 rounded-3xl p-5">
+              <div className="flex items-center gap-2 text-[0.7rem] text-white/70 mb-2">
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white/10 text-[0.6rem]">
+                  🔒
+                </span>
+                <span>Siddha-Quantum</span>
+              </div>
+              <p className="text-[0.78rem] text-white/70 mb-3">
+                Unlock Pre/Post Scantions &amp; all Siddha Courses.
+              </p>
+              <button className="w-full rounded-xl bg-[#D4AF37] text-black text-[0.75rem] font-semibold py-2.5">
+                Upgrade Frequency
+              </button>
+            </div>
+
+            {/* Infinity Tier — Akasha-Infinity */}
+            <div className="min-w-[260px] rounded-3xl p-5 border border-[#D4AF37] bg-gradient-to-br from-[#D4AF37]/25 via-black to-black">
+              <div className="flex items-center gap-2 text-[0.7rem] text-[#D4AF37] mb-2">
+                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-black/60 text-base">
+                  👑
+                </span>
+                <span>Akasha-Infinity</span>
+              </div>
+              <p className="text-[0.78rem] text-white/80 mb-3">
+                Quantum Apothecary &amp; Akashic Decoder included.
+              </p>
+              <button className="w-full rounded-xl border border-[#D4AF37]/70 text-[#D4AF37] text-[0.75rem] font-semibold py-2.5 bg-black/40">
+                Claim Eternal Access
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* My Records — Akashic Reading */}
       {hasAkashicRecord && (
         <div className="mb-8 animate-slide-up">
