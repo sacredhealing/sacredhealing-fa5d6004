@@ -654,30 +654,37 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
         </div>
       </div>
 
-      {/* Akasha-Infinity Vault Preview */}
-      <div className="mb-8 animate-slide-up">
-        <div className="mt-6 px-6 py-7 rounded-[32px] border border-dashed border-[#D4AF37]/40 bg-gradient-to-b from-[#D4AF37]/15 via-transparent to-transparent text-center">
-          <h3 className="text-[#D4AF37] tracking-[0.26em] text-[0.7rem] font-semibold mb-6">
-            AKASHA-INFINITY VAULT
-          </h3>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-            <div className="flex flex-col items-center opacity-70">
-              <div className="mb-3 flex items-center justify-center">
-                <div className="w-10 h-10 rounded-full border border-[#D4AF37]/60 bg-[#D4AF37]/10 shadow-[0_0_18px_rgba(212,175,55,0.5)]" />
-              </div>
-              <span className="text-[0.75rem] text-white mt-1">Quantum Apothecary</span>
-              <small className="text-[0.6rem] text-[#D4AF37] font-semibold mt-1">VALUE: 888€</small>
+      {/* SQI 2050: The Ascension Vault (Lifetime Tier Highlight) */}
+      <div className="mb-10 animate-slide-up">
+        <div className="w-full px-6 pt-12 pb-24 space-y-8 rounded-[32px] border border-dashed border-[#D4AF37]/40 bg-gradient-to-b from-[#D4AF37]/10 via-transparent to-transparent">
+          <div className="text-center">
+            <h3 className="text-[#D4AF37] text-[10px] tracking-[0.5em] font-black uppercase mb-2">
+              The Ascension Vault
+            </h3>
+            <div className="w-16 h-px bg-[#D4AF37]/30 mx-auto" />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            {/* Quantum Apothecary Relic */}
+            <div className="relative group p-6 rounded-[32px] bg-white/[0.02] border border-[#D4AF37]/10 flex flex-col items-center justify-center transition-all hover:border-[#D4AF37]/40">
+              <div className="w-12 h-12 bg-[#D4AF37]/20 rounded-full blur-xl absolute" />
+              <div className="text-2xl mb-2 grayscale group-hover:grayscale-0 transition-all">⚗️</div>
+              <span className="text-white text-[10px] font-bold tracking-widest uppercase">Apothecary</span>
+              <span className="text-[#D4AF37] text-[8px] mt-1">LOCKED [888€]</span>
             </div>
-            <div className="flex flex-col items-center opacity-70">
-              <div className="mb-3 flex items-center justify-center">
-                <div className="w-10 h-10 rounded-full border border-[#D4AF37]/60 bg-gradient-to-b from-[#D4AF37]/40 to-black shadow-[0_0_18px_rgba(212,175,55,0.5)]" />
-              </div>
-              <span className="text-[0.75rem] text-white mt-1">Virtual Pilgrimage</span>
-              <small className="text-[0.6rem] text-[#D4AF37] font-semibold mt-1">VALUE: 888€</small>
+
+            {/* Virtual Pilgrimage Relic */}
+            <div className="relative group p-6 rounded-[32px] bg-white/[0.02] border border-[#D4AF37]/10 flex flex-col items-center justify-center transition-all hover:border-[#D4AF37]/40">
+              <div className="w-12 h-12 bg-[#D4AF37]/20 rounded-full blur-xl absolute" />
+              <div className="text-2xl mb-2 grayscale group-hover:grayscale-0 transition-all">🏔️</div>
+              <span className="text-white text-[10px] font-bold tracking-widest uppercase">Pilgrimage</span>
+              <span className="text-[#D4AF37] text-[8px] mt-1">LOCKED [888€]</span>
             </div>
           </div>
-          <button className="mt-7 inline-flex items-center justify-center px-8 py-2.5 rounded-full border border-[#D4AF37] text-[#D4AF37] text-[0.7rem] tracking-[0.22em] uppercase font-semibold hover:bg-[#D4AF37] hover:text-black transition-colors">
-            Activate Eternal Access
+
+          {/* Lifetime Call to Action */}
+          <button className="w-full py-5 rounded-full bg-gradient-to-r from-[#D4AF37]/20 via-[#D4AF37] to-[#D4AF37]/20 text-black font-black text-xs tracking-[0.3em] uppercase shadow-[0_0_30px_rgba(212,175,55,0.3)] hover:scale-105 transition-transform">
+            Claim Akasha-Infinity Access
           </button>
         </div>
       </div>
