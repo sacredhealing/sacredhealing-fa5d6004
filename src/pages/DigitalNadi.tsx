@@ -352,21 +352,312 @@ function DigitalNadiInner() {
 
   const formatTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
-  // For brevity, the full JSX from the standalone Digital Nāḍī scanner app is not repeated.
-  // The structure mirrors the original: scan page, results page, and section page.
+  const recommendation = bpm ? getRecommendation(bpm, hrv) : null;
+
+  // ─── Waveform mini-canvas ───
+  const WaveformCanvas = ({ data, width = 280, height = 60 }) => {
+    const ref = useRef(null);
+    useEffect(() => {
+      const c = ref.current;
+      if (!c || !data.length) return;
+      const ctx = c.getContext("2d");
+      ctx.clearRect(0, 0, width, height);
+      const step = Math.max(1, Math.floor(data.length / width));
+      const mid = height / 2;
+      ctx.strokeStyle = "#5AE4A8";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      for (let i = 0; i < width; i++) {
+        const idx = Math.min(i * step, data.length - 1);
+        const y = mid - (data[idx] || 0) * 12;
+        i === 0 ? ctx.moveTo(i, y) : ctx.lineTo(i, y);
+      }
+      ctx.stroke();
+    }, [data, width, height]);
+    return <canvas ref={ref} width={width} height={height} style={{ display: "block", margin: "0 auto" }} />;
+  };
+
+  // ─── SCAN PAGE ───
+  if (page === "scan") {
+    return (
+      <div style={{ fontFamily: "'Cormorant Garamond', serif", background: "#050505", color: "#fff", minHeight: "100vh" }}>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap');`}</style>
+        <video ref={videoRef} style={{ display: "none" }} playsInline muted />
+        <canvas ref={canvasRef} style={{ display: "none" }} />
+
+        <div style={{ maxWidth: 440, margin: "0 auto", padding: "48px 24px", textAlign: "center" }}>
+          {/* Header */}
+          <p style={{ fontSize: 11, letterSpacing: "0.35em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 8 }}>
+            रक्त नाडी परीक्षा
+          </p>
+          <h1 style={{ fontSize: 28, fontWeight: 300, letterSpacing: "0.12em", margin: "0 0 6px" }}>
+            DIGITAL NĀḌĪ
+          </h1>
+          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", letterSpacing: "0.2em" }}>
+            Remote Photoplethysmography
+          </p>
+
+          {/* Status */}
+          <div style={{ margin: "48px 0 32px" }}>
+            {phase === "idle" && (
+              <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.7 }}>
+                Position your face within camera view.<br />
+                Ensure even, natural lighting — avoid direct sunlight.
+              </p>
+            )}
+            {phase === "initializing" && (
+              <p style={{ fontSize: 14, color: "#FFB84A" }}>Initializing camera…</p>
+            )}
+            {(phase === "scanning" || phase === "reading") && (
+              <div>
+                <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", letterSpacing: "0.2em", marginBottom: 16 }}>
+                  {phase === "scanning" ? "ACQUIRING SIGNAL" : "READING PULSE"}　·　{formatTime(elapsed)}
+                </p>
+
+                {/* Signal quality bar */}
+                <div style={{ margin: "0 auto 20px", width: 200, height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2 }}>
+                  <div style={{
+                    width: `${quality * 100}%`,
+                    height: "100%",
+                    borderRadius: 2,
+                    background: quality > 0.5 ? "#5AE4A8" : "#FF6B4A",
+                    transition: "width 0.3s",
+                  }} />
+                </div>
+
+                {/* Waveform */}
+                <WaveformCanvas data={signal} />
+
+                {/* BPM display */}
+                {bpm && (
+                  <div style={{ marginTop: 24 }}>
+                    <span style={{ fontSize: 56, fontWeight: 300, letterSpacing: "0.05em" }}>{bpm}</span>
+                    <span style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", marginLeft: 8 }}>BPM</span>
+                    {hrv !== null && (
+                      <p style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 4 }}>
+                        HRV {hrv} ms
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+            {cameraError && (
+              <p style={{ fontSize: 13, color: "#FF6B4A", marginTop: 12 }}>{cameraError}</p>
+            )}
+          </div>
+
+          {/* Actions */}
+          <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+            {phase === "idle" && (
+              <button
+                onClick={startScan}
+                style={{
+                  padding: "14px 36px",
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  color: "#fff",
+                  fontSize: 13,
+                  letterSpacing: "0.2em",
+                  cursor: "pointer",
+                  textTransform: "uppercase",
+                }}
+              >
+                Begin Scan
+              </button>
+            )}
+            {(phase === "scanning" || phase === "reading") && (
+              <>
+                <button
+                  onClick={() => { stopCamera(); setPhase("idle"); }}
+                  style={{
+                    padding: "12px 28px",
+                    background: "transparent",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    color: "rgba(255,255,255,0.5)",
+                    fontSize: 12,
+                    letterSpacing: "0.15em",
+                    cursor: "pointer",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Cancel
+                </button>
+                {bpm && (
+                  <button
+                    onClick={finishScan}
+                    style={{
+                      padding: "12px 28px",
+                      background: "rgba(90,228,168,0.12)",
+                      border: "1px solid rgba(90,228,168,0.3)",
+                      color: "#5AE4A8",
+                      fontSize: 12,
+                      letterSpacing: "0.15em",
+                      cursor: "pointer",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    View Results
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── RESULTS PAGE ───
+  if (page === "results" && recommendation) {
+    return (
+      <div style={{ fontFamily: "'Cormorant Garamond', serif", background: "#050505", color: "#fff", minHeight: "100vh" }}>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap');`}</style>
+        <div style={{ maxWidth: 440, margin: "0 auto", padding: "48px 24px" }}>
+          {/* Vitals Summary */}
+          <div style={{ textAlign: "center", marginBottom: 40 }}>
+            <p style={{ fontSize: 11, letterSpacing: "0.35em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 12 }}>
+              Nāḍī Reading Complete
+            </p>
+            <div style={{ display: "flex", justifyContent: "center", gap: 32, marginBottom: 16 }}>
+              <div>
+                <span style={{ fontSize: 42, fontWeight: 300 }}>{bpm}</span>
+                <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: "0.15em" }}>BPM</p>
+              </div>
+              {hrv !== null && (
+                <div>
+                  <span style={{ fontSize: 42, fontWeight: 300 }}>{hrv}</span>
+                  <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: "0.15em" }}>HRV ms</p>
+                </div>
+              )}
+              <div>
+                <span style={{ fontSize: 42, fontWeight: 300 }}>{recommendation.stress}%</span>
+                <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: "0.15em" }}>STRESS</p>
+              </div>
+            </div>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>
+              Dominant Dosha: <span style={{ color: "#FFB84A" }}>{recommendation.dosha}</span>
+            </p>
+          </div>
+
+          {/* Recommendation Cards */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {recommendation.sections.map((sec, i) => (
+              <button
+                key={sec.id}
+                onClick={() => handleNavigateSection(sec)}
+                style={{
+                  textAlign: "left",
+                  padding: "20px 24px",
+                  background: "rgba(255,255,255,0.03)",
+                  border: `1px solid ${sec.color}22`,
+                  borderRadius: 2,
+                  cursor: "pointer",
+                  color: "#fff",
+                  width: "100%",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
+                  <span style={{ fontSize: 20, color: sec.color }}>{sec.icon}</span>
+                  <span style={{ fontSize: 14, fontWeight: 500, letterSpacing: "0.08em" }}>{sec.title}</span>
+                  <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginLeft: "auto" }}>#{i + 1}</span>
+                </div>
+                <p style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: 1.5, margin: "0 0 4px" }}>
+                  {sec.reason}
+                </p>
+                <p style={{ fontSize: 11, color: sec.color, opacity: 0.8 }}>
+                  → {sec.recommendation}
+                </p>
+              </button>
+            ))}
+          </div>
+
+          {/* Re-scan button */}
+          <div style={{ textAlign: "center", marginTop: 40 }}>
+            <button
+              onClick={handleRescan}
+              style={{
+                padding: "12px 32px",
+                background: "transparent",
+                border: "1px solid rgba(255,255,255,0.1)",
+                color: "rgba(255,255,255,0.5)",
+                fontSize: 12,
+                letterSpacing: "0.15em",
+                cursor: "pointer",
+                textTransform: "uppercase",
+              }}
+            >
+              Re-scan
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── SECTION DETAIL PAGE ───
+  if (page === "section" && activeSection) {
+    return (
+      <div style={{ fontFamily: "'Cormorant Garamond', serif", background: "#050505", color: "#fff", minHeight: "100vh" }}>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap');`}</style>
+        <div style={{ maxWidth: 440, margin: "0 auto", padding: "48px 24px", textAlign: "center" }}>
+          <button
+            onClick={() => setPage("results")}
+            style={{
+              background: "none",
+              border: "none",
+              color: "rgba(255,255,255,0.4)",
+              fontSize: 12,
+              letterSpacing: "0.15em",
+              cursor: "pointer",
+              marginBottom: 32,
+              textTransform: "uppercase",
+            }}
+          >
+            ← Back to Results
+          </button>
+
+          <span style={{ fontSize: 48, display: "block", marginBottom: 16, color: activeSection.color }}>
+            {activeSection.icon}
+          </span>
+          <h2 style={{ fontSize: 22, fontWeight: 400, letterSpacing: "0.1em", margin: "0 0 4px" }}>
+            {activeSection.title}
+          </h2>
+          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", marginBottom: 32 }}>
+            {activeSection.sanskrit}
+          </p>
+
+          <div style={{
+            padding: "24px",
+            background: "rgba(255,255,255,0.03)",
+            border: `1px solid ${activeSection.color}22`,
+            borderRadius: 2,
+            textAlign: "left",
+            marginBottom: 24,
+          }}>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.7, marginBottom: 12 }}>
+              {activeSection.reason}
+            </p>
+            <p style={{ fontSize: 14, color: activeSection.color, fontWeight: 500 }}>
+              {activeSection.recommendation}
+            </p>
+          </div>
+
+          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", lineHeight: 1.7, maxWidth: 320, margin: "0 auto" }}>
+            This recommendation was generated from your live biometric reading. For best results, practice during the time of day aligned with your dominant dosha rhythm.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback
   return (
-    <div style={{ fontFamily: "'Cormorant Garamond', serif" }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap');
-      `}</style>
+    <div style={{ fontFamily: "'Cormorant Garamond', serif", background: "#050505", color: "#fff", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap');`}</style>
       <video ref={videoRef} style={{ display: "none" }} playsInline muted />
       <canvas ref={canvasRef} style={{ display: "none" }} />
-      {/* Here you would render the scan/results/section UI exactly as in the original app. */}
-      <div className="flex min-h-screen items-center justify-center bg-[#050505] text-white">
-        <span className="text-sm uppercase tracking-[0.3em] text-white/40">
-          Digital Nāḍī scanner active (UI trimmed in this embed).
-        </span>
-      </div>
+      <p style={{ fontSize: 14, color: "rgba(255,255,255,0.4)" }}>Loading…</p>
     </div>
   );
 }
