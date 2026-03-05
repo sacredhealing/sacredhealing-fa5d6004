@@ -441,6 +441,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           {profile?.bio && (
             <p className="mt-3 text-sm text-muted-foreground text-center max-w-xs">{profile.bio}</p>
           )}
+        </div>
 
         {/* SQI 2050: Floating Sri Yantra (Dashboard-Style Motion) */}
         <section className="relative my-12 w-full max-w-sm aspect-square flex items-center justify-center">
