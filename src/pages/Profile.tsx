@@ -403,7 +403,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
     scanPhase === 'done' ? 1 : scanPhase === 'scanning' ? 0.75 : 0.5;
 
   return (
-    <div className="relative min-h-screen bg-[#050505] overflow-x-hidden">
+    <div className="profile-main-container relative min-h-screen bg-[#050505] overflow-x-hidden">
       {/* Cosmic background */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,_#D4AF3715_0%,_transparent_60%)]" aria-hidden />
       <div className="absolute inset-0 opacity-20 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] animate-[subtleMove_100s_linear_infinite]" aria-hidden />
@@ -456,22 +456,10 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               src={profile?.sri_yantra_url || '/Gemini_Generated_Image_v8j3v8j3v8j3v8j3.png'}
               onError={(e) => { (e.target as HTMLImageElement).src = '/Gemini_Generated_Image_57v0zm57v0zm57v0.jpg'; }}
               alt="Siddha Sri Yantra"
-              className="w-full h-full object-contain mix-blend-screen opacity-90 scale-110 animate-[sriYantraPulse_3.5s_ease-in-out_infinite]"
-              style={{
-                maskImage: 'radial-gradient(circle, black 40%, transparent 85%)',
-                WebkitMaskImage: 'radial-gradient(circle, black 40%, transparent 85%)',
-              }}
+              className="sri-yantra-shield w-full h-full object-contain opacity-90 scale-110 animate-[sriYantraPulse_3.5s_ease-in-out_infinite]"
             />
-            {/* Stats: glass bar floating over Yantra */}
-            <div
-              className="absolute bottom-0 left-1/2 -translate-x-1/2 z-20 w-full max-w-sm px-6 py-6 flex justify-around items-center rounded-[40px]"
-              style={{
-                background: 'rgba(0, 0, 0, 0.05)',
-                backdropFilter: 'blur(40px)',
-                WebkitBackdropFilter: 'blur(40px)',
-                border: '1px solid rgba(212, 175, 55, 0.2)',
-              }}
-            >
+            {/* Stats: transparent glass bar (global .stats-banner-transparent) */}
+            <div className="stats-banner-transparent absolute bottom-0 left-1/2 -translate-x-1/2 z-30 w-full max-w-sm mx-6 py-8 rounded-[40px] flex justify-around items-center">
               <div className="text-center group cursor-pointer">
                 <span className="text-[#D4AF37] text-2xl font-black block transition-transform group-hover:scale-110">{shcProfile?.streak_days ?? 0}</span>
                 <label className="text-white/30 text-[7px] tracking-[0.4em] uppercase font-bold">Streak</label>
@@ -522,7 +510,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           const tiers = [
             { name: 'ATMA-SEED', tagline: 'ENTRY FREQUENCY', price: 'Free', features: ['Free Meditations & Mantras', 'Community Chat & Live', 'Basic Ayurveda & Jyotish'] },
             { name: 'PRANA-FLOW', tagline: 'SONIC VIBRATION', price: '19€ / mo', features: ['Full Vedic Jyotish + Chat', 'Full Ayurvedic Scan + Chat', 'Vastu Guide for Home', 'All Meditations & Healing Audios Access'] },
-            { name: 'SIDDHA-QUANTUM', tagline: 'SIDDHA FIELD', price: '45€ / mo', features: ['Digital Nadi 2050 Scanner', 'Pre/Post Practice Scantions', 'Siddha Portal Access', 'Infinite Bio-Adaptive Resonance', 'HRV-Synced Meditations & Mantras', 'Full Healing Audio Library'] },
+            { name: 'SIDDHA-QUANTUM', tagline: 'SIDDHA FIELD', price: '45€ / mo', features: ['Digital Nadi 2050 Scanner', 'Pre/Post Practice Scantions', 'Siddha Portal Access', 'Infinite Bio-Adaptive Resonance', 'Access to All Mantras'] },
             { name: 'AKASHA-INFINITY', tagline: 'ETERNAL NODE', price: '€1111', features: ['Quantum Apothecary (€888 Value)', 'Virtual Pilgrimage (€888 Value)', 'Palm Reading Portal', 'Akashic Decoder'] },
           ];
           return (
