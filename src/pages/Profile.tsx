@@ -508,7 +508,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
         {(() => {
           const tiers = [
             { name: 'ATMA-SEED', tagline: 'ENTRY FREQUENCY', price: 'Free', features: ['Free Meditations & Mantras', 'Free Healing Audios', 'Free Breathing Protocols', 'Free Vayu Scrubber (1km Atmospheric Restoration)', 'Community Chat & Live', 'Basic Ayurveda & Jyotish'] },
-            { name: 'PRANA-FLOW', tagline: 'SONIC VIBRATION', price: '19€ / mo', features: ['Full Vedic Jyotish + Chat', 'Full Ayurvedic Scan + Chat', 'Vastu Guide for Home', 'All Meditations & Healing Audios Access'] },
+            { name: 'PRANA-FLOW', tagline: 'SONIC VIBRATION', price: '19€ / mo', features: ['Full Vedic Jyotish + Chat', 'Full Ayurvedic Scan + Chat', 'Vastu Guide for Home', 'Access to All Healing Music', 'Full Meditation & Mantra Library'] },
             { name: 'SIDDHA-QUANTUM', tagline: 'SIDDHA FIELD', price: '45€ / mo', features: ['Digital Nadi 2050 Scanner', 'Pre/Post Practice Scantions', 'Siddha Portal Access', 'Access to All Mantras'] },
             { name: 'AKASHA-INFINITY', tagline: 'ETERNAL NODE', price: '€1111', features: ['Quantum Apothecary (€888 Value)', 'Virtual Pilgrimage (€888 Value)', 'Palm Reading Portal', 'Akashic Decoder'] },
           ];
@@ -537,6 +537,34 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                       <span className="text-white/10 text-[9px] font-black uppercase tracking-widest">Radius: 1KM Local</span>
                       <span className="text-white text-xl font-black">{tier.price}</span>
                     </div>
+                  </div>
+                ) : tier.name === 'PRANA-FLOW' ? (
+                  <div
+                    key={tier.name}
+                    className="p-8 rounded-[40px] border border-white/5 bg-white/[0.02] backdrop-blur-3xl relative overflow-hidden group"
+                  >
+                    <div className="flex justify-between items-start mb-6">
+                      <div>
+                        <h3 className="text-[#D4AF37] text-xl font-black tracking-tighter uppercase italic">PRANA-FLOW</h3>
+                        <p className="text-white/30 text-[8px] font-black tracking-[0.4em] uppercase mt-1">Sonic Vibration</p>
+                      </div>
+                      <span className="text-[#D4AF37] text-xs font-bold">{tier.price}</span>
+                    </div>
+                    <ul className="space-y-3 mb-8">
+                      {tier.features.map((feature, i) => (
+                        <li key={i} className="flex items-center gap-3 text-white/60 text-[10px]">
+                          <div className="w-1 h-1 bg-[#D4AF37]/40 rounded-full shrink-0" />
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                    <button
+                      type="button"
+                      onClick={() => navigate('/membership')}
+                      className="w-full py-4 rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] text-[10px] font-black uppercase tracking-[0.2em] hover:bg-[#D4AF37] hover:text-black transition-all"
+                    >
+                      Activate Vibration
+                    </button>
                   </div>
                 ) : (
                   <div
