@@ -443,54 +443,52 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           )}
         </div>
 
-        {/* SQI 2050: Full-Width Horizon Portal */}
-        <section className="relative w-full overflow-hidden flex flex-col items-center my-8">
-          {/* The Background Glow - Expanding the width */}
-          <div className="absolute w-[120%] h-full bg-[radial-gradient(ellipse_at_center,_rgba(212,175,55,0.15)_0%,_transparent_80%)] -top-20 pointer-events-none" />
+        {/* SQI 2050: Pure Horizon Portal (No Box) */}
+        <section className="relative w-full flex flex-col items-center my-8">
+          {/* 1. The Divine Geometry (Dissolving the Square) */}
+          <div className="relative w-full aspect-square flex items-center justify-center overflow-hidden">
+            {/* Global Aura Glow */}
+            <div className="absolute w-[120%] h-[120%] bg-[radial-gradient(circle,_rgba(212,175,55,0.12)_0%,_transparent_70%)] pointer-events-none animate-pulse" />
 
-          <div className="relative w-full max-w-none flex justify-center">
-            {/* The Geometry: Bleeding into the page width */}
             <img
               src={profile?.sri_yantra_url || '/Gemini_Generated_Image_57v0zm57v0zm57v0.jpg'}
               alt="Siddha-Quantum Sri Yantra"
-              className="w-full h-auto min-h-[400px] object-cover mix-blend-screen opacity-90 animate-[portalPulse_15s_ease-in-out_infinite]"
+              className="w-full h-full object-contain mix-blend-screen opacity-90 scale-110"
               style={{
-                maskImage:
-                  'radial-gradient(ellipse 50% 50% at 50% 50%, black 20%, transparent 95%)',
-                WebkitMaskImage:
-                  'radial-gradient(ellipse 50% 50% at 50% 50%, black 20%, transparent 95%)',
+                maskImage: 'radial-gradient(circle, black 35%, transparent 75%)',
+                WebkitMaskImage: 'radial-gradient(circle, black 35%, transparent 75%)',
               }}
             />
+          </div>
 
-            {/* Floating Data Nodes: Integrated into the geometry */}
-            <div className="absolute inset-x-0 bottom-12 flex justify-center items-end px-6">
-              <div className="flex w-full max-w-sm justify-around items-center backdrop-blur-md bg-black/20 py-6 rounded-[40px] border border-white/5 shadow-2xl">
-                <div className="text-center group">
-                  <span className="text-[#D4AF37] text-2xl font-black block group-hover:scale-110 transition-transform">
-                    {shcProfile?.streak_days ?? 0}
-                  </span>
-                  <label className="text-white/30 text-[7px] tracking-[0.4em] uppercase font-bold">
-                    Streak
-                  </label>
-                </div>
-                <div className="h-8 w-px bg-[#D4AF37]/20" />
-                <div className="text-center group">
-                  <span className="text-[#D4AF37] text-2xl font-black block group-hover:scale-110 transition-transform">
-                    {balance?.balance ?? 0}
-                  </span>
-                  <label className="text-white/30 text-[7px] tracking-[0.4em] uppercase font-bold">
-                    Balance
-                  </label>
-                </div>
-                <div className="h-8 w-px bg-[#D4AF37]/20" />
-                <div className="text-center group">
-                  <span className="text-[#D4AF37] text-2xl font-black block group-hover:scale-110 transition-transform">
-                    {badges.filter((b) => b.earned).length}
-                  </span>
-                  <label className="text-white/30 text-[7px] tracking-[0.4em] uppercase font-bold">
-                    Badges
-                  </label>
-                </div>
+          {/* 2. The Grounded Stats (Moved BELOW for better Prana flow) */}
+          <div className="relative -mt-16 w-full px-6 z-20">
+            <div className="max-w-sm mx-auto flex justify-around items-center backdrop-blur-xl bg-white/[0.02] py-8 rounded-[40px] border border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+              <div className="text-center group cursor-pointer">
+                <span className="text-[#D4AF37] text-2xl font-black block transition-transform group-hover:scale-110">
+                  {shcProfile?.streak_days ?? 0}
+                </span>
+                <label className="text-white/30 text-[8px] tracking-[0.4em] uppercase font-bold">
+                  Streak
+                </label>
+              </div>
+              <div className="h-10 w-px bg-white/5" />
+              <div className="text-center group cursor-pointer">
+                <span className="text-[#D4AF37] text-2xl font-black block transition-transform group-hover:scale-110">
+                  {balance?.balance ?? 0}
+                </span>
+                <label className="text-white/30 text-[8px] tracking-[0.4em] uppercase font-bold">
+                  Balance
+                </label>
+              </div>
+              <div className="h-10 w-px bg-white/5" />
+              <div className="text-center group cursor-pointer">
+                <span className="text-[#D4AF37] text-2xl font-black block transition-transform group-hover:scale-110">
+                  {badges.filter((b) => b.earned).length}
+                </span>
+                <label className="text-white/30 text-[8px] tracking-[0.4em] uppercase font-bold">
+                  Badges
+                </label>
               </div>
             </div>
           </div>
