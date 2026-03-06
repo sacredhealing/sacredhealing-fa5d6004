@@ -269,6 +269,44 @@
   }
 }
 
+/* SQI 2050 Global Theme Override */
+@layer base {
+  body {
+    @apply bg-[#050505] text-white antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* Force the Stardust Background on all Main Containers */
+  .main-app-container {
+    background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
+    background-attachment: fixed;
+  }
+}
+
+@layer components {
+  /* The Universal Siddha-Gold Button */
+  .btn-siddha {
+    @apply py-4 px-8 rounded-full bg-[#D4AF37] text-black font-black text-xs
+           tracking-[0.3em] uppercase transition-all duration-300
+           shadow-[0_10px_30px_rgba(212,175,55,0.2)] hover:scale-[1.02]
+           hover:shadow-[0_15px_40px_rgba(212,175,55,0.4)] active:scale-95;
+  }
+
+  /* The Universal Glass Input */
+  .input-glass {
+    @apply bg-white/[0.03] border border-white/10 rounded-full px-6 py-4
+           text-white text-sm focus:outline-none focus:border-[#D4AF37]/50
+           transition-all backdrop-blur-xl placeholder:text-white/20;
+  }
+
+  /* The Universal Glass Card (Tiers, Relics, etc.) */
+  .card-glass {
+    @apply bg-white/[0.02] border border-white/5 backdrop-blur-2xl
+           rounded-[40px] p-8 transition-all duration-500
+           hover:border-[#D4AF37]/30;
+  }
+}
+
 @layer utilities {
   .font-heading {
     font-family: 'Poppins', sans-serif;
