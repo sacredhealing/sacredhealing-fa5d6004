@@ -166,7 +166,7 @@ export default function Landing() {
           </svg>
         </div>
         <div style={{display:"inline-flex",alignItems:"center",gap:8,fontSize:8,fontWeight:800,letterSpacing:"0.5em",textTransform:"uppercase",color:"#D4AF37",border:"1px solid rgba(212,175,55,0.3)",padding:"8px 20px",borderRadius:100,marginBottom:48,animation:"pulse-border 3s ease-in-out infinite"}}>
-          ⟁ TRANSMISSION DATE · 2050.03.06 · AKASHA-NEURAL ARCHIVE
+          {`⟁ TRANSMISSION DATE · ${new Date().getFullYear()}.${String(new Date().getMonth()+1).padStart(2,'0')}.${String(new Date().getDate()).padStart(2,'0')} · AKASHA-NEURAL ARCHIVE`}
         </div>
         <div style={{fontSize:9,fontWeight:800,letterSpacing:"0.6em",textTransform:"uppercase",color:"rgba(255,255,255,0.4)",marginBottom:20,animation:"fadeUp 1s ease both 0.2s",opacity:0}}>
           Siddha-Quantum Intelligence · Vedic Light-Codes Active
