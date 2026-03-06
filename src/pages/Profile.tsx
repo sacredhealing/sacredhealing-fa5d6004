@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Flame, Flower2, Star, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield, Scale, LayoutDashboard, Megaphone, Crown, Pencil, Banknote, Lock, FileText, BookOpen, Hand } from 'lucide-react';
+import { Flame, Flower2, Star, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield, Scale, LayoutDashboard, Megaphone, Crown, Pencil, Banknote, Lock, FileText, BookOpen, Hand, Globe, ChevronDown } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { useAuth } from '@/hooks/useAuth';
@@ -470,11 +470,12 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   .scroll-hint{position:absolute;bottom:36px;font-weight:800;font-size:7px;letter-spacing:0.5em;text-transform:uppercase;color:rgba(255,255,255,0.15);display:flex;flex-direction:column;align-items:center;gap:8px}
   .scroll-arrow{width:12px;height:12px;border-right:1.5px solid rgba(255,255,255,0.2);border-bottom:1.5px solid rgba(255,255,255,0.2);transform:rotate(45deg);animation:bounce 1.8s ease-in-out infinite}
   .sri-yantra-section{width:100%;position:relative;height:clamp(380px,55vw,650px);overflow:hidden}
-  .sri-yantra-img{width:100%;height:100%;object-fit:cover;object-position:center center;display:block}
+  .sri-yantra-img{width:100%;height:100%;object-fit:cover;object-position:center center;display:block;animation:sriYantraBreathe 7s ease-in-out infinite}
+  .sri-yantra-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;height:90%;background:radial-gradient(ellipse,rgba(212,175,55,0.4) 0%,rgba(212,175,55,0.1) 40%,transparent 70%);filter:blur(40px);pointer-events:none;z-index:0;animation:sriGlowPulse 7s ease-in-out infinite}
   .sri-yantra-svg-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#0a2040 0%,#050505 70%)}
   .sri-yantra-fade-top{position:absolute;top:0;left:0;right:0;height:220px;background:linear-gradient(to bottom,#050505 0%,transparent 100%);pointer-events:none}
   .sri-yantra-fade-bottom{position:absolute;bottom:0;left:0;right:0;height:220px;background:linear-gradient(to top,#050505 0%,transparent 100%);pointer-events:none}
-  .sri-yantra-label{position:absolute;bottom:52px;left:50%;transform:translateX(-50%);font-weight:800;font-size:8px;letter-spacing:0.45em;text-transform:uppercase;color:rgba(212,175,55,0.85);background:rgba(5,5,5,0.65);backdrop-filter:blur(12px);padding:10px 24px;border-radius:100px;border:1px solid rgba(212,175,55,0.2);white-space:nowrap}
+  .sri-yantra-label{position:absolute;bottom:52px;left:50%;transform:translateX(-50%);font-weight:800;font-size:clamp(6px,1.8vw,8px);letter-spacing:0.45em;text-transform:uppercase;color:rgba(212,175,55,0.85);background:rgba(5,5,5,0.65);backdrop-filter:blur(12px);padding:10px 24px;border-radius:100px;border:1px solid rgba(212,175,55,0.2);max-width:92vw;overflow:hidden;z-index:3}
   .section-wrap{max-width:780px;margin:0 auto;padding:80px 24px 0}
   .section-label{font-family:'Montserrat',sans-serif;font-weight:800;font-size:8px;letter-spacing:0.5em;text-transform:uppercase;color:rgba(212,175,55,0.5);margin-bottom:32px;display:flex;align-items:center;gap:12px}
   .section-label::after{content:'';flex:1;height:1px;background:linear-gradient(to right,rgba(212,175,55,0.2),transparent)}
@@ -542,9 +543,12 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   .settings-btn:hover{color:#D4AF37;border-color:rgba(212,175,55,0.2)}
   .signout-btn{width:100%;background:transparent;border:1px solid rgba(255,255,255,0.06);border-radius:100px;padding:13px;font-family:'Montserrat',sans-serif;font-weight:800;font-size:8px;letter-spacing:0.35em;text-transform:uppercase;color:rgba(255,255,255,0.2);cursor:pointer;transition:all 0.2s;margin-top:8px}
   .signout-btn:hover{color:rgba(239,68,68,0.7);border-color:rgba(239,68,68,0.2)}
+  .lang-selector{background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.12);border-radius:24px;padding:20px 24px;backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}
+  @keyframes sriYantraBreathe{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.06);filter:brightness(1.18)}}
+  @keyframes sriGlowPulse{0%,100%{opacity:0.35;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.2)}}
   @keyframes sqPulse{0%{transform:scale(1);opacity:0.8}50%{transform:scale(1.04);opacity:0}100%{transform:scale(1.08);opacity:0}}
   @keyframes shimmer{0%{background-position:0% 50%}100%{background-position:300% 50%}}
-  @keyframes btnGlow{0%,100%{box-shadow:0 0 20px rgba(212,175,55,0.4),0 0 40px rgba(212,175,55,0.1)}50%{box-shadow:0 0 40px rgba(212,175,55,0.7),0 0 80px rgba(212,175,55,0.25)}}
+  @keyframes btnGlow{0%,100%{box-shadow:0 0 20px rgba(212,175,55,0.4)}50%{box-shadow:0 0 40px rgba(212,175,55,0.7)}}
   @keyframes glowBreathe{0%,100%{opacity:0.5;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.25)}}
   @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
   @keyframes bounce{0%,100%{transform:rotate(45deg) translateY(0)}50%{transform:rotate(45deg) translateY(6px)}}
@@ -602,6 +606,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
 
       {/* ── SRI YANTRA ── */}
       <section className="sri-yantra-section">
+        <div className="sri-yantra-glow" aria-hidden />
         <img className="sri-yantra-img"
           src="/Gemini_Generated_Image_57v0zm57v0zm57v0.jpg"
           onError={(e) => { e.currentTarget.style.display='none'; (e.currentTarget.nextElementSibling as HTMLElement).style.display='flex'; }}
@@ -705,15 +710,32 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
       <div className="section-wrap">
         <div className="section-label">◈ Vedic Siddhis</div>
         <div className="siddhis-scroll">
-          {badges.map((badge) => (
-            <div key={badge.id} className={`siddhi-card ${badge.earned ? 'earned' : 'locked'}`}>
-              <div className={`siddhi-icon-wrap ${badge.earned ? 'earned' : 'locked'}`}>
-                <span style={{fontSize:28}}>{badge.emoji}</span>
+          {badges.map((badge, idx) => {
+            const SvgIcon = badge.id === 1 ? (/* Gold Bindu */
+              <svg viewBox="0 0 40 40" width={40} height={40} fill="none"><circle cx="20" cy="20" r="18" stroke="#D4AF37" strokeWidth="0.8" opacity="0.4"/><circle cx="20" cy="20" r="13" stroke="#D4AF37" strokeWidth="0.6" strokeDasharray="2 2" opacity="0.6"/><circle cx="20" cy="20" r="8" stroke="#D4AF37" strokeWidth="1"/><circle cx="20" cy="20" r="4" stroke="#D4AF37" strokeWidth="0.8" opacity="0.8"/><circle cx="20" cy="20" r="2" fill="#D4AF37"/></svg>
+            ) : badge.id === 2 ? (/* Agni-Flame */
+              <svg viewBox="0 0 40 40" width={40} height={40} fill="none"><path d="M20 4 C20 4 29 13 29 21 C29 26 25 32 20 36 C15 32 11 26 11 21 C11 13 20 4 20 4Z" stroke="#D4AF37" strokeWidth="1.2" fill="none"/><path d="M20 10 C20 10 25 16 25 21 C25 25 22 29 20 32" stroke="#D4AF37" strokeWidth="1" fill="none" opacity="0.8"/><circle cx="20" cy="8" r="1.5" fill="#D4AF37"/></svg>
+            ) : badge.id === 3 ? (/* Siddha Seal */
+              <svg viewBox="0 0 40 40" width={40} height={40} fill="none"><polygon points="20,7 25,16 35,16 27,23 30,33 20,27 10,33 13,23 5,16 15,16" stroke="#D4AF37" strokeWidth="1" fill="rgba(212,175,55,0.08)"/><circle cx="20" cy="20" r="3" stroke="#D4AF37" strokeWidth="0.8" opacity="0.8"/><circle cx="20" cy="20" r="6" stroke="#D4AF37" strokeWidth="0.5" opacity="0.4"/></svg>
+            ) : badge.id === 4 ? (/* Solar Crown locked */
+              <svg viewBox="0 0 40 40" width={40} height={40} fill="none"><path d="M8 28 L12 18 L20 24 L28 18 L32 28 Z" stroke="rgba(255,255,255,0.12)" strokeWidth="1" fill="none"/><rect x="10" y="26" width="20" height="4" rx="1" stroke="rgba(255,255,255,0.12)" fill="none"/><circle cx="14" cy="20" r="1.5" stroke="rgba(255,255,255,0.12)" fill="none"/><circle cx="20" cy="16" r="1.5" stroke="rgba(255,255,255,0.12)" fill="none"/><circle cx="26" cy="20" r="1.5" stroke="rgba(255,255,255,0.12)" fill="none"/><path d="M18 22 L20 24 L22 22" stroke="rgba(255,255,255,0.12)" strokeWidth="1" fill="none"/></svg>
+            ) : badge.id === 5 ? (/* Sovereign locked */
+              <svg viewBox="0 0 40 40" width={40} height={40} fill="none"><path d="M20 4 L8 10 L8 22 C8 28 14 34 20 36 C26 34 32 28 32 22 L32 10 Z" stroke="rgba(255,255,255,0.1)" strokeWidth="1" fill="none"/><path d="M14 16 L20 10 L26 16 L26 22 L20 26 L14 22 Z" stroke="rgba(255,255,255,0.1)" strokeWidth="0.8" fill="none"/></svg>
+            ) : badge.id === 6 ? (/* Moon Keeper locked */
+              <svg viewBox="0 0 40 40" width={40} height={40} fill="none"><path d="M25 7 C15 9 8 16 8 24 C8 30 14 34 20 34 C26 34 32 30 32 24 C32 16 25 9 25 7Z" stroke="rgba(255,255,255,0.1)" strokeWidth="1" fill="none"/><circle cx="12" cy="18" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="28" cy="20" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="20" cy="28" r="1" fill="rgba(255,255,255,0.1)"/></svg>
+            ) : (
+              <svg viewBox="0 0 40 40" width={40} height={40} fill="none"><circle cx="20" cy="20" r="18" stroke="#D4AF37" strokeWidth="0.8" opacity="0.4"/><circle cx="20" cy="20" r="13" stroke="#D4AF37" strokeWidth="0.6" strokeDasharray="2 2" opacity="0.6"/><circle cx="20" cy="20" r="8" stroke="#D4AF37" strokeWidth="1"/><circle cx="20" cy="20" r="4" stroke="#D4AF37" strokeWidth="0.8" opacity="0.8"/><circle cx="20" cy="20" r="2" fill="#D4AF37"/></svg>
+            );
+            return (
+              <div key={badge.id} className={`siddhi-card ${badge.earned ? 'earned' : 'locked'}`}>
+                <div className={`siddhi-icon-wrap ${badge.earned ? 'earned' : 'locked'}`}>
+                  {SvgIcon}
+                </div>
+                <span className="siddhi-name">{t(badge.titleKey)}</span>
+                <div className="siddhi-bar-bg"><div className="siddhi-bar-fill" style={{width: badge.earned ? '100%' : '10%'}} /></div>
               </div>
-              <span className="siddhi-name">{t(badge.titleKey)}</span>
-              <div className="siddhi-bar-bg"><div className="siddhi-bar-fill" style={{width: badge.earned ? '100%' : '10%'}} /></div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -828,7 +850,18 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
       {/* ── SETTINGS ── */}
       <div className="section-wrap">
         <div className="section-label">◈ Physical Sanctuary</div>
-        <LanguageSelector />
+        <div className="lang-selector">
+          <div style={{display:'flex',alignItems:'center',gap:12,flex:1}}>
+            <div style={{width:40,height:40,borderRadius:12,background:'rgba(212,175,55,0.08)',border:'1px solid rgba(212,175,55,0.2)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+              <Globe size={18} color="#D4AF37" />
+            </div>
+            <div style={{flex:1}}>
+              <div style={{fontWeight:800,fontSize:7,letterSpacing:'0.4em',color:'rgba(212,175,55,0.5)',textTransform:'uppercase',marginBottom:4}}>LANGUAGE</div>
+              <LanguageSelector />
+            </div>
+          </div>
+          <ChevronDown size={18} className="text-[#D4AF37]/60 transition-transform duration-300 hover:rotate-180" style={{flexShrink:0}} />
+        </div>
         <div className="settings-row" style={{marginTop:20}}>
           <button type="button" className="settings-btn" onClick={() => setNotificationsOpen(true)}>Notifications</button>
           <button type="button" className="settings-btn" onClick={() => setAppearanceOpen(true)}>Appearance</button>
