@@ -544,7 +544,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
             },
             {
               name: 'Akasha-Infinity',
-              price: 'Lifetime',
+            price: '€1111 · Lifetime',
               desc: 'Karmic Release · Lifetime access',
               tag: 'Eternal Node',
             },
