@@ -312,14 +312,48 @@ const Auth: React.FC = () => {
               <circle cx="250" cy="250" r="5" fill="#D4AF37" opacity="0.8" />
             </svg>
           </div>
-          <div className="relative w-[200px] h-[200px] md:w-[300px] md:h-[300px] rounded-full overflow-hidden border border-[#D4AF37]/10 bg-[radial-gradient(circle,_rgba(212,175,55,0.08)_0%,_transparent_70%)]">
-            <img
-              src="/Gemini_Generated_Image_v8j3v8j3v8j3v8j3.png"
-              onError={(e) => { (e.target as HTMLImageElement).src = '/Gemini_Generated_Image_57v0zm57v0zm57v0.jpg'; }}
-              alt="Siddha Sri Yantra"
-              className="w-full h-full object-contain mix-blend-screen opacity-90 animate-[siddhiSpin_150s_linear_infinite]"
-            />
-            <div className="absolute inset-0 shadow-[inset_0_0_60px_rgba(0,0,0,0.9)] rounded-full pointer-events-none" />
+          <div className="relative flex items-center justify-center w-[200px] h-[200px] md:w-[280px] md:h-[280px]">
+            {/* Outer glow rings */}
+            <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'radial-gradient(circle, rgba(212,175,55,0.12) 0%, transparent 70%)', animation: 'siddhiSpin 20s ease-in-out infinite' }} />
+            <svg className="w-full h-full" width="280" height="280" viewBox="0 0 280 280" fill="none" style={{ animation: 'siddhiSpin 150s linear infinite' }}>
+              {/* Outer circles */}
+              <circle cx="140" cy="140" r="135" stroke="#D4AF37" strokeWidth="0.8" opacity="0.6" />
+              <circle cx="140" cy="140" r="125" stroke="#D4AF37" strokeWidth="0.4" opacity="0.3" />
+              {/* Lotus petals outer ring - 16 petals */}
+              {Array.from({ length: 16 }).map((_, i) => {
+                const angle = (i * 22.5) * Math.PI / 180;
+                const x = 140 + 118 * Math.cos(angle);
+                const y = 140 + 118 * Math.sin(angle);
+                const x2 = 140 + 118 * Math.cos(angle + 0.2);
+                const y2 = 140 + 118 * Math.sin(angle + 0.2);
+                return <path key={i} d={`M140 140 Q${x} ${y} ${x2} ${y2} Z`} stroke="#D4AF37" strokeWidth="0.6" fill="rgba(212,175,55,0.04)" opacity="0.7" />;
+              })}
+              {/* Large upward triangle */}
+              <polygon points="140,30 242,198 38,198" stroke="#D4AF37" strokeWidth="1.2" fill="none" opacity="0.95" />
+              {/* Large downward triangle */}
+              <polygon points="140,250 242,82 38,82" stroke="#D4AF37" strokeWidth="1.2" fill="none" opacity="0.95" />
+              {/* Medium upward triangle */}
+              <polygon points="140,55 222,183 58,183" stroke="#D4AF37" strokeWidth="0.8" fill="none" opacity="0.7" />
+              {/* Medium downward triangle */}
+              <polygon points="140,225 222,97 58,97" stroke="#D4AF37" strokeWidth="0.8" fill="none" opacity="0.7" />
+              {/* Inner upward triangle */}
+              <polygon points="140,82 202,168 78,168" stroke="#D4AF37" strokeWidth="0.7" fill="none" opacity="0.6" />
+              {/* Inner downward triangle */}
+              <polygon points="140,198 202,112 78,112" stroke="#D4AF37" strokeWidth="0.7" fill="none" opacity="0.6" />
+              {/* Small upward triangle */}
+              <polygon points="140,105 186,155 94,155" stroke="#D4AF37" strokeWidth="0.6" fill="none" opacity="0.5" />
+              {/* Small downward triangle */}
+              <polygon points="140,175 186,125 94,125" stroke="#D4AF37" strokeWidth="0.6" fill="none" opacity="0.5" />
+              {/* Inner circle rings */}
+              <circle cx="140" cy="140" r="55" stroke="#D4AF37" strokeWidth="0.6" opacity="0.4" />
+              <circle cx="140" cy="140" r="35" stroke="#D4AF37" strokeWidth="0.5" opacity="0.3" />
+              <circle cx="140" cy="140" r="18" stroke="#D4AF37" strokeWidth="0.5" opacity="0.4" />
+              {/* Bindu - center dot */}
+              <circle cx="140" cy="140" r="4" fill="#D4AF37" opacity="0.9" />
+              <circle cx="140" cy="140" r="8" fill="rgba(212,175,55,0.2)" opacity="0.8" />
+            </svg>
+            {/* Gold pulse glow at center */}
+            <div style={{ position: 'absolute', width: 20, height: 20, borderRadius: '50%', background: '#D4AF37', opacity: 0.3, animation: 'glowBreathe 2s ease-in-out infinite', filter: 'blur(8px)' }} />
           </div>
           <h2 className="mt-6 font-[350] italic text-[2rem] md:text-[3rem] text-[#D4AF37] leading-tight" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
             Enter the Field
@@ -506,6 +540,7 @@ const Auth: React.FC = () => {
         @keyframes siddhiSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes glow-breathe { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+        @keyframes glowBreathe { 0%, 100% { opacity: 0.2; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.5); } }
         .auth-left-content { animation: fadeUp 0.8s ease both; animation-delay: 0.1s; }
         .auth-right-content { animation: fadeUp 0.8s ease both; animation-delay: 0.3s; }
         @media (min-width: 768px) {
