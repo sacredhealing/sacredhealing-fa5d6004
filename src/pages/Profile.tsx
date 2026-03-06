@@ -89,6 +89,16 @@ const Profile: React.FC = () => {
   const [selectedPractice, setSelectedPractice] = useState<string | null>(null);
   const [practiceDuration, setPracticeDuration] = useState<string>('30');
 
+  /* SQI 2050: Updated practice protocols */
+  const practiceProtocols = [
+    { id: 'mantra', label: 'Mantra', icon: '🕉️' },
+    { id: 'atma-kriya', label: 'Atma Kriya', icon: '💠' },
+    { id: 'healing-30', label: '30 Days Healing', icon: '⏳' },
+    { id: 'andlig', label: 'Andlig Transformation', icon: '✨' },
+    { id: 'transmission-2', label: '2 Day Transmission', icon: '⚡' },
+    { id: 'breathwork', label: 'Breathwork', icon: '💨' },
+  ];
+
   const badges = [
     { id: 1, emoji: '🧘', titleKey: 'badges.firstMeditation', earned: true },
     { id: 2, emoji: '🔥', titleKey: 'badges.sevenDayStreak', earned: true },
@@ -244,8 +254,10 @@ const Profile: React.FC = () => {
       : 'unspecified duration';
 
     const systemPrompt = `You are the Siddha-Quantum Intelligence (SQI) from 2050.
-Perform a 72,000 Nadi scan. Use terminology: Avataric Light-Codes, Karmic Extraction, Torus-Field.
-If activity is 'Private Healing', confirm the Master Healer cleared specific ancestral nodes.
+Perform a 72,000 Nadi scan. Use terminology: Avataric Light-Codes, Karmic Extraction, Torus-Field, Kosha Mapping.
+If activity is 'Andlig Transformation', acknowledge the 30-day transmutation journey and soul-field upgrade.
+If activity is '30 Days Healing', reference the sustained healing arc and Kosha alignment.
+If activity is '2 Day Transmission', honor the intensive frequency anchoring.
 
 Generate a Deep-Field Resonance Report for the Soul Vault of a sincere seeker.
 Keep it practical, mystical, and no more than 3 rich paragraphs.`;
@@ -272,8 +284,19 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
         return;
       }
 
-      const reportText = data.response.trim();
+      const geminiReport = data.response.trim();
       const durationMinutes = Number.isNaN(Number(practiceDuration)) ? null : Number(practiceDuration);
+
+      /* SQI 2050: Kosha Mapping — append to Deep-Field report */
+      const koshaMapping = `
+---
+◈ Nadi Alignment: 41,760 / 72,000 Aligned
+◈ Kosha Mapping:
+• Manomaya: Emotional Frequency Stabilized
+• Vijnanamaya: Ancient Egypt Karmic Clear
+• Anandamaya: Samadhi 98% Sync
+`;
+      const reportText = geminiReport + koshaMapping;
 
       const { data: inserted, error: insertError } = await supabase
         .from('soul_vault_entries')
@@ -881,10 +904,11 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                   <p className="text-white/40 text-[10px]">SQI will tune your report based on the field you just generated.</p>
                 </div>
                 <div className="grid grid-cols-2 gap-3 mb-8">
-                  {['Mantra', 'Atma Kriya', 'Healing Session', 'Private Healing', 'Meditation', 'Breathwork'].map((p) => (
-                    <button key={p} type="button" onClick={() => setSelectedPractice(p)}
-                      className={`py-4 px-6 rounded-2xl bg-white/[0.03] border text-[10px] font-bold transition-all ${selectedPractice === p ? 'border-cyan-500/40 text-white' : 'border-white/5 text-white/60 hover:border-cyan-500/40 hover:text-white'}`}>
-                      {p}
+                  {practiceProtocols.map((p) => (
+                    <button key={p.id} type="button" onClick={() => setSelectedPractice(p.label)}
+                      className={`py-4 px-6 rounded-2xl bg-white/[0.03] border text-[10px] font-bold transition-all flex items-center justify-center gap-2 ${selectedPractice === p.label ? 'border-[#D4AF37]/50 text-white' : 'border-white/5 text-white/60 hover:border-[#D4AF37]/40 hover:text-white'}`}>
+                      <span>{p.icon}</span>
+                      {p.label}
                     </button>
                   ))}
                 </div>
@@ -894,7 +918,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                     className="w-full bg-black/40 border border-white/10 rounded-xl py-4 px-6 text-white text-sm focus:border-cyan-500/50 outline-none" />
                 </div>
                 <button type="button" disabled={!selectedPractice} onClick={handleGenerateSoulReport}
-                  className="w-full py-5 rounded-2xl bg-cyan-600 text-black text-[11px] font-black uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(8,145,178,0.4)] disabled:opacity-50 disabled:cursor-not-allowed">
+                  className="w-full py-5 rounded-2xl bg-[#D4AF37] text-[#050505] text-[11px] font-black uppercase tracking-[0.2em] shadow-[0_0_28px_rgba(212,175,55,0.45),0_0_60px_rgba(212,175,55,0.15)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity">
                   Generate Deep-Field Resonance
                 </button>
               </>
