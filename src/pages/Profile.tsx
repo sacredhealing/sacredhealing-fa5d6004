@@ -510,7 +510,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
             { name: 'ATMA-SEED', tagline: 'ENTRY FREQUENCY', price: 'Free', features: ['Free Meditations & Mantras', 'Free Healing Audios', 'Free Breathing Protocols', 'Free Vayu Scrubber (1km Atmospheric Restoration)', 'Community Chat & Live', 'Basic Ayurveda & Jyotish'] },
             { name: 'PRANA-FLOW', tagline: 'SONIC VIBRATION', price: '19€ / mo', features: ['Full Vedic Jyotish + Chat', 'Full Ayurvedic Scan + Chat', 'Vastu Guide for Home', 'Access to All Healing Music', 'Full Meditation & Mantra Library'] },
             { name: 'SIDDHA-QUANTUM', tagline: 'SIDDHA FIELD', price: '45€ / mo', features: ['Digital Nadi Scanner (Bio-Sync)', 'Practice Scantions (Printed Results)', 'Siddha Portal Access', 'Full Healing Audios & Transmissions', 'Infinite Bio-Adaptive Resonance'] },
-            { name: 'AKASHA-INFINITY', tagline: 'ETERNAL NODE', price: '€1111', features: ['Quantum Apothecary (€888 Value)', 'Virtual Pilgrimage (€888 Value)', 'Palm Reading Portal', 'Akashic Decoder'] },
+            { name: 'AKASHA-INFINITY', tagline: 'ETERNAL NODE', price: '€1111', features: ['Akashic Decoder', 'Quantum Apothecary (€888 Value)', 'Virtual Pilgrimage (€888 Value)', 'Palm Reading Portal', 'Sri Yantra Universal Protection Shield'] },
           ];
           return (
             <div className="w-full max-w-xl mx-auto mt-5 mb-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -615,24 +615,26 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                 ) : (
                   <div
                     key={tier.name}
-                    className="relative overflow-hidden rounded-2xl border border-white/15 bg-white/[0.03] backdrop-blur-xl p-3"
+                    className="p-10 rounded-[50px] border border-[#D4AF37]/50 bg-white/[0.03] backdrop-blur-3xl relative overflow-hidden group"
                   >
-                    <div className="absolute inset-0 pointer-events-none opacity-40 bg-gradient-to-br from-[#D4AF37]/10 via-slate-900/30 to-slate-900/80" />
-                    <div className="relative flex flex-col gap-1.5 text-left">
-                      <div className="flex items-center justify-between gap-2">
-                        <h3 className="text-xs font-semibold tracking-[0.22em] uppercase text-[#D4AF37]">
-                          {tier.name}
-                        </h3>
-                        <span className="text-[10px] text-[#D4AF37]/80 uppercase tracking-[0.18em]">
-                          {tier.tagline}
-                        </span>
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(212,175,55,0.1)_0%,_transparent_70%)] opacity-50 animate-pulse pointer-events-none" />
+                    <div className="relative z-10">
+                      <div className="mb-8">
+                        <h3 className="text-[#D4AF37] text-2xl font-black tracking-tighter uppercase italic">AKASHA-INFINITY</h3>
+                        <p className="text-white/40 text-[9px] font-black tracking-[0.5em] uppercase mt-1">Eternal Node Activation</p>
                       </div>
-                      <ul className="text-[0.65rem] text-white/70 space-y-0.5 list-disc list-inside">
-                        {tier.features.slice(0, 3).map((f, i) => (
-                          <li key={i}>{f}</li>
+                      <ul className="space-y-4 mb-12">
+                        {tier.features.map((feature, i) => (
+                          <li key={i} className="flex items-center gap-4 text-white text-[11px] font-bold">
+                            <div className="w-1.5 h-1.5 bg-[#D4AF37] rounded-full shadow-[0_0_12px_#D4AF37] shrink-0" />
+                            {feature}
+                          </li>
                         ))}
                       </ul>
-                      <p className="mt-1 text-[0.7rem] font-semibold text-[#D4AF37]">{tier.price}</p>
+                      <div className="flex justify-between items-end">
+                        <span className="text-white/20 text-[10px] font-black uppercase tracking-widest italic">Lifetime Transmission</span>
+                        <span className="text-[#D4AF37] text-3xl font-black tracking-tighter">{tier.price}</span>
+                      </div>
                     </div>
                   </div>
                 )
