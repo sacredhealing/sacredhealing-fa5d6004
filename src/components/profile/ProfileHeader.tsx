@@ -36,7 +36,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         <Pencil size={12} />
       </button>
     </div>
-    <h1 className="text-white leading-tight" style={{ fontFamily: 'Cormorant Garamond, serif', fontWeight: 300, fontStyle: 'italic', fontSize: '2.2rem' }}>{userName}</h1>
+    <h1 className="text-white leading-tight font-[style:italic]" style={{ fontFamily: 'Cormorant Garamond, serif', fontWeight: 300, fontStyle: 'italic', fontSize: '2.2rem' }}>{userName}</h1>
     <div className="flex items-center justify-center gap-2 mt-2 flex-wrap">
       <span className="text-[#D4AF37]/70 uppercase" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '8px', letterSpacing: '0.5em' }}>528Hz</span>
       <span className="text-[#D4AF37]/40">·</span>
