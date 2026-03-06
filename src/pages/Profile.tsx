@@ -24,7 +24,7 @@ import { ProfileEditDialog } from '@/components/profile/ProfileEditDialog';
 import KoshaReport from '@/components/profile/KoshaReport';
 import HandScanner from '@/components/scanner/HandScanner';
 import { supabase } from '@/integrations/supabase/client';
-import { STRIPE_TIERS, type StripeTierKey } from '@/lib/stripe-config';
+import { paymentLogic, getStripeMode, type StripeTierKey } from '@/lib/stripe-config';
 
 type LifeBookCategory =
   | 'children'
@@ -228,14 +228,14 @@ const Profile: React.FC = () => {
 
   /* SQI 2050: COMMERCE & AFFILIATE SYNC LOGIC */
   const handleUpgrade = async (tierKey: StripeTierKey) => {
-    const tier = STRIPE_TIERS[tierKey];
+    const tier = paymentLogic[tierKey];
     const affiliateId = typeof localStorage !== 'undefined' ? localStorage.getItem('sqi_affiliate_id') || 'direct' : 'direct';
     setUpgradeLoading(tierKey);
     try {
       const { data, error } = await supabase.functions.invoke('create-membership-checkout', {
         body: {
-          priceId: tier.priceId,
-          mode: tier.mode,
+          priceId: tier.stripePriceId,
+          mode: getStripeMode(tier.interval),
           tierSlug: tierKey,
           affiliate_id: affiliateId,
           metadata: {

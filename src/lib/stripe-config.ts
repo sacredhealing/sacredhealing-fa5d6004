@@ -1,20 +1,27 @@
-/* SQI 2050: STRIPE PRICE MAPPING */
-export const STRIPE_TIERS = {
+/* SQI 2050: FINAL COMMERCE CONFIG */
+export const paymentLogic = {
   PRANA_FLOW: {
-    priceId: 'price_prana_19_monthly', // Replace with your actual Stripe Price ID
-    mode: 'subscription' as const,
+    price: 19,
+    interval: 'month' as const, // Recurring every 30 days
+    stripePriceId: 'price_19_monthly_id', // Replace with your actual Stripe Price ID
     commission: 5,
   },
   SIDDHA_QUANTUM: {
-    priceId: 'price_siddha_45_monthly', // Replace with your actual Stripe Price ID
-    mode: 'subscription' as const,
+    price: 45,
+    interval: 'month' as const, // Recurring every 30 days
+    stripePriceId: 'price_45_monthly_id', // Replace with your actual Stripe Price ID
     commission: 15,
   },
   AKASHA_INFINITY: {
-    priceId: 'price_akasha_1111_lifetime', // Replace with your actual Stripe Price ID
-    mode: 'payment' as const, // One-time payment
+    price: 1111,
+    interval: 'one-time' as const, // No recurring charge
+    stripePriceId: 'price_1111_lifetime_id', // Replace with your actual Stripe Price ID
     commission: 250,
   },
 } as const;
 
-export type StripeTierKey = keyof typeof STRIPE_TIERS;
+export type StripeTierKey = keyof typeof paymentLogic;
+
+/** Derive Stripe mode from interval: month = subscription, one-time = payment */
+export const getStripeMode = (interval: (typeof paymentLogic)[StripeTierKey]['interval']): 'subscription' | 'payment' =>
+  interval === 'month' ? 'subscription' : 'payment';
