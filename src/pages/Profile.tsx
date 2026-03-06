@@ -3,7 +3,6 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Flame, Flower2, Star, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield, Scale, LayoutDashboard, Megaphone, Crown, Pencil, Banknote, Lock, FileText, BookOpen, Hand } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { useAuth } from '@/hooks/useAuth';
@@ -22,6 +21,7 @@ import { AppearanceDialog } from '@/components/profile/AppearanceDialog';
 import { PrivacyDialog } from '@/components/profile/PrivacyDialog';
 import { SettingsDialog } from '@/components/profile/SettingsDialog';
 import { ProfileEditDialog } from '@/components/profile/ProfileEditDialog';
+import KoshaReport from '@/components/profile/KoshaReport';
 import { supabase } from '@/integrations/supabase/client';
 
 type LifeBookCategory =
@@ -930,11 +930,13 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               </div>
             )}
             {scanPhase === 'done' && (
-              <div className="space-y-4 pt-6 pb-4 text-center">
-                <p className="text-[11px] uppercase tracking-[0.25em] text-cyan-200/80">Report saved</p>
-                <p className="text-xs text-white/90">Your Deep-Field Resonance Report has been anchored into your Soul Vault.</p>
-                <Button size="sm" className="mt-2 bg-cyan-500 text-xs font-semibold tracking-[0.2em] text-black hover:bg-cyan-400" onClick={handleCloseScanner}>Close</Button>
-              </div>
+              <KoshaReport
+                sessionData={{
+                  practice: selectedPractice || undefined,
+                  duration: practiceDuration ? Number(practiceDuration) : null,
+                }}
+                onSave={handleCloseScanner}
+              />
             )}
           </div>
         </div>
