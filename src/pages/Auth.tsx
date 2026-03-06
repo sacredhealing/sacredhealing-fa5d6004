@@ -228,77 +228,96 @@ const Auth: React.FC = () => {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="relative min-h-screen flex items-center justify-center bg-[#050505] overflow-hidden">
+        <div className="absolute inset-0 opacity-40 pointer-events-none">
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] animate-[stardustMove_150s_linear_infinite]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_#D4AF3715_0%,_transparent_70%)]" />
+        </div>
+        <Loader2 className="relative z-10 w-8 h-8 animate-spin text-[#D4AF37]" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      {/* Background effects */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-primary/20 rounded-full blur-[100px]" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-secondary/15 rounded-full blur-[100px]" />
+    <div className="relative min-h-screen flex items-center justify-center bg-[#050505] overflow-hidden">
+      {/* Global Akasha Background */}
+      <div className="absolute inset-0 z-0 opacity-40 pointer-events-none">
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] animate-[stardustMove_150s_linear_infinite]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_#D4AF3715_0%,_transparent_70%)]" />
       </div>
 
-      <div className="relative z-10 flex-1 flex flex-col px-6 pt-12 pb-8">
-        {/* Header */}
-        <div className="flex flex-col items-center animate-fade-in">
-          <LotusIcon size={80} className="drop-shadow-[0_0_20px_hsl(var(--primary))]" />
-          <h1 className="mt-4 text-3xl font-heading font-bold text-gradient-spiritual">
-            Sacred Healing
-          </h1>
-          <p className="mt-2 text-muted-foreground">
+      <div className="relative z-10 w-full max-w-md px-8 py-12">
+        {/* The Entry Sri Yantra */}
+        <div className="flex justify-center mb-10">
+          <div className="relative w-32 h-32">
+            <div className="absolute inset-0 bg-[#D4AF37]/20 blur-2xl rounded-full animate-pulse" />
+            <img
+              src="/Gemini_Generated_Image_57v0zm57v0zm57v0.jpg"
+              className="w-full h-full object-contain mix-blend-screen opacity-90 animate-[siddhiSpin_60s_linear_infinite]"
+              style={{ maskImage: 'radial-gradient(circle, black 40%, transparent 90%)' }}
+              alt="Sri Yantra"
+            />
+          </div>
+        </div>
+
+        <div className="text-center mb-6">
+          <h1 className="text-white text-3xl font-black tracking-tighter mb-2">Sacred Healing</h1>
+          <p className="text-[#D4AF37] text-[10px] font-black tracking-[0.4em] uppercase opacity-70">
             {isLogin ? t('auth.welcomeBack') : t('auth.beginJourney')}
           </p>
         </div>
 
         {/* Referral Banner */}
         {referralCode && !isLogin && (
-          <div className="mt-6 p-4 rounded-xl bg-secondary/20 border border-secondary/30 flex items-center gap-3 animate-fade-in">
-            <Gift className="w-6 h-6 text-secondary flex-shrink-0" />
+          <div className="mt-4 mb-6 p-4 rounded-2xl bg-white/[0.04] border border-[#D4AF37]/30 flex items-center gap-3">
+            <Gift className="w-6 h-6 text-[#D4AF37] flex-shrink-0" />
             <div>
-              <p className="font-medium text-foreground">{t('auth.youveBeenInvited')}</p>
-              <p className="text-sm text-muted-foreground">{t('auth.signUpBonus')}</p>
+              <p className="font-medium text-white">{t('auth.youveBeenInvited')}</p>
+              <p className="text-xs text-white/60">{t('auth.signUpBonus')}</p>
             </div>
           </div>
         )}
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="mt-10 space-y-4 animate-slide-up">
+        {/* The Glass Auth Form */}
+        <form onSubmit={handleSubmit} className="space-y-6 mt-6">
           {!isLogin && (
-            <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
+            <div className="space-y-2">
+              <label className="text-white/40 text-[9px] font-black tracking-widest uppercase ml-4">
+                {t('auth.yourName')}
+              </label>
               <Input
                 type="text"
-                placeholder={t('auth.yourName')}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="pl-12 h-14 bg-muted/50 border-border/50 rounded-xl text-foreground placeholder:text-muted-foreground focus:ring-primary"
+                className="w-full bg-white/[0.03] border border-white/10 rounded-full px-6 py-4 h-auto text-white text-sm focus:outline-none focus:border-[#D4AF37]/50 transition-all backdrop-blur-xl placeholder:text-white/30"
+                placeholder={t('auth.yourName') || 'Your Name'}
               />
             </div>
           )}
-          
-          <div className="relative">
-            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
+
+          <div className="space-y-2">
+            <label className="text-white/40 text-[9px] font-black tracking-widest uppercase ml-4">
+              {t('auth.emailAddress', 'Soul Email')}
+            </label>
             <Input
               type="email"
-              placeholder={t('auth.emailAddress')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="pl-12 h-14 bg-muted/50 border-border/50 rounded-xl text-foreground placeholder:text-muted-foreground focus:ring-primary"
+              className="w-full bg-white/[0.03] border border-white/10 rounded-full px-6 py-4 h-auto text-white text-sm focus:outline-none focus:border-[#D4AF37]/50 transition-all backdrop-blur-xl placeholder:text-white/30"
+              placeholder={t('auth.emailPlaceholder', 'Enter your email...')}
             />
           </div>
 
-          <div className="relative">
-            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
+          <div className="space-y-2">
+            <label className="text-white/40 text-[9px] font-black tracking-widest uppercase ml-4">
+              {t('auth.password', 'Password')}
+            </label>
             <Input
               type="password"
-              placeholder={t('auth.password')}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pl-12 h-14 bg-muted/50 border-border/50 rounded-xl text-foreground placeholder:text-muted-foreground focus:ring-primary"
+              className="w-full bg-white/[0.03] border border-white/10 rounded-full px-6 py-4 h-auto text-white text-sm focus:outline-none focus:border-[#D4AF37]/50 transition-all backdrop-blur-xl placeholder:text-white/30"
+              placeholder={t('auth.passwordPlaceholder', 'Enter your password...')}
             />
           </div>
 
@@ -311,84 +330,103 @@ const Auth: React.FC = () => {
                     toast({
                       title: t('auth.missingFields'),
                       description: 'Please enter your email address first.',
-                      variant: 'destructive'
+                      variant: 'destructive',
                     });
                     return;
                   }
                   try {
                     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                      redirectTo: `${window.location.origin}/reset-password`
+                      redirectTo: `${window.location.origin}/reset-password`,
                     });
                     if (error) throw error;
                     toast({
                       title: 'Check your email',
-                      description: 'A password reset link has been sent to your email.'
+                      description: 'A password reset link has been sent to your email.',
                     });
                   } catch (err: any) {
                     toast({
                       title: 'Error',
                       description: err?.message || 'Could not send reset email.',
-                      variant: 'destructive'
+                      variant: 'destructive',
                     });
                   }
                 }}
-                className="text-sm text-primary hover:underline"
+                className="text-xs text-white/60 hover:text-[#D4AF37] transition-colors"
               >
                 Forgot password?
               </button>
             </div>
           )}
 
-          <Button type="submit" size="xl" className="w-full mt-4" disabled={isSubmitting}>
+          <Button
+            type="submit"
+            size="xl"
+            className="w-full mt-2 py-5 rounded-full bg-[#D4AF37] text-black font-black text-xs tracking-[0.3em] uppercase shadow-[0_10px_30px_rgba(212,175,55,0.3)] hover:scale-[1.02] transition-transform"
+            disabled={isSubmitting}
+          >
             {isSubmitting ? (
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : (
               <>
                 {isLogin ? t('auth.signIn') : t('auth.createAccount')}
-                <ArrowRight size={20} />
+                <ArrowRight size={20} className="ml-2" />
               </>
             )}
           </Button>
+
+          {/* Social buttons */}
+          <div className="mt-8 space-y-3">
+            <Button
+              variant="glass"
+              size="lg"
+              className="w-full bg-white/[0.04] border border-white/10 hover:border-[#D4AF37]/40"
+              onClick={handlePhantomConnect}
+              disabled={isConnecting}
+            >
+              {isConnecting ? (
+                <Loader2 className="w-5 h-5 animate-spin mr-2" />
+              ) : (
+                <Sparkles className="w-5 h-5 mr-2 text-[#D4AF37]" />
+              )}
+              {t('auth.connectPhantomWallet')}
+            </Button>
+          </div>
+
+          {/* Toggle */}
+          <p className="mt-8 text-center text-white/40 text-[9px] tracking-widest uppercase">
+            {isLogin ? t('auth.noAccount') : t('auth.haveAccount')}
+            <button
+              type="button"
+              onClick={() => setIsLogin(!isLogin)}
+              className="ml-2 text-[#D4AF37] hover:underline"
+            >
+              {isLogin ? t('auth.signUp') : t('auth.signIn')}
+            </button>
+          </p>
+
+          <div className="mt-6 text-center">
+            <p className="text-white/30 text-[9px] tracking-widest uppercase">
+              {isLogin ? t('auth.newSeeker', 'New Seeker?') : t('auth.returningSeeker', 'Returning Seeker?')}{' '}
+              <span className="text-[#D4AF37] cursor-pointer" onClick={() => setIsLogin(!isLogin)}>
+                {isLogin ? t('auth.signUp', 'Register Here') : t('auth.signIn', 'Sign In')}
+              </span>
+            </p>
+          </div>
+
+          <AppDisclaimer className="mt-10" />
         </form>
-
-        {/* Divider */}
-        <div className="flex items-center gap-4 my-8">
-          <div className="flex-1 h-px bg-border/50" />
-          <span className="text-sm text-muted-foreground">{t('auth.orContinueWith')}</span>
-          <div className="flex-1 h-px bg-border/50" />
-        </div>
-
-        {/* Social buttons */}
-        <div className="space-y-3">
-          <Button 
-            variant="glass" 
-            size="lg" 
-            className="w-full"
-            onClick={handlePhantomConnect}
-            disabled={isConnecting}
-          >
-            {isConnecting ? (
-              <Loader2 className="w-5 h-5 animate-spin mr-2" />
-            ) : (
-              <Sparkles className="w-5 h-5 mr-2 text-purple" />
-            )}
-            {t('auth.connectPhantomWallet')}
-          </Button>
-        </div>
-
-        {/* Toggle */}
-        <p className="mt-8 text-center text-muted-foreground">
-          {isLogin ? t('auth.noAccount') : t('auth.haveAccount')}
-          <button
-            type="button"
-            onClick={() => setIsLogin(!isLogin)}
-            className="ml-2 text-primary font-medium hover:underline"
-          >
-            {isLogin ? t('auth.signUp') : t('auth.signIn')}
-          </button>
-        </p>
-        <AppDisclaimer className="mt-auto pt-8" />
       </div>
+
+      <style>{`
+        @keyframes stardustMove { 
+          from { background-position: 0 0; } 
+          to { background-position: 1000px 1000px; } 
+        }
+        @keyframes siddhiSpin { 
+          from { transform: rotate(0deg); } 
+          to { transform: rotate(360deg); } 
+        }
+      `}</style>
     </div>
   );
 };
