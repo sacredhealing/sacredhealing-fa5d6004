@@ -447,32 +447,36 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           )}
         </div>
 
-        {/* Sri Yantra + stats (closer to Jyotish; stats under/overlapping bottom of Yantra) */}
-        <section className="relative w-full flex flex-col items-center mt-2 mb-4">
-          <div className="relative w-full aspect-square max-w-md flex items-center justify-center overflow-hidden rounded-2xl">
-            {/* Glow and Sri Yantra */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle,_rgba(212,175,55,0.12)_0%,_transparent_70%)] pointer-events-none animate-pulse" />
+        {/* SQI 2050: Absolute Horizon Sri Yantra (No Box) */}
+        <section className="relative w-full flex flex-col items-center justify-center overflow-hidden py-10">
+          <div className="relative w-full max-w-lg aspect-square flex items-center justify-center group">
+            <div className="absolute inset-0 bg-[radial-gradient(circle,_rgba(212,175,55,0.15)_0%,_transparent_75%)] pointer-events-none animate-pulse" />
             <img
               src={profile?.sri_yantra_url || '/Gemini_Generated_Image_v8j3v8j3v8j3v8j3.png'}
               onError={(e) => { (e.target as HTMLImageElement).src = '/Gemini_Generated_Image_57v0zm57v0zm57v0.jpg'; }}
               alt="Siddha Sri Yantra"
-              className="relative w-full h-full object-contain mix-blend-screen opacity-90 animate-[siddhiSpin_150s_linear_infinite]"
+              className="w-full h-full object-contain mix-blend-screen opacity-90 scale-110"
+              style={{
+                maskImage: 'radial-gradient(circle, black 40%, transparent 85%)',
+                WebkitMaskImage: 'radial-gradient(circle, black 40%, transparent 85%)',
+              }}
             />
-            {/* Stats card under Sri Yantra, overlapping bottom */}
-            <div className="absolute bottom-0 left-0 right-0 z-20 px-4 pb-2 pt-6">
-              <div className="flex justify-around items-center backdrop-blur-2xl bg-white/[0.06] py-5 rounded-[32px] border border-white/10 shadow-2xl">
-                <div className="text-center group">
-                  <span className="text-[#D4AF37] text-2xl font-black block group-hover:scale-110 transition-transform">{shcProfile?.streak_days ?? 0}</span>
-                  <label className="text-white/40 text-[7px] tracking-[0.35em] uppercase font-bold">Streak</label>
-                </div>
-                <div className="text-center group">
-                  <span className="text-[#D4AF37] text-2xl font-black block group-hover:scale-110 transition-transform">{balance?.balance ?? 0}</span>
-                  <label className="text-white/40 text-[7px] tracking-[0.35em] uppercase font-bold">Balance</label>
-                </div>
-                <div className="text-center group">
-                  <span className="text-[#D4AF37] text-2xl font-black block group-hover:scale-110 transition-transform">{badges.filter((b) => b.earned).length}</span>
-                  <label className="text-white/40 text-[7px] tracking-[0.35em] uppercase font-bold">Badges</label>
-                </div>
+          </div>
+          <div className="relative -mt-20 z-20 w-full px-8">
+            <div className="max-w-sm mx-auto flex justify-around items-center backdrop-blur-2xl bg-white/[0.02] py-8 rounded-[40px] border border-white/5 shadow-[0_20px_60px_rgba(0,0,0,0.6)]">
+              <div className="text-center group cursor-pointer">
+                <span className="text-[#D4AF37] text-2xl font-black block transition-transform group-hover:scale-110">{shcProfile?.streak_days ?? 0}</span>
+                <label className="text-white/30 text-[7px] tracking-[0.4em] uppercase font-bold">Streak</label>
+              </div>
+              <div className="h-10 w-[1px] bg-white/10" />
+              <div className="text-center group cursor-pointer">
+                <span className="text-[#D4AF37] text-2xl font-black block transition-transform group-hover:scale-110">{balance?.balance ?? 0}</span>
+                <label className="text-white/30 text-[7px] tracking-[0.4em] uppercase font-bold">Balance</label>
+              </div>
+              <div className="h-10 w-[1px] bg-white/10" />
+              <div className="text-center group cursor-pointer">
+                <span className="text-[#D4AF37] text-2xl font-black block transition-transform group-hover:scale-110">{badges.filter((b) => b.earned).length}</span>
+                <label className="text-white/30 text-[7px] tracking-[0.4em] uppercase font-bold">Badges</label>
               </div>
             </div>
           </div>
@@ -502,63 +506,52 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
         `}</style>
 
         {/* SQI 2050 Membership Tiers — Vibration Levels */}
-        <div className="w-full max-w-xl mx-auto mt-5 mb-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {[
-            {
-              name: 'Atma-Seed',
-              price: 'Free',
-              desc: 'Basic 72,000 Nāḍī scan',
-              tag: 'Entry Frequency',
-            },
-            {
-              name: 'Prana-Flow',
-              price: '19€ / mo',
-              desc: 'Universal Audio Library access',
-              tag: 'Sonic Vibration',
-            },
-            {
-              name: 'Siddha-Quantum',
-              price: '45€ / mo',
-              desc: 'Premium healing & advanced scantions',
-              tag: 'Siddha Field',
-            },
-            {
-              name: 'Akasha-Infinity',
-            price: '€1111 · Lifetime',
-              desc: 'Karmic Release · Lifetime access',
-              tag: 'Eternal Node',
-            },
-          ].map((tier) => (
-            <div
-              key={tier.name}
-              className={
-                tier.name === 'Siddha-Quantum'
-                  ? 'relative overflow-hidden rounded-2xl border border-[#D4AF37]/60 bg-white/[0.08] backdrop-blur-2xl p-3 shadow-[0_0_32px_rgba(212,175,55,0.45)] scale-[1.02]'
-                  : 'relative overflow-hidden rounded-2xl border border-white/15 bg-white/[0.03] backdrop-blur-xl p-3'
-              }
-            >
-              <div
-                className={
-                  tier.name === 'Siddha-Quantum'
-                    ? 'absolute inset-0 pointer-events-none opacity-70 bg-gradient-to-br from-[#D4AF37]/35 via-slate-900/40 to-slate-900/90'
-                    : 'absolute inset-0 pointer-events-none opacity-40 bg-gradient-to-br from-[#D4AF37]/10 via-slate-900/30 to-slate-900/80'
-                }
-              />
-              <div className="relative flex flex-col gap-1 text-left">
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-xs font-semibold tracking-[0.22em] uppercase text-[#D4AF37]">
-                    {tier.name}
-                  </h3>
-                  <span className="text-[10px] text-[#D4AF37]/80 uppercase tracking-[0.18em]">
-                    {tier.tag}
-                  </span>
+        {(() => {
+          const tiers = [
+            { name: 'ATMA-SEED', tagline: 'ENTRY FREQUENCY', price: 'Free', features: ['Free Meditations & Mantras', 'Community Chat & Live', 'Basic Ayurveda & Jyotish', 'Healing Audios & Breathwork'] },
+            { name: 'PRANA-FLOW', tagline: 'SONIC VIBRATION', price: '19€ / mo', features: ['Full Vedic Jyotish + AI Chat', 'Full Ayurvedic Scan + AI Chat', 'Vastu Guide for Home', 'Full Access: All Music & Beats'] },
+            { name: 'SIDDHA-QUANTUM', tagline: 'SIDDHA FIELD', price: '45€ / mo', features: ['Digital Nadi 2050 Scanner', 'Pre/Post Practice Scantions', 'All Healing Course Access', 'Mantra & Meditation Engine'] },
+            { name: 'AKASHA-INFINITY', tagline: 'ETERNAL NODE', price: '€1111', features: ['Quantum Apothecary (€888 Value)', 'Virtual Pilgrimage (€888 Value)', 'Palm Reading Portal', 'Akashic Decoder Access'] },
+          ];
+          return (
+            <div className="w-full max-w-xl mx-auto mt-5 mb-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {tiers.map((tier) => (
+                <div
+                  key={tier.name}
+                  className={
+                    tier.name === 'SIDDHA-QUANTUM'
+                      ? 'relative overflow-hidden rounded-2xl border border-[#D4AF37]/60 bg-white/[0.08] backdrop-blur-2xl p-3 shadow-[0_0_32px_rgba(212,175,55,0.45)] scale-[1.02]'
+                      : 'relative overflow-hidden rounded-2xl border border-white/15 bg-white/[0.03] backdrop-blur-xl p-3'
+                  }
+                >
+                  <div
+                    className={
+                      tier.name === 'SIDDHA-QUANTUM'
+                        ? 'absolute inset-0 pointer-events-none opacity-70 bg-gradient-to-br from-[#D4AF37]/35 via-slate-900/40 to-slate-900/90'
+                        : 'absolute inset-0 pointer-events-none opacity-40 bg-gradient-to-br from-[#D4AF37]/10 via-slate-900/30 to-slate-900/80'
+                    }
+                  />
+                  <div className="relative flex flex-col gap-1.5 text-left">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-xs font-semibold tracking-[0.22em] uppercase text-[#D4AF37]">
+                        {tier.name}
+                      </h3>
+                      <span className="text-[10px] text-[#D4AF37]/80 uppercase tracking-[0.18em]">
+                        {tier.tagline}
+                      </span>
+                    </div>
+                    <ul className="text-[0.65rem] text-white/70 space-y-0.5 list-disc list-inside">
+                      {tier.features.slice(0, 3).map((f, i) => (
+                        <li key={i}>{f}</li>
+                      ))}
+                    </ul>
+                    <p className="mt-1 text-[0.7rem] font-semibold text-[#D4AF37]">{tier.price}</p>
+                  </div>
                 </div>
-                <p className="text-[0.7rem] text-white/70">{tier.desc}</p>
-                <p className="mt-1 text-[0.7rem] font-semibold text-[#D4AF37]">{tier.price}</p>
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
+          );
+        })()}
 
         
       </div>
