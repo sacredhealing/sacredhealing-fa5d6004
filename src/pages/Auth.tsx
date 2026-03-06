@@ -247,22 +247,17 @@ const Auth: React.FC = () => {
       </div>
 
       <div className="relative z-10 w-full max-w-md px-8 py-12">
-        {/* SQI 2050: Unified Horizon Gatekeeper (Auth Page) */}
+        {/* SQI 2050: Absolute Sovereign Logo (Auth) */}
         <div className="relative flex flex-col items-center justify-center pt-4">
-          {/* The Pure Horizon Sri Yantra (Matching Profile) */}
-          <div className="relative w-64 h-64 flex items-center justify-center">
-            {/* Aura Glow Layer */}
-            <div className="absolute w-full h-full bg-[radial-gradient(circle,_rgba(212,175,55,0.15)_0%,_transparent_70%)] pointer-events-none animate-pulse" />
-
+          {/* The Portal Container - Forces a circle, no square boundaries */}
+          <div className="relative w-72 h-72 rounded-full overflow-hidden border border-[#D4AF37]/10 bg-[radial-gradient(circle,_rgba(212,175,55,0.08)_0%,_transparent_70%)]">
             <img
-              src="/Gemini_Generated_Image_57v0zm57v0zm57v0.jpg"
-              className="w-full h-full object-contain mix-blend-screen opacity-90 animate-[siddhiSpin_120s_linear_infinite]"
-              style={{
-                maskImage: 'radial-gradient(circle, black 35%, transparent 75%)',
-                WebkitMaskImage: 'radial-gradient(circle, black 35%, transparent 75%)',
-              }}
-              alt="Sri Yantra"
+              src="/Gemini_Generated_Image_v8j3v8j3v8j3v8j3.png"
+              onError={(e) => { (e.target as HTMLImageElement).src = '/Gemini_Generated_Image_57v0zm57v0zm57v0.jpg'; }}
+              alt="Siddha Sri Yantra"
+              className="w-full h-full object-contain mix-blend-screen opacity-90 animate-[siddhiSpin_150s_linear_infinite]"
             />
+            <div className="absolute inset-0 shadow-[inset_0_0_60px_rgba(0,0,0,0.9)] rounded-full pointer-events-none" />
           </div>
 
           {/* Auth Branding (Matching Profile Typography) */}
