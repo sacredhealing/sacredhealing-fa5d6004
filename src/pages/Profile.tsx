@@ -594,6 +594,33 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               <div className="w-6 h-px bg-[#D4AF37] mx-auto mt-2" />
             </div>
 
+            {/* SQI 2050: Achievement Seal — Andlig Transformation Certification */}
+            {(() => {
+              const isCourseCompleted =
+                shcProfile?.purchased_courses?.includes?.('AndligTransformation') ||
+                certificates.some(
+                  (c) =>
+                    c.certificate_type === 'course_completion' &&
+                    (c.title?.toLowerCase().includes('andlig') ?? false)
+                );
+              return (
+                <div className="flex flex-col items-center group min-w-[140px] bg-white/[0.03] backdrop-blur-md border border-[#D4AF37]/20 rounded-3xl p-5 text-center transition-all hover:bg-[#D4AF37]/5">
+                  <div className="relative w-32 h-32 flex items-center justify-center">
+                    {isCourseCompleted && (
+                      <div className="absolute inset-0 bg-[#D4AF37]/20 blur-2xl rounded-full animate-pulse" />
+                    )}
+                    <img
+                      src="/Andlig_Transformation_Seal.jpg"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      alt="Andlig Certification"
+                      className={`relative w-full h-full object-contain transition-all duration-1000 ${isCourseCompleted ? 'opacity-100 grayscale-0' : 'opacity-20 grayscale'}`}
+                    />
+                  </div>
+                  <p className="text-[#D4AF37] text-[8px] font-black tracking-[0.3em] uppercase mt-4">Siddha Certified</p>
+                </div>
+              );
+            })()}
+
             {/* Siddhi: Locked Relic (Dimmed Aura) */}
             <div className="min-w-[140px] bg-white/[0.02] border border-white/5 rounded-3xl p-5 text-center opacity-40 grayscale">
               <div className="h-16 flex items-center justify-center mb-4">
