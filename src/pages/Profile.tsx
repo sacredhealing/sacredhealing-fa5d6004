@@ -507,47 +507,72 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
         {/* SQI 2050 Membership Tiers — Vibration Levels */}
         {(() => {
           const tiers = [
-            { name: 'ATMA-SEED', tagline: 'ENTRY FREQUENCY', price: 'Free', features: ['Free Meditations & Mantras', 'Community Chat & Live', 'Basic Ayurveda & Jyotish'] },
+            { name: 'ATMA-SEED', tagline: 'ENTRY FREQUENCY', price: 'Free', features: ['Free Meditations & Mantras', 'Free Healing Audios', 'Free Breathing Protocols', 'Free Vayu Scrubber (1km Atmospheric Restoration)', 'Community Chat & Live', 'Basic Ayurveda & Jyotish'] },
             { name: 'PRANA-FLOW', tagline: 'SONIC VIBRATION', price: '19€ / mo', features: ['Full Vedic Jyotish + Chat', 'Full Ayurvedic Scan + Chat', 'Vastu Guide for Home', 'All Meditations & Healing Audios Access'] },
             { name: 'SIDDHA-QUANTUM', tagline: 'SIDDHA FIELD', price: '45€ / mo', features: ['Digital Nadi 2050 Scanner', 'Pre/Post Practice Scantions', 'Siddha Portal Access', 'Access to All Mantras'] },
             { name: 'AKASHA-INFINITY', tagline: 'ETERNAL NODE', price: '€1111', features: ['Quantum Apothecary (€888 Value)', 'Virtual Pilgrimage (€888 Value)', 'Palm Reading Portal', 'Akashic Decoder'] },
           ];
           return (
             <div className="w-full max-w-xl mx-auto mt-5 mb-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {tiers.map((tier) => (
-                <div
-                  key={tier.name}
-                  className={
-                    tier.name === 'SIDDHA-QUANTUM'
-                      ? 'relative overflow-hidden rounded-2xl border border-[#D4AF37]/60 bg-white/[0.08] backdrop-blur-2xl p-3 shadow-[0_0_32px_rgba(212,175,55,0.45)] scale-[1.02]'
-                      : 'relative overflow-hidden rounded-2xl border border-white/15 bg-white/[0.03] backdrop-blur-xl p-3'
-                  }
-                >
+              {tiers.map((tier) =>
+                tier.name === 'ATMA-SEED' ? (
                   <div
-                    className={
-                      tier.name === 'SIDDHA-QUANTUM'
-                        ? 'absolute inset-0 pointer-events-none opacity-70 bg-gradient-to-br from-[#D4AF37]/35 via-slate-900/40 to-slate-900/90'
-                        : 'absolute inset-0 pointer-events-none opacity-40 bg-gradient-to-br from-[#D4AF37]/10 via-slate-900/30 to-slate-900/80'
-                    }
-                  />
-                  <div className="relative flex flex-col gap-1.5 text-left">
-                    <div className="flex items-center justify-between gap-2">
-                      <h3 className="text-xs font-semibold tracking-[0.22em] uppercase text-[#D4AF37]">
-                        {tier.name}
-                      </h3>
-                      <span className="text-[10px] text-[#D4AF37]/80 uppercase tracking-[0.18em]">
-                        {tier.tagline}
-                      </span>
+                    key={tier.name}
+                    className="relative p-8 rounded-[48px] bg-white/[0.02] border border-white/5 backdrop-blur-3xl group overflow-hidden"
+                  >
+                    <div className="absolute -top-10 -right-10 w-40 h-40 bg-cyan-500/5 blur-[80px] rounded-full group-hover:bg-[#D4AF37]/10 transition-all duration-1000" />
+                    <div className="mb-8">
+                      <h3 className="text-[#D4AF37] text-2xl font-black tracking-tighter uppercase italic">ATMA-SEED</h3>
+                      <p className="text-white/20 text-[8px] font-black tracking-[0.5em] uppercase mt-1">Sovereign Entry Node</p>
                     </div>
-                    <ul className="text-[0.65rem] text-white/70 space-y-0.5 list-disc list-inside">
-                      {tier.features.slice(0, 3).map((f, i) => (
-                        <li key={i}>{f}</li>
+                    <ul className="space-y-4 mb-10">
+                      {tier.features.map((feature, i) => (
+                        <li key={i} className="flex items-start gap-4 text-white/50 text-[10px] font-bold">
+                          <div className="mt-1 w-1 h-1 bg-[#D4AF37]/40 rounded-full shadow-[0_0_8px_#D4AF37] shrink-0" />
+                          <span className="leading-tight">{feature}</span>
+                        </li>
                       ))}
                     </ul>
-                    <p className="mt-1 text-[0.7rem] font-semibold text-[#D4AF37]">{tier.price}</p>
+                    <div className="flex justify-between items-center pt-6 border-t border-white/5">
+                      <span className="text-white/10 text-[9px] font-black uppercase tracking-widest">Radius: 1KM Local</span>
+                      <span className="text-white text-xl font-black">{tier.price}</span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ) : (
+                  <div
+                    key={tier.name}
+                    className={
+                      tier.name === 'SIDDHA-QUANTUM'
+                        ? 'relative overflow-hidden rounded-2xl border border-[#D4AF37]/60 bg-white/[0.08] backdrop-blur-2xl p-3 shadow-[0_0_32px_rgba(212,175,55,0.45)] scale-[1.02]'
+                        : 'relative overflow-hidden rounded-2xl border border-white/15 bg-white/[0.03] backdrop-blur-xl p-3'
+                    }
+                  >
+                    <div
+                      className={
+                        tier.name === 'SIDDHA-QUANTUM'
+                          ? 'absolute inset-0 pointer-events-none opacity-70 bg-gradient-to-br from-[#D4AF37]/35 via-slate-900/40 to-slate-900/90'
+                          : 'absolute inset-0 pointer-events-none opacity-40 bg-gradient-to-br from-[#D4AF37]/10 via-slate-900/30 to-slate-900/80'
+                      }
+                    />
+                    <div className="relative flex flex-col gap-1.5 text-left">
+                      <div className="flex items-center justify-between gap-2">
+                        <h3 className="text-xs font-semibold tracking-[0.22em] uppercase text-[#D4AF37]">
+                          {tier.name}
+                        </h3>
+                        <span className="text-[10px] text-[#D4AF37]/80 uppercase tracking-[0.18em]">
+                          {tier.tagline}
+                        </span>
+                      </div>
+                      <ul className="text-[0.65rem] text-white/70 space-y-0.5 list-disc list-inside">
+                        {tier.features.slice(0, 3).map((f, i) => (
+                          <li key={i}>{f}</li>
+                        ))}
+                      </ul>
+                      <p className="mt-1 text-[0.7rem] font-semibold text-[#D4AF37]">{tier.price}</p>
+                    </div>
+                  </div>
+                )
+              )}
             </div>
           );
         })()}
