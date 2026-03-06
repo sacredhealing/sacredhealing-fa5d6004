@@ -409,33 +409,37 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
       <div className="absolute inset-0 opacity-20 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] animate-[subtleMove_100s_linear_infinite]" aria-hidden />
 
       <div className="relative z-10 px-4 pt-6 flex flex-col items-center">
-        {/* Soul Header - Avatar with Soul-Frequency Glow */}
-        <div className="flex flex-col items-center py-8 mb-4 animate-fade-in text-center">
-          <div className="relative mb-2">
-            <div className="absolute -inset-4 bg-[#D4AF37]/20 blur-2xl rounded-full animate-sangha-pulse" />
-            <div className="relative w-24 h-24 rounded-full p-[2px] border border-[#D4AF37]/40" style={{ boxShadow: '0 0 24px rgba(212,175,55,0.35), inset 0 0 20px rgba(212,175,55,0.1)' }}>
-              <Avatar className="w-full h-full rounded-full border-2 border-background">
+        {/* Soul Header - Floating Identity & Tightened Resonance */}
+        <div className="relative flex flex-col items-center pt-10 pb-6 text-center animate-fade-in">
+          {/* Floating Avatar (Soft Glow, no hard boundary) */}
+          <div className="relative group mb-2">
+            <div className="absolute -inset-8 bg-[#D4AF37]/10 blur-3xl rounded-full animate-pulse" />
+            <div className="relative">
+              <Avatar className="w-28 h-28 rounded-full grayscale-[20%] hover:grayscale-0 transition-all duration-700 shadow-[0_0_30px_rgba(212,175,55,0.1)] border-2 border-background">
                 <AvatarImage src={profile?.avatar_url || undefined} />
                 <AvatarFallback className="bg-background text-4xl text-foreground">
                   {userName?.charAt(0) || '🧘'}
                 </AvatarFallback>
               </Avatar>
+              <button
+                onClick={() => setProfileEditOpen(true)}
+                className="absolute bottom-1 right-1 w-6 h-6 rounded-full bg-[#D4AF37] flex items-center justify-center text-[#0f051a] hover:bg-[#D4AF37]/90 transition-colors border-2 border-black shadow-lg"
+              >
+                <Pencil size={10} />
+              </button>
             </div>
-            <button
-              onClick={() => setProfileEditOpen(true)}
-              className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-[#D4AF37] flex items-center justify-center text-[#0f051a] hover:bg-[#D4AF37]/90 transition-colors shadow-[0_0_12px_rgba(212,175,55,0.5)]"
-            >
-              <Pencil size={14} />
-            </button>
           </div>
 
-          <h1 className="text-3xl font-heading font-bold text-white tracking-tight">{userName}</h1>
-          <div className="flex items-center justify-center gap-3 mt-2">
-            <span className="text-[#D4AF37] text-[10px] font-black tracking-[0.3em] uppercase opacity-70">
-              528Hz Resonance
-            </span>
-            <div className="w-1 h-1 bg-[#D4AF37]/40 rounded-full" />
-            <span className="text-white/40 text-[9px] tracking-widest uppercase">Rahu Active</span>
+          {/* Tightened Jyotish Text */}
+          <div className="text-center z-20">
+            <h1 className="text-4xl font-black tracking-tighter">{userName}</h1>
+            <div className="flex items-center justify-center gap-3 mt-1.5">
+              <span className="text-[#D4AF37] text-[9px] font-black tracking-[0.4em] uppercase opacity-80">
+                528Hz Resonance
+              </span>
+              <div className="w-1 h-1 bg-[#D4AF37]/40 rounded-full" />
+              <span className="text-white/40 text-[8px] tracking-[0.3em] uppercase">Rahu Active</span>
+            </div>
           </div>
 
           {profile?.bio && (
