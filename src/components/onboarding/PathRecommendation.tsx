@@ -98,35 +98,81 @@ export const PathRecommendation: React.FC<PathRecommendationProps> = ({
       </div>
 
       <div className="relative overflow-hidden rounded-2xl border border-primary/30">
-        {recommendedPath.cover_image_url && (
-          <div className="h-40 overflow-hidden">
-            <img 
-              src={recommendedPath.cover_image_url} 
-              alt={recommendedPath.title}
-              className="w-full h-full object-cover"
+        <div
+          className="h-48 overflow-hidden relative flex items-center justify-center"
+          style={{ background: 'linear-gradient(135deg, #050505 0%, rgba(212,175,55,0.08) 50%, #050505 100%)' }}
+        >
+          <svg width="160" height="160" viewBox="0 0 160 160" fill="none" style={{ animation: 'siddhiSpin 30s linear infinite', opacity: 0.6 }}>
+            <circle cx="80" cy="80" r="75" stroke="#D4AF37" strokeWidth="0.5" opacity="0.4" />
+            <polygon points="80,15 145,120 15,120" stroke="#D4AF37" strokeWidth="1" fill="none" opacity="0.9" />
+            <polygon points="80,145 15,40 145,40" stroke="#D4AF37" strokeWidth="1" fill="none" opacity="0.9" />
+            <polygon points="80,32 132,112 28,112" stroke="#D4AF37" strokeWidth="0.7" fill="none" opacity="0.6" />
+            <polygon points="80,128 28,48 132,48" stroke="#D4AF37" strokeWidth="0.7" fill="none" opacity="0.6" />
+            <circle cx="80" cy="80" r="22" stroke="#D4AF37" strokeWidth="0.5" fill="none" opacity="0.4" />
+            <circle cx="80" cy="80" r="10" stroke="#D4AF37" strokeWidth="0.5" fill="none" opacity="0.3" />
+            <circle cx="80" cy="80" r="3" fill="#D4AF37" opacity="0.9" />
+          </svg>
+          {[...Array(12)].map((_, i) => (
+            <div
+              key={i}
+              style={{
+                position: 'absolute',
+                width: `${(i % 3) + 1.5}px`,
+                height: `${(i % 3) + 1.5}px`,
+                borderRadius: '50%',
+                background: '#D4AF37',
+                opacity: 0.1 + (i % 5) * 0.08,
+                left: `${(i * 17) % 85 + 5}%`,
+                top: `${(i * 11) % 85 + 5}%`,
+                animation: `glowBreathe ${1 + (i % 3) * 0.5}s ease-in-out infinite`,
+              }}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
-          </div>
-        )}
-        
-        <div className="p-5 -mt-12 relative">
-          <h3 className="text-xl font-heading font-bold text-foreground mb-2">
+          ))}
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'linear-gradient(to bottom, transparent 40%, #050505 100%)',
+            }}
+          />
+        </div>
+
+        <div className="p-5 relative">
+          <h3
+            style={{
+              fontFamily: 'Cormorant Garamond, serif',
+              fontWeight: 600,
+              fontSize: '1.6rem',
+              color: 'white',
+              marginBottom: 8,
+              textShadow: '0 0 20px rgba(212,175,55,0.2)',
+            }}
+          >
             {recommendedPath.title}
           </h3>
-          <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+          <p
+            style={{
+              fontFamily: 'Cormorant Garamond, serif',
+              fontStyle: 'italic',
+              fontSize: '1rem',
+              color: 'rgba(255,255,255,0.5)',
+              lineHeight: 1.6,
+              marginBottom: 20,
+            }}
+          >
             {recommendedPath.description}
           </p>
 
-          <div className="flex items-center gap-4 text-sm mb-4">
-            <div className="flex items-center gap-1 text-muted-foreground">
+          <div className="flex items-center gap-4 mb-4" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+            <div className="flex items-center gap-1" style={{ color: 'rgba(255,255,255,0.5)' }}>
               <Clock className="w-4 h-4" />
               <span>{recommendedPath.duration_days} days</span>
             </div>
-            <div className="flex items-center gap-1 text-accent">
+            <div className="flex items-center gap-1 text-[#D4AF37]">
               <Star className="w-4 h-4" />
               <span>+{recommendedPath.shc_reward_total} SHC</span>
             </div>
-            <span className="px-2 py-0.5 rounded-full bg-muted text-xs capitalize">
+            <span style={{ color: 'rgba(255,255,255,0.5)' }} className="px-2 py-0.5 rounded-full bg-white/5 capitalize">
               {recommendedPath.difficulty}
             </span>
           </div>
