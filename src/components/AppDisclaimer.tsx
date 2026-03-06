@@ -1,14 +1,8 @@
-import React from 'react';
-import { useTranslation } from 'react-i18next';
-
-export const AppDisclaimer: React.FC<{ className?: string }> = ({ className = '' }) => {
-  const { t } = useTranslation();
-  return (
-    <footer
-      className={`text-center text-foreground/80 text-sm py-4 px-4 border-t border-border/50 ${className}`}
-      role="contentinfo"
-    >
-      {t('common.disclaimer')}
-    </footer>
-  );
-};
+export const AppDisclaimer = ({ className }: { className?: string }) => (
+  <p
+    className={`text-center text-white/20 text-[8px] tracking-widest leading-relaxed ${className ?? ''}`}
+    style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 400 }}
+  >
+    For spiritual & entertainment purposes only.
+  </p>
+);
