@@ -449,7 +449,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
 
         {/* SQI 2050: Absolute Horizon Sri Yantra (No Box) */}
         <section className="relative w-full flex flex-col items-center justify-center overflow-hidden py-10">
-          <div className="relative w-full max-w-lg aspect-square flex items-center justify-center group">
+          <div className="relative w-full max-w-lg aspect-square flex items-center justify-center group animate-[sriYantraPulse_3.5s_ease-in-out_infinite]">
             <div className="absolute inset-0 bg-[radial-gradient(circle,_rgba(212,175,55,0.15)_0%,_transparent_75%)] pointer-events-none animate-pulse" />
             <img
               src={profile?.sri_yantra_url || '/Gemini_Generated_Image_v8j3v8j3v8j3v8j3.png'}
@@ -482,6 +482,10 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           </div>
         </section>
         <style>{`
+          @keyframes sriYantraPulse {
+            0%, 100% { transform: scale(0.95); opacity: 0.85; }
+            50% { transform: scale(1.05); opacity: 1; }
+          }
           @keyframes siddhiSpin {
             from { transform: rotate(0deg) scale(1); }
             50% { transform: rotate(180deg) scale(1.1); }
