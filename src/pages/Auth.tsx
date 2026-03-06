@@ -247,24 +247,31 @@ const Auth: React.FC = () => {
       </div>
 
       <div className="relative z-10 w-full max-w-md px-8 py-12">
-        {/* The Entry Sri Yantra */}
-        <div className="flex justify-center mb-10">
-          <div className="relative w-32 h-32">
-            <div className="absolute inset-0 bg-[#D4AF37]/20 blur-2xl rounded-full animate-pulse" />
+        {/* SQI 2050: Unified Horizon Gatekeeper (Auth Page) */}
+        <div className="relative flex flex-col items-center justify-center pt-4">
+          {/* The Pure Horizon Sri Yantra (Matching Profile) */}
+          <div className="relative w-64 h-64 flex items-center justify-center">
+            {/* Aura Glow Layer */}
+            <div className="absolute w-full h-full bg-[radial-gradient(circle,_rgba(212,175,55,0.15)_0%,_transparent_70%)] pointer-events-none animate-pulse" />
+
             <img
               src="/Gemini_Generated_Image_57v0zm57v0zm57v0.jpg"
-              className="w-full h-full object-contain mix-blend-screen opacity-90 animate-[siddhiSpin_60s_linear_infinite]"
-              style={{ maskImage: 'radial-gradient(circle, black 40%, transparent 90%)' }}
+              className="w-full h-full object-contain mix-blend-screen opacity-90 animate-[siddhiSpin_120s_linear_infinite]"
+              style={{
+                maskImage: 'radial-gradient(circle, black 35%, transparent 75%)',
+                WebkitMaskImage: 'radial-gradient(circle, black 35%, transparent 75%)',
+              }}
               alt="Sri Yantra"
             />
           </div>
-        </div>
 
-        <div className="text-center mb-6">
-          <h1 className="text-white text-3xl font-black tracking-tighter mb-2">Sacred Healing</h1>
-          <p className="text-[#D4AF37] text-[10px] font-black tracking-[0.4em] uppercase opacity-70">
-            {isLogin ? t('auth.welcomeBack') : t('auth.beginJourney')}
-          </p>
+          {/* Auth Branding (Matching Profile Typography) */}
+          <div className="text-center -mt-8 z-10 mb-4">
+            <h1 className="text-white text-4xl font-black tracking-tighter">Sacred Healing</h1>
+            <p className="text-[#D4AF37] text-[10px] font-black tracking-[0.4em] uppercase mt-2 opacity-80">
+              {isLogin ? t('auth.welcomeBackBeautifulSoul', 'Welcome Back, Beautiful Soul') : t('auth.beginJourney', 'Initiate Transmission')}
+            </p>
+          </div>
         </div>
 
         {/* Referral Banner */}
