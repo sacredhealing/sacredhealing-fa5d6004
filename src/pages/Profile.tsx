@@ -603,6 +603,9 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   @keyframes scanPulse{0%,100%{transform:scale(1);opacity:0.5}50%{transform:scale(1.12);opacity:1}}
   @keyframes siddhiSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
   @keyframes stardustMove{from{background-position:0 0}to{background-position:1000px 1000px}}
+  .sy-short{display:none}
+  .sy-full{display:inline}
+  @media(max-width:480px){.sy-full{display:none}.sy-short{display:inline}}
 `}} />
 
     <div className="profile-wrap" style={{minHeight:'100vh',background:'#050505',overflowX:'hidden',fontFamily:'Montserrat,sans-serif',paddingBottom:'120px',position:'relative'}}>
@@ -683,7 +686,10 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
         </div>
         <div className="sri-yantra-fade-top" />
         <div className="sri-yantra-fade-bottom" />
-        <div className="sri-yantra-label">◈ Sri Yantra Shield · Akashic Field Active · 72,000 Nadis Mapped</div>
+        <div className="sri-yantra-label">
+          <span className="sy-full">◈ Sri Yantra Shield · Akashic Field Active · 72,000 Nadis Mapped</span>
+          <span className="sy-short">◈ Sri Yantra Shield Active</span>
+        </div>
       </section>
 
       {/* ── TIERS ── */}
