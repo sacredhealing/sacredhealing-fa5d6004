@@ -64,11 +64,11 @@ interface SoulVaultEntry {
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user, signOut } = useAuth();
   const { walletAddress, connectWallet } = usePhantomWallet();
   const { balance, profile: shcProfile } = useSHC();
-  const { profile } = useProfile();
+  const { profile, updatePreferredLanguage } = useProfile();
   const { toast } = useToast();
   const { isAdmin } = useAdminRole();
   const { certificates, isLoading: certificatesLoading, downloadCertificate, shareCertificate } = useCertificates();
@@ -88,6 +88,7 @@ const Profile: React.FC = () => {
   const [scannerOpen, setScannerOpen] = useState(false);
   const [scanPhase, setScanPhase] = useState<'idle' | 'scanning' | 'question' | 'saving' | 'done'>('idle');
   const [upgradeLoading, setUpgradeLoading] = useState<StripeTierKey | null>(null);
+  const [langOpen, setLangOpen] = useState(false);
   const [selectedPractice, setSelectedPractice] = useState<string | null>(null);
   const [practiceDuration, setPracticeDuration] = useState<string>('30');
 
@@ -484,6 +485,14 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
     { icon: Settings, label: t('profile.settings'), sublabel: t('profile.appPreferences'), onClick: () => setSettingsOpen(true) },
   ];
 
+  const langs = [
+    { flag: '🇬🇧', label: 'English', code: 'en' },
+    { flag: '🇸🇪', label: 'Svenska', code: 'sv' },
+    { flag: '🇪🇸', label: 'Español', code: 'es' },
+    { flag: '🇳🇴', label: 'Norsk', code: 'no' },
+  ];
+  const activeLangIdx = Math.max(0, langs.findIndex((l) => (i18n.language || '').split('-')[0] === l.code));
+
   const userName = user?.user_metadata?.full_name || t('dashboard.sacredSoul');
   const userEmail = user?.email || '';
   const hrvGlowIntensity =
@@ -514,7 +523,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   .sri-yantra-svg-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#0a2040 0%,#050505 70%)}
   .sri-yantra-fade-top{position:absolute;top:0;left:0;right:0;height:220px;background:linear-gradient(to bottom,#050505 0%,transparent 100%);pointer-events:none}
   .sri-yantra-fade-bottom{position:absolute;bottom:0;left:0;right:0;height:220px;background:linear-gradient(to top,#050505 0%,transparent 100%);pointer-events:none}
-  .sri-yantra-label{position:absolute;bottom:52px;left:50%;transform:translateX(-50%);font-weight:800;font-size:clamp(6px,1.8vw,8px);letter-spacing:0.45em;text-transform:uppercase;color:rgba(212,175,55,0.85);background:rgba(5,5,5,0.65);backdrop-filter:blur(12px);padding:10px 24px;border-radius:100px;border:1px solid rgba(212,175,55,0.2);max-width:92vw;overflow:hidden;z-index:3}
+  .sri-yantra-label{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);font-weight:800;font-size:clamp(6px,1.8vw,8px);letter-spacing:clamp(0.1em,0.45em,0.45em);text-transform:uppercase;color:rgba(212,175,55,0.85);background:rgba(5,5,5,0.65);backdrop-filter:blur(12px);padding:10px 24px;border-radius:100px;border:1px solid rgba(212,175,55,0.2);max-width:92vw;overflow:hidden;text-overflow:ellipsis;z-index:3}
   .section-wrap{max-width:780px;margin:0 auto;padding:80px 24px 0}
   .section-label{font-family:'Montserrat',sans-serif;font-weight:800;font-size:8px;letter-spacing:0.5em;text-transform:uppercase;color:rgba(212,175,55,0.5);margin-bottom:32px;display:flex;align-items:center;gap:12px}
   .section-label::after{content:'';flex:1;height:1px;background:linear-gradient(to right,rgba(212,175,55,0.2),transparent)}
@@ -583,8 +592,8 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   .signout-btn{width:100%;background:transparent;border:1px solid rgba(255,255,255,0.06);border-radius:100px;padding:13px;font-family:'Montserrat',sans-serif;font-weight:800;font-size:8px;letter-spacing:0.35em;text-transform:uppercase;color:rgba(255,255,255,0.2);cursor:pointer;transition:all 0.2s;margin-top:8px}
   .signout-btn:hover{color:rgba(239,68,68,0.7);border-color:rgba(239,68,68,0.2)}
   .lang-selector{background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.12);border-radius:24px;padding:20px 24px;backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}
-  @keyframes sriYantraBreathe{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.06);filter:brightness(1.18)}}
-  @keyframes sriGlowPulse{0%,100%{opacity:0.35;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.2)}}
+  @keyframes sriYantraBreathe{0%,100%{filter:brightness(1) saturate(1)}50%{filter:brightness(1.2) saturate(1.3)}}
+  @keyframes sriGlowPulse{0%,100%{opacity:0.2}50%{opacity:0.9}}
   @keyframes sqPulse{0%{transform:scale(1);opacity:0.8}50%{transform:scale(1.04);opacity:0}100%{transform:scale(1.08);opacity:0}}
   @keyframes shimmer{0%{background-position:0% 50%}100%{background-position:300% 50%}}
   @keyframes btnGlow{0%,100%{box-shadow:0 0 20px rgba(212,175,55,0.4)}50%{box-shadow:0 0 40px rgba(212,175,55,0.7)}}
@@ -645,11 +654,20 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
 
       {/* ── SRI YANTRA ── */}
       <section className="sri-yantra-section">
-        <div className="sri-yantra-glow" aria-hidden />
         <img className="sri-yantra-img"
           src="/Gemini_Generated_Image_57v0zm57v0zm57v0.jpg"
+          style={{ animation: 'sriYantraBreathe 7s ease-in-out infinite' }}
           onError={(e) => { e.currentTarget.style.display='none'; (e.currentTarget.nextElementSibling as HTMLElement).style.display='flex'; }}
           alt="Sri Yantra" />
+        <div style={{
+          position:'absolute', top:'50%', left:'50%',
+          transform:'translate(-50%,-50%)',
+          width:'65%', height:'85%', borderRadius:'50%',
+          background:'radial-gradient(ellipse, rgba(212,175,55,0.22) 0%, rgba(212,175,55,0.07) 45%, transparent 70%)',
+          pointerEvents:'none',
+          animation:'sriGlowPulse 7s ease-in-out infinite',
+          zIndex:1
+        }} aria-hidden />
         <div className="sri-yantra-svg-fallback" style={{display:'none'}}>
           <svg width="420" height="420" viewBox="0 0 420 420" style={{animation:'siddhiSpin 180s linear infinite',opacity:0.7}}>
             <circle cx="210" cy="210" r="200" fill="none" stroke="rgba(212,175,55,0.2)" strokeWidth="1"/>
@@ -812,8 +830,16 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
         <div className="archive-grid">
           <div className="archive-card" onClick={() => navigate('/akashic-records')}>
             <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
-              <div style={{width:36,height:36,borderRadius:10,background:'rgba(212,175,55,0.08)',border:'1px solid rgba(212,175,55,0.2)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                <FileText size={16} color="#D4AF37" />
+              <div style={{width:44,height:44,borderRadius:13,background:'rgba(212,175,55,0.06)',border:'1px solid rgba(212,175,55,0.18)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginBottom:14}}>
+                <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
+                  <rect x="5" y="3" width="15" height="20" rx="2" fill="rgba(212,175,55,0.08)" stroke="#D4AF37" strokeWidth="1.4"/>
+                  <path d="M5 6 C5 4.3 3 4.3 3 6 L3 22 C3 23.7 5 23.7 5 22" fill="rgba(212,175,55,0.06)" stroke="rgba(212,175,55,0.5)" strokeWidth="1.2"/>
+                  <line x1="9" y1="9" x2="17" y2="9" stroke="#D4AF37" strokeWidth="1.2" strokeLinecap="round" opacity="0.7"/>
+                  <line x1="9" y1="12" x2="17" y2="12" stroke="#D4AF37" strokeWidth="1.2" strokeLinecap="round" opacity="0.5"/>
+                  <line x1="9" y1="15" x2="14" y2="15" stroke="#D4AF37" strokeWidth="1.2" strokeLinecap="round" opacity="0.3"/>
+                  <circle cx="21" cy="5" r="3" fill="rgba(212,175,55,0.15)" stroke="#D4AF37" strokeWidth="1"/>
+                  <circle cx="21" cy="5" r="1" fill="#D4AF37"/>
+                </svg>
               </div>
               <div>
                 <span className="archive-title">Akashic Record</span>
@@ -824,8 +850,15 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           </div>
           <div className="archive-card" onClick={() => navigate('/vedic-astrology')}>
             <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
-              <div style={{width:36,height:36,borderRadius:10,background:'rgba(212,175,55,0.08)',border:'1px solid rgba(212,175,55,0.2)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                <BookOpen size={16} color="#D4AF37" />
+              <div style={{width:44,height:44,borderRadius:13,background:'rgba(212,175,55,0.06)',border:'1px solid rgba(212,175,55,0.18)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginBottom:14}}>
+                <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
+                  <path d="M3 14 C3 14 8 6 14 6 C20 6 25 14 25 14 C25 14 20 22 14 22 C8 22 3 14 3 14Z" fill="rgba(212,175,55,0.08)" stroke="#D4AF37" strokeWidth="1.4" strokeLinejoin="round"/>
+                  <circle cx="14" cy="14" r="4" fill="rgba(212,175,55,0.1)" stroke="#D4AF37" strokeWidth="1.4"/>
+                  <circle cx="14" cy="14" r="1.5" fill="#D4AF37"/>
+                  <line x1="14" y1="2" x2="14" y2="5" stroke="rgba(212,175,55,0.4)" strokeWidth="1" strokeLinecap="round"/>
+                  <line x1="20" y1="4" x2="18.5" y2="6.5" stroke="rgba(212,175,55,0.3)" strokeWidth="1" strokeLinecap="round"/>
+                  <line x1="8" y1="4" x2="9.5" y2="6.5" stroke="rgba(212,175,55,0.3)" strokeWidth="1" strokeLinecap="round"/>
+                </svg>
               </div>
               <div>
                 <span className="archive-title">Life Reading</span>
@@ -836,8 +869,12 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           </div>
           <div className="archive-card" onClick={() => navigate('/digital-nadi')}>
             <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
-              <div style={{width:36,height:36,borderRadius:10,background:'rgba(212,175,55,0.08)',border:'1px solid rgba(212,175,55,0.2)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                <Hand size={16} color="#D4AF37" />
+              <div style={{width:44,height:44,borderRadius:13,background:'rgba(212,175,55,0.06)',border:'1px solid rgba(212,175,55,0.18)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginBottom:14}}>
+                <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
+                  <path d="M2 14 L5 14 L7 8 L9 20 L11 11 L13 17 L15 14 L17 14" stroke="#D4AF37" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M17 14 L19 10 L21 18 L23 14 L26 14" stroke="rgba(212,175,55,0.5)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <line x1="14" y1="4" x2="14" y2="24" stroke="rgba(212,175,55,0.2)" strokeWidth="1" strokeLinecap="round" strokeDasharray="2 3"/>
+                </svg>
               </div>
               <div>
                 <span className="archive-title">Digital Nadi Scan</span>
@@ -848,8 +885,15 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           </div>
           <div className="archive-card" onClick={() => navigate('/quantum-apothecary')}>
             <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
-              <div style={{width:36,height:36,borderRadius:10,background:'rgba(212,175,55,0.08)',border:'1px solid rgba(212,175,55,0.2)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                <Shield size={16} color="#D4AF37" />
+              <div style={{width:44,height:44,borderRadius:13,background:'rgba(212,175,55,0.06)',border:'1px solid rgba(212,175,55,0.18)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginBottom:14}}>
+                <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
+                  <path d="M8 12 L7 22 L21 22 L20 12 Z" fill="rgba(212,175,55,0.08)" stroke="#D4AF37" strokeWidth="1.4" strokeLinejoin="round"/>
+                  <path d="M6 12 L22 12" stroke="#D4AF37" strokeWidth="1.4" strokeLinecap="round"/>
+                  <path d="M11 12 L10 7 L18 7 L17 12" fill="rgba(212,175,55,0.06)" stroke="rgba(212,175,55,0.6)" strokeWidth="1.2" strokeLinejoin="round"/>
+                  <line x1="14" y1="15" x2="14" y2="19" stroke="#D4AF37" strokeWidth="1.3" strokeLinecap="round"/>
+                  <line x1="12" y1="17" x2="16" y2="17" stroke="#D4AF37" strokeWidth="1.3" strokeLinecap="round"/>
+                  <circle cx="14" cy="5" r="1.5" fill="rgba(212,175,55,0.3)" stroke="#D4AF37" strokeWidth="1"/>
+                </svg>
               </div>
               <div>
                 <span className="archive-title">Quantum Apothecary</span>
@@ -889,17 +933,63 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
       {/* ── SETTINGS ── */}
       <div className="section-wrap">
         <div className="section-label">◈ Physical Sanctuary</div>
-        <div className="lang-selector">
-          <div style={{display:'flex',alignItems:'center',gap:12,flex:1}}>
-            <div style={{width:40,height:40,borderRadius:12,background:'rgba(212,175,55,0.08)',border:'1px solid rgba(212,175,55,0.2)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-              <Globe size={18} color="#D4AF37" />
+        <div style={{marginBottom:16}}>
+          <div onClick={() => setLangOpen((o) => !o)} style={{
+            background:'rgba(255,255,255,0.02)',
+            border:'1px solid rgba(212,175,55,0.12)',
+            borderRadius:16, padding:'16px 20px',
+            display:'flex', alignItems:'center',
+            justifyContent:'space-between', cursor:'pointer',
+            transition:'all 0.2s'
+          }}>
+            <div style={{display:'flex',alignItems:'center',gap:14}}>
+              <div style={{width:40,height:40,borderRadius:12,
+                background:'rgba(212,175,55,0.06)',
+                border:'1px solid rgba(212,175,55,0.15)',
+                display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.5" strokeLinecap="round">
+                  <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+                  <path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/>
+                </svg>
+              </div>
+              <div>
+                <span style={{fontWeight:800,fontSize:7,letterSpacing:'0.4em',
+                  textTransform:'uppercase',color:'rgba(255,255,255,0.2)',
+                  display:'block',marginBottom:4}}>Language</span>
+                <div style={{display:'flex',alignItems:'center',gap:8,fontSize:14,fontWeight:600,color:'rgba(255,255,255,0.7)'}}>
+                  <span style={{fontSize:20}}>{langs[activeLangIdx].flag}</span>
+                  <span>{langs[activeLangIdx].label}</span>
+                </div>
+              </div>
             </div>
-            <div style={{flex:1}}>
-              <div style={{fontWeight:800,fontSize:7,letterSpacing:'0.4em',color:'rgba(212,175,55,0.5)',textTransform:'uppercase',marginBottom:4}}>LANGUAGE</div>
-              <LanguageSelector />
-            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="rgba(212,175,55,0.5)" strokeWidth="2" strokeLinecap="round"
+              style={{transform: langOpen ? 'rotate(180deg)' : 'none', transition:'transform 0.25s'}}>
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
           </div>
-          <ChevronDown size={18} className="text-[#D4AF37]/60 transition-transform duration-300 hover:rotate-180" style={{flexShrink:0}} />
+          {langOpen && (
+            <div style={{background:'rgba(8,8,8,0.97)',border:'1px solid rgba(212,175,55,0.12)',
+              borderRadius:14,overflow:'hidden',marginTop:4}}>
+              {langs.map((l, i) => (
+                <div key={l.label} onClick={async () => {
+                  setLangOpen(false);
+                  await i18n.changeLanguage(l.code);
+                  if (user) await updatePreferredLanguage(l.code);
+                }}
+                  style={{display:'flex',alignItems:'center',gap:12,padding:'14px 20px',
+                    fontSize:14,fontWeight: i===activeLangIdx ? 700 : 500,
+                    color: i===activeLangIdx ? '#D4AF37' : 'rgba(255,255,255,0.5)',
+                    cursor:'pointer',
+                    borderBottom: i < langs.length-1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                    background: i===activeLangIdx ? 'rgba(212,175,55,0.05)' : 'transparent'}}>
+                  <span style={{fontSize:22}}>{l.flag}</span>
+                  {l.label}
+                  {i===activeLangIdx && <span style={{marginLeft:'auto',color:'#D4AF37',fontSize:12}}>✓</span>}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         <div className="settings-row" style={{marginTop:20}}>
           <button type="button" className="settings-btn" onClick={() => setNotificationsOpen(true)}>Notifications</button>
