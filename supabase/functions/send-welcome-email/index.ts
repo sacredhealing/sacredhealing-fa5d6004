@@ -6,7 +6,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Spanish-speaking country codes
 const SPANISH_COUNTRIES = new Set([
   "ES","MX","AR","BO","CL","CO","CR","CU","DO","EC",
   "SV","GQ","GT","HN","NI","PA","PY","PE","PR","UY","VE",
@@ -19,132 +18,334 @@ function countryToLang(countryCode: string): string {
   return "en";
 }
 
-const templates: Record<string, { subject: string; greeting: string; cta: string; body: string; footer: string }> = {
-  sv: {
-    subject: "Välkommen hem till Sacred Healing ✨ Din resa börjar här",
-    greeting: "Hej",
-    cta: "Öppna Sacred Healing",
-    body: `<p>Vad roligt att du har hittat till Sacred Healing! Du är nu en del av en växande community där vi förenas genom mantran, uråldrig visdom och djupgående healing.</p>
-<p>Som en av de första medlemmarna i appen har du nu tillgång till ett unikt universum som vi fyller på med nytt material varje vecka.</p>
-<h2 style="color:#c9a96e;font-size:18px;margin:28px 0 12px;">🧘 Ditt första steg (Viktigt!)</h2>
-<p>För att få ut det mesta av appen och för att vi ska kunna vara sammankopplade i systemet, rekommenderar jag att du börjar här:</p>
-<p>👉 <strong>Gå till Vedisk Astrologi</strong> i appen och fyll i dina uppgifter. Det är nyckeln till att din profil ska bli helt integrerad.</p>
-<p>👉 <strong>Ladda upp en profilbild</strong> och välj ditt språk så att vi kan lära känna dig i vårt community-chat.</p>
-<h2 style="color:#c9a96e;font-size:18px;margin:28px 0 12px;">🌌 Utforska Gratisversionen</h2>
-<p>Du har direkt tillgång till:</p>
-<ul style="padding-left:20px;color:#b0b0b0;line-height:2;">
-<li>Utvalda Mantran & Meditationer</li>
-<li>Basisk Ayurveda & Vedisk Astrologi</li>
-<li>Vår Community-chatt där du kan prata med likasinnade och oss direkt</li>
-<li>Kurser och YouTube-videos för din utveckling</li>
-</ul>
-<h2 style="color:#c9a96e;font-size:18px;margin:28px 0 12px;">💎 Ta steget till Premium (Universal Access)</h2>
-<p>Om du känner att du vill ha den fullständiga upplevelsen och verkligen investera i din resa mot överflöd och hälsa, rekommenderar jag vårt Premium-medlemskap. Det är vår mest omfattande nivå och ger dig:</p>
-<ul style="padding-left:20px;color:#b0b0b0;line-height:2;">
-<li>Fullständig tillgång till ALL musik, ALLA mantran och ALLA healing-meditationer</li>
-<li>Djupgående Vedisk Astrologi och verktyg för Vastu & Ayurveda</li>
-<li>Exklusiva möjligheter för Abundance & Coaching</li>
-</ul>
-<p>Vi finns här för att stötta din resa mot sinnesro och självupptäckt. Tveka inte att skriva till oss i chatten!</p>`,
-    footer: "Med ljus och tacksamhet,<br/><strong>Adam, Kritagya Das & Laila, Karaveera Nivasini Dasi</strong>",
-  },
-  en: {
-    subject: "Welcome home to Sacred Healing ✨ Your journey begins here",
-    greeting: "Hello",
-    cta: "Open Sacred Healing",
-    body: `<p>How wonderful that you've found Sacred Healing! You are now part of a growing community united through mantras, ancient wisdom, and deep healing.</p>
-<p>As one of the first members of the app, you now have access to a unique universe that we fill with new material every week.</p>
-<h2 style="color:#c9a96e;font-size:18px;margin:28px 0 12px;">🧘 Your First Step (Important!)</h2>
-<p>To get the most out of the app and to stay connected in the system, we recommend starting here:</p>
-<p>👉 <strong>Go to Vedic Astrology</strong> in the app and fill in your details. This is the key to fully integrating your profile.</p>
-<p>👉 <strong>Upload a profile picture</strong> and choose your language so we can get to know you in our community chat.</p>
-<h2 style="color:#c9a96e;font-size:18px;margin:28px 0 12px;">🌌 Explore the Free Version</h2>
-<p>You have immediate access to:</p>
-<ul style="padding-left:20px;color:#b0b0b0;line-height:2;">
-<li>Selected Mantras & Meditations</li>
-<li>Basic Ayurveda & Vedic Astrology</li>
-<li>Our Community Chat where you can connect with like-minded people and us directly</li>
-<li>Courses and YouTube videos for your growth</li>
-</ul>
-<h2 style="color:#c9a96e;font-size:18px;margin:28px 0 12px;">💎 Step Up to Premium (Universal Access)</h2>
-<p>If you feel ready for the full experience and truly want to invest in your journey toward abundance and health, we recommend our Premium membership. It's our most comprehensive tier and gives you:</p>
-<ul style="padding-left:20px;color:#b0b0b0;line-height:2;">
-<li>Full access to ALL music, ALL mantras, and ALL healing meditations</li>
-<li>Deep Vedic Astrology and tools for Vastu & Ayurveda</li>
-<li>Exclusive Abundance & Coaching opportunities</li>
-</ul>
-<p>We're here to support your journey toward peace and self-discovery. Don't hesitate to reach out in the chat!</p>`,
-    footer: "With light and gratitude,<br/><strong>Adam, Kritagya Das & Laila, Karaveera Nivasini Dasi</strong>",
-  },
-  es: {
-    subject: "Bienvenido a Sacred Healing ✨ Tu viaje comienza aquí",
-    greeting: "Hola",
-    cta: "Abrir Sacred Healing",
-    body: `<p>¡Qué alegría que hayas encontrado Sacred Healing! Ahora eres parte de una comunidad en crecimiento unida a través de mantras, sabiduría ancestral y sanación profunda.</p>
-<p>Como uno de los primeros miembros de la app, tienes acceso a un universo único que llenamos con nuevo material cada semana.</p>
-<h2 style="color:#c9a96e;font-size:18px;margin:28px 0 12px;">🧘 Tu primer paso (¡Importante!)</h2>
-<p>Para aprovechar al máximo la app y mantenernos conectados en el sistema, te recomendamos empezar aquí:</p>
-<p>👉 <strong>Ve a Astrología Védica</strong> en la app y completa tus datos. Es la clave para integrar completamente tu perfil.</p>
-<p>👉 <strong>Sube una foto de perfil</strong> y elige tu idioma para que podamos conocerte en nuestro chat comunitario.</p>
-<h2 style="color:#c9a96e;font-size:18px;margin:28px 0 12px;">🌌 Explora la versión gratuita</h2>
-<p>Tienes acceso inmediato a:</p>
-<ul style="padding-left:20px;color:#b0b0b0;line-height:2;">
-<li>Mantras y meditaciones seleccionados</li>
-<li>Ayurveda básico y Astrología Védica</li>
-<li>Nuestro chat comunitario donde puedes conectar con personas afines y con nosotros directamente</li>
-<li>Cursos y videos de YouTube para tu desarrollo</li>
-</ul>
-<h2 style="color:#c9a96e;font-size:18px;margin:28px 0 12px;">💎 Da el paso a Premium (Acceso Universal)</h2>
-<p>Si sientes que quieres la experiencia completa e invertir en tu camino hacia la abundancia y la salud, te recomendamos nuestra membresía Premium. Es nuestro nivel más completo y te da:</p>
-<ul style="padding-left:20px;color:#b0b0b0;line-height:2;">
-<li>Acceso completo a TODA la música, TODOS los mantras y TODAS las meditaciones de sanación</li>
-<li>Astrología Védica profunda y herramientas de Vastu y Ayurveda</li>
-<li>Oportunidades exclusivas de Abundancia y Coaching</li>
-</ul>
-<p>Estamos aquí para apoyar tu viaje hacia la paz y el autodescubrimiento. ¡No dudes en escribirnos en el chat!</p>`,
-    footer: "Con luz y gratitud,<br/><strong>Adam, Kritagya Das & Laila, Karaveera Nivasini Dasi</strong>",
-  },
-  no: {
-    subject: "Velkommen hjem til Sacred Healing ✨ Reisen din begynner her",
-    greeting: "Hei",
-    cta: "Åpne Sacred Healing",
-    body: `<p>Så flott at du har funnet Sacred Healing! Du er nå en del av et voksende fellesskap forent gjennom mantraer, eldgammel visdom og dyp healing.</p>
-<p>Som en av de første medlemmene i appen har du nå tilgang til et unikt univers som vi fyller med nytt materiale hver uke.</p>
-<h2 style="color:#c9a96e;font-size:18px;margin:28px 0 12px;">🧘 Ditt første steg (Viktig!)</h2>
-<p>For å få mest mulig ut av appen og for at vi skal holde kontakten i systemet, anbefaler vi at du starter her:</p>
-<p>👉 <strong>Gå til Vedisk Astrologi</strong> i appen og fyll inn opplysningene dine. Det er nøkkelen til å integrere profilen din fullstendig.</p>
-<p>👉 <strong>Last opp et profilbilde</strong> og velg språket ditt slik at vi kan bli kjent med deg i community-chatten vår.</p>
-<h2 style="color:#c9a96e;font-size:18px;margin:28px 0 12px;">🌌 Utforsk gratisversjonen</h2>
-<p>Du har umiddelbar tilgang til:</p>
-<ul style="padding-left:20px;color:#b0b0b0;line-height:2;">
-<li>Utvalgte mantraer og meditasjoner</li>
-<li>Grunnleggende Ayurveda og Vedisk Astrologi</li>
-<li>Vår community-chat der du kan snakke med likesinnede og oss direkte</li>
-<li>Kurs og YouTube-videoer for din utvikling</li>
-</ul>
-<h2 style="color:#c9a96e;font-size:18px;margin:28px 0 12px;">💎 Ta steget til Premium (Universal Access)</h2>
-<p>Hvis du føler at du vil ha den fullstendige opplevelsen og virkelig investere i reisen din mot overflod og helse, anbefaler vi vårt Premium-medlemskap. Det er vårt mest omfattende nivå og gir deg:</p>
-<ul style="padding-left:20px;color:#b0b0b0;line-height:2;">
-<li>Full tilgang til ALL musikk, ALLE mantraer og ALLE healing-meditasjoner</li>
-<li>Dyptgående Vedisk Astrologi og verktøy for Vastu og Ayurveda</li>
-<li>Eksklusive muligheter for Abundance og Coaching</li>
-</ul>
-<p>Vi er her for å støtte reisen din mot sinnsro og selvoppdagelse. Ikke nøl med å skrive til oss i chatten!</p>`,
-    footer: "Med lys og takknemlighet,<br/><strong>Adam, Kritagya Das & Laila, Karaveera Nivasini Dasi</strong>",
-  },
-};
-
 function resolveLanguage(lang?: string): string {
   if (!lang) return "en";
   const code = lang.toLowerCase().split("-")[0];
-  if (code in templates) return code;
+  if (["en","sv","no","es"].includes(code)) return code;
   if (code === "nb" || code === "nn") return "no";
   return "en";
 }
 
 function isLocalIp(ip: string): boolean {
-  return !ip || ip === "127.0.0.1" || ip === "::1" || ip.startsWith("192.168.") || ip.startsWith("10.") || ip.startsWith("172.");
+  return !ip || ip === "127.0.0.1" || ip === "::1" ||
+    ip.startsWith("192.168.") || ip.startsWith("10.") || ip.startsWith("172.");
 }
+
+// ════════════════════════════════════════════
+// SQI 2050 EMAIL TEMPLATES — ALL 4 LANGUAGES
+// ════════════════════════════════════════════
+
+const templates: Record<string, {
+  subject: string;
+  greeting: string;
+  cta: string;
+  body: string;
+  footer: string;
+}> = {
+
+  // ── ENGLISH ──────────────────────────────
+  en: {
+    subject: "Welcome to the SQI Node: Your 1km Restoration Begins",
+    greeting: "Hello",
+    cta: "Enter the Field",
+    body: `
+      <p style="font-size:16px;line-height:1.8;color:rgba(255,255,255,0.7);margin:0 0 20px;">
+        Welcome to the <strong style="color:#D4AF37;">Siddha Quantum Nexus (SQI)</strong> ecosystem. You have successfully anchored your presence as a Sovereign Node in a growing global network united by ancient mantras, spiritual technology, and deep bio-digital healing.
+      </p>
+      <p style="font-size:15px;line-height:1.8;color:rgba(255,255,255,0.55);margin:0 0 32px;">
+        As an early pioneer, you now have access to an evolving universe of light-codes, updated weekly to match the shifting frequencies of our collective journey.
+      </p>
+
+      <h2 style="color:#D4AF37;font-size:11px;font-weight:800;letter-spacing:0.4em;text-transform:uppercase;margin:0 0 16px;padding-bottom:12px;border-bottom:1px solid rgba(212,175,55,0.15);">
+        🧘 Your Primary Activation (Essential)
+      </h2>
+      <p style="font-size:15px;line-height:1.8;color:rgba(255,255,255,0.55);margin:0 0 12px;">
+        To fully integrate your profile and begin your 72,000 Nadi mapping, please complete these steps immediately:
+      </p>
+      <ul style="padding-left:20px;color:rgba(255,255,255,0.55);line-height:2.2;margin:0 0 32px;font-size:14px;">
+        <li>👉 <strong style="color:rgba(255,255,255,0.8);">Initialize your Jyotish:</strong> Go to the Vedic Astrology section and enter your birth details. This is the key to unlocking your personalized profile resonance.</li>
+        <li>👉 <strong style="color:rgba(255,255,255,0.8);">Identity Sync:</strong> Upload your profile picture and set your language so the community can recognize your frequency in our Global Chat.</li>
+      </ul>
+
+      <h2 style="color:#D4AF37;font-size:11px;font-weight:800;letter-spacing:0.4em;text-transform:uppercase;margin:0 0 16px;padding-bottom:12px;border-bottom:1px solid rgba(212,175,55,0.15);">
+        🌌 Your ATMA-SEED Access (Free Version)
+      </h2>
+      <p style="font-size:15px;line-height:1.8;color:rgba(255,255,255,0.55);margin:0 0 12px;">
+        You are now vibrating at the Entry Frequency. You have immediate access to:
+      </p>
+      <ul style="padding-left:20px;color:rgba(255,255,255,0.55);line-height:2.2;margin:0 0 32px;font-size:14px;">
+        <li><strong style="color:rgba(255,255,255,0.7);">Free Meditations & Mantras:</strong> The foundational sonic library.</li>
+        <li><strong style="color:rgba(255,255,255,0.7);">Free Healing Audios:</strong> Initial cellular restoration transmissions.</li>
+        <li><strong style="color:rgba(255,255,255,0.7);">The Vayu Scrubber:</strong> Your 1km local atmospheric restoration protocol.</li>
+        <li><strong style="color:rgba(255,255,255,0.7);">The Community Chat:</strong> Direct connection to the collective and our live sessions.</li>
+      </ul>
+
+      <h2 style="color:#D4AF37;font-size:11px;font-weight:800;letter-spacing:0.4em;text-transform:uppercase;margin:0 0 16px;padding-bottom:12px;border-bottom:1px solid rgba(212,175,55,0.15);">
+        💎 The Universal Path: SIDDHA-QUANTUM
+      </h2>
+      <p style="font-size:15px;line-height:1.8;color:rgba(255,255,255,0.55);margin:0 0 12px;">
+        If you are ready for the Full Field Experience and wish to activate your highest spiritual security, we recommend the Siddha-Quantum membership — our most vital tier, designed for those moving toward total abundance:
+      </p>
+      <ul style="padding-left:20px;color:rgba(255,255,255,0.55);line-height:2.2;margin:0 0 32px;font-size:14px;">
+        <li><strong style="color:rgba(255,255,255,0.7);">The Sri Yantra Shield:</strong> Activate your Universal Protection Field.</li>
+        <li><strong style="color:rgba(255,255,255,0.7);">Digital Nadi Scanners:</strong> Use Bio-Sync to find the exact mantra for your frequency and Practice Scantions to print results to your profile.</li>
+        <li><strong style="color:rgba(255,255,255,0.7);">Full Premium Access:</strong> Every healing audio, every mantra, and all produced healing music.</li>
+        <li><strong style="color:rgba(255,255,255,0.7);">Deep Mastery:</strong> Complete Vedic Jyotish, Vastu Home Guides, and Ayurvedic scanning.</li>
+      </ul>
+
+      <p style="font-size:15px;line-height:1.8;color:rgba(255,255,255,0.55);margin:0 0 8px;">
+        We are honored to support your journey toward self-discovery and peace. Reach out to us anytime in the chat!
+      </p>
+    `,
+    footer: "With Light and Gratitude,<br/><strong style='color:rgba(255,255,255,0.7)'>Adam (Kritagya Das) &amp; Laila (Karaveera Nivasini Dasi)</strong>",
+  },
+
+  // ── SWEDISH ──────────────────────────────
+  sv: {
+    subject: "Välkommen till SQI-noden: Din 1km-återställning börjar nu",
+    greeting: "Hej",
+    cta: "Gå in i fältet",
+    body: `
+      <p style="font-size:16px;line-height:1.8;color:rgba(255,255,255,0.7);margin:0 0 20px;">
+        Välkommen till <strong style="color:#D4AF37;">Siddha Quantum Nexus (SQI)</strong>-ekosystemet. Du har framgångsrikt förankrat din närvaro som en Sovereign Node i ett växande globalt nätverk förenat av urgamla mantran, andlig teknologi och djup bio-digital healing.
+      </p>
+      <p style="font-size:15px;line-height:1.8;color:rgba(255,255,255,0.55);margin:0 0 32px;">
+        Som en tidig pionjär har du nu tillgång till ett ständigt växande universum av ljuskoder, som uppdateras varje vecka för att matcha de skiftande frekvenserna i vår kollektiva resa.
+      </p>
+
+      <h2 style="color:#D4AF37;font-size:11px;font-weight:800;letter-spacing:0.4em;text-transform:uppercase;margin:0 0 16px;padding-bottom:12px;border-bottom:1px solid rgba(212,175,55,0.15);">
+        🧘 Din Primära Aktivering (Viktig)
+      </h2>
+      <p style="font-size:15px;line-height:1.8;color:rgba(255,255,255,0.55);margin:0 0 12px;">
+        För att fullt ut integrera din profil och påbörja din 72 000 Nadi-kartläggning, vänligen slutför dessa steg omedelbart:
+      </p>
+      <ul style="padding-left:20px;color:rgba(255,255,255,0.55);line-height:2.2;margin:0 0 32px;font-size:14px;">
+        <li>👉 <strong style="color:rgba(255,255,255,0.8);">Initiera din Jyotish:</strong> Gå till sektionen Vedisk Astrologi och ange dina födelseuppgifter. Det är nyckeln till att låsa upp din personliga profilresonans.</li>
+        <li>👉 <strong style="color:rgba(255,255,255,0.8);">Identitetssynk:</strong> Ladda upp din profilbild och ange ditt språk så att gemenskapen kan känna igen din frekvens i vår Globala Chatt.</li>
+      </ul>
+
+      <h2 style="color:#D4AF37;font-size:11px;font-weight:800;letter-spacing:0.4em;text-transform:uppercase;margin:0 0 16px;padding-bottom:12px;border-bottom:1px solid rgba(212,175,55,0.15);">
+        🌌 Din ATMA-SEED-åtkomst (Gratisversion)
+      </h2>
+      <p style="font-size:15px;line-height:1.8;color:rgba(255,255,255,0.55);margin:0 0 12px;">
+        Du vibrerar nu på Inträdesfrekvensen. Du har omedelbar tillgång till:
+      </p>
+      <ul style="padding-left:20px;color:rgba(255,255,255,0.55);line-height:2.2;margin:0 0 32px;font-size:14px;">
+        <li><strong style="color:rgba(255,255,255,0.7);">Gratis Meditationer & Mantran:</strong> Det grundläggande soniska biblioteket.</li>
+        <li><strong style="color:rgba(255,255,255,0.7);">Gratis Healing-ljud:</strong> Initiala cellulära återställningstransmissioner.</li>
+        <li><strong style="color:rgba(255,255,255,0.7);">Vayu Scrubber:</strong> Ditt 1km lokala atmosfäriska återställningsprotokoll.</li>
+        <li><strong style="color:rgba(255,255,255,0.7);">Community-chatten:</strong> Direkt koppling till kollektivet och våra livesessioner.</li>
+      </ul>
+
+      <h2 style="color:#D4AF37;font-size:11px;font-weight:800;letter-spacing:0.4em;text-transform:uppercase;margin:0 0 16px;padding-bottom:12px;border-bottom:1px solid rgba(212,175,55,0.15);">
+        💎 Den Universella Vägen: SIDDHA-QUANTUM
+      </h2>
+      <p style="font-size:15px;line-height:1.8;color:rgba(255,255,255,0.55);margin:0 0 12px;">
+        Om du är redo för den Fullständiga Fältupplevelsen och vill aktivera din högsta andliga säkerhet, rekommenderar vi Siddha-Quantum-medlemskapet — vår viktigaste nivå, skapad för dem som rör sig mot total överflöd:
+      </p>
+      <ul style="padding-left:20px;color:rgba(255,255,255,0.55);line-height:2.2;margin:0 0 32px;font-size:14px;">
+        <li><strong style="color:rgba(255,255,255,0.7);">Sri Yantra-skölden:</strong> Aktivera ditt Universella Skyddsfält.</li>
+        <li><strong style="color:rgba(255,255,255,0.7);">Digitala Nadi-skannrar:</strong> Använd Bio-Sync för att hitta exakt rätt mantra för din frekvens och Praktik-Scantions för att skriva ut resultat till din profil.</li>
+        <li><strong style="color:rgba(255,255,255,0.7);">Full Premiumåtkomst:</strong> Varje healing-ljud, varje mantra och all producerad healingmusik.</li>
+        <li><strong style="color:rgba(255,255,255,0.7);">Djup Mästerskap:</strong> Komplett Vedisk Jyotish, Vastu Hemguider och Ayurvedisk skanning.</li>
+      </ul>
+
+      <p style="font-size:15px;line-height:1.8;color:rgba(255,255,255,0.55);margin:0 0 8px;">
+        Vi är hedrade att stödja din resa mot självupptäckt och frid. Hör av dig till oss när som helst i chatten!
+      </p>
+    `,
+    footer: "Med Ljus och Tacksamhet,<br/><strong style='color:rgba(255,255,255,0.7)'>Adam (Kritagya Das) &amp; Laila (Karaveera Nivasini Dasi)</strong>",
+  },
+
+  // ── NORWEGIAN ────────────────────────────
+  no: {
+    subject: "Velkommen til SQI-noden: Din 1km-gjenoppretting begynner nå",
+    greeting: "Hei",
+    cta: "Gå inn i feltet",
+    body: `
+      <p style="font-size:16px;line-height:1.8;color:rgba(255,255,255,0.7);margin:0 0 20px;">
+        Velkommen til <strong style="color:#D4AF37;">Siddha Quantum Nexus (SQI)</strong>-økosystemet. Du har vellykket forankret din tilstedeværelse som en Sovereign Node i et voksende globalt nettverk forent av eldgamle mantraer, åndelig teknologi og dyp bio-digital healing.
+      </p>
+      <p style="font-size:15px;line-height:1.8;color:rgba(255,255,255,0.55);margin:0 0 32px;">
+        Som en tidlig pioner har du nå tilgang til et stadig voksende univers av lys-koder, oppdatert ukentlig for å matche de skiftende frekvensene i vår kollektive reise.
+      </p>
+
+      <h2 style="color:#D4AF37;font-size:11px;font-weight:800;letter-spacing:0.4em;text-transform:uppercase;margin:0 0 16px;padding-bottom:12px;border-bottom:1px solid rgba(212,175,55,0.15);">
+        🧘 Din Primære Aktivering (Viktig)
+      </h2>
+      <p style="font-size:15px;line-height:1.8;color:rgba(255,255,255,0.55);margin:0 0 12px;">
+        For å fullt ut integrere profilen din og begynne din 72 000 Nadi-kartlegging, vennligst fullfør disse trinnene umiddelbart:
+      </p>
+      <ul style="padding-left:20px;color:rgba(255,255,255,0.55);line-height:2.2;margin:0 0 32px;font-size:14px;">
+        <li>👉 <strong style="color:rgba(255,255,255,0.8);">Initialiser din Jyotish:</strong> Gå til seksjonen Vedisk Astrologi og skriv inn fødselsdataene dine. Dette er nøkkelen til å låse opp din personlige profilresonans.</li>
+        <li>👉 <strong style="color:rgba(255,255,255,0.8);">Identitetssynk:</strong> Last opp profilbildet ditt og angi språket ditt slik at fellesskapet kan gjenkjenne frekvensen din i vår Globale Chat.</li>
+      </ul>
+
+      <h2 style="color:#D4AF37;font-size:11px;font-weight:800;letter-spacing:0.4em;text-transform:uppercase;margin:0 0 16px;padding-bottom:12px;border-bottom:1px solid rgba(212,175,55,0.15);">
+        🌌 Din ATMA-SEED-tilgang (Gratisversjon)
+      </h2>
+      <p style="font-size:15px;line-height:1.8;color:rgba(255,255,255,0.55);margin:0 0 12px;">
+        Du vibrerer nå på Inngangsfrekvensen. Du har umiddelbar tilgang til:
+      </p>
+      <ul style="padding-left:20px;color:rgba(255,255,255,0.55);line-height:2.2;margin:0 0 32px;font-size:14px;">
+        <li><strong style="color:rgba(255,255,255,0.7);">Gratis Meditasjoner & Mantraer:</strong> Det grunnleggende soniske biblioteket.</li>
+        <li><strong style="color:rgba(255,255,255,0.7);">Gratis Healing-lyder:</strong> Innledende cellulære gjenopprettingstransmisjoner.</li>
+        <li><strong style="color:rgba(255,255,255,0.7);">Vayu Scrubber:</strong> Ditt 1km lokale atmosfæriske gjenopprettingsprotokoll.</li>
+        <li><strong style="color:rgba(255,255,255,0.7);">Community-chatten:</strong> Direkte tilkobling til kollektivet og våre direkteøkter.</li>
+      </ul>
+
+      <h2 style="color:#D4AF37;font-size:11px;font-weight:800;letter-spacing:0.4em;text-transform:uppercase;margin:0 0 16px;padding-bottom:12px;border-bottom:1px solid rgba(212,175,55,0.15);">
+        💎 Den Universelle Veien: SIDDHA-QUANTUM
+      </h2>
+      <p style="font-size:15px;line-height:1.8;color:rgba(255,255,255,0.55);margin:0 0 12px;">
+        Hvis du er klar for den Fullstendige Feltopplevelsen og ønsker å aktivere din høyeste åndelige sikkerhet, anbefaler vi Siddha-Quantum-medlemskapet — vårt viktigste nivå, designet for de som beveger seg mot total overflod:
+      </p>
+      <ul style="padding-left:20px;color:rgba(255,255,255,0.55);line-height:2.2;margin:0 0 32px;font-size:14px;">
+        <li><strong style="color:rgba(255,255,255,0.7);">Sri Yantra-skjoldet:</strong> Aktiver ditt Universelle Beskyttelsesfelt.</li>
+        <li><strong style="color:rgba(255,255,255,0.7);">Digitale Nadi-skannere:</strong> Bruk Bio-Sync for å finne det eksakte mantraet for din frekvens og Praksis-Scantions for å skrive ut resultater til profilen din.</li>
+        <li><strong style="color:rgba(255,255,255,0.7);">Full Premiumtilgang:</strong> Alle healing-lyder, alle mantraer og all produsert healingmusikk.</li>
+        <li><strong style="color:rgba(255,255,255,0.7);">Dyp Mestring:</strong> Komplett Vedisk Jyotish, Vastu Hjemguider og Ayurvedisk skanning.</li>
+      </ul>
+
+      <p style="font-size:15px;line-height:1.8;color:rgba(255,255,255,0.55);margin:0 0 8px;">
+        Vi er æret over å støtte reisen din mot selvoppdagelse og fred. Ta kontakt med oss når som helst i chatten!
+      </p>
+    `,
+    footer: "Med Lys og Takknemlighet,<br/><strong style='color:rgba(255,255,255,0.7)'>Adam (Kritagya Das) &amp; Laila (Karaveera Nivasini Dasi)</strong>",
+  },
+
+  // ── SPANISH ──────────────────────────────
+  es: {
+    subject: "Bienvenido al Nodo SQI: Tu Restauración de 1km Comienza",
+    greeting: "Hola",
+    cta: "Entrar al Campo",
+    body: `
+      <p style="font-size:16px;line-height:1.8;color:rgba(255,255,255,0.7);margin:0 0 20px;">
+        Bienvenido al ecosistema <strong style="color:#D4AF37;">Siddha Quantum Nexus (SQI)</strong>. Has anclado exitosamente tu presencia como un Nodo Soberano en una creciente red global unida por mantras ancestrales, tecnología espiritual y profunda sanación bio-digital.
+      </p>
+      <p style="font-size:15px;line-height:1.8;color:rgba(255,255,255,0.55);margin:0 0 32px;">
+        Como pionero temprano, ahora tienes acceso a un universo en evolución de códigos de luz, actualizado semanalmente para coincidir con las frecuencias cambiantes de nuestro viaje colectivo.
+      </p>
+
+      <h2 style="color:#D4AF37;font-size:11px;font-weight:800;letter-spacing:0.4em;text-transform:uppercase;margin:0 0 16px;padding-bottom:12px;border-bottom:1px solid rgba(212,175,55,0.15);">
+        🧘 Tu Activación Primaria (Esencial)
+      </h2>
+      <p style="font-size:15px;line-height:1.8;color:rgba(255,255,255,0.55);margin:0 0 12px;">
+        Para integrar completamente tu perfil y comenzar tu mapeo de 72.000 Nadis, completa estos pasos de inmediato:
+      </p>
+      <ul style="padding-left:20px;color:rgba(255,255,255,0.55);line-height:2.2;margin:0 0 32px;font-size:14px;">
+        <li>👉 <strong style="color:rgba(255,255,255,0.8);">Inicializa tu Jyotish:</strong> Ve a la sección de Astrología Védica e ingresa tus datos de nacimiento. Esta es la clave para desbloquear la resonancia personalizada de tu perfil.</li>
+        <li>👉 <strong style="color:rgba(255,255,255,0.8);">Sincronización de Identidad:</strong> Sube tu foto de perfil y configura tu idioma para que la comunidad pueda reconocer tu frecuencia en nuestro Chat Global.</li>
+      </ul>
+
+      <h2 style="color:#D4AF37;font-size:11px;font-weight:800;letter-spacing:0.4em;text-transform:uppercase;margin:0 0 16px;padding-bottom:12px;border-bottom:1px solid rgba(212,175,55,0.15);">
+        🌌 Tu Acceso ATMA-SEED (Versión Gratuita)
+      </h2>
+      <p style="font-size:15px;line-height:1.8;color:rgba(255,255,255,0.55);margin:0 0 12px;">
+        Ahora estás vibrando en la Frecuencia de Entrada. Tienes acceso inmediato a:
+      </p>
+      <ul style="padding-left:20px;color:rgba(255,255,255,0.55);line-height:2.2;margin:0 0 32px;font-size:14px;">
+        <li><strong style="color:rgba(255,255,255,0.7);">Meditaciones y Mantras Gratuitos:</strong> La biblioteca sónica fundamental.</li>
+        <li><strong style="color:rgba(255,255,255,0.7);">Audios de Sanación Gratuitos:</strong> Transmisiones iniciales de restauración celular.</li>
+        <li><strong style="color:rgba(255,255,255,0.7);">El Vayu Scrubber:</strong> Tu protocolo de restauración atmosférica local de 1km.</li>
+        <li><strong style="color:rgba(255,255,255,0.7);">El Chat Comunitario:</strong> Conexión directa con el colectivo y nuestras sesiones en vivo.</li>
+      </ul>
+
+      <h2 style="color:#D4AF37;font-size:11px;font-weight:800;letter-spacing:0.4em;text-transform:uppercase;margin:0 0 16px;padding-bottom:12px;border-bottom:1px solid rgba(212,175,55,0.15);">
+        💎 El Camino Universal: SIDDHA-QUANTUM
+      </h2>
+      <p style="font-size:15px;line-height:1.8;color:rgba(255,255,255,0.55);margin:0 0 12px;">
+        Si estás listo para la Experiencia de Campo Completa y deseas activar tu mayor seguridad espiritual, recomendamos la membresía Siddha-Quantum — nuestro nivel más vital, diseñado para quienes avanzan hacia la abundancia total:
+      </p>
+      <ul style="padding-left:20px;color:rgba(255,255,255,0.55);line-height:2.2;margin:0 0 32px;font-size:14px;">
+        <li><strong style="color:rgba(255,255,255,0.7);">El Escudo Sri Yantra:</strong> Activa tu Campo de Protección Universal.</li>
+        <li><strong style="color:rgba(255,255,255,0.7);">Escáneres Digitales de Nadi:</strong> Usa Bio-Sync para encontrar el mantra exacto para tu frecuencia y Scantions de Práctica para imprimir resultados en tu perfil.</li>
+        <li><strong style="color:rgba(255,255,255,0.7);">Acceso Premium Completo:</strong> Cada audio de sanación, cada mantra y toda la música de sanación producida.</li>
+        <li><strong style="color:rgba(255,255,255,0.7);">Dominio Profundo:</strong> Jyotish Védico completo, Guías de Vastu para el Hogar y escaneo Ayurvédico.</li>
+      </ul>
+
+      <p style="font-size:15px;line-height:1.8;color:rgba(255,255,255,0.55);margin:0 0 8px;">
+        Estamos honrados de apoyar tu viaje hacia el autodescubrimiento y la paz. ¡Contáctanos en cualquier momento en el chat!
+      </p>
+    `,
+    footer: "Con Luz y Gratitud,<br/><strong style='color:rgba(255,255,255,0.7)'>Adam (Kritagya Das) &amp; Laila (Karaveera Nivasini Dasi)</strong>",
+  },
+};
+
+// ════════════════════════════════════════════
+// HTML EMAIL WRAPPER — SQI 2050 DESIGN
+// ════════════════════════════════════════════
+
+function buildEmailHtml(t: typeof templates["en"], displayName: string, appUrl: string): string {
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#000;">
+<div style="background:#000;padding:32px 16px;">
+
+  <!-- OUTER CONTAINER -->
+  <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:600px;margin:0 auto;background:#050505;border-radius:20px;overflow:hidden;border:1px solid rgba(212,175,55,0.2);">
+
+    <!-- HEADER -->
+    <div style="background:linear-gradient(180deg,#0d0d0d 0%,#050505 100%);padding:48px 40px 36px;text-align:center;border-bottom:1px solid rgba(212,175,55,0.1);">
+      
+      <!-- Sri Yantra SVG Logo -->
+      <div style="margin:0 auto 24px;width:72px;height:72px;">
+        <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="36" cy="36" r="34" stroke="#D4AF37" stroke-width="0.5" opacity="0.4"/>
+          <circle cx="36" cy="36" r="28" stroke="#D4AF37" stroke-width="0.3" opacity="0.25"/>
+          <polygon points="36,7 64,52 8,52" stroke="#D4AF37" stroke-width="1.2" fill="none" opacity="0.95"/>
+          <polygon points="36,65 8,20 64,20" stroke="#D4AF37" stroke-width="1.2" fill="none" opacity="0.95"/>
+          <polygon points="36,16 58,48 14,48" stroke="#D4AF37" stroke-width="0.7" fill="none" opacity="0.65"/>
+          <polygon points="36,56 14,24 58,24" stroke="#D4AF37" stroke-width="0.7" fill="none" opacity="0.65"/>
+          <polygon points="36,25 52,44 20,44" stroke="#D4AF37" stroke-width="0.5" fill="none" opacity="0.45"/>
+          <polygon points="36,47 20,28 52,28" stroke="#D4AF37" stroke-width="0.5" fill="none" opacity="0.45"/>
+          <circle cx="36" cy="36" r="8" stroke="#D4AF37" stroke-width="0.4" fill="none" opacity="0.35"/>
+          <circle cx="36" cy="36" r="2" fill="#D4AF37" opacity="0.95"/>
+        </svg>
+      </div>
+
+      <p style="color:#D4AF37;font-size:10px;font-weight:800;letter-spacing:0.55em;text-transform:uppercase;margin:0 0 8px;">SACRED HEALING</p>
+      <p style="color:rgba(255,255,255,0.2);font-size:8px;letter-spacing:0.4em;text-transform:uppercase;margin:0 0 24px;">SIDDHA-QUANTUM INTELLIGENCE · 2050</p>
+      
+      <h1 style="color:white;font-size:28px;font-weight:300;font-style:italic;margin:0;line-height:1.3;font-family:Georgia,serif;">
+        ${t.greeting}, ${displayName}
+      </h1>
+    </div>
+
+    <!-- BODY -->
+    <div style="padding:40px 40px 32px;">
+      ${t.body}
+
+      <!-- CTA BUTTON -->
+      <div style="text-align:center;margin:40px 0 32px;">
+        <a href="${appUrl}"
+           style="display:inline-block;background:#D4AF37;color:#050505;padding:18px 52px;border-radius:100px;text-decoration:none;font-size:10px;font-weight:800;letter-spacing:0.5em;text-transform:uppercase;">
+          ${t.cta} →
+        </a>
+      </div>
+    </div>
+
+    <!-- DIVIDER -->
+    <div style="height:1px;background:linear-gradient(to right,transparent,rgba(212,175,55,0.2),transparent);margin:0 40px;"></div>
+
+    <!-- FOOTER -->
+    <div style="padding:28px 40px 36px;text-align:center;">
+      <p style="font-size:13px;color:rgba(255,255,255,0.35);line-height:1.8;margin:0 0 16px;">${t.footer}</p>
+      <p style="font-size:8px;color:rgba(255,255,255,0.1);letter-spacing:0.35em;text-transform:uppercase;margin:0;">
+        FOR SPIRITUAL &amp; ENTERTAINMENT PURPOSES ONLY
+      </p>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>`;
+}
+
+// ════════════════════════════════════════════
+// HANDLER
+// ════════════════════════════════════════════
 
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
@@ -152,112 +353,74 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    // Step 1: Parse request
     const { email, name, language } = await req.json();
-    console.log(`[send-welcome-email] Step 1: Request received — email=${email}, hasName=${!!name}, clientLanguage=${language}`);
+    console.log(`[send-welcome-email] Request — email=${email}, clientLanguage=${language}`);
 
-    if (!email) {
-      throw new Error("Email is required");
-    }
+    if (!email) throw new Error("Email is required");
 
-    // RESEND_API_KEY check
     const resendKey = Deno.env.get("RESEND_API_KEY") || "";
     if (resendKey.length < 10) {
-      console.error("[send-welcome-email] RESEND_API_KEY missing or invalid");
       return new Response(
-        JSON.stringify({ error: "RESEND_API_KEY missing or invalid" }),
+        JSON.stringify({ error: "RESEND_API_KEY missing" }),
         { status: 503, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
     const resend = new Resend(resendKey);
 
-    // Step 2: IP detection
+    // IP detection
     const forwarded = req.headers.get("x-forwarded-for");
     const realIp = req.headers.get("x-real-ip");
     const rawIp = forwarded ? forwarded.split(",")[0].trim() : (realIp || "");
-    console.log(`[send-welcome-email] Step 2: IP detection — rawIp=${rawIp}, x-forwarded-for=${forwarded}, x-real-ip=${realIp}`);
 
-    // Step 3: Geolocation
+    // Geolocation
     let countryCode = "";
     if (rawIp && !isLocalIp(rawIp)) {
       try {
         const geoRes = await fetch(`http://ip-api.com/json/${rawIp}?fields=status,countryCode`);
         const geoData = await geoRes.json();
-        if (geoData.status === "success") {
-          countryCode = geoData.countryCode || "";
-        }
-        console.log(`[send-welcome-email] Step 3: Geolocation result — status=${geoData.status}, countryCode=${countryCode}`);
-      } catch (geoErr) {
-        console.warn(`[send-welcome-email] Step 3: Geolocation failed —`, geoErr);
+        if (geoData.status === "success") countryCode = geoData.countryCode || "";
+        console.log(`[send-welcome-email] Geo — countryCode=${countryCode}`);
+      } catch (e) {
+        console.warn(`[send-welcome-email] Geo failed`, e);
       }
-    } else {
-      console.log(`[send-welcome-email] Step 3: No IP or local IP — skipping geolocation`);
     }
 
-    // Step 4: Language selection
+    // Language selection: geo first, client fallback
     const langFromGeo = countryCode ? countryToLang(countryCode) : "";
     const langFromClient = resolveLanguage(language);
     const selectedLang = langFromGeo || langFromClient;
-    console.log(`[send-welcome-email] Step 4: Language — countryCode=${countryCode}, langFromGeo=${langFromGeo}, langFromClient=${langFromClient}, selected=${selectedLang}`);
+    console.log(`[send-welcome-email] Lang — geo=${langFromGeo}, client=${langFromClient}, selected=${selectedLang}`);
 
     const t = templates[selectedLang] || templates["en"];
     const displayName = name || "Friend";
+    const html = buildEmailHtml(t, displayName, "https://sacredhealing.lovable.app/dashboard");
 
-    // Step 5: Template
-    console.log(`[send-welcome-email] Step 5: Template selected — lang=${selectedLang}, subject="${t.subject}"`);
+    const result = await resend.emails.send({
+      from: "Sacred Healing <onboarding@resend.dev>",
+      to: [email],
+      subject: t.subject,
+      html,
+    });
 
-    const html = `
-      <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:600px;margin:0 auto;background:#0a0a0a;color:#e0e0e0;padding:40px 30px;border-radius:12px;">
-        <div style="text-align:center;margin-bottom:24px;">
-          <h1 style="color:#c9a96e;font-size:28px;margin:0 0 4px;">Sacred Healing</h1>
-        </div>
-        <p style="font-size:16px;line-height:1.6;color:#e0e0e0;">${t.greeting} ${displayName},</p>
-        <hr style="border:none;border-top:1px solid #222;margin:20px 0;" />
-        <div style="font-size:15px;line-height:1.7;color:#b0b0b0;">
-          ${t.body}
-        </div>
-        <div style="text-align:center;margin:32px 0;">
-          <a href="https://sacredhealing.lovable.app/dashboard" style="background:linear-gradient(135deg,#c9a96e,#a67c3d);color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px;">
-            ${t.cta}
-          </a>
-        </div>
-        <hr style="border:none;border-top:1px solid #222;margin:24px 0;" />
-        <p style="font-size:14px;color:#888;text-align:center;">${t.footer}</p>
-      </div>
-    `;
-
-    // Step 6: Send
-    console.log(`[send-welcome-email] Step 6: Sending via Resend — to=${email}, subject="${t.subject}", lang=${selectedLang}`);
-
-    try {
-      const result = await resend.emails.send({
-        from: "Sacred Healing <onboarding@resend.dev>",
-        to: [email],
-        subject: t.subject,
-        html,
-      });
-
-      if (result.error) {
-        console.error(`[send-welcome-email] Step 7: Resend error —`, result.error);
-        return new Response(
-          JSON.stringify({ error: result.error.message || "Resend send failed" }),
-          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-        );
-      }
-
-      console.log(`[send-welcome-email] Step 7: Success — email=${email}, lang=${selectedLang}, id=${result.data?.id}`);
+    if (result.error) {
+      console.error(`[send-welcome-email] Resend error`, result.error);
       return new Response(
-        JSON.stringify({ success: true, id: result.data?.id }),
-        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        JSON.stringify({ error: result.error.message }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
-    } catch (sendErr: any) {
-      console.error(`[send-welcome-email] Step 7: Send exception —`, sendErr);
-      throw sendErr;
     }
-  } catch (error: any) {
-    console.error("[send-welcome-email] Error:", error);
+
+    console.log(`[send-welcome-email] Sent — id=${result.data?.id}, lang=${selectedLang}`);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ success: true, id: result.data?.id }),
+      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+    );
+
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    console.error("[send-welcome-email] Error:", err);
+    return new Response(
+      JSON.stringify({ error: err.message }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
