@@ -514,7 +514,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           const tiers = [
             { name: 'ATMA-SEED', tagline: 'ENTRY FREQUENCY', price: 'Free', features: ['Free Meditations & Mantras', 'Community Chat & Live', 'Basic Ayurveda & Jyotish'] },
             { name: 'PRANA-FLOW', tagline: 'SONIC VIBRATION', price: '19€ / mo', features: ['Full Vedic Jyotish + Chat', 'Full Ayurvedic Scan + Chat', 'Vastu Guide for Home', 'All Meditations & Healing Audios Access'] },
-            { name: 'SIDDHA-QUANTUM', tagline: 'SIDDHA FIELD', price: '45€ / mo', features: ['Digital Nadi 2050 Scanner', 'Pre/Post Practice Scantions', 'Siddha Portal Access', 'Access to All Mantras'] },
+            { name: 'SIDDHA-QUANTUM', tagline: 'SIDDHA FIELD', price: '45€ / mo', features: ['Digital Nadi 2050 Scanner', 'Pre/Post Practice Scantions', 'Siddha Portal Access', 'Infinite Bio-Adaptive Resonance', 'HRV-Synced Meditations & Mantras', 'Full Healing Audio Library'] },
             { name: 'AKASHA-INFINITY', tagline: 'ETERNAL NODE', price: '€1111', features: ['Quantum Apothecary (€888 Value)', 'Virtual Pilgrimage (€888 Value)', 'Palm Reading Portal', 'Akashic Decoder'] },
           ];
           return (
