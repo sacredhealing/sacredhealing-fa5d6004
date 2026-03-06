@@ -769,39 +769,29 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               }
 
               return (
-                <button
-                  type="button"
+                <div
+                  role="button"
+                  tabIndex={0}
                   onClick={handleStartScanner}
-                  className="w-full text-left"
+                  onKeyDown={(e) => e.key === 'Enter' && handleStartScanner()}
+                  className="w-full bg-[#050505] rounded-[40px] border border-cyan-900/30 p-12 text-center relative overflow-hidden group cursor-pointer"
                 >
-                  <div className="relative group p-1 bg-gradient-to-r from-cyan-500/20 via-blue-500/40 to-cyan-500/20 rounded-[48px] overflow-hidden">
-                    <div className="bg-black/80 backdrop-blur-3xl rounded-[46px] p-8 text-center relative z-10">
-                      <div className="absolute inset-0 bg-cyan-500/5 animate-pulse" />
-                      <div className="relative mb-6 flex justify-center">
-                        <div
-                          className="w-20 h-20 rounded-full border-2 border-cyan-400/30 flex items-center justify-center group-hover:border-cyan-400 transition-all duration-700 relative"
-                          style={{ filter: 'drop-shadow(0 0 15px rgba(212,175,55,0.5))' }}
-                        >
-                          <div className="w-12 h-12 bg-cyan-400/20 rounded-full animate-ping" />
-                          <img
-                            src="/Gemini_Generated_Image_r8p4r8p4r8p4r8p4.jpg"
-                            className="w-16 h-16 object-contain animate-[flamePulse_4s_ease-in-out_infinite]"
-                            alt="Agni-Flame"
-                          />
-                        </div>
-                      </div>
-                      <h3 className="text-white text-xl font-bold tracking-tight">Digital Nadi 2050 Scanner</h3>
-                      <p className="text-cyan-400/60 text-[10px] uppercase tracking-[0.2em] mt-2">
-                        Tap to Initiate 72,000 Nadi Alignment
-                      </p>
-                      <div className="mt-6 flex justify-center gap-4 text-white/30 text-[8px] uppercase tracking-widest">
-                        <span>Symphonic Light-Codes</span>
-                        <span>•</span>
-                        <span>Bio-Signature Mapping</span>
-                      </div>
+                  <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/5 to-transparent pointer-events-none" />
+                  <div className="relative mb-6 flex justify-center">
+                    <div className="w-20 h-20 rounded-full border border-cyan-400/50 flex items-center justify-center animate-pulse">
+                      <img src="/Agni-Flame.png" onError={(e) => { (e.target as HTMLImageElement).src = '/Gemini_Generated_Image_r8p4r8p4r8p4r8p4.jpg'; }} className="w-12 h-12 object-contain" alt="Agni-Flame" />
                     </div>
                   </div>
-                </button>
+                  <h2 className="text-white text-2xl font-black tracking-tight mb-2">Digital Nadi 2050 Scanner</h2>
+                  <button type="button" onClick={handleStartScanner} className="text-cyan-400 text-[10px] font-black tracking-[0.4em] uppercase hover:text-white transition-colors">
+                    Tap to Initiate 72,000 Nadi Alignment
+                  </button>
+                  <div className="flex items-center justify-center gap-4 mt-8 opacity-30">
+                    <span className="text-[7px] font-black tracking-widest uppercase text-white">Symphonic Light-Codes</span>
+                    <div className="w-1 h-1 bg-white rounded-full" />
+                    <span className="text-[7px] font-black tracking-widest uppercase text-white">Bio-Signature Mapping</span>
+                  </div>
+                </div>
               );
             })()
           )}
@@ -1138,14 +1128,11 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
 
       {/* Digital Nadi 2050 Scanner Overlay */}
       {scannerOpen && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 backdrop-blur-xl">
-          <div className="relative w-full max-w-md mx-4 rounded-3xl border border-cyan-400/40 bg-slate-950/95 p-5 shadow-[0_0_40px_rgba(34,211,238,0.4)]">
-            <button
-              onClick={handleCloseScanner}
-              className="absolute right-3 top-3 text-xs text-cyan-100/70 hover:text-white"
-            >
-              Close
-            </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 backdrop-blur-md bg-black/40">
+          <div className="w-full max-w-xl bg-[#030712] rounded-[40px] border border-cyan-500/20 p-10 shadow-[0_0_50px_rgba(6,182,212,0.1)]">
+            <div className="text-right mb-4">
+              <button type="button" onClick={handleCloseScanner} className="text-white/40 text-xs hover:text-white">Close</button>
+            </div>
 
             {scanPhase === 'scanning' && (
               <div className="space-y-5 pt-4 pb-2 text-center">
@@ -1181,52 +1168,44 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
             )}
 
             {scanPhase === 'question' && (
-              <div className="space-y-4 pt-4 pb-2">
-                <p className="text-[11px] uppercase tracking-[0.25em] text-cyan-200/80 text-center">
-                  2050 Deep-Field Capture
-                </p>
-                <h3 className="text-sm font-semibold text-white text-center">
-                  What is your current practice?
-                </h3>
-                <p className="text-[11px] text-muted-foreground text-center">
-                  SQI will tune your report based on the field you just generated.
-                </p>
-                <div className="grid grid-cols-2 gap-2 mt-2">
-                  {['Mantra', 'Atma Kriya', 'Healing Session', 'Private Healing', 'Meditation', 'Breathwork'].map(
-                    (label) => (
-                      <button
-                        key={label}
-                        onClick={() => setSelectedPractice(label)}
-                        className={`rounded-xl border px-3 py-2 text-xs ${
-                          selectedPractice === label
-                            ? 'border-cyan-400 bg-cyan-500/15 text-cyan-100'
-                            : 'border-white/10 bg-white/5 text-white/80 hover:border-cyan-300/60'
-                        }`}
-                      >
-                        {label}
-                      </button>
-                    ),
-                  )}
+              <>
+                <div className="text-center mb-10">
+                  <p className="text-cyan-400/60 text-[10px] font-black tracking-[0.4em] uppercase mb-4">2050 Deep-Field Capture</p>
+                  <h3 className="text-white text-xl font-bold mb-2">What is your current practice?</h3>
+                  <p className="text-white/40 text-[10px]">SQI will tune your report based on the field you just generated.</p>
                 </div>
-                <div className="mt-3 text-left space-y-1">
-                  <label className="text-[11px] text-muted-foreground">
-                    Approximate duration (minutes)
-                  </label>
+                <div className="grid grid-cols-2 gap-3 mb-8">
+                  {['Mantra', 'Atma Kriya', 'Healing Session', 'Private Healing', 'Meditation', 'Breathwork'].map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setSelectedPractice(p)}
+                      className={`py-4 px-6 rounded-2xl bg-white/[0.03] border text-[10px] font-bold transition-all ${
+                        selectedPractice === p ? 'border-cyan-500/40 text-white' : 'border-white/5 text-white/60 hover:border-cyan-500/40 hover:text-white'
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                </div>
+                <div className="mb-8">
+                  <label className="text-white/40 text-[8px] uppercase tracking-widest block mb-2 px-2">Approximate duration (minutes)</label>
                   <input
+                    type="number"
                     value={practiceDuration}
                     onChange={(e) => setPracticeDuration(e.target.value)}
-                    className="w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                    className="w-full bg-black/40 border border-white/10 rounded-xl py-4 px-6 text-white text-sm focus:border-cyan-500/50 outline-none"
                   />
                 </div>
-                <Button
-                  size="sm"
-                  className="mt-3 w-full bg-cyan-500 text-xs font-semibold tracking-[0.2em] text-black hover:bg-cyan-400"
+                <button
+                  type="button"
                   disabled={!selectedPractice}
                   onClick={handleGenerateSoulReport}
+                  className="w-full py-5 rounded-2xl bg-cyan-600 text-black text-[11px] font-black uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(8,145,178,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Generate Deep‑Field Resonance
-                </Button>
-              </div>
+                  Generate Deep-Field Resonance
+                </button>
+              </>
             )}
 
             {scanPhase === 'saving' && (
