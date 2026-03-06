@@ -458,9 +458,12 @@ const Auth: React.FC = () => {
                         redirectTo: `${window.location.origin}/reset-password`,
                       });
                       if (error) throw error;
+                      await supabase.functions.invoke('send-reset-email', {
+                        body: { email, language: i18n.language },
+                      });
                       toast({
-                        title: 'Check your email',
-                        description: 'A password reset link has been sent to your email.',
+                        title: t('auth.resetEmailTitle'),
+                        description: t('auth.resetEmailDescription'),
                       });
                     } catch (err: any) {
                       toast({

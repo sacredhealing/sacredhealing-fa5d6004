@@ -1691,7 +1691,9 @@
     "walletConnected": "Wallet connected",
     "createAccountFirst": "Please also create an account to use the app",
     "error": "Error",
-    "somethingWrong": "Something went wrong. Please try again."
+    "somethingWrong": "Something went wrong. Please try again.",
+    "resetEmailTitle": "Check your email",
+    "resetEmailDescription": "A password reset link has been sent to your email."
   },
   "breathing": {
     "title": "Breathing Exercises",

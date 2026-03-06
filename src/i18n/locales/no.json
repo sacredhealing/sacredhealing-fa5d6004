@@ -1315,7 +1315,9 @@
     "walletConnected": "Lommebok tilkoblet",
     "createAccountFirst": "Vennligst opprett også en konto for å bruke appen",
     "error": "Feil",
-    "somethingWrong": "Noe gikk galt. Prøv igjen."
+    "somethingWrong": "Noe gikk galt. Prøv igjen.",
+    "resetEmailTitle": "Sjekk e-posten din",
+    "resetEmailDescription": "En lenke for å tilbakestille passordet er sendt til e-posten din."
   },
   "breathing": {
     "title": "Pusteøvelser",

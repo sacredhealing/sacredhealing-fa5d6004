@@ -1663,7 +1663,9 @@
     "walletConnected": "Plånbok ansluten",
     "createAccountFirst": "Vänligen skapa också ett konto för att använda appen",
     "error": "Fel",
-    "somethingWrong": "Något gick fel. Försök igen."
+    "somethingWrong": "Något gick fel. Försök igen.",
+    "resetEmailTitle": "Kontrollera din e-post",
+    "resetEmailDescription": "En länk för att återställa lösenordet har skickats till din e-post."
   },
   "breathing": {
     "title": "Andningsövningar",

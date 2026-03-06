@@ -961,6 +961,8 @@
     "createAccountFirst": "Por favor también crea una cuenta para usar la app",
     "error": "Error",
     "somethingWrong": "Algo salió mal. Por favor intenta de nuevo.",
+    "resetEmailTitle": "Revisa tu correo",
+    "resetEmailDescription": "Se ha enviado un enlace para restablecer la contraseña a tu correo.",
     "referralBonus": "¡Fuiste referido! Recibirás 50 SHC de bono al registrarte."
   },
   "admin": {
