@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Flame, Flower2, Star, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield, Scale, LayoutDashboard, Megaphone, Crown, Pencil, Banknote, Lock, FileText, BookOpen, Hand } from 'lucide-react';
@@ -106,6 +106,53 @@ const Profile: React.FC = () => {
     });
     navigate('/');
   };
+
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    let animId: number;
+    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+    resize();
+    window.addEventListener('resize', resize);
+    class Particle {
+      x=0; y=0; size=0; speedX=0; speedY=0; life=0; maxLife=0; growing=true; color='212,175,55';
+      constructor() { this.reset(); }
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 1.5 + 0.3;
+        this.speedX = (Math.random() - 0.5) * 0.3;
+        this.speedY = (Math.random() - 0.5) * 0.3;
+        this.life = Math.random();
+        this.maxLife = Math.random() * 0.005 + 0.001;
+        this.growing = true;
+        const c = ['212,175,55','255,255,255','34,211,238'];
+        this.color = c[Math.floor(Math.random()*3)];
+      }
+      update() {
+        this.x += this.speedX; this.y += this.speedY;
+        if (this.growing) { this.life += this.maxLife; if (this.life>=1) this.growing=false; }
+        else { this.life -= this.maxLife; if (this.life<=0) this.reset(); }
+        if (this.x<0||this.x>canvas.width||this.y<0||this.y>canvas.height) this.reset();
+      }
+      draw() {
+        ctx.save(); ctx.globalAlpha = this.life*0.6;
+        ctx.fillStyle = `rgba(${this.color},1)`;
+        ctx.beginPath(); ctx.arc(this.x,this.y,this.size,0,Math.PI*2); ctx.fill(); ctx.restore();
+      }
+    }
+    const particles = Array.from({ length: 200 }, () => new Particle());
+    const animate = () => {
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      particles.forEach(p => { p.update(); p.draw(); });
+      animId = requestAnimationFrame(animate);
+    };
+    animate();
+    return () => { cancelAnimationFrame(animId); window.removeEventListener('resize', resize); };
+  }, []);
 
   const dashaCycle = vedicReading?.personalCompass?.currentDasha?.period?.split(' ')[0] || 'Rahu';
   const soulLabel = t('profile.soulRecordLabel', `Age 42 • ${dashaCycle} Cycle Active • Soul Frequency: 528Hz`);
@@ -403,853 +450,396 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
     scanPhase === 'done' ? 1 : scanPhase === 'scanning' ? 0.75 : 0.5;
 
   return (
-    <div className="relative min-h-screen bg-[#050505] overflow-x-hidden">
-      {/* Cosmic background */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,_#D4AF3715_0%,_transparent_60%)]" aria-hidden />
-      <div className="absolute inset-0 opacity-20 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] animate-[subtleMove_100s_linear_infinite]" aria-hidden />
+    <>
+    <style dangerouslySetInnerHTML={{__html: `
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Montserrat:wght@300;400;700;800;900&display=swap');
+  .profile-wrap *,:root{--gold:#D4AF37;--black:#050505}
+  .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:80px 24px 40px;text-align:center}
+  .hero::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:600px;background:radial-gradient(ellipse,rgba(212,175,55,0.08) 0%,transparent 65%);pointer-events:none}
+  .avatar-wrap{position:relative;display:inline-block;margin-bottom:28px}
+  .avatar-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,0.65) 0%,rgba(212,175,55,0.2) 40%,transparent 70%);filter:blur(22px);animation:glowBreathe 3s ease-in-out infinite;z-index:0;pointer-events:none}
+  .avatar-glow-2{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,0.15) 0%,transparent 65%);filter:blur(30px);animation:glowBreathe 4s ease-in-out infinite reverse;z-index:0;pointer-events:none}
+  .hero-name{font-family:'Cormorant Garamond',serif;font-weight:300;font-style:italic;font-size:clamp(2.8rem,6vw,4.5rem);letter-spacing:-0.02em;color:white;line-height:1;margin-bottom:12px;animation:fadeUp 0.8s ease both}
+  .soul-label{font-family:'Montserrat',sans-serif;font-weight:800;font-size:8px;letter-spacing:0.5em;text-transform:uppercase;color:rgba(212,175,55,0.7);margin-bottom:28px}
+  .soul-label span{color:rgba(255,255,255,0.25);margin:0 8px}
+  .stats-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:48px;animation:fadeUp 1.1s ease both}
+  .stat-pill{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:100px;padding:12px 28px;text-align:center;min-width:100px}
+  .stat-value{font-weight:800;font-size:20px;color:#D4AF37;letter-spacing:-0.02em;display:block}
+  .stat-label{font-weight:400;font-size:7px;letter-spacing:0.45em;text-transform:uppercase;color:rgba(255,255,255,0.25);display:block;margin-top:2px}
+  .scroll-hint{position:absolute;bottom:36px;font-weight:800;font-size:7px;letter-spacing:0.5em;text-transform:uppercase;color:rgba(255,255,255,0.15);display:flex;flex-direction:column;align-items:center;gap:8px}
+  .scroll-arrow{width:12px;height:12px;border-right:1.5px solid rgba(255,255,255,0.2);border-bottom:1.5px solid rgba(255,255,255,0.2);transform:rotate(45deg);animation:bounce 1.8s ease-in-out infinite}
+  .sri-yantra-section{width:100%;position:relative;height:clamp(380px,55vw,650px);overflow:hidden}
+  .sri-yantra-img{width:100%;height:100%;object-fit:cover;object-position:center center;display:block}
+  .sri-yantra-svg-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#0a2040 0%,#050505 70%)}
+  .sri-yantra-fade-top{position:absolute;top:0;left:0;right:0;height:220px;background:linear-gradient(to bottom,#050505 0%,transparent 100%);pointer-events:none}
+  .sri-yantra-fade-bottom{position:absolute;bottom:0;left:0;right:0;height:220px;background:linear-gradient(to top,#050505 0%,transparent 100%);pointer-events:none}
+  .sri-yantra-label{position:absolute;bottom:52px;left:50%;transform:translateX(-50%);font-weight:800;font-size:8px;letter-spacing:0.45em;text-transform:uppercase;color:rgba(212,175,55,0.85);background:rgba(5,5,5,0.65);backdrop-filter:blur(12px);padding:10px 24px;border-radius:100px;border:1px solid rgba(212,175,55,0.2);white-space:nowrap}
+  .section-wrap{max-width:780px;margin:0 auto;padding:80px 24px 0}
+  .section-label{font-family:'Montserrat',sans-serif;font-weight:800;font-size:8px;letter-spacing:0.5em;text-transform:uppercase;color:rgba(212,175,55,0.5);margin-bottom:32px;display:flex;align-items:center;gap:12px}
+  .section-label::after{content:'';flex:1;height:1px;background:linear-gradient(to right,rgba(212,175,55,0.2),transparent)}
+  .glass-card{background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.12);border-radius:24px;padding:32px;backdrop-filter:blur(20px);margin-bottom:16px}
+  .tier-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+  @media(max-width:600px){.tier-grid{grid-template-columns:1fr}}
+  .tier-card{background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.1);border-radius:24px;padding:28px 24px;backdrop-filter:blur(20px);transition:border-color 0.3s,transform 0.3s}
+  .tier-card:hover{border-color:rgba(212,175,55,0.25);transform:translateY(-2px)}
+  .tier-card.active-tier{border-color:rgba(212,175,55,0.3);background:rgba(212,175,55,0.03)}
+  .tier-card.featured{grid-column:1/-1;border-color:rgba(212,175,55,0.25);background:rgba(212,175,55,0.04)}
+  .tier-badge{display:inline-block;font-weight:800;font-size:7px;letter-spacing:0.4em;text-transform:uppercase;color:#050505;background:#D4AF37;padding:4px 12px;border-radius:100px;margin-bottom:10px}
+  .tier-name{font-weight:800;font-size:15px;letter-spacing:0.2em;color:#D4AF37;display:block;margin-bottom:4px}
+  .tier-sub{font-weight:400;font-size:8px;letter-spacing:0.4em;text-transform:uppercase;color:rgba(255,255,255,0.25)}
+  .tier-price{font-family:'Cormorant Garamond',serif;font-weight:300;font-style:italic;font-size:2.2rem;color:white;margin:16px 0 12px;letter-spacing:-0.02em}
+  .tier-price small{font-size:0.45em;color:rgba(255,255,255,0.3);font-style:normal;letter-spacing:0.1em}
+  .tier-features{list-style:none;margin-bottom:20px}
+  .tier-features li{font-size:12px;color:rgba(255,255,255,0.45);padding:5px 0;display:flex;align-items:center;gap:10px;line-height:1.5}
+  .tier-features li::before{content:'◈';color:#D4AF37;font-size:8px;flex-shrink:0}
+  .gold-btn{display:block;width:100%;background:#D4AF37;color:#050505;border:none;border-radius:100px;padding:13px 24px;font-family:'Montserrat',sans-serif;font-weight:800;font-size:9px;letter-spacing:0.4em;text-transform:uppercase;cursor:pointer;transition:opacity 0.2s,transform 0.2s;text-align:center}
+  .gold-btn:hover{opacity:0.85;transform:translateY(-1px)}
+  .ghost-btn{display:block;width:100%;background:transparent;color:rgba(212,175,55,0.6);border:1px solid rgba(212,175,55,0.2);border-radius:100px;padding:12px 24px;font-family:'Montserrat',sans-serif;font-weight:800;font-size:9px;letter-spacing:0.4em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;text-align:center}
+  .siddha-quantum-card{position:relative;overflow:visible!important;border-color:rgba(212,175,55,0.35)!important;background:rgba(212,175,55,0.04)!important}
+  .sq-aura{position:absolute;inset:0;border-radius:24px;pointer-events:none;z-index:0}
+  .sq-aura-1{border:1px solid rgba(212,175,55,0.5);animation:sqPulse 2.5s ease-in-out infinite}
+  .sq-aura-2{border:1px solid rgba(212,175,55,0.3);animation:sqPulse 2.5s ease-in-out infinite 0.6s}
+  .sq-aura-3{border:1px solid rgba(212,175,55,0.15);animation:sqPulse 2.5s ease-in-out infinite 1.2s}
+  .sq-badge{background:linear-gradient(90deg,#b8960c,#D4AF37,#f5d76e,#D4AF37,#b8960c);background-size:300%;animation:shimmer 3s linear infinite}
+  .sq-btn{box-shadow:0 0 28px rgba(212,175,55,0.45),0 0 60px rgba(212,175,55,0.15);animation:btnGlow 2.5s ease-in-out infinite}
+  .siddhis-scroll{display:flex;gap:14px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none}
+  .siddhis-scroll::-webkit-scrollbar{display:none}
+  .siddhi-card{min-width:148px;background:rgba(255,255,255,0.02);border-radius:20px;padding:22px 16px;text-align:center;flex-shrink:0;transition:transform 0.2s}
+  .siddhi-card:hover{transform:translateY(-3px)}
+  .siddhi-card.earned{border:1px solid rgba(212,175,55,0.3)}
+  .siddhi-card.locked{border:1px solid rgba(255,255,255,0.04);opacity:0.5}
+  .siddhi-icon-wrap{width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+  .siddhi-icon-wrap.earned{background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.25);box-shadow:0 0 20px rgba(212,175,55,0.1)}
+  .siddhi-icon-wrap.locked{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06)}
+  .siddhi-name{font-weight:700;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;display:block;margin-bottom:10px}
+  .siddhi-card.earned .siddhi-name{color:#D4AF37}
+  .siddhi-card.locked .siddhi-name{color:rgba(255,255,255,0.2)}
+  .siddhi-bar-bg{height:3px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden}
+  .siddhi-bar-fill{height:100%;background:#D4AF37;border-radius:3px}
+  .vault-idle{text-align:center;padding:20px 0}
+  .vault-idle p{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.05rem;color:rgba(255,255,255,0.35);line-height:1.8;margin-bottom:28px;max-width:460px;margin-left:auto;margin-right:auto}
+  .vault-scan-ring{width:80px;height:80px;border-radius:50%;border:1px solid rgba(212,175,55,0.3);display:flex;align-items:center;justify-content:center;margin:0 auto 28px;animation:scanPulse 3s ease-in-out infinite;position:relative}
+  .vault-scan-ring::before{content:'';position:absolute;inset:-8px;border-radius:50%;border:1px solid rgba(212,175,55,0.1)}
+  .vault-scan-ring span{font-size:28px}
+  .archive-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:520px){.archive-grid{grid-template-columns:1fr}}
+  .archive-card{background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.1);border-radius:18px;padding:20px 18px;transition:all 0.3s;cursor:pointer}
+  .archive-card:hover{border-color:rgba(212,175,55,0.3);background:rgba(212,175,55,0.03);transform:translateY(-2px)}
+  .archive-title{font-weight:800;font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.55);display:block;margin-bottom:2px}
+  .archive-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.75rem;color:rgba(255,255,255,0.25);display:block;line-height:1.5}
+  .archive-cta{font-weight:800;font-size:8px;letter-spacing:0.4em;text-transform:uppercase;color:#D4AF37;opacity:0.7}
+  .archive-card:hover .archive-cta{opacity:1}
+  .abundance-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  @media(min-width:520px){.abundance-grid{grid-template-columns:repeat(4,1fr)}}
+  .abundance-card{background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.1);border-radius:20px;padding:24px 16px 20px;text-align:center;cursor:pointer;transition:all 0.25s}
+  .abundance-card:hover{border-color:rgba(212,175,55,0.3);background:rgba(212,175,55,0.04);transform:translateY(-3px)}
+  .abundance-icon-wrap{width:56px;height:56px;border-radius:16px;background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;transition:all 0.25s}
+  .abundance-card:hover .abundance-icon-wrap{background:rgba(212,175,55,0.1);border-color:rgba(212,175,55,0.3);box-shadow:0 0 20px rgba(212,175,55,0.1)}
+  .abundance-label{font-weight:800;font-size:7.5px;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.3)}
+  .settings-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+  .settings-btn{flex:1;min-width:120px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:100px;padding:13px 20px;font-family:'Montserrat',sans-serif;font-weight:800;font-size:8px;letter-spacing:0.35em;text-transform:uppercase;color:rgba(255,255,255,0.3);cursor:pointer;transition:all 0.2s;text-align:center}
+  .settings-btn:hover{color:#D4AF37;border-color:rgba(212,175,55,0.2)}
+  .signout-btn{width:100%;background:transparent;border:1px solid rgba(255,255,255,0.06);border-radius:100px;padding:13px;font-family:'Montserrat',sans-serif;font-weight:800;font-size:8px;letter-spacing:0.35em;text-transform:uppercase;color:rgba(255,255,255,0.2);cursor:pointer;transition:all 0.2s;margin-top:8px}
+  .signout-btn:hover{color:rgba(239,68,68,0.7);border-color:rgba(239,68,68,0.2)}
+  @keyframes sqPulse{0%{transform:scale(1);opacity:0.8}50%{transform:scale(1.04);opacity:0}100%{transform:scale(1.08);opacity:0}}
+  @keyframes shimmer{0%{background-position:0% 50%}100%{background-position:300% 50%}}
+  @keyframes btnGlow{0%,100%{box-shadow:0 0 20px rgba(212,175,55,0.4),0 0 40px rgba(212,175,55,0.1)}50%{box-shadow:0 0 40px rgba(212,175,55,0.7),0 0 80px rgba(212,175,55,0.25)}}
+  @keyframes glowBreathe{0%,100%{opacity:0.5;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.25)}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes bounce{0%,100%{transform:rotate(45deg) translateY(0)}50%{transform:rotate(45deg) translateY(6px)}}
+  @keyframes scanPulse{0%,100%{transform:scale(1);opacity:0.5}50%{transform:scale(1.12);opacity:1}}
+  @keyframes siddhiSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+  @keyframes stardustMove{from{background-position:0 0}to{background-position:1000px 1000px}}
+`}} />
 
-      <div className="relative z-10 px-4 pt-6 flex flex-col items-center">
-        {/* Soul Header - Floating Identity & Tightened Resonance */}
-        <div className="relative flex flex-col items-center pt-10 pb-2 text-center animate-fade-in">
-          {/* Floating Avatar (Soft Glow, no hard boundary) */}
-          <div className="relative group mb-2">
-            <div style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: '140px',
-              height: '140px',
-              borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(212,175,55,0.6) 0%, rgba(212,175,55,0.2) 40%, transparent 70%)',
-              filter: 'blur(16px)',
-              animation: 'glowBreathe 3s ease-in-out infinite',
-              zIndex: 0,
-              pointerEvents: 'none',
-            }} />
-            <div className="absolute -inset-8 bg-[#D4AF37]/10 blur-3xl rounded-full animate-pulse" />
-            <div className="relative" style={{ position: 'relative', zIndex: 1 }}>
-              <Avatar className="w-28 h-28 rounded-full grayscale-[20%] hover:grayscale-0 transition-all duration-700 shadow-[0_0_30px_rgba(212,175,55,0.1)] border-2 border-background">
-                <AvatarImage src={profile?.avatar_url || undefined} />
-                <AvatarFallback className="bg-background text-4xl text-foreground">
-                  {userName?.charAt(0) || '🧘'}
-                </AvatarFallback>
-              </Avatar>
-              <button
-                onClick={() => setProfileEditOpen(true)}
-                className="absolute bottom-1 right-1 w-6 h-6 rounded-full bg-[#D4AF37] flex items-center justify-center text-[#0f051a] hover:bg-[#D4AF37]/90 transition-colors border-2 border-black shadow-lg"
-              >
-                <Pencil size={10} />
-              </button>
-            </div>
+    <div className="profile-wrap" style={{minHeight:'100vh',background:'#050505',overflowX:'hidden',fontFamily:'Montserrat,sans-serif',paddingBottom:'120px',position:'relative'}}>
+
+      <div style={{position:'fixed',inset:0,backgroundImage:"url('https://www.transparenttextures.com/patterns/stardust.png')",opacity:0.25,pointerEvents:'none',zIndex:0,animation:'stardustMove 180s linear infinite'}} />
+
+      <canvas ref={canvasRef} style={{position:'fixed',top:0,left:0,width:'100%',height:'100%',pointerEvents:'none',zIndex:0}} />
+
+      <div style={{position:'relative',zIndex:1}}>
+
+      {/* ── HERO ── */}
+      <section className="hero">
+        <div className="avatar-wrap">
+          <div className="avatar-glow" />
+          <div className="avatar-glow-2" />
+          <div style={{position:'relative',zIndex:1}}>
+            <Avatar style={{width:100,height:100,border:'2px solid rgba(212,175,55,0.45)',boxShadow:'0 0 40px rgba(212,175,55,0.15)'}}>
+              <AvatarImage src={profile?.avatar_url || undefined} />
+              <AvatarFallback style={{background:'rgba(212,175,55,0.08)',color:'white',fontSize:36}}>
+                {userName?.charAt(0) || '🧘'}
+              </AvatarFallback>
+            </Avatar>
           </div>
-
-          {/* Tightened Jyotish Text */}
-          <div className="text-center z-20">
-            <h1 className="text-4xl font-black tracking-tighter">{userName}</h1>
-            <div className="flex items-center justify-center gap-3 mt-1.5">
-              <span className="text-[#D4AF37] text-[9px] font-black tracking-[0.4em] uppercase opacity-80">
-                528Hz Resonance
-              </span>
-              <div className="w-1 h-1 bg-[#D4AF37]/40 rounded-full" />
-              <span className="text-white/40 text-[8px] tracking-[0.3em] uppercase">Rahu Active</span>
-            </div>
-          </div>
-
-          {profile?.bio && (
-            <p className="mt-3 text-sm text-muted-foreground text-center max-w-xs">{profile.bio}</p>
-          )}
-        </div>
-
-        {/* SRI YANTRA — full image, no crop */}
-        <section className="relative w-full mx-3 mt-5 rounded-2xl border border-[#D4AF37]/10" style={{ background: 'radial-gradient(ellipse at center, #1e1200 0%, #0a0800 55%, #050505 100%)', minHeight: '500px', paddingTop: '60px' }}>
-          <div style={{ minHeight: '500px', width: '100%', position: 'relative' }}>
-            <img
-              src="/Gemini_Generated_Image_57v0zm57v0zm57v0.jpg"
-              alt="Sri Yantra"
-              className="w-full block"
-              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center center', mixBlendMode: 'screen', opacity: 0.95 }}
-            />
-          </div>
-          <div className="relative -mt-20 z-20 w-full px-8">
-            <div className="max-w-sm mx-auto flex justify-around items-center backdrop-blur-2xl bg-white/[0.02] py-8 rounded-[40px] border border-white/5 shadow-[0_20px_60px_rgba(0,0,0,0.6)]">
-              <div className="text-center group cursor-pointer">
-                <span className="text-[#D4AF37] text-2xl font-black block transition-transform group-hover:scale-110">{shcProfile?.streak_days ?? 0}</span>
-                <label className="text-white/30 text-[7px] tracking-[0.4em] uppercase font-bold">Streak</label>
-              </div>
-              <div className="h-10 w-[1px] bg-white/10" />
-              <div className="text-center group cursor-pointer">
-                <span className="text-[#D4AF37] text-2xl font-black block transition-transform group-hover:scale-110">{balance?.balance ?? 0}</span>
-                <label className="text-white/30 text-[7px] tracking-[0.4em] uppercase font-bold">Balance</label>
-              </div>
-              <div className="h-10 w-[1px] bg-white/10" />
-              <div className="text-center group cursor-pointer">
-                <span className="text-[#D4AF37] text-2xl font-black block transition-transform group-hover:scale-110">{badges.filter((b) => b.earned).length}</span>
-                <label className="text-white/30 text-[7px] tracking-[0.4em] uppercase font-bold">Badges</label>
-              </div>
-            </div>
-          </div>
-        </section>
-        <style>{`
-          @keyframes glowBreathe {
-            0%, 100% { opacity: 0.6; transform: translate(-50%,-50%) scale(1); }
-            50% { opacity: 1; transform: translate(-50%,-50%) scale(1.2); }
-          }
-          @keyframes sriYantraPulse {
-            0%, 100% { transform: scale(0.95); opacity: 0.85; }
-            50% { transform: scale(1.05); opacity: 1; }
-          }
-          @keyframes siddhiSpin {
-            from { transform: rotate(0deg) scale(1); }
-            50% { transform: rotate(180deg) scale(1.1); }
-            to { transform: rotate(360deg) scale(1); }
-          }
-          @keyframes subtleMove {
-            from { background-position: 0 0; }
-            to { background-position: 1000px 1000px; }
-          }
-          @keyframes waveFlow {
-            from { transform: translateX(0); }
-            to { transform: translateX(-100px); }
-          }
-          @keyframes flamePulse {
-            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(212,175,55,0.4)); }
-            50% { transform: scale(1.12); filter: drop-shadow(0 0 18px rgba(212,175,55,0.8)); }
-          }
-          @keyframes portalPulse {
-            0%, 100% { transform: scale(1.02); opacity: 0.8; }
-            50% { transform: scale(1.08); opacity: 1; filter: brightness(1.2); }
-          }
-        `}</style>
-
-        {/* SQI 2050 Membership Tiers — Vibration Levels */}
-        {(() => {
-          const tiers = [
-            { name: 'ATMA-SEED', tagline: 'ENTRY FREQUENCY', price: 'Free', features: ['Free Meditations & Mantras', 'Free Healing Audios', 'Free Breathing Protocols', 'Free Vayu Scrubber (1km Atmospheric Restoration)', 'Community Chat & Live', 'Basic Ayurveda & Jyotish'] },
-            { name: 'PRANA-FLOW', tagline: 'SONIC VIBRATION', price: '19€ / mo', features: ['Full Vedic Jyotish + Chat', 'Full Ayurvedic Scan + Chat', 'Vastu Guide for Home', 'Access to All Healing Music', 'Full Meditation & Mantra Library'] },
-            { name: 'SIDDHA-QUANTUM', tagline: 'SIDDHA FIELD', price: '45€ / mo', features: ['Digital Nadi Scanner (Bio-Sync)', 'Practice Scantions (Printed Results)', 'Siddha Portal Access', 'Full Healing Audios & Transmissions', 'Sri Yantra Universal Protection Shield'] },
-            { name: 'AKASHA-INFINITY', tagline: 'ETERNAL NODE', price: '€1111', features: ['Akashic Decoder', 'Quantum Apothecary (€888 Value)', 'Virtual Pilgrimage (€888 Value)', 'Palm Reading Portal', 'Sri Yantra Universal Protection Shield'] },
-          ];
-          return (
-            <div className="w-full max-w-xl mx-auto mt-5 mb-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {tiers.map((tier) =>
-                tier.name === 'ATMA-SEED' ? (
-                  <div
-                    key={tier.name}
-                    className="relative p-8 rounded-[48px] bg-white/[0.02] border border-white/5 backdrop-blur-3xl group overflow-hidden"
-                  >
-                    <div className="absolute -top-10 -right-10 w-40 h-40 bg-cyan-500/5 blur-[80px] rounded-full group-hover:bg-[#D4AF37]/10 transition-all duration-1000" />
-                    <div className="mb-8">
-                      <h3 className="text-[#D4AF37] text-2xl font-black tracking-tighter uppercase italic">ATMA-SEED</h3>
-                      <p className="text-white/20 text-[8px] font-black tracking-[0.5em] uppercase mt-1">Sovereign Entry Node</p>
-                    </div>
-                    <ul className="space-y-4 mb-10">
-                      {tier.features.map((feature, i) => (
-                        <li key={i} className="flex items-start gap-4 text-white/50 text-[10px] font-bold">
-                          <div className="mt-1 w-1 h-1 bg-[#D4AF37]/40 rounded-full shadow-[0_0_8px_#D4AF37] shrink-0" />
-                          <span className="leading-tight">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="flex justify-between items-center pt-6 border-t border-white/5">
-                      <span className="text-white/10 text-[9px] font-black uppercase tracking-widest">Radius: 1KM Local</span>
-                      <span className="text-white text-xl font-black">{tier.price}</span>
-                    </div>
-                  </div>
-                ) : tier.name === 'PRANA-FLOW' ? (
-                  <div
-                    key={tier.name}
-                    className="p-8 rounded-[40px] border border-white/5 bg-white/[0.02] backdrop-blur-3xl relative overflow-hidden group"
-                  >
-                    <div className="flex justify-between items-start mb-6">
-                      <div>
-                        <h3 className="text-[#D4AF37] text-xl font-black tracking-tighter uppercase italic">PRANA-FLOW</h3>
-                        <p className="text-white/30 text-[8px] font-black tracking-[0.4em] uppercase mt-1">Sonic Vibration</p>
-                      </div>
-                      <span className="text-[#D4AF37] text-xs font-bold">{tier.price}</span>
-                    </div>
-                    <ul className="space-y-3 mb-8">
-                      {tier.features.map((feature, i) => (
-                        <li key={i} className="flex items-center gap-3 text-white/60 text-[10px]">
-                          <div className="w-1 h-1 bg-[#D4AF37]/40 rounded-full shrink-0" />
-                          {feature}
-                        </li>
-                      ))}
-                    </ul>
-                    <button
-                      type="button"
-                      onClick={() => navigate('/membership')}
-                      className="w-full py-4 rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] text-[10px] font-black uppercase tracking-[0.2em] hover:bg-[#D4AF37] hover:text-black transition-all"
-                    >
-                      Activate Vibration
-                    </button>
-                  </div>
-                ) : tier.name === 'SIDDHA-QUANTUM' ? (
-                  <div key={tier.name} className="sm:col-span-2 space-y-6">
-                    <div className="p-8 rounded-[48px] bg-white/[0.03] border border-[#D4AF37]/30 backdrop-blur-3xl relative overflow-hidden group hover:border-[#D4AF37] transition-all duration-700">
-                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(212,175,55,0.08)_0%,_transparent_70%)] opacity-40 group-hover:opacity-70 transition-opacity pointer-events-none" />
-                      <div className="relative z-10">
-                        <div className="flex justify-between items-start mb-8">
-                          <div>
-                            <h3 className="text-[#D4AF37] text-2xl font-black tracking-tighter uppercase italic">SIDDHA-QUANTUM</h3>
-                            <p className="text-white/40 text-[9px] font-black tracking-[0.4em] uppercase mt-1">Universal Field Node</p>
-                          </div>
-                          <div className="flex flex-col items-end text-right">
-                            <span className="text-white text-xl font-black tracking-tighter italic">45€</span>
-                            <span className="text-white/20 text-[7px] uppercase tracking-[0.4em]">per month</span>
-                          </div>
-                        </div>
-                        <ul className="space-y-4 mb-10">
-                          {tier.features.map((feature, i) => (
-                            <li key={i} className="flex items-start gap-4 text-white text-[11px] font-bold">
-                              <div className="mt-1 w-1.5 h-1.5 bg-[#D4AF37] rounded-full shadow-[0_0_12px_rgba(212,175,55,0.5)] shrink-0" />
-                              <span className="leading-tight group-hover:text-white transition-colors">{feature}</span>
-                            </li>
-                          ))}
-                        </ul>
-                        <button
-                          type="button"
-                          onClick={handleStartScanner}
-                          className="w-full py-5 rounded-2xl bg-[#D4AF37] text-black text-[11px] font-black uppercase tracking-[0.3em] shadow-[0_10px_40px_rgba(212,175,55,0.2)] hover:scale-[1.02] transition-transform"
-                        >
-                          Activate Universal Shield
-                        </button>
-                        <div className="mt-6 flex justify-center gap-2 opacity-30 group-hover:opacity-60 transition-opacity">
-                          <span className="text-[7px] text-[#D4AF37] font-black uppercase tracking-[0.5em]">Aetheric Lock Active</span>
-                        </div>
-                      </div>
-                    </div>
-                    {/* Dual-Scanner Architecture */}
-                    <div className="space-y-6">
-                      <div className="p-8 rounded-[40px] border border-[#D4AF37]/30 bg-white/[0.02]">
-                        <h4 className="text-[#D4AF37] text-xs font-black tracking-widest mb-4 uppercase text-center">Bio-Sync Resonance</h4>
-                        <button
-                          type="button"
-                          onClick={handleStartScanner}
-                          className="w-full py-6 rounded-3xl bg-[#D4AF37] text-black font-black uppercase tracking-widest text-xs"
-                        >
-                          Scan & Sync with Library
-                        </button>
-                        <p className="text-white/20 text-[8px] text-center mt-4 uppercase tracking-[0.3em]">
-                          Detects frequency to recommend Mantras, Meditations, or Music
-                        </p>
-                      </div>
-                      <div className="p-8 rounded-[40px] border border-cyan-500/20 bg-white/[0.01]">
-                        <h4 className="text-cyan-400 text-xs font-black tracking-widest mb-4 uppercase text-center">Practice Scantion</h4>
-                        <div className="flex gap-3">
-                          <button type="button" className="flex-1 py-4 rounded-2xl border border-white/10 text-white text-[9px] font-black uppercase">Pre-Session</button>
-                          <button type="button" className="flex-1 py-4 rounded-2xl border border-white/10 text-white text-[9px] font-black uppercase">Post-Session</button>
-                        </div>
-                        <p className="text-white/20 text-[8px] text-center mt-4 uppercase tracking-[0.3em]">
-                          Generates 72,000 Nadi Mapping & Printed Profile Results
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div
-                    key={tier.name}
-                    className="p-10 rounded-[50px] border border-[#D4AF37]/50 bg-white/[0.03] backdrop-blur-3xl relative overflow-hidden group"
-                  >
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(212,175,55,0.1)_0%,_transparent_70%)] opacity-50 animate-pulse pointer-events-none" />
-                    <div className="relative z-10">
-                      <div className="mb-8">
-                        <h3 className="text-[#D4AF37] text-2xl font-black tracking-tighter uppercase italic">AKASHA-INFINITY</h3>
-                        <p className="text-white/40 text-[9px] font-black tracking-[0.5em] uppercase mt-1">Eternal Node Activation</p>
-                      </div>
-                      <ul className="space-y-4 mb-12">
-                        {tier.features.map((feature, i) => (
-                          <li key={i} className="flex items-center gap-4 text-white text-[11px] font-bold">
-                            <div className="w-1.5 h-1.5 bg-[#D4AF37] rounded-full shadow-[0_0_12px_#D4AF37] shrink-0" />
-                            {feature}
-                          </li>
-                        ))}
-                      </ul>
-                      <div className="flex justify-between items-end">
-                        <span className="text-white/20 text-[10px] font-black uppercase tracking-widest italic">Lifetime Transmission</span>
-                        <span className="text-[#D4AF37] text-3xl font-black tracking-tighter">{tier.price}</span>
-                      </div>
-                    </div>
-                  </div>
-                )
-              )}
-            </div>
-          );
-        })()}
-
-        
-      </div>
-
-      {/* SQI 2050 Siddhi-Relic Component */}
-      <div className="mb-8 animate-slide-up">
-        <div className="w-full px-4 sm:px-6 py-6">
-          <div className="flex justify-between items-end mb-6">
-            <h2 className="text-[#D4AF37] tracking-[0.2em] text-xs font-bold uppercase">
-              Vedic Siddhis
-            </h2>
-            <button className="text-white/40 text-[10px] uppercase tracking-widest hover:text-[#D4AF37] transition-colors">
-              View All
-            </button>
-          </div>
-
-          <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
-            {/* Siddhi: The Gold Bindu (First Meditation) */}
-            <div className="min-w-[140px] bg-white/[0.03] backdrop-blur-md border border-[#D4AF37]/20 rounded-3xl p-5 text-center transition-all hover:bg-[#D4AF37]/10">
-              <div className="h-16 flex items-center justify-center mb-4">
-                <div className="w-4 h-4 bg-[#D4AF37] rounded-full shadow-[0_0_20px_#D4AF37] animate-pulse" />
-              </div>
-              <div className="text-white text-[10px] font-medium tracking-wide">The Gold Bindu</div>
-              <div className="w-6 h-px bg-[#D4AF37]/50 mx-auto mt-2" />
-            </div>
-
-            {/* Siddhi: The Agni-Flame (7-Day Streak) */}
-            <div className="min-w-[140px] bg-[#D4AF37]/10 backdrop-blur-md border border-[#D4AF37]/50 rounded-3xl p-5 text-center shadow-[0_0_30px_rgba(212,175,55,0.1)]">
-              <div className="h-16 flex items-center justify-center mb-4">
-                <div className="w-8 h-8 bg-[#D4AF37] rounded-full rounded-tr-none rotate-45 shadow-[0_0_25px_#D4AF37] animate-[flameSway_3s_ease-in-out_infinite]" />
-              </div>
-              <div className="text-white text-[10px] font-medium tracking-wide">Agni-Flame</div>
-              <div className="w-6 h-px bg-[#D4AF37] mx-auto mt-2" />
-            </div>
-
-            {/* SQI 2050: Achievement Seal — Andlig Transformation Certification */}
-            {(() => {
-              const isCourseCompleted =
-                shcProfile?.purchased_courses?.includes?.('AndligTransformation') ||
-                certificates.some(
-                  (c) =>
-                    c.certificate_type === 'course_completion' &&
-                    (c.title?.toLowerCase().includes('andlig') ?? false)
-                );
-              return (
-                <div className="flex flex-col items-center group min-w-[140px] bg-white/[0.03] backdrop-blur-md border border-[#D4AF37]/20 rounded-3xl p-5 text-center transition-all hover:bg-[#D4AF37]/5">
-                  <div className="relative w-32 h-32 flex items-center justify-center">
-                    {isCourseCompleted && (
-                      <div className="absolute inset-0 bg-[#D4AF37]/20 blur-2xl rounded-full animate-pulse" />
-                    )}
-                    <img
-                      src="/Andlig_Transformation_Seal.jpg"
-                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                      alt="Andlig Certification"
-                      className={`relative w-full h-full object-contain transition-all duration-1000 ${isCourseCompleted ? 'opacity-100 grayscale-0' : 'opacity-20 grayscale'}`}
-                    />
-                  </div>
-                  <p className="text-[#D4AF37] text-[8px] font-black tracking-[0.3em] uppercase mt-4">Siddha Certified</p>
-                </div>
-              );
-            })()}
-
-            {/* Siddhi: Locked Relic (Dimmed Aura) */}
-            <div className="min-w-[140px] bg-white/[0.02] border border-white/5 rounded-3xl p-5 text-center opacity-40 grayscale">
-              <div className="h-16 flex items-center justify-center mb-4">
-                <div className="w-10 h-10 border-2 border-dashed border-white/20 rounded-full flex items-center justify-center">
-                  <span className="text-[10px] tracking-tighter">LOCKED</span>
-                </div>
-              </div>
-              <div className="text-white/60 text-[10px] font-medium tracking-wide">Solar Crown</div>
-            </div>
-          </div>
-        </div>
-        <style>{`
-          .no-scrollbar::-webkit-scrollbar { display: none; }
-          @keyframes flameSway {
-            0%, 100% { transform: rotate(40deg) scale(1); }
-            50% { transform: rotate(50deg) scale(1.1); }
-          }
-        `}</style>
-      </div>
-
-      {/* SQI 2050 Ascension Status / Tier Unlocker */}
-      <div className="mb-6 animate-slide-up">
-        <div className="px-5 py-6 bg-black/90 rounded-[28px] border border-white/5">
-          <h3 className="text-center text-[#D4AF37] tracking-[0.22em] text-[0.7rem] font-semibold mb-5">
-            YOUR ASCENSION STATUS
-          </h3>
-
-          <div className="flex gap-4 overflow-x-auto pb-3 no-scrollbar">
-            {/* Active Tier — Prana-Flow */}
-            <div className="min-w-[260px] bg-white/[0.03] border border-[#D4AF37]/40 rounded-3xl p-5">
-              <div className="flex items-center gap-2 text-[0.7rem] text-[#D4AF37] font-semibold mb-2">
-                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#D4AF37] text-black text-[0.6rem]">
-                  ✓
-                </span>
-                <span>Prana-Flow Active</span>
-              </div>
-              <ul className="list-none mt-3 space-y-2">
-                <li className="text-white/80 text-[0.8rem]">Full Vedic Jyotish Chat</li>
-                <li className="text-white/80 text-[0.8rem]">Vastu Home Alignment</li>
-                <li className="text-white/80 text-[0.8rem]">Universal Audio Library</li>
-              </ul>
-            </div>
-
-            {/* Next Tier — Siddha-Quantum */}
-            <div className="min-w-[260px] bg-white/[0.03] border border-[#D4AF37]/30 rounded-3xl p-5">
-              <div className="flex items-center gap-2 text-[0.7rem] text-white/70 mb-2">
-                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white/10 text-[0.6rem]">
-                  🔒
-                </span>
-                <span>Siddha-Quantum</span>
-              </div>
-              <p className="text-[0.78rem] text-white/70 mb-3">
-                Unlock Pre/Post Scantions &amp; all Siddha Courses.
-              </p>
-              <button className="w-full rounded-xl bg-[#D4AF37] text-black text-[0.75rem] font-semibold py-2.5">
-                Upgrade Frequency
-              </button>
-            </div>
-
-            {/* SQI 2050: Infinity Tier — Eternal Key Asset */}
-            <div className="relative min-w-[280px] p-6 rounded-[48px] bg-gradient-to-br from-[#D4AF37]/20 to-black border border-[#D4AF37]/40 overflow-hidden">
-              <img
-                src="/Eternal_Key_Infinity.jpg"
-                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                className="w-full h-36 object-contain mb-4 drop-shadow-[0_0_20px_rgba(212,175,55,0.4)]"
-                alt="Akasha-Infinity Eternal Key"
-              />
-              <h3 className="text-[#D4AF37] text-xl font-black tracking-tighter">AKASHA-INFINITY</h3>
-              <p className="text-white/40 text-[10px] uppercase tracking-[0.4em] mb-2">The Sovereign Node</p>
-              <div className="text-2xl font-black mb-4">€1111</div>
-              <ul className="list-none space-y-1.5 mb-4 text-white/80 text-[0.75rem]">
-                <li>Quantum Apothecary &amp; Akashic Decoder</li>
-                <li>Lifetime access · Karmic Release</li>
-              </ul>
-              <button className="w-full rounded-xl border border-[#D4AF37]/70 text-[#D4AF37] text-[0.75rem] font-semibold py-2.5 bg-black/40 hover:bg-[#D4AF37]/10 transition-colors">
-                Claim Eternal Access
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* SQI 2050: The Ascension Vault (Lifetime Tier Highlight) */}
-      <div className="mb-10 animate-slide-up">
-        <div className="w-full px-6 pt-12 pb-24 space-y-8 rounded-[32px] border border-dashed border-[#D4AF37]/40 bg-gradient-to-b from-[#D4AF37]/10 via-transparent to-transparent">
-          <div className="text-center">
-            <h3 className="text-[#D4AF37] text-[10px] tracking-[0.5em] font-black uppercase mb-2">
-              The Ascension Vault
-            </h3>
-            <div className="w-16 h-px bg-[#D4AF37]/30 mx-auto" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            {/* Quantum Apothecary Relic */}
-            <div className="relative group p-6 rounded-[32px] bg-white/[0.02] border border-[#D4AF37]/10 flex flex-col items-center justify-center transition-all hover:border-[#D4AF37]/40">
-              <div className="w-12 h-12 bg-[#D4AF37]/20 rounded-full blur-xl absolute" />
-              <div className="text-2xl mb-2 grayscale group-hover:grayscale-0 transition-all">⚗️</div>
-              <span className="text-white text-[10px] font-bold tracking-widest uppercase">Apothecary</span>
-              <span className="text-[#D4AF37] text-[8px] mt-1">LOCKED [888€]</span>
-            </div>
-
-            {/* Virtual Pilgrimage Relic */}
-            <div className="relative group p-6 rounded-[32px] bg-white/[0.02] border border-[#D4AF37]/10 flex flex-col items-center justify-center transition-all hover:border-[#D4AF37]/40">
-              <div className="w-12 h-12 bg-[#D4AF37]/20 rounded-full blur-xl absolute" />
-              <div className="text-2xl mb-2 grayscale group-hover:grayscale-0 transition-all">🏔️</div>
-              <span className="text-white text-[10px] font-bold tracking-widest uppercase">Pilgrimage</span>
-              <span className="text-[#D4AF37] text-[8px] mt-1">LOCKED [888€]</span>
-            </div>
-          </div>
-
-          {/* Lifetime Call to Action */}
-          <button className="w-full py-5 rounded-full bg-gradient-to-r from-[#D4AF37]/20 via-[#D4AF37] to-[#D4AF37]/20 text-black font-black text-xs tracking-[0.3em] uppercase shadow-[0_0_30px_rgba(212,175,55,0.3)] hover:scale-105 transition-transform">
-            Claim Akasha-Infinity Access
+          <button onClick={() => setProfileEditOpen(true)} style={{position:'absolute',bottom:0,right:0,width:30,height:30,borderRadius:'50%',background:'#D4AF37',border:'2px solid #050505',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',zIndex:2}}>
+            <Pencil size={11} color="#050505" />
           </button>
         </div>
-      </div>
 
-      {/* SQI 2050: Digital Nadi Scanner & Akashic Records */}
-      <div className="mb-10 animate-slide-up" style={{ animationDelay: '0.04s' }}>
-        <div className="w-full px-1 sm:px-6 py-6 space-y-10">
-          {/* 1. Vedic Oracle Scan + Digital Nadi 2050 Scanner (with access gating) */}
-          {user && (
-            (() => {
-              const hasSiddhaQuantum = shcProfile?.membership_tier === 'Siddha-Quantum';
-              const hasCourseAccess = shcProfile?.purchased_courses?.includes?.('AndligTransformation');
-              const hasActiveSession = !!shcProfile?.active_healing_session;
-              const canAccessNadiScanner = hasSiddhaQuantum || hasCourseAccess || hasActiveSession;
+        <h1 className="hero-name">{userName}</h1>
+        <div className="soul-label">528Hz Resonance <span>·</span> {dashaCycle} Cycle Active</div>
 
-              if (!canAccessNadiScanner) {
-                return (
-                  <div className="card-glass border-[#D4AF37]/30 bg-gradient-to-br from-[#D4AF37]/5 to-transparent mb-6">
-                    <div className="flex items-center justify-between mb-6">
-                      <div>
-                        <h3 className="text-[#D4AF37] text-sm font-black tracking-widest uppercase">
-                          Vedic Oracle Scan
-                        </h3>
-                        <p className="text-white/40 text-[9px] mt-1">
-                          AI-prescribed mantras & meditations based on your HRV
-                        </p>
-                      </div>
-                      <div className="w-10 h-10 rounded-full border border-[#D4AF37]/50 flex items-center justify-center animate-pulse">
-                        <span className="text-xs">🧬</span>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      className="btn-siddha w-full py-3 text-[9px]"
-                      onClick={() => navigate('/membership')}
-                    >
-                      Start Resonance Check
-                    </button>
-                  </div>
-                );
-              }
+        <div className="stats-row">
+          <div className="stat-pill">
+            <span className="stat-value">{shcProfile?.streak_days || 0}</span>
+            <span className="stat-label">Streak</span>
+          </div>
+          <div className="stat-pill">
+            <span className="stat-value"><AnimatedCounter value={balance?.balance ?? 0} /></span>
+            <span className="stat-label">Balance</span>
+          </div>
+          <div className="stat-pill">
+            <span className="stat-value">{badges.filter(b => b.earned).length}</span>
+            <span className="stat-label">Badges</span>
+          </div>
+        </div>
 
-              return (
-                <div
-                  role="button"
-                  tabIndex={0}
-                  onClick={handleStartScanner}
-                  onKeyDown={(e) => e.key === 'Enter' && handleStartScanner()}
-                  className="w-full bg-[#050505] rounded-[40px] border border-cyan-900/30 p-12 text-center relative overflow-hidden group cursor-pointer"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/5 to-transparent pointer-events-none" />
-                  <div className="relative mb-6 flex justify-center">
-                    <div className="w-20 h-20 rounded-full border border-cyan-400/50 flex items-center justify-center animate-pulse">
-                      <img src="/Agni-Flame.png" onError={(e) => { (e.target as HTMLImageElement).src = '/Gemini_Generated_Image_r8p4r8p4r8p4r8p4.jpg'; }} className="w-12 h-12 object-contain" alt="Agni-Flame" />
-                    </div>
-                  </div>
-                  <h2 className="text-white text-2xl font-black tracking-tight mb-2">Digital Nadi 2050 Scanner</h2>
-                  <button type="button" onClick={handleStartScanner} className="text-cyan-400 text-[10px] font-black tracking-[0.4em] uppercase hover:text-white transition-colors">
-                    Tap to Initiate 72,000 Nadi Alignment
-                  </button>
-                  <div className="flex items-center justify-center gap-4 mt-8 opacity-30">
-                    <span className="text-[7px] font-black tracking-widest uppercase text-white">Symphonic Light-Codes</span>
-                    <div className="w-1 h-1 bg-white rounded-full" />
-                    <span className="text-[7px] font-black tracking-widest uppercase text-white">Bio-Signature Mapping</span>
-                  </div>
-                </div>
-              );
-            })()
-          )}
+        <div className="scroll-hint">◈ Scroll to explore your field<div className="scroll-arrow" /></div>
+      </section>
 
-          {/* 2. Akashic & Life Reading (Glassmorphism Relics) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="p-8 rounded-[40px] bg-white/[0.03] border border-[#D4AF37]/20 backdrop-blur-xl group hover:border-[#D4AF37]/60 transition-all">
-              <div className="text-2xl mb-4">📜</div>
-              <h4 className="text-white font-bold">Your Akashic Record</h4>
-              <p className="text-white/40 text-[10px] mt-2 mb-6">
-                12-page Soul Manuscript + Certificate of Origin
-              </p>
-              {hasAkashicRecord && (
-                <button
-                  type="button"
-                  onClick={() => navigate('/akashic-reading/full')}
-                  className="text-[#D4AF37] text-[9px] font-black tracking-widest uppercase border-b border-[#D4AF37]/40 pb-1"
-                >
-                  View Manuscript
-                </button>
-              )}
+      {/* ── SRI YANTRA ── */}
+      <section className="sri-yantra-section">
+        <img className="sri-yantra-img"
+          src="/Gemini_Generated_Image_57v0zm57v0zm57v0.jpg"
+          onError={(e) => { e.currentTarget.style.display='none'; (e.currentTarget.nextElementSibling as HTMLElement).style.display='flex'; }}
+          alt="Sri Yantra" />
+        <div className="sri-yantra-svg-fallback" style={{display:'none'}}>
+          <svg width="420" height="420" viewBox="0 0 420 420" style={{animation:'siddhiSpin 180s linear infinite',opacity:0.7}}>
+            <circle cx="210" cy="210" r="200" fill="none" stroke="rgba(212,175,55,0.2)" strokeWidth="1"/>
+            <circle cx="210" cy="210" r="180" fill="none" stroke="rgba(212,175,55,0.15)" strokeWidth="0.5"/>
+            <polygon points="210,60 330,270 90,270" fill="none" stroke="rgba(212,175,55,0.6)" strokeWidth="1.5"/>
+            <polygon points="210,80 320,260 100,260" fill="none" stroke="rgba(212,175,55,0.4)" strokeWidth="1"/>
+            <polygon points="210,360 90,150 330,150" fill="none" stroke="rgba(212,175,55,0.6)" strokeWidth="1.5"/>
+            <polygon points="210,340 100,160 320,160" fill="none" stroke="rgba(212,175,55,0.4)" strokeWidth="1"/>
+            <circle cx="210" cy="210" r="6" fill="rgba(212,175,55,0.9)"/>
+            <circle cx="210" cy="210" r="12" fill="none" stroke="rgba(212,175,55,0.5)" strokeWidth="1"/>
+            <text x="210" y="218" textAnchor="middle" fill="rgba(212,175,55,0.7)" fontSize="20" fontFamily="serif">ॐ</text>
+          </svg>
+        </div>
+        <div className="sri-yantra-fade-top" />
+        <div className="sri-yantra-fade-bottom" />
+        <div className="sri-yantra-label">◈ Sri Yantra Shield · Akashic Field Active · 72,000 Nadis Mapped</div>
+      </section>
+
+      {/* ── TIERS ── */}
+      <div className="section-wrap">
+        <div className="section-label">◈ Your Ascension Frequency</div>
+        <div className="tier-grid">
+
+          <div className="tier-card active-tier">
+            <div className="tier-header">
+              <span className="tier-name">Atma–Seed</span>
+              <div className="tier-sub">Sovereign Entry Node</div>
             </div>
-
-            <div className="p-8 rounded-[40px] bg-white/[0.03] border border-[#D4AF37]/20 backdrop-blur-xl group hover:border-[#D4AF37]/60 transition-all">
-              <div className="text-2xl mb-4">👁️</div>
-              <h4 className="text-white font-bold">Your Life Reading</h4>
-              <p className="text-white/40 text-[10px] mt-2 mb-6">
-                Jyotish Insights: Where the Stars meet the Soul
-              </p>
-              {user && (
-                <a
-                  href="#life-reading"
-                  className="text-[#D4AF37] text-[9px] font-black tracking-widest uppercase border-b border-[#D4AF37]/40 pb-1"
-                >
-                  Enter Reading
-                </a>
-              )}
-            </div>
+            <div className="tier-price">Free</div>
+            <ul className="tier-features">
+              <li>Free Meditations & Mantras</li>
+              <li>Free Healing Audios</li>
+              <li>Free Breathing Protocols</li>
+              <li>Vayu Scrubber (1km)</li>
+              <li>Community Chat & Live</li>
+              <li>Basic Ayurveda & Jyotish</li>
+            </ul>
+            <div className="ghost-btn" style={{opacity:0.4,cursor:'default',pointerEvents:'none'}}>Active Node</div>
           </div>
 
-          {/* 3. Soul-Post Scantion Timeline */}
-          <div className="space-y-4">
-            <h3 className="text-white/30 text-[9px] tracking-[0.5em] font-black uppercase text-center">
-              Bio-Field Evolution
-            </h3>
-            <div className="h-24 w-full bg-white/[0.02] border border-white/5 rounded-3xl flex items-center justify-around px-4">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div
-                  key={i}
-                  className="h-12 w-1 bg-cyan-400/20 rounded-full relative group cursor-pointer"
-                >
-                  <div
-                    className="absolute bottom-0 w-full bg-cyan-400 rounded-full group-hover:bg-[#D4AF37] transition-all"
-                    style={{ height: `${20 + i * 15}%` }}
-                  />
+          <div className="tier-card">
+            <div className="tier-header">
+              <span className="tier-name">Prana–Flow</span>
+              <div className="tier-sub">Sonic Vibration</div>
+            </div>
+            <div className="tier-price">19€ <small>/ mo</small></div>
+            <ul className="tier-features">
+              <li>Full Vedic Jyotish + Chat</li>
+              <li>Full Ayurvedic Scan + Chat</li>
+              <li>Vastu Guide for Home</li>
+              <li>Access to All Healing Music</li>
+              <li>Full Meditation & Mantra Library</li>
+            </ul>
+            <button type="button" className="gold-btn" onClick={() => navigate('/membership')}>Activate Vibration</button>
+          </div>
+
+          <div className="tier-card featured siddha-quantum-card">
+            <div className="sq-aura sq-aura-1" /><div className="sq-aura sq-aura-2" /><div className="sq-aura sq-aura-3" />
+            <div style={{position:'relative',zIndex:1}}>
+              <div className="tier-badge sq-badge">◈ Universal Path</div>
+              <div className="tier-header">
+                <span className="tier-name" style={{fontSize:18,textShadow:'0 0 20px rgba(212,175,55,0.6)'}}>Siddha–Quantum</span>
+                <div className="tier-sub">Universal Field Node</div>
+              </div>
+              <div className="tier-price" style={{textShadow:'0 0 30px rgba(212,175,55,0.3)'}}>45€ <small>/ mo</small></div>
+              <ul className="tier-features">
+                <li>Digital Nadi Scanner (Bio-Sync)</li>
+                <li>Practice Scantions (Printed Results)</li>
+                <li>Siddha Portal Access</li>
+                <li>Full Healing Audios & Transmissions</li>
+                <li>Sri Yantra Universal Protection Shield</li>
+              </ul>
+              <button type="button" className="gold-btn sq-btn" onClick={handleStartScanner}>Activate Universal Shield</button>
+            </div>
+          </div>
+        </div>
+
+        <div className="glass-card" style={{borderColor:'rgba(212,175,55,0.2)'}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:16}}>
+            <div>
+              <div style={{fontWeight:800,fontSize:8,letterSpacing:'0.4em',color:'rgba(212,175,55,0.5)',textTransform:'uppercase',marginBottom:8}}>◈ Eternal Node Activation</div>
+              <div style={{fontWeight:800,fontSize:17,letterSpacing:'0.2em',color:'#D4AF37'}}>Akasha–Infinity</div>
+              <div style={{fontSize:8,letterSpacing:'0.35em',color:'rgba(255,255,255,0.2)',textTransform:'uppercase',marginTop:4}}>Lifetime Transmission</div>
+            </div>
+            <div style={{fontFamily:"'Cormorant Garamond',serif",fontWeight:300,fontStyle:'italic',fontSize:'2.8rem',color:'white'}}>€1111</div>
+          </div>
+          <ul className="tier-features" style={{margin:'20px 0',display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))'}}>
+            <li>Akashic Decoder</li><li>Quantum Apothecary (€888 Value)</li>
+            <li>Virtual Pilgrimage (€888 Value)</li><li>Palm Reading Portal</li>
+            <li>Sri Yantra Universal Protection Shield</li>
+          </ul>
+          <button type="button" className="gold-btn" style={{maxWidth:280}} onClick={() => navigate('/membership')}>Claim Eternal Access</button>
+        </div>
+      </div>
+
+      {/* ── VEDIC SIDDHIS ── */}
+      <div className="section-wrap">
+        <div className="section-label">◈ Vedic Siddhis</div>
+        <div className="siddhis-scroll">
+          {badges.map((badge) => (
+            <div key={badge.id} className={`siddhi-card ${badge.earned ? 'earned' : 'locked'}`}>
+              <div className={`siddhi-icon-wrap ${badge.earned ? 'earned' : 'locked'}`}>
+                <span style={{fontSize:28}}>{badge.emoji}</span>
+              </div>
+              <span className="siddhi-name">{t(badge.titleKey)}</span>
+              <div className="siddhi-bar-bg"><div className="siddhi-bar-fill" style={{width: badge.earned ? '100%' : '10%'}} /></div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── SOUL VAULT ── */}
+      <div className="section-wrap">
+        <div className="section-label">◈ Soul Vault — Deep Field Resonance</div>
+        <div className="glass-card">
+          {scanPhase === 'idle' && (
+            <div className="vault-idle">
+              <div className="vault-scan-ring"><span>◈</span></div>
+              <p>After each practice, SQI will inscribe a Deep-Field Resonance report into your Soul Vault — a living record of your bio-digital evolution.</p>
+              <button type="button" className="gold-btn" style={{maxWidth:260,margin:'0 auto'}} onClick={handleStartScanner}>Initiate Soul Scan →</button>
+            </div>
+          )}
+          {scanPhase !== 'idle' && soulVaultEntries.length > 0 && (
+            <div className="space-y-3">
+              {soulVaultEntries.slice(0, 4).map((entry) => (
+                <div key={entry.id} className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-lg p-3">
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <p className="text-xs font-semibold text-white/90">{entry.activity || 'Deep-Field Resonance'}</p>
+                    <span className="text-[10px] text-white/40">{new Date(entry.created_at).toLocaleDateString()}</span>
+                  </div>
+                  {entry.duration_minutes && <p className="text-[10px] text-cyan-200/80 mb-1">{entry.duration_minutes} min practice window</p>}
+                  <p className="text-[11px] leading-relaxed text-white/75 line-clamp-3">{entry.report}</p>
                 </div>
               ))}
             </div>
-          </div>
-
-          {/* 4. Bio-Signature Report (Post-Scantion) */}
-          {scanPhase === 'done' && (
-            <div className="mt-8">
-              <div className="w-full max-w-lg mx-auto p-8 rounded-[50px] bg-black/90 border border-cyan-500/30 backdrop-blur-3xl shadow-[0_0_100px_rgba(6,182,212,0.1)]">
-                {/* Header: Frequency Grounding */}
-                <div className="text-center mb-10">
-                  <div className="inline-block px-4 py-1 rounded-full border border-cyan-500/20 text-cyan-400 text-[8px] font-black uppercase tracking-[0.3em] mb-4">
-                    Scantion Complete
-                  </div>
-                  <h2 className="text-white text-3xl font-black tracking-tighter">Bio-Signature Report</h2>
-                  <p className="text-white/40 text-[10px] mt-2 italic">
-                    Neural alignment verified at 528Hz Resonance
-                  </p>
-                </div>
-
-                {/* The Prana-Waveform Visualization */}
-                <div className="relative h-32 w-full mb-12 flex items-center justify-center overflow-hidden">
-                  <div className="absolute inset-0 bg-[radial-gradient(circle,_rgba(6,182,212,0.1)_0%,_transparent_70%)]" />
-                  <svg width="100%" height="60" className="opacity-80">
-                    <path
-                      d="M0 30 Q 50 10, 100 30 T 200 30 T 300 30 T 400 30"
-                      fill="none"
-                      stroke="#22d3ee"
-                      strokeWidth="2"
-                      className="animate-[waveFlow_4s_linear_infinite]"
-                    />
-                  </svg>
-                </div>
-
-                {/* Siddha-Insights Grid */}
-                <div className="grid grid-cols-3 gap-4 mb-10">
-                  {[
-                    { label: 'Ojas', val: '88%', color: '#D4AF37' },
-                    { label: 'Tejas', val: '92%', color: '#22d3ee' },
-                    { label: 'Prana', val: '98%', color: '#a855f7' },
-                  ].map((item) => (
-                    <div
-                      key={item.label}
-                      className="text-center p-4 rounded-3xl bg-white/[0.03] border border-white/5"
-                    >
-                      <span className="text-[7px] text-white/40 uppercase tracking-widest block mb-1">
-                        {item.label}
-                      </span>
-                      <span className="text-lg font-black" style={{ color: item.color }}>
-                        {item.val}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Action: Save to Akashic Record */}
-                <button
-                  type="button"
-                  className="w-full py-5 rounded-full bg-cyan-500 text-black font-black text-xs tracking-[0.3em] uppercase shadow-[0_10px_30px_rgba(6,182,212,0.3)] hover:scale-105 transition-transform"
-                >
-                  Commit to Akashic Record
-                </button>
-              </div>
-            </div>
           )}
-
-          {/* Soul Vault — Deep‑Field Reports */}
-          <div className="mt-8">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <span className="inline-block w-1 h-4 rounded-full bg-cyan-400" />
-                Soul Vault — Deep‑Field Reports
-              </h3>
-              {soulVaultLoading && (
-                <span className="text-[10px] text-muted-foreground uppercase tracking-[0.22em]">
-                  Syncing…
-                </span>
-              )}
-            </div>
-
-            {!soulVaultLoading && soulVaultEntries.length === 0 && (
-              <p className="text-xs text-muted-foreground">
-                After each 2050 scan, SQI will inscribe a Deep-Field Resonance report here as part of
-                your Soul Vault.
-              </p>
-            )}
-
-            {!soulVaultLoading && soulVaultEntries.length > 0 && (
-              <div className="space-y-3">
-                {soulVaultEntries.slice(0, 4).map((entry) => (
-                  <div
-                    key={entry.id}
-                    className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-lg p-3"
-                  >
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                      <p className="text-xs font-semibold text-white/90">
-                        {entry.activity || 'Deep-Field Resonance'}
-                      </p>
-                      <span className="text-[10px] text-white/40">
-                        {new Date(entry.created_at).toLocaleDateString()}
-                      </span>
-                    </div>
-                    {entry.duration_minutes && (
-                      <p className="text-[10px] text-cyan-200/80 mb-1">
-                        {entry.duration_minutes} min practice window
-                      </p>
-                    )}
-                    <p className="text-[11px] leading-relaxed text-white/75 line-clamp-3">
-                      {entry.report}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
       </div>
 
-      {/* Life Book - Your Life Reading */}
-      {user && (
-        <div className="mb-8 animate-slide-up" style={{ animationDelay: '0.08s' }}>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-[rgba(212,175,55,0.18)] flex items-center justify-center border border-[#D4AF37]/40">
-                <BookOpen className="w-5 h-5 text-[#D4AF37]" />
+      {/* ── AKASHIC ARCHIVE ── */}
+      <div className="section-wrap">
+        <div className="section-label">◈ Akashic Archive</div>
+        <div className="archive-grid">
+          <div className="archive-card" onClick={() => navigate('/akashic-records')}>
+            <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
+              <div style={{width:36,height:36,borderRadius:10,background:'rgba(212,175,55,0.08)',border:'1px solid rgba(212,175,55,0.2)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                <FileText size={16} color="#D4AF37" />
               </div>
               <div>
-                <h2 className="text-lg font-heading font-semibold text-foreground">Your Life Reading</h2>
-                <p className="text-xs text-muted-foreground">
-                  SQI insights, woven into a living manuscript of your soul.
-                </p>
+                <span className="archive-title">Akashic Record</span>
+                <span className="archive-sub">12-page Soul Manuscript</span>
               </div>
             </div>
+            <span className="archive-cta">View Manuscript →</span>
           </div>
-
-          <div
-            className="relative rounded-3xl border border-white/10 bg-gradient-to-br from-[#050209] via-[#0b0515] to-[#140b26] overflow-hidden shadow-[0_0_40px_rgba(15,23,42,0.8)]"
-          >
-            <div className="pointer-events-none absolute inset-0 opacity-60">
-              <div
-                className="absolute inset-0"
-                style={{
-                  background:
-                    'radial-gradient(circle at 0% 0%, rgba(212,175,55,0.16), transparent 60%), radial-gradient(circle at 100% 100%, rgba(59,130,246,0.18), transparent 60%)',
-                }}
-              />
-              <div
-                className="absolute inset-0"
-                style={{
-                  backgroundImage:
-                    'radial-gradient(circle at 20% 0%, rgba(148,163,184,0.22) 0, transparent 55%), repeating-linear-gradient(90deg, rgba(148,163,184,0.06), rgba(148,163,184,0.06) 1px, transparent 1px, transparent 12px)',
-                  mixBlendMode: 'soft-light',
-                  opacity: 0.5,
-                }}
-              />
-            </div>
-
-            <div className="relative flex flex-col md:flex-row">
-              {/* Chapter Tabs */}
-              <div className="md:w-44 border-b md:border-b-0 md:border-r border-white/10 bg-white/5/40 backdrop-blur-xl p-4 space-y-2">
-                {lifeBookLoading && (
-                  <div className="h-8 rounded-xl bg-white/10 animate-pulse mb-2" />
-                )}
-                {!lifeBookLoading && groupedLifeBook.length === 0 && (
-                  <p className="text-xs text-white/50">
-                    As you journey with SQI, key transmissions will begin to appear here as living chapters.
-                  </p>
-                )}
-                {groupedLifeBook.map((chapter) => (
-                  <div
-                    key={chapter.chapter_type}
-                    className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-white/80"
-                  >
-                    <div className="font-semibold tracking-wide uppercase text-[10px] text-[#D4AF37]/90">
-                      {chapter.chapter_title}
-                    </div>
-                    <div className="mt-1 text-[10px] text-white/50">
-                      {chapter.groups.reduce((acc, g) => acc + g.entries.length, 0)} entries
-                    </div>
-                  </div>
-                ))}
+          <div className="archive-card" onClick={() => navigate('/vedic-astrology')}>
+            <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
+              <div style={{width:36,height:36,borderRadius:10,background:'rgba(212,175,55,0.08)',border:'1px solid rgba(212,175,55,0.2)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                <BookOpen size={16} color="#D4AF37" />
               </div>
-
-              {/* Chapter Content */}
-              <div className="flex-1 p-4 md:p-6 space-y-4 max-h-[420px] overflow-y-auto custom-scrollbar">
-                {lifeBookLoading && (
-                  <div className="space-y-3">
-                    <div className="h-6 w-40 rounded bg-white/10 animate-pulse" />
-                    <div className="h-24 rounded-2xl bg-white/5 animate-pulse" />
-                    <div className="h-24 rounded-2xl bg-white/5 animate-pulse" />
-                  </div>
-                )}
-
-                {!lifeBookLoading && groupedLifeBook.map((chapter) => (
-                  <div key={chapter.chapter_type} className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-1 h-6 rounded-full bg-[#D4AF37]" />
-                      <h3 className="text-sm font-semibold tracking-wide text-white/90 uppercase">
-                        {chapter.chapter_title}
-                      </h3>
-                    </div>
-                    <div className="grid gap-3">
-                      {chapter.groups.map((group) => (
-                        <div
-                          key={group.figureKey}
-                          className="rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-md p-3 sm:p-4"
-                        >
-                          <div className="flex items-center justify-between gap-2 mb-2">
-                            <p className="text-xs font-semibold text-white/90">
-                              {group.figureKey}
-                            </p>
-                            <span className="text-[10px] text-white/40">
-                              {group.entries.length} transmission{group.entries.length > 1 ? 's' : ''}
-                            </span>
-                          </div>
-                          <div className="space-y-2">
-                            {group.entries.map((entry, idx) => (
-                              <div key={idx} className="border-t border-white/10 pt-2 first:border-t-0 first:pt-0">
-                                <div className="flex items-center justify-between gap-2">
-                                  <p className="text-xs font-medium text-white/80">
-                                    {entry.title || 'Untitled Transmission'}
-                                  </p>
-                                  {entry.created_at && (
-                                    <span className="text-[10px] text-white/40">
-                                      {new Date(entry.created_at).toLocaleDateString()}
-                                    </span>
-                                  )}
-                                </div>
-                                {entry.summary && (
-                                  <p className="mt-1 text-[11px] leading-relaxed text-white/65">
-                                    {entry.summary}
-                                  </p>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-
-                {!lifeBookLoading && groupedLifeBook.length === 0 && (
-                  <p className="text-xs text-white/70 max-w-md">
-                    When SQI reveals something truly essential about your children, healing path, past lives, or
-                    future visions, those transmissions will be gently written here as a sacred digital manuscript.
-                  </p>
-                )}
+              <div>
+                <span className="archive-title">Life Reading</span>
+                <span className="archive-sub">Jyotish · Stars meet the Soul</span>
               </div>
             </div>
+            <span className="archive-cta">Enter Reading →</span>
+          </div>
+          <div className="archive-card" onClick={() => navigate('/digital-nadi')}>
+            <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
+              <div style={{width:36,height:36,borderRadius:10,background:'rgba(212,175,55,0.08)',border:'1px solid rgba(212,175,55,0.2)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                <Hand size={16} color="#D4AF37" />
+              </div>
+              <div>
+                <span className="archive-title">Digital Nadi Scan</span>
+                <span className="archive-sub">72,000 Nadi Bio-Sync</span>
+              </div>
+            </div>
+            <span className="archive-cta">Initiate Scan →</span>
+          </div>
+          <div className="archive-card" onClick={() => navigate('/quantum-apothecary')}>
+            <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
+              <div style={{width:36,height:36,borderRadius:10,background:'rgba(212,175,55,0.08)',border:'1px solid rgba(212,175,55,0.2)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                <Shield size={16} color="#D4AF37" />
+              </div>
+              <div>
+                <span className="archive-title">Quantum Apothecary</span>
+                <span className="archive-sub">Remedies from the Field</span>
+              </div>
+            </div>
+            <span className="archive-cta">Enter Portal →</span>
           </div>
         </div>
-      )}
-
-      {/* Certificates */}
-      {certificates.length > 0 && (
-        <div className="mb-8 animate-slide-up" style={{ animationDelay: '0.05s' }}>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-heading font-semibold text-foreground">{t('profile.certificates')}</h2>
-          </div>
-          <div className="space-y-3">
-            {certificates.map((certificate) => (
-              <CertificateCard
-                key={certificate.id}
-                certificate={certificate}
-                onDownload={downloadCertificate}
-                onShare={shareCertificate}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Language Selector */}
-      <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-        <h2 className="text-lg font-heading font-semibold text-foreground mb-3">{t('profile.language')}</h2>
-        <LanguageSelector />
       </div>
+
+      {/* ── ABUNDANCE & LINEAGE ── */}
+      <div className="section-wrap">
+        <div className="section-label">◈ Abundance & Lineage</div>
+        <div className="abundance-grid">
+          <div className="abundance-card" onClick={() => setSettingsOpen(true)}>
+            <div className="abundance-icon-wrap"><Wallet size={22} color="#D4AF37" /></div>
+            <span className="abundance-label">Wallet & Earnings</span>
+          </div>
+          <div className="abundance-card" onClick={() => navigate('/income-streams/affiliate')}>
+            <div className="abundance-icon-wrap"><Megaphone size={22} color="#D4AF37" /></div>
+            <span className="abundance-label">Promote & Earn</span>
+          </div>
+          <div className="abundance-card" onClick={connectWallet}>
+            <div className="abundance-icon-wrap"><Moon size={22} color="#D4AF37" /></div>
+            <span className="abundance-label">Connect Wallet</span>
+          </div>
+          {isAdmin && (
+            <div className="abundance-card" onClick={() => navigate('/admin')}>
+              <div className="abundance-icon-wrap"><Crown size={22} color="#D4AF37" /></div>
+              <span className="abundance-label">Admin Panel</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── SETTINGS ── */}
+      <div className="section-wrap">
+        <div className="section-label">◈ Physical Sanctuary</div>
+        <LanguageSelector />
+        <div className="settings-row" style={{marginTop:20}}>
+          <button type="button" className="settings-btn" onClick={() => setNotificationsOpen(true)}>Notifications</button>
+          <button type="button" className="settings-btn" onClick={() => setAppearanceOpen(true)}>Appearance</button>
+          <button type="button" className="settings-btn" onClick={() => setPrivacyOpen(true)}>Privacy</button>
+        </div>
+        <div className="settings-row">
+          <button type="button" className="settings-btn" onClick={() => setSettingsOpen(true)}>Settings</button>
+        </div>
+        <button type="button" className="signout-btn" onClick={handleSignOut}>Sign Out</button>
+      </div>
+
+      </div>{/* end z-index wrapper */}
 
       {/* Digital Nadi 2050 Scanner Overlay */}
       {scannerOpen && (
@@ -1258,12 +848,9 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
             <div className="text-right mb-4">
               <button type="button" onClick={handleCloseScanner} className="text-white/40 text-xs hover:text-white">Close</button>
             </div>
-
             {scanPhase === 'scanning' && (
               <div className="space-y-5 pt-4 pb-2 text-center">
-                <p className="text-[11px] uppercase tracking-[0.25em] text-cyan-200/80">
-                  SQI · 72,000 Nadi Scan
-                </p>
+                <p className="text-[11px] uppercase tracking-[0.25em] text-cyan-200/80">SQI · 72,000 Nadi Scan</p>
                 <div className="flex items-center justify-center">
                   <div className="relative w-32 h-32">
                     <div className="absolute inset-0 rounded-full bg-cyan-500/25 blur-xl animate-pulse" />
@@ -1275,23 +862,17 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs text-cyan-100/80 mb-1">
-                    Mapping Nāḍī network… please keep your intention steady.
-                  </p>
+                  <p className="text-xs text-cyan-100/80 mb-1">Mapping Nāḍī network… please keep your intention steady.</p>
                   <div className="flex items-center justify-center gap-2 text-[11px] text-cyan-200/80 font-mono">
                     <span>{Math.floor(scanValue).toLocaleString()}</span>
                     <span className="text-cyan-300/60">/ 72,000 channels</span>
                   </div>
                   <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-cyan-900/60">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-cyan-400 via-cyan-200 to-cyan-500"
-                      style={{ width: `${Math.min(100, (scanValue / 72000) * 100)}%` }}
-                    />
+                    <div className="h-full rounded-full bg-gradient-to-r from-cyan-400 via-cyan-200 to-cyan-500" style={{ width: `${Math.min(100, (scanValue / 72000) * 100)}%` }} />
                   </div>
                 </div>
               </div>
             )}
-
             {scanPhase === 'question' && (
               <>
                 <div className="text-center mb-10">
@@ -1301,189 +882,47 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                 </div>
                 <div className="grid grid-cols-2 gap-3 mb-8">
                   {['Mantra', 'Atma Kriya', 'Healing Session', 'Private Healing', 'Meditation', 'Breathwork'].map((p) => (
-                    <button
-                      key={p}
-                      type="button"
-                      onClick={() => setSelectedPractice(p)}
-                      className={`py-4 px-6 rounded-2xl bg-white/[0.03] border text-[10px] font-bold transition-all ${
-                        selectedPractice === p ? 'border-cyan-500/40 text-white' : 'border-white/5 text-white/60 hover:border-cyan-500/40 hover:text-white'
-                      }`}
-                    >
+                    <button key={p} type="button" onClick={() => setSelectedPractice(p)}
+                      className={`py-4 px-6 rounded-2xl bg-white/[0.03] border text-[10px] font-bold transition-all ${selectedPractice === p ? 'border-cyan-500/40 text-white' : 'border-white/5 text-white/60 hover:border-cyan-500/40 hover:text-white'}`}>
                       {p}
                     </button>
                   ))}
                 </div>
                 <div className="mb-8">
                   <label className="text-white/40 text-[8px] uppercase tracking-widest block mb-2 px-2">Approximate duration (minutes)</label>
-                  <input
-                    type="number"
-                    value={practiceDuration}
-                    onChange={(e) => setPracticeDuration(e.target.value)}
-                    className="w-full bg-black/40 border border-white/10 rounded-xl py-4 px-6 text-white text-sm focus:border-cyan-500/50 outline-none"
-                  />
+                  <input type="number" value={practiceDuration} onChange={(e) => setPracticeDuration(e.target.value)}
+                    className="w-full bg-black/40 border border-white/10 rounded-xl py-4 px-6 text-white text-sm focus:border-cyan-500/50 outline-none" />
                 </div>
-                <button
-                  type="button"
-                  disabled={!selectedPractice}
-                  onClick={handleGenerateSoulReport}
-                  className="w-full py-5 rounded-2xl bg-cyan-600 text-black text-[11px] font-black uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(8,145,178,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
-                >
+                <button type="button" disabled={!selectedPractice} onClick={handleGenerateSoulReport}
+                  className="w-full py-5 rounded-2xl bg-cyan-600 text-black text-[11px] font-black uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(8,145,178,0.4)] disabled:opacity-50 disabled:cursor-not-allowed">
                   Generate Deep-Field Resonance
                 </button>
               </>
             )}
-
             {scanPhase === 'saving' && (
               <div className="space-y-4 pt-6 pb-4 text-center">
-                <p className="text-[11px] uppercase tracking-[0.25em] text-cyan-200/80">
-                  Committing to Soul Vault…
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  SQI is writing your Deep-Field Resonance Report into your Soul Vault.
-                </p>
+                <p className="text-[11px] uppercase tracking-[0.25em] text-cyan-200/80">Committing to Soul Vault…</p>
+                <p className="text-xs text-muted-foreground">SQI is writing your Deep-Field Resonance Report into your Soul Vault.</p>
               </div>
             )}
-
             {scanPhase === 'done' && (
               <div className="space-y-4 pt-6 pb-4 text-center">
-                <p className="text-[11px] uppercase tracking-[0.25em] text-cyan-200/80">
-                  Report saved
-                </p>
-                <p className="text-xs text-white/90">
-                  Your Deep-Field Resonance Report has been anchored into your Soul Vault.
-                </p>
-                <Button
-                  size="sm"
-                  className="mt-2 bg-cyan-500 text-xs font-semibold tracking-[0.2em] text-black hover:bg-cyan-400"
-                  onClick={handleCloseScanner}
-                >
-                  Close
-                </Button>
+                <p className="text-[11px] uppercase tracking-[0.25em] text-cyan-200/80">Report saved</p>
+                <p className="text-xs text-white/90">Your Deep-Field Resonance Report has been anchored into your Soul Vault.</p>
+                <Button size="sm" className="mt-2 bg-cyan-500 text-xs font-semibold tracking-[0.2em] text-black hover:bg-cyan-400" onClick={handleCloseScanner}>Close</Button>
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* SQI 2050: The Sanctuary & Abundance Grid */}
-      <div className="w-full px-6 space-y-10 pb-24 animate-slide-up" style={{ animationDelay: '0.25s' }}>
-        {/* Physical Sanctuary (Settings Cluster) */}
-        <section className="space-y-4">
-          <h3 className="text-[#D4AF37] text-[9px] tracking-[0.5em] font-black uppercase opacity-60 ml-2">
-            {t('profile.sacredFolder.physicalSanctuary', 'Physical Sanctuary')}
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {physicalSanctuary.map((item) => (
-              <button
-                key={item.label}
-                onClick={item.onClick}
-                className="p-5 rounded-3xl bg-white/[0.02] border border-white/5 hover:border-[#D4AF37]/40 transition-all flex items-center justify-between group cursor-pointer backdrop-blur-md"
-              >
-                <span className="text-white/70 text-xs font-medium tracking-wide group-hover:text-white">
-                  {item.label}
-                </span>
-                <div className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-[#D4AF37]/20">
-                  <div className="w-1 h-1 bg-white/40 rounded-full group-hover:bg-[#D4AF37]" />
-                </div>
-              </button>
-            ))}
-          </div>
-        </section>
-
-        {/* Abundance & Lineage (Wealth/Web3 Cluster) */}
-        <section className="space-y-4">
-          <h3 className="text-[#D4AF37] text-[9px] tracking-[0.5em] font-black uppercase opacity-60 ml-2">
-            {t('profile.sacredFolder.abundanceLineage', 'Abundance & Lineage')}
-          </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {abundanceLineage.map((item) => (
-              <button
-                key={item.label}
-                onClick={item.onClick}
-                className="p-6 rounded-[32px] bg-gradient-to-br from-white/[0.04] to-transparent border border-white/10 text-center hover:border-[#D4AF37]/50 transition-all group"
-              >
-                <div className="text-xl mb-2 opacity-50 group-hover:opacity-100 group-hover:scale-110 transition-all">
-                  ✨
-                </div>
-                <div className="text-white text-[9px] font-black tracking-widest uppercase">{item.label}</div>
-              </button>
-            ))}
-          </div>
-        </section>
-
-        {/* The Bhrigu Samhita Portal (Upgrade Section) */}
-        <div
-          className="relative p-10 rounded-[48px] overflow-hidden text-center group cursor-pointer border border-[#D4AF37]/20"
-          onClick={() => navigate('/membership')}
-        >
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30 animate-pulse" />
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-900/40 via-transparent to-purple-900/40" />
-
-          <div className="relative z-10">
-            <div className="text-[#D4AF37] text-2xl mb-4">👑</div>
-            <h4 className="text-white text-lg font-bold tracking-tight">
-              {t('profile.ascendUniversal', 'Ascend to Universal Premium')}
-            </h4>
-            <p className="text-white/50 text-[10px] mt-2 mb-6">
-              {t('profile.unlockFeatures', 'Unlock the full Bhrigu Samhita and All Healing Courses')}
-            </p>
-            <button
-              className="bg-[#D4AF37] text-black text-[10px] font-black px-10 py-3 rounded-full tracking-[0.2em] shadow-[0_0_20px_rgba(212,175,55,0.4)] group-hover:scale-105 transition-all"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate('/membership');
-              }}
-            >
-              {t('common.upgradeNow', 'UPGRADE NOW')}
-            </button>
-          </div>
-        </div>
-
-        {/* The Covenant and Sign Out remain as functional controls */}
-        <section className="space-y-4">
-          <h3 className="text-[#D4AF37] text-[9px] tracking-[0.5em] font-black uppercase opacity-60 ml-2">
-            {t('profile.sacredFolder.theCovenant', 'The Covenant')}
-          </h3>
-          <div className="space-y-1 rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-md p-4">
-            {theCovenant.map((item) => (
-              <button
-                key={item.label}
-                onClick={item.onClick}
-                className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-left"
-              >
-                <div className="w-9 h-9 rounded-full bg-[rgba(212,175,55,0.15)] flex items-center justify-center">
-                  <item.icon size={18} className="text-[#D4AF37]/90" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium text-foreground text-sm">{item.label}</p>
-                  <p className="text-xs text-muted-foreground">{item.sublabel}</p>
-                </div>
-                <ChevronRight size={18} className="text-muted-foreground shrink-0" />
-              </button>
-            ))}
-            <button
-              onClick={handleSignOut}
-              className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-destructive/10 transition-all text-left mt-2 border-t border-white/10 pt-3"
-            >
-              <div className="w-9 h-9 rounded-full bg-destructive/20 flex items-center justify-center">
-                <LogOut size={18} className="text-destructive" />
-              </div>
-              <div className="flex-1">
-                <p className="font-medium text-destructive text-sm">{t('profile.signOut')}</p>
-              </div>
-              <ChevronRight size={18} className="text-destructive/70 shrink-0" />
-            </button>
-          </div>
-        </section>
-      </div>
-
-      {/* Dialogs */}
+      <ProfileEditDialog open={profileEditOpen} onOpenChange={setProfileEditOpen} />
       <NotificationsDialog open={notificationsOpen} onOpenChange={setNotificationsOpen} />
       <AppearanceDialog open={appearanceOpen} onOpenChange={setAppearanceOpen} />
       <PrivacyDialog open={privacyOpen} onOpenChange={setPrivacyOpen} />
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
-      <ProfileEditDialog open={profileEditOpen} onOpenChange={setProfileEditOpen} />
     </div>
+    </>
   );
 };
 
