@@ -653,18 +653,22 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               </button>
             </div>
 
-            {/* Infinity Tier — Akasha-Infinity */}
-            <div className="min-w-[260px] rounded-3xl p-5 border border-[#D4AF37] bg-gradient-to-br from-[#D4AF37]/25 via-black to-black">
-              <div className="flex items-center gap-2 text-[0.7rem] text-[#D4AF37] mb-2">
-                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-black/60 text-base">
-                  👑
-                </span>
-                <span>Akasha-Infinity</span>
-              </div>
-              <p className="text-[0.78rem] text-white/80 mb-3">
-                Quantum Apothecary &amp; Akashic Decoder included.
-              </p>
-              <button className="w-full rounded-xl border border-[#D4AF37]/70 text-[#D4AF37] text-[0.75rem] font-semibold py-2.5 bg-black/40">
+            {/* SQI 2050: Infinity Tier — Eternal Key Asset */}
+            <div className="relative min-w-[280px] p-6 rounded-[48px] bg-gradient-to-br from-[#D4AF37]/20 to-black border border-[#D4AF37]/40 overflow-hidden">
+              <img
+                src="/Eternal_Key_Infinity.jpg"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                className="w-full h-36 object-contain mb-4 drop-shadow-[0_0_20px_rgba(212,175,55,0.4)]"
+                alt="Akasha-Infinity Eternal Key"
+              />
+              <h3 className="text-[#D4AF37] text-xl font-black tracking-tighter">AKASHA-INFINITY</h3>
+              <p className="text-white/40 text-[10px] uppercase tracking-[0.4em] mb-2">The Sovereign Node</p>
+              <div className="text-2xl font-black mb-4">€1111</div>
+              <ul className="list-none space-y-1.5 mb-4 text-white/80 text-[0.75rem]">
+                <li>Quantum Apothecary &amp; Akashic Decoder</li>
+                <li>Lifetime access · Karmic Release</li>
+              </ul>
+              <button className="w-full rounded-xl border border-[#D4AF37]/70 text-[#D4AF37] text-[0.75rem] font-semibold py-2.5 bg-black/40 hover:bg-[#D4AF37]/10 transition-colors">
                 Claim Eternal Access
               </button>
             </div>
