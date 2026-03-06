@@ -20,6 +20,7 @@ import { ProtectedRoute } from "./components/layout/ProtectedRoute";
 import { AuthOnlyRoute } from "./components/layout/AuthOnlyRoute";
 import { DebugBanner } from "./components/DebugBanner";
 import { ProfileLanguageSync } from "./components/ProfileLanguageSync";
+import Profile from "./pages/Profile";
 import "@/lib/performance"; // Initialize performance monitoring
 
 // Lazy-loaded page components
@@ -36,7 +37,6 @@ const TrackDetail = React.lazy(() => import("./pages/TrackDetail"));
 const ArtistProfile = React.lazy(() => import("./pages/ArtistProfile"));
 const Mastering = React.lazy(() => import("./pages/Mastering"));
 const Wallet = React.lazy(() => import("./pages/Wallet"));
-const Profile = React.lazy(() => import("./pages/Profile"));
 const Legal = React.lazy(() => import("./pages/Legal"));
 const AdminDashboard = React.lazy(() => import("./pages/AdminDashboard"));
 const Admin = React.lazy(() => import("./pages/Admin"));

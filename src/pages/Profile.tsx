@@ -1004,7 +1004,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
             <span className="text-[8px] text-white/40 uppercase tracking-[0.25em] font-medium">BADGES</span>
           </div>
         </div>
-      )}
+      </section>
 
       {/* Certificates */}
       {certificates.length > 0 && (
