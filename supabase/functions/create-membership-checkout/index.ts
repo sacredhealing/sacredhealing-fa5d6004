@@ -17,22 +17,24 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const authHeader = req.headers.get("Authorization") ?? "";
   const supabaseClient = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+    Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+    { global: { headers: { Authorization: authHeader } } }
   );
 
   try {
     logStep("Function started");
 
-    const { priceId, tierSlug } = await req.json();
-    logStep("Request body", { priceId, tierSlug });
+    const body = await req.json();
+    const { priceId, tierSlug, affiliate_id: affiliateId, metadata: extraMetadata } = body;
+    logStep("Request body", { priceId, tierSlug, affiliateId });
 
     if (!priceId) {
       throw new Error("Price ID is required");
     }
 
-    const authHeader = req.headers.get("Authorization")!;
     const token = authHeader.replace("Bearer ", "");
     const { data } = await supabaseClient.auth.getUser(token);
     const user = data.user;
@@ -41,6 +43,24 @@ serve(async (req) => {
       throw new Error("User not authenticated or email not available");
     }
     logStep("User authenticated", { userId: user.id, email: user.email });
+
+    const affiliateRef = (affiliateId ?? extraMetadata?.affiliate_id ?? "direct") as string;
+    if (affiliateRef && affiliateRef !== "direct") {
+      try {
+        await supabaseClient.from("affiliate_attribution").upsert(
+          { user_id: user.id, ref_code: affiliateRef, last_seen_at: new Date().toISOString() },
+          { onConflict: "user_id" }
+        );
+        await supabaseClient.from("affiliate_events").insert({
+          ref_code: affiliateRef,
+          user_id: user.id,
+          tool_slug: "sqi_membership",
+          event_type: "checkout",
+        });
+      } catch (e) {
+        logStep("Affiliate attribution (best-effort) failed", String(e));
+      }
+    }
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
@@ -73,7 +93,10 @@ serve(async (req) => {
       cancel_url: `${req.headers.get("origin")}/membership?canceled=true`,
       metadata: {
         user_id: user.id,
-        tier_slug: tierSlug,
+        tier_slug: tierSlug ?? "",
+        affiliate_id: (affiliateId ?? extraMetadata?.affiliate_id ?? "direct") as string,
+        tier_name: (extraMetadata?.tier_name ?? tierSlug ?? "") as string,
+        protection_shield: (extraMetadata?.protection_shield ?? "inactive") as string,
       },
     };
 

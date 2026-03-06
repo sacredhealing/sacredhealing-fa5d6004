@@ -24,6 +24,7 @@ import { ProfileEditDialog } from '@/components/profile/ProfileEditDialog';
 import KoshaReport from '@/components/profile/KoshaReport';
 import HandScanner from '@/components/scanner/HandScanner';
 import { supabase } from '@/integrations/supabase/client';
+import { STRIPE_TIERS, type StripeTierKey } from '@/lib/stripe-config';
 
 type LifeBookCategory =
   | 'children'
@@ -86,6 +87,7 @@ const Profile: React.FC = () => {
 
   const [scannerOpen, setScannerOpen] = useState(false);
   const [scanPhase, setScanPhase] = useState<'idle' | 'scanning' | 'question' | 'saving' | 'done'>('idle');
+  const [upgradeLoading, setUpgradeLoading] = useState<StripeTierKey | null>(null);
   const [selectedPractice, setSelectedPractice] = useState<string | null>(null);
   const [practiceDuration, setPracticeDuration] = useState<string>('30');
 
@@ -222,6 +224,43 @@ const Profile: React.FC = () => {
     setScannerOpen(false);
     setScanPhase('idle');
     setSelectedPractice(null);
+  };
+
+  /* SQI 2050: COMMERCE & AFFILIATE SYNC LOGIC */
+  const handleUpgrade = async (tierKey: StripeTierKey) => {
+    const tier = STRIPE_TIERS[tierKey];
+    const affiliateId = typeof localStorage !== 'undefined' ? localStorage.getItem('sqi_affiliate_id') || 'direct' : 'direct';
+    setUpgradeLoading(tierKey);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-membership-checkout', {
+        body: {
+          priceId: tier.priceId,
+          mode: tier.mode,
+          tierSlug: tierKey,
+          affiliate_id: affiliateId,
+          metadata: {
+            affiliate_id: affiliateId,
+            tier_name: tierKey,
+            protection_shield: tierKey === 'SIDDHA_QUANTUM' ? 'active' : 'inactive',
+          },
+        },
+      });
+      if (error) throw error;
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL returned');
+      }
+    } catch (err) {
+      console.error('Checkout error:', err);
+      toast({
+        title: 'Checkout failed',
+        description: 'Could not start checkout. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setUpgradeLoading(null);
+    }
   };
 
   const handleGenerateSoulReport = async () => {
@@ -664,7 +703,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               <li>Access to All Healing Music</li>
               <li>Full Meditation & Mantra Library</li>
             </ul>
-            <button type="button" className="gold-btn" onClick={() => navigate('/membership')}>Activate Vibration</button>
+            <button type="button" className="gold-btn" onClick={() => handleUpgrade('PRANA_FLOW')} disabled={upgradeLoading === 'PRANA_FLOW'}>Activate Vibration</button>
           </div>
 
           <div className="tier-card featured siddha-quantum-card">
@@ -683,7 +722,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                 <li>Full Healing Audios & Transmissions</li>
                 <li>Sri Yantra Universal Protection Shield</li>
               </ul>
-              <button type="button" className="gold-btn sq-btn" onClick={handleStartScanner}>Activate Universal Shield</button>
+              <button type="button" className="gold-btn sq-btn" onClick={() => handleUpgrade('SIDDHA_QUANTUM')} disabled={upgradeLoading === 'SIDDHA_QUANTUM'}>Activate Universal Shield</button>
             </div>
           </div>
         </div>
@@ -702,7 +741,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
             <li>Virtual Pilgrimage (€888 Value)</li><li>Palm Reading Portal</li>
             <li>Sri Yantra Universal Protection Shield</li>
           </ul>
-          <button type="button" className="gold-btn" style={{maxWidth:280}} onClick={() => navigate('/membership')}>Claim Eternal Access</button>
+          <button type="button" className="gold-btn" style={{maxWidth:280}} onClick={() => handleUpgrade('AKASHA_INFINITY')} disabled={upgradeLoading === 'AKASHA_INFINITY'}>Claim Eternal Access</button>
         </div>
       </div>
 
