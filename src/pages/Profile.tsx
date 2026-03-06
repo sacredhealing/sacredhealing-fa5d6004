@@ -410,7 +410,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
 
       <div className="relative z-10 px-4 pt-6 flex flex-col items-center">
         {/* Soul Header - Floating Identity & Tightened Resonance */}
-        <div className="relative flex flex-col items-center pt-10 pb-6 text-center animate-fade-in">
+        <div className="relative flex flex-col items-center pt-10 pb-2 text-center animate-fade-in">
           {/* Floating Avatar (Soft Glow, no hard boundary) */}
           <div className="relative group mb-2">
             <div className="absolute -inset-8 bg-[#D4AF37]/10 blur-3xl rounded-full animate-pulse" />
@@ -447,34 +447,32 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           )}
         </div>
 
-        {/* SQI 2050: Absolute Sovereign Logo (Profile) */}
-        <section className="relative w-full flex flex-col items-center justify-center py-4 my-6">
-          {/* The Portal Container - Forces a circle even if the image has edges */}
-          <div className="relative w-72 h-72 rounded-full overflow-hidden border border-[#D4AF37]/10 bg-[radial-gradient(circle,_rgba(212,175,55,0.08)_0%,_transparent_70%)]">
+        {/* Sri Yantra + stats (closer to Jyotish; stats under/overlapping bottom of Yantra) */}
+        <section className="relative w-full flex flex-col items-center mt-2 mb-4">
+          <div className="relative w-full aspect-square max-w-md flex items-center justify-center overflow-hidden rounded-2xl">
+            {/* Glow and Sri Yantra */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle,_rgba(212,175,55,0.12)_0%,_transparent_70%)] pointer-events-none animate-pulse" />
             <img
               src={profile?.sri_yantra_url || '/Gemini_Generated_Image_v8j3v8j3v8j3v8j3.png'}
               onError={(e) => { (e.target as HTMLImageElement).src = '/Gemini_Generated_Image_57v0zm57v0zm57v0.jpg'; }}
               alt="Siddha Sri Yantra"
-              className="w-full h-full object-contain mix-blend-screen opacity-90 animate-[siddhiSpin_150s_linear_infinite]"
+              className="relative w-full h-full object-contain mix-blend-screen opacity-90 animate-[siddhiSpin_150s_linear_infinite]"
             />
-            {/* Subtle Inner Glow to blend edges */}
-            <div className="absolute inset-0 shadow-[inset_0_0_60px_rgba(0,0,0,0.9)] rounded-full pointer-events-none" />
-          </div>
-
-          {/* Tightened Stats Grounding */}
-          <div className="relative -mt-12 z-20 w-full px-10">
-            <div className="flex justify-around items-center backdrop-blur-2xl bg-white/[0.02] py-6 rounded-[40px] border border-white/5 shadow-2xl">
-              <div className="text-center group">
-                <span className="text-[#D4AF37] text-2xl font-black block group-hover:scale-110 transition-transform">{shcProfile?.streak_days ?? 0}</span>
-                <label className="text-white/30 text-[7px] tracking-[0.4em] uppercase font-bold">Streak</label>
-              </div>
-              <div className="text-center group">
-                <span className="text-[#D4AF37] text-2xl font-black block group-hover:scale-110 transition-transform">{balance?.balance ?? 0}</span>
-                <label className="text-white/30 text-[7px] tracking-[0.4em] uppercase font-bold">Balance</label>
-              </div>
-              <div className="text-center group">
-                <span className="text-[#D4AF37] text-2xl font-black block group-hover:scale-110 transition-transform">{badges.filter((b) => b.earned).length}</span>
-                <label className="text-white/30 text-[7px] tracking-[0.4em] uppercase font-bold">Badges</label>
+            {/* Stats card under Sri Yantra, overlapping bottom */}
+            <div className="absolute bottom-0 left-0 right-0 z-20 px-4 pb-2 pt-6">
+              <div className="flex justify-around items-center backdrop-blur-2xl bg-white/[0.06] py-5 rounded-[32px] border border-white/10 shadow-2xl">
+                <div className="text-center group">
+                  <span className="text-[#D4AF37] text-2xl font-black block group-hover:scale-110 transition-transform">{shcProfile?.streak_days ?? 0}</span>
+                  <label className="text-white/40 text-[7px] tracking-[0.35em] uppercase font-bold">Streak</label>
+                </div>
+                <div className="text-center group">
+                  <span className="text-[#D4AF37] text-2xl font-black block group-hover:scale-110 transition-transform">{balance?.balance ?? 0}</span>
+                  <label className="text-white/40 text-[7px] tracking-[0.35em] uppercase font-bold">Balance</label>
+                </div>
+                <div className="text-center group">
+                  <span className="text-[#D4AF37] text-2xl font-black block group-hover:scale-110 transition-transform">{badges.filter((b) => b.earned).length}</span>
+                  <label className="text-white/40 text-[7px] tracking-[0.35em] uppercase font-bold">Badges</label>
+                </div>
               </div>
             </div>
           </div>
