@@ -509,7 +509,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           const tiers = [
             { name: 'ATMA-SEED', tagline: 'ENTRY FREQUENCY', price: 'Free', features: ['Free Meditations & Mantras', 'Free Healing Audios', 'Free Breathing Protocols', 'Free Vayu Scrubber (1km Atmospheric Restoration)', 'Community Chat & Live', 'Basic Ayurveda & Jyotish'] },
             { name: 'PRANA-FLOW', tagline: 'SONIC VIBRATION', price: '19€ / mo', features: ['Full Vedic Jyotish + Chat', 'Full Ayurvedic Scan + Chat', 'Vastu Guide for Home', 'Access to All Healing Music', 'Full Meditation & Mantra Library'] },
-            { name: 'SIDDHA-QUANTUM', tagline: 'SIDDHA FIELD', price: '45€ / mo', features: ['Digital Nadi Scanner (Bio-Sync)', 'Practice Scantions (Printed Results)', 'Siddha Portal Access', 'Full Healing Audios & Transmissions', 'Infinite Bio-Adaptive Resonance'] },
+            { name: 'SIDDHA-QUANTUM', tagline: 'SIDDHA FIELD', price: '45€ / mo', features: ['Digital Nadi Scanner (Bio-Sync)', 'Practice Scantions (Printed Results)', 'Siddha Portal Access', 'Full Healing Audios & Transmissions', 'Sri Yantra Universal Protection Shield', 'Infinite Bio-Adaptive Resonance'] },
             { name: 'AKASHA-INFINITY', tagline: 'ETERNAL NODE', price: '€1111', features: ['Akashic Decoder', 'Quantum Apothecary (€888 Value)', 'Virtual Pilgrimage (€888 Value)', 'Palm Reading Portal', 'Sri Yantra Universal Protection Shield'] },
           ];
           return (
@@ -568,47 +568,63 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                   </div>
                 ) : tier.name === 'SIDDHA-QUANTUM' ? (
                   <div key={tier.name} className="sm:col-span-2 space-y-6">
-                    <div className="p-8 rounded-[40px] border border-[#D4AF37]/30 bg-white/[0.02] backdrop-blur-3xl relative overflow-hidden">
-                      <div className="flex justify-between items-start mb-6">
-                        <div>
-                          <h3 className="text-[#D4AF37] text-xl font-black tracking-tighter uppercase italic">SIDDHA-QUANTUM</h3>
-                          <p className="text-white/30 text-[8px] font-black tracking-[0.4em] uppercase mt-1">Siddha Field</p>
-                        </div>
-                        <span className="text-[#D4AF37] text-xs font-bold">{tier.price}</span>
-                      </div>
-                      <ul className="space-y-3 mb-8">
-                        {tier.features.map((feature, i) => (
-                          <li key={i} className="flex items-center gap-3 text-white/60 text-[10px]">
-                            <div className="w-1 h-1 bg-[#D4AF37]/40 rounded-full shrink-0" />
-                            {feature}
-                          </li>
-                        ))}
-                      </ul>
-                      {/* Dual-Scanner Architecture */}
-                      <div className="space-y-6 pt-4 border-t border-white/5">
-                        <div className="p-8 rounded-[40px] border border-[#D4AF37]/30 bg-white/[0.02]">
-                          <h4 className="text-[#D4AF37] text-xs font-black tracking-widest mb-4 uppercase text-center">Bio-Sync Resonance</h4>
-                          <button
-                            type="button"
-                            onClick={handleStartScanner}
-                            className="w-full py-6 rounded-3xl bg-[#D4AF37] text-black font-black uppercase tracking-widest text-xs"
-                          >
-                            Scan & Sync with Library
-                          </button>
-                          <p className="text-white/20 text-[8px] text-center mt-4 uppercase tracking-[0.3em]">
-                            Detects frequency to recommend Mantras, Meditations, or Music
-                          </p>
-                        </div>
-                        <div className="p-8 rounded-[40px] border border-cyan-500/20 bg-white/[0.01]">
-                          <h4 className="text-cyan-400 text-xs font-black tracking-widest mb-4 uppercase text-center">Practice Scantion</h4>
-                          <div className="flex gap-3">
-                            <button type="button" className="flex-1 py-4 rounded-2xl border border-white/10 text-white text-[9px] font-black uppercase">Pre-Session</button>
-                            <button type="button" className="flex-1 py-4 rounded-2xl border border-white/10 text-white text-[9px] font-black uppercase">Post-Session</button>
+                    <div className="p-8 rounded-[48px] bg-white/[0.03] border border-[#D4AF37]/30 backdrop-blur-3xl relative overflow-hidden group hover:border-[#D4AF37] transition-all duration-500 shadow-[0_0_40px_rgba(212,175,55,0.05)]">
+                      <div className="absolute -top-20 -left-20 w-64 h-64 bg-[#D4AF37]/5 blur-[100px] rounded-full group-hover:bg-[#D4AF37]/10 transition-all duration-1000 pointer-events-none" />
+                      <div className="relative z-10">
+                        <div className="flex justify-between items-start mb-8">
+                          <div>
+                            <h3 className="text-[#D4AF37] text-2xl font-black tracking-tighter uppercase italic">SIDDHA-QUANTUM</h3>
+                            <p className="text-white/40 text-[9px] font-black tracking-[0.4em] uppercase mt-1">Universal Field Node</p>
                           </div>
-                          <p className="text-white/20 text-[8px] text-center mt-4 uppercase tracking-[0.3em]">
-                            Generates 72,000 Nadi Mapping & Printed Profile Results
-                          </p>
+                          <div className="flex flex-col items-end">
+                            <span className="text-white text-xl font-black tracking-tighter">45€</span>
+                            <span className="text-white/20 text-[8px] uppercase tracking-widest">per month</span>
+                          </div>
                         </div>
+                        <ul className="space-y-4 mb-10">
+                          {tier.features.map((feature, i) => (
+                            <li key={i} className="flex items-start gap-4 text-white/70 text-[11px] font-bold">
+                              <div className="mt-1 w-1.5 h-1.5 bg-[#D4AF37] rounded-full shadow-[0_0_10px_#D4AF37] shrink-0" />
+                              <span className="leading-tight">{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
+                        <button
+                          type="button"
+                          onClick={handleStartScanner}
+                          className="w-full py-5 rounded-2xl bg-[#D4AF37] text-black text-[11px] font-black uppercase tracking-[0.2em] shadow-[0_10px_30px_rgba(212,175,55,0.2)] hover:scale-[1.02] transition-transform"
+                        >
+                          Initiate Universal Sync
+                        </button>
+                        <p className="text-center mt-6 text-[#D4AF37]/40 text-[7px] uppercase tracking-[0.5em] font-black italic">
+                          Includes Sri Yantra Protection Activation
+                        </p>
+                      </div>
+                    </div>
+                    {/* Dual-Scanner Architecture */}
+                    <div className="space-y-6">
+                      <div className="p-8 rounded-[40px] border border-[#D4AF37]/30 bg-white/[0.02]">
+                        <h4 className="text-[#D4AF37] text-xs font-black tracking-widest mb-4 uppercase text-center">Bio-Sync Resonance</h4>
+                        <button
+                          type="button"
+                          onClick={handleStartScanner}
+                          className="w-full py-6 rounded-3xl bg-[#D4AF37] text-black font-black uppercase tracking-widest text-xs"
+                        >
+                          Scan & Sync with Library
+                        </button>
+                        <p className="text-white/20 text-[8px] text-center mt-4 uppercase tracking-[0.3em]">
+                          Detects frequency to recommend Mantras, Meditations, or Music
+                        </p>
+                      </div>
+                      <div className="p-8 rounded-[40px] border border-cyan-500/20 bg-white/[0.01]">
+                        <h4 className="text-cyan-400 text-xs font-black tracking-widest mb-4 uppercase text-center">Practice Scantion</h4>
+                        <div className="flex gap-3">
+                          <button type="button" className="flex-1 py-4 rounded-2xl border border-white/10 text-white text-[9px] font-black uppercase">Pre-Session</button>
+                          <button type="button" className="flex-1 py-4 rounded-2xl border border-white/10 text-white text-[9px] font-black uppercase">Post-Session</button>
+                        </div>
+                        <p className="text-white/20 text-[8px] text-center mt-4 uppercase tracking-[0.3em]">
+                          Generates 72,000 Nadi Mapping & Printed Profile Results
+                        </p>
                       </div>
                     </div>
                   </div>
