@@ -1,8 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { Sun, Cloud, Moon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 
 interface TimeSelectorProps {
   morningTime: string;
@@ -13,6 +10,29 @@ interface TimeSelectorProps {
   onEveningChange: (time: string) => void;
 }
 
+const SunIcon = () => (
+  <svg className="w-6 h-6 text-[#D4AF37]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+  </svg>
+);
+const BoltIcon = () => (
+  <svg className="w-6 h-6 text-[#D4AF37]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+  </svg>
+);
+const MoonIcon = () => (
+  <svg className="w-6 h-6 text-[#D4AF37]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+  </svg>
+);
+
+const timeSlots = [
+  { id: 'morning', label: 'Morning', valueKey: 'morningTime' as const, Icon: SunIcon },
+  { id: 'midday', label: 'Midday', valueKey: 'middayTime' as const, Icon: BoltIcon },
+  { id: 'evening', label: 'Evening', valueKey: 'eveningTime' as const, Icon: MoonIcon },
+];
+
 export const TimeSelector: React.FC<TimeSelectorProps> = ({
   morningTime,
   middayTime,
@@ -21,71 +41,43 @@ export const TimeSelector: React.FC<TimeSelectorProps> = ({
   onMiddayChange,
   onEveningChange,
 }) => {
-  const timeSlots = [
-    {
-      id: 'morning',
-      label: 'Morning Practice',
-      description: 'Start your day mindfully',
-      icon: Sun,
-      color: 'from-amber-500/20 to-orange-500/10 border-amber-500/30',
-      iconColor: 'text-amber-400',
-      value: morningTime,
-      onChange: onMorningChange,
-    },
-    {
-      id: 'midday',
-      label: 'Midday Check-in',
-      description: 'A moment of calm',
-      icon: Cloud,
-      color: 'from-sky-500/20 to-blue-500/10 border-sky-500/30',
-      iconColor: 'text-sky-400',
-      value: middayTime,
-      onChange: onMiddayChange,
-    },
-    {
-      id: 'evening',
-      label: 'Evening Reset',
-      description: 'Wind down peacefully',
-      icon: Moon,
-      color: 'from-indigo-500/20 to-purple-500/10 border-indigo-500/30',
-      iconColor: 'text-indigo-400',
-      value: eveningTime,
-      onChange: onEveningChange,
-    },
-  ];
+  const values = { morningTime, middayTime, eveningTime };
+  const handlers = { morningTime: onMorningChange, middayTime: onMiddayChange, eveningTime: onEveningChange };
 
   return (
     <div className="space-y-4">
-      {timeSlots.map((slot, index) => {
-        const Icon = slot.icon;
-        
+      {timeSlots.map((slot) => {
+        const Icon = slot.Icon;
+        const value = values[slot.valueKey];
+        const onChange = handlers[slot.valueKey];
         return (
-          <motion.div
+          <div
             key={slot.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className={`p-4 rounded-xl border bg-gradient-to-br ${slot.color}`}
+            className="onb-card p-5 rounded-[20px] border border-white/[0.06] bg-white/[0.02] backdrop-blur-xl"
           >
             <div className="flex items-center gap-4">
-              <div className="p-2 rounded-lg bg-background/20">
-                <Icon className={`w-5 h-5 ${slot.iconColor}`} />
+              <div className="flex-shrink-0 flex items-center justify-center w-11 h-11">
+                <Icon />
               </div>
-              <div className="flex-1">
-                <Label htmlFor={slot.id} className="font-semibold text-foreground">
+              <div className="flex-1 min-w-0">
+                <label
+                  htmlFor={slot.id}
+                  className="text-white/40 text-[8px] font-extrabold tracking-widest uppercase block"
+                  style={{ fontFamily: 'Montserrat, sans-serif' }}
+                >
                   {slot.label}
-                </Label>
-                <p className="text-xs text-muted-foreground">{slot.description}</p>
+                </label>
+                <Input
+                  id={slot.id}
+                  type="time"
+                  value={value}
+                  onChange={(e) => onChange(e.target.value || value)}
+                  className="mt-1 w-28 bg-transparent border-0 border-b border-white/10 rounded-none text-[#D4AF37] text-[2rem] font-[300] p-0 h-auto focus-visible:ring-0 focus-visible:border-[#D4AF37]/50"
+                  style={{ fontFamily: 'Cormorant Garamond, serif' }}
+                />
               </div>
-              <Input
-                id={slot.id}
-                type="time"
-                value={slot.value}
-                onChange={(e) => slot.onChange(e.target.value || slot.value)}
-                className="w-28 bg-background/50 border-border/50"
-              />
             </div>
-          </motion.div>
+          </div>
         );
       })}
     </div>
