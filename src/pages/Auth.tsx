@@ -480,7 +480,7 @@ const Auth: React.FC = () => {
             <Button
               type="submit"
               size="xl"
-              className="w-full mt-2 py-5 rounded-full bg-[#D4AF37] text-black font-black text-xs tracking-[0.4em] uppercase shadow-[0_0_30px_rgba(212,175,55,0.3)] hover:scale-[1.02] transition-transform"
+              className="auth-submit-btn w-full mt-2 py-5 rounded-full bg-[#D4AF37] hover:bg-[#D4AF37] active:bg-[#C9A227] text-black font-black text-xs tracking-[0.4em] uppercase shadow-[0_0_30px_rgba(212,175,55,0.3)] hover:shadow-[0_0_50px_rgba(212,175,55,0.5)] hover:scale-[1.02] transition-all"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
@@ -543,6 +543,9 @@ const Auth: React.FC = () => {
         @keyframes glowBreathe { 0%, 100% { opacity: 0.2; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.5); } }
         .auth-left-content { animation: fadeUp 0.8s ease both; animation-delay: 0.1s; }
         .auth-right-content { animation: fadeUp 0.8s ease both; animation-delay: 0.3s; }
+        .auth-submit-btn { background-color: #D4AF37 !important; }
+        .auth-submit-btn:hover { background-color: #D4AF37 !important; transform: scale(1.02); box-shadow: 0 0 50px rgba(212,175,55,0.5) !important; }
+        .auth-submit-btn:active { background-color: #C9A227 !important; }
         @media (min-width: 768px) {
           .auth-right-panel { border-left: 1px solid rgba(255,255,255,0.05); }
         }
