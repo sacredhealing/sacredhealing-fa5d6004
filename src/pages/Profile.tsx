@@ -447,34 +447,24 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           )}
         </div>
 
-        {/* SQI 2050: Sri Yantra — kill-switch transparency, no black box */}
-        <section className="relative w-full flex flex-col items-center justify-center py-10">
-          <div className="sri-yantra-container relative w-full max-w-4xl mx-auto aspect-square flex items-center justify-center">
-            <div className="absolute inset-0 bg-[radial-gradient(circle,_rgba(212,175,55,0.15)_0%,_transparent_75%)] pointer-events-none animate-pulse" />
+        {/* SQI 2050: ZERO-BOX PROFILE — Sri Yantra pure transparency */}
+        <div className="relative w-full flex justify-center py-10 bg-transparent">
+          <div className="relative w-72 h-72 rounded-full overflow-hidden bg-transparent">
             <img
               src={profile?.sri_yantra_url || '/Gemini_Generated_Image_v8j3v8j3v8j3v8j3.png'}
               onError={(e) => { (e.target as HTMLImageElement).src = '/Gemini_Generated_Image_57v0zm57v0zm57v0.jpg'; }}
               alt="Siddha Sri Yantra"
-              className="sri-yantra-img w-full h-full object-contain opacity-90 scale-110 animate-[sriYantraPulse_3.5s_ease-in-out_infinite]"
+              className="w-full h-full object-contain mix-blend-screen animate-[sriYantraPulse_3.5s_ease-in-out_infinite]"
+              style={{ maskImage: 'radial-gradient(circle, black 50%, transparent 95%)', WebkitMaskImage: 'radial-gradient(circle, black 50%, transparent 95%)' }}
             />
-            <div className="stats-banner-glass absolute bottom-0 left-1/2 -translate-x-1/2 z-30 w-full max-w-sm mx-6 py-8 rounded-[40px] flex justify-around items-center">
-              <div className="text-center group cursor-pointer">
-                <span className="text-[#D4AF37] text-2xl font-black block transition-transform group-hover:scale-110">{shcProfile?.streak_days ?? 0}</span>
-                <label className="text-white/30 text-[7px] tracking-[0.4em] uppercase font-bold">Streak</label>
-              </div>
-              <div className="h-10 w-px bg-white/10" />
-              <div className="text-center group cursor-pointer">
-                <span className="text-[#D4AF37] text-2xl font-black block transition-transform group-hover:scale-110">{balance?.balance ?? 0}</span>
-                <label className="text-white/30 text-[7px] tracking-[0.4em] uppercase font-bold">Balance</label>
-              </div>
-              <div className="h-10 w-px bg-white/10" />
-              <div className="text-center group cursor-pointer">
-                <span className="text-[#D4AF37] text-2xl font-black block transition-transform group-hover:scale-110">{badges.filter((b) => b.earned).length}</span>
-                <label className="text-white/30 text-[7px] tracking-[0.4em] uppercase font-bold">Badges</label>
-              </div>
-            </div>
           </div>
-        </section>
+        </div>
+        {/* Stats bar — glass, no black box */}
+        <div className="stats-banner-glass relative -mt-12 z-20 max-w-sm mx-auto py-6 rounded-[40px] flex justify-around items-center px-6">
+          <div className="text-center"><span className="text-[#D4AF37] text-2xl font-black block">{shcProfile?.streak_days ?? 0}</span><label className="text-white/30 text-[7px] uppercase tracking-widest">Streak</label></div>
+          <div className="text-center"><span className="text-[#D4AF37] text-2xl font-black block">{balance?.balance ?? 0}</span><label className="text-white/30 text-[7px] uppercase tracking-widest">Balance</label></div>
+          <div className="text-center"><span className="text-[#D4AF37] text-2xl font-black block">{badges.filter((b) => b.earned).length}</span><label className="text-white/30 text-[7px] uppercase tracking-widest">Badges</label></div>
+        </div>
         <style>{`
           @keyframes sriYantraPulse {
             0%, 100% { transform: scale(0.95); opacity: 0.85; }
@@ -503,53 +493,37 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           }
         `}</style>
 
-        {/* SQI 2050 Membership Tiers — Vibration Levels */}
-        {(() => {
-          const tiers = [
-            { name: 'ATMA-SEED', tagline: 'ENTRY FREQUENCY', price: 'Free', features: ['Free Meditations & Mantras', 'Community Chat & Live', 'Basic Ayurveda & Jyotish'] },
-            { name: 'PRANA-FLOW', tagline: 'SONIC VIBRATION', price: '19€ / mo', features: ['Full Vedic Jyotish + Chat', 'Full Ayurvedic Scan + Chat', 'Vastu Guide for Home', 'All Meditations & Healing Audios Access'] },
-            { name: 'SIDDHA-QUANTUM', tagline: 'SIDDHA FIELD', price: '45€ / mo', features: ['Digital Nadi 2050 Scanner', 'Pre/Post Practice Scantions', 'Siddha Portal Access', 'Infinite Bio-Adaptive Resonance', 'Access to All Mantras'] },
-            { name: 'AKASHA-INFINITY', tagline: 'ETERNAL NODE', price: '€1111', features: ['Quantum Apothecary (€888 Value)', 'Virtual Pilgrimage (€888 Value)', 'Palm Reading Portal', 'Akashic Decoder'] },
-          ];
-          return (
-            <div className="w-full max-w-xl mx-auto mt-5 mb-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {tiers.map((tier) => (
-                <div
-                  key={tier.name}
-                  className={
-                    tier.name === 'SIDDHA-QUANTUM'
-                      ? 'relative overflow-hidden rounded-2xl border border-[#D4AF37]/60 bg-white/[0.08] backdrop-blur-2xl p-3 shadow-[0_0_32px_rgba(212,175,55,0.45)] scale-[1.02]'
-                      : 'relative overflow-hidden rounded-2xl border border-white/15 bg-white/[0.03] backdrop-blur-xl p-3'
-                  }
-                >
-                  <div
-                    className={
-                      tier.name === 'SIDDHA-QUANTUM'
-                        ? 'absolute inset-0 pointer-events-none opacity-70 bg-gradient-to-br from-[#D4AF37]/35 via-slate-900/40 to-slate-900/90'
-                        : 'absolute inset-0 pointer-events-none opacity-40 bg-gradient-to-br from-[#D4AF37]/10 via-slate-900/30 to-slate-900/80'
-                    }
-                  />
-                  <div className="relative flex flex-col gap-1.5 text-left">
-                    <div className="flex items-center justify-between gap-2">
-                      <h3 className="text-xs font-semibold tracking-[0.22em] uppercase text-[#D4AF37]">
-                        {tier.name}
-                      </h3>
-                      <span className="text-[10px] text-[#D4AF37]/80 uppercase tracking-[0.18em]">
-                        {tier.tagline}
-                      </span>
-                    </div>
-                    <ul className="text-[0.65rem] text-white/70 space-y-0.5 list-disc list-inside">
-                      {tier.features.slice(0, 3).map((f, i) => (
-                        <li key={i}>{f}</li>
-                      ))}
-                    </ul>
-                    <p className="mt-1 text-[0.7rem] font-semibold text-[#D4AF37]">{tier.price}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          );
-        })()}
+        {/* SQI 2050: UPDATED TIERS — NO "AI" LABELS */}
+        <div className="px-6 space-y-4 mt-6 mb-6">
+          <div className="p-6 rounded-[32px] border border-white/10 bg-white/[0.02] backdrop-blur-xl">
+            <h3 className="text-[#D4AF37] font-black">ATMA-SEED (Free)</h3>
+            <p className="text-[10px] text-white/60">• Free Meditations & Mantras</p>
+            <p className="text-[10px] text-white/60">• Community Chat & Live</p>
+            <p className="text-[10px] text-white/60">• Basic Ayurveda & Jyotish</p>
+          </div>
+          <div className="p-6 rounded-[32px] border border-white/10 bg-white/[0.02] backdrop-blur-xl">
+            <h3 className="text-[#D4AF37] font-black">PRANA-FLOW (19€)</h3>
+            <p className="text-[10px] text-white/60">• Full Vedic Jyotish + Chat</p>
+            <p className="text-[10px] text-white/60">• Full Ayurvedic Scan + Chat</p>
+            <p className="text-[10px] text-white/60">• Vastu Guide for Home</p>
+            <p className="text-[10px] text-white/60">• All Meditations & Healing Audios Access</p>
+          </div>
+          <div className="p-6 rounded-[32px] border border-[#D4AF37]/30 bg-white/[0.03] backdrop-blur-xl">
+            <h3 className="text-[#D4AF37] font-black">SIDDHA-QUANTUM (45€)</h3>
+            <p className="text-[10px] text-white/60">• Digital Nadi 2050 Scanner</p>
+            <p className="text-[10px] text-white/60">• Pre/Post Practice Scantions</p>
+            <p className="text-[10px] text-white/60">• Siddha Portal Access</p>
+            <p className="text-[10px] text-white/60">• Infinite Bio-Adaptive Resonance</p>
+            <p className="text-[10px] text-white/60">• Access to All Mantras</p>
+          </div>
+          <div className="p-6 rounded-[32px] border border-white/10 bg-white/[0.02] backdrop-blur-xl">
+            <h3 className="text-[#D4AF37] font-black">AKASHA-INFINITY (€1111)</h3>
+            <p className="text-[10px] text-white/60">• Quantum Apothecary (€888 Value)</p>
+            <p className="text-[10px] text-white/60">• Virtual Pilgrimage (€888 Value)</p>
+            <p className="text-[10px] text-white/60">• Palm Reading Portal</p>
+            <p className="text-[10px] text-white/60">• Akashic Decoder</p>
+          </div>
+        </div>
 
         
       </div>
