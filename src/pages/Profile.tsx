@@ -413,8 +413,22 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
         <div className="relative flex flex-col items-center pt-10 pb-2 text-center animate-fade-in">
           {/* Floating Avatar (Soft Glow, no hard boundary) */}
           <div className="relative group mb-2">
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '140px',
+              height: '140px',
+              borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(212,175,55,0.6) 0%, rgba(212,175,55,0.2) 40%, transparent 70%)',
+              filter: 'blur(16px)',
+              animation: 'glowBreathe 3s ease-in-out infinite',
+              zIndex: 0,
+              pointerEvents: 'none',
+            }} />
             <div className="absolute -inset-8 bg-[#D4AF37]/10 blur-3xl rounded-full animate-pulse" />
-            <div className="relative">
+            <div className="relative" style={{ position: 'relative', zIndex: 1 }}>
               <Avatar className="w-28 h-28 rounded-full grayscale-[20%] hover:grayscale-0 transition-all duration-700 shadow-[0_0_30px_rgba(212,175,55,0.1)] border-2 border-background">
                 <AvatarImage src={profile?.avatar_url || undefined} />
                 <AvatarFallback className="bg-background text-4xl text-foreground">
@@ -447,14 +461,14 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           )}
         </div>
 
-        {/* SRI YANTRA — radial gradient, no py-10/max-w-lg */}
-        <section className="relative w-full overflow-hidden mx-3 mt-5 rounded-2xl border border-[#D4AF37]/10" style={{ background: 'radial-gradient(ellipse at center, #1e1200 0%, #0a0800 55%, #050505 100%)' }}>
-          <div className="relative w-full">
+        {/* SRI YANTRA — full image, no crop */}
+        <section className="relative w-full mx-3 mt-5 rounded-2xl border border-[#D4AF37]/10" style={{ background: 'radial-gradient(ellipse at center, #1e1200 0%, #0a0800 55%, #050505 100%)', minHeight: '500px', paddingTop: '60px' }}>
+          <div style={{ minHeight: '500px', width: '100%', position: 'relative' }}>
             <img
               src="/Gemini_Generated_Image_57v0zm57v0zm57v0.jpg"
               alt="Sri Yantra"
-              className="w-full h-auto block"
-              style={{ mixBlendMode: 'screen', opacity: 0.95, transform: 'scale(1.05)' }}
+              className="w-full block"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center center', mixBlendMode: 'screen', opacity: 0.95 }}
             />
           </div>
           <div className="relative -mt-20 z-20 w-full px-8">
@@ -477,6 +491,10 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           </div>
         </section>
         <style>{`
+          @keyframes glowBreathe {
+            0%, 100% { opacity: 0.6; transform: translate(-50%,-50%) scale(1); }
+            50% { opacity: 1; transform: translate(-50%,-50%) scale(1.2); }
+          }
           @keyframes sriYantraPulse {
             0%, 100% { transform: scale(0.95); opacity: 0.85; }
             50% { transform: scale(1.05); opacity: 1; }
