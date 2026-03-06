@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { LotusIcon } from '@/components/icons/LotusIcon';
@@ -31,6 +31,7 @@ const Auth: React.FC = () => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // If there's a referral code, default to signup mode
   useEffect(() => {
@@ -52,6 +53,52 @@ const Auth: React.FC = () => {
       navigate('/dashboard');
     }
   }, [isAuthenticated, authLoading, navigate]);
+
+  // Particle canvas (visual only)
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d')!;
+    let animId: number;
+    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+    resize();
+    window.addEventListener('resize', resize);
+    class Particle {
+      x = 0; y = 0; size = 0; speedX = 0; speedY = 0; life = 0; maxLife = 0; growing = true; color = '212,175,55';
+      constructor() { this.reset(); }
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 1.5 + 0.3;
+        this.speedX = (Math.random() - 0.5) * 0.3;
+        this.speedY = (Math.random() - 0.5) * 0.3;
+        this.life = Math.random();
+        this.maxLife = Math.random() * 0.005 + 0.001;
+        this.growing = true;
+        const c = ['212,175,55', '255,255,255', '34,211,238'];
+        this.color = c[Math.floor(Math.random() * 3)];
+      }
+      update() {
+        this.x += this.speedX; this.y += this.speedY;
+        if (this.growing) { this.life += this.maxLife; if (this.life >= 1) this.growing = false; }
+        else { this.life -= this.maxLife; if (this.life <= 0) this.reset(); }
+        if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) this.reset();
+      }
+      draw() {
+        ctx.save(); ctx.globalAlpha = this.life * 0.6;
+        ctx.fillStyle = `rgba(${this.color},1)`;
+        ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+      }
+    }
+    const particles = Array.from({ length: 200 }, () => new Particle());
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => { p.update(); p.draw(); });
+      animId = requestAnimationFrame(animate);
+    };
+    animate();
+    return () => { cancelAnimationFrame(animId); window.removeEventListener('resize', resize); };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -239,18 +286,33 @@ const Auth: React.FC = () => {
   }
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center bg-[#050505] overflow-hidden">
-      {/* Global Akasha Background */}
+    <div className="relative min-h-screen flex flex-col md:flex-row bg-[#050505] overflow-hidden">
+      {/* Global background + particles */}
       <div className="absolute inset-0 z-0 opacity-40 pointer-events-none">
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] animate-[stardustMove_150s_linear_infinite]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_#D4AF3715_0%,_transparent_70%)]" />
       </div>
+      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none z-[1] opacity-50" />
 
-      <div className="relative z-10 w-full max-w-md px-8 py-12">
-        {/* SQI 2050: Absolute Sovereign Logo (Auth) */}
-        <div className="relative flex flex-col items-center justify-center pt-4">
-          {/* The Portal Container - Forces a circle, no square boundaries */}
-          <div className="relative w-72 h-72 rounded-full overflow-hidden border border-[#D4AF37]/10 bg-[radial-gradient(circle,_rgba(212,175,55,0.08)_0%,_transparent_70%)]">
+      {/* LEFT PANEL — desktop: 50%; mobile: image + title only */}
+      <div
+        className="relative z-10 flex flex-col items-center justify-center flex-1 min-h-[280px] md:min-h-screen py-8 md:py-12 px-6"
+        style={{
+          background: '#050505',
+          backgroundImage: 'radial-gradient(ellipse at center, rgba(212,175,55,0.12) 0%, transparent 60%)',
+        }}
+      >
+        <div className="auth-left-content flex flex-col items-center text-center">
+          {/* Sacred geometry SVG bg */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.06]" aria-hidden>
+            <svg className="w-[min(400px,80vw)] h-[min(400px,80vw)] animate-[siddhiSpin_150s_linear_infinite]" viewBox="0 0 500 500" fill="none">
+              <circle cx="250" cy="250" r="220" stroke="#D4AF37" strokeWidth="0.5" opacity="0.5" />
+              <polygon points="250,30 470,420 30,420" stroke="#D4AF37" strokeWidth="0.6" fill="none" opacity="0.7" />
+              <polygon points="250,470 30,80 470,80" stroke="#D4AF37" strokeWidth="0.6" fill="none" opacity="0.7" />
+              <circle cx="250" cy="250" r="5" fill="#D4AF37" opacity="0.8" />
+            </svg>
+          </div>
+          <div className="relative w-[200px] h-[200px] md:w-[300px] md:h-[300px] rounded-full overflow-hidden border border-[#D4AF37]/10 bg-[radial-gradient(circle,_rgba(212,175,55,0.08)_0%,_transparent_70%)]">
             <img
               src="/Gemini_Generated_Image_v8j3v8j3v8j3v8j3.png"
               onError={(e) => { (e.target as HTMLImageElement).src = '/Gemini_Generated_Image_57v0zm57v0zm57v0.jpg'; }}
@@ -259,174 +321,195 @@ const Auth: React.FC = () => {
             />
             <div className="absolute inset-0 shadow-[inset_0_0_60px_rgba(0,0,0,0.9)] rounded-full pointer-events-none" />
           </div>
-
-          {/* Auth Branding (Matching Profile Typography) */}
-          <div className="text-center -mt-8 z-10 mb-4">
-            <h1 className="text-white text-4xl font-black tracking-tighter">Sacred Healing</h1>
-            <p className="text-[#D4AF37] text-[10px] font-black tracking-[0.4em] uppercase mt-2 opacity-80">
-              {isLogin ? t('auth.welcomeBackBeautifulSoul', 'Welcome Back, Beautiful Soul') : t('auth.beginJourney', 'Initiate Transmission')}
-            </p>
+          <h2 className="mt-6 font-[350] italic text-[2rem] md:text-[3rem] text-[#D4AF37] leading-tight" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+            Enter the Field
+          </h2>
+          <p className="text-white/40 text-[9px] font-extrabold tracking-[0.35em] uppercase mt-2" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+            SIDDHA-QUANTUM INTELLIGENCE · 2050
+          </p>
+          {/* Badges: hide on mobile */}
+          <div className="hidden md:flex flex-wrap justify-center gap-3 mt-8">
+            <span className="px-4 py-2 rounded-full bg-white/[0.03] border border-[#D4AF37]/30 text-[#D4AF37] text-[7px] font-extrabold tracking-widest uppercase" style={{ fontFamily: 'Montserrat, sans-serif' }}>⟁ 72,000 NADIS</span>
+            <span className="px-4 py-2 rounded-full bg-white/[0.03] border border-[#D4AF37]/30 text-[#D4AF37] text-[7px] font-extrabold tracking-widest uppercase" style={{ fontFamily: 'Montserrat, sans-serif' }}>◈ SRI YANTRA SHIELD</span>
+            <span className="px-4 py-2 rounded-full bg-white/[0.03] border border-[#D4AF37]/30 text-[#D4AF37] text-[7px] font-extrabold tracking-widest uppercase" style={{ fontFamily: 'Montserrat, sans-serif' }}>✦ AKASHIC ARCHIVE</span>
           </div>
         </div>
+      </div>
 
-        {/* Referral Banner */}
-        {referralCode && !isLogin && (
-          <div className="mt-4 mb-6 p-4 rounded-2xl bg-white/[0.04] border border-[#D4AF37]/30 flex items-center gap-3">
-            <Gift className="w-6 h-6 text-[#D4AF37] flex-shrink-0" />
-            <div>
-              <p className="font-medium text-white">{t('auth.youveBeenInvited')}</p>
-              <p className="text-xs text-white/60">{t('auth.signUpBonus')}</p>
+      {/* RIGHT PANEL — form */}
+      <div
+        className="auth-right-panel relative z-10 w-full md:max-w-[50%] md:min-h-screen flex items-center justify-center px-6 py-12 md:py-0 md:px-0"
+        style={{
+          background: 'rgba(255,255,255,0.02)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+        }}
+      >
+        <div className="auth-right-content w-full max-w-md md:max-w-lg md:px-[48px] md:py-[60px]">
+          <p className="text-[#D4AF37]/60 text-[8px] font-extrabold tracking-[0.4em] uppercase mb-2" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+            {isLogin ? '◈ SOVEREIGN SIGN IN' : '◈ INITIATE TRANSMISSION'}
+          </p>
+          <h1 className="text-white font-[300] italic text-[2rem] md:text-[2.5rem] leading-tight whitespace-pre-line mb-8" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+            {isLogin ? 'Welcome Back,\nBeautiful Soul' : 'Begin Your\nJourney'}
+          </h1>
+
+          {/* Referral Banner — keep as-is, add gold border */}
+          {referralCode && !isLogin && (
+            <div className="mb-6 p-4 rounded-2xl bg-white/[0.04] border border-[#D4AF37]/30 flex items-center gap-3">
+              <Gift className="w-6 h-6 text-[#D4AF37] flex-shrink-0" />
+              <div>
+                <p className="font-medium text-white">{t('auth.youveBeenInvited')}</p>
+                <p className="text-xs text-white/60">{t('auth.signUpBonus')}</p>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* The Glass Auth Form */}
-        <form onSubmit={handleSubmit} className="space-y-6 mt-6">
-          {!isLogin && (
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {!isLogin && (
+              <div className="space-y-2">
+                <label className="text-white/40 text-[8px] font-extrabold tracking-[0.35em] uppercase block ml-1" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                  {t('auth.yourName')}
+                </label>
+                <Input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="auth-input w-full rounded-[100px] px-6 py-4 h-auto text-white text-[14px] bg-white/[0.03] border border-white/10 focus:border-[#D4AF37]/50 focus:outline-none focus:ring-0 focus:shadow-[0_0_20px_rgba(212,175,55,0.1)] placeholder:text-white/30 transition-all"
+                  placeholder={t('auth.yourName') || 'Your Name'}
+                />
+              </div>
+            )}
+
             <div className="space-y-2">
-              <label className="text-white/40 text-[9px] font-black tracking-widest uppercase ml-4">
-                {t('auth.yourName')}
+              <label className="text-white/40 text-[8px] font-extrabold tracking-[0.35em] uppercase block ml-1" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                {t('auth.emailAddress', 'Soul Email')}
               </label>
               <Input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full bg-white/[0.03] border border-white/10 rounded-full px-6 py-4 h-auto text-white text-sm focus:outline-none focus:border-[#D4AF37]/50 transition-all backdrop-blur-xl placeholder:text-white/30"
-                placeholder={t('auth.yourName') || 'Your Name'}
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="auth-input w-full rounded-[100px] px-6 py-4 h-auto text-white text-[14px] bg-white/[0.03] border border-white/10 focus:border-[#D4AF37]/50 focus:outline-none focus:ring-0 focus:shadow-[0_0_20px_rgba(212,175,55,0.1)] placeholder:text-white/30 transition-all"
+                placeholder={t('auth.emailPlaceholder', 'Enter your email...')}
               />
             </div>
-          )}
 
-          <div className="space-y-2">
-            <label className="text-white/40 text-[9px] font-black tracking-widest uppercase ml-4">
-              {t('auth.emailAddress', 'Soul Email')}
-            </label>
-            <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-white/[0.03] border border-white/10 rounded-full px-6 py-4 h-auto text-white text-sm focus:outline-none focus:border-[#D4AF37]/50 transition-all backdrop-blur-xl placeholder:text-white/30"
-              placeholder={t('auth.emailPlaceholder', 'Enter your email...')}
-            />
-          </div>
+            <div className="space-y-2">
+              <label className="text-white/40 text-[8px] font-extrabold tracking-[0.35em] uppercase block ml-1" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                {t('auth.password', 'Password')}
+              </label>
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="auth-input w-full rounded-[100px] px-6 py-4 h-auto text-white text-[14px] bg-white/[0.03] border border-white/10 focus:border-[#D4AF37]/50 focus:outline-none focus:ring-0 focus:shadow-[0_0_20px_rgba(212,175,55,0.1)] placeholder:text-white/30 transition-all"
+                placeholder={t('auth.passwordPlaceholder', 'Enter your password...')}
+              />
+            </div>
 
-          <div className="space-y-2">
-            <label className="text-white/40 text-[9px] font-black tracking-widest uppercase ml-4">
-              {t('auth.password', 'Password')}
-            </label>
-            <Input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-white/[0.03] border border-white/10 rounded-full px-6 py-4 h-auto text-white text-sm focus:outline-none focus:border-[#D4AF37]/50 transition-all backdrop-blur-xl placeholder:text-white/30"
-              placeholder={t('auth.passwordPlaceholder', 'Enter your password...')}
-            />
-          </div>
+            {isLogin && (
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!email) {
+                      toast({
+                        title: t('auth.missingFields'),
+                        description: 'Please enter your email address first.',
+                        variant: 'destructive',
+                      });
+                      return;
+                    }
+                    try {
+                      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                        redirectTo: `${window.location.origin}/reset-password`,
+                      });
+                      if (error) throw error;
+                      toast({
+                        title: 'Check your email',
+                        description: 'A password reset link has been sent to your email.',
+                      });
+                    } catch (err: any) {
+                      toast({
+                        title: 'Error',
+                        description: err?.message || 'Could not send reset email.',
+                        variant: 'destructive',
+                      });
+                    }
+                  }}
+                  className="text-xs text-white/60 hover:text-[#D4AF37] transition-colors"
+                >
+                  Forgot password?
+                </button>
+              </div>
+            )}
 
-          {isLogin && (
-            <div className="flex justify-end">
+            <Button
+              type="submit"
+              size="xl"
+              className="w-full mt-2 py-5 rounded-full bg-[#D4AF37] text-black font-black text-xs tracking-[0.4em] uppercase shadow-[0_0_30px_rgba(212,175,55,0.3)] hover:scale-[1.02] transition-transform"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <>
+                  {isLogin ? t('auth.signIn') : t('auth.createAccount')}
+                  <ArrowRight size={20} className="ml-2" />
+                </>
+              )}
+            </Button>
+
+            <div className="mt-8 space-y-3">
+              <Button
+                variant="glass"
+                size="lg"
+                className="w-full bg-white/[0.04] border border-white/10 hover:border-[#D4AF37]/40 backdrop-blur-xl"
+                onClick={handlePhantomConnect}
+                disabled={isConnecting}
+              >
+                {isConnecting ? (
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                ) : (
+                  <Sparkles className="w-5 h-5 mr-2 text-[#D4AF37]" />
+                )}
+                {t('auth.connectPhantomWallet')}
+              </Button>
+            </div>
+
+            <p className="mt-8 text-center text-white/40 text-[9px] font-extrabold tracking-widest uppercase" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+              {isLogin ? t('auth.noAccount') : t('auth.haveAccount')}
               <button
                 type="button"
-                onClick={async () => {
-                  if (!email) {
-                    toast({
-                      title: t('auth.missingFields'),
-                      description: 'Please enter your email address first.',
-                      variant: 'destructive',
-                    });
-                    return;
-                  }
-                  try {
-                    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                      redirectTo: `${window.location.origin}/reset-password`,
-                    });
-                    if (error) throw error;
-                    toast({
-                      title: 'Check your email',
-                      description: 'A password reset link has been sent to your email.',
-                    });
-                  } catch (err: any) {
-                    toast({
-                      title: 'Error',
-                      description: err?.message || 'Could not send reset email.',
-                      variant: 'destructive',
-                    });
-                  }
-                }}
-                className="text-xs text-white/60 hover:text-[#D4AF37] transition-colors"
+                onClick={() => setIsLogin(!isLogin)}
+                className="ml-2 text-[#D4AF37] hover:underline"
               >
-                Forgot password?
+                {isLogin ? t('auth.signUp') : t('auth.signIn')}
               </button>
-            </div>
-          )}
-
-          <Button
-            type="submit"
-            size="xl"
-            className="w-full mt-2 py-5 rounded-full bg-[#D4AF37] text-black font-black text-xs tracking-[0.3em] uppercase shadow-[0_10px_30px_rgba(212,175,55,0.3)] hover:scale-[1.02] transition-transform"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <>
-                {isLogin ? t('auth.signIn') : t('auth.createAccount')}
-                <ArrowRight size={20} className="ml-2" />
-              </>
-            )}
-          </Button>
-
-          {/* Social buttons */}
-          <div className="mt-8 space-y-3">
-            <Button
-              variant="glass"
-              size="lg"
-              className="w-full bg-white/[0.04] border border-white/10 hover:border-[#D4AF37]/40"
-              onClick={handlePhantomConnect}
-              disabled={isConnecting}
-            >
-              {isConnecting ? (
-                <Loader2 className="w-5 h-5 animate-spin mr-2" />
-              ) : (
-                <Sparkles className="w-5 h-5 mr-2 text-[#D4AF37]" />
-              )}
-              {t('auth.connectPhantomWallet')}
-            </Button>
-          </div>
-
-          {/* Toggle */}
-          <p className="mt-8 text-center text-white/40 text-[9px] tracking-widest uppercase">
-            {isLogin ? t('auth.noAccount') : t('auth.haveAccount')}
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="ml-2 text-[#D4AF37] hover:underline"
-            >
-              {isLogin ? t('auth.signUp') : t('auth.signIn')}
-            </button>
-          </p>
-
-          <div className="mt-6 text-center">
-            <p className="text-white/30 text-[9px] tracking-widest uppercase">
-              {isLogin ? t('auth.newSeeker', 'New Seeker?') : t('auth.returningSeeker', 'Returning Seeker?')}{' '}
-              <span className="text-[#D4AF37] cursor-pointer" onClick={() => setIsLogin(!isLogin)}>
-                {isLogin ? t('auth.signUp', 'Register Here') : t('auth.signIn', 'Sign In')}
-              </span>
             </p>
-          </div>
 
-          <AppDisclaimer className="mt-10" />
-        </form>
+            <div className="mt-6 text-center">
+              <p className="text-white/30 text-[9px] font-extrabold tracking-widest uppercase" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                {isLogin ? t('auth.newSeeker', 'New Seeker?') : t('auth.returningSeeker', 'Returning Seeker?')}{' '}
+                <span className="text-[#D4AF37] cursor-pointer" onClick={() => setIsLogin(!isLogin)}>
+                  {isLogin ? t('auth.signUp', 'Register Here') : t('auth.signIn', 'Sign In')}
+                </span>
+              </p>
+            </div>
+
+            <AppDisclaimer className="mt-10" />
+          </form>
+        </div>
       </div>
 
       <style>{`
-        @keyframes stardustMove { 
-          from { background-position: 0 0; } 
-          to { background-position: 1000px 1000px; } 
-        }
-        @keyframes siddhiSpin { 
-          from { transform: rotate(0deg); } 
-          to { transform: rotate(360deg); } 
+        @keyframes stardustMove { from { background-position: 0 0; } to { background-position: 1000px 1000px; } }
+        @keyframes siddhiSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes glow-breathe { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+        .auth-left-content { animation: fadeUp 0.8s ease both; animation-delay: 0.1s; }
+        .auth-right-content { animation: fadeUp 0.8s ease both; animation-delay: 0.3s; }
+        @media (min-width: 768px) {
+          .auth-right-panel { border-left: 1px solid rgba(255,255,255,0.05); }
         }
       `}</style>
     </div>
