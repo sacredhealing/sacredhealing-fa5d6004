@@ -730,41 +730,77 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
       {/* SQI 2050: Digital Nadi Scanner & Akashic Records */}
       <div className="mb-10 animate-slide-up" style={{ animationDelay: '0.04s' }}>
         <div className="w-full px-1 sm:px-6 py-6 space-y-10">
-          {/* 1. Digital Nadi 2050 Scanner (Alive Interaction) */}
+          {/* 1. Vedic Oracle Scan + Digital Nadi 2050 Scanner (with access gating) */}
           {user && (
-            <button
-              type="button"
-              onClick={handleStartScanner}
-              className="w-full text-left"
-            >
-              <div className="relative group p-1 bg-gradient-to-r from-cyan-500/20 via-blue-500/40 to-cyan-500/20 rounded-[48px] overflow-hidden">
-                <div className="bg-black/80 backdrop-blur-3xl rounded-[46px] p-8 text-center relative z-10">
-                  <div className="absolute inset-0 bg-cyan-500/5 animate-pulse" />
-                  <div className="relative mb-6 flex justify-center">
-                    <div
-                      className="w-20 h-20 rounded-full border-2 border-cyan-400/30 flex items-center justify-center group-hover:border-cyan-400 transition-all duration-700 relative"
-                      style={{ filter: 'drop-shadow(0 0 15px rgba(212,175,55,0.5))' }}
+            (() => {
+              const hasSiddhaQuantum = shcProfile?.membership_tier === 'Siddha-Quantum';
+              const hasCourseAccess = shcProfile?.purchased_courses?.includes?.('AndligTransformation');
+              const hasActiveSession = !!shcProfile?.active_healing_session;
+              const canAccessNadiScanner = hasSiddhaQuantum || hasCourseAccess || hasActiveSession;
+
+              if (!canAccessNadiScanner) {
+                return (
+                  <div className="card-glass border-[#D4AF37]/30 bg-gradient-to-br from-[#D4AF37]/5 to-transparent mb-6">
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <h3 className="text-[#D4AF37] text-sm font-black tracking-widest uppercase">
+                          Vedic Oracle Scan
+                        </h3>
+                        <p className="text-white/40 text-[9px] mt-1">
+                          AI-prescribed mantras & meditations based on your HRV
+                        </p>
+                      </div>
+                      <div className="w-10 h-10 rounded-full border border-[#D4AF37]/50 flex items-center justify-center animate-pulse">
+                        <span className="text-xs">🧬</span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn-siddha w-full py-3 text-[9px]"
+                      onClick={() => navigate('/membership')}
                     >
-                      <div className="w-12 h-12 bg-cyan-400/20 rounded-full animate-ping" />
-                      <img
-                        src="/Gemini_Generated_Image_r8p4r8p4r8p4r8p4.jpg"
-                        className="w-16 h-16 object-contain animate-[flamePulse_4s_ease-in-out_infinite]"
-                        alt="Agni-Flame"
-                      />
+                      Start Resonance Check
+                    </button>
+                  </div>
+                );
+              }
+
+              return (
+                <button
+                  type="button"
+                  onClick={handleStartScanner}
+                  className="w-full text-left"
+                >
+                  <div className="relative group p-1 bg-gradient-to-r from-cyan-500/20 via-blue-500/40 to-cyan-500/20 rounded-[48px] overflow-hidden">
+                    <div className="bg-black/80 backdrop-blur-3xl rounded-[46px] p-8 text-center relative z-10">
+                      <div className="absolute inset-0 bg-cyan-500/5 animate-pulse" />
+                      <div className="relative mb-6 flex justify-center">
+                        <div
+                          className="w-20 h-20 rounded-full border-2 border-cyan-400/30 flex items-center justify-center group-hover:border-cyan-400 transition-all duration-700 relative"
+                          style={{ filter: 'drop-shadow(0 0 15px rgba(212,175,55,0.5))' }}
+                        >
+                          <div className="w-12 h-12 bg-cyan-400/20 rounded-full animate-ping" />
+                          <img
+                            src="/Gemini_Generated_Image_r8p4r8p4r8p4r8p4.jpg"
+                            className="w-16 h-16 object-contain animate-[flamePulse_4s_ease-in-out_infinite]"
+                            alt="Agni-Flame"
+                          />
+                        </div>
+                      </div>
+                      <h3 className="text-white text-xl font-bold tracking-tight">Digital Nadi 2050 Scanner</h3>
+                      <p className="text-cyan-400/60 text-[10px] uppercase tracking-[0.2em] mt-2">
+                        Tap to Initiate 72,000 Nadi Alignment
+                      </p>
+                      <div className="mt-6 flex justify-center gap-4 text-white/30 text-[8px] uppercase tracking-widest">
+                        <span>Symphonic Light-Codes</span>
+                        <span>•</span>
+                        <span>Bio-Signature Mapping</span>
+                      </div>
                     </div>
                   </div>
-                  <h3 className="text-white text-xl font-bold tracking-tight">Digital Nadi 2050 Scanner</h3>
-                  <p className="text-cyan-400/60 text-[10px] uppercase tracking-[0.2em] mt-2">
-                    Tap to Initiate 72,000 Nadi Alignment
-                  </p>
-                  <div className="mt-6 flex justify-center gap-4 text-white/30 text-[8px] uppercase tracking-widest">
-                    <span>Symphonic Light-Codes</span>
-                    <span>•</span>
-                    <span>Bio-Signature Mapping</span>
-                  </div>
-                </div>
-              </div>
-            </button>
+                </button>
+              );
+            })()
           )}
 
           {/* 2. Akashic & Life Reading (Glassmorphism Relics) */}
