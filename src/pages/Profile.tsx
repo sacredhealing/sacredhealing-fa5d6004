@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSHC } from '@/contexts/SHCContext';
 import { useProfile } from '@/hooks/useProfile';
 import { ProfileEditDialog } from '@/components/profile/ProfileEditDialog';
-import { Pencil } from 'lucide-react';
+import { Pencil, BookOpen } from 'lucide-react';
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
@@ -110,6 +110,44 @@ const Profile: React.FC = () => {
             </ul>
           </div>
         ))}
+      </div>
+
+      {/* SQI 2050: Tightened Life Reading Manuscript */}
+      <div className="w-full max-w-4xl mx-auto mt-8 px-4">
+        <div className="w-full bg-[#050505] p-4 rounded-[40px] border border-white/5 backdrop-blur-3xl">
+          <div className="flex items-center gap-3 mb-6 px-4">
+            <div className="p-2 bg-[#D4AF37]/10 rounded-xl">
+              <BookOpen className="w-5 h-5 text-[#D4AF37]" />
+            </div>
+            <div>
+              <h2 className="text-white text-xl font-black tracking-tighter uppercase">Your Life Reading</h2>
+              <p className="text-[#D4AF37] text-[8px] font-black tracking-[0.3em] uppercase opacity-70">Vedic Light-Codes Manifested</p>
+            </div>
+          </div>
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex md:flex-col gap-2 overflow-x-auto md:w-48 pb-2 md:pb-0 scrollbar-hide">
+              {['CHILDREN', 'PAST LIVES', 'FUTURE VISIONS', 'NADI KNOWLEDGE'].map((cat) => (
+                <button key={cat} type="button" className="whitespace-nowrap px-4 py-3 rounded-2xl bg-white/[0.03] border border-white/5 text-[#D4AF37] text-[9px] font-black tracking-widest hover:bg-[#D4AF37]/10 transition-all">
+                  {cat}
+                </button>
+              ))}
+            </div>
+            <div className="flex-1 space-y-3">
+              {[
+                { title: 'Samadhi Stabilization', date: '04/03/2026', desc: "Stabilization protocols activated to ground the seeker's high-frequency state." },
+                { title: "Youth Light-Codes", date: "05/03/2026", desc: "Bio-signature recalibration triggered through Mahavatar Babaji's resonance." },
+              ].map((entry, i) => (
+                <div key={i} className="p-5 rounded-[30px] bg-white/[0.02] border border-white/5 hover:border-[#D4AF37]/20 transition-all group">
+                  <div className="flex justify-between items-start mb-2">
+                    <h4 className="text-white text-sm font-bold group-hover:text-[#D4AF37] transition-colors">{entry.title}</h4>
+                    <span className="text-white/20 text-[8px] font-mono uppercase">{entry.date}</span>
+                  </div>
+                  <p className="text-white/40 text-[11px] leading-relaxed line-clamp-2">{entry.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
 
       <ProfileEditDialog open={profileEditOpen} onOpenChange={setProfileEditOpen} />
