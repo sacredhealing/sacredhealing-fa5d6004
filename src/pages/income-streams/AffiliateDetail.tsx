@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { 
-  ArrowLeft, Copy, Share2, Users, DollarSign, Gift, 
+  ArrowLeft, Copy, Share2, Users, DollarSign, 
   TrendingUp, CheckCircle, Clock, Megaphone, Heart,
   Sparkles, Target, Award, Edit3, Save, X, Wallet, ArrowRight, Check, Percent
 } from 'lucide-react';
@@ -144,13 +144,6 @@ const AffiliateDetail: React.FC = () => {
       setIsSaving(false);
     }
   };
-
-  const commissionTiers = [
-    { type: t('affiliate.newUserSignup', 'New User Signup'), reward: '100 SHC', icon: Users },
-    { type: t('affiliate.musicPurchase', 'Music Purchase'), reward: '30%', icon: DollarSign },
-    { type: t('affiliate.courseEnrollment', 'Course Enrollment'), reward: '30%', icon: Award },
-    { type: t('affiliate.healingSubscription', 'Healing Subscription'), reward: '30%', icon: Heart },
-  ];
 
   if (isLoading) {
     return (
@@ -362,28 +355,25 @@ const AffiliateDetail: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Commission Structure */}
-        <Card className="bg-gradient-to-br from-amber-500/10 to-yellow-500/5 border-amber-500/30">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Gift className="h-5 w-5 text-secondary" />
-              {t('affiliate.howYouEarn', 'How You Earn')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {commissionTiers.map((tier, index) => (
-              <div key={index} className="flex items-center justify-between p-3 rounded-xl bg-background/50">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                    <tier.icon className="h-5 w-5 text-primary" />
-                  </div>
-                  <span className="text-foreground">{tier.type}</span>
-                </div>
-                <Badge className="bg-green-500 text-white">{tier.reward}</Badge>
+        {/* SQI 2050: Commission Matrix */}
+        <div className="mt-10 space-y-4">
+          <h4 className="text-[#D4AF37] text-[10px] font-black tracking-[0.4em] uppercase">Commission Matrix</h4>
+          <div className="grid grid-cols-1 gap-3">
+            {[
+              { name: "Prana-Flow", reward: "€5/mo", color: "white" },
+              { name: "Siddha-Quantum", reward: "€15/mo", color: "#D4AF37" },
+              { name: "Akasha-Infinity", reward: "€250", color: "#D4AF37" },
+            ].map((item) => (
+              <div
+                key={item.name}
+                className="flex justify-between items-center p-4 rounded-2xl bg-white/[0.02] border border-white/5"
+              >
+                <span className="text-white/60 text-[10px] font-bold uppercase tracking-widest">{item.name}</span>
+                <span className="text-[#D4AF37] text-xs font-black italic">{item.reward}</span>
               </div>
             ))}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Promotion Tips */}
         <Card className="bg-card/50 border-border/50">
