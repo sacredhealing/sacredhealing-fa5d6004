@@ -486,11 +486,11 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               <Pencil size={12} />
             </button>
           </div>
-          <h1 className="text-white font-[300] italic text-[2.2rem] leading-tight" style={{ fontFamily: 'Cormorant Garamond, serif' }}>{userName}</h1>
+          <h1 className="text-white leading-tight" style={{ fontFamily: 'Cormorant Garamond, serif', fontWeight: 300, fontStyle: 'italic', fontSize: '2.2rem' }}>{userName}</h1>
           <div className="flex items-center justify-center gap-2 mt-2 flex-wrap">
-            <span className="text-[#D4AF37]/70 text-[8px] font-extrabold tracking-[0.5em] uppercase" style={{ fontFamily: 'Montserrat, sans-serif' }}>528Hz</span>
+            <span className="text-[#D4AF37]/70 uppercase" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '8px', letterSpacing: '0.5em' }}>528Hz</span>
             <span className="text-[#D4AF37]/40">·</span>
-            <span className="text-[#D4AF37]/70 text-[8px] font-extrabold tracking-[0.5em] uppercase" style={{ fontFamily: 'Montserrat, sans-serif' }}>Rahu Active</span>
+            <span className="text-[#D4AF37]/70 uppercase" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '8px', letterSpacing: '0.5em' }}>Rahu Active</span>
           </div>
           {profile?.bio && (
             <p className="mt-3 text-[0.95rem] text-white/40 italic max-w-md mx-auto leading-relaxed" style={{ fontFamily: 'Cormorant Garamond, serif' }}>{profile.bio}</p>
@@ -503,16 +503,16 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           </div>
           <div className="flex justify-center gap-4 mt-6">
             <div className="rounded-full border border-[#D4AF37]/10 bg-white/[0.02] px-5 py-2.5 min-w-[80px]">
-              <span className="text-[#D4AF37] text-sm font-extrabold block" style={{ fontFamily: 'Montserrat, sans-serif' }}>{shcProfile?.streak_days ?? 0}</span>
-              <span className="text-white/30 text-[7px] font-normal tracking-widest" style={{ fontFamily: 'Montserrat, sans-serif' }}>STREAK</span>
+              <span className="block" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, color: '#D4AF37', fontSize: '1.3rem' }}>{shcProfile?.streak_days ?? 0}</span>
+              <span className="uppercase" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '7px', letterSpacing: '0.4em', color: 'rgba(255,255,255,0.3)' }}>STREAK</span>
             </div>
             <div className="rounded-full border border-[#D4AF37]/10 bg-white/[0.02] px-5 py-2.5 min-w-[80px]">
-              <span className="text-[#D4AF37] text-sm font-extrabold block" style={{ fontFamily: 'Montserrat, sans-serif' }}>{balance?.balance ?? 0}</span>
-              <span className="text-white/30 text-[7px] font-normal tracking-widest" style={{ fontFamily: 'Montserrat, sans-serif' }}>SESSIONS</span>
+              <span className="block" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, color: '#D4AF37', fontSize: '1.3rem' }}>{balance?.balance ?? 0}</span>
+              <span className="uppercase" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '7px', letterSpacing: '0.4em', color: 'rgba(255,255,255,0.3)' }}>SESSIONS</span>
             </div>
             <div className="rounded-full border border-[#D4AF37]/10 bg-white/[0.02] px-5 py-2.5 min-w-[80px]">
-              <span className="text-[#D4AF37] text-sm font-extrabold block" style={{ fontFamily: 'Montserrat, sans-serif' }}>{badges.filter((b) => b.earned).length}</span>
-              <span className="text-white/30 text-[7px] font-normal tracking-widest" style={{ fontFamily: 'Montserrat, sans-serif' }}>LEVEL</span>
+              <span className="block" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, color: '#D4AF37', fontSize: '1.3rem' }}>{badges.filter((b) => b.earned).length}</span>
+              <span className="uppercase" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '7px', letterSpacing: '0.4em', color: 'rgba(255,255,255,0.3)' }}>LEVEL</span>
             </div>
           </div>
         </div>
@@ -548,18 +548,18 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
             </svg>
             <div style={{ position: 'absolute', width: 20, height: 20, borderRadius: '50%', background: '#D4AF37', opacity: 0.3, animation: 'glowBreathe 2s ease-in-out infinite', filter: 'blur(8px)' }} />
           </div>
-          <p className="mt-6 text-[#D4AF37]/50 text-[8px] font-extrabold tracking-[0.4em] uppercase" style={{ fontFamily: 'Montserrat, sans-serif' }}>◈ AKASHIC FIELD ACTIVE · 72,000 NADIS MAPPED</p>
+          <p className="mt-6 uppercase" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '8px', letterSpacing: '0.5em', color: 'rgba(212,175,55,0.6)' }}>◈ AKASHIC FIELD ACTIVE · 72,000 NADIS MAPPED</p>
         </div>
 
         {/* Section 3 — Soul Vault Scanner */}
         <div className="profile-card rounded-[28px] border border-[#D4AF37]/12 bg-white/[0.02] backdrop-blur-[40px] p-8 mb-8">
-          <p className="text-[#D4AF37]/50 text-[8px] font-extrabold tracking-[0.4em] uppercase mb-2" style={{ fontFamily: 'Montserrat, sans-serif' }}>◈ SOUL VAULT — DEEP FIELD RESONANCE</p>
-          <h2 className="text-white italic text-[1.8rem] mb-6" style={{ fontFamily: 'Cormorant Garamond, serif' }}>Soul Vault Scanner</h2>
+          <p className="uppercase mb-2" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '8px', letterSpacing: '0.5em', color: 'rgba(212,175,55,0.6)' }}>◈ SOUL VAULT — DEEP FIELD RESONANCE</p>
+          <h2 className="text-white mb-6" style={{ fontFamily: 'Cormorant Garamond, serif', fontStyle: 'italic', fontSize: '1.4rem' }}>Soul Vault Scanner</h2>
           <button
             type="button"
             onClick={handleStartScanner}
-            className="w-full py-5 rounded-2xl bg-[#D4AF37] text-[#050505] text-sm font-extrabold uppercase tracking-[0.3em] hover:opacity-90 transition-opacity"
-            style={{ fontFamily: 'Montserrat, sans-serif' }}
+            className="w-full py-5 rounded-2xl bg-[#D4AF37] text-[#050505] uppercase hover:bg-[#D4AF37] transition-colors"
+            style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, letterSpacing: '0.4em' }}
           >
             INITIATE SOUL SCAN →
           </button>
@@ -567,7 +567,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
 
         {/* Section 4 — Vedic Siddhis */}
         <div className="profile-card mb-8">
-          <p className="text-[#D4AF37]/50 text-[8px] font-extrabold tracking-[0.4em] uppercase mb-4" style={{ fontFamily: 'Montserrat, sans-serif' }}>◈ VEDIC SIDDHIS</p>
+          <p className="uppercase mb-4" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '8px', letterSpacing: '0.5em', color: 'rgba(212,175,55,0.6)' }}>◈ VEDIC SIDDHIS</p>
           <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
             {badges.map((b) => (
               <div
@@ -620,7 +620,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
 
         {/* Section 5 — AKASHIC LIFE BOOK (Life Book + Soul Vault entries) */}
         <div className="profile-card rounded-[28px] border border-[#D4AF37]/12 bg-white/[0.02] backdrop-blur-[40px] p-8 mb-8">
-          <p className="text-[#D4AF37]/50 text-[8px] font-extrabold tracking-[0.4em] uppercase mb-4" style={{ fontFamily: 'Montserrat, sans-serif' }}>◈ AKASHIC LIFE BOOK</p>
+          <p className="uppercase mb-4" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '8px', letterSpacing: '0.5em', color: 'rgba(212,175,55,0.6)' }}>◈ AKASHIC LIFE BOOK</p>
           {lifeBookLoading && (
             <div className="space-y-3 py-4">
               <div className="h-6 w-40 rounded bg-white/10 animate-pulse" />
@@ -631,7 +631,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
             <div className="space-y-4 mb-8">
               {groupedLifeBook.map((chapter) => (
                 <div key={chapter.chapter_type} className="rounded-2xl border border-[#D4AF37]/10 bg-white/[0.02] p-5 sm:p-6">
-                  <h3 className="text-white/60 text-[10px] font-bold tracking-widest uppercase mb-3" style={{ fontFamily: 'Montserrat, sans-serif' }}>{chapter.chapter_title}</h3>
+                  <h3 className="text-white mb-3" style={{ fontFamily: 'Cormorant Garamond, serif', fontStyle: 'italic', fontSize: '1.4rem' }}>{chapter.chapter_title}</h3>
                   <div className="space-y-3">
                     {chapter.groups.map((group) => (
                       <div key={group.figureKey}>
@@ -661,7 +661,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               <div className="space-y-4">
                 {soulVaultEntries.slice(0, 4).map((entry) => (
                   <div key={entry.id} className="rounded-2xl border border-[#D4AF37]/10 bg-white/[0.02] p-5 sm:p-6">
-                    <p className="text-white/60 text-[10px] font-bold tracking-widest uppercase mb-2" style={{ fontFamily: 'Montserrat, sans-serif' }}>{entry.activity || 'Deep-Field Resonance'}</p>
+                    <p className="text-white mb-2" style={{ fontFamily: 'Cormorant Garamond, serif', fontStyle: 'italic', fontSize: '1.4rem' }}>{entry.activity || 'Deep-Field Resonance'}</p>
                     <p className="text-white/40 text-base italic leading-[1.7]" style={{ fontFamily: 'Cormorant Garamond, serif' }}>{entry.report}</p>
                     <span className="text-white/30 text-xs mt-2 block">{new Date(entry.created_at).toLocaleDateString()}{entry.duration_minutes ? ` · ${entry.duration_minutes} min` : ''}</span>
                   </div>
@@ -674,7 +674,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
         {/* Section 6 — Certificates (Sovereign Seals) */}
         {certificates.length > 0 && (
           <div className="profile-card rounded-[28px] border border-[#D4AF37]/12 bg-white/[0.02] backdrop-blur-[40px] p-8 mb-8">
-            <p className="text-[#D4AF37]/50 text-[8px] font-extrabold tracking-[0.4em] uppercase mb-4" style={{ fontFamily: 'Montserrat, sans-serif' }}>◈ SOVEREIGN SEALS</p>
+            <p className="uppercase mb-4" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '8px', letterSpacing: '0.5em', color: 'rgba(212,175,55,0.6)' }}>◈ SOVEREIGN SEALS</p>
             <div className="space-y-3">
               {certificates.map((certificate) => (
                 <CertificateCard
@@ -694,38 +694,38 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
             <div className="w-12 h-12 rounded-full border border-[#D4AF37]/10 bg-white/[0.02] flex items-center justify-center text-white/40 group-hover:text-[#D4AF37] transition-colors">
               <Bell size={20} />
             </div>
-            <span className="text-white/20 text-[6px] font-extrabold tracking-widest uppercase" style={{ fontFamily: 'Montserrat, sans-serif' }}>Alerts</span>
+            <span className="text-white/20 uppercase" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '8px', letterSpacing: '0.2em' }}>Alerts</span>
           </button>
           <button type="button" onClick={() => setAppearanceOpen(true)} className="flex flex-col items-center gap-2 group">
             <div className="w-12 h-12 rounded-full border border-[#D4AF37]/10 bg-white/[0.02] flex items-center justify-center text-white/40 group-hover:text-[#D4AF37] transition-colors">
               <Moon size={20} />
             </div>
-            <span className="text-white/20 text-[6px] font-extrabold tracking-widest uppercase" style={{ fontFamily: 'Montserrat, sans-serif' }}>Theme</span>
+            <span className="text-white/20 uppercase" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '8px', letterSpacing: '0.2em' }}>Theme</span>
           </button>
           <button type="button" onClick={() => setPrivacyOpen(true)} className="flex flex-col items-center gap-2 group">
             <div className="w-12 h-12 rounded-full border border-[#D4AF37]/10 bg-white/[0.02] flex items-center justify-center text-white/40 group-hover:text-[#D4AF37] transition-colors">
               <Shield size={20} />
             </div>
-            <span className="text-white/20 text-[6px] font-extrabold tracking-widest uppercase" style={{ fontFamily: 'Montserrat, sans-serif' }}>Privacy</span>
+            <span className="text-white/20 uppercase" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '8px', letterSpacing: '0.2em' }}>Privacy</span>
           </button>
           <button type="button" onClick={() => setSettingsOpen(true)} className="flex flex-col items-center gap-2 group">
             <div className="w-12 h-12 rounded-full border border-[#D4AF37]/10 bg-white/[0.02] flex items-center justify-center text-white/40 group-hover:text-[#D4AF37] transition-colors">
               <Settings size={20} />
             </div>
-            <span className="text-white/20 text-[6px] font-extrabold tracking-widest uppercase" style={{ fontFamily: 'Montserrat, sans-serif' }}>Settings</span>
+            <span className="text-white/20 uppercase" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '8px', letterSpacing: '0.2em' }}>Settings</span>
           </button>
           <button type="button" onClick={() => setProfileEditOpen(true)} className="flex flex-col items-center gap-2 group">
             <div className="w-12 h-12 rounded-full border border-[#D4AF37]/10 bg-white/[0.02] flex items-center justify-center text-white/40 group-hover:text-[#D4AF37] transition-colors">
               <Pencil size={20} />
             </div>
-            <span className="text-white/20 text-[6px] font-extrabold tracking-widest uppercase" style={{ fontFamily: 'Montserrat, sans-serif' }}>Profile</span>
+            <span className="text-white/20 uppercase" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '8px', letterSpacing: '0.2em' }}>Profile</span>
           </button>
           {abundanceLineage.map((item) => (
             <button key={item.label} type="button" onClick={item.onClick} className="flex flex-col items-center gap-2 group">
               <div className="w-12 h-12 rounded-full border border-[#D4AF37]/10 bg-white/[0.02] flex items-center justify-center text-white/40 group-hover:text-[#D4AF37] transition-colors">
                 <item.icon size={20} />
               </div>
-              <span className="text-white/20 text-[6px] font-extrabold tracking-widest uppercase max-w-[60px] truncate" style={{ fontFamily: 'Montserrat, sans-serif' }}>{item.label}</span>
+              <span className="text-white/20 uppercase max-w-[60px] truncate" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '8px', letterSpacing: '0.2em' }}>{item.label}</span>
             </button>
           ))}
           {theCovenant.map((item) => (
@@ -733,7 +733,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               <div className="w-12 h-12 rounded-full border border-[#D4AF37]/10 bg-white/[0.02] flex items-center justify-center text-white/40 group-hover:text-[#D4AF37] transition-colors">
                 <item.icon size={20} />
               </div>
-              <span className="text-white/20 text-[6px] font-extrabold tracking-widest uppercase max-w-[60px] truncate" style={{ fontFamily: 'Montserrat, sans-serif' }}>{item.label}</span>
+              <span className="text-white/20 uppercase max-w-[60px] truncate" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '8px', letterSpacing: '0.2em' }}>{item.label}</span>
             </button>
           ))}
           <button type="button" onClick={handleSignOut} className="flex flex-col items-center gap-2 text-white/30 hover:text-red-500/60 transition-colors">
@@ -823,8 +823,8 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                   type="button"
                   disabled={!selectedPractice}
                   onClick={handleGenerateSoulReport}
-                  className="w-full py-5 rounded-2xl bg-[#D4AF37] text-[#050505] text-[11px] font-extrabold uppercase tracking-[0.2em] disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ fontFamily: 'Montserrat, sans-serif' }}
+                  className="w-full py-5 rounded-2xl bg-[#D4AF37] text-[#050505] uppercase hover:bg-[#D4AF37] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, letterSpacing: '0.4em' }}
                 >
                   Generate Deep-Field Resonance
                 </button>
@@ -842,7 +842,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               <div className="space-y-4 pt-6 pb-4 text-center">
                 <p className="text-[#D4AF37]/80 text-[8px] font-extrabold tracking-[0.4em] uppercase" style={{ fontFamily: 'Montserrat, sans-serif' }}>Report saved</p>
                 <p className="text-white/70 text-base italic leading-relaxed" style={{ fontFamily: 'Cormorant Garamond, serif' }}>Your Deep-Field Resonance Report has been anchored into your Soul Vault.</p>
-                <Button size="sm" className="mt-2 bg-[#D4AF37] text-[#050505] text-xs font-semibold tracking-[0.2em] hover:bg-[#D4AF37]/90" onClick={handleCloseScanner}>Close</Button>
+                <Button size="sm" className="mt-2 bg-[#D4AF37] text-[#050505] hover:bg-[#D4AF37] transition-colors" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, letterSpacing: '0.4em' }} onClick={handleCloseScanner}>Close</Button>
               </div>
             )}
           </div>
