@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSHC } from '@/contexts/SHCContext';
 import { useProfile } from '@/hooks/useProfile';
 import { ProfileEditDialog } from '@/components/profile/ProfileEditDialog';
-import { Pencil, BookOpen } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
@@ -63,36 +63,28 @@ const Profile: React.FC = () => {
         </div>
       </div>
 
-      {/* SECTION 2: SRI YANTRA — from reference: glowing on stardust, stats pill overlay */}
-      <section className="relative w-full flex flex-col items-center mt-4">
-        <div className="relative w-full max-w-lg aspect-square flex items-center justify-center">
-          {/* Glow behind Yantra */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle,_rgba(212,175,55,0.12)_0%,_transparent_70%)] pointer-events-none" />
+      {/* SECTION 2: SRI YANTRA — radial gradient background, stats bar below */}
+      <section className="relative w-full overflow-hidden mx-3 mt-5 rounded-2xl border border-[#D4AF37]/10" style={{ background: 'radial-gradient(ellipse at center, #1e1200 0%, #0a0800 55%, #050505 100%)' }}>
+        <div className="relative w-full">
           <img
-            src="/Gemini_Generated_Image_v8j3v8j3v8j3v8j3.png"
-            alt="Siddha Sri Yantra"
-            className="relative w-full h-full object-contain mix-blend-screen opacity-95"
-            style={{
-              maskImage: 'radial-gradient(circle, black 35%, transparent 88%)',
-              WebkitMaskImage: 'radial-gradient(circle, black 35%, transparent 88%)',
-              filter: 'drop-shadow(0 0 30px rgba(212,175,55,0.25))',
-            }}
-            onError={(e) => { (e.target as HTMLImageElement).src = '/Gemini_Generated_Image_57v0zm57v0zm57v0.jpg'; }}
+            src="/Gemini_Generated_Image_57v0zm57v0zm57v0.jpg"
+            alt="Sri Yantra"
+            className="w-full h-auto block"
+            style={{ mixBlendMode: 'screen', opacity: 0.95, transform: 'scale(1.05)' }}
           />
-          {/* Stats banner: pill-shaped glass overlay on lower part of Yantra */}
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-sm backdrop-blur-3xl bg-white/[0.04] border border-white/10 rounded-[40px] py-6 flex justify-around items-center shadow-xl">
-            <div className="text-center">
-              <span className="text-[#D4AF37] text-2xl font-black block">{streak}</span>
-              <span className="text-[8px] text-white/40 uppercase tracking-[0.25em] font-medium">STREAK</span>
-            </div>
-            <div className="text-center">
-              <span className="text-[#D4AF37] text-2xl font-black block">{balanceVal}</span>
-              <span className="text-[8px] text-white/40 uppercase tracking-[0.25em] font-medium">BALANCE</span>
-            </div>
-            <div className="text-center">
-              <span className="text-[#D4AF37] text-2xl font-black block">{badgesCount}</span>
-              <span className="text-[8px] text-white/40 uppercase tracking-[0.25em] font-medium">BADGES</span>
-            </div>
+        </div>
+        <div className="w-full grid grid-cols-3 bg-black/60 backdrop-blur border-t border-[#D4AF37]/10">
+          <div className="py-4 text-center border-r border-[#D4AF37]/10 last:border-r-0">
+            <span className="text-[#D4AF37] text-2xl font-black block">{streak}</span>
+            <span className="text-[8px] text-white/40 uppercase tracking-[0.25em] font-medium">STREAK</span>
+          </div>
+          <div className="py-4 text-center border-r border-[#D4AF37]/10 last:border-r-0">
+            <span className="text-[#D4AF37] text-2xl font-black block">{balanceVal}</span>
+            <span className="text-[8px] text-white/40 uppercase tracking-[0.25em] font-medium">BALANCE</span>
+          </div>
+          <div className="py-4 text-center border-r border-[#D4AF37]/10 last:border-r-0">
+            <span className="text-[#D4AF37] text-2xl font-black block">{badgesCount}</span>
+            <span className="text-[8px] text-white/40 uppercase tracking-[0.25em] font-medium">BADGES</span>
           </div>
         </div>
       </section>
@@ -112,43 +104,45 @@ const Profile: React.FC = () => {
         ))}
       </div>
 
-      {/* SQI 2050: Tightened Life Reading Manuscript */}
-      <div className="w-full max-w-4xl mx-auto mt-8 px-4">
-        <div className="w-full bg-[#050505] p-4 rounded-[40px] border border-white/5 backdrop-blur-3xl">
-          <div className="flex items-center gap-3 mb-6 px-4">
-            <div className="p-2 bg-[#D4AF37]/10 rounded-xl">
-              <BookOpen className="w-5 h-5 text-[#D4AF37]" />
+      {/* SQI 2050: Nadi Restoration & Space Compression */}
+      <section className="mt-12 px-6">
+        <div className="glass-card p-6 bg-white/[0.02] border border-white/5 rounded-[40px] backdrop-blur-3xl">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-[#D4AF37]/10 flex items-center justify-center">
+                <span className="text-[#D4AF37] text-xl">📜</span>
+              </div>
+              <div>
+                <h3 className="text-white text-lg font-black tracking-tighter uppercase">Your Life Reading</h3>
+                <p className="text-[#D4AF37] text-[7px] font-black tracking-[0.4em] uppercase opacity-60">Siddha Insights</p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-white text-xl font-black tracking-tighter uppercase">Your Life Reading</h2>
-              <p className="text-[#D4AF37] text-[8px] font-black tracking-[0.3em] uppercase opacity-70">Vedic Light-Codes Manifested</p>
-            </div>
+            <button type="button" className="text-[8px] font-black tracking-widest text-white/20 uppercase border border-white/10 px-3 py-1 rounded-full">Expand All</button>
           </div>
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex md:flex-col gap-2 overflow-x-auto md:w-48 pb-2 md:pb-0 scrollbar-hide">
-              {['CHILDREN', 'PAST LIVES', 'FUTURE VISIONS', 'NADI KNOWLEDGE'].map((cat) => (
-                <button key={cat} type="button" className="whitespace-nowrap px-4 py-3 rounded-2xl bg-white/[0.03] border border-white/5 text-[#D4AF37] text-[9px] font-black tracking-widest hover:bg-[#D4AF37]/10 transition-all">
-                  {cat}
-                </button>
-              ))}
-            </div>
-            <div className="flex-1 space-y-3">
-              {[
-                { title: 'Samadhi Stabilization', date: '04/03/2026', desc: "Stabilization protocols activated to ground the seeker's high-frequency state." },
-                { title: "Youth Light-Codes", date: "05/03/2026", desc: "Bio-signature recalibration triggered through Mahavatar Babaji's resonance." },
-              ].map((entry, i) => (
-                <div key={i} className="p-5 rounded-[30px] bg-white/[0.02] border border-white/5 hover:border-[#D4AF37]/20 transition-all group">
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="text-white text-sm font-bold group-hover:text-[#D4AF37] transition-colors">{entry.title}</h4>
-                    <span className="text-white/20 text-[8px] font-mono uppercase">{entry.date}</span>
-                  </div>
-                  <p className="text-white/40 text-[11px] leading-relaxed line-clamp-2">{entry.desc}</p>
+          <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide border-b border-white/5 mb-6">
+            {['Children', 'Healing', 'Past Lives', 'Future', 'Nadi'].map((cat) => (
+              <span key={cat} className="px-4 py-2 rounded-xl bg-white/[0.03] text-[#D4AF37] text-[9px] font-bold whitespace-nowrap border border-white/5">
+                {cat}
+              </span>
+            ))}
+          </div>
+          <div className="space-y-4">
+            {[
+              { title: 'Samadhi Stabilization', subtitle: 'Uddevalla School Mission', date: '04/03/2026' },
+              { title: 'Activation of Youth Codes', subtitle: 'Bio-Signature Recalibration', date: '05/03/2026' },
+            ].map((nadi, i) => (
+              <div key={i} className="relative pl-6 border-l border-[#D4AF37]/20 py-1">
+                <div className="absolute -left-[5px] top-2 w-2 h-2 rounded-full bg-[#D4AF37] shadow-[0_0_10px_#D4AF37]" />
+                <div className="flex justify-between items-start">
+                  <h4 className="text-white text-xs font-bold">{nadi.title}</h4>
+                  <span className="text-white/20 text-[7px] font-mono">{nadi.date}</span>
                 </div>
-              ))}
-            </div>
+                <p className="text-white/40 text-[9px] mt-1 italic">{nadi.subtitle}</p>
+              </div>
+            ))}
           </div>
         </div>
-      </div>
+      </section>
 
       <ProfileEditDialog open={profileEditOpen} onOpenChange={setProfileEditOpen} />
     </div>
