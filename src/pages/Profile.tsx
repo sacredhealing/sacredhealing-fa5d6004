@@ -22,6 +22,7 @@ import { PrivacyDialog } from '@/components/profile/PrivacyDialog';
 import { SettingsDialog } from '@/components/profile/SettingsDialog';
 import { ProfileEditDialog } from '@/components/profile/ProfileEditDialog';
 import KoshaReport from '@/components/profile/KoshaReport';
+import HandScanner from '@/components/scanner/HandScanner';
 import { supabase } from '@/integrations/supabase/client';
 
 type LifeBookCategory =
@@ -85,7 +86,6 @@ const Profile: React.FC = () => {
 
   const [scannerOpen, setScannerOpen] = useState(false);
   const [scanPhase, setScanPhase] = useState<'idle' | 'scanning' | 'question' | 'saving' | 'done'>('idle');
-  const [scanValue, setScanValue] = useState(0);
   const [selectedPractice, setSelectedPractice] = useState<string | null>(null);
   const [practiceDuration, setPracticeDuration] = useState<string>('30');
 
@@ -211,27 +211,6 @@ const Profile: React.FC = () => {
     loadSoulVault();
   }, [user?.id]);
 
-  useEffect(() => {
-    if (!scannerOpen || scanPhase !== 'scanning') return;
-    setScanValue(0);
-    const target = 72000;
-    const durationMs = 8000;
-    const stepMs = 40;
-    const step = (target * stepMs) / durationMs;
-    const interval = window.setInterval(() => {
-      setScanValue((prev) => {
-        const next = prev + step;
-        if (next >= target) {
-          window.clearInterval(interval);
-          setScanPhase('question');
-          return target;
-        }
-        return next;
-      });
-    }, stepMs);
-    return () => window.clearInterval(interval);
-  }, [scannerOpen, scanPhase]);
-
   const handleStartScanner = () => {
     setSelectedPractice(null);
     setPracticeDuration('30');
@@ -242,7 +221,6 @@ const Profile: React.FC = () => {
   const handleCloseScanner = () => {
     setScannerOpen(false);
     setScanPhase('idle');
-    setScanValue(0);
     setSelectedPractice(null);
   };
 
@@ -872,29 +850,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               <button type="button" onClick={handleCloseScanner} className="text-white/40 text-xs hover:text-white">Close</button>
             </div>
             {scanPhase === 'scanning' && (
-              <div className="space-y-5 pt-4 pb-2 text-center">
-                <p className="text-[11px] uppercase tracking-[0.25em] text-cyan-200/80">SQI · 72,000 Nadi Scan</p>
-                <div className="flex items-center justify-center">
-                  <div className="relative w-32 h-32">
-                    <div className="absolute inset-0 rounded-full bg-cyan-500/25 blur-xl animate-pulse" />
-                    <div className="absolute inset-3 rounded-full border border-cyan-300/60" />
-                    <div className="absolute inset-6 rounded-full border border-cyan-300/40" />
-                    <div className="absolute inset-10 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                      <Hand className="w-8 h-8 text-cyan-100" />
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-xs text-cyan-100/80 mb-1">Mapping Nāḍī network… please keep your intention steady.</p>
-                  <div className="flex items-center justify-center gap-2 text-[11px] text-cyan-200/80 font-mono">
-                    <span>{Math.floor(scanValue).toLocaleString()}</span>
-                    <span className="text-cyan-300/60">/ 72,000 channels</span>
-                  </div>
-                  <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-cyan-900/60">
-                    <div className="h-full rounded-full bg-gradient-to-r from-cyan-400 via-cyan-200 to-cyan-500" style={{ width: `${Math.min(100, (scanValue / 72000) * 100)}%` }} />
-                  </div>
-                </div>
-              </div>
+              <HandScanner onComplete={() => setScanPhase('question')} />
             )}
             {scanPhase === 'question' && (
               <>
