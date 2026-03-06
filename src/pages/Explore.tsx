@@ -172,6 +172,7 @@ export default function Explore() {
   const { isAdmin } = useAdminRole();
   const [showFallback, setShowFallback] = useState(false);
   const [akashicOpen, setAkashicOpen] = useState(false);
+  const [gitaOpen, setGitaOpen] = useState(false);
   const [sacredRevealOpen, setSacredRevealOpen] = useState(false);
   const presence = usePresenceState();
   const userHouse = 12; // Ketu's house default; can derive from useAIVedicReading().reading later
@@ -225,10 +226,6 @@ export default function Explore() {
         <p className="text-amber-200/70 mt-1 text-base">{subtitle}</p>
       </div>
 
-      {/* Gita Oracle — top of Library with Why Today? */}
-      <div className="mb-6">
-        <GitaCard />
-      </div>
 
       {/* Hero Banner — Healing Sounds */}
       <section className="mb-6 -mx-4">
@@ -344,6 +341,7 @@ export default function Explore() {
                 { label: "Akashic Decoder", desc: "Personalized transmission — unlock your 15-page soul manuscript.", href: "/akashic-records", Icon: Eye, akashicHighTicket: true, adminOnly: true },
                 { label: "Vedic Astrology", desc: "🔱 Daily Jyotish influence + Akashic Records", href: "/vedic-astrology", Icon: Sparkles, premium: true },
                 { label: "Mantra Library", desc: "Sacred sounds for daily practice", href: "/mantras", Icon: Music2, premium: true },
+                { label: "Bhagavad Gita", desc: "Daily verse aligned with your planetary transit", Icon: BookOpen, isGita: true },
                 { label: "Ayurveda", desc: "Balance + daily guidance", href: "/ayurveda" },
                 { label: "Vastu", desc: "Abundance Architect", href: "/vastu" },
                 { label: "Quantum Apothecary", desc: "2050 Siddha-Quantum bio-resonance platform", href: "/quantum-apothecary", Icon: Cpu, adminOnly: true },
@@ -357,7 +355,10 @@ export default function Explore() {
                 const openAkashic = "openAkashic" in item && item.openAkashic;
                 const premium = "premium" in item && item.premium;
                 const akashicHighTicket = "akashicHighTicket" in item && item.akashicHighTicket;
-                const onClick = akashicHighTicket
+                const isGita = "isGita" in item && item.isGita;
+                const onClick = isGita
+                  ? () => setGitaOpen(!gitaOpen)
+                  : akashicHighTicket
                   ? () => (isAdmin ? navigate('/akashic-reading/full') : hasAkashicAccess ? navigate(item.href) : setSacredRevealOpen(true))
                   : openAkashic
                     ? () => setAkashicOpen(true)
@@ -396,6 +397,11 @@ export default function Explore() {
                 );
               })}
             </div>
+            {gitaOpen && (
+              <div className="mt-4">
+                <GitaCard />
+              </div>
+            )}
             <div className="mt-4 flex items-center justify-between">
               <button onClick={() => navigate("/library")} className="text-sm text-purple-200 hover:text-white transition underline underline-offset-4">Open Library</button>
               <button onClick={() => navigate("/membership")} className="text-sm text-purple-200 hover:text-white transition underline underline-offset-4">Manage</button>

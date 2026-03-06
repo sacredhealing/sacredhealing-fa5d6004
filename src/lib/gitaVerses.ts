@@ -85,22 +85,21 @@ export const GITA_VERSES: Record<string, GitaVerse> = {
 };
 
 /**
- * Get Gita verse based on Jyotish cycle
+ * Get Gita verse based on Jyotish cycle, rotating daily
+ * Uses day-of-year to cycle through all planet verses while
+ * weighting toward the user's current cycle
  */
 export function getGitaVerseForCycle(cycle: string | null | undefined): GitaVerse {
-  if (!cycle) return GITA_VERSES.default;
+  const allPlanets = ['Sun', 'Moon', 'Mars', 'Mercury', 'Guru', 'Shukra', 'Saturn', 'Rahu', 'Ketu'];
   
-  const normalized = cycle.toLowerCase().trim();
+  // Use day of year to rotate
+  const now = new Date();
+  const startOfYear = new Date(now.getFullYear(), 0, 0);
+  const dayOfYear = Math.floor((now.getTime() - startOfYear.getTime()) / 86400000);
   
-  if (normalized === 'rahu') return GITA_VERSES.Rahu;
-  if (normalized === 'shukra' || normalized === 'venus') return GITA_VERSES.Shukra;
-  if (normalized === 'guru' || normalized === 'jupiter') return GITA_VERSES.Guru;
-  if (normalized === 'sun' || normalized === 'surya') return GITA_VERSES.Sun;
-  if (normalized === 'moon' || normalized === 'chandra') return GITA_VERSES.Moon;
-  if (normalized === 'mars' || normalized === 'mangal') return GITA_VERSES.Mars;
-  if (normalized === 'mercury' || normalized === 'budha') return GITA_VERSES.Mercury;
-  if (normalized === 'saturn' || normalized === 'shani') return GITA_VERSES.Saturn;
-  if (normalized === 'ketu') return GITA_VERSES.Ketu;
+  // Pick planet based on day rotation
+  const dailyPlanet = allPlanets[dayOfYear % allPlanets.length];
+  const key = GITA_VERSES[dailyPlanet] ? dailyPlanet : 'default';
   
-  return GITA_VERSES.default;
+  return GITA_VERSES[key] || GITA_VERSES.default;
 }
