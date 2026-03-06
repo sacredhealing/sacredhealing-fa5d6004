@@ -980,31 +980,141 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
         </div>
       </div>
 
-      {/* SECTION 2: SRI YANTRA — radial gradient background, stats bar below */}
-      <section className="relative w-full overflow-hidden mx-3 mt-5 rounded-2xl border border-[#D4AF37]/10" style={{ background: 'radial-gradient(ellipse at center, #1e1200 0%, #0a0800 55%, #050505 100%)' }}>
-        <div className="relative w-full">
-          <img
-            src="/Gemini_Generated_Image_57v0zm57v0zm57v0.jpg"
-            alt="Sri Yantra"
-            className="w-full h-auto block"
-            style={{ mixBlendMode: 'screen', opacity: 0.95, transform: 'scale(1.05)' }}
-          />
+      {/* Life Book - Your Life Reading */}
+      {user && (
+        <div className="mb-8 animate-slide-up" style={{ animationDelay: '0.08s' }}>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-[rgba(212,175,55,0.18)] flex items-center justify-center border border-[#D4AF37]/40">
+                <BookOpen className="w-5 h-5 text-[#D4AF37]" />
+              </div>
+              <div>
+                <h2 className="text-lg font-heading font-semibold text-foreground">Your Life Reading</h2>
+                <p className="text-xs text-muted-foreground">
+                  SQI insights, woven into a living manuscript of your soul.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div
+            className="relative rounded-3xl border border-white/10 bg-gradient-to-br from-[#050209] via-[#0b0515] to-[#140b26] overflow-hidden shadow-[0_0_40px_rgba(15,23,42,0.8)]"
+          >
+            <div className="pointer-events-none absolute inset-0 opacity-60">
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    'radial-gradient(circle at 0% 0%, rgba(212,175,55,0.16), transparent 60%), radial-gradient(circle at 100% 100%, rgba(59,130,246,0.18), transparent 60%)',
+                }}
+              />
+              <div
+                className="absolute inset-0"
+                style={{
+                  backgroundImage:
+                    'radial-gradient(circle at 20% 0%, rgba(148,163,184,0.22) 0, transparent 55%), repeating-linear-gradient(90deg, rgba(148,163,184,0.06), rgba(148,163,184,0.06) 1px, transparent 1px, transparent 12px)',
+                  mixBlendMode: 'soft-light',
+                  opacity: 0.5,
+                }}
+              />
+            </div>
+
+            <div className="relative flex flex-col md:flex-row">
+              {/* Chapter Tabs */}
+              <div className="md:w-44 border-b md:border-b-0 md:border-r border-white/10 bg-white/5/40 backdrop-blur-xl p-4 space-y-2">
+                {lifeBookLoading && (
+                  <div className="h-8 rounded-xl bg-white/10 animate-pulse mb-2" />
+                )}
+                {!lifeBookLoading && groupedLifeBook.length === 0 && (
+                  <p className="text-xs text-white/50">
+                    As you journey with SQI, key transmissions will begin to appear here as living chapters.
+                  </p>
+                )}
+                {groupedLifeBook.map((chapter) => (
+                  <div
+                    key={chapter.chapter_type}
+                    className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-white/80"
+                  >
+                    <div className="font-semibold tracking-wide uppercase text-[10px] text-[#D4AF37]/90">
+                      {chapter.chapter_title}
+                    </div>
+                    <div className="mt-1 text-[10px] text-white/50">
+                      {chapter.groups.reduce((acc, g) => acc + g.entries.length, 0)} entries
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Chapter Content */}
+              <div className="flex-1 p-4 md:p-6 space-y-4 max-h-[420px] overflow-y-auto custom-scrollbar">
+                {lifeBookLoading && (
+                  <div className="space-y-3">
+                    <div className="h-6 w-40 rounded bg-white/10 animate-pulse" />
+                    <div className="h-24 rounded-2xl bg-white/5 animate-pulse" />
+                    <div className="h-24 rounded-2xl bg-white/5 animate-pulse" />
+                  </div>
+                )}
+
+                {!lifeBookLoading && groupedLifeBook.map((chapter) => (
+                  <div key={chapter.chapter_type} className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1 h-6 rounded-full bg-[#D4AF37]" />
+                      <h3 className="text-sm font-semibold tracking-wide text-white/90 uppercase">
+                        {chapter.chapter_title}
+                      </h3>
+                    </div>
+                    <div className="grid gap-3">
+                      {chapter.groups.map((group) => (
+                        <div
+                          key={group.figureKey}
+                          className="rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-md p-3 sm:p-4"
+                        >
+                          <div className="flex items-center justify-between gap-2 mb-2">
+                            <p className="text-xs font-semibold text-white/90">
+                              {group.figureKey}
+                            </p>
+                            <span className="text-[10px] text-white/40">
+                              {group.entries.length} transmission{group.entries.length > 1 ? 's' : ''}
+                            </span>
+                          </div>
+                          <div className="space-y-2">
+                            {group.entries.map((entry, idx) => (
+                              <div key={idx} className="border-t border-white/10 pt-2 first:border-t-0 first:pt-0">
+                                <div className="flex items-center justify-between gap-2">
+                                  <p className="text-xs font-medium text-white/80">
+                                    {entry.title || 'Untitled Transmission'}
+                                  </p>
+                                  {entry.created_at && (
+                                    <span className="text-[10px] text-white/40">
+                                      {new Date(entry.created_at).toLocaleDateString()}
+                                    </span>
+                                  )}
+                                </div>
+                                {entry.summary && (
+                                  <p className="mt-1 text-[11px] leading-relaxed text-white/65">
+                                    {entry.summary}
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+
+                {!lifeBookLoading && groupedLifeBook.length === 0 && (
+                  <p className="text-xs text-white/70 max-w-md">
+                    When SQI reveals something truly essential about your children, healing path, past lives, or
+                    future visions, those transmissions will be gently written here as a sacred digital manuscript.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="w-full grid grid-cols-3 bg-black/60 backdrop-blur border-t border-[#D4AF37]/10">
-          <div className="py-4 text-center border-r border-[#D4AF37]/10 last:border-r-0">
-            <span className="text-[#D4AF37] text-2xl font-black block">{streak}</span>
-            <span className="text-[8px] text-white/40 uppercase tracking-[0.25em] font-medium">STREAK</span>
-          </div>
-          <div className="py-4 text-center border-r border-[#D4AF37]/10 last:border-r-0">
-            <span className="text-[#D4AF37] text-2xl font-black block">{balanceVal}</span>
-            <span className="text-[8px] text-white/40 uppercase tracking-[0.25em] font-medium">BALANCE</span>
-          </div>
-          <div className="py-4 text-center border-r border-[#D4AF37]/10 last:border-r-0">
-            <span className="text-[#D4AF37] text-2xl font-black block">{badgesCount}</span>
-            <span className="text-[8px] text-white/40 uppercase tracking-[0.25em] font-medium">BADGES</span>
-          </div>
-        </div>
-      </section>
+      )}
 
       {/* Certificates */}
       {certificates.length > 0 && (
@@ -1031,46 +1141,248 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
         <LanguageSelector />
       </div>
 
-      {/* SQI 2050: Nadi Restoration & Space Compression */}
-      <section className="mt-12 px-6">
-        <div className="glass-card p-6 bg-white/[0.02] border border-white/5 rounded-[40px] backdrop-blur-3xl">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#D4AF37]/10 flex items-center justify-center">
-                <span className="text-[#D4AF37] text-xl">📜</span>
-              </div>
-              <div>
-                <h3 className="text-white text-lg font-black tracking-tighter uppercase">Your Life Reading</h3>
-                <p className="text-[#D4AF37] text-[7px] font-black tracking-[0.4em] uppercase opacity-60">Siddha Insights</p>
-              </div>
-            </div>
-            <button type="button" className="text-[8px] font-black tracking-widest text-white/20 uppercase border border-white/10 px-3 py-1 rounded-full">Expand All</button>
-          </div>
-          <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide border-b border-white/5 mb-6">
-            {['Children', 'Healing', 'Past Lives', 'Future', 'Nadi'].map((cat) => (
-              <span key={cat} className="px-4 py-2 rounded-xl bg-white/[0.03] text-[#D4AF37] text-[9px] font-bold whitespace-nowrap border border-white/5">
-                {cat}
-              </span>
-            ))}
-          </div>
-          <div className="space-y-4">
-            {[
-              { title: 'Samadhi Stabilization', subtitle: 'Uddevalla School Mission', date: '04/03/2026' },
-              { title: 'Activation of Youth Codes', subtitle: 'Bio-Signature Recalibration', date: '05/03/2026' },
-            ].map((nadi, i) => (
-              <div key={i} className="relative pl-6 border-l border-[#D4AF37]/20 py-1">
-                <div className="absolute -left-[5px] top-2 w-2 h-2 rounded-full bg-[#D4AF37] shadow-[0_0_10px_#D4AF37]" />
-                <div className="flex justify-between items-start">
-                  <h4 className="text-white text-xs font-bold">{nadi.title}</h4>
-                  <span className="text-white/20 text-[7px] font-mono">{nadi.date}</span>
+      {/* Digital Nadi 2050 Scanner Overlay */}
+      {scannerOpen && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 backdrop-blur-xl">
+          <div className="relative w-full max-w-md mx-4 rounded-3xl border border-cyan-400/40 bg-slate-950/95 p-5 shadow-[0_0_40px_rgba(34,211,238,0.4)]">
+            <button
+              onClick={handleCloseScanner}
+              className="absolute right-3 top-3 text-xs text-cyan-100/70 hover:text-white"
+            >
+              Close
+            </button>
+
+            {scanPhase === 'scanning' && (
+              <div className="space-y-5 pt-4 pb-2 text-center">
+                <p className="text-[11px] uppercase tracking-[0.25em] text-cyan-200/80">
+                  SQI · 72,000 Nadi Scan
+                </p>
+                <div className="flex items-center justify-center">
+                  <div className="relative w-32 h-32">
+                    <div className="absolute inset-0 rounded-full bg-cyan-500/25 blur-xl animate-pulse" />
+                    <div className="absolute inset-3 rounded-full border border-cyan-300/60" />
+                    <div className="absolute inset-6 rounded-full border border-cyan-300/40" />
+                    <div className="absolute inset-10 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                      <Hand className="w-8 h-8 text-cyan-100" />
+                    </div>
+                  </div>
                 </div>
-                <p className="text-white/40 text-[9px] mt-1 italic">{nadi.subtitle}</p>
+                <div>
+                  <p className="text-xs text-cyan-100/80 mb-1">
+                    Mapping Nāḍī network… please keep your intention steady.
+                  </p>
+                  <div className="flex items-center justify-center gap-2 text-[11px] text-cyan-200/80 font-mono">
+                    <span>{Math.floor(scanValue).toLocaleString()}</span>
+                    <span className="text-cyan-300/60">/ 72,000 channels</span>
+                  </div>
+                  <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-cyan-900/60">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-cyan-400 via-cyan-200 to-cyan-500"
+                      style={{ width: `${Math.min(100, (scanValue / 72000) * 100)}%` }}
+                    />
+                  </div>
+                </div>
               </div>
-            ))}
+            )}
+
+            {scanPhase === 'question' && (
+              <div className="space-y-4 pt-4 pb-2">
+                <p className="text-[11px] uppercase tracking-[0.25em] text-cyan-200/80 text-center">
+                  2050 Deep-Field Capture
+                </p>
+                <h3 className="text-sm font-semibold text-white text-center">
+                  What is your current practice?
+                </h3>
+                <p className="text-[11px] text-muted-foreground text-center">
+                  SQI will tune your report based on the field you just generated.
+                </p>
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  {['Mantra', 'Atma Kriya', 'Healing Session', 'Private Healing', 'Meditation', 'Breathwork'].map(
+                    (label) => (
+                      <button
+                        key={label}
+                        onClick={() => setSelectedPractice(label)}
+                        className={`rounded-xl border px-3 py-2 text-xs ${
+                          selectedPractice === label
+                            ? 'border-cyan-400 bg-cyan-500/15 text-cyan-100'
+                            : 'border-white/10 bg-white/5 text-white/80 hover:border-cyan-300/60'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ),
+                  )}
+                </div>
+                <div className="mt-3 text-left space-y-1">
+                  <label className="text-[11px] text-muted-foreground">
+                    Approximate duration (minutes)
+                  </label>
+                  <input
+                    value={practiceDuration}
+                    onChange={(e) => setPracticeDuration(e.target.value)}
+                    className="w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                  />
+                </div>
+                <Button
+                  size="sm"
+                  className="mt-3 w-full bg-cyan-500 text-xs font-semibold tracking-[0.2em] text-black hover:bg-cyan-400"
+                  disabled={!selectedPractice}
+                  onClick={handleGenerateSoulReport}
+                >
+                  Generate Deep‑Field Resonance
+                </Button>
+              </div>
+            )}
+
+            {scanPhase === 'saving' && (
+              <div className="space-y-4 pt-6 pb-4 text-center">
+                <p className="text-[11px] uppercase tracking-[0.25em] text-cyan-200/80">
+                  Committing to Soul Vault…
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  SQI is writing your Deep-Field Resonance Report into your Soul Vault.
+                </p>
+              </div>
+            )}
+
+            {scanPhase === 'done' && (
+              <div className="space-y-4 pt-6 pb-4 text-center">
+                <p className="text-[11px] uppercase tracking-[0.25em] text-cyan-200/80">
+                  Report saved
+                </p>
+                <p className="text-xs text-white/90">
+                  Your Deep-Field Resonance Report has been anchored into your Soul Vault.
+                </p>
+                <Button
+                  size="sm"
+                  className="mt-2 bg-cyan-500 text-xs font-semibold tracking-[0.2em] text-black hover:bg-cyan-400"
+                  onClick={handleCloseScanner}
+                >
+                  Close
+                </Button>
+              </div>
+            )}
           </div>
         </div>
-      </section>
+      )}
 
+      {/* SQI 2050: The Sanctuary & Abundance Grid */}
+      <div className="w-full px-6 space-y-10 pb-24 animate-slide-up" style={{ animationDelay: '0.25s' }}>
+        {/* Physical Sanctuary (Settings Cluster) */}
+        <section className="space-y-4">
+          <h3 className="text-[#D4AF37] text-[9px] tracking-[0.5em] font-black uppercase opacity-60 ml-2">
+            {t('profile.sacredFolder.physicalSanctuary', 'Physical Sanctuary')}
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {physicalSanctuary.map((item) => (
+              <button
+                key={item.label}
+                onClick={item.onClick}
+                className="p-5 rounded-3xl bg-white/[0.02] border border-white/5 hover:border-[#D4AF37]/40 transition-all flex items-center justify-between group cursor-pointer backdrop-blur-md"
+              >
+                <span className="text-white/70 text-xs font-medium tracking-wide group-hover:text-white">
+                  {item.label}
+                </span>
+                <div className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-[#D4AF37]/20">
+                  <div className="w-1 h-1 bg-white/40 rounded-full group-hover:bg-[#D4AF37]" />
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* Abundance & Lineage (Wealth/Web3 Cluster) */}
+        <section className="space-y-4">
+          <h3 className="text-[#D4AF37] text-[9px] tracking-[0.5em] font-black uppercase opacity-60 ml-2">
+            {t('profile.sacredFolder.abundanceLineage', 'Abundance & Lineage')}
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {abundanceLineage.map((item) => (
+              <button
+                key={item.label}
+                onClick={item.onClick}
+                className="p-6 rounded-[32px] bg-gradient-to-br from-white/[0.04] to-transparent border border-white/10 text-center hover:border-[#D4AF37]/50 transition-all group"
+              >
+                <div className="text-xl mb-2 opacity-50 group-hover:opacity-100 group-hover:scale-110 transition-all">
+                  ✨
+                </div>
+                <div className="text-white text-[9px] font-black tracking-widest uppercase">{item.label}</div>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* The Bhrigu Samhita Portal (Upgrade Section) */}
+        <div
+          className="relative p-10 rounded-[48px] overflow-hidden text-center group cursor-pointer border border-[#D4AF37]/20"
+          onClick={() => navigate('/membership')}
+        >
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30 animate-pulse" />
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-900/40 via-transparent to-purple-900/40" />
+
+          <div className="relative z-10">
+            <div className="text-[#D4AF37] text-2xl mb-4">👑</div>
+            <h4 className="text-white text-lg font-bold tracking-tight">
+              {t('profile.ascendUniversal', 'Ascend to Universal Premium')}
+            </h4>
+            <p className="text-white/50 text-[10px] mt-2 mb-6">
+              {t('profile.unlockFeatures', 'Unlock the full Bhrigu Samhita and All Healing Courses')}
+            </p>
+            <button
+              className="bg-[#D4AF37] text-black text-[10px] font-black px-10 py-3 rounded-full tracking-[0.2em] shadow-[0_0_20px_rgba(212,175,55,0.4)] group-hover:scale-105 transition-all"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate('/membership');
+              }}
+            >
+              {t('common.upgradeNow', 'UPGRADE NOW')}
+            </button>
+          </div>
+        </div>
+
+        {/* The Covenant and Sign Out remain as functional controls */}
+        <section className="space-y-4">
+          <h3 className="text-[#D4AF37] text-[9px] tracking-[0.5em] font-black uppercase opacity-60 ml-2">
+            {t('profile.sacredFolder.theCovenant', 'The Covenant')}
+          </h3>
+          <div className="space-y-1 rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-md p-4">
+            {theCovenant.map((item) => (
+              <button
+                key={item.label}
+                onClick={item.onClick}
+                className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all text-left"
+              >
+                <div className="w-9 h-9 rounded-full bg-[rgba(212,175,55,0.15)] flex items-center justify-center">
+                  <item.icon size={18} className="text-[#D4AF37]/90" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-foreground text-sm">{item.label}</p>
+                  <p className="text-xs text-muted-foreground">{item.sublabel}</p>
+                </div>
+                <ChevronRight size={18} className="text-muted-foreground shrink-0" />
+              </button>
+            ))}
+            <button
+              onClick={handleSignOut}
+              className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-destructive/10 transition-all text-left mt-2 border-t border-white/10 pt-3"
+            >
+              <div className="w-9 h-9 rounded-full bg-destructive/20 flex items-center justify-center">
+                <LogOut size={18} className="text-destructive" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-destructive text-sm">{t('profile.signOut')}</p>
+              </div>
+              <ChevronRight size={18} className="text-destructive/70 shrink-0" />
+            </button>
+          </div>
+        </section>
+      </div>
+
+      {/* Dialogs */}
+      <NotificationsDialog open={notificationsOpen} onOpenChange={setNotificationsOpen} />
+      <AppearanceDialog open={appearanceOpen} onOpenChange={setAppearanceOpen} />
+      <PrivacyDialog open={privacyOpen} onOpenChange={setPrivacyOpen} />
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
       <ProfileEditDialog open={profileEditOpen} onOpenChange={setProfileEditOpen} />
     </div>
   );
