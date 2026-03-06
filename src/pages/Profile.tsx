@@ -447,33 +447,41 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           )}
         </div>
 
-        {/* SQI 2050: Absolute Horizon Sri Yantra (No Box) */}
-        <section className="relative w-full flex flex-col items-center justify-center overflow-hidden py-10">
-          <div className="relative w-full max-w-lg aspect-square flex items-center justify-center group animate-[sriYantraPulse_3.5s_ease-in-out_infinite]">
+        {/* SQI 2050: Sri Yantra — seamless on stardust, stats float over */}
+        <section className="relative w-full flex flex-col items-center justify-center py-10">
+          <div className="relative w-full max-w-4xl mx-auto aspect-square flex items-center justify-center">
+            {/* Glow — no box, no overflow clip */}
             <div className="absolute inset-0 bg-[radial-gradient(circle,_rgba(212,175,55,0.15)_0%,_transparent_75%)] pointer-events-none animate-pulse" />
             <img
               src={profile?.sri_yantra_url || '/Gemini_Generated_Image_v8j3v8j3v8j3v8j3.png'}
               onError={(e) => { (e.target as HTMLImageElement).src = '/Gemini_Generated_Image_57v0zm57v0zm57v0.jpg'; }}
               alt="Siddha Sri Yantra"
-              className="w-full h-full object-contain mix-blend-screen opacity-90 scale-110"
+              className="w-full h-full object-contain mix-blend-screen opacity-90 scale-110 animate-[sriYantraPulse_3.5s_ease-in-out_infinite]"
               style={{
                 maskImage: 'radial-gradient(circle, black 40%, transparent 85%)',
                 WebkitMaskImage: 'radial-gradient(circle, black 40%, transparent 85%)',
               }}
             />
-          </div>
-          <div className="relative -mt-20 z-20 w-full px-8">
-            <div className="max-w-sm mx-auto flex justify-around items-center backdrop-blur-2xl bg-white/[0.02] py-8 rounded-[40px] border border-white/5 shadow-[0_20px_60px_rgba(0,0,0,0.6)]">
+            {/* Stats: glass bar floating over Yantra */}
+            <div
+              className="absolute bottom-0 left-1/2 -translate-x-1/2 z-20 w-full max-w-sm px-6 py-6 flex justify-around items-center rounded-[40px]"
+              style={{
+                background: 'rgba(0, 0, 0, 0.05)',
+                backdropFilter: 'blur(40px)',
+                WebkitBackdropFilter: 'blur(40px)',
+                border: '1px solid rgba(212, 175, 55, 0.2)',
+              }}
+            >
               <div className="text-center group cursor-pointer">
                 <span className="text-[#D4AF37] text-2xl font-black block transition-transform group-hover:scale-110">{shcProfile?.streak_days ?? 0}</span>
                 <label className="text-white/30 text-[7px] tracking-[0.4em] uppercase font-bold">Streak</label>
               </div>
-              <div className="h-10 w-[1px] bg-white/10" />
+              <div className="h-10 w-px bg-white/10" />
               <div className="text-center group cursor-pointer">
                 <span className="text-[#D4AF37] text-2xl font-black block transition-transform group-hover:scale-110">{balance?.balance ?? 0}</span>
                 <label className="text-white/30 text-[7px] tracking-[0.4em] uppercase font-bold">Balance</label>
               </div>
-              <div className="h-10 w-[1px] bg-white/10" />
+              <div className="h-10 w-px bg-white/10" />
               <div className="text-center group cursor-pointer">
                 <span className="text-[#D4AF37] text-2xl font-black block transition-transform group-hover:scale-110">{badges.filter((b) => b.earned).length}</span>
                 <label className="text-white/30 text-[7px] tracking-[0.4em] uppercase font-bold">Badges</label>
