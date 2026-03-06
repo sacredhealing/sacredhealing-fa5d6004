@@ -447,19 +447,14 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           )}
         </div>
 
-        {/* SQI 2050: Absolute Horizon Sri Yantra (No Box) */}
-        <section className="relative w-full flex flex-col items-center justify-center overflow-hidden py-10">
-          <div className="relative w-full max-w-lg aspect-square flex items-center justify-center group animate-[sriYantraPulse_3.5s_ease-in-out_infinite]">
-            <div className="absolute inset-0 bg-[radial-gradient(circle,_rgba(212,175,55,0.15)_0%,_transparent_75%)] pointer-events-none animate-pulse" />
+        {/* SRI YANTRA — radial gradient, no py-10/max-w-lg */}
+        <section className="relative w-full overflow-hidden mx-3 mt-5 rounded-2xl border border-[#D4AF37]/10" style={{ background: 'radial-gradient(ellipse at center, #1e1200 0%, #0a0800 55%, #050505 100%)' }}>
+          <div className="relative w-full">
             <img
-              src={profile?.sri_yantra_url || '/Gemini_Generated_Image_v8j3v8j3v8j3v8j3.png'}
-              onError={(e) => { (e.target as HTMLImageElement).src = '/Gemini_Generated_Image_57v0zm57v0zm57v0.jpg'; }}
-              alt="Siddha Sri Yantra"
-              className="w-full h-full object-contain mix-blend-screen opacity-90 scale-110"
-              style={{
-                maskImage: 'radial-gradient(circle, black 40%, transparent 85%)',
-                WebkitMaskImage: 'radial-gradient(circle, black 40%, transparent 85%)',
-              }}
+              src="/Gemini_Generated_Image_57v0zm57v0zm57v0.jpg"
+              alt="Sri Yantra"
+              className="w-full h-auto block"
+              style={{ mixBlendMode: 'screen', opacity: 0.95, transform: 'scale(1.05)' }}
             />
           </div>
           <div className="relative -mt-20 z-20 w-full px-8">
