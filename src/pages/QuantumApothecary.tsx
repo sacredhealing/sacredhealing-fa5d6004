@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Sparkles, Zap, Wind, Droplets, Activity, MessageSquare, Plus, Trash2, Send,
   Cpu, Globe, ShieldCheck, ChevronRight, Info, X, ArrowLeft, Camera, Mic,
@@ -45,6 +45,7 @@ function renderInline(text: string): React.ReactNode {
 
 export default function QuantumApothecary() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAdmin, isLoading: adminLoading } = useAdminRole();
   const { user } = useAuth();
 
@@ -85,6 +86,7 @@ export default function QuantumApothecary() {
   const [sessionsOpen, setSessionsOpen] = useState(false);
   const [loadingSessions, setLoadingSessions] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatPanelRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -96,6 +98,17 @@ export default function QuantumApothecary() {
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
   useEffect(() => { localStorage.setItem('active_resonators', JSON.stringify(activeTransmissions)); }, [activeTransmissions]);
+
+  // When opened from Profile (focusChat), scroll chat panel into view so "all chat comes up there"
+  useEffect(() => {
+    const focusChat = (location.state as { focusChat?: boolean } | null)?.focusChat;
+    if (focusChat && chatPanelRef.current) {
+      const t = setTimeout(() => {
+        chatPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 300);
+      return () => clearTimeout(t);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     if (isScanning) {
@@ -713,8 +726,10 @@ export default function QuantumApothecary() {
               />
             </Suspense>
 
-            {/* Chat */}
-            {renderChatPanel()}
+            {/* Chat — scroll into view when opened from Profile */}
+            <div ref={chatPanelRef}>
+              {renderChatPanel()}
+            </div>
           </div>
         </div>
       </div>
