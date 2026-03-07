@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, Music, ChevronRight, FileText, History, User, Cpu, Waves, ShieldCheck, Database, Sparkles, Brain } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import DigitalNadiScanner from '@/components/soul-scan/DigitalNadiScanner';

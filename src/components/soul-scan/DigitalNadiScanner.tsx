@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, Zap, Shield, Heart, RefreshCw, Hand } from 'lucide-react';
 import type { ScanResults } from '@/types/soulScan';
 
