@@ -1,10 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Compass, ChevronRight, Play, Check } from 'lucide-react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Play } from 'lucide-react';
 import { useSpiritualPaths } from '@/hooks/useSpiritualPaths';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -14,72 +11,84 @@ export const SpiritualPathCard: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Card className="p-4">
-        <Skeleton className="h-6 w-40 mb-3" />
-        <Skeleton className="h-20 w-full" />
-      </Card>
+      <div className="flex flex-col gap-4">
+        <div className="flex justify-between">
+          <Skeleton className="h-3 w-32" />
+          <Skeleton className="h-3 w-16" />
+        </div>
+        <Skeleton className="h-6 w-full" />
+        <Skeleton className="h-3 w-3/4" />
+        <Skeleton className="h-2 w-full rounded-full" />
+      </div>
     );
   }
 
   const activeProgress = getActiveProgress();
 
-  // If user has an active path, show progress
+  // If user has an active path, show progress (image layout: INNER PEACE PATH card)
   if (activeProgress) {
     const activePath = paths.find(p => p.id === activeProgress.path_id);
     if (activePath) {
       const progressPercent = Math.round((activeProgress.current_day / activePath.duration_days) * 100);
+      const pathTitle = t(`spiritualPath.paths.${activePath.slug.replace(/-/g, '_')}.title`, activePath.title);
+      const pathDesc = t(`spiritualPath.paths.${activePath.slug.replace(/-/g, '_')}.description`, activePath.description || '');
 
       return (
-        <Card className="glass-card p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Compass className="w-5 h-5 text-amber-400" />
-              <h3 className="font-semibold text-foreground" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
-                {t('spiritualPath.dharmaPathProgress', 'Dharma Path Progress')}
-              </h3>
-            </div>
-            <Badge variant="outline" className="text-xs">
-              {t('spiritualPath.day')} {activeProgress.current_day}/{activePath.duration_days}
-            </Badge>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <span
+              className="text-[10px] font-extrabold uppercase tracking-[0.35em] text-[rgba(212,175,55,0.7)]"
+              style={{ fontFamily: 'Montserrat,sans-serif' }}
+            >
+              {activePath.slug.replace(/-/g, ' ')}
+            </span>
+            <span
+              className="text-[10px] font-bold uppercase tracking-wider text-[rgba(212,175,55,0.5)]"
+              style={{ fontFamily: 'Montserrat,sans-serif' }}
+            >
+              Day {activeProgress.current_day} / {activePath.duration_days}
+            </span>
           </div>
-
-          <div className="space-y-3">
-            <div>
-              <p className="font-medium text-foreground font-serif" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
-                {t(`spiritualPath.paths.${activePath.slug.replace(/-/g, '_')}.title`, activePath.title)}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {t(`spiritualPath.paths.${activePath.slug.replace(/-/g, '_')}.description`, activePath.description || '')}
-              </p>
-            </div>
-
+          <p
+            className="text-lg font-serif text-white/90 leading-tight"
+            style={{ fontFamily: 'Cormorant Garamond, Cinzel, serif' }}
+          >
+            {pathTitle}
+          </p>
+          <p className="text-xs text-white/50" style={{ fontFamily: 'Montserrat,sans-serif' }}>
+            {pathDesc}
+          </p>
+          <div className="flex flex-col gap-2">
             <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-500"
                 style={{
                   width: `${progressPercent}%`,
-                  background: 'linear-gradient(90deg, #D4AF37 0%, #F5D77A 50%, #D4AF37 100%)',
-                  boxShadow: '0 0 10px rgba(212,175,55,0.5)',
+                  background: '#D4AF37',
+                  boxShadow: '0 0 10px rgba(212,175,55,0.4)',
                 }}
               />
             </div>
-
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">
-                {t('spiritualPath.progressComplete', { percent: progressPercent, defaultValue: `${progressPercent}% complete` })}
+              <span
+                className="text-[10px] font-semibold uppercase tracking-wider text-[rgba(212,175,55,0.6)]"
+                style={{ fontFamily: 'Montserrat,sans-serif' }}
+              >
+                {progressPercent}% complete
               </span>
               <Link to={`/paths/${activePath.slug}`}>
-                <Button
-                  size="sm"
-                  className="text-xs h-8 bg-gradient-to-r from-[#D4AF37] to-[#C4943A] text-black font-semibold rounded-full px-4 hover:brightness-110 border-0"
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/60 bg-transparent px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-[#D4AF37] hover:bg-[#D4AF37]/10 transition"
+                  style={{ fontFamily: 'Montserrat,sans-serif' }}
                 >
-                  <Play className="w-3 h-3 mr-1" />
+                  <Play className="h-3 w-3 fill-current" />
                   {t('spiritualPath.continueDayWithNumber', { day: activeProgress.current_day, defaultValue: `Continue Day ${activeProgress.current_day}` })}
-                </Button>
+                </button>
               </Link>
             </div>
           </div>
-        </Card>
+        </div>
       );
     }
   }
@@ -90,54 +99,44 @@ export const SpiritualPathCard: React.FC = () => {
     return null;
   }
 
-  return (
-    <Card className="glass-card p-4">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <Compass className="w-5 h-5 text-amber-400" />
-          <h3 className="font-semibold text-foreground" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
-            {t('spiritualPath.startJourney', 'Start Your Journey')}
-          </h3>
-        </div>
-        <Link to="/paths" className="text-xs text-primary hover:underline">
-          {t('common.viewAll', 'View All')}
-        </Link>
-      </div>
+  const pathTitle = t(`spiritualPath.paths.${recommendedPath.slug.replace(/-/g, '_')}.title`, recommendedPath.title);
+  const pathDesc = t(`spiritualPath.paths.${recommendedPath.slug.replace(/-/g, '_')}.description`, recommendedPath.description || '');
 
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <span
+          className="text-[10px] font-extrabold uppercase tracking-[0.35em] text-[rgba(212,175,55,0.7)]"
+          style={{ fontFamily: 'Montserrat,sans-serif' }}
+        >
+          {recommendedPath.slug.replace(/-/g, ' ')}
+        </span>
+        <span
+          className="text-[10px] font-bold uppercase tracking-wider text-[rgba(212,175,55,0.5)]"
+          style={{ fontFamily: 'Montserrat,sans-serif' }}
+        >
+          Day 0 / {recommendedPath.duration_days}
+        </span>
+      </div>
+      <p
+        className="text-lg font-serif text-white/90 leading-tight"
+        style={{ fontFamily: 'Cormorant Garamond, Cinzel, serif' }}
+      >
+        {pathTitle}
+      </p>
+      <p className="text-xs text-white/50" style={{ fontFamily: 'Montserrat,sans-serif' }}>
+        {pathDesc}
+      </p>
       <Link to={`/paths/${recommendedPath.slug}`}>
-        <div className="flex items-center gap-4 p-3 rounded-xl bg-background/50 border border-border/30 hover:border-primary/50 transition-all">
-          <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-primary/20 to-accent/10 flex items-center justify-center shrink-0">
-            {recommendedPath.cover_image_url ? (
-              <img 
-                src={recommendedPath.cover_image_url} 
-                alt={recommendedPath.title}
-                className="w-full h-full object-cover rounded-lg"
-              />
-            ) : (
-              <Compass className="w-6 h-6 text-primary" />
-            )}
-          </div>
-          
-          <div className="flex-1 min-w-0">
-            <p className="font-medium text-foreground text-sm font-serif" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
-              {t(`spiritualPath.paths.${recommendedPath.slug.replace(/-/g, '_')}.title`, recommendedPath.title)}
-            </p>
-            <p className="text-xs text-muted-foreground line-clamp-1">
-              {t(`spiritualPath.paths.${recommendedPath.slug.replace(/-/g, '_')}.description`, recommendedPath.description || '')}
-            </p>
-            <div className="flex items-center gap-2 mt-1">
-              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                {recommendedPath.duration_days} {t('common.days')}
-              </Badge>
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-accent border-accent/30">
-                +{recommendedPath.shc_reward_total} SHC
-              </Badge>
-            </div>
-          </div>
-          
-          <ChevronRight className="w-5 h-5 text-muted-foreground" />
-        </div>
+        <button
+          type="button"
+          className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/60 bg-transparent px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-[#D4AF37] hover:bg-[#D4AF37]/10 transition"
+          style={{ fontFamily: 'Montserrat,sans-serif' }}
+        >
+          <Play className="h-3 w-3 fill-current" />
+          {t('spiritualPath.startJourney', 'Start Journey')}
+        </button>
       </Link>
-    </Card>
+    </div>
   );
 };

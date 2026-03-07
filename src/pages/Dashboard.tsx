@@ -27,8 +27,13 @@ import { useAchievements } from '@/hooks/useAchievements';
 import { useMembership } from '@/hooks/useMembership';
 import { useSocialShare } from '@/hooks/useSocialShare';
 import { translateAchievement } from '@/lib/translateAchievement';
+import { Award, Flame, Target, Share2, Users, Star, Sparkles, Heart, Crown, Calendar } from 'lucide-react';
 import type { DailyGuidance } from '@/hooks/useDailyGuidance';
 import type { SessionLike } from '@/hooks/useDashboardAutostart';
+
+const ACHIEVEMENT_ICON_MAP: Record<string, React.ComponentType<{ className?: string; size?: number }>> = {
+  Award, Flame, Target, Share2, Users, Star, Sparkles, Heart, Crown, Calendar,
+};
 
 export type HomeFlowState = 'idle' | 'in_session' | 'completed';
 
@@ -476,50 +481,66 @@ const Dashboard: React.FC = () => {
             <SpiritualPathCard />
           </div>
 
-          {/* ══ ZONE 7: SOUL FIELD STATS ══ */}
+          {/* ══ ZONE 7: SOUL FIELD — stats row + achievement cards row (per image) ══ */}
           <SectionLabel label="◈ Soul Field" delay="0.35s" />
-          <div style={{ margin: '0 16px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8, animation: 'sqFadeUp 0.5s 0.35s ease both' }}>
-            {([
-              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2C12 2 7 8 7 13a5 5 0 0010 0c0-5-5-11-5-11z" stroke="rgba(212,175,55,0.7)" strokeWidth="1.4" fill="rgba(212,175,55,0.08)"/><circle cx="12" cy="14" r="2" fill="rgba(212,175,55,0.5)"/></svg>, val: streakDays ?? 0, lbl: 'Day Streak' },
-              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><polygon points="12,2 14.5,9 22,9 16,14 18.5,21 12,17 5.5,21 8,14 2,9 9.5,9" stroke="rgba(212,175,55,0.7)" strokeWidth="1.3" strokeLinejoin="round" fill="rgba(212,175,55,0.07)"/><circle cx="12" cy="12" r="2" fill="rgba(212,175,55,0.45)"/></svg>, val: userAchievements.length * 25, lbl: 'SHC' },
-              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="rgba(212,175,55,0.55)" strokeWidth="1.2" fill="none"/><circle cx="12" cy="12" r="5" stroke="rgba(212,175,55,0.35)" strokeWidth="1" fill="none"/><circle cx="12" cy="12" r="2" fill="rgba(212,175,55,0.6)"/></svg>, val: userAchievements.length, lbl: 'Achieved' },
-              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="rgba(212,175,55,0.5)" strokeWidth="1.2" fill="none"/><line x1="12" y1="6" x2="12" y2="12" stroke="rgba(212,175,55,0.7)" strokeWidth="1.5" strokeLinecap="round"/><line x1="12" y1="12" x2="16" y2="14" stroke="rgba(212,175,55,0.5)" strokeWidth="1.3" strokeLinecap="round"/><circle cx="12" cy="12" r="1.5" fill="rgba(212,175,55,0.7)"/></svg>, val: `${successWindowPct}%`, lbl: 'Window' },
-            ] as { icon: React.ReactNode; val: string | number; lbl: string }[]).map(({ icon, val, lbl }, i) => (
-              <div key={i} style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(212,175,55,0.12)', borderRadius: 16, padding: '12px 8px 10px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                {icon}
-                <span style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '1.3rem', fontWeight: 600, color: 'rgba(255,255,255,0.88)', lineHeight: 1, margin: '5px 0 3px' }}>{val}</span>
-                <span style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 6, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.4)', textAlign: 'center' }}>{lbl}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* ══ ZONE 8: ACHIEVEMENTS ══ */}
-          {achievements.length > 0 && (
-            <>
-              <SectionLabel label="◈ Achievements" delay="0.38s" />
-              <div style={{ margin: '0 16px', display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4, animation: 'sqFadeUp 0.5s 0.38s ease both' }}>
-                {achievements.slice(0, 5).map((achievement) => {
+          <div style={{ margin: '0 16px', animation: 'sqFadeUp 0.5s 0.35s ease both' }}>
+            {/* Row 1: 4 stat cards — Day Streak, SHC, Presence, Min */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
+              {([
+                { icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2.5v4M12 17.5v4M4.5 12h4M15.5 12h4M6.3 6.3l2.8 2.8M14.9 14.9l2.8 2.8M6.3 17.7l2.8-2.8M14.9 9.1l2.8-2.8" stroke="rgba(212,175,55,0.8)" strokeWidth="1.5" strokeLinecap="round"/><circle cx="12" cy="12" r="4" stroke="rgba(212,175,55,0.6)" strokeWidth="1.2" fill="rgba(212,175,55,0.06)"/></svg>, val: streakDays ?? 0, lbl: 'DAY STREAK' },
+                { icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><polygon points="12,2 14.5,9 22,9 16,14 18.5,21 12,17 5.5,21 8,14 2,9 9.5,9" stroke="rgba(212,175,55,0.8)" strokeWidth="1.3" strokeLinejoin="round" fill="rgba(212,175,55,0.08)"/><circle cx="12" cy="12" r="2" fill="rgba(212,175,55,0.5)"/></svg>, val: userAchievements.length * 25, lbl: 'SHC' },
+                { icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="rgba(212,175,55,0.6)" strokeWidth="1.2" fill="none"/><circle cx="12" cy="12" r="5" stroke="rgba(212,175,55,0.4)" strokeWidth="1" fill="none"/><circle cx="12" cy="12" r="2" fill="rgba(212,175,55,0.6)"/></svg>, val: userAchievements.length, lbl: 'PRESENCE' },
+                { icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="rgba(212,175,55,0.6)" strokeWidth="1.2" fill="none"/><line x1="12" y1="6" x2="12" y2="12" stroke="rgba(212,175,55,0.8)" strokeWidth="1.5" strokeLinecap="round"/><line x1="12" y1="12" x2="16" y2="14" stroke="rgba(212,175,55,0.5)" strokeWidth="1.3" strokeLinecap="round"/><circle cx="12" cy="12" r="1.5" fill="rgba(212,175,55,0.7)"/></svg>, val: successWindowPct, lbl: 'MIN' },
+              ] as { icon: React.ReactNode; val: string | number; lbl: string }[]).map(({ icon, val, lbl }, i) => (
+                <div key={i} style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(212,175,55,0.12)', borderRadius: 16, padding: '14px 10px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                  <div style={{ color: 'rgba(212,175,55,0.85)' }}>{icon}</div>
+                  <span style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '1.5rem', fontWeight: 700, color: 'rgba(255,255,255,0.9)', lineHeight: 1 }}>{val}</span>
+                  <span style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7, fontWeight: 800, letterSpacing: '0.25em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.5)' }}>{lbl}</span>
+                </div>
+              ))}
+            </div>
+            {/* Row 2: 4 achievement cards — icon, title, +SHC or progress (per image) */}
+            {achievements.length > 0 && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8 }}>
+                {achievements.slice(0, 4).map((achievement) => {
                   const progress = getAchievementProgress(achievement);
                   const translated = translateAchievement(achievement.slug, t, achievement.name, achievement.description || '');
+                  const nameUpper = (translated.name || achievement.name || '').toUpperCase().replace(/\s+/g, ' ');
+                  const IconComponent = ACHIEVEMENT_ICON_MAP[achievement.icon_name] || Award;
                   return (
-                    <div key={achievement.id} style={{ flexShrink: 0, opacity: progress.unlocked ? 1 : 0.35 }}>
-                      <AchievementBadge
-                        name={translated.name}
-                        description={translated.description}
-                        iconName={achievement.icon_name}
-                        badgeColor={achievement.badge_color}
-                        unlocked={progress.unlocked}
-                        unlockedAt={progress.unlockedAt}
-                        shcReward={achievement.shc_reward}
-                        size="sm"
-                        progressText={progress.progressText}
-                      />
+                    <div
+                      key={achievement.id}
+                      style={{
+                        background: 'rgba(255,255,255,0.025)',
+                        border: '1px solid rgba(212,175,55,0.12)',
+                        borderRadius: 16,
+                        padding: '14px 10px 12px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 6,
+                        opacity: progress.unlocked ? 1 : 0.7,
+                      }}
+                    >
+                      <div style={{ color: 'rgba(212,175,55,0.85)' }}>
+                        <IconComponent size={20} />
+                      </div>
+                      <span style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.85)', textAlign: 'center', lineHeight: 1.2 }}>
+                        {nameUpper.slice(0, 18)}{nameUpper.length > 18 ? '…' : ''}
+                      </span>
+                      {progress.unlocked && achievement.shc_reward != null && achievement.shc_reward > 0 ? (
+                        <span style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 8, fontWeight: 700, color: '#D4AF37' }}>+{achievement.shc_reward} SHC</span>
+                      ) : progress.progressText ? (
+                        <span style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 8, fontWeight: 600, color: 'rgba(255,255,255,0.4)' }}>{progress.progressText}</span>
+                      ) : achievement.shc_reward != null && achievement.shc_reward > 0 ? (
+                        <span style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 8, fontWeight: 700, color: 'rgba(212,175,55,0.6)' }}>+{achievement.shc_reward} SHC</span>
+                      ) : null}
                     </div>
                   );
                 })}
               </div>
-            </>
-          )}
+            )}
+          </div>
 
           {/* ══ ZONE 9: UPGRADE BANNER ══ */}
           {showUpgradeBanner && (
