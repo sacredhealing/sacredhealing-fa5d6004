@@ -26,7 +26,6 @@ import { filterByMeditationLanguage, buildSections } from '@/features/meditation
 import { MeditationSection } from '@/features/meditations/MeditationSection';
 import { BackToTopFab } from '@/features/meditations/BackToTopFab';
 import { useJyotishProfile } from '@/hooks/useJyotishProfile';
-import { GatedResonancePanel } from '@/components/resonance/UniversalResonanceEngine';
 
 const JyotishMeditationCard = () => {
   const jyotish = useJyotishProfile();
@@ -484,9 +483,6 @@ const Meditations: React.FC = () => {
       </div>
     </>
       </div>
-      <aside className="mt-6 lg:mt-0">
-        <GatedResonancePanel page="Meditation" />
-      </aside>
     </div>
   );
 };
