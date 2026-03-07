@@ -605,7 +605,12 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   @keyframes stardustMove{from{background-position:0 0}to{background-position:1000px 1000px}}
   .sy-short{display:none}
   .sy-full{display:inline}
-  @media(max-width:480px){.sy-full{display:none}.sy-short{display:inline}}
+  @media(max-width:520px){
+    .sri-yantra-label{position:relative;bottom:auto;left:auto;transform:none;display:block;text-align:center;width:calc(100% - 48px);max-width:100%;margin:-1px auto 0;border-radius:0 0 20px 20px;border-top:none;padding:12px 20px;font-size:7px;letter-spacing:0.25em}
+    .sy-full{display:none}
+    .sy-short{display:inline}
+    .sri-yantra-section{overflow:visible}
+  }
 `}} />
 
     <div className="profile-wrap" style={{minHeight:'100vh',background:'#050505',overflowX:'hidden',fontFamily:'Montserrat,sans-serif',paddingBottom:'120px',position:'relative'}}>
