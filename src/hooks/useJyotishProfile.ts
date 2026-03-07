@@ -70,6 +70,19 @@ const DOSHA_MAP: Record<string, string> = {
   'Cancer': 'Kapha', 'Scorpio': 'Pitta', 'Pisces': 'Kapha',
 };
 
+// Per-planet karma focus for meditation guidance (used when masterBlueprint not available)
+const KARMA_FOCUS_MAP: Record<string, string> = {
+  'Sun': 'vitality, leadership and self-confidence',
+  'Moon': 'emotional balance and intuition',
+  'Mars': 'courage, boundaries and healthy action',
+  'Mercury': 'clarity, communication and learning',
+  'Jupiter': 'spiritual growth and self-mastery',
+  'Venus': 'love, harmony and self-worth',
+  'Saturn': 'discipline, patience and release of karma',
+  'Rahu': 'detachment from illusion and worldly ambition',
+  'Ketu': 'spiritual liberation and past-life clarity',
+};
+
 export function useJyotishProfile(): JyotishProfile {
   const { user: authUser } = useAuth();
   const { reading, isLoading } = useAIVedicReading();
@@ -89,10 +102,10 @@ export function useJyotishProfile(): JyotishProfile {
     // Active yogas from masterBlueprint
     const activeYogas = (reading?.masterBlueprint?.significantYogas || []).map(y => y.name);
 
-    // Karma focus from masterBlueprint
+    // Karma focus: from masterBlueprint or planet-specific default for daily relevance
     const karmaFocus = reading?.masterBlueprint?.karmaPatterns
-      ? reading.masterBlueprint.karmaPatterns.split('.')[0]
-      : 'spiritual growth and self-mastery';
+      ? reading.masterBlueprint.karmaPatterns.split('.')[0].trim()
+      : (KARMA_FOCUS_MAP[mahadasha] || KARMA_FOCUS_MAP['Jupiter']);
 
     // Healing focus from masterBlueprint
     const healingFocus = reading?.masterBlueprint?.soulPurpose

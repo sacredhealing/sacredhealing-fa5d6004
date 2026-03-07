@@ -26,10 +26,14 @@ import { filterByMeditationLanguage, buildSections } from '@/features/meditation
 import { MeditationSection } from '@/features/meditations/MeditationSection';
 import { BackToTopFab } from '@/features/meditations/BackToTopFab';
 import { useJyotishProfile } from '@/hooks/useJyotishProfile';
+import { useAuth } from '@/hooks/useAuth';
+import { useAIVedicReading } from '@/hooks/useAIVedicReading';
+import type { UserProfile } from '@/lib/vedicTypes';
 
 const JyotishMeditationCard = () => {
   const jyotish = useJyotishProfile();
-  if (jyotish.isLoading || !jyotish.mahadasha || jyotish.mahadasha === 'Jupiter' && !jyotish.nakshatra) return null;
+  if (jyotish.isLoading) return null;
+  if (!jyotish.mahadasha) return null;
   return (
     <div className="mx-0 mb-4 p-4 rounded-2xl bg-gradient-to-r from-amber-900/20 to-purple-900/20 border border-amber-800/20">
       <div className="flex items-center gap-2 mb-2">
@@ -62,6 +66,8 @@ interface Meditation {
 
 const Meditations: React.FC = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const { reading: vedicReading, generateReading } = useAIVedicReading();
   const { playUniversalAudio, currentAudio, isPlaying, progress: playerProgress } = useMusicPlayer();
   const { language, setLanguage } = useMeditationContentLanguage();
   const { userState } = useUserDailyState();
@@ -70,6 +76,29 @@ const Meditations: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [meditations, setMeditations] = useState<Meditation[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Ensure Jyotish card has daily data: load Vedic reading when user has birth data
+  useEffect(() => {
+    if (!user || vedicReading || !generateReading) return;
+    const load = async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('birth_name, birth_date, birth_time, birth_place')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (data?.birth_name && data?.birth_date && data?.birth_time && data?.birth_place) {
+        const profile: UserProfile = {
+          name: data.birth_name,
+          birthDate: data.birth_date,
+          birthTime: data.birth_time,
+          birthPlace: data.birth_place,
+          plan: 'compass',
+        };
+        await generateReading(profile, 0, 'Europe/Stockholm', user.id);
+      }
+    };
+    load();
+  }, [user, vedicReading, generateReading]);
 
   // Intention threshold state
   const [showThreshold, setShowThreshold] = useState(false);
