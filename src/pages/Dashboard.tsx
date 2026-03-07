@@ -16,13 +16,7 @@ import { CompletionResponse } from '@/components/dashboard/CompletionResponse';
 import { mapSessionTypeToCompleted } from '@/lib/recommendationEngine';
 import { DailyRitualCard } from '@/components/dashboard/DailyRitualCard';
 import { SpiritualPathCard } from '@/components/dashboard/SpiritualPathCard';
-import { BreathingJourneysCard } from '@/components/dashboard/BreathingJourneysCard';
-import { HealingJourneysCard } from '@/components/dashboard/HealingJourneysCard';
-import { PositiveMeCard } from '@/components/dashboard/PositiveMeCard';
-import { JourneyTimeline } from '@/components/dashboard/JourneyTimeline';
-import { ShareableProgressCard } from '@/components/achievements/ShareableProgressCard';
 import { AchievementPopup } from '@/components/achievements/AchievementPopup';
-import { AchievementBadge } from '@/components/achievements/AchievementBadge';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useMembership } from '@/hooks/useMembership';
 import { useSocialShare } from '@/hooks/useSocialShare';
@@ -481,7 +475,7 @@ const Dashboard: React.FC = () => {
             <SpiritualPathCard />
           </div>
 
-          {/* ══ ZONE 7: SOUL FIELD — stats row + achievement cards row (per image) ══ */}
+          {/* ══ ZONE 7: SOUL FIELD — stats + achievements only (no separate achievements section below) ══ */}
           <SectionLabel label="◈ Soul Field" delay="0.35s" />
           <div style={{ margin: '0 16px', animation: 'sqFadeUp 0.5s 0.35s ease both' }}>
             {/* Row 1: 4 stat cards — Day Streak, SHC, Presence, Min */}
