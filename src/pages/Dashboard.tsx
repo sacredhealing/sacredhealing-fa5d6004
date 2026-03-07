@@ -73,28 +73,56 @@ const SQTile: React.FC<{
   featured?: boolean;
   locked?: boolean;
   onClick?: () => void;
-}> = ({ children, featured, locked, onClick }) => (
-  <div
-    onClick={locked ? undefined : onClick}
-    style={{
-      gridColumn: (featured || locked) ? 'span 2' : undefined,
-      position: 'relative',
-      overflow: 'hidden',
-      background: featured
-        ? 'linear-gradient(135deg,rgba(212,175,55,0.08) 0%,rgba(212,175,55,0.03) 100%)'
-        : 'rgba(255,255,255,0.025)',
-      border: `1px solid ${featured ? 'rgba(212,175,55,0.22)' : locked ? 'rgba(255,255,255,0.05)' : 'rgba(212,175,55,0.13)'}`,
-      borderRadius: 20,
-      padding: featured ? '18px 16px' : '16px 14px 14px',
-      cursor: locked ? 'default' : 'pointer',
-      transition: 'transform 0.25s, border-color 0.25s',
-    }}
-    onMouseEnter={e => { if (!locked) (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-3px) scale(1.01)'; }}
-    onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = ''; }}
-  >
-    {children}
-  </div>
-);
+  /** When true, show diagonal moving light on hover/touch (Sacred Portals) */
+  lightOnHover?: boolean;
+}> = ({ children, featured, locked, onClick, lightOnHover }) => {
+  const [active, setActive] = useState(false);
+  return (
+    <div
+      onClick={locked ? undefined : onClick}
+      onMouseEnter={(e) => {
+        if (!locked) {
+          (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-3px) scale(1.01)';
+          if (lightOnHover) setActive(true);
+        }
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLDivElement).style.transform = '';
+        if (lightOnHover) setActive(false);
+      }}
+      onTouchStart={() => { if (lightOnHover && !locked) setActive(true); }}
+      onTouchEnd={() => { if (lightOnHover) setActive(false); }}
+      style={{
+        gridColumn: (featured || locked) ? 'span 2' : undefined,
+        position: 'relative',
+        overflow: 'hidden',
+        background: featured
+          ? 'linear-gradient(135deg,rgba(212,175,55,0.08) 0%,rgba(212,175,55,0.03) 100%)'
+          : 'rgba(255,255,255,0.025)',
+        border: `1px solid ${featured ? 'rgba(212,175,55,0.22)' : locked ? 'rgba(255,255,255,0.05)' : 'rgba(212,175,55,0.13)'}`,
+        borderRadius: 20,
+        padding: featured ? '18px 16px' : '16px 14px 14px',
+        cursor: locked ? 'default' : 'pointer',
+        transition: 'transform 0.25s, border-color 0.25s',
+      }}
+    >
+      {lightOnHover && active && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            pointerEvents: 'none',
+            borderRadius: 20,
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(212,175,55,0.08) 25%, transparent 55%, transparent 100%)',
+            animation: 'sqTileShimmer 0.6s ease-out forwards',
+            zIndex: 0,
+          }}
+        />
+      )}
+      <div style={{ position: 'relative', zIndex: 1 }}>{children}</div>
+    </div>
+  );
+};
 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
@@ -367,12 +395,11 @@ const Dashboard: React.FC = () => {
             ))}
           </div>
 
-          {/* ══ ZONE 4: MODULE GRID (Sacred Portals) — moving light shimmer ══ */}
+          {/* ══ ZONE 4: MODULE GRID (Sacred Portals) — light on hover/touch per tile ══ */}
           <SectionLabel label="◈ Sacred Portals" delay="0.2s" />
-          <div style={{ padding: '0 16px', position: 'relative', overflow: 'hidden', animation: 'sqFadeUp 0.5s 0.2s ease both' }}>
-            <div style={{ position: 'absolute', top: 0, left: '-100%', width: '50%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(212,175,55,0.12),transparent)', animation: 'sqShimmer 5s ease-in-out infinite', pointerEvents: 'none', zIndex: 0 }} />
-            <div style={{ position: 'relative', zIndex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <SQTile featured onClick={() => navigate('/vedic-astrology')}>
+          <div style={{ padding: '0 16px', animation: 'sqFadeUp 0.5s 0.2s ease both' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <SQTile featured lightOnHover onClick={() => navigate('/vedic-astrology')}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                 <div style={{ fontSize: 34, flexShrink: 0, animation: 'sqIconFloat 4s ease-in-out infinite', filter: 'drop-shadow(0 0 14px rgba(212,175,55,0.5))' }}>
                   <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
@@ -399,7 +426,7 @@ const Dashboard: React.FC = () => {
               <div style={{ position: 'absolute', top: 12, right: 12, width: 6, height: 6, borderRadius: '50%', background: '#D4AF37', boxShadow: '0 0 8px rgba(212,175,55,0.8)', animation: 'sqDotPulse 2.5s infinite' }} />
             </SQTile>
 
-            <SQTile onClick={() => navigate('/ayurveda')}>
+            <SQTile lightOnHover onClick={() => navigate('/ayurveda')}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ marginBottom: 8, display: 'block', animation: 'sqIconFloat 3s ease-in-out infinite' }}>
                 <path d="M12 20 C12 20 4 14 4 8 C4 4 8 2 12 4 C16 2 20 4 20 8 C20 14 12 20 12 20Z" stroke="rgba(212,175,55,0.7)" strokeWidth="1.4" fill="rgba(212,175,55,0.07)"/>
                 <line x1="12" y1="4" x2="12" y2="20" stroke="rgba(212,175,55,0.3)" strokeWidth="0.8"/>
@@ -415,7 +442,7 @@ const Dashboard: React.FC = () => {
               <span style={{ position: 'absolute', bottom: 13, right: 13, color: 'rgba(212,175,55,0.25)', fontSize: 11 }}>→</span>
             </SQTile>
 
-            <SQTile onClick={() => navigate('/music')}>
+            <SQTile lightOnHover onClick={() => navigate('/music')}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ marginBottom: 8, display: 'block', animation: 'sqIconFloat 3s 0.3s ease-in-out infinite' }}>
                 <path d="M9 18V6l10-2v12" stroke="rgba(212,175,55,0.7)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
                 <circle cx="7" cy="18" r="2.5" stroke="rgba(212,175,55,0.6)" strokeWidth="1.2" fill="rgba(212,175,55,0.08)"/>
@@ -426,7 +453,7 @@ const Dashboard: React.FC = () => {
               <span style={{ position: 'absolute', bottom: 13, right: 13, color: 'rgba(212,175,55,0.25)', fontSize: 11 }}>→</span>
             </SQTile>
 
-            <SQTile onClick={() => navigate('/vastu')}>
+            <SQTile lightOnHover onClick={() => navigate('/vastu')}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ marginBottom: 8, display: 'block', animation: 'sqIconFloat 3s 0.6s ease-in-out infinite' }}>
                 <rect x="3" y="10" width="18" height="12" stroke="rgba(212,175,55,0.6)" strokeWidth="1.3" fill="rgba(212,175,55,0.05)" rx="1"/>
                 <polyline points="2,10 12,2 22,10" stroke="rgba(212,175,55,0.7)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
@@ -438,7 +465,7 @@ const Dashboard: React.FC = () => {
               <span style={{ position: 'absolute', bottom: 13, right: 13, color: 'rgba(212,175,55,0.25)', fontSize: 11 }}>→</span>
             </SQTile>
 
-            <SQTile onClick={() => navigate('/mantras')}>
+            <SQTile lightOnHover onClick={() => navigate('/mantras')}>
               <svg width="26" height="26" viewBox="0 0 40 40" fill="none" style={{ marginBottom: 8, display: 'block', animation: 'sqIconFloat 3s 0.9s ease-in-out infinite' }}>
                 <text x="20" y="28" fontSize="26" textAnchor="middle" fill="none" stroke="rgba(212,175,55,0.65)" strokeWidth="0.8" fontFamily="serif" fontStyle="italic">ॐ</text>
                 <text x="20" y="28" fontSize="26" textAnchor="middle" fill="rgba(212,175,55,0.45)" fontFamily="serif" fontStyle="italic">ॐ</text>

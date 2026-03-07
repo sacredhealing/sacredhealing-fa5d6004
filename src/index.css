@@ -680,6 +680,11 @@
 }
 @keyframes sqSpin    { to { transform: rotate(360deg); } }
 @keyframes sqShimmer { 0% { left: -100%; } 100% { left: 200%; } }
+@keyframes sqTileShimmer {
+  0% { opacity: 0; transform: translate(-30%, -30%) scale(0.5); }
+  40% { opacity: 1; }
+  100% { opacity: 1; transform: translate(0, 0) scale(1); }
+}
 @keyframes sqIconFloat {
   0%, 100% { transform: translateY(0); }
   50%     { transform: translateY(-3px); }
