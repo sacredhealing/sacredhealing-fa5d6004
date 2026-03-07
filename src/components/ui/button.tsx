@@ -9,20 +9,19 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // Primary - Vibrant Glowing Turquoise #00F2FE with enhanced glow
+        // Primary — gold #D4AF37 (app-wide)
         default:
-          "bg-[#00F2FE] text-[#000000] font-extrabold hover:bg-[#00D4E0] shadow-[0_0_25px_rgba(0,242,254,0.5)] hover:shadow-[0_0_35px_rgba(0,242,254,0.6)] border-none",
+          "bg-[#D4AF37] text-[#000000] font-extrabold hover:bg-[#C4943A] shadow-[0_0_25px_rgba(212,175,55,0.5)] hover:shadow-[0_0_35px_rgba(212,175,55,0.6)] border-none",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-[0_0_15px_hsl(0_84%_60%/0.3)]",
-        outline: "glass-card hover:bg-white/5 text-white shadow-[0_0_10px_rgba(0,242,254,0.1)] p-4",
+        outline: "glass-card hover:bg-white/5 text-white shadow-[0_0_10px_rgba(212,175,55,0.2)] p-4 border border-[#D4AF37]/30",
         secondary:
           "bg-secondary text-secondary-foreground font-extrabold hover:bg-secondary/90 shadow-[0_0_15px_hsl(var(--secondary)/0.4)]",
-        ghost: "hover:bg-white/5 hover:text-white hover:shadow-[0_0_10px_rgba(0,242,254,0.15)]",
-        link: "text-[#00F2FE] underline-offset-4 hover:underline font-bold",
-        gold: "bg-gradient-to-r from-[hsl(51,100%,50%)] to-[hsl(45,100%,45%)] text-gray-900 font-extrabold shadow-[0_0_20px_hsl(51_100%_50%/0.5)] hover:shadow-[0_0_30px_hsl(51_100%_50%/0.6)] hover:scale-105 rounded-full border-none",
-        // Spiritual also uses vibrant turquoise glow
+        ghost: "hover:bg-white/5 hover:text-white hover:shadow-[0_0_10px_rgba(212,175,55,0.15)]",
+        link: "text-[#D4AF37] underline-offset-4 hover:underline font-bold",
+        gold: "bg-gradient-to-r from-[#D4AF37] to-[#C4943A] text-gray-900 font-extrabold shadow-[0_0_20px_rgba(212,175,55,0.5)] hover:shadow-[0_0_30px_rgba(212,175,55,0.6)] hover:scale-105 rounded-full border-none",
         spiritual:
-          "bg-[#00F2FE] text-[#000000] font-extrabold hover:bg-[#00D4E0] shadow-[0_0_25px_rgba(0,242,254,0.5)] hover:shadow-[0_0_35px_rgba(0,242,254,0.6)] hover:scale-105 border-none",
-        glass: "glass-card hover:bg-white/5 text-white shadow-[0_0_15px_rgba(0,242,254,0.15)] hover:shadow-[0_0_20px_rgba(0,242,254,0.25)] p-4",
+          "bg-[#D4AF37] text-[#000000] font-extrabold hover:bg-[#C4943A] shadow-[0_0_25px_rgba(212,175,55,0.5)] hover:shadow-[0_0_35px_rgba(212,175,55,0.6)] hover:scale-105 border-none",
+        glass: "glass-card hover:bg-white/5 text-white shadow-[0_0_15px_rgba(212,175,55,0.2)] hover:shadow-[0_0_20px_rgba(212,175,55,0.25)] p-4 border border-[#D4AF37]/20",
       },
       size: {
         default: "h-11 px-6 py-2",
