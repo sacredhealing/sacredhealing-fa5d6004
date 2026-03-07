@@ -768,7 +768,29 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                 <li>Full Healing Audios & Transmissions</li>
                 <li>Sri Yantra Universal Protection Shield</li>
               </ul>
-              <button type="button" className="gold-btn sq-btn" onClick={() => handleUpgrade('SIDDHA_QUANTUM')} disabled={upgradeLoading === 'SIDDHA_QUANTUM'}>Activate Universal Shield</button>
+              <button
+                onClick={() => navigate('/siddha-quantum')}
+                style={{
+                  display:'block', width:'100%',
+                  background:'linear-gradient(135deg,rgba(212,175,55,0.18),rgba(212,175,55,0.08))',
+                  color:'#D4AF37', border:'1px solid rgba(212,175,55,0.4)',
+                  borderRadius:100, padding:'14px 24px',
+                  fontFamily:'Montserrat,sans-serif', fontWeight:800,
+                  fontSize:9, letterSpacing:'0.4em', textTransform:'uppercase',
+                  cursor:'pointer', transition:'all 0.2s',
+                  boxShadow:'0 0 24px rgba(212,175,55,0.2)'
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.boxShadow='0 0 40px rgba(212,175,55,0.5)';
+                  e.currentTarget.style.borderColor='rgba(212,175,55,0.7)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.boxShadow='0 0 24px rgba(212,175,55,0.2)';
+                  e.currentTarget.style.borderColor='rgba(212,175,55,0.4)';
+                }}
+              >
+                ◈ Activate Universal Field
+              </button>
             </div>
           </div>
         </div>

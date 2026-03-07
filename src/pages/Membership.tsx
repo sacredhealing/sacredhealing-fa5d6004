@@ -348,6 +348,23 @@ const Membership = () => {
                 </p>
               );
             })()}
+            <p style={{ textAlign: 'center', marginTop: 8 }}>
+              <button
+                type="button"
+                onClick={() => navigate('/siddha-quantum')}
+                style={{
+                  fontSize: 11,
+                  color: 'rgba(212,175,55,0.6)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                  textUnderlineOffset: 3,
+                }}
+              >
+                See what Siddha–Quantum includes →
+              </button>
+            </p>
           </div>
         </>
       ) : (

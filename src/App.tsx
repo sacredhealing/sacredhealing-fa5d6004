@@ -11,7 +11,7 @@ import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
 import { GitaTransitionOverlay } from "@/components/dashboard/GitaTransitionOverlay";
 import { AmbientAudioProvider } from "@/contexts/AmbientAudioContext";
 import { ResonanceProvider } from '@/components/resonance/UniversalResonanceEngine';
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { Loader2 } from "lucide-react";
 import { AppLayout } from "./components/layout/AppLayout";
@@ -39,6 +39,7 @@ const Mastering = React.lazy(() => import("./pages/Mastering"));
 const Wallet = React.lazy(() => import("./pages/Wallet"));
 const Profile = React.lazy(() => import("./pages/Profile"));
 const AtmaSeed = React.lazy(() => import("./pages/AtmaSeed"));
+const SiddhaQuantum = React.lazy(() => import("./pages/SiddhaQuantum"));
 const Legal = React.lazy(() => import("./pages/Legal"));
 const AdminDashboard = React.lazy(() => import("./pages/AdminDashboard"));
 const Admin = React.lazy(() => import("./pages/Admin"));
@@ -144,9 +145,18 @@ const PageLoader = () => (
 
 function AppRoutes() {
   const navigate = useNavigate();
+  const location = useLocation();
   useEffect(() => {
     setNavigator(navigate);
   }, [navigate]);
+  useEffect(() => {
+    const ref = new URLSearchParams(location.search).get("ref");
+    if (ref) {
+      try {
+        sessionStorage.setItem("affiliate_ref", ref);
+      } catch {}
+    }
+  }, [location.search]);
   return (
     <Suspense fallback={<PageLoader />}>
     <Routes>
@@ -175,6 +185,7 @@ function AppRoutes() {
                   <Route path="/wallet" element={<Wallet />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/atma-seed" element={<AtmaSeed />} />
+                  <Route path="/siddha-quantum" element={<SiddhaQuantum />} />
                   <Route path="/legal" element={<Legal />} />
                   <Route path="/healing" element={<Healing />} />
                   <Route path="/healing/my-sacred-flame" element={<MySacredFlame />} />

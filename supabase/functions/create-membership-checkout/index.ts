@@ -28,7 +28,7 @@ serve(async (req) => {
     logStep("Function started");
 
     const body = await req.json();
-    const { priceId, tierSlug, affiliate_id: affiliateId, metadata: extraMetadata } = body;
+    const { priceId, tierSlug, affiliate_id: affiliateId, metadata: extraMetadata, successPath } = body;
     logStep("Request body", { priceId, tierSlug, affiliateId });
 
     if (!priceId) {
@@ -89,8 +89,8 @@ serve(async (req) => {
         },
       ],
       mode: isSubscription ? "subscription" : "payment",
-      success_url: `${req.headers.get("origin")}/membership?success=true&tier=${tierSlug}`,
-      cancel_url: `${req.headers.get("origin")}/membership?canceled=true`,
+      success_url: `${req.headers.get("origin")}${successPath ?? '/membership'}?success=true&tier=${tierSlug ?? ''}`,
+      cancel_url: `${req.headers.get("origin")}${successPath ?? '/membership'}?canceled=true`,
       metadata: {
         user_id: user.id,
         tier_slug: tierSlug ?? "",
