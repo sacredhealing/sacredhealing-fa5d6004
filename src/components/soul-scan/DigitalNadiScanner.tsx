@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, Zap, Shield, Heart, RefreshCw, Hand } from 'lucide-react';
+import { Activity, Zap, Shield, Heart, RefreshCw, Hand, Video, VideoOff } from 'lucide-react';
 import type { ScanResults } from '@/types/soulScan';
 
 interface DigitalNadiScannerProps {
@@ -19,6 +19,39 @@ export default function DigitalNadiScanner({
   const [status, setStatus] = useState<'idle' | 'scanning' | 'finished'>('idle');
   const [results, setResults] = useState<ScanResults | null>(null);
   const [progress, setProgress] = useState(0);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  // Request camera on mount and attach to video element
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+      setCameraError('Camera not supported in this browser.');
+      return;
+    }
+    let stream: MediaStream | null = null;
+    const startCamera = async () => {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+        });
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+        setCameraError(null);
+      } catch (err) {
+        console.error('[DigitalNadiScanner] Camera error:', err);
+        setCameraError('Camera access denied or unavailable. You can still run the scan.');
+      }
+    };
+    startCamera();
+    return () => {
+      stream?.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+      if (videoRef.current) videoRef.current.srcObject = null;
+    };
+  }, []);
 
   const start2050Scan = () => {
     setStatus('scanning');
@@ -89,78 +122,101 @@ export default function DigitalNadiScanner({
         </div>
 
         <AnimatePresence mode="wait">
-          {status === 'idle' && (
+          {(status === 'idle' || status === 'scanning') && (
             <motion.div
-              key="idle"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="flex flex-col items-center"
             >
+              {/* Single camera view: stays mounted for idle and scanning so stream stays attached */}
               <div
-                className="w-48 h-64 border-2 border-dashed border-[#D4AF37]/20 rounded-[40px] flex flex-col items-center justify-center mb-8 relative group cursor-pointer overflow-hidden"
-                onClick={start2050Scan}
+                className={`w-full aspect-video max-h-[320px] border-2 rounded-[40px] mb-8 relative overflow-hidden bg-black ${
+                  status === 'scanning' ? 'border-[#D4AF37]/40' : 'border-[#D4AF37]/20'
+                }`}
               >
-                <div className="absolute inset-0 bg-[#D4AF37]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <Hand className="w-16 h-16 text-[#D4AF37]/20 group-hover:text-[#D4AF37]/40 transition-colors mb-4" />
-                <p className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/40 text-center px-4">
-                  Place Hand Here <br /> to Initialize Scan
-                </p>
-                <motion.div
-                  className="absolute top-0 left-0 right-0 h-1 bg-[#D4AF37]/40"
-                  animate={{ top: ['0%', '100%', '0%'] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="w-full h-full object-cover"
                 />
+                <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/80 via-transparent to-black/40" />
+                {cameraError && (
+                  <div className="absolute top-3 left-3 right-3 flex items-center gap-2 rounded-lg bg-black/60 px-3 py-2 text-[10px] text-amber-200">
+                    <VideoOff className="w-4 h-4 flex-shrink-0" />
+                    {cameraError}
+                  </div>
+                )}
+                {status === 'idle' && !cameraError && (
+                  <div className="absolute bottom-3 left-3 flex items-center gap-2 text-[10px] text-white/70">
+                    <Video className="w-4 h-4" />
+                    Camera active — position your hand in frame
+                  </div>
+                )}
+                {status === 'idle' && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <div className="w-32 h-32 rounded-full border-2 border-dashed border-[#D4AF37]/40 flex items-center justify-center">
+                      <Hand className="w-12 h-12 text-[#D4AF37]/50" />
+                    </div>
+                    <p className="mt-3 text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/70 text-center px-4">
+                      Place hand in frame
+                    </p>
+                  </div>
+                )}
+                {status === 'scanning' && (
+                  <>
+                    <div className="absolute inset-0 bg-[#D4AF37]/10" />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <Hand className="w-20 h-20 text-[#D4AF37]/50 animate-pulse mb-4" />
+                      <motion.div
+                        className="w-full h-1 bg-[#D4AF37]"
+                        initial={{ width: '0%' }}
+                        animate={{ width: '100%' }}
+                        transition={{ duration: 0.5, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }}
+                      />
+                    </div>
+                    <div
+                      className="absolute bottom-0 left-0 right-0 bg-[#D4AF37]/30 transition-all duration-100"
+                      style={{ height: `${progress}%` }}
+                    />
+                  </>
+                )}
               </div>
-              <p className="text-xs mb-6 text-white/40 leading-relaxed text-center">
-                Initialize the 2050 Quantum Intelligence to map 72,000 Nadis, analyze Causal Body Density, and verify DNA Blueprint alignment.
-              </p>
-              <button
-                onClick={start2050Scan}
-                className="w-full py-4 bg-[#D4AF37] text-black font-black tracking-tighter rounded-2xl hover:brightness-110 transition-all active:scale-95 flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(212,175,55,0.2)]"
-              >
-                <Zap className="w-5 h-5" />
-                {label ?? 'INITIALIZE 2050 BIO-SCAN'}
-              </button>
-            </motion.div>
-          )}
-
-          {status === 'scanning' && (
-            <motion.div
-              key="scanning"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex flex-col items-center py-4"
-            >
-              <div className="relative w-48 h-64 border-2 border-[#D4AF37]/40 rounded-[40px] mb-8 overflow-hidden">
-                <div className="absolute inset-0 bg-[#D4AF37]/5" />
-                <Hand className="absolute inset-0 m-auto w-24 h-24 text-[#D4AF37]/40 animate-pulse" />
-                <motion.div
-                  className="absolute left-0 right-0 h-1 bg-[#D4AF37] z-20"
-                  initial={{ top: '0%' }}
-                  animate={{ top: '100%' }}
-                  transition={{ duration: 0.5, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }}
-                />
-                <div
-                  className="absolute bottom-0 left-0 right-0 bg-[#D4AF37]/20 transition-all duration-100"
-                  style={{ height: `${progress}%` }}
-                />
-              </div>
-              <div className="text-center mb-6">
-                <div className="text-2xl font-black text-[#D4AF37] mb-2">{Math.round(progress)}%</div>
-                <p className="animate-pulse text-[10px] tracking-[0.3em] uppercase text-[#D4AF37]/60">
-                  MAPPING NADIS & ANAHATA OPENING...
-                </p>
-              </div>
-              <div className="grid grid-cols-2 gap-4 w-full">
-                <div className="flex items-center gap-2 text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/40">
-                  <Shield className="w-3 h-3" /> SCALAR TRANSMISSION
-                </div>
-                <div className="flex items-center gap-2 text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/40">
-                  <Heart className="w-3 h-3" /> PREMA-PULSE
-                </div>
-              </div>
+              {status === 'idle' && (
+                <>
+                  <p className="text-xs mb-6 text-white/40 leading-relaxed text-center">
+                    Initialize the 2050 Quantum Intelligence to map 72,000 Nadis, analyze Causal Body Density, and verify DNA Blueprint alignment.
+                  </p>
+                  <button
+                    onClick={start2050Scan}
+                    type="button"
+                    className="w-full py-4 bg-[#D4AF37] text-black font-black tracking-tighter rounded-2xl hover:brightness-110 transition-all active:scale-95 flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(212,175,55,0.2)]"
+                  >
+                    <Zap className="w-5 h-5" />
+                    {label ?? 'INITIALIZE 2050 BIO-SCAN'}
+                  </button>
+                </>
+              )}
+              {status === 'scanning' && (
+                <>
+                  <div className="text-center mb-6">
+                    <div className="text-2xl font-black text-[#D4AF37] mb-2">{Math.round(progress)}%</div>
+                    <p className="animate-pulse text-[10px] tracking-[0.3em] uppercase text-[#D4AF37]/60">
+                      MAPPING NADIS & ANAHATA OPENING...
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 w-full">
+                    <div className="flex items-center gap-2 text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/40">
+                      <Shield className="w-3 h-3" /> SCALAR TRANSMISSION
+                    </div>
+                    <div className="flex items-center gap-2 text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/40">
+                      <Heart className="w-3 h-3" /> PREMA-PULSE
+                    </div>
+                  </div>
+                </>
+              )}
             </motion.div>
           )}
 
