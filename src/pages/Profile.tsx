@@ -13,6 +13,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useAIVedicReading } from '@/hooks/useAIVedicReading';
+import { PlanetaryCycleBanner } from '@/components/dashboard/PlanetaryCycleBanner';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
 import { useCertificates } from '@/hooks/useCertificates';
 import { useAkashicAccess } from '@/hooks/useAkashicAccess';
@@ -643,6 +644,10 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
 
         <h1 className="hero-name">{userName}</h1>
         <div className="soul-label">528Hz Resonance <span>·</span> {dashaCycle} Cycle Active</div>
+
+        <div style={{ margin: '0 16px 20px', maxWidth: 398 }}>
+          <PlanetaryCycleBanner userJyotishData={vedicReading ?? undefined} />
+        </div>
 
         <div className="stats-row">
           <div className="stat-pill">

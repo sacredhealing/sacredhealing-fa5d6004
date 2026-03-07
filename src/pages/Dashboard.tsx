@@ -17,6 +17,7 @@ import { mapSessionTypeToCompleted } from '@/lib/recommendationEngine';
 import { DailyRitualCard } from '@/components/dashboard/DailyRitualCard';
 import { SpiritualPathCard } from '@/components/dashboard/SpiritualPathCard';
 import { AchievementPopup } from '@/components/achievements/AchievementPopup';
+import { PlanetaryCycleBanner } from '@/components/dashboard/PlanetaryCycleBanner';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useMembership } from '@/hooks/useMembership';
 import { useSocialShare } from '@/hooks/useSocialShare';
@@ -329,6 +330,11 @@ const Dashboard: React.FC = () => {
             <button onClick={() => navigate('/vedic-astrology')} style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 8, fontWeight: 800, letterSpacing: '0.42em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.55)', background: 'none', border: 'none', cursor: 'pointer' }}>
               Open Full Reading →
             </button>
+          </div>
+
+          {/* ══ PLANETARY CYCLE BANNER (Vimshottari Dasha from birth data) ══ */}
+          <div style={{ marginTop: 16, animation: 'sqFadeUp 0.5s 0.12s ease both' }}>
+            <PlanetaryCycleBanner userJyotishData={vedicReading ?? undefined} />
           </div>
 
           {/* ══ ZONE 3: COSMIC STRIP — links to /vedic-astrology ══ */}
