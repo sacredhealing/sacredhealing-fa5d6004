@@ -367,9 +367,11 @@ const Dashboard: React.FC = () => {
             ))}
           </div>
 
-          {/* ══ ZONE 4: MODULE GRID ══ */}
+          {/* ══ ZONE 4: MODULE GRID (Sacred Portals) — moving light shimmer ══ */}
           <SectionLabel label="◈ Sacred Portals" delay="0.2s" />
-          <div style={{ padding: '0 16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, animation: 'sqFadeUp 0.5s 0.2s ease both' }}>
+          <div style={{ padding: '0 16px', position: 'relative', overflow: 'hidden', animation: 'sqFadeUp 0.5s 0.2s ease both' }}>
+            <div style={{ position: 'absolute', top: 0, left: '-100%', width: '50%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(212,175,55,0.12),transparent)', animation: 'sqShimmer 5s ease-in-out infinite', pointerEvents: 'none', zIndex: 0 }} />
+            <div style={{ position: 'relative', zIndex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             <SQTile featured onClick={() => navigate('/vedic-astrology')}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                 <div style={{ fontSize: 34, flexShrink: 0, animation: 'sqIconFloat 4s ease-in-out infinite', filter: 'drop-shadow(0 0 14px rgba(212,175,55,0.5))' }}>
@@ -461,6 +463,7 @@ const Dashboard: React.FC = () => {
                 <span style={{ position: 'absolute', bottom: 12, right: 12, fontSize: 11, color: 'rgba(255,255,255,0.15)' }}>🔒</span>
               </SQTile>
             )}
+            </div>
           </div>
 
           {/* ══ ZONE 5: DAILY SADHANA ══ */}
