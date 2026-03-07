@@ -4,19 +4,19 @@ export const paymentLogic = {
     price: 19,
     interval: 'month' as const, // Recurring every 30 days
     stripePriceId: 'price_19_monthly_id', // Replace with your actual Stripe Price ID
-    commission: 5,
+    commission: 30,
   },
   SIDDHA_QUANTUM: {
     price: 45,
     interval: 'month' as const, // Recurring every 30 days
     stripePriceId: 'price_45_monthly_id', // Replace with your actual Stripe Price ID
-    commission: 15,
+    commission: 30,
   },
   AKASHA_INFINITY: {
     price: 1111,
     interval: 'one-time' as const, // No recurring charge
     stripePriceId: 'price_1111_lifetime_id', // Replace with your actual Stripe Price ID
-    commission: 250,
+    commission: 30,
   },
 } as const;
 
