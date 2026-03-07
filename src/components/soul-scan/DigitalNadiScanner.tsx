@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, Zap, Shield, Heart, RefreshCw, Hand, Video, VideoOff } from 'lucide-react';
 import type { ScanResults } from '@/types/soulScan';
+import { runSoulScanLogic } from '@/components/soul-scan/soulScanLogic';
 
 interface DigitalNadiScannerProps {
   isHealerPresent: boolean;
@@ -66,34 +67,8 @@ export default function DigitalNadiScanner({
       setProgress(Math.min((currentStep / steps) * 100, 100));
       if (currentStep >= steps) {
         clearInterval(timer);
-        const scanResults: ScanResults = {
-          focus: isHealerPresent ? `Master Intervention: ${modalityName}` : `Self-Practice: ${modalityName}`,
-          summary: isHealerPresent
-            ? `Direct Healer Transmission via ${modalityName}: 14 layers of past-life karma dissolved and Akashic records rewritten.`
-            : `User Practice (${modalityName}): DNA coherence increased by 22% via Mantra vibration and Aura harmonization.`,
-          technicalData: {
-            scalarCoherence: isHealerPresent ? 98.4 : 76.2,
-            nadiFlow: isHealerPresent ? 92.1 : 68.5,
-            causalDensity: isHealerPresent ? 12.4 : 45.8,
-            dnaAlignment: isHealerPresent ? 99.9 : 82.3,
-            activeNadis: isHealerPresent ? 71840 : 42300,
-            doshaImbalance: isHealerPresent ? 'Balanced' : 'Vata-Pitta High',
-            nervousSystemLevel: isHealerPresent ? 'Deep Parasympathetic' : 'Sympathetic Dominant',
-            chakras: [
-              { name: 'Root', status: isHealerPresent ? 'Aligned' : 'Blocked' },
-              { name: 'Sacral', status: isHealerPresent ? 'Aligned' : 'Overactive' },
-              { name: 'Solar', status: isHealerPresent ? 'Aligned' : 'Weak' },
-              { name: 'Heart', status: 'Opening' },
-              { name: 'Throat', status: isHealerPresent ? 'Aligned' : 'Restricted' },
-              { name: 'Third Eye', status: isHealerPresent ? 'Aligned' : 'Clouded' },
-              { name: 'Crown', status: isHealerPresent ? 'Aligned' : 'Dormant' },
-            ],
-            waterBalance: isHealerPresent ? 72 : 64,
-            presentKarma: isHealerPresent ? 'Cleared' : 'Ancestral Clearing Required',
-            torusFieldDiameter: isHealerPresent ? 12.5 : 4.2,
-            karmicNodesExtracted: isHealerPresent ? Math.floor(Math.random() * 20) + 5 : undefined,
-          },
-        };
+        // Same scan logic as /quantum-apothecary runNadiScan: day-based planet/herb, random dosha, blockages, activeNadis 60k–70k, 5 remedies
+        const scanResults = runSoulScanLogic(isHealerPresent, modalityName);
         setResults(scanResults);
         setStatus('finished');
         onScanComplete(scanResults);
