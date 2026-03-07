@@ -73,56 +73,15 @@ const SQTile: React.FC<{
   featured?: boolean;
   locked?: boolean;
   onClick?: () => void;
-  /** When true, show diagonal moving light on hover/touch (Sacred Portals) */
-  lightOnHover?: boolean;
-}> = ({ children, featured, locked, onClick, lightOnHover }) => {
-  const [active, setActive] = useState(false);
-  return (
-    <div
-      onClick={locked ? undefined : onClick}
-      onMouseEnter={(e) => {
-        if (!locked) {
-          (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-3px) scale(1.01)';
-          if (lightOnHover) setActive(true);
-        }
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLDivElement).style.transform = '';
-        if (lightOnHover) setActive(false);
-      }}
-      onTouchStart={() => { if (lightOnHover && !locked) setActive(true); }}
-      onTouchEnd={() => { if (lightOnHover) setActive(false); }}
-      style={{
-        gridColumn: (featured || locked) ? 'span 2' : undefined,
-        position: 'relative',
-        overflow: 'hidden',
-        background: featured
-          ? 'linear-gradient(135deg,rgba(212,175,55,0.08) 0%,rgba(212,175,55,0.03) 100%)'
-          : 'rgba(255,255,255,0.025)',
-        border: `1px solid ${featured ? 'rgba(212,175,55,0.22)' : locked ? 'rgba(255,255,255,0.05)' : 'rgba(212,175,55,0.13)'}`,
-        borderRadius: 20,
-        padding: featured ? '18px 16px' : '16px 14px 14px',
-        cursor: locked ? 'default' : 'pointer',
-        transition: 'transform 0.25s, border-color 0.25s',
-      }}
-    >
-      {lightOnHover && active && (
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            pointerEvents: 'none',
-            borderRadius: 20,
-            background: 'linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(212,175,55,0.08) 25%, transparent 55%, transparent 100%)',
-            animation: 'sqTileShimmer 0.6s ease-out forwards',
-            zIndex: 0,
-          }}
-        />
-      )}
-      <div style={{ position: 'relative', zIndex: 1 }}>{children}</div>
-    </div>
-  );
-};
+}> = ({ children, featured, locked, onClick }) => (
+  <div
+    onClick={locked ? undefined : onClick}
+    className={`sq-tile ${featured ? 'sq-tile-featured' : ''} ${locked ? 'sq-tile-locked' : ''}`}
+    style={{ position: 'relative' }}
+  >
+    {children}
+  </div>
+);
 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
@@ -399,7 +358,7 @@ const Dashboard: React.FC = () => {
           <SectionLabel label="◈ Sacred Portals" delay="0.2s" />
           <div style={{ padding: '0 16px', animation: 'sqFadeUp 0.5s 0.2s ease both' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <SQTile featured lightOnHover onClick={() => navigate('/vedic-astrology')}>
+            <SQTile featured onClick={() => navigate('/vedic-astrology')}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                 <div style={{ fontSize: 34, flexShrink: 0, animation: 'sqIconFloat 4s ease-in-out infinite', filter: 'drop-shadow(0 0 14px rgba(212,175,55,0.5))' }}>
                   <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
@@ -426,7 +385,7 @@ const Dashboard: React.FC = () => {
               <div style={{ position: 'absolute', top: 12, right: 12, width: 6, height: 6, borderRadius: '50%', background: '#D4AF37', boxShadow: '0 0 8px rgba(212,175,55,0.8)', animation: 'sqDotPulse 2.5s infinite' }} />
             </SQTile>
 
-            <SQTile lightOnHover onClick={() => navigate('/ayurveda')}>
+            <SQTile onClick={() => navigate('/ayurveda')}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ marginBottom: 8, display: 'block', animation: 'sqIconFloat 3s ease-in-out infinite' }}>
                 <path d="M12 20 C12 20 4 14 4 8 C4 4 8 2 12 4 C16 2 20 4 20 8 C20 14 12 20 12 20Z" stroke="rgba(212,175,55,0.7)" strokeWidth="1.4" fill="rgba(212,175,55,0.07)"/>
                 <line x1="12" y1="4" x2="12" y2="20" stroke="rgba(212,175,55,0.3)" strokeWidth="0.8"/>
@@ -442,7 +401,7 @@ const Dashboard: React.FC = () => {
               <span style={{ position: 'absolute', bottom: 13, right: 13, color: 'rgba(212,175,55,0.25)', fontSize: 11 }}>→</span>
             </SQTile>
 
-            <SQTile lightOnHover onClick={() => navigate('/music')}>
+            <SQTile onClick={() => navigate('/music')}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ marginBottom: 8, display: 'block', animation: 'sqIconFloat 3s 0.3s ease-in-out infinite' }}>
                 <path d="M9 18V6l10-2v12" stroke="rgba(212,175,55,0.7)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
                 <circle cx="7" cy="18" r="2.5" stroke="rgba(212,175,55,0.6)" strokeWidth="1.2" fill="rgba(212,175,55,0.08)"/>
@@ -453,7 +412,7 @@ const Dashboard: React.FC = () => {
               <span style={{ position: 'absolute', bottom: 13, right: 13, color: 'rgba(212,175,55,0.25)', fontSize: 11 }}>→</span>
             </SQTile>
 
-            <SQTile lightOnHover onClick={() => navigate('/vastu')}>
+            <SQTile onClick={() => navigate('/vastu')}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ marginBottom: 8, display: 'block', animation: 'sqIconFloat 3s 0.6s ease-in-out infinite' }}>
                 <rect x="3" y="10" width="18" height="12" stroke="rgba(212,175,55,0.6)" strokeWidth="1.3" fill="rgba(212,175,55,0.05)" rx="1"/>
                 <polyline points="2,10 12,2 22,10" stroke="rgba(212,175,55,0.7)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
@@ -465,7 +424,7 @@ const Dashboard: React.FC = () => {
               <span style={{ position: 'absolute', bottom: 13, right: 13, color: 'rgba(212,175,55,0.25)', fontSize: 11 }}>→</span>
             </SQTile>
 
-            <SQTile lightOnHover onClick={() => navigate('/mantras')}>
+            <SQTile onClick={() => navigate('/mantras')}>
               <svg width="26" height="26" viewBox="0 0 40 40" fill="none" style={{ marginBottom: 8, display: 'block', animation: 'sqIconFloat 3s 0.9s ease-in-out infinite' }}>
                 <text x="20" y="28" fontSize="26" textAnchor="middle" fill="none" stroke="rgba(212,175,55,0.65)" strokeWidth="0.8" fontFamily="serif" fontStyle="italic">ॐ</text>
                 <text x="20" y="28" fontSize="26" textAnchor="middle" fill="rgba(212,175,55,0.45)" fontFamily="serif" fontStyle="italic">ॐ</text>
@@ -493,15 +452,15 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* ══ ZONE 5: DAILY SADHANA ══ */}
+          {/* ══ ZONE 5: DAILY SADHANA (match preview) ══ */}
           <SectionLabel label="◈ Daily Sadhana" delay="0.27s" />
-          <div style={{ margin: '0 16px', background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(212,175,55,0.13)', borderRadius: 22, padding: '18px 16px', animation: 'sqFadeUp 0.5s 0.27s ease both' }}>
+          <div className="sq-sadhana-card" style={{ margin: '12px 16px 0', background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(212,175,55,0.13)', animation: 'sqFadeUp 0.5s 0.27s ease both' }}>
             <DailyRitualCard isDayClosed={isDayClosed} hasCompletedAllThree={hasCompletedAllThree} />
           </div>
 
-          {/* ══ ZONE 6: DHARMA PATH ══ */}
+          {/* ══ ZONE 6: DHARMA PATH (match preview) ══ */}
           <SectionLabel label="◈ Dharma Path" delay="0.32s" />
-          <div style={{ margin: '0 16px', background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(212,175,55,0.13)', borderRadius: 20, padding: 16, animation: 'sqFadeUp 0.5s 0.32s ease both' }}>
+          <div style={{ margin: '10px 16px 0', animation: 'sqFadeUp 0.5s 0.32s ease both' }}>
             <SpiritualPathCard />
           </div>
 
@@ -511,22 +470,22 @@ const Dashboard: React.FC = () => {
             {/* Row 1: 4 stat cards — Day Streak, SHC, Presence, Min */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
               {([
-                { icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2.5v4M12 17.5v4M4.5 12h4M15.5 12h4M6.3 6.3l2.8 2.8M14.9 14.9l2.8 2.8M6.3 17.7l2.8-2.8M14.9 9.1l2.8-2.8" stroke="rgba(212,175,55,0.8)" strokeWidth="1.5" strokeLinecap="round"/><circle cx="12" cy="12" r="4" stroke="rgba(212,175,55,0.6)" strokeWidth="1.2" fill="rgba(212,175,55,0.06)"/></svg>, val: streakDays ?? 0, lbl: 'DAY STREAK' },
-                { icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><polygon points="12,2 14.5,9 22,9 16,14 18.5,21 12,17 5.5,21 8,14 2,9 9.5,9" stroke="rgba(212,175,55,0.8)" strokeWidth="1.3" strokeLinejoin="round" fill="rgba(212,175,55,0.08)"/><circle cx="12" cy="12" r="2" fill="rgba(212,175,55,0.5)"/></svg>, val: userAchievements.length * 25, lbl: 'SHC' },
-                { icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="rgba(212,175,55,0.6)" strokeWidth="1.2" fill="none"/><circle cx="12" cy="12" r="5" stroke="rgba(212,175,55,0.4)" strokeWidth="1" fill="none"/><circle cx="12" cy="12" r="2" fill="rgba(212,175,55,0.6)"/></svg>, val: userAchievements.length, lbl: 'PRESENCE' },
-                { icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="rgba(212,175,55,0.6)" strokeWidth="1.2" fill="none"/><line x1="12" y1="6" x2="12" y2="12" stroke="rgba(212,175,55,0.8)" strokeWidth="1.5" strokeLinecap="round"/><line x1="12" y1="12" x2="16" y2="14" stroke="rgba(212,175,55,0.5)" strokeWidth="1.3" strokeLinecap="round"/><circle cx="12" cy="12" r="1.5" fill="rgba(212,175,55,0.7)"/></svg>, val: successWindowPct, lbl: 'MIN' },
+                { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2C12 2 7 8 7 13a5 5 0 0010 0c0-5-5-11-5-11z" stroke="rgba(212,175,55,0.7)" strokeWidth="1.4" fill="rgba(212,175,55,0.08)"/><circle cx="12" cy="14" r="2" fill="rgba(212,175,55,0.5)"/></svg>, val: streakDays ?? 0, lbl: 'Day Streak' },
+                { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><polygon points="12,2 14.5,9 22,9 16,14 18.5,21 12,17 5.5,21 8,14 2,9 9.5,9" stroke="rgba(212,175,55,0.7)" strokeWidth="1.3" strokeLinejoin="round" fill="rgba(212,175,55,0.07)"/><circle cx="12" cy="12" r="2" fill="rgba(212,175,55,0.45)"/></svg>, val: userAchievements.length * 25, lbl: 'SHC' },
+                { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="rgba(212,175,55,0.55)" strokeWidth="1.2" fill="none"/><circle cx="12" cy="12" r="5" stroke="rgba(212,175,55,0.35)" strokeWidth="1" fill="none"/><circle cx="12" cy="12" r="2" fill="rgba(212,175,55,0.6)"/></svg>, val: userAchievements.length, lbl: 'Presence' },
+                { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="rgba(212,175,55,0.5)" strokeWidth="1.2" fill="none"/><line x1="12" y1="6" x2="12" y2="12" stroke="rgba(212,175,55,0.7)" strokeWidth="1.5" strokeLinecap="round"/><line x1="12" y1="12" x2="16" y2="14" stroke="rgba(212,175,55,0.5)" strokeWidth="1.3" strokeLinecap="round"/><circle cx="12" cy="12" r="1.5" fill="rgba(212,175,55,0.7)"/></svg>, val: successWindowPct, lbl: 'Min' },
               ] as { icon: React.ReactNode; val: string | number; lbl: string }[]).map(({ icon, val, lbl }, i) => (
-                <div key={i} style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(212,175,55,0.12)', borderRadius: 16, padding: '14px 10px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                  <div style={{ color: 'rgba(212,175,55,0.85)' }}>{icon}</div>
-                  <span style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '1.5rem', fontWeight: 700, color: 'rgba(255,255,255,0.9)', lineHeight: 1 }}>{val}</span>
-                  <span style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7, fontWeight: 800, letterSpacing: '0.25em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.5)' }}>{lbl}</span>
+                <div key={i} className="sq-stat-chip">
+                  <div style={{ marginBottom: 6 }}>{icon}</div>
+                  <div className="sq-stat-val">{val}</div>
+                  <div className="sq-stat-lbl">{lbl}</div>
                 </div>
               ))}
             </div>
-            {/* Row 2: 4 achievement cards — icon, title, +SHC or progress (per image) */}
+            {/* Row 2: achievement badges — horizontal scroll strip (match preview) */}
             {achievements.length > 0 && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8 }}>
-                {achievements.slice(0, 4).map((achievement) => {
+              <div className="sq-ach-strip" style={{ marginTop: 10 }}>
+                {achievements.slice(0, 6).map((achievement) => {
                   const progress = getAchievementProgress(achievement);
                   const translated = translateAchievement(achievement.slug, t, achievement.name, achievement.description || '');
                   const nameUpper = (translated.name || achievement.name || '').toUpperCase().replace(/\s+/g, ' ');
@@ -534,30 +493,18 @@ const Dashboard: React.FC = () => {
                   return (
                     <div
                       key={achievement.id}
-                      style={{
-                        background: 'rgba(255,255,255,0.025)',
-                        border: '1px solid rgba(212,175,55,0.12)',
-                        borderRadius: 16,
-                        padding: '14px 10px 12px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: 6,
-                        opacity: progress.unlocked ? 1 : 0.7,
-                      }}
+                      className={`sq-ach-badge ${progress.unlocked ? 'sq-ach-badge-unlocked' : 'sq-ach-badge-locked'}`}
                     >
-                      <div style={{ color: 'rgba(212,175,55,0.85)' }}>
+                      <div style={{ marginBottom: 5, color: 'rgba(212,175,55,0.75)' }}>
                         <IconComponent size={20} />
                       </div>
-                      <span style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.85)', textAlign: 'center', lineHeight: 1.2 }}>
-                        {nameUpper.slice(0, 18)}{nameUpper.length > 18 ? '…' : ''}
-                      </span>
+                      <div className="sq-ach-name">{nameUpper.slice(0, 20)}{nameUpper.length > 20 ? '…' : ''}</div>
                       {progress.unlocked && achievement.shc_reward != null && achievement.shc_reward > 0 ? (
-                        <span style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 8, fontWeight: 700, color: '#D4AF37' }}>+{achievement.shc_reward} SHC</span>
+                        <div className="sq-ach-pts">+{achievement.shc_reward} SHC</div>
                       ) : progress.progressText ? (
-                        <span style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 8, fontWeight: 600, color: 'rgba(255,255,255,0.4)' }}>{progress.progressText}</span>
+                        <div className="sq-ach-pts sq-ach-pts-muted">{progress.progressText}</div>
                       ) : achievement.shc_reward != null && achievement.shc_reward > 0 ? (
-                        <span style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 8, fontWeight: 700, color: 'rgba(212,175,55,0.6)' }}>+{achievement.shc_reward} SHC</span>
+                        <div className="sq-ach-pts sq-ach-pts-muted">+{achievement.shc_reward} SHC</div>
                       ) : null}
                     </div>
                   );
