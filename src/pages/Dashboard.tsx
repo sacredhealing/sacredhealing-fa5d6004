@@ -467,14 +467,6 @@ const Dashboard: React.FC = () => {
           {/* ══ ZONE 5: DAILY SADHANA ══ */}
           <SectionLabel label="◈ Daily Sadhana" delay="0.27s" />
           <div style={{ margin: '0 16px', background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(212,175,55,0.13)', borderRadius: 22, padding: '18px 16px', animation: 'sqFadeUp 0.5s 0.27s ease both' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-              <span style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.45em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.45)' }}>
-                {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase()}
-              </span>
-              <span style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7, fontWeight: 700, letterSpacing: '0.2em', color: 'rgba(212,175,55,0.35)' }}>
-                {hasCompletedAllThree ? '3 / 3 COMPLETE' : lastCompleted ? '1 / 3 COMPLETE' : '0 / 3 COMPLETE'}
-              </span>
-            </div>
             <DailyRitualCard isDayClosed={isDayClosed} hasCompletedAllThree={hasCompletedAllThree} />
           </div>
 

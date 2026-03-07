@@ -1,7 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Sun, Moon, Check, Cloud, Clock } from 'lucide-react';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useDailyJourney } from '@/hooks/useDailyJourney';
 import { motion } from 'framer-motion';
@@ -59,80 +58,98 @@ export const DailyRitualCard: React.FC<{ isDayClosed?: boolean; hasCompletedAllT
 
   if (isLoading) {
     return (
-      <Card className="glass-card p-4">
-        <div className="animate-pulse space-y-3">
-          <div className="h-5 w-48 rounded bg-white/10" />
-          <div className="h-2 w-full rounded bg-white/10" />
-          <div className="space-y-2">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-14 rounded-[16px] bg-white/5" />
-            ))}
-          </div>
+      <div className="flex flex-col gap-4">
+        <div className="flex justify-between">
+          <div className="h-3 w-28 rounded bg-white/10" />
+          <div className="h-3 w-20 rounded bg-white/10" />
         </div>
-      </Card>
+        <div className="grid grid-cols-3 gap-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex flex-col items-center gap-2">
+              <div className="h-12 w-12 rounded-full bg-white/10" />
+              <div className="h-3 w-14 rounded bg-white/10" />
+            </div>
+          ))}
+        </div>
+      </div>
     );
   }
 
   const phases: PhaseState[] = [phaseStates.morning, phaseStates.midday, phaseStates.evening];
+  const completedCount = phases.filter((p) => p.status === 'completed').length;
+
+  const dateStr = new Date()
+    .toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+    .replace(/, /g, ' • ')
+    .toUpperCase();
 
   return (
-    <Card className="glass-card p-4">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-foreground" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
-          {t('dailyRitual.title', 'Daily Spiritual Practice')}
-        </h3>
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          {phases.map((phase, i) => {
-            const config = PHASE_CONFIG[phase.id];
-            const isCompleted = phase.status === 'completed';
-            return (
-              <React.Fragment key={phase.id}>
-                {i > 0 && <span className="opacity-50">•</span>}
-                <span className="flex items-center gap-1">
-                  <span
-                    className={`inline-block w-2 h-2 rounded-full shrink-0 ${
-                      isCompleted ? 'bg-[#8B7D3C]' : 'border border-muted-foreground/60'
-                    }`}
-                    aria-hidden
-                  />
-                  {t(`dailyRitual.${phase.id}Short`, phase.id.charAt(0).toUpperCase() + phase.id.slice(1))}
-                </span>
-              </React.Fragment>
-            );
-          })}
-        </div>
+    <div className="flex flex-col gap-4">
+      {/* Card header: date | X / 3 COMPLETE */}
+      <div className="flex items-center justify-between">
+        <span
+          className="font-mono text-[10px] font-extrabold uppercase tracking-[0.35em] text-[rgba(212,175,55,0.5)]"
+          style={{ fontFamily: 'Montserrat,sans-serif' }}
+        >
+          {dateStr}
+        </span>
+        <span
+          className="text-[10px] font-bold uppercase tracking-[0.2em] text-[rgba(212,175,55,0.4)]"
+          style={{ fontFamily: 'Montserrat,sans-serif' }}
+        >
+          {completedCount} / 3 COMPLETE
+        </span>
       </div>
 
-      <div className="space-y-2">
+      {/* Three columns: Morning | Midday | Evening */}
+      <div className="grid grid-cols-3 gap-3">
         {phases.map((phase) => {
           const config = PHASE_CONFIG[phase.id];
           const Icon = config.icon;
           const isActive = activePhaseId === phase.id && phase.status === 'active';
-
           const isClaimed = claimedPhases.has(phase.id);
-          const statusLabel =
-            phase.status === 'completed'
-              ? null
-              : phase.status === 'closed'
-                ? t('dailyRitual.passedGently', 'Passed gently')
-                : phase.status === 'upcoming'
-                  ? t('dailyRitual.arrivingLater', 'Arriving later')
-                  : null;
+          const isCompleted = phase.status === 'completed';
 
-          const StatusIcon =
+          const statusLabel =
+            phase.status === 'closed'
+              ? t('dailyRitual.passedGently', 'Passed gently')
+              : phase.status === 'upcoming'
+                ? t('dailyRitual.arrivingLater', 'Arriving later')
+                : null;
+
+          const iconCircle =
             phase.status === 'completed' ? (
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#8B7D3C]/20 ring-2 ring-[#8B7D3C]/50">
-                <Check className="w-4 h-4 text-[#8B7D3C]" />
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border-2 border-[#8B7D3C]/50 bg-[#8B7D3C]/10">
+                <Check className="h-5 w-5 text-[#8B7D3C]" />
               </div>
             ) : phase.status === 'closed' ? (
-              <div className="w-8 h-8 rounded-full border-2 border-muted-foreground/50 shrink-0" aria-hidden />
+              <div className="mx-auto h-12 w-12 rounded-full border-2 border-white/10 bg-white/[0.02]" aria-hidden />
             ) : phase.status === 'upcoming' ? (
-              <div className={`flex items-center justify-center w-8 h-8 rounded-full bg-background/50 ${config.iconColor}`}>
-                <Clock className="w-4 h-4" />
+              <div className={`mx-auto flex h-12 w-12 items-center justify-center rounded-full border-2 border-white/10 bg-white/[0.02] ${config.iconColor}`}>
+                <Clock className="h-5 w-5" />
+              </div>
+            ) : isActive ? (
+              <div className="relative mx-auto h-12 w-12">
+                <svg className="h-12 w-12 -rotate-90" viewBox="0 0 48 48">
+                  <circle cx="24" cy="24" r="20" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="3" />
+                  <circle
+                    cx="24"
+                    cy="24"
+                    r="20"
+                    fill="none"
+                    stroke="#D4AF37"
+                    strokeWidth="3"
+                    strokeDasharray={`${0.75 * 125.6} 125.6`}
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Icon className={`h-5 w-5 ${config.iconColor}`} />
+                </div>
               </div>
             ) : (
-              <div className={`flex items-center justify-center w-8 h-8 rounded-full bg-background/50 ${config.iconColor}`}>
-                <Icon className="w-4 h-4" />
+              <div className={`mx-auto flex h-12 w-12 items-center justify-center rounded-full border-2 border-white/10 bg-white/[0.02] ${config.iconColor}`}>
+                <Icon className="h-5 w-5" />
               </div>
             );
 
@@ -140,50 +157,38 @@ export const DailyRitualCard: React.FC<{ isDayClosed?: boolean; hasCompletedAllT
             <motion.div
               key={phase.id}
               layout
-              className={`flex items-center gap-3 p-3 rounded-[16px] border transition-colors ${
-                isActive
-                  ? 'bg-[#D4AF37]/5 border-[#D4AF37]/20'
-                  : 'bg-white/[0.02] border-white/5'
+              className={`flex flex-col items-center gap-2 rounded-xl py-3 ${
+                isActive ? 'bg-[#D4AF37]/5' : ''
               }`}
             >
-              {StatusIcon}
-
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm text-foreground">{t(config.labelKey)}</p>
-                <p className="text-[10px] text-muted-foreground">{config.time}</p>
-              </div>
-
+              {iconCircle}
+              <span
+                className={`text-[9px] font-extrabold uppercase tracking-[0.25em] ${
+                  isActive ? 'text-[#D4AF37]' : 'text-[rgba(212,175,55,0.5)]'
+                }`}
+                style={{ fontFamily: 'Montserrat,sans-serif' }}
+              >
+                {t(`dailyRitual.${phase.id}Short`, phase.id.charAt(0).toUpperCase() + phase.id.slice(1))}
+              </span>
               {phase.status === 'completed' ? (
                 isClaimed ? (
-                  <motion.span
-                    initial={{ scale: 1 }}
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ duration: 0.3 }}
-                    className="text-xs flex items-center gap-1 shrink-0 text-[#D4AF37] font-medium"
-                  >
-                    <Check className="w-3 h-3" />
-                    +{phase.reward} SHC
-                  </motion.span>
+                  <span className="text-[10px] italic text-white/50">Complete</span>
                 ) : (
-                  <motion.div initial={{ scale: 1 }} className="shrink-0">
-                    <Button
-                      size="sm"
-                      className="text-xs h-7 rounded-full px-3 font-semibold bg-gradient-to-r from-[#D4AF37] to-[#C4943A] text-black border-0 animate-pulse hover:brightness-110"
-                      onClick={() => claimPhase(phase.id)}
-                    >
-                      ✦ {t('dailyRitual.claim', 'Claim')} {phase.reward} SHC
-                    </Button>
-                  </motion.div>
+                  <Button
+                    size="sm"
+                    className="h-8 rounded-full px-4 text-[10px] font-bold uppercase tracking-wider bg-[#D4AF37] text-black hover:bg-[#C4943A] border-0"
+                    onClick={() => claimPhase(phase.id)}
+                  >
+                    + {phase.reward} SHC
+                  </Button>
                 )
               ) : statusLabel ? (
-                <span className="text-xs flex items-center gap-1 shrink-0 text-muted-foreground">
-                  {statusLabel}
-                </span>
+                <span className="text-[10px] italic text-white/40">{statusLabel}</span>
               ) : null}
             </motion.div>
           );
         })}
       </div>
-    </Card>
+    </div>
   );
 };
