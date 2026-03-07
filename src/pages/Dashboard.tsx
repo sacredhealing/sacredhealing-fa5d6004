@@ -59,7 +59,7 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
 
   const { profile: userProfile } = useProfile();
-  const { isPremium } = useMembership();
+  const { isPremium, tier } = useMembership();
   const horaWatch = useHoraWatch({ timezone: 'Europe/Stockholm' });
   const { reading: vedicReading } = useAIVedicReading();
 
@@ -200,27 +200,48 @@ const Dashboard: React.FC = () => {
 
             {!isPremium && (
               <div
-                onClick={() => navigate('/siddha-quantum')}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => e.key === 'Enter' && navigate('/siddha-quantum')}
                 style={{
                   background: 'linear-gradient(90deg,rgba(212,175,55,0.08),rgba(212,175,55,0.04))',
                   border: '1px solid rgba(212,175,55,0.15)',
                   borderRadius: 14,
                   padding: '12px 18px',
                   margin: '0 0 16px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
                   transition: 'all 0.2s',
                 }}
               >
-                <span style={{ fontFamily: 'Montserrat,sans-serif', fontWeight: 800, fontSize: 8, letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.6)' }}>
-                  ◈ Activate Siddha–Quantum — Full Universal Field Access
-                </span>
-                <span style={{ color: 'rgba(212,175,55,0.5)', fontSize: 12 }}>→</span>
+                <div
+                  onClick={() => navigate('/siddha-quantum')}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => e.key === 'Enter' && navigate('/siddha-quantum')}
+                  style={{
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <span style={{ fontFamily: 'Montserrat,sans-serif', fontWeight: 800, fontSize: 8, letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.6)' }}>
+                    ◈ Activate Siddha–Quantum — Full Universal Field Access
+                  </span>
+                  <span style={{ color: 'rgba(212,175,55,0.5)', fontSize: 12 }}>→</span>
+                </div>
+                {tier !== 'lifetime' && (
+                  <p style={{ margin: 0, marginTop: 8, fontSize: 11, color: 'rgba(212,175,55,0.4)' }}>
+                    or{' '}
+                    <button
+                      type="button"
+                      onClick={() => navigate('/akasha-infinity')}
+                      style={{
+                        color: 'rgba(212,175,55,0.55)', background: 'none', border: 'none',
+                        cursor: 'pointer', textDecoration: 'underline', fontSize: 'inherit',
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      unlock everything forever →
+                    </button>
+                  </p>
+                )}
               </div>
             )}
 

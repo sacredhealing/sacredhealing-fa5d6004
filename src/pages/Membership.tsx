@@ -319,6 +319,26 @@ const Membership = () => {
                           'Subscribe Now'
                         )}
                       </Button>
+                      {planTier.slug === 'lifetime' && (
+                        <p style={{ textAlign: 'center', marginTop: 8 }}>
+                          <button
+                            type="button"
+                            onClick={() => navigate('/akasha-infinity')}
+                            style={{
+                              fontSize: 11,
+                              color: 'rgba(212,175,55,0.6)',
+                              background: 'none',
+                              border: 'none',
+                              cursor: 'pointer',
+                              textDecoration: 'underline',
+                              textUnderlineOffset: 3,
+                              fontFamily: 'inherit',
+                            }}
+                          >
+                            See everything Akasha–Infinity includes →
+                          </button>
+                        </p>
+                      )}
                     </div>
                   </div>
                 </Card>

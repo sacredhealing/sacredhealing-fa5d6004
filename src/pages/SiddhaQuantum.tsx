@@ -333,6 +333,24 @@ const SiddhaQuantum: React.FC = () => {
             </div>
           </div>
           <p style={{ textAlign: 'center', fontSize: 10, color: 'rgba(255,255,255,0.25)' }}>◈ Cancel anytime · No lock-in · Instant access</p>
+          <p style={{
+            textAlign: 'center', marginTop: 14,
+            fontFamily: 'Cormorant Garamond, serif', fontStyle: 'italic',
+            fontSize: '0.85rem', color: 'rgba(255,255,255,0.2)'
+          }}>
+            Want everything forever?{' '}
+            <button
+              type="button"
+              onClick={() => navigate('/akasha-infinity')}
+              style={{
+                color: 'rgba(212,175,55,0.55)', background: 'none', border: 'none',
+                cursor: 'pointer', textDecoration: 'underline',
+                fontFamily: 'inherit', fontStyle: 'inherit', fontSize: 'inherit'
+              }}
+            >
+              See Akasha–Infinity →
+            </button>
+          </p>
         </section>
 
         <section className="sq-section">

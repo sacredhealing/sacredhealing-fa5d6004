@@ -6,6 +6,7 @@ import { Flame, Flower2, Star, Settings, LogOut, ChevronRight, Wallet, Bell, Moo
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { useAuth } from '@/hooks/useAuth';
+import { useMembership } from '@/hooks/useMembership';
 import { usePhantomWallet } from '@/hooks/usePhantomWallet';
 import { useSHC } from '@/contexts/SHCContext';
 import { useProfile } from '@/hooks/useProfile';
@@ -73,6 +74,7 @@ const Profile: React.FC = () => {
   const { isAdmin } = useAdminRole();
   const { certificates, isLoading: certificatesLoading, downloadCertificate, shareCertificate } = useCertificates();
   const { hasAccess: hasAkashicRecord } = useAkashicAccess(user?.id);
+  const { tier } = useMembership();
   const { reading: vedicReading } = useAIVedicReading();
 
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -801,6 +803,14 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               <div style={{fontWeight:800,fontSize:8,letterSpacing:'0.4em',color:'rgba(212,175,55,0.5)',textTransform:'uppercase',marginBottom:8}}>◈ Eternal Node Activation</div>
               <div style={{fontWeight:800,fontSize:17,letterSpacing:'0.2em',color:'#D4AF37'}}>Akasha–Infinity</div>
               <div style={{fontSize:8,letterSpacing:'0.35em',color:'rgba(255,255,255,0.2)',textTransform:'uppercase',marginTop:4}}>Lifetime Transmission</div>
+              {tier === 'lifetime' && (
+                <span style={{
+                  display:'inline-block',
+                  fontWeight:800, fontSize:6.5, letterSpacing:'0.4em', textTransform:'uppercase',
+                  color:'#050505', background:'#D4AF37', borderRadius:100, padding:'3px 9px',
+                  marginTop:6
+                }}>◈ Active · Eternal</span>
+              )}
             </div>
             <div style={{fontFamily:"'Cormorant Garamond',serif",fontWeight:300,fontStyle:'italic',fontSize:'2.8rem',color:'white'}}>€1111</div>
           </div>
@@ -809,7 +819,30 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
             <li>Virtual Pilgrimage (€888 Value)</li><li>Palm Reading Portal</li>
             <li>Sri Yantra Universal Protection Shield</li>
           </ul>
-          <button type="button" className="gold-btn" style={{maxWidth:280}} onClick={() => handleUpgrade('AKASHA_INFINITY')} disabled={upgradeLoading === 'AKASHA_INFINITY'}>Claim Eternal Access</button>
+          <button
+            type="button"
+            onClick={() => navigate('/akasha-infinity')}
+            style={{
+              display: 'block',
+              width: '100%',
+              maxWidth: 280,
+              background: 'linear-gradient(135deg, rgba(212,175,55,0.22), rgba(212,175,55,0.1))',
+              color: '#D4AF37',
+              border: '1px solid rgba(212,175,55,0.5)',
+              borderRadius: 100,
+              padding: '15px 24px',
+              fontFamily: 'Montserrat, sans-serif',
+              fontWeight: 800,
+              fontSize: 9,
+              letterSpacing: '0.4em',
+              textTransform: 'uppercase' as const,
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              boxShadow: '0 0 32px rgba(212,175,55,0.3), 0 0 64px rgba(212,175,55,0.08)',
+            }}
+          >
+            {tier === 'lifetime' ? '◈ Field Active — Open Portal ∞' : '◈ Enter the Akashic Field ∞'}
+          </button>
         </div>
       </div>
 
