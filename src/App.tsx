@@ -38,6 +38,7 @@ const ArtistProfile = React.lazy(() => import("./pages/ArtistProfile"));
 const Mastering = React.lazy(() => import("./pages/Mastering"));
 const Wallet = React.lazy(() => import("./pages/Wallet"));
 const Profile = React.lazy(() => import("./pages/Profile"));
+const AtmaSeed = React.lazy(() => import("./pages/AtmaSeed"));
 const Legal = React.lazy(() => import("./pages/Legal"));
 const AdminDashboard = React.lazy(() => import("./pages/AdminDashboard"));
 const Admin = React.lazy(() => import("./pages/Admin"));
@@ -173,6 +174,7 @@ function AppRoutes() {
                   <Route path="/mastering" element={<Mastering />} />
                   <Route path="/wallet" element={<Wallet />} />
                   <Route path="/profile" element={<Profile />} />
+                  <Route path="/atma-seed" element={<AtmaSeed />} />
                   <Route path="/legal" element={<Legal />} />
                   <Route path="/healing" element={<Healing />} />
                   <Route path="/healing/my-sacred-flame" element={<MySacredFlame />} />

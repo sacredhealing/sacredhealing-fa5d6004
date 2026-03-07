@@ -244,6 +244,15 @@ const VedicAstrology: React.FC = () => {
                       />
                     </DialogContent>
                   </Dialog>
+                  <div className="mt-3">
+                    <button
+                      type="button"
+                      onClick={() => navigate('/atma-seed')}
+                      className="text-xs text-muted-foreground hover:text-primary underline"
+                    >
+                      ← Full activation guide
+                    </button>
+                  </div>
                 </div>
               </CardContent>
             </Card>

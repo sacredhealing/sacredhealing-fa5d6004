@@ -716,7 +716,24 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               <li>Community Chat & Live</li>
               <li>Basic Ayurveda & Jyotish</li>
             </ul>
-            <div className="ghost-btn" style={{opacity:0.4,cursor:'default',pointerEvents:'none'}}>Active Node</div>
+            <button
+              onClick={() => navigate('/atma-seed')}
+              style={{
+                display:'block', width:'100%',
+                background:'transparent',
+                color:'rgba(212,175,55,0.7)',
+                border:'1px solid rgba(212,175,55,0.25)',
+                borderRadius:100, padding:'12px 24px',
+                fontFamily:'Montserrat,sans-serif',
+                fontWeight:800, fontSize:9,
+                letterSpacing:'0.4em', textTransform:'uppercase',
+                cursor:'pointer', transition:'all 0.2s'
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(212,175,55,0.5)'; e.currentTarget.style.color='#D4AF37'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor='rgba(212,175,55,0.25)'; e.currentTarget.style.color='rgba(212,175,55,0.7)'; }}
+            >
+              ◈ Explore Free Tier
+            </button>
           </div>
 
           <div className="tier-card">

@@ -88,6 +88,9 @@ export const useOnboarding = () => {
 
       await refreshBalance();
       toast.success('Welcome to your spiritual journey! +50 SHC earned');
+      toast('Activate your Jyotish field for personalized Vedic guidance', {
+        action: { label: 'Activate →', onClick: () => navigate('/atma-seed') },
+      });
       navigate('/dashboard');
     } catch (error) {
       console.error('Onboarding error:', error);
