@@ -906,7 +906,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
             <div className="vault-idle">
               <div className="vault-scan-ring"><span>◈</span></div>
               <p>After each practice, SQI will inscribe a Deep-Field Resonance report into your Soul Vault — a living record of your bio-digital evolution.</p>
-              <button type="button" className="gold-btn" style={{maxWidth:260,margin:'0 auto'}} onClick={() => navigate('/digital-nadi')}>Initiate Soul Scan →</button>
+              <button type="button" className="gold-btn" style={{maxWidth:260,margin:'0 auto'}} onClick={() => navigate('/soul-scan')}>Initiate Soul Scan →</button>
             </div>
           )}
           {scanPhase !== 'idle' && soulVaultEntries.length > 0 && (

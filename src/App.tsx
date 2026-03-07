@@ -137,6 +137,7 @@ const QuantumApothecary = React.lazy(() => import("./pages/QuantumApothecary"));
 const SriYantraShield = React.lazy(() => import("./pages/SriYantraShield"));
 const TempleHome = React.lazy(() => import("./pages/TempleHome"));
 const DigitalNadi = React.lazy(() => import("./pages/DigitalNadi"));
+const SoulScan = React.lazy(() => import("./pages/SoulScan"));
 const VayuProtocol = React.lazy(() => import("./pages/VayuProtocol"));
 
 const PageLoader = () => (
@@ -241,6 +242,7 @@ function AppRoutes() {
                   <Route path="/sri-yantra-shield" element={<SriYantraShield />} />
                   <Route path="/temple-home" element={<TempleHome />} />
                   <Route path="/digital-nadi" element={<DigitalNadi />} />
+                  <Route path="/soul-scan" element={<SoulScan />} />
                   <Route path="/vayu-protocol" element={<VayuProtocol />} />
                   <Route path="/prompt-library" element={<PromptLibrary />} />
                   <Route path="/creative-soul" element={<Navigate to="/creative-soul/store" replace />} />
