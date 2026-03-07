@@ -74,7 +74,7 @@ const Profile: React.FC = () => {
   const { isAdmin } = useAdminRole();
   const { certificates, isLoading: certificatesLoading, downloadCertificate, shareCertificate } = useCertificates();
   const { hasAccess: hasAkashicRecord } = useAkashicAccess(user?.id);
-  const { tier } = useMembership();
+  const { tier, isPremium } = useMembership();
   const { reading: vedicReading } = useAIVedicReading();
 
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -751,7 +751,26 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               <li>Access to All Healing Music</li>
               <li>Full Meditation & Mantra Library</li>
             </ul>
-            <button type="button" className="gold-btn" onClick={() => handleUpgrade('PRANA_FLOW')} disabled={upgradeLoading === 'PRANA_FLOW'}>Activate Vibration</button>
+            <button
+              type="button"
+              onClick={() => navigate('/prana-flow')}
+              style={{
+                display: 'block', width: '100%', maxWidth: 260,
+                background: isPremium && tier !== 'free'
+                  ? 'linear-gradient(135deg,rgba(212,175,55,0.18),rgba(212,175,55,0.08))'
+                  : 'rgba(255,255,255,0.04)',
+                color: isPremium && tier !== 'free' ? '#D4AF37' : 'rgba(255,255,255,0.4)',
+                border: isPremium && tier !== 'free'
+                  ? '1px solid rgba(212,175,55,0.4)'
+                  : '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 100, padding: '13px 20px',
+                fontFamily: 'Montserrat,sans-serif', fontWeight: 800,
+                fontSize: 9, letterSpacing: '0.38em', textTransform: 'uppercase',
+                cursor: 'pointer', transition: 'all 0.2s'
+              }}
+            >
+              {isPremium && tier !== 'free' ? '◈ Active — Explore' : '◈ Activate Vibration'}
+            </button>
           </div>
 
           <div className="tier-card featured siddha-quantum-card">
