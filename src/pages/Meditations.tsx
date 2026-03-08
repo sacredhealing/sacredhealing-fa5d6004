@@ -464,7 +464,7 @@ const Meditations: React.FC = () => {
 
         <div className="micro-label" style={{ marginBottom: 8, color: 'rgba(212,175,55,0.5)' }}>Akasha-Neural Archive · Meditation Transmissions</div>
         <h1 className="hero-title shimmer-text" style={{ marginBottom: 6 }}>{t('meditations.templeGreeting', 'The Hall of Stillness')}</h1>
-        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, marginBottom: 24, maxWidth: 340 }}>{t('meditations.sectionsSubtitle', 'Curated by intention. Expand when you feel ready.')}</p>
+        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, marginBottom: 24, maxWidth: 340 }}>Curated by intention. Bhakti-Algorithms activated. Expand when you feel ready.</p>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
           <Globe size={13} color="rgba(255,255,255,0.3)" />
