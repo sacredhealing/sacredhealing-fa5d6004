@@ -122,24 +122,24 @@ const Onboarding: React.FC = () => {
             <div className="onb-step text-center flex flex-col items-center">
               <SriYantraSvg />
               <p className="mt-6 text-[#D4AF37]/60 text-[8px] font-extrabold tracking-[0.5em] uppercase" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                ◈ SIDDHA-QUANTUM INTELLIGENCE · 2050
+                {t('onboarding.sqiLabel')}
               </p>
               <h1 className="mt-3 text-white font-[300] italic leading-tight" style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 'clamp(2.5rem, 6vw, 4rem)' }}>
-                Welcome, Sacred Soul
+                {t('onboarding.welcomeTitle')}
               </h1>
               <p className="mt-4 text-white/50 text-[0.9rem] leading-[1.7] max-w-md" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 400 }}>
-                Let's attune your field to the frequencies that serve you most.
+                {t('onboarding.welcomeDesc')}
               </p>
               <div className="mt-6 px-5 py-3 rounded-full bg-white/[0.03] border border-[#D4AF37]/30 flex items-center gap-2 text-[#D4AF37] text-sm">
                 <Sparkles className="w-4 h-4 flex-shrink-0" />
-                <span>✦ Earn +50 SHC for completing your attunement</span>
+                <span>{t('onboarding.earnBonus')}</span>
               </div>
               <Button
                 onClick={nextStep}
                 className="mt-8 w-full max-w-sm py-5 rounded-full bg-[#D4AF37] hover:bg-[#D4AF37] text-black font-extrabold text-[9px] tracking-[0.4em] uppercase shadow-[0_0_30px_rgba(212,175,55,0.3)]"
                 style={{ fontFamily: 'Montserrat, sans-serif' }}
               >
-                BEGIN ATTUNEMENT →
+                {t('onboarding.beginAttunement')}
               </Button>
             </div>
           </div>
