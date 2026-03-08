@@ -539,7 +539,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   .avatar-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,0.65) 0%,rgba(212,175,55,0.2) 40%,transparent 70%);filter:blur(22px);animation:glowBreathe 3s ease-in-out infinite;z-index:0;pointer-events:none}
   .avatar-glow-2{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,0.15) 0%,transparent 65%);filter:blur(30px);animation:glowBreathe 4s ease-in-out infinite reverse;z-index:0;pointer-events:none}
   .hero-name{font-family:'Cormorant Garamond',serif;font-weight:300;font-style:italic;font-size:clamp(2.8rem,6vw,4.5rem);letter-spacing:-0.02em;color:white;line-height:1;margin-bottom:12px;animation:fadeUp 0.8s ease both}
-  .soul-label{font-family:'Montserrat',sans-serif;font-weight:800;font-size:8px;letter-spacing:0.5em;text-transform:uppercase;color:rgba(212,175,55,0.7);margin-bottom:28px}
+  .soul-label{font-family:'Montserrat',sans-serif;font-weight:800;font-size:8px;letter-spacing:0.5em;text-transform:uppercase;color:rgba(212,175,55,0.7);margin-bottom:28px;white-space:nowrap}
   .soul-label span{color:rgba(255,255,255,0.25);margin:0 8px}
    .stats-row{display:flex;gap:12px;flex-wrap:nowrap;justify-content:center;margin-bottom:48px;animation:fadeUp 1.1s ease both;width:100%;max-width:400px;margin-left:auto;margin-right:auto}
    .stat-pill{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:100px;padding:12px 20px;text-align:center;flex:1 1 0;min-width:0}
