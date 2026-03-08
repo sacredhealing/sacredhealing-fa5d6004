@@ -13,7 +13,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useAIVedicReading } from '@/hooks/useAIVedicReading';
-import { PlanetaryCycleBanner } from '@/components/dashboard/PlanetaryCycleBanner';
+
 import type { UserProfile } from '@/lib/vedicTypes';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
 import { useCertificates } from '@/hooks/useCertificates';
