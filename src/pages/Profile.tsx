@@ -1017,7 +1017,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
             </div>
             <span className="archive-cta">Initiate Scan →</span>
           </div>
-          <div className="archive-card" onClick={() => navigate('/quantum-apothecary', { state: { focusChat: true } })}>
+          <div className="archive-card" onClick={() => navigate('/life-book')}>
             <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
               <div style={{width:44,height:44,borderRadius:13,background:'rgba(212,175,55,0.06)',border:'1px solid rgba(212,175,55,0.18)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginBottom:14}}>
                 <svg width="22" height="22" viewBox="0 0 28 28" fill="none">

@@ -138,6 +138,7 @@ const TempleHome = React.lazy(() => import("./pages/TempleHome"));
 const DigitalNadi = React.lazy(() => import("./pages/DigitalNadi"));
 const SoulScan = React.lazy(() => import("./pages/SoulScan"));
 const VayuProtocol = React.lazy(() => import("./pages/VayuProtocol"));
+const LifeBook = React.lazy(() => import("./pages/LifeBook"));
 
 const PageLoader = () => (
   <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a]">
