@@ -116,7 +116,7 @@ const AdminYouTube: React.FC = () => {
                 <Input
                   value={channelName}
                   onChange={(e) => setChannelName(e.target.value)}
-                  placeholder="Sacred Healing TV"
+                  placeholder="Siddha Quantum Nexus TV"
                   required
                 />
               </div>

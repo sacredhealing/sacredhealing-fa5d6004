@@ -20,8 +20,8 @@ export const MusicShareCard: React.FC<MusicShareCardProps> = ({
   const handleShare = async () => {
     const shareUrl = `https://sacredhealing.lovable.app/music/track/${track.id}?utm_source=share&utm_medium=music`;
     const shareText = track.affirmation 
-      ? `🎵 "${track.title}" by ${track.artist}\n\n✨ "${track.affirmation}"\n\nDiscover healing music at Sacred Healing`
-      : `🎵 "${track.title}" by ${track.artist}\n\nDiscover healing music at Sacred Healing`;
+      ? `🎵 "${track.title}" by ${track.artist}\n\n✨ "${track.affirmation}"\n\nDiscover healing music at Siddha Quantum Nexus`
+      : `🎵 "${track.title}" by ${track.artist}\n\nDiscover healing music at Siddha Quantum Nexus`;
 
     if (navigator.share) {
       try {
@@ -114,7 +114,7 @@ export const MusicShareCard: React.FC<MusicShareCardProps> = ({
         <div className="flex items-center justify-between pt-4 border-t border-white/10">
           <div className="flex items-center gap-2">
             <LotusIcon size={20} className="text-amber-400" />
-            <span className="text-sm font-medium text-amber-400">Sacred Healing</span>
+            <span className="text-sm font-medium text-amber-400">Siddha Quantum Nexus</span>
           </div>
 
           <Button 

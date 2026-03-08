@@ -110,7 +110,7 @@ const PractitionerCertification = () => {
   ];
 
   const outcomes = [
-    "Work independently as a Sacred Healing Vibration Practitioner",
+    "Work independently as a Siddha Quantum Nexus Vibration Practitioner",
     "Support clients in nervous system regulation, trauma healing, and energy balancing",
     "Apply sound, mantra, meditation, and yogic practices professionally",
     "Expand intuition and deepen connection with the heart"
@@ -134,10 +134,10 @@ const PractitionerCertification = () => {
             1-Year Certification Program
           </Badge>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
-            Sacred Healing Vibration Practitioner Certification
+            Siddha Quantum Nexus Vibration Practitioner Certification
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-            Become a certified Sacred Healing Vibration Practitioner through our comprehensive 1-year online program. 
+            Become a certified Siddha Quantum Nexus Vibration Practitioner through our comprehensive 1-year online program. 
             Master the art of healing, open your heart, and awaken your intuition.
           </p>
           <div className="flex flex-wrap justify-center gap-4 mb-8">

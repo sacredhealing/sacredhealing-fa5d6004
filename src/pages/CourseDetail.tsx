@@ -729,7 +729,7 @@ const CourseDetail: React.FC = () => {
                                 playUniversalAudio({
                                   id: material.id,
                                   title: material.title,
-                                  artist: course?.instructor_name || 'Sacred Healing',
+                                  artist: course?.instructor_name || 'Siddha Quantum Nexus',
                                   audio_url: material.file_url,
                                   preview_url: null,
                                   cover_image_url: course?.cover_image_url || null,

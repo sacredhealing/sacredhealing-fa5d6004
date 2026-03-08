@@ -83,7 +83,7 @@ const AdminMusic: React.FC = () => {
   
   // Form state
   const [title, setTitle] = useState('');
-  const [artist, setArtist] = useState('Sacred Healing');
+  const [artist, setArtist] = useState('Siddha Quantum Nexus');
   const [description, setDescription] = useState('');
   const [genre, setGenre] = useState('beats');
   const [durationInput, setDurationInput] = useState('3:00');
@@ -360,7 +360,7 @@ const AdminMusic: React.FC = () => {
 
       // Reset form
       setTitle('');
-      setArtist('Sacred Healing');
+      setArtist('Siddha Quantum Nexus');
       setDescription('');
       setGenre('beats');
       setDurationInput('3:00');
@@ -580,7 +580,7 @@ const AdminMusic: React.FC = () => {
                 <Input
                   value={artist}
                   onChange={(e) => setArtist(e.target.value)}
-                  placeholder="Sacred Healing"
+                  placeholder="Siddha Quantum Nexus"
                   className="bg-muted/50"
                 />
               </div>

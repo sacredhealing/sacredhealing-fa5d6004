@@ -299,7 +299,7 @@ const PolymarketBotDetail: React.FC = () => {
   // Market scanning loop when bot is running
   useEffect(() => {
     if (isRunning && address) {
-      addLog("🚀 Starting Sacred Healing HFT Engine...", "info");
+      addLog("🚀 Starting Siddha Quantum Nexus HFT Engine...", "info");
       addLog(`[1] ${STRATEGY_NAMES.WHALE_MIRROR} - Monitoring 0x8dxd`, "info");
       addLog(`[2] ${STRATEGY_NAMES.LATENCY_ARB} - Gemini 3 Flash active`, "info");
       addLog(`[3] ${STRATEGY_NAMES.VOLATILITY_SCALP} - Ladder orders ready`, "info");

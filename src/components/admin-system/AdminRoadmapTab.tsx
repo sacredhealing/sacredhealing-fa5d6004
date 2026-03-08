@@ -163,7 +163,7 @@ const AdminRoadmapTab: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold mb-2">🧭 Sacred Healing — 90-Day Master Roadmap</h2>
+        <h2 className="text-2xl font-bold mb-2">🧭 Siddha Quantum Nexus — 90-Day Master Roadmap</h2>
         <p className="text-muted-foreground">Track your content creation journey, one task at a time</p>
       </div>
 

@@ -11,7 +11,7 @@ export const en = {
 
   profile: {
     your_sacred_space: {
-      title: "Your Sacred Healing Space",
+      title: "Your Siddha Quantum Nexus Space",
       body:
         "This app is a daily support space.\n" +
         "You don’t need to learn anything or believe anything.\n" +
@@ -21,7 +21,7 @@ export const en = {
     start_here: {
       title: "Start here",
       body:
-        "If this is your first time, this short guide explains how Sacred Healing works and how to begin gently.",
+        "If this is your first time, this short guide explains how Siddha Quantum Nexus works and how to begin gently.",
       button: "Open guide",
     },
     how_to_use: {

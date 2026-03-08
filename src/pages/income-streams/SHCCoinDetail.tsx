@@ -68,7 +68,7 @@ const SHCCoinDetail: React.FC = () => {
           </CardHeader>
           <CardContent className="space-y-3 text-muted-foreground">
             <p>
-              {t('shcCoin.overviewP1', 'SHC (Sacred Healing Coin) is our native utility token built on the Solana blockchain. It powers the ecosystem and rewards active community members.')}
+              {t('shcCoin.overviewP1', 'SHC (Siddha Quantum Nexus Coin) is our native utility token built on the Solana blockchain. It powers the ecosystem and rewards active community members.')}
             </p>
             <p>
               {t('shcCoin.overviewP2', 'As the platform grows, so does the value and utility of SHC. Early adopters benefit from holding and using the token.')}

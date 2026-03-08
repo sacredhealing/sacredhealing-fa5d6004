@@ -164,7 +164,7 @@ const CopyTradingDetail: React.FC = () => {
               <Badge className="bg-green-500 text-white text-lg px-3">80%</Badge>
             </div>
             <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-              <span className="text-muted-foreground">{t('copyTrading.systemProvider', 'Sacred Healing (system provider)')}</span>
+              <span className="text-muted-foreground">{t('copyTrading.systemProvider', 'Siddha Quantum Nexus (system provider)')}</span>
               <Badge variant="secondary" className="text-lg px-3">20%</Badge>
             </div>
             <div className="flex items-center gap-2 text-green-500 font-medium mt-2">

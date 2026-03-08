@@ -18,7 +18,7 @@ export const ConvertGuideCard: React.FC = () => {
   const { price, formatEur, isLoading } = useSHCPrice();
 
   const steps = [
-    t('wallet.convertStep1', 'Connect your Phantom wallet to Sacred Healing'),
+    t('wallet.convertStep1', 'Connect your Phantom wallet to Siddha Quantum Nexus'),
     t('wallet.convertStep2', 'Withdraw your SHC to your Phantom wallet'),
     t('wallet.convertStep3', 'Go to a DEX like Jupiter or Raydium'),
     t('wallet.convertStep4', 'Swap SHC for SOL, USDC, or other tokens'),

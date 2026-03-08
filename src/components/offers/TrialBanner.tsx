@@ -61,7 +61,7 @@ export const TrialBanner = ({ onTrialStarted }: TrialBannerProps) => {
               Start Your 14-Day Free Trial
             </h3>
             <p className="text-muted-foreground mb-4">
-              Experience the full power of Sacred Healing Club with unlimited access to all premium content.
+              Experience the full power of Siddha Quantum Nexus Club with unlimited access to all premium content.
             </p>
             
             <div className="flex flex-wrap gap-4 justify-center md:justify-start text-sm">

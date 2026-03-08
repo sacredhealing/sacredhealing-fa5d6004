@@ -24,7 +24,7 @@ The JSON must match this structure exactly:
 `;
 
 export const generateModule = async (month: number, topic: string): Promise<ModuleContent> => {
-  const prompt = `You are a world-class Instructional Designer and Spiritual Mentor for 'Sacred Healing Academy'.
+  const prompt = `You are a world-class Instructional Designer and Spiritual Mentor for 'Siddha Quantum Nexus Academy'.
 
 The Task:
 Create detailed curriculum content for Month ${month}. 

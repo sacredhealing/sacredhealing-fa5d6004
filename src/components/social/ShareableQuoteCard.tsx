@@ -14,13 +14,13 @@ interface ShareableQuoteCardProps {
 
 export const ShareableQuoteCard: React.FC<ShareableQuoteCardProps> = ({
   quote,
-  author = 'Sacred Healing',
+  author = 'Siddha Quantum Nexus',
   category,
   onShare,
 }) => {
   const handleShare = async () => {
     const shareUrl = 'https://sacredhealing.lovable.app?utm_source=share&utm_medium=quote';
-    const shareText = `"${quote}"\n\n— ${author}\n\n✨ Discover daily wisdom at Sacred Healing`;
+    const shareText = `"${quote}"\n\n— ${author}\n\n✨ Discover daily wisdom at Siddha Quantum Nexus`;
 
     if (navigator.share) {
       try {
@@ -84,7 +84,7 @@ export const ShareableQuoteCard: React.FC<ShareableQuoteCardProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <LotusIcon size={20} className="text-amber-400" />
-            <span className="text-sm font-medium text-amber-400">Sacred Healing</span>
+            <span className="text-sm font-medium text-amber-400">Siddha Quantum Nexus</span>
           </div>
 
           <Button 

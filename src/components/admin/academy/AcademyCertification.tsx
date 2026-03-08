@@ -44,7 +44,7 @@ export const AcademyCertification: React.FC = () => {
             S
           </div>
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white leading-none mb-1 serif">Sacred Healing</h1>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white leading-none mb-1 serif">Siddha Quantum Nexus</h1>
             <p className="text-[8px] md:text-[10px] font-black tracking-[0.4em] text-teal-400 uppercase opacity-90">Academy Certification</p>
           </div>
         </div>
