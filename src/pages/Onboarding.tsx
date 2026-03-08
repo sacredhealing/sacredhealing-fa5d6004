@@ -177,7 +177,7 @@ const Onboarding: React.FC = () => {
               </p>
               <GoalSelector selectedGoals={data.goals} onToggle={toggleGoal} />
               {data.goals.length > 0 && (
-                <p className="text-center text-sm text-white/40 mt-4">{data.goals.length} selected</p>
+                <p className="text-center text-sm text-white/40 mt-4">{t('onboarding.selected', { count: data.goals.length })}</p>
               )}
             </>
           )}
