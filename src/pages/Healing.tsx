@@ -502,6 +502,7 @@ const Healing: React.FC = () => {
   // RENDER — SQI-2050 UI, all logic preserved
   // ============================================================
   return (
+    <>
     <div className="h-page">
       <style>{H_CSS}</style>
       <IntentionThreshold isOpen={showThreshold} onSelectIntention={handleIntentionSelected} onClose={handleThresholdClose} />
