@@ -2,9 +2,9 @@
 
 export const TIER_CONFIG = {
   ATMA_SEED: { id: "price_atma_free", price: 0, commission: 0 },
-  PRANA_FLOW: { id: "price_prana_19", price: 19, commission: 5 },
-  SIDDHA_QUANTUM: { id: "price_siddha_45", price: 45, commission: 15 },
-  AKASHA_INFINITY: { id: "price_akasha_1111", price: 1111, commission: 250 },
+  PRANA_FLOW: { id: "price_1T8o3YAPsnbrivP056UJqOP7", price: 19, commission: 5.70 },
+  SIDDHA_QUANTUM: { id: "price_1T8o3jAPsnbrivP0uZKR33EY", price: 45, commission: 13.50 },
+  AKASHA_INFINITY: { id: "price_1T8o3kAPsnbrivP0m8bOzl3M", price: 1111, commission: 333.30 },
 } as const;
 
 export type TierName = keyof typeof TIER_CONFIG;
