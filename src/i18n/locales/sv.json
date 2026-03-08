@@ -162,7 +162,7 @@
     "stargateMembership": "Stargate-medlemskap",
     "stargateDesc": "Veckovisa livesessioner, Telegram-gemenskap och andligt stöd för €25/månad",
     "practitionerCert": "Utövarcertifiering",
-    "certDesc": "Bli en certifierad Sacred Healing Vibration-utövare på 12 månader",
+    "certDesc": "Bli en certifierad Siddha Quantum Nexus-utövare på 12 månader",
     "sixMonthTransform": "6-månaders transformation",
     "transformDesc": "Djup personlig transformation med privat coachning och dagligt stöd",
     "testimonials": "Transformationens röster",
@@ -241,7 +241,7 @@
     "diary": {
       "fromTheSpace": "Från utrymmet",
       "today": "Idag",
-      "sharedBy": "Delat av Sacred Healing-teamet",
+      "sharedBy": "Delat av Siddha Quantum Nexus-teamet",
       "comment": "Kommentera",
       "createEntry": "Skapa dagboksinlägg",
       "type": "Typ",
@@ -295,7 +295,7 @@
     "startSession": "Starta Session",
     "quickActions": "Snabbåtgärder",
     "inviteFriends": "Bjud in vänner",
-    "inviteDescription": "Dela Sacred Healing med dina vänner och hjälp dem på deras andliga resa.",
+    "inviteDescription": "Dela Siddha Quantum Nexus med dina vänner och hjälp dem på deras andliga resa.",
     "loadingWisdom": "Laddar visdom...",
     "morningAwakening": "Morgonuppvaknande",
     "explore": "Utforska",
@@ -742,7 +742,7 @@
     "viewOnDexScreener": "Visa på DEXScreener",
     "swapOnDEX": "Byt på en DEX",
     "howToConvert": "Hur man konverterar SHC till kontanter",
-    "convertStep1": "Anslut din Phantom-plånbok till Sacred Healing",
+    "convertStep1": "Anslut din Phantom-plånbok till Siddha Quantum Nexus",
     "convertStep2": "Ta ut din SHC till din Phantom-plånbok",
     "convertStep3": "Gå till en DEX som Jupiter eller Raydium",
     "convertStep4": "Byt SHC mot SOL, USDC eller andra tokens",
@@ -777,7 +777,7 @@
     "premiumFeature3": "Tjäna 33 SHC per session & ström",
     "certificates": "Certifikat",
     "yourSacredSpace": {
-      "title": "Din Sacred Healing-plats",
+      "title": "Din Siddha Quantum Nexus-plats",
       "description": "Denna app är en daglig stödplats.\nDu behöver inte lära dig något eller tro på något.\nKom bara, välj hur du mår och följ en kort praktik.\nMed tiden organiseras ditt sinne, din sömn och dina känslor naturligt."
     },
     "howToUse": {
@@ -809,7 +809,7 @@
     }
   },
   "legal": {
-    "title": "Sacred Healing: Rättsligt meddelande",
+    "title": "Siddha Quantum Nexus: Rättsligt meddelande",
     "subtitle": "Läs gärna innan användning.",
     "entertainment": {
       "title": "Endast underhållning",
@@ -838,7 +838,7 @@
     "themeChangedTo": "Tema ändrat till"
   },
   "pwa": {
-    "installTitle": "Inställ Sacred Healing",
+    "installTitle": "Installera Siddha Quantum Nexus",
     "installDesc": "Lägg till på hemskärmen för bästa upplevelse",
     "install": "Inställ",
     "installApp": "Inställ App",
@@ -1056,7 +1056,7 @@
       "phantomStep2": "Skapa eller importera din plånbok och lägg till SOL (Solana)",
       "phantomStep3": "Öppna Phantom och tryck på Byt-ikonen",
       "phantomStep4": "Välj SOL som token du byter från",
-      "phantomStep5": "Klistra in SHC token-adressen ovan eller sök \"Sacred Healing Coin\"",
+      "phantomStep5": "Klistra in SHC token-adressen ovan eller sök \"Siddha Quantum Nexus Coin\"",
       "phantomStep6": "Ange beloppet och bekräfta bytet",
       "getPhantomWallet": "Hämta Phantom Plånbok",
       "cardStep1": "Öppna Phantom Plånbok och tryck på Köp",
@@ -1135,7 +1135,7 @@
     "title": "SHC Mynt",
     "badge": "Investering",
     "whatIsIt": "Vad är SHC Mynt?",
-    "overviewP1": "SHC (Sacred Healing Coin) är vår egna utility-token byggd på Solana-blockkedjan. Den driver ekosystemet och belönar aktiva gemenskapsmedlemmar.",
+    "overviewP1": "SHC (Siddha Quantum Nexus Coin) är vår egna utility-token byggd på Solana-blockkedjan. Den driver ekosystemet och belönar aktiva gemenskapsmedlemmar.",
     "overviewP2": "När plattformen växer, ökar också värdet och nyttan av SHC. Tidiga användare drar nytta av att hålla och använda token.",
     "tokenAddressLabel": "Token-adress (Solana)",
     "addressCopied": "Token-adress kopierad!",
@@ -1185,7 +1185,7 @@
     "confirmNickname": "Bekräfta smeknamn",
     "profitSplit": "Vinstdelning",
     "yourProfit": "Din vinst",
-    "systemProvider": "Sacred Healing (systemleverantör)",
+    "systemProvider": "Siddha Quantum Nexus (systemleverantör)",
     "freeToJoin": "Gratis att gå med",
     "depositsWithdrawals": "Insättningar & Uttag",
     "minDeposit": "Minsta insättning",
@@ -1291,7 +1291,7 @@
     "tip1": "Dela din unika länk på sociala medier",
     "tip2": "Berätta för vänner om din läkningsresa",
     "tip3": "Inkludera länk i din bio eller signatur",
-    "tip4": "Skapa innehåll om Sacred Healing",
+    "tip4": "Skapa innehåll om Siddha Quantum Nexus",
     "recentReferrals": "Senaste hänvisningar",
     "recentEarnings": "Senaste intäkter",
     "noRecentReferrals": "Inga hänvisningar ännu",
@@ -1343,7 +1343,7 @@
   },
   "certification": {
     "title": "Utövarcertifiering",
-    "subtitle": "Bli en certifierad Sacred Healing Vibration-utövare",
+    "subtitle": "Bli en certifierad Siddha Quantum Nexus-utövare",
     "duration": "12 månader",
     "oneTime": "engångsbetalning",
     "monthly": "per månad",
@@ -1455,7 +1455,7 @@
   },
   "promote": {
     "title": "Marknadsför & Tjäna",
-    "subtitle": "Tjäna med Sacred Healing",
+    "subtitle": "Tjäna med Siddha Quantum Nexus",
     "yourLink": "Din hänvisningslänk",
     "copyLink": "Kopiera länk",
     "totalEarnings": "Totala intäkter",
@@ -1581,8 +1581,8 @@
     "ownershipTitle": "Äganderättsavtal",
     "ownershipDesc": "Genom köp accepterar du en 50/50 ägandefördelning av den skapade meditationen. Detta innebär:",
     "ownership1": "Du äger 50% av alla streamingintäkter",
-    "ownership2": "Sacred Healing Music (Adam Gil Lazaro) äger 50%",
-    "ownership3": "Vid uppladdning till DistroKid eller annan distributör måste du lägga till \"Sacred Healing Music Adam Gil Lazaro\" som medarbetare/delägare"
+    "ownership2": "Siddha Quantum Nexus Music (Adam Gil Lazaro) äger 50%",
+    "ownership3": "Vid uppladdning till DistroKid eller annan distributör måste du lägga till \"Siddha Quantum Nexus Music Adam Gil Lazaro\" som medarbetare/delägare"
   },
   "mastering": {
     "title": "Professionell musikmastering",
@@ -1816,15 +1816,15 @@
   },
   "progressCard": {
     "sacredSoul": "Helig Själ",
-    "sacredHealingJourney": "Sacred Healing-resan",
+    "sacredHealingJourney": "Siddha Quantum Nexus-resan",
     "dayStreak": "Dagars svit",
     "achievements": "Prestationer",
     "milestones": "Milstolpar",
     "shcEarned": "SHC intjänat",
-    "sacredHealing": "Sacred Healing",
+    "sacredHealing": "Siddha Quantum Nexus",
     "shareMyProgress": "Dela min framgång",
-    "shareIntro": "Min Sacred Healing-resa:",
-    "shareTitle": "Min Sacred Healing-framgång",
+    "shareIntro": "Min Siddha Quantum Nexus-resa:",
+    "shareTitle": "Min Siddha Quantum Nexus-framgång",
     "shareJoinPath": "Följ mig på denna förvandlande väg!",
     "sharedSuccess": "Delat!",
     "copiedToClipboard": "Framgång kopierad till urklipp!",

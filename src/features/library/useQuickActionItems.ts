@@ -46,7 +46,7 @@ function meditationToUniversal(m: Meditation): UniversalAudioItem & { tags?: str
   return {
     id: m.id,
     title: m.title,
-    artist: "Sacred Healing",
+    artist: "Siddha Quantum Nexus",
     audio_url: m.audio_url,
     cover_image_url: m.cover_image_url,
     duration_seconds: m.duration_minutes * 60,
@@ -99,7 +99,7 @@ export function useQuickActionItems() {
         list.push({
           id: "quick-action-fixture-calm",
           title: "2-min Reset",
-          artist: "Sacred Healing",
+          artist: "Siddha Quantum Nexus",
           audio_url: "", // no play; verifies resolver picks by tags+duration
           cover_image_url: null,
           duration_seconds: 120,

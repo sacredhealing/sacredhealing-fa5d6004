@@ -1,7 +1,7 @@
 {
   "id": "https://sacredhealing.lovable.app/",
-  "name": "Sacred Healing - Awaken Your Inner Light",
-  "short_name": "Sacred Healing",
+  "name": "Siddha Quantum Nexus - Awaken Your Inner Light",
+  "short_name": "Siddha Quantum Nexus",
   "description": "Transform your life with guided meditations, healing courses, and spiritual growth. Earn SHC tokens as you progress on your journey.",
   "start_url": "/",
   "display_override": ["standalone", "minimal-ui", "browser"],

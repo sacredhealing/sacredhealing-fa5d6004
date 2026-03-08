@@ -63,8 +63,8 @@ const InviteFriends: React.FC = () => {
             Share on Social Media
           </h3>
           <SocialShare 
-            title="Sacred Healing App"
-            text="Join me on Sacred Healing - Transform your spiritual journey and earn SHC tokens! 🧘‍♀️✨"
+            title="Siddha Quantum Nexus App"
+            text="Join me on Siddha Quantum Nexus - Transform your spiritual journey and earn SHC tokens! 🧘‍♀️✨"
           />
         </Card>
       </div>
