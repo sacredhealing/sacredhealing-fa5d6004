@@ -26,7 +26,7 @@ import { Award, Flame, Target, Share2, Users, Star, Sparkles, Heart, Crown, Cale
 import type { DailyGuidance } from '@/hooks/useDailyGuidance';
 import type { SessionLike } from '@/hooks/useDashboardAutostart';
 
-const ACHIEVEMENT_ICON_MAP: Record<string, React.ComponentType<{ className?: string; size?: number }>> = {
+const ACHIEVEMENT_ICON_MAP: Record<string, React.ComponentType<{ className?: string; size?: string | number }>> = {
   Award, Flame, Target, Share2, Users, Star, Sparkles, Heart, Crown, Calendar,
 };
 
