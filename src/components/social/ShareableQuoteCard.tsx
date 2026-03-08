@@ -14,7 +14,7 @@ interface ShareableQuoteCardProps {
 
 export const ShareableQuoteCard: React.FC<ShareableQuoteCardProps> = ({
   quote,
-  author = 'Sacred Healing',
+  author = 'Siddha Quantum Nexus',
   category,
   onShare,
 }) => {
