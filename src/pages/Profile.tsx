@@ -670,7 +670,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
         </div>
 
         <h1 className="hero-name">{userName}</h1>
-        <div className="soul-label">528Hz Resonance <span>·</span> {dashaCycle} Cycle Active</div>
+        <div className="soul-label">528Hz Resonance <span>·</span> {dashaCycle} Cycle <span>·</span> Active</div>
 
 
         <div className="stats-row">
