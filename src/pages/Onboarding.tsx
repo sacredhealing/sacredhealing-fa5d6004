@@ -219,14 +219,14 @@ const Onboarding: React.FC = () => {
           {currentStep === 4 && (
             <>
               <h2 className="text-white font-[300] italic text-[3rem] leading-tight text-center mb-2" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-                Your Sovereign Path
+                {t('onboarding.sovereignPath')}
               </h2>
               <p className="text-white/40 text-[9px] font-normal tracking-[0.4em] uppercase text-center mb-6" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                AKASHA-NEURAL ARCHIVE · TRANSMISSION LOCKED
+                {t('onboarding.transmissionLocked')}
               </p>
               <div className="rounded-3xl border border-[#D4AF37]/20 bg-white/[0.02] backdrop-blur-xl p-8">
                 <p className="text-[#D4AF37] text-[8px] font-extrabold tracking-widest uppercase mb-4" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                  ◈ YOUR FIELD HAS BEEN READ
+                  {t('onboarding.fieldRead')}
                 </p>
                 <PathRecommendation userGoals={data.goals} />
               </div>
