@@ -229,6 +229,18 @@ const MeditationSectionSQI: React.FC<{
   );
 };
 
+const SacredCommissionCard: React.FC<{ icon: string; price: string; title: string; subtitle: string }> = ({ icon, price, title, subtitle }) => (
+  <div className="commission-card">
+    <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg, rgba(212,175,55,0.12), rgba(212,175,55,0.04))', border: '1px solid rgba(212,175,55,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{icon}</div>
+    <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.6)', marginBottom: 2 }}>{price}</div>
+      <div style={{ fontWeight: 700, fontSize: 14, color: 'rgba(255,255,255,0.9)', marginBottom: 1 }}>{title}</div>
+      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)' }}>{subtitle}</div>
+    </div>
+    <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 18, flexShrink: 0 }}>›</div>
+  </div>
+);
+
 const Meditations: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
