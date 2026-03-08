@@ -200,10 +200,10 @@ const Onboarding: React.FC = () => {
           {currentStep === 3 && (
             <>
               <h2 className="text-white font-[300] italic text-[3rem] leading-tight text-center mb-2" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-                Set your sacred rhythm
+                {t('onboarding.sacredRhythm')}
               </h2>
               <p className="text-white/40 text-[9px] font-normal tracking-[0.4em] uppercase text-center mb-8" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                YOUR FIELD WILL BE PRIMED AT THESE MOMENTS
+                {t('onboarding.fieldPrimed')}
               </p>
               <TimeSelector
                 morningTime={data.morningTime}
