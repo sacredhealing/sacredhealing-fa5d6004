@@ -528,8 +528,8 @@ const Dashboard: React.FC = () => {
                       key={achievement.id}
                       className={`sq-ach-badge ${progress.unlocked ? 'sq-ach-badge-unlocked' : 'sq-ach-badge-locked'}`}
                     >
-                      <div style={{ marginBottom: 5, color: 'rgba(212,175,55,0.75)' }}>
-                        <IconComponent size={20} />
+                      <div style={{ marginBottom: 6, color: progress.unlocked ? 'rgba(212,175,55,0.9)' : 'rgba(212,175,55,0.5)', filter: progress.unlocked ? 'drop-shadow(0 0 4px rgba(212,175,55,0.3))' : 'none' }}>
+                        <IconComponent size={22} />
                       </div>
                       <div className="sq-ach-name">{nameUpper.slice(0, 20)}{nameUpper.length > 20 ? '…' : ''}</div>
                       {progress.unlocked && achievement.shc_reward != null && achievement.shc_reward > 0 ? (
