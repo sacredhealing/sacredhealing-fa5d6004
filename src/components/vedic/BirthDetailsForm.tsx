@@ -62,13 +62,16 @@ export const BirthDetailsForm: React.FC<BirthDetailsFormProps> = ({ onSaved, ini
     try {
       const { error } = await (supabase as any)
         .from('profiles')
-        .update({
-          birth_name: formData.birth_name.trim(),
-          birth_date: formData.birth_date,
-          birth_time: formData.birth_time,
-          birth_place: formData.birth_place.trim(),
-        })
-        .eq('user_id', user.id);
+        .upsert(
+          {
+            user_id: user.id,
+            birth_name: formData.birth_name.trim(),
+            birth_date: formData.birth_date,
+            birth_time: formData.birth_time,
+            birth_place: formData.birth_place.trim(),
+          },
+          { onConflict: 'user_id' }
+        );
 
       if (error) throw error;
 

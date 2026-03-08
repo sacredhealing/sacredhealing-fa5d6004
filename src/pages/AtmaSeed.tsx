@@ -29,7 +29,7 @@ const AtmaSeed: React.FC = () => {
       .from('profiles')
       .select('birth_name, birth_date, birth_time, birth_place')
       .eq('user_id', user.id)
-      .single()
+      .maybeSingle()
       .then(({ data }) => {
         if (data?.birth_date && data?.birth_time && data?.birth_place) {
           setHasBirthData(true);
@@ -93,13 +93,16 @@ const AtmaSeed: React.FC = () => {
     try {
       const { error } = await (supabase as any)
         .from('profiles')
-        .update({
-          birth_name: birthData.birth_name.trim(),
-          birth_date: birthData.birth_date,
-          birth_time: birthData.birth_time,
-          birth_place: birthData.birth_place.trim(),
-        })
-        .eq('user_id', user.id);
+        .upsert(
+          {
+            user_id: user.id,
+            birth_name: birthData.birth_name.trim(),
+            birth_date: birthData.birth_date,
+            birth_time: birthData.birth_time,
+            birth_place: birthData.birth_place.trim(),
+          },
+          { onConflict: 'user_id' }
+        );
       if (error) throw error;
       setIsSaved(true);
       setHasBirthData(true);

@@ -96,6 +96,12 @@ const VedicAstrology: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    if (!user) {
+      setBirthDetails(null);
+      setHasBirthDetails(false);
+      setCachedBirth(null);
+      return;
+    }
     fetchBirthDetails();
   }, [user]);  
 
