@@ -664,7 +664,7 @@ function DigitalNadiInner() {
 
 // Export with membership/admin gating
 export default function DigitalNadi() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { isAdmin, isPremium, loading: membershipLoading } = useMembership();
 
   if (authLoading || membershipLoading) {
