@@ -110,7 +110,7 @@ const PractitionerCertification = () => {
   ];
 
   const outcomes = [
-    "Work independently as a Sacred Healing Vibration Practitioner",
+    "Work independently as a Siddha Quantum Nexus Vibration Practitioner",
     "Support clients in nervous system regulation, trauma healing, and energy balancing",
     "Apply sound, mantra, meditation, and yogic practices professionally",
     "Expand intuition and deepen connection with the heart"
