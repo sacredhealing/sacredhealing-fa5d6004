@@ -1059,12 +1059,12 @@ const Meditations: React.FC = () => {
       </div>
 
       {/* ✅ FIX 10: Now-Playing Floating Bar */}
-      {currentAudio && currentAudio.type === 'meditation' && (
+      {currentAudio && currentAudio.contentType === 'meditation' && (
         <NowPlayingBar
           audio={currentAudio}
           isPlaying={isPlaying}
           progress={playerProgress ?? 0}
-          onToggle={togglePlayPause}
+          onToggle={togglePlay}
         />
       )}
     </div>
