@@ -20,7 +20,7 @@ export const ShareableQuoteCard: React.FC<ShareableQuoteCardProps> = ({
 }) => {
   const handleShare = async () => {
     const shareUrl = 'https://sacredhealing.lovable.app?utm_source=share&utm_medium=quote';
-    const shareText = `"${quote}"\n\n— ${author}\n\n✨ Discover daily wisdom at Sacred Healing`;
+    const shareText = `"${quote}"\n\n— ${author}\n\n✨ Discover daily wisdom at Siddha Quantum Nexus`;
 
     if (navigator.share) {
       try {
