@@ -24,24 +24,55 @@ import { HealingLanguageToggle } from '@/features/healing/HealingLanguageToggle'
 import { getHealingSessions, type HealingSessionItem } from '@/features/healing/getHealingSessions';
 import { useJyotishProfile } from '@/hooks/useJyotishProfile';
 
+/* ─── SQI-2050 INLINE STYLES ─── */
+const H_CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Cinzel:wght@400;500;600&display=swap');
+  :root { --h-gold:#D4AF37; --h-gold2:#F5E17A; --h-black:#050505; --h-glass:rgba(255,255,255,0.02); --h-border:rgba(255,255,255,0.05); --h-muted:rgba(255,255,255,0.42); --h-cyan:#22D3EE; --h-green:#10B981; --r40:40px; }
+  .h-page { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--h-black); color: rgba(255,255,255,0.9); min-height: 100vh; overflow-x: hidden; }
+  .h-glass { background: var(--h-glass); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); border: 1px solid var(--h-border); border-radius: var(--r40); transition: border-color .3s; }
+  .h-glass:hover { border-color: rgba(212,175,55,.12); }
+  @keyframes hShimmer { 0%{background-position:-200% center} 100%{background-position:200% center} }
+  .h-shimmer { background: linear-gradient(135deg,#D4AF37 0%,#F5E17A 40%,#D4AF37 60%,#A07C10 100%); background-size: 200% auto; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: hShimmer 5s linear infinite; }
+  @keyframes hNadi { 0%,100%{opacity:.6} 50%{opacity:1;filter:drop-shadow(0 0 8px rgba(212,175,55,.7))} }
+  .h-nadi { animation: hNadi 3s ease-in-out infinite; color: var(--h-gold); }
+  @keyframes hOrb { 0%,100%{transform:translateY(0) rotate(0deg);opacity:.2} 50%{transform:translateY(-18px) rotate(180deg);opacity:.5} }
+  .h-orb { position: absolute; border-radius: 50%; background: radial-gradient(circle, rgba(212,175,55,.18), transparent 70%); pointer-events: none; animation: hOrb var(--dur,10s) ease-in-out infinite; animation-delay: var(--dl,0s); }
+  .h-hero { position: relative; min-height: 85vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 28px 80px; text-align: center; overflow: hidden; }
+  .h-hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 80% 60% at 50% 30%, rgba(212,175,55,.07) 0%, transparent 65%), radial-gradient(ellipse 60% 40% at 20% 80%, rgba(34,211,238,.03) 0%, transparent 60%); pointer-events: none; }
+  .h-hero-title { font-family: 'Cinzel', serif; font-size: clamp(26px,7vw,40px); font-weight: 600; letter-spacing: .04em; line-height: 1.1; margin-bottom: 20px; }
+  .h-section-title { font-family: 'Cinzel', serif; font-size: clamp(18px,5vw,24px); font-weight: 500; letter-spacing: .06em; margin-top: 6px; }
+  .h-micro { font-size: 8px; font-weight: 800; letter-spacing: .5em; text-transform: uppercase; color: rgba(212,175,55,.45); }
+  .h-vedic { background: linear-gradient(135deg, rgba(16,185,129,.05), rgba(34,211,238,.04)); border: 1px solid rgba(16,185,129,.18); border-radius: var(--r40); padding: 18px 22px; }
+  @keyframes hIconPulse { 0%,100%{box-shadow:0 0 14px rgba(212,175,55,.35)} 50%{box-shadow:0 0 28px rgba(212,175,55,.65)} }
+  .h-how-icon { width: 56px; height: 56px; border-radius: 18px; background: linear-gradient(135deg, rgba(212,175,55,.22), rgba(255,215,80,.1) 50%, rgba(212,175,55,.06)); border: 1.5px solid rgba(212,175,55,.55); display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 16px; color: #D4AF37; }
+  .h-diff-old { padding: 12px 18px; font-size: 12px; color: rgba(255,255,255,.28); text-decoration: line-through; background: rgba(255,0,0,.025); }
+  .h-diff-new { padding: 12px 18px; font-size: 13px; font-weight: 700; color: rgba(255,255,255,.82); border-top: 1px solid rgba(212,175,55,.07); background: rgba(212,175,55,.03); display: flex; align-items: center; gap: 8px; }
+  .h-track { display: flex; align-items: center; gap: 14px; padding: 14px 18px; background: rgba(255,255,255,.015); border: 1px solid rgba(255,255,255,.05); border-radius: 20px; cursor: pointer; transition: all .2s; }
+  .h-track:hover { border-color: rgba(212,175,55,.18); background: rgba(212,175,55,.03); }
+  .h-play-btn { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; background: linear-gradient(135deg, rgba(212,175,55,.12), rgba(212,175,55,.04)); border: 1px solid rgba(212,175,55,.22); display: flex; align-items: center; justify-content: center; color: #D4AF37; transition: all .22s; }
+  .h-track:hover .h-play-btn { background: linear-gradient(135deg, #D4AF37, #B8960C); color: #050505; box-shadow: 0 0 18px rgba(212,175,55,.45); }
+  .h-testimonial { padding: 18px 20px; background: rgba(255,255,255,.015); border: 1px solid rgba(255,255,255,.04); border-radius: 24px; }
+  .h-pricing { background: linear-gradient(135deg, rgba(139,92,246,.08), rgba(212,175,55,.05)); border: 1px solid rgba(212,175,55,.18); border-radius: var(--r40); padding: 30px 24px 24px; text-align: center; position: relative; overflow: hidden; }
+  .h-pricing::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(212,175,55,.08), transparent 65%); }
+  .h-tier-btn { flex: 1; min-width: 88px; padding: 12px 14px; border-radius: 100px; font-size: 12px; font-weight: 800; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08); color: rgba(255,255,255,.7); cursor: pointer; font-family: inherit; transition: all .22s; }
+  .h-tier-btn:hover, .h-tier-btn.h-active { background: linear-gradient(135deg, rgba(212,175,55,.12), rgba(212,175,55,.04)); border-color: rgba(212,175,55,.3); color: #D4AF37; box-shadow: 0 0 16px rgba(212,175,55,.12); }
+  .h-cta-btn { width: 100%; padding: 15px; border-radius: 100px; background: linear-gradient(135deg, #D4AF37, #B8960C); color: #050505; font-size: 13px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; border: none; cursor: pointer; font-family: inherit; box-shadow: 0 0 28px rgba(212,175,55,.4); transition: all .25s; display: flex; align-items: center; justify-content: center; gap: 9px; }
+  .h-cta-btn:hover { box-shadow: 0 0 50px rgba(212,175,55,.65); transform: scale(1.02); }
+  .h-divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(212,175,55,.1), transparent); margin: 0 22px 32px; }
+`;
+
 const JyotishHealingCard = () => {
   const jyotish = useJyotishProfile();
-  if (jyotish.isLoading) return null;
+  if (jyotish.isLoading || !jyotish.mahadasha) return null;
   return (
-    <div className="mx-4 mb-4 p-4 rounded-2xl bg-gradient-to-r from-amber-900/20 to-emerald-900/20 border border-amber-800/20">
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-emerald-400">🔱</span>
-        <span className="text-sm font-serif text-amber-300 uppercase tracking-wider">
-          Vedic Healing Insight
-        </span>
+    <div className="h-vedic" style={{ margin: '0 22px 24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+        <span style={{ color: '#10B981', fontSize: 15 }}>⚕</span>
+        <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.4em', textTransform: 'uppercase', color: 'rgba(16,185,129,.7)' }}>Vedic Healing Insight</span>
       </div>
-      <p className="text-sm text-amber-100/70 mb-1">
-        During your <strong className="text-amber-200">{jyotish.mahadasha}/{jyotish.antardasha}</strong> period,{' '}
-        <strong className="text-amber-200">{jyotish.doshaImbalance}</strong> may occur.
-      </p>
-      <p className="text-sm text-amber-100/50">
-        {jyotish.healingFocus} can help restore balance during your {jyotish.bhriguCycle} cycle.
-      </p>
+      <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,.5)', lineHeight: 1.65 }}>
+        During your <strong style={{ color: '#D4AF37' }}>{jyotish.mahadasha}/{jyotish.antardasha}</strong> period, <strong style={{ color: '#D4AF37' }}>{jyotish.doshaImbalance}</strong> may occur. {jyotish.healingFocus} can help restore balance during your {jyotish.bhriguCycle} cycle.
+      </div>
     </div>
   );
 };
@@ -468,283 +499,272 @@ const Healing: React.FC = () => {
   const scrollToBooking = () => { document.getElementById('booking-section')?.scrollIntoView({ behavior: 'smooth' }); };
 
   // ============================================================
-  // RENDER
+  // RENDER — SQI-2050 UI, all logic preserved
   // ============================================================
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
-    <div>
-    <>
+    <div className="h-page">
+      <style>{H_CSS}</style>
       <IntentionThreshold isOpen={showThreshold} onSelectIntention={handleIntentionSelected} onClose={handleThresholdClose} />
 
-      <div className="min-h-screen bg-[#0a0a0a] text-white">
+      {/* ══ HERO ══ */}
+      <section className="h-hero">
+        <div className="h-orb" style={{ width: 220, height: 220, top: -80, right: -70, '--dur': '12s', '--dl': '0s' } as React.CSSProperties & { '--dur': string; '--dl': string }} />
+        <div className="h-orb" style={{ width: 120, height: 120, top: '60%', left: -40, '--dur': '8s', '--dl': '-4s' } as React.CSSProperties & { '--dur': string; '--dl': string }} />
+        <div className="h-orb" style={{ width: 80, height: 80, bottom: 100, right: 20, '--dur': '7s', '--dl': '-2s' } as React.CSSProperties & { '--dur': string; '--dl': string }} />
 
-        {/* ========== SECTION 1: HERO ========== */}
-        <section className="relative min-h-[85vh] flex flex-col items-center justify-center text-center px-6 overflow-hidden">
-          {/* Background glow */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(212,175,55,0.08)_0%,transparent_70%)]" />
-          {/* Sri Yantra background */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-[0.06] pointer-events-none">
-            <div className="w-[600px] h-[600px]">
-              <SriYantra className="w-full h-full" variant="gold" />
-            </div>
-          </div>
+        <button type="button" style={{ position: 'absolute', top: 52, left: 22, width: 36, height: 36, borderRadius: 12, background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'rgba(255,255,255,.4)', fontSize: 14, fontFamily: 'inherit' }} onClick={() => navigate(-1)}>←</button>
 
-          <div className="relative z-10 max-w-2xl mx-auto space-y-6">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#D4AF37] leading-tight" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
-              {T.heroTitle}
-            </h1>
-            <p className="text-white/70 text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
-              {T.heroSubtitle}
-            </p>
-            <button
-              onClick={scrollToBooking}
-              className="inline-flex items-center gap-2 px-8 py-4 bg-[#D4AF37] text-black font-bold rounded-full text-base hover:bg-[#c4a030] transition"
-            >
-              <Sparkles className="w-5 h-5" />
-              {T.heroCta}
-            </button>
-          </div>
+        <div className="h-micro" style={{ marginBottom: 16 }}>Siddha-Quantum Healing Portal · Avataric Blueprint Active</div>
+        <h1 className="h-hero-title h-shimmer">
+          {T.heroTitle}
+        </h1>
+        <p style={{ fontSize: 14, color: 'rgba(255,255,255,.42)', lineHeight: 1.75, maxWidth: 320, marginBottom: 32 }}>
+          {T.heroSubtitle}
+        </p>
+        <button type="button" className="h-cta-btn" style={{ width: 'auto', padding: '16px 36px' }} onClick={scrollToBooking}>
+          <Sparkles size={15} className="h-nadi" />
+          {T.heroCta}
+        </button>
+      </section>
 
-          {/* Scroll hint */}
-          <div className="absolute bottom-8 animate-bounce text-[#D4AF37]/40">
-            <ChevronDown className="w-6 h-6" />
-          </div>
-        </section>
-
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 space-y-16 pb-24">
-
-          {/* Language toggle */}
-          <section className="flex flex-wrap items-center gap-3 rounded-xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 px-4 py-2.5">
-            <span className="text-[#D4AF37]/70 text-sm font-medium">Language</span>
-            <HealingLanguageToggle language={language} setLanguage={setLanguage} />
-          </section>
-
-          <MeditationMembershipBanner />
-
-          <JyotishHealingCard />
-
-          {/* ========== SECTION 2: HEALER'S STATEMENT ========== */}
-          <section className="relative">
-            <div className="border-l-2 border-[#D4AF37]/40 pl-6 sm:pl-8 space-y-4">
-              <h2 className="text-xl sm:text-2xl font-bold text-[#D4AF37]" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
-                {T.statementTitle}
-              </h2>
-              {T.statementBody.split('\n\n').map((para, i) => (
-                <p key={i} className="text-white/75 leading-relaxed text-sm sm:text-base italic">
-                  {para}
-                </p>
-              ))}
-            </div>
-          </section>
-
-          {/* ========== SECTION 3: HOW IT WORKS ========== */}
-          <section className="space-y-8">
-            <h2 className="text-xl sm:text-2xl font-bold text-center text-[#D4AF37]" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
-              {T.howTitle}
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[
-                { icon: <Waves className="w-6 h-6" />, title: T.howCard1Title, body: T.howCard1Body },
-                { icon: <Flame className="w-6 h-6" />, title: T.howCard2Title, body: T.howCard2Body },
-                { icon: <Music className="w-6 h-6" />, title: T.howCard3Title, body: T.howCard3Body },
-              ].map((card, i) => (
-                <div key={i} className="rounded-2xl border border-[#D4AF37]/20 bg-[#111] p-6 space-y-3 hover:border-[#D4AF37]/40 transition">
-                  <div className="w-12 h-12 rounded-full bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37]">
-                    {card.icon}
-                  </div>
-                  <h3 className="text-lg font-bold text-white">{card.title}</h3>
-                  <p className="text-white/60 text-sm leading-relaxed">{card.body}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* ========== SECTION 4: COMPARISON ========== */}
-          <section className="space-y-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-center text-[#D4AF37]" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
-              {T.compTitle}
-            </h2>
-            <div className="space-y-3">
-              {[
-                [T.comp1L, T.comp1R], [T.comp2L, T.comp2R], [T.comp3L, T.comp3R], [T.comp4L, T.comp4R],
-              ].map(([left, right], i) => (
-                <div key={i} className="rounded-xl border border-[#D4AF37]/15 bg-[#111] overflow-hidden">
-                  <div className="px-4 py-2.5 text-white/35 text-sm line-through decoration-white/20">{left}</div>
-                  <div className="px-4 py-3 bg-[#D4AF37]/8 text-[#D4AF37] text-sm font-medium border-t border-[#D4AF37]/10">
-                    → {right}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* ========== DIRECT HEALING CTA ========== */}
-          <section className="rounded-2xl overflow-hidden border-2 border-[#D4AF37]" style={{ boxShadow: '0 0 30px rgba(212,175,55,0.15)' }}>
-            <div className="bg-gradient-to-r from-[#1a0b2e] to-[#0a0a0a] p-8 text-center space-y-4">
-              <h2 className="text-xl sm:text-2xl font-bold text-white" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
-                {T.directTitle}
-              </h2>
-              <p className="text-white/70 text-sm max-w-lg mx-auto">{T.directSub}</p>
-              <Link to="/private-sessions">
-                <Button size="lg" className="bg-[#D4AF37] text-black font-semibold hover:bg-[#c4a030]">
-                  <Sparkles className="w-5 h-5 mr-2" />
-                  {T.directCta}
-                </Button>
-              </Link>
-            </div>
-          </section>
-
-          {/* Journey card - collapsible on mobile */}
-          <details className="rounded-xl border border-[#D4AF37]/15 bg-[#111] overflow-hidden group">
-            <summary className="flex items-center justify-between p-4 cursor-pointer list-none">
-              <div className="flex items-center gap-3">
-                <Sparkles className="w-5 h-5 text-[#D4AF37]" />
-                <span className="font-semibold text-white text-sm">Your Healing Journey</span>
-              </div>
-              <ChevronDown className="w-4 h-4 text-[#D4AF37]/50 group-open:rotate-180 transition-transform" />
-            </summary>
-            <div className="px-4 pb-4">
-              <HealingProgressCard variant="full" />
-            </div>
-          </details>
-
-          {/* ========== SECTION 5: MEDITATIONS ========== */}
-          <section className="space-y-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-center text-[#D4AF37]" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
-              {T.medTitle}
-            </h2>
-
-            <Tabs defaultValue="free" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-2 h-11 bg-white/5 border border-[#D4AF37]/20">
-                <TabsTrigger value="free" className="data-[state=active]:bg-[#D4AF37]/20 data-[state=active]:text-[#D4AF37] text-white/60">
-                  {T.medCat1}
-                </TabsTrigger>
-                <TabsTrigger value="premium" className="data-[state=active]:bg-[#D4AF37]/20 data-[state=active]:text-[#D4AF37] text-white/60">
-                  {T.medCat3}
-                </TabsTrigger>
-              </TabsList>
-
-              <p className="text-center text-[#D4AF37]/50 text-xs uppercase tracking-widest">{T.medEncoded}</p>
-
-              <TabsContent value="free" className="space-y-3 mt-4">
-                {freeSessions.length > 0 ? freeSessions.map((audio) => (
-                  <SessionRow key={audio.id} audio={audio as HealingAudio} isPlaying={isHealingPlaying(audio.id)} onTogglePlay={initiatePlay} formatDuration={formatDuration} isAdmin={isAdmin} ownedAudioIds={ownedAudioIds} hasHealingAccess={hasHealingAccess} onPurchase={handlePurchaseAudio} isProcessing={isProcessing} T={T} formatEnergyExchange={formatEnergyExchange} isPremiumTier={false} onRequestUpgrade={() => {}} />
-                )) : (
-                  <div className="py-8 text-center text-white/40 text-sm">{T.noSessions}</div>
-                )}
-              </TabsContent>
-              <TabsContent value="premium" className="space-y-3 mt-4">
-                {premiumSessions.length > 0 ? premiumSessions.map((audio) => (
-                  <SessionRow key={audio.id} audio={audio as HealingAudio} isPlaying={isHealingPlaying(audio.id)} onTogglePlay={initiatePlay} formatDuration={formatDuration} isAdmin={isAdmin} ownedAudioIds={ownedAudioIds} hasHealingAccess={hasHealingAccess} onPurchase={handlePurchaseAudio} isProcessing={isProcessing} T={T} formatEnergyExchange={formatEnergyExchange} isPremiumTier onRequestUpgrade={() => setUpgradeSheetOpen(true)} />
-                )) : (
-                  <div className="py-8 text-center text-white/40 text-sm">{T.noSessions}</div>
-                )}
-              </TabsContent>
-            </Tabs>
-
-            <Button variant="outline" className="w-full border-[#D4AF37]/30 text-[#D4AF37] hover:bg-[#D4AF37]/10" onClick={() => navigate('/meditations')}>
-              {T.viewAll}
-            </Button>
-          </section>
-
-          {/* ========== SECTION 6: TESTIMONIALS ========== */}
-          <section className="space-y-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-center text-[#D4AF37]" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
-              {T.testimTitle}
-            </h2>
-            <p className="text-white/40 text-sm text-center">{T.testimSub}</p>
-
-            {/* Video testimonials */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {testimonialVideos.map((url, j) => (
-                <div key={j} className="aspect-video rounded-xl overflow-hidden border border-[#D4AF37]/20">
-                  <iframe className="w-full h-full" src={url} title={`Testimonial ${j + 1}`} frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
-                </div>
-              ))}
-            </div>
-
-            {/* Text testimonials */}
-            <div className="space-y-4">
-              {testimonials.filter((x): x is typeof x & { text: string } => 'text' in x && !!x.text).slice(0, testimonialsExpanded ? 99 : 2).map((t, i) => (
-                <div key={i} className="rounded-xl border border-[#D4AF37]/15 bg-[#111] p-5">
-                  <div className="text-[#D4AF37]/30 text-4xl font-serif leading-none mb-2">"</div>
-                  <p className="text-white/70 italic text-sm leading-relaxed">{t.text}</p>
-                  <p className="text-[#D4AF37]/60 text-xs mt-3 font-semibold">— {t.name}</p>
-                </div>
-              ))}
-              {testimonials.filter((x) => 'text' in x).length > 2 && (
-                <Button variant="ghost" className="w-full text-[#D4AF37]/60 hover:text-[#D4AF37]" onClick={() => setTestimonialsExpanded(!testimonialsExpanded)}>
-                  {testimonialsExpanded ? T.seeLess : T.seeMore}
-                </Button>
-              )}
-            </div>
-          </section>
-
-          {/* ========== SECTION 7: FAQ ========== */}
-          <section className="space-y-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-center text-[#D4AF37]" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
-              {T.faqTitle}
-            </h2>
-            <Accordion type="multiple" className="space-y-2">
-              {[
-                { q: T.faq1Q, a: T.faq1A }, { q: T.faq2Q, a: T.faq2A }, { q: T.faq3Q, a: T.faq3A },
-                { q: T.faq4Q, a: T.faq4A }, { q: T.faq5Q, a: T.faq5A }, { q: T.faq6Q, a: T.faq6A },
-              ].map((faq, i) => (
-                <AccordionItem key={i} value={`faq-${i}`} className="border border-[#D4AF37]/15 rounded-xl px-5 bg-[#111]">
-                  <AccordionTrigger className="text-left text-white/90 hover:no-underline text-sm py-4">
-                    {faq.q}
-                  </AccordionTrigger>
-                  <AccordionContent className="text-white/60 text-sm leading-relaxed pb-4">
-                    {faq.a}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </section>
-
-          {/* ========== SECTION 8: BOOKING ========== */}
-          <section id="booking-section" className="scroll-mt-8 space-y-6">
-            {!hasHealingAccess ? (
-              <div className="rounded-2xl border-2 border-[#D4AF37]/30 bg-gradient-to-b from-[#1a0b2e]/50 to-[#0a0a0a] p-8 sm:p-12 text-center space-y-6">
-                <h2 className="text-2xl sm:text-3xl font-bold text-white" style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}>
-                  {T.bookingTitle}
-                </h2>
-                <p className="text-white/50 text-sm max-w-lg mx-auto">{T.bookingSub}</p>
-
-                <div className="flex flex-wrap justify-center gap-3">
-                  {HEALING_PLANS.map((plan) => (
-                    <button
-                      key={plan.id}
-                      onClick={() => openPaymentModal(plan)}
-                      disabled={isProcessing}
-                      className={`px-6 py-4 rounded-full font-bold text-base transition border-2 ${selectedPlan?.id === plan.id ? 'border-[#D4AF37] bg-[#D4AF37]/20 text-[#D4AF37]' : 'border-[#D4AF37]/30 bg-transparent text-[#D4AF37]/80 hover:border-[#D4AF37]/60'} disabled:opacity-50`}
-                    >
-                      {plan.days} {T.days} — €{plan.price}
-                    </button>
-                  ))}
-                </div>
-
-                <button
-                  onClick={handleSubscriptionStripe}
-                  disabled={isProcessing}
-                  className="px-8 py-3 border border-[#D4AF37]/30 text-[#D4AF37]/70 rounded-full text-sm hover:border-[#D4AF37]/50 transition disabled:opacity-50"
-                >
-                  {T.bookingOngoing} — €147/{lang === 'sv' ? 'mån' : lang === 'no' ? 'mnd' : lang === 'es' ? 'mes' : 'mo'}
-                </button>
-
-                <p className="text-white/30 text-xs max-w-md mx-auto">{T.bookingDisclosure}</p>
-              </div>
-            ) : (
-              <div className="rounded-xl border border-green-500/30 bg-green-500/10 p-5 flex items-center gap-3">
-                <CheckCircle className="w-6 h-6 text-green-500 shrink-0" />
-                <span className="text-green-400 font-medium">{T.activeAccess}</span>
-              </div>
-            )}
-          </section>
-
-          <ReviewSection contentType="healing" contentId="general" />
+      {/* Language toggle */}
+      <div style={{ padding: '0 22px', marginBottom: 24 }}>
+        <div className="h-glass" style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,.4)' }}>🌐 {t('healing.langLabel', 'Meditation language')}</span>
+          <HealingLanguageToggle language={language} setLanguage={setLanguage} />
         </div>
       </div>
+
+      <MeditationMembershipBanner />
+
+      <JyotishHealingCard />
+
+      {/* HealingProgressCard */}
+      <div style={{ padding: '0 22px', marginBottom: 24 }}>
+        <HealingProgressCard variant="full" />
+      </div>
+
+      <div className="h-divider" />
+
+      {/* Evolution of Grace */}
+      <section style={{ padding: '0 22px 32px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 20 }}>
+          <div className="h-micro" style={{ marginBottom: 6 }}>Avataric Blueprint · Origin Story</div>
+          <div className="h-section-title h-shimmer">{T.statementTitle}</div>
+        </div>
+        <div className="h-glass" style={{ padding: '28px 26px' }}>
+          {T.statementBody.split('\n\n').map((para, i) => (
+            <p key={i} style={{ fontSize: 13, color: 'rgba(255,255,255,.55)', lineHeight: 1.8, fontStyle: 'italic', marginBottom: i === 0 ? 14 : 0 }}>{para}</p>
+          ))}
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section style={{ padding: '0 22px 32px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 20 }}>
+          <div className="h-micro" style={{ marginBottom: 6 }}>Prema-Pulse Mechanics</div>
+          <div className="h-section-title h-shimmer">{T.howTitle}</div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {[
+            { icon: '◈', title: T.howCard1Title, body: T.howCard1Body },
+            { icon: '⟁', title: T.howCard2Title, body: T.howCard2Body },
+            { icon: '☽◯☾', title: T.howCard3Title, body: T.howCard3Body },
+          ].map((card) => (
+            <div key={card.title} className="h-glass" style={{ padding: '26px 24px' }}>
+              <div className="h-how-icon">{card.icon}</div>
+              <div style={{ fontSize: 14, fontWeight: 800, letterSpacing: '-.01em', marginBottom: 8 }}>{card.title}</div>
+              <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,.5)', lineHeight: 1.65 }}>{card.body}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Why different */}
+      <section style={{ padding: '0 22px 32px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 20 }}>
+          <div className="h-micro" style={{ marginBottom: 6 }}>Bhakti-Algorithm Comparison</div>
+          <div className="h-section-title h-shimmer">{T.compTitle}</div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {[[T.comp1L, T.comp1R], [T.comp2L, T.comp2R], [T.comp3L, T.comp3R], [T.comp4L, T.comp4R]].map(([left, right], i) => (
+            <div key={i} style={{ background: 'rgba(255,255,255,.015)', border: '1px solid rgba(255,255,255,.04)', borderRadius: 20, overflow: 'hidden' }}>
+              <div className="h-diff-old">{left}</div>
+              <div className="h-diff-new"><span style={{ color: '#D4AF37' }}>→</span> {right}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Direct Healing CTA */}
+      <div style={{ margin: '0 22px 32px', background: 'linear-gradient(135deg,rgba(139,92,246,.07),rgba(212,175,55,.05))', border: '1px solid rgba(212,175,55,.2)', borderRadius: 40, padding: '30px 24px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 70% 50% at 50% 0%,rgba(212,175,55,.07),transparent 65%)', pointerEvents: 'none' }} />
+        <div className="h-section-title h-shimmer" style={{ marginBottom: 10 }}>{T.directTitle}</div>
+        <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,.45)', lineHeight: 1.65, marginBottom: 24 }}>{T.directSub}</div>
+        <Link to="/private-sessions">
+          <button type="button" className="h-cta-btn" style={{ width: 'auto', padding: '16px 36px', display: 'inline-flex' }}>
+            <Sparkles size={15} className="h-nadi" />
+            {T.directCta}
+          </button>
+        </Link>
+      </div>
+
+      {/* Your Healing Journey accordion */}
+      <div style={{ padding: '0 22px 32px' }}>
+        <Accordion type="single" collapsible>
+          <AccordionItem value="journey" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.05)', borderRadius: 40, overflow: 'hidden' }}>
+            <AccordionTrigger style={{ padding: '20px 24px', fontWeight: 800, fontSize: 14 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <Sparkles size={15} style={{ color: '#D4AF37' }} />
+                {t('healing.journeyTitle', 'Your Healing Journey')}
+              </div>
+            </AccordionTrigger>
+            <AccordionContent style={{ padding: '0 24px 20px' }}>
+              <HealingProgressCard variant="full" />
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </div>
+
+      <div className="h-divider" />
+
+      {/* Sonic Treatments */}
+      <section style={{ padding: '0 22px 32px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 20 }}>
+          <div className="h-micro" style={{ marginBottom: 6 }}>Vedic Light-Code Audio · Frequency Transmissions</div>
+          <div className="h-section-title h-shimmer">{T.medTitle}</div>
+        </div>
+
+        <Tabs defaultValue="free" className="space-y-4">
+          <TabsList style={{ display: 'flex', background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.05)', borderRadius: 100, padding: 4, marginBottom: 20, gap: 3 }}>
+            <TabsTrigger value="free" style={{ flex: 1, borderRadius: 100, fontSize: 10, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', padding: '8px 0' }}>{T.medCat1}</TabsTrigger>
+            <TabsTrigger value="premium" style={{ flex: 1, borderRadius: 100, fontSize: 10, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', padding: '8px 0' }}>{T.medCat3}</TabsTrigger>
+          </TabsList>
+
+          <p style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.3em', textTransform: 'uppercase', color: 'rgba(212,175,55,.35)', textAlign: 'center', marginBottom: 16 }}>{T.medEncoded}</p>
+
+          <TabsContent value="free" className="space-y-3 mt-4">
+            {freeSessions.length > 0 ? freeSessions.map((audio) => (
+              <SessionRow key={audio.id} audio={audio as HealingAudio} isPlaying={isHealingPlaying(audio.id)} onTogglePlay={initiatePlay} formatDuration={formatDuration} isAdmin={isAdmin} ownedAudioIds={ownedAudioIds} hasHealingAccess={hasHealingAccess} onPurchase={handlePurchaseAudio} isProcessing={isProcessing} T={T} formatEnergyExchange={formatEnergyExchange} isPremiumTier={false} onRequestUpgrade={() => {}} />
+            )) : (
+              <div style={{ padding: '24px 0', textAlign: 'center', color: 'rgba(255,255,255,.3)', fontSize: 12 }}>{T.noSessions}</div>
+            )}
+          </TabsContent>
+          <TabsContent value="premium" className="space-y-3 mt-4">
+            {premiumSessions.length > 0 ? premiumSessions.map((audio) => (
+              <SessionRow key={audio.id} audio={audio as HealingAudio} isPlaying={isHealingPlaying(audio.id)} onTogglePlay={initiatePlay} formatDuration={formatDuration} isAdmin={isAdmin} ownedAudioIds={ownedAudioIds} hasHealingAccess={hasHealingAccess} onPurchase={handlePurchaseAudio} isProcessing={isProcessing} T={T} formatEnergyExchange={formatEnergyExchange} isPremiumTier onRequestUpgrade={() => setUpgradeSheetOpen(true)} />
+            )) : (
+              <div style={{ padding: '24px 0', textAlign: 'center', color: 'rgba(255,255,255,.3)', fontSize: 12 }}>{T.noSessions}</div>
+            )}
+          </TabsContent>
+        </Tabs>
+
+        <button type="button" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', padding: 14, marginTop: 12, background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.05)', borderRadius: 20, fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,.45)', cursor: 'pointer', fontFamily: 'inherit' }} onClick={() => navigate('/meditations')}>
+          {T.viewAll} →
+        </button>
+      </section>
+
+      <div className="h-divider" />
+
+      {/* Miracle Logs / Testimonials */}
+      <section style={{ padding: '0 22px 32px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 20 }}>
+          <div className="h-micro" style={{ marginBottom: 6 }}>Transmission Testimonials · Verified Field Reports</div>
+          <div className="h-section-title h-shimmer">{T.testimTitle}</div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,.4)', marginTop: 6 }}>{T.testimSub}</div>
+        </div>
+
+        <ReviewSection contentType="healing" contentId="general" />
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
+          {testimonials.filter((x): x is typeof x & { text: string } => 'text' in x && !!x.text).slice(0, testimonialsExpanded ? 99 : 2).map((t_, i) => (
+            <div key={i} className="h-testimonial">
+              <div style={{ fontSize: 22, color: 'rgba(212,175,55,.3)', lineHeight: 1, marginBottom: 8 }}>"</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,.6)', lineHeight: 1.7, fontStyle: 'italic', marginBottom: 10 }}>{t_.text}</div>
+              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(212,175,55,.5)' }}>— {t_.name}</div>
+            </div>
+          ))}
+          {testimonials.filter((x) => 'text' in x).length > 2 && (
+            <Button variant="ghost" className="w-full text-[#D4AF37]/60 hover:text-[#D4AF37]" onClick={() => setTestimonialsExpanded(!testimonialsExpanded)}>
+              {testimonialsExpanded ? T.seeLess : T.seeMore}
+            </Button>
+          )}
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12, marginTop: 16 }}>
+          {testimonialVideos.map((url, j) => (
+            <div key={j} style={{ aspectRatio: '16/9', borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(212,175,55,.2)' }}>
+              <iframe title={`Testimonial ${j + 1}`} src={url} style={{ width: '100%', height: '100%' }} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <div className="h-divider" />
+
+      {/* FAQ */}
+      <section style={{ padding: '0 22px 32px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 20 }}>
+          <div className="h-micro" style={{ marginBottom: 6 }}>Akasha-Intelligence Answers</div>
+          <div className="h-section-title h-shimmer">{T.faqTitle}</div>
+        </div>
+        <Accordion type="single" collapsible style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {[
+            { q: T.faq1Q, a: T.faq1A }, { q: T.faq2Q, a: T.faq2A }, { q: T.faq3Q, a: T.faq3A },
+            { q: T.faq4Q, a: T.faq4A }, { q: T.faq5Q, a: T.faq5A }, { q: T.faq6Q, a: T.faq6A },
+          ].map((item, i) => (
+            <AccordionItem key={i} value={`faq-${i}`} style={{ background: 'rgba(255,255,255,.015)', border: '1px solid rgba(255,255,255,.05)', borderRadius: 20, overflow: 'hidden' }}>
+              <AccordionTrigger style={{ padding: '16px 20px', fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,.82)', textAlign: 'left' }}>{item.q}</AccordionTrigger>
+              <AccordionContent style={{ padding: '0 20px 16px', fontSize: 12.5, color: 'rgba(255,255,255,.45)', lineHeight: 1.75, borderTop: '1px solid rgba(255,255,255,.04)' }}>{item.a}</AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </section>
+
+      {/* Booking — Stripe/checkout preserved */}
+      <section id="booking-section" style={{ padding: '0 22px 32px', scrollMarginTop: 32 }}>
+        {!hasHealingAccess ? (
+          <div className="h-pricing">
+            <div className="h-micro" style={{ marginBottom: 10 }}>Sacred Initiation · Stripe Checkout</div>
+            <div className="h-section-title h-shimmer" style={{ marginBottom: 8 }}>{T.bookingTitle}</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.45)', lineHeight: 1.7, marginBottom: 24, maxWidth: 300, margin: '0 auto 24px' }}>{T.bookingSub}</div>
+
+            <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
+              {HEALING_PLANS.map((plan) => (
+                <button key={plan.id} type="button" className={`h-tier-btn${selectedPlan?.id === plan.id ? ' h-active' : ''}`} onClick={() => openPaymentModal(plan)} disabled={isProcessing}>
+                  {plan.days} {T.days} — €{plan.price}
+                </button>
+              ))}
+            </div>
+
+            <button type="button" style={{ width: '100%', padding: 13, borderRadius: 100, fontSize: 12, fontWeight: 800, letterSpacing: '.04em', textTransform: 'uppercase', background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.06)', color: 'rgba(255,255,255,.45)', cursor: 'pointer', fontFamily: 'inherit', marginBottom: 20 }} onClick={handleSubscriptionStripe} disabled={isProcessing}>
+              {T.bookingOngoing} — €147/{lang === 'sv' ? 'mån' : lang === 'no' ? 'mnd' : lang === 'es' ? 'mes' : 'mo'}
+            </button>
+
+            <button type="button" className="h-cta-btn" onClick={() => openPaymentModal(selectedPlan ?? HEALING_PLANS[1])}>
+              <Sparkles size={15} className="h-nadi" />
+              {T.bookingCta}
+            </button>
+
+            <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,.2)', lineHeight: 1.6, marginTop: 14, position: 'relative', zIndex: 1 }}>{T.bookingDisclosure}</div>
+          </div>
+        ) : (
+          <div style={{ padding: 18, background: 'rgba(16,185,129,.08)', border: '1px solid rgba(16,185,129,.25)', borderRadius: 40, display: 'flex', alignItems: 'center', gap: 12 }}>
+            <CheckCircle className="w-6 h-6 text-[#10B981] shrink-0" />
+            <span style={{ color: '#10B981', fontWeight: 700 }}>{T.activeAccess}</span>
+          </div>
+        )}
+      </section>
+
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '0 22px 40px' }}>
+        <SriYantra size={80} />
+      </div>
+
+      <div style={{ padding: '0 22px 32px' }}>
+        <MeditationMembershipBanner />
+      </div>
+
+      <div style={{ height: 100 }} />
 
       {/* ========== PAYMENT MODAL ========== */}
       <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
@@ -801,39 +821,32 @@ function SessionRow({ audio, isPlaying, onTogglePlay, formatDuration, isAdmin, o
   const priceLabel = formatEnergyExchange(audio.price_usd);
 
   return (
-    <div className="rounded-xl border border-[#D4AF37]/10 bg-[#111] p-4 flex items-center gap-4 hover:border-[#D4AF37]/25 transition">
+    <div className="h-track">
       <button
         type="button"
         onClick={() => isLockedPremium && onRequestUpgrade ? onRequestUpgrade() : onTogglePlay(audio)}
-        className="w-12 h-12 rounded-full bg-[#D4AF37]/10 flex items-center justify-center hover:bg-[#D4AF37]/20 transition relative shrink-0"
+        className="h-play-btn relative"
       >
         {isLockedPremium && <Lock className="w-3 h-3 text-[#D4AF37] absolute -top-1 -right-1" />}
-        {hasAccess && isPlaying ? <Pause className="w-5 h-5 text-[#D4AF37]" /> : <Play className="w-5 h-5 text-[#D4AF37] ml-0.5" />}
+        {hasAccess && isPlaying ? <Pause size={14} /> : <Play size={14} style={{ marginLeft: 2 }} />}
       </button>
       <div className="flex-1 min-w-0">
-        <h3 className="font-medium text-white text-sm truncate">{audio.title}</h3>
-        <div className="flex items-center gap-2 text-xs text-white/40 mt-0.5">
-          <Clock className="w-3 h-3" />
-          <span>{formatDuration(audio.duration_seconds)}</span>
+        <div style={{ fontSize: 13.5, fontWeight: 700, letterSpacing: '-.01em', marginBottom: 3 }}>{audio.title}</div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 10.5, color: 'rgba(255,255,255,.4)' }}>
+          <span>⏱ {formatDuration(audio.duration_seconds)}</span>
           {hasAccess ? (
-            <span className="text-green-500">• {T.owned}</span>
+            <span style={{ color: '#10B981', fontSize: 9, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase' }}>● {T.owned}</span>
           ) : (
-            <span className="text-[#D4AF37]">• {priceLabel}</span>
+            <span style={{ color: '#D4AF37' }}>• {priceLabel}</span>
           )}
         </div>
       </div>
       {hasAccess ? (
-        <Button variant="ghost" size="icon" className="text-white/30 hover:text-white">
-          <Download className="w-4 h-4" />
-        </Button>
+        <Download size={14} style={{ color: 'rgba(255,255,255,.2)', cursor: 'pointer', flexShrink: 0 }} />
       ) : isLockedPremium ? (
-        <Button size="sm" className="bg-[#D4AF37] text-black font-semibold text-xs" onClick={onRequestUpgrade}>
-          Unlock
-        </Button>
+        <Button size="sm" className="bg-[#D4AF37] text-black font-semibold text-xs shrink-0" onClick={onRequestUpgrade}>Unlock</Button>
       ) : (
-        <Button size="sm" className="bg-[#D4AF37] text-black font-bold text-xs" onClick={() => onPurchase(audio, 'stripe')} disabled={isProcessing}>
-          {priceLabel}
-        </Button>
+        <Button size="sm" className="bg-[#D4AF37] text-black font-bold text-xs shrink-0" onClick={() => onPurchase(audio, 'stripe')} disabled={isProcessing}>{priceLabel}</Button>
       )}
     </div>
   );
