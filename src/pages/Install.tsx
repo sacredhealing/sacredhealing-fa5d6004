@@ -63,7 +63,7 @@ const Install = () => {
             </div>
             <h1 className="text-2xl font-bold text-foreground mb-4">Already Installed!</h1>
             <p className="text-muted-foreground">
-              Sacred Healing is installed on your device. Look for it on your home screen.
+              Siddha Quantum Nexus is installed on your device. Look for it on your home screen.
             </p>
           </div>
         </div>
