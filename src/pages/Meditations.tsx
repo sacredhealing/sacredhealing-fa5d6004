@@ -7,6 +7,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Play, Pause, Clock, Sparkles, ArrowLeft, Loader2, Globe, Lock } from 'lucide-react';
+import BabajiShadow from '@/components/meditation/BabajiShadow';
 import { Button } from '@/components/ui/button';
 import CustomMeditationBooking from '@/components/meditation/CustomMeditationBooking';
 import CustomMeditationCreation from '@/components/meditation/CustomMeditationCreation';
@@ -375,8 +376,9 @@ const Meditations: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="sqi-page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+      <div className="sqi-page" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
         <style>{SQI_STYLES}</style>
+        <BabajiShadow />
         <Loader2 size={28} className="nadi-pulse" style={{ margin: '0 auto 12px', display: 'block', color: '#22D3EE' }} />
         <div className="micro-label">Accessing Akasha Archive…</div>
       </div>
