@@ -252,7 +252,7 @@ const Onboarding: React.FC = () => {
             className="rounded-full bg-[#D4AF37] hover:bg-[#D4AF37] text-black font-extrabold text-[9px] tracking-[0.4em] uppercase shadow-[0_0_30px_rgba(212,175,55,0.3)] py-5 px-8"
             style={{ fontFamily: 'Montserrat, sans-serif' }}
           >
-            {isSubmitting ? 'Please wait...' : currentStep === 4 ? 'SEAL THE TRANSMISSION →' : 'NEXT →'}
+            {isSubmitting ? t('onboarding.pleaseWait') : currentStep === 4 ? t('onboarding.sealTransmission') : t('onboarding.next')}
           </Button>
         </div>
       </div>
