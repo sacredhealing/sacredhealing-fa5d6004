@@ -185,10 +185,10 @@ const Onboarding: React.FC = () => {
           {currentStep === 2 && (
             <>
               <h2 className="text-white font-[300] italic text-[3rem] leading-tight text-center mb-2" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-                How deep can you go?
+                {t('onboarding.howDeep')}
               </h2>
               <p className="text-white/40 text-[9px] font-normal tracking-[0.4em] uppercase text-center mb-8" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                CHOOSE YOUR DAILY TRANSMISSION WINDOW
+                {t('onboarding.chooseWindow')}
               </p>
               <DurationSelector
                 selectedDuration={data.practiceDuration}
