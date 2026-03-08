@@ -11,7 +11,7 @@ export const sv = {
 
   profile: {
     your_sacred_space: {
-      title: "Din Sacred Healing-plats",
+      title: "Din Siddha Quantum Nexus-plats",
       body:
         "Det här är en daglig stödplats.\n" +
         "Du behöver inte lära dig något eller tro på något.\n" +
