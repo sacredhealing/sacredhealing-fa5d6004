@@ -1,10 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Leaf, Play, Sparkles } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { normalizePlanetName, type Planet } from '@/lib/jyotishMantraLogic';
+import { normalizePlanetName, getPlanetOfDay, type Planet } from '@/lib/jyotishMantraLogic';
 import type { PalmArchetype } from '@/lib/palmScanStore';
+
 const DASHA_MANTRA_DISPLAY: Record<string, string> = {
   Jupiter: 'Om Gurave Namaha',
   Rahu: 'Om Ram Rahave Namah',
@@ -17,14 +16,13 @@ const DASHA_MANTRA_DISPLAY: Record<string, string> = {
   Ketu: 'Om Kem Ketave Namah',
 };
 
-/** Palm + Dasha mantra mapping: triggers remedy revelation when hand analysis complete */
 function getRevealedMantra(
   handAnalysisComplete: boolean,
   palmArchetype: PalmArchetype | null | undefined,
   dashaPlanet: Planet | null,
   prescribedText: string | null
-): { text: string; planet: Planet | null } | null {
-  // If we have both palm and dasha
+): { text: string; planet: Planet } {
+  // Palm + Dasha combo
   if (handAnalysisComplete && palmArchetype && dashaPlanet) {
     if (palmArchetype === 'Spiritual Mastery' && dashaPlanet === 'Jupiter') {
       return { text: 'Om Gurave Namaha', planet: 'Jupiter' };
@@ -33,24 +31,22 @@ function getRevealedMantra(
       return { text: 'Om Ram Rahave Namah', planet: 'Rahu' };
     }
   }
-  // If we have dasha planet with prescribed text
+  // Dasha planet with prescribed text
   if (dashaPlanet && prescribedText) {
     return { text: prescribedText, planet: dashaPlanet };
   }
-  // If we have dasha planet, use known mantra display map
+  // Dasha planet from known map
   if (dashaPlanet && DASHA_MANTRA_DISPLAY[dashaPlanet]) {
     return { text: DASHA_MANTRA_DISPLAY[dashaPlanet], planet: dashaPlanet };
   }
   // Palm-only fallbacks
   if (handAnalysisComplete && palmArchetype) {
-    if (palmArchetype === 'Spiritual Mastery') {
-      return { text: 'Om Gurave Namaha', planet: 'Jupiter' };
-    }
-    if (palmArchetype === 'Karmic Debt') {
-      return { text: 'Om Ram Rahave Namah', planet: 'Rahu' };
-    }
+    if (palmArchetype === 'Spiritual Mastery') return { text: 'Om Gurave Namaha', planet: 'Jupiter' };
+    if (palmArchetype === 'Karmic Debt') return { text: 'Om Ram Rahave Namah', planet: 'Rahu' };
   }
-  return null;
+  // FALLBACK: use today's day ruler planet — always reveals
+  const dayPlanet = getPlanetOfDay();
+  return { text: DASHA_MANTRA_DISPLAY[dayPlanet] || 'Om Gurave Namaha', planet: dayPlanet };
 }
 
 export interface BhriguCardProps {
@@ -77,87 +73,130 @@ const BhriguCard: React.FC<BhriguCardProps> = ({
   heartHealingMantraTitle,
 }) => {
   const revealed = getRevealedMantra(handAnalysisComplete, palmArchetype, activeDasha, prescribedText);
-  const isRevealed = !!revealed;
 
   return (
-    <section className="px-4 mt-4 mb-4">
-      <Card
-        className={`relative overflow-hidden rounded-2xl border-2 border-[#D4AF37] bg-gradient-to-br from-[#D4AF37]/10 via-amber-950/40 to-black/60 shadow-[0_0_24px_rgba(212,175,55,0.25)] ${!isRevealed ? 'animate-sovereign-pulse' : ''} ${heartLineLeak ? 'ring-2 ring-rose-400/50' : ''}`}
+    <div style={{
+      position: 'relative',
+      overflow: 'hidden',
+      borderRadius: 28,
+      border: '2px solid rgba(212,175,55,0.5)',
+      background: 'linear-gradient(135deg, rgba(212,175,55,0.08) 0%, rgba(139,92,246,0.04) 50%, rgba(0,0,0,0.6) 100%)',
+      boxShadow: heartLineLeak
+        ? '0 0 0 1px rgba(212,175,55,0.3), 0 0 24px rgba(212,175,55,0.2), 0 0 40px rgba(244,63,94,0.15)'
+        : '0 0 0 1px rgba(212,175,55,0.3), 0 0 24px rgba(212,175,55,0.2), 0 0 40px rgba(212,175,55,0.1)',
+      padding: '20px 22px',
+    }}>
+      {/* Leaf icon top-right */}
+      <div style={{ position: 'absolute', top: 14, right: 14, color: 'rgba(212,175,55,0.6)' }}>
+        <Leaf size={20} strokeWidth={1.5} />
+      </div>
+
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+        <Sparkles size={18} style={{ color: '#D4AF37' }} />
+        <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#D4AF37' }}>
+          Bhrigu Samhita
+        </span>
+      </div>
+
+      {/* Heart healing section */}
+      {heartLineLeak && (
+        <div style={{
+          marginBottom: 16, padding: 14, borderRadius: 16,
+          background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.25)',
+        }}>
+          <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(244,63,94,0.8)', marginBottom: 4 }}>
+            From your palm scan
+          </p>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', marginBottom: 10 }}>
+            432Hz Heart-Healing (Anahata) Mantra recommended
+          </p>
+          {onPlayHeartHealing && (
+            <button
+              onClick={onPlayHeartHealing}
+              style={{
+                width: '100%', padding: '10px 16px', borderRadius: 12,
+                background: 'transparent', border: '1px solid rgba(244,63,94,0.4)',
+                color: 'rgba(244,63,94,0.8)', fontSize: 12, fontWeight: 700,
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              }}
+            >
+              <Play size={12} />
+              {heartHealingMantraTitle ? `Play ${heartHealingMantraTitle}` : 'Play Heart-Healing Mantra'}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Siddha verdict */}
+      {handAnalysisComplete && (
+        <p style={{ fontSize: 11, color: 'rgba(212,175,55,0.7)', fontStyle: 'italic', marginBottom: 8 }}>
+          Siddha Verdict: Based on your Palm Mandala and current Dasha, this frequency is your required medicine.
+        </p>
+      )}
+
+      {/* Holy Remedy */}
+      <h2 style={{ fontSize: 20, fontWeight: 800, color: 'white', marginBottom: 6 }}>
+        Holy Remedy
+      </h2>
+      <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>
+        {revealed.planet} Remedy
+      </p>
+
+      {/* Mantra text with shimmer */}
+      <motion.p
+        key={revealed.text}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6 }}
         style={{
-          boxShadow: heartLineLeak
-            ? '0 0 0 2px rgba(212,175,55,0.4), 0 0 20px rgba(212,175,55,0.2), 0 0 40px rgba(244,63,94,0.15)'
-            : '0 0 0 2px rgba(212,175,55,0.4), 0 0 20px rgba(212,175,55,0.2), 0 0 40px rgba(212,175,55,0.1)',
+          fontFamily: 'Cinzel, Georgia, serif',
+          fontSize: 22,
+          fontWeight: 600,
+          color: '#D4AF37',
+          letterSpacing: '0.03em',
+          marginBottom: 18,
+          lineHeight: 1.3,
         }}
       >
-        <div className="absolute top-3 right-3 text-[#D4AF37]/80" aria-hidden>
-          <Leaf className="w-6 h-6" strokeWidth={1.5} />
-        </div>
-        <CardContent className="p-5">
-          <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="w-5 h-5 text-[#D4AF37]" />
-            <span className="text-xs font-semibold uppercase tracking-widest text-[#D4AF37]">Bhrigu Samhita</span>
-          </div>
-          {heartLineLeak && (
-            <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-400/30">
-              <p className="text-xs font-bold uppercase tracking-wider text-rose-300 mb-1">From your palm scan</p>
-              <p className="text-sm text-white/90 mb-2">432Hz Heart-Healing (Anahata) Mantra recommended</p>
-              {onPlayHeartHealing && (
-                <Button
-                  onClick={onPlayHeartHealing}
-                  variant="outline"
-                  size="sm"
-                  className="w-full border-rose-400/50 text-rose-200 hover:bg-rose-500/20"
-                >
-                  <Play className="w-3 h-3 mr-2 inline" />
-                  {heartHealingMantraTitle ? `Play ${heartHealingMantraTitle}` : 'Play Heart-Healing Mantra'}
-                </Button>
-              )}
-            </div>
-          )}
-          {isRevealed && revealed ? (
-            <>
-              {handAnalysisComplete && (
-                <p className="text-xs text-[#D4AF37]/80 mb-2 italic">
-                  Siddha Verdict: Based on your Palm Mandala and current Dasha, this frequency is your required medicine.
-                </p>
-              )}
-              <h2 className="text-lg font-bold text-white mb-2 pr-8">Holy Remedy</h2>
-              <p className="text-sm text-white/70 mb-2">{revealed.planet} Remedy</p>
-              <motion.p
-                key={revealed.text}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.6 }}
-                className="text-xl font-serif text-[#D4AF37] mb-4 tracking-wide pr-2 relative overflow-hidden"
-                style={{ fontFamily: 'Georgia, Cinzel, serif' }}
-              >
-                <span className="relative inline-block">
-                  {revealed.text}
-                  <span
-                    className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-[#D4AF37]/40 to-transparent"
-                    style={{ animation: 'shimmer 2s ease-in-out' }}
-                  />
-                </span>
-              </motion.p>
-              <Button
-                onClick={() => revealed.planet && onPlayRemedy(revealed.planet)}
-                className="w-full bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-black font-semibold py-2.5 rounded-xl border border-[#D4AF37] shadow-lg shadow-[#D4AF37]/30"
-              >
-                <Play className="w-4 h-4 mr-2 inline" />
-                Play {revealed.planet} Remedy
-              </Button>
-            </>
-          ) : (
-            <div className="py-2 pr-8">
-              <p className="text-[#D4AF37]/90 text-sm animate-pulse" style={{ animationDuration: '2s' }}>
-                Calculating your Soul&apos;s Frequency...
-              </p>
-              <p className="text-white/50 text-xs mt-1">Bhrigu calculation in progress</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </section>
+        {revealed.text}
+      </motion.p>
+
+      {/* Play button — outlined gold style matching reference */}
+      <button
+        onClick={() => onPlayRemedy(revealed.planet)}
+        style={{
+          width: '100%',
+          padding: '13px 20px',
+          borderRadius: 14,
+          background: 'rgba(212,175,55,0.06)',
+          border: '1px solid rgba(212,175,55,0.35)',
+          color: 'rgba(255,255,255,0.75)',
+          fontSize: 13,
+          fontWeight: 700,
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+          transition: 'all 0.2s',
+          fontFamily: 'inherit',
+        }}
+        onMouseEnter={e => {
+          e.currentTarget.style.borderColor = 'rgba(212,175,55,0.6)';
+          e.currentTarget.style.background = 'rgba(212,175,55,0.12)';
+          e.currentTarget.style.color = '#D4AF37';
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.borderColor = 'rgba(212,175,55,0.35)';
+          e.currentTarget.style.background = 'rgba(212,175,55,0.06)';
+          e.currentTarget.style.color = 'rgba(255,255,255,0.75)';
+        }}
+      >
+        <Play size={14} />
+        Play {revealed.planet} Remedy
+      </button>
+    </div>
   );
 };
 
