@@ -554,7 +554,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   .sri-yantra-fade-top{position:absolute;top:0;left:0;right:0;height:220px;background:linear-gradient(to bottom,#050505 0%,transparent 100%);pointer-events:none}
   .sri-yantra-fade-bottom{position:absolute;bottom:0;left:0;right:0;height:220px;background:linear-gradient(to top,#050505 0%,transparent 100%);pointer-events:none}
   .sri-yantra-label{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);font-weight:800;font-size:clamp(6px,1.8vw,8px);letter-spacing:clamp(0.1em,0.45em,0.45em);text-transform:uppercase;color:rgba(212,175,55,0.85);background:rgba(5,5,5,0.65);backdrop-filter:blur(12px);padding:10px 24px;border-radius:100px;border:1px solid rgba(212,175,55,0.2);max-width:92vw;overflow:hidden;text-overflow:ellipsis;z-index:3}
-  .section-wrap{max-width:780px;margin:0 auto;padding:80px 24px 0}
+  .section-wrap{max-width:780px;margin:0 auto;padding:80px 24px 0;text-align:center}
   .section-label{font-family:'Montserrat',sans-serif;font-weight:800;font-size:8px;letter-spacing:0.5em;text-transform:uppercase;color:rgba(212,175,55,0.5);margin-bottom:32px;display:flex;align-items:center;gap:12px}
   .section-label::after{content:'';flex:1;height:1px;background:linear-gradient(to right,rgba(212,175,55,0.2),transparent)}
   .glass-card{background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.12);border-radius:24px;padding:32px;backdrop-filter:blur(20px);margin-bottom:16px}
