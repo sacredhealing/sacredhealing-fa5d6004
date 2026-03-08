@@ -338,7 +338,7 @@ const ProductDetail = () => {
               </ul>
               <div className="bg-muted/50 rounded-lg p-3 mt-4">
                 <p className="text-xs text-muted-foreground">
-                  <strong>Pro tip:</strong> Following these care instructions will help maintain the vibrant colors and energy of your sacred healing shirt for years to come.
+                  <strong>Pro tip:</strong> Following these care instructions will help maintain the vibrant colors and energy of your Siddha Quantum Nexus shirt for years to come.
                 </p>
               </div>
             </Card>

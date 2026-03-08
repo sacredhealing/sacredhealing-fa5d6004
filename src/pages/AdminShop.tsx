@@ -197,7 +197,7 @@ const AdminShop = () => {
                 <Input
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Sacred Healing Dress"
+                  placeholder="Siddha Quantum Nexus Dress"
                 />
               </div>
 

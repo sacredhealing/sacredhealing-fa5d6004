@@ -312,7 +312,7 @@ const PregnancyProgram: React.FC = () => {
 
       {/* Footer */}
       <footer className="py-8 px-4 text-center text-muted-foreground text-sm">
-        <p>Sacred Healing • Supporting mothers on their sacred journey</p>
+        <p>Siddha Quantum Nexus • Supporting mothers on their sacred journey</p>
       </footer>
     </div>
   );

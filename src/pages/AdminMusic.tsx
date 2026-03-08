@@ -580,7 +580,7 @@ const AdminMusic: React.FC = () => {
                 <Input
                   value={artist}
                   onChange={(e) => setArtist(e.target.value)}
-                  placeholder="Sacred Healing"
+                  placeholder="Siddha Quantum Nexus"
                   className="bg-muted/50"
                 />
               </div>
