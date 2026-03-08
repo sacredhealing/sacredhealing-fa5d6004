@@ -610,9 +610,9 @@ const Healing: React.FC = () => {
         </Link>
       </div>
 
-      {/* Your Healing Journey accordion */}
+      {/* Your Healing Journey — collapsed by default, tap to expand */}
       <div style={{ padding: '0 22px 32px' }}>
-        <Accordion type="single" collapsible>
+        <Accordion type="single" collapsible defaultValue="">
           <AccordionItem value="journey" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.05)', borderRadius: 40, overflow: 'hidden' }}>
             <AccordionTrigger style={{ padding: '20px 24px', fontWeight: 800, fontSize: 14 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
