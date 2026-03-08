@@ -83,7 +83,7 @@ const AdminMusic: React.FC = () => {
   
   // Form state
   const [title, setTitle] = useState('');
-  const [artist, setArtist] = useState('Sacred Healing');
+  const [artist, setArtist] = useState('Siddha Quantum Nexus');
   const [description, setDescription] = useState('');
   const [genre, setGenre] = useState('beats');
   const [durationInput, setDurationInput] = useState('3:00');
