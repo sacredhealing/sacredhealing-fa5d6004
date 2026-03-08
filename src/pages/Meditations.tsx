@@ -525,10 +525,16 @@ const Meditations: React.FC = () => {
       <div style={{ padding: '0 20px 32px' }}>
         <div style={{ marginBottom: 20 }}>
           <div className="micro-label" style={{ marginBottom: 6, color: 'rgba(212,175,55,0.5)' }}>{t('meditations.sacredCommissions', 'Sacred Commissions')}</div>
-          <div style={{ fontWeight: 800, fontSize: 17, letterSpacing: '-0.02em', color: 'rgba(255,255,255,0.9)' }}>{t('meditations.sacredCommissionsDesc', 'Personal transmissions. When you want something channeled for you alone.')}</div>
+          <div style={{ fontWeight: 800, fontSize: 17, letterSpacing: '-0.02em', color: 'rgba(255,255,255,0.9)', marginBottom: 4 }}>Personal Transmissions</div>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: 0 }}>When you want something channeled for you alone.</p>
         </div>
-        <MeditationMembershipBanner />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <SacredCommissionCard icon="☸" price="€47" title="108 Wealth Reprogramming Meditation" subtitle="Wealth Activation" />
+          <SacredCommissionCard icon="✦" price="€20–€97" title="Custom Channeled Meditation" subtitle="Personalized Experience" />
+          <SacredCommissionCard icon="◎" price="€97–€197" title="Custom Meditation Creation" subtitle="For Creators & Healers" />
+        </div>
+        {/* Hidden functional components for dialog triggers */}
+        <div style={{ display: 'none' }}>
           <WealthMeditationService />
           <CustomMeditationBooking />
           <CustomMeditationCreation />
