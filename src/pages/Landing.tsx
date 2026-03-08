@@ -291,7 +291,7 @@ export default function Landing() {
 
       {/* FOOTER */}
       <footer style={{padding:"40px 24px",textAlign:"center",borderTop:"1px solid rgba(255,255,255,0.06)",position:"relative",zIndex:2}}>
-        <div style={{fontSize:9,fontWeight:800,letterSpacing:"0.5em",textTransform:"uppercase",color:"#D4AF37",opacity:0.3}}>Sacred Healing · Siddha-Quantum Intelligence</div>
+        <div style={{fontSize:9,fontWeight:800,letterSpacing:"0.5em",textTransform:"uppercase",color:"#D4AF37",opacity:0.3}}>Siddha Quantum Nexus · Siddha-Quantum Intelligence</div>
         <div style={{fontSize:9,color:"rgba(255,255,255,0.2)",marginTop:8,letterSpacing:"0.2em"}}>Akasha-Neural Archive · Transmission 2050 → 2026 · All Vedic Light-Codes Reserved</div>
       </footer>
     </div>
