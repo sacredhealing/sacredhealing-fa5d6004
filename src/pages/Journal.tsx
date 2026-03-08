@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { BookOpen, Save, Calendar, Smile, Sparkles } from 'lucide-react';
 import { useJournal } from '@/hooks/useJournal';
@@ -10,16 +11,17 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
-const moodEmojis = [
-  { value: 1, emoji: '😔', label: 'Low' },
-  { value: 2, emoji: '😐', label: 'Okay' },
-  { value: 3, emoji: '🙂', label: 'Good' },
-  { value: 4, emoji: '😊', label: 'Great' },
-  { value: 5, emoji: '🌟', label: 'Amazing' },
-];
-
 const Journal: React.FC = () => {
+  const { t } = useTranslation();
   const { entries, todayEntry, isLoading, createEntry, updateEntry } = useJournal();
+
+  const moodEmojis = [
+    { value: 1, emoji: '😔', label: t('journal.moodLow') },
+    { value: 2, emoji: '😐', label: t('journal.moodOkay') },
+    { value: 3, emoji: '🙂', label: t('journal.moodGood') },
+    { value: 4, emoji: '😊', label: t('journal.moodGreat') },
+    { value: 5, emoji: '🌟', label: t('journal.moodAmazing') },
+  ];
   
   const [content, setContent] = useState(todayEntry?.content || '');
   const [mood, setMood] = useState<number | null>(todayEntry?.mood || null);
@@ -69,11 +71,11 @@ const Journal: React.FC = () => {
         <div className="flex items-center gap-2 mb-1">
           <BookOpen className="w-6 h-6 text-primary" />
           <h1 className="text-2xl font-heading font-bold text-foreground">
-            Journal
+            {t('journal.title')}
           </h1>
         </div>
         <p className="text-muted-foreground">
-          Reflect on your journey • +10 SHC per entry
+          {t('journal.subtitle')}
         </p>
       </header>
 
@@ -87,7 +89,7 @@ const Journal: React.FC = () => {
         <Card className="p-4">
           <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
             <Smile className="w-4 h-4" />
-            How are you feeling?
+            {t('journal.howFeeling')}
           </h3>
           <div className="flex justify-between">
             {moodEmojis.map((m) => (
@@ -112,16 +114,16 @@ const Journal: React.FC = () => {
         <Card className="p-4">
           <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-accent" />
-            Gratitude
+            {t('journal.gratitude')}
           </h3>
           <p className="text-sm text-muted-foreground mb-3">
-            What are 3 things you're grateful for today?
+            {t('journal.gratitudePrompt')}
           </p>
           <div className="space-y-2">
             {[0, 1, 2].map((index) => (
               <Input
                 key={index}
-                placeholder={`Gratitude ${index + 1}...`}
+                placeholder={t('journal.gratitudePlaceholder', { num: index + 1 })}
                 value={gratitude[index] || ''}
                 onChange={(e) => updateGratitude(index, e.target.value)}
                 className="bg-muted/30"
@@ -134,10 +136,10 @@ const Journal: React.FC = () => {
         <Card className="p-4">
           <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
             <BookOpen className="w-4 h-4" />
-            Today's Reflection
+            {t('journal.todaysReflection')}
           </h3>
           <Textarea
-            placeholder="Write about your day, thoughts, or anything on your mind..."
+            placeholder={t('journal.writePlaceholder')}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             className="min-h-[150px] bg-muted/30 resize-none"
@@ -152,7 +154,7 @@ const Journal: React.FC = () => {
           disabled={createEntry.isPending || updateEntry.isPending || (!content.trim() && !mood)}
         >
           <Save className="w-4 h-4 mr-2" />
-          {todayEntry ? 'Update Entry' : 'Save Entry'}
+          {todayEntry ? t('journal.updateEntry') : t('journal.saveEntry')}
         </Button>
       </motion.div>
 
@@ -160,7 +162,7 @@ const Journal: React.FC = () => {
       {entries.length > 0 && (
         <div className="mt-8">
           <h2 className="font-heading font-semibold text-lg text-foreground mb-4">
-            Past Entries
+            {t('journal.pastEntries')}
           </h2>
           <div className="space-y-3">
             {entries.slice(0, 7).map((entry) => (

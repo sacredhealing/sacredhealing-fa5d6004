@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, BookOpen, Sparkles, Users, Heart, Eye, Globe, Brain, Scroll, ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -31,14 +32,24 @@ interface LifeBookChapter {
   updated_at: string;
 }
 
-const CHAPTER_META: Record<LifeBookCategory, { label: string; icon: React.ReactNode; color: string }> = {
-  children: { label: 'Children & Family', icon: <Users size={18} />, color: '#10B981' },
-  healing_upgrades: { label: 'Healing Upgrades', icon: <Heart size={18} />, color: '#22D3EE' },
-  past_lives: { label: 'Past Lives', icon: <Eye size={18} />, color: '#A78BFA' },
-  future_visions: { label: 'Future Visions', icon: <Sparkles size={18} />, color: '#F59E0B' },
-  spiritual_figures: { label: 'Spiritual Figures', icon: <Globe size={18} />, color: '#D4AF37' },
-  nadi_knowledge: { label: 'Nadi Knowledge', icon: <Brain size={18} />, color: '#EC4899' },
-  general_wisdom: { label: 'General Wisdom', icon: <Scroll size={18} />, color: '#8B5CF6' },
+const CHAPTER_ICONS: Record<LifeBookCategory, { icon: React.ReactNode; color: string }> = {
+  children: { icon: <Users size={18} />, color: '#10B981' },
+  healing_upgrades: { icon: <Heart size={18} />, color: '#22D3EE' },
+  past_lives: { icon: <Eye size={18} />, color: '#A78BFA' },
+  future_visions: { icon: <Sparkles size={18} />, color: '#F59E0B' },
+  spiritual_figures: { icon: <Globe size={18} />, color: '#D4AF37' },
+  nadi_knowledge: { icon: <Brain size={18} />, color: '#EC4899' },
+  general_wisdom: { icon: <Scroll size={18} />, color: '#8B5CF6' },
+};
+
+const CHAPTER_LABEL_KEYS: Record<LifeBookCategory, string> = {
+  children: 'lifeBook.children',
+  healing_upgrades: 'lifeBook.healingUpgrades',
+  past_lives: 'lifeBook.pastLives',
+  future_visions: 'lifeBook.futureVisions',
+  spiritual_figures: 'lifeBook.spiritualFigures',
+  nadi_knowledge: 'lifeBook.nadiKnowledge',
+  general_wisdom: 'lifeBook.generalWisdom',
 };
 
 const CHAPTER_ORDER: LifeBookCategory[] = [
@@ -48,6 +59,7 @@ const CHAPTER_ORDER: LifeBookCategory[] = [
 
 export default function LifeBook() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [chapters, setChapters] = useState<LifeBookChapter[]>([]);
   const [loading, setLoading] = useState(true);
@@ -99,8 +111,8 @@ export default function LifeBook() {
           <ArrowLeft size={18} />
         </button>
         <div>
-          <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.5em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.5)' }}>Akasha-Neural Archive</div>
-          <h1 style={{ fontFamily: "'Cinzel', serif", fontSize: 'clamp(22px, 6vw, 30px)', fontWeight: 600, margin: 0 }} className="lb-shimmer">Your Life Book</h1>
+          <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.5em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.5)' }}>{t('lifeBook.archiveLabel')}</div>
+          <h1 style={{ fontFamily: "'Cinzel', serif", fontSize: 'clamp(22px, 6vw, 30px)', fontWeight: 600, margin: 0 }} className="lb-shimmer">{t('lifeBook.title')}</h1>
         </div>
       </div>
 
@@ -108,11 +120,11 @@ export default function LifeBook() {
       <div style={{ padding: '0 20px 20px', display: 'flex', gap: 12 }}>
         <div style={{ flex: 1, padding: '14px 16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 20, textAlign: 'center' }}>
           <div style={{ fontSize: 22, fontWeight: 800, color: '#D4AF37' }}>{ordered.length}</div>
-          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>Chapters</div>
+          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>{t('lifeBook.chapters')}</div>
         </div>
         <div style={{ flex: 1, padding: '14px 16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 20, textAlign: 'center' }}>
           <div style={{ fontSize: 22, fontWeight: 800, color: '#22D3EE' }}>{totalEntries}</div>
-          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>Transmissions</div>
+          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>{t('lifeBook.transmissions')}</div>
         </div>
       </div>
 
@@ -121,24 +133,25 @@ export default function LifeBook() {
         {loading ? (
           <div style={{ textAlign: 'center', padding: 60, color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>
             <BookOpen size={28} style={{ margin: '0 auto 12px', opacity: 0.4 }} />
-            Accessing Akasha-Neural Archive…
+            {t('lifeBook.loading')}
           </div>
         ) : ordered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 60 }}>
             <BookOpen size={32} style={{ margin: '0 auto 12px', color: 'rgba(212,175,55,0.3)' }} />
-            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, marginBottom: 8 }}>No chapters yet.</p>
-            <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 11 }}>Start a conversation with SQI in the Quantum Apothecary to begin writing your Life Book.</p>
+            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, marginBottom: 8 }}>{t('lifeBook.noChapters')}</p>
+            <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 11 }}>{t('lifeBook.noChaptersHint')}</p>
             <button
               onClick={() => navigate('/quantum-apothecary')}
               style={{ marginTop: 20, padding: '12px 24px', borderRadius: 100, background: 'linear-gradient(135deg, #D4AF37, #B8960C)', color: '#050505', fontSize: 12, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', border: 'none', cursor: 'pointer' }}
             >
-              Open Quantum Apothecary
+              {t('lifeBook.openApothecary')}
             </button>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {ordered.map(chapter => {
-              const meta = CHAPTER_META[chapter.chapter_type];
+              const icons = CHAPTER_ICONS[chapter.chapter_type];
+              const label = t(CHAPTER_LABEL_KEYS[chapter.chapter_type]);
               const isExpanded = expandedChapter === chapter.id;
               const entries = chapter.content || [];
 
@@ -148,13 +161,13 @@ export default function LifeBook() {
                     onClick={() => setExpandedChapter(isExpanded ? null : chapter.id)}
                     style={{ width: '100%', padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 14, background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontFamily: 'inherit', textAlign: 'left' }}
                   >
-                    <div style={{ width: 42, height: 42, borderRadius: 14, background: `${meta.color}12`, border: `1px solid ${meta.color}33`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: meta.color, flexShrink: 0 }}>
-                      {meta.icon}
+                    <div style={{ width: 42, height: 42, borderRadius: 14, background: `${icons.color}12`, border: `1px solid ${icons.color}33`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: icons.color, flexShrink: 0 }}>
+                      {icons.icon}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{meta.label}</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{label}</div>
                       <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.35)' }}>
-                        {entries.length} {entries.length === 1 ? 'transmission' : 'transmissions'}
+                        {entries.length} {entries.length === 1 ? t('lifeBook.transmission') : t('lifeBook.transmissions').toLowerCase()}
                       </div>
                     </div>
                     {isExpanded ? <ChevronUp size={16} style={{ color: 'rgba(255,255,255,0.3)', flexShrink: 0 }} /> : <ChevronDown size={16} style={{ color: 'rgba(255,255,255,0.3)', flexShrink: 0 }} />}
@@ -165,7 +178,7 @@ export default function LifeBook() {
                       {entries.map((entry, i) => (
                         <div key={i} style={{ padding: '14px 16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: 16 }}>
                           {entry.title && (
-                            <div style={{ fontSize: 12.5, fontWeight: 700, color: meta.color, marginBottom: 4 }}>{entry.title}</div>
+                            <div style={{ fontSize: 12.5, fontWeight: 700, color: icons.color, marginBottom: 4 }}>{entry.title}</div>
                           )}
                           {entry.summary && (
                             <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.55)', lineHeight: 1.65 }}>{entry.summary}</div>
