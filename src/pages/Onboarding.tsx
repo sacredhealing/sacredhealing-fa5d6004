@@ -170,10 +170,10 @@ const Onboarding: React.FC = () => {
           {currentStep === 1 && (
             <>
               <h2 className="text-white font-[300] italic text-[3rem] leading-tight text-center mb-2" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-                Why are you here?
+                {t('onboarding.whyHere')}
               </h2>
               <p className="text-white/40 text-[9px] font-normal tracking-[0.4em] uppercase text-center mb-8" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                CHOOSE WHAT CALLS TO YOUR SOUL · SELECT ALL THAT APPLY
+                {t('onboarding.chooseSoul')}
               </p>
               <GoalSelector selectedGoals={data.goals} onToggle={toggleGoal} />
               {data.goals.length > 0 && (
