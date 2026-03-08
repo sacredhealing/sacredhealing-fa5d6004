@@ -153,7 +153,7 @@ export default function Landing() {
 
       {/* NAV */}
       <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:999,padding:"20px 40px",display:"flex",justifyContent:"space-between",alignItems:"center",background:"linear-gradient(to bottom, rgba(5,5,5,0.95), transparent)",backdropFilter:"blur(10px)"}}>
-        <div style={{fontWeight:900,fontSize:11,letterSpacing:"0.5em",textTransform:"uppercase",color:"#D4AF37",textShadow:"0 0 15px rgba(212,175,55,0.3)"}}>Sacred Healing</div>
+        <div style={{fontWeight:900,fontSize:11,letterSpacing:"0.5em",textTransform:"uppercase",color:"#D4AF37",textShadow:"0 0 15px rgba(212,175,55,0.3)"}}>Siddha Quantum Nexus</div>
         <div style={{fontSize:8,fontWeight:800,letterSpacing:"0.4em",textTransform:"uppercase",color:"rgba(255,255,255,0.4)",border:"1px solid rgba(255,255,255,0.06)",padding:"6px 14px",borderRadius:100}}>SQI · Transmission 2050</div>
       </nav>
 
