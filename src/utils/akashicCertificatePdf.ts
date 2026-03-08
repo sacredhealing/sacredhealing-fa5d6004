@@ -115,7 +115,7 @@ export function generateAkashicCertificatePdf(
     </section>
 
     <p style="margin-top: 48px; font-size: 10px; color: #666; text-align: center;">
-      Sacred Healing — Akashic Decoder • A Siddha Transmission
+      Siddha Quantum Nexus — Akashic Decoder • A Siddha Transmission
     </p>
   </div>
   <script>window.onload = () => { window.print(); }</script>

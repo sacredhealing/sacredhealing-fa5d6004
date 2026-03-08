@@ -125,7 +125,7 @@ export function generateSovereignSealPdf(data: SovereignManuscriptData): void {
     </div>
 
     <p style="margin-top: 48px; font-size: 10px; color: #666; text-align: center;">
-      Sacred Healing — Akashic Soul Manuscript • Sovereign Seal • A Siddha Transmission
+      Siddha Quantum Nexus — Akashic Soul Manuscript • Sovereign Seal • A Siddha Transmission
     </p>
   </div>
   <script>window.onload = () => { window.print(); }</script>

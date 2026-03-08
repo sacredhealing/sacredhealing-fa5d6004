@@ -172,7 +172,7 @@ const Shop = () => {
         </div>
         <h1 className="text-2xl font-bold text-foreground mb-2">Sacred Shop</h1>
         <p className="text-muted-foreground">
-          Laila's Sacred Healing Clothing & Art Collection
+          Laila's Siddha Quantum Nexus Clothing & Art Collection
         </p>
       </div>
 

@@ -205,7 +205,7 @@ const Meditations: React.FC = () => {
       const audioItem: UniversalAudioItem = {
         id: meditation.id,
         title: meditation.title,
-        artist: 'Sacred Healing',
+        artist: 'Siddha Quantum Nexus',
         audio_url: meditation.audio_url,
         cover_image_url: meditation.cover_image_url,
         duration_seconds: meditation.duration_minutes * 60,

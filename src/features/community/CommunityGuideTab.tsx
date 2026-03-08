@@ -47,7 +47,7 @@ export function CommunityGuideTab({
     <div className="p-4 max-w-3xl mx-auto">
       {/* Header */}
       <div className="pt-2">
-        <div className="text-2xl font-bold text-white">Sacred Healing Guide</div>
+        <div className="text-2xl font-bold text-white">Siddha Quantum Nexus Guide</div>
         <div className="mt-1 text-sm text-white/60">
           A calm overview — so you always know what to do next.
         </div>
