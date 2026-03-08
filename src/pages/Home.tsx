@@ -282,7 +282,7 @@ const Home: React.FC = () => {
               <Card className="bg-gradient-to-br from-gold/20 to-gold/5 border-gold/30 p-4 sm:p-6 hover:border-gold/50 transition-all h-full">
                 <Star className="w-8 h-8 sm:w-10 sm:h-10 text-gold mb-2 sm:mb-3" />
                 <h4 className="font-heading font-bold text-foreground mb-1 sm:mb-2 text-sm sm:text-base">Practitioner Certification</h4>
-                <p className="text-xs sm:text-sm text-muted-foreground">Become a certified Sacred Healing Vibration Practitioner in 12 months</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Become a certified Siddha Quantum Nexus Vibration Practitioner in 12 months</p>
               </Card>
             </Link>
             <Link to="/transformation" className="block">
