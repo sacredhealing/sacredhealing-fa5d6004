@@ -540,11 +540,6 @@ const Healing: React.FC = () => {
 
       <JyotishHealingCard />
 
-      {/* HealingProgressCard */}
-      <div style={{ padding: '0 22px', marginBottom: 24 }}>
-        <HealingProgressCard variant="full" />
-      </div>
-
       <div className="h-divider" />
 
       {/* Evolution of Grace */}
