@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useAIVedicReading } from '@/hooks/useAIVedicReading';
 import { PlanetaryCycleBanner } from '@/components/dashboard/PlanetaryCycleBanner';
+import type { UserProfile } from '@/lib/vedicTypes';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
 import { useCertificates } from '@/hooks/useCertificates';
 import { useAkashicAccess } from '@/hooks/useAkashicAccess';
@@ -76,7 +77,30 @@ const Profile: React.FC = () => {
   const { certificates, isLoading: certificatesLoading, downloadCertificate, shareCertificate } = useCertificates();
   const { hasAccess: hasAkashicRecord } = useAkashicAccess(user?.id);
   const { tier, isPremium } = useMembership();
-  const { reading: vedicReading } = useAIVedicReading();
+  const { reading: vedicReading, generateReading } = useAIVedicReading();
+
+  // Load Vedic reading when user has birth data so PlanetaryCycleBanner shows real cycle (not "Initializing Alignment...")
+  useEffect(() => {
+    if (!user || vedicReading || !generateReading) return;
+    const load = async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('birth_name, birth_date, birth_time, birth_place')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (data?.birth_name && data?.birth_date && data?.birth_time && data?.birth_place) {
+        const profile: UserProfile = {
+          name: data.birth_name,
+          birthDate: data.birth_date,
+          birthTime: data.birth_time,
+          birthPlace: data.birth_place,
+          plan: 'compass',
+        };
+        await generateReading(profile, 0, 'Europe/Stockholm', user.id);
+      }
+    };
+    load();
+  }, [user, vedicReading, generateReading]);
 
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [appearanceOpen, setAppearanceOpen] = useState(false);
