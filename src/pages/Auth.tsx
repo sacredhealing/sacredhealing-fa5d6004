@@ -312,7 +312,7 @@ const Auth: React.FC = () => {
               <circle cx="250" cy="250" r="5" fill="#D4AF37" opacity="0.8" />
             </svg>
           </div>
-          <div className="relative flex items-center justify-center w-[200px] h-[200px] md:w-[280px] md:h-[280px]">
+          <div className="relative flex items-center justify-center w-[280px] h-[280px] md:w-[280px] md:h-[280px]">
             {/* Outer glow rings */}
             <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'radial-gradient(circle, rgba(212,175,55,0.12) 0%, transparent 70%)', animation: 'siddhiSpin 20s ease-in-out infinite' }} />
             <svg className="w-full h-full" width="280" height="280" viewBox="0 0 280 280" fill="none" style={{ animation: 'siddhiSpin 150s linear infinite' }}>
