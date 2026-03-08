@@ -541,8 +541,8 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   .hero-name{font-family:'Cormorant Garamond',serif;font-weight:300;font-style:italic;font-size:clamp(2.8rem,6vw,4.5rem);letter-spacing:-0.02em;color:white;line-height:1;margin-bottom:12px;animation:fadeUp 0.8s ease both}
   .soul-label{font-family:'Montserrat',sans-serif;font-weight:800;font-size:8px;letter-spacing:0.5em;text-transform:uppercase;color:rgba(212,175,55,0.7);margin-bottom:28px}
   .soul-label span{color:rgba(255,255,255,0.25);margin:0 8px}
-  .stats-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:48px;animation:fadeUp 1.1s ease both}
-  .stat-pill{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:100px;padding:12px 28px;text-align:center;min-width:100px}
+   .stats-row{display:flex;gap:12px;flex-wrap:nowrap;justify-content:center;margin-bottom:48px;animation:fadeUp 1.1s ease both;width:100%;max-width:400px;margin-left:auto;margin-right:auto}
+   .stat-pill{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:100px;padding:12px 20px;text-align:center;flex:1 1 0;min-width:0}
   .stat-value{font-weight:800;font-size:20px;color:#D4AF37;letter-spacing:-0.02em;display:block}
   .stat-label{font-weight:400;font-size:7px;letter-spacing:0.45em;text-transform:uppercase;color:rgba(255,255,255,0.25);display:block;margin-top:2px}
   .scroll-hint{position:absolute;bottom:36px;font-weight:800;font-size:7px;letter-spacing:0.5em;text-transform:uppercase;color:rgba(255,255,255,0.15);display:flex;flex-direction:column;align-items:center;gap:8px}
@@ -1014,7 +1014,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
             </div>
             <span className="archive-cta">Initiate Scan →</span>
           </div>
-          <div className="archive-card" onClick={() => navigate('/quantum-apothecary')}>
+          <div className="archive-card" onClick={() => navigate('/quantum-apothecary', { state: { focusChat: true } })}>
             <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
               <div style={{width:44,height:44,borderRadius:13,background:'rgba(212,175,55,0.06)',border:'1px solid rgba(212,175,55,0.18)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginBottom:14}}>
                 <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
