@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GoalSelector } from '@/components/onboarding/GoalSelector';
