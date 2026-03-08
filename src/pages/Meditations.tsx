@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Play, Pause, Clock, Sparkles, ArrowLeft, Loader2, Globe, Lock, Settings } from 'lucide-react';
+import { Play, Pause, Clock, Sparkles, ArrowLeft, Loader2, Globe, Lock } from 'lucide-react';
 import BabajiShadow from '@/components/meditation/BabajiShadow';
 import { Button } from '@/components/ui/button';
 import CustomMeditationBooking from '@/components/meditation/CustomMeditationBooking';
@@ -229,18 +229,6 @@ const MeditationSectionSQI: React.FC<{
   );
 };
 
-const SacredCommissionCard: React.FC<{ icon: string; price: string; title: string; subtitle: string }> = ({ icon, price, title, subtitle }) => (
-  <div className="commission-card">
-    <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg, rgba(212,175,55,0.12), rgba(212,175,55,0.04))', border: '1px solid rgba(212,175,55,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{icon}</div>
-    <div style={{ flex: 1, minWidth: 0 }}>
-      <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.6)', marginBottom: 2 }}>{price}</div>
-      <div style={{ fontWeight: 700, fontSize: 14, color: 'rgba(255,255,255,0.9)', marginBottom: 1 }}>{title}</div>
-      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)' }}>{subtitle}</div>
-    </div>
-    <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 18, flexShrink: 0 }}>›</div>
-  </div>
-);
-
 const Meditations: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -454,17 +442,12 @@ const Meditations: React.FC = () => {
           <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.5)', padding: 0, display: 'flex', alignItems: 'center', gap: 6 }} onClick={() => navigate(-1)}>
             <ArrowLeft size={18} />
           </button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div className="nadi-pulse"><Sparkles size={18} /></div>
-            <button style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'rgba(255,255,255,0.4)' }} onClick={() => navigate('/settings')}>
-              <Settings size={16} />
-            </button>
-          </div>
+          <div className="nadi-pulse"><Sparkles size={18} /></div>
         </div>
 
         <div className="micro-label" style={{ marginBottom: 8, color: 'rgba(212,175,55,0.5)' }}>Akasha-Neural Archive · Meditation Transmissions</div>
         <h1 className="hero-title shimmer-text" style={{ marginBottom: 6 }}>{t('meditations.templeGreeting', 'The Hall of Stillness')}</h1>
-        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, marginBottom: 24, maxWidth: 340 }}>Curated by intention. Bhakti-Algorithms activated. Expand when you feel ready.</p>
+        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, marginBottom: 24, maxWidth: 340 }}>{t('meditations.sectionsSubtitle', 'Curated by intention. Expand when you feel ready.')}</p>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
           <Globe size={13} color="rgba(255,255,255,0.3)" />
@@ -537,16 +520,10 @@ const Meditations: React.FC = () => {
       <div style={{ padding: '0 20px 32px' }}>
         <div style={{ marginBottom: 20 }}>
           <div className="micro-label" style={{ marginBottom: 6, color: 'rgba(212,175,55,0.5)' }}>{t('meditations.sacredCommissions', 'Sacred Commissions')}</div>
-          <div style={{ fontWeight: 800, fontSize: 17, letterSpacing: '-0.02em', color: 'rgba(255,255,255,0.9)', marginBottom: 4 }}>Personal Transmissions</div>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: 0 }}>When you want something channeled for you alone.</p>
+          <div style={{ fontWeight: 800, fontSize: 17, letterSpacing: '-0.02em', color: 'rgba(255,255,255,0.9)' }}>{t('meditations.sacredCommissionsDesc', 'Personal transmissions. When you want something channeled for you alone.')}</div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <SacredCommissionCard icon="☸" price="€47" title="108 Wealth Reprogramming Meditation" subtitle="Wealth Activation" />
-          <SacredCommissionCard icon="✦" price="€20–€97" title="Custom Channeled Meditation" subtitle="Personalized Experience" />
-          <SacredCommissionCard icon="◎" price="€97–€197" title="Custom Meditation Creation" subtitle="For Creators & Healers" />
-        </div>
-        {/* Hidden functional components for dialog triggers */}
-        <div style={{ display: 'none' }}>
+        <MeditationMembershipBanner />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
           <WealthMeditationService />
           <CustomMeditationBooking />
           <CustomMeditationCreation />

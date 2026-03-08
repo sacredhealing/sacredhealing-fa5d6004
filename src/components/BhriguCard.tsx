@@ -24,7 +24,7 @@ function getRevealedMantra(
   dashaPlanet: Planet | null,
   prescribedText: string | null
 ): { text: string; planet: Planet | null } | null {
-  if (!handAnalysisComplete && !dashaPlanet) return null;
+  // If we have both palm and dasha
   if (handAnalysisComplete && palmArchetype && dashaPlanet) {
     if (palmArchetype === 'Spiritual Mastery' && dashaPlanet === 'Jupiter') {
       return { text: 'Om Gurave Namaha', planet: 'Jupiter' };
@@ -33,9 +33,15 @@ function getRevealedMantra(
       return { text: 'Om Ram Rahave Namah', planet: 'Rahu' };
     }
   }
+  // If we have dasha planet with prescribed text
   if (dashaPlanet && prescribedText) {
     return { text: prescribedText, planet: dashaPlanet };
   }
+  // If we have dasha planet, use known mantra display map
+  if (dashaPlanet && DASHA_MANTRA_DISPLAY[dashaPlanet]) {
+    return { text: DASHA_MANTRA_DISPLAY[dashaPlanet], planet: dashaPlanet };
+  }
+  // Palm-only fallbacks
   if (handAnalysisComplete && palmArchetype) {
     if (palmArchetype === 'Spiritual Mastery') {
       return { text: 'Om Gurave Namaha', planet: 'Jupiter' };
