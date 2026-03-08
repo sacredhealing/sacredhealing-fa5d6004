@@ -25,12 +25,12 @@ import { useAchievements } from '@/hooks/useAchievements';
 import { useMembership } from '@/hooks/useMembership';
 import { useSocialShare } from '@/hooks/useSocialShare';
 import { translateAchievement } from '@/lib/translateAchievement';
-import { Award, Flame, Target, Share2, Users, Star, Sparkles, Heart, Crown, Calendar } from 'lucide-react';
+import { Award, Flame, Target, Share2, Users, Star, Sparkles, Heart, Crown, Calendar, Droplet, Clock, Shield, Pentagon } from 'lucide-react';
 import type { DailyGuidance } from '@/hooks/useDailyGuidance';
 import type { SessionLike } from '@/hooks/useDashboardAutostart';
 
 const ACHIEVEMENT_ICON_MAP: Record<string, React.ComponentType<{ className?: string; size?: string | number }>> = {
-  Award, Flame, Target, Share2, Users, Star, Sparkles, Heart, Crown, Calendar,
+  Award, Flame, Target, Share2, Users, Star, Sparkles, Heart, Crown, Calendar, Droplet, Clock, Shield, Pentagon,
 };
 
 export type HomeFlowState = 'idle' | 'in_session' | 'completed';
