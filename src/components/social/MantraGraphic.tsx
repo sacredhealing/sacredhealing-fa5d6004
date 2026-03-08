@@ -22,7 +22,7 @@ export const MantraGraphic: React.FC<MantraGraphicProps> = ({
 }) => {
   const handleShare = async () => {
     const shareUrl = 'https://sacredhealing.lovable.app/mantras?utm_source=share&utm_medium=mantra';
-    const shareText = `🕉️ ${title || 'Sacred Mantra'}\n\n"${mantra}"\n\n✨ Chant with me on Sacred Healing`;
+    const shareText = `🕉️ ${title || 'Sacred Mantra'}\n\n"${mantra}"\n\n✨ Chant with me on Siddha Quantum Nexus`;
 
     if (navigator.share) {
       try {
