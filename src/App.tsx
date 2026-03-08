@@ -138,7 +138,7 @@ const TempleHome = React.lazy(() => import("./pages/TempleHome"));
 const DigitalNadi = React.lazy(() => import("./pages/DigitalNadi"));
 const SoulScan = React.lazy(() => import("./pages/SoulScan"));
 const VayuProtocol = React.lazy(() => import("./pages/VayuProtocol"));
-const SiddhaPortal = React.lazy(() => import("./pages/SiddhaPortal"));
+const LifeBook = React.lazy(() => import("./pages/LifeBook"));
 
 const PageLoader = () => (
   <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a]">
@@ -244,7 +244,7 @@ function AppRoutes() {
                   <Route path="/digital-nadi" element={<DigitalNadi />} />
                   <Route path="/soul-scan" element={<SoulScan />} />
                   <Route path="/vayu-protocol" element={<VayuProtocol />} />
-                  <Route path="/siddha-portal" element={<SiddhaPortal />} />
+                  <Route path="/life-book" element={<LifeBook />} />
                   <Route path="/prompt-library" element={<PromptLibrary />} />
                   <Route path="/creative-soul" element={<Navigate to="/creative-soul/store" replace />} />
                   <Route path="/creative-soul-hub" element={<CreativeSoulHub />} />
