@@ -290,7 +290,7 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
         <p className="font-serif italic text-sm text-purple-300/40 mb-1">
           "Health is wealth, peace of mind is happiness, Yoga shows the way."
         </p>
-        <p className="text-xs text-purple-400/20">Sacred Healing Ayurveda • Siddha AI Engine</p>
+        <p className="text-xs text-purple-400/20">Siddha Quantum Nexus Ayurveda • Siddha AI Engine</p>
       </div>
     </div>
   );

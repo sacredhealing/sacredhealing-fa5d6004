@@ -105,7 +105,7 @@ export const MantraGraphic: React.FC<MantraGraphicProps> = ({
         {/* Branding */}
         <div className="flex items-center justify-center gap-2 mb-4">
           <LotusIcon size={20} className="text-amber-400" />
-          <span className="text-sm font-medium text-amber-400">Sacred Healing</span>
+          <span className="text-sm font-medium text-amber-400">Siddha Quantum Nexus</span>
         </div>
 
         {/* Share Button */}
