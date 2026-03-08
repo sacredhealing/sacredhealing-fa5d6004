@@ -346,13 +346,25 @@ const Mantras = () => {
   const currentMantra = selectedMantraId ? mantras.find((m) => m.id === selectedMantraId) : null;
   const mantraPlanet = currentMantra?.planet_type ? normalizePlanetName(currentMantra.planet_type) : null;
 
-  const { reading } = useAIVedicReading();
+  const { reading, generateReading } = useAIVedicReading();
   const jyotishRecommendation = useJyotishMantraRecommendation(mantras, reading);
   const horaWatch = useHoraWatch({ timezone: userTimezone });
   const currentHoraPlanet = horaWatch.calculation?.currentHora?.planet
     ? normalizePlanetName(horaWatch.calculation.currentHora.planet)
     : null;
   const dashaPlanet = useBhriguPlanet(reading);
+
+  // Auto-generate Vedic reading when user is logged in
+  useEffect(() => {
+    if (!user || reading || !generateReading) return;
+    const load = async () => {
+      const { data } = await supabase.from('profiles').select('birth_name, birth_date, birth_time, birth_place').eq('user_id', user.id).maybeSingle();
+      if (data?.birth_name && data?.birth_date && data?.birth_time && data?.birth_place) {
+        await generateReading({ name: data.birth_name, birthDate: data.birth_date, birthTime: data.birth_time, birthPlace: data.birth_place, plan: 'compass' }, 0, 'Europe/Stockholm', user.id);
+      }
+    };
+    load();
+  }, [user, reading, generateReading]);
 
   const palmScan = getPalmScanResult();
   const handAnalysisComplete = !!palmScan;
