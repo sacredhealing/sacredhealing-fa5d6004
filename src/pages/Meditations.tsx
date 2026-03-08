@@ -658,7 +658,7 @@ const Meditations: React.FC = () => {
   const [playlistMeditations, setPlaylistMeditations] = useState<MeditationFull[]>([]);
   const { reading: vedicReading, generateReading } = useAIVedicReading();
   const userDailyState = useUserDailyState();
-  const startNowItem = useMemo(() => selectStartNowItem(meditations, { dayPhase: getDayPhase(), userState: userDailyState?.userState ?? 'calm', language }), [meditations, userDailyState, language]);
+  const startNowItem = useMemo(() => selectStartNowItem(meditations, { dayPhase: getDayPhase(), userState: (userDailyState?.userState ?? 'calm') as any, language }), [meditations, userDailyState, language]);
 
   // Stripe success toasts (preserved)
   useEffect(() => {
