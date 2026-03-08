@@ -574,7 +574,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   .tier-features li::before{content:'◈';color:#D4AF37;font-size:8px;flex-shrink:0}
   .gold-btn{display:block;width:100%;max-width:280px;margin:0 auto;background:#D4AF37;color:#050505;border:none;border-radius:100px;padding:13px 24px;font-family:'Montserrat',sans-serif;font-weight:800;font-size:9px;letter-spacing:0.4em;text-transform:uppercase;cursor:pointer;transition:opacity 0.2s,transform 0.2s;text-align:center}
   .gold-btn:hover{opacity:0.85;transform:translateY(-1px)}
-  .ghost-btn{display:block;width:100%;background:transparent;color:rgba(212,175,55,0.6);border:1px solid rgba(212,175,55,0.2);border-radius:100px;padding:12px 24px;font-family:'Montserrat',sans-serif;font-weight:800;font-size:9px;letter-spacing:0.4em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;text-align:center}
+  .ghost-btn{display:block;width:100%;max-width:280px;margin:0 auto;background:transparent;color:rgba(212,175,55,0.6);border:1px solid rgba(212,175,55,0.2);border-radius:100px;padding:12px 24px;font-family:'Montserrat',sans-serif;font-weight:800;font-size:9px;letter-spacing:0.4em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;text-align:center}
   .siddha-quantum-card{position:relative;overflow:visible!important;border-color:rgba(212,175,55,0.35)!important;background:rgba(212,175,55,0.04)!important}
   .sq-aura{position:absolute;inset:0;border-radius:24px;pointer-events:none;z-index:0}
   .sq-aura-1{border:1px solid rgba(212,175,55,0.5);animation:sqPulse 2.5s ease-in-out infinite}
