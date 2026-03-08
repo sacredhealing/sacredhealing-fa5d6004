@@ -232,16 +232,19 @@ const Profile: React.FC = () => {
 
   /* SQI 2050: COMMERCE & AFFILIATE SYNC LOGIC */
   const handleUpgrade = async (tierKey: StripeTierKey) => {
-    const tier = paymentLogic[tierKey];
-    const affiliateId = typeof localStorage !== 'undefined' ? localStorage.getItem('sqi_affiliate_id') || 'direct' : 'direct';
+    const tierConfig = paymentLogic[tierKey];
+    const affiliateId =
+      (() => { try { return sessionStorage.getItem('affiliate_ref'); } catch { return null; } })() ||
+      (typeof localStorage !== 'undefined' ? localStorage.getItem('sqi_affiliate_id') : null) ||
+      'direct';
     setUpgradeLoading(tierKey);
     try {
       const { data, error } = await supabase.functions.invoke('create-membership-checkout', {
         body: {
-          priceId: tier.stripePriceId,
-          mode: getStripeMode(tier.interval),
-          tierSlug: tierKey,
+          priceId: tierConfig.stripePriceId,
+          tierSlug: tierConfig.tierSlug,
           affiliate_id: affiliateId,
+          successPath: '/profile',
           metadata: {
             affiliate_id: affiliateId,
             tier_name: tierKey,

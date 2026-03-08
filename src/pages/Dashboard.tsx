@@ -400,8 +400,8 @@ const Dashboard: React.FC = () => {
               </svg>
               <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.7)', marginBottom: 4 }}>Ayurveda</div>
               <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.42)' }}>
-                {(vedicReading as { ayurvedicProfile?: { dominantDosha?: string } })?.ayurvedicProfile?.dominantDosha
-                  ? `${(vedicReading as { ayurvedicProfile: { dominantDosha: string } }).ayurvedicProfile.dominantDosha} dominance`
+                {(vedicReading as unknown as { ayurvedicProfile?: { dominantDosha?: string } })?.ayurvedicProfile?.dominantDosha
+                  ? `${(vedicReading as unknown as { ayurvedicProfile: { dominantDosha: string } }).ayurvedicProfile.dominantDosha} dominance`
                   : 'Dosha analysis'}
               </div>
               <span style={{ position: 'absolute', bottom: 13, right: 13, color: 'rgba(212,175,55,0.25)', fontSize: 11 }}>→</span>
