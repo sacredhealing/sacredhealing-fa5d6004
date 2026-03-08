@@ -11,10 +11,19 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ServiceBannerRow } from '@/components/ui/service-banner-row';
 
-const CustomMeditationBooking: React.FC = () => {
+interface CustomMeditationBookingProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
+}
+
+const CustomMeditationBooking: React.FC<CustomMeditationBookingProps> = ({ open: controlledOpen, onOpenChange, hideTrigger }) => {
   const { t } = useTranslation();
   const { user, isAuthenticated } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined && onOpenChange !== undefined;
+  const isOpen = isControlled ? controlledOpen : internalOpen;
+  const setIsOpen = isControlled ? (v: boolean) => onOpenChange?.(v) : setInternalOpen;
   const [selectedPackage, setSelectedPackage] = useState<'single' | 'double' | null>(null);
   const [notes, setNotes] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -88,15 +97,17 @@ const CustomMeditationBooking: React.FC = () => {
 
   return (
     <>
-      <ServiceBannerRow
-        icon={Sparkles}
-        title={t('customMeditation.title')}
-        subtitle={t('customMeditation.badge')}
-        onCtaClick={() => setIsOpen(true)}
-        accentColor="purple"
-        variant="sanctuary"
-        priceAboveTitle="€70–€97"
-      />
+      {!hideTrigger && (
+        <ServiceBannerRow
+          icon={Sparkles}
+          title={t('customMeditation.title')}
+          subtitle={t('customMeditation.badge')}
+          onCtaClick={() => setIsOpen(true)}
+          accentColor="purple"
+          variant="sanctuary"
+          priceAboveTitle="€70–€97"
+        />
+      )}
 
       {/* Booking Dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>

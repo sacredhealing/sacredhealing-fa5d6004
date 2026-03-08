@@ -9,10 +9,19 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ServiceBannerRow } from '@/components/ui/service-banner-row';
 
-const WealthMeditationService: React.FC = () => {
+interface WealthMeditationServiceProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
+}
+
+const WealthMeditationService: React.FC<WealthMeditationServiceProps> = ({ open: controlledOpen, onOpenChange, hideTrigger }) => {
   const { t } = useTranslation();
   const { user, isAuthenticated } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined && onOpenChange !== undefined;
+  const isOpen = isControlled ? controlledOpen : internalOpen;
+  const setIsOpen = isControlled ? (v: boolean) => onOpenChange?.(v) : setInternalOpen;
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -57,15 +66,17 @@ const WealthMeditationService: React.FC = () => {
 
   return (
     <>
-      <ServiceBannerRow
-        icon={Zap}
-        title={t('wealth.title')}
-        subtitle={t('wealth.badge')}
-        onCtaClick={() => setIsOpen(true)}
-        accentColor="yellow"
-        variant="sanctuary"
-        priceAboveTitle="€47"
-      />
+      {!hideTrigger && (
+        <ServiceBannerRow
+          icon={Zap}
+          title={t('wealth.title')}
+          subtitle={t('wealth.badge')}
+          onCtaClick={() => setIsOpen(true)}
+          accentColor="yellow"
+          variant="sanctuary"
+          priceAboveTitle="€47"
+        />
+      )}
 
       {/* Purchase Dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>

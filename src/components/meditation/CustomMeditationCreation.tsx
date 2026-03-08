@@ -12,7 +12,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ServiceBannerRow } from '@/components/ui/service-banner-row';
 
-const CustomMeditationCreation: React.FC = () => {
+interface CustomMeditationCreationProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
+}
+
+const CustomMeditationCreation: React.FC<CustomMeditationCreationProps> = ({ open: controlledOpen, onOpenChange, hideTrigger }) => {
   const { t } = useTranslation();
 
   const frequencies = [
@@ -50,7 +56,10 @@ const CustomMeditationCreation: React.FC = () => {
   ];
 
   const { user, isAuthenticated } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined && onOpenChange !== undefined;
+  const isOpen = isControlled ? controlledOpen : internalOpen;
+  const setIsOpen = isControlled ? (v: boolean) => onOpenChange?.(v) : setInternalOpen;
   const [selectedPackage, setSelectedPackage] = useState<'single' | 'triple' | null>(null);
   const [selectedFrequency, setSelectedFrequency] = useState<string>('');
   const [selectedSoundType, setSelectedSoundType] = useState<string>('');
@@ -188,15 +197,17 @@ const CustomMeditationCreation: React.FC = () => {
 
   return (
     <>
-      <ServiceBannerRow
-        icon={Music}
-        title={t('meditationCreation.title')}
-        subtitle={t('meditationCreation.badge')}
-        onCtaClick={() => setIsOpen(true)}
-        accentColor="amber"
-        variant="sanctuary"
-        priceAboveTitle="€97–€197"
-      />
+      {!hideTrigger && (
+        <ServiceBannerRow
+          icon={Music}
+          title={t('meditationCreation.title')}
+          subtitle={t('meditationCreation.badge')}
+          onCtaClick={() => setIsOpen(true)}
+          accentColor="amber"
+          variant="sanctuary"
+          priceAboveTitle="€97–€197"
+        />
+      )}
 
       {/* Booking Dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>

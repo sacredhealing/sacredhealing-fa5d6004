@@ -21,7 +21,6 @@ import { useCuratedPlaylists, CuratedPlaylist } from '@/hooks/useCuratedPlaylist
 import { useMusicPlayer, UniversalAudioItem } from '@/contexts/MusicPlayerContext';
 import { useUserDailyState } from '@/hooks/useUserDailyState';
 import { getDayPhase } from '@/utils/postSessionContext';
-import { StartNowCard } from '@/features/meditations/StartNowCard';
 import { LanguageToggle } from '@/features/meditations/LanguageToggle';
 import { useMeditationContentLanguage } from '@/features/meditations/useContentLanguage';
 import { selectStartNowItem } from '@/features/meditations/startNowSelector';
@@ -96,7 +95,7 @@ const JyotishMeditationCard = () => {
     <div className="jyotish-banner" style={{ fontFamily: 'inherit' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
         <span style={{ fontSize: 16 }}>🔭</span>
-        <span className="micro-label" style={{ color: 'rgba(212,175,55,0.7)' }}>Jyotish Meditation Guidance</span>
+        <span className="micro-label" style={{ color: 'rgba(212,175,55,0.7)' }}>JYOTISH MEDITATION GUIDANCE</span>
       </div>
       <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6, margin: 0 }}>
         Your <strong style={{ color: '#D4AF37' }}>{jyotish.mahadasha} Mahadasha</strong> period recommends{' '}
@@ -165,7 +164,7 @@ const MeditationRow: React.FC<{
         )}
       </div>
       <div style={{ flexShrink: 0 }}>
-        {isFree ? <span className="badge-free">Free</span> : <span className="badge-premium">{isLocked ? '🔒' : '✦'} Prana+</span>}
+        {isFree ? <span className="badge-free">FREE</span> : <span className="badge-premium">{isLocked ? '🔒' : '✦'} PRANA+</span>}
       </div>
       {isLocked && (
         <div className="lock-overlay">
@@ -204,7 +203,7 @@ const MeditationSectionSQI: React.FC<{
           <div style={{ fontWeight: 800, fontSize: 15, letterSpacing: '-0.01em', color: 'rgba(255,255,255,0.9)' }}>{title}</div>
           {subtitle && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>{subtitle}</div>}
         </div>
-        <div className={`chevron${open ? ' open' : ''}`}>▼</div>
+        <div className={`chevron${open ? ' open' : ''}`} aria-hidden>{open ? '▲' : '▼'}</div>
       </div>
       {open && (
         <div style={{ paddingBottom: 12 }}>
@@ -249,6 +248,7 @@ const Meditations: React.FC = () => {
   const { playlists: curatedPlaylists, getPlaylistItems } = useCuratedPlaylists('meditation');
   const [selectedPlaylist, setSelectedPlaylist] = useState<CuratedPlaylist | null>(null);
   const [playlistMeditations, setPlaylistMeditations] = useState<Meditation[]>([]);
+  const [activeCommission, setActiveCommission] = useState<'wealth' | 'booking' | 'creation' | null>(null);
 
   useEffect(() => {
     if (!user || vedicReading || !generateReading) return;
@@ -447,7 +447,7 @@ const Meditations: React.FC = () => {
 
         <div className="micro-label" style={{ marginBottom: 8, color: 'rgba(212,175,55,0.5)' }}>Akasha-Neural Archive · Meditation Transmissions</div>
         <h1 className="hero-title shimmer-text" style={{ marginBottom: 6 }}>{t('meditations.templeGreeting', 'The Hall of Stillness')}</h1>
-        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, marginBottom: 24, maxWidth: 340 }}>{t('meditations.sectionsSubtitle', 'Curated by intention. Expand when you feel ready.')}</p>
+        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, marginBottom: 24, maxWidth: 340 }}>{t('meditations.sectionsSubtitle', 'Curated by intention. Bhakti-Algorithms activated. Expand when you feel ready.')}</p>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
           <Globe size={13} color="rgba(255,255,255,0.3)" />
@@ -461,7 +461,38 @@ const Meditations: React.FC = () => {
 
       {startNowItem && (
         <div style={{ padding: '0 20px 20px' }}>
-          <StartNowCard item={startNowItem} dayPhase={dayPhase} userState={userState} onStart={(item) => item && startPlayback(item as Meditation)} />
+          <div
+            className="glass-card"
+            style={{ padding: 20, display: 'flex', alignItems: 'center', gap: 16, cursor: 'pointer' }}
+            onClick={() => startPlayback(startNowItem)}
+          >
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <button
+                type="button"
+                className="play-btn playing"
+                style={{ width: 56, height: 56 }}
+                onClick={e => { e.stopPropagation(); startPlayback(startNowItem); }}
+                aria-label="Play"
+              >
+                <Play size={22} strokeWidth={2.5} style={{ marginLeft: 3 }} />
+              </button>
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="micro-label" style={{ marginBottom: 4, color: 'rgba(212,175,55,0.6)' }}>NOW · PREMA-PULSE ACTIVE</div>
+              <div style={{ fontWeight: 800, fontSize: 18, letterSpacing: '-0.02em', color: 'rgba(255,255,255,0.95)', marginBottom: 6 }}>{language === 'sv' && startNowItem.title_sv ? startNowItem.title_sv : startNowItem.title}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                {(startNowItem.duration_minutes != null) && (
+                  <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', gap: 4 }}><Clock size={12} />{startNowItem.duration_minutes} min</span>
+                )}
+                {(startNowItem.shc_reward != null) && (
+                  <span style={{ fontSize: 12, color: 'rgba(212,175,55,0.7)', display: 'flex', alignItems: 'center', gap: 4 }}><Sparkles size={12} />+{startNowItem.shc_reward} SHC</span>
+                )}
+                {startNowItem.audio_url_sv && (
+                  <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(34,211,238,0.6)', border: '1px solid rgba(34,211,238,0.2)', borderRadius: 6, padding: '2px 6px' }}>SV+EN</span>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -519,15 +550,42 @@ const Meditations: React.FC = () => {
 
       <div style={{ padding: '0 20px 32px' }}>
         <div style={{ marginBottom: 20 }}>
-          <div className="micro-label" style={{ marginBottom: 6, color: 'rgba(212,175,55,0.5)' }}>{t('meditations.sacredCommissions', 'Sacred Commissions')}</div>
-          <div style={{ fontWeight: 800, fontSize: 17, letterSpacing: '-0.02em', color: 'rgba(255,255,255,0.9)' }}>{t('meditations.sacredCommissionsDesc', 'Personal transmissions. When you want something channeled for you alone.')}</div>
+          <div className="micro-label" style={{ marginBottom: 6, color: 'rgba(212,175,55,0.5)' }}>{t('meditations.sacredCommissions', 'SACRED COMMISSIONS')}</div>
+          <div style={{ fontWeight: 800, fontSize: 17, letterSpacing: '-0.02em', color: 'rgba(255,255,255,0.9)', marginBottom: 4 }}>{t('meditations.personalTransmissions', 'Personal Transmissions')}</div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', lineHeight: 1.5 }}>{t('meditations.sacredCommissionsDesc', 'When you want something channeled for you alone.')}</div>
         </div>
-        <MeditationMembershipBanner />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
-          <WealthMeditationService />
-          <CustomMeditationBooking />
-          <CustomMeditationCreation />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div className="commission-card" onClick={() => setActiveCommission('wealth')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setActiveCommission('wealth')}>
+            <div style={{ width: 44, height: 44, borderRadius: 14, background: 'linear-gradient(135deg, rgba(212,175,55,0.1), rgba(212,175,55,0.03))', border: '1px solid rgba(212,175,55,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>☸</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.5)', marginBottom: 3 }}>€47</div>
+              <div style={{ fontWeight: 700, fontSize: 14, color: 'rgba(255,255,255,0.88)' }}>{t('meditations.wealthTitle', '108 Wealth Reprogramming Meditation')}</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>{t('meditations.wealthSub', 'Wealth Activation')}</div>
+            </div>
+            <div style={{ color: 'rgba(212,175,55,0.4)', fontSize: 16 }}>›</div>
+          </div>
+          <div className="commission-card" onClick={() => setActiveCommission('booking')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setActiveCommission('booking')}>
+            <div style={{ width: 44, height: 44, borderRadius: 14, background: 'linear-gradient(135deg, rgba(212,175,55,0.1), rgba(212,175,55,0.03))', border: '1px solid rgba(212,175,55,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>✦</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.5)', marginBottom: 3 }}>€20–€97</div>
+              <div style={{ fontWeight: 700, fontSize: 14, color: 'rgba(255,255,255,0.88)' }}>{t('meditations.bookingTitle', 'Custom Channeled Meditation')}</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>{t('meditations.bookingSub', 'Personalized Experience')}</div>
+            </div>
+            <div style={{ color: 'rgba(212,175,55,0.4)', fontSize: 16 }}>›</div>
+          </div>
+          <div className="commission-card" onClick={() => setActiveCommission('creation')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setActiveCommission('creation')}>
+            <div style={{ width: 44, height: 44, borderRadius: 14, background: 'linear-gradient(135deg, rgba(212,175,55,0.1), rgba(212,175,55,0.03))', border: '1px solid rgba(212,175,55,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>◎</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.5)', marginBottom: 3 }}>€97–€197</div>
+              <div style={{ fontWeight: 700, fontSize: 14, color: 'rgba(255,255,255,0.88)' }}>{t('meditations.creationTitle', 'Custom Meditation Creation')}</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>{t('meditations.creationSub', 'For Creators & Healers')}</div>
+            </div>
+            <div style={{ color: 'rgba(212,175,55,0.4)', fontSize: 16 }}>›</div>
+          </div>
         </div>
+        <WealthMeditationService open={activeCommission === 'wealth'} onOpenChange={o => !o && setActiveCommission(null)} hideTrigger />
+        <CustomMeditationBooking open={activeCommission === 'booking'} onOpenChange={o => !o && setActiveCommission(null)} hideTrigger />
+        <CustomMeditationCreation open={activeCommission === 'creation'} onOpenChange={o => !o && setActiveCommission(null)} hideTrigger />
       </div>
 
       <IntentionThreshold
