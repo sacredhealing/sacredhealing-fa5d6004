@@ -645,9 +645,9 @@ const Meditations: React.FC = () => {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { language, setLanguage } = useMeditationContentLanguage();
-  const { playUniversalAudio, currentAudio, isPlaying, togglePlayPause, playerProgress } =
+  const { playUniversalAudio, currentAudio, isPlaying, togglePlay, progress: playerProgress } =
     useMusicPlayer();
-  const { curatedPlaylists } = useCuratedPlaylists();
+  const { playlists: curatedPlaylists, getPlaylistItems } = useCuratedPlaylists('meditation');
   const [meditations, setMeditations] = useState<MeditationFull[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCommission, setActiveCommission] = useState<string | null>(null);
@@ -656,9 +656,9 @@ const Meditations: React.FC = () => {
   const [currentIntention, setCurrentIntention] = useState<IntentionType | null>(null);
   const [selectedPlaylist, setSelectedPlaylist] = useState<CuratedPlaylist | null>(null);
   const [playlistMeditations, setPlaylistMeditations] = useState<MeditationFull[]>([]);
-  const { vedicReading, generateReading } = useAIVedicReading();
+  const { reading: vedicReading, generateReading } = useAIVedicReading();
   const userDailyState = useUserDailyState();
-  const { startNowItem } = useMemo(() => selectStartNowItem(meditations, userDailyState), [meditations, userDailyState]);
+  const startNowItem = useMemo(() => selectStartNowItem(meditations, { dayPhase: getDayPhase(), userState: (userDailyState?.userState ?? 'calm') as any, language }), [meditations, userDailyState, language]);
 
   // Stripe success toasts (preserved)
   useEffect(() => {
@@ -738,7 +738,7 @@ const Meditations: React.FC = () => {
       setShowThreshold(true);
       return;
     }
-    playUniversalAudio({ id: med.id, title: med.title, audioUrl, type: 'meditation' });
+    playUniversalAudio({ id: med.id, title: med.title, audio_url: audioUrl, artist: '', cover_image_url: null, duration_seconds: 0, shc_reward: 0, contentType: 'meditation' });
   };
 
   const handleLock = () => {
@@ -914,7 +914,6 @@ const Meditations: React.FC = () => {
                   playlist={playlist}
                   onClick={async () => {
                     setSelectedPlaylist(playlist);
-                    const { getPlaylistItems } = await import('@/hooks/useCuratedPlaylists');
                     const items = await getPlaylistItems(playlist.id);
                     setPlaylistMeditations((items || []) as MeditationFull[]);
                   }}
@@ -1060,12 +1059,12 @@ const Meditations: React.FC = () => {
       </div>
 
       {/* ✅ FIX 10: Now-Playing Floating Bar */}
-      {currentAudio && currentAudio.type === 'meditation' && (
+      {currentAudio && currentAudio.contentType === 'meditation' && (
         <NowPlayingBar
           audio={currentAudio}
           isPlaying={isPlaying}
           progress={playerProgress ?? 0}
-          onToggle={togglePlayPause}
+          onToggle={togglePlay}
         />
       )}
     </div>
