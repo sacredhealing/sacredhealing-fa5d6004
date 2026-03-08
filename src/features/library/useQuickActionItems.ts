@@ -46,7 +46,7 @@ function meditationToUniversal(m: Meditation): UniversalAudioItem & { tags?: str
   return {
     id: m.id,
     title: m.title,
-    artist: "Sacred Healing",
+    artist: "Siddha Quantum Nexus",
     audio_url: m.audio_url,
     cover_image_url: m.cover_image_url,
     duration_seconds: m.duration_minutes * 60,
