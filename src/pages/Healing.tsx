@@ -758,7 +758,7 @@ const Healing: React.FC = () => {
       </section>
 
       <div style={{ display: 'flex', justifyContent: 'center', padding: '0 22px 40px' }}>
-        <SriYantra size={80} />
+        <SriYantra style={{ width: 80, height: 80 }} />
       </div>
 
       <div style={{ padding: '0 22px 32px' }}>
