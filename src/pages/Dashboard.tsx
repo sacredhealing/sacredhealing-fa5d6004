@@ -20,7 +20,7 @@ import { mapSessionTypeToCompleted } from '@/lib/recommendationEngine';
 import { DailyRitualCard } from '@/components/dashboard/DailyRitualCard';
 import { SpiritualPathCard } from '@/components/dashboard/SpiritualPathCard';
 import { AchievementPopup } from '@/components/achievements/AchievementPopup';
-import { PlanetaryCycleBanner } from '@/components/dashboard/PlanetaryCycleBanner';
+
 import { useAchievements } from '@/hooks/useAchievements';
 import { useMembership } from '@/hooks/useMembership';
 import { useSocialShare } from '@/hooks/useSocialShare';
