@@ -656,9 +656,9 @@ const Meditations: React.FC = () => {
   const [currentIntention, setCurrentIntention] = useState<IntentionType | null>(null);
   const [selectedPlaylist, setSelectedPlaylist] = useState<CuratedPlaylist | null>(null);
   const [playlistMeditations, setPlaylistMeditations] = useState<MeditationFull[]>([]);
-  const { vedicReading, generateReading } = useAIVedicReading();
+  const { reading: vedicReading, generateReading } = useAIVedicReading();
   const userDailyState = useUserDailyState();
-  const { startNowItem } = useMemo(() => selectStartNowItem(meditations, userDailyState), [meditations, userDailyState]);
+  const startNowItem = useMemo(() => selectStartNowItem(meditations, { dayPhase: getDayPhase(), userState: userDailyState?.userState ?? 'calm', language }), [meditations, userDailyState, language]);
 
   // Stripe success toasts (preserved)
   useEffect(() => {
