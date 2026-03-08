@@ -61,7 +61,7 @@ const Splash: React.FC = () => {
         </div>
         
         <h1 className="mt-8 text-5xl font-heading font-bold text-gradient-spiritual">
-          Sacred Healing
+          Siddha Quantum Nexus
         </h1>
         
         <p className="mt-4 text-lg text-muted-foreground font-light tracking-wide">

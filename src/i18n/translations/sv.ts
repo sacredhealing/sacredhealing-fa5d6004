@@ -21,7 +21,7 @@ export const sv = {
     start_here: {
       title: "Börja här",
       body:
-        "Om det här är din första gång förklarar denna korta guide hur Sacred Healing fungerar och hur du börjar varsamt.",
+        "Om det här är din första gång förklarar denna korta guide hur Siddha Quantum Nexus fungerar och hur du börjar varsamt.",
       button: "Öppna guide",
     },
     how_to_use: {

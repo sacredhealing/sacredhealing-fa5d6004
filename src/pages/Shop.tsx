@@ -520,7 +520,7 @@ const Shop = () => {
             About Our Collection
           </h3>
           <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-            Each piece in our collection is infused with sacred healing energy by Laila. 
+            Each piece in our collection is infused with Siddha Quantum Nexus energy by Laila. 
             Our clothing features unique spiritual designs, and our art pieces carry powerful 
             healing frequencies to transform your space and energy field.
           </p>

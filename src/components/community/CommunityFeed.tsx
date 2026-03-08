@@ -110,7 +110,7 @@ const CommunityFeed = () => {
               <p className="text-sm text-white/65 leading-relaxed">{entry.body}</p>
               <div className="mt-4 flex items-center justify-between">
                 <span className="text-[11px] text-white/25">
-                  {t('community.diary.sharedBy', 'Sacred Healing team')}
+                  {t('community.diary.sharedBy', 'Siddha Quantum Nexus team')}
                 </span>
                 <button
                   className="text-xs text-amber-400/60 hover:text-amber-300 transition"
