@@ -159,7 +159,7 @@ const Onboarding: React.FC = () => {
             />
           </div>
           <p className="text-center text-white/30 text-[7px] font-extrabold tracking-[0.5em] uppercase mt-3" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-            STEP {currentStep} OF 4
+            {t('onboarding.stepOf', { current: currentStep, total: 4 })}
           </p>
         </div>
       )}
