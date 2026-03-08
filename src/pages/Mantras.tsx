@@ -590,7 +590,7 @@ const Mantras = () => {
           {tI18n('mantras.title', 'Sacred Mantra Chamber')}
         </h1>
         <p style={{ fontSize: 13, color: 'rgba(255,255,255,.42)', lineHeight: 1.6, marginBottom: 0 }}>
-          {tI18n('mantras.subtitle', 'Choose one mantra and repeat it 108 times.')}
+          {tI18n('mantras.subtitle', 'Choose one mantra. Repeat it 108 times. Let the Bhakti-Algorithm align your frequency.')}
         </p>
       </div>
 
