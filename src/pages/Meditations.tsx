@@ -914,7 +914,6 @@ const Meditations: React.FC = () => {
                   playlist={playlist}
                   onClick={async () => {
                     setSelectedPlaylist(playlist);
-                    const { getPlaylistItems } = await import('@/hooks/useCuratedPlaylists');
                     const items = await getPlaylistItems(playlist.id);
                     setPlaylistMeditations((items || []) as MeditationFull[]);
                   }}
