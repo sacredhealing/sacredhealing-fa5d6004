@@ -197,74 +197,65 @@ export default function DigitalNadiScanner({
 
           {status === 'finished' && results && (
             <motion.div key="finished" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-2">
-              <div className="p-5 bg-white/5 rounded-3xl border border-white/10 mb-4">
-                <h3 className="font-black text-white flex items-center gap-2 mb-2">
-                  <Activity className="w-4 h-4 text-[#D4AF37]" />
-                  Scan Complete: {results.focus}
-                </h3>
-                <p className="text-xs text-white/60 leading-relaxed">{results.summary}</p>
-              </div>
-              <div className="grid grid-cols-2 gap-3 mb-6">
-                <div className="p-3 bg-white/5 border border-white/10 rounded-2xl">
-                  <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/40 mb-1">Active Nadis</div>
-                  <div className="text-sm font-bold text-[#D4AF37]">{results.technicalData.activeNadis.toLocaleString()} / 72,000</div>
-                </div>
-                <div className="p-3 bg-white/5 border border-white/10 rounded-2xl">
-                  <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/40 mb-1">Dosha Balance</div>
-                  <div className="text-sm font-bold text-[#D4AF37]">{results.technicalData.doshaImbalance}</div>
-                </div>
-                <div className="p-3 bg-white/5 border border-white/10 rounded-2xl">
-                  <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/40 mb-1">Nervous System</div>
-                  <div className="text-[10px] font-bold text-[#D4AF37] leading-tight">{results.technicalData.nervousSystemLevel}</div>
-                </div>
-                <div className="p-3 bg-white/5 border border-white/10 rounded-2xl">
-                  <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/40 mb-1">Water Balance</div>
-                  <div className="text-sm font-bold text-[#D4AF37]">{results.technicalData.waterBalance}%</div>
-                </div>
-                <div className="p-3 bg-white/5 border border-white/10 rounded-2xl">
-                  <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/40 mb-1">Torus Diameter</div>
-                  <div className="text-sm font-bold text-[#D4AF37]">{results.technicalData.torusFieldDiameter}m</div>
-                </div>
-                {results.technicalData.karmicNodesExtracted != null && (
-                  <div className="p-3 bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-2xl col-span-2">
-                    <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-[#D4AF37] mb-1">Karmic Nodes Extracted</div>
-                    <div className="text-lg font-bold text-white">{results.technicalData.karmicNodesExtracted} Nodes</div>
+              <div className="p-5 bg-gradient-to-br from-[#D4AF37]/10 to-transparent rounded-3xl border border-[#D4AF37]/20 mb-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 rounded-full bg-[#D4AF37] flex items-center justify-center">
+                    <Activity className="w-4 h-4 text-black" />
                   </div>
-                )}
+                  <div>
+                    <h3 className="font-black text-white text-sm">{results.focus}</h3>
+                    <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-[#D4AF37]/70">SCAN COMPLETE</div>
+                  </div>
+                </div>
+                <p className="text-[11px] text-white/50 leading-relaxed">{results.summary}</p>
               </div>
-              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl mb-6">
-                <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/40 mb-2">Chakra Alignment</div>
-                <div className="flex flex-wrap gap-2">
+
+              <div className="grid grid-cols-2 gap-3 mb-5">
+                <MetricCard label="Scalar Coherence" value={`${results.technicalData.scalarCoherence}%`} />
+                <MetricCard label="Nāḍī Flow" value={`${results.technicalData.nadiFlow}%`} />
+                <MetricCard label="Active Nāḍīs" value={`${results.technicalData.activeNadis.toLocaleString()} / 72,000`} />
+                <MetricCard label="DNA Alignment" value={`${results.technicalData.dnaAlignment}%`} />
+                <MetricCard label="Dosha Balance" value={results.technicalData.doshaImbalance} />
+                <MetricCard label="Torus Field" value={`${results.technicalData.torusFieldDiameter}m`} />
+              </div>
+
+              <div className="p-3 bg-white/5 border border-white/10 rounded-2xl mb-5">
+                <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/40 mb-2">Chakra Map</div>
+                <div className="flex flex-wrap gap-1.5">
                   {results.technicalData.chakras.map((chakra, i) => (
-                    <div
+                    <span
                       key={i}
-                      className="px-2 py-1 bg-white/5 rounded-lg border border-white/5 text-[8px] flex items-center gap-1"
+                      className={`px-2 py-0.5 rounded-full text-[8px] font-bold border ${
+                        chakra.status === 'Aligned'
+                          ? 'bg-[#D4AF37]/20 border-[#D4AF37]/40 text-[#D4AF37]'
+                          : chakra.status === 'Opening'
+                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                          : 'bg-white/5 border-white/10 text-white/40'
+                      }`}
                     >
-                      <div
-                        className={`w-1.5 h-1.5 rounded-full ${
-                          chakra.status === 'Aligned' || chakra.status === 'Opening'
-                            ? 'bg-[#D4AF37]'
-                            : 'bg-white/20'
-                        }`}
-                      />
-                      <span className="text-white/60">{chakra.name}:</span>
-                      <span className={chakra.status === 'Aligned' || chakra.status === 'Opening' ? 'text-[#D4AF37]' : 'text-white/40'}>
-                        {chakra.status}
-                      </span>
-                    </div>
+                      {chakra.name} · {chakra.status}
+                    </span>
                   ))}
                 </div>
               </div>
-              <div className="p-4 bg-[#D4AF37]/5 border border-[#D4AF37]/20 rounded-2xl mb-6">
-                <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-[#D4AF37] mb-1">Karmic Signature</div>
-                <div className="text-xs font-bold text-white">{results.technicalData.presentKarma}</div>
+
+              {results.technicalData.karmicNodesExtracted != null && (
+                <div className="p-3 bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-2xl mb-5 text-center">
+                  <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-[#D4AF37] mb-1">Karmic Nodes Extracted</div>
+                  <div className="text-xl font-black text-white">{results.technicalData.karmicNodesExtracted}</div>
+                </div>
+              )}
+
+              <div className="text-center text-[10px] text-[#D4AF37]/60 mb-4 animate-pulse">
+                ✦ Generating your Transformation Document on the right panel…
               </div>
+
               <button
-                onClick={() => setStatus('idle')}
+                onClick={() => { setStatus('idle'); setResults(null); }}
                 className="w-full py-3 text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/40 hover:text-[#D4AF37] transition-colors flex items-center justify-center gap-2 border border-white/10 rounded-2xl"
               >
                 <RefreshCw className="w-3 h-3" />
-                Reset Scanner
+                New Scan
               </button>
             </motion.div>
           )}
