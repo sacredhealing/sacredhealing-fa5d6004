@@ -11,7 +11,7 @@ export const en = {
 
   profile: {
     your_sacred_space: {
-      title: "Your Sacred Healing Space",
+      title: "Your Siddha Quantum Nexus Space",
       body:
         "This app is a daily support space.\n" +
         "You don’t need to learn anything or believe anything.\n" +
