@@ -442,7 +442,12 @@ const Meditations: React.FC = () => {
           <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.5)', padding: 0, display: 'flex', alignItems: 'center', gap: 6 }} onClick={() => navigate(-1)}>
             <ArrowLeft size={18} />
           </button>
-          <div className="nadi-pulse"><Sparkles size={18} /></div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div className="nadi-pulse"><Sparkles size={18} /></div>
+            <button style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'rgba(255,255,255,0.4)' }} onClick={() => navigate('/settings')}>
+              <Settings size={16} />
+            </button>
+          </div>
         </div>
 
         <div className="micro-label" style={{ marginBottom: 8, color: 'rgba(212,175,55,0.5)' }}>Akasha-Neural Archive · Meditation Transmissions</div>
