@@ -1,24 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { LotusIcon } from '@/components/icons/LotusIcon';
 import { supabase } from '@/integrations/supabase/client';
 
 const Splash: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [fadeOut, setFadeOut] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
     const checkAuthAndRedirect = async () => {
       try {
-        // Check for existing valid session
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error('Session check error:', error);
         }
 
-        // Allow splash animation to show briefly
         await new Promise(resolve => setTimeout(resolve, 1500));
         
         setFadeOut(true);
@@ -26,10 +26,8 @@ const Splash: React.FC = () => {
         
         setTimeout(() => {
           if (session?.access_token) {
-            // Valid token exists - auto-login to dashboard
             navigate('/dashboard', { replace: true });
           } else {
-            // No valid token - show login screen
             navigate('/auth', { replace: true });
           }
         }, 500);
@@ -61,11 +59,11 @@ const Splash: React.FC = () => {
         </div>
         
         <h1 className="mt-8 text-5xl font-heading font-bold text-gradient-spiritual">
-          Siddha Quantum Nexus
+          {t('splash.title')}
         </h1>
         
         <p className="mt-4 text-lg text-muted-foreground font-light tracking-wide">
-          Awaken Your Inner Light
+          {t('splash.subtitle')}
         </p>
 
         {/* Loading indicator */}
@@ -81,7 +79,7 @@ const Splash: React.FC = () => {
           </div>
           {authChecked && (
             <p className="text-xs text-muted-foreground animate-fade-in">
-              {fadeOut ? 'Redirecting...' : 'Checking session...'}
+              {fadeOut ? t('splash.redirecting') : t('splash.checkingSession')}
             </p>
           )}
         </div>

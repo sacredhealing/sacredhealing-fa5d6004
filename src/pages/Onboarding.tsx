@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GoalSelector } from '@/components/onboarding/GoalSelector';
@@ -43,6 +44,7 @@ const SriYantraSvg = () => (
 );
 
 const Onboarding: React.FC = () => {
+  const { t } = useTranslation();
   const {
     data,
     updateData,
@@ -120,24 +122,24 @@ const Onboarding: React.FC = () => {
             <div className="onb-step text-center flex flex-col items-center">
               <SriYantraSvg />
               <p className="mt-6 text-[#D4AF37]/60 text-[8px] font-extrabold tracking-[0.5em] uppercase" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                ◈ SIDDHA-QUANTUM INTELLIGENCE · 2050
+                {t('onboarding.sqiLabel')}
               </p>
               <h1 className="mt-3 text-white font-[300] italic leading-tight" style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 'clamp(2.5rem, 6vw, 4rem)' }}>
-                Welcome, Sacred Soul
+                {t('onboarding.welcomeTitle')}
               </h1>
               <p className="mt-4 text-white/50 text-[0.9rem] leading-[1.7] max-w-md" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 400 }}>
-                Let's attune your field to the frequencies that serve you most.
+                {t('onboarding.welcomeDesc')}
               </p>
               <div className="mt-6 px-5 py-3 rounded-full bg-white/[0.03] border border-[#D4AF37]/30 flex items-center gap-2 text-[#D4AF37] text-sm">
                 <Sparkles className="w-4 h-4 flex-shrink-0" />
-                <span>✦ Earn +50 SHC for completing your attunement</span>
+                <span>{t('onboarding.earnBonus')}</span>
               </div>
               <Button
                 onClick={nextStep}
                 className="mt-8 w-full max-w-sm py-5 rounded-full bg-[#D4AF37] hover:bg-[#D4AF37] text-black font-extrabold text-[9px] tracking-[0.4em] uppercase shadow-[0_0_30px_rgba(212,175,55,0.3)]"
                 style={{ fontFamily: 'Montserrat, sans-serif' }}
               >
-                BEGIN ATTUNEMENT →
+                {t('onboarding.beginAttunement')}
               </Button>
             </div>
           </div>
@@ -157,7 +159,7 @@ const Onboarding: React.FC = () => {
             />
           </div>
           <p className="text-center text-white/30 text-[7px] font-extrabold tracking-[0.5em] uppercase mt-3" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-            STEP {currentStep} OF 4
+            {t('onboarding.stepOf', { current: currentStep, total: 4 })}
           </p>
         </div>
       )}
@@ -168,14 +170,14 @@ const Onboarding: React.FC = () => {
           {currentStep === 1 && (
             <>
               <h2 className="text-white font-[300] italic text-[3rem] leading-tight text-center mb-2" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-                Why are you here?
+                {t('onboarding.whyHere')}
               </h2>
               <p className="text-white/40 text-[9px] font-normal tracking-[0.4em] uppercase text-center mb-8" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                CHOOSE WHAT CALLS TO YOUR SOUL · SELECT ALL THAT APPLY
+                {t('onboarding.chooseSoul')}
               </p>
               <GoalSelector selectedGoals={data.goals} onToggle={toggleGoal} />
               {data.goals.length > 0 && (
-                <p className="text-center text-sm text-white/40 mt-4">{data.goals.length} selected</p>
+                <p className="text-center text-sm text-white/40 mt-4">{t('onboarding.selected', { count: data.goals.length })}</p>
               )}
             </>
           )}
@@ -183,10 +185,10 @@ const Onboarding: React.FC = () => {
           {currentStep === 2 && (
             <>
               <h2 className="text-white font-[300] italic text-[3rem] leading-tight text-center mb-2" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-                How deep can you go?
+                {t('onboarding.howDeep')}
               </h2>
               <p className="text-white/40 text-[9px] font-normal tracking-[0.4em] uppercase text-center mb-8" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                CHOOSE YOUR DAILY TRANSMISSION WINDOW
+                {t('onboarding.chooseWindow')}
               </p>
               <DurationSelector
                 selectedDuration={data.practiceDuration}
@@ -198,10 +200,10 @@ const Onboarding: React.FC = () => {
           {currentStep === 3 && (
             <>
               <h2 className="text-white font-[300] italic text-[3rem] leading-tight text-center mb-2" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-                Set your sacred rhythm
+                {t('onboarding.sacredRhythm')}
               </h2>
               <p className="text-white/40 text-[9px] font-normal tracking-[0.4em] uppercase text-center mb-8" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                YOUR FIELD WILL BE PRIMED AT THESE MOMENTS
+                {t('onboarding.fieldPrimed')}
               </p>
               <TimeSelector
                 morningTime={data.morningTime}
@@ -217,14 +219,14 @@ const Onboarding: React.FC = () => {
           {currentStep === 4 && (
             <>
               <h2 className="text-white font-[300] italic text-[3rem] leading-tight text-center mb-2" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-                Your Sovereign Path
+                {t('onboarding.sovereignPath')}
               </h2>
               <p className="text-white/40 text-[9px] font-normal tracking-[0.4em] uppercase text-center mb-6" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                AKASHA-NEURAL ARCHIVE · TRANSMISSION LOCKED
+                {t('onboarding.transmissionLocked')}
               </p>
               <div className="rounded-3xl border border-[#D4AF37]/20 bg-white/[0.02] backdrop-blur-xl p-8">
                 <p className="text-[#D4AF37] text-[8px] font-extrabold tracking-widest uppercase mb-4" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                  ◈ YOUR FIELD HAS BEEN READ
+                  {t('onboarding.fieldRead')}
                 </p>
                 <PathRecommendation userGoals={data.goals} />
               </div>
@@ -242,7 +244,7 @@ const Onboarding: React.FC = () => {
             className="text-white/30 hover:text-white/50 font-extrabold text-[8px] tracking-widest uppercase px-4"
             style={{ fontFamily: 'Montserrat, sans-serif' }}
           >
-            ← BACK
+            {t('onboarding.back')}
           </Button>
           <Button
             onClick={currentStep === 4 ? completeOnboarding : nextStep}
@@ -250,7 +252,7 @@ const Onboarding: React.FC = () => {
             className="rounded-full bg-[#D4AF37] hover:bg-[#D4AF37] text-black font-extrabold text-[9px] tracking-[0.4em] uppercase shadow-[0_0_30px_rgba(212,175,55,0.3)] py-5 px-8"
             style={{ fontFamily: 'Montserrat, sans-serif' }}
           >
-            {isSubmitting ? 'Please wait...' : currentStep === 4 ? 'SEAL THE TRANSMISSION →' : 'NEXT →'}
+            {isSubmitting ? t('onboarding.pleaseWait') : currentStep === 4 ? t('onboarding.sealTransmission') : t('onboarding.next')}
           </Button>
         </div>
       </div>
