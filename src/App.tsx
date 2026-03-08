@@ -240,6 +240,7 @@ function AppRoutes() {
                   <Route path="/ayurveda" element={<Ayurveda />} />
                   <Route path="/vastu" element={<Vastu />} />
                   <Route path="/quantum-apothecary" element={<QuantumApothecary />} />
+                  <Route path="/life-book" element={<LifeBook />} />
                   <Route path="/sri-yantra-shield" element={<SriYantraShield />} />
                   <Route path="/temple-home" element={<TempleHome />} />
                   <Route path="/digital-nadi" element={<DigitalNadi />} />
