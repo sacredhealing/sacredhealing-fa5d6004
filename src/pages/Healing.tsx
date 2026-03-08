@@ -806,7 +806,7 @@ const Healing: React.FC = () => {
         </SheetContent>
       </Sheet>
     </div>
-    </div>
+    </>
   );
 };
 
