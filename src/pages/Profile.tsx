@@ -873,7 +873,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
             style={{
               display: 'block',
               width: '100%',
-              maxWidth: 280,
+              maxWidth: 280, margin: '0 auto',
               background: 'linear-gradient(135deg, rgba(212,175,55,0.22), rgba(212,175,55,0.1))',
               color: '#D4AF37',
               border: '1px solid rgba(212,175,55,0.5)',
