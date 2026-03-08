@@ -264,3 +264,12 @@ export default function DigitalNadiScanner({
     </div>
   );
 }
+
+function MetricCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="p-3 bg-white/5 border border-white/10 rounded-2xl">
+      <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/40 mb-1">{label}</div>
+      <div className="text-sm font-bold text-[#D4AF37]">{value}</div>
+    </div>
+  );
+}
