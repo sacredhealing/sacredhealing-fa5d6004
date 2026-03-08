@@ -682,7 +682,9 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
             <span className="stat-value"><AnimatedCounter value={balance?.balance ?? 0} /></span>
             <span className="stat-label">Balance</span>
           </div>
-          <div className="stat-pill">
+        </div>
+        <div style={{display:'flex',justifyContent:'center',marginBottom:48,marginTop:-36}}>
+          <div className="stat-pill" style={{minWidth:120}}>
             <span className="stat-value">{badges.filter(b => b.earned).length}</span>
             <span className="stat-label">Badges</span>
           </div>
