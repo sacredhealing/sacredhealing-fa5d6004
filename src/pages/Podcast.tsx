@@ -56,7 +56,7 @@ const Podcast: React.FC = () => {
             allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
             loading="lazy"
             className="rounded-lg"
-            title="Sacred Healing Vibration Podcast"
+            title="Siddha Quantum Nexus Podcast"
           />
         </Card>
 

@@ -123,7 +123,7 @@ const AdminSendEmail = () => {
           <Textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder={'Hello {{name}},\n\nYour message here...\n\nWarm regards,\nSacred Healing'}
+            placeholder={'Hello {{name}},\n\nYour message here...\n\nWarm regards,\nSiddha Quantum Nexus'}
             rows={14}
             className="text-sm"
           />

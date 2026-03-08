@@ -37,7 +37,7 @@ const About: React.FC = () => {
           <div className="text-center max-w-3xl mx-auto">
             <Sparkles className="w-12 h-12 text-gold mx-auto mb-6" />
             <h1 className="text-4xl md:text-6xl font-heading font-bold text-foreground mb-6">
-              About <span className="text-gold">Sacred Healing</span>
+              About <span className="text-gold">Siddha Quantum Nexus</span>
             </h1>
             <p className="text-xl text-muted-foreground leading-relaxed">
               Two souls united in the sacred mission of healing, awakening, and guiding others 
