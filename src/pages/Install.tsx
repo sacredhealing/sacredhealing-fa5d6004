@@ -83,7 +83,7 @@ const Install = () => {
           <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center mx-auto mb-6 shadow-lg shadow-primary/30">
             <Smartphone className="w-10 h-10 text-primary-foreground" />
           </div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Install Sacred Healing</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Install Siddha Quantum Nexus</h1>
           <p className="text-muted-foreground">
             Get the full app experience on your device
           </p>
