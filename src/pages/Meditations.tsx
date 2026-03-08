@@ -738,7 +738,7 @@ const Meditations: React.FC = () => {
       setShowThreshold(true);
       return;
     }
-    playUniversalAudio({ id: med.id, title: med.title, audioUrl, type: 'meditation' });
+    playUniversalAudio({ id: med.id, title: med.title, audio_url: audioUrl, artist: '', cover_image_url: null, duration_seconds: 0, shc_reward: 0, contentType: 'meditation' });
   };
 
   const handleLock = () => {
