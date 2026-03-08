@@ -360,7 +360,7 @@ const AdminMusic: React.FC = () => {
 
       // Reset form
       setTitle('');
-      setArtist('Sacred Healing');
+      setArtist('Siddha Quantum Nexus');
       setDescription('');
       setGenre('beats');
       setDurationInput('3:00');
