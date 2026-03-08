@@ -244,6 +244,7 @@ function AppRoutes() {
                   <Route path="/digital-nadi" element={<DigitalNadi />} />
                   <Route path="/soul-scan" element={<SoulScan />} />
                   <Route path="/vayu-protocol" element={<VayuProtocol />} />
+                  <Route path="/life-book" element={<LifeBook />} />
                   <Route path="/prompt-library" element={<PromptLibrary />} />
                   <Route path="/creative-soul" element={<Navigate to="/creative-soul/store" replace />} />
                   <Route path="/creative-soul-hub" element={<CreativeSoulHub />} />
