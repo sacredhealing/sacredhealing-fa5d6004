@@ -244,7 +244,7 @@ const Onboarding: React.FC = () => {
             className="text-white/30 hover:text-white/50 font-extrabold text-[8px] tracking-widest uppercase px-4"
             style={{ fontFamily: 'Montserrat, sans-serif' }}
           >
-            ← BACK
+            {t('onboarding.back')}
           </Button>
           <Button
             onClick={currentStep === 4 ? completeOnboarding : nextStep}
