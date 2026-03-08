@@ -13,7 +13,7 @@ const About: React.FC = () => {
   const values = [
     {
       icon: Heart,
-      title: 'Sacred Healing',
+      title: 'Siddha Quantum Nexus',
       description: 'We believe in the power of divine energy to heal and transform.'
     },
     {
