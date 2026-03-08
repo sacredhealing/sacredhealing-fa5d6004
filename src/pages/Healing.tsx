@@ -502,6 +502,7 @@ const Healing: React.FC = () => {
   // RENDER — SQI-2050 UI, all logic preserved
   // ============================================================
   return (
+    <>
     <div className="h-page">
       <style>{H_CSS}</style>
       <IntentionThreshold isOpen={showThreshold} onSelectIntention={handleIntentionSelected} onClose={handleThresholdClose} />
@@ -757,7 +758,7 @@ const Healing: React.FC = () => {
       </section>
 
       <div style={{ display: 'flex', justifyContent: 'center', padding: '0 22px 40px' }}>
-        <SriYantra size={80} />
+        <SriYantra style={{ width: 80, height: 80 }} />
       </div>
 
       <div style={{ padding: '0 22px 32px' }}>
@@ -804,9 +805,8 @@ const Healing: React.FC = () => {
           </div>
         </SheetContent>
       </Sheet>
+    </div>
     </>
-    </div>
-    </div>
   );
 };
 
