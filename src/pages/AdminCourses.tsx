@@ -88,7 +88,7 @@ const AdminCourses: React.FC = () => {
     price_usd: 49.99,
     price_shc: 0,
     has_certificate: true,
-    instructor_name: 'Sacred Healing Academy',
+    instructor_name: 'Siddha Quantum Nexus Academy',
     recurring_price_usd: null as number | null,
     recurring_interval: null as string | null,
     language: 'en',
