@@ -99,7 +99,7 @@ export default function QuantumApothecary() {
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
   useEffect(() => { localStorage.setItem('active_resonators', JSON.stringify(activeTransmissions)); }, [activeTransmissions]);
 
-  // When opened from Profile (focusChat), scroll chat panel into view so "all chat comes up there"
+  // When opened from Profile (focusChat), scroll chat panel into view
   useEffect(() => {
     const focusChat = (location.state as { focusChat?: boolean } | null)?.focusChat;
     if (focusChat && chatPanelRef.current) {
@@ -109,6 +109,15 @@ export default function QuantumApothecary() {
       return () => clearTimeout(t);
     }
   }, [location.state]);
+
+  // When opened from Profile (openSessions / life book): open SQI Session History drawer to show all saved chats from Supabase
+  useEffect(() => {
+    const state = location.state as { openSessions?: boolean; focusChat?: boolean } | null;
+    const openSessions = state?.openSessions ?? state?.focusChat;
+    if (!openSessions || loadingSessions) return;
+    const t = setTimeout(() => setSessionsOpen(true), 400);
+    return () => clearTimeout(t);
+  }, [location.state, loadingSessions]);
 
   useEffect(() => {
     if (isScanning) {
