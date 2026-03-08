@@ -106,7 +106,7 @@ const SiddhaQuantum: React.FC = () => {
       const { data: tierData, error: tierError } = await supabase
         .from('membership_tiers')
         .select('stripe_price_id, slug')
-        .eq('slug', 'premium-monthly')
+        .eq('slug', 'siddha-quantum-monthly')
         .single();
 
       if (tierError || !tierData?.stripe_price_id) {
@@ -117,7 +117,7 @@ const SiddhaQuantum: React.FC = () => {
       const { data, error } = await supabase.functions.invoke('create-membership-checkout', {
         body: {
           priceId: tierData.stripe_price_id,
-          tierSlug: 'premium-monthly',
+          tierSlug: 'siddha-quantum-monthly',
           affiliate_id: affiliateRef,
           successPath: '/siddha-quantum',
           metadata: {

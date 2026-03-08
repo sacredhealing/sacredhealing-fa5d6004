@@ -59,7 +59,7 @@ ${JSON_ONLY}`;
 }
 
 export async function saveHealingReport(userId: string, doc: TransformationDoc): Promise<void> {
-  const { error } = await supabase.from('healing_reports').insert({
+  const { error } = await (supabase as any).from('healing_reports').insert({
     user_id: userId,
     title: doc.title,
     session_type: doc.sessionType,
@@ -72,7 +72,7 @@ export async function saveHealingReport(userId: string, doc: TransformationDoc):
 }
 
 export async function fetchHealingReports(userId: string): Promise<TransformationDoc[]> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('healing_reports')
     .select('id, title, session_type, content, pre_scan_data, post_scan_data, technical_metrics, created_at')
     .eq('user_id', userId)
