@@ -672,9 +672,6 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
         <h1 className="hero-name">{userName}</h1>
         <div className="soul-label">528Hz Resonance <span>·</span> {dashaCycle} Cycle Active</div>
 
-        <div style={{ margin: '0 16px 20px', maxWidth: 398 }}>
-          <PlanetaryCycleBanner userJyotishData={vedicReading ?? undefined} />
-        </div>
 
         <div className="stats-row">
           <div className="stat-pill">

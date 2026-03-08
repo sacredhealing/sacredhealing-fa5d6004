@@ -359,10 +359,6 @@ const Dashboard: React.FC = () => {
             </button>
           </div>
 
-          {/* ══ PLANETARY CYCLE BANNER (Vimshottari Dasha from birth data) ══ */}
-          <div style={{ marginTop: 16, animation: 'sqFadeUp 0.5s 0.12s ease both' }}>
-            <PlanetaryCycleBanner userJyotishData={vedicReading ?? undefined} />
-          </div>
 
           {/* ══ ZONE 3: COSMIC STRIP — links to /vedic-astrology ══ */}
           <div
