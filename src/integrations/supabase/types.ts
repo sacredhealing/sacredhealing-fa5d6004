@@ -2243,6 +2243,42 @@ export type Database = {
         }
         Relationships: []
       }
+      healing_reports: {
+        Row: {
+          content: string | null
+          created_at: string
+          id: string
+          post_scan_data: Json | null
+          pre_scan_data: Json | null
+          session_type: string
+          technical_metrics: Json | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          post_scan_data?: Json | null
+          pre_scan_data?: Json | null
+          session_type?: string
+          technical_metrics?: Json | null
+          title?: string
+          user_id: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          post_scan_data?: Json | null
+          pre_scan_data?: Json | null
+          session_type?: string
+          technical_metrics?: Json | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       income_streams: {
         Row: {
           badge_text: string | null
