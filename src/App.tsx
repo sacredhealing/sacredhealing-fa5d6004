@@ -133,6 +133,7 @@ const AkashicRecords = React.lazy(() => import("./pages/AkashicRecords"));
 const AkashicReadingInitiating = React.lazy(() => import("./pages/AkashicReadingInitiating"));
 const AkashicReadingFull = React.lazy(() => import("./pages/AkashicReadingFull"));
 const QuantumApothecary = React.lazy(() => import("./pages/QuantumApothecary"));
+const LifeBook = React.lazy(() => import("./pages/LifeBook"));
 const SriYantraShield = React.lazy(() => import("./pages/SriYantraShield"));
 const TempleHome = React.lazy(() => import("./pages/TempleHome"));
 const DigitalNadi = React.lazy(() => import("./pages/DigitalNadi"));
@@ -239,6 +240,7 @@ function AppRoutes() {
                   <Route path="/ayurveda" element={<Ayurveda />} />
                   <Route path="/vastu" element={<Vastu />} />
                   <Route path="/quantum-apothecary" element={<QuantumApothecary />} />
+                  <Route path="/life-book" element={<LifeBook />} />
                   <Route path="/sri-yantra-shield" element={<SriYantraShield />} />
                   <Route path="/temple-home" element={<TempleHome />} />
                   <Route path="/digital-nadi" element={<DigitalNadi />} />
