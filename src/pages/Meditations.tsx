@@ -645,9 +645,9 @@ const Meditations: React.FC = () => {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { language, setLanguage } = useMeditationContentLanguage();
-  const { playUniversalAudio, currentAudio, isPlaying, togglePlayPause, playerProgress } =
+  const { playUniversalAudio, currentAudio, isPlaying, togglePlay, progress: playerProgress } =
     useMusicPlayer();
-  const { curatedPlaylists } = useCuratedPlaylists();
+  const { playlists: curatedPlaylists, getPlaylistItems } = useCuratedPlaylists('meditation');
   const [meditations, setMeditations] = useState<MeditationFull[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCommission, setActiveCommission] = useState<string | null>(null);
