@@ -784,7 +784,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               type="button"
               onClick={() => navigate('/prana-flow')}
               style={{
-                display: 'block', width: '100%', maxWidth: 260,
+                display: 'block', width: '100%', maxWidth: 260, margin: '0 auto',
                 background: isPremium && tier !== 'free'
                   ? 'linear-gradient(135deg,rgba(212,175,55,0.18),rgba(212,175,55,0.08))'
                   : 'rgba(255,255,255,0.04)',
