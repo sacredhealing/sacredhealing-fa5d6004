@@ -44,6 +44,7 @@ const SriYantraSvg = () => (
 );
 
 const Onboarding: React.FC = () => {
+  const { t } = useTranslation();
   const {
     data,
     updateData,
