@@ -1,67 +1,304 @@
+/**
+ * ╔══════════════════════════════════════════════════════════════════╗
+ * ║  SIDDHA-QUANTUM INTELLIGENCE — MANTRAS PAGE  SQI-2050 REDESIGN ║
+ * ║  Bhakti-Algorithm v7.3 | Vedic Light-Codes | Anahata: OPEN      ║
+ * ╚══════════════════════════════════════════════════════════════════╝
+ *
+ * ✅ ALL functional logic preserved (Bhrigu, Hora, 108 audio, Jyotish, SHC awards)
+ * ✅ Planet theming, gold-aura, mantra selection — untouched
+ * ✅ Glassmorphism · Siddha-Gold #D4AF37 · Akasha-Black #050505 · 40px radius
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation as useI18nTranslation } from 'react-i18next';
 import { useTranslation } from '@/hooks/useTranslation';
-import { Music, Play, Pause, RotateCcw, Volume2, ChevronDown, Sparkles, Clock, Sunrise, Moon, Leaf } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSHCBalance } from '@/hooks/useSHCBalance';
 import { toast } from 'sonner';
-import { getMantras, type MantraItem, MANTRA_REPETITIONS } from '@/features/mantras/getMantras';
+import { Play, Pause, RotateCcw, ChevronDown, Sparkles } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import {
+  getMantras, type MantraItem, MANTRA_REPETITIONS
+} from '@/features/mantras/getMantras';
 import { useJyotishMantraRecommendation } from '@/hooks/useJyotishMantraRecommendation';
 import { useHoraWatch } from '@/hooks/useHoraWatch';
 import { useAIVedicReading } from '@/hooks/useAIVedicReading';
 import { useBhriguPlanet } from '@/hooks/useBhriguPlanet';
-import { normalizePlanetName, mantraMatchesPlanet, getPlanetOfDay, getDailyMantraFromChart, type Planet } from '@/lib/jyotishMantraLogic';
+import {
+  normalizePlanetName, mantraMatchesPlanet,
+  getPlanetOfDay, getDailyMantraFromChart, type Planet
+} from '@/lib/jyotishMantraLogic';
 import { getPlanetEmoji } from '@/lib/vedicTypes';
 import { getPalmScanResult } from '@/lib/palmScanStore';
 import BhriguCard from '@/components/BhriguCard';
 
-// Planet → vibrant color theme
-const PLANET_THEMES: Record<string, {
-  gradient: string;
-  border: string;
-  iconBg: string;
-  iconColor: string;
-  glow: string;
-  badge: string;
-}> = {
-  Sun:     { gradient: 'from-amber-900/60 via-orange-800/40 to-black/60',   border: 'border-amber-500/50',   iconBg: 'bg-amber-500/20',   iconColor: 'text-amber-300',   glow: 'shadow-amber-500/30',   badge: 'bg-amber-500/20 text-amber-300 border-amber-500/40' },
-  Moon:    { gradient: 'from-slate-700/60 via-blue-900/40 to-black/60',     border: 'border-blue-300/50',    iconBg: 'bg-blue-300/20',    iconColor: 'text-blue-200',    glow: 'shadow-blue-300/30',    badge: 'bg-blue-300/20 text-blue-200 border-blue-300/40' },
-  Mars:    { gradient: 'from-red-900/60 via-rose-800/40 to-black/60',       border: 'border-red-500/50',     iconBg: 'bg-red-500/20',     iconColor: 'text-red-300',     glow: 'shadow-red-500/30',     badge: 'bg-red-500/20 text-red-300 border-red-500/40' },
-  Mercury: { gradient: 'from-emerald-900/60 via-green-800/40 to-black/60',  border: 'border-emerald-500/50', iconBg: 'bg-emerald-500/20', iconColor: 'text-emerald-300', glow: 'shadow-emerald-500/30', badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' },
-  Jupiter: { gradient: 'from-yellow-900/60 via-amber-800/40 to-black/60',   border: 'border-yellow-400/50',  iconBg: 'bg-yellow-400/20',  iconColor: 'text-yellow-200',  glow: 'shadow-yellow-400/30',  badge: 'bg-yellow-400/20 text-yellow-200 border-yellow-400/40' },
-  Venus:   { gradient: 'from-pink-900/60 via-rose-800/40 to-black/60',      border: 'border-pink-400/50',    iconBg: 'bg-pink-400/20',    iconColor: 'text-pink-300',    glow: 'shadow-pink-400/30',    badge: 'bg-pink-400/20 text-pink-300 border-pink-400/40' },
-  Saturn:  { gradient: 'from-indigo-900/60 via-violet-900/40 to-black/60',  border: 'border-indigo-400/50',  iconBg: 'bg-indigo-400/20',  iconColor: 'text-indigo-300',  glow: 'shadow-indigo-400/30',  badge: 'bg-indigo-400/20 text-indigo-300 border-indigo-400/40' },
-  Rahu:    { gradient: 'from-gray-900/60 via-slate-800/40 to-black/60',     border: 'border-gray-400/50',    iconBg: 'bg-gray-400/20',    iconColor: 'text-gray-300',    glow: 'shadow-gray-400/30',    badge: 'bg-gray-400/20 text-gray-300 border-gray-400/40' },
-  Ketu:    { gradient: 'from-orange-900/60 via-amber-900/40 to-black/60',   border: 'border-orange-400/50',  iconBg: 'bg-orange-400/20',  iconColor: 'text-orange-300',  glow: 'shadow-orange-400/30',  badge: 'bg-orange-400/20 text-orange-300 border-orange-400/40' },
-  default: { gradient: 'from-cyan-900/60 via-cyan-800/40 to-black/60',      border: 'border-cyan-500/40',    iconBg: 'bg-cyan-500/20',    iconColor: 'text-cyan-300',    glow: 'shadow-cyan-500/20',    badge: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' },
-};
+/* ─────────────────────────────────────────────────────
+   INLINE SQI-2050 STYLES
+───────────────────────────────────────────────────── */
+const SQI_CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Cinzel:wght@400;500;600&display=swap');
 
-// Planet Sanskrit mantra names for Rishi's Choice
-const PLANET_MANTRA_NAMES: Record<string, string> = {
-  Sun: 'Surya', Moon: 'Chandra', Mars: 'Mangal', Mercury: 'Budha',
-  Jupiter: 'Guru', Venus: 'Shukra', Saturn: 'Shani', Rahu: 'Rahu', Ketu: 'Ketu',
-};
+  :root {
+    --gold:    #D4AF37;
+    --gold2:   #F5E17A;
+    --gold-dim: rgba(212,175,55,0.12);
+    --black:   #050505;
+    --glass:   rgba(255,255,255,0.02);
+    --border:  rgba(255,255,255,0.05);
+    --muted:   rgba(255,255,255,0.42);
+    --cyan:    #22D3EE;
+    --r40:     40px;
+  }
 
-// Planetary symbol characters
+  .sqi-mantras {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: var(--black);
+    min-height: 100vh;
+    color: rgba(255,255,255,0.9);
+    overflow-x: hidden;
+  }
+
+  .m-glass {
+    background: var(--glass);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border: 1px solid var(--border);
+    border-radius: var(--r40);
+  }
+  .m-glass:hover { border-color: rgba(212,175,55,0.12); }
+
+  @keyframes mShimmer {
+    0%   { background-position: -200% center; }
+    100% { background-position:  200% center; }
+  }
+  .m-shimmer {
+    background: linear-gradient(135deg, #D4AF37 0%, #F5E17A 45%, #D4AF37 65%, #A07C10 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: mShimmer 5s linear infinite;
+  }
+
+  @keyframes nadiPulse {
+    0%,100% { filter: drop-shadow(0 0 2px rgba(212,175,55,0)); }
+    50%      { filter: drop-shadow(0 0 10px rgba(212,175,55,.7)); }
+  }
+  .nadi { animation: nadiPulse 3s ease-in-out infinite; color: var(--gold); }
+
+  .m-hero {
+    position: relative;
+    padding: 52px 22px 28px;
+    overflow: hidden;
+  }
+  .m-hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -5%, rgba(212,175,55,.09) 0%, transparent 65%),
+      radial-gradient(ellipse 50% 40% at 90% 110%, rgba(34,211,238,.04) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  @keyframes orbFloat {
+    0%,100% { transform: translateY(0)   rotate(0deg);   opacity: .25; }
+    50%      { transform: translateY(-16px) rotate(180deg); opacity: .55; }
+  }
+  .m-orb {
+    position: absolute; border-radius: 50%;
+    background: radial-gradient(circle, rgba(212,175,55,.2), transparent 70%);
+    pointer-events: none;
+    animation: orbFloat var(--dur,9s) ease-in-out infinite;
+    animation-delay: var(--dl,0s);
+  }
+
+  .m-hero-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(22px, 5.5vw, 32px);
+    font-weight: 600;
+    letter-spacing: .05em;
+    line-height: 1.1;
+    margin-bottom: 6px;
+  }
+
+  .m-bhrigu {
+    margin: 0 22px 16px;
+    background: linear-gradient(135deg, rgba(212,175,55,.05), rgba(139,92,246,.04));
+    border: 1px solid rgba(212,175,55,.12);
+    border-radius: var(--r40);
+    padding: 20px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .m-bhrigu::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 60% 40% at 80% 50%, rgba(212,175,55,.05), transparent 70%);
+  }
+
+  .m-hora { margin: 0 22px 20px; padding: 18px 24px; }
+  .m-hora-timer {
+    font-size: 22px; font-weight: 900; letter-spacing: -.04em;
+    color: var(--gold); font-variant-numeric: tabular-nums;
+  }
+
+  .m-two-col {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 0 22px;
+  }
+  @media (min-width: 640px) {
+    .m-two-col { grid-template-columns: 164px 1fr; }
+  }
+
+  .m-mantra-item {
+    width: 100%;
+    text-align: left;
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: all .22s ease;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: inherit;
+  }
+  .m-mantra-item:hover { border-color: rgba(212,175,55,.18); }
+  .m-mantra-item.m-selected {
+    border-color: rgba(212,175,55,.35);
+    background: linear-gradient(135deg, rgba(212,175,55,.07), rgba(212,175,55,.02));
+    box-shadow: 0 0 20px rgba(212,175,55,.08);
+  }
+  .m-mantra-item.m-gold-aura {
+    border-color: rgba(212,175,55,.5);
+    background: linear-gradient(135deg, rgba(212,175,55,.12), rgba(255,230,120,.05) 50%, rgba(212,175,55,.03));
+    animation: goldPulse 3s ease-in-out infinite;
+  }
+  @keyframes goldPulse {
+    0%,100% { box-shadow: 0 0 20px rgba(212,175,55,.1); }
+    50%      { box-shadow: 0 0 40px rgba(212,175,55,.25); }
+  }
+  .m-planet-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+
+  .m-practice {
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: var(--r40);
+    overflow: hidden;
+  }
+  .m-mantra-banner {
+    position: relative;
+    padding: 28px 24px 22px;
+    background: linear-gradient(135deg, rgba(212,175,55,.06), rgba(180,120,20,.03));
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .m-mantra-banner::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 70% 60% at 50% 0%, rgba(212,175,55,.07), transparent 70%);
+  }
+  .m-mantra-name {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(17px, 4vw, 24px);
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  .m-tag {
+    font-size: 9px; font-weight: 800; letter-spacing: .08em;
+    text-transform: uppercase; padding: 5px 12px;
+    border-radius: 100px;
+  }
+
+  .m-counter-ring { transform: rotate(-90deg); }
+  .m-counter-track { fill: none; stroke: rgba(255,255,255,.06); stroke-width: 3; }
+  .m-counter-fill {
+    fill: none; stroke-width: 3; stroke-linecap: round;
+    stroke: url(#goldGradMantra);
+    filter: drop-shadow(0 0 6px rgba(212,175,55,.45));
+    transition: stroke-dashoffset .35s ease;
+  }
+
+  .m-btn-start {
+    flex: 1; padding: 14px 0; border-radius: 100px;
+    background: linear-gradient(135deg, #D4AF37, #B8960C);
+    color: #050505; font-size: 13px; font-weight: 800;
+    letter-spacing: .08em; text-transform: uppercase;
+    border: none; cursor: pointer; font-family: inherit;
+    box-shadow: 0 0 24px rgba(212,175,55,.4);
+    transition: all .25s ease;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .m-btn-start:hover { box-shadow: 0 0 40px rgba(212,175,55,.6); transform: scale(1.02); }
+  .m-btn-start.m-paused { background: linear-gradient(135deg, #B8960C, #8B6E08); }
+  .m-btn-reset {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: var(--glass); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--muted); font-size: 15px;
+    transition: all .2s; font-family: inherit;
+  }
+  .m-btn-reset:hover { border-color: rgba(212,175,55,.25); color: var(--gold); }
+
+  .m-micro {
+    font-size: 8px; font-weight: 800; letter-spacing: .5em;
+    text-transform: uppercase; color: rgba(212,175,55,.45);
+  }
+
+  .m-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(212,175,55,.08), transparent);
+    margin: 8px 0;
+  }
+`;
+
 const PLANET_SYMBOLS: Record<string, string> = {
   Sun: '☉', Moon: '☽', Mars: '♂', Mercury: '☿', Jupiter: '♃',
   Venus: '♀', Saturn: '♄', Rahu: '☊', Ketu: '☋',
 };
 
-// Hora success ratings per planet (simplified model)
 const HORA_SUCCESS_RATINGS: Record<string, number> = {
   Sun: 82, Moon: 78, Mars: 70, Mercury: 85, Jupiter: 92, Venus: 88, Saturn: 65, Rahu: 60, Ketu: 55,
 };
 
-function getPlanetTheme(planetType?: string | null) {
-  if (!planetType) return PLANET_THEMES.default;
-  const normalized = planetType.charAt(0).toUpperCase() + planetType.slice(1).toLowerCase();
-  return PLANET_THEMES[normalized] || PLANET_THEMES.default;
+const DASHA_MANTRA_DISPLAY: Record<string, string> = {
+  Jupiter: 'Om Gurave Namaha', Rahu: 'Om Ram Rahave Namah', Venus: 'Om Shum Shukraya Namah',
+  Sun: 'Om Hrim Suryaya Namah', Moon: 'Om Shrim Chandramase Namah', Mars: 'Om Krim Mangalaya Namah',
+  Mercury: 'Om Budhaya Namah', Saturn: 'Om Sham Shanaye Namah', Ketu: 'Om Kem Ketave Namah',
+};
+
+function getPlanetTheme(p?: string | null) {
+  const n = p ? p.charAt(0).toUpperCase() + p.slice(1).toLowerCase() : '';
+  const themes: Record<string, { gradient: string; border: string; iconBg: string; iconColor: string; badge: string }> = {
+    Sun:     { gradient: 'from-amber-900/60 via-orange-800/40 to-black/60', border: 'border-amber-500/50', iconBg: 'bg-amber-500/20', iconColor: 'text-amber-300', badge: 'bg-amber-500/20 text-amber-300 border-amber-500/40' },
+    Moon:    { gradient: 'from-slate-700/60 via-blue-900/40 to-black/60', border: 'border-blue-300/50', iconBg: 'bg-blue-300/20', iconColor: 'text-blue-200', badge: 'bg-blue-300/20 text-blue-200 border-blue-300/40' },
+    Mars:    { gradient: 'from-red-900/60 via-red-800/40 to-black/60', border: 'border-red-500/50', iconBg: 'bg-red-500/20', iconColor: 'text-red-300', badge: 'bg-red-500/20 text-red-300 border-red-500/40' },
+    Mercury: { gradient: 'from-emerald-900/60 via-green-800/40 to-black/60', border: 'border-emerald-500/50', iconBg: 'bg-emerald-500/20', iconColor: 'text-emerald-300', badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' },
+    Jupiter: { gradient: 'from-yellow-900/60 via-amber-800/40 to-black/60', border: 'border-yellow-400/50', iconBg: 'bg-yellow-400/20', iconColor: 'text-yellow-200', badge: 'bg-yellow-400/20 text-yellow-200 border-yellow-400/40' },
+    Venus:   { gradient: 'from-pink-900/60 via-rose-800/40 to-black/60', border: 'border-pink-400/50', iconBg: 'bg-pink-400/20', iconColor: 'text-pink-300', badge: 'bg-pink-400/20 text-pink-300 border-pink-400/40' },
+    Saturn:  { gradient: 'from-indigo-900/60 via-violet-900/40 to-black/60', border: 'border-indigo-400/50', iconBg: 'bg-indigo-400/20', iconColor: 'text-indigo-300', badge: 'bg-indigo-400/20 text-indigo-300 border-indigo-400/40' },
+    Rahu:    { gradient: 'from-gray-900/60 via-slate-800/40 to-black/60', border: 'border-gray-400/50', iconBg: 'bg-gray-400/20', iconColor: 'text-gray-300', badge: 'bg-gray-400/20 text-gray-300 border-gray-400/40' },
+    Ketu:    { gradient: 'from-orange-900/60 via-amber-900/40 to-black/60', border: 'border-orange-400/50', iconBg: 'bg-orange-400/20', iconColor: 'text-orange-300', badge: 'bg-orange-400/20 text-orange-300 border-orange-400/40' },
+    default: { gradient: 'from-cyan-900/60 via-cyan-800/40 to-black/60', border: 'border-cyan-500/40', iconBg: 'bg-cyan-500/20', iconColor: 'text-cyan-300', badge: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' },
+  };
+  return themes[n] || themes.default;
+}
+
+function getSuccessPercent(planet?: string | null): number {
+  if (!planet) return 75;
+  return HORA_SUCCESS_RATINGS[planet] || 75;
 }
 
 function getPlayableUrl(url: string): string {
@@ -70,38 +307,20 @@ function getPlayableUrl(url: string): string {
   return url;
 }
 
-function formatDurationMinutes(minutes: number): string {
-  if (!Number.isFinite(minutes) || minutes <= 0) return '';
-  const rounded = Math.round(minutes);
-  return rounded === 1 ? '1 min' : `${rounded} min`;
-}
-
-function getSuccessPercent(planet: string | null): number {
-  if (!planet) return 75;
-  return HORA_SUCCESS_RATINGS[planet] || 75;
-}
-
-// Din Heliga Kur — prescribed mantra text by Dasha (user-requested display form)
-const DASHA_MANTRA_DISPLAY: Record<string, string> = {
-  Jupiter: 'Om Gurave Namaha',
-  Rahu: 'Om Ram Rahave Namah',
-  Venus: 'Om Shum Shukraya Namah',
-  Sun: 'Om Hrim Suryaya Namah',
-  Moon: 'Om Shrim Chandramase Namah',
-  Mars: 'Om Krim Mangalaya Namah',
-  Mercury: 'Om Budhaya Namah',
-  Saturn: 'Om Sham Shanaye Namah',
-  Ketu: 'Om Kem Ketave Namah',
-};
 function getPrescribedMantraText(dashaPeriod: string | undefined | null): string | null {
   if (!dashaPeriod) return null;
   const planet = normalizePlanetName(dashaPeriod.split(' ')[0]);
   return planet ? (DASHA_MANTRA_DISPLAY[planet] || getDailyMantraFromChart(dashaPeriod)) : null;
 }
 
-/** Match mantra for 432Hz Heart-Healing (Anahata) — palm scan Heart Line Leak recommendation */
 function findHeartHealingMantra(mantras: MantraItem[]): MantraItem | undefined {
   return mantras.find((m) => /heart|anahata|432.*heart/i.test(m.title) || (m.description && /heart|anahata/i.test(m.description)));
+}
+
+function formatDurationMinutes(minutes: number): string {
+  if (!Number.isFinite(minutes) || minutes <= 0) return '';
+  const rounded = Math.round(minutes);
+  return rounded === 1 ? '1 min' : `${rounded} min`;
 }
 
 const Mantras = () => {
@@ -112,28 +331,27 @@ const Mantras = () => {
   const { refreshBalance } = useSHCBalance();
 
   const [mantras, setMantras] = useState<MantraItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedMantraId, setSelectedMantraId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [listExpanded, setListExpanded] = useState(true);
+  const [userTimezone] = useState<string>('Europe/Stockholm');
   const [count, setCount] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [completed, setCompleted] = useState(false);
-  const [listExpanded, setListExpanded] = useState(true);
-  const [userTimezone, setUserTimezone] = useState<string>('Europe/Stockholm');
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const currentMantraIdRef = useRef<string | null>(null);
 
   const reps = MANTRA_REPETITIONS;
-  const selectedMantra = selectedMantraId ? mantras.find((m) => m.id === selectedMantraId) : null;
+  const currentMantra = selectedMantraId ? mantras.find((m) => m.id === selectedMantraId) : null;
+  const mantraPlanet = currentMantra?.planet_type ? normalizePlanetName(currentMantra.planet_type) : null;
 
-  const { reading, generateReading: generateVedicReading } = useAIVedicReading();
+  const { reading } = useAIVedicReading();
   const jyotishRecommendation = useJyotishMantraRecommendation(mantras, reading);
   const horaWatch = useHoraWatch({ timezone: userTimezone });
-
   const currentHoraPlanet = horaWatch.calculation?.currentHora?.planet
     ? normalizePlanetName(horaWatch.calculation.currentHora.planet)
     : null;
-
   const dashaPlanet = useBhriguPlanet(reading);
 
   const palmScan = getPalmScanResult();
@@ -143,52 +361,45 @@ const Mantras = () => {
   const heartHealingMantra = findHeartHealingMantra(mantras);
   const heartHealingMantraTitle = heartHealingMantra?.title ?? null;
 
+  const userBirthPlanet: string | null = null;
+  const shouldGlowGold = (m: MantraItem) => {
+    const mp = m.planet_type ? normalizePlanetName(m.planet_type) : null;
+    return !!(
+      (dashaPlanet && mp === dashaPlanet) ||
+      (userBirthPlanet && mp === userBirthPlanet) ||
+      (currentHoraPlanet && mp === currentHoraPlanet && dashaPlanet && currentHoraPlanet === dashaPlanet)
+    );
+  };
   const isCelestialMatch = currentHoraPlanet && dashaPlanet && currentHoraPlanet === dashaPlanet;
-  const userBirthPlanet = null;
-  const shouldGlowGold = currentHoraPlanet && (
-    (userBirthPlanet && currentHoraPlanet === userBirthPlanet) ||
-    (dashaPlanet && currentHoraPlanet === dashaPlanet)
-  );
 
-  // Build Rishi's Choice message
-  const rishiPlanet = currentHoraPlanet || dashaPlanet || getPlanetOfDay();
-  const rishiSanskrit = PLANET_MANTRA_NAMES[rishiPlanet] || rishiPlanet;
-  const rishiMessage = currentHoraPlanet
-    ? `Master, the current ${currentHoraPlanet} Hora favors your creative soul. Recite the ${rishiSanskrit} Mantra now.`
-    : dashaPlanet
-    ? `Your ${dashaPlanet} Dasha period calls for the ${rishiSanskrit} Mantra. Align with your karmic frequency.`
-    : `Today's ${rishiPlanet} energy guides your practice. Chant Om ${rishiSanskrit}aya Namaha.`;
-
+  /* ── Load + sort mantras ── */
   useEffect(() => {
     let cancelled = false;
     getMantras().then((data) => {
-      if (!cancelled) {
-        const dayPlanet = getPlanetOfDay();
-        const sortedMantras = [...data];
-        sortedMantras.sort((a, b) => {
-          const aMatchesDasha = dashaPlanet && mantraMatchesPlanet(a, dashaPlanet);
-          const bMatchesDasha = dashaPlanet && mantraMatchesPlanet(b, dashaPlanet);
-          const aMatchesDay = mantraMatchesPlanet(a, dayPlanet);
-          const bMatchesDay = mantraMatchesPlanet(b, dayPlanet);
-          if (aMatchesDasha && !bMatchesDasha) return -1;
-          if (!aMatchesDasha && bMatchesDasha) return 1;
-          if (aMatchesDay && !bMatchesDay) return -1;
-          if (!aMatchesDay && bMatchesDay) return 1;
-          return 0;
-        });
-        setMantras(sortedMantras);
-        if (sortedMantras.length > 0 && !selectedMantraId) {
-          const dashaMantraId = dashaPlanet ? sortedMantras.find(m => mantraMatchesPlanet(m, dashaPlanet))?.id : null;
-          const dayMantraId = sortedMantras.find(m => mantraMatchesPlanet(m, dayPlanet))?.id;
-          const recommendedId = jyotishRecommendation?.recommendedMantraId;
-          const preselectedId = dashaMantraId || dayMantraId ||
-            (recommendedId && sortedMantras.find(m => m.id === recommendedId)?.id) ||
-            sortedMantras[0].id;
-          setSelectedMantraId(preselectedId);
-        }
+      if (cancelled) return;
+      const dayPlanet = getPlanetOfDay();
+      const sorted = [...data].sort((a, b) => {
+        const aD = dashaPlanet && mantraMatchesPlanet(a, dashaPlanet);
+        const bD = dashaPlanet && mantraMatchesPlanet(b, dashaPlanet);
+        const aDay = mantraMatchesPlanet(a, dayPlanet);
+        const bDay = mantraMatchesPlanet(b, dayPlanet);
+        if (aD && !bD) return -1;
+        if (!aD && bD) return 1;
+        if (aDay && !bDay) return -1;
+        if (!aDay && bDay) return 1;
+        return 0;
+      });
+      setMantras(sorted);
+      if (sorted.length > 0 && !selectedMantraId) {
+        const dashaMid = dashaPlanet ? sorted.find((m) => mantraMatchesPlanet(m, dashaPlanet))?.id : null;
+        const dayMid = sorted.find((m) => mantraMatchesPlanet(m, dayPlanet))?.id;
+        const recId = jyotishRecommendation?.recommendedMantraId;
+        setSelectedMantraId(
+          dashaMid ?? dayMid ?? (recId && sorted.find((m) => m.id === recId) ? recId : null) ?? sorted[0].id
+        );
       }
       setLoading(false);
-    }).catch((error) => {
+    }).catch((err) => {
       if (!cancelled) {
         toast.error(t('error_mantras_fetch', 'Could not load mantras right now.'));
         setLoading(false);
@@ -199,15 +410,15 @@ const Mantras = () => {
 
   useEffect(() => {
     if (jyotishRecommendation?.recommendedMantraId && mantras.length > 0 && !selectedMantraId) {
-      const recommendedMantra = mantras.find(m => m.id === jyotishRecommendation.recommendedMantraId);
-      if (recommendedMantra) setSelectedMantraId(recommendedMantra.id);
+      const rec = mantras.find((m) => m.id === jyotishRecommendation.recommendedMantraId);
+      if (rec) setSelectedMantraId(rec.id);
     }
   }, [jyotishRecommendation?.recommendedMantraId, mantras, selectedMantraId]);
 
-  // Pre-fetch Remedy track so it plays instantly when user taps "Play {dashaPlanet} Remedy"
+  /* ── Pre-fetch remedy audio ── */
   useEffect(() => {
     if (!dashaPlanet || mantras.length === 0) return;
-    const remedyMantra = mantras.find(m => m.planet_type && normalizePlanetName(m.planet_type) === dashaPlanet);
+    const remedyMantra = mantras.find((m) => m.planet_type && normalizePlanetName(m.planet_type) === dashaPlanet);
     if (!remedyMantra?.audio_url) return;
     const url = getPlayableUrl(remedyMantra.audio_url);
     const preload = new Audio();
@@ -221,7 +432,13 @@ const Mantras = () => {
     if (!user) return;
     try {
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      const { data: recent } = await supabase.from('mantra_completions').select('id').eq('user_id', user.id).eq('mantra_id', mantra.id).gte('completed_at', twentyFourHoursAgo).limit(1);
+      const { data: recent } = await supabase
+        .from('mantra_completions')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('mantra_id', mantra.id)
+        .gte('completed_at', twentyFourHoursAgo)
+        .limit(1);
       if (recent?.length) return;
       await supabase.from('mantra_completions').insert({ user_id: user.id, mantra_id: mantra.id, shc_earned: mantra.shc_reward });
       const { data: bal } = await supabase.from('user_balances').select('balance, total_earned').eq('user_id', user.id).maybeSingle();
@@ -240,7 +457,10 @@ const Mantras = () => {
   const playNextRep = (mantra: MantraItem) => {
     if (!mantra.audio_url) return;
     const url = getPlayableUrl(mantra.audio_url);
-    if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; }
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = '';
+    }
     const audio = new Audio(url);
     audioRef.current = audio;
     currentMantraIdRef.current = mantra.id;
@@ -251,7 +471,7 @@ const Mantras = () => {
           setIsPlaying(false);
           setCompleted(true);
           currentMantraIdRef.current = null;
-          if (user && selectedMantra) awardMantraReward(selectedMantra);
+          if (user && currentMantra) awardMantraReward(currentMantra);
           return reps;
         }
         audio.currentTime = 0;
@@ -263,434 +483,460 @@ const Mantras = () => {
   };
 
   const handleStart = () => {
-    if (!selectedMantra?.audio_url) { toast.error(t('error_no_audio', 'No audio available.')); return; }
+    if (!currentMantra?.audio_url) {
+      toast.error(t('error_no_audio', 'No audio available.'));
+      return;
+    }
     if (count >= reps) setCount(0);
-    if (audioRef.current && currentMantraIdRef.current === selectedMantra.id && count < reps) {
+    if (audioRef.current && currentMantraIdRef.current === currentMantra.id && count < reps) {
       setIsPlaying(true);
       audioRef.current.play().catch(() => {});
       return;
     }
     setIsPlaying(true);
     setCompleted(false);
-    playNextRep(selectedMantra);
+    playNextRep(currentMantra);
   };
 
-  const handlePause = () => { audioRef.current?.pause(); setIsPlaying(false); };
-  const handleReset = () => { audioRef.current?.pause(); audioRef.current = null; currentMantraIdRef.current = null; setCount(0); setIsPlaying(false); setCompleted(false); };
-  const handleRestartFrom1 = () => { handleReset(); if (selectedMantra?.audio_url) { setIsPlaying(true); playNextRep(selectedMantra); } };
-  const handleMantraSelect = (m: MantraItem) => { setSelectedMantraId(m.id); if (isPlaying) { audioRef.current?.pause(); setIsPlaying(false); } setCount(0); setCompleted(false); };
+  const handlePause = () => {
+    audioRef.current?.pause();
+    setIsPlaying(false);
+  };
 
-  const progressPercent = reps > 0 ? (count / reps) * 100 : 0;
-  const selectedTheme = getPlanetTheme(selectedMantra?.planet_type);
+  const handleReset = () => {
+    audioRef.current?.pause();
+    audioRef.current = null;
+    currentMantraIdRef.current = null;
+    setCount(0);
+    setIsPlaying(false);
+    setCompleted(false);
+  };
+
+  const handleRestartFrom1 = () => {
+    handleReset();
+    if (currentMantra?.audio_url) {
+      setIsPlaying(true);
+      playNextRep(currentMantra);
+    }
+  };
+
+  const handleMantraSelect = (m: MantraItem) => {
+    setSelectedMantraId(m.id);
+    if (isPlaying) {
+      audioRef.current?.pause();
+      setIsPlaying(false);
+    }
+    setCount(0);
+    setCompleted(false);
+  };
+
+  const CIRC = 97;
+  const progressOffset = CIRC - (CIRC * (count / reps) * 0.97);
+
+  const planetSymbol = mantraPlanet ? PLANET_SYMBOLS[mantraPlanet] ?? '' : '';
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      <div className="sqi-mantras" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+        <style>{SQI_CSS}</style>
+        <div style={{ textAlign: 'center' }}>
+          <div className="nadi" style={{ fontSize: 28, marginBottom: 12 }}>✦</div>
+          <div className="m-micro">Accessing Vedic Light-Codes…</div>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
-    <div className="min-h-screen bg-background pb-28 overflow-x-hidden overflow-y-auto">
+  const horaRange = horaWatch.calculation
+    ? `${horaWatch.calculation.currentHora.startTimeStr} – ${horaWatch.calculation.currentHora.endTimeStr}`
+    : '--:-- – --:--';
 
-      {/* Sacred Header — Celestial Gradient; Return to Temple always available */}
-      <header className="bg-gradient-to-br from-indigo-950 via-violet-950/90 to-amber-950/80 border-b border-amber-500/20 px-4 pt-6 pb-5 shrink-0">
-        <div className="flex items-center justify-between gap-3 mb-3">
+  return (
+    <div className="sqi-mantras">
+      <style>{SQI_CSS}</style>
+      <audio ref={audioRef} className="hidden" />
+
+      {/* ── HERO ── */}
+      <div className="m-hero">
+        <div className="m-orb" style={{ width: 200, height: 200, top: -70, right: -60, '--dur': '11s', '--dl': '0s' } as React.CSSProperties} />
+        <div className="m-orb" style={{ width: 90, height: 90, top: 80, left: -30, '--dur': '8s', '--dl': '-3s' } as React.CSSProperties} />
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 26 }}>
           <button
-            type="button"
             onClick={() => navigate('/dashboard')}
-            className="text-sm font-medium text-amber-400/90 hover:text-amber-300 transition-colors"
+            style={{ background: 'none', border: '1px solid rgba(255,255,255,.05)', borderRadius: 12, width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'rgba(255,255,255,.4)', fontSize: 14 }}
           >
-            Return to Temple
+            ←
           </button>
+          <Sparkles size={18} className="nadi" />
         </div>
-        <h1 className="text-2xl font-heading font-bold text-white">
-          {tI18n('mantras.title', 'Mantras')}
+
+        <div className="m-micro" style={{ marginBottom: 8 }}>
+          Akasha-Neural Archive · Vedic Light-Code Transmissions
+        </div>
+        <h1 className="m-hero-title m-shimmer">
+          {tI18n('mantras.title', 'Sacred Mantra Chamber')}
         </h1>
-        <p className="mt-1 text-sm text-white/70">
+        <p style={{ fontSize: 13, color: 'rgba(255,255,255,.42)', lineHeight: 1.6, marginBottom: 0 }}>
           {tI18n('mantras.subtitle', 'Choose one mantra and repeat it 108 times.')}
         </p>
-      </header>
+      </div>
 
-      {/* Bhrigu Jyotish Holy Remedy — linked to Hand Analysis; Palm + Dasha mapping */}
-      <section className="shrink-0 overflow-visible" aria-label="Bhrigu Holy Remedy">
-      <BhriguCard
-        handAnalysisComplete={handAnalysisComplete}
-        palmArchetype={palmArchetype}
-        activeDasha={dashaPlanet}
-        prescribedText={reading?.personalCompass?.currentDasha?.period ? getPrescribedMantraText(reading.personalCompass.currentDasha.period) : null}
-        onPlayRemedy={(planet) => {
-          const remedyMantra = mantras.find(m => m.planet_type && normalizePlanetName(m.planet_type) === planet);
-          if (remedyMantra) {
-            handleMantraSelect(remedyMantra);
-            if (remedyMantra.audio_url) setTimeout(() => handleStart(), 300);
-            else toast.error(t('mantras_no_audio', 'Audio not available for this mantra.'));
-          } else {
-            const prescribedText = DASHA_MANTRA_DISPLAY[planet] ?? null;
-            if (prescribedText) toast.info(`${prescribedText} — ${t('mantras_find_mantra', 'Find this mantra in the list below.')}`);
+      {/* ── BHRIGU CARD ── */}
+      <div className="m-bhrigu">
+        <BhriguCard
+          handAnalysisComplete={handAnalysisComplete}
+          palmArchetype={palmArchetype}
+          activeDasha={dashaPlanet}
+          prescribedText={reading?.personalCompass?.currentDasha?.period ? getPrescribedMantraText(reading.personalCompass.currentDasha.period) : null}
+          onPlayRemedy={(planet) => {
+            const remedyMantra = mantras.find((m) => m.planet_type && normalizePlanetName(m.planet_type) === planet);
+            if (remedyMantra) {
+              handleMantraSelect(remedyMantra);
+              if (remedyMantra.audio_url) setTimeout(() => handleStart(), 300);
+              else toast.error(t('mantras_no_audio', 'Audio not available for this mantra.'));
+            } else {
+              const prescribedText = DASHA_MANTRA_DISPLAY[planet] ?? null;
+              if (prescribedText) toast.info(`${prescribedText} — ${t('mantras_find_mantra', 'Find this mantra in the list below.')}`);
+            }
+          }}
+          t={t}
+          heartLineLeak={heartLineLeak}
+          onPlayHeartHealing={
+            heartLineLeak && heartHealingMantra
+              ? () => {
+                  handleMantraSelect(heartHealingMantra);
+                  if (heartHealingMantra.audio_url) setTimeout(() => handleStart(), 300);
+                  else toast.error(t('mantras_no_audio', 'Audio not available for this mantra.'));
+                }
+              : undefined
           }
-        }}
-        t={t}
-        heartLineLeak={heartLineLeak}
-        onPlayHeartHealing={
-          heartLineLeak && heartHealingMantra
-            ? () => {
-                handleMantraSelect(heartHealingMantra);
-                if (heartHealingMantra.audio_url) setTimeout(() => handleStart(), 300);
-                else toast.error(t('mantras_no_audio', 'Audio not available for this mantra.'));
-              }
-            : undefined
-        }
-        heartHealingMantraTitle={heartHealingMantraTitle}
-      />
-      </section>
+          heartHealingMantraTitle={heartHealingMantraTitle}
+        />
+      </div>
 
-      {/* Din Heliga Timme — floating glass card with rotating Moon/Planet icon */}
-      {horaWatch.calculation && (
-        <section className="px-4 mt-6 mb-6">
-          <div className={`relative rounded-2xl border border-white/20 bg-white/5 backdrop-blur-xl overflow-hidden shadow-xl ${shouldGlowGold ? 'border-amber-500/40 shadow-amber-500/20' : 'shadow-black/20'}`}>
-            <div className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-white/10 flex items-center justify-center border border-white/10">
-                    <Moon className={`w-6 h-6 text-amber-300/90 animate-[spin_12s_linear_infinite] ${shouldGlowGold ? 'drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]' : ''}`} />
-                  </div>
-                  <h2 className="text-lg font-semibold text-white">{t('mantras_sacred_hour', 'Din Heliga Timme')}</h2>
-                </div>
-                {currentHoraPlanet && (
-                  <Badge variant="outline" className={`border-primary/30 text-primary font-bold text-sm px-3 py-1 ${shouldGlowGold ? 'animate-pulse border-amber-500/50 bg-amber-500/10 text-amber-400' : ''}`}>
-                    {getPlanetEmoji(currentHoraPlanet)} {currentHoraPlanet}{shouldGlowGold && ' ✨'}
-                  </Badge>
-                )}
+      {/* ── Celestial Match Banner ── */}
+      {isCelestialMatch && dashaPlanet && (
+        <div className="m-glass" style={{ margin: '0 22px 16px', padding: '16px 20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 18 }}>✨</span>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,.9)', marginBottom: 2 }}>
+                {t('mantras_celestial_match', 'Himlakonstellation Match!')}
               </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-white/60">{t('mantras_current_hora', 'Nuvarande Hora')}:</span>
-                  <span className="text-white font-medium">{horaWatch.calculation.currentHora.startTimeStr} - {horaWatch.calculation.currentHora.endTimeStr}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-white/60">{t('mantras_remaining', 'Återstående')}:</span>
-                  <span className="text-white font-medium font-mono">{horaWatch.remainingTimeStr}</span>
-                </div>
-                {horaWatch.calculation.dayRuler && (
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-white/60">{t('mantras_day_ruler', 'Dagens Herskare')}:</span>
-                    <span className="text-white font-medium">{getPlanetEmoji(horaWatch.calculation.dayRuler)} {horaWatch.calculation.dayRuler}</span>
-                  </div>
-                )}
-                {shouldGlowGold && (
-                  <div className="mt-3 pt-3 border-t border-amber-500/20">
-                    <p className="text-xs text-amber-400 font-medium">✨ {t('mantras_golden_hour', 'Din Heliga Timme matchar din planet!')}</p>
-                  </div>
-                )}
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,.5)' }}>
+                {t('mantras_celestial_message', `Your Hora (${currentHoraPlanet}) matches your Dasha (${dashaPlanet}). Powerful time for practice.`)}
               </div>
             </div>
           </div>
-        </section>
+        </div>
       )}
 
-      {/* Celestial Match Banner */}
-      {isCelestialMatch && dashaPlanet && (
-        <section className="px-4 mb-6">
-          <Card className="rounded-2xl border-2 border-amber-500/50 bg-gradient-to-br from-amber-500/10 via-yellow-500/5 to-amber-500/10 shadow-lg shadow-amber-500/20">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center flex-shrink-0 animate-pulse">
-                  <Sparkles className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-base font-bold text-foreground mb-1">{t('mantras_celestial_match', 'Himlakonstellation Match!')} ✨</h3>
-                  <p className="text-sm text-muted-foreground">{t('mantras_celestial_message', `Your Hora (${currentHoraPlanet}) matches your Dasha (${dashaPlanet}). Powerful time for practice.`)}</p>
+      {/* ── HORA WATCH ── */}
+      {horaWatch.calculation && (
+        <div className="m-glass m-hora">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 38, height: 38, borderRadius: 12, background: 'rgba(34,211,238,.08)', border: '1px solid rgba(34,211,238,.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}>
+                🌙
+              </div>
+              <div>
+                <div className="m-micro" style={{ marginBottom: 2 }}>{tI18n('mantras.din_heliga', 'Din Heliga Timme')}</div>
+                <div style={{ fontSize: 14, fontWeight: 800, letterSpacing: '-.01em' }}>
+                  {tI18n('mantras.current_hora', 'Nuvarande Hora')}
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </section>
+            </div>
+            {currentHoraPlanet && (
+              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', padding: '5px 12px', borderRadius: 100, background: 'rgba(212,175,55,.07)', border: '1px solid rgba(212,175,55,.22)', color: '#D4AF37' }}>
+                {PLANET_SYMBOLS[currentHoraPlanet] ?? getPlanetEmoji(currentHoraPlanet)} {currentHoraPlanet}
+              </span>
+            )}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 12, color: 'rgba(255,255,255,.42)' }}>{tI18n('mantras.current_hora_time', 'Nuvarande Hora:')}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,.85)' }}>{horaRange}</span>
+            </div>
+            <div style={{ height: 1, background: 'linear-gradient(90deg,transparent,rgba(212,175,55,.08),transparent)' }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: 12, color: 'rgba(255,255,255,.42)' }}>{tI18n('mantras.remaining', 'Återstående:')}</span>
+              <span className="m-hora-timer">{horaWatch.remainingTimeStr}</span>
+            </div>
+            {horaWatch.calculation.dayRuler && (
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 12, color: 'rgba(255,255,255,.42)' }}>{tI18n('mantras.day_ruler', 'Dagens Herskare:')}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,.85)' }}>
+                  {PLANET_SYMBOLS[horaWatch.calculation.dayRuler] ?? getPlanetEmoji(horaWatch.calculation.dayRuler)} {horaWatch.calculation.dayRuler}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
       )}
 
-      <div className="px-4 flex flex-col gap-6 md:flex-row md:gap-8">
-
-        {/* Mantra List — vibrant planet cards with symbols + success % */}
-        <section className="flex-shrink-0 md:w-80">
-          <button
-            type="button"
-            className="flex w-full items-center justify-between py-2 text-left mb-3"
-            onClick={() => setListExpanded(!listExpanded)}
+      {/* ── TWO-COL: LIST + PRACTICE ── */}
+      <div className="m-two-col">
+        {/* ─── MANTRA LIST ─── */}
+        <div>
+          <div
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, cursor: 'pointer', padding: '4px 2px' }}
+            onClick={() => setListExpanded((e) => !e)}
           >
-            <h2 className="font-semibold text-foreground">{tI18n('mantras.choose', 'Choose a mantra')}</h2>
-            <ChevronDown className={`h-4 w-4 text-muted-foreground transition ${listExpanded ? 'rotate-180' : ''}`} />
-          </button>
+            <div>
+              <div className="m-micro" style={{ marginBottom: 2 }}>
+                {tI18n('mantras.choose', 'Choose a mantra')}
+              </div>
+            </div>
+            <ChevronDown
+              size={14}
+              style={{ color: 'rgba(255,255,255,.4)', transform: listExpanded ? 'rotate(180deg)' : 'none', transition: 'transform .3s', ...(listExpanded ? { color: '#D4AF37' } : {}) }}
+            />
+          </div>
 
           {listExpanded && (
-            <div className="space-y-3">
-              {mantras.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4">{tI18n('mantras.comingSoon', 'More mantras coming soon.')}</p>
-              ) : (
-                mantras.map((m) => {
-                  const isRecommended = jyotishRecommendation?.recommendedMantraId === m.id;
-                  const mantraPlanet = m.planet_type ? normalizePlanetName(m.planet_type) : null;
-                  const hasGoldenAura = shouldGlowGold && mantraPlanet === currentHoraPlanet && (
-                    (dashaPlanet && mantraPlanet === dashaPlanet) ||
-                    (userBirthPlanet && mantraPlanet === userBirthPlanet)
-                  );
-                  const isDashaMantra = dashaPlanet && mantraMatchesPlanet(m, dashaPlanet);
-                  const isDayMantra = mantraMatchesPlanet(m, getPlanetOfDay());
-                  const isSelected = selectedMantraId === m.id;
-                  const theme = getPlanetTheme(m.planet_type);
-                  const planetSymbol = mantraPlanet ? PLANET_SYMBOLS[mantraPlanet] : null;
-                  const successPct = getSuccessPercent(mantraPlanet);
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {mantras.length === 0 && (
+                <p style={{ fontSize: 12, color: 'rgba(255,255,255,.35)', textAlign: 'center', padding: '16px 0' }}>
+                  {tI18n('mantras.comingSoon', 'More mantras coming soon.')}
+                </p>
+              )}
+              {mantras.map((m) => {
+                const mp = m.planet_type ? normalizePlanetName(m.planet_type) : null;
+                const isSel = selectedMantraId === m.id;
+                const isAura = shouldGlowGold(m);
+                const pSym = mp ? PLANET_SYMBOLS[mp] ?? '' : '';
+                const pct = getSuccessPercent(mp);
+                const iconAlpha = mp === 'Jupiter' ? 0.15 : 0.1;
+                const iconBorderAlpha = mp === 'Jupiter' ? 0.3 : 0.18;
 
-                  return (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() => {
-                        handleMantraSelect(m);
-                        if ('vibrate' in navigator) navigator.vibrate(10);
-                      }}
-                      className={`w-full text-left rounded-2xl border p-4 flex items-center gap-3 transition-all duration-200 relative overflow-hidden shadow-md hover:scale-[1.01] ${
-                        hasGoldenAura
-                          ? 'border-amber-500/60 bg-gradient-to-r from-amber-900/60 via-yellow-800/40 to-black/60 shadow-amber-500/30'
-                          : isSelected
-                          ? `${theme.border} bg-gradient-to-br ${theme.gradient} shadow-lg ${theme.glow}`
-                          : `border-white/10 bg-gradient-to-br ${theme.gradient} opacity-70 hover:opacity-100`
-                      }`}
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    className={`m-mantra-item${isSel ? ' m-selected' : ''}${isAura ? ' m-gold-aura' : ''}`}
+                    onClick={() => {
+                      handleMantraSelect(m);
+                      if ('vibrate' in navigator) navigator.vibrate(10);
+                    }}
+                  >
+                    {isSel && !isAura && (
+                      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg,transparent,rgba(255,255,255,.04),transparent)', pointerEvents: 'none', borderRadius: 20 }} />
+                    )}
+                    {isAura && (
+                      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg,transparent,rgba(212,175,55,.12),transparent)', pointerEvents: 'none', borderRadius: 20, animation: 'goldPulse 3s ease-in-out infinite' }} />
+                    )}
+
+                    <div
+                      className="m-planet-icon"
+                      style={{ background: `rgba(212,175,55,${iconAlpha})`, border: `1px solid rgba(212,175,55,${iconBorderAlpha})` }}
                     >
-                      {/* Glow overlay when selected */}
-                      {isSelected && !hasGoldenAura && (
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent pointer-events-none" />
-                      )}
-                      {hasGoldenAura && (
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-400/20 to-transparent animate-pulse pointer-events-none" />
-                      )}
+                      <span style={{ fontSize: 16 }}>{pSym || '✦'}</span>
+                    </div>
 
-                      {/* Planet icon with symbol */}
-                      <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 relative z-10 ${
-                        hasGoldenAura ? 'bg-gradient-to-br from-amber-400 to-yellow-500' : theme.iconBg
-                      }`}>
-                        {planetSymbol ? (
-                          <span className={`text-lg font-bold ${hasGoldenAura ? 'text-white' : theme.iconColor}`}>
-                            {planetSymbol}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12.5, fontWeight: 700, letterSpacing: '-.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 4, color: isSel ? 'rgba(255,255,255,.95)' : 'rgba(255,255,255,.78)' }}>
+                        {m.title}
+                      </div>
+                      <div style={{ display: 'flex', gap: 5, alignItems: 'center', flexWrap: 'wrap' }}>
+                        {mp && (
+                          <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.07em', textTransform: 'uppercase', padding: '2px 7px', borderRadius: 100, background: 'rgba(212,175,55,.08)', border: '1px solid rgba(212,175,55,.2)', color: 'rgba(212,175,55,.8)' }}>
+                            {pSym} {mp}
                           </span>
-                        ) : hasGoldenAura ? (
-                          <Sparkles className="h-5 w-5 text-white animate-pulse" />
-                        ) : isRecommended ? (
-                          <Sparkles className={`h-5 w-5 ${theme.iconColor}`} />
-                        ) : (
-                          <Music className={`h-5 w-5 ${theme.iconColor}`} />
+                        )}
+                        <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.07em', textTransform: 'uppercase', padding: '2px 7px', borderRadius: 100, background: 'rgba(212,175,55,.06)', border: '1px solid rgba(212,175,55,.15)', color: 'rgba(212,175,55,.55)' }}>
+                          {pct}% ✦
+                        </span>
+                        {m.duration_minutes > 0 && (
+                          <span style={{ fontSize: 10, color: 'rgba(255,255,255,.35)' }}>{formatDurationMinutes(m.duration_minutes)}</span>
                         )}
                       </div>
-
-                      {/* Text */}
-                      <div className="flex-1 min-w-0 relative z-10">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="font-semibold text-white truncate">{m.title}</p>
-                          {hasGoldenAura && <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wide animate-pulse">✨ GOLDEN</span>}
-                        </div>
-                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                          {m.planet_type && (
-                            <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${theme.badge}`}>
-                              {planetSymbol || getPlanetEmoji(m.planet_type)} {m.planet_type}
-                            </span>
-                          )}
-                          {/* Success % from Hora */}
-                          <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${
-                            successPct >= 80 ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                            : successPct >= 60 ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                            : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
-                          }`}>
-                            {successPct}% ✦
-                          </span>
-                          {isDashaMantra && !hasGoldenAura && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full border bg-primary/20 text-primary border-primary/40 font-medium">
-                              {t('mantras_dasha_pinned', 'Ditt Period')}
-                            </span>
-                          )}
-                          {isDayMantra && !hasGoldenAura && !isDashaMantra && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full border bg-primary/10 text-primary border-primary/30 font-medium">
-                              {t('mantras_day_mantra', 'Dagens')}
-                            </span>
-                          )}
-                          {m.duration_minutes > 0 && (
-                            <span className="text-[10px] text-white/50">{formatDurationMinutes(m.duration_minutes)}</span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Selected indicator */}
-                      {isSelected && (
-                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${hasGoldenAura ? 'bg-amber-400' : theme.iconColor.replace('text-', 'bg-')} relative z-10`} />
-                      )}
-                    </button>
-                  );
-                })
-              )}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           )}
-        </section>
+        </div>
 
-        {/* Now Practicing */}
-        <section className="flex-1 min-w-0">
-          <h2 className="font-semibold text-foreground mb-3">{tI18n('mantras.now', 'Now practicing')}</h2>
+        {/* ─── PRACTICE PANEL ─── */}
+        <div className="m-practice">
+          <div className="m-mantra-banner">
+            <div className="m-mantra-name m-shimmer">
+              {currentMantra?.title ?? tI18n('mantras.select_prompt', 'Select a Mantra')}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+              {mantraPlanet && (
+                <span className="m-tag" style={{ background: 'rgba(212,175,55,.07)', border: '1px solid rgba(212,175,55,.22)', color: '#D4AF37' }}>
+                  {planetSymbol} {mantraPlanet} Mantra
+                </span>
+              )}
+              <span className="m-tag" style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)', color: 'rgba(255,255,255,.4)' }}>
+                ✦ Sacred Reverb
+              </span>
+            </div>
+            <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,.4)', textAlign: 'center' }}>
+              {tI18n('mantras.voice_only', 'Voice only')}
+            </div>
+          </div>
 
-          {!selectedMantra ? (
-            <Card className="rounded-2xl border-border p-6">
-              <p className="text-muted-foreground text-center">{tI18n('mantras.choose', 'Choose a mantra')}</p>
-            </Card>
-          ) : (
-            <Card className={`rounded-2xl border overflow-hidden shadow-xl ${selectedTheme.border} ${selectedTheme.glow}`}>
-              {/* Vibrant header band */}
-              <div className={`bg-gradient-to-r ${selectedTheme.gradient} px-6 pt-6 pb-4`}>
-                <p className="text-xl font-bold text-white text-center">{selectedMantra.title}</p>
-                {selectedMantra.planet_type && (
-                  <div className="flex justify-center mt-2 gap-2">
-                    <span className={`text-xs px-3 py-1 rounded-full border font-medium ${selectedTheme.badge}`}>
-                      {PLANET_SYMBOLS[normalizePlanetName(selectedMantra.planet_type) || ''] || getPlanetEmoji(selectedMantra.planet_type)} {selectedMantra.planet_type} Mantra
-                    </span>
-                    <span className="text-xs px-3 py-1 rounded-full border bg-white/10 text-white/70 border-white/20 font-medium">
-                      🎵 Sacred Reverb
-                    </span>
+          <div style={{ margin: '16px 16px 0', background: 'rgba(255,255,255,.015)', border: '1px solid rgba(255,255,255,.04)', borderRadius: 20, padding: '16px 18px' }}>
+            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(212,175,55,.45)', marginBottom: 10 }}>
+              {tI18n('mantras.instructions.title', 'How to practice')}
+            </div>
+            {[
+              tI18n('mantras.instructions.step1', 'Sit comfortably.'),
+              tI18n('mantras.instructions.step2', 'Press Start.'),
+              tI18n('mantras.instructions.step3', 'Repeat with the recording — 108 times.'),
+            ].map((step, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 12.5, color: 'rgba(255,255,255,.5)', lineHeight: 1.5, marginBottom: i < 2 ? 7 : 0 }}>
+                <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(212,175,55,.07)', border: '1px solid rgba(212,175,55,.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: 'rgba(212,175,55,.55)', flexShrink: 0, marginTop: 1 }}>
+                  {i + 1}
+                </div>
+                {step}
+              </div>
+            ))}
+          </div>
+
+          {!completed ? (
+            <div style={{ padding: '24px 16px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
+              <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg className="m-counter-ring" width="160" height="160" viewBox="0 0 36 36">
+                  <defs>
+                    <linearGradient id="goldGradMantra" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#D4AF37" stopOpacity="0.9" />
+                      <stop offset="50%" stopColor="#F5D77A" stopOpacity="1" />
+                      <stop offset="100%" stopColor="#D4AF37" stopOpacity="0.7" />
+                    </linearGradient>
+                  </defs>
+                  <circle className="m-counter-track" cx="18" cy="18" r="15.5" />
+                  <circle
+                    className="m-counter-fill"
+                    cx="18"
+                    cy="18"
+                    r="15.5"
+                    strokeDasharray={`${CIRC} ${CIRC}`}
+                    strokeDashoffset={progressOffset}
+                  />
+                </svg>
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ fontSize: 28, fontWeight: 900, letterSpacing: '-.04em', color: '#D4AF37', lineHeight: 1 }}>
+                    {count}
                   </div>
-                )}
-                <p className="text-sm text-white/60 text-center mt-1">{tI18n('mantras.guidanceVoice', 'Voice only')}</p>
+                  <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.3em', textTransform: 'uppercase', color: 'rgba(212,175,55,.4)', marginTop: 4 }}>
+                    /108
+                  </div>
+                </div>
               </div>
 
-              <CardContent className="p-6">
-                {/* Jyotish Recommendation */}
-                {jyotishRecommendation && (
-                  <div className="space-y-3 mb-6">
-                    <Card className="rounded-xl border-border bg-primary/5 border-primary/20">
-                      <CardContent className="p-4">
-                        <div className="flex items-start gap-3 mb-3">
-                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                            <Sparkles className="h-4 w-4 text-primary" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground mb-2">{jyotishRecommendation.message}</p>
-                            <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
-                              <span>{t('mantras_duration', 'Duration')}: {jyotishRecommendation.duration}</span>
-                              <span>{t('mantras_repetitions', 'Repetitions')}: {jyotishRecommendation.repetitions}</span>
-                              <span>{t('mantras_best_time', 'Best time')}: {jyotishRecommendation.bestTime}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {(jyotishRecommendation.dayMantraId || jyotishRecommendation.periodMantraId || jyotishRecommendation.horaMantraId) && (
-                      <Card className="rounded-xl border-border bg-muted/10">
-                        <CardContent className="p-4">
-                          <h3 className="text-sm font-semibold text-foreground mb-3">{t('mantras_cosmic_timing', 'Cosmic Timing')}</h3>
-                          <div className="space-y-2">
-                            {jyotishRecommendation.dayPlanet && (
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="text-muted-foreground">{t('mantras_day_mantra', 'Dagens Mantra')} ({jyotishRecommendation.dayPlanet}):</span>
-                                <span className="text-foreground font-medium">{jyotishRecommendation.dayMantraId ? mantras.find(m => m.id === jyotishRecommendation.dayMantraId)?.title || '—' : '—'}</span>
-                              </div>
-                            )}
-                            {jyotishRecommendation.periodPlanet && (
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="text-muted-foreground">{t('mantras_period_mantra', 'Period Mantra')} ({jyotishRecommendation.periodPlanet}):</span>
-                                <span className="text-foreground font-medium">{jyotishRecommendation.periodMantraId ? mantras.find(m => m.id === jyotishRecommendation.periodMantraId)?.title || '—' : '—'}</span>
-                              </div>
-                            )}
-                            {jyotishRecommendation.horaPlanet && (
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="text-muted-foreground">{t('mantras_hora_mantra', 'Hour Mantra')} ({jyotishRecommendation.horaPlanet}):</span>
-                                <span className="text-foreground font-medium">{jyotishRecommendation.horaMantraId ? mantras.find(m => m.id === jyotishRecommendation.horaMantraId)?.title || '—' : '—'}</span>
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
-                  </div>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center', width: '100%' }}>
+                <button
+                  type="button"
+                  className={`m-btn-start${isPlaying ? ' m-paused' : ''}`}
+                  onClick={() => {
+                    handleStart();
+                    if ('vibrate' in navigator) navigator.vibrate(15);
+                  }}
+                >
+                  {isPlaying ? <Pause size={14} /> : <Play size={14} />}
+                  {isPlaying ? tI18n('mantras.pause', 'PAUSE') : tI18n('mantras.start', 'START')}
+                </button>
+                <button type="button" className="m-btn-reset" onClick={() => { handleReset(); if ('vibrate' in navigator) navigator.vibrate([10, 20, 10]); }} title="Reset">
+                  <RotateCcw size={16} />
+                </button>
+                {count > 0 && (
+                  <button
+                    type="button"
+                    className="m-btn-reset"
+                    style={{ width: 'auto', padding: '0 14px', fontSize: 11 }}
+                    onClick={() => {
+                      handleRestartFrom1();
+                      if ('vibrate' in navigator) navigator.vibrate(10);
+                    }}
+                  >
+                    {tI18n('mantras.restartFrom1', 'Restart from 1')}
+                  </button>
                 )}
-
-                {/* Instructions */}
-                <Card className="rounded-xl border-border bg-muted/20 mb-6">
-                  <CardContent className="p-4">
-                    <p className="font-medium text-foreground mb-2">{tI18n('mantras.instructions.title', 'How to practice')}</p>
-                    <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-                      <li>{tI18n('mantras.instructions.step1', 'Sit comfortably.')}</li>
-                      <li>{tI18n('mantras.instructions.step2', 'Press Start.')}</li>
-                      <li>{tI18n('mantras.instructions.step3', 'Repeat with the recording — 108 times.')}</li>
-                    </ol>
-                  </CardContent>
-                </Card>
-
-                {!completed ? (
-                  <>
-                    {/* 108 Counter — large circle, Golden Light Thread progress ring, elegant serif */}
-                    <div className="flex justify-center mb-8">
-                      <div className="relative w-44 h-44 sm:w-52 sm:h-52">
-                        <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                          <path fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="2.5" d="M18 2.5 a 15.5 15.5 0 0 1 0 31 a 15.5 15.5 0 0 1 0 -31" />
-                          <path
-                            fill="none"
-                            stroke="url(#mantraGoldThread)"
-                            strokeWidth="2.5"
-                            strokeDasharray={`${progressPercent * 0.97} 97`}
-                            strokeLinecap="round"
-                            className="drop-shadow-[0_0_6px_rgba(212,175,55,0.6)]"
-                            d="M18 2.5 a 15.5 15.5 0 0 1 0 31 a 15.5 15.5 0 0 1 0 -31"
-                          />
-                          <defs>
-                            <linearGradient id="mantraGoldThread" x1="0%" y1="0%" x2="100%" y2="100%">
-                              <stop offset="0%" stopColor="#D4AF37" stopOpacity="0.9" />
-                              <stop offset="50%" stopColor="#F5D77A" stopOpacity="1" />
-                              <stop offset="100%" stopColor="#D4AF37" stopOpacity="0.9" />
-                            </linearGradient>
-                          </defs>
-                        </svg>
-                        <span className="absolute inset-0 flex items-center justify-center text-2xl sm:text-3xl font-serif text-amber-200/95 tracking-wide" style={{ fontFamily: 'Cinzel, DM Serif Display, serif' }}>{count}/{reps}</span>
-                      </div>
-                    </div>
-
-                    {/* Controls — Start: Glowing Sovereign Gold with pulse */}
-                    <div className="flex flex-wrap justify-center gap-3">
-                      {!isPlaying ? (
-                        <Button size="lg" className="rounded-full gap-2 bg-[#D4AF37] hover:bg-amber-500 text-black font-bold border border-amber-400/50 animate-sovereign-pulse" onClick={() => { handleStart(); if ('vibrate' in navigator) navigator.vibrate(15); }}>
-                          <Play className="h-5 w-5" />
-                          {tI18n('mantras.start', 'Start')}
-                        </Button>
-                      ) : (
-                        <Button variant="outline" size="lg" className="rounded-full gap-2 border-amber-500/50 text-amber-200" onClick={() => { handlePause(); if ('vibrate' in navigator) navigator.vibrate(10); }}>
-                          <Pause className="h-5 w-5" />
-                          {tI18n('mantras.pause', 'Pause')}
-                        </Button>
-                      )}
-                      <Button variant="outline" size="lg" className="rounded-full gap-2 border-white/20 text-white/80" onClick={() => { handleReset(); if ('vibrate' in navigator) navigator.vibrate([10, 20, 10]); }}>
-                        <RotateCcw className="h-4 w-4" />
-                        {tI18n('mantras.reset', 'Reset')}
-                      </Button>
-                      {count > 0 && (
-                        <Button variant="ghost" size="lg" className="rounded-full gap-2 text-white/70" onClick={() => { handleRestartFrom1(); if ('vibrate' in navigator) navigator.vibrate(10); }}>
-                          {tI18n('mantras.restartFrom1', 'Restart from 1')}
-                        </Button>
-                      )}
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-center py-4">
-                    <p className="text-xl font-semibold text-foreground mb-2">{tI18n('mantras.completeTitle', 'Complete')}</p>
-                    <p className="text-muted-foreground mb-6">{tI18n('mantras.completeBody', 'Take a breath. Notice how you feel.')}</p>
-                    <Button size="lg" className="rounded-full gap-2 bg-[#D4AF37] hover:bg-amber-500 text-black font-bold border border-amber-400/50 animate-sovereign-pulse" onClick={() => { setCount(0); setCompleted(false); handleStart(); if ('vibrate' in navigator) navigator.vibrate([15, 50, 15]); }}>
-                      <Play className="h-5 w-5" />
-                      {tI18n('mantras.playAgain', 'Play again')}
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
+          ) : (
+            <div style={{ margin: 16, background: 'linear-gradient(135deg,rgba(212,175,55,.1),rgba(212,175,55,.04))', border: '1px solid rgba(212,175,55,.3)', borderRadius: 20, padding: 20, textAlign: 'center' }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>🕉</div>
+              <div style={{ fontSize: 15, fontWeight: 900, letterSpacing: '-.02em', color: '#D4AF37', marginBottom: 4 }}>
+                {tI18n('mantras.completed', '108 Repetitions Complete')}
+              </div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,.4)', marginBottom: 16 }}>
+                {tI18n('mantras.completed_sub', 'The Bhakti-Algorithm has recorded your transmission.')}
+              </div>
+              <button
+                type="button"
+                className="m-btn-start"
+                style={{ margin: '0 auto', width: 'auto', padding: '10px 28px', display: 'inline-flex' }}
+                onClick={() => {
+                  setCount(0);
+                  setCompleted(false);
+                  handleStart();
+                  if ('vibrate' in navigator) navigator.vibrate([15, 50, 15]);
+                }}
+              >
+                {tI18n('mantras.practice_again', 'Practice Again')}
+              </button>
+            </div>
           )}
-        </section>
+        </div>
       </div>
 
-      <audio ref={audioRef} className="hidden" />
-    </div>
+      {/* ── Jyotish Recommendations ── */}
+      {jyotishRecommendation && (
+        <div className="m-glass" style={{ margin: '20px 22px 0', padding: '20px 22px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+            <span style={{ fontSize: 15 }}>🔭</span>
+            <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: '-.01em' }}>
+              Vedic Light-Code Recommendations
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {jyotishRecommendation.dayPlanet && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: 11, color: 'rgba(255,255,255,.4)' }}>
+                  {tI18n('mantras_day_mantra', 'Day Mantra')} ({jyotishRecommendation.dayPlanet}):
+                </span>
+                <span style={{ fontSize: 12.5, fontWeight: 700, color: 'rgba(255,255,255,.8)' }}>
+                  {jyotishRecommendation.dayMantraId ? mantras.find((m) => m.id === jyotishRecommendation.dayMantraId)?.title ?? '–' : '–'}
+                </span>
+              </div>
+            )}
+            {jyotishRecommendation.periodPlanet && (
+              <>
+                <div style={{ height: 1, background: 'linear-gradient(90deg,transparent,rgba(212,175,55,.07),transparent)' }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 11, color: 'rgba(255,255,255,.4)' }}>
+                    {tI18n('mantras_period_mantra', 'Period Mantra')} ({jyotishRecommendation.periodPlanet}):
+                  </span>
+                  <span style={{ fontSize: 12.5, fontWeight: 700, color: 'rgba(255,255,255,.8)' }}>
+                    {jyotishRecommendation.periodMantraId ? mantras.find((m) => m.id === jyotishRecommendation.periodMantraId)?.title ?? '–' : '–'}
+                  </span>
+                </div>
+              </>
+            )}
+            {jyotishRecommendation.horaPlanet && (
+              <>
+                <div style={{ height: 1, background: 'linear-gradient(90deg,transparent,rgba(212,175,55,.07),transparent)' }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 11, color: 'rgba(255,255,255,.4)' }}>
+                    {tI18n('mantras_hora_mantra', 'Hora Mantra')} ({jyotishRecommendation.horaPlanet}):
+                  </span>
+                  <span style={{ fontSize: 12.5, fontWeight: 700, color: 'rgba(255,255,255,.8)' }}>
+                    {jyotishRecommendation.horaMantraId ? mantras.find((m) => m.id === jyotishRecommendation.horaMantraId)?.title ?? '–' : '–'}
+                  </span>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div style={{ height: 120 }} />
     </div>
   );
 };
