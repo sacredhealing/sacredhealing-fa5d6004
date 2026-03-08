@@ -1,8 +1,11 @@
 // @ts-nocheck
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Navigate } from "react-router-dom";
+import { Heart, Wind, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useMembership } from "@/hooks/useMembership";
+import { BreathingGuide } from "@/components/digital-nadi/BreathingGuide";
+import { MeditationPlayer } from "@/components/digital-nadi/MeditationPlayer";
 
 // rPPG ENGINE — Remote Photoplethysmography Signal Processing
 class RPPGEngine {
@@ -239,7 +242,9 @@ function getRecommendation(bpm, hrv) {
 }
 
 // MAIN APP — DIGITAL NĀḌĪ (inner, ungated)
+type TabType = "sensor" | "breathing" | "meditation";
 function DigitalNadiInner() {
+  const [activeTab, setActiveTab] = useState<TabType>("sensor");
   const [page, setPage] = useState("scan");
   const [phase, setPhase] = useState("idle");
   const [bpm, setBpm] = useState(null);
@@ -354,7 +359,96 @@ function DigitalNadiInner() {
 
   const recommendation = bpm ? getRecommendation(bpm, hrv) : null;
 
-  // ─── Waveform mini-canvas ───
+  // ─── Bottom Nav (Sensor | Breath | Mantra) ───
+  const navStyle = {
+    position: "fixed" as const,
+    bottom: 32,
+    left: "50%",
+    transform: "translateX(-50%)",
+    zIndex: 50,
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    padding: 8,
+    borderRadius: 9999,
+    background: "rgba(0,0,0,0.4)",
+    backdropFilter: "blur(24px)",
+    border: "1px solid rgba(255,255,255,0.1)",
+    boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
+  };
+  const navBtn = (tab: TabType, label: string, Icon: React.ComponentType<{ size?: number }>) => (
+    <button
+      key={tab}
+      onClick={() => setActiveTab(tab)}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        padding: "12px 24px",
+        borderRadius: 9999,
+        fontSize: 12,
+        fontWeight: 600,
+        letterSpacing: "0.15em",
+        textTransform: "uppercase",
+        cursor: "pointer",
+        transition: "all 0.3s",
+        ...(activeTab === tab
+          ? { background: "#FF6B4A", color: "#fff" }
+          : { background: "transparent", color: "rgba(255,255,255,0.4)" }),
+      }}
+    >
+      <Icon size={18} />
+      <span className="hidden sm:inline">{label}</span>
+    </button>
+  );
+  const BottomNav = () => (
+    <nav style={navStyle}>
+      {navBtn("sensor", "Sensor", Heart)}
+      {navBtn("breathing", "Breath", Wind)}
+      {navBtn("meditation", "Mantra", Sparkles)}
+    </nav>
+  );
+
+  // ─── BREATHING TAB ───
+  if (activeTab === "breathing") {
+    return (
+      <div style={{ fontFamily: "'Cormorant Garamond', serif", background: "#050505", color: "#fff", minHeight: "100vh", paddingBottom: 120 }}>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap');`}</style>
+        <div style={{ maxWidth: 440, margin: "0 auto", padding: "48px 24px", textAlign: "center" }}>
+          <p style={{ fontSize: 11, letterSpacing: "0.35em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 8 }}>Pranayama</p>
+          <h1 style={{ fontSize: 28, fontWeight: 300, letterSpacing: "0.12em", margin: "0 0 6px" }}>Breath is the bridge</h1>
+          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", letterSpacing: "0.2em", marginBottom: 32 }}>between body and spirit.</p>
+          <BreathingGuide bpm={bpm} />
+          <button
+            onClick={() => setActiveTab("meditation")}
+            style={{ marginTop: 24, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", background: "none", border: "none", cursor: "pointer" }}
+          >
+            Skip to Meditation →
+          </button>
+        </div>
+        <BottomNav />
+      </div>
+    );
+  }
+
+  // ─── MEDITATION TAB ───
+  if (activeTab === "meditation") {
+    return (
+      <div style={{ fontFamily: "'Cormorant Garamond', serif", background: "#050505", color: "#fff", minHeight: "100vh", paddingBottom: 120 }}>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap');`}</style>
+        <div style={{ maxWidth: 480, margin: "0 auto", padding: "48px 24px" }}>
+          <p style={{ fontSize: 11, letterSpacing: "0.35em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 8, textAlign: "center" }}>Mantra & Dhyana</p>
+          <h1 style={{ fontSize: 28, fontWeight: 300, letterSpacing: "0.12em", margin: "0 0 6px", textAlign: "center" }}>Resonating with peace</h1>
+          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", letterSpacing: "0.2em", marginBottom: 32, textAlign: "center" }}>The frequency of stillness.</p>
+          <MeditationPlayer bpm={bpm} hrv={hrv} />
+        </div>
+        <BottomNav />
+      </div>
+    );
+  }
+
+  // ─── SENSOR TAB (scan / results / section) ───
+  // Waveform mini-canvas ───
   const WaveformCanvas = ({ data, width = 280, height = 60 }) => {
     const ref = useRef(null);
     useEffect(() => {
@@ -448,62 +542,82 @@ function DigitalNadiInner() {
           </div>
 
           {/* Actions */}
-          <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
-            {phase === "idle" && (
-              <button
-                onClick={startScan}
-                style={{
-                  padding: "14px 36px",
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  color: "#fff",
-                  fontSize: 13,
-                  letterSpacing: "0.2em",
-                  cursor: "pointer",
-                  textTransform: "uppercase",
-                }}
-              >
-                Begin Scan
-              </button>
-            )}
-            {(phase === "scanning" || phase === "reading") && (
-              <>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center" }}>
+            <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+              {phase === "idle" && (
                 <button
-                  onClick={() => { stopCamera(); setPhase("idle"); }}
+                  onClick={startScan}
                   style={{
-                    padding: "12px 28px",
-                    background: "transparent",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                    color: "rgba(255,255,255,0.5)",
-                    fontSize: 12,
-                    letterSpacing: "0.15em",
+                    padding: "14px 36px",
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    color: "#fff",
+                    fontSize: 13,
+                    letterSpacing: "0.2em",
                     cursor: "pointer",
                     textTransform: "uppercase",
                   }}
                 >
-                  Cancel
+                  Begin Scan
                 </button>
-                {bpm && (
+              )}
+              {(phase === "scanning" || phase === "reading") && (
+                <>
                   <button
-                    onClick={finishScan}
+                    onClick={() => { stopCamera(); setPhase("idle"); }}
                     style={{
                       padding: "12px 28px",
-                      background: "rgba(90,228,168,0.12)",
-                      border: "1px solid rgba(90,228,168,0.3)",
-                      color: "#5AE4A8",
+                      background: "transparent",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      color: "rgba(255,255,255,0.5)",
                       fontSize: 12,
                       letterSpacing: "0.15em",
                       cursor: "pointer",
                       textTransform: "uppercase",
                     }}
                   >
-                    View Results
+                    Cancel
                   </button>
-                )}
-              </>
+                  {bpm && (
+                    <button
+                      onClick={finishScan}
+                      style={{
+                        padding: "12px 28px",
+                        background: "rgba(90,228,168,0.12)",
+                        border: "1px solid rgba(90,228,168,0.3)",
+                        color: "#5AE4A8",
+                        fontSize: 12,
+                        letterSpacing: "0.15em",
+                        cursor: "pointer",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      View Results
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+            {bpm && (
+              <button
+                onClick={() => setActiveTab("breathing")}
+                style={{
+                  padding: "12px 28px",
+                  background: "rgba(255,107,74,0.15)",
+                  border: "1px solid rgba(255,107,74,0.35)",
+                  color: "#FF6B4A",
+                  fontSize: 12,
+                  letterSpacing: "0.15em",
+                  cursor: "pointer",
+                  textTransform: "uppercase",
+                }}
+              >
+                Begin Breathing →
+              </button>
             )}
           </div>
         </div>
+        <BottomNav />
       </div>
     );
   }
@@ -591,6 +705,7 @@ function DigitalNadiInner() {
             </button>
           </div>
         </div>
+        <BottomNav />
       </div>
     );
   }
@@ -647,6 +762,7 @@ function DigitalNadiInner() {
             This recommendation was generated from your live biometric reading. For best results, practice during the time of day aligned with your dominant dosha rhythm.
           </p>
         </div>
+        <BottomNav />
       </div>
     );
   }
