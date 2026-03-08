@@ -142,11 +142,17 @@ const Membership = () => {
 
     setCheckoutLoading(tier.id);
 
+    const affiliateRef =
+      (() => { try { return sessionStorage.getItem('affiliate_ref'); } catch { return null; } })() ||
+      (typeof localStorage !== 'undefined' ? localStorage.getItem('sqi_affiliate_id') : null) ||
+      'direct';
+
     try {
       const { data, error } = await supabase.functions.invoke('create-membership-checkout', {
         body: {
           priceId: tier.stripe_price_id,
           tierSlug: tier.slug,
+          affiliate_id: affiliateRef,
         },
       });
 
