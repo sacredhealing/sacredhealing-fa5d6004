@@ -10,7 +10,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { hasFeatureAccess, FEATURE_TIER } from '@/lib/tierAccess';
-import { setPalmScanResult } from '@/lib/palmScanStore';
 
 const CAMERA_TIMEOUT_MS = 4000;
 
