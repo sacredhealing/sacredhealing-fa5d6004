@@ -466,7 +466,7 @@ const Dashboard: React.FC = () => {
               <span style={{ position: 'absolute', bottom: 13, right: 13, color: 'rgba(212,175,55,0.25)', fontSize: 11 }}>→</span>
             </SQTile>
 
-            {!isPremium && (
+            {!hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal) && (
               <SQTile locked onClick={() => navigate('/siddha-quantum')}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, opacity: 0.38 }}>
                   <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
