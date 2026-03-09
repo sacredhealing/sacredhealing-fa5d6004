@@ -12,10 +12,10 @@ import AtmaIcon from '@/components/icons/AtmaIcon';
 
 const NAV_ITEMS = [
   { to: '/dashboard', icon: MerkabaIcon, labelKey: 'nav_home', label: 'Nexus' },
-  { to: '/meditations', icon: ThirdEyeIcon, labelKey: 'nav_meditate', label: 'Void-Sync' },
-  { to: '/mantras', icon: MalaBeadsIcon, labelKey: 'nav_mantras', label: 'Vedic Light-Codes' },
+  { to: '/meditations', icon: ThirdEyeIcon, labelKey: 'nav_meditate', label: 'Dhyana' },
+  { to: '/mantras', icon: MalaBeadsIcon, labelKey: 'nav_mantras', label: 'Nada' },
   { to: '/explore', icon: PalmLeafIcon, labelKey: 'nav_library', label: 'Akasha' },
-  { to: '/healing', icon: AlchemicalStarIcon, labelKey: 'header_healing', label: 'Bio-Field Alchemy' },
+  { to: '/healing', icon: AlchemicalStarIcon, labelKey: 'header_healing', label: 'Soma' },
   { to: '/profile', icon: AtmaIcon, labelKey: 'nav_profile', label: 'Avatar' },
 ];
 
