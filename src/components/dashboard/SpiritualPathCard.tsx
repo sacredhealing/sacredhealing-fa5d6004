@@ -35,21 +35,31 @@ export const SpiritualPathCard: React.FC = () => {
       const pathTitle = t(`spiritualPath.paths.${activePath.slug.replace(/-/g, '_')}.title`, activePath.title);
       const pathDesc = t(`spiritualPath.paths.${activePath.slug.replace(/-/g, '_')}.description`, activePath.description || '');
       const pathLabel = toTitleCase(activePath.slug);
+      const isInnerPeace =
+        activePath.slug === 'inner-peace-path' ||
+        activePath.slug === 'inner-peace' ||
+        pathTitle.toLowerCase().includes('inner peace');
+      const displayLabel = isInnerPeace ? 'SHANTI - SATTVA PROTOCOOL' : pathLabel;
+      const displayTitle = isInnerPeace ? 'Equilibrium Mastery' : pathTitle;
+      const continueLabel = t('spiritualPath.continueDayWithNumber', {
+        day: activeProgress.current_day,
+        defaultValue: `Resume Transmission: Cycle ${activeProgress.current_day}`,
+      });
 
       return (
         <Link to={`/paths/${activePath.slug}`} className="sq-path-card block text-inherit no-underline" style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(212,175,55,0.13)' }}>
           <div className="sq-path-header">
-            <div className="sq-path-title">{pathLabel}</div>
+            <div className="sq-path-title">{displayLabel}</div>
             <div className="sq-path-day">Day {activeProgress.current_day} / {activePath.duration_days}</div>
           </div>
-          <div className="sq-path-name">{pathTitle}</div>
+          <div className="sq-path-name">{displayTitle}</div>
           <div className="sq-path-desc">{pathDesc}</div>
           <div className="sq-path-bar-wrap">
             <div className="sq-path-bar" style={{ width: `${progressPercent}%` }} />
           </div>
           <div className="sq-path-footer">
             <div className="sq-path-pct">{progressPercent}% complete</div>
-            <span className="sq-path-btn">▷ {t('spiritualPath.continueDayWithNumber', { day: activeProgress.current_day, defaultValue: `Continue Day ${activeProgress.current_day}` })}</span>
+            <span className="sq-path-btn">▷ {continueLabel}</span>
           </div>
         </Link>
       );
