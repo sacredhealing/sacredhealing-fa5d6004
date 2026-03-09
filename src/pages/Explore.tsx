@@ -264,7 +264,7 @@ export default function Explore() {
         ].map(({ title, sub, href, premium, svg }) => (
           <div key={title} onClick={() => {
             if (!href) { setGitaOpen(!gitaOpen); return; }
-            if (premium && !isAdmin && !isPremium) { navigate('/prana-flow'); return; }
+            if (premium && !hasFeatureAccess(isAdmin, tier, FEATURE_TIER.ayurveda)) { navigate('/prana-flow'); return; }
             navigate(href);
           }} style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(212,175,55,0.13)', borderRadius: 18, padding: '16px 14px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
             {premium && <div style={{ position: 'absolute', top: 10, right: 10 }}><Badge label="Premium" /></div>}
