@@ -39,9 +39,9 @@ export const DailyRitualCard: React.FC<{ isDayClosed?: boolean; hasCompletedAllT
   const activePhaseId = getActivePhaseId(currentHour);
 
   const phaseLabels: Record<PhaseId, string> = {
-    morning: t('dailyRitual.morningShort', 'Solar Inception'),
-    midday: t('dailyRitual.middayShort', 'Zenith Alignement'),
-    evening: t('dailyRitual.eveningShort', 'Lunar Integration'),
+    morning: 'Solar Inception',
+    midday: 'Zenith Alignement',
+    evening: 'Lunar Integration',
   };
 
   if (isLoading) {
