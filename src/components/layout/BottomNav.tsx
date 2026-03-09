@@ -34,7 +34,7 @@ export const BottomNav: React.FC = () => {
             to={item.to}
             className={({ isActive }) =>
               cn(
-                'flex flex-col items-center justify-center gap-0.5 py-2 rounded-lg transition-all duration-200',
+                'flex flex-col items-center justify-center gap-0.5 py-2 rounded-lg transition-all duration-200 min-w-0 w-full overflow-hidden',
                 isActive
                   ? 'text-[#D4AF37] drop-shadow-[0_0_8px_rgba(212,175,55,0.5)]'
                   : 'text-[#6B5F50] hover:text-[#D4AF37]/80 active:text-[#D4AF37]/80'
@@ -43,14 +43,26 @@ export const BottomNav: React.FC = () => {
           >
             {({ isActive }) => (
               <>
-                <item.icon
-                  className={cn(
-                    'w-5 h-5 shrink-0 transition-all duration-200',
-                    isActive && 'drop-shadow-[0_0_6px_rgba(212,175,55,0.5)]'
-                  )}
-                />
-                <span className="text-[11px] font-medium leading-tight" style={{ fontSize: '0.75rem' }}>
-                  {t(item.labelKey, item.label)}
+                <div className="shrink-0 flex items-center justify-center">
+                  <item.icon
+                    className={cn(
+                      'w-5 h-5 transition-all duration-200',
+                      isActive && 'drop-shadow-[0_0_6px_rgba(212,175,55,0.5)]'
+                    )}
+                  />
+                </div>
+                <span
+                  className="font-medium text-center block w-full min-w-0 px-0.5"
+                  style={{
+                    fontSize: '0.6rem',
+                    lineHeight: 1.2,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                  title={t(item.labelKey, item.label)}
+                >
+                  {item.label}
                 </span>
               </>
             )}
