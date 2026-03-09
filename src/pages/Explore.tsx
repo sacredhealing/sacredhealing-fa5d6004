@@ -97,7 +97,7 @@ export default function Explore() {
       {/* ══ SIDDHA PORTAL GATE ══ */}
       <SL label="◈ Siddha Portal" delay="0.04s" />
       <div
-        onClick={() => navigate(isPremium ? '/siddha-portal' : '/siddha-quantum')}
+        onClick={() => navigate(hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal) ? '/siddha-portal' : '/siddha-quantum')}
         style={{ margin: '0 16px', position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg,rgba(212,175,55,0.11) 0%,rgba(212,175,55,0.04) 60%,rgba(0,0,0,0) 100%)', border: '1px solid rgba(212,175,55,0.28)', borderRadius: 22, padding: '22px 18px', cursor: 'pointer', animation: 'sqFadeUp 0.5s 0.06s ease both' }}
       >
         <div style={{ position: 'absolute', top: 0, left: '-110%', width: '55%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(212,175,55,0.09),transparent)', animation: 'sqShimmer 4s ease-in-out infinite', pointerEvents: 'none' }} />
