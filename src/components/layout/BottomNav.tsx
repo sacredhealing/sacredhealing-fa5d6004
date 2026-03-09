@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 import TempleGateIcon from '@/components/icons/TempleGateIcon';
+import MerkabaIcon from '@/components/icons/MerkabaIcon';
 import ThirdEyeIcon from '@/components/icons/ThirdEyeIcon';
 import MalaBeadsIcon from '@/components/icons/MalaBeadsIcon';
 import PalmLeafIcon from '@/components/icons/PalmLeafIcon';
@@ -10,7 +11,7 @@ import AlchemicalStarIcon from '@/components/icons/AlchemicalStarIcon';
 import AtmaIcon from '@/components/icons/AtmaIcon';
 
 const NAV_ITEMS = [
-  { to: '/dashboard', icon: TempleGateIcon, labelKey: 'nav_home', label: 'Nexus Point' },
+  { to: '/dashboard', icon: MerkabaIcon, labelKey: 'nav_home', label: 'Nexus Point' },
   { to: '/meditations', icon: ThirdEyeIcon, labelKey: 'nav_meditate', label: 'Void-Sync' },
   { to: '/mantras', icon: MalaBeadsIcon, labelKey: 'nav_mantras', label: 'Vedic Light-Codes' },
   { to: '/explore', icon: PalmLeafIcon, labelKey: 'nav_library', label: 'Akasha Archive' },
