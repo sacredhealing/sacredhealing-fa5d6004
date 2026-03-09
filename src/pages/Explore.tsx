@@ -126,8 +126,8 @@ export default function Explore() {
             </div>
           ))}
         </div>
-        <button onClick={(e) => { e.stopPropagation(); navigate(isPremium ? '/siddha-portal' : '/siddha-quantum'); }} style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.5)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-          {isPremium ? 'Enter the Portal →' : 'Unlock Siddha-Quantum to Enter →'}
+        <button onClick={(e) => { e.stopPropagation(); navigate(hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal) ? '/siddha-portal' : '/siddha-quantum'); }} style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.5)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+          {hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal) ? 'Enter the Portal →' : 'Unlock Siddha-Quantum to Enter →'}
         </button>
       </div>
 
