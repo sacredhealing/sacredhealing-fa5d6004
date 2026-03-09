@@ -353,12 +353,12 @@ const Dashboard: React.FC = () => {
               <div style={{ position: 'absolute', bottom: 14, right: 14, width: 8, height: 8, borderRadius: '50%', background: '#D4AF37', boxShadow: '0 0 12px rgba(212,175,55,0.9)', animation: 'sqDotPulse 2s ease-in-out infinite' }} />
             </div>
 
-            <p style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.3)', textAlign: 'center', marginBottom: 10 }}>◈ Today&apos;s Akashic Verdict</p>
+            <p style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.3)', textAlign: 'center', marginBottom: 10 }}>◈ The Roots of Your Success</p>
             <p style={{ fontFamily: 'Cormorant Garamond,serif', fontStyle: 'italic', fontSize: '1.12rem', color: 'rgba(255,255,255,0.72)', lineHeight: 1.55, textAlign: 'center', marginBottom: 14, maxWidth: 300 }}>
               {vedicReading?.todayInfluence?.wisdomQuote || `As you move through your ${dashaCycle} cycle, the ${horaPlanet} Hora illuminates karmic completion.`}
             </p>
             <button onClick={() => navigate('/vedic-astrology')} style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 8, fontWeight: 800, letterSpacing: '0.42em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.55)', background: 'none', border: 'none', cursor: 'pointer' }}>
-              Open Full Reading →
+              Receive Transmission →
             </button>
           </div>
 
