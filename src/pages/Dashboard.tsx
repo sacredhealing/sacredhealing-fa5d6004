@@ -79,9 +79,9 @@ const SQTile: React.FC<{
   onClick?: () => void;
 }> = ({ children, featured, locked, onClick }) => (
   <div
-    onClick={locked ? undefined : onClick}
+    onClick={onClick}
     className={`sq-tile ${featured ? 'sq-tile-featured' : ''} ${locked ? 'sq-tile-locked' : ''}`}
-    style={{ position: 'relative' }}
+    style={{ position: 'relative', cursor: onClick ? 'pointer' : undefined }}
   >
     {children}
   </div>
@@ -414,7 +414,7 @@ const Dashboard: React.FC = () => {
               <div style={{ position: 'absolute', top: 12, right: 12, width: 6, height: 6, borderRadius: '50%', background: '#D4AF37', boxShadow: '0 0 8px rgba(212,175,55,0.8)', animation: 'sqDotPulse 2.5s infinite' }} />
             </SQTile>
 
-            <SQTile onClick={() => navigate('/ayurveda')}>
+            <SQTile onClick={() => isPremium ? navigate('/ayurveda') : navigate('/prana-flow')}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ marginBottom: 8, display: 'block', animation: 'sqIconFloat 3s ease-in-out infinite' }}>
                 <path d="M12 20 C12 20 4 14 4 8 C4 4 8 2 12 4 C16 2 20 4 20 8 C20 14 12 20 12 20Z" stroke="rgba(212,175,55,0.7)" strokeWidth="1.4" fill="rgba(212,175,55,0.07)"/>
                 <line x1="12" y1="4" x2="12" y2="20" stroke="rgba(212,175,55,0.3)" strokeWidth="0.8"/>
@@ -441,7 +441,7 @@ const Dashboard: React.FC = () => {
               <span style={{ position: 'absolute', bottom: 13, right: 13, color: 'rgba(212,175,55,0.25)', fontSize: 11 }}>→</span>
             </SQTile>
 
-            <SQTile onClick={() => navigate('/vastu')}>
+            <SQTile onClick={() => isPremium ? navigate('/vastu') : navigate('/prana-flow')}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ marginBottom: 8, display: 'block', animation: 'sqIconFloat 3s 0.6s ease-in-out infinite' }}>
                 <rect x="3" y="10" width="18" height="12" stroke="rgba(212,175,55,0.6)" strokeWidth="1.3" fill="rgba(212,175,55,0.05)" rx="1"/>
                 <polyline points="2,10 12,2 22,10" stroke="rgba(212,175,55,0.7)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
@@ -464,7 +464,7 @@ const Dashboard: React.FC = () => {
             </SQTile>
 
             {!isPremium && (
-              <SQTile locked>
+              <SQTile locked onClick={() => navigate('/siddha-quantum')}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, opacity: 0.38 }}>
                   <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
                     <polygon points="13,2 4,14 11,14 11,22 20,10 13,10" stroke="rgba(255,255,255,0.5)" strokeWidth="1.3" strokeLinejoin="round" fill="rgba(255,255,255,0.05)"/>
