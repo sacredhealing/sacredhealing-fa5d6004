@@ -464,7 +464,7 @@ const Dashboard: React.FC = () => {
             </SQTile>
 
             {!isPremium && (
-              <SQTile locked>
+              <SQTile locked onClick={() => navigate('/siddha-quantum')}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, opacity: 0.38 }}>
                   <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
                     <polygon points="13,2 4,14 11,14 11,22 20,10 13,10" stroke="rgba(255,255,255,0.5)" strokeWidth="1.3" strokeLinejoin="round" fill="rgba(255,255,255,0.05)"/>
