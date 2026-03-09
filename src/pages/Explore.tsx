@@ -111,7 +111,7 @@ export default function Explore() {
               <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.85rem', color: 'rgba(255,255,255,0.36)' }}>18 Masters · Nāḍī Oracle · Quantum Field</div>
             </div>
           </div>
-          {isPremium ? <Badge label="Active" /> : <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6.5, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.38)' }}>45€/mo</span>}
+          {hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal) ? <Badge label="Active" /> : <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6.5, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.38)' }}>45€/mo</span>}
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 7, marginBottom: 16 }}>
           {[
