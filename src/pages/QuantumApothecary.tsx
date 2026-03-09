@@ -46,7 +46,7 @@ function renderInline(text: string): React.ReactNode {
   });
 }
 
-export default function QuantumApothecary() {
+function QuantumApothecaryInner() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAdmin, isLoading: adminLoading } = useAdminRole();
