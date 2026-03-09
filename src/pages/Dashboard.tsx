@@ -521,6 +521,14 @@ const Dashboard: React.FC = () => {
                   const progress = getAchievementProgress(achievement);
                   const translated = translateAchievement(achievement.slug, t, achievement.name, achievement.description || '');
                   const nameUpper = (translated.name || achievement.name || '').toUpperCase().replace(/\s+/g, ' ');
+                  const displayNameUpper =
+                    nameUpper === 'FIRST STEPS'
+                      ? 'INITIATION SPARK'
+                      : nameUpper === 'BUILDING MOMENTUM'
+                      ? 'KINETIC SURGE'
+                      : nameUpper === 'WEEK WARRIOR'
+                      ? 'SOVEREIGN WARRIOR'
+                      : nameUpper;
                   const IconComponent = ACHIEVEMENT_ICON_MAP[achievement.icon_name] || Award;
                   return (
                     <div
@@ -530,7 +538,10 @@ const Dashboard: React.FC = () => {
                       <div style={{ marginBottom: 6, color: progress.unlocked ? 'rgba(212,175,55,0.9)' : 'rgba(212,175,55,0.5)', filter: progress.unlocked ? 'drop-shadow(0 0 4px rgba(212,175,55,0.3))' : 'none' }}>
                         <IconComponent size={22} />
                       </div>
-                      <div className="sq-ach-name">{nameUpper.slice(0, 20)}{nameUpper.length > 20 ? '…' : ''}</div>
+                      <div className="sq-ach-name">
+                        {displayNameUpper.slice(0, 20)}
+                        {displayNameUpper.length > 20 ? '…' : ''}
+                      </div>
                       {progress.unlocked && achievement.shc_reward != null && achievement.shc_reward > 0 ? (
                         <div className="sq-ach-pts">+{achievement.shc_reward} SHC</div>
                       ) : progress.progressText ? (
