@@ -2,15 +2,20 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMembership } from '@/hooks/useMembership';
+import { useAdminRole } from '@/hooks/useAdminRole';
+import { hasFeatureAccess, FEATURE_TIER } from '@/lib/tierAccess';
 
 export default function SiddhaPortal() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { isPremium } = useMembership();
+  const { tier, loading } = useMembership();
+  const { isAdmin } = useAdminRole();
 
   useEffect(() => {
-    if (isPremium === false) navigate('/siddha-quantum');
-  }, [isPremium, navigate]);
+    if (!loading && !hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal)) {
+      navigate('/siddha-quantum');
+    }
+  }, [isAdmin, tier, loading, navigate]);
 
   const masters = [
     { titleKey: 'siddhaPortal.agastyaMuni',  subKey: 'siddhaPortal.agastyaDesc',    badge: 'LIVE', href: '/digital-nadi' },

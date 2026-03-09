@@ -4,6 +4,8 @@ import { Navigate } from "react-router-dom";
 import { Heart, Wind, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useMembership } from "@/hooks/useMembership";
+import { useAdminRole } from "@/hooks/useAdminRole";
+import { hasFeatureAccess, FEATURE_TIER } from "@/lib/tierAccess";
 import { BreathingGuide } from "@/components/digital-nadi/BreathingGuide";
 import { MeditationPlayer } from "@/components/digital-nadi/MeditationPlayer";
 

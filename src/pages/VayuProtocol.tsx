@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from "react";
+import { Navigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Wind, ShieldCheck, Activity, Info, RefreshCw, Lock } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useMembership } from "@/hooks/useMembership";
+import { useAdminRole } from "@/hooks/useAdminRole";
+import { hasFeatureAccess, FEATURE_TIER } from "@/lib/tierAccess";
 
 type Phase = "IDLE" | "ACTIVE" | "LOCKING" | "LOCKED";
 type BreathStep = "INHALE" | "HOLD" | "EXHALE" | "NONE";
 
-const VayuProtocol: React.FC = () => {
+const VayuProtocolInner: React.FC = () => {
   const [phase, setPhase] = useState<Phase>("IDLE");
   const [clarity, setClarity] = useState(10);
   const [breathStep, setBreathStep] = useState<BreathStep>("NONE");

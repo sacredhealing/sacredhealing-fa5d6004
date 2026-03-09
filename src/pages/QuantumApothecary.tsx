@@ -11,6 +11,9 @@ import { ACTIVATIONS, PLANETARY_DATA } from '@/features/quantum-apothecary/const
 import { streamChatWithSQI } from '@/features/quantum-apothecary/chatService';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useAuth } from '@/hooks/useAuth';
+import { useMembership } from '@/hooks/useMembership';
+import { hasFeatureAccess, FEATURE_TIER } from '@/lib/tierAccess';
+import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
 const FrequencyLibrarySection = lazy(() => import('@/features/quantum-apothecary/FrequencyLibrarySection'));
