@@ -38,6 +38,12 @@ export const DailyRitualCard: React.FC<{ isDayClosed?: boolean; hasCompletedAllT
 
   const activePhaseId = getActivePhaseId(currentHour);
 
+  const phaseLabels: Record<PhaseId, string> = {
+    morning: t('dailyRitual.morningShort', 'Solar Inception'),
+    midday: t('dailyRitual.middayShort', 'Zenith Alignement'),
+    evening: t('dailyRitual.eveningShort', 'Lunar Integration'),
+  };
+
   if (isLoading) {
     return (
       <div className="flex flex-col gap-4">
@@ -93,14 +99,14 @@ export const DailyRitualCard: React.FC<{ isDayClosed?: boolean; hasCompletedAllT
                 <div className="sq-gate-inner">{GATE_EMOJI[phase.id]}</div>
               </div>
               <div className="sq-gate-name">
-                {t(`dailyRitual.${phase.id}Short`, phase.id.charAt(0).toUpperCase() + phase.id.slice(1))}
+                {phaseLabels[phase.id]}
               </div>
               {isDone ? (
                 isClaimed ? (
                   <div className="sq-gate-state">Complete</div>
                 ) : (
                   <button type="button" className="sq-shc-btn" onClick={() => claimPhase(phase.id)}>
-                    + {phase.reward} SHC
+                    + {phase.reward} SOMA-HARMONIC CREDITS
                   </button>
                 )
               ) : phase.status === 'closed' ? (
