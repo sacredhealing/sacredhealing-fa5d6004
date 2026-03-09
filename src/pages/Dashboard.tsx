@@ -23,6 +23,8 @@ import { AchievementPopup } from '@/components/achievements/AchievementPopup';
 
 import { useAchievements } from '@/hooks/useAchievements';
 import { useMembership } from '@/hooks/useMembership';
+import { useAdminRole } from '@/hooks/useAdminRole';
+import { hasFeatureAccess, FEATURE_TIER } from '@/lib/tierAccess';
 import { useSocialShare } from '@/hooks/useSocialShare';
 import { translateAchievement } from '@/lib/translateAchievement';
 import { Award, Flame, Target, Share2, Users, Star, Sparkles, Heart, Crown, Calendar, Droplet, Clock, Shield, Pentagon } from 'lucide-react';
@@ -94,6 +96,7 @@ const Dashboard: React.FC = () => {
 
   const { profile: userProfile } = useProfile();
   const { isPremium, tier } = useMembership();
+  const { isAdmin } = useAdminRole();
   const horaWatch = useHoraWatch({ timezone: 'Europe/Stockholm' });
   const { reading: vedicReading, generateReading } = useAIVedicReading();
 
@@ -414,7 +417,7 @@ const Dashboard: React.FC = () => {
               <div style={{ position: 'absolute', top: 12, right: 12, width: 6, height: 6, borderRadius: '50%', background: '#D4AF37', boxShadow: '0 0 8px rgba(212,175,55,0.8)', animation: 'sqDotPulse 2.5s infinite' }} />
             </SQTile>
 
-            <SQTile onClick={() => isPremium ? navigate('/ayurveda') : navigate('/prana-flow')}>
+            <SQTile onClick={() => hasFeatureAccess(isAdmin, tier, FEATURE_TIER.ayurveda) ? navigate('/ayurveda') : navigate('/prana-flow')}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ marginBottom: 8, display: 'block', animation: 'sqIconFloat 3s ease-in-out infinite' }}>
                 <path d="M12 20 C12 20 4 14 4 8 C4 4 8 2 12 4 C16 2 20 4 20 8 C20 14 12 20 12 20Z" stroke="rgba(212,175,55,0.7)" strokeWidth="1.4" fill="rgba(212,175,55,0.07)"/>
                 <line x1="12" y1="4" x2="12" y2="20" stroke="rgba(212,175,55,0.3)" strokeWidth="0.8"/>
@@ -441,7 +444,7 @@ const Dashboard: React.FC = () => {
               <span style={{ position: 'absolute', bottom: 13, right: 13, color: 'rgba(212,175,55,0.25)', fontSize: 11 }}>→</span>
             </SQTile>
 
-            <SQTile onClick={() => isPremium ? navigate('/vastu') : navigate('/prana-flow')}>
+            <SQTile onClick={() => hasFeatureAccess(isAdmin, tier, FEATURE_TIER.vastu) ? navigate('/vastu') : navigate('/prana-flow')}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ marginBottom: 8, display: 'block', animation: 'sqIconFloat 3s 0.6s ease-in-out infinite' }}>
                 <rect x="3" y="10" width="18" height="12" stroke="rgba(212,175,55,0.6)" strokeWidth="1.3" fill="rgba(212,175,55,0.05)" rx="1"/>
                 <polyline points="2,10 12,2 22,10" stroke="rgba(212,175,55,0.7)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
@@ -463,7 +466,7 @@ const Dashboard: React.FC = () => {
               <span style={{ position: 'absolute', bottom: 13, right: 13, color: 'rgba(212,175,55,0.25)', fontSize: 11 }}>→</span>
             </SQTile>
 
-            {!isPremium && (
+            {!hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal) && (
               <SQTile locked onClick={() => navigate('/siddha-quantum')}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, opacity: 0.38 }}>
                   <svg width="28" height="28" viewBox="0 0 24 24" fill="none">

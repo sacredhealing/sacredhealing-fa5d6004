@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Compass, Sparkles, Home, Activity, Zap, Map, Info, X, BookOpen, 
@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useAuth } from '@/hooks/useAuth';
+import { useMembership } from '@/hooks/useMembership';
+import { hasFeatureAccess, FEATURE_TIER } from '@/lib/tierAccess';
 import TempleGateIcon from '@/components/icons/TempleGateIcon';
 
 // ─── Data ───────────────────────────────────────────────────────────────────
@@ -111,7 +113,7 @@ function calcSaturation(distance: number, intensity: number) {
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-export default function TempleHome() {
+function TempleHomeInner() {
   const navigate = useNavigate();
   const { isAdmin, isLoading: adminLoading } = useAdminRole();
   const { isLoading: authLoading } = useAuth();
@@ -401,4 +403,25 @@ export default function TempleHome() {
       </AnimatePresence>
     </div>
   );
+}
+
+export default function TempleHome() {
+  const { user, isLoading: authLoading } = useAuth();
+  const { tier, loading: membershipLoading } = useMembership();
+  const { isAdmin } = useAdminRole();
+
+  if (authLoading || membershipLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#050505] text-white">
+        <span className="text-sm uppercase tracking-[0.3em] text-white/40">Loading…</span>
+      </div>
+    );
+  }
+
+  if (!user) return <Navigate to="/auth" replace />;
+  if (!hasFeatureAccess(isAdmin, tier, FEATURE_TIER.virtualPilgrimage)) {
+    return <Navigate to="/akasha-infinity" replace />;
+  }
+
+  return <TempleHomeInner />;
 }

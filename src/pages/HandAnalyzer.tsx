@@ -1,11 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Camera } from 'lucide-react';
 import PalmOracle, { getHeartLineLeak, getVataPittaKapha, getPalmArchetype } from '@/components/PalmOracle';
 import { setPalmScanResult } from '@/lib/palmScanStore';
+import { useAuth } from '@/hooks/useAuth';
+import { useMembership } from '@/hooks/useMembership';
+import { useAdminRole } from '@/hooks/useAdminRole';
+import { hasFeatureAccess, FEATURE_TIER } from '@/lib/tierAccess';
 
 const CAMERA_TIMEOUT_MS = 4000;
 
@@ -449,4 +453,25 @@ const HandAnalyzer = () => {
   );
 };
 
-export default React.memo(HandAnalyzer);
+function HandAnalyzerGated() {
+  const { user, isLoading: authLoading } = useAuth();
+  const { tier, loading: membershipLoading } = useMembership();
+  const { isAdmin } = useAdminRole();
+
+  if (authLoading || membershipLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#050505] text-white">
+        <span className="text-sm uppercase tracking-[0.3em] text-white/40">Loading…</span>
+      </div>
+    );
+  }
+
+  if (!user) return <Navigate to="/auth" replace />;
+  if (!hasFeatureAccess(isAdmin, tier, FEATURE_TIER.palmOracle)) {
+    return <Navigate to="/akasha-infinity" replace />;
+  }
+
+  return <HandAnalyzer />;
+}
+
+export default React.memo(HandAnalyzerGated);

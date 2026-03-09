@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from "react";
+import { Navigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Wind, ShieldCheck, Activity, Info, RefreshCw, Lock } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useMembership } from "@/hooks/useMembership";
+import { useAdminRole } from "@/hooks/useAdminRole";
+import { hasFeatureAccess, FEATURE_TIER } from "@/lib/tierAccess";
 
 type Phase = "IDLE" | "ACTIVE" | "LOCKING" | "LOCKED";
 type BreathStep = "INHALE" | "HOLD" | "EXHALE" | "NONE";
 
-const VayuProtocol: React.FC = () => {
+const VayuProtocolInner: React.FC = () => {
   const [phase, setPhase] = useState<Phase>("IDLE");
   const [clarity, setClarity] = useState(10);
   const [breathStep, setBreathStep] = useState<BreathStep>("NONE");
@@ -331,5 +336,24 @@ const VayuProtocol: React.FC = () => {
   );
 };
 
-export default VayuProtocol;
+export default function VayuProtocol() {
+  const { user, isLoading: authLoading } = useAuth();
+  const { tier, loading: membershipLoading } = useMembership();
+  const { isAdmin } = useAdminRole();
+
+  if (authLoading || membershipLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#050505] text-white">
+        <span className="text-sm uppercase tracking-[0.3em] text-white/40">Loading…</span>
+      </div>
+    );
+  }
+
+  if (!user) return <Navigate to="/auth" replace />;
+  if (!hasFeatureAccess(isAdmin, tier, FEATURE_TIER.vayuProtocol)) {
+    return <Navigate to="/siddha-quantum" replace />;
+  }
+
+  return <VayuProtocolInner />;
+}
 

@@ -11,6 +11,9 @@ import { ACTIVATIONS, PLANETARY_DATA } from '@/features/quantum-apothecary/const
 import { streamChatWithSQI } from '@/features/quantum-apothecary/chatService';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useAuth } from '@/hooks/useAuth';
+import { useMembership } from '@/hooks/useMembership';
+import { hasFeatureAccess, FEATURE_TIER } from '@/lib/tierAccess';
+import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
 const FrequencyLibrarySection = lazy(() => import('@/features/quantum-apothecary/FrequencyLibrarySection'));
@@ -43,7 +46,7 @@ function renderInline(text: string): React.ReactNode {
   });
 }
 
-export default function QuantumApothecary() {
+function QuantumApothecaryInner() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAdmin, isLoading: adminLoading } = useAdminRole();
@@ -869,4 +872,25 @@ export default function QuantumApothecary() {
       `}</style>
     </div>
   );
+}
+
+export default function QuantumApothecary() {
+  const { user, isLoading: authLoading } = useAuth();
+  const { tier, loading: membershipLoading } = useMembership();
+  const { isAdmin } = useAdminRole();
+
+  if (authLoading || membershipLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#050505] text-white">
+        <span className="text-sm uppercase tracking-[0.3em] text-white/40">Loading…</span>
+      </div>
+    );
+  }
+
+  if (!user) return <Navigate to="/auth" replace />;
+  if (!hasFeatureAccess(isAdmin, tier, FEATURE_TIER.quantumApothecary)) {
+    return <Navigate to="/akasha-infinity" replace />;
+  }
+
+  return <QuantumApothecaryInner />;
 }

@@ -4,6 +4,8 @@ import { Navigate } from "react-router-dom";
 import { Heart, Wind, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useMembership } from "@/hooks/useMembership";
+import { useAdminRole } from "@/hooks/useAdminRole";
+import { hasFeatureAccess, FEATURE_TIER } from "@/lib/tierAccess";
 import { BreathingGuide } from "@/components/digital-nadi/BreathingGuide";
 import { MeditationPlayer } from "@/components/digital-nadi/MeditationPlayer";
 
@@ -781,7 +783,8 @@ function DigitalNadiInner() {
 // Export with membership/admin gating
 export default function DigitalNadi() {
   const { user, isLoading: authLoading } = useAuth();
-  const { isAdmin, isPremium, loading: membershipLoading } = useMembership();
+  const { tier, loading: membershipLoading } = useMembership();
+  const { isAdmin } = useAdminRole();
 
   if (authLoading || membershipLoading) {
     return (
@@ -797,8 +800,8 @@ export default function DigitalNadi() {
     return <Navigate to="/auth" replace />;
   }
 
-  if (!isAdmin && !isPremium) {
-    return <Navigate to="/membership?product=digital-nadi" replace />;
+  if (!hasFeatureAccess(isAdmin, tier, FEATURE_TIER.digitalNadi)) {
+    return <Navigate to="/siddha-quantum" replace />;
   }
 
   return <DigitalNadiInner />;

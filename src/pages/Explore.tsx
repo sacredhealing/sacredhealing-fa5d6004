@@ -13,6 +13,7 @@ import { usePresenceState } from "@/features/presence/usePresenceState";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { useMeditationContentLanguage } from "@/features/meditations/useContentLanguage";
 import { useMembership } from "@/hooks/useMembership";
+import { getTierRank, FEATURE_TIER, getSalesPageForRank, hasFeatureAccess } from "@/lib/tierAccess";
 import { useAuth } from "@/hooks/useAuth";
 import { useAkashicAccess } from "@/hooks/useAkashicAccess";
 import { useAdminRole } from "@/hooks/useAdminRole";
@@ -36,7 +37,7 @@ export default function Explore() {
   const { playUniversalAudio } = useMusicPlayer();
   const { allAudioItems } = useQuickActionItems();
   const { language: meditationLanguage } = useMeditationContentLanguage();
-  const { isPremium } = useMembership();
+  const { isPremium, tier } = useMembership();
   const { user } = useAuth();
   const { hasAccess: hasAkashicAccess } = useAkashicAccess(user?.id);
   const { isAdmin } = useAdminRole();
@@ -96,7 +97,7 @@ export default function Explore() {
       {/* ══ SIDDHA PORTAL GATE ══ */}
       <SL label="◈ Siddha Portal" delay="0.04s" />
       <div
-        onClick={() => navigate(isPremium ? '/siddha-portal' : '/siddha-quantum')}
+        onClick={() => navigate(hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal) ? '/siddha-portal' : '/siddha-quantum')}
         style={{ margin: '0 16px', position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg,rgba(212,175,55,0.11) 0%,rgba(212,175,55,0.04) 60%,rgba(0,0,0,0) 100%)', border: '1px solid rgba(212,175,55,0.28)', borderRadius: 22, padding: '22px 18px', cursor: 'pointer', animation: 'sqFadeUp 0.5s 0.06s ease both' }}
       >
         <div style={{ position: 'absolute', top: 0, left: '-110%', width: '55%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(212,175,55,0.09),transparent)', animation: 'sqShimmer 4s ease-in-out infinite', pointerEvents: 'none' }} />
@@ -110,7 +111,7 @@ export default function Explore() {
               <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.85rem', color: 'rgba(255,255,255,0.36)' }}>18 Masters · Nāḍī Oracle · Quantum Field</div>
             </div>
           </div>
-          {isPremium ? <Badge label="Active" /> : <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6.5, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.38)' }}>45€/mo</span>}
+          {hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal) ? <Badge label="Active" /> : <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6.5, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.38)' }}>45€/mo</span>}
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 7, marginBottom: 16 }}>
           {[
@@ -125,8 +126,8 @@ export default function Explore() {
             </div>
           ))}
         </div>
-        <button onClick={(e) => { e.stopPropagation(); navigate(isPremium ? '/siddha-portal' : '/siddha-quantum'); }} style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.5)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-          {isPremium ? 'Enter the Portal →' : 'Unlock Siddha-Quantum to Enter →'}
+        <button onClick={(e) => { e.stopPropagation(); navigate(hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal) ? '/siddha-portal' : '/siddha-quantum'); }} style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.5)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+          {hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal) ? 'Enter the Portal →' : 'Unlock Siddha-Quantum to Enter →'}
         </button>
       </div>
 
@@ -173,7 +174,7 @@ export default function Explore() {
       {/* ══ SACRED TOOLS ══ */}
       <SL label="◈ Sacred Tools" delay="0.18s" />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '0 16px', animation: 'sqFadeUp 0.4s 0.2s ease both' }}>
-        <div onClick={() => navigate('/quantum-apothecary')} style={{ background: 'linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03))', border: '1px solid rgba(212,175,55,0.22)', borderRadius: 18, padding: '18px 15px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
+        <div onClick={() => hasFeatureAccess(isAdmin, tier, FEATURE_TIER.quantumApothecary) ? navigate('/quantum-apothecary') : navigate('/akasha-infinity')} style={{ background: 'linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03))', border: '1px solid rgba(212,175,55,0.22)', borderRadius: 18, padding: '18px 15px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', top: 0, left: '-110%', width: '55%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(212,175,55,0.07),transparent)', animation: 'sqShimmer 5.5s 1.2s ease-in-out infinite', pointerEvents: 'none' }} />
           <div style={{ position: 'absolute', top: 10, right: 10 }}><Badge label="2050" /></div>
           <TI pulse><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="18" height="13" rx="2" stroke="rgba(212,175,55,0.8)" strokeWidth="1.4"/><path d="M8 7 L8 4 C8 3.4 8.4 3 9 3 L15 3 C15.6 3 16 3.4 16 4 L16 7" stroke="rgba(212,175,55,0.55)" strokeWidth="1.2"/><circle cx="12" cy="13" r="2.5" stroke="rgba(212,175,55,0.7)" strokeWidth="1.2"/><line x1="12" y1="10.5" x2="12" y2="8.5" stroke="rgba(212,175,55,0.45)" strokeWidth="1"/></svg></TI>
@@ -181,7 +182,7 @@ export default function Explore() {
           <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>Siddha bio-resonance platform</div>
           <span style={{ position: 'absolute', bottom: 12, right: 13, color: 'rgba(212,175,55,0.18)', fontSize: 11 }}>→</span>
         </div>
-        <div onClick={() => navigate('/temple-home')} style={{ background: 'linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03))', border: '1px solid rgba(212,175,55,0.22)', borderRadius: 18, padding: '18px 15px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
+        <div onClick={() => hasFeatureAccess(isAdmin, tier, FEATURE_TIER.virtualPilgrimage) ? navigate('/temple-home') : navigate('/akasha-infinity')} style={{ background: 'linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03))', border: '1px solid rgba(212,175,55,0.22)', borderRadius: 18, padding: '18px 15px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', top: 10, right: 10 }}><Badge label="24/7" v="muted" /></div>
           <TI><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="rgba(212,175,55,0.7)" strokeWidth="1.3"/><path d="M12 3 C12 3 8 7 8 12 C8 17 12 21 12 21" stroke="rgba(212,175,55,0.45)" strokeWidth="1.1"/><path d="M12 3 C12 3 16 7 16 12 C16 17 12 21 12 21" stroke="rgba(212,175,55,0.45)" strokeWidth="1.1"/><line x1="3.5" y1="9" x2="20.5" y2="9" stroke="rgba(212,175,55,0.3)" strokeWidth="1"/><line x1="3.5" y1="15" x2="20.5" y2="15" stroke="rgba(212,175,55,0.3)" strokeWidth="1"/></svg></TI>
           <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.65)', marginBottom: 5 }}>Virtual<br/>Pilgrimage</div>
@@ -208,21 +209,21 @@ export default function Explore() {
           <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.87rem', color: 'rgba(255,255,255,0.33)', lineHeight: 1.6, marginBottom: 11 }}>Unlock your personalized transmission — past lives, dharma contracts, soul purpose decoded through Akashic field access.</p>
           <button style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.36em', textTransform: 'uppercase', color: 'rgba(175,130,255,0.58)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>Request Your Reading →</button>
         </div>
-        <div onClick={() => (isAdmin || isPremium) ? navigate('/vayu-protocol') : navigate('/siddha-quantum')} style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(212,175,55,0.13)', borderRadius: 18, padding: '18px 15px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
+        <div onClick={() => hasFeatureAccess(isAdmin, tier, FEATURE_TIER.vayuProtocol) ? navigate('/vayu-protocol') : navigate('/siddha-quantum')} style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(212,175,55,0.13)', borderRadius: 18, padding: '18px 15px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', top: 10, right: 10 }}><Badge label="2060" /></div>
           <TI><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><ellipse cx="12" cy="12" rx="9" ry="5" stroke="rgba(212,175,55,0.65)" strokeWidth="1.2" fill="none"/><ellipse cx="12" cy="12" rx="9" ry="5" stroke="rgba(212,175,55,0.28)" strokeWidth="0.9" fill="none" transform="rotate(60,12,12)"/><circle cx="12" cy="12" r="2.2" fill="rgba(212,175,55,0.15)" stroke="rgba(212,175,55,0.65)" strokeWidth="1"/></svg></TI>
           <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.65)', marginBottom: 5 }}>Vayu<br/>Protocol</div>
           <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>Golden Torus · Sapphire Icosahedron</div>
           <span style={{ position: 'absolute', bottom: 12, right: 13, color: 'rgba(212,175,55,0.18)', fontSize: 11 }}>→</span>
         </div>
-        <div onClick={() => (isAdmin || isPremium) ? navigate('/sri-yantra-shield') : navigate('/prana-flow')} style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(212,175,55,0.13)', borderRadius: 18, padding: '18px 15px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
+        <div onClick={() => hasFeatureAccess(isAdmin, tier, FEATURE_TIER.sriYantraShield) ? navigate('/sri-yantra-shield') : navigate('/siddha-quantum')} style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(212,175,55,0.13)', borderRadius: 18, padding: '18px 15px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', top: 10, right: 10 }}><Badge label="v2.6" /></div>
           <TI><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ animation: 'sqBreathe 5s ease-in-out infinite' }}><polygon points="12,2.5 21.5,20 2.5,20" stroke="rgba(212,175,55,0.85)" strokeWidth="1.3" fill="none"/><polygon points="12,21.5 2.5,4 21.5,4" stroke="rgba(212,175,55,0.68)" strokeWidth="1.1" fill="none"/><polygon points="12,6.5 19,19 5,19" stroke="rgba(212,175,55,0.48)" strokeWidth="0.9" fill="none"/><circle cx="12" cy="12" r="1.5" fill="rgba(212,175,55,0.92)"/></svg></TI>
           <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.65)', marginBottom: 5 }}>Sri Yantra<br/>Shield</div>
           <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>Quantum flux · GLOBAL</div>
           <span style={{ position: 'absolute', bottom: 12, right: 13, color: 'rgba(212,175,55,0.18)', fontSize: 11 }}>→</span>
         </div>
-        <div onClick={() => (isAdmin || isPremium) ? navigate('/hand-analyzer') : navigate('/membership?product=palm-oracle')} style={{ gridColumn: 'span 2', background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(212,175,55,0.13)', borderRadius: 18, padding: '18px 16px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
+        <div onClick={() => hasFeatureAccess(isAdmin, tier, FEATURE_TIER.palmOracle) ? navigate('/hand-analyzer') : navigate('/akasha-infinity')} style={{ gridColumn: 'span 2', background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(212,175,55,0.13)', borderRadius: 18, padding: '18px 16px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', top: 10, right: 10 }}><Badge label="Premium" /></div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <TI><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M8 18 L8 8 C8 7.4 8.4 7 9 7 C9.6 7 10 7.4 10 8 L10 13" stroke="rgba(212,175,55,0.8)" strokeWidth="1.4"/><path d="M10 12 C10 11.4 10.4 11 11 11 C11.6 11 12 11.4 12 12 L12 13" stroke="rgba(212,175,55,0.7)" strokeWidth="1.3"/><path d="M12 12.5 C12 11.9 12.4 11.5 13 11.5 C13.6 11.5 14 11.9 14 12.5 L14 14" stroke="rgba(212,175,55,0.6)" strokeWidth="1.2"/><path d="M8 15 C6 14 5 12 5 10" stroke="rgba(212,175,55,0.35)" strokeWidth="1.1"/><path d="M8 18 C8 19 9 20 10 20 L13 20 C15 20 16 18 16 16 L16 13 C16 12.4 15.6 12 15 12 C14.4 12 14 12.4 14 13" stroke="rgba(212,175,55,0.75)" strokeWidth="1.3" fill="none"/></svg></TI>
@@ -263,7 +264,7 @@ export default function Explore() {
         ].map(({ title, sub, href, premium, svg }) => (
           <div key={title} onClick={() => {
             if (!href) { setGitaOpen(!gitaOpen); return; }
-            if (premium && !isAdmin && !isPremium) { navigate('/prana-flow'); return; }
+            if (premium && !hasFeatureAccess(isAdmin, tier, FEATURE_TIER.ayurveda)) { navigate('/prana-flow'); return; }
             navigate(href);
           }} style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(212,175,55,0.13)', borderRadius: 18, padding: '16px 14px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
             {premium && <div style={{ position: 'absolute', top: 10, right: 10 }}><Badge label="Premium" /></div>}
