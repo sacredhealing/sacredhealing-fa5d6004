@@ -1,10 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Camera } from 'lucide-react';
 import PalmOracle, { getHeartLineLeak, getVataPittaKapha, getPalmArchetype } from '@/components/PalmOracle';
+import { setPalmScanResult } from '@/lib/palmScanStore';
+import { useAuth } from '@/hooks/useAuth';
+import { useMembership } from '@/hooks/useMembership';
+import { useAdminRole } from '@/hooks/useAdminRole';
+import { hasFeatureAccess, FEATURE_TIER } from '@/lib/tierAccess';
 import { setPalmScanResult } from '@/lib/palmScanStore';
 
 const CAMERA_TIMEOUT_MS = 4000;
