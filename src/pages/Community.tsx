@@ -105,11 +105,15 @@ const styles = `
   .sqi-root {
     display: flex;
     height: 100vh;
-    width: 100vw;
+    height: 100dvh;
+    width: 100%;
+    min-width: 100%;
+    max-width: 100vw;
     background: #050505;
     overflow: hidden;
     position: relative;
     font-family: 'Plus Jakarta Sans', sans-serif;
+    box-sizing: border-box;
   }
 
   .sqi-root::before {
@@ -875,7 +879,17 @@ const styles = `
 
   @media (max-width: 768px) {
     .sqi-members { display: none; }
-    .sqi-sidebar { width: 100vw; position: absolute; left: 0; z-index: 50; }
+    .sqi-sidebar {
+      width: 100%;
+      min-width: 100%;
+      max-width: 100%;
+      position: absolute;
+      left: 0;
+      top: 0;
+      right: 0;
+      z-index: 50;
+      box-sizing: border-box;
+    }
   }
 `;
 

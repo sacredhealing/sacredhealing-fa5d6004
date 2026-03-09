@@ -133,7 +133,7 @@ export const AppLayout: React.FC = () => {
           exit="exit"
           variants={pageVariants}
           transition={pageTransition}
-          className={`relative pb-28 overflow-x-hidden ${showBackButton ? 'pt-14' : ''}`}
+          className={`relative pb-28 overflow-x-hidden w-full max-w-none ${showBackButton ? 'pt-14' : ''} ${location.pathname === '/community' ? 'min-w-full' : ''}`}
         >
           <Outlet />
         </motion.main>
