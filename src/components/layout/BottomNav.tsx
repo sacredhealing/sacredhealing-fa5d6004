@@ -11,12 +11,12 @@ import AlchemicalStarIcon from '@/components/icons/AlchemicalStarIcon';
 import AtmaIcon from '@/components/icons/AtmaIcon';
 
 const NAV_ITEMS = [
-  { to: '/dashboard', icon: MerkabaIcon, labelKey: 'nav_home', label: 'Nexus Point' },
+  { to: '/dashboard', icon: MerkabaIcon, labelKey: 'nav_home', label: 'Nexus' },
   { to: '/meditations', icon: ThirdEyeIcon, labelKey: 'nav_meditate', label: 'Void-Sync' },
   { to: '/mantras', icon: MalaBeadsIcon, labelKey: 'nav_mantras', label: 'Vedic Light-Codes' },
   { to: '/explore', icon: PalmLeafIcon, labelKey: 'nav_library', label: 'Akasha' },
   { to: '/healing', icon: AlchemicalStarIcon, labelKey: 'header_healing', label: 'Bio-Field Alchemy' },
-  { to: '/profile', icon: AtmaIcon, labelKey: 'nav_profile', label: 'Avataric Blueprint' },
+  { to: '/profile', icon: AtmaIcon, labelKey: 'nav_profile', label: 'Avatar Blueprint' },
 ];
 
 export const BottomNav: React.FC = () => {
