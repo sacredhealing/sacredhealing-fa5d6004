@@ -79,9 +79,9 @@ const SQTile: React.FC<{
   onClick?: () => void;
 }> = ({ children, featured, locked, onClick }) => (
   <div
-    onClick={locked ? undefined : onClick}
+    onClick={onClick}
     className={`sq-tile ${featured ? 'sq-tile-featured' : ''} ${locked ? 'sq-tile-locked' : ''}`}
-    style={{ position: 'relative' }}
+    style={{ position: 'relative', cursor: onClick ? 'pointer' : undefined }}
   >
     {children}
   </div>
