@@ -37,7 +37,7 @@ export default function Explore() {
   const { playUniversalAudio } = useMusicPlayer();
   const { allAudioItems } = useQuickActionItems();
   const { language: meditationLanguage } = useMeditationContentLanguage();
-  const { isPremium } = useMembership();
+  const { isPremium, tier } = useMembership();
   const { user } = useAuth();
   const { hasAccess: hasAkashicAccess } = useAkashicAccess(user?.id);
   const { isAdmin } = useAdminRole();
