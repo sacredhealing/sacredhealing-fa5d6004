@@ -4,137 +4,247 @@ import { VastuChatWindow, VastuMessage } from './VastuChat';
 import { MODULES } from './vastuConstants';
 import { toast } from 'sonner';
 
+// ─────────────────────────────────────────────
+// SQI 2050 Design Tokens (inline for portability)
+// Primary:   #D4AF37  (Siddha-Gold)
+// Bg:        #050505  (Akasha-Black)
+// Glass:     rgba(255,255,255,0.02)
+// Border:    rgba(255,255,255,0.06)
+// Cyan:      #22D3EE  (Vayu-Cyan – scanner pulses only)
+// ─────────────────────────────────────────────
+
 interface VastuToolProps {
   isAdmin?: boolean;
 }
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/vastu-chat`;
 
+// ── SQI Sidebar Module Button ──────────────────
+const ModuleButton: React.FC<{
+  module: { id: number; title: string };
+  isCurrent: boolean;
+  isCompleted: boolean;
+  isAvailable: boolean;
+  onClick: () => void;
+}> = ({ module, isCurrent, isCompleted, isAvailable, onClick }) => (
+  <button
+    disabled={!isAvailable}
+    onClick={onClick}
+    style={{
+      width: '100%',
+      textAlign: 'left',
+      padding: '12px 14px',
+      borderRadius: '18px',
+      border: `1px solid ${
+        isCurrent
+          ? 'rgba(212,175,55,0.4)'
+          : isCompleted
+          ? 'rgba(212,175,55,0.15)'
+          : isAvailable
+          ? 'rgba(255,255,255,0.06)'
+          : 'rgba(255,255,255,0.03)'
+      }`,
+      background: isCurrent
+        ? 'rgba(212,175,55,0.06)'
+        : isCompleted
+        ? 'rgba(212,175,55,0.03)'
+        : 'rgba(255,255,255,0.015)',
+      display: 'flex',
+      alignItems: 'flex-start',
+      gap: '10px',
+      cursor: isAvailable ? 'pointer' : 'not-allowed',
+      opacity: isAvailable ? 1 : 0.35,
+      transition: 'all 0.25s',
+      boxShadow: isCurrent ? '0 0 20px rgba(212,175,55,0.08)' : 'none',
+    }}
+  >
+    {/* Number badge */}
+    <div
+      style={{
+        flexShrink: 0,
+        width: '26px',
+        height: '26px',
+        borderRadius: '50%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '10px',
+        fontWeight: 900,
+        background: isCurrent
+          ? '#D4AF37'
+          : isCompleted
+          ? 'rgba(212,175,55,0.3)'
+          : 'rgba(255,255,255,0.06)',
+        color: isCurrent ? '#050505' : isCompleted ? '#D4AF37' : 'rgba(255,255,255,0.5)',
+        border: isCompleted && !isCurrent ? '1px solid rgba(212,175,55,0.3)' : 'none',
+      }}
+    >
+      {isCompleted && !isCurrent ? '✓' : module.id}
+    </div>
+
+    {/* Title + label */}
+    <div style={{ flexGrow: 1, minWidth: 0 }}>
+      <p
+        style={{
+          fontSize: '11px',
+          fontWeight: isCurrent ? 700 : 500,
+          color: isCurrent ? '#fff' : 'rgba(255,255,255,0.55)',
+          margin: 0,
+          lineHeight: 1.4,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {module.title}
+      </p>
+      {isCurrent && (
+        <span
+          style={{
+            display: 'block',
+            marginTop: '3px',
+            fontSize: '8px',
+            fontWeight: 800,
+            letterSpacing: '0.45em',
+            textTransform: 'uppercase',
+            color: '#D4AF37',
+          }}
+        >
+          Current Focus
+        </span>
+      )}
+      {!isAvailable && (
+        <span
+          style={{
+            display: 'block',
+            marginTop: '3px',
+            fontSize: '8px',
+            fontWeight: 700,
+            letterSpacing: '0.3em',
+            textTransform: 'uppercase',
+            color: 'rgba(255,255,255,0.25)',
+          }}
+        >
+          🔒 Locked
+        </span>
+      )}
+    </div>
+  </button>
+);
+
 export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
   const [currentModule, setCurrentModule] = useState(1);
   const [messages, setMessages] = useState<VastuMessage[]>([]);
   const [isThinking, setIsThinking] = useState(false);
-  
   const [isMasterUnlocked, setIsMasterUnlocked] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-
-  const handleSendMessage = useCallback(async (text: string, images?: string[]) => {
-    const userMsg: VastuMessage = {
-      role: 'user',
-      text,
-      images,
-      timestamp: Date.now(),
-    };
-
-    setMessages((prev) => [...prev, userMsg]);
-    setIsThinking(true);
-
-    let assistantContent = '';
-
-    try {
-      // Build messages for API (convert to role/content format)
-      const apiMessages = [...messages, userMsg].map((m) => ({
-        role: m.role === 'model' ? 'assistant' : 'user',
-        content: m.text,
-      }));
-
-      const response = await fetch(CHAT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: apiMessages, images }),
-      });
-
-      if (!response.ok || !response.body) {
-        if (response.status === 429) {
-          toast.error('Rate limit exceeded. Please try again in a moment.');
-        } else {
-          toast.error('The cosmic connection was interrupted. Please try again.');
+  // ── handleSendMessage: LOGIC UNCHANGED ───────
+  const handleSendMessage = useCallback(
+    async (text: string, images?: string[]) => {
+      const userMsg: VastuMessage = {
+        role: 'user',
+        text,
+        images,
+        timestamp: Date.now(),
+      };
+      setMessages((prev) => [...prev, userMsg]);
+      setIsThinking(true);
+      let assistantContent = '';
+      try {
+        const apiMessages = [...messages, userMsg].map((m) => ({
+          role: m.role === 'model' ? 'assistant' : 'user',
+          content: m.text,
+        }));
+        const response = await fetch(CHAT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: apiMessages, images }),
+        });
+        if (!response.ok || !response.body) {
+          if (response.status === 429) {
+            toast.error('Rate limit exceeded. Please try again in a moment.');
+          } else {
+            toast.error('The cosmic connection was interrupted. Please try again.');
+          }
+          setIsThinking(false);
+          return;
         }
-        setIsThinking(false);
-        return;
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let textBuffer = '';
-
-      // Add empty assistant message to stream into
-      setMessages((prev) => [...prev, { role: 'model', text: '', timestamp: Date.now() }]);
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        textBuffer += decoder.decode(value, { stream: true });
-
-        let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf('\n')) !== -1) {
-          let line = textBuffer.slice(0, newlineIndex);
-          textBuffer = textBuffer.slice(newlineIndex + 1);
-
-          if (line.endsWith('\r')) line = line.slice(0, -1);
-          if (line.startsWith(':') || line.trim() === '') continue;
-          if (!line.startsWith('data: ')) continue;
-
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === '[DONE]') break;
-
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) {
-              assistantContent += content;
-              setMessages((prev) => {
-                const updated = [...prev];
-                updated[updated.length - 1] = {
-                  role: 'model',
-                  text: assistantContent,
-                  timestamp: Date.now(),
-                };
-                return updated;
-              });
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let textBuffer = '';
+        setMessages((prev) => [
+          ...prev,
+          { role: 'model', text: '', timestamp: Date.now() },
+        ]);
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          textBuffer += decoder.decode(value, { stream: true });
+          let newlineIndex: number;
+          while ((newlineIndex = textBuffer.indexOf('\n')) !== -1) {
+            let line = textBuffer.slice(0, newlineIndex);
+            textBuffer = textBuffer.slice(newlineIndex + 1);
+            if (line.endsWith('\r')) line = line.slice(0, -1);
+            if (line.startsWith(':') || line.trim() === '') continue;
+            if (!line.startsWith('data: ')) continue;
+            const jsonStr = line.slice(6).trim();
+            if (jsonStr === '[DONE]') break;
+            try {
+              const parsed = JSON.parse(jsonStr);
+              const content = parsed.choices?.[0]?.delta?.content as
+                | string
+                | undefined;
+              if (content) {
+                assistantContent += content;
+                setMessages((prev) => {
+                  const updated = [...prev];
+                  updated[updated.length - 1] = {
+                    role: 'model',
+                    text: assistantContent,
+                    timestamp: Date.now(),
+                  };
+                  return updated;
+                });
+              }
+            } catch {
+              textBuffer = line + '\n' + textBuffer;
+              break;
             }
-          } catch {
-            textBuffer = line + '\n' + textBuffer;
-            break;
           }
         }
+        const startMatch = assistantContent.match(/\[MODULE_START:\s*(\d+)\]/);
+        const completeMatch = assistantContent.match(
+          /\[MODULE_COMPLETE:\s*(\d+)\]/
+        );
+        if (startMatch) {
+          setCurrentModule(parseInt(startMatch[1]));
+        } else if (completeMatch) {
+          const next = Math.min(10, parseInt(completeMatch[1]) + 1);
+          setCurrentModule(next);
+        }
+      } catch (error) {
+        console.error('Vastu chat error:', error);
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'model',
+            text: 'The cosmic connection was interrupted. Please try again.',
+            timestamp: Date.now(),
+          },
+        ]);
+      } finally {
+        setIsThinking(false);
       }
-
-      // After full response: detect module progression
-      const startMatch = assistantContent.match(/\[MODULE_START:\s*(\d+)\]/);
-      const completeMatch = assistantContent.match(/\[MODULE_COMPLETE:\s*(\d+)\]/);
-
-      if (startMatch) {
-        setCurrentModule(parseInt(startMatch[1]));
-      } else if (completeMatch) {
-        const next = Math.min(10, parseInt(completeMatch[1]) + 1);
-        setCurrentModule(next);
-      }
-
-    } catch (error) {
-      console.error('Vastu chat error:', error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'model',
-          text: 'The cosmic connection was interrupted. Please try again.',
-          timestamp: Date.now(),
-        },
-      ]);
-    } finally {
-      setIsThinking(false);
-    }
-  }, [messages]);
+    },
+    [messages]
+  );
 
   const handleModuleClick = (id: number) => {
     const isCompleted = id < currentModule;
     const isCurrent = id === currentModule;
     const isAvailable = isMasterUnlocked || isCompleted || isCurrent;
-
     if (!isAvailable) return;
-
     setIsSidebarOpen(false);
     setCurrentModule(id);
     const moduleTitle = MODULES.find((m) => m.id === id)?.title;
@@ -143,149 +253,367 @@ export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
     );
   };
 
-  
-
+  // ── RENDER ────────────────────────────────────
   return (
-    <div className="flex h-[calc(100vh-8rem)] relative overflow-hidden rounded-2xl border border-stone-200 shadow-xl bg-stone-50">
-      {/* Mobile sidebar overlay */}
+    <div
+      style={{
+        display: 'flex',
+        height: 'calc(100vh - 8rem)',
+        position: 'relative',
+        overflow: 'hidden',
+        borderRadius: '28px',
+        border: '1px solid rgba(212,175,55,0.15)',
+        background: '#050505',
+        boxShadow: '0 0 80px rgba(212,175,55,0.06), 0 40px 100px rgba(0,0,0,0.6)',
+        colorScheme: 'dark',
+      }}
+      className="vastu-sqi-root"
+    >
+      <style>{`
+        .vastu-sqi-root, .vastu-sqi-root * {
+          box-sizing: border-box !important;
+        }
+        /* Nuke any Tailwind/shadcn white backgrounds leaking into this tree */
+        .vastu-sqi-root .bg-stone-50,
+        .vastu-sqi-root .bg-white,
+        .vastu-sqi-root .bg-background,
+        .vastu-sqi-root [class*="bg-stone"],
+        .vastu-sqi-root [class*="bg-amber"] {
+          background: transparent !important;
+        }
+        /* Override stone borders */
+        .vastu-sqi-root [class*="border-stone"],
+        .vastu-sqi-root [class*="border-amber"] {
+          border-color: rgba(255,255,255,0.07) !important;
+        }
+        /* Kill any white text that Tailwind might inject */
+        .vastu-sqi-root .text-stone-800,
+        .vastu-sqi-root .text-stone-900 {
+          color: #fff !important;
+        }
+        .vastu-sqi-root .text-stone-600,
+        .vastu-sqi-root .text-stone-500,
+        .vastu-sqi-root .text-stone-400 {
+          color: rgba(255,255,255,0.5) !important;
+        }
+        /* Input placeholder */
+        .vastu-sqi-root input::placeholder {
+          color: rgba(255,255,255,0.28) !important;
+        }
+        @keyframes sqiSpin { to { transform: rotate(360deg); } }
+      `}</style>
+      {/* ── STAR FIELD BG ── */}
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background:
+            'radial-gradient(ellipse 80% 60% at 50% -10%, rgba(212,175,55,0.05) 0%, transparent 70%)',
+          pointerEvents: 'none',
+          zIndex: 0,
+        }}
+      />
+
+      {/* ── MOBILE OVERLAY ── */}
       <AnimatePresence>
         {isSidebarOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/40 z-40 md:hidden"
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0,0,0,0.7)',
+              zIndex: 40,
+            }}
+            className="md:hidden"
             onClick={() => setIsSidebarOpen(false)}
           />
         )}
       </AnimatePresence>
 
-      {/* Sidebar */}
+      {/* ── SIDEBAR ── */}
       <aside
-        className={`
-          fixed md:relative z-50 md:z-auto top-0 left-0 h-full
-          w-64 bg-stone-50 border-r border-stone-200 flex flex-col
-          transition-transform duration-300
-          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-        `}
+        style={{
+          position: 'relative',
+          zIndex: 10,
+          width: '256px',
+          flexShrink: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          background: 'rgba(255,255,255,0.015)',
+          borderRight: '1px solid rgba(255,255,255,0.06)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+        }}
+        className={`fixed md:relative z-50 md:z-auto top-0 left-0 h-full w-64 transition-transform duration-300 ${
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        }`}
       >
         {/* Sidebar header */}
-        <div className="p-4 border-b border-stone-200 flex items-center justify-between">
+        <div
+          style={{
+            padding: '20px 18px 16px',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
           <div>
-            <h3 className="font-bold text-stone-800" style={{ fontFamily: 'Georgia, serif' }}>
+            <h3
+              style={{
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                fontWeight: 900,
+                fontSize: '14px',
+                letterSpacing: '-0.02em',
+                color: '#fff',
+                margin: 0,
+              }}
+            >
               Your Journey
             </h3>
-            <p className="text-[10px] text-stone-400 uppercase tracking-widest">10-Module Path</p>
+            <p
+              style={{
+                fontSize: '8px',
+                fontWeight: 800,
+                letterSpacing: '0.45em',
+                textTransform: 'uppercase',
+                color: 'rgba(255,255,255,0.3)',
+                margin: '3px 0 0',
+              }}
+            >
+              10-Module Path
+            </p>
           </div>
-          <span className="text-stone-300 text-lg">🧭</span>
+          {/* Rotating yantra glyph */}
+          <span
+            style={{
+              fontSize: '18px',
+              color: '#D4AF37',
+              filter: 'drop-shadow(0 0 8px rgba(212,175,55,0.5))',
+              animation: 'sqiSpin 20s linear infinite',
+            }}
+          >
+            🧭
+          </span>
         </div>
 
-
         {/* Modules list */}
-        <div className="flex-grow overflow-y-auto p-3 space-y-1.5">
+        <div
+          style={{
+            flexGrow: 1,
+            overflowY: 'auto',
+            padding: '12px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '6px',
+          }}
+        >
           {MODULES.map((module) => {
             const isCompleted = module.id < currentModule;
             const isCurrent = module.id === currentModule;
             const isAvailable = isMasterUnlocked || isCompleted || isCurrent;
-
             return (
-              <button
+              <ModuleButton
                 key={module.id}
-                disabled={!isAvailable}
+                module={module}
+                isCurrent={isCurrent}
+                isCompleted={isCompleted}
+                isAvailable={isAvailable}
                 onClick={() => handleModuleClick(module.id)}
-                className={`w-full text-left p-3 rounded-xl transition-all flex items-start gap-3 border group ${
-                  isCurrent
-                    ? 'bg-amber-50 border-amber-200 shadow-sm ring-1 ring-amber-100'
-                    : isCompleted
-                    ? 'bg-stone-100 border-stone-200 opacity-80'
-                    : isAvailable
-                    ? 'bg-white border-stone-200 hover:border-amber-300 hover:shadow-sm'
-                    : 'bg-stone-50 border-transparent opacity-40 cursor-not-allowed'
-                }`}
-              >
-                <div
-                  className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
-                    isCurrent
-                      ? 'bg-amber-600 text-white'
-                      : isCompleted
-                      ? 'bg-green-600 text-white'
-                      : isAvailable
-                      ? 'bg-stone-200 text-stone-600 group-hover:bg-amber-200 group-hover:text-amber-800'
-                      : 'bg-stone-200 text-stone-400'
-                  }`}
-                >
-                  {isCompleted ? '✓' : module.id}
-                </div>
-                <div className="flex-grow min-w-0">
-                  <p className={`text-[12px] font-semibold leading-tight truncate ${isCurrent ? 'text-stone-900' : 'text-stone-600'}`}>
-                    {module.title}
-                  </p>
-                  {isCurrent && (
-                    <span className="text-[9px] text-amber-700 font-black uppercase tracking-widest mt-0.5 block animate-pulse">
-                      Current Focus
-                    </span>
-                  )}
-                  {!isAvailable && (
-                    <span className="text-[9px] text-stone-400 font-bold uppercase tracking-tight mt-0.5 block">🔒 Locked</span>
-                  )}
-                </div>
-              </button>
+              />
             );
           })}
         </div>
 
-        {/* Developer tools (admin or always for testing) */}
-        <div className="p-3 border-t border-stone-200">
-          <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest mb-2">Dev Tools</p>
+        {/* Dev tools — admin panel preserved */}
+        <div
+          style={{
+            padding: '12px',
+            borderTop: '1px solid rgba(255,255,255,0.06)',
+          }}
+        >
+          <p
+            style={{
+              fontSize: '8px',
+              fontWeight: 800,
+              letterSpacing: '0.45em',
+              textTransform: 'uppercase',
+              color: 'rgba(255,255,255,0.2)',
+              marginBottom: '8px',
+            }}
+          >
+            Dev Tools
+          </p>
           <button
             onClick={() => setIsMasterUnlocked((v) => !v)}
-            className={`w-full py-2 px-3 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
-              isMasterUnlocked
-                ? 'bg-amber-700 text-white hover:bg-amber-800'
-                : 'bg-stone-200 text-stone-600 hover:bg-stone-300'
-            }`}
+            style={{
+              width: '100%',
+              padding: '10px',
+              borderRadius: '14px',
+              fontSize: '9px',
+              fontWeight: 800,
+              letterSpacing: '0.35em',
+              textTransform: 'uppercase',
+              border: `1px solid ${
+                isMasterUnlocked
+                  ? 'rgba(212,175,55,0.4)'
+                  : 'rgba(255,255,255,0.06)'
+              }`,
+              background: isMasterUnlocked
+                ? 'rgba(212,175,55,0.12)'
+                : 'rgba(255,255,255,0.03)',
+              color: isMasterUnlocked ? '#D4AF37' : 'rgba(255,255,255,0.35)',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+            }}
           >
             {isMasterUnlocked ? '🔓 Lock Course' : '🔒 Unlock All'}
           </button>
         </div>
       </aside>
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      {/* ── MAIN CONTENT ── */}
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          minWidth: 0,
+          position: 'relative',
+          zIndex: 1,
+        }}
+      >
         {/* Header */}
-        <div className="flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-amber-800 to-stone-900 text-white flex-shrink-0">
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '16px',
+            padding: '14px 20px',
+            background:
+              'linear-gradient(135deg, rgba(212,175,55,0.08) 0%, rgba(255,255,255,0.02) 100%)',
+            borderBottom: '1px solid rgba(212,175,55,0.12)',
+            flexShrink: 0,
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+          }}
+        >
           {/* Mobile hamburger */}
           <button
             onClick={() => setIsSidebarOpen(true)}
-            className="md:hidden text-white/70 hover:text-white transition-colors p-1"
+            className="md:hidden"
+            style={{
+              color: 'rgba(255,255,255,0.6)',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '16px',
+              padding: '4px',
+            }}
           >
             ☰
           </button>
 
-          <div className="flex items-center gap-3 flex-1">
-            <div className="w-10 h-10 rounded-full bg-amber-700/40 flex items-center justify-center">
-              <span className="text-xl">🕉</span>
+          {/* Avatar + title */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1 }}>
+            <div
+              style={{
+                width: '42px',
+                height: '42px',
+                borderRadius: '14px',
+                background: 'rgba(212,175,55,0.12)',
+                border: '1px solid rgba(212,175,55,0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '20px',
+                boxShadow: '0 0 20px rgba(212,175,55,0.15)',
+              }}
+            >
+              🕉
             </div>
             <div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-lg font-bold" style={{ fontFamily: 'Georgia, serif' }}>Vastu</span>
-                <span className="text-amber-300 font-light text-sm" style={{ fontFamily: 'Georgia, serif' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px' }}>
+                <span
+                  style={{
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    fontSize: '17px',
+                    fontWeight: 900,
+                    letterSpacing: '-0.03em',
+                    color: '#fff',
+                  }}
+                >
+                  Vastu
+                </span>
+                <span
+                  style={{
+                    fontFamily: 'Georgia, serif',
+                    fontSize: '13px',
+                    fontWeight: 300,
+                    fontStyle: 'italic',
+                    color: '#D4AF37',
+                    textShadow: '0 0 12px rgba(212,175,55,0.4)',
+                  }}
+                >
                   Abundance Architect
                 </span>
               </div>
-              <p className="text-[9px] text-white/50 uppercase tracking-widest">Conscious Space Design</p>
+              <p
+                style={{
+                  fontSize: '8px',
+                  fontWeight: 800,
+                  letterSpacing: '0.45em',
+                  textTransform: 'uppercase',
+                  color: 'rgba(255,255,255,0.3)',
+                  margin: 0,
+                }}
+              >
+                Conscious Space Design
+              </p>
             </div>
           </div>
 
           {/* Module badge */}
-          <div className="text-right hidden sm:block">
-            <p className="text-[9px] text-white/50 uppercase tracking-widest">Module</p>
-            <p className="text-lg font-black text-amber-300">{currentModule} / 10</p>
+          <div style={{ textAlign: 'right' }} className="hidden sm:block">
+            <p
+              style={{
+                fontSize: '8px',
+                fontWeight: 800,
+                letterSpacing: '0.45em',
+                textTransform: 'uppercase',
+                color: 'rgba(255,255,255,0.3)',
+                margin: '0 0 2px',
+              }}
+            >
+              Module
+            </p>
+            <p
+              style={{
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                fontSize: '20px',
+                fontWeight: 900,
+                color: '#D4AF37',
+                margin: 0,
+                lineHeight: 1,
+                textShadow: '0 0 20px rgba(212,175,55,0.5)',
+              }}
+            >
+              {currentModule}{' '}
+              <span style={{ fontSize: '13px', opacity: 0.5 }}>/ 10</span>
+            </p>
           </div>
         </div>
 
-        {/* Chat window */}
-        <div className="flex-1 min-h-0">
+        {/* Chat window — passes through, styled inside VastuChat */}
+        <div style={{ flex: 1, minHeight: 0 }}>
           <VastuChatWindow
             messages={messages}
             onSendMessage={handleSendMessage}
