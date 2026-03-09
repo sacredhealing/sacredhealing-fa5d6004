@@ -403,7 +403,7 @@ const Dashboard: React.FC = () => {
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 8 }}>
                     <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#D4AF37', boxShadow: '0 0 6px rgba(212,175,55,0.8)', animation: 'sqDotPulse 2s infinite' }} />
-                    <span style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.5)' }}>Live Reading</span>
+                    <span style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.5)' }}>Real-Time Transmission</span>
                   </div>
                   <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 8.5, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.8)', marginBottom: 6 }}>Vedic Oracle</div>
                   <p style={{ fontFamily: 'Cormorant Garamond,serif', fontStyle: 'italic', fontSize: '0.9rem', color: 'rgba(255,255,255,0.52)', lineHeight: 1.4, margin: '0 0 10px' }}>
@@ -428,7 +428,7 @@ const Dashboard: React.FC = () => {
               <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.42)' }}>
                 {(vedicReading as unknown as { ayurvedicProfile?: { dominantDosha?: string } })?.ayurvedicProfile?.dominantDosha
                   ? `${(vedicReading as unknown as { ayurvedicProfile: { dominantDosha: string } }).ayurvedicProfile.dominantDosha} dominance`
-                  : 'Dosha analysis'}
+                  : 'Bio-Signature Scan'}
               </div>
               <span style={{ position: 'absolute', bottom: 13, right: 13, color: 'rgba(212,175,55,0.25)', fontSize: 11 }}>→</span>
             </SQTile>
@@ -439,7 +439,7 @@ const Dashboard: React.FC = () => {
                 <circle cx="7" cy="18" r="2.5" stroke="rgba(212,175,55,0.6)" strokeWidth="1.2" fill="rgba(212,175,55,0.08)"/>
                 <circle cx="17" cy="16" r="2.5" stroke="rgba(212,175,55,0.5)" strokeWidth="1.2" fill="rgba(212,175,55,0.06)"/>
               </svg>
-              <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.7)', marginBottom: 4 }}>Healing Sounds</div>
+              <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.7)', marginBottom: 4 }}>Soma Acoustic Sync</div>
               <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.42)' }}>528Hz ready</div>
               <span style={{ position: 'absolute', bottom: 13, right: 13, color: 'rgba(212,175,55,0.25)', fontSize: 11 }}>→</span>
             </SQTile>
@@ -452,7 +452,7 @@ const Dashboard: React.FC = () => {
                 <line x1="15" y1="22" x2="15" y2="14" stroke="rgba(212,175,55,0.3)" strokeWidth="1"/>
               </svg>
               <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.7)', marginBottom: 4 }}>Vastu</div>
-              <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.42)' }}>Sacred space scan</div>
+              <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.42)' }}>Dimensional Harmonization</div>
               <span style={{ position: 'absolute', bottom: 13, right: 13, color: 'rgba(212,175,55,0.25)', fontSize: 11 }}>→</span>
             </SQTile>
 
@@ -462,7 +462,7 @@ const Dashboard: React.FC = () => {
                 <text x="20" y="28" fontSize="26" textAnchor="middle" fill="rgba(212,175,55,0.45)" fontFamily="serif" fontStyle="italic">ॐ</text>
               </svg>
               <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.7)', marginBottom: 4 }}>Mantras</div>
-              <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.42)' }}>Daily mantra set</div>
+              <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.42)' }}>Sonic-Code Activation</div>
               <span style={{ position: 'absolute', bottom: 13, right: 13, color: 'rgba(212,175,55,0.25)', fontSize: 11 }}>→</span>
             </SQTile>
 
