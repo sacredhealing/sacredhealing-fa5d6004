@@ -23,6 +23,8 @@ import { AchievementPopup } from '@/components/achievements/AchievementPopup';
 
 import { useAchievements } from '@/hooks/useAchievements';
 import { useMembership } from '@/hooks/useMembership';
+import { useAdminRole } from '@/hooks/useAdminRole';
+import { hasFeatureAccess, FEATURE_TIER } from '@/lib/tierAccess';
 import { useSocialShare } from '@/hooks/useSocialShare';
 import { translateAchievement } from '@/lib/translateAchievement';
 import { Award, Flame, Target, Share2, Users, Star, Sparkles, Heart, Crown, Calendar, Droplet, Clock, Shield, Pentagon } from 'lucide-react';
