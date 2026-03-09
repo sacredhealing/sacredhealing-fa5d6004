@@ -27,13 +27,7 @@ const Ayurveda = () => {
     return 'FREE' as AyurvedaMembershipLevel;
   };
 
-  return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-6">
-        <AyurvedaTool membershipLevel={getAyurvedaLevel()} isAdmin={isAdmin} />
-      </div>
-    </div>
-  );
+  return <AyurvedaTool membershipLevel={getAyurvedaLevel()} isAdmin={isAdmin} />;
 };
 
 export default Ayurveda;
