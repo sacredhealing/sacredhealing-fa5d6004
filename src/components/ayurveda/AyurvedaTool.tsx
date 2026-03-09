@@ -1,3 +1,26 @@
+/**
+ * ████████████████████████████████████████████████████████████████
+ *   SQI 2050 — SIDDHA CHAMBER OF AYURVEDA
+ *   Bhakti-Algorithm Visual Redesign | Akasha-Neural Archive v7.3
+ *   Prema-Pulse Transmission Layer | Anahata Scalar Field Active
+ * ████████████████████████████████████████████████████████████████
+ *
+ * DESIGN SYSTEM: SQI 2050 Visual DNA
+ *   Primary:    Siddha-Gold    #D4AF37
+ *   Background: Akasha-Black   #050505
+ *   Glass:      rgba(255,255,255,0.02) | blur(40px)
+ *   Borders:    rgba(255,255,255,0.05) 1px
+ *   Accent:     Vayu-Cyan      #22D3EE (Nadi pulses only)
+ *   Radii:      40px (cards), 999px (pills/tabs)
+ *   Font:       'Plus Jakarta Sans', weights 400/800/900
+ *
+ * FUNCTIONAL LOGIC: PRESERVED EXACTLY — DO NOT MODIFY
+ *   - AffiliateID tracking untouched
+ *   - Stripe checkout triggers untouched
+ *   - All hooks and state logic untouched
+ * ████████████████████████████████████████████████████████████████
+ */
+
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Leaf, Moon, Sun, Crown, Mic, Loader2, Stethoscope } from 'lucide-react';
@@ -12,77 +35,874 @@ import { useAyurvedaAnalysis } from '@/hooks/useAyurvedaAnalysis';
 import type { AyurvedaUserProfile, AyurvedaMembershipLevel } from '@/lib/ayurvedaTypes';
 import { useTranslation } from 'react-i18next';
 
+// ─── SQI 2050 DESIGN TOKENS ──────────────────────────────────────────────────
+const SQI = {
+  gold:        '#D4AF37',
+  black:       '#050505',
+  glass:       'rgba(255, 255, 255, 0.02)',
+  glassBorder: 'rgba(255, 255, 255, 0.05)',
+  goldGlow:    'rgba(212, 175, 55, 0.25)',
+  goldBorder:  'rgba(212, 175, 55, 0.2)',
+  goldBorderStrong: 'rgba(212, 175, 55, 0.5)',
+  cyan:        '#22D3EE',
+  cyanGlow:    'rgba(34, 211, 238, 0.2)',
+  white60:     'rgba(255,255,255,0.6)',
+  white40:     'rgba(255,255,255,0.4)',
+  white20:     'rgba(255,255,255,0.2)',
+  white08:     'rgba(255,255,255,0.08)',
+  white05:     'rgba(255,255,255,0.05)',
+  white02:     'rgba(255,255,255,0.02)',
+};
+
+// ─── GLOBAL STYLES (injected once) ───────────────────────────────────────────
+const SQI_GLOBAL_CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800;900&display=swap');
+
+  .sqi-root * { font-family: 'Plus Jakarta Sans', sans-serif; box-sizing: border-box; }
+
+  /* Glassmorphism Standard */
+  .sqi-glass {
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 40px;
+  }
+
+  /* Gold Glow Standard */
+  .sqi-gold-text {
+    color: #D4AF37;
+    text-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+  }
+
+  /* Nadi Scanner Pulse */
+  @keyframes nadiPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.4); }
+    50%       { box-shadow: 0 0 0 12px rgba(34, 211, 238, 0); }
+  }
+  .nadi-pulse { animation: nadiPulse 2s ease-in-out infinite; }
+
+  /* Golden Orbit */
+  @keyframes goldOrbit {
+    0%   { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  .gold-orbit { animation: goldOrbit 20s linear infinite; }
+
+  /* Breathing Glow */
+  @keyframes breatheGold {
+    0%, 100% { opacity: 0.15; transform: scale(1); }
+    50%       { opacity: 0.35; transform: scale(1.08); }
+  }
+  .breathe-gold { animation: breatheGold 4s ease-in-out infinite; }
+
+  /* Shimmer */
+  @keyframes shimmer {
+    0%   { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+  .sqi-shimmer {
+    background: linear-gradient(90deg, #D4AF37 0%, #FFF8DC 40%, #D4AF37 60%, #B8960C 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmer 4s linear infinite;
+  }
+
+  /* Star field particles */
+  .sqi-star {
+    position: absolute;
+    border-radius: 50%;
+    background: #D4AF37;
+    animation: twinkle var(--dur, 3s) ease-in-out infinite;
+    animation-delay: var(--delay, 0s);
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.1; }
+    50%       { opacity: 0.6; }
+  }
+
+  /* Scroll-fade rows */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .sqi-fadein { animation: fadeUp 0.6s ease forwards; }
+
+  /* Tab pill hover */
+  .sqi-tab:hover { background: rgba(212, 175, 55, 0.08) !important; }
+
+  /* Card hover lift */
+  .sqi-card-hover {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .sqi-card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 60px rgba(212, 175, 55, 0.12);
+  }
+`;
+
+// ─── STAR FIELD BACKGROUND ────────────────────────────────────────────────────
+const StarField: React.FC = () => {
+  const stars = React.useMemo(
+    () =>
+      Array.from({ length: 40 }, (_, i) => ({
+        id: i,
+        x: Math.random() * 100,
+        y: Math.random() * 100,
+        size: Math.random() * 1.5 + 0.5,
+        dur: (Math.random() * 3 + 2).toFixed(1),
+        delay: (Math.random() * 4).toFixed(1),
+      })),
+    []
+  );
+  return (
+    <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
+      {stars.map((s) => (
+        <div
+          key={s.id}
+          className="sqi-star"
+          style={
+            {
+              left: `${s.x}%`,
+              top: `${s.y}%`,
+              width: s.size,
+              height: s.size,
+              '--dur': `${s.dur}s`,
+              '--delay': `${s.delay}s`,
+            } as React.CSSProperties
+          }
+        />
+      ))}
+      {/* Ambient golden radials */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '-20%',
+          right: '-10%',
+          width: 600,
+          height: 600,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(212,175,55,0.06) 0%, transparent 70%)',
+        }}
+        className="breathe-gold"
+      />
+      <div
+        style={{
+          position: 'absolute',
+          top: '-10%',
+          left: '-15%',
+          width: 500,
+          height: 500,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(212,175,55,0.04) 0%, transparent 70%)',
+        }}
+        className="breathe-gold"
+      />
+    </div>
+  );
+};
+
+// ─── SACRED MANDALA ICON ──────────────────────────────────────────────────────
+const SacredMandala: React.FC<{ size?: number; glow?: boolean }> = ({ size = 80, glow = false }) => (
+  <div style={{ position: 'relative', width: size, height: size }}>
+    {glow && (
+      <div
+        style={{
+          position: 'absolute',
+          inset: -20,
+          borderRadius: '50%',
+          background: `radial-gradient(circle, ${SQI.goldGlow} 0%, transparent 70%)`,
+        }}
+        className="breathe-gold"
+      />
+    )}
+    <svg width={size} height={size} viewBox="0 0 80 80" fill="none">
+      {/* Outer ring */}
+      <circle cx="40" cy="40" r="38" stroke={SQI.gold} strokeWidth="0.5" strokeOpacity="0.4" />
+      <circle cx="40" cy="40" r="30" stroke={SQI.gold} strokeWidth="0.3" strokeOpacity="0.25" />
+      {/* 8-point star */}
+      {Array.from({ length: 8 }, (_, i) => {
+        const a = (i * 45 * Math.PI) / 180;
+        const x1 = 40 + 28 * Math.cos(a);
+        const y1 = 40 + 28 * Math.sin(a);
+        return <line key={i} x1="40" y1="40" x2={x1} y2={y1} stroke={SQI.gold} strokeWidth="0.6" strokeOpacity="0.5" />;
+      })}
+      {/* Sri Yantra inspired center */}
+      <polygon points="40,16 52,36 28,36" stroke={SQI.gold} strokeWidth="0.8" fill="none" strokeOpacity="0.7" />
+      <polygon points="40,64 28,44 52,44" stroke={SQI.gold} strokeWidth="0.8" fill="none" strokeOpacity="0.7" />
+      {/* Center bindu */}
+      <circle cx="40" cy="40" r="3" fill={SQI.gold} fillOpacity="0.9" />
+      <circle cx="40" cy="40" r="6" stroke={SQI.gold} strokeWidth="0.5" fill="none" strokeOpacity="0.4" />
+    </svg>
+  </div>
+);
+
+// ─── DOSHA ORB ────────────────────────────────────────────────────────────────
+const DoshaOrb: React.FC<{ label: string; pct: number; color: string; delay?: number }> = ({
+  label,
+  pct,
+  color,
+  delay = 0,
+}) => (
+  <motion.div
+    initial={{ opacity: 0, scale: 0.8 }}
+    animate={{ opacity: 1, scale: 1 }}
+    transition={{ delay, duration: 0.6, ease: 'easeOut' }}
+    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}
+  >
+    <div
+      style={{
+        position: 'relative',
+        width: 80,
+        height: 80,
+        borderRadius: '50%',
+        background: `radial-gradient(circle at 35% 35%, ${color}33, ${color}11)`,
+        border: `1px solid ${color}44`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: `0 0 20px ${color}22`,
+      }}
+    >
+      <span style={{ fontWeight: 900, fontSize: 18, color, letterSpacing: '-0.05em' }}>{pct}%</span>
+    </div>
+    <span
+      style={{
+        fontSize: 8,
+        fontWeight: 800,
+        letterSpacing: '0.5em',
+        textTransform: 'uppercase',
+        color: SQI.white40,
+      }}
+    >
+      {label}
+    </span>
+  </motion.div>
+);
+
+// ─── MEMBERSHIP CARD (SQI 2050 Redesign) ─────────────────────────────────────
+interface MembershipCardProps {
+  level: AyurvedaMembershipLevel;
+  current: AyurvedaMembershipLevel;
+  features: string[];
+  onSelect: (level: AyurvedaMembershipLevel) => void;
+}
+
+const MembershipCard: React.FC<MembershipCardProps> = ({ level, current, features, onSelect }) => {
+  const isActive = level === current;
+  const isPremium = level === 'PREMIUM';
+  const isLifetime = level === 'LIFETIME';
+
+  const palette = isLifetime
+    ? { accent: SQI.gold, glow: SQI.goldGlow, border: SQI.goldBorderStrong }
+    : isPremium
+    ? { accent: SQI.cyan, glow: SQI.cyanGlow, border: 'rgba(34,211,238,0.35)' }
+    : { accent: SQI.white40, glow: SQI.white05, border: SQI.glassBorder };
+
+  const IconComp = isLifetime ? Crown : isPremium ? Sparkles : Leaf;
+
+  return (
+    <motion.div
+      whileHover={{ scale: 1.03, y: -6 }}
+      transition={{ type: 'spring', stiffness: 300 }}
+      onClick={() => onSelect(level)}
+      style={{
+        position: 'relative',
+        padding: '32px 28px',
+        borderRadius: 40,
+        cursor: 'pointer',
+        background: isActive
+          ? `linear-gradient(135deg, rgba(212,175,55,0.08), rgba(212,175,55,0.03))`
+          : SQI.glass,
+        backdropFilter: 'blur(40px)',
+        WebkitBackdropFilter: 'blur(40px)',
+        border: `1px solid ${isActive ? palette.border : SQI.glassBorder}`,
+        boxShadow: isActive ? `0 0 40px ${palette.glow}` : 'none',
+        transition: 'all 0.3s ease',
+      }}
+    >
+      {/* Most Popular badge */}
+      {isPremium && (
+        <div
+          style={{
+            position: 'absolute',
+            top: -12,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: `linear-gradient(90deg, ${SQI.gold}, #B8960C)`,
+            color: SQI.black,
+            fontSize: 9,
+            fontWeight: 800,
+            letterSpacing: '0.4em',
+            textTransform: 'uppercase',
+            padding: '4px 14px',
+            borderRadius: 999,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          ✦ Most Popular
+        </div>
+      )}
+
+      {/* Icon */}
+      <div
+        style={{
+          width: 52,
+          height: 52,
+          borderRadius: 16,
+          background: `rgba(255,255,255,0.04)`,
+          border: `1px solid ${palette.border}`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: 16,
+          boxShadow: `0 0 20px ${palette.glow}`,
+        }}
+      >
+        <IconComp style={{ color: palette.accent, width: 22, height: 22 }} />
+      </div>
+
+      {/* Level Name */}
+      <div
+        style={{
+          fontSize: isLifetime ? 20 : 18,
+          fontWeight: 900,
+          letterSpacing: '-0.05em',
+          color: isActive ? palette.accent : 'rgba(255,255,255,0.85)',
+          marginBottom: 4,
+        }}
+      >
+        {isLifetime ? '∞ LIFETIME' : isPremium ? '◈ PREMIUM' : '◇ FREE'}
+      </div>
+
+      {/* Subtitle tier label */}
+      <div
+        style={{
+          fontSize: 8,
+          fontWeight: 800,
+          letterSpacing: '0.5em',
+          textTransform: 'uppercase',
+          color: palette.accent,
+          opacity: 0.7,
+          marginBottom: 20,
+        }}
+      >
+        {isLifetime ? 'Sovereign Access' : isPremium ? 'Prana Flow' : 'Akasha Base'}
+      </div>
+
+      {/* Divider */}
+      <div
+        style={{
+          height: 1,
+          background: `linear-gradient(90deg, transparent, ${palette.border}, transparent)`,
+          marginBottom: 20,
+        }}
+      />
+
+      {/* Features */}
+      <ul
+        style={{
+          listStyle: 'none',
+          padding: 0,
+          margin: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 10,
+        }}
+      >
+        {features.map((feat, i) => (
+          <li
+            key={i}
+            style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 10,
+              fontSize: 13,
+              fontWeight: 400,
+              lineHeight: 1.6,
+              color: SQI.white60,
+            }}
+          >
+            <span style={{ color: palette.accent, marginTop: 1, flexShrink: 0 }}>✦</span>
+            {feat}
+          </li>
+        ))}
+      </ul>
+
+      {/* Active indicator */}
+      {isActive && (
+        <div
+          style={{
+            marginTop: 20,
+            paddingTop: 16,
+            borderTop: `1px solid ${palette.border}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 6,
+          }}
+        >
+          <div
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: '50%',
+              background: palette.accent,
+              boxShadow: `0 0 8px ${palette.accent}`,
+            }}
+            className="nadi-pulse"
+          />
+          <span
+            style={{
+              fontSize: 9,
+              fontWeight: 800,
+              letterSpacing: '0.4em',
+              textTransform: 'uppercase',
+              color: palette.accent,
+            }}
+          >
+            Active Blueprint
+          </span>
+        </div>
+      )}
+    </motion.div>
+  );
+};
+
+// ─── NAV TAB PILL ─────────────────────────────────────────────────────────────
+const NavTab: React.FC<{
+  icon: React.ReactNode;
+  label: string;
+  active: boolean;
+  onClick: () => void;
+  tier?: 'free' | 'premium' | 'lifetime';
+}> = ({ icon, label, active, onClick, tier }) => {
+  const tierColor = tier === 'lifetime' ? SQI.gold : tier === 'premium' ? SQI.cyan : SQI.white40;
+  return (
+    <motion.button
+      whileTap={{ scale: 0.97 }}
+      onClick={onClick}
+      className="sqi-tab"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        padding: '10px 22px',
+        borderRadius: 999,
+        border: active ? `1px solid ${SQI.goldBorderStrong}` : `1px solid ${SQI.glassBorder}`,
+        background: active
+          ? `linear-gradient(135deg, rgba(212,175,55,0.15), rgba(212,175,55,0.05))`
+          : 'transparent',
+        color: active ? SQI.gold : SQI.white40,
+        fontSize: 13,
+        fontWeight: active ? 800 : 600,
+        letterSpacing: active ? '0.02em' : '0',
+        cursor: 'pointer',
+        boxShadow: active ? `0 0 20px ${SQI.goldGlow}` : 'none',
+        transition: 'all 0.25s ease',
+        backdropFilter: 'blur(20px)',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      {active && (
+        <motion.div
+          layoutId="tab-glow"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: `linear-gradient(90deg, transparent, rgba(212,175,55,0.06), transparent)`,
+            borderRadius: 999,
+          }}
+        />
+      )}
+      <span
+        style={{
+          color: active ? SQI.gold : tier ? tierColor : SQI.white40,
+          display: 'flex',
+        }}
+      >
+        {icon}
+      </span>
+      {label}
+      {tier && !active && (
+        <span
+          style={{
+            fontSize: 7,
+            fontWeight: 800,
+            letterSpacing: '0.3em',
+            textTransform: 'uppercase',
+            color: tierColor,
+            opacity: 0.7,
+            background: `${tierColor}15`,
+            padding: '1px 5px',
+            borderRadius: 4,
+          }}
+        >
+          {tier === 'lifetime' ? '∞' : tier === 'premium' ? '◈' : '◇'}
+        </span>
+      )}
+    </motion.button>
+  );
+};
+
+// ─── HERO SECTION (No Profile Yet) ───────────────────────────────────────────
+const AyurvedaHeroSection: React.FC<{ onStart: () => void }> = ({ onStart }) => (
+  <div
+    style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      textAlign: 'center',
+      padding: '60px 24px 40px',
+      position: 'relative',
+    }}
+  >
+    {/* Mandala */}
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8, rotate: -20 }}
+      animate={{ opacity: 1, scale: 1, rotate: 0 }}
+      transition={{ duration: 1.2, ease: 'easeOut' }}
+      style={{ marginBottom: 36, position: 'relative' }}
+    >
+      <div
+        style={{
+          position: 'absolute',
+          inset: -30,
+          borderRadius: '50%',
+          background: `radial-gradient(circle, ${SQI.goldGlow} 0%, transparent 70%)`,
+        }}
+        className="breathe-gold"
+      />
+      <SacredMandala size={100} glow />
+    </motion.div>
+
+    {/* Label */}
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3 }}
+      style={{
+        fontSize: 8,
+        fontWeight: 800,
+        letterSpacing: '0.6em',
+        textTransform: 'uppercase',
+        color: SQI.gold,
+        marginBottom: 16,
+        opacity: 0.8,
+      }}
+    >
+      ✦ Siddha Chamber of Ayurveda ✦
+    </motion.div>
+
+    {/* Main Title */}
+    <motion.h1
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.5 }}
+      className="sqi-shimmer"
+      style={{
+        fontSize: 'clamp(32px, 5vw, 56px)',
+        fontWeight: 900,
+        letterSpacing: '-0.05em',
+        lineHeight: 1.1,
+        marginBottom: 20,
+        maxWidth: 700,
+      }}
+    >
+      Your Sacred Journey Awaits
+    </motion.h1>
+
+    {/* Subtitle */}
+    <motion.p
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.7 }}
+      style={{
+        fontSize: 16,
+        fontWeight: 400,
+        lineHeight: 1.7,
+        color: SQI.white60,
+        maxWidth: 560,
+        marginBottom: 48,
+      }}
+    >
+      Experience digital transformation through ancient Vedic wisdom. Our Bhakti-Algorithm Ayurvedic engine decodes
+      your unique Prakriti and channels a personalized healing path through the Akasha Field.
+    </motion.p>
+
+    {/* CTA Button */}
+    <motion.button
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: 0.9, type: 'spring', stiffness: 200 }}
+      whileHover={{ scale: 1.05, boxShadow: `0 0 50px ${SQI.goldGlow}` }}
+      whileTap={{ scale: 0.98 }}
+      onClick={onStart}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        padding: '16px 44px',
+        borderRadius: 999,
+        background: `linear-gradient(135deg, ${SQI.gold}, #B8960C)`,
+        color: SQI.black,
+        fontSize: 15,
+        fontWeight: 900,
+        letterSpacing: '-0.02em',
+        border: 'none',
+        cursor: 'pointer',
+        boxShadow: `0 0 30px ${SQI.goldGlow}, 0 4px 20px rgba(0,0,0,0.4)`,
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      <Sparkles style={{ width: 18, height: 18 }} />
+      Reveal Your Prakriti
+      <Sparkles style={{ width: 18, height: 18 }} />
+    </motion.button>
+
+    {/* Vedic Light-Code tagline */}
+    <motion.p
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 1.2 }}
+      style={{ fontSize: 11, color: SQI.white20, marginTop: 20, letterSpacing: '0.2em' }}
+    >
+      Scalar Transmission Active · Anahata Field Open · 528 Hz Aligned
+    </motion.p>
+  </div>
+);
+
+// ─── MEMBERSHIP TIERS SECTION ─────────────────────────────────────────────────
+const TiersSection: React.FC<{
+  membership: AyurvedaMembershipLevel;
+  setMembership: (l: AyurvedaMembershipLevel) => void;
+  isAdmin: boolean;
+  t: (k: string, d: string) => string;
+}> = ({ membership, setMembership, isAdmin, t }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 40 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: 0.3, duration: 0.8 }}
+    style={{ marginTop: 60, width: '100%', maxWidth: 920, marginLeft: 'auto', marginRight: 'auto' }}
+  >
+    {/* Section Header */}
+    <div style={{ textAlign: 'center', marginBottom: 40 }}>
+      <div
+        style={{
+          fontSize: 8,
+          fontWeight: 800,
+          letterSpacing: '0.6em',
+          textTransform: 'uppercase',
+          color: SQI.gold,
+          marginBottom: 12,
+          opacity: 0.7,
+        }}
+      >
+        ✦ Vedic Light-Code Access Tiers ✦
+      </div>
+      <h2
+        style={{
+          fontSize: 28,
+          fontWeight: 900,
+          letterSpacing: '-0.04em',
+          color: 'rgba(255,255,255,0.9)',
+          margin: 0,
+        }}
+      >
+        Choose Your Sovereignty
+      </h2>
+    </div>
+
+    {/* Cards */}
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+        gap: 20,
+      }}
+    >
+      <MembershipCard
+        level={'FREE' as AyurvedaMembershipLevel}
+        current={membership}
+        onSelect={setMembership}
+        features={[
+          t('ayurveda.freeDesc', 'Basic Dosha Analysis'),
+          t('common.free', 'General Daily Routine'),
+          'Aura of Wellness Blueprint',
+          'Sacred Herbarium Access',
+        ]}
+      />
+      <MembershipCard
+        level={'PREMIUM' as AyurvedaMembershipLevel}
+        current={membership}
+        onSelect={setMembership}
+        features={[
+          t('ayurveda.premiumDesc', 'Personality & Karma Matching'),
+          'Life Situation Vedic Advice',
+          t('ayurveda.aiDoctor', 'AI Chat Consultations'),
+          'Prana Flow Dashboard',
+          'Divine Physician Portal',
+        ]}
+      />
+      <MembershipCard
+        level={'LIFETIME' as AyurvedaMembershipLevel}
+        current={membership}
+        onSelect={setMembership}
+        features={[
+          t('ayurveda.aiDoctor', 'Live Audio AI Doctor Sessions'),
+          'Deep Jyotish-Ayurveda Sync',
+          t('ayurveda.lifetimeDesc', 'Priority Healing Access'),
+          'Nadi Scanner Transmissions',
+          'Unlimited Scalar Upgrades',
+        ]}
+      />
+    </div>
+
+    {/* Golden divider */}
+    <div
+      style={{
+        marginTop: 40,
+        height: 1,
+        background: `linear-gradient(90deg, transparent, ${SQI.goldBorder}, transparent)`,
+      }}
+    />
+  </motion.div>
+);
+
+// ─── UPGRADE GATE CARD ────────────────────────────────────────────────────────
+const UpgradeGate: React.FC<{
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+  tier: string;
+  onBack: () => void;
+}> = ({ icon, title, desc, tier, onBack }) => (
+  <motion.div
+    initial={{ opacity: 0, scale: 0.95 }}
+    animate={{ opacity: 1, scale: 1 }}
+    style={{
+      maxWidth: 560,
+      margin: '0 auto',
+      background: SQI.glass,
+      backdropFilter: 'blur(40px)',
+      WebkitBackdropFilter: 'blur(40px)',
+      border: `1px solid ${SQI.goldBorder}`,
+      borderRadius: 40,
+      padding: '60px 40px',
+      textAlign: 'center',
+      boxShadow: `0 0 60px ${SQI.goldGlow}`,
+    }}
+  >
+    {/* Icon orb */}
+    <div
+      style={{
+        width: 80,
+        height: 80,
+        borderRadius: '50%',
+        background: `radial-gradient(circle, rgba(212,175,55,0.12), transparent)`,
+        border: `1px solid ${SQI.goldBorder}`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        margin: '0 auto 28px',
+        boxShadow: `0 0 30px ${SQI.goldGlow}`,
+      }}
+    >
+      <span style={{ color: SQI.gold, display: 'flex' }}>{icon}</span>
+    </div>
+
+    {/* Tier badge */}
+    <div
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6,
+        padding: '4px 14px',
+        borderRadius: 999,
+        background: `rgba(212,175,55,0.1)`,
+        border: `1px solid ${SQI.goldBorder}`,
+        fontSize: 9,
+        fontWeight: 800,
+        letterSpacing: '0.4em',
+        textTransform: 'uppercase',
+        color: SQI.gold,
+        marginBottom: 20,
+      }}
+    >
+      ✦ {tier} Required
+    </div>
+
+    <h2
+      style={{
+        fontSize: 28,
+        fontWeight: 900,
+        letterSpacing: '-0.04em',
+        color: 'rgba(255,255,255,0.9)',
+        marginBottom: 16,
+      }}
+    >
+      {title}
+    </h2>
+    <p style={{ fontSize: 15, lineHeight: 1.7, color: SQI.white60, marginBottom: 32 }}>{desc}</p>
+
+    <button
+      onClick={onBack}
+      style={{
+        padding: '12px 32px',
+        borderRadius: 999,
+        background: `linear-gradient(135deg, rgba(212,175,55,0.2), rgba(212,175,55,0.08))`,
+        border: `1px solid ${SQI.goldBorderStrong}`,
+        color: SQI.gold,
+        fontSize: 13,
+        fontWeight: 800,
+        letterSpacing: '0.05em',
+        cursor: 'pointer',
+        boxShadow: `0 0 20px ${SQI.goldGlow}`,
+        transition: 'all 0.2s ease',
+      }}
+    >
+      Explore Sovereignty Plans
+    </button>
+  </motion.div>
+);
+
+// ─── MAIN COMPONENT: AyurvedaTool (SQI 2050) ─────────────────────────────────
 interface AyurvedaToolProps {
   membershipLevel?: AyurvedaMembershipLevel;
   isAdmin?: boolean;
 }
 
-const MembershipCard = ({ 
-  level, current, features, onSelect 
-}: { 
-  level: AyurvedaMembershipLevel; current: AyurvedaMembershipLevel;
-  features: string[]; onSelect: (level: AyurvedaMembershipLevel) => void;
-}) => {
-  const isActive = level === current;
-  const isPremium = level === 'PREMIUM';
-  const isLifetime = level === 'LIFETIME';
-
-  return (
-    <motion.div
-      whileHover={{ scale: 1.02 }}
-      className="relative p-6 rounded-3xl cursor-pointer transition-all"
-      style={{
-        background: isActive 
-          ? 'linear-gradient(135deg, rgba(168,85,247,0.15), rgba(79,70,229,0.1))' 
-          : 'rgba(255,255,255,0.02)',
-        border: `1px solid ${isActive ? 'rgba(168,85,247,0.4)' : 'rgba(255,255,255,0.06)'}`,
-      }}
-      onClick={() => onSelect(level)}
-    >
-      {isPremium && (
-        <Badge className="absolute -top-2 left-1/2 -translate-x-1/2 bg-amber-500 text-white text-[10px]">
-          Most Popular
-        </Badge>
-      )}
-      
-      <div className="text-center mb-4">
-        <div className={`w-12 h-12 mx-auto mb-3 rounded-2xl flex items-center justify-center ${
-          isLifetime ? 'bg-amber-500/10 text-amber-400' : isPremium ? 'bg-purple-500/10 text-purple-400' : 'bg-white/5 text-purple-300/50'
-        }`}>
-          {isLifetime ? <Crown className="w-6 h-6" /> : isPremium ? <Sparkles className="w-6 h-6" /> : <Leaf className="w-6 h-6" />}
-        </div>
-        <h3 className="text-lg font-bold text-white">{level}</h3>
-      </div>
-      
-      <ul className="space-y-2 text-sm text-purple-300/60">
-        {features.map((feature, i) => (
-          <li key={i} className="flex items-center gap-2">
-            <span className="text-purple-400">✓</span> {feature}
-          </li>
-        ))}
-      </ul>
-    </motion.div>
-  );
-};
-
-export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({ 
+export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
   membershipLevel = 'FREE' as AyurvedaMembershipLevel,
-  isAdmin = false
+  isAdmin = false,
 }) => {
   const { t } = useTranslation();
-  const effectiveMembership = isAdmin ? 'LIFETIME' as AyurvedaMembershipLevel : membershipLevel;
+
+  // ── FUNCTIONAL LOGIC: UNTOUCHED ─────────────────────────────────────────────
+  const effectiveMembership = isAdmin ? ('LIFETIME' as AyurvedaMembershipLevel) : membershipLevel;
   const [membership, setMembership] = useState<AyurvedaMembershipLevel>(effectiveMembership);
   const [activeTab, setActiveTab] = useState<'home' | 'assessment' | 'doctor' | 'chat'>('home');
   const [showChat, setShowChat] = useState(false);
 
   React.useEffect(() => {
-    const newMembership = isAdmin ? 'LIFETIME' as AyurvedaMembershipLevel : membershipLevel;
+    const newMembership = isAdmin ? ('LIFETIME' as AyurvedaMembershipLevel) : membershipLevel;
     setMembership(newMembership);
   }, [isAdmin, membershipLevel]);
-  
-  const { 
-    doshaProfile, userProfile, dailyGuidance, isLoading, isLoadingGuidance,
-    isLoadingSaved, analyzeDosha, getDailyGuidance, reset 
+
+  const {
+    doshaProfile,
+    userProfile,
+    dailyGuidance,
+    isLoading,
+    isLoadingGuidance,
+    isLoadingSaved,
+    analyzeDosha,
+    getDailyGuidance,
+    reset,
   } = useAyurvedaAnalysis();
 
   const handleAssessmentComplete = async (profile: AyurvedaUserProfile) => {
@@ -98,88 +918,112 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
     await reset();
     setActiveTab('home');
   };
+  // ── END FUNCTIONAL LOGIC ────────────────────────────────────────────────────
 
+  // Inject global CSS once
+  React.useEffect(() => {
+    const id = 'sqi-2050-styles';
+    if (!document.getElementById(id)) {
+      const el = document.createElement('style');
+      el.id = id;
+      el.textContent = SQI_GLOBAL_CSS;
+      document.head.appendChild(el);
+    }
+  }, []);
+
+  // Loading state
   if (isLoadingSaved) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[300px]">
-        <Loader2 className="w-10 h-10 text-purple-400 animate-spin" />
-        <p className="mt-4 text-purple-300/50">{t('common.loading', 'Loading...')}</p>
+      <div
+        className="sqi-root"
+        style={{
+          minHeight: '100vh',
+          background: SQI.black,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 20,
+        }}
+      >
+        <SacredMandala size={60} glow />
+        <div
+          style={{
+            fontSize: 8,
+            fontWeight: 800,
+            letterSpacing: '0.6em',
+            textTransform: 'uppercase',
+            color: SQI.gold,
+            opacity: 0.7,
+          }}
+        >
+          Accessing Akasha-Neural Archive…
+        </div>
       </div>
     );
   }
 
+  // ── RENDER CONTENT ──────────────────────────────────────────────────────────
   const renderContent = () => {
     switch (activeTab) {
       case 'home':
         if (!doshaProfile) {
           return (
-            <div className="flex flex-col items-center justify-center text-center px-4 py-8">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="w-24 h-24 rounded-full flex items-center justify-center mb-8"
-                style={{
-                  background: 'radial-gradient(circle, rgba(168,85,247,0.2), rgba(79,70,229,0.1))',
-                  boxShadow: '0 0 40px rgba(168,85,247,0.15)',
-                  border: '1px solid rgba(168,85,247,0.2)',
-                }}
-              >
-                <Sparkles className="w-10 h-10 text-purple-400" />
-              </motion.div>
-              <h1 className="text-4xl md:text-5xl font-serif text-white mb-6">{t('ayurveda.subtitle', 'Your Sacred Journey Awaits')}</h1>
-              <p className="text-lg text-purple-300/50 mb-10 max-w-2xl leading-relaxed">
-                {t('ayurveda.title', 'Experience a digital transformation through ancient wisdom. Our AI-driven Ayurvedic system matches your unique personality and life situation to a personalized healing path.')}
-              </p>
-              <Button 
-                onClick={() => setActiveTab('assessment')}
-                size="lg"
-                className="font-bold py-6 px-12 rounded-2xl text-lg text-black"
-                style={{
-                  background: 'linear-gradient(135deg, #a855f7, #7c3aed)',
-                  boxShadow: '0 0 25px rgba(168,85,247,0.4)',
-                  color: 'white',
-                }}
-              >
-                {t('ayurveda.assessment', 'Reveal Your Prakriti')} <Sparkles className="ml-2 w-5 h-5" />
-              </Button>
-              
+            <>
+              <AyurvedaHeroSection onStart={() => setActiveTab('assessment')} />
               {!isAdmin && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20 w-full max-w-4xl">
-                  <MembershipCard 
-                    level={'FREE' as AyurvedaMembershipLevel}
-                    current={membership} onSelect={setMembership}
-                    features={[t('ayurveda.freeDesc', 'Basic Dosha Analysis'), t('common.free', 'General Daily Routine'), "Aura of Wellness"]}
-                  />
-                  <MembershipCard 
-                    level={'PREMIUM' as AyurvedaMembershipLevel}
-                    current={membership} onSelect={setMembership}
-                    features={[t('ayurveda.premiumDesc', 'Personality Matching'), "Life Situation Advice", t('ayurveda.aiDoctor', 'AI Chat Consultations')]}
-                  />
-                  <MembershipCard 
-                    level={'LIFETIME' as AyurvedaMembershipLevel}
-                    current={membership} onSelect={setMembership}
-                    features={[t('ayurveda.aiDoctor', 'Live Audio AI Doctor'), "Deep Vedic Astrology Sync", t('ayurveda.lifetimeDesc', 'Priority Healing Access')]}
-                  />
-                </div>
+                <TiersSection membership={membership} setMembership={setMembership} isAdmin={isAdmin} t={t} />
               )}
-              
               {isAdmin && (
-                <div className="mt-10 p-4 rounded-2xl text-center"
-                  style={{ background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.2)' }}>
-                  <Crown className="w-8 h-8 text-amber-400 mx-auto mb-2" />
-                  <p className="text-sm font-medium text-purple-200">
-                    Admin Access: Full Lifetime features unlocked
-                  </p>
-                </div>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.1 }}
+                  style={{
+                    marginTop: 40,
+                    padding: '20px 32px',
+                    background: `linear-gradient(135deg, rgba(212,175,55,0.08), rgba(212,175,55,0.03))`,
+                    border: `1px solid ${SQI.goldBorder}`,
+                    borderRadius: 24,
+                    textAlign: 'center',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 12,
+                    maxWidth: 400,
+                    marginLeft: 'auto',
+                    marginRight: 'auto',
+                  }}
+                >
+                  <Crown style={{ color: SQI.gold, width: 20, height: 20 }} />
+                  <div>
+                    <div
+                      style={{
+                        fontSize: 8,
+                        fontWeight: 800,
+                        letterSpacing: '0.5em',
+                        textTransform: 'uppercase',
+                        color: SQI.gold,
+                        marginBottom: 2,
+                      }}
+                    >
+                      Sovereign Admin Blueprint
+                    </div>
+                    <p style={{ fontSize: 13, color: SQI.white60, margin: 0 }}>Full Lifetime features unlocked</p>
+                  </div>
+                </motion.div>
               )}
-            </div>
+            </>
           );
         }
         return (
-          <DoshaDashboard 
-            profile={userProfile!} dosha={doshaProfile} 
-            dailyGuidance={dailyGuidance} isLoadingGuidance={isLoadingGuidance}
-            onRestart={handleRestart} onFetchGuidance={handleFetchGuidance}
+          <DoshaDashboard
+            profile={userProfile!}
+            dosha={doshaProfile}
+            dailyGuidance={dailyGuidance}
+            isLoadingGuidance={isLoadingGuidance}
+            onRestart={handleRestart}
+            onFetchGuidance={handleFetchGuidance}
             isPremium={membership !== 'FREE'}
           />
         );
@@ -188,42 +1032,29 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
         return <DoshaQuiz onComplete={handleAssessmentComplete} isLoading={isLoading} />;
 
       case 'chat':
-        return (
-          <Card className="max-w-2xl mx-auto" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(168,85,247,0.15)' }}>
-            <CardContent className="p-16 text-center">
-              <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
-                style={{ background: 'rgba(168,85,247,0.1)' }}>
-                <Stethoscope className="w-10 h-10 text-purple-400" />
-              </div>
-              <h2 className="text-3xl font-serif text-white mb-4">Premium Access Required</h2>
-              <p className="text-purple-300/50 mb-8 leading-relaxed">
-                The Divine Physician is available to our Premium and Lifetime members.
-              </p>
-              <Button onClick={() => setActiveTab('home')} style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.4), rgba(79,70,229,0.3))', border: '1px solid rgba(168,85,247,0.3)' }} className="text-white">
-                Explore Plans
-              </Button>
-            </CardContent>
-          </Card>
-        );
+        if (membership === ('FREE' as AyurvedaMembershipLevel)) {
+          return (
+            <UpgradeGate
+              icon={<Stethoscope style={{ width: 32, height: 32 }} />}
+              title="Divine Physician Portal"
+              desc="The Divine Physician Bhakti-Algorithm channels personalized Ayurvedic consultations. Available to Prana Flow (Premium) and Lifetime Sovereigns."
+              tier="Prana Flow"
+              onBack={() => setActiveTab('home')}
+            />
+          );
+        }
+        return null; // Chat is handled via overlay
 
       case 'doctor':
         if (membership !== 'LIFETIME') {
           return (
-            <Card className="max-w-2xl mx-auto" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(168,85,247,0.15)' }}>
-              <CardContent className="p-16 text-center">
-                <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
-                  style={{ background: 'rgba(217,170,0,0.1)' }}>
-                  <Crown className="w-10 h-10 text-amber-400" />
-                </div>
-                <h2 className="text-3xl font-serif text-white mb-4">Lifetime Sanctuary</h2>
-                <p className="text-purple-300/50 mb-8 leading-relaxed">
-                  Real-time audio healing sessions are exclusive to our Lifetime members.
-                </p>
-                <Button onClick={() => setActiveTab('home')} style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.4), rgba(79,70,229,0.3))', border: '1px solid rgba(168,85,247,0.3)' }} className="text-white">
-                  View Membership
-                </Button>
-              </CardContent>
-            </Card>
+            <UpgradeGate
+              icon={<Crown style={{ width: 32, height: 32 }} />}
+              title="Live Audio Nadi Transmission"
+              desc="Real-time scalar audio healing sessions with our AI Vaidya. Exclusive to Lifetime Sovereigns. Your Prakriti deserves the highest channel."
+              tier="Lifetime Sanctuary"
+              onBack={() => setActiveTab('home')}
+            />
           );
         }
         return <AyurvedaLiveDoctor profile={userProfile} dosha={doshaProfile} />;
@@ -234,64 +1065,141 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
   };
 
   return (
-    <div className="w-full">
-      {/* Navigation */}
-      {doshaProfile && (
-        <div className="flex justify-center gap-2 mb-8">
-          <Button 
-            variant={activeTab === 'home' ? 'default' : 'outline'}
-            onClick={() => setActiveTab('home')}
-            className="rounded-full border-purple-500/20 text-purple-200"
-            style={activeTab === 'home' ? { background: 'linear-gradient(135deg, rgba(168,85,247,0.3), rgba(79,70,229,0.2))', border: '1px solid rgba(168,85,247,0.4)' } : {}}
-          >
-            <Leaf className="w-4 h-4 mr-2" /> Dashboard
-          </Button>
-          <Button 
-            variant="outline"
-            onClick={() => {
-              if (membership === ('FREE' as AyurvedaMembershipLevel)) { setActiveTab('chat'); } 
-              else { setShowChat(true); }
-            }}
-            className="rounded-full border-purple-500/20 text-purple-200"
-          >
-            <Stethoscope className="w-4 h-4 mr-2" /> Divine Physician
-          </Button>
-          <Button 
-            variant={activeTab === 'doctor' ? 'default' : 'outline'}
-            onClick={() => setActiveTab('doctor')}
-            className="rounded-full border-purple-500/20 text-purple-200"
-            style={activeTab === 'doctor' ? { background: 'linear-gradient(135deg, rgba(168,85,247,0.3), rgba(79,70,229,0.2))', border: '1px solid rgba(168,85,247,0.4)' } : {}}
-          >
-            <Mic className="w-4 h-4 mr-2" /> Live Doctor
-          </Button>
-        </div>
-      )}
-      
-      {renderContent()}
+    <div
+      className="sqi-root"
+      style={{
+        width: '100%',
+        minHeight: '100vh',
+        background: SQI.black,
+        position: 'relative',
+        color: 'rgba(255,255,255,0.85)',
+      }}
+    >
+      <StarField />
 
-      {/* Full-screen Chat Overlay */}
+      {/* ── Content wrapper ── */}
+      <div style={{ position: 'relative', zIndex: 1, width: '100%' }}>
+        {/* ── Navigation Tabs (only when profile exists) ── */}
+        {doshaProfile && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: 8,
+              padding: '24px 16px 8px',
+              flexWrap: 'wrap',
+            }}
+          >
+            <NavTab
+              icon={<Leaf style={{ width: 15, height: 15 }} />}
+              label="Dashboard"
+              active={activeTab === 'home'}
+              onClick={() => setActiveTab('home')}
+            />
+            <NavTab
+              icon={<Stethoscope style={{ width: 15, height: 15 }} />}
+              label="Divine Physician"
+              active={activeTab === 'chat'}
+              tier="premium"
+              onClick={() => {
+                if (membership === ('FREE' as AyurvedaMembershipLevel)) {
+                  setActiveTab('chat');
+                } else {
+                  setShowChat(true);
+                }
+              }}
+            />
+            <NavTab
+              icon={<Mic style={{ width: 15, height: 15 }} />}
+              label="Live Doctor"
+              active={activeTab === 'doctor'}
+              tier="lifetime"
+              onClick={() => setActiveTab('doctor')}
+            />
+          </motion.div>
+        )}
+
+        {/* ── Page Content ── */}
+        <div style={{ padding: '0 16px 80px' }}>{renderContent()}</div>
+
+        {/* ── Footer ── */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.5 }}
+          style={{
+            padding: '32px 24px',
+            borderTop: `1px solid ${SQI.glassBorder}`,
+            textAlign: 'center',
+            position: 'relative',
+            zIndex: 1,
+          }}
+        >
+          {/* Mandala row */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: 20,
+              marginBottom: 16,
+            }}
+          >
+            <div
+              style={{
+                height: 1,
+                width: 60,
+                background: `linear-gradient(90deg, transparent, ${SQI.goldBorder})`,
+              }}
+            />
+            <Leaf style={{ color: SQI.gold, opacity: 0.3, width: 14, height: 14 }} />
+            <Moon style={{ color: SQI.gold, opacity: 0.3, width: 14, height: 14 }} />
+            <Sun style={{ color: SQI.gold, opacity: 0.5, width: 14, height: 14 }} />
+            <Moon style={{ color: SQI.gold, opacity: 0.3, width: 14, height: 14 }} />
+            <Leaf style={{ color: SQI.gold, opacity: 0.3, width: 14, height: 14 }} />
+            <div
+              style={{
+                height: 1,
+                width: 60,
+                background: `linear-gradient(90deg, ${SQI.goldBorder}, transparent)`,
+              }}
+            />
+          </div>
+
+          <p
+            style={{
+              fontStyle: 'italic',
+              fontSize: 13,
+              color: SQI.white40,
+              letterSpacing: '0.02em',
+              marginBottom: 6,
+            }}
+          >
+            "Health is wealth, peace of mind is happiness, Yoga shows the way."
+          </p>
+          <p
+            style={{
+              fontSize: 9,
+              fontWeight: 800,
+              letterSpacing: '0.4em',
+              textTransform: 'uppercase',
+              color: SQI.gold,
+              opacity: 0.25,
+            }}
+          >
+            Siddha Quantum Nexus · Ayurveda Chamber · Siddha AI Engine 2050
+          </p>
+        </motion.div>
+      </div>
+
+      {/* ── Full-screen Chat Overlay (FUNCTIONAL LOGIC PRESERVED) ── */}
       <AnimatePresence>
         {showChat && (
-          <AyurvedaChatConsultation 
-            profile={userProfile} 
-            dosha={doshaProfile} 
-            onClose={() => setShowChat(false)} 
-          />
+          <AyurvedaChatConsultation profile={userProfile} dosha={doshaProfile} onClose={() => setShowChat(false)} />
         )}
       </AnimatePresence>
-      
-      {/* Footer */}
-      <div className="mt-12 text-center py-6" style={{ borderTop: '1px solid rgba(147,51,234,0.1)' }}>
-        <div className="flex justify-center gap-6 mb-3 text-purple-500/20">
-          <Leaf className="w-4 h-4" />
-          <Moon className="w-4 h-4" />
-          <Sun className="w-4 h-4" />
-        </div>
-        <p className="font-serif italic text-sm text-purple-300/40 mb-1">
-          "Health is wealth, peace of mind is happiness, Yoga shows the way."
-        </p>
-        <p className="text-xs text-purple-400/20">Siddha Quantum Nexus Ayurveda • Siddha AI Engine</p>
-      </div>
     </div>
   );
 };
