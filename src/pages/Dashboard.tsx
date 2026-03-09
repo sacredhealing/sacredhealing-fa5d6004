@@ -96,6 +96,7 @@ const Dashboard: React.FC = () => {
 
   const { profile: userProfile } = useProfile();
   const { isPremium, tier } = useMembership();
+  const { isAdmin } = useAdminRole();
   const horaWatch = useHoraWatch({ timezone: 'Europe/Stockholm' });
   const { reading: vedicReading, generateReading } = useAIVedicReading();
 
