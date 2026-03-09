@@ -873,3 +873,24 @@ function QuantumApothecaryInner() {
     </div>
   );
 }
+
+export default function QuantumApothecary() {
+  const { user, isLoading: authLoading } = useAuth();
+  const { tier, loading: membershipLoading } = useMembership();
+  const { isAdmin } = useAdminRole();
+
+  if (authLoading || membershipLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#050505] text-white">
+        <span className="text-sm uppercase tracking-[0.3em] text-white/40">Loading…</span>
+      </div>
+    );
+  }
+
+  if (!user) return <Navigate to="/auth" replace />;
+  if (!hasFeatureAccess(isAdmin, tier, FEATURE_TIER.quantumApothecary)) {
+    return <Navigate to="/akasha-infinity" replace />;
+  }
+
+  return <QuantumApothecaryInner />;
+}

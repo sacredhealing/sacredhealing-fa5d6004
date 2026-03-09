@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Compass, Sparkles, Home, Activity, Zap, Map, Info, X, BookOpen, 
@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useAuth } from '@/hooks/useAuth';
+import { useMembership } from '@/hooks/useMembership';
+import { hasFeatureAccess, FEATURE_TIER } from '@/lib/tierAccess';
 import TempleGateIcon from '@/components/icons/TempleGateIcon';
 
 // ─── Data ───────────────────────────────────────────────────────────────────
