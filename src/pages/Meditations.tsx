@@ -519,7 +519,12 @@ const MeditationRowSQI: React.FC<{
           fontSize: 13, fontWeight: 500,
           letterSpacing: '.02em',
           color: isActive ? '#D4AF37' : 'rgba(255,255,255,0.88)',
-          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical' as const,
+          lineHeight: 1.35,
           marginBottom: 3,
         }}>
           {displayTitle}
