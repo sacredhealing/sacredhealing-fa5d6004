@@ -113,7 +113,7 @@ function calcSaturation(distance: number, intensity: number) {
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-export default function TempleHome() {
+function TempleHomeInner() {
   const navigate = useNavigate();
   const { isAdmin, isLoading: adminLoading } = useAdminRole();
   const { isLoading: authLoading } = useAuth();
