@@ -13,6 +13,7 @@ import { usePresenceState } from "@/features/presence/usePresenceState";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { useMeditationContentLanguage } from "@/features/meditations/useContentLanguage";
 import { useMembership } from "@/hooks/useMembership";
+import { getTierRank, FEATURE_TIER, getSalesPageForRank, hasFeatureAccess } from "@/lib/tierAccess";
 import { useAuth } from "@/hooks/useAuth";
 import { useAkashicAccess } from "@/hooks/useAkashicAccess";
 import { useAdminRole } from "@/hooks/useAdminRole";
