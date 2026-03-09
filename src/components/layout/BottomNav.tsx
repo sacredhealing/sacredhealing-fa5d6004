@@ -7,7 +7,7 @@ import MerkabaIcon from '@/components/icons/MerkabaIcon';
 import ThirdEyeIcon from '@/components/icons/ThirdEyeIcon';
 import MalaBeadsIcon from '@/components/icons/MalaBeadsIcon';
 import PalmLeafIcon from '@/components/icons/PalmLeafIcon';
-import AlchemicalStarIcon from '@/components/icons/AlchemicalStarIcon';
+import StarPentagramIcon from '@/components/icons/StarPentagramIcon';
 import AtmaIcon from '@/components/icons/AtmaIcon';
 
 const NAV_ITEMS = [
@@ -15,7 +15,7 @@ const NAV_ITEMS = [
   { to: '/meditations', icon: ThirdEyeIcon, labelKey: 'nav_meditate', label: 'Dhyana' },
   { to: '/mantras', icon: MalaBeadsIcon, labelKey: 'nav_mantras', label: 'Nada' },
   { to: '/explore', icon: PalmLeafIcon, labelKey: 'nav_library', label: 'Akasha' },
-  { to: '/healing', icon: AlchemicalStarIcon, labelKey: 'header_healing', label: 'Soma' },
+  { to: '/healing', icon: StarPentagramIcon, labelKey: 'header_healing', label: 'Soma' },
   { to: '/profile', icon: AtmaIcon, labelKey: 'nav_profile', label: 'Avatar' },
 ];
 
