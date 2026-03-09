@@ -336,5 +336,24 @@ const VayuProtocolInner: React.FC = () => {
   );
 };
 
-export default VayuProtocol;
+export default function VayuProtocol() {
+  const { user, isLoading: authLoading } = useAuth();
+  const { tier, loading: membershipLoading } = useMembership();
+  const { isAdmin } = useAdminRole();
+
+  if (authLoading || membershipLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#050505] text-white">
+        <span className="text-sm uppercase tracking-[0.3em] text-white/40">Loading…</span>
+      </div>
+    );
+  }
+
+  if (!user) return <Navigate to="/auth" replace />;
+  if (!hasFeatureAccess(isAdmin, tier, FEATURE_TIER.vayuProtocol)) {
+    return <Navigate to="/siddha-quantum" replace />;
+  }
+
+  return <VayuProtocolInner />;
+}
 
