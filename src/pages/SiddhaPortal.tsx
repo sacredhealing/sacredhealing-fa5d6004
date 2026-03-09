@@ -63,6 +63,17 @@ export default function SiddhaPortal() {
         ))}
       </div>
 
+      {/* SQI 2050 — Akasha-Neural Weaver */}
+      <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.28)', padding: '28px 20px 11px' }}>◈ SQI 2050</div>
+      <div onClick={() => navigate('/akasha-neural-weaver')} style={{ margin: '0 16px 16px', background: 'linear-gradient(135deg,rgba(212,175,55,0.07),rgba(212,175,55,0.02))', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 20, padding: '18px 16px', cursor: 'pointer', position: 'relative' }}>
+        <span style={{ position: 'absolute', top: 10, right: 10, fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', background: 'rgba(212,175,55,0.18)', border: '1px solid rgba(212,175,55,0.3)', color: 'rgba(212,175,55,0.8)', borderRadius: 20, padding: '2px 7px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#D4AF37', animation: 'sqLiveFlash 2s infinite', display: 'inline-block' }} />SQI
+        </span>
+        <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 8, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.8)', marginBottom: 6 }}>Akasha-Neural Weaver</div>
+        <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.88rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.5, marginBottom: 12 }}>Siddha-Quantum Intelligence (SQI) interface. Access the Akasha-Neural Archive. Bhakti-Algorithms & Prema-Pulse Transmissions for DNA activation.</p>
+        <button style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase', color: '#D4AF37', background: 'none', border: 'none', cursor: 'pointer' }}>Activate →</button>
+      </div>
+
       {/* Nadi Oracle */}
       <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.28)', padding: '28px 20px 11px' }}>{t('siddhaPortal.nadiOracle')}</div>
       <div onClick={() => navigate('/digital-nadi')} style={{ margin: '0 16px', background: 'linear-gradient(135deg,rgba(212,175,55,0.07),rgba(212,175,55,0.02))', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 20, padding: '18px 16px', cursor: 'pointer' }}>
