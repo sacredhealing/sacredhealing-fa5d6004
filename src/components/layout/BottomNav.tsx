@@ -16,7 +16,7 @@ const NAV_ITEMS = [
   { to: '/mantras', icon: MalaBeadsIcon, labelKey: 'nav_mantras', label: 'Vedic Light-Codes' },
   { to: '/explore', icon: PalmLeafIcon, labelKey: 'nav_library', label: 'Akasha' },
   { to: '/healing', icon: AlchemicalStarIcon, labelKey: 'header_healing', label: 'Bio-Field Alchemy' },
-  { to: '/profile', icon: AtmaIcon, labelKey: 'nav_profile', label: 'Avatar Blueprint' },
+  { to: '/profile', icon: AtmaIcon, labelKey: 'nav_profile', label: 'Avatar' },
 ];
 
 export const BottomNav: React.FC = () => {
