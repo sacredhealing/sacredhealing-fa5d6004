@@ -1362,5 +1362,3 @@ Rest in this peaceful state. When you're ready, gently open your eyes, knowing y
     </div>
   );
 };
-
-export default Admin;
