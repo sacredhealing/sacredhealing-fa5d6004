@@ -32,7 +32,7 @@ import SpectralVisualizer from '@/components/soulmeditate/SpectralVisualizer';
 import NeuralSourceInput from '@/components/soulmeditate/NeuralSourceInput';
 import DSPMasteringRack from '@/components/soulmeditate/DSPMasteringRack';
 import SpectralInsights from '@/components/soulmeditate/SpectralInsights';
-import { StyleGrid, MeditationStyle } from '@/components/soulmeditate/StyleGrid';
+import StyleGrid, { MeditationStyle } from '@/components/soulmeditate/StyleGrid';
 import HealingFrequencySelector from '@/components/soulmeditate/HealingFrequencySelector';
 import BrainwaveSelector from '@/components/soulmeditate/BrainwaveSelector';
 import ProcessingTerminal from '@/components/soulmeditate/ProcessingTerminal';
@@ -827,12 +827,13 @@ export default function CreativeSoulMeditationTool() {
               </div>
               <StyleGrid
                 activeStyle={activeStyle}
-                onStyleChange={setActiveStyle}
-                engine={engine}
+                onStyleSelect={setActiveStyle}
+                atmosphereVolume={volumes.ambient / 100}
+                onAtmosphereVolumeChange={(v) =>
+                  setVolumes(prev => ({ ...prev, ambient: Math.round(v * 100) }))
+                }
                 onRefreshSound={handleRefreshSound}
-                isRefreshing={isRefreshingSound}
-                volumes={volumes}
-                onVolumeChange={(key, val) => setVolumes(v => ({ ...v, [key]: val }))}
+                isRefreshingSound={isRefreshingSound}
               />
             </div>
           </SQISection>
