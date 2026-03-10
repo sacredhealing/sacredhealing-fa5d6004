@@ -161,7 +161,7 @@ export default function Community() {
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
   const [activeView, setActiveView] = useState<ActiveView>(isMobile ? 'chat' : 'feed');
-  const [activeChannelId, setActiveChannelId] = useState<ChannelId | null>(isMobile ? null : 'divine-sangha');
+  const [activeChannelId, setActiveChannelId] = useState<ChannelId>('divine-sangha');
   const [onlineCount, setOnlineCount] = useState(108);
   const [liveMeetingUrl, setLiveMeetingUrl] = useState<string | null>(null);
   const [showMembersSidebar, setShowMembersSidebar] = useState(true);
@@ -200,9 +200,7 @@ export default function Community() {
     setActiveView('meeting');
   };
 
-  const activeChannel = activeChannelId
-    ? COMMUNITY_CHANNELS.find(c => c.id === activeChannelId) || COMMUNITY_CHANNELS[0]
-    : null;
+  const activeChannel = COMMUNITY_CHANNELS.find(c => c.id === activeChannelId) || COMMUNITY_CHANNELS[0];
 
   return (
     <div className="sqi-community-root">
@@ -335,13 +333,13 @@ export default function Community() {
           <CommunityFeed isAdmin={isAdmin} />
         )}
 
-        {/* Inline channel list on mobile when no channel is selected */}
-        {isMobile && activeView === 'chat' && !activeChannelId && (
+        {/* Inline channel list on mobile (quick access) */}
+        {isMobile && activeView === 'chat' && (
           <div className="sqi-mobile-channel-list">
             <ChannelSection
               label="Public Channels"
               channels={COMMUNITY_CHANNELS.filter(c => c.access === 'public')}
-              activeChannelId={activeChannelId ?? ''}
+              activeChannelId={activeChannelId}
               canAccess={canAccessChannel}
               onSelect={handleChannelSelect}
             />
@@ -349,7 +347,7 @@ export default function Community() {
               label="Sacred Spaces"
               sublabel="Siddha Quantum · Akasha Infinity"
               channels={COMMUNITY_CHANNELS.filter(c => c.access === 'sacred')}
-              activeChannelId={activeChannelId ?? ''}
+              activeChannelId={activeChannelId}
               canAccess={canAccessChannel}
               onSelect={handleChannelSelect}
               isAdmin={isAdmin}
@@ -358,7 +356,7 @@ export default function Community() {
               label="Private Channels"
               sublabel="Invite Only"
               channels={COMMUNITY_CHANNELS.filter(c => c.access === 'private')}
-              activeChannelId={activeChannelId ?? ''}
+              activeChannelId={activeChannelId}
               canAccess={canAccessChannel}
               onSelect={handleChannelSelect}
               isAdmin={isAdmin}
@@ -415,8 +413,8 @@ export default function Community() {
             </div>
             <div className="sqi-golive-wrap">
               <GoLiveButton
-                channelId={activeChannelId ?? 'divine-sangha'}
-                channelName={activeChannel?.name ?? 'Divine Sangha'}
+                channelId={activeChannelId}
+                channelName={activeChannel.name}
                 isAdmin={isAdmin}
                 onGoLive={handleGoLive}
               />
