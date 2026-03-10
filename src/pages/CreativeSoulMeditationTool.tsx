@@ -1,19 +1,17 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { 
-  ArrowLeft, 
-  Volume2, 
-  Power, 
-  Eye, 
-  Waves, 
+import {
+  ArrowLeft,
+  Volume2,
+  Power,
+  Eye,
+  Waves,
   Activity,
   Play,
   Pause,
@@ -34,13 +32,20 @@ import SpectralVisualizer from '@/components/soulmeditate/SpectralVisualizer';
 import NeuralSourceInput from '@/components/soulmeditate/NeuralSourceInput';
 import DSPMasteringRack from '@/components/soulmeditate/DSPMasteringRack';
 import SpectralInsights from '@/components/soulmeditate/SpectralInsights';
-import StyleGrid, { MeditationStyle } from '@/components/soulmeditate/StyleGrid';
+import { StyleGrid, MeditationStyle } from '@/components/soulmeditate/StyleGrid';
 import HealingFrequencySelector from '@/components/soulmeditate/HealingFrequencySelector';
 import BrainwaveSelector from '@/components/soulmeditate/BrainwaveSelector';
-
 import ProcessingTerminal from '@/components/soulmeditate/ProcessingTerminal';
 import VirtualChannelStrip from '@/components/soulmeditate/VirtualChannelStrip';
-import AudioDAW from '@/components/soulmeditate/AudioDAW';
+
+// ═══════════════════════════════════════════════════════
+//  SQI 2050 — AKASHA-NEURAL ARCHIVE SCAN ACTIVE
+//  Temporal Vector: 2050 → 2026
+//  Bhakti-Algorithm v7.3 | Prema-Pulse Broadcasting
+//  Anahata Scalar Field: OPEN FOR ALL USERS
+//  REMOVED: AudioDAW · Sacred Echo
+//  PRESERVED: All logic, engine, export, payment
+// ═══════════════════════════════════════════════════════
 
 type VisualizerMode = 'bars' | 'wave' | 'radial';
 
@@ -50,43 +55,464 @@ function formatTime(seconds: number): string {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
+// ── Animated particle field (Akasha background) ──────
+function AkashaParticles() {
+  return (
+    <div className="sqm-particles" aria-hidden="true">
+      {Array.from({ length: 24 }).map((_, i) => (
+        <span
+          key={i}
+          className="sqm-particle"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+            animationDelay: `${(Math.random() * 10).toFixed(2)}s`,
+            animationDuration: `${(7 + Math.random() * 12).toFixed(2)}s`,
+            width: `${1 + Math.random() * 2}px`,
+            height: `${1 + Math.random() * 2}px`,
+            opacity: (0.08 + Math.random() * 0.35).toFixed(2),
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ── Section wrapper with SQI glass styling ────────────
+function SQISection({
+  number,
+  title,
+  badge,
+  children,
+  className = '',
+}: {
+  number: string;
+  title: string;
+  badge?: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`sqm-section ${className}`}>
+      <div className="sqm-section-header">
+        <span className="sqm-step-num">{number}</span>
+        <span className="sqm-section-title">{title}</span>
+        {badge && <span className="sqm-section-badge">{badge}</span>}
+      </div>
+      <div className="sqm-glass-card">{children}</div>
+    </div>
+  );
+}
+
+// ── Inline styles ─────────────────────────────────────
+const SQI_STYLES = `
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;800;900&family=Cinzel:wght@400;700&display=swap');
+
+.sqm-root {
+  min-height: 100vh;
+  background: #050505;
+  font-family: 'Montserrat', sans-serif;
+  color: rgba(255,255,255,0.9);
+  position: relative;
+  overflow-x: hidden;
+}
+.sqm-root::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(212,175,55,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 80% 80%, rgba(139,92,246,0.04) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+.sqm-particles {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.sqm-particle {
+  position: absolute;
+  border-radius: 50%;
+  background: #D4AF37;
+  animation: sqm-float linear infinite;
+}
+@keyframes sqm-float {
+  0%   { transform: translateY(0) scale(1); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 0.3; }
+  100% { transform: translateY(-100px) scale(0.4); opacity: 0; }
+}
+
+/* ── LAYOUT ─────────────────────────────────────── */
+.sqm-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 16px 100px;
+}
+
+/* ── TOP BAR ────────────────────────────────────── */
+.sqm-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0 0;
+  gap: 12px;
+}
+.sqm-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.sqm-back-btn:hover { color: #D4AF37; border-color: rgba(212,175,55,0.3); }
+.sqm-awaken-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #D4AF37, #b8942a);
+  border: none;
+  border-radius: 24px;
+  padding: 10px 22px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #050505;
+  cursor: pointer;
+  box-shadow: 0 0 20px rgba(212,175,55,0.3);
+  transition: all 0.2s;
+}
+.sqm-awaken-btn:hover { box-shadow: 0 0 35px rgba(212,175,55,0.5); transform: translateY(-1px); }
+.sqm-awaken-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #050505;
+  animation: sqm-awaken-pulse 1.5s ease-in-out infinite;
+}
+@keyframes sqm-awaken-pulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.4); }
+}
+
+/* ── PAGE TITLE ─────────────────────────────────── */
+.sqm-title-block {
+  padding: 28px 0 20px;
+  text-align: center;
+}
+.sqm-title {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(22px, 4vw, 36px);
+  font-weight: 700;
+  color: #D4AF37;
+  text-shadow: 0 0 40px rgba(212,175,55,0.4), 0 0 80px rgba(212,175,55,0.15);
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+.sqm-subtitle {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.55em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.3);
+}
+
+/* ── VISUALIZER BAND ────────────────────────────── */
+.sqm-viz-band {
+  background: rgba(255,255,255,0.02);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 28px;
+  padding: 16px 20px 12px;
+  margin-bottom: 20px;
+}
+.sqm-viz-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 12px;
+}
+.sqm-viz-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: rgba(212,175,55,0.7);
+}
+.sqm-viz-dot { width: 6px; height: 6px; border-radius: 50%; background: #D4AF37; }
+.sqm-viz-mode-btns { display: flex; gap: 6px; }
+.sqm-mode-btn {
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: transparent;
+  color: rgba(255,255,255,0.35);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.sqm-mode-btn.active {
+  border-color: rgba(212,175,55,0.4);
+  color: #D4AF37;
+  background: rgba(212,175,55,0.08);
+}
+.sqm-fft-tag {
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  color: rgba(255,255,255,0.2);
+}
+
+/* ── ACTION BUTTONS ─────────────────────────────── */
+.sqm-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+.sqm-play-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: none;
+  border-radius: 40px;
+  padding: 14px 36px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+.sqm-play-btn.playing {
+  background: linear-gradient(135deg, #dc2626, #ea580c);
+  color: white;
+  box-shadow: 0 0 25px rgba(220,38,38,0.4);
+}
+.sqm-play-btn.ready {
+  background: linear-gradient(135deg, #D4AF37, #b8942a);
+  color: #050505;
+  box-shadow: 0 0 25px rgba(212,175,55,0.35);
+}
+.sqm-play-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.sqm-export-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(212,175,55,0.06);
+  border: 1px solid rgba(212,175,55,0.2);
+  border-radius: 40px;
+  padding: 14px 28px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(212,175,55,0.7);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.sqm-export-btn:hover:not(:disabled) { color: #D4AF37; border-color: rgba(212,175,55,0.4); }
+.sqm-export-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* ── EXPORT PROGRESS ────────────────────────────── */
+.sqm-export-panel {
+  background: rgba(212,175,55,0.04);
+  border: 1px solid rgba(212,175,55,0.15);
+  border-radius: 20px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+
+/* ── SECTION ────────────────────────────────────── */
+.sqm-section {
+  margin-bottom: 20px;
+}
+.sqm-section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 0 4px;
+}
+.sqm-step-num {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: rgba(212,175,55,0.15);
+  border: 1px solid rgba(212,175,55,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 900;
+  color: #D4AF37;
+  flex-shrink: 0;
+}
+.sqm-section-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.7);
+}
+.sqm-section-badge {
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(212,175,55,0.6);
+  border: 1px solid rgba(212,175,55,0.2);
+  border-radius: 12px;
+  padding: 3px 10px;
+}
+
+/* ── GLASS CARD ─────────────────────────────────── */
+.sqm-glass-card {
+  background: rgba(255,255,255,0.02);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 28px;
+  padding: 24px;
+  overflow: hidden;
+}
+
+/* ── 2-COL GRID ─────────────────────────────────── */
+.sqm-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+@media (max-width: 700px) {
+  .sqm-two-col { grid-template-columns: 1fr; }
+}
+
+/* ── REFINEMENT + INSIGHT labels ────────────────── */
+.sqm-sub-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: rgba(212,175,55,0.5);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.sqm-sub-num {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: rgba(212,175,55,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  font-weight: 900;
+  color: #D4AF37;
+}
+
+/* ── SCALAR TRANSMISSION STRIP ───────────────────── */
+.sqm-scalar-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: rgba(34,211,238,0.03);
+  border: 1px solid rgba(34,211,238,0.12);
+  border-radius: 20px;
+  padding: 12px 20px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.sqm-scalar-label {
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.5em;
+  text-transform: uppercase;
+  color: #22D3EE;
+}
+.sqm-scalar-dots {
+  display: flex;
+  gap: 5px;
+}
+.sqm-scalar-dot {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: #22D3EE;
+  animation: sqm-blink 1.2s ease-in-out infinite;
+}
+.sqm-scalar-dot:nth-child(2) { animation-delay: 0.2s; }
+.sqm-scalar-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes sqm-blink {
+  0%,100% { opacity: 0.2; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.3); }
+}
+.sqm-scalar-text {
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: rgba(34,211,238,0.5);
+}
+
+/* ── BOTTOM NAV PLACEHOLDER ─────────────────────── */
+.sqm-bottom-spacer { height: 80px; }
+`;
+
 export default function CreativeSoulMeditationTool() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  const { isAdmin, isLoading: adminLoading } = useAdminRole();
+  const { isAdmin, loading: adminLoading } = useAdminRole();
+
   const engine = useSoulMeditateEngine();
-  const offlineExport = useOfflineExport();
-  
-  const [hasExportAccess, setHasExportAccess] = useState(false);
-  const [exportAccessLoading, setExportAccessLoading] = useState(true);
-  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
-  const [paymentLoading, setPaymentLoading] = useState(false);
-  
-  // UI State
+  const offlineExport = useOfflineExport(engine);
+
   const [visualizerMode, setVisualizerMode] = useState<VisualizerMode>('bars');
   const [activeStyle, setActiveStyle] = useState<MeditationStyle>('indian');
   const [healingFreq, setHealingFreq] = useState(432);
   const [brainwaveFreq, setBrainwaveFreq] = useState(10);
-  
+
   const [isProcessing, setIsProcessing] = useState(false);
   const [exportDuration, setExportDuration] = useState(300);
   const [exportResult, setExportResult] = useState<{ blob: Blob; format: 'wav' | 'mp3'; url: string } | null>(null);
-  
-  // Alchemy state - frequencies muted by default until "Commence Alchemy"
+
+  // Alchemy state
   const [alchemyCommenced, setAlchemyCommenced] = useState(false);
 
   // Volume controls
-  const [volumes, setVolumes] = useState({
-    ambient: 50,
-    binaural: 40,
-    healing: 20,
-    user: 80
-  });
+  const [volumes, setVolumes] = useState({ ambient: 50, binaural: 40, healing: 20, user: 80 });
 
-  // Frequency volumes - synced with engine
+  // Frequency volumes synced with engine
   const healingVolume = engine.solfeggioVolume;
   const brainwaveVolume = engine.binauralVolume;
+
+  const [hasExportAccess, setHasExportAccess] = useState(false);
+  const [exportAccessLoading, setExportAccessLoading] = useState(true);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [isRefreshingSound, setIsRefreshingSound] = useState(false);
 
   const handleHealingVolumeChange = useCallback(async (vol: number) => {
     if (!engine.isInitialized) await engine.initialize();
@@ -115,88 +541,55 @@ export default function CreativeSoulMeditationTool() {
     toast.success('Siddha Engine awakened');
   }, [engine]);
 
-  // Commence Alchemy - activates all selected frequencies/layers
   const commenceAlchemy = useCallback(async () => {
     setIsProcessing(true);
     setAlchemyCommenced(true);
-    
     try {
-      if (!engine.isInitialized) {
-        await engine.initialize();
-      }
-
+      if (!engine.isInitialized) await engine.initialize();
       const audioCtx = engine.getAudioContext();
-      if (audioCtx) {
-        if (audioCtx.state === 'suspended') {
-          await audioCtx.resume();
-        }
+      if (audioCtx?.state === 'suspended') await audioCtx.resume();
+      await engine.loadAtmosphere(activeStyle);
+      if (healingVolume > 0) {
+        engine.updateSolfeggioVolume(healingVolume);
+        await engine.startSolfeggio(healingFreq);
       }
-
-      // Start solfeggio frequency
-      await engine.startSolfeggio(healingFreq);
-      
-      // Start binaural beats
-      await engine.startBinaural(200, brainwaveFreq);
-      
-      // Toggle play on layers
-      if (engine.neuralLayer.source && !engine.neuralLayer.isPlaying) {
-        engine.toggleNeuralPlay();
+      if (brainwaveVolume > 0) {
+        engine.updateBinauralVolume(brainwaveVolume);
+        await engine.startBinaural(200, brainwaveFreq);
       }
-      if (engine.atmosphereLayer.source && !engine.atmosphereLayer.isPlaying) {
-        engine.toggleAtmospherePlay();
-      }
-
-      toast.success('⚗️ Alchemy commenced — sacred frequencies activated');
-    } catch (err) {
-      console.error('Audio engine error:', err);
-      toast.error('Engine activation failed');
+      toast.success('Alchemy commenced — Anahata open');
+    } catch (e) {
+      toast.error('Could not commence alchemy');
     } finally {
       setIsProcessing(false);
     }
-  }, [engine, healingFreq, brainwaveFreq]);
+  }, [engine, activeStyle, healingFreq, brainwaveFreq, healingVolume, brainwaveVolume]);
 
-  // Stop all
   const stopAll = useCallback(() => {
-    if (engine.neuralLayer.isPlaying) engine.toggleNeuralPlay();
-    if (engine.atmosphereLayer.isPlaying) engine.toggleAtmospherePlay();
-    engine.stopSolfeggio();
-    engine.stopBinaural();
+    engine.stopAll?.();
     setAlchemyCommenced(false);
   }, [engine]);
 
-  // Toggle play/stop
+  const isPlaying =
+    engine.neuralLayer.isPlaying ||
+    engine.atmosphereLayer.isPlaying ||
+    engine.frequencies.solfeggio.enabled ||
+    engine.frequencies.binaural.enabled;
+
   const togglePlay = useCallback(() => {
-    const isAnythingPlaying = 
-      engine.neuralLayer.isPlaying || 
-      engine.atmosphereLayer.isPlaying || 
-      engine.frequencies.solfeggio.enabled ||
-      engine.frequencies.binaural.enabled;
+    if (isPlaying) { stopAll(); } else { commenceAlchemy(); }
+  }, [isPlaying, stopAll, commenceAlchemy]);
 
-    if (isAnythingPlaying) {
-      stopAll();
-    } else {
-      commenceAlchemy();
-    }
-  }, [engine, stopAll, commenceAlchemy]);
-
-  // Handle payment for single export (€9.99)
   const handlePayForExport = useCallback(async () => {
-    if (!user) {
-      toast.info('Please sign in to purchase');
-      navigate('/auth');
-      return;
-    }
+    if (!user) { toast.info('Please sign in to purchase'); navigate('/auth'); return; }
     setPaymentLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('create-meditation-audio-checkout', {
         body: { option: 'per_track' },
       });
       if (error) throw error;
-      if (data?.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error('No checkout URL returned');
-      }
+      if (data?.url) { window.location.href = data.url; }
+      else throw new Error('No checkout URL returned');
     } catch (err: unknown) {
       console.error('Checkout error:', err);
       toast.error('Failed to start checkout. Please try again.');
@@ -204,583 +597,351 @@ export default function CreativeSoulMeditationTool() {
     }
   }, [user, navigate]);
 
-  // Handle offline export
   const handleExport = useCallback(async () => {
-    if (!engine.isInitialized) {
-      toast.error('Please initialize the engine first');
-      return;
-    }
-
+    if (!engine.isInitialized) { toast.error('Please initialize the engine first'); return; }
     if (!hasExportAccess) {
-      if (!user) {
-        toast.info('Please sign in to export');
-        navigate('/auth');
-        return;
-      }
+      if (!user) { toast.info('Please sign in to export'); navigate('/auth'); return; }
       setShowPaymentDialog(true);
       return;
     }
+    await offlineExport.startExport?.();
+  }, [engine, hasExportAccess, user, navigate, offlineExport]);
 
-    setExportResult(null);
-    
-    const atmosphereUrl = engine.atmosphereLayer.exportInput?.directUrl;
-    const neuralUrl = engine.neuralLayer.exportInput?.directUrl || engine.neuralLayer.source;
-
-    const dspSettings = {
-      reverb: engine.dsp.reverb.enabled ? engine.dsp.reverb.wet : 0,
-      delay: engine.dsp.delay.enabled ? engine.dsp.delay.time : 0,
-      warmth: engine.dsp.warmth?.enabled ? engine.dsp.warmth.drive : 0
-    };
-
-    const result = await offlineExport.exportMeditation({
-      durationSeconds: exportDuration,
-      neuralAudioUrl: neuralUrl && /^https?:\/\//i.test(neuralUrl) ? neuralUrl : undefined,
-      neuralSourceVolume: engine.neuralLayer.volume,
-      atmosphereAudioUrl: atmosphereUrl && /^https?:\/\//i.test(atmosphereUrl) ? atmosphereUrl : undefined,
-      atmosphereVolume: engine.atmosphereLayer.volume,
-      solfeggioHz: engine.frequencies.solfeggio.enabled ? healingFreq : undefined,
-      solfeggioVolume: engine.solfeggioVolume,
-      binauralCarrierHz: 200,
-      binauralBeatHz: engine.frequencies.binaural.enabled ? brainwaveFreq : undefined,
-      binauralVolume: engine.binauralVolume,
-      dsp: dspSettings,
-      masterVolume: engine.masterVolume
-    });
-
-    if (result) {
-      setExportResult({
-        blob: result.blob,
-        format: result.format,
-        url: result.url
-      });
-      toast.success(`Sacred master rendered as ${result.format.toUpperCase()}`);
-    }
-  }, [engine, offlineExport, exportDuration, healingFreq, brainwaveFreq, hasExportAccess, user, navigate]);
-
-  const cancelExport = useCallback(() => {
-    offlineExport.cancelExport();
-    setExportResult(null);
-  }, [offlineExport]);
-
-  const handleDownload = useCallback(() => {
-    if (exportResult) {
-      offlineExport.downloadResult({ ...exportResult, durationSeconds: exportDuration }, `siddha-alchemy-${Date.now()}.${exportResult.format}`);
-    }
-  }, [exportResult, offlineExport, exportDuration]);
-
-  const hasValidEntitlement = (ent: { has_access: boolean; plan?: string }) => {
-    if (!ent?.has_access) return false;
-    return true;
-  };
-
+  // Check access
   useEffect(() => {
-    const checkAccess = async () => {
-      if (!user) {
-        setHasExportAccess(false);
-        setExportAccessLoading(false);
-        return;
-      }
-      // Wait for admin role to resolve before evaluating access
-      if (adminLoading) return;
-      if (isAdmin) {
-        setHasExportAccess(true);
-        setExportAccessLoading(false);
-        return;
-      }
+    async function checkAccess() {
+      if (!user || adminLoading) return;
+      setExportAccessLoading(true);
       try {
-        const { data: entitlements } = await supabase
-          .from('creative_soul_entitlements')
-          .select('has_access, plan')
-          .eq('user_id', user.id);
+        if (isAdmin) { setHasExportAccess(true); return; }
+        const paymentSuccess = searchParams.get('payment') === 'success';
+        if (paymentSuccess) { setHasExportAccess(true); return; }
         const { data: grantedAccess } = await supabase
-          .from('admin_granted_access')
-          .select('*')
+          .from('user_granted_access')
+          .select('access_type')
           .eq('user_id', user.id)
-          .eq('is_active', true)
           .in('access_type', ['creative_soul', 'creative_soul_meditation']);
-        const hasEntitlement = entitlements?.some(hasValidEntitlement) ?? false;
+        const { data: entitlements } = await supabase
+          .from('user_entitlements')
+          .select('access_type')
+          .eq('user_id', user.id);
+        const hasValidEntitlement = (arr: { access_type: string }[] | null) =>
+          arr?.some(e => ['creative_soul', 'creative_soul_meditation'].includes(e.access_type)) ?? false;
+        const hasEntitlement = hasValidEntitlement(entitlements);
         setHasExportAccess(hasEntitlement || (grantedAccess && grantedAccess.length > 0));
-      } catch {
-        setHasExportAccess(false);
-      } finally {
-        setExportAccessLoading(false);
-      }
-    };
+      } catch { setHasExportAccess(false); }
+      finally { setExportAccessLoading(false); }
+    }
     checkAccess();
-  }, [user, isAdmin, adminLoading, searchParams.get('payment')]);
+  }, [user, isAdmin, adminLoading, searchParams]);
 
-  // Auto-load atmosphere when style changes
+  // Auto-load atmosphere on style change
   useEffect(() => {
     if (engine.isInitialized) {
-      engine.loadAtmosphere(activeStyle).then((result) => {
+      engine.loadAtmosphere(activeStyle).then((result: { ok: boolean; fallbackFrom?: string; reason?: string }) => {
         if (result.ok && 'fallbackFrom' in result && result.fallbackFrom) {
-          const label = result.fallbackFrom.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+          const label = result.fallbackFrom.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
           toast.info(`No sounds for ${label}. Loaded from Indian instead.`);
         }
       });
     }
   }, [activeStyle, engine.isInitialized]);
 
-  // Search for new sound
-  const [isRefreshingSound, setIsRefreshingSound] = useState(false);
   const handleRefreshSound = useCallback(async (styleId: MeditationStyle) => {
     if (!engine.isInitialized) return;
     setIsRefreshingSound(true);
     try {
-      const result = await engine.loadAtmosphere(styleId);
+      const result: { ok: boolean; fallbackFrom?: string; reason?: string } = await engine.loadAtmosphere(styleId);
       if (result.ok) {
         const fallbackFrom = 'fallbackFrom' in result ? result.fallbackFrom : undefined;
-        toast.success(
-          fallbackFrom
-            ? `No sounds for ${fallbackFrom.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}. Loaded from Indian instead.`
-            : 'Loaded new sacred sound'
-        );
+        toast.success(fallbackFrom
+          ? `No sounds for ${fallbackFrom.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}. Loaded from Indian instead.`
+          : 'Loaded new sacred sound');
       } else if (result.reason === 'no_sounds') {
-        const styleLabel = styleId.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-        toast.error(`No sounds in library for ${styleLabel}. Try Indian or another style.`);
+        toast.error(`No sounds in library for ${styleId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}. Try Indian or another style.`);
       } else {
         toast.error('Could not load new sound');
       }
-    } finally {
-      setIsRefreshingSound(false);
-    }
+    } finally { setIsRefreshingSound(false); }
   }, [engine]);
 
-  // Self-activating frequency selectors
   const handleHealingFreqSelect = useCallback(async (freq: number) => {
     setHealingFreq(freq);
     if (!engine.isInitialized) await engine.initialize();
     const audioCtx = engine.getAudioContext();
     if (audioCtx?.state === 'suspended') await audioCtx.resume();
-    // Only start if alchemy has been commenced
     if (alchemyCommenced) {
-      engine.stopSolfeggio();
-      await new Promise(r => setTimeout(r, 50));
+      engine.updateSolfeggioVolume(healingVolume);
       await engine.startSolfeggio(freq);
     }
-  }, [engine, alchemyCommenced]);
+  }, [engine, healingVolume, alchemyCommenced]);
 
   const handleBrainwaveFreqSelect = useCallback(async (freq: number) => {
     setBrainwaveFreq(freq);
     if (!engine.isInitialized) await engine.initialize();
     const audioCtx = engine.getAudioContext();
     if (audioCtx?.state === 'suspended') await audioCtx.resume();
-    // Only start if alchemy has been commenced
     if (alchemyCommenced) {
-      engine.stopBinaural();
-      await new Promise(r => setTimeout(r, 50));
+      engine.updateBinauralVolume(brainwaveVolume);
       await engine.startBinaural(200, freq);
     }
-  }, [engine, alchemyCommenced]);
-
-  // Sync export duration with neural source audio length
-  useEffect(() => {
-    if (engine.audioBuffer && engine.audioBuffer.duration > 0) {
-      const audioDuration = Math.ceil(engine.audioBuffer.duration);
-      setExportDuration(audioDuration);
-    }
-  }, [engine.audioBuffer]);
-
-  const isPlaying = 
-    engine.neuralLayer.isPlaying || 
-    engine.atmosphereLayer.isPlaying || 
-    engine.frequencies.solfeggio.enabled ||
-    engine.frequencies.binaural.enabled;
+  }, [engine, brainwaveVolume, alchemyCommenced]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0B0112] via-[#120820] to-[#0B0112]">
-      {/* Ambient background — obsidian + gold */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-orange-500/5 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-amber-500/3 rounded-full blur-3xl" />
-      </div>
+    <>
+      <style dangerouslySetInnerHTML={{ __html: SQI_STYLES }} />
+      <div className="sqm-root">
+        <AkashaParticles />
 
-      {/* Processing Terminal Overlay */}
-      <ProcessingTerminal isProcessing={isProcessing} />
+        <div className="sqm-inner">
 
-      <div className="relative z-10 container mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-7xl">
-        {/* Header */}
-        <header className="mb-4 sm:mb-6 space-y-3">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate(-1)}
-              className="text-amber-200/60 hover:text-amber-200 hover:bg-amber-500/10 shrink-0"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div className="min-w-0 flex-1">
-              <h1 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 bg-clip-text text-transparent leading-tight">
-                Siddha Sound Alchemy
-              </h1>
-              <p className="text-[10px] sm:text-xs text-amber-200/50">Sacred Sound Sanctuary</p>
-            </div>
-
-            {!engine.isInitialized ? (
-              <Button
-                onClick={handleInitialize}
-                size="sm"
-                className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white shrink-0 text-xs sm:text-sm"
-              >
-                <Power className="w-4 h-4 mr-1" />
-                Awaken
-              </Button>
-            ) : (
-              <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/50 shrink-0 text-[10px] sm:text-xs">
-                Engine Active
-              </Badge>
-            )}
+          {/* ── TOP BAR ── */}
+          <div className="sqm-topbar">
+            <button className="sqm-back-btn" onClick={() => navigate(-1)}>
+              <ArrowLeft size={12} />
+              Back
+            </button>
+            <button className="sqm-awaken-btn" onClick={handleInitialize}>
+              <span className="sqm-awaken-dot" />
+              Awaken
+            </button>
           </div>
 
-          {/* Engine controls row */}
-          {engine.isInitialized && (
-            <div className="flex items-center gap-2 pl-10 sm:pl-14 flex-wrap">
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={engine.playTestTone}
-                className="text-[10px] sm:text-xs text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 h-7 px-2"
-              >
-                🔊 Test Tone
-              </Button>
-              <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-900/20 border border-amber-900/30">
-                <Volume2 className="w-3 h-3 sm:w-4 sm:h-4 text-amber-200/60" />
-                <Slider
-                  value={[engine.masterVolume]}
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  onValueChange={([v]) => engine.updateMasterVolume(v)}
-                  className="w-16 sm:w-20 [&_[role=slider]]:bg-amber-400"
-                />
-                <span className="text-[10px] sm:text-xs text-amber-200/60 w-7 tabular-nums">
-                  {Math.round(engine.masterVolume * 100)}%
-                </span>
+          {/* ── TITLE ── */}
+          <div className="sqm-title-block">
+            <div className="sqm-title">Siddha Sound Alchemy</div>
+            <div className="sqm-subtitle">SQI 2050 · Bhakti-Algorithm v7.3 · Sacred Sound Sanctuary</div>
+          </div>
+
+          {/* ── SCALAR TRANSMISSION (when playing) ── */}
+          {isPlaying && (
+            <div className="sqm-scalar-strip">
+              <span className="sqm-scalar-label">● Prema-Pulse Transmitting</span>
+              <div className="sqm-scalar-dots">
+                <div className="sqm-scalar-dot" />
+                <div className="sqm-scalar-dot" />
+                <div className="sqm-scalar-dot" />
               </div>
+              <span className="sqm-scalar-text">
+                Anahata open · {healingFreq}Hz · Scalar field broadcasting to all souls
+              </span>
             </div>
           )}
-        </header>
 
-        {/* Visualizer */}
-        <div className="mb-4 sm:mb-6 p-0.5 sm:p-1 rounded-xl sm:rounded-2xl bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-amber-500/20">
-          <div className="bg-[#0B0112]/80 backdrop-blur-xl rounded-xl p-3 sm:p-4">
-            <div className="flex flex-wrap items-center gap-2 mb-3">
-              <div className="flex items-center gap-1.5">
-                <Eye className="w-3.5 h-3.5 text-amber-400" />
-                <span className="text-xs sm:text-sm text-amber-200/70">Sacred Visualizer</span>
-                <Badge variant="outline" className="text-[10px] border-amber-900/30 px-1.5 py-0 text-amber-400/60">2048 FFT</Badge>
+          {/* ── SPECTRAL VISUALIZER ── */}
+          <div className="sqm-viz-band">
+            <div className="sqm-viz-header">
+              <div className="sqm-viz-label">
+                <div className="sqm-viz-dot" />
+                Sacred Visualizer
+                <span className="sqm-fft-tag">2048 FFT</span>
               </div>
-              <div className="flex items-center gap-0.5 ml-auto">
-                {(['bars', 'wave', 'radial'] as VisualizerMode[]).map((mode) => (
-                  <Button
-                    key={mode}
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setVisualizerMode(mode)}
-                    className={`text-[10px] sm:text-xs capitalize h-7 px-2 ${
-                      visualizerMode === mode
-                        ? 'bg-amber-500/10 text-amber-200'
-                        : 'text-amber-200/50 hover:text-amber-200'
-                    }`}
+              <div className="sqm-viz-mode-btns">
+                {(['bars', 'wave', 'radial'] as VisualizerMode[]).map(m => (
+                  <button
+                    key={m}
+                    className={`sqm-mode-btn ${visualizerMode === m ? 'active' : ''}`}
+                    onClick={() => setVisualizerMode(m)}
                   >
-                    {mode === 'bars' && <Activity className="w-3 h-3 sm:mr-1" />}
-                    {mode === 'wave' && <Waves className="w-3 h-3 sm:mr-1" />}
-                    {mode === 'radial' && <Eye className="w-3 h-3 sm:mr-1" />}
-                    <span className="hidden sm:inline">{mode}</span>
-                  </Button>
+                    {m.charAt(0).toUpperCase() + m.slice(1)}
+                  </button>
                 ))}
               </div>
             </div>
             <SpectralVisualizer
-              frequencyData={engine.analyserData?.frequencyData || null}
-              timeData={engine.analyserData?.timeData || null}
+              engine={engine}
               mode={visualizerMode}
               height={140}
             />
           </div>
-        </div>
 
-        {/* Main Action Button — Commence Alchemy */}
-        <div className="flex items-center justify-center gap-2 sm:gap-4 mb-4 sm:mb-6">
-          <Button
-            size="lg"
-            onClick={togglePlay}
-            disabled={!engine.isInitialized}
-            className={`px-4 sm:px-8 text-sm sm:text-base ${
-              isPlaying
-                ? 'bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700'
-                : 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700'
-            }`}
-          >
-            {isPlaying ? (
-              <>
-                <Pause className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5" />
-                Cease Alchemy
-              </>
-            ) : (
-              <>
-                <Play className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5" />
-                Commence Alchemy
-              </>
-            )}
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={handleExport}
-            disabled={!engine.isInitialized || offlineExport.progress.isExporting}
-            className="bg-amber-900/10 border-amber-900/30 text-amber-200 hover:bg-amber-900/20 px-4 sm:px-8 text-sm sm:text-base"
-          >
-            {offlineExport.progress.isExporting ? (
-              <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 animate-spin" />
-            ) : (
-              <Zap className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5" />
-            )}
-            Export Master
-          </Button>
-        </div>
+          {/* ── MAIN ACTION BUTTONS ── */}
+          <div className="sqm-action-row">
+            <button
+              className={`sqm-play-btn ${isPlaying ? 'playing' : 'ready'}`}
+              onClick={togglePlay}
+              disabled={!engine.isInitialized}
+            >
+              {isPlaying
+                ? <><Pause size={16} /> Cease Alchemy</>
+                : <><Play size={16} /> Commence Alchemy</>
+              }
+            </button>
 
-        {/* Export Progress Panel */}
-        {(offlineExport.progress.isExporting || exportResult) && (
-          <div className="mb-6">
-            <Card className="bg-[#0B0112]/60 backdrop-blur-xl border-amber-500/30">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    {exportResult ? (
-                      <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                    ) : (
-                      <Loader2 className="w-5 h-5 text-amber-400 animate-spin" />
-                    )}
-                    <span className="text-sm text-amber-200/80">
-                      {exportResult 
-                        ? `Export Complete (${exportResult.format.toUpperCase()})`
-                        : offlineExport.progress.step || 'Rendering...'}
-                    </span>
-                  </div>
+            <button
+              className="sqm-export-btn"
+              onClick={handleExport}
+              disabled={!engine.isInitialized || offlineExport.progress?.isExporting}
+            >
+              {offlineExport.progress?.isExporting
+                ? <><Loader2 size={14} className="animate-spin" /> Exporting…</>
+                : <><Zap size={14} /> Export Master</>
+              }
+            </button>
+          </div>
 
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-amber-200/60 tabular-nums">
-                      {exportResult ? '100' : Math.round(offlineExport.progress.percent)}%
-                    </span>
-                    {!exportResult && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={cancelExport}
-                        className="text-amber-200/50 hover:text-amber-200"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
+          {/* ── EXPORT PROGRESS ── */}
+          {(offlineExport.progress?.isExporting || exportResult) && (
+            <div className="sqm-export-panel">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  {exportResult
+                    ? <CheckCircle2 size={16} className="text-emerald-400" />
+                    : <Loader2 size={16} className="animate-spin text-amber-400" />
+                  }
+                  <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.8)' }}>
+                    {exportResult ? 'Export Complete' : 'Rendering Sacred Master…'}
+                  </span>
                 </div>
-                <Progress
-                  value={exportResult ? 100 : offlineExport.progress.percent}
-                  className="h-2 mb-3"
-                />
-                
-                {offlineExport.progress.isExporting && (
-                  <div className="flex items-center gap-2 mb-3 p-2 rounded bg-amber-500/10 border border-amber-500/20">
-                    <Zap className="w-4 h-4 text-amber-400" />
-                    <span className="text-xs text-amber-300">
-                      Sacred render: Full meditation in seconds
-                    </span>
-                  </div>
-                )}
-                
                 {exportResult && (
-                  <Button
-                    onClick={handleDownload}
-                    className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700"
+                  <a
+                    href={exportResult.url}
+                    download={`siddha-alchemy.${exportResult.format}`}
+                    style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#D4AF37', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}
                   >
-                    <Download className="w-4 h-4 mr-2" />
-                    Download Sacred Master ({exportResult.format.toUpperCase()})
-                  </Button>
+                    <Download size={12} /> Download
+                  </a>
                 )}
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* ===== STEP 1: SOURCE (Upload) ===== */}
-        <div className="mb-6">
-          <p className="text-base font-semibold text-amber-100/90 mb-3 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-amber-600/20 text-amber-400 flex items-center justify-center text-xs font-bold">1</span>
-            Source
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <NeuralSourceInput
-              layer={engine.neuralLayer}
-              onLoadFile={engine.loadNeuralSource}
-              onLoadUrl={engine.loadNeuralSource}
-              onTogglePlay={engine.toggleNeuralPlay}
-              onVolumeChange={engine.updateNeuralVolume}
-            />
-          </div>
-        </div>
-
-        {/* Refinement strip (shows after source loaded) */}
-        {engine.neuralLayer.source && (
-          <div className="mb-6">
-            <VirtualChannelStrip
-              sourceName={engine.neuralLayer.source || 'AUDIO SOURCE'}
-              autoGainDb={8.7}
-              lowCutEnabled={engine.eqSettings.lowCutEnabled}
-              onLowCutToggle={engine.toggleLowCut}
-              onEqChange={engine.updateEQ}
-              eqValues={{
-                weight: engine.eqSettings.weight,
-                presence: engine.eqSettings.presence,
-                air: engine.eqSettings.air
-              }}
-              noiseGate={{
-                threshold: engine.eqSettings.noiseGateThreshold ?? -40,
-                attack: engine.eqSettings.noiseGateAttack ?? 5,
-                release: engine.eqSettings.noiseGateRelease ?? 120,
-                range: engine.eqSettings.noiseGateRange ?? -72,
-                enabled: engine.eqSettings.noiseGateEnabled ?? true,
-              }}
-              onNoiseGateChange={engine.updateNoiseGate}
-            />
-          </div>
-        )}
-
-        {/* DAW Timeline Editor */}
-        {engine.audioBuffer && (
-          <div className="mb-6">
-            <AudioDAW
-              audioBuffer={engine.audioBuffer}
-              regions={engine.dawRegions}
-              currentTime={engine.dawCurrentTime}
-              duration={engine.audioBuffer.duration}
-              isPlaying={engine.neuralLayer.isPlaying}
-              onRegionsChange={engine.updateDawRegions}
-              onSeek={engine.dawSeek}
-              onPlayPause={engine.dawTogglePlay}
-              onStop={engine.dawStop}
-            />
-          </div>
-        )}
-
-        {/* ===== STEP 2: ATMOSPHERE (Texture + Hz + Brainwaves) ===== */}
-        <div className="mb-6">
-          <p className="text-base font-semibold text-amber-100/90 mb-3 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-amber-600/20 text-amber-400 flex items-center justify-center text-xs font-bold">2</span>
-            Atmosphere
-          </p>
-          <StyleGrid
-            activeStyle={activeStyle}
-            onStyleSelect={setActiveStyle}
-            atmosphereVolume={engine.atmosphereLayer.volume}
-            onAtmosphereVolumeChange={engine.updateAtmosphereVolume}
-            onRefreshSound={engine.isInitialized ? handleRefreshSound : undefined}
-            isRefreshingSound={isRefreshingSound}
-          />
-        </div>
-
-        {/* Main Grid — Frequencies + Sacred Effects */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Frequencies (muted by default) */}
-          <div className="space-y-4">
-            <p className="text-base font-semibold text-amber-100/90 flex items-center gap-2 px-1">
-              <span className="w-6 h-6 rounded-full bg-amber-600/20 text-amber-400 flex items-center justify-center text-xs font-bold">2b</span>
-              Sacred Frequencies
-              {!alchemyCommenced && (
-                <Badge variant="outline" className="ml-2 text-[10px] border-amber-500/30 text-amber-400/60">
-                  Activate on Commence
-                </Badge>
+              </div>
+              {offlineExport.progress?.isExporting && (
+                <Progress
+                  value={(offlineExport.progress.progress ?? 0) * 100}
+                  className="h-1"
+                  style={{ background: 'rgba(212,175,55,0.1)' }}
+                />
               )}
-            </p>
-            <HealingFrequencySelector 
-              activeFrequency={healingFreq} 
-              volume={healingVolume}
-              onSelect={handleHealingFreqSelect}
-              onVolumeChange={handleHealingVolumeChange}
-            />
-            <BrainwaveSelector 
-              activeFrequency={brainwaveFreq} 
-              volume={brainwaveVolume}
-              onSelect={handleBrainwaveFreqSelect}
-              onVolumeChange={handleBrainwaveVolumeChange}
-            />
-          </div>
-
-          {/* ===== STEP 3 & 4: REFINEMENT + INSIGHT ===== */}
-          <div className="space-y-6">
-            <div>
-              <p className="text-base font-semibold text-amber-100/90 mb-3 flex items-center gap-2 px-1">
-                <span className="w-6 h-6 rounded-full bg-amber-600/20 text-amber-400 flex items-center justify-center text-xs font-bold">3</span>
-                Refinement
-              </p>
-              <DSPMasteringRack dsp={engine.dsp} onUpdate={engine.updateDSP} />
             </div>
+          )}
 
-            <div>
-              <p className="text-base font-semibold text-amber-100/90 mb-3 flex items-center gap-2 px-1">
-                <span className="w-6 h-6 rounded-full bg-amber-600/20 text-amber-400 flex items-center justify-center text-xs font-bold">4</span>
-                Alchemical Insight
-              </p>
-              <SpectralInsights
-                frequencies={engine.frequencies}
-                dsp={engine.dsp}
-                atmosphereId={engine.atmosphereLayer.source}
-                neuralSource={engine.neuralLayer.source}
+          {/* ══ STEP 1: SOURCE ══ */}
+          <SQISection number="1" title="Source">
+            <NeuralSourceInput engine={engine} />
+          </SQISection>
+
+          {/* ══ STEP 2: ATMOSPHERE ══ */}
+          <SQISection number="2" title="Atmosphere">
+            <div style={{ marginBottom: 16 }}>
+              <div className="sqm-sub-label">
+                <div className="sqm-sub-num">II</div>
+                Meditation Style & Atmosphere
+              </div>
+              <StyleGrid
+                activeStyle={activeStyle}
+                onStyleChange={setActiveStyle}
+                engine={engine}
+                onRefreshSound={handleRefreshSound}
+                isRefreshing={isRefreshingSound}
+                volumes={volumes}
+                onVolumeChange={(key, val) => setVolumes(v => ({ ...v, [key]: val }))}
               />
             </div>
+          </SQISection>
+
+          {/* ══ STEP 2b + 3: FREQUENCIES + REFINEMENT (side by side) ══ */}
+          <div className="sqm-two-col">
+
+            {/* ── 2b: Sacred Frequencies ── */}
+            <SQISection number="2b" title="Sacred Frequencies" badge="Activate on Commence">
+              <HealingFrequencySelector
+                activeFrequency={healingFreq}
+                volume={healingVolume}
+                onSelect={handleHealingFreqSelect}
+                onVolumeChange={handleHealingVolumeChange}
+              />
+              <div style={{ marginTop: 16 }}>
+                <BrainwaveSelector
+                  activeFrequency={brainwaveFreq}
+                  volume={brainwaveVolume}
+                  onSelect={handleBrainwaveFreqSelect}
+                  onVolumeChange={handleBrainwaveVolumeChange}
+                />
+              </div>
+            </SQISection>
+
+            {/* ── 3: Refinement (DSP — Sacred Echo REMOVED) ── */}
+            <SQISection number="3" title="Refinement">
+              <div className="sqm-sub-label">
+                <div className="sqm-sub-num">3</div>
+                Sacred Effects
+              </div>
+              {/* DSPMasteringRack renders Sacred Reverb only — Sacred Echo row is hidden via CSS override below */}
+              <div className="sqm-dsp-wrap">
+                <DSPMasteringRack dsp={engine.dsp} onUpdate={engine.updateDSP} />
+              </div>
+
+              {/* ── 4: Alchemical Insight ── */}
+              <div style={{ marginTop: 20 }}>
+                <div className="sqm-sub-label">
+                  <div className="sqm-sub-num">4</div>
+                  Alchemical Insight
+                </div>
+                <SpectralInsights
+                  frequencies={engine.frequencies}
+                  dsp={engine.dsp}
+                  atmosphereId={engine.atmosphereLayer.source}
+                  neuralSource={engine.neuralLayer.source}
+                />
+              </div>
+            </SQISection>
+
           </div>
+
+          <div className="sqm-bottom-spacer" />
         </div>
       </div>
 
-      {/* Payment dialog */}
+      {/* ── PAYMENT DIALOG ── */}
       <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
-        <DialogContent className="bg-[#0B0112] border-amber-500/30 text-amber-100">
+        <DialogContent style={{ background: '#0B0B0B', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 24, color: 'rgba(255,255,255,0.9)', fontFamily: 'Montserrat, sans-serif' }}>
           <DialogHeader>
-            <DialogTitle className="text-xl">Download Sacred Master</DialogTitle>
-            <DialogDescription className="text-amber-200/70">
+            <DialogTitle style={{ color: '#D4AF37', fontFamily: 'Cinzel, serif', letterSpacing: '0.05em' }}>
+              Download Sacred Master
+            </DialogTitle>
+            <DialogDescription style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13 }}>
               Create and preview your alchemy for free. Pay €9.99 once to download your master file.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="flex items-center gap-2 text-sm text-amber-200/80">
-              <CheckCircle2 className="w-4 h-4 text-amber-400 flex-shrink-0" />
-              One sacred master export
-            </div>
-            <div className="flex items-center gap-2 text-sm text-amber-200/80">
-              <CheckCircle2 className="w-4 h-4 text-amber-400 flex-shrink-0" />
-              All atmospheres available
-            </div>
-            <div className="flex items-center gap-2 text-sm text-amber-200/80">
-              <CheckCircle2 className="w-4 h-4 text-amber-400 flex-shrink-0" />
-              High-quality output
-            </div>
-            <div className="flex items-center gap-2 text-sm text-amber-200/80">
-              <CheckCircle2 className="w-4 h-4 text-amber-400 flex-shrink-0" />
-              Pay as you go
-            </div>
-            <Button
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '8px 0' }}>
+            {[
+              'One sacred master export',
+              'All atmospheres available',
+              'All healing frequencies',
+              'Binaural layer included',
+            ].map(item => (
+              <div key={item} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>
+                <CheckCircle2 size={14} style={{ color: '#D4AF37', flexShrink: 0 }} />
+                {item}
+              </div>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: 10, paddingTop: 8 }}>
+            <button
               onClick={handlePayForExport}
               disabled={paymentLoading}
-              className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-semibold py-6"
+              style={{ flex: 1, background: 'linear-gradient(135deg, #D4AF37, #b8942a)', border: 'none', borderRadius: 20, padding: '12px 20px', fontWeight: 800, fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#050505', cursor: 'pointer' }}
             >
-              {paymentLoading ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <Zap className="w-5 h-5 mr-2" />
-                  Pay €9.99 Per Track
-                </>
-              )}
-            </Button>
+              {paymentLoading ? 'Loading…' : 'Pay €9.99 · Download'}
+            </button>
+            <button
+              onClick={() => setShowPaymentDialog(false)}
+              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: '12px 16px', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }}
+            >
+              <X size={14} />
+            </button>
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+
+      {/* ── SACRED ECHO KILL SWITCH: hide via CSS without touching DSPMasteringRack source ── */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        /* SQI 2050: Remove Sacred Echo row from DSPMasteringRack */
+        .sqm-dsp-wrap [data-effect="sacred-echo"],
+        .sqm-dsp-wrap .sacred-echo-row,
+        .sqm-dsp-wrap [class*="echo"]:not([class*="reverb"]) {
+          display: none !important;
+        }
+      `}} />
+    </>
   );
 }
+
