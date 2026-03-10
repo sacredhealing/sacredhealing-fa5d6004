@@ -974,6 +974,8 @@ const Community: React.FC = () => {
               <span className="sqi-search-icon">⌕</span>
               <input type="text" placeholder="Search channels, souls..." />
             </div>
+            {/* Go Live — always visible at top */}
+            <button className="sqi-golive-btn" style={{ marginBottom: 0 }}>📡 Enter Sacred Space (Go Live)</button>
           </div>
 
           {/* Tabs */}
