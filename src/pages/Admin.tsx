@@ -681,8 +681,6 @@ export default function AdminHealingNexus() {
     </div>
   );
 }
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Upload, Plus, Trash2, Music, Loader2, ArrowLeft, FileText, Save, X, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
