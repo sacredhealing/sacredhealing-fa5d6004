@@ -8,7 +8,7 @@
 
 import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate, useLocation, Navigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Sparkles, Zap, Wind, Droplets, Activity, MessageSquare,
   Plus, Trash2, Send, Cpu, Globe, ShieldCheck, ChevronRight,
@@ -21,6 +21,7 @@ import { useAdminRole } from '@/hooks/useAdminRole';
 import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
 import { hasFeatureAccess, FEATURE_TIER } from '@/lib/tierAccess';
+import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
 const FrequencyLibrarySection = lazy(() => import('@/features/quantum-apothecary/FrequencyLibrarySection'));
@@ -32,19 +33,18 @@ function renderChatText(text: string) {
   return lines.map((line, i) => {
     const trimmed = line.trim();
     if (!trimmed) return <div key={i} className="h-2" />;
-    if (trimmed.startsWith('### ')) return <h3 key={i} className="text-sm font-bold text-[#D4AF37] mt-3 mb-1">{renderInline(trimmed.slice(4))}</h3>;
-    if (trimmed.startsWith('## ')) return <h2 key={i} className="text-base font-bold text-white mt-4 mb-1">{renderInline(trimmed.slice(3))}</h2>;
-    if (trimmed.startsWith('# ')) return <h1 key={i} className="text-lg font-bold text-white mt-4 mb-2">{renderInline(trimmed.slice(2))}</h1>;
-    if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) return <li key={i} className="ml-4 list-disc text-sm opacity-80 mb-1">{renderInline(trimmed.slice(2))}</li>;
-    if (/^\d+\.\s/.test(trimmed)) return <li key={i} className="ml-4 list-decimal text-sm opacity-80 mb-1">{renderInline(trimmed.replace(/^\d+\.\s/, ''))}</li>;
-    return <p key={i} className="text-sm opacity-80 mb-2 leading-relaxed">{renderInline(trimmed)}</p>;
+    if (trimmed.startsWith('### ')) return <h3 key={i} className="text-base font-bold text-[#D4AF37] mt-4 mb-2">{renderInline(trimmed.slice(4))}</h3>;
+    if (trimmed.startsWith('## ')) return <h2 key={i} className="text-lg font-bold text-white mt-5 mb-2">{renderInline(trimmed.slice(3))}</h2>;
+    if (trimmed.startsWith('# ')) return <h1 key={i} className="text-xl font-black text-white mt-5 mb-3">{renderInline(trimmed.slice(2))}</h1>;
+    if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) return <li key={i} className="ml-5 list-disc text-[15px] leading-relaxed opacity-90 mb-2">{renderInline(trimmed.slice(2))}</li>;
+    if (/^\d+\.\s/.test(trimmed)) return <li key={i} className="ml-5 list-decimal text-[15px] leading-relaxed opacity-90 mb-2">{renderInline(trimmed.replace(/^\d+\.\s/, ''))}</li>;
+    return <p key={i} className="text-[15px] opacity-85 mb-3 leading-[1.7]">{renderInline(trimmed)}</p>;
   });
 }
 
 function renderInline(text: string): React.ReactNode {
   const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g);
   return parts.map((p, i) => {
-    // Bold text: keep simple strong emphasis, no yellow highlight
     if (p.startsWith('**') && p.endsWith('**')) return <strong key={i} className="font-semibold text-white">{p.slice(2, -2)}</strong>;
     if (p.startsWith('*') && p.endsWith('*')) return <em key={i} className="italic text-white/80">{p.slice(1, -1)}</em>;
     if (p.startsWith('`') && p.endsWith('`')) return <code key={i} className="bg-[#D4AF37]/10 px-1 rounded text-xs font-mono text-[#D4AF37]">{p.slice(1, -1)}</code>;
@@ -251,50 +251,23 @@ function QuantumApothecaryInner() {
   const startVoiceInput = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
-
-    // Tap again to stop listening manually
-    if (isRecording && recognitionRef.current) {
-      recognitionRef.current.stop();
-      return;
-    }
-
+    if (isRecording && recognitionRef.current) { recognitionRef.current.stop(); return; }
     voiceTranscriptRef.current = input;
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
-
     recognition.onresult = (event: any) => {
-      let interim = '';
+      let final = ''; let interim = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i].transcript;
-        if (event.results[i].isFinal) {
-          // Accumulate all final segments into one long utterance
-          voiceTranscriptRef.current = (voiceTranscriptRef.current + ' ' + transcript).trim();
-        } else {
-          interim += transcript;
-        }
+        if (event.results[i].isFinal) final += transcript; else interim += transcript;
       }
-
-      const combined = (voiceTranscriptRef.current + (interim ? ' ' + interim : '')).trim();
-      setInput(combined);
+      if (final) { voiceTranscriptRef.current = (voiceTranscriptRef.current + final).trim(); setInput(voiceTranscriptRef.current); recognition.stop(); setIsRecording(false); recognitionRef.current = null; const textToSend = voiceTranscriptRef.current; if (textToSend) setTimeout(() => handleSendMessage(textToSend), 0); }
+      else if (interim) { setInput(voiceTranscriptRef.current + interim); }
     };
-
-    recognition.onend = () => {
-      setIsRecording(false);
-      recognitionRef.current = null;
-      const textToSend = voiceTranscriptRef.current.trim();
-      if (textToSend) {
-        // Send the full accumulated utterance after the user stops speaking
-        setTimeout(() => handleSendMessage(textToSend), 0);
-      }
-    };
-
-    recognition.onerror = () => {
-      setIsRecording(false);
-      recognitionRef.current = null;
-    };
-
+    recognition.onend = () => { setIsRecording(false); recognitionRef.current = null; };
+    recognition.onerror = () => { setIsRecording(false); recognitionRef.current = null; };
     recognition.start();
     recognitionRef.current = recognition;
     setIsRecording(true);
@@ -327,7 +300,7 @@ function QuantumApothecaryInner() {
      CHAT PANEL — Logic 100% preserved, UI upgraded to SQI-2050
      ══════════════════════════════════════════════════════ */
   const renderChatPanel = () => (
-    <div className="glass-card overflow-hidden flex flex-col min-h-[60vh]">
+    <div className="glass-card overflow-hidden flex flex-col" style={{ minHeight: '75vh', height: '75vh' }}>
       {/* Chat Header */}
       <div className="px-5 py-4 border-b border-white/[0.05] flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -362,10 +335,10 @@ function QuantumApothecaryInner() {
           {messages.map((msg, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
               className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-full p-3 rounded-2xl ${
+              <div className={`max-w-[95%] p-4 rounded-2xl ${
                 msg.role === 'user'
                   ? 'bg-[#D4AF37]/10 border border-[#D4AF37]/25 rounded-br-sm'
-                  : 'bg-white/[0.03] border border-white/[0.06] rounded-bl-sm'
+                  : 'bg-white/[0.03] border border-white/[0.06] rounded-bl-sm w-full'
               }`}>
                 <div className="markdown-body">{renderChatText(msg.text)}</div>
               </div>
