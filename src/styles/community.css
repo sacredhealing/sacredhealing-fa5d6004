@@ -1205,14 +1205,75 @@
   z-index: 10;
 }
 
-/* ── MOBILE ──────────────────────────────────────────────── */
+/* ── MOBILE TOP TABS & LAYOUT ───────────────────────────── */
+.sqi-mobile-tabs {
+  display: none;
+}
+
+.sqi-mobile-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: rgba(255,255,255,0.4);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.sqi-mobile-tab.active {
+  color: #D4AF37;
+  border-bottom-color: #D4AF37;
+}
+
+.sqi-mobile-channel-list {
+  padding: 8px 10px 16px;
+  overflow-y: auto;
+}
+
+.sqi-mobile-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 60;
+  display: flex;
+}
+
+.sqi-mobile-sheet {
+  width: 80%;
+  max-width: 320px;
+  height: 100%;
+  background: rgba(3,3,4,0.98);
+  border-right: 1px solid rgba(212,175,55,0.08);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── MOBILE BREAKPOINTS ─────────────────────────────────── */
 @media (max-width: 900px) {
   .sqi-members-panel { display: none; }
 }
 
-@media (max-width: 640px) {
-  .sqi-sidebar { position: absolute; left: -100%; z-index: 50; transition: left 0.3s; }
-  .sqi-sidebar.mobile-open { left: 0; }
+@media (max-width: 768px) {
+  .sqi-sidebar { display: none; }
+  .sqi-members-panel { display: none; }
+  .sqi-mobile-tabs {
+    display: flex;
+    width: 100%;
+    background: rgba(5,5,5,0.95);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    position: relative;
+    z-index: 20;
+  }
   .sqi-msg-row { max-width: 90%; }
 }
 

@@ -158,12 +158,15 @@ export default function Community() {
   const { isAdmin } = useAdminRole();
   const navigate = useNavigate();
   const { canAccessChannel } = useUserAccess();
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
-  const [activeView, setActiveView] = useState<ActiveView>('feed');
-  const [activeChannelId, setActiveChannelId] = useState<ChannelId>('divine-sangha');
+  const [activeView, setActiveView] = useState<ActiveView>(isMobile ? 'chat' : 'feed');
+  const [activeChannelId, setActiveChannelId] = useState<ChannelId | null>(isMobile ? null : 'divine-sangha');
   const [onlineCount, setOnlineCount] = useState(108);
   const [liveMeetingUrl, setLiveMeetingUrl] = useState<string | null>(null);
   const [showMembersSidebar, setShowMembersSidebar] = useState(true);
+  const [showMobileChannelSheet, setShowMobileChannelSheet] = useState(false);
+  const [showMobileMembersSheet, setShowMobileMembersSheet] = useState(false);
 
   // Real-time online presence count
   useEffect(() => {
@@ -181,7 +184,7 @@ export default function Community() {
   }, [user]);
 
   const handleChannelSelect = (channelId: ChannelId) => {
-    if (!canAccessChannel(channelId)) {
+    if (!canAccessChannel(channelId) && !isAdmin) {
       // Show upgrade/request access modal
       // TODO: wire to your existing upgrade flow
       alert('Upgrade your membership to access this channel.');
@@ -189,6 +192,7 @@ export default function Community() {
     }
     setActiveChannelId(channelId);
     setActiveView('chat');
+    setShowMobileChannelSheet(false);
   };
 
   const handleGoLive = async (roomUrl: string) => {
@@ -196,11 +200,14 @@ export default function Community() {
     setActiveView('meeting');
   };
 
-  const activeChannel = COMMUNITY_CHANNELS.find(c => c.id === activeChannelId)!;
+  const activeChannel = activeChannelId
+    ? COMMUNITY_CHANNELS.find(c => c.id === activeChannelId) || COMMUNITY_CHANNELS[0]
+    : null;
 
   return (
     <div className="sqi-community-root">
       {/* ── LEFT SIDEBAR ────────────────────────────── */}
+      {/* Desktop / tablet sidebar */}
       <aside className="sqi-sidebar">
         <SidebarHeader onlineCount={onlineCount} />
 
@@ -283,6 +290,41 @@ export default function Community() {
 
       {/* ── MAIN AREA ────────────────────────────────── */}
       <main className="sqi-main-area">
+        {/* Mobile top tabs */}
+        {isMobile && (
+          <div className="sqi-mobile-tabs">
+            <button
+              className={`sqi-mobile-tab ${activeView === 'feed' ? 'active' : ''}`}
+              onClick={() => {
+                setActiveView('feed');
+                setShowMobileChannelSheet(false);
+                setShowMobileMembersSheet(false);
+              }}
+            >
+              📰 Feed
+            </button>
+            <button
+              className={`sqi-mobile-tab ${activeView === 'chat' ? 'active' : ''}`}
+              onClick={() => {
+                setActiveView('chat');
+                setShowMobileChannelSheet(true);
+                setShowMobileMembersSheet(false);
+              }}
+            >
+              💬 Channels
+            </button>
+            <button
+              className={`sqi-mobile-tab ${showMobileMembersSheet ? 'active' : ''}`}
+              onClick={() => {
+                setShowMobileMembersSheet(true);
+                setShowMobileChannelSheet(false);
+              }}
+            >
+              👥 Members
+            </button>
+          </div>
+        )}
+
         {/* 108 Souls Banner */}
         <div className="sqi-presence-banner">
           <span className="sqi-pulse-dot" />
@@ -293,7 +335,38 @@ export default function Community() {
           <CommunityFeed isAdmin={isAdmin} />
         )}
 
-        {activeView === 'chat' && (
+        {/* Inline channel list on mobile when no channel is selected */}
+        {isMobile && activeView === 'chat' && !activeChannelId && (
+          <div className="sqi-mobile-channel-list">
+            <ChannelSection
+              label="Public Channels"
+              channels={COMMUNITY_CHANNELS.filter(c => c.access === 'public')}
+              activeChannelId={activeChannelId ?? ''}
+              canAccess={canAccessChannel}
+              onSelect={handleChannelSelect}
+            />
+            <ChannelSection
+              label="Sacred Spaces"
+              sublabel="Siddha Quantum · Akasha Infinity"
+              channels={COMMUNITY_CHANNELS.filter(c => c.access === 'sacred')}
+              activeChannelId={activeChannelId ?? ''}
+              canAccess={canAccessChannel}
+              onSelect={handleChannelSelect}
+              isAdmin={isAdmin}
+            />
+            <ChannelSection
+              label="Private Channels"
+              sublabel="Invite Only"
+              channels={COMMUNITY_CHANNELS.filter(c => c.access === 'private')}
+              activeChannelId={activeChannelId ?? ''}
+              canAccess={canAccessChannel}
+              onSelect={handleChannelSelect}
+              isAdmin={isAdmin}
+            />
+          </div>
+        )}
+
+        {activeView === 'chat' && activeChannel && activeChannelId && (
           <ChannelChat
             channelId={activeChannelId}
             channel={activeChannel}
@@ -325,6 +398,85 @@ export default function Community() {
           onlineCount={onlineCount}
           isAdmin={isAdmin}
         />
+      )}
+
+      {/* Mobile channels sheet */}
+      {isMobile && showMobileChannelSheet && (
+        <div className="sqi-mobile-sheet-backdrop" onClick={() => setShowMobileChannelSheet(false)}>
+          <aside className="sqi-mobile-sheet" onClick={e => e.stopPropagation()}>
+            <SidebarHeader onlineCount={onlineCount} />
+            <div className="sqi-search-wrap">
+              <span className="sqi-search-icon">⌕</span>
+              <input
+                type="text"
+                className="sqi-search-input"
+                placeholder="Search channels, souls..."
+              />
+            </div>
+            <div className="sqi-golive-wrap">
+              <GoLiveButton
+                channelId={activeChannelId ?? 'divine-sangha'}
+                channelName={activeChannel?.name ?? 'Divine Sangha'}
+                isAdmin={isAdmin}
+                onGoLive={handleGoLive}
+              />
+            </div>
+            <div className="sqi-channel-list">
+              <ChannelSection
+                label="Public Channels"
+                channels={COMMUNITY_CHANNELS.filter(c => c.access === 'public')}
+                activeChannelId={activeChannelId ?? ''}
+                canAccess={canAccessChannel}
+                onSelect={handleChannelSelect}
+                isAdmin={isAdmin}
+              />
+              <ChannelSection
+                label="Sacred Spaces"
+                sublabel="Siddha Quantum · Akasha Infinity"
+                channels={COMMUNITY_CHANNELS.filter(c => c.access === 'sacred')}
+                activeChannelId={activeChannelId ?? ''}
+                canAccess={canAccessChannel}
+                onSelect={handleChannelSelect}
+                isAdmin={isAdmin}
+              />
+              <ChannelSection
+                label="Private Channels"
+                sublabel="Invite Only"
+                channels={COMMUNITY_CHANNELS.filter(c => c.access === 'private')}
+                activeChannelId={activeChannelId ?? ''}
+                canAccess={canAccessChannel}
+                onSelect={handleChannelSelect}
+                isAdmin={isAdmin}
+              />
+            </div>
+            {isAdmin && (
+              <div className="sqi-admin-invite">
+                <button
+                  className="sqi-invite-btn"
+                  onClick={() => {
+                    setShowMobileChannelSheet(false);
+                    navigate('/admin/community');
+                  }}
+                >
+                  ⚙ Manage Channels & Invites
+                </button>
+              </div>
+            )}
+          </aside>
+        </div>
+      )}
+
+      {/* Mobile members sheet */}
+      {isMobile && showMobileMembersSheet && (
+        <div className="sqi-mobile-sheet-backdrop" onClick={() => setShowMobileMembersSheet(false)}>
+          <aside className="sqi-mobile-sheet" onClick={e => e.stopPropagation()}>
+            <MembersList
+              channelId={activeChannelId ?? 'divine-sangha'}
+              onlineCount={onlineCount}
+              isAdmin={isAdmin}
+            />
+          </aside>
+        </div>
       )}
     </div>
   );
