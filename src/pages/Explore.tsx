@@ -158,7 +158,27 @@ export default function Explore() {
             {[
               { label: 'Kumbhaka\nPrāṇāyāma', svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="7" stroke="rgba(120,180,255,0.7)" strokeWidth="1.3" fill="none"><animate attributeName="r" values="7;9;7" dur="4s" repeatCount="indefinite"/></circle><circle cx="12" cy="12" r="3" fill="rgba(120,180,255,0.2)" stroke="rgba(120,180,255,0.6)" strokeWidth="1"/></svg> },
               { label: 'Nāḍī\nShodhana',      svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 12 Q8 6 12 12 Q16 18 20 12" stroke="rgba(120,180,255,0.75)" strokeWidth="1.4" fill="none"><animate attributeName="d" values="M4 12 Q8 6 12 12 Q16 18 20 12;M4 12 Q8 18 12 12 Q16 6 20 12;M4 12 Q8 6 12 12 Q16 18 20 12" dur="3.5s" repeatCount="indefinite"/></path></svg> },
-              { label: 'Agni\nPrāṇa',          svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><polygon points="12,3 22,21 2,21" stroke="rgba(212,175,55,0.7)" strokeWidth="1.2" fill="none"/><polygon points="12,21 22,3 2,3" stroke="rgba(120,180,255,0.5)" strokeWidth="1" fill="none"/><circle cx="12" cy="12" r="1.5" fill="rgba(180,210,255,0.8)"/></svg> },
+              { label: 'Agni\nPrāṇa',          svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  {/* Neural flame core */}
+                  <path d="M12 3 C9 7 8 9.5 8 11.5 C8 14.5 9.8 16.5 12 18 C14.2 16.5 16 14.5 16 11.5 C16 9.5 15 7 12 3 Z" stroke="rgba(212,175,55,0.8)" strokeWidth="1.3" fill="rgba(212,175,55,0.15)">
+                    <animate attributeName="d" dur="2.8s" repeatCount="indefinite"
+                      values="
+                        M12 3 C9 7 8 9.5 8 11.5 C8 14.5 9.8 16.5 12 18 C14.2 16.5 16 14.5 16 11.5 C16 9.5 15 7 12 3 Z;
+                        M12 3 C9.2 6.8 8 9.3 8.2 11.6 C8.5 14.4 10 16.4 12 17.8 C14 16.4 15.5 14.4 15.8 11.6 C16 9.3 14.8 6.8 12 3 Z;
+                        M12 3 C9 7 8 9.5 8 11.5 C8 14.5 9.8 16.5 12 18 C14.2 16.5 16 14.5 16 11.5 C16 9.5 15 7 12 3 Z" />
+                  </path>
+                  {/* Electric neural arcs */}
+                  <path d="M6 14 C8 13 9 12 10 10.8" stroke="rgba(120,180,255,0.7)" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                    <animate attributeName="stroke-opacity" values="0.2;0.8;0.2" dur="1.6s" repeatCount="indefinite" />
+                  </path>
+                  <path d="M18 14 C16 13 15 12 14 10.8" stroke="rgba(120,180,255,0.7)" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                    <animate attributeName="stroke-opacity" values="0.8;0.2;0.8" dur="1.6s" repeatCount="indefinite" />
+                  </path>
+                  {/* Nucleus */}
+                  <circle cx="12" cy="12" r="1.6" fill="rgba(180,210,255,0.9)">
+                    <animate attributeName="r" values="1.5;2;1.5" dur="2.2s" repeatCount="indefinite" />
+                  </circle>
+                </svg> },
             ].map(({ svg, label }, i) => (
               <div key={i} style={{ background: 'rgba(30,80,160,0.2)', border: '1px solid rgba(100,160,255,0.15)', borderRadius: 13, padding: '11px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
                 {svg}
@@ -167,7 +187,23 @@ export default function Explore() {
             ))}
           </div>
           <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.87rem', color: 'rgba(255,255,255,0.38)', lineHeight: 1.62, marginBottom: 13 }}>Activate life-force through Siddha breath science. Kumbhaka retention, Nāḍī purification, Agni awakening.</p>
-          <button style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(140,190,255,0.65)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>Begin Practice →</button>
+          <button
+            style={{
+              fontFamily: "'Montserrat',sans-serif",
+              fontSize: 7.5,
+              fontWeight: 800,
+              letterSpacing: '0.38em',
+              textTransform: 'uppercase',
+              color: 'rgba(140,190,255,0.8)',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 0,
+              animation: 'sqDotPulse 3.4s ease-in-out infinite',
+            }}
+          >
+            Begin Practice →
+          </button>
         </div>
       </div>
 
