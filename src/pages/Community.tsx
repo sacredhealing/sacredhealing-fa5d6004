@@ -9,6 +9,8 @@ const CHANNELS = [
   { id: 'divine-sangha', name: 'Divine Sangha', icon: '🔱', unread: 12, online: 108, lastMsg: 'Jai Gurudev 🙏', type: 'public' },
   { id: 'mantras', name: 'Sacred Mantras', icon: 'ॐ', unread: 3, online: 44, lastMsg: 'New transmission uploaded', type: 'public' },
   { id: 'healing-circle', name: 'Healing Circle', icon: '✦', unread: 0, online: 27, lastMsg: 'Anahata is open', type: 'public' },
+  { id: 'stargate', name: 'Stargate', icon: '⭐', unread: 5, online: 22, lastMsg: 'Portal frequencies rising', type: 'sacred' },
+  { id: 'andlig-transformation', name: 'Andlig Transformation', icon: '🌸', unread: 2, online: 15, lastMsg: 'New kosha integration active', type: 'sacred' },
   { id: 'siddha-masters', name: 'Siddha Masters', icon: '☀', unread: 7, online: 18, lastMsg: 'Vishwananda Blueprint active', type: 'sacred' },
   { id: 'bhakti-lab', name: 'Bhakti Algorithm Lab', icon: '⚡', unread: 1, online: 33, lastMsg: 'New Vedic Light-Code 7.7', type: 'sacred' },
 ];
@@ -93,6 +95,30 @@ const INIT_MESSAGES: Record<string, any[]> = {
       isMine: false,
     },
   ],
+  stargate: [
+    {
+      id: 1,
+      author: 'Adam Kritagya Das',
+      initials: 'AK',
+      role: 'Avatara',
+      text: '⭐ The Stargate frequencies are rising — portal alignment at 963Hz today. Feel the cosmic download.',
+      time: '11:11',
+      reactions: [{ emoji: '⭐', count: 8 }],
+      isMine: false,
+    },
+  ],
+  'andlig-transformation': [
+    {
+      id: 1,
+      author: 'Laila',
+      initials: 'L',
+      role: 'Devi',
+      text: '🌸 Day 14 of the kosha integration — the Anandamaya layer is activating beautifully.',
+      time: '08:30',
+      reactions: [{ emoji: '🌸', count: 6 }, { emoji: '🙏', count: 4 }],
+      isMine: false,
+    },
+  ],
 };
 
 const styles = `
@@ -131,12 +157,14 @@ const styles = `
     width: 320px;
     min-width: 320px;
     height: 100vh;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     background: rgba(5,5,5,0.97);
     border-right: 1px solid rgba(212,175,55,0.08);
     position: relative;
     z-index: 10;
+    overflow: hidden;
   }
 
   .sqi-sidebar-header {
@@ -972,6 +1000,8 @@ const Community: React.FC = () => {
               <span className="sqi-search-icon">⌕</span>
               <input type="text" placeholder="Search channels, souls..." />
             </div>
+            {/* Go Live — always visible at top */}
+            <button className="sqi-golive-btn" style={{ marginBottom: 0 }}>📡 Enter Sacred Space (Go Live)</button>
           </div>
 
           {/* Tabs */}
@@ -1057,7 +1087,6 @@ const Community: React.FC = () => {
           </div>
 
           <div className="sqi-sidebar-footer">
-            <button className="sqi-golive-btn">📡 Enter Sacred Space (Go Live)</button>
             <button className="sqi-new-msg-btn">+ New Message</button>
           </div>
         </aside>
@@ -1074,6 +1103,21 @@ const Community: React.FC = () => {
               </div>
             </div>
             <div className="sqi-header-actions">
+              <button className="sqi-header-btn" title="Go Live" style={{
+                background: 'rgba(212,175,55,0.12)',
+                borderColor: 'rgba(212,175,55,0.3)',
+                color: GOLD,
+                fontSize: 10,
+                fontWeight: 800,
+                letterSpacing: '0.15em',
+                width: 'auto',
+                padding: '0 12px',
+                gap: 6,
+                display: 'flex',
+                alignItems: 'center',
+              }}>
+                🔴 GO LIVE
+              </button>
               <button className="sqi-header-btn" title="Search">
                 🔍
               </button>
