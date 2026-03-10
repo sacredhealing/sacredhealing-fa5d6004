@@ -160,7 +160,7 @@ export default function AdminHealingNexus() {
     // Persist to Supabase
     try {
       setSavingSession(true);
-      await supabase.from("healing_sessions").insert({
+      await (supabase as any).from("healing_sessions").insert({
         user_id: selectedUser.id,
         protocol,
         duration_months: duration,
