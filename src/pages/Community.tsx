@@ -157,12 +157,14 @@ const styles = `
     width: 320px;
     min-width: 320px;
     height: 100vh;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     background: rgba(5,5,5,0.97);
     border-right: 1px solid rgba(212,175,55,0.08);
     position: relative;
     z-index: 10;
+    overflow: hidden;
   }
 
   .sqi-sidebar-header {
