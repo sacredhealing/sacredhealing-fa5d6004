@@ -95,6 +95,30 @@ const INIT_MESSAGES: Record<string, any[]> = {
       isMine: false,
     },
   ],
+  stargate: [
+    {
+      id: 1,
+      author: 'Adam Kritagya Das',
+      initials: 'AK',
+      role: 'Avatara',
+      text: '⭐ The Stargate frequencies are rising — portal alignment at 963Hz today. Feel the cosmic download.',
+      time: '11:11',
+      reactions: [{ emoji: '⭐', count: 8 }],
+      isMine: false,
+    },
+  ],
+  'andlig-transformation': [
+    {
+      id: 1,
+      author: 'Laila',
+      initials: 'L',
+      role: 'Devi',
+      text: '🌸 Day 14 of the kosha integration — the Anandamaya layer is activating beautifully.',
+      time: '08:30',
+      reactions: [{ emoji: '🌸', count: 6 }, { emoji: '🙏', count: 4 }],
+      isMine: false,
+    },
+  ],
 };
 
 const styles = `
