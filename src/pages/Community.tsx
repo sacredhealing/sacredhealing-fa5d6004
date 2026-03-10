@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import AdminGoLive from '@/components/community/AdminGoLive';
 
 const GOLD = '#D4AF37';
 const GOLD_GLOW = 'rgba(212,175,55,0.25)';
@@ -1001,7 +1002,7 @@ const Community: React.FC = () => {
               <input type="text" placeholder="Search channels, souls..." />
             </div>
             {/* Go Live — always visible at top */}
-            <button className="sqi-golive-btn" style={{ marginBottom: 0 }}>📡 Enter Sacred Space (Go Live)</button>
+            <AdminGoLive />
           </div>
 
           {/* Tabs */}
@@ -1103,21 +1104,7 @@ const Community: React.FC = () => {
               </div>
             </div>
             <div className="sqi-header-actions">
-              <button className="sqi-header-btn" title="Go Live" style={{
-                background: 'rgba(212,175,55,0.12)',
-                borderColor: 'rgba(212,175,55,0.3)',
-                color: GOLD,
-                fontSize: 10,
-                fontWeight: 800,
-                letterSpacing: '0.15em',
-                width: 'auto',
-                padding: '0 12px',
-                gap: 6,
-                display: 'flex',
-                alignItems: 'center',
-              }}>
-                🔴 GO LIVE
-              </button>
+              <AdminGoLive />
               <button className="sqi-header-btn" title="Search">
                 🔍
               </button>
