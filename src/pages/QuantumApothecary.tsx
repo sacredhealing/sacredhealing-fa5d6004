@@ -250,23 +250,50 @@ function QuantumApothecaryInner() {
   const startVoiceInput = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
-    if (isRecording && recognitionRef.current) { recognitionRef.current.stop(); return; }
+
+    // Tap again to stop listening manually
+    if (isRecording && recognitionRef.current) {
+      recognitionRef.current.stop();
+      return;
+    }
+
     voiceTranscriptRef.current = input;
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
+
     recognition.onresult = (event: any) => {
-      let final = ''; let interim = '';
+      let interim = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i].transcript;
-        if (event.results[i].isFinal) final += transcript; else interim += transcript;
+        if (event.results[i].isFinal) {
+          // Accumulate all final segments into one long utterance
+          voiceTranscriptRef.current = (voiceTranscriptRef.current + ' ' + transcript).trim();
+        } else {
+          interim += transcript;
+        }
       }
-      if (final) { voiceTranscriptRef.current = (voiceTranscriptRef.current + final).trim(); setInput(voiceTranscriptRef.current); recognition.stop(); setIsRecording(false); recognitionRef.current = null; const textToSend = voiceTranscriptRef.current; if (textToSend) setTimeout(() => handleSendMessage(textToSend), 0); }
-      else if (interim) { setInput(voiceTranscriptRef.current + interim); }
+
+      const combined = (voiceTranscriptRef.current + (interim ? ' ' + interim : '')).trim();
+      setInput(combined);
     };
-    recognition.onend = () => { setIsRecording(false); recognitionRef.current = null; };
-    recognition.onerror = () => { setIsRecording(false); recognitionRef.current = null; };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+      recognitionRef.current = null;
+      const textToSend = voiceTranscriptRef.current.trim();
+      if (textToSend) {
+        // Send the full accumulated utterance after the user stops speaking
+        setTimeout(() => handleSendMessage(textToSend), 0);
+      }
+    };
+
+    recognition.onerror = () => {
+      setIsRecording(false);
+      recognitionRef.current = null;
+    };
+
     recognition.start();
     recognitionRef.current = recognition;
     setIsRecording(true);
