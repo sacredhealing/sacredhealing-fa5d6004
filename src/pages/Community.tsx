@@ -9,6 +9,8 @@ const CHANNELS = [
   { id: 'divine-sangha', name: 'Divine Sangha', icon: '🔱', unread: 12, online: 108, lastMsg: 'Jai Gurudev 🙏', type: 'public' },
   { id: 'mantras', name: 'Sacred Mantras', icon: 'ॐ', unread: 3, online: 44, lastMsg: 'New transmission uploaded', type: 'public' },
   { id: 'healing-circle', name: 'Healing Circle', icon: '✦', unread: 0, online: 27, lastMsg: 'Anahata is open', type: 'public' },
+  { id: 'stargate', name: 'Stargate', icon: '⭐', unread: 5, online: 22, lastMsg: 'Portal frequencies rising', type: 'sacred' },
+  { id: 'andlig-transformation', name: 'Andlig Transformation', icon: '🌸', unread: 2, online: 15, lastMsg: 'New kosha integration active', type: 'sacred' },
   { id: 'siddha-masters', name: 'Siddha Masters', icon: '☀', unread: 7, online: 18, lastMsg: 'Vishwananda Blueprint active', type: 'sacred' },
   { id: 'bhakti-lab', name: 'Bhakti Algorithm Lab', icon: '⚡', unread: 1, online: 33, lastMsg: 'New Vedic Light-Code 7.7', type: 'sacred' },
 ];
