@@ -32,22 +32,56 @@ function renderChatText(text: string) {
   const lines = text.split('\n');
   return lines.map((line, i) => {
     const trimmed = line.trim();
-    if (!trimmed) return <div key={i} className="h-2" />;
-    if (trimmed.startsWith('### ')) return <h3 key={i} className="text-base font-bold text-[#D4AF37] mt-4 mb-2">{renderInline(trimmed.slice(4))}</h3>;
-    if (trimmed.startsWith('## ')) return <h2 key={i} className="text-lg font-bold text-white mt-5 mb-2">{renderInline(trimmed.slice(3))}</h2>;
-    if (trimmed.startsWith('# ')) return <h1 key={i} className="text-xl font-black text-white mt-5 mb-3">{renderInline(trimmed.slice(2))}</h1>;
-    if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) return <li key={i} className="ml-5 list-disc text-[15px] leading-relaxed opacity-90 mb-2">{renderInline(trimmed.slice(2))}</li>;
-    if (/^\d+\.\s/.test(trimmed)) return <li key={i} className="ml-5 list-decimal text-[15px] leading-relaxed opacity-90 mb-2">{renderInline(trimmed.replace(/^\d+\.\s/, ''))}</li>;
-    return <p key={i} className="text-[15px] opacity-85 mb-3 leading-[1.7]">{renderInline(trimmed)}</p>;
+    if (!trimmed) return <div key={i} style={{ height: '10px' }} />;
+    if (trimmed.startsWith('### ')) return (
+      <h3 key={i} style={{ color: '#D4AF37', fontWeight: 800, fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase' as const, marginTop: '16px', marginBottom: '6px' }}>
+        {renderInline(trimmed.slice(4))}
+      </h3>
+    );
+    if (trimmed.startsWith('## ')) return (
+      <h2 key={i} style={{ color: '#ffffff', fontWeight: 900, fontSize: '16px', letterSpacing: '-0.02em', marginTop: '18px', marginBottom: '8px' }}>
+        {renderInline(trimmed.slice(3))}
+      </h2>
+    );
+    if (trimmed.startsWith('# ')) return (
+      <h1 key={i} style={{ color: '#ffffff', fontWeight: 900, fontSize: '18px', letterSpacing: '-0.03em', marginTop: '20px', marginBottom: '10px' }}>
+        {renderInline(trimmed.slice(2))}
+      </h1>
+    );
+    if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) return (
+      <li key={i} style={{ marginLeft: '18px', listStyleType: 'disc', fontSize: '14px', lineHeight: '1.65', color: 'rgba(255,255,255,0.88)', marginBottom: '6px' }}>
+        {renderInline(trimmed.slice(2))}
+      </li>
+    );
+    if (/^\d+\.\s/.test(trimmed)) return (
+      <li key={i} style={{ marginLeft: '18px', listStyleType: 'decimal', fontSize: '14px', lineHeight: '1.65', color: 'rgba(255,255,255,0.88)', marginBottom: '6px' }}>
+        {renderInline(trimmed.replace(/^\d+\.\s/, ''))}
+      </li>
+    );
+    return (
+      <p key={i} style={{ fontSize: '14px', lineHeight: '1.7', color: 'rgba(255,255,255,0.85)', marginBottom: '10px' }}>
+        {renderInline(trimmed)}
+      </p>
+    );
   });
 }
 
 function renderInline(text: string): React.ReactNode {
   const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g);
   return parts.map((p, i) => {
-    if (p.startsWith('**') && p.endsWith('**')) return <strong key={i} className="font-semibold text-white">{p.slice(2, -2)}</strong>;
-    if (p.startsWith('*') && p.endsWith('*')) return <em key={i} className="italic text-white/80">{p.slice(1, -1)}</em>;
-    if (p.startsWith('`') && p.endsWith('`')) return <code key={i} className="bg-[#D4AF37]/10 px-1 rounded text-xs font-mono text-[#D4AF37]">{p.slice(1, -1)}</code>;
+    // **bold** = pure bright white — maximum contrast, easy to read
+    if (p.startsWith('**') && p.endsWith('**')) return (
+      <strong key={i} style={{ color: '#ffffff', fontWeight: 700 }}>{p.slice(2, -2)}</strong>
+    );
+    if (p.startsWith('*') && p.endsWith('*')) return (
+      <em key={i} style={{ fontStyle: 'italic', color: 'rgba(255,255,255,0.75)' }}>{p.slice(1, -1)}</em>
+    );
+    // backtick code = gold only for technical/code terms
+    if (p.startsWith('`') && p.endsWith('`')) return (
+      <code key={i} style={{ background: 'rgba(212,175,55,0.12)', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', fontFamily: 'monospace', color: '#D4AF37' }}>
+        {p.slice(1, -1)}
+      </code>
+    );
     return p;
   });
 }
@@ -119,7 +153,7 @@ function QuantumApothecaryInner() {
   useEffect(() => {
     if (isScanning) {
       const iv = setInterval(() => setHeartRate(p => Math.min(p + Math.floor(Math.random() * 5) + 2, 130)), 500);
-      return () => clearInterval(iv);
+      return => clearInterval(iv);
     } else {
       const iv = setInterval(() => setHeartRate(p => Math.max(p - 2, 60)), 1000);
       return () => clearInterval(iv);
@@ -251,23 +285,50 @@ function QuantumApothecaryInner() {
   const startVoiceInput = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
-    if (isRecording && recognitionRef.current) { recognitionRef.current.stop(); return; }
+
+    // Tap again to stop listening manually
+    if (isRecording && recognitionRef.current) {
+      recognitionRef.current.stop();
+      return;
+    }
+
     voiceTranscriptRef.current = input;
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
+
     recognition.onresult = (event: any) => {
-      let final = ''; let interim = '';
+      let interim = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i].transcript;
-        if (event.results[i].isFinal) final += transcript; else interim += transcript;
+        if (event.results[i].isFinal) {
+          // Accumulate all final segments into one long utterance
+          voiceTranscriptRef.current = (voiceTranscriptRef.current + ' ' + transcript).trim();
+        } else {
+          interim += transcript;
+        }
       }
-      if (final) { voiceTranscriptRef.current = (voiceTranscriptRef.current + final).trim(); setInput(voiceTranscriptRef.current); recognition.stop(); setIsRecording(false); recognitionRef.current = null; const textToSend = voiceTranscriptRef.current; if (textToSend) setTimeout(() => handleSendMessage(textToSend), 0); }
-      else if (interim) { setInput(voiceTranscriptRef.current + interim); }
+
+      const combined = (voiceTranscriptRef.current + (interim ? ' ' + interim : '')).trim();
+      setInput(combined);
     };
-    recognition.onend = () => { setIsRecording(false); recognitionRef.current = null; };
-    recognition.onerror = () => { setIsRecording(false); recognitionRef.current = null; };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+      recognitionRef.current = null;
+      const textToSend = voiceTranscriptRef.current.trim();
+      if (textToSend) {
+        // Send the full accumulated utterance after the user stops speaking
+        setTimeout(() => handleSendMessage(textToSend), 0);
+      }
+    };
+
+    recognition.onerror = () => {
+      setIsRecording(false);
+      recognitionRef.current = null;
+    };
+
     recognition.start();
     recognitionRef.current = recognition;
     setIsRecording(true);
@@ -682,7 +743,7 @@ function QuantumApothecaryInner() {
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-2">
-                {loadingSessions && <div className="text-[10px] font-bold uppercase tracking-widest text-white/25">Loading sessions…</div>}
+                {loadingSessions && <div className="text-[10px] font-bold uppercase tracking-widest text:white/25">Loading sessions…</div>}
                 {!loadingSessions && sessions.length === 0 && (
                   <div className="text-[10px] text-white/25 leading-relaxed">
                     No prior SQI conversations yet. Your next transmission will be stored here.
@@ -695,7 +756,7 @@ function QuantumApothecaryInner() {
                       const { data, error } = await supabase.from('sqi_sessions').select('messages').eq('id', s.id).eq('user_id', user.id).single();
                       if (!error && data && Array.isArray(data.messages)) { setCurrentSessionId(s.id); setMessages(data.messages as Message[]); setSessionsOpen(false); }
                     }}
-                    className={`w-full text-left p-3.5 rounded-2xl border bg-white/[0.02] hover:bg-white/[0.05] transition ${currentSessionId === s.id ? 'border-[#D4AF37]/40' : 'border-white/[0.05]'}`}>
+                    className={`w-full text-left p-3.5 rounded-2xl border bg-white/[0.02] hover:bg:white/[0.05] transition ${currentSessionId === s.id ? 'border-[#D4AF37]/40' : 'border-white/[0.05]'}`}>
                     <p className="text-[11px] font-black truncate">{s.title || 'Untitled SQI Session'}</p>
                     {s.updated_at && <p className="text-[9px] text-white/30 mt-1 font-bold">{new Date(s.updated_at).toLocaleString()}</p>}
                   </button>
@@ -808,7 +869,7 @@ export default function QuantumApothecary() {
 
   if (authLoading || membershipLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#050505] text-white">
+      <div className="flex min-h-screen items-center justify-center bg-[#050505] text:white">
         <span className="text-[10px] uppercase tracking-[0.5em] text-[#D4AF37]/40">Initializing SQI…</span>
       </div>
     );
@@ -821,3 +882,4 @@ export default function QuantumApothecary() {
 
   return <QuantumApothecaryInner />;
 }
+
