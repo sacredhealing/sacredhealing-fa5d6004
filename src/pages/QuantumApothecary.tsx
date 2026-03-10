@@ -44,7 +44,8 @@ function renderChatText(text: string) {
 function renderInline(text: string): React.ReactNode {
   const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g);
   return parts.map((p, i) => {
-    if (p.startsWith('**') && p.endsWith('**')) return <strong key={i} className="text-[#D4AF37] font-semibold">{p.slice(2, -2)}</strong>;
+    // Bold text: keep simple strong emphasis, no yellow highlight
+    if (p.startsWith('**') && p.endsWith('**')) return <strong key={i} className="font-semibold text-white">{p.slice(2, -2)}</strong>;
     if (p.startsWith('*') && p.endsWith('*')) return <em key={i} className="italic text-white/80">{p.slice(1, -1)}</em>;
     if (p.startsWith('`') && p.endsWith('`')) return <code key={i} className="bg-[#D4AF37]/10 px-1 rounded text-xs font-mono text-[#D4AF37]">{p.slice(1, -1)}</code>;
     return p;
@@ -361,7 +362,7 @@ function QuantumApothecaryInner() {
           {messages.map((msg, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
               className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[90%] p-3 rounded-2xl ${
+              <div className={`max-w-full p-3 rounded-2xl ${
                 msg.role === 'user'
                   ? 'bg-[#D4AF37]/10 border border-[#D4AF37]/25 rounded-br-sm'
                   : 'bg-white/[0.03] border border-white/[0.06] rounded-bl-sm'
