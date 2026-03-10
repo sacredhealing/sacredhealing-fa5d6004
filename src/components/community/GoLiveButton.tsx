@@ -35,7 +35,7 @@
  * ─────────────────────────────────────────────────────────────
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface GoLiveButtonProps {
@@ -60,7 +60,7 @@ export default function GoLiveButton({
 
   // Check if there's currently a live session in this channel
   // (stored in Supabase when admin starts it)
-  useState(() => {
+  useEffect(() => {
     const checkLive = async () => {
       const { data } = await supabase
         .from('community_live_sessions')
@@ -90,7 +90,7 @@ export default function GoLiveButton({
       .subscribe();
 
     return () => { supabase.removeChannel(sub); };
-  });
+  }, [channelId]);
 
   const createRoom = async (type: 'group' | 'private') => {
     setLoading(true);
