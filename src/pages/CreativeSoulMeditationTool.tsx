@@ -815,7 +815,13 @@ export default function CreativeSoulMeditationTool() {
 
           {/* ══ STEP 1: SOURCE ══ */}
           <SQISection number="1" title="Source">
-            <NeuralSourceInput engine={engine} />
+            <NeuralSourceInput
+              layer={engine.neuralLayer}
+              onLoadFile={(file) => engine.loadNeuralSource(file)}
+              onLoadUrl={(url) => { void engine.loadNeuralSource(url); }}
+              onTogglePlay={engine.toggleNeuralPlay}
+              onVolumeChange={engine.updateNeuralVolume}
+            />
           </SQISection>
 
           {/* ══ STEP 2: ATMOSPHERE ══ */}
