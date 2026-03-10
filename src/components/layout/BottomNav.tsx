@@ -46,7 +46,10 @@ export const BottomNav: React.FC = () => {
                 <div className="shrink-0 flex items-center justify-center">
                   <item.icon
                     className={cn(
-                      'w-5 h-5 transition-all duration-200',
+                      // Make the Nexus icon slightly larger on mobile
+                      item.to === '/dashboard'
+                        ? 'w-6 h-6 md:w-5 md:h-5 transition-all duration-200'
+                        : 'w-5 h-5 transition-all duration-200',
                       isActive && 'drop-shadow-[0_0_6px_rgba(212,175,55,0.5)]'
                     )}
                   />
