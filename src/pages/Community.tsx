@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import AdminGoLive from '@/components/community/AdminGoLive';
 
 const GOLD = '#D4AF37';
 const GOLD_GLOW = 'rgba(212,175,55,0.25)';
