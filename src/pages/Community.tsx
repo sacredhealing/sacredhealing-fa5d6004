@@ -1104,21 +1104,7 @@ const Community: React.FC = () => {
               </div>
             </div>
             <div className="sqi-header-actions">
-              <button className="sqi-header-btn" title="Go Live" style={{
-                background: 'rgba(212,175,55,0.12)',
-                borderColor: 'rgba(212,175,55,0.3)',
-                color: GOLD,
-                fontSize: 10,
-                fontWeight: 800,
-                letterSpacing: '0.15em',
-                width: 'auto',
-                padding: '0 12px',
-                gap: 6,
-                display: 'flex',
-                alignItems: 'center',
-              }}>
-                🔴 GO LIVE
-              </button>
+              <AdminGoLive />
               <button className="sqi-header-btn" title="Search">
                 🔍
               </button>
