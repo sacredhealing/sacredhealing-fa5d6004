@@ -1061,7 +1061,6 @@ const Community: React.FC = () => {
           </div>
 
           <div className="sqi-sidebar-footer">
-            <button className="sqi-golive-btn">📡 Enter Sacred Space (Go Live)</button>
             <button className="sqi-new-msg-btn">+ New Message</button>
           </div>
         </aside>
