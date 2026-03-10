@@ -44,7 +44,9 @@ export function useSriYantraAccess() {
     check();
   }, [check]);
 
-  const hasAccess = isAdmin || hasPurchasedAccess || hasFeatureAccess(false, tier, FEATURE_TIER.sriYantraShield);
+  // Centralize all tier/admin logic through hasFeatureAccess so admins always bypass tiers
+  const hasAccess =
+    hasFeatureAccess(isAdmin, tier, FEATURE_TIER.sriYantraShield) || hasPurchasedAccess;
 
   return { hasAccess, loading, refetch: check };
 }
