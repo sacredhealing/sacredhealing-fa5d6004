@@ -487,7 +487,7 @@ export default function CreativeSoulMeditationTool() {
   const { isAdmin, isLoading: adminLoading } = useAdminRole();
 
   const engine = useSoulMeditateEngine();
-  const offlineExport = useOfflineExport(engine);
+  const offlineExport = useOfflineExport();
 
   const [visualizerMode, setVisualizerMode] = useState<VisualizerMode>('bars');
   const [activeStyle, setActiveStyle] = useState<MeditationStyle>('indian');
