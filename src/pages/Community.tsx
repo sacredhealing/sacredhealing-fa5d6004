@@ -943,36 +943,28 @@ const Community = () => {
     setLikingPostId(null);
   }, [user, feedPosts]);
 
-  // Fetch member list for Members tab (with avatars)
+  // Fetch all signed-up users for Members tab (profiles = one per signup)
   useEffect(() => {
     const loadMembers = async () => {
       try {
-        let { data, error } = await supabase
+        const { data, error } = await supabase
           .from("profiles")
-          .select("user_id, id, full_name, subscription_tier, avatar_url")
-          .limit(200);
+          .select("*")
+          .limit(500);
 
         if (error) {
-          console.error("Error loading members (user_id schema):", error);
+          console.error("Error loading members:", error);
+          setMembers([]);
+          return;
         }
 
-        if (!data || data.length === 0) {
-          const fallback = await supabase
-            .from("profiles")
-            .select("id, full_name, subscription_tier, avatar_url")
-            .limit(200);
-          if (!fallback.error && fallback.data) {
-            data = fallback.data as any[];
-          }
-        }
-
-        const mapped: Member[] =
-          (data as any[] | null)?.map((row) => ({
-            id: (row.user_id as string) || (row.id as string),
-            full_name: (row.full_name as string) ?? null,
-            subscription_tier: (row.subscription_tier as string) ?? null,
-            avatar_url: (row.avatar_url as string) ?? null,
-          })) ?? [];
+        const rows = (data as any[] | null) ?? [];
+        const mapped: Member[] = rows.map((row) => ({
+          id: (row.user_id != null ? row.user_id : row.id) as string,
+          full_name: (row.full_name ?? null) as string | null,
+          subscription_tier: (row.subscription_tier ?? row.role ?? null) as string | null,
+          avatar_url: (row.avatar_url ?? null) as string | null,
+        }));
 
         setMembers(mapped);
       } catch (e) {
@@ -1900,8 +1892,10 @@ const Community = () => {
                               borderRadius: "50%",
                               background: "#22c55e",
                               border: "2px solid #050505",
+                              boxShadow: "0 0 8px #22c55e, 0 0 12px rgba(34, 197, 94, 0.6)",
                             }}
                             title="Online"
+                            aria-label="Online"
                           />
                         )}
                       </div>
@@ -1909,9 +1903,31 @@ const Community = () => {
                         <div className="c-member-name">
                           {m.full_name || "Member"}
                         </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                           {isOnline && (
-                            <span style={{ fontSize: 10, color: "#22c55e", fontWeight: 600 }}>Online</span>
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 4,
+                                fontSize: 10,
+                                color: "#22c55e",
+                                fontWeight: 700,
+                                letterSpacing: "0.05em",
+                                textTransform: "uppercase",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  width: 6,
+                                  height: 6,
+                                  borderRadius: "50%",
+                                  background: "#22c55e",
+                                  boxShadow: "0 0 6px #22c55e",
+                                }}
+                              />
+                              Online
+                            </span>
                           )}
                           {m.subscription_tier && (
                             <span className="c-member-status">
