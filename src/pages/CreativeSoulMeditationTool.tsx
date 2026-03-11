@@ -566,7 +566,7 @@ export default function CreativeSoulMeditationTool() {
   }, [engine, activeStyle, healingFreq, brainwaveFreq, healingVolume, brainwaveVolume]);
 
   const stopAll = useCallback(() => {
-    engine.stopAll?.();
+    (engine as any).stopAll?.();
     setAlchemyCommenced(false);
   }, [engine]);
 
