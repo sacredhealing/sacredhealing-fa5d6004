@@ -806,7 +806,7 @@ export default function CreativeSoulMeditationTool() {
               </div>
               {offlineExport.progress?.isExporting && (
                 <Progress
-                  value={(offlineExport.progress.progress ?? 0) * 100}
+                  value={(offlineExport.progress.percent ?? 0) * 100}
                   className="h-1"
                   style={{ background: 'rgba(212,175,55,0.1)' }}
                 />
