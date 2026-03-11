@@ -617,6 +617,13 @@ export default function CreativeSoulMeditationTool() {
     }
 
     // Build offline render config from current engine state
+    // Map rich DSP object → simple numeric settings for offline renderer
+    const dspForExport = {
+      reverb: engine.dsp?.reverb?.wet ?? 0,
+      delay: engine.dsp?.delay?.wet ?? 0,
+      warmth: engine.dsp?.warmth?.enabled ? engine.dsp.warmth.drive ?? 0 : 0,
+    };
+
     const cfg = {
       durationSeconds: exportDuration,
       neuralAudioUrl: engine.neuralLayer.exportInput?.directUrl,
@@ -628,7 +635,7 @@ export default function CreativeSoulMeditationTool() {
       binauralCarrierHz: engine.frequencies.binaural.carrierHz,
       binauralBeatHz: engine.frequencies.binaural.enabled ? engine.frequencies.binaural.beatHz : undefined,
       binauralVolume: engine.binauralVolume,
-      dsp: engine.dsp,
+      dsp: dspForExport,
       masterVolume: engine.masterVolume,
     };
 
