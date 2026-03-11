@@ -49,17 +49,17 @@ function renderChatText(text: string) {
       </h1>
     );
     if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) return (
-      <li key={i} style={{ marginLeft: '18px', listStyleType: 'disc', fontSize: '14px', lineHeight: '1.65', color: 'rgba(255,255,255,0.88)', marginBottom: '6px' }}>
+      <li key={i} style={{ marginLeft: '18px', listStyleType: 'disc', fontSize: '13px', lineHeight: '1.6', color: 'rgba(255,255,255,0.88)', marginBottom: '6px' }}>
         {renderInline(trimmed.slice(2))}
       </li>
     );
     if (/^\d+\.\s/.test(trimmed)) return (
-      <li key={i} style={{ marginLeft: '18px', listStyleType: 'decimal', fontSize: '14px', lineHeight: '1.65', color: 'rgba(255,255,255,0.88)', marginBottom: '6px' }}>
+      <li key={i} style={{ marginLeft: '18px', listStyleType: 'decimal', fontSize: '13px', lineHeight: '1.6', color: 'rgba(255,255,255,0.88)', marginBottom: '6px' }}>
         {renderInline(trimmed.replace(/^\d+\.\s/, ''))}
       </li>
     );
     return (
-      <p key={i} style={{ fontSize: '14px', lineHeight: '1.7', color: 'rgba(255,255,255,0.85)', marginBottom: '10px' }}>
+      <p key={i} style={{ fontSize: '13px', lineHeight: '1.6', color: 'rgba(255,255,255,0.85)', marginBottom: '8px' }}>
         {renderInline(trimmed)}
       </p>
     );
@@ -396,7 +396,7 @@ function QuantumApothecaryInner() {
           {messages.map((msg, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
               className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[95%] p-4 rounded-2xl ${
+              <div className={`w-full max-w-full p-4 rounded-2xl ${
                 msg.role === 'user'
                   ? 'bg-[#D4AF37]/10 border border-[#D4AF37]/25 rounded-br-sm'
                   : 'bg-white/[0.03] border border-white/[0.06] rounded-bl-sm w-full'
