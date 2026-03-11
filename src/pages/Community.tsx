@@ -1846,14 +1846,14 @@ const Community = () => {
               </div>
               {(() => {
                 const query = memberSearch.trim().toLowerCase();
-                const filtered = members
-                  .filter((m) => m.id !== user?.id)
-                  .filter((m) => {
-                    if (!query) return true;
-                    const name = (m.full_name || "").toLowerCase();
-                    const tier = (m.subscription_tier || "").toLowerCase();
-                    return name.includes(query) || tier.includes(query);
-                  });
+                const filtered = members.filter((m) => {
+                  if (!query) return true;
+                  const name = (m.full_name || "").toLowerCase();
+                  const tier = (m.subscription_tier || "").toLowerCase();
+                  const searchText = `${name} ${tier}`;
+                  const words = query.split(/\s+/).filter(Boolean);
+                  return words.every((word) => searchText.includes(word));
+                });
                 if (filtered.length === 0) {
                   return (
                     <div className="c-empty" style={{ marginTop: 24 }}>
