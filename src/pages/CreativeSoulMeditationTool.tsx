@@ -615,11 +615,6 @@ export default function CreativeSoulMeditationTool() {
       setShowPaymentDialog(true);
       return;
     }
-<<<<<<< HEAD
-    // Export not yet configured
-    toast.info('Export feature coming soon');
-  }, [engine, hasExportAccess, user, navigate, offlineExport]);
-=======
 
     // Build offline render config from current engine state
     const cfg = {
@@ -674,7 +669,6 @@ export default function CreativeSoulMeditationTool() {
     healingFreq,
     brainwaveFreq,
   ]);
->>>>>>> d51a0bd (feat(soul-meditate): add admin export and named filenames)
 
   // Check access
   useEffect(() => {
