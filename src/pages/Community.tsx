@@ -680,6 +680,18 @@ type FeedPost = {
   video_url: string | null;
   pdf_url: string | null;
   post_type: string;
+  likes_count: number;
+  comments_count: number;
+  user_liked?: boolean;
+};
+
+type FeedComment = {
+  id: string;
+  post_id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+  user_name?: string | null;
 };
 
 const Community = () => {
@@ -705,6 +717,11 @@ const Community = () => {
   const [feedFile, setFeedFile] = useState<File | null>(null);
   const [feedLoading, setFeedLoading] = useState(false);
   const [roomIds, setRoomIds] = useState<Record<string, string>>({});
+  const [openCommentsPostId, setOpenCommentsPostId] = useState<string | null>(null);
+  const [commentsByPostId, setCommentsByPostId] = useState<Record<string, FeedComment[]>>({});
+  const [commentDraft, setCommentDraft] = useState("");
+  const [commentingPostId, setCommentingPostId] = useState<string | null>(null);
+  const [likingPostId, setLikingPostId] = useState<string | null>(null);
 
   const isDmChannel = (id: string | null) => !!id && id.startsWith("dm-");
 
@@ -792,22 +809,129 @@ const Community = () => {
     [roomIds, user]
   );
 
-  // Fetch admin feed posts
+  // Fetch feed posts (admin posts); include likes/comments counts and current user's like state
   const fetchFeedPosts = useCallback(async () => {
     setFeedLoading(true);
     const { data, error } = await supabase
       .from("community_posts")
-      .select("id, user_id, content, created_at, image_url, audio_url, video_url, pdf_url, post_type")
+      .select("id, user_id, content, created_at, image_url, audio_url, video_url, pdf_url, post_type, likes_count, comments_count")
       .order("created_at", { ascending: false })
       .limit(30);
     if (error) {
       console.error("Error loading community feed:", error);
       setFeedPosts([]);
-    } else {
-      setFeedPosts((data as FeedPost[]) || []);
+      setFeedLoading(false);
+      return;
     }
+    const posts = (data as (FeedPost & { likes_count?: number; comments_count?: number })[]) || [];
+    const withLiked: FeedPost[] = posts.map((p) => ({
+      ...p,
+      likes_count: p.likes_count ?? 0,
+      comments_count: p.comments_count ?? 0,
+      user_liked: false,
+    }));
+    if (user?.id) {
+      const postIds = withLiked.map((p) => p.id);
+      const { data: likesData } = await supabase
+        .from("post_likes")
+        .select("post_id")
+        .eq("user_id", user.id)
+        .in("post_id", postIds);
+      const likedSet = new Set((likesData || []).map((r: { post_id: string }) => r.post_id));
+      withLiked.forEach((p) => {
+        p.user_liked = likedSet.has(p.id);
+      });
+    }
+    setFeedPosts(withLiked);
     setFeedLoading(false);
-  }, []);
+  }, [user?.id]);
+
+  const fetchPostComments = useCallback(async (postId: string) => {
+    const { data, error } = await supabase
+      .from("post_comments")
+      .select("id, post_id, user_id, content, created_at")
+      .eq("post_id", postId)
+      .order("created_at", { ascending: true });
+    if (error) {
+      console.error("Error loading comments:", error);
+      setCommentsByPostId((prev) => ({ ...prev, [postId]: [] }));
+      return;
+    }
+    const rows = (data || []) as { id: string; post_id: string; user_id: string; content: string; created_at: string }[];
+    const userIds = [...new Set(rows.map((r) => r.user_id))];
+    let names: Record<string, string | null> = {};
+    if (userIds.length > 0) {
+      const { data: profiles } = await supabase.from("profiles").select("user_id, id, full_name").in("user_id", userIds);
+      (profiles || []).forEach((p: { user_id?: string; id?: string; full_name: string | null }) => {
+        const uid = (p as any).user_id ?? (p as any).id;
+        if (uid) names[uid] = p.full_name ?? null;
+      });
+    }
+    const comments: FeedComment[] = rows.map((r) => ({
+      id: r.id,
+      post_id: r.post_id,
+      user_id: r.user_id,
+      content: r.content,
+      created_at: r.created_at,
+      user_name: user?.id === r.user_id ? "You" : (names[r.user_id] ?? "Member"),
+    }));
+    setCommentsByPostId((prev) => ({ ...prev, [postId]: comments }));
+  }, [user?.id]);
+
+  const addComment = useCallback(async (postId: string, content: string) => {
+    if (!user || !content.trim()) return;
+    setCommentingPostId(postId);
+    const { error } = await supabase.from("post_comments").insert({
+      post_id: postId,
+      user_id: user.id,
+      content: content.trim(),
+    });
+    setCommentingPostId(null);
+    setCommentDraft("");
+    if (error) {
+      console.error("Failed to add comment:", error);
+      toast.error("Could not add comment.");
+      return;
+    }
+    const post = feedPosts.find((p) => p.id === postId);
+    if (post) {
+      await supabase
+        .from("community_posts")
+        .update({ comments_count: (post.comments_count || 0) + 1 })
+        .eq("id", postId);
+      setFeedPosts((prev) =>
+        prev.map((p) => (p.id === postId ? { ...p, comments_count: (p.comments_count || 0) + 1 } : p))
+      );
+    }
+    await fetchPostComments(postId);
+    toast.success("Comment added.");
+  }, [user, feedPosts, fetchPostComments]);
+
+  const likePost = useCallback(async (postId: string) => {
+    if (!user) {
+      toast.info("Sign in to like posts.");
+      return;
+    }
+    const post = feedPosts.find((p) => p.id === postId);
+    if (!post) return;
+    setLikingPostId(postId);
+    if (post.user_liked) {
+      await supabase.from("post_likes").delete().eq("post_id", postId).eq("user_id", user.id);
+      await supabase.from("community_posts").update({ likes_count: Math.max(0, (post.likes_count || 0) - 1) }).eq("id", postId);
+      setFeedPosts((prev) =>
+        prev.map((p) =>
+          p.id === postId ? { ...p, user_liked: false, likes_count: Math.max(0, (p.likes_count || 0) - 1) } : p
+        )
+      );
+    } else {
+      await supabase.from("post_likes").insert({ post_id: postId, user_id: user.id });
+      await supabase.from("community_posts").update({ likes_count: (post.likes_count || 0) + 1 }).eq("id", postId);
+      setFeedPosts((prev) =>
+        prev.map((p) => (p.id === postId ? { ...p, user_liked: true, likes_count: (p.likes_count || 0) + 1 } : p))
+      );
+    }
+    setLikingPostId(null);
+  }, [user, feedPosts]);
 
   // Fetch member list for Members tab
   useEffect(() => {
@@ -889,6 +1013,10 @@ const Community = () => {
   useEffect(() => {
     fetchFeedPosts();
   }, [fetchFeedPosts]);
+
+  useEffect(() => {
+    if (openCommentsPostId) fetchPostComments(openCommentsPostId);
+  }, [openCommentsPostId, fetchPostComments]);
 
   // Realtime listener so the Community view reacts to new feed + live posts
   useEffect(() => {
@@ -1227,7 +1355,7 @@ const Community = () => {
         {/* Mobile tabs */}
         <div className="c-top-tabs">
           <button className={`c-top-tab ${mobileTab === "chat" ? "active" : ""}`} onClick={() => setMobileTab("chat")}>Chat</button>
-          {isAdmin && <button className={`c-top-tab ${mobileTab === "feed" ? "active" : ""}`} onClick={() => setMobileTab("feed")}>Feed</button>}
+          <button className={`c-top-tab ${mobileTab === "feed" ? "active" : ""}`} onClick={() => setMobileTab("feed")}>Feed</button>
           <button className={`c-top-tab ${mobileTab === "members" ? "active" : ""}`} onClick={() => setMobileTab("members")}>Members</button>
         </div>
 
@@ -1416,9 +1544,10 @@ const Community = () => {
                 })}
               </div>
             )
-          ) : mobileTab === "feed" && isAdmin ? (
+          ) : mobileTab === "feed" ? (
             <div className="c-feed-view">
-              <div className="c-section-label">ADMIN FEED</div>
+              <div className="c-section-label">{isAdmin ? "ADMIN FEED" : "SANGHA FEED"}</div>
+              {isAdmin && (
               <div className="c-feed-card" style={{ marginBottom: 16 }}>
                 <textarea
                   placeholder="Share an update with the Sangha..."
@@ -1488,6 +1617,7 @@ const Community = () => {
                   🔴 Go Live via Divine Sangha
                 </button>
               </div>
+              )}
 
               {feedLoading && feedPosts.length === 0 ? (
                 <div className="c-empty">
@@ -1561,6 +1691,100 @@ const Community = () => {
                       >
                         📄 Open attached PDF
                       </a>
+                    )}
+                    <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 12, paddingTop: 10, borderTop: "1px solid rgba(255,255,255,.06)" }}>
+                      <button
+                        type="button"
+                        onClick={() => likePost(post.id)}
+                        disabled={!!likingPostId}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 6,
+                          background: "none",
+                          border: "none",
+                          color: post.user_liked ? "#D4AF37" : "rgba(255,255,255,.5)",
+                          fontSize: 12,
+                          cursor: likingPostId ? "default" : "pointer",
+                        }}
+                      >
+                        <span>{post.user_liked ? "❤️" : "🤍"}</span>
+                        <span>{post.likes_count ?? 0}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setOpenCommentsPostId((prev) => (prev === post.id ? null : post.id))}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 6,
+                          background: "none",
+                          border: "none",
+                          color: "rgba(255,255,255,.5)",
+                          fontSize: 12,
+                          cursor: "pointer",
+                        }}
+                      >
+                        <span>💬</span>
+                        <span>{post.comments_count ?? 0}</span>
+                      </button>
+                    </div>
+                    {openCommentsPostId === post.id && (
+                      <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid rgba(255,255,255,.06)" }}>
+                        {(commentsByPostId[post.id] || []).map((c) => (
+                          <div key={c.id} style={{ marginBottom: 8, fontSize: 12, color: "rgba(255,255,255,.8)" }}>
+                            <span style={{ fontWeight: 600, color: "rgba(212,175,55,.9)", marginRight: 6 }}>{c.user_name ?? "Member"}:</span>
+                            <span>{c.content}</span>
+                            <span style={{ marginLeft: 6, color: "rgba(255,255,255,.4)", fontSize: 11 }}>{formatTime(c.created_at)}</span>
+                          </div>
+                        ))}
+                        {user ? (
+                          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                            <input
+                              type="text"
+                              placeholder="Write a comment..."
+                              value={commentDraft}
+                              onChange={(e) => setCommentDraft(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  addComment(post.id, commentDraft);
+                                }
+                              }}
+                              style={{
+                                flex: 1,
+                                padding: "8px 12px",
+                                borderRadius: 999,
+                                border: "1px solid rgba(255,255,255,.1)",
+                                background: "rgba(5,5,5,.8)",
+                                color: "rgba(255,255,255,.9)",
+                                fontSize: 12,
+                                outline: "none",
+                              }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => addComment(post.id, commentDraft)}
+                              disabled={!commentDraft.trim() || commentingPostId === post.id}
+                              style={{
+                                padding: "8px 14px",
+                                borderRadius: 999,
+                                border: "none",
+                                background: "rgba(212,175,55,.4)",
+                                color: "#050505",
+                                fontSize: 11,
+                                fontWeight: 700,
+                                cursor: commentDraft.trim() && commentingPostId !== post.id ? "pointer" : "default",
+                                opacity: commentDraft.trim() && commentingPostId !== post.id ? 1 : 0.5,
+                              }}
+                            >
+                              {commentingPostId === post.id ? "…" : "Comment"}
+                            </button>
+                          </div>
+                        ) : (
+                          <p style={{ fontSize: 11, color: "rgba(255,255,255,.4)", marginTop: 8 }}>Sign in to comment.</p>
+                        )}
+                      </div>
                     )}
                   </div>
                 ))
