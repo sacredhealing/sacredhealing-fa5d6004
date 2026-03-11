@@ -968,16 +968,25 @@ const Community = () => {
                 ))}
 
                 <div className="c-section-label">PRIVATE</div>
-                {CHANNELS.filter((c) => c.access === "private").map((ch) => (
-                  <button key={ch.id} className="c-channel-row locked" onClick={() => {}}>
-                    <div className="c-ch-icon private">{ch.icon}</div>
-                    <div className="c-ch-info">
-                      <div className="c-ch-name">{ch.name}</div>
-                      <div className="c-ch-desc">{ch.description}</div>
-                    </div>
-                    <span className="c-lock-badge">🔒</span>
-                  </button>
-                ))}
+                {CHANNELS.filter((c) => c.access === "private").map((ch) => {
+                  const locked = !isAdmin;
+                  return (
+                    <button
+                      key={ch.id}
+                      className={`c-channel-row ${locked ? "locked" : ""}`}
+                      onClick={() => {
+                        if (!locked) setActiveChannel(ch.id);
+                      }}
+                    >
+                      <div className="c-ch-icon private">{ch.icon}</div>
+                      <div className="c-ch-info">
+                        <div className="c-ch-name">{ch.name}</div>
+                        <div className="c-ch-desc">{ch.description}</div>
+                      </div>
+                      {locked ? <span className="c-lock-badge">🔒</span> : <div className="c-ch-arrow">›</div>}
+                    </button>
+                  );
+                })}
               </div>
             )
           )}

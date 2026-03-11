@@ -514,6 +514,9 @@ export default function CreativeSoulMeditationTool() {
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [isRefreshingSound, setIsRefreshingSound] = useState(false);
 
+  // User-defined meditation title for export filename
+  const [meditationName, setMeditationName] = useState('');
+
   const handleHealingVolumeChange = useCallback(async (vol: number) => {
     if (!engine.isInitialized) await engine.initialize();
     const audioCtx = engine.getAudioContext();
@@ -598,15 +601,80 @@ export default function CreativeSoulMeditationTool() {
   }, [user, navigate]);
 
   const handleExport = useCallback(async () => {
-    if (!engine.isInitialized) { toast.error('Please initialize the engine first'); return; }
+    if (!engine.isInitialized) {
+      toast.error('Please initialize the engine first');
+      return;
+    }
+
     if (!hasExportAccess) {
-      if (!user) { toast.info('Please sign in to export'); navigate('/auth'); return; }
+      if (!user) {
+        toast.info('Please sign in to export');
+        navigate('/auth');
+        return;
+      }
       setShowPaymentDialog(true);
       return;
     }
+<<<<<<< HEAD
     // Export not yet configured
     toast.info('Export feature coming soon');
   }, [engine, hasExportAccess, user, navigate, offlineExport]);
+=======
+
+    // Build offline render config from current engine state
+    const cfg = {
+      durationSeconds: exportDuration,
+      neuralAudioUrl: engine.neuralLayer.exportInput?.directUrl,
+      neuralSourceVolume: engine.neuralLayer.volume,
+      atmosphereAudioUrl: engine.atmosphereLayer.exportInput?.directUrl,
+      atmosphereVolume: engine.atmosphereLayer.volume,
+      solfeggioHz: engine.frequencies.solfeggio.enabled ? engine.frequencies.solfeggio.hz : undefined,
+      solfeggioVolume: engine.solfeggioVolume,
+      binauralCarrierHz: engine.frequencies.binaural.carrierHz,
+      binauralBeatHz: engine.frequencies.binaural.enabled ? engine.frequencies.binaural.beatHz : undefined,
+      binauralVolume: engine.binauralVolume,
+      dsp: engine.dsp,
+      masterVolume: engine.masterVolume,
+    };
+
+    const result = await offlineExport.exportMeditation(cfg);
+    if (!result) return;
+
+    setExportResult(result);
+
+    // Build descriptive filename including name + Hz info
+    const baseName = (meditationName || 'Siddha Meditation').trim();
+    const safeBase = baseName.replace(/[^a-zA-Z0-9 _-]/g, '').replace(/\s+/g, '_');
+
+    const solfPart = `${healingFreq}Hz`;
+    const bandMap: Record<number, string> = {
+      0.5: 'Epsilon',
+      2: 'Delta',
+      4: 'Theta',
+      6: 'Theta',
+      10: 'Alpha',
+      14: 'Beta',
+      40: 'Gamma',
+    };
+    const bandLabel = bandMap[brainwaveFreq] || `${brainwaveFreq}Hz`;
+    const brainwavePart = bandMap[brainwaveFreq]
+      ? `${bandLabel}${brainwaveFreq}Hz`
+      : `${brainwaveFreq}Hz`;
+
+    const filename = `${safeBase}_${solfPart}_${brainwavePart}.${result.format}`;
+    offlineExport.downloadResult(result, filename);
+  }, [
+    engine,
+    exportDuration,
+    hasExportAccess,
+    user,
+    navigate,
+    offlineExport,
+    meditationName,
+    healingFreq,
+    brainwaveFreq,
+  ]);
+>>>>>>> d51a0bd (feat(soul-meditate): add admin export and named filenames)
 
   // Check access
   useEffect(() => {
@@ -779,6 +847,38 @@ export default function CreativeSoulMeditationTool() {
                 : <><Zap size={14} /> Export Master</>
               }
             </button>
+          </div>
+
+          {/* ── MEDITATION NAME INPUT (for export filename) ── */}
+          <div style={{ marginBottom: 18 }}>
+            <div
+              style={{
+                fontSize: 9,
+                fontWeight: 800,
+                letterSpacing: '0.35em',
+                textTransform: 'uppercase',
+                color: 'rgba(212,175,55,0.6)',
+                marginBottom: 6,
+              }}
+            >
+              Name Your Meditation
+            </div>
+            <input
+              type="text"
+              value={meditationName}
+              onChange={(e) => setMeditationName(e.target.value)}
+              placeholder="e.g. Forest Meditation"
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                borderRadius: 999,
+                border: '1px solid rgba(212,175,55,0.25)',
+                background: 'rgba(5,5,5,0.6)',
+                color: 'rgba(255,255,255,0.9)',
+                fontSize: 12,
+                outline: 'none',
+              }}
+            />
           </div>
 
           {/* ── EXPORT PROGRESS ── */}
