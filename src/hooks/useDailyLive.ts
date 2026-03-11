@@ -61,7 +61,7 @@ export function useDailyLive() {
       .order('started_at', { ascending: false });
     if (channelId) query = query.eq('channel_id', channelId);
     const { data } = await query;
-    return (data as DailySession[] | null) || [];
+    return ((data as unknown) as DailySession[] | null) || [];
   }, []);
 
   return { createRoom, endSession, fetchActiveSessions, activeSession, isCreating, setActiveSession };
