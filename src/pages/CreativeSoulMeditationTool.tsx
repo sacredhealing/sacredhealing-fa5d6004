@@ -484,7 +484,7 @@ export default function CreativeSoulMeditationTool() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  const { isAdmin, loading: adminLoading } = useAdminRole();
+  const { isAdmin, isLoading: adminLoading } = useAdminRole();
 
   const engine = useSoulMeditateEngine();
   const offlineExport = useOfflineExport(engine);
