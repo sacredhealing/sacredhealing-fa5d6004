@@ -623,11 +623,18 @@ export default function CreativeSoulMeditationTool() {
       return;
     }
 
-    // Determine duration from last session if available so export matches played length
-    const derivedDuration =
-      sessionStartMs
-        ? Math.max(30, Math.round((Date.now() - sessionStartMs) / 1000))
-        : exportDuration;
+    // Determine duration from source audio / session so export matches full meditation
+    const sourceDuration = engine.audioBuffer?.duration;
+    const sessionElapsed = sessionStartMs
+      ? (Date.now() - sessionStartMs) / 1000
+      : null;
+
+    const derivedDurationRaw =
+      (sourceDuration && sourceDuration > 0 ? sourceDuration : null) ??
+      (sessionElapsed && sessionElapsed > 0 ? sessionElapsed : null) ??
+      exportDuration;
+
+    const derivedDuration = Math.max(30, Math.round(derivedDurationRaw));
     if (derivedDuration !== exportDuration) {
       setExportDuration(derivedDuration);
     }
