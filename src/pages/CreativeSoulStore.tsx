@@ -287,8 +287,8 @@ const CreativeSoulStore = () => {
           </div>
 
           <div className="cs-store-grid space-y-8">
-            {/* Creative Soul Meditation Card */}
-            <Card className="cs-store-card overflow-hidden">
+          {/* Creative Soul Meditation Card */}
+          <Card className="cs-store-card overflow-hidden">
               <CardHeader className="pb-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#D4AF37]/12 border border-[#D4AF37]/35">
@@ -388,6 +388,69 @@ const CreativeSoulStore = () => {
               {affiliateId && (
                 <p className="text-[10px] text-center text-white/45 tracking-[0.18em] uppercase mt-1">
                   Affiliate field active · Your referrer earns 30% commission
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Siddha Sound Alchemy Oracle (Admin Tool) */}
+          <Card className="cs-store-card overflow-hidden mt-6">
+            <CardHeader className="pb-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#D4AF37]/12 border border-[#D4AF37]/35">
+                  <Sparkles className="w-6 h-6 text-[#D4AF37]" />
+                </div>
+                <div className="text-right space-y-1">
+                  <Badge variant="outline" className="bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/40 text-[10px] tracking-[0.18em] uppercase">
+                    Admin Tool
+                  </Badge>
+                  <p className="text-[9px] font-semibold tracking-[0.32em] uppercase text-white/40">
+                    Siddha Sound Alchemy Oracle · 2050
+                  </p>
+                </div>
+              </div>
+              <CardTitle className="text-xl text-white mt-5">
+                Siddha Sound Alchemy Oracle
+              </CardTitle>
+              <CardDescription className="text-sm leading-relaxed text-white/60 mt-2">
+                Quantum audio analysis console that scans uploaded tracks with Gemini AI, applies
+                Siddha master EQ signatures, and renders alchemized meditations into Supabase
+                storage. Protected creation space for your inner-circle transmissions.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-white/70">
+                <div className="flex flex-col gap-1 rounded-2xl bg-black/40 border border-white/5 p-3">
+                  <span className="font-semibold text-[11px] tracking-[0.18em] uppercase text-white/60">
+                    Gemini · Supabase
+                  </span>
+                  <span>Gemini-3 Flash + Supabase service role for secure oracle processing.</span>
+                </div>
+                <div className="flex flex-col gap-1 rounded-2xl bg-black/40 border border-white/5 p-3">
+                  <span className="font-semibold text-[11px] tracking-[0.18em] uppercase text-white/60">
+                    FFmpeg Engine
+                  </span>
+                  <span>Server-side synthesis of healing Hz, binaurals and master EQ layers.</span>
+                </div>
+                <div className="flex flex-col gap-1 rounded-2xl bg-black/40 border border-white/5 p-3">
+                  <span className="font-semibold text-[11px] tracking-[0.18em] uppercase text-white/60">
+                    Git Integration
+                  </span>
+                  <span>Optional GitHub push for &quot;Alchemy-Build&quot; releases of finished tracks.</span>
+                </div>
+              </div>
+
+              {isAdmin ? (
+                <Button
+                  onClick={() => navigate("/creative-soul/siddha-oracle")}
+                  className="w-full bg-[#D4AF37] hover:bg-[#f0d26a] text-black font-semibold tracking-[0.18em] uppercase text-[10px]"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Open Siddha Sound Alchemy Oracle
+                </Button>
+              ) : (
+                <p className="text-[10px] text-center text-white/45 tracking-[0.18em] uppercase">
+                  Admin-only creation console · visible here for roadmap clarity
                 </p>
               )}
             </CardContent>

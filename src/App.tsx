@@ -141,6 +141,7 @@ const DigitalNadi = React.lazy(() => import("./pages/DigitalNadi"));
 const SoulScan = React.lazy(() => import("./pages/SoulScan"));
 const VayuProtocol = React.lazy(() => import("./pages/VayuProtocol"));
 const SiddhaPortal = React.lazy(() => import("./pages/SiddhaPortal"));
+const SiddhaSoundAlchemyOracle = React.lazy(() => import("./pages/SiddhaSoundAlchemyOracle"));
 
 const PageLoader = () => (
   <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a]">
@@ -267,6 +268,7 @@ function AppRoutes() {
                   <Route path="/creative-soul/store" element={<CreativeSoulStore />} />
                   <Route path="/creative-soul/tool" element={<CreativeSoulTool />} />
                   <Route path="/creative-soul/meditation" element={<CreativeSoulMeditationTool />} />
+                  <Route path="/creative-soul/siddha-oracle" element={<SiddhaSoundAlchemyOracle />} />
                   {/* Legacy routes */}
                   <Route path="/creative-soul-tool" element={<CreativeSoulTool />} />
                   <Route path="/creative-soul-meditation-tool" element={<CreativeSoulMeditationTool />} />
