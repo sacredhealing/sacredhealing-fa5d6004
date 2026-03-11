@@ -1097,10 +1097,43 @@ const Community = () => {
       return;
     }
 
-    const roomId = roomIds[activeChannel];
+    // Ensure there is a backing chat_rooms row for this channel (auto-create if missing)
+    let roomId = roomIds[activeChannel];
     if (!roomId) {
-      toast.error("Channel is not configured yet.");
-      return;
+      try {
+        const logical = CHANNELS.find((c) => c.id === activeChannel);
+        const baseType =
+          logical?.id === "stargate"
+            ? "stargate"
+            : logical?.id === "andlig-transformation"
+            ? "andlig"
+            : "community";
+
+        const { data, error } = await supabase
+          .from("chat_rooms")
+          .insert({
+            name: logical?.name || activeChannel,
+            type: baseType,
+            path_slug: null,
+            is_premium: baseType !== "community",
+            intention: logical?.description || null,
+          } as any)
+          .select("id")
+          .single();
+
+        if (error || !data?.id) {
+          console.error("Failed to auto-create chat room:", error);
+          toast.error("Channel is not configured yet.");
+          return;
+        }
+
+        roomId = data.id as string;
+        setRoomIds((prev) => ({ ...prev, [activeChannel]: roomId! }));
+      } catch (e) {
+        console.error("Error while ensuring chat room exists:", e);
+        toast.error("Channel is not configured yet.");
+        return;
+      }
     }
     const { data, error } = await supabase
       .from("chat_messages")
