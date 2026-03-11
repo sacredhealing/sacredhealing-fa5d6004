@@ -1205,6 +1205,48 @@ export type Database = {
         }
         Relationships: []
       }
+      community_live_sessions: {
+        Row: {
+          channel_id: string
+          created_at: string
+          description: string | null
+          ended_at: string | null
+          host_user_id: string
+          id: string
+          room_name: string | null
+          room_url: string | null
+          started_at: string
+          status: string
+          title: string
+        }
+        Insert: {
+          channel_id: string
+          created_at?: string
+          description?: string | null
+          ended_at?: string | null
+          host_user_id: string
+          id?: string
+          room_name?: string | null
+          room_url?: string | null
+          started_at?: string
+          status?: string
+          title: string
+        }
+        Update: {
+          channel_id?: string
+          created_at?: string
+          description?: string | null
+          ended_at?: string | null
+          host_user_id?: string
+          id?: string
+          room_name?: string | null
+          room_url?: string | null
+          started_at?: string
+          status?: string
+          title?: string
+        }
+        Relationships: []
+      }
       community_posts: {
         Row: {
           audio_url: string | null

@@ -20,6 +20,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { supabase } from "@/integrations/supabase/client";
+import { useDailyLive, DailySession } from "@/hooks/useDailyLive";
 import { formatDistanceToNow } from "date-fns";
 
 // ─────────────────────────────────────────────
@@ -665,6 +666,7 @@ type Message = {
 const Community = () => {
   const { user } = useAuth();
   const { isAdmin } = useAdminRole();
+  const daily = useDailyLive();
 
   // UI state
   const [mobileTab, setMobileTab] = useState<"chat" | "feed" | "members">("chat");
@@ -673,6 +675,8 @@ const Community = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const [showGoLiveOptions, setShowGoLiveOptions] = useState(false);
+  const [liveRoomUrl, setLiveRoomUrl] = useState<string | null>(null);
+  const [viewerSessions, setViewerSessions] = useState<DailySession[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [onlineCount] = useState(() => Math.floor(Math.random() * 20) + 5);
 
@@ -692,6 +696,8 @@ const Community = () => {
   useEffect(() => {
     if (activeChannel) {
       fetchMessages(activeChannel);
+      // Check for active live sessions
+      daily.fetchActiveSessions(activeChannel).then(setViewerSessions);
       // Realtime subscription
       const channel = supabase
         .channel(`room-${activeChannel}`)
@@ -704,13 +710,46 @@ const Community = () => {
           setMessages((prev) => [...prev, payload.new as Message]);
         })
         .subscribe();
-      return () => { supabase.removeChannel(channel); };
+      // Listen for live session changes
+      const liveChannel = supabase
+        .channel(`live-${activeChannel}`)
+        .on("postgres_changes", {
+          event: "*",
+          schema: "public",
+          table: "community_live_sessions",
+        }, () => {
+          daily.fetchActiveSessions(activeChannel).then(setViewerSessions);
+        })
+        .subscribe();
+      return () => {
+        supabase.removeChannel(channel);
+        supabase.removeChannel(liveChannel);
+      };
+    } else {
+      setViewerSessions([]);
+      setLiveRoomUrl(null);
     }
-  }, [activeChannel, fetchMessages]);
+  }, [activeChannel, fetchMessages, daily]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  const handleGoLive = async () => {
+    if (!activeChannel || !currentChannel) return;
+    setShowGoLiveOptions(false);
+    const result = await daily.createRoom(activeChannel, `Live in ${currentChannel.name}`);
+    if (result) {
+      setLiveRoomUrl(result.room_url);
+    }
+  };
+
+  const handleEndLive = async () => {
+    if (daily.activeSession) {
+      await daily.endSession(daily.activeSession.id);
+      setLiveRoomUrl(null);
+    }
+  };
 
   const sendMessage = async () => {
     if (!messageText.trim() || !user || !activeChannel) return;
@@ -779,35 +818,68 @@ const Community = () => {
                     <div className="c-chat-name">{currentChannel.name}</div>
                     <div className="c-chat-sub">{currentChannel.description}</div>
                   </div>
-                  {isAdmin && (
+                  {isAdmin && !liveRoomUrl && (
                     <div style={{ position: "relative" }}>
                       <button
-                        className={`c-golive-header-btn ${showGoLiveOptions ? "c-golive-active" : ""}`}
-                        onClick={() => setShowGoLiveOptions(!showGoLiveOptions)}
+                        className={`c-golive-header-btn ${daily.isCreating ? "c-golive-active" : ""}`}
+                        onClick={handleGoLive}
+                        disabled={daily.isCreating}
                       >
-                        🔴 GO LIVE
+                        {daily.isCreating ? "⏳ CREATING..." : "🔴 GO LIVE"}
                       </button>
-                      {showGoLiveOptions && (
-                        <div className="c-golive-options">
-                          <button className="c-golive-opt" onClick={() => setShowGoLiveOptions(false)}>
-                            <span className="c-golive-opt-icon">📹</span>
-                            <div>
-                              <strong>Video Stream</strong>
-                              <span>Camera + Audio broadcast</span>
-                            </div>
-                          </button>
-                          <button className="c-golive-opt" onClick={() => setShowGoLiveOptions(false)}>
-                            <span className="c-golive-opt-icon">🎙</span>
-                            <div>
-                              <strong>Audio Only</strong>
-                              <span>Voice-only broadcast</span>
-                            </div>
-                          </button>
-                        </div>
-                      )}
                     </div>
                   )}
+                  {isAdmin && liveRoomUrl && (
+                    <button
+                      className="c-golive-header-btn c-golive-active"
+                      onClick={handleEndLive}
+                    >
+                      ⬛ END LIVE
+                    </button>
+                  )}
                 </div>
+
+                {/* Live Room iframe (admin broadcasting) */}
+                {liveRoomUrl && (
+                  <div style={{ flexShrink: 0, background: "#000", borderBottom: "1px solid rgba(212,175,55,.15)" }}>
+                    <iframe
+                      src={liveRoomUrl}
+                      allow="camera;microphone;fullscreen;display-capture"
+                      style={{ width: "100%", height: "300px", border: "none" }}
+                    />
+                  </div>
+                )}
+
+                {/* Viewer: active live session banner */}
+                {!liveRoomUrl && viewerSessions.length > 0 && (
+                  <div style={{ flexShrink: 0, padding: "0 14px" }}>
+                    {viewerSessions.map((s) => (
+                      <button
+                        key={s.id}
+                        onClick={() => s.room_url && setLiveRoomUrl(s.room_url)}
+                        style={{
+                          width: "100%",
+                          padding: "12px 16px",
+                          margin: "8px 0",
+                          background: "linear-gradient(135deg, rgba(255,59,48,.12), rgba(212,175,55,.12))",
+                          border: "1px solid rgba(255,59,48,.25)",
+                          borderRadius: "16px",
+                          color: "#ff6b61",
+                          fontWeight: 800,
+                          fontSize: "13px",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "10px",
+                        }}
+                      >
+                        <span style={{ animation: "pulse 1.5s ease-in-out infinite" }}>🔴</span>
+                        LIVE NOW: {s.title}
+                        <span style={{ marginLeft: "auto", fontSize: "10px", color: "rgba(255,255,255,.4)" }}>TAP TO JOIN</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
 
                 {/* Messages */}
                 <div className="c-messages">
