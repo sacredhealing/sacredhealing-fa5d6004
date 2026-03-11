@@ -1069,9 +1069,38 @@ const Community = () => {
       return;
     }
 
-    // DMs: fetch messages once; no live video integration per-room
-    if (isDmChannel(activeChannel)) {
+    // DMs: fetch messages and subscribe to new private messages with this partner
+    if (isDmChannel(activeChannel) && user) {
+      const partnerId = getDmPartnerId(activeChannel, user.id);
       fetchMessages(activeChannel);
+      if (partnerId) {
+        const dmChannel = supabase
+          .channel(`dm-${user.id}-${partnerId}`)
+          .on(
+            "postgres_changes",
+            { event: "INSERT", schema: "public", table: "private_messages" },
+            (payload: { new: { id: string; sender_id: string; receiver_id: string; content: string; created_at: string } }) => {
+              const n = payload.new;
+              const isBetweenUs =
+                (n.sender_id === user.id && n.receiver_id === partnerId) ||
+                (n.sender_id === partnerId && n.receiver_id === user.id);
+              if (!isBetweenUs) return;
+              const newMsg: Message = {
+                id: n.id,
+                channel_id: activeChannel,
+                user_id: n.sender_id,
+                content: n.content,
+                created_at: n.created_at,
+                user_name: n.sender_id === user.id ? "You" : "Member",
+              };
+              setMessages((prev) => [...prev, newMsg]);
+            }
+          )
+          .subscribe();
+        return () => {
+          supabase.removeChannel(dmChannel);
+        };
+      }
       return;
     }
 
@@ -1290,10 +1319,12 @@ const Community = () => {
           .from("chat_rooms")
           .insert({
             name: logical?.name || activeChannel,
+            description: logical?.description || null,
             type: baseType,
             path_slug: null,
             is_premium: baseType !== "community",
             intention: logical?.description || null,
+            created_by: user.id,
           } as any)
           .select("id")
           .single();
