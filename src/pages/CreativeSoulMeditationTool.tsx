@@ -500,6 +500,7 @@ export default function CreativeSoulMeditationTool() {
 
   // Alchemy state
   const [alchemyCommenced, setAlchemyCommenced] = useState(false);
+  const [sessionStartMs, setSessionStartMs] = useState<number | null>(null);
 
   // Volume controls
   const [volumes, setVolumes] = useState({ ambient: 50, binaural: 40, healing: 20, user: 80 });
@@ -547,6 +548,7 @@ export default function CreativeSoulMeditationTool() {
   const commenceAlchemy = useCallback(async () => {
     setIsProcessing(true);
     setAlchemyCommenced(true);
+    setSessionStartMs(Date.now());
     try {
       if (!engine.isInitialized) await engine.initialize();
       const audioCtx = engine.getAudioContext();
@@ -571,7 +573,12 @@ export default function CreativeSoulMeditationTool() {
   const stopAll = useCallback(() => {
     (engine as any).stopAll?.();
     setAlchemyCommenced(false);
-  }, [engine]);
+    if (sessionStartMs) {
+      const elapsed = Math.max(30, Math.round((Date.now() - sessionStartMs) / 1000));
+      setExportDuration(elapsed);
+      setSessionStartMs(null);
+    }
+  }, [engine, sessionStartMs]);
 
   const isPlaying =
     engine.neuralLayer.isPlaying ||
@@ -616,6 +623,15 @@ export default function CreativeSoulMeditationTool() {
       return;
     }
 
+    // Determine duration from last session if available so export matches played length
+    const derivedDuration =
+      sessionStartMs
+        ? Math.max(30, Math.round((Date.now() - sessionStartMs) / 1000))
+        : exportDuration;
+    if (derivedDuration !== exportDuration) {
+      setExportDuration(derivedDuration);
+    }
+
     // Build offline render config from current engine state
     // Map rich DSP object → simple numeric settings for offline renderer
     const dspForExport = {
@@ -625,7 +641,7 @@ export default function CreativeSoulMeditationTool() {
     };
 
     const cfg = {
-      durationSeconds: exportDuration,
+      durationSeconds: derivedDuration,
       neuralAudioUrl: engine.neuralLayer.exportInput?.directUrl,
       neuralSourceVolume: engine.neuralLayer.volume,
       atmosphereAudioUrl: engine.atmosphereLayer.exportInput?.directUrl,
@@ -668,6 +684,7 @@ export default function CreativeSoulMeditationTool() {
   }, [
     engine,
     exportDuration,
+    sessionStartMs,
     hasExportAccess,
     user,
     navigate,
