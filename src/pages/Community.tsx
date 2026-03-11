@@ -663,6 +663,12 @@ type Message = {
   user_name?: string;
 };
 
+type Member = {
+  id: string;
+  full_name: string | null;
+  subscription_tier: string | null;
+};
+
 const Community = () => {
   const { user } = useAuth();
   const { isAdmin } = useAdminRole();
@@ -679,6 +685,8 @@ const Community = () => {
   const [viewerSessions, setViewerSessions] = useState<DailySession[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [onlineCount] = useState(() => Math.floor(Math.random() * 20) + 5);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [memberSearch, setMemberSearch] = useState("");
 
   // Fetch messages for active channel
   const fetchMessages = useCallback(async (channelId: string) => {
@@ -691,6 +699,26 @@ const Community = () => {
       .limit(100);
     setMessages((data as any[]) || []);
     setLoading(false);
+  }, []);
+
+  // Fetch member list for Members tab
+  useEffect(() => {
+    supabase
+      .from("profiles")
+      .select("user_id, full_name, subscription_tier")
+      .limit(100)
+      .then(({ data }) => {
+        const mapped =
+          (data as any[] | null)?.map((row) => ({
+            id: row.user_id as string,
+            full_name: (row.full_name as string) ?? null,
+            subscription_tier: (row.subscription_tier as string) ?? null,
+          })) ?? [];
+        setMembers(mapped);
+      })
+      .catch(() => {
+        setMembers([]);
+      });
   }, []);
 
   useEffect(() => {
@@ -774,7 +802,16 @@ const Community = () => {
     setMessages((prev) => prev.filter((m) => m.id !== id));
   };
 
-  const currentChannel = CHANNELS.find((c) => c.id === activeChannel);
+  const currentChannel =
+    CHANNELS.find((c) => c.id === activeChannel) ||
+    (activeChannel && activeChannel.startsWith("dm-")
+      ? {
+          id: activeChannel,
+          name: "Direct Message",
+          icon: "👥",
+          description: "Private 1-on-1 chat",
+        }
+      : undefined);
 
   const getInitials = (name?: string) => {
     if (!name) return "??";
@@ -807,7 +844,7 @@ const Community = () => {
         {/* Body */}
         <div className="c-body">
           {/* ─── CHANNEL LIST / CHAT ─── */}
-          {(mobileTab === "chat" || window.innerWidth >= 768) && (
+          {(mobileTab === "chat" || window.innerWidth >= 768) ? (
             activeChannel && currentChannel ? (
               <div className="c-chat-view">
                 {/* Chat header */}
@@ -989,7 +1026,63 @@ const Community = () => {
                 })}
               </div>
             )
-          )}
+          ) : mobileTab === "members" ? (
+            <div className="c-members-view">
+              <div className="c-section-label">Members</div>
+              <div style={{ marginBottom: 10 }}>
+                <input
+                  placeholder="Search members…"
+                  value={memberSearch}
+                  onChange={(e) => setMemberSearch(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "8px 12px",
+                    borderRadius: 999,
+                    border: "1px solid rgba(255,255,255,.08)",
+                    background: "rgba(5,5,5,.8)",
+                    color: "rgba(255,255,255,.9)",
+                    fontSize: 12,
+                    outline: "none",
+                  }}
+                />
+              </div>
+              {members
+                .filter((m) =>
+                  memberSearch.trim()
+                    ? (m.full_name || "")
+                        .toLowerCase()
+                        .includes(memberSearch.trim().toLowerCase())
+                    : true
+                )
+                .map((m) => (
+                  <div
+                    key={m.id}
+                    className="c-member-row"
+                    onClick={() => {
+                      if (!user) return;
+                      const ids = [user.id, m.id].sort();
+                      const dmId = `dm-${ids[0]}-${ids[1]}`;
+                      setActiveChannel(dmId);
+                      setMobileTab("chat");
+                    }}
+                  >
+                    <div className="c-member-avatar">
+                      {getInitials(m.full_name || undefined)}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="c-member-name">
+                        {m.full_name || "Member"}
+                      </div>
+                      {m.subscription_tier && (
+                        <div className="c-member-status">
+                          {m.subscription_tier}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+            </div>
+          ) : null}
         </div>
       </div>
     </>
