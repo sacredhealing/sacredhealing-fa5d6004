@@ -258,7 +258,8 @@ export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
     <div
       style={{
         display: 'flex',
-        height: 'calc(100vh - 8rem)',
+        height: '100%',
+        minHeight: 'min(720px, 100vh - 32px)',
         position: 'relative',
         overflow: 'hidden',
         borderRadius: '28px',

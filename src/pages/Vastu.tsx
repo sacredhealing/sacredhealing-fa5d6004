@@ -33,10 +33,8 @@ const Vastu = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-6">
-        <VastuTool isAdmin={isAdmin} />
-      </div>
+    <div className="min-h-screen bg-background px-2 py-3 md:px-4 md:py-6">
+      <VastuTool isAdmin={isAdmin} />
     </div>
   );
 };
