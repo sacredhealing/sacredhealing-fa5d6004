@@ -22,6 +22,7 @@ import { useAdminRole } from "@/hooks/useAdminRole";
 import { supabase } from "@/integrations/supabase/client";
 import { useDailyLive, DailySession } from "@/hooks/useDailyLive";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
 
 // ─────────────────────────────────────────────
 // CHANNEL CONFIG
@@ -703,19 +704,93 @@ const Community = () => {
   const [feedText, setFeedText] = useState("");
   const [feedFile, setFeedFile] = useState<File | null>(null);
   const [feedLoading, setFeedLoading] = useState(false);
+  const [roomIds, setRoomIds] = useState<Record<string, string>>({});
 
-  // Fetch messages for active channel
-  const fetchMessages = useCallback(async (channelId: string) => {
-    setLoading(true);
-    const { data } = await supabase
-      .from("chat_messages")
-      .select("*")
-      .eq("room_id", channelId)
-      .order("created_at", { ascending: true })
-      .limit(100);
-    setMessages((data as any[]) || []);
-    setLoading(false);
-  }, []);
+  const isDmChannel = (id: string | null) => !!id && id.startsWith("dm-");
+
+  const getDmPartnerId = (channelId: string, selfId: string): string | null => {
+    if (!channelId.startsWith("dm-")) return null;
+    const parts = channelId.split("-");
+    if (parts.length !== 3) return null;
+    const [, a, b] = parts;
+    if (selfId === a) return b;
+    if (selfId === b) return a;
+    return null;
+  };
+
+  // Fetch messages for active channel (group rooms + DMs)
+  const fetchMessages = useCallback(
+    async (channelId: string) => {
+      if (!channelId) return;
+      setLoading(true);
+      try {
+        // Direct messages use private_messages table
+        if (isDmChannel(channelId)) {
+          if (!user) {
+            setMessages([]);
+            return;
+          }
+          const partnerId = getDmPartnerId(channelId, user.id);
+          if (!partnerId) {
+            setMessages([]);
+            return;
+          }
+          const { data, error } = await supabase
+            .from("private_messages")
+            .select("*")
+            .or(
+              `and(sender_id.eq.${user.id},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${user.id})`
+            )
+            .order("created_at", { ascending: true });
+
+          if (error) {
+            console.error("Error loading DM messages:", error);
+            setMessages([]);
+            return;
+          }
+
+          const mapped: Message[] =
+            (data as any[] | null)?.map((row) => ({
+              id: row.id,
+              channel_id: channelId,
+              user_id: row.sender_id,
+              content: row.content,
+              created_at: row.created_at,
+              user_name: row.sender_id === user.id ? "You" : "Member",
+            })) ?? [];
+
+          setMessages(mapped);
+          return;
+        }
+
+        // Group channels use chat_messages with UUID room_id
+        const roomId = roomIds[channelId];
+        if (!roomId) {
+          // No backing room yet – show empty state instead of failing
+          setMessages([]);
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from("chat_messages")
+          .select("*")
+          .eq("room_id", roomId)
+          .order("created_at", { ascending: true })
+          .limit(100);
+
+        if (error) {
+          console.error("Error loading channel messages:", error);
+          setMessages([]);
+          return;
+        }
+
+        setMessages((data as any[]) || []);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [roomIds, user]
+  );
 
   // Fetch admin feed posts
   const fetchFeedPosts = useCallback(async () => {
@@ -754,55 +829,107 @@ const Community = () => {
       });
   }, []);
 
+  // Map logical channel ids (like "divine-sangha") to real chat_rooms UUIDs
+  useEffect(() => {
+    const loadRooms = async () => {
+      const { data, error } = await supabase
+        .from("chat_rooms")
+        .select("id, name, type");
+
+      if (error) {
+        console.error("Error loading chat rooms for community:", error);
+        return;
+      }
+
+      const map: Record<string, string> = {};
+      (data || []).forEach((room: any) => {
+        // Match by exact name when possible
+        const matched = CHANNELS.find((ch) => ch.name === room.name);
+        if (matched) {
+          map[matched.id] = room.id;
+        }
+        // Map special types for private spaces
+        if (room.type === "andlig") {
+          map["andlig-transformation"] = room.id;
+        }
+        if (room.type === "stargate") {
+          map["stargate"] = room.id;
+        }
+      });
+
+      setRoomIds(map);
+    };
+
+    loadRooms();
+  }, []);
+
   useEffect(() => {
     fetchFeedPosts();
   }, [fetchFeedPosts]);
 
   useEffect(() => {
-    if (activeChannel) {
-      fetchMessages(activeChannel);
-      // Check for active live sessions once when channel changes
-      daily.fetchActiveSessions(activeChannel).then(setViewerSessions);
-      // Realtime subscription for messages in this room
-      const channel = supabase
-        .channel(`room-${activeChannel}`)
-        .on(
-          "postgres_changes",
-          {
-            event: "INSERT",
-            schema: "public",
-            table: "chat_messages",
-            filter: `room_id=eq.${activeChannel}`,
-          },
-          (payload) => {
-            setMessages((prev) => [...prev, payload.new as Message]);
-          }
-        )
-        .subscribe();
-      // Listen for live session changes in this channel
-      const liveChannel = supabase
-        .channel(`live-${activeChannel}`)
-        .on(
-          "postgres_changes",
-          {
-            event: "*",
-            schema: "public",
-            table: "community_live_sessions",
-          },
-          () => {
-            daily.fetchActiveSessions(activeChannel).then(setViewerSessions);
-          }
-        )
-        .subscribe();
-      return () => {
-        supabase.removeChannel(channel);
-        supabase.removeChannel(liveChannel);
-      };
-    } else {
+    if (!activeChannel) {
       setViewerSessions([]);
       setLiveRoomUrl(null);
+      return;
     }
-  }, [activeChannel, fetchMessages]);
+
+    // DMs: fetch messages once; no live video integration per-room
+    if (isDmChannel(activeChannel)) {
+      fetchMessages(activeChannel);
+      return;
+    }
+
+    const roomId = roomIds[activeChannel];
+    if (!roomId) {
+      setMessages([]);
+      setViewerSessions([]);
+      setLiveRoomUrl(null);
+      return;
+    }
+
+    fetchMessages(activeChannel);
+    // Check for active live sessions once when channel changes
+    daily.fetchActiveSessions(activeChannel).then(setViewerSessions);
+
+    // Realtime subscription for messages in this room
+    const channel = supabase
+      .channel(`room-${roomId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "chat_messages",
+          filter: `room_id=eq.${roomId}`,
+        },
+        (payload) => {
+          setMessages((prev) => [...prev, payload.new as Message]);
+        }
+      )
+      .subscribe();
+
+    // Listen for live session changes in this channel
+    const liveChannel = supabase
+      .channel(`live-${activeChannel}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "community_live_sessions",
+        },
+        () => {
+          daily.fetchActiveSessions(activeChannel).then(setViewerSessions);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+      supabase.removeChannel(liveChannel);
+    };
+  }, [activeChannel, fetchMessages, roomIds, daily]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -894,13 +1021,65 @@ const Community = () => {
 
   const sendMessage = async () => {
     if (!messageText.trim() || !user || !activeChannel) return;
+
     const text = messageText.trim();
     setMessageText("");
-    await supabase.from("chat_messages").insert({
-      room_id: activeChannel,
-      user_id: user.id,
-      content: text,
-    });
+
+    // DM: write to private_messages
+    if (isDmChannel(activeChannel)) {
+      const partnerId = getDmPartnerId(activeChannel, user.id);
+      if (!partnerId) return;
+
+      const { data, error } = await supabase
+        .from("private_messages")
+        .insert({
+          sender_id: user.id,
+          receiver_id: partnerId,
+          content: text,
+        })
+        .select("*")
+        .single();
+
+      if (error) {
+        console.error("Failed to send DM:", error);
+        toast.error("Could not send message.");
+        return;
+      }
+
+      const newMsg: Message = {
+        id: data.id,
+        channel_id: activeChannel,
+        user_id: data.sender_id,
+        content: data.content,
+        created_at: data.created_at,
+        user_name: "You",
+      };
+      setMessages((prev) => [...prev, newMsg]);
+      return;
+    }
+
+    const roomId = roomIds[activeChannel];
+    if (!roomId) {
+      toast.error("Channel is not configured yet.");
+      return;
+    }
+    const { data, error } = await supabase
+      .from("chat_messages")
+      .insert({
+        room_id: roomId,
+        user_id: user.id,
+        content: text,
+      })
+      .select("*")
+      .single();
+
+    if (error) {
+      console.error("Failed to send message:", error);
+      toast.error("Could not send message.");
+      return;
+    }
+
+    setMessages((prev) => [...prev, data as Message]);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -1062,7 +1241,7 @@ const Community = () => {
                             )}
                             <div className={`c-bubble ${isMine ? "mine" : ""}`}>
                               {msg.content}
-                              {(isMine || isAdmin) && (
+                              {!isDmChannel(activeChannel) && (isMine || isAdmin) && (
                                 <button className="c-delete-btn" onClick={() => deleteMessage(msg.id)}>✕</button>
                               )}
                             </div>
@@ -1310,13 +1489,15 @@ const Community = () => {
                 />
               </div>
               {members
-                .filter((m) =>
-                  memberSearch.trim()
-                    ? (m.full_name || "")
-                        .toLowerCase()
-                        .includes(memberSearch.trim().toLowerCase())
-                    : true
-                )
+                .filter((m) => {
+                  const query = memberSearch.trim().toLowerCase();
+                  if (!query) return true;
+                  const name = (m.full_name || "").toLowerCase();
+                  const tier = (m.subscription_tier || "").toLowerCase();
+                  // If we don't have any metadata, don't hide the member on search
+                  if (!name && !tier) return true;
+                  return name.includes(query) || tier.includes(query);
+                })
                 .map((m) => (
                   <div
                     key={m.id}
