@@ -9,6 +9,146 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+const SQI_STORE_STYLES = `
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;800;900&family=Cinzel:wght@400;700&display=swap');
+
+.cs-store-root {
+  min-height: 100vh;
+  background: #050505;
+  font-family: 'Montserrat', system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  color: rgba(255,255,255,0.92);
+  position: relative;
+  overflow-x: hidden;
+}
+
+.cs-store-root::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(212,175,55,0.06) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 10% 80%, rgba(147,51,234,0.10) 0%, transparent 55%),
+    radial-gradient(ellipse 40% 30% at 90% 20%, rgba(59,130,246,0.10) 0%, transparent 55%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.cs-store-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 18px 16px 96px;
+}
+
+.cs-store-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.cs-store-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(5,5,5,0.9);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cs-store-back:hover {
+  border-color: rgba(212,175,55,0.4);
+  color: #D4AF37;
+  box-shadow: 0 0 18px rgba(212,175,55,0.25);
+}
+
+.cs-store-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(212,175,55,0.35);
+  background: radial-gradient(circle at 0 0, rgba(212,175,55,0.22), rgba(5,5,5,0.96));
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: rgba(5,5,5,0.96);
+  box-shadow: 0 0 24px rgba(212,175,55,0.35);
+}
+
+.cs-store-title-block {
+  text-align: center;
+  margin-top: 6px;
+  margin-bottom: 26px;
+}
+
+.cs-store-title {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(22px, 3.5vw, 32px);
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #D4AF37;
+  text-shadow: 0 0 34px rgba(212,175,55,0.45);
+  margin-bottom: 6px;
+}
+
+.cs-store-subtitle {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.42);
+}
+
+.cs-store-grid {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.cs-store-card {
+  border-radius: 26px;
+  border-width: 1px;
+  border-color: rgba(255,255,255,0.06);
+  background: radial-gradient(circle at top left, rgba(212,175,55,0.09), rgba(12,12,12,0.98));
+  box-shadow:
+    0 24px 80px rgba(0,0,0,0.85),
+    0 0 0 1px rgba(255,255,255,0.02);
+}
+
+.cs-store-price-pill {
+  border-radius: 18px;
+  border-width: 1px;
+  padding: 10px 10px 8px;
+  background: rgba(5,5,5,0.92);
+  border-color: rgba(212,175,55,0.4);
+}
+
+.cs-store-bottom-quote {
+  max-width: 760px;
+  margin: 40px auto 0;
+}
+
+.cs-store-quote-card {
+  border-radius: 26px;
+  border-width: 1px;
+  border-color: rgba(255,255,255,0.06);
+  background: linear-gradient(135deg, rgba(255,255,255,0.02), rgba(0,0,0,0.9));
+}
+`;
+
 const CreativeSoulStore = () => {
   const navigate = useNavigate();
   const { isAdmin } = useAdminRole();
@@ -120,115 +260,107 @@ const CreativeSoulStore = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-purple-900/30 via-purple-800/20 to-background" />
-        <div className="absolute top-0 left-0 w-full h-full">
-          <div className="absolute top-10 left-10 w-72 h-72 bg-purple-600/20 rounded-full blur-3xl" />
-          <div className="absolute top-20 right-20 w-96 h-96 bg-violet-600/15 rounded-full blur-3xl" />
-        </div>
-        
-        <div className="relative container mx-auto px-4 py-12 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-600/20 border border-purple-500/30 mb-6">
-            <Sparkles className="w-8 h-8 text-purple-400" />
+    <>
+      <style dangerouslySetInnerHTML={{ __html: SQI_STORE_STYLES }} />
+      <div className="cs-store-root">
+        <div className="cs-store-inner">
+          <div className="cs-store-topbar">
+            <button
+              type="button"
+              className="cs-store-back"
+              onClick={() => navigate("/dashboard")}
+            >
+              <ArrowLeft className="w-3 h-3" />
+              Back to Nexus
+            </button>
+            <div className="cs-store-pill">
+              <Sparkles className="w-3 h-3" />
+              <span>Creative Soul · SQI 2050</span>
+            </div>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Creative Soul Store
-          </h1>
-          <p className="text-muted-foreground text-lg mb-6">
-            Creative tools designed for creative souls
-          </p>
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate('/dashboard')}
-            className="text-muted-foreground hover:text-white"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Dashboard
-          </Button>
-        </div>
-      </div>
 
-      {/* Tools Section */}
-      <div className="container mx-auto px-4 py-12">
-        <div className="text-center mb-12">
-          <h2 className="text-2xl font-bold text-white mb-2">Creative Tools</h2>
-          <p className="text-muted-foreground">AI-powered tools for your creative journey</p>
-        </div>
+          <div className="cs-store-title-block">
+            <div className="cs-store-title">Creative Soul Store</div>
+            <div className="cs-store-subtitle">
+              Bhakti-Algorithms for Creators & Healers
+            </div>
+          </div>
 
-        <div className="max-w-3xl mx-auto space-y-8">
-          {/* Creative Soul Meditation Card */}
-          <Card className="bg-card/50 border-border/50 backdrop-blur-sm overflow-hidden">
-            <CardHeader className="pb-4">
-              <div className="flex items-start justify-between">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-purple-600/20 border border-purple-500/30">
-                  <Headphones className="w-6 h-6 text-purple-400" />
-                </div>
-                <div className="text-right">
-                  <div className="flex gap-2 mb-1">
-                    <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-xs">
-                      <Check className="w-3 h-3 mr-1" />
-                      Free Access
-                    </Badge>
-                    <Badge variant="outline" className="bg-purple-500/10 text-purple-400 border-purple-500/30 text-xs">
-                      AI Powered
-                    </Badge>
+          <div className="cs-store-grid space-y-8">
+            {/* Creative Soul Meditation Card */}
+            <Card className="cs-store-card overflow-hidden">
+              <CardHeader className="pb-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#D4AF37]/12 border border-[#D4AF37]/35">
+                    <Headphones className="w-6 h-6 text-[#D4AF37]" />
+                  </div>
+                  <div className="text-right space-y-1">
+                    <div className="flex gap-2 justify-end">
+                      <Badge variant="outline" className="bg-emerald-500/10 text-emerald-300 border-emerald-400/40 text-[10px] tracking-[0.18em] uppercase">
+                        <Check className="w-3 h-3 mr-1" />
+                        Access Ready
+                      </Badge>
+                      <Badge variant="outline" className="bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/40 text-[10px] tracking-[0.18em] uppercase">
+                        SQI Engine
+                      </Badge>
+                    </div>
+                    <p className="text-[9px] font-semibold tracking-[0.32em] uppercase text-white/40">
+                      Neural-Sync Meditation Studio · 2050
+                    </p>
                   </div>
                 </div>
-              </div>
-              <CardTitle className="text-xl text-white mt-4">Creative Soul Meditation</CardTitle>
-              <CardDescription className="text-muted-foreground">
-                Transform any audio into high-quality meditation tracks. Apply healing frequencies, 
-                choose from 15 meditation styles, add binaural beats, and use stem separation 
-                for professional-quality audio.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Pricing Options - Clickable */}
-              <div className="grid grid-cols-3 gap-3">
+                <CardTitle className="text-xl text-white mt-5">Creative Soul Meditation</CardTitle>
+                <CardDescription className="text-sm leading-relaxed text-white/60 mt-2">
+                  Transform any audio into a Siddha-grade meditation master. Apply healing frequencies,
+                  choose from 15 meditation styles, add binaural beats, and use stem separation for
+                  professional-quality audio.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-7">
+                {/* Pricing Options - Clickable */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <button 
                   onClick={() => handleMeditationPurchase('lifetime')}
                   disabled={loading || purchaseLoading?.startsWith('meditation-') || isAdmin || hasMeditationAccess}
-                  className="bg-background/50 rounded-lg p-3 text-center border border-border/50 hover:border-purple-500/50 hover:bg-purple-500/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="cs-store-price-pill text-center disabled:opacity-40 disabled:cursor-not-allowed hover:border-[#D4AF37]/70 hover:shadow-[0_0_22px_rgba(212,175,55,0.35)] transition-all"
                 >
                   {purchaseLoading === 'meditation-lifetime' ? (
                     <Loader2 className="w-5 h-5 animate-spin mx-auto mb-1" />
                   ) : (
                     <div className="text-xl font-bold text-white">€149</div>
                   )}
-                  <div className="text-xs text-muted-foreground">Lifetime Access</div>
-                  <Badge className="mt-2 bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs">
+                  <div className="text-[11px] text-white/55 mt-0.5">Lifetime Access</div>
+                  <Badge className="mt-2 bg-emerald-500/15 text-emerald-300 border-emerald-500/40 text-[10px] tracking-[0.18em] uppercase">
                     +1000 SHC
                   </Badge>
                 </button>
                 <button 
                   onClick={() => handleMeditationPurchase('monthly')}
                   disabled={loading || purchaseLoading?.startsWith('meditation-') || isAdmin || hasMeditationAccess}
-                  className="bg-background/50 rounded-lg p-3 text-center border border-purple-500/50 hover:bg-purple-500/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed ring-2 ring-purple-500/30"
+                  className="cs-store-price-pill text-center disabled:opacity-40 disabled:cursor-not-allowed ring-2 ring-[#D4AF37]/40"
                 >
                   {purchaseLoading === 'meditation-monthly' ? (
                     <Loader2 className="w-5 h-5 animate-spin mx-auto mb-1" />
                   ) : (
                     <div className="text-xl font-bold text-white">€14.99</div>
                   )}
-                  <div className="text-xs text-muted-foreground">/ month</div>
-                  <Badge className="mt-2 bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs">
+                  <div className="text-[11px] text-white/55 mt-0.5">/ month</div>
+                  <Badge className="mt-2 bg-emerald-500/15 text-emerald-300 border-emerald-500/40 text-[10px] tracking-[0.18em] uppercase">
                     +1000 SHC
                   </Badge>
                 </button>
                 <button 
                   onClick={() => handleMeditationPurchase('single')}
                   disabled={loading || purchaseLoading?.startsWith('meditation-') || isAdmin || hasMeditationAccess}
-                  className="bg-background/50 rounded-lg p-3 text-center border border-border/50 hover:border-purple-500/50 hover:bg-purple-500/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="cs-store-price-pill text-center disabled:opacity-40 disabled:cursor-not-allowed hover:border-[#D4AF37]/60 hover:shadow-[0_0_18px_rgba(212,175,55,0.25)] transition-all"
                 >
                   {purchaseLoading === 'meditation-single' ? (
                     <Loader2 className="w-5 h-5 animate-spin mx-auto mb-1" />
                   ) : (
                     <div className="text-xl font-bold text-white">€9.99</div>
                   )}
-                  <div className="text-xs text-muted-foreground">One Meditation</div>
-                  <Badge className="mt-2 bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs">
+                  <div className="text-[11px] text-white/55 mt-0.5">One Meditation</div>
+                  <Badge className="mt-2 bg-emerald-500/15 text-emerald-300 border-emerald-500/40 text-[10px] tracking-[0.18em] uppercase">
                     +1000 SHC
                   </Badge>
                 </button>
@@ -236,8 +368,8 @@ const CreativeSoulStore = () => {
 
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {meditationFeatures.map((feature, index) => (
-                  <div key={index} className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <feature.icon className="w-4 h-4 text-purple-400" />
+                  <div key={index} className="flex items-center gap-2 text-xs text-white/65">
+                    <feature.icon className="w-4 h-4 text-[#D4AF37]/80" />
                     <span>{feature.label}</span>
                   </div>
                 ))}
@@ -246,7 +378,7 @@ const CreativeSoulStore = () => {
               {(isAdmin || hasMeditationAccess) && (
                 <Button 
                   onClick={handleMeditationAccess}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                  className="w-full bg-[#D4AF37] hover:bg-[#f0d26a] text-black font-semibold tracking-[0.18em] uppercase text-[10px]"
                 >
                   <Check className="w-4 h-4 mr-2" />
                   Open Tool (Access Granted)
@@ -254,30 +386,32 @@ const CreativeSoulStore = () => {
               )}
 
               {affiliateId && (
-                <p className="text-xs text-center text-muted-foreground">
-                  🎁 Affiliate referral applied • Your referrer earns 30% commission
+                <p className="text-[10px] text-center text-white/45 tracking-[0.18em] uppercase mt-1">
+                  Affiliate field active · Your referrer earns 30% commission
                 </p>
               )}
             </CardContent>
           </Card>
-        </div>
+          </div>
 
-        {/* Bottom Quote */}
-        <div className="max-w-3xl mx-auto mt-16">
-          <Card className="bg-card/30 border-border/30 backdrop-blur-sm">
-            <CardContent className="py-8 text-center">
-              <p className="text-muted-foreground italic mb-4">
-                "You don't need to understand technology. Just start with a feeling — we'll help with the rest."
-              </p>
-              <p className="text-sm text-muted-foreground/70">
-                Every purchase supports your growth, unlocks tools for your creative journey, and rewards affiliates automatically. 
-                All tools include lifetime access and updates.
-              </p>
-            </CardContent>
-          </Card>
+          {/* Bottom Quote */}
+          <div className="cs-store-bottom-quote">
+            <Card className="cs-store-quote-card backdrop-blur-2xl">
+              <CardContent className="py-8 px-6 text-center">
+                <p className="text-sm text-white/70 italic mb-4">
+                  "You don&apos;t need to understand technology. Begin with a feeling — the Siddha-Quantum field will handle the code."
+                </p>
+                <p className="text-[11px] text-white/55 leading-relaxed max-w-xl mx-auto">
+                  Every Creative Soul purchase opens a new protocol inside your Siddha Quantum Nexus:
+                  tools are upgraded over time, affiliates are rewarded automatically, and your field
+                  stays synced with the 2050 timeline.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
