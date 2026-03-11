@@ -71,19 +71,19 @@ export async function renderOffline(config: OfflineRenderConfig): Promise<AudioB
   
   onProgress?.(5, 'Initializing render engine...');
 
-  // Clamp master volume to prevent clipping (max 0.85 for headroom)
-  const safeVolume = Math.min(masterVolume, 0.85);
+  // Clamp master volume to prevent clipping (match live engine headroom: <= 0.9)
+  const safeVolume = Math.min(masterVolume, 0.9);
 
-  // Create master limiter BEFORE master gain to catch peaks
+  // Create master limiter (mirror live engine limiter settings as closely as possible)
   const masterLimiter = offlineCtx.createDynamicsCompressor();
-  masterLimiter.threshold.value = -3;  // -3 dB threshold (catches peaks before clipping)
-  masterLimiter.knee.value = 6;        // Soft knee
-  masterLimiter.ratio.value = 20;      // Brick-wall limiting
+  masterLimiter.threshold.value = -6;  // -6 dB threshold (same as live engine)
+  masterLimiter.knee.value = 10;       // Soft knee width
+  masterLimiter.ratio.value = 20;      // High ratio for limiting
   masterLimiter.attack.value = 0.001;  // 1ms attack
-  masterLimiter.release.value = 0.1;   // 100ms release
+  masterLimiter.release.value = 0.05;  // 50ms release (faster recovery)
   masterLimiter.connect(offlineCtx.destination);
 
-  // Master gain node - connects to limiter, not destination
+  // Master gain node - connects to limiter, not destination (same order as live engine master stage)
   const masterGain = offlineCtx.createGain();
   masterGain.gain.value = safeVolume;
   masterGain.connect(masterLimiter);
