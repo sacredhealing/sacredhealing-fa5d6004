@@ -26,8 +26,8 @@ export default function SpectralVisualizer({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Set canvas size
-    const dpr = window.devicePixelRatio || 1;
+    // Set canvas size (guard for non-browser environments)
+    const dpr = typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1;
     const rect = canvas.getBoundingClientRect();
     canvas.width = rect.width * dpr;
     canvas.height = rect.height * dpr;

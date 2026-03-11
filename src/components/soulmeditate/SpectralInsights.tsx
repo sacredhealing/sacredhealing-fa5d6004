@@ -7,11 +7,22 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { FrequencyState, DSPSettings } from '@/hooks/useSoulMeditateEngine';
 
+const DEFAULT_FREQUENCIES: FrequencyState = {
+  solfeggio: { enabled: false, hz: 528 },
+  binaural: { enabled: false, carrierHz: 200, beatHz: 6 },
+};
+
+const DEFAULT_DSP: DSPSettings = {
+  reverb: { enabled: true, decay: 2.5, wet: 0.3 },
+  delay: { enabled: false, time: 0.4, feedback: 0, wet: 0 },
+  warmth: { enabled: false, drive: 0.3, tone: 0.5 },
+};
+
 interface SpectralInsightsProps {
-  frequencies: FrequencyState;
-  dsp: DSPSettings;
-  atmosphereId: string | null;
-  neuralSource: string | null;
+  frequencies?: FrequencyState | null;
+  dsp?: DSPSettings | null;
+  atmosphereId?: string | null;
+  neuralSource?: string | null;
 }
 
 interface InsightData {
@@ -23,11 +34,13 @@ interface InsightData {
 }
 
 export default function SpectralInsights({
-  frequencies,
-  dsp,
-  atmosphereId,
-  neuralSource,
+  frequencies: frequenciesProp,
+  dsp: dspProp,
+  atmosphereId = null,
+  neuralSource = null,
 }: SpectralInsightsProps) {
+  const frequencies = frequenciesProp ?? DEFAULT_FREQUENCIES;
+  const dsp = dspProp ?? DEFAULT_DSP;
   const [insights, setInsights] = useState<InsightData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 

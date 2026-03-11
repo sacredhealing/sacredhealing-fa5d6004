@@ -505,9 +505,9 @@ export default function CreativeSoulMeditationTool() {
   // Volume controls
   const [volumes, setVolumes] = useState({ ambient: 50, binaural: 40, healing: 20, user: 80 });
 
-  // Frequency volumes synced with engine
-  const healingVolume = engine.solfeggioVolume;
-  const brainwaveVolume = engine.binauralVolume;
+  // Frequency volumes synced with engine (safe fallbacks so we never throw)
+  const healingVolume = engine?.solfeggioVolume ?? 0.5;
+  const brainwaveVolume = engine?.binauralVolume ?? 0.5;
 
   const [hasExportAccess, setHasExportAccess] = useState(false);
   const [exportAccessLoading, setExportAccessLoading] = useState(true);
@@ -519,33 +519,34 @@ export default function CreativeSoulMeditationTool() {
   const [meditationName, setMeditationName] = useState('');
 
   const handleHealingVolumeChange = useCallback(async (vol: number) => {
-    if (!engine.isInitialized) await engine.initialize();
-    const audioCtx = engine.getAudioContext();
+    if (!engine?.isInitialized) await engine?.initialize?.();
+    const audioCtx = engine?.getAudioContext?.();
     if (audioCtx?.state === 'suspended') await audioCtx.resume();
-    engine.updateSolfeggioVolume(vol);
-    if (!engine.frequencies.solfeggio.enabled) {
-      await engine.startSolfeggio(healingFreq);
+    engine?.updateSolfeggioVolume?.(vol);
+    if (!engine?.frequencies?.solfeggio?.enabled) {
+      await engine?.startSolfeggio?.(healingFreq);
     }
   }, [engine, healingFreq]);
 
   const handleBrainwaveVolumeChange = useCallback(async (vol: number) => {
-    if (!engine.isInitialized) await engine.initialize();
-    const audioCtx = engine.getAudioContext();
+    if (!engine?.isInitialized) await engine?.initialize?.();
+    const audioCtx = engine?.getAudioContext?.();
     if (audioCtx?.state === 'suspended') await audioCtx.resume();
-    engine.updateBinauralVolume(vol);
-    if (!engine.frequencies.binaural.enabled) {
-      await engine.startBinaural(200, brainwaveFreq);
+    engine?.updateBinauralVolume?.(vol);
+    if (!engine?.frequencies?.binaural?.enabled) {
+      await engine?.startBinaural?.(200, brainwaveFreq);
     }
   }, [engine, brainwaveFreq]);
 
   const handleInitialize = useCallback(async () => {
-    await engine.initialize();
-    const audioCtx = engine.getAudioContext();
+    await engine?.initialize?.();
+    const audioCtx = engine?.getAudioContext?.();
     if (audioCtx?.state === 'suspended') await audioCtx.resume();
     toast.success('Siddha Engine awakened');
   }, [engine]);
 
   const commenceAlchemy = useCallback(async () => {
+    if (!engine) return;
     setIsProcessing(true);
     setAlchemyCommenced(true);
     setSessionStartMs(Date.now());
@@ -581,10 +582,10 @@ export default function CreativeSoulMeditationTool() {
   }, [engine, sessionStartMs]);
 
   const isPlaying =
-    engine.neuralLayer.isPlaying ||
-    engine.atmosphereLayer.isPlaying ||
-    engine.frequencies.solfeggio.enabled ||
-    engine.frequencies.binaural.enabled;
+    engine?.neuralLayer?.isPlaying ||
+    engine?.atmosphereLayer?.isPlaying ||
+    engine?.frequencies?.solfeggio?.enabled ||
+    engine?.frequencies?.binaural?.enabled;
 
   const togglePlay = useCallback(() => {
     if (isPlaying) { stopAll(); } else { commenceAlchemy(); }
@@ -608,6 +609,7 @@ export default function CreativeSoulMeditationTool() {
   }, [user, navigate]);
 
   const handleExport = useCallback(async () => {
+    if (!engine) return;
     // Auto-initialize engine on first export click so button is always tappable
     if (!engine.isInitialized) {
       await engine.initialize();
@@ -736,7 +738,7 @@ export default function CreativeSoulMeditationTool() {
 
   // Auto-load atmosphere on style change
   useEffect(() => {
-    if (engine.isInitialized) {
+    if (engine?.isInitialized && engine?.loadAtmosphere) {
       engine.loadAtmosphere(activeStyle).then((result: { ok: boolean; fallbackFrom?: string; reason?: string }) => {
         if (result.ok && 'fallbackFrom' in result && result.fallbackFrom) {
           const label = result.fallbackFrom.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
@@ -744,10 +746,10 @@ export default function CreativeSoulMeditationTool() {
         }
       });
     }
-  }, [activeStyle, engine.isInitialized]);
+  }, [activeStyle, engine?.isInitialized]);
 
   const handleRefreshSound = useCallback(async (styleId: MeditationStyle) => {
-    if (!engine.isInitialized) return;
+    if (!engine?.isInitialized) return;
     setIsRefreshingSound(true);
     try {
       const result: { ok: boolean; fallbackFrom?: string; reason?: string } = await engine.loadAtmosphere(styleId);
@@ -766,7 +768,7 @@ export default function CreativeSoulMeditationTool() {
 
   const handleHealingFreqSelect = useCallback(async (freq: number) => {
     setHealingFreq(freq);
-    if (!engine.isInitialized) await engine.initialize();
+    if (!engine?.isInitialized) await engine?.initialize?.();
     const audioCtx = engine.getAudioContext();
     if (audioCtx?.state === 'suspended') await audioCtx.resume();
     if (alchemyCommenced) {
@@ -777,7 +779,7 @@ export default function CreativeSoulMeditationTool() {
 
   const handleBrainwaveFreqSelect = useCallback(async (freq: number) => {
     setBrainwaveFreq(freq);
-    if (!engine.isInitialized) await engine.initialize();
+    if (!engine?.isInitialized) await engine?.initialize?.();
     const audioCtx = engine.getAudioContext();
     if (audioCtx?.state === 'suspended') await audioCtx.resume();
     if (alchemyCommenced) {
@@ -848,8 +850,8 @@ export default function CreativeSoulMeditationTool() {
               </div>
             </div>
             <SpectralVisualizer
-              frequencyData={engine.analyserData?.frequencyData ?? null}
-              timeData={engine.analyserData?.timeData ?? null}
+              frequencyData={engine?.analyserData?.frequencyData ?? null}
+              timeData={engine?.analyserData?.timeData ?? null}
               height={140}
             />
           </div>
@@ -947,11 +949,11 @@ export default function CreativeSoulMeditationTool() {
           {/* ══ STEP 1: SOURCE ══ */}
           <SQISection number="1" title="Source">
             <NeuralSourceInput
-              layer={engine.neuralLayer}
-              onLoadFile={(file) => engine.loadNeuralSource(file)}
-              onLoadUrl={(url) => { void engine.loadNeuralSource(url); }}
-              onTogglePlay={engine.toggleNeuralPlay}
-              onVolumeChange={engine.updateNeuralVolume}
+              layer={engine?.neuralLayer ?? { isPlaying: false, volume: 0.7, source: null }}
+              onLoadFile={(file) => engine?.loadNeuralSource?.(file)}
+              onLoadUrl={(url) => { void engine?.loadNeuralSource?.(url); }}
+              onTogglePlay={engine?.toggleNeuralPlay ?? (() => {})}
+              onVolumeChange={engine?.updateNeuralVolume ?? (() => {})}
             />
           </SQISection>
 
@@ -967,7 +969,7 @@ export default function CreativeSoulMeditationTool() {
                 onStyleSelect={setActiveStyle}
                 atmosphereVolume={volumes.ambient / 100}
                 onAtmosphereVolumeChange={(v) => {
-                  engine.updateAtmosphereVolume(v);
+                  engine?.updateAtmosphereVolume?.(v);
                   setVolumes(prev => ({ ...prev, ambient: Math.round(v * 100) }));
                 }}
                 onRefreshSound={handleRefreshSound}
@@ -1005,7 +1007,7 @@ export default function CreativeSoulMeditationTool() {
               </div>
               {/* DSPMasteringRack renders Sacred Reverb only — Sacred Echo row is hidden via CSS override below */}
               <div className="sqm-dsp-wrap">
-                <DSPMasteringRack dsp={engine.dsp} onUpdate={engine.updateDSP} />
+                <DSPMasteringRack dsp={engine?.dsp} onUpdate={engine?.updateDSP ?? (() => {})} />
               </div>
 
               {/* ── 4: Alchemical Insight ── */}
@@ -1015,10 +1017,10 @@ export default function CreativeSoulMeditationTool() {
                   Alchemical Insight
                 </div>
                 <SpectralInsights
-                  frequencies={engine.frequencies}
-                  dsp={engine.dsp}
-                  atmosphereId={engine.atmosphereLayer.source}
-                  neuralSource={engine.neuralLayer.source}
+                  frequencies={engine?.frequencies}
+                  dsp={engine?.dsp}
+                  atmosphereId={engine?.atmosphereLayer?.source ?? null}
+                  neuralSource={engine?.neuralLayer?.source ?? null}
                 />
               </div>
             </SQISection>
