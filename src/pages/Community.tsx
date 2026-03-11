@@ -20,6 +20,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { supabase } from "@/integrations/supabase/client";
+import { useDailyLive, DailySession } from "@/hooks/useDailyLive";
 import { formatDistanceToNow } from "date-fns";
 
 // ─────────────────────────────────────────────
