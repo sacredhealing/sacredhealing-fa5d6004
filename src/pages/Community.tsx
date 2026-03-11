@@ -669,6 +669,18 @@ type Member = {
   subscription_tier: string | null;
 };
 
+type FeedPost = {
+  id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+  image_url: string | null;
+  audio_url: string | null;
+  video_url: string | null;
+  pdf_url: string | null;
+  post_type: string;
+};
+
 const Community = () => {
   const { user } = useAuth();
   const { isAdmin } = useAdminRole();
@@ -687,6 +699,10 @@ const Community = () => {
   const [onlineCount] = useState(() => Math.floor(Math.random() * 20) + 5);
   const [members, setMembers] = useState<Member[]>([]);
   const [memberSearch, setMemberSearch] = useState("");
+  const [feedPosts, setFeedPosts] = useState<FeedPost[]>([]);
+  const [feedText, setFeedText] = useState("");
+  const [feedFile, setFeedFile] = useState<File | null>(null);
+  const [feedLoading, setFeedLoading] = useState(false);
 
   // Fetch messages for active channel
   const fetchMessages = useCallback(async (channelId: string) => {
@@ -699,6 +715,23 @@ const Community = () => {
       .limit(100);
     setMessages((data as any[]) || []);
     setLoading(false);
+  }, []);
+
+  // Fetch admin feed posts
+  const fetchFeedPosts = useCallback(async () => {
+    setFeedLoading(true);
+    const { data, error } = await supabase
+      .from("community_posts")
+      .select("id, user_id, content, created_at, image_url, audio_url, video_url, pdf_url, post_type")
+      .order("created_at", { ascending: false })
+      .limit(30);
+    if (error) {
+      console.error("Error loading community feed:", error);
+      setFeedPosts([]);
+    } else {
+      setFeedPosts((data as FeedPost[]) || []);
+    }
+    setFeedLoading(false);
   }, []);
 
   // Fetch member list for Members tab
@@ -720,6 +753,10 @@ const Community = () => {
         setMembers([]);
       });
   }, []);
+
+  useEffect(() => {
+    fetchFeedPosts();
+  }, [fetchFeedPosts]);
 
   useEffect(() => {
     if (activeChannel) {
@@ -776,6 +813,74 @@ const Community = () => {
     if (daily.activeSession) {
       await daily.endSession(daily.activeSession.id);
       setLiveRoomUrl(null);
+    }
+  };
+
+  const createFeedPost = async () => {
+    if (!user || !feedText.trim()) return;
+
+    setFeedLoading(true);
+    let imageUrl: string | null = null;
+    let audioUrl: string | null = null;
+    let videoUrl: string | null = null;
+    let pdfUrl: string | null = null;
+    let postType = "text";
+
+    try {
+      if (feedFile) {
+        const ext = feedFile.name.split(".").pop() || "bin";
+        const path = `feed/${user.id}/${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from("community-media")
+          .upload(path, feedFile, {
+            upsert: true,
+            contentType: feedFile.type || undefined,
+          });
+        if (uploadError) throw uploadError;
+
+        const { data } = supabase.storage.from("community-media").getPublicUrl(path);
+        const url = data.publicUrl;
+
+        if (feedFile.type.startsWith("image/")) {
+          imageUrl = url;
+          postType = "image";
+        } else if (feedFile.type.startsWith("video/")) {
+          videoUrl = url;
+          postType = "video";
+        } else if (feedFile.type.startsWith("audio/")) {
+          audioUrl = url;
+          postType = "audio";
+        } else if (feedFile.type === "application/pdf" || ext.toLowerCase() === "pdf") {
+          pdfUrl = url;
+          postType = "pdf";
+        } else {
+          // Fallback: treat as generic attachment in text post
+          pdfUrl = url;
+          postType = "attachment";
+        }
+      }
+
+      const { error } = await supabase.from("community_posts").insert({
+        user_id: user.id,
+        content: feedText.trim(),
+        image_url: imageUrl,
+        audio_url: audioUrl,
+        video_url: videoUrl,
+        pdf_url: pdfUrl,
+        post_type: postType,
+      });
+
+      if (error) throw error;
+
+      setFeedText("");
+      setFeedFile(null);
+      await fetchFeedPosts();
+      toast.success("Post shared to the Sangha feed.");
+    } catch (e) {
+      console.error("Failed to create feed post:", e);
+      toast.error("Could not post to feed. Please try again.");
+    } finally {
+      setFeedLoading(false);
     }
   };
 
@@ -1026,6 +1131,156 @@ const Community = () => {
                 })}
               </div>
             )
+          ) : mobileTab === "feed" && isAdmin ? (
+            <div className="c-feed-view">
+              <div className="c-section-label">ADMIN FEED</div>
+              <div className="c-feed-card" style={{ marginBottom: 16 }}>
+                <textarea
+                  placeholder="Share an update with the Sangha..."
+                  value={feedText}
+                  onChange={(e) => setFeedText(e.target.value)}
+                  style={{
+                    width: "100%",
+                    minHeight: 70,
+                    background: "transparent",
+                    border: "none",
+                    outline: "none",
+                    resize: "vertical",
+                    color: "rgba(255,255,255,.9)",
+                    fontSize: 14,
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  }}
+                />
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
+                  <input
+                    type="file"
+                    accept="image/*,video/*,audio/*,application/pdf"
+                    onChange={(e) => setFeedFile(e.target.files?.[0] || null)}
+                    style={{ fontSize: 11, color: "rgba(255,255,255,.6)" }}
+                  />
+                  <button
+                    onClick={createFeedPost}
+                    disabled={feedLoading || !feedText.trim()}
+                    style={{
+                      marginLeft: "auto",
+                      padding: "8px 16px",
+                      borderRadius: 999,
+                      border: "none",
+                      background:
+                        "linear-gradient(135deg, rgba(212,175,55,.3), rgba(212,175,55,.6))",
+                      color: "#050505",
+                      fontSize: 11,
+                      fontWeight: 800,
+                      letterSpacing: "0.2em",
+                      textTransform: "uppercase",
+                      cursor: feedLoading || !feedText.trim() ? "default" : "pointer",
+                      opacity: feedLoading || !feedText.trim() ? 0.4 : 1,
+                    }}
+                  >
+                    {feedLoading ? "Posting..." : "Post"}
+                  </button>
+                </div>
+                <button
+                  onClick={() => {
+                    // Jump to chat Divine Sangha to start Go Live from there
+                    setActiveChannel("divine-sangha");
+                    setMobileTab("chat");
+                  }}
+                  style={{
+                    marginTop: 10,
+                    padding: "6px 12px",
+                    borderRadius: 999,
+                    border: "1px solid rgba(212,175,55,.35)",
+                    background: "rgba(5,5,5,.9)",
+                    color: "#D4AF37",
+                    fontSize: 10,
+                    fontWeight: 700,
+                    letterSpacing: "0.18em",
+                    textTransform: "uppercase",
+                    cursor: "pointer",
+                  }}
+                >
+                  🔴 Go Live via Divine Sangha
+                </button>
+              </div>
+
+              {feedLoading && feedPosts.length === 0 ? (
+                <div className="c-empty">
+                  <div className="c-empty-icon">⏳</div>
+                  <div className="c-empty-sub">LOADING FEED</div>
+                </div>
+              ) : feedPosts.length === 0 ? (
+                <div className="c-empty">
+                  <div className="c-empty-icon">✦</div>
+                  <div className="c-empty-title">No posts yet</div>
+                  <div className="c-empty-sub">Share the first transmission</div>
+                </div>
+              ) : (
+                feedPosts.map((post) => (
+                  <div key={post.id} className="c-feed-card">
+                    <div style={{ display: "flex", alignItems: "center", marginBottom: 4 }}>
+                      <span className="c-feed-author">Admin Transmission</span>
+                      <span className="c-feed-time">{formatTime(post.created_at)}</span>
+                    </div>
+                    <div className="c-feed-text">{post.content}</div>
+                    {post.image_url && (
+                      <img
+                        src={post.image_url}
+                        alt=""
+                        style={{
+                          marginTop: 10,
+                          borderRadius: 16,
+                          width: "100%",
+                          maxHeight: 260,
+                          objectFit: "cover",
+                          border: "1px solid rgba(255,255,255,.06)",
+                        }}
+                      />
+                    )}
+                    {post.video_url && (
+                      <video
+                        src={post.video_url}
+                        controls
+                        style={{
+                          marginTop: 10,
+                          borderRadius: 16,
+                          width: "100%",
+                          maxHeight: 260,
+                          objectFit: "cover",
+                          border: "1px solid rgba(255,255,255,.06)",
+                          background: "#000",
+                        }}
+                      />
+                    )}
+                    {post.audio_url && (
+                      <audio
+                        src={post.audio_url}
+                        controls
+                        style={{ marginTop: 10, width: "100%" }}
+                      />
+                    )}
+                    {post.pdf_url && (
+                      <a
+                        href={post.pdf_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 6,
+                          marginTop: 10,
+                          fontSize: 12,
+                          color: "rgba(212,175,55,.9)",
+                          textDecoration: "underline",
+                        }}
+                      >
+                        📄 Open attached PDF
+                      </a>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
           ) : mobileTab === "members" ? (
             <div className="c-members-view">
               <div className="c-section-label">Members</div>
