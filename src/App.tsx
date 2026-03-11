@@ -122,7 +122,8 @@ const CreativeSoulSales = React.lazy(() => import("./pages/CreativeSoulSales"));
 const CreativeSoulTool = React.lazy(() => import("./pages/CreativeSoulTool"));
 const CreativeSoulLanding = React.lazy(() => import("./pages/CreativeSoulLanding"));
 const CreativeSoulHub = React.lazy(() => import("./pages/CreativeSoulHub"));
-const CreativeSoulMeditationTool = React.lazy(() => import("./pages/CreativeSoulMeditationTool"));
+// Eager load meditation tool so it never fails from chunk load (e.g. CDN/base path issues)
+import CreativeSoulMeditationTool from "./pages/CreativeSoulMeditationTool";
 const CreativeSoulStore = React.lazy(() => import("./pages/CreativeSoulStore"));
 const InviteFriends = React.lazy(() => import("./pages/InviteFriends"));
 const VedicAstrology = React.lazy(() => import("./pages/VedicAstrology"));
