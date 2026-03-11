@@ -19,6 +19,7 @@ import { ProtectedRoute } from "./components/layout/ProtectedRoute";
 import { AuthOnlyRoute } from "./components/layout/AuthOnlyRoute";
 import { DebugBanner } from "./components/DebugBanner";
 import { ProfileLanguageSync } from "./components/ProfileLanguageSync";
+import { useAuth } from "@/hooks/useAuth";
 import "@/lib/performance"; // Initialize performance monitoring
 
 // Lazy-loaded page components
@@ -147,6 +148,18 @@ const PageLoader = () => (
   </div>
 );
 
+// Root route: send signed-in users directly into the app, otherwise show landing
+function RootEntry() {
+  const { user, loading } = useAuth();
+  if (loading) {
+    return <PageLoader />;
+  }
+  if (user) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return <Landing />;
+}
+
 function AppRoutes() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -164,7 +177,7 @@ function AppRoutes() {
   return (
     <Suspense fallback={<PageLoader />}>
     <Routes>
-      <Route path="/" element={<Landing />} />
+      <Route path="/" element={<RootEntry />} />
       <Route path="/about" element={<About />} />
       <Route path="/auth" element={<Auth />} />
       <Route path="/reset-password" element={<ResetPassword />} />
