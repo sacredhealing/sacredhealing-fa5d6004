@@ -871,7 +871,7 @@ export function useSoulMeditateEngine() {
       return;
     }
 
-    // Play: decoded buffer → Gain Compensation (1.2) → neuralGain → mixer → Spectral (EQ, Reverb, Echo) → destination
+    // Play: decoded buffer → [noise chain + EQ + gate] → neuralGain → mixer → Sacred Effects → master
     const buffer = audioBuffer;
     if (buffer && neuralGainRef.current) {
       if (neuralBufferGainRef.current) {
@@ -886,12 +886,32 @@ export function useSoulMeditateEngine() {
       const source = audioCtx.createBufferSource();
       source.buffer = buffer;
       source.loop = true;
+
+      // Detect presence of full neural processing chain
+      const hasMono = monoSplitterRef.current && monoMergerRef.current;
+      const hasNoise = noiseHighPassRef.current && noiseLowPassRef.current && noiseCompressorRef.current;
+      const hasLowCut = lowCutFilterRef.current;
+      const hasEQ = eqWeightRef.current && eqPresenceRef.current && eqAirRef.current;
+      const hasGate = userNoiseGateRef.current;
+
+      // Slight gain compensation so buffer path matches MediaElement loudness
       const gainComp = audioCtx.createGain();
       gainComp.gain.value = 1.2;
-      source.connect(gainComp);
-      gainComp.connect(neuralGainRef.current);
+
+      if (hasMono && hasNoise && hasLowCut && hasEQ && hasGate) {
+        // Buffer follows the same chain as live neural source:
+        // source -> gain(1.2) -> mono balancer -> noise cleanup -> EQ -> de-esser -> gate -> neuralGain
+        source.connect(gainComp);
+        gainComp.connect(monoSplitterRef.current!);
+        console.log('[Neural] BufferSource -> gain(1.2) -> mono/EQ/gate -> neuralGain -> Sacred Effects -> master');
+      } else {
+        // Fallback: direct to neuralGain (still hits Sacred Effects via mixer)
+        source.connect(gainComp);
+        gainComp.connect(neuralGainRef.current);
+        console.warn('[Neural] BufferSource direct to neuralGain (no full noise/EQ chain available)');
+      }
+
       neuralBufferGainRef.current = gainComp;
-      console.log('[Neural] BufferSource -> gain(1.2) -> neuralGain -> Spectral (EQ/Reverb/Echo) -> destination');
       source.start(0);
       neuralBufferSourceRef.current = source;
       setNeuralLayer(prev => ({ ...prev, isPlaying: true }));
