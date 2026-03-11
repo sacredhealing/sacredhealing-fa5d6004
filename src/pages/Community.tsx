@@ -1210,6 +1210,9 @@ const Community = () => {
     catch { return ""; }
   };
 
+  // Avoid referencing window directly in render on environments without DOM (SSR/preview)
+  const isDesktop = typeof window !== "undefined" && window.innerWidth >= 768;
+
   // ── RENDER ──
   return (
     <>
@@ -1231,7 +1234,7 @@ const Community = () => {
         {/* Body */}
         <div className="c-body">
           {/* ─── CHANNEL LIST / CHAT ─── */}
-          {(mobileTab === "chat" || window.innerWidth >= 768) ? (
+          {(mobileTab === "chat" || isDesktop) ? (
             activeChannel && currentChannel ? (
               <div className="c-chat-view">
                 {/* Chat header */}
