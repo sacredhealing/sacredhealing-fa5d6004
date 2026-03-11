@@ -88,7 +88,7 @@ export async function renderOffline(config: OfflineRenderConfig): Promise<AudioB
   masterGain.gain.value = safeVolume;
   masterGain.connect(masterLimiter);
 
-  // DSP chain
+  // DSP chain (Sacred Effects) — mirrors live engine voicing but slightly stronger in export
   const dspOutput = await createDSPChain(offlineCtx, dsp, masterGain);
   
   onProgress?.(15, 'Loading audio sources...');
@@ -120,7 +120,7 @@ export async function renderOffline(config: OfflineRenderConfig): Promise<AudioB
 
   onProgress?.(40, 'Scheduling audio layers...');
 
-  // Schedule all audio layers with looping
+  // Schedule all audio layers with looping (neural + atmosphere hit the same DSP chain)
   for (const layer of layers) {
     scheduleLoopingBuffer(offlineCtx, layer.buffer, layer.volume, durationSeconds, dspOutput, layer.isNeuralSource ?? false);
   }
@@ -409,32 +409,40 @@ function createBinauralBeats(
 }
 
 /**
- * Create DSP effects chain (reverb, warmth)
+ * Create DSP effects chain (reverb, warmth) for offline export
  */
 async function createDSPChain(
   ctx: OfflineAudioContext,
   dsp: DSPSettings,
   destination: AudioNode
 ): Promise<AudioNode> {
-  // Warmth (low-pass filter with resonance)
+  // Warmth (lowshelf tilt EQ) — slightly stronger in export so voice feels as rich as live engine
   const warmthFilter = ctx.createBiquadFilter();
   warmthFilter.type = 'lowshelf';
   warmthFilter.frequency.value = 500;
-  warmthFilter.gain.value = dsp.warmth * 6; // 0-6 dB boost
+  // Map 0–1 warmth → ~0–10 dB boost
+  const warmthAmount = Math.max(0, Math.min(1, dsp.warmth));
+  warmthFilter.gain.value = warmthAmount * 10;
   
-  // Simple convolution reverb using delay network
+  // Simple convolution-style reverb using a feedback delay network
+  // We intentionally make export reverb slightly wetter so it matches the in-app Sacred Effects perceived level
   const dryGain = ctx.createGain();
-  dryGain.gain.value = 1 - dsp.reverb * 0.5;
+  const reverbAmount = Math.max(0, Math.min(1, dsp.reverb));
+  // Reduce dry as reverb increases, but never fully dry-cut so intelligibility stays
+  dryGain.gain.value = 1 - reverbAmount * 0.7;
   
   const wetGain = ctx.createGain();
-  wetGain.gain.value = dsp.reverb * 0.5;
+  // Give exported mixes a clearly audible space: baseline + scale with reverbAmount
+  wetGain.gain.value = 0.25 + reverbAmount * 0.85;
   
   // Create delay-based reverb approximation
   const delayNode = ctx.createDelay(1);
-  delayNode.delayTime.value = 0.05 + dsp.delay * 0.3;
+  // Export: slightly longer tail than live, but still in plate-style range
+  const delayControl = Math.max(0, Math.min(1, dsp.delay));
+  delayNode.delayTime.value = 0.02 + delayControl * 0.28;
   
   const feedbackGain = ctx.createGain();
-  feedbackGain.gain.value = 0.3 + dsp.reverb * 0.4;
+  feedbackGain.gain.value = 0.2 + reverbAmount * 0.6;
   
   const reverbFilter = ctx.createBiquadFilter();
   reverbFilter.type = 'lowpass';
