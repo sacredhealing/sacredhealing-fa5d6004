@@ -1094,6 +1094,38 @@ export function useSoulMeditateEngine() {
     setFrequencies(prev => ({ ...prev, binaural: { ...prev.binaural, enabled: false } }));
   }, []);
 
+  // Stop everything currently playing (neural, atmosphere, solfeggio, binaural, DAW)
+  const stopAll = useCallback(() => {
+    // Neural (voice / source)
+    if (neuralLayer.isPlaying) {
+      void toggleNeuralPlay();
+    }
+    // Atmosphere bed
+    if (atmosphereLayer.isPlaying) {
+      void toggleAtmospherePlay();
+    }
+    // Healing solfeggio tone
+    if (frequencies.solfeggio.enabled) {
+      stopSolfeggio();
+    }
+    // Binaural beats
+    if (frequencies.binaural.enabled) {
+      stopBinaural();
+    }
+    // DAW preview playback (if active)
+    dawStop();
+  }, [
+    neuralLayer.isPlaying,
+    atmosphereLayer.isPlaying,
+    frequencies.solfeggio.enabled,
+    frequencies.binaural.enabled,
+    toggleNeuralPlay,
+    toggleAtmospherePlay,
+    stopSolfeggio,
+    stopBinaural,
+    dawStop,
+  ]);
+
   // Update volumes
   // Volume clamping helper to prevent distortion at max volume
   // Max 0.85 gives headroom for the limiter when multiple layers combine
@@ -1518,5 +1550,6 @@ export function useSoulMeditateEngine() {
     
     // Diagnostics
     playTestTone,
+    stopAll,
   };
 }
