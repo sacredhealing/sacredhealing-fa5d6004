@@ -617,18 +617,18 @@ export default function CreativeSoulMeditationTool() {
         if (isAdmin) { setHasExportAccess(true); return; }
         const paymentSuccess = searchParams.get('payment') === 'success';
         if (paymentSuccess) { setHasExportAccess(true); return; }
-        const { data: grantedAccess } = await supabase
+        const { data: grantedAccess } = await (supabase as any)
           .from('user_granted_access')
           .select('access_type')
           .eq('user_id', user.id)
           .in('access_type', ['creative_soul', 'creative_soul_meditation']);
-        const { data: entitlements } = await supabase
+        const { data: entitlements } = await (supabase as any)
           .from('user_entitlements')
           .select('access_type')
           .eq('user_id', user.id);
         const hasValidEntitlement = (arr: { access_type: string }[] | null) =>
           arr?.some(e => ['creative_soul', 'creative_soul_meditation'].includes(e.access_type)) ?? false;
-        const hasEntitlement = hasValidEntitlement(entitlements);
+        const hasEntitlement = hasValidEntitlement(entitlements as any);
         setHasExportAccess(hasEntitlement || (grantedAccess && grantedAccess.length > 0));
       } catch { setHasExportAccess(false); }
       finally { setExportAccessLoading(false); }
