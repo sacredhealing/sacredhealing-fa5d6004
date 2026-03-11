@@ -830,7 +830,7 @@ export default function CreativeSoulMeditationTool() {
             <button
               className={`sqm-play-btn ${isPlaying ? 'playing' : 'ready'}`}
               onClick={togglePlay}
-              disabled={!engine.isInitialized}
+              disabled={isProcessing}
             >
               {isPlaying
                 ? <><Pause size={16} /> Cease Alchemy</>
