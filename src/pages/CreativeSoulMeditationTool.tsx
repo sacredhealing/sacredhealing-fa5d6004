@@ -604,7 +604,8 @@ export default function CreativeSoulMeditationTool() {
       setShowPaymentDialog(true);
       return;
     }
-    await offlineExport.startExport?.();
+    // Export not yet configured
+    toast.info('Export feature coming soon');
   }, [engine, hasExportAccess, user, navigate, offlineExport]);
 
   // Check access
