@@ -761,30 +761,38 @@ const Community = () => {
   useEffect(() => {
     if (activeChannel) {
       fetchMessages(activeChannel);
-      // Check for active live sessions
+      // Check for active live sessions once when channel changes
       daily.fetchActiveSessions(activeChannel).then(setViewerSessions);
-      // Realtime subscription
+      // Realtime subscription for messages in this room
       const channel = supabase
         .channel(`room-${activeChannel}`)
-        .on("postgres_changes", {
-          event: "INSERT",
-          schema: "public",
-          table: "chat_messages",
-          filter: `room_id=eq.${activeChannel}`,
-        }, (payload) => {
-          setMessages((prev) => [...prev, payload.new as Message]);
-        })
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "chat_messages",
+            filter: `room_id=eq.${activeChannel}`,
+          },
+          (payload) => {
+            setMessages((prev) => [...prev, payload.new as Message]);
+          }
+        )
         .subscribe();
-      // Listen for live session changes
+      // Listen for live session changes in this channel
       const liveChannel = supabase
         .channel(`live-${activeChannel}`)
-        .on("postgres_changes", {
-          event: "*",
-          schema: "public",
-          table: "community_live_sessions",
-        }, () => {
-          daily.fetchActiveSessions(activeChannel).then(setViewerSessions);
-        })
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "community_live_sessions",
+          },
+          () => {
+            daily.fetchActiveSessions(activeChannel).then(setViewerSessions);
+          }
+        )
         .subscribe();
       return () => {
         supabase.removeChannel(channel);
@@ -794,7 +802,7 @@ const Community = () => {
       setViewerSessions([]);
       setLiveRoomUrl(null);
     }
-  }, [activeChannel, fetchMessages, daily]);
+  }, [activeChannel, fetchMessages]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
