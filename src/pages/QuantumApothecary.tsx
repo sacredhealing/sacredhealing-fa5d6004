@@ -394,13 +394,41 @@ function QuantumApothecaryInner() {
       <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
         <div className="flex flex-col justify-end min-h-full space-y-3">
           {messages.map((msg, i) => (
-            <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`w-full max-w-full p-4 rounded-2xl ${
-                msg.role === 'user'
-                  ? 'bg-[#D4AF37]/10 border border-[#D4AF37]/25 rounded-br-sm'
-                  : 'bg-white/[0.03] border border-white/[0.06] rounded-bl-sm w-full'
-              }`}>
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              style={
+                msg.role === 'model'
+                  ? {
+                      marginLeft: '-1rem',
+                      marginRight: '-1rem',
+                    }
+                  : undefined
+              }
+            >
+              <div
+                className={`w-full max-w-full p-4 ${
+                  msg.role === 'user'
+                    ? 'rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/25 rounded-br-sm'
+                    : 'border border-white/[0.06] w-full'
+                }`}
+                style={
+                  msg.role === 'model'
+                    ? {
+                        width: '100%',
+                        paddingBottom: '120px',
+                        minHeight: '80vh',
+                        backgroundColor: 'rgba(5,5,5,0.85)',
+                        backdropFilter: 'blur(20px)',
+                        borderLeft: 'none',
+                        borderRight: 'none',
+                        borderRadius: 0,
+                      }
+                    : undefined
+                }
+              >
                 <div className="markdown-body">{renderChatText(msg.text)}</div>
               </div>
             </motion.div>
