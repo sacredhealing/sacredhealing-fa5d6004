@@ -622,9 +622,10 @@ const CSS = `
 }
 .c-member-row:hover { background: rgba(212,175,55,.05); }
 .c-member-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 13px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border-radius: 50%;
   background: rgba(212,175,55,.1);
   border: 1px solid rgba(212,175,55,.2);
   display: flex;
@@ -633,6 +634,13 @@ const CSS = `
   font-weight: 900;
   font-size: 14px;
   color: #D4AF37;
+  overflow: hidden;
+  object-fit: cover;
+}
+.c-member-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .c-member-name {
   font-weight: 800;
@@ -668,6 +676,7 @@ type Member = {
   id: string;
   full_name: string | null;
   subscription_tier: string | null;
+  avatar_url: string | null;
 };
 
 type FeedPost = {
@@ -722,6 +731,7 @@ const Community = () => {
   const [commentDraft, setCommentDraft] = useState("");
   const [commentingPostId, setCommentingPostId] = useState<string | null>(null);
   const [likingPostId, setLikingPostId] = useState<string | null>(null);
+  const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
 
   const isDmChannel = (id: string | null) => !!id && id.startsWith("dm-");
 
@@ -933,25 +943,23 @@ const Community = () => {
     setLikingPostId(null);
   }, [user, feedPosts]);
 
-  // Fetch member list for Members tab
+  // Fetch member list for Members tab (with avatars)
   useEffect(() => {
     const loadMembers = async () => {
       try {
-        // Primary: profiles table keyed by user_id (current production schema)
         let { data, error } = await supabase
           .from("profiles")
-          .select("user_id, id, full_name, subscription_tier")
+          .select("user_id, id, full_name, subscription_tier, avatar_url")
           .limit(200);
 
         if (error) {
           console.error("Error loading members (user_id schema):", error);
         }
 
-        // Fallback: if no rows or legacy schema keyed by id, try again selecting id only
         if (!data || data.length === 0) {
           const fallback = await supabase
             .from("profiles")
-            .select("id, full_name, subscription_tier")
+            .select("id, full_name, subscription_tier, avatar_url")
             .limit(200);
           if (!fallback.error && fallback.data) {
             data = fallback.data as any[];
@@ -960,10 +968,10 @@ const Community = () => {
 
         const mapped: Member[] =
           (data as any[] | null)?.map((row) => ({
-            // Prefer user_id, but fall back to id so we always have a stable identifier
             id: (row.user_id as string) || (row.id as string),
             full_name: (row.full_name as string) ?? null,
             subscription_tier: (row.subscription_tier as string) ?? null,
+            avatar_url: (row.avatar_url as string) ?? null,
           })) ?? [];
 
         setMembers(mapped);
@@ -975,6 +983,32 @@ const Community = () => {
 
     loadMembers();
   }, []);
+
+  // Track who's online via Realtime presence (community channel)
+  useEffect(() => {
+    if (!user?.id) return;
+    const channel = supabase.channel("community-presence");
+    channel
+      .on("presence", { event: "sync" }, () => {
+        const state = channel.presenceState();
+        const ids = new Set<string>();
+        Object.values(state).forEach((presences: any) => {
+          (presences || []).forEach((p: { user_id?: string }) => {
+            if (p?.user_id) ids.add(p.user_id);
+          });
+        });
+        ids.add(user.id);
+        setOnlineUserIds(ids);
+      })
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          await channel.track({ user_id: user.id });
+        }
+      });
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
 
   // Map logical channel ids (like "divine-sangha") to real chat_rooms UUIDs
   useEffect(() => {
@@ -1810,43 +1844,86 @@ const Community = () => {
                   }}
                 />
               </div>
-              {members
-                .filter((m) => {
-                  const query = memberSearch.trim().toLowerCase();
-                  if (!query) return true;
-                  const name = (m.full_name || "").toLowerCase();
-                  const tier = (m.subscription_tier || "").toLowerCase();
-                  // If we don't have any metadata, don't hide the member on search
-                  if (!name && !tier) return true;
-                  return name.includes(query) || tier.includes(query);
-                })
-                .map((m) => (
-                  <div
-                    key={m.id}
-                    className="c-member-row"
-                    onClick={() => {
-                      if (!user) return;
-                      const ids = [user.id, m.id].sort();
-                      const dmId = `dm-${ids[0]}-${ids[1]}`;
-                      setActiveChannel(dmId);
-                      setMobileTab("chat");
-                    }}
-                  >
-                    <div className="c-member-avatar">
-                      {getInitials(m.full_name || undefined)}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div className="c-member-name">
-                        {m.full_name || "Member"}
+              {(() => {
+                const query = memberSearch.trim().toLowerCase();
+                const filtered = members
+                  .filter((m) => m.id !== user?.id)
+                  .filter((m) => {
+                    if (!query) return true;
+                    const name = (m.full_name || "").toLowerCase();
+                    const tier = (m.subscription_tier || "").toLowerCase();
+                    return name.includes(query) || tier.includes(query);
+                  });
+                if (filtered.length === 0) {
+                  return (
+                    <div className="c-empty" style={{ marginTop: 24 }}>
+                      <div className="c-empty-icon">👤</div>
+                      <div className="c-empty-title">
+                        {query ? "No members match your search" : "No members yet"}
                       </div>
-                      {m.subscription_tier && (
-                        <div className="c-member-status">
-                          {m.subscription_tier}
-                        </div>
-                      )}
+                      <div className="c-empty-sub">
+                        {query ? "Try a different name or tier" : "Members will appear here"}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                }
+                return filtered.map((m) => {
+                  const isOnline = onlineUserIds.has(m.id);
+                  return (
+                    <div
+                      key={m.id}
+                      className="c-member-row"
+                      onClick={() => {
+                        if (!user) return;
+                        const ids = [user.id, m.id].sort();
+                        const dmId = `dm-${ids[0]}-${ids[1]}`;
+                        setActiveChannel(dmId);
+                        setMobileTab("chat");
+                      }}
+                    >
+                      <div style={{ position: "relative" }}>
+                        <div className="c-member-avatar">
+                          {m.avatar_url ? (
+                            <img src={m.avatar_url} alt="" />
+                          ) : (
+                            getInitials(m.full_name || undefined)
+                          )}
+                        </div>
+                        {isOnline && (
+                          <span
+                            style={{
+                              position: "absolute",
+                              bottom: 0,
+                              right: 0,
+                              width: 12,
+                              height: 12,
+                              borderRadius: "50%",
+                              background: "#22c55e",
+                              border: "2px solid #050505",
+                            }}
+                            title="Online"
+                          />
+                        )}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div className="c-member-name">
+                          {m.full_name || "Member"}
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          {isOnline && (
+                            <span style={{ fontSize: 10, color: "#22c55e", fontWeight: 600 }}>Online</span>
+                          )}
+                          {m.subscription_tier && (
+                            <span className="c-member-status">
+                              {m.subscription_tier}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
             </div>
           ) : null}
         </div>
