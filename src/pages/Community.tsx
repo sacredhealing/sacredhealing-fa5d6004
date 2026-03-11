@@ -794,7 +794,7 @@ const Community = () => {
         {/* Banner */}
         <div className="c-banner">
           <span className="c-pulse" />
-          SACRED COMMUNITY · {onlineCount} SOULS ONLINE
+          {onlineCount} SOUL{onlineCount === 1 ? "" : "S"} CURRENTLY IN SACRED COMMUNITY
         </div>
 
         {/* Mobile tabs */}
