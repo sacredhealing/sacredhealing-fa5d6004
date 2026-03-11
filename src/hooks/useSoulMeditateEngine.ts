@@ -178,7 +178,8 @@ export function useSoulMeditateEngine() {
   const [binauralVolume, setBinauralVolume] = useState(0.5);
   const [dsp, setDSP] = useState<DSPSettings>({
     reverb: { enabled: true, decay: 2.5, wet: 0.3 },
-    delay: { enabled: false, time: 0.4, feedback: 0.3, wet: 0.2 },
+    // Sacred Echo (delay) removed globally – keep structure but force fully bypassed
+    delay: { enabled: false, time: 0.4, feedback: 0, wet: 0 },
     warmth: { enabled: false, drive: 0.3, tone: 0.5 },
   });
   const [masterVolume, setMasterVolume] = useState(0.8);
@@ -364,15 +365,15 @@ export function useSoulMeditateEngine() {
     reverbGainRef.current = ctx.createGain();
     reverbGainRef.current.gain.value = dsp.reverb.wet;
 
-    // Create delay
+    // Create delay (kept in graph but hard-bypassed so Sacred Echo is fully removed)
     delayNodeRef.current = ctx.createDelay(5);
     delayNodeRef.current.delayTime.value = dsp.delay.time;
 
     delayFeedbackRef.current = ctx.createGain();
-    delayFeedbackRef.current.gain.value = dsp.delay.feedback;
+    delayFeedbackRef.current.gain.value = 0;
 
     delayGainRef.current = ctx.createGain();
-    delayGainRef.current.gain.value = dsp.delay.wet;
+    delayGainRef.current.gain.value = 0;
 
     // Delay feedback loop
     delayNodeRef.current.connect(delayFeedbackRef.current);
@@ -1273,18 +1274,7 @@ export function useSoulMeditateEngine() {
         reverbGainRef.current.gain.value = updated.reverb.enabled ? updated.reverb.wet : 0;
       }
 
-      // Apply delay changes
-      if (newDsp.delay) {
-        if (delayNodeRef.current) {
-          delayNodeRef.current.delayTime.value = updated.delay.time;
-        }
-        if (delayFeedbackRef.current) {
-          delayFeedbackRef.current.gain.value = updated.delay.feedback;
-        }
-        if (delayGainRef.current) {
-          delayGainRef.current.gain.value = updated.delay.enabled ? updated.delay.wet : 0;
-        }
-      }
+      // Sacred Echo (delay) is removed – ignore any delay updates and keep it bypassed
 
       // Apply warmth changes
       if (newDsp.warmth && waveShaperRef.current) {
