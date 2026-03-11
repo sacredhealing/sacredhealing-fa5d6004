@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { setNavigator } from "@/utils/navigation";
@@ -149,6 +149,36 @@ const PageLoader = () => (
   </div>
 );
 
+/** Wraps meditation tool in ErrorBoundary so a load/render error shows a retry instead of the full-app error screen */
+function MeditationToolWithBoundary() {
+  const [retryKey, setRetryKey] = useState(0);
+  return (
+    <ErrorBoundary
+      key={retryKey}
+      fallback={
+        <div className="min-h-screen flex flex-col items-center justify-center px-6" style={{ background: "radial-gradient(ellipse at 15% 20%, rgba(30, 27, 75, 0.7) 0%, transparent 50%), #030303" }}>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Something went wrong</h1>
+          <p className="text-muted-foreground mb-6">The meditation tool failed to load. Please try again or return to the dashboard.</p>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setRetryKey((k) => k + 1)}
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#D4AF37] px-5 py-2.5 text-sm font-semibold text-[#050505] hover:opacity-90"
+            >
+              Try again
+            </button>
+            <a href="/dashboard" className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/20 px-5 py-2.5 text-sm font-medium text-foreground hover:bg-white/5">
+              Go to Dashboard
+            </a>
+          </div>
+        </div>
+      }
+    >
+      <CreativeSoulMeditationTool />
+    </ErrorBoundary>
+  );
+}
+
 // Root route: send signed-in users directly into the app, otherwise show landing
 function RootEntry() {
   const { user, loading } = useAuth();
@@ -267,11 +297,11 @@ function AppRoutes() {
                   {/* ROUTE DEFINITION: /creative-soul/store renders CreativeSoulStore.tsx */}
                   <Route path="/creative-soul/store" element={<CreativeSoulStore />} />
                   <Route path="/creative-soul/tool" element={<CreativeSoulTool />} />
-                  <Route path="/creative-soul/meditation" element={<CreativeSoulMeditationTool />} />
+                  <Route path="/creative-soul/meditation" element={<MeditationToolWithBoundary />} />
                   <Route path="/creative-soul/siddha-oracle" element={<SiddhaSoundAlchemyOracle />} />
                   {/* Legacy routes */}
                   <Route path="/creative-soul-tool" element={<CreativeSoulTool />} />
-                  <Route path="/creative-soul-meditation-tool" element={<CreativeSoulMeditationTool />} />
+                  <Route path="/creative-soul-meditation-tool" element={<MeditationToolWithBoundary />} />
                 </Route>
                 <Route element={<AdminLayout />}>
                   <Route path="/admin" element={<AdminDashboard />} />

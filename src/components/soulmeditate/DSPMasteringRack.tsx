@@ -7,12 +7,19 @@ import { Badge } from '@/components/ui/badge';
 import { Waves, Timer } from 'lucide-react';
 import type { DSPSettings } from '@/hooks/useSoulMeditateEngine';
 
+const DEFAULT_DSP: DSPSettings = {
+  reverb: { enabled: true, decay: 2.5, wet: 0.3 },
+  delay: { enabled: false, time: 0.4, feedback: 0, wet: 0 },
+  warmth: { enabled: false, drive: 0.3, tone: 0.5 },
+};
+
 interface DSPMasteringRackProps {
-  dsp: DSPSettings;
+  dsp?: DSPSettings | null;
   onUpdate: (dsp: Partial<DSPSettings>) => void;
 }
 
-export default function DSPMasteringRack({ dsp, onUpdate }: DSPMasteringRackProps) {
+export default function DSPMasteringRack({ dsp: dspProp, onUpdate }: DSPMasteringRackProps) {
+  const dsp = dspProp ?? DEFAULT_DSP;
   return (
     <Card className="bg-[#0B0112]/60 backdrop-blur-xl border-amber-900/30">
       <CardHeader className="pb-3">
@@ -37,45 +44,45 @@ export default function DSPMasteringRack({ dsp, onUpdate }: DSPMasteringRackProp
               </div>
             </div>
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-              {dsp.reverb.enabled && (
+              {dsp.reverb?.enabled && (
                 <Badge variant="outline" className="text-[10px] border-amber-500/50 text-amber-400 px-1.5">
                   Active
                 </Badge>
               )}
               <Switch
-                checked={dsp.reverb.enabled}
-                onCheckedChange={(enabled) => onUpdate({ reverb: { ...dsp.reverb, enabled } })}
+                checked={dsp.reverb?.enabled ?? true}
+                onCheckedChange={(enabled) => onUpdate({ reverb: { ...(dsp.reverb ?? DEFAULT_DSP.reverb), enabled } })}
               />
             </div>
           </div>
           
-          {dsp.reverb.enabled && (
+          {(dsp.reverb?.enabled ?? true) && (
             <div className="grid grid-cols-2 gap-3 sm:gap-4 pt-2">
               <div className="space-y-2">
                 <div className="flex justify-between text-[10px] sm:text-xs">
                   <span className="text-amber-200/60">Decay</span>
-                  <span className="text-amber-200/80">{dsp.reverb.decay.toFixed(1)}s</span>
+                  <span className="text-amber-200/80">{(dsp.reverb?.decay ?? 2.5).toFixed(1)}s</span>
                 </div>
                 <Slider
-                  value={[dsp.reverb.decay]}
+                  value={[dsp.reverb?.decay ?? 2.5]}
                   min={0.5}
                   max={8}
                   step={0.1}
-                  onValueChange={([decay]) => onUpdate({ reverb: { ...dsp.reverb, decay } })}
+                  onValueChange={([decay]) => onUpdate({ reverb: { ...(dsp.reverb ?? DEFAULT_DSP.reverb), decay } })}
                   className="[&_[role=slider]]:bg-amber-500"
                 />
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between text-[10px] sm:text-xs">
                   <span className="text-amber-200/60">Wet Mix</span>
-                  <span className="text-amber-200/80">{Math.round(dsp.reverb.wet * 100)}%</span>
+                  <span className="text-amber-200/80">{Math.round((dsp.reverb?.wet ?? 0.3) * 100)}%</span>
                 </div>
                 <Slider
-                  value={[dsp.reverb.wet]}
+                  value={[dsp.reverb?.wet ?? 0.3]}
                   min={0}
                   max={1}
                   step={0.01}
-                  onValueChange={([wet]) => onUpdate({ reverb: { ...dsp.reverb, wet } })}
+                  onValueChange={([wet]) => onUpdate({ reverb: { ...(dsp.reverb ?? DEFAULT_DSP.reverb), wet } })}
                   className="[&_[role=slider]]:bg-amber-500"
                 />
               </div>
