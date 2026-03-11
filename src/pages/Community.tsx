@@ -867,6 +867,24 @@ const Community = () => {
     fetchFeedPosts();
   }, [fetchFeedPosts]);
 
+  // Realtime listener so the Community view reacts to new feed + live posts
+  useEffect(() => {
+    const channel = supabase
+      .channel("community-feed")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "community_posts" },
+        () => {
+          fetchFeedPosts();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchFeedPosts]);
+
   useEffect(() => {
     if (!activeChannel) {
       setViewerSessions([]);
@@ -935,13 +953,34 @@ const Community = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleGoLive = async () => {
-    if (!activeChannel || !currentChannel) return;
+  const handleGoLiveForChannel = async (channelId: string, channelName: string) => {
+    if (!user) return;
     setShowGoLiveOptions(false);
-    const result = await daily.createRoom(activeChannel, `Live in ${currentChannel.name}`);
+    const result = await daily.createRoom(channelId, `Live in ${channelName}`);
     if (result) {
       setLiveRoomUrl(result.room_url);
+      // Also surface the live session in the community feed
+      try {
+        await supabase.from("community_posts").insert({
+          user_id: user.id,
+          content: `🔴 Live now in ${channelName}`,
+          post_type: "live",
+          is_live_recording: true,
+          live_recording_title: `Live in ${channelName}`,
+          live_recording_description: "Streaming via Siddha Quantum Nexus",
+          video_url: result.room_url,
+        } as any);
+        // Refresh feed so the LIVE card appears at the top
+        await fetchFeedPosts();
+      } catch (err) {
+        console.error("Failed to create live feed post:", err);
+      }
     }
+  };
+
+  const handleGoLive = async () => {
+    if (!activeChannel || !currentChannel) return;
+    await handleGoLiveForChannel(activeChannel, currentChannel.name);
   };
 
   const handleEndLive = async () => {
