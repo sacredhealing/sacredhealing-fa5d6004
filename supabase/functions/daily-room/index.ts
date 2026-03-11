@@ -62,7 +62,6 @@ Deno.serve(async (req) => {
           properties: {
             enable_chat: true,
             enable_screenshare: true,
-            max_participants: 100,
             exp: Math.floor(Date.now() / 1000) + 3600 * 4, // 4 hours
           },
         }),
