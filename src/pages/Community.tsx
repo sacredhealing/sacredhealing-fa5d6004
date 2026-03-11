@@ -811,22 +811,45 @@ const Community = () => {
 
   // Fetch member list for Members tab
   useEffect(() => {
-    supabase
-      .from("profiles")
-      .select("user_id, full_name, subscription_tier")
-      .limit(100)
-      .then(({ data }) => {
-        const mapped =
+    const loadMembers = async () => {
+      try {
+        // Primary: profiles table keyed by user_id (current production schema)
+        let { data, error } = await supabase
+          .from("profiles")
+          .select("user_id, id, full_name, subscription_tier")
+          .limit(200);
+
+        if (error) {
+          console.error("Error loading members (user_id schema):", error);
+        }
+
+        // Fallback: if no rows or legacy schema keyed by id, try again selecting id only
+        if (!data || data.length === 0) {
+          const fallback = await supabase
+            .from("profiles")
+            .select("id, full_name, subscription_tier")
+            .limit(200);
+          if (!fallback.error && fallback.data) {
+            data = fallback.data as any[];
+          }
+        }
+
+        const mapped: Member[] =
           (data as any[] | null)?.map((row) => ({
-            id: row.user_id as string,
+            // Prefer user_id, but fall back to id so we always have a stable identifier
+            id: (row.user_id as string) || (row.id as string),
             full_name: (row.full_name as string) ?? null,
             subscription_tier: (row.subscription_tier as string) ?? null,
           })) ?? [];
+
         setMembers(mapped);
-      })
-      .catch(() => {
+      } catch (e) {
+        console.error("Failed to load members:", e);
         setMembers([]);
-      });
+      }
+    };
+
+    loadMembers();
   }, []);
 
   // Map logical channel ids (like "divine-sangha") to real chat_rooms UUIDs
