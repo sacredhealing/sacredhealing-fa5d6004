@@ -640,10 +640,11 @@ export default function CreativeSoulMeditationTool() {
     }
 
     // Build offline render config from current engine state
-    // Map rich DSP object → simple numeric settings for offline renderer
+    // Map rich DSP object → simple numeric settings for offline renderer.
+    // Sacred Echo (delay) is intentionally disabled for export; Sacred Reverb is preserved.
     const dspForExport = {
       reverb: engine.dsp?.reverb?.wet ?? 0,
-      delay: engine.dsp?.delay?.wet ?? 0,
+      delay: 0,
       warmth: engine.dsp?.warmth?.enabled ? engine.dsp.warmth.drive ?? 0 : 0,
     };
 
