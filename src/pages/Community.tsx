@@ -696,6 +696,8 @@ const Community = () => {
   useEffect(() => {
     if (activeChannel) {
       fetchMessages(activeChannel);
+      // Check for active live sessions
+      daily.fetchActiveSessions(activeChannel).then(setViewerSessions);
       // Realtime subscription
       const channel = supabase
         .channel(`room-${activeChannel}`)
@@ -708,13 +710,46 @@ const Community = () => {
           setMessages((prev) => [...prev, payload.new as Message]);
         })
         .subscribe();
-      return () => { supabase.removeChannel(channel); };
+      // Listen for live session changes
+      const liveChannel = supabase
+        .channel(`live-${activeChannel}`)
+        .on("postgres_changes", {
+          event: "*",
+          schema: "public",
+          table: "community_live_sessions",
+        }, () => {
+          daily.fetchActiveSessions(activeChannel).then(setViewerSessions);
+        })
+        .subscribe();
+      return () => {
+        supabase.removeChannel(channel);
+        supabase.removeChannel(liveChannel);
+      };
+    } else {
+      setViewerSessions([]);
+      setLiveRoomUrl(null);
     }
-  }, [activeChannel, fetchMessages]);
+  }, [activeChannel, fetchMessages, daily]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  const handleGoLive = async () => {
+    if (!activeChannel || !currentChannel) return;
+    setShowGoLiveOptions(false);
+    const result = await daily.createRoom(activeChannel, `Live in ${currentChannel.name}`);
+    if (result) {
+      setLiveRoomUrl(result.room_url);
+    }
+  };
+
+  const handleEndLive = async () => {
+    if (daily.activeSession) {
+      await daily.endSession(daily.activeSession.id);
+      setLiveRoomUrl(null);
+    }
+  };
 
   const sendMessage = async () => {
     if (!messageText.trim() || !user || !activeChannel) return;
