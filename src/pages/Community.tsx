@@ -666,6 +666,7 @@ type Message = {
 const Community = () => {
   const { user } = useAuth();
   const { isAdmin } = useAdminRole();
+  const daily = useDailyLive();
 
   // UI state
   const [mobileTab, setMobileTab] = useState<"chat" | "feed" | "members">("chat");
@@ -674,6 +675,8 @@ const Community = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const [showGoLiveOptions, setShowGoLiveOptions] = useState(false);
+  const [liveRoomUrl, setLiveRoomUrl] = useState<string | null>(null);
+  const [viewerSessions, setViewerSessions] = useState<DailySession[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [onlineCount] = useState(() => Math.floor(Math.random() * 20) + 5);
 
