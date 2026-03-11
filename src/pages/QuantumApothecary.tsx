@@ -153,7 +153,7 @@ function QuantumApothecaryInner() {
   useEffect(() => {
     if (isScanning) {
       const iv = setInterval(() => setHeartRate(p => Math.min(p + Math.floor(Math.random() * 5) + 2, 130)), 500);
-      return => clearInterval(iv);
+      return () => clearInterval(iv);
     } else {
       const iv = setInterval(() => setHeartRate(p => Math.max(p - 2, 60)), 1000);
       return () => clearInterval(iv);

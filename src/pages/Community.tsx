@@ -529,3 +529,390 @@ const CSS = `
   flex-shrink: 0;
   padding: 10px 14px 14px;
   background: rgba(5,5,5,.85);
+  border-top: 1px solid rgba(255,255,255,.05);
+}
+.c-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 22px;
+  padding: 4px 6px 4px 16px;
+  transition: border-color .2s;
+}
+.c-input-row:focus-within {
+  border-color: rgba(212,175,55,.25);
+  box-shadow: 0 0 20px rgba(212,175,55,.06);
+}
+.c-input-row input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: rgba(255,255,255,.9);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+}
+.c-input-row input::placeholder { color: rgba(255,255,255,.2); }
+.c-send-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(212,175,55,.25), rgba(212,175,55,.45));
+  border: none;
+  color: #D4AF37;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all .2s;
+}
+.c-send-btn:hover { background: linear-gradient(135deg, rgba(212,175,55,.35), rgba(212,175,55,.55)); }
+.c-send-btn:disabled { opacity: .3; cursor: default; }
+
+/* ── FEED VIEW ── */
+.c-feed-view {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+}
+.c-feed-card {
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 20px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.c-feed-author {
+  font-weight: 800;
+  font-size: 13px;
+  color: #D4AF37;
+}
+.c-feed-time {
+  font-size: 10px;
+  color: rgba(255,255,255,.25);
+  margin-left: 8px;
+}
+.c-feed-text {
+  color: rgba(255,255,255,.8);
+  font-size: 14px;
+  line-height: 1.6;
+  margin-top: 8px;
+}
+
+/* ── MEMBERS VIEW ── */
+.c-members-view {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+}
+.c-member-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: background .2s;
+}
+.c-member-row:hover { background: rgba(212,175,55,.05); }
+.c-member-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 13px;
+  background: rgba(212,175,55,.1);
+  border: 1px solid rgba(212,175,55,.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 14px;
+  color: #D4AF37;
+}
+.c-member-name {
+  font-weight: 800;
+  font-size: 14px;
+  color: rgba(255,255,255,.9);
+}
+.c-member-status {
+  font-size: 10px;
+  color: rgba(255,255,255,.3);
+}
+
+/* ── DESKTOP ── */
+@media (min-width: 768px) {
+  .c-top-tabs { display: none; }
+  .c-body { gap: 0; }
+}
+`;
+
+// ─────────────────────────────────────────────
+// COMPONENT
+// ─────────────────────────────────────────────
+
+type Message = {
+  id: string;
+  channel_id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+  user_name?: string;
+};
+
+const Community = () => {
+  const { user } = useAuth();
+  const { isAdmin } = useAdminRole();
+
+  // UI state
+  const [mobileTab, setMobileTab] = useState<"chat" | "feed" | "members">("chat");
+  const [activeChannel, setActiveChannel] = useState<string | null>(null);
+  const [messageText, setMessageText] = useState("");
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [showGoLiveOptions, setShowGoLiveOptions] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [onlineCount] = useState(() => Math.floor(Math.random() * 20) + 5);
+
+  // Fetch messages for active channel
+  const fetchMessages = useCallback(async (channelId: string) => {
+    setLoading(true);
+    const { data } = await supabase
+      .from("chat_messages")
+      .select("*")
+      .eq("room_id", channelId)
+      .order("created_at", { ascending: true })
+      .limit(100);
+    setMessages((data as any[]) || []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (activeChannel) {
+      fetchMessages(activeChannel);
+      // Realtime subscription
+      const channel = supabase
+        .channel(`room-${activeChannel}`)
+        .on("postgres_changes", {
+          event: "INSERT",
+          schema: "public",
+          table: "chat_messages",
+          filter: `room_id=eq.${activeChannel}`,
+        }, (payload) => {
+          setMessages((prev) => [...prev, payload.new as Message]);
+        })
+        .subscribe();
+      return () => { supabase.removeChannel(channel); };
+    }
+  }, [activeChannel, fetchMessages]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const sendMessage = async () => {
+    if (!messageText.trim() || !user || !activeChannel) return;
+    const text = messageText.trim();
+    setMessageText("");
+    await supabase.from("chat_messages").insert({
+      room_id: activeChannel,
+      user_id: user.id,
+      content: text,
+    });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  const deleteMessage = async (id: string) => {
+    await supabase.from("chat_messages").delete().eq("id", id);
+    setMessages((prev) => prev.filter((m) => m.id !== id));
+  };
+
+  const currentChannel = CHANNELS.find((c) => c.id === activeChannel);
+
+  const getInitials = (name?: string) => {
+    if (!name) return "??";
+    return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
+  };
+
+  const formatTime = (ts: string) => {
+    try { return formatDistanceToNow(new Date(ts), { addSuffix: true }); }
+    catch { return ""; }
+  };
+
+  // ── RENDER ──
+  return (
+    <>
+      <style>{CSS}</style>
+      <div className="c-root">
+        {/* Banner */}
+        <div className="c-banner">
+          <span className="c-pulse" />
+          SACRED COMMUNITY · {onlineCount} SOULS ONLINE
+        </div>
+
+        {/* Mobile tabs */}
+        <div className="c-top-tabs">
+          <button className={`c-top-tab ${mobileTab === "chat" ? "active" : ""}`} onClick={() => setMobileTab("chat")}>Chat</button>
+          {isAdmin && <button className={`c-top-tab ${mobileTab === "feed" ? "active" : ""}`} onClick={() => setMobileTab("feed")}>Feed</button>}
+          <button className={`c-top-tab ${mobileTab === "members" ? "active" : ""}`} onClick={() => setMobileTab("members")}>Members</button>
+        </div>
+
+        {/* Body */}
+        <div className="c-body">
+          {/* ─── CHANNEL LIST / CHAT ─── */}
+          {(mobileTab === "chat" || window.innerWidth >= 768) && (
+            activeChannel && currentChannel ? (
+              <div className="c-chat-view">
+                {/* Chat header */}
+                <div className="c-chat-header">
+                  <button className="c-back-btn" onClick={() => setActiveChannel(null)}>←</button>
+                  <div className="c-chat-icon">{currentChannel.icon}</div>
+                  <div className="c-chat-title">
+                    <div className="c-chat-name">{currentChannel.name}</div>
+                    <div className="c-chat-sub">{currentChannel.description}</div>
+                  </div>
+                  {isAdmin && (
+                    <div style={{ position: "relative" }}>
+                      <button
+                        className={`c-golive-header-btn ${showGoLiveOptions ? "c-golive-active" : ""}`}
+                        onClick={() => setShowGoLiveOptions(!showGoLiveOptions)}
+                      >
+                        🔴 GO LIVE
+                      </button>
+                      {showGoLiveOptions && (
+                        <div className="c-golive-options">
+                          <button className="c-golive-opt" onClick={() => setShowGoLiveOptions(false)}>
+                            <span className="c-golive-opt-icon">📹</span>
+                            <div>
+                              <strong>Video Stream</strong>
+                              <span>Camera + Audio broadcast</span>
+                            </div>
+                          </button>
+                          <button className="c-golive-opt" onClick={() => setShowGoLiveOptions(false)}>
+                            <span className="c-golive-opt-icon">🎙</span>
+                            <div>
+                              <strong>Audio Only</strong>
+                              <span>Voice-only broadcast</span>
+                            </div>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Messages */}
+                <div className="c-messages">
+                  {loading ? (
+                    <div className="c-empty">
+                      <div className="c-empty-icon">⏳</div>
+                      <div className="c-empty-sub">LOADING MESSAGES</div>
+                    </div>
+                  ) : messages.length === 0 ? (
+                    <div className="c-empty">
+                      <div className="c-empty-icon">{currentChannel.icon}</div>
+                      <div className="c-empty-title">{currentChannel.name}</div>
+                      <div className="c-empty-sub">BE THE FIRST TO SPEAK</div>
+                    </div>
+                  ) : (
+                    messages.map((msg, i) => {
+                      const isMine = msg.user_id === user?.id;
+                      const prev = messages[i - 1];
+                      const consecutive = prev && prev.user_id === msg.user_id;
+                      return (
+                        <div key={msg.id} className={`c-msg-row ${isMine ? "mine" : ""} ${consecutive ? "consecutive" : ""}`}>
+                          <div className={`c-avatar ${isMine ? "mine" : ""} ${consecutive ? "hidden" : ""}`}>
+                            {getInitials(msg.user_name || (isMine ? "ME" : undefined))}
+                          </div>
+                          <div className="c-msg-body">
+                            {!consecutive && (
+                              <div className="c-msg-meta">
+                                <span className="c-msg-author">{msg.user_name || (isMine ? "You" : "Member")}</span>
+                              </div>
+                            )}
+                            <div className={`c-bubble ${isMine ? "mine" : ""}`}>
+                              {msg.content}
+                              {(isMine || isAdmin) && (
+                                <button className="c-delete-btn" onClick={() => deleteMessage(msg.id)}>✕</button>
+                              )}
+                            </div>
+                            <div className={`c-msg-time ${isMine ? "mine" : ""}`}>{formatTime(msg.created_at)}</div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
+
+                {/* Input */}
+                <div className="c-input-bar">
+                  <div className="c-input-row">
+                    <input
+                      placeholder={`Message ${currentChannel.name}...`}
+                      value={messageText}
+                      onChange={(e) => setMessageText(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                    />
+                    <button className="c-send-btn" onClick={sendMessage} disabled={!messageText.trim()}>
+                      ➤
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Channel list */
+              <div className="c-channels-view">
+                <div className="c-section-label">OPEN CHANNELS</div>
+                {CHANNELS.filter((c) => c.access === "public").map((ch) => (
+                  <button key={ch.id} className="c-channel-row" onClick={() => setActiveChannel(ch.id)}>
+                    <div className="c-ch-icon">{ch.icon}</div>
+                    <div className="c-ch-info">
+                      <div className="c-ch-name">{ch.name}</div>
+                      <div className="c-ch-desc">{ch.description}</div>
+                    </div>
+                    <div className="c-ch-arrow">›</div>
+                  </button>
+                ))}
+
+                <div className="c-section-label">SACRED SPACES</div>
+                {CHANNELS.filter((c) => c.access === "sacred").map((ch) => (
+                  <button key={ch.id} className="c-channel-row" onClick={() => setActiveChannel(ch.id)}>
+                    <div className="c-ch-icon sacred">{ch.icon}</div>
+                    <div className="c-ch-info">
+                      <div className="c-ch-name">{ch.name}</div>
+                      <div className="c-ch-desc">{ch.description}</div>
+                    </div>
+                    <div className="c-ch-arrow">›</div>
+                  </button>
+                ))}
+
+                <div className="c-section-label">PRIVATE</div>
+                {CHANNELS.filter((c) => c.access === "private").map((ch) => (
+                  <button key={ch.id} className="c-channel-row locked" onClick={() => {}}>
+                    <div className="c-ch-icon private">{ch.icon}</div>
+                    <div className="c-ch-info">
+                      <div className="c-ch-name">{ch.name}</div>
+                      <div className="c-ch-desc">{ch.description}</div>
+                    </div>
+                    <span className="c-lock-badge">🔒</span>
+                  </button>
+                ))}
+              </div>
+            )
+          )}
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default Community;
