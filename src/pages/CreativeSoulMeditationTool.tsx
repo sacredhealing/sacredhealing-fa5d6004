@@ -608,9 +608,13 @@ export default function CreativeSoulMeditationTool() {
   }, [user, navigate]);
 
   const handleExport = useCallback(async () => {
+    // Auto-initialize engine on first export click so button is always tappable
     if (!engine.isInitialized) {
-      toast.error('Please initialize the engine first');
-      return;
+      await engine.initialize();
+      const audioCtx = engine.getAudioContext();
+      if (audioCtx?.state === 'suspended') {
+        await audioCtx.resume();
+      }
     }
 
     if (!hasExportAccess) {
@@ -866,7 +870,7 @@ export default function CreativeSoulMeditationTool() {
             <button
               className="sqm-export-btn"
               onClick={handleExport}
-              disabled={!engine.isInitialized || offlineExport.progress?.isExporting}
+              disabled={offlineExport.progress?.isExporting}
             >
               {offlineExport.progress?.isExporting
                 ? <><Loader2 size={14} className="animate-spin" /> Exporting…</>
