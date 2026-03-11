@@ -150,20 +150,33 @@ const PageLoader = () => (
   </div>
 );
 
-/** Wraps meditation tool in ErrorBoundary so a load/render error shows a retry instead of the full-app error screen */
+/** Wraps meditation tool in ErrorBoundary; shows error details so we can fix the root cause */
 function MeditationToolWithBoundary() {
   const [retryKey, setRetryKey] = useState(0);
+  const handleRetry = () => setRetryKey((k) => k + 1);
   return (
     <ErrorBoundary
       key={retryKey}
-      fallback={
+      fallbackRender={(error) => (
         <div className="min-h-screen flex flex-col items-center justify-center px-6" style={{ background: "radial-gradient(ellipse at 15% 20%, rgba(30, 27, 75, 0.7) 0%, transparent 50%), #030303" }}>
           <h1 className="text-2xl font-bold text-foreground mb-2">Something went wrong</h1>
-          <p className="text-muted-foreground mb-6">The meditation tool failed to load. Please try again or return to the dashboard.</p>
+          <p className="text-muted-foreground mb-4">The meditation tool failed to load. Please try again or return to the dashboard.</p>
+          {/* Show error so we can fix it; user can copy/screenshot */}
+          <div className="mb-6 w-full max-w-md text-left">
+            <details className="rounded-lg bg-black/40 border border-white/10 overflow-hidden">
+              <summary className="cursor-pointer px-4 py-2 text-sm text-amber-200/80 hover:text-amber-200">
+                Error details
+              </summary>
+              <pre className="p-4 text-xs text-red-300/90 whitespace-pre-wrap break-words font-mono overflow-auto max-h-40">
+                {error.message}
+                {error.stack ? `\n\n${error.stack}` : ''}
+              </pre>
+            </details>
+          </div>
           <div className="flex gap-3">
             <button
               type="button"
-              onClick={() => setRetryKey((k) => k + 1)}
+              onClick={handleRetry}
               className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#D4AF37] px-5 py-2.5 text-sm font-semibold text-[#050505] hover:opacity-90"
             >
               Try again
@@ -173,7 +186,7 @@ function MeditationToolWithBoundary() {
             </a>
           </div>
         </div>
-      }
+      )}
     >
       <CreativeSoulMeditationTool />
     </ErrorBoundary>

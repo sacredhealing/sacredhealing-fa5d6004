@@ -5,7 +5,10 @@ import { RefreshCw, Home } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
+  /** Static fallback when error is caught */
   fallback?: ReactNode;
+  /** Alternatively, render fallback with error details (e.g. for debugging) */
+  fallbackRender?: (error: Error, errorInfo: ErrorInfo | null, reset: () => void) => ReactNode;
 }
 
 interface State {
@@ -49,7 +52,10 @@ class ErrorBoundary extends Component<Props, State> {
   };
 
   render() {
-    if (this.state.hasError) {
+    if (this.state.hasError && this.state.error) {
+      if (this.props.fallbackRender) {
+        return this.props.fallbackRender(this.state.error, this.state.errorInfo, this.handleReset);
+      }
       if (this.props.fallback) {
         return this.props.fallback;
       }
