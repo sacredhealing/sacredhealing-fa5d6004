@@ -192,7 +192,7 @@ function scheduleLoopingBuffer(
     const monoMixGainR = ctx.createGain();
     monoMixGainL.gain.value = 0.5; // Mix L+R at 50% each to prevent clipping
     monoMixGainR.gain.value = 0.5;
-    
+
     // Connect: splitter -> both channels sum through gains -> merger (mono to both L and R)
     monoSplitter.connect(monoMixGainL, 0); // Left channel to mix gain L
     monoSplitter.connect(monoMixGainR, 1); // Right channel to mix gain R
@@ -200,34 +200,87 @@ function scheduleLoopingBuffer(
     monoMixGainL.connect(monoMerger, 0, 1); // Left mix -> output R
     monoMixGainR.connect(monoMerger, 0, 0); // Right mix -> output L
     monoMixGainR.connect(monoMerger, 0, 1); // Right mix -> output R
-    
+
     console.log('[OfflineRender] Stereo-to-Mono Balancer applied to neural source');
-    
-    // Create compressor matching live engine settings
+
+    // --- Neural cleanup chain to mirror live engine (high-pass, low-pass, EQ, de-esser, compressor, limiter) ---
+
+    // High-pass: remove low-frequency rumble (≈80Hz)
+    const highPass = ctx.createBiquadFilter();
+    highPass.type = 'highpass';
+    highPass.frequency.value = 80;
+    highPass.Q.value = 0.7;
+
+    // Low-pass: remove harsh hiss above ~12kHz
+    const lowPass = ctx.createBiquadFilter();
+    lowPass.type = 'lowpass';
+    lowPass.frequency.value = 12000;
+    lowPass.Q.value = 0.7;
+
+    // Additional low-cut around 100Hz (matches live low-cut filter)
+    const lowCut = ctx.createBiquadFilter();
+    lowCut.type = 'highpass';
+    lowCut.frequency.value = 100;
+    lowCut.Q.value = 0.7;
+
+    // 3‑band EQ defaults (match live defaults: weight -0.5dB, presence +3dB, air +1dB)
+    const eqWeight = ctx.createBiquadFilter();
+    eqWeight.type = 'peaking';
+    eqWeight.frequency.value = 400;
+    eqWeight.Q.value = 1.5;
+    eqWeight.gain.value = -0.5;
+
+    const eqPresence = ctx.createBiquadFilter();
+    eqPresence.type = 'peaking';
+    eqPresence.frequency.value = 4000;
+    eqPresence.Q.value = 1.2;
+    eqPresence.gain.value = 3;
+
+    const eqAir = ctx.createBiquadFilter();
+    eqAir.type = 'highshelf';
+    eqAir.frequency.value = 10000;
+    eqAir.gain.value = 1;
+
+    // De‑Esser: gentle cut around 7.2kHz to tame sibilance
+    const deEsser = ctx.createBiquadFilter();
+    deEsser.type = 'peaking';
+    deEsser.frequency.value = 7200;
+    deEsser.Q.value = 2.5;
+    deEsser.gain.value = -4;
+
+    // Compressor similar to live engine
     const compressor = ctx.createDynamicsCompressor();
     compressor.threshold.value = -18; // More conservative threshold
     compressor.knee.value = 12;       // Wider knee for smoother compression
     compressor.ratio.value = 4;
     compressor.attack.value = 0.003;
     compressor.release.value = 0.25;
-    
-    // Create soft-knee limiter matching live engine
+
+    // Soft-knee limiter for final voicing stage
     const limiter = ctx.createDynamicsCompressor();
     limiter.threshold.value = -3;  // -3 dB threshold for headroom
     limiter.knee.value = 6;        // 6 dB soft knee
     limiter.ratio.value = 20;      // High ratio for limiting
     limiter.attack.value = 0.001;  // 1ms attack
     limiter.release.value = 0.1;   // 100ms release
-    
-    // Chain: monoMerger -> compressor -> limiter -> destination
-    monoMerger.connect(compressor);
+
+    // Chain:
+    // monoMerger -> highPass -> lowPass -> lowCut -> EQ (weight/presence/air) -> deEsser -> compressor -> limiter -> destination
+    monoMerger.connect(highPass);
+    highPass.connect(lowPass);
+    lowPass.connect(lowCut);
+    lowCut.connect(eqWeight);
+    eqWeight.connect(eqPresence);
+    eqPresence.connect(eqAir);
+    eqAir.connect(deEsser);
+    deEsser.connect(compressor);
     compressor.connect(limiter);
     limiter.connect(destination);
-    
+
     // Output to mono splitter (start of chain)
     outputNode = monoSplitter;
-    
-    console.log('[OfflineRender] Neural source chain: MONO BALANCER -> compressor -> limiter -> destination');
+
+    console.log('[OfflineRender] Neural chain: MONO BALANCER -> HP/LP/LowCut -> 3‑band EQ -> De‑Esser -> Compressor -> Limiter -> destination');
   }
   
   // Use a SINGLE looping buffer source instead of creating many to reduce memory
