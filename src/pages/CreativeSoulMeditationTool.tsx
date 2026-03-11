@@ -750,8 +750,8 @@ export default function CreativeSoulMeditationTool() {
               </div>
             </div>
             <SpectralVisualizer
-              frequencyData={engine.analyserData?.frequency ?? null}
-              timeData={engine.analyserData?.time ?? null}
+              frequencyData={engine.analyserData?.frequencyData ?? null}
+              timeData={engine.analyserData?.timeData ?? null}
               height={140}
             />
           </div>
