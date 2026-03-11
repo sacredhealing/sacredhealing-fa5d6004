@@ -930,9 +930,10 @@ export default function CreativeSoulMeditationTool() {
                 activeStyle={activeStyle}
                 onStyleSelect={setActiveStyle}
                 atmosphereVolume={volumes.ambient / 100}
-                onAtmosphereVolumeChange={(v) =>
-                  setVolumes(prev => ({ ...prev, ambient: Math.round(v * 100) }))
-                }
+                onAtmosphereVolumeChange={(v) => {
+                  engine.updateAtmosphereVolume(v);
+                  setVolumes(prev => ({ ...prev, ambient: Math.round(v * 100) }));
+                }}
                 onRefreshSound={handleRefreshSound}
                 isRefreshingSound={isRefreshingSound}
               />
