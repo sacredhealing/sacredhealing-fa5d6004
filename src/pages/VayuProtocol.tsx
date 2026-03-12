@@ -72,6 +72,9 @@ function VayuProtocolInner() {
     const W = mountRef.current.clientWidth;
     const H = mountRef.current.clientHeight;
 
+    const isMobileViewport =
+      typeof window !== "undefined" ? window.innerWidth <= 768 : false;
+
     // Renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(W, H);
@@ -93,7 +96,7 @@ function VayuProtocolInner() {
 
     // Camera
     const camera = new THREE.PerspectiveCamera(60, W / H, 0.1, 1000);
-    camera.position.set(0, 0, 5);
+    camera.position.set(0, 0, isMobileViewport ? 5.8 : 5);
     cameraRef.current = camera;
 
     // Lights
@@ -132,8 +135,10 @@ function VayuProtocolInner() {
     scene.add(stars);
     particlesRef.current = stars;
 
-    // Torus (default)
-    const torusGeo = new THREE.TorusGeometry(1.4, 0.55, 64, 128);
+    // Torus (default) — slightly smaller on mobile so it stays fully visible
+    const torusRadius = isMobileViewport ? 1.1 : 1.4;
+    const torusTube = isMobileViewport ? 0.42 : 0.55;
+    const torusGeo = new THREE.TorusGeometry(torusRadius, torusTube, 64, 128);
     const mat = new THREE.MeshPhongMaterial({
       color: 0xf5a800,
       emissive: 0x7a4800,
@@ -290,6 +295,11 @@ function VayuProtocolInner() {
 
   const cfg = PHASE_CONFIG[phase];
 
+  const isMobile =
+    typeof window !== "undefined" ? window.innerWidth <= 768 : false;
+  const isShortViewport =
+    typeof window !== "undefined" ? window.innerHeight <= 750 : false;
+
   // Torus tilted effect during scrubbing
   const meshTiltStyle =
     phase === "scrubbing"
@@ -380,7 +390,14 @@ function VayuProtocolInner() {
       )}
 
       {/* TOP LEFT — LOGO */}
-      <div style={{ position: "absolute", top: 20, left: 24, zIndex: 10 }}>
+      <div
+        style={{
+          position: "absolute",
+          top: isMobile ? 12 : 20,
+          left: isMobile ? 16 : 24,
+          zIndex: 10,
+        }}
+      >
         <div
           style={{
             display: "flex",
@@ -399,7 +416,7 @@ function VayuProtocolInner() {
           </svg>
           <span
             style={{
-              fontSize: 20,
+              fontSize: isMobile ? 16 : 20,
               fontWeight: 900,
               letterSpacing: "0.15em",
               color: phase === "stabilized" ? "#00e5ff" : "#f5c842",
@@ -423,8 +440,8 @@ function VayuProtocolInner() {
       <div
         style={{
           position: "absolute",
-          top: 20,
-          right: 24,
+          top: isMobile ? 12 : 20,
+          right: isMobile ? 16 : 24,
           zIndex: 10,
           textAlign: "right",
         }}
@@ -467,7 +484,7 @@ function VayuProtocolInner() {
         </div>
         <div
           style={{
-            width: 200,
+            width: isMobile ? 160 : 200,
             height: 3,
             background: "#1a1a1a",
             marginBottom: 4,
@@ -571,10 +588,10 @@ function VayuProtocolInner() {
       <div
         style={{
           position: "absolute",
-          bottom: 70,
-          left: 24,
+          bottom: isMobile || isShortViewport ? 110 : 70,
+          left: isMobile ? 16 : 24,
           zIndex: 10,
-          maxWidth: 340,
+          maxWidth: isMobile ? 280 : 340,
         }}
       >
         {phase === "standby" && (
@@ -678,7 +695,7 @@ function VayuProtocolInner() {
       <div
         style={{
           position: "absolute",
-          bottom: 16,
+          bottom: isMobile ? 30 : 16,
           left: "50%",
           transform: "translateX(-50%)",
           zIndex: 10,
@@ -691,12 +708,12 @@ function VayuProtocolInner() {
               display: "flex",
               alignItems: "center",
               gap: 10,
-              padding: "14px 32px",
+              padding: isMobile ? "12px 26px" : "14px 32px",
               background: "#f5a800",
               color: "#000",
               border: "none",
               borderRadius: 40,
-              fontSize: 13,
+              fontSize: isMobile ? 11 : 13,
               fontWeight: 900,
               letterSpacing: "0.18em",
               cursor: "pointer",
@@ -730,12 +747,12 @@ function VayuProtocolInner() {
               display: "flex",
               alignItems: "center",
               gap: 10,
-              padding: "14px 32px",
+              padding: isMobile ? "12px 26px" : "14px 32px",
               background: "#111",
               color: "#fff",
               border: "1.5px solid #444",
               borderRadius: 40,
-              fontSize: 13,
+              fontSize: isMobile ? 11 : 13,
               fontWeight: 700,
               letterSpacing: "0.18em",
               cursor: "pointer",
@@ -771,12 +788,12 @@ function VayuProtocolInner() {
               display: "flex",
               alignItems: "center",
               gap: 10,
-              padding: "14px 32px",
+              padding: isMobile ? "12px 26px" : "14px 32px",
               background: "#00e5ff",
               color: "#000",
               border: "none",
               borderRadius: 40,
-              fontSize: 13,
+              fontSize: isMobile ? 11 : 13,
               fontWeight: 900,
               letterSpacing: "0.18em",
               cursor: "pointer",
