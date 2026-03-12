@@ -27,7 +27,7 @@ import { ProfileEditDialog } from '@/components/profile/ProfileEditDialog';
 import KoshaReport from '@/components/profile/KoshaReport';
 import HandScanner from '@/components/scanner/HandScanner';
 import { supabase } from '@/integrations/supabase/client';
-import { paymentLogic, getStripeMode, type StripeTierKey } from '@/lib/stripe-config';
+import { getTierRank } from '@/lib/tierAccess';
 
 type LifeBookCategory =
   | 'children'
@@ -77,6 +77,7 @@ const Profile: React.FC = () => {
   const { certificates, isLoading: certificatesLoading, downloadCertificate, shareCertificate } = useCertificates();
   const { hasAccess: hasAkashicRecord } = useAkashicAccess(user?.id);
   const { tier, isPremium } = useMembership();
+  const userRank = getTierRank(tier);
   const { reading: vedicReading, generateReading } = useAIVedicReading();
 
   // Load Vedic reading when user has birth data so PlanetaryCycleBanner shows real cycle (not "Initializing Alignment...")
@@ -114,7 +115,6 @@ const Profile: React.FC = () => {
 
   const [scannerOpen, setScannerOpen] = useState(false);
   const [scanPhase, setScanPhase] = useState<'idle' | 'scanning' | 'question' | 'saving' | 'done'>('idle');
-  const [upgradeLoading, setUpgradeLoading] = useState<StripeTierKey | null>(null);
   const [langOpen, setLangOpen] = useState(false);
   const [selectedPractice, setSelectedPractice] = useState<string | null>(null);
   const [practiceDuration, setPracticeDuration] = useState<string>('30');
@@ -252,46 +252,6 @@ const Profile: React.FC = () => {
     setScannerOpen(false);
     setScanPhase('idle');
     setSelectedPractice(null);
-  };
-
-  /* SQI 2050: COMMERCE & AFFILIATE SYNC LOGIC */
-  const handleUpgrade = async (tierKey: StripeTierKey) => {
-    const tierConfig = paymentLogic[tierKey];
-    const affiliateId =
-      (() => { try { return sessionStorage.getItem('affiliate_ref'); } catch { return null; } })() ||
-      (typeof localStorage !== 'undefined' ? localStorage.getItem('sqi_affiliate_id') : null) ||
-      'direct';
-    setUpgradeLoading(tierKey);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-membership-checkout', {
-        body: {
-          priceId: tierConfig.stripePriceId,
-          tierSlug: tierConfig.tierSlug,
-          affiliate_id: affiliateId,
-          successPath: '/profile',
-          metadata: {
-            affiliate_id: affiliateId,
-            tier_name: tierKey,
-            protection_shield: tierKey === 'SIDDHA_QUANTUM' ? 'active' : 'inactive',
-          },
-        },
-      });
-      if (error) throw error;
-      if (data?.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error('No checkout URL returned');
-      }
-    } catch (err) {
-      console.error('Checkout error:', err);
-      toast({
-        title: 'Checkout failed',
-        description: 'Could not start checkout. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setUpgradeLoading(null);
-    }
   };
 
   const handleGenerateSoulReport = async () => {
@@ -733,7 +693,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
         <div className="section-label">◈ Your Ascension Frequency</div>
         <div className="tier-grid">
 
-          <div className="tier-card active-tier">
+          <div className={`tier-card${userRank === 0 ? ' active-tier' : ''}`}>
             <div className="tier-header">
               <span className="tier-name">Atma–Seed</span>
               <div className="tier-sub">Sovereign Entry Node</div>
@@ -751,23 +711,21 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               onClick={() => navigate('/atma-seed')}
               style={{
                 display:'block', width:'100%',
-                background:'transparent',
-                color:'rgba(212,175,55,0.7)',
-                border:'1px solid rgba(212,175,55,0.25)',
+                background: userRank === 0 ? 'transparent' : 'rgba(255,255,255,0.02)',
+                color: userRank === 0 ? 'rgba(212,175,55,0.7)' : 'rgba(255,255,255,0.25)',
+                border: `1px solid ${userRank === 0 ? 'rgba(212,175,55,0.25)' : 'rgba(255,255,255,0.08)'}`,
                 borderRadius:100, padding:'12px 24px',
                 fontFamily:'Montserrat,sans-serif',
                 fontWeight:800, fontSize:9,
                 letterSpacing:'0.4em', textTransform:'uppercase',
                 cursor:'pointer', transition:'all 0.2s'
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(212,175,55,0.5)'; e.currentTarget.style.color='#D4AF37'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor='rgba(212,175,55,0.25)'; e.currentTarget.style.color='rgba(212,175,55,0.7)'; }}
             >
-              ◈ Explore Free Tier
+              {userRank === 0 ? '◈ Current Tier' : '◈ Free Tier'}
             </button>
           </div>
 
-          <div className="tier-card">
+          <div className={`tier-card${userRank === 1 ? ' active-tier' : ''}`}>
             <div className="tier-header">
               <span className="tier-name">Prana–Flow</span>
               <div className="tier-sub">Sonic Vibration</div>
@@ -785,11 +743,11 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               onClick={() => navigate('/prana-flow')}
               style={{
                 display: 'block', width: '100%', maxWidth: 260, margin: '0 auto',
-                background: isPremium && tier !== 'free'
+                background: userRank >= 1
                   ? 'linear-gradient(135deg,rgba(212,175,55,0.18),rgba(212,175,55,0.08))'
                   : 'rgba(255,255,255,0.04)',
-                color: isPremium && tier !== 'free' ? '#D4AF37' : 'rgba(255,255,255,0.4)',
-                border: isPremium && tier !== 'free'
+                color: userRank >= 1 ? '#D4AF37' : 'rgba(255,255,255,0.4)',
+                border: userRank >= 1
                   ? '1px solid rgba(212,175,55,0.4)'
                   : '1px solid rgba(255,255,255,0.1)',
                 borderRadius: 100, padding: '13px 20px',
@@ -798,11 +756,13 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                 cursor: 'pointer', transition: 'all 0.2s'
               }}
             >
-              {isPremium && tier !== 'free' ? '◈ Active — Explore' : '◈ Activate Vibration'}
+              {userRank >= 1
+                ? (userRank === 1 ? '◈ Current Tier' : '◈ Included in Your Plan')
+                : '◈ Activate Vibration'}
             </button>
           </div>
 
-          <div className="tier-card featured siddha-quantum-card">
+          <div className={`tier-card featured siddha-quantum-card${userRank === 2 ? ' active-tier' : ''}`}>
             <div className="sq-aura sq-aura-1" /><div className="sq-aura sq-aura-2" /><div className="sq-aura sq-aura-3" />
             <div style={{position:'relative',zIndex:1}}>
               <div className="tier-badge sq-badge">◈ Universal Path</div>
@@ -830,16 +790,10 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                   cursor:'pointer', transition:'all 0.2s',
                   boxShadow:'0 0 24px rgba(212,175,55,0.2)'
                 }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.boxShadow='0 0 40px rgba(212,175,55,0.5)';
-                  e.currentTarget.style.borderColor='rgba(212,175,55,0.7)';
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.boxShadow='0 0 24px rgba(212,175,55,0.2)';
-                  e.currentTarget.style.borderColor='rgba(212,175,55,0.4)';
-                }}
               >
-                ◈ Activate Universal Field
+                {userRank >= 2
+                  ? (userRank === 2 ? '◈ Current Tier — Active' : '◈ Included in Your Plan')
+                  : '◈ Activate Universal Field'}
               </button>
             </div>
           </div>
@@ -851,7 +805,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               <div style={{fontWeight:800,fontSize:8,letterSpacing:'0.4em',color:'rgba(212,175,55,0.5)',textTransform:'uppercase',marginBottom:8}}>◈ Eternal Node Activation</div>
               <div style={{fontWeight:800,fontSize:17,letterSpacing:'0.2em',color:'#D4AF37'}}>Akasha–Infinity</div>
               <div style={{fontSize:8,letterSpacing:'0.35em',color:'rgba(255,255,255,0.2)',textTransform:'uppercase',marginTop:4}}>Lifetime Transmission</div>
-              {tier === 'lifetime' && (
+              {userRank >= 3 && (
                 <span style={{
                   display:'inline-block',
                   fontWeight:800, fontSize:6.5, letterSpacing:'0.4em', textTransform:'uppercase',
@@ -889,7 +843,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               boxShadow: '0 0 32px rgba(212,175,55,0.3), 0 0 64px rgba(212,175,55,0.08)',
             }}
           >
-            {tier === 'lifetime' ? '◈ Field Active — Open Portal ∞' : '◈ Enter the Akashic Field ∞'}
+            {userRank >= 3 ? '◈ Field Active — Open Portal ∞' : '◈ Enter the Akashic Field ∞'}
           </button>
         </div>
       </div>
@@ -1040,7 +994,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
       <div className="section-wrap">
         <div className="section-label">◈ Abundance & Lineage</div>
         <div className="abundance-grid">
-          <div className="abundance-card" onClick={() => setSettingsOpen(true)}>
+          <div className="abundance-card" onClick={() => navigate('/income-streams')}>
             <div className="abundance-icon-wrap"><Wallet size={22} color="#D4AF37" /></div>
             <span className="abundance-label">Wallet & Earnings</span>
           </div>
