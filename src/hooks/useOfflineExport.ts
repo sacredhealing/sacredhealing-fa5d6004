@@ -78,6 +78,8 @@ export function useOfflineExport() {
         } : undefined,
         dsp: config.dsp,
         masterVolume: config.masterVolume,
+        noiseGate: config.noiseGate,
+        eq: config.eq,
         onProgress: (percent, step) => {
           if (!abortRef.current) {
             setProgress({ percent, step, isExporting: true });
