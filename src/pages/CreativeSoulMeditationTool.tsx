@@ -21,7 +21,8 @@ import {
   X,
   CheckCircle2,
   AlertCircle,
-  Zap
+  Zap,
+  RotateCcw
 } from 'lucide-react';
 import { useSoulMeditateEngine } from '@/hooks/useSoulMeditateEngine';
 import { useOfflineExport } from '@/hooks/useOfflineExport';
@@ -289,6 +290,7 @@ const SQI_STYLES = `
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-wrap: wrap;
   gap: 12px;
   margin-bottom: 28px;
   flex-wrap: wrap;
@@ -336,6 +338,23 @@ const SQI_STYLES = `
 }
 .sqm-export-btn:hover:not(:disabled) { color: #D4AF37; border-color: rgba(212,175,55,0.4); }
 .sqm-export-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.sqm-new-session-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 20px;
+  padding: 10px 20px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.sqm-new-session-btn:hover { color: #D4AF37; border-color: rgba(212,175,55,0.4); background: rgba(212,175,55,0.05); }
 
 /* ── EXPORT PROGRESS ────────────────────────────── */
 .sqm-export-panel {
@@ -480,7 +499,7 @@ const SQI_STYLES = `
 .sqm-bottom-spacer { height: 80px; }
 `;
 
-export default function CreativeSoulMeditationTool() {
+function MeditationToolInner({ onNewSession }: { onNewSession: () => void }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
@@ -901,6 +920,17 @@ export default function CreativeSoulMeditationTool() {
                 : <><Zap size={14} /> Export Master</>
               }
             </button>
+
+            <button
+              className="sqm-new-session-btn"
+              onClick={() => {
+                if (isPlaying) stopAll();
+                onNewSession();
+              }}
+              title="Start a new meditation from scratch"
+            >
+              <RotateCcw size={14} /> New Session
+            </button>
           </div>
 
           {/* ── MEDITATION NAME INPUT (for export filename) ── */}
@@ -1136,3 +1166,19 @@ export default function CreativeSoulMeditationTool() {
   );
 }
 
+/**
+ * Outer wrapper that manages the session lifecycle.
+ * Incrementing `sessionKey` fully remounts the inner component,
+ * which tears down the AudioContext, clears all state, and gives
+ * the user a fresh canvas -- no page refresh needed.
+ */
+export default function CreativeSoulMeditationTool() {
+  const [sessionKey, setSessionKey] = useState(0);
+
+  return (
+    <MeditationToolInner
+      key={sessionKey}
+      onNewSession={() => setSessionKey(k => k + 1)}
+    />
+  );
+}
