@@ -49,12 +49,12 @@ const SOLFEGGIO_FREQUENCIES = [
 ];
 
 // III. Quantum Calibration is 5dB lower than II. Meditation Style & Neural Source
-const QUANTUM_CALIBRATION_LINEAR = Math.pow(10, -5 / 20); // ≈ 0.562
-// Oscillator gain: 0.7–0.8 range for audible Hz/Binaural without clipping
-const OSCILLATOR_BASE_GAIN = 0.8;
-const OSCILLATOR_GAIN_MAX = 0.85;
-// Neural source +3dB to match oscillators in the same DSP rack
-const NEURAL_GAIN_BOOST_LINEAR = Math.pow(10, 3 / 20); // ≈ 1.412
+const QUANTUM_CALIBRATION_LINEAR = Math.pow(10, -3 / 20); // ≈ 0.708 (was -5dB, now -3dB for louder oscillators)
+// Oscillator gain: 0.85–0.95 range for audible Hz/Binaural without clipping
+const OSCILLATOR_BASE_GAIN = 0.9;
+const OSCILLATOR_GAIN_MAX = 0.95;
+// Neural source +4dB to match oscillators in the same DSP rack
+const NEURAL_GAIN_BOOST_LINEAR = Math.pow(10, 4 / 20); // ≈ 1.585
 
 const BINAURAL_PRESETS = [
   { beatHz: 0.5, label: 'Epsilon (0.5 Hz) – Transcendence' },
@@ -1133,7 +1133,7 @@ export function useSoulMeditateEngine() {
   // Update volumes
   // Volume clamping helper to prevent distortion at max volume
   // Max 0.85 gives headroom for the limiter when multiple layers combine
-  const clampVolume = (vol: number, maxVol: number = 0.85) => Math.min(Math.max(0, vol), maxVol);
+  const clampVolume = (vol: number, maxVol: number = 0.95) => Math.min(Math.max(0, vol), maxVol);
 
   const updateNeuralVolume = useCallback((vol: number) => {
     const safeVol = Math.min(0.95, clampVolume(vol) * NEURAL_GAIN_BOOST_LINEAR);
@@ -1168,7 +1168,7 @@ export function useSoulMeditateEngine() {
   }, [frequencies.binaural.enabled]);
 
   const updateMasterVolume = useCallback((vol: number) => {
-    const safeVol = clampVolume(vol, 0.9); // Master has limiter, allow slightly higher
+    const safeVol = clampVolume(vol, 0.95); // Master has limiter, allow higher
     if (masterGainRef.current) {
       masterGainRef.current.gain.value = safeVol;
     }

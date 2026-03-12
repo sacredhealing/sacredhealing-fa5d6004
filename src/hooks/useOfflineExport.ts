@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback, useRef } from 'react';
-import { renderOffline, OfflineRenderConfig, DSPSettings } from '@/utils/offlineAudioRenderer';
+import { renderOffline, OfflineRenderConfig, DSPSettings, NoiseGateSettings, EQSettings } from '@/utils/offlineAudioRenderer';
 import { audioBufferToWav } from '@/utils/wavEncoder';
 import { sanitizeUrl } from '@/utils/sanitizeUrl';
 import { supabase } from '@/integrations/supabase/client';
@@ -36,6 +36,8 @@ export interface ExportConfig {
   binauralVolume?: number;
   dsp: DSPSettings;
   masterVolume: number;
+  noiseGate?: NoiseGateSettings;
+  eq?: EQSettings;
 }
 
 export function useOfflineExport() {
@@ -76,6 +78,8 @@ export function useOfflineExport() {
         } : undefined,
         dsp: config.dsp,
         masterVolume: config.masterVolume,
+        noiseGate: config.noiseGate,
+        eq: config.eq,
         onProgress: (percent, step) => {
           if (!abortRef.current) {
             setProgress({ percent, step, isExporting: true });

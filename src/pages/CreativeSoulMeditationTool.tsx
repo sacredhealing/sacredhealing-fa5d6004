@@ -654,6 +654,22 @@ export default function CreativeSoulMeditationTool() {
       warmth: engine.dsp?.warmth?.enabled ? engine.dsp.warmth.drive ?? 0 : 0,
     };
 
+    // Pass noise gate settings so export includes the gate effect
+    const noiseGateForExport = {
+      enabled: engine.eqSettings?.noiseGateEnabled ?? true,
+      threshold: engine.eqSettings?.noiseGateThreshold ?? -40,
+      range: engine.eqSettings?.noiseGateRange ?? -72,
+    };
+
+    // Pass EQ settings so export matches live preview exactly
+    const eqForExport = {
+      weight: engine.eqSettings?.weight ?? -0.5,
+      presence: engine.eqSettings?.presence ?? 3,
+      air: engine.eqSettings?.air ?? 1,
+      lowCutEnabled: engine.eqSettings?.lowCutEnabled ?? true,
+      deEsserEnabled: true,
+    };
+
     const cfg = {
       durationSeconds: derivedDuration,
       neuralAudioUrl: engine.neuralLayer.exportInput?.directUrl,
@@ -667,6 +683,8 @@ export default function CreativeSoulMeditationTool() {
       binauralVolume: engine.binauralVolume,
       dsp: dspForExport,
       masterVolume: engine.masterVolume,
+      noiseGate: noiseGateForExport,
+      eq: eqForExport,
     };
 
     const result = await offlineExport.exportMeditation(cfg);
