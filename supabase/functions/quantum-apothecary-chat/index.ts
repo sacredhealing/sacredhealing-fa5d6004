@@ -156,7 +156,7 @@ async function classifyAndPersistLifeBook(options: {
 
   const { data: existing, error: fetchError } = await supabaseAdmin
     .from("life_book_chapters")
-    .select("id, content, sort_order")
+    .select("id, content, sort_order, title")
     .eq("user_id", userId)
     .eq("chapter_type", category)
     .order("sort_order", { ascending: true })
