@@ -96,6 +96,13 @@ const adminSections = [
     color: 'text-emerald-500',
   },
   {
+    title: 'Divine Transmissions',
+    description: 'Manage Explore Akasha audio talks, oracle teachings & series',
+    icon: AudioLines,
+    href: '/admin/divine-transmissions',
+    color: 'text-violet-500',
+  },
+  {
     title: 'Mantras',
     description: 'Manage sacred mantras for users to earn 111 SHC',
     icon: Crown,

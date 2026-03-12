@@ -207,6 +207,52 @@ export default function Explore() {
         </div>
       </div>
 
+      {/* ══ EXPLORE AKASHA — WISDOM ARCHIVE ══ */}
+      <SL label="◈ Explore Akasha" delay="0.15s" />
+      <div
+        onClick={() => navigate('/explore-akasha')}
+        style={{ margin: '0 16px', borderRadius: 22, overflow: 'hidden', position: 'relative', cursor: 'pointer', border: '1px solid rgba(160,80,240,0.25)', background: 'linear-gradient(160deg,rgba(50,15,90,0.7) 0%,rgba(20,5,40,0.95) 55%,rgba(212,175,55,0.06) 100%)', animation: 'sqFadeUp 0.45s 0.17s ease both' }}
+      >
+        <div style={{ position: 'absolute', top: 0, left: '-110%', width: '55%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(160,80,240,0.07),transparent)', animation: 'sqShimmer 5s ease-in-out infinite', pointerEvents: 'none' }} />
+        <div style={{ position: 'relative', zIndex: 1, padding: '20px 18px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+            <div style={{ width: 50, height: 50, borderRadius: '50%', background: 'rgba(160,80,240,0.15)', border: '1px solid rgba(160,80,240,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
+                <circle cx="14" cy="14" r="10" stroke="rgba(190,140,255,0.7)" strokeWidth="1.2" fill="none"/>
+                <circle cx="14" cy="14" r="5.5" stroke="rgba(190,140,255,0.4)" strokeWidth="1" fill="none"/>
+                <circle cx="14" cy="14" r="2" fill="rgba(190,140,255,0.8)"/>
+                <line x1="14" y1="4" x2="14" y2="8" stroke="rgba(190,140,255,0.5)" strokeWidth="0.8"/>
+                <line x1="14" y1="20" x2="14" y2="24" stroke="rgba(190,140,255,0.5)" strokeWidth="0.8"/>
+                <line x1="4" y1="14" x2="8" y2="14" stroke="rgba(190,140,255,0.5)" strokeWidth="0.8"/>
+                <line x1="20" y1="14" x2="24" y2="14" stroke="rgba(190,140,255,0.5)" strokeWidth="0.8"/>
+              </svg>
+            </div>
+            <div>
+              <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 8.5, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(190,140,255,0.85)', marginBottom: 3 }}>Explore Akasha</div>
+              <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.85rem', color: 'rgba(255,255,255,0.36)' }}>The Wisdom Archive</div>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 16 }}>
+            {[
+              { label: 'Divine\nTransmissions', svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2 L12 22" stroke="rgba(190,140,255,0.7)" strokeWidth="1.2"/><path d="M6 8 L12 2 L18 8" stroke="rgba(190,140,255,0.7)" strokeWidth="1.2" fill="none"/><circle cx="12" cy="14" r="3" stroke="rgba(190,140,255,0.5)" strokeWidth="1" fill="rgba(190,140,255,0.1)"/></svg> },
+              { label: 'Oracle\nTalks', svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="rgba(190,140,255,0.6)" strokeWidth="1.2" fill="none"/><circle cx="12" cy="10" r="2.5" fill="rgba(190,140,255,0.3)" stroke="rgba(190,140,255,0.7)" strokeWidth="1"/><path d="M8 18 Q12 14 16 18" stroke="rgba(190,140,255,0.5)" strokeWidth="1" fill="none"/></svg> },
+              { label: 'Sacred\nSeries', svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="16" height="18" rx="2" stroke="rgba(190,140,255,0.6)" strokeWidth="1.2" fill="none"/><line x1="8" y1="8" x2="16" y2="8" stroke="rgba(190,140,255,0.4)" strokeWidth="1"/><line x1="8" y1="12" x2="16" y2="12" stroke="rgba(190,140,255,0.4)" strokeWidth="1"/><line x1="8" y1="16" x2="13" y2="16" stroke="rgba(190,140,255,0.4)" strokeWidth="1"/></svg> },
+            ].map(({ svg, label }, i) => (
+              <div key={i} style={{ background: 'rgba(160,80,240,0.1)', border: '1px solid rgba(160,80,240,0.15)', borderRadius: 13, padding: '11px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
+                {svg}
+                <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(190,140,255,0.6)', textAlign: 'center', lineHeight: 1.4, whiteSpace: 'pre-line' }}>{label}</span>
+              </div>
+            ))}
+          </div>
+          <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.87rem', color: 'rgba(255,255,255,0.38)', lineHeight: 1.62, marginBottom: 13 }}>Timeless teachings, deeper spiritual transmissions, and sacred frequency talks. English & Swedish audio.</p>
+          <button
+            style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(190,140,255,0.8)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+          >
+            Enter the Archive →
+          </button>
+        </div>
+      </div>
+
       {/* ══ SACRED TOOLS ══ */}
       <SL label="◈ Sacred Tools" delay="0.18s" />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '0 16px', animation: 'sqFadeUp 0.4s 0.2s ease both' }}>

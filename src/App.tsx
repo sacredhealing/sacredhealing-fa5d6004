@@ -143,6 +143,8 @@ const SoulScan = React.lazy(() => import("./pages/SoulScan"));
 const VayuProtocol = React.lazy(() => import("./pages/VayuProtocol"));
 const SiddhaPortal = React.lazy(() => import("./pages/SiddhaPortal"));
 const SiddhaSoundAlchemyOracle = React.lazy(() => import("./pages/SiddhaSoundAlchemyOracle"));
+const ExploreAkasha = React.lazy(() => import("./pages/ExploreAkasha"));
+const AdminDivineTransmissions = React.lazy(() => import("./pages/AdminDivineTransmissions"));
 
 const PageLoader = () => (
   <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a]">
@@ -306,6 +308,7 @@ function AppRoutes() {
                   <Route path="/vayu-protocol" element={<VayuProtocol />} />
                   <Route path="/siddha-portal" element={<SiddhaPortal />} />
                   <Route path="/prompt-library" element={<PromptLibrary />} />
+                  <Route path="/explore-akasha" element={<ExploreAkasha />} />
                   <Route path="/creative-soul" element={<Navigate to="/creative-soul/store" replace />} />
                   <Route path="/creative-soul-hub" element={<CreativeSoulHub />} />
                   {/* ROUTE DEFINITION: /creative-soul/store renders CreativeSoulStore.tsx */}
@@ -346,6 +349,7 @@ function AppRoutes() {
                   <Route path="/admin/music-analytics" element={<AdminMusicAnalytics />} />
                   <Route path="/admin/content-roadmap" element={<AdminContentRoadmap />} />
                   <Route path="/admin/vedic-translation" element={<AdminVedicTranslation />} />
+                  <Route path="/admin/divine-transmissions" element={<AdminDivineTransmissions />} />
                   <Route path="/admin/books" element={<AdminScripturalBooks />} />
                   <Route path="/admin/books/:id" element={<AdminScripturalBookView />} />
                 </Route>
