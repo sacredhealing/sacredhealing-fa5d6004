@@ -1168,7 +1168,7 @@ export function useSoulMeditateEngine() {
   }, [frequencies.binaural.enabled]);
 
   const updateMasterVolume = useCallback((vol: number) => {
-    const safeVol = clampVolume(vol, 0.9); // Master has limiter, allow slightly higher
+    const safeVol = clampVolume(vol, 0.95); // Master has limiter, allow higher
     if (masterGainRef.current) {
       masterGainRef.current.gain.value = safeVol;
     }
