@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback, useRef } from 'react';
-import { renderOffline, OfflineRenderConfig, DSPSettings } from '@/utils/offlineAudioRenderer';
+import { renderOffline, OfflineRenderConfig, DSPSettings, NoiseGateSettings, EQSettings } from '@/utils/offlineAudioRenderer';
 import { audioBufferToWav } from '@/utils/wavEncoder';
 import { sanitizeUrl } from '@/utils/sanitizeUrl';
 import { supabase } from '@/integrations/supabase/client';
