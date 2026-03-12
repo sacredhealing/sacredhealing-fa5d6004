@@ -1133,7 +1133,7 @@ export function useSoulMeditateEngine() {
   // Update volumes
   // Volume clamping helper to prevent distortion at max volume
   // Max 0.85 gives headroom for the limiter when multiple layers combine
-  const clampVolume = (vol: number, maxVol: number = 0.85) => Math.min(Math.max(0, vol), maxVol);
+  const clampVolume = (vol: number, maxVol: number = 0.95) => Math.min(Math.max(0, vol), maxVol);
 
   const updateNeuralVolume = useCallback((vol: number) => {
     const safeVol = Math.min(0.95, clampVolume(vol) * NEURAL_GAIN_BOOST_LINEAR);
