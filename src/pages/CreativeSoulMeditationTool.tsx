@@ -563,6 +563,10 @@ export default function CreativeSoulMeditationTool() {
         engine.updateBinauralVolume(brainwaveVolume);
         await engine.startBinaural(200, brainwaveFreq);
       }
+      // Resume vocal/neural source if one was loaded but stopped by Cease Alchemy
+      if (engine.neuralLayer?.source && !engine.neuralLayer.isPlaying) {
+        await engine.toggleNeuralPlay();
+      }
       toast.success('Alchemy commenced — Anahata open');
     } catch (e) {
       toast.error('Could not commence alchemy');
@@ -974,6 +978,34 @@ export default function CreativeSoulMeditationTool() {
               onVolumeChange={engine?.updateNeuralVolume ?? (() => {})}
             />
           </SQISection>
+
+          {/* ══ STEP 1b: VOCAL REFINEMENT (Noise Gate + Tonal Balance) ══ */}
+          {engine?.neuralLayer?.source && (
+            <SQISection number="1b" title="Vocal Refinement">
+              <VirtualChannelStrip
+                sourceName={typeof engine.neuralLayer.source === 'string'
+                  ? engine.neuralLayer.source.split('/').pop() || 'Neural Source'
+                  : 'Neural Source'}
+                autoGainDb={0}
+                lowCutEnabled={engine?.eqSettings?.lowCutEnabled ?? true}
+                onLowCutToggle={engine?.toggleLowCut}
+                onEqChange={engine?.updateEQ}
+                eqValues={{
+                  weight: engine?.eqSettings?.weight ?? -0.5,
+                  presence: engine?.eqSettings?.presence ?? 3,
+                  air: engine?.eqSettings?.air ?? 1,
+                }}
+                noiseGate={{
+                  threshold: engine?.eqSettings?.noiseGateThreshold ?? -40,
+                  attack: engine?.eqSettings?.noiseGateAttack ?? 5,
+                  release: engine?.eqSettings?.noiseGateRelease ?? 120,
+                  range: engine?.eqSettings?.noiseGateRange ?? -72,
+                  enabled: engine?.eqSettings?.noiseGateEnabled ?? true,
+                }}
+                onNoiseGateChange={engine?.updateNoiseGate}
+              />
+            </SQISection>
+          )}
 
           {/* ══ STEP 2: ATMOSPHERE ══ */}
           <SQISection number="2" title="Atmosphere">
