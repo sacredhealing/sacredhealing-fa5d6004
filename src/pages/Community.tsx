@@ -1359,7 +1359,7 @@ const Community = () => {
       return;
     }
 
-    setMessages((prev) => [...prev, data as Message]);
+    setMessages((prev) => [...prev, data as unknown as Message]);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
