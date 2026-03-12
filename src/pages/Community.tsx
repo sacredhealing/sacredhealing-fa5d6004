@@ -1072,8 +1072,11 @@ const Community = () => {
   }, [user?.id]);
 
   // Map logical channel ids (like "divine-sangha") to real chat_rooms UUIDs
+  // Auto-create any missing community rooms so chat always works
   useEffect(() => {
     const loadRooms = async () => {
+      if (!user) return;
+
       const { data, error } = await supabase
         .from("chat_rooms")
         .select("id, name, type");
@@ -1085,25 +1088,56 @@ const Community = () => {
 
       const map: Record<string, string> = {};
       (data || []).forEach((room: any) => {
-        // Match by exact name when possible
         const matched = CHANNELS.find((ch) => ch.name === room.name);
         if (matched) {
           map[matched.id] = room.id;
         }
-        // Map special types for private spaces
-        if (room.type === "andlig") {
-          map["andlig-transformation"] = room.id;
-        }
-        if (room.type === "stargate") {
-          map["stargate"] = room.id;
-        }
+        if (room.type === "andlig") map["andlig-transformation"] = room.id;
+        if (room.type === "stargate") map["stargate"] = room.id;
       });
+
+      // Auto-create any missing channel rooms
+      for (const ch of CHANNELS) {
+        if (map[ch.id]) continue;
+        const roomType =
+          ch.id === "stargate" ? "stargate"
+          : ch.id === "andlig-transformation" ? "andlig"
+          : "community";
+        try {
+          const { data: created, error: createErr } = await supabase
+            .from("chat_rooms")
+            .insert({
+              name: ch.name,
+              description: ch.description,
+              created_by: user.id,
+              type: roomType,
+            } as Record<string, unknown>)
+            .select("id")
+            .single();
+
+          if (!createErr && created?.id) {
+            map[ch.id] = created.id as string;
+          } else {
+            // Room may already exist under a different query timing; try to find it
+            const { data: found } = await supabase
+              .from("chat_rooms")
+              .select("id")
+              .eq("name", ch.name)
+              .limit(1);
+            if (found && found.length > 0) {
+              map[ch.id] = (found[0] as any).id;
+            }
+          }
+        } catch (e) {
+          console.warn(`Could not auto-create room for ${ch.name}:`, e);
+        }
+      }
 
       setRoomIds(map);
     };
 
     loadRooms();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     fetchFeedPosts();
@@ -1421,19 +1455,31 @@ const Community = () => {
         if (!createError && created?.id) {
           roomId = created.id as string;
         } else {
-          // Fallback: try to find an existing room matching this channel by name
-          const { data: existingRooms } = await supabase
+          // Fallback: find existing room by exact name match
+          const channelName = logical?.name || activeChannel;
+          const { data: byName } = await supabase
             .from("chat_rooms")
-            .select("id, name")
-            .or(`name.eq.${logical?.name || activeChannel},type.eq.${baseType}`)
+            .select("id")
+            .eq("name", channelName)
             .limit(1);
 
-          if (existingRooms && existingRooms.length > 0) {
-            roomId = (existingRooms[0] as any).id;
+          if (byName && byName.length > 0) {
+            roomId = (byName[0] as any).id;
           } else {
-            console.error("Failed to auto-create or find chat room:", createError);
-            toast.error("Channel is not configured yet. Try another channel.");
-            return;
+            // Try by type
+            const { data: byType } = await supabase
+              .from("chat_rooms")
+              .select("id")
+              .eq("type", baseType)
+              .limit(1);
+
+            if (byType && byType.length > 0) {
+              roomId = (byType[0] as any).id;
+            } else {
+              console.error("Failed to auto-create or find chat room:", createError);
+              toast.error("Could not set up this channel. Please try again.");
+              return;
+            }
           }
         }
 
