@@ -36,6 +36,8 @@ export interface ExportConfig {
   binauralVolume?: number;
   dsp: DSPSettings;
   masterVolume: number;
+  noiseGate?: NoiseGateSettings;
+  eq?: EQSettings;
 }
 
 export function useOfflineExport() {
