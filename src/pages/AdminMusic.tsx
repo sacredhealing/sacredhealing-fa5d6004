@@ -245,10 +245,10 @@ const AdminMusic: React.FC = () => {
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!previewFile || !fullFile || !title) {
+    if (!title || (!previewFile && !fullFile)) {
       toast({
         title: "Missing fields",
-        description: "Please provide title, preview, and full audio files",
+        description: "Please provide a title and at least one audio file (preview or full)",
         variant: "destructive"
       });
       return;
@@ -260,48 +260,48 @@ const AdminMusic: React.FC = () => {
       const timestamp = Date.now();
       const randomId = Math.random().toString(36).slice(2);
       
-      // Upload preview
-      const previewExt = previewFile.name.split('.').pop();
-      const previewName = `${timestamp}-${randomId}-preview.${previewExt}`;
-      
-      const { error: previewError } = await supabase.storage
-        .from('songs')
-        .upload(previewName, previewFile, { 
-          cacheControl: '3600', 
-          upsert: false,
-          contentType: previewFile.type || 'audio/mpeg'
-        });
+      let previewUrl: string | null = null;
+      let fullUrl: string | null = null;
 
-      if (previewError) throw previewError;
+      // Upload preview if provided
+      if (previewFile) {
+        const previewExt = previewFile.name.split('.').pop();
+        const previewName = `${timestamp}-${randomId}-preview.${previewExt}`;
+        const { error: previewError } = await supabase.storage
+          .from('songs')
+          .upload(previewName, previewFile, { 
+            cacheControl: '3600', 
+            upsert: false,
+            contentType: previewFile.type || 'audio/mpeg'
+          });
+        if (previewError) throw previewError;
+        previewUrl = supabase.storage.from('songs').getPublicUrl(previewName).data.publicUrl;
+      }
 
-      // Upload full track
-      const fullExt = fullFile.name.split('.').pop();
-      const fullName = `${timestamp}-${randomId}-full.${fullExt}`;
-      
-      const { error: fullError } = await supabase.storage
-        .from('songs')
-        .upload(fullName, fullFile, { 
-          cacheControl: '3600', 
-          upsert: false,
-          contentType: fullFile.type || 'audio/mpeg'
-        });
+      // Upload full track if provided
+      if (fullFile) {
+        const fullExt = fullFile.name.split('.').pop();
+        const fullName = `${timestamp}-${randomId}-full.${fullExt}`;
+        const { error: fullError } = await supabase.storage
+          .from('songs')
+          .upload(fullName, fullFile, { 
+            cacheControl: '3600', 
+            upsert: false,
+            contentType: fullFile.type || 'audio/mpeg'
+          });
+        if (fullError) throw fullError;
+        fullUrl = supabase.storage.from('songs').getPublicUrl(fullName).data.publicUrl;
+      }
 
-      if (fullError) throw fullError;
+      // If only one file was provided, reuse it for the other
+      if (!previewUrl && fullUrl) previewUrl = fullUrl;
+      if (!fullUrl && previewUrl) fullUrl = previewUrl;
 
       // Upload cover image if provided
       let coverUrl: string | null = null;
       if (coverFile) {
         coverUrl = await uploadImage(coverFile);
       }
-
-      // Get public URLs
-      const { data: { publicUrl: previewUrl } } = supabase.storage
-        .from('songs')
-        .getPublicUrl(previewName);
-
-      const { data: { publicUrl: fullUrl } } = supabase.storage
-        .from('songs')
-        .getPublicUrl(fullName);
 
       // Insert track record with pending analysis status
       const { data: insertedTrack, error: insertError } = await supabase
@@ -312,8 +312,8 @@ const AdminMusic: React.FC = () => {
           description: description || null,
           genre,
           duration_seconds: parseDuration(durationInput),
-          preview_url: previewUrl,
-          full_audio_url: fullUrl,
+          preview_url: previewUrl!,
+          full_audio_url: fullUrl!,
           cover_image_url: coverUrl,
           price_usd: parseFloat(priceUsd),
           bpm: bpm ? parseInt(bpm) : null,
@@ -662,7 +662,7 @@ const AdminMusic: React.FC = () => {
               </div>
               
               <div>
-                <label className="block text-sm text-muted-foreground mb-1">30-Second Preview *</label>
+                <label className="block text-sm text-muted-foreground mb-1">30-Second Preview (optional)</label>
                 <label className="flex items-center justify-center gap-2 h-16 border-2 border-dashed border-border/50 rounded-xl cursor-pointer hover:border-primary/50 transition-colors">
                   <input
                     type="file"

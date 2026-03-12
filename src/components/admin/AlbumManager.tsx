@@ -158,10 +158,10 @@ const AlbumManager: React.FC = () => {
   };
 
   const handleCreateTrack = async () => {
-    if (!newTrackTitle || !newTrackPreviewFile || !newTrackFullFile) {
+    if (!newTrackTitle || (!newTrackPreviewFile && !newTrackFullFile)) {
       toast({
         title: "Missing fields",
-        description: "Please provide title, preview audio, and full audio",
+        description: "Please provide a title and at least one audio file (preview or full)",
         variant: "destructive"
       });
       return;
@@ -170,9 +170,19 @@ const AlbumManager: React.FC = () => {
     setIsCreatingTrack(true);
 
     try {
-      // Upload files
-      const previewUrl = await uploadAudioFile(newTrackPreviewFile, 'previews');
-      const fullUrl = await uploadAudioFile(newTrackFullFile, 'full-tracks');
+      let previewUrl: string | null = null;
+      let fullUrl: string | null = null;
+
+      if (newTrackPreviewFile) {
+        previewUrl = await uploadAudioFile(newTrackPreviewFile, 'previews');
+      }
+      if (newTrackFullFile) {
+        fullUrl = await uploadAudioFile(newTrackFullFile, 'full-tracks');
+      }
+
+      // Reuse whichever file was provided for the missing URL
+      if (!previewUrl && fullUrl) previewUrl = fullUrl;
+      if (!fullUrl && previewUrl) fullUrl = previewUrl;
       
       let coverUrl: string | null = null;
       if (newTrackCoverFile) {
@@ -189,8 +199,8 @@ const AlbumManager: React.FC = () => {
           genre: newTrackGenre,
           bpm: newTrackBpm ? parseInt(newTrackBpm) : null,
           price_usd: parseFloat(newTrackPrice),
-          preview_url: previewUrl,
-          full_audio_url: fullUrl,
+          preview_url: previewUrl!,
+          full_audio_url: fullUrl!,
           cover_image_url: coverUrl
         })
         .select()
@@ -577,7 +587,7 @@ const AlbumManager: React.FC = () => {
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-xs text-muted-foreground mb-1">30s Preview Audio *</label>
+                    <label className="block text-xs text-muted-foreground mb-1">30s Preview (optional)</label>
                     <input
                       ref={previewInputRef}
                       type="file"
@@ -595,7 +605,7 @@ const AlbumManager: React.FC = () => {
                     </button>
                   </div>
                   <div>
-                    <label className="block text-xs text-muted-foreground mb-1">Full Track Audio *</label>
+                    <label className="block text-xs text-muted-foreground mb-1">Full Track Audio</label>
                     <input
                       ref={fullInputRef}
                       type="file"
