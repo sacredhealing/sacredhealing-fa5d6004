@@ -1113,8 +1113,12 @@ export function useSoulMeditateEngine() {
     if (frequencies.binaural.enabled) {
       stopBinaural();
     }
-    // DAW preview playback (if active)
-    dawStop();
+    // DAW preview playback (if active) — inlined to avoid forward-reference
+    if (dawPlaybackRef.current) {
+      dawPlaybackRef.current.source.stop();
+      dawPlaybackRef.current = null;
+    }
+    setDawCurrentTime(0);
   }, [
     neuralLayer.isPlaying,
     atmosphereLayer.isPlaying,
@@ -1124,7 +1128,6 @@ export function useSoulMeditateEngine() {
     toggleAtmospherePlay,
     stopSolfeggio,
     stopBinaural,
-    dawStop,
   ]);
 
   // Update volumes
