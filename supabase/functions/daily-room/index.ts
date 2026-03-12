@@ -35,20 +35,22 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Admin check
-    const { data: isAdmin } = await supabase.rpc("has_role", {
-      _user_id: user.id,
-      _role: "admin",
-    });
-    if (!isAdmin) {
-      return new Response(JSON.stringify({ error: "Admin only" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const body = await req.json();
-    const { action, channel_id, title, description, session_id } = body;
+    const { action, channel_id, title, description, session_id, allow_non_admin } = body;
+
+    // Admin check (DM video calls set allow_non_admin=true)
+    if (!allow_non_admin) {
+      const { data: isAdmin } = await supabase.rpc("has_role", {
+        _user_id: user.id,
+        _role: "admin",
+      });
+      if (!isAdmin) {
+        return new Response(JSON.stringify({ error: "Admin only" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     if (action === "create") {
       // Create Daily.co room
@@ -62,6 +64,7 @@ Deno.serve(async (req) => {
           properties: {
             enable_chat: true,
             enable_screenshare: true,
+            enable_recording: "cloud",
             exp: Math.floor(Date.now() / 1000) + 3600 * 4, // 4 hours
           },
         }),
@@ -105,11 +108,49 @@ Deno.serve(async (req) => {
     }
 
     if (action === "end") {
-      // End session
+      // Fetch session to get room_name before ending
+      const { data: sessionRow } = await supabase
+        .from("community_live_sessions")
+        .select("room_name, channel_id, title")
+        .eq("id", session_id)
+        .single();
+
+      // End session in DB
       await supabase
         .from("community_live_sessions")
         .update({ status: "ended", ended_at: new Date().toISOString() })
         .eq("id", session_id);
+
+      // Try to fetch recording from Daily.co and update the feed post
+      if (sessionRow?.room_name) {
+        try {
+          const recRes = await fetch(
+            `https://api.daily.co/v1/rooms/${sessionRow.room_name}/recordings`,
+            { headers: { Authorization: `Bearer ${dailyKey}` } }
+          );
+          if (recRes.ok) {
+            const recData = await recRes.json();
+            const recordings = recData?.data || recData || [];
+            const latestRec = Array.isArray(recordings) ? recordings[0] : null;
+            if (latestRec?.download_link || latestRec?.s3_key) {
+              const recordingUrl = latestRec.download_link || latestRec.s3_key;
+              // Update the live feed post with the recording URL
+              await supabase
+                .from("community_posts")
+                .update({
+                  video_url: recordingUrl,
+                  post_type: "video",
+                  content: `📹 Recording: ${sessionRow.title || "Live Session"}`,
+                })
+                .eq("post_type", "live")
+                .eq("user_id", user.id)
+                .like("content", `%${sessionRow.title || "Live Session"}%`);
+            }
+          }
+        } catch (recErr) {
+          console.error("Failed to fetch recording:", recErr);
+        }
+      }
 
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

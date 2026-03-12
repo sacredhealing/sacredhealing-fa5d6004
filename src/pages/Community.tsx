@@ -16,7 +16,7 @@
  * ✅ Private channels: Stargate (membership), Andlig (invite-only)
  */
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { supabase } from "@/integrations/supabase/client";
@@ -652,10 +652,67 @@ const CSS = `
   color: rgba(255,255,255,.3);
 }
 
+/* ── VIDEO CALL BUTTON (DMs) ── */
+.c-video-call-btn {
+  flex-shrink: 0;
+  background: linear-gradient(135deg,rgba(34,211,238,.12),rgba(34,211,238,.22));
+  border: 1px solid rgba(34,211,238,.35);
+  border-radius: 20px;
+  color: #22d3ee;
+  font-weight: 800;
+  font-size: 9px;
+  letter-spacing: .25em;
+  text-transform: uppercase;
+  padding: 7px 12px;
+  cursor: pointer;
+  transition: all .3s;
+  white-space: nowrap;
+}
+.c-video-call-btn:hover { background:linear-gradient(135deg,rgba(34,211,238,.2),rgba(34,211,238,.3)); }
+.c-video-call-btn:disabled { opacity:.4; cursor:default; }
+
+/* ── JOIN LIVE BANNER ── */
+.c-live-banner {
+  flex-shrink: 0;
+  margin: 0 14px 0;
+}
+.c-live-join-btn {
+  width: 100%;
+  padding: 12px 16px;
+  margin: 8px 0;
+  background: linear-gradient(135deg, rgba(255,59,48,.12), rgba(212,175,55,.12));
+  border: 1px solid rgba(255,59,48,.25);
+  border-radius: 16px;
+  color: #ff6b61;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all .2s;
+}
+.c-live-join-btn:hover {
+  background: linear-gradient(135deg, rgba(255,59,48,.2), rgba(212,175,55,.18));
+}
+
+/* ── LIVE IFRAME ── */
+.c-live-frame {
+  flex-shrink: 0;
+  background: #000;
+  border-bottom: 1px solid rgba(212,175,55,.15);
+}
+.c-live-frame iframe {
+  width: 100%;
+  height: 300px;
+  border: none;
+}
+
 /* ── DESKTOP ── */
 @media (min-width: 768px) {
   .c-top-tabs { display: none; }
   .c-body { gap: 0; }
+  .c-live-frame iframe { height: 400px; }
 }
 `;
 
@@ -732,6 +789,13 @@ const Community = () => {
   const [commentingPostId, setCommentingPostId] = useState<string | null>(null);
   const [likingPostId, setLikingPostId] = useState<string | null>(null);
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
+  const [dmVideoUrl, setDmVideoUrl] = useState<string | null>(null);
+
+  const memberNameMap = useMemo(() => {
+    const m: Record<string, string> = {};
+    members.forEach((mem) => { if (mem.full_name) m[mem.id] = mem.full_name; });
+    return m;
+  }, [members]);
 
   const isDmChannel = (id: string | null) => !!id && id.startsWith("dm-");
 
@@ -783,7 +847,7 @@ const Community = () => {
               user_id: row.sender_id,
               content: row.content,
               created_at: row.created_at,
-              user_name: row.sender_id === user.id ? "You" : "Member",
+              user_name: row.sender_id === user.id ? "You" : (memberNameMap[row.sender_id] || "Member"),
             })) ?? [];
 
           setMessages(mapped);
@@ -811,12 +875,17 @@ const Community = () => {
           return;
         }
 
-        setMessages((data as any[]) || []);
+        const rows = (data as any[]) || [];
+        const enriched: Message[] = rows.map((row) => ({
+          ...row,
+          user_name: row.user_name || (row.user_id === user?.id ? "You" : (memberNameMap[row.user_id] || "Member")),
+        }));
+        setMessages(enriched);
       } finally {
         setLoading(false);
       }
     },
-    [roomIds, user]
+    [roomIds, user, memberNameMap]
   );
 
   // Fetch feed posts (admin posts); include likes/comments counts and current user's like state
@@ -1091,7 +1160,7 @@ const Community = () => {
                 user_id: n.sender_id,
                 content: n.content,
                 created_at: n.created_at,
-                user_name: n.sender_id === user.id ? "You" : "Member",
+                user_name: n.sender_id === user.id ? "You" : (memberNameMap[n.sender_id] || "Member"),
               };
               setMessages((prev) => [...prev, newMsg]);
             }
@@ -1128,7 +1197,12 @@ const Community = () => {
           filter: `room_id=eq.${roomId}`,
         },
         (payload) => {
-          setMessages((prev) => [...prev, payload.new as Message]);
+          const n = payload.new as any;
+          const msg: Message = {
+            ...n,
+            user_name: n.user_name || (n.user_id === user?.id ? "You" : (memberNameMap[n.user_id] || "Member")),
+          };
+          setMessages((prev) => [...prev, msg]);
         }
       )
       .subscribe();
@@ -1153,7 +1227,7 @@ const Community = () => {
       supabase.removeChannel(channel);
       supabase.removeChannel(liveChannel);
     };
-  }, [activeChannel, fetchMessages, roomIds, daily]);
+  }, [activeChannel, fetchMessages, roomIds, daily, user, memberNameMap]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -1189,10 +1263,27 @@ const Community = () => {
     await handleGoLiveForChannel(activeChannel, currentChannel.name);
   };
 
+  const handleDmVideoCall = async () => {
+    if (!activeChannel || !user || !isDmChannel(activeChannel)) return;
+    const partnerId = getDmPartnerId(activeChannel, user.id);
+    const partnerName = partnerId ? memberNameMap[partnerId] : "Member";
+    const result = await daily.createRoom(
+      activeChannel,
+      `Video call with ${partnerName}`,
+      "1-on-1 video call",
+      true
+    );
+    if (result) {
+      setDmVideoUrl(result.room_url);
+    }
+  };
+
   const handleEndLive = async () => {
     if (daily.activeSession) {
       await daily.endSession(daily.activeSession.id);
       setLiveRoomUrl(null);
+      await fetchFeedPosts();
+      toast.success("Session ended. Recording will appear in feed when processed.");
     }
   };
 
@@ -1315,27 +1406,37 @@ const Community = () => {
             ? "andlig"
             : "community";
 
-        const { data, error } = await supabase
+        // Try to create the room
+        const { data: created, error: createError } = await supabase
           .from("chat_rooms")
           .insert({
             name: logical?.name || activeChannel,
-            description: logical?.description || null,
-            type: baseType,
-            path_slug: null,
-            is_premium: baseType !== "community",
-            intention: logical?.description || null,
+            description: logical?.description || "Community channel",
             created_by: user.id,
-          } as any)
+            ...(typeof baseType === "string" && { type: baseType }),
+          } as Record<string, unknown>)
           .select("id")
           .single();
 
-        if (error || !data?.id) {
-          console.error("Failed to auto-create chat room:", error);
-          toast.error("Channel is not configured yet.");
-          return;
+        if (!createError && created?.id) {
+          roomId = created.id as string;
+        } else {
+          // Fallback: try to find an existing room matching this channel by name
+          const { data: existingRooms } = await supabase
+            .from("chat_rooms")
+            .select("id, name")
+            .or(`name.eq.${logical?.name || activeChannel},type.eq.${baseType}`)
+            .limit(1);
+
+          if (existingRooms && existingRooms.length > 0) {
+            roomId = (existingRooms[0] as any).id;
+          } else {
+            console.error("Failed to auto-create or find chat room:", createError);
+            toast.error("Channel is not configured yet. Try another channel.");
+            return;
+          }
         }
 
-        roomId = data.id as string;
         setRoomIds((prev) => ({ ...prev, [activeChannel]: roomId! }));
       } catch (e) {
         console.error("Error while ensuring chat room exists:", e);
@@ -1343,13 +1444,17 @@ const Community = () => {
         return;
       }
     }
+    const profile = members.find((m) => m.id === user.id);
+    const senderName = profile?.full_name || "You";
+
     const { data, error } = await supabase
       .from("chat_messages")
       .insert({
         room_id: roomId,
         user_id: user.id,
         content: text,
-      })
+        user_name: senderName,
+      } as any)
       .select("*")
       .single();
 
@@ -1359,7 +1464,11 @@ const Community = () => {
       return;
     }
 
-    setMessages((prev) => [...prev, data as unknown as Message]);
+    const sentMsg: Message = {
+      ...(data as any),
+      user_name: "You",
+    };
+    setMessages((prev) => [...prev, sentMsg]);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -1374,16 +1483,22 @@ const Community = () => {
     setMessages((prev) => prev.filter((m) => m.id !== id));
   };
 
-  const currentChannel =
-    CHANNELS.find((c) => c.id === activeChannel) ||
-    (activeChannel && activeChannel.startsWith("dm-")
-      ? {
-          id: activeChannel,
-          name: "Direct Message",
-          icon: "👥",
-          description: "Private 1-on-1 chat",
-        }
-      : undefined);
+  const currentChannel = useMemo(() => {
+    if (!activeChannel) return undefined;
+    const ch = CHANNELS.find((c) => c.id === activeChannel);
+    if (ch) return ch;
+    if (activeChannel.startsWith("dm-") && user) {
+      const partnerId = getDmPartnerId(activeChannel, user.id);
+      const partnerName = partnerId ? memberNameMap[partnerId] : null;
+      return {
+        id: activeChannel,
+        name: partnerName || "Direct Message",
+        icon: "👤",
+        description: "Private 1-on-1 chat",
+      };
+    }
+    return undefined;
+  }, [activeChannel, user, memberNameMap]);
 
   const getInitials = (name?: string) => {
     if (!name) return "??";
@@ -1424,24 +1539,42 @@ const Community = () => {
               <div className="c-chat-view">
                 {/* Chat header */}
                 <div className="c-chat-header">
-                  <button className="c-back-btn" onClick={() => setActiveChannel(null)}>←</button>
+                  <button className="c-back-btn" onClick={() => { setActiveChannel(null); setDmVideoUrl(null); setLiveRoomUrl(null); }}>←</button>
                   <div className="c-chat-icon">{currentChannel.icon}</div>
                   <div className="c-chat-title">
                     <div className="c-chat-name">{currentChannel.name}</div>
                     <div className="c-chat-sub">{currentChannel.description}</div>
                   </div>
-                  {isAdmin && !liveRoomUrl && (
-                    <div style={{ position: "relative" }}>
-                      <button
-                        className={`c-golive-header-btn ${daily.isCreating ? "c-golive-active" : ""}`}
-                        onClick={handleGoLive}
-                        disabled={daily.isCreating}
-                      >
-                        {daily.isCreating ? "⏳ CREATING..." : "🔴 GO LIVE"}
-                      </button>
-                    </div>
+                  {/* DM: video call button */}
+                  {isDmChannel(activeChannel) && !dmVideoUrl && (
+                    <button
+                      className="c-video-call-btn"
+                      onClick={handleDmVideoCall}
+                      disabled={daily.isCreating}
+                    >
+                      {daily.isCreating ? "⏳" : "📹"} VIDEO CALL
+                    </button>
                   )}
-                  {isAdmin && liveRoomUrl && (
+                  {isDmChannel(activeChannel) && dmVideoUrl && (
+                    <button
+                      className="c-video-call-btn"
+                      onClick={() => setDmVideoUrl(null)}
+                      style={{ borderColor: "rgba(255,59,48,.4)", color: "#ff6b61" }}
+                    >
+                      ⬛ END CALL
+                    </button>
+                  )}
+                  {/* Group: Go Live button (admin only) */}
+                  {!isDmChannel(activeChannel) && isAdmin && !liveRoomUrl && (
+                    <button
+                      className={`c-golive-header-btn ${daily.isCreating ? "c-golive-active" : ""}`}
+                      onClick={handleGoLive}
+                      disabled={daily.isCreating}
+                    >
+                      {daily.isCreating ? "⏳ CREATING..." : "🔴 GO LIVE"}
+                    </button>
+                  )}
+                  {!isDmChannel(activeChannel) && isAdmin && liveRoomUrl && (
                     <button
                       className="c-golive-header-btn c-golive-active"
                       onClick={handleEndLive}
@@ -1451,39 +1584,34 @@ const Community = () => {
                   )}
                 </div>
 
-                {/* Live Room iframe (admin broadcasting) */}
-                {liveRoomUrl && (
-                  <div style={{ flexShrink: 0, background: "#000", borderBottom: "1px solid rgba(212,175,55,.15)" }}>
+                {/* DM Video call iframe */}
+                {isDmChannel(activeChannel) && dmVideoUrl && (
+                  <div className="c-live-frame">
                     <iframe
-                      src={liveRoomUrl}
+                      src={dmVideoUrl}
                       allow="camera;microphone;fullscreen;display-capture"
-                      style={{ width: "100%", height: "300px", border: "none" }}
                     />
                   </div>
                 )}
 
-                {/* Viewer: active live session banner */}
-                {!liveRoomUrl && viewerSessions.length > 0 && (
-                  <div style={{ flexShrink: 0, padding: "0 14px" }}>
+                {/* Group Live Room iframe (admin broadcasting or viewer joined) */}
+                {!isDmChannel(activeChannel) && liveRoomUrl && (
+                  <div className="c-live-frame">
+                    <iframe
+                      src={liveRoomUrl}
+                      allow="camera;microphone;fullscreen;display-capture"
+                    />
+                  </div>
+                )}
+
+                {/* Viewer: active live session banner (group only, when not already watching) */}
+                {!isDmChannel(activeChannel) && !liveRoomUrl && viewerSessions.length > 0 && (
+                  <div className="c-live-banner">
                     {viewerSessions.map((s) => (
                       <button
                         key={s.id}
+                        className="c-live-join-btn"
                         onClick={() => s.room_url && setLiveRoomUrl(s.room_url)}
-                        style={{
-                          width: "100%",
-                          padding: "12px 16px",
-                          margin: "8px 0",
-                          background: "linear-gradient(135deg, rgba(255,59,48,.12), rgba(212,175,55,.12))",
-                          border: "1px solid rgba(255,59,48,.25)",
-                          borderRadius: "16px",
-                          color: "#ff6b61",
-                          fontWeight: 800,
-                          fontSize: "13px",
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "10px",
-                        }}
                       >
                         <span style={{ animation: "pulse 1.5s ease-in-out infinite" }}>🔴</span>
                         LIVE NOW: {s.title}
@@ -1652,11 +1780,12 @@ const Community = () => {
                   </button>
                 </div>
                 <button
-                  onClick={() => {
-                    // Jump to chat Divine Sangha to start Go Live from there
+                  onClick={async () => {
+                    await handleGoLiveForChannel("divine-sangha", "Divine Sangha");
                     setActiveChannel("divine-sangha");
                     setMobileTab("chat");
                   }}
+                  disabled={daily.isCreating}
                   style={{
                     marginTop: 10,
                     padding: "6px 12px",
@@ -1668,10 +1797,11 @@ const Community = () => {
                     fontWeight: 700,
                     letterSpacing: "0.18em",
                     textTransform: "uppercase",
-                    cursor: "pointer",
+                    cursor: daily.isCreating ? "default" : "pointer",
+                    opacity: daily.isCreating ? 0.5 : 1,
                   }}
                 >
-                  🔴 Go Live via Divine Sangha
+                  {daily.isCreating ? "⏳ Creating Live..." : "🔴 Go Live via Divine Sangha"}
                 </button>
               </div>
               )}
