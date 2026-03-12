@@ -195,8 +195,8 @@ function MeditationToolWithBoundary() {
 
 // Root route: send signed-in users directly into the app, otherwise show landing
 function RootEntry() {
-  const { user, loading } = useAuth();
-  if (loading) {
+  const { user, isLoading } = useAuth();
+  if (isLoading) {
     return <PageLoader />;
   }
   if (user) {
