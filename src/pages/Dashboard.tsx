@@ -212,11 +212,12 @@ const Dashboard: React.FC = () => {
     handleStartSession(session as unknown as DailyGuidance);
   }, [handleStartSession]);
 
+  // Autostart disabled — let users manually start sessions from the dashboard
   useDashboardAutostart({
     todaySession,
     hasCompletedToday,
     openSession,
-    enabled: flowState === 'idle',
+    enabled: false,
   });
 
   const handleSessionComplete = () => {
