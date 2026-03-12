@@ -45,6 +45,7 @@ const AkashaInfinity = React.lazy(() => import("./pages/AkashaInfinity"));
 const Legal = React.lazy(() => import("./pages/Legal"));
 const AdminDashboard = React.lazy(() => import("./pages/AdminDashboard"));
 const Admin = React.lazy(() => import("./pages/Admin"));
+const AdminMeditations = React.lazy(() => import("./pages/AdminMeditations"));
 const AdminMeditationEdit = React.lazy(() => import("./pages/AdminMeditationEdit"));
 const AdminMusic = React.lazy(() => import("./pages/AdminMusic"));
 const AdminHealing = React.lazy(() => import("./pages/AdminHealing"));
@@ -323,7 +324,7 @@ function AppRoutes() {
                 <Route element={<AdminLayout />}>
                   <Route path="/admin" element={<AdminDashboard />} />
                   <Route path="/admin/grant-access" element={<AdminGrantAccess />} />
-                  <Route path="/admin/meditations" element={<Admin />} />
+                  <Route path="/admin/meditations" element={<AdminMeditations />} />
                   <Route path="/admin/meditations/:id" element={<AdminMeditationEdit />} />
                   <Route path="/admin/music" element={<AdminMusic />} />
                   <Route path="/admin/healing" element={<AdminHealing />} />
