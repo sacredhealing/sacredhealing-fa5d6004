@@ -245,10 +245,12 @@ const AdminMusic: React.FC = () => {
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!previewFile || !fullFile || !title) {
+    // Allow upload as long as there is at least one audio file (preview or full)
+    // and a title is provided. If only a preview is uploaded, reuse it as full.
+    if (!title || (!previewFile && !fullFile)) {
       toast({
         title: "Missing fields",
-        description: "Please provide title, preview, and full audio files",
+        description: "Please provide a title and at least one audio file (preview or full).",
         variant: "destructive"
       });
       return;
@@ -260,48 +262,58 @@ const AdminMusic: React.FC = () => {
       const timestamp = Date.now();
       const randomId = Math.random().toString(36).slice(2);
       
-      // Upload preview
-      const previewExt = previewFile.name.split('.').pop();
-      const previewName = `${timestamp}-${randomId}-preview.${previewExt}`;
-      
-      const { error: previewError } = await supabase.storage
-        .from('songs')
-        .upload(previewName, previewFile, { 
-          cacheControl: '3600', 
-          upsert: false,
-          contentType: previewFile.type || 'audio/mpeg'
-        });
+      let previewUrl: string | null = null;
+      let fullUrl: string | null = null;
 
-      if (previewError) throw previewError;
+      // Upload preview if provided
+      if (previewFile) {
+        const previewExt = previewFile.name.split('.').pop();
+        const previewName = `${timestamp}-${randomId}-preview.${previewExt}`;
+        
+        const { error: previewError } = await supabase.storage
+          .from('songs')
+          .upload(previewName, previewFile, { 
+            cacheControl: '3600', 
+            upsert: false,
+            contentType: previewFile.type || 'audio/mpeg'
+          });
 
-      // Upload full track
-      const fullExt = fullFile.name.split('.').pop();
-      const fullName = `${timestamp}-${randomId}-full.${fullExt}`;
-      
-      const { error: fullError } = await supabase.storage
-        .from('songs')
-        .upload(fullName, fullFile, { 
-          cacheControl: '3600', 
-          upsert: false,
-          contentType: fullFile.type || 'audio/mpeg'
-        });
+        if (previewError) throw previewError;
 
-      if (fullError) throw fullError;
+        const { data: { publicUrl } } = supabase.storage
+          .from('songs')
+          .getPublicUrl(previewName);
+        previewUrl = publicUrl;
+      }
+
+      // Upload full track if provided, otherwise reuse preview as full
+      if (fullFile) {
+        const fullExt = fullFile.name.split('.').pop();
+        const fullName = `${timestamp}-${randomId}-full.${fullExt}`;
+        
+        const { error: fullError } = await supabase.storage
+          .from('songs')
+          .upload(fullName, fullFile, { 
+            cacheControl: '3600', 
+            upsert: false,
+            contentType: fullFile.type || 'audio/mpeg'
+          });
+
+        if (fullError) throw fullError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('songs')
+          .getPublicUrl(fullName);
+        fullUrl = publicUrl;
+      } else if (previewUrl) {
+        fullUrl = previewUrl;
+      }
 
       // Upload cover image if provided
       let coverUrl: string | null = null;
       if (coverFile) {
         coverUrl = await uploadImage(coverFile);
       }
-
-      // Get public URLs
-      const { data: { publicUrl: previewUrl } } = supabase.storage
-        .from('songs')
-        .getPublicUrl(previewName);
-
-      const { data: { publicUrl: fullUrl } } = supabase.storage
-        .from('songs')
-        .getPublicUrl(fullName);
 
       // Insert track record with pending analysis status
       const { data: insertedTrack, error: insertError } = await supabase

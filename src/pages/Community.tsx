@@ -1303,43 +1303,47 @@ const Community = () => {
       return;
     }
 
-    // Ensure there is a backing chat_rooms row for this channel (auto-create if missing)
+    // Use backing chat_rooms row for this channel; create if missing or use first community room as fallback
     let roomId = roomIds[activeChannel];
     if (!roomId) {
-      try {
-        const logical = CHANNELS.find((c) => c.id === activeChannel);
-        const baseType =
-          logical?.id === "stargate"
-            ? "stargate"
-            : logical?.id === "andlig-transformation"
-            ? "andlig"
-            : "community";
+      const logical = CHANNELS.find((c) => c.id === activeChannel);
+      const baseType =
+        logical?.id === "stargate"
+          ? "stargate"
+          : logical?.id === "andlig-transformation"
+          ? "andlig"
+          : "community";
 
-        const { data, error } = await supabase
-          .from("chat_rooms")
-          .insert({
-            name: logical?.name || activeChannel,
-            description: logical?.description || null,
-            type: baseType,
-            path_slug: null,
-            is_premium: baseType !== "community",
-            intention: logical?.description || null,
-            created_by: user.id,
-          } as any)
-          .select("id")
-          .single();
+      const { data: created, error: createError } = await supabase
+        .from("chat_rooms")
+        .insert({
+          name: logical?.name || activeChannel,
+          description: logical?.description || null,
+          created_by: user.id,
+          ...(typeof baseType === "string" && { type: baseType }),
+        } as Record<string, unknown>)
+        .select("id")
+        .single();
 
-        if (error || !data?.id) {
-          console.error("Failed to auto-create chat room:", error);
-          toast.error("Channel is not configured yet.");
-          return;
-        }
-
-        roomId = data.id as string;
+      if (!createError && created?.id) {
+        roomId = created.id as string;
         setRoomIds((prev) => ({ ...prev, [activeChannel]: roomId! }));
-      } catch (e) {
-        console.error("Error while ensuring chat room exists:", e);
-        toast.error("Channel is not configured yet.");
+      } else {
+        const { data: fallbackList } = await supabase
+          .from("chat_rooms")
+          .select("id")
+          .eq("type", baseType)
+          .limit(1);
+        const fallback = Array.isArray(fallbackList) ? fallbackList[0] : fallbackList;
+        if (fallback?.id) {
+          roomId = fallback.id as string;
+          setRoomIds((prev) => ({ ...prev, [activeChannel]: roomId! }));
+        }
+      }
+
+      if (!roomId) {
+        console.error("Failed to create or find chat room:", createError);
+        toast.error("Channel is not configured yet. Try another channel.");
         return;
       }
     }

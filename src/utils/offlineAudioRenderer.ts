@@ -61,7 +61,9 @@ const MAX_RENDER_FRAMES = 20_000_000;
 export async function renderOffline(config: OfflineRenderConfig): Promise<AudioBuffer> {
   const {
     durationSeconds: rawDuration,
-    sampleRate = 44100,
+    // Force high-fidelity export at 48kHz so the rendered mixdown
+    // matches the UI playback quality on modern devices.
+    sampleRate = 48000,
     neuralAudioUrl,
     neuralSourceVolume = 1.0,
     atmosphereAudioUrl,
@@ -299,8 +301,13 @@ function scheduleLoopingBuffer(
     limiter.attack.value = 0.001;
     limiter.release.value = 0.1;
 
+    // Dedicated voice gain to guarantee no digital clipping in export,
+    // even when upstream compression is working hard.
+    const voiceGain = ctx.createGain();
+    voiceGain.gain.value = 0.9;
+
     // Chain:
-    // monoMerger -> highPass -> lowPass -> lowCut -> EQ -> deEsser -> gate -> compressor -> limiter -> destination
+    // monoMerger -> highPass -> lowPass -> lowCut -> EQ -> deEsser -> gate -> compressor -> limiter -> voiceGain -> destination
     monoMerger.connect(highPass);
     highPass.connect(lowPass);
     lowPass.connect(lowCut);
@@ -311,7 +318,8 @@ function scheduleLoopingBuffer(
     deEsser.connect(gateNode);
     gateNode.connect(compressor);
     compressor.connect(limiter);
-    limiter.connect(destination);
+    limiter.connect(voiceGain);
+    voiceGain.connect(destination);
 
     // Output to mono splitter (start of chain)
     outputNode = monoSplitter;
