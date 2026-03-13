@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useDailyLive, DailySession } from "@/hooks/useDailyLive";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
+import { getTierRank } from "@/lib/tierAccess";
 
 // ─────────────────────────────────────────────
 // CHANNEL CONFIG
