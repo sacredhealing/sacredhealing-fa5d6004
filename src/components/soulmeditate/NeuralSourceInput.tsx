@@ -28,13 +28,16 @@ interface NeuralSourceInputProps {
 
 const ACCEPTED_AUDIO = '.mp3,.wav,.m4a,.flac,.aac,.ogg,.webm,.aiff';
 
+const DEFAULT_LAYER: LayerState = { isPlaying: false, volume: 0.7, source: null };
+
 export default function NeuralSourceInput({
-  layer,
+  layer: layerProp,
   onLoadFile,
   onLoadUrl,
   onTogglePlay,
   onVolumeChange,
 }: NeuralSourceInputProps) {
+  const layer = layerProp ?? DEFAULT_LAYER;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
