@@ -1029,12 +1029,17 @@ const Community = () => {
   useEffect(() => {
     const loadMembers = async () => {
       try {
-        const { data: adminRoles } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
-        const adminIds = new Set((adminRoles || []).map((r: any) => r.user_id));
+        let adminIds = new Set<string>();
+        try {
+          const { data: adminRoles } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
+          adminIds = new Set((adminRoles || []).map((r: any) => r.user_id));
+        } catch (_) {
+          // user_roles may not exist or RLS blocks; continue without admin list
+        }
 
         const { data, error } = await supabase
           .from("profiles")
-          .select("user_id, id, full_name, subscription_tier, role, avatar_url")
+          .select("*")
           .limit(500);
 
         if (error) {
@@ -1120,13 +1125,17 @@ const Community = () => {
       }
 
       const map: Record<string, string> = {};
-      (data || []).forEach((room: any) => {
+      const rooms = (data || []) as { id: string; name: string; type?: string }[];
+      rooms.forEach((room: any) => {
         const matched = CHANNELS.find((ch) => ch.name === room.name);
-        if (matched) {
-          map[matched.id] = room.id;
-        }
+        if (matched) map[matched.id] = room.id;
         if (room.type === "andlig") map["andlig-transformation"] = room.id;
         if (room.type === "stargate") map["stargate"] = room.id;
+        // Map DB room names to our channel ids (migrations may use different names)
+        if (room.name === "Community Lounge" && !map["divine-sangha"]) map["divine-sangha"] = room.id;
+        if (room.name?.includes("Divine Sangha") && !map["divine-sangha"]) map["divine-sangha"] = room.id;
+        if (room.name?.includes("Sacred Mantra") && !map["sacred-mantras"]) map["sacred-mantras"] = room.id;
+        if (room.name?.includes("Healing") && !map["healing-circle"]) map["healing-circle"] = room.id;
       });
 
       // Auto-create any missing channel rooms
@@ -1141,9 +1150,10 @@ const Community = () => {
             .from("chat_rooms")
             .insert({
               name: ch.name,
-              description: ch.description,
+              description: ch.description ?? "Community channel",
               created_by: user.id,
               type: roomType,
+              is_active: true,
             } as any)
             .select("id")
             .single();
@@ -1514,13 +1524,13 @@ const Community = () => {
         if (!createError && created?.id) {
           roomId = created.id as string;
         } else {
-          // Fallback: find existing room by exact name match
+          // Fallback: find existing room by name (try exact, then "Community Lounge" for main channel)
           const channelName = logical?.name || activeChannel;
-          const { data: byName } = await supabase
-            .from("chat_rooms")
-            .select("id")
-            .eq("name", channelName)
-            .limit(1);
+          let { data: byName } = await supabase.from("chat_rooms").select("id").eq("name", channelName).eq("is_active", true).limit(1);
+          if ((!byName || byName.length === 0) && activeChannel === "divine-sangha") {
+            const fallback = await supabase.from("chat_rooms").select("id").eq("name", "Community Lounge").eq("is_active", true).limit(1);
+            byName = fallback.data;
+          }
 
           if (byName && byName.length > 0) {
             roomId = (byName[0] as any).id;
@@ -1530,14 +1540,25 @@ const Community = () => {
               .from("chat_rooms")
               .select("id")
               .eq("type", baseType)
+              .eq("is_active", true)
               .limit(1);
 
             if (byType && byType.length > 0) {
               roomId = (byType[0] as any).id;
             } else {
-              console.error("Failed to auto-create or find chat room:", createError);
-              toast.error("Could not set up this channel. Please try again.");
-              return;
+              // Last resort: use ANY active community room so user can chat
+              const { data: anyRoom } = await supabase
+                .from("chat_rooms")
+                .select("id")
+                .eq("is_active", true)
+                .limit(1);
+              if (anyRoom && anyRoom.length > 0) {
+                roomId = (anyRoom[0] as any).id;
+              } else {
+                console.error("Failed to auto-create or find chat room:", createError);
+                toast.error("Could not set up this channel. Please try again.");
+                return;
+              }
             }
           }
         }
