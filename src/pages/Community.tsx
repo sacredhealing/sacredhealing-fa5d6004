@@ -1192,15 +1192,20 @@ const Community = () => {
                 (n.sender_id === user.id && n.receiver_id === partnerId) ||
                 (n.sender_id === partnerId && n.receiver_id === user.id);
               if (!isBetweenUs) return;
+              const nameMap = memberNameMapRef.current;
               const newMsg: Message = {
                 id: n.id,
                 channel_id: activeChannel,
                 user_id: n.sender_id,
                 content: n.content,
                 created_at: n.created_at,
-                user_name: n.sender_id === user.id ? "You" : (memberNameMap[n.sender_id] || "Member"),
+                user_name: n.sender_id === user.id ? "You" : (nameMap[n.sender_id] || "Member"),
               };
-              setMessages((prev) => [...prev, newMsg]);
+              setMessages((prev) => {
+                // Deduplicate by id
+                if (prev.some((m) => m.id === newMsg.id)) return prev;
+                return [...prev, newMsg];
+              });
             }
           )
           .subscribe();
@@ -1236,11 +1241,15 @@ const Community = () => {
         },
         (payload) => {
           const n = payload.new as any;
+          const nameMap = memberNameMapRef.current;
           const msg: Message = {
             ...n,
-            user_name: n.user_name || (n.user_id === user?.id ? "You" : (memberNameMap[n.user_id] || "Member")),
+            user_name: n.user_name || (n.user_id === user?.id ? "You" : (nameMap[n.user_id] || "Member")),
           };
-          setMessages((prev) => [...prev, msg]);
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === msg.id)) return prev;
+            return [...prev, msg];
+          });
         }
       )
       .subscribe();
@@ -1265,7 +1274,7 @@ const Community = () => {
       supabase.removeChannel(channel);
       supabase.removeChannel(liveChannel);
     };
-  }, [activeChannel, fetchMessages, roomIds, daily, user, memberNameMap]);
+  }, [activeChannel, fetchMessages, roomIds, daily, user]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
