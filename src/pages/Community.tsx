@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useDailyLive, DailySession } from "@/hooks/useDailyLive";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
+import { getTierRank } from "@/lib/tierAccess";
 
 // ─────────────────────────────────────────────
 // CHANNEL CONFIG
@@ -1742,16 +1743,32 @@ const Community = () => {
                 ))}
 
                 <div className="c-section-label">SACRED SPACES</div>
-                {CHANNELS.filter((c) => c.access === "sacred").map((ch) => (
-                  <button key={ch.id} className="c-channel-row" onClick={() => setActiveChannel(ch.id)}>
-                    <div className="c-ch-icon sacred">{ch.icon}</div>
-                    <div className="c-ch-info">
-                      <div className="c-ch-name">{ch.name}</div>
-                      <div className="c-ch-desc">{ch.description}</div>
-                    </div>
-                    <div className="c-ch-arrow">›</div>
-                  </button>
-                ))}
+                {CHANNELS.filter((c) => c.access === "sacred").map((ch) => {
+                  // Sacred channels require Siddha Quantum (rank 2) or higher
+                  const userTier = members.find((m) => m.id === user?.id)?.subscription_tier;
+                  const userRank = getTierRank(userTier);
+                  const hasAccess = isAdmin || userRank >= 2;
+                  return (
+                    <button
+                      key={ch.id}
+                      className={`c-channel-row ${!hasAccess ? "locked" : ""}`}
+                      onClick={() => {
+                        if (hasAccess) {
+                          setActiveChannel(ch.id);
+                        } else {
+                          toast.error("This space requires Siddha Quantum or Akasha Infinity membership.");
+                        }
+                      }}
+                    >
+                      <div className="c-ch-icon sacred">{ch.icon}</div>
+                      <div className="c-ch-info">
+                        <div className="c-ch-name">{ch.name}</div>
+                        <div className="c-ch-desc">{ch.description}</div>
+                      </div>
+                      {hasAccess ? <div className="c-ch-arrow">›</div> : <span className="c-lock-badge">🔒</span>}
+                    </button>
+                  );
+                })}
 
                 <div className="c-section-label">PRIVATE</div>
                 {CHANNELS.filter((c) => c.access === "private").map((ch) => {
@@ -2046,6 +2063,8 @@ const Community = () => {
               {(() => {
                 const query = memberSearch.trim().toLowerCase();
                 const filtered = members.filter((m) => {
+                  // Exclude current user from the list
+                  if (user && m.id === user.id) return false;
                   if (!query) return true;
                   const name = (m.full_name || "").toLowerCase();
                   const tier = (m.subscription_tier || "").toLowerCase();
