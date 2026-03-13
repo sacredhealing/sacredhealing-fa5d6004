@@ -740,6 +740,7 @@ type Member = {
   full_name: string | null;
   subscription_tier: string | null;
   avatar_url: string | null;
+  isAdmin?: boolean;
 };
 
 type FeedPost = {
@@ -822,18 +823,17 @@ const Community = () => {
     return null;
   };
 
+  const fetchInProgressRef = useRef<string | null>(null);
+
   // Fetch messages for active channel (group rooms + DMs)
   const fetchMessages = useCallback(
     async (channelId: string) => {
-      if (!channelId) return;
+      if (!channelId || !user) return;
+      fetchInProgressRef.current = channelId;
       setLoading(true);
       try {
         // Direct messages use private_messages table
         if (isDmChannel(channelId)) {
-          if (!user) {
-            setMessages([]);
-            return;
-          }
           const partnerId = getDmPartnerId(channelId, user.id);
           if (!partnerId) {
             setMessages([]);
@@ -844,6 +844,7 @@ const Community = () => {
             supabase.from("private_messages").select("*").eq("sender_id", user.id).eq("receiver_id", partnerId).order("created_at", { ascending: true }),
             supabase.from("private_messages").select("*").eq("sender_id", partnerId).eq("receiver_id", user.id).order("created_at", { ascending: true }),
           ]);
+          if (fetchInProgressRef.current !== channelId) return;
           const sent = (sentRes.data as any[] | null) ?? [];
           const received = (receivedRes.data as any[] | null) ?? [];
           if (sentRes.error) console.error("Error loading DM sent:", sentRes.error);
@@ -892,7 +893,7 @@ const Community = () => {
         }));
         setMessages(enriched);
       } finally {
-        // Always clear loading regardless of which path was taken
+        if (fetchInProgressRef.current === channelId) fetchInProgressRef.current = null;
         setLoading(false);
       }
     },
@@ -1024,13 +1025,16 @@ const Community = () => {
   }, [user, feedPosts]);
 
   // Fetch all signed-up users for Members tab (profiles = one per signup)
-  // Include admins so members can DM them (e.g. admin Laila)
+  // Include admins so members can DM them (e.g. admin Laila); admins sorted to TOP
   useEffect(() => {
     const loadMembers = async () => {
       try {
+        const { data: adminRoles } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
+        const adminIds = new Set((adminRoles || []).map((r: any) => r.user_id));
+
         const { data, error } = await supabase
           .from("profiles")
-          .select("*")
+          .select("user_id, id, full_name, subscription_tier, role, avatar_url")
           .limit(500);
 
         if (error) {
@@ -1045,12 +1049,24 @@ const Community = () => {
             const tier = (row.subscription_tier || row.role || "").toLowerCase();
             return tier !== "admin"; // exclude only if tier/role is literally "admin" (legacy)
           })
-          .map((row) => ({
-            id: (row.user_id != null ? row.user_id : row.id) as string,
-            full_name: (row.full_name ?? null) as string | null,
-            subscription_tier: (row.subscription_tier ?? row.role ?? null) as string | null,
-            avatar_url: (row.avatar_url ?? null) as string | null,
-          }));
+          .map((row) => {
+            const uid = (row.user_id != null ? row.user_id : row.id) as string;
+            return {
+              id: uid,
+              full_name: (row.full_name ?? null) as string | null,
+              subscription_tier: (row.subscription_tier ?? row.role ?? null) as string | null,
+              avatar_url: (row.avatar_url ?? null) as string | null,
+              isAdmin: adminIds.has(uid),
+            };
+          })
+          .sort((a, b) => {
+            // Admins first, then by name
+            if (a.isAdmin && !b.isAdmin) return -1;
+            if (!a.isAdmin && b.isAdmin) return 1;
+            const na = (a.full_name || "").toLowerCase();
+            const nb = (b.full_name || "").toLowerCase();
+            return na.localeCompare(nb);
+          });
 
         setMembers(mapped);
       } catch (e) {
@@ -2094,7 +2110,37 @@ const Community = () => {
             </div>
           ) : mobileTab === "members" ? (
             <div className="c-members-view">
-              <div className="c-section-label">Members</div>
+              <div className="c-section-label">Guides & Admins</div>
+              {members.filter((m) => m.isAdmin && m.id !== user?.id).length > 0 ? (
+                members.filter((m) => m.isAdmin && m.id !== user?.id).map((m) => {
+                  const isOnline = onlineUserIds.has(m.id);
+                  return (
+                    <div
+                      key={m.id}
+                      className="c-member-row"
+                      onClick={() => {
+                        if (!user) return;
+                        const ids = [user.id, m.id].sort();
+                        setActiveChannel(`dm-${ids[0]}-${ids[1]}`);
+                        setMobileTab("chat");
+                      }}
+                      style={{ borderLeft: "2px solid rgba(212,175,55,.4)" }}
+                    >
+                      <div style={{ position: "relative" }}>
+                        <div className="c-member-avatar">{m.avatar_url ? <img src={m.avatar_url} alt="" /> : getInitials(m.full_name || undefined)}</div>
+                        {isOnline && <span style={{ position: "absolute", bottom: 0, right: 0, width: 12, height: 12, borderRadius: "50%", background: "#22c55e", border: "2px solid #050505" }} title="Online" />}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div className="c-member-name">{m.full_name || "Admin"} <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 800, letterSpacing: "0.15em", color: "#D4AF37", textTransform: "uppercase" }}>Admin</span></div>
+                        <div className="c-member-status">Message your guide</div>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div style={{ padding: "8px 12px", fontSize: 11, color: "rgba(255,255,255,.4)" }}>No guides online</div>
+              )}
+              <div className="c-section-label" style={{ marginTop: 16 }}>All Members</div>
               <div style={{ marginBottom: 10 }}>
                 <input
                   placeholder="Search members…"
@@ -2115,13 +2161,13 @@ const Community = () => {
               {(() => {
                 const query = memberSearch.trim().toLowerCase();
                 const filtered = members.filter((m) => {
-                  // Exclude current user and admin accounts from the list
                   if (user && m.id === user.id) return false;
+                  if (!query && m.isAdmin) return false; // Admins in Guides section when not searching
                   const tier = (m.subscription_tier || "").toLowerCase();
                   if (tier === "admin") return false;
                   if (!query) return true;
                   const name = (m.full_name || "").toLowerCase();
-                  const searchText = `${name} ${tier}`;
+                  const searchText = `${name} ${tier} ${m.isAdmin ? "admin guide" : ""}`;
                   const words = query.split(/\s+/).filter(Boolean);
                   return words.every((word) => searchText.includes(word));
                 });
@@ -2181,6 +2227,9 @@ const Community = () => {
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div className="c-member-name">
                           {m.full_name || "Member"}
+                          {m.isAdmin && (
+                            <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 800, letterSpacing: "0.15em", color: "#D4AF37", textTransform: "uppercase" }}>Admin</span>
+                          )}
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                           {isOnline && (
