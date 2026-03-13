@@ -1448,7 +1448,7 @@ const Community = () => {
             description: logical?.description || "Community channel",
             created_by: user.id,
             ...(typeof baseType === "string" && { type: baseType }),
-          } as Record<string, unknown>)
+          } as any)
           .select("id")
           .single();
 
