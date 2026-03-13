@@ -1063,6 +1063,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
       <div className="section-wrap">
         <div className="section-label">◈ Akashic Archive</div>
         <div className="archive-grid">
+          {hasFeatureAccess(isAdmin, tier, 3) ? (
           <div className="archive-card" onClick={() => navigate('/akashic-records')}>
             <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
               <div style={{width:44,height:44,borderRadius:13,background:'rgba(212,175,55,0.06)',border:'1px solid rgba(212,175,55,0.18)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginBottom:14}}>
@@ -1083,6 +1084,20 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
             </div>
             <span className="archive-cta">View Manuscript →</span>
           </div>
+          ) : (
+          <div className="archive-card" onClick={() => navigate('/akasha-infinity')} style={{ opacity: 0.9, borderColor: 'rgba(212,175,55,0.15)' }}>
+            <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
+              <div style={{width:44,height:44,borderRadius:13,background:'rgba(212,175,55,0.06)',border:'1px solid rgba(212,175,55,0.18)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginBottom:14,opacity:0.7}}>
+                <Lock size={18} color="rgba(212,175,55,0.5)" />
+              </div>
+              <div>
+                <span className="archive-title">Akashic Record</span>
+                <span className="archive-sub">12-page Soul Manuscript — Akasha Infinity only</span>
+              </div>
+            </div>
+            <span className="archive-cta">Upgrade to Akasha Infinity →</span>
+          </div>
+          )}
           <div className="archive-card" onClick={() => navigate('/vedic-astrology')}>
             <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
               <div style={{width:44,height:44,borderRadius:13,background:'rgba(212,175,55,0.06)',border:'1px solid rgba(212,175,55,0.18)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginBottom:14}}>
