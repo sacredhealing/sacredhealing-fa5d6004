@@ -92,6 +92,7 @@ const CSS = `
   display: flex;
   flex-direction: column;
   height: calc(100vh - 64px);
+  min-height: 280px;
   background: #050505;
   font-family: 'Plus Jakarta Sans', sans-serif;
   overflow: hidden;
@@ -159,6 +160,7 @@ const CSS = `
 /* ── MAIN BODY ── */
 .c-body {
   flex: 1;
+  min-height: 0;
   overflow: hidden;
   display: flex;
   margin-top: 10px;
@@ -167,6 +169,7 @@ const CSS = `
 /* ─── CHANNEL LIST VIEW ─── */
 .c-channels-view {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: 8px 14px 20px;
 }
@@ -244,6 +247,7 @@ const CSS = `
 /* ─── CHAT VIEW ─── */
 .c-chat-view {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -370,6 +374,7 @@ const CSS = `
 /* ── MESSAGES ── */
 .c-messages {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: 14px 14px 8px;
   display: flex;
@@ -530,7 +535,7 @@ const CSS = `
 /* ── INPUT BAR — NEVER CUT OFF ── */
 .c-input-bar {
   flex-shrink: 0;
-  padding: 10px 14px 14px;
+  padding: 10px 14px max(14px, env(safe-area-inset-bottom));
   background: rgba(5,5,5,.85);
   border-top: 1px solid rgba(255,255,255,.05);
 }
@@ -834,30 +839,26 @@ const Community = () => {
             setMessages([]);
             return;
           }
-          const { data, error } = await supabase
-            .from("private_messages")
-            .select("*")
-            .or(
-              `and(sender_id.eq.${user.id},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${user.id})`
-            )
-            .order("created_at", { ascending: true });
-
-          if (error) {
-            console.error("Error loading DM messages:", error);
-            setMessages([]);
-            return;
-          }
+          // Two queries to avoid .or() syntax issues with complex filters
+          const [sentRes, receivedRes] = await Promise.all([
+            supabase.from("private_messages").select("*").eq("sender_id", user.id).eq("receiver_id", partnerId).order("created_at", { ascending: true }),
+            supabase.from("private_messages").select("*").eq("sender_id", partnerId).eq("receiver_id", user.id).order("created_at", { ascending: true }),
+          ]);
+          const sent = (sentRes.data as any[] | null) ?? [];
+          const received = (receivedRes.data as any[] | null) ?? [];
+          if (sentRes.error) console.error("Error loading DM sent:", sentRes.error);
+          if (receivedRes.error) console.error("Error loading DM received:", receivedRes.error);
+          const merged = [...sent, ...received].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
           const nameMap = memberNameMapRef.current;
-          const mapped: Message[] =
-            (data as any[] | null)?.map((row) => ({
-              id: row.id,
-              channel_id: channelId,
-              user_id: row.sender_id,
-              content: row.content,
-              created_at: row.created_at,
-              user_name: row.sender_id === user.id ? "You" : (nameMap[row.sender_id] || "Member"),
-            })) ?? [];
+          const mapped: Message[] = merged.map((row) => ({
+            id: row.id,
+            channel_id: channelId,
+            user_id: row.sender_id,
+            content: row.content,
+            created_at: row.created_at,
+            user_name: row.sender_id === user.id ? "You" : (nameMap[row.sender_id] || "Member"),
+          }));
 
           setMessages(mapped);
           return; // setLoading(false) handled in finally
@@ -1023,16 +1024,10 @@ const Community = () => {
   }, [user, feedPosts]);
 
   // Fetch all signed-up users for Members tab (profiles = one per signup)
+  // Include admins so members can DM them (e.g. admin Laila)
   useEffect(() => {
     const loadMembers = async () => {
       try {
-        // Fetch admin user IDs to exclude them from the members list
-        const { data: adminRoles } = await supabase
-          .from("user_roles")
-          .select("user_id")
-          .eq("role", "admin");
-        const adminIds = new Set((adminRoles || []).map((r: any) => r.user_id));
-
         const { data, error } = await supabase
           .from("profiles")
           .select("*")
@@ -1047,11 +1042,8 @@ const Community = () => {
         const rows = (data as any[] | null) ?? [];
         const mapped: Member[] = rows
           .filter((row) => {
-            const rowId = (row.user_id != null ? row.user_id : row.id) as string;
-            if (adminIds.has(rowId)) return false;
-            // Also filter by subscription_tier as a fallback
             const tier = (row.subscription_tier || row.role || "").toLowerCase();
-            return tier !== "admin";
+            return tier !== "admin"; // exclude only if tier/role is literally "admin" (legacy)
           })
           .map((row) => ({
             id: (row.user_id != null ? row.user_id : row.id) as string,
