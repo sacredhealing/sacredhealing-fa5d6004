@@ -2046,6 +2046,8 @@ const Community = () => {
               {(() => {
                 const query = memberSearch.trim().toLowerCase();
                 const filtered = members.filter((m) => {
+                  // Exclude current user from the list
+                  if (user && m.id === user.id) return false;
                   if (!query) return true;
                   const name = (m.full_name || "").toLowerCase();
                   const tier = (m.subscription_tier || "").toLowerCase();
