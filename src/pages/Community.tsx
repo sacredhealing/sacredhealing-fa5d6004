@@ -792,9 +792,11 @@ const Community = () => {
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
   const [dmVideoUrl, setDmVideoUrl] = useState<string | null>(null);
 
+  const memberNameMapRef = useRef<Record<string, string>>({});
   const memberNameMap = useMemo(() => {
     const m: Record<string, string> = {};
     members.forEach((mem) => { if (mem.full_name) m[mem.id] = mem.full_name; });
+    memberNameMapRef.current = m;
     return m;
   }, [members]);
 
@@ -841,6 +843,7 @@ const Community = () => {
             return;
           }
 
+          const nameMap = memberNameMapRef.current;
           const mapped: Message[] =
             (data as any[] | null)?.map((row) => ({
               id: row.id,
@@ -848,7 +851,7 @@ const Community = () => {
               user_id: row.sender_id,
               content: row.content,
               created_at: row.created_at,
-              user_name: row.sender_id === user.id ? "You" : (memberNameMap[row.sender_id] || "Member"),
+              user_name: row.sender_id === user.id ? "You" : (nameMap[row.sender_id] || "Member"),
             })) ?? [];
 
           setMessages(mapped);
@@ -858,7 +861,6 @@ const Community = () => {
         // Group channels use chat_messages with UUID room_id
         const roomId = roomIds[channelId];
         if (!roomId) {
-          // No backing room yet – show empty state instead of failing
           setMessages([]);
           return;
         }
@@ -876,17 +878,18 @@ const Community = () => {
           return;
         }
 
+        const nameMap = memberNameMapRef.current;
         const rows = (data as any[]) || [];
         const enriched: Message[] = rows.map((row) => ({
           ...row,
-          user_name: row.user_name || (row.user_id === user?.id ? "You" : (memberNameMap[row.user_id] || "Member")),
+          user_name: row.user_name || (row.user_id === user?.id ? "You" : (nameMap[row.user_id] || "Member")),
         }));
         setMessages(enriched);
       } finally {
         setLoading(false);
       }
     },
-    [roomIds, user, memberNameMap]
+    [roomIds, user]
   );
 
   // Fetch feed posts (admin posts); include likes/comments counts and current user's like state
@@ -1189,15 +1192,20 @@ const Community = () => {
                 (n.sender_id === user.id && n.receiver_id === partnerId) ||
                 (n.sender_id === partnerId && n.receiver_id === user.id);
               if (!isBetweenUs) return;
+              const nameMap = memberNameMapRef.current;
               const newMsg: Message = {
                 id: n.id,
                 channel_id: activeChannel,
                 user_id: n.sender_id,
                 content: n.content,
                 created_at: n.created_at,
-                user_name: n.sender_id === user.id ? "You" : (memberNameMap[n.sender_id] || "Member"),
+                user_name: n.sender_id === user.id ? "You" : (nameMap[n.sender_id] || "Member"),
               };
-              setMessages((prev) => [...prev, newMsg]);
+              setMessages((prev) => {
+                // Deduplicate by id
+                if (prev.some((m) => m.id === newMsg.id)) return prev;
+                return [...prev, newMsg];
+              });
             }
           )
           .subscribe();
@@ -1233,11 +1241,15 @@ const Community = () => {
         },
         (payload) => {
           const n = payload.new as any;
+          const nameMap = memberNameMapRef.current;
           const msg: Message = {
             ...n,
-            user_name: n.user_name || (n.user_id === user?.id ? "You" : (memberNameMap[n.user_id] || "Member")),
+            user_name: n.user_name || (n.user_id === user?.id ? "You" : (nameMap[n.user_id] || "Member")),
           };
-          setMessages((prev) => [...prev, msg]);
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === msg.id)) return prev;
+            return [...prev, msg];
+          });
         }
       )
       .subscribe();
@@ -1262,7 +1274,7 @@ const Community = () => {
       supabase.removeChannel(channel);
       supabase.removeChannel(liveChannel);
     };
-  }, [activeChannel, fetchMessages, roomIds, daily, user, memberNameMap]);
+  }, [activeChannel, fetchMessages, roomIds, daily, user]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -1401,31 +1413,19 @@ const Community = () => {
       const partnerId = getDmPartnerId(activeChannel, user.id);
       if (!partnerId) return;
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("private_messages")
         .insert({
           sender_id: user.id,
           receiver_id: partnerId,
           content: text,
-        })
-        .select("*")
-        .single();
+        });
 
       if (error) {
         console.error("Failed to send DM:", error);
         toast.error("Could not send message.");
-        return;
       }
-
-      const newMsg: Message = {
-        id: data.id,
-        channel_id: activeChannel,
-        user_id: data.sender_id,
-        content: data.content,
-        created_at: data.created_at,
-        user_name: "You",
-      };
-      setMessages((prev) => [...prev, newMsg]);
+      // Realtime subscription will append the message
       return;
     }
 
@@ -1494,28 +1494,20 @@ const Community = () => {
     const profile = members.find((m) => m.id === user.id);
     const senderName = profile?.full_name || "You";
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("chat_messages")
       .insert({
         room_id: roomId,
         user_id: user.id,
         content: text,
         user_name: senderName,
-      } as any)
-      .select("*")
-      .single();
+      } as any);
 
     if (error) {
       console.error("Failed to send message:", error);
       toast.error("Could not send message.");
-      return;
     }
-
-    const sentMsg: Message = {
-      ...(data as any),
-      user_name: "You",
-    };
-    setMessages((prev) => [...prev, sentMsg]);
+    // Realtime subscription will append the message
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
