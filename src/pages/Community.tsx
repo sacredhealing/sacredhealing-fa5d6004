@@ -2081,7 +2081,6 @@ const Community = () => {
                   if (tier === "admin") return false;
                   if (!query) return true;
                   const name = (m.full_name || "").toLowerCase();
-                  const tier = (m.subscription_tier || "").toLowerCase();
                   const searchText = `${name} ${tier}`;
                   const words = query.split(/\s+/).filter(Boolean);
                   return words.every((word) => searchText.includes(word));
