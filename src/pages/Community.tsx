@@ -860,7 +860,7 @@ const Community = () => {
             })) ?? [];
 
           setMessages(mapped);
-          return;
+          return; // setLoading(false) handled in finally
         }
 
         // Group channels use chat_messages with UUID room_id
@@ -891,6 +891,7 @@ const Community = () => {
         }));
         setMessages(enriched);
       } finally {
+        // Always clear loading regardless of which path was taken
         setLoading(false);
       }
     },
@@ -1067,7 +1068,7 @@ const Community = () => {
     };
 
     loadMembers();
-  }, []);
+  }, [user?.id]);
 
   // Track who's online via Realtime presence (community channel)
   useEffect(() => {
@@ -1267,7 +1268,17 @@ const Community = () => {
             user_name: n.user_name || (n.user_id === user?.id ? "You" : (nameMap[n.user_id] || "Member")),
           };
           setMessages((prev) => {
+            // Skip if already present by real id
             if (prev.some((m) => m.id === msg.id)) return prev;
+            // Replace matching temp optimistic message (same user + content)
+            const tempIdx = prev.findIndex(
+              (m) => m.id.startsWith("temp-") && m.user_id === n.user_id && m.content === n.content
+            );
+            if (tempIdx !== -1) {
+              const next = [...prev];
+              next[tempIdx] = msg;
+              return next;
+            }
             return [...prev, msg];
           });
         }
@@ -1433,19 +1444,38 @@ const Community = () => {
       const partnerId = getDmPartnerId(activeChannel, user.id);
       if (!partnerId) return;
 
-      const { error } = await supabase
+      // Optimistically append own message immediately
+      const optimisticMsg: Message = {
+        id: `temp-${Date.now()}`,
+        channel_id: activeChannel,
+        user_id: user.id,
+        content: text,
+        created_at: new Date().toISOString(),
+        user_name: "You",
+      };
+      setMessages((prev) => [...prev, optimisticMsg]);
+
+      const { data: inserted, error } = await supabase
         .from("private_messages")
         .insert({
           sender_id: user.id,
           receiver_id: partnerId,
           content: text,
-        });
+        })
+        .select()
+        .single();
 
       if (error) {
         console.error("Failed to send DM:", error);
         toast.error("Could not send message.");
+        // Remove optimistic message on failure
+        setMessages((prev) => prev.filter((m) => m.id !== optimisticMsg.id));
+      } else if (inserted) {
+        // Replace temp with real message
+        setMessages((prev) =>
+          prev.map((m) => m.id === optimisticMsg.id ? { ...optimisticMsg, id: (inserted as any).id } : m)
+        );
       }
-      // Realtime subscription will append the message
       return;
     }
 
@@ -1514,20 +1544,38 @@ const Community = () => {
     const profile = members.find((m) => m.id === user.id);
     const senderName = profile?.full_name || "You";
 
-    const { error } = await supabase
+    // Optimistically append own message immediately
+    const optimisticGroupMsg: Message = {
+      id: `temp-${Date.now()}`,
+      channel_id: activeChannel,
+      user_id: user.id,
+      content: text,
+      created_at: new Date().toISOString(),
+      user_name: "You",
+    };
+    setMessages((prev) => [...prev, optimisticGroupMsg]);
+
+    const { data: insertedGroup, error } = await supabase
       .from("chat_messages")
       .insert({
         room_id: roomId,
         user_id: user.id,
         content: text,
         user_name: senderName,
-      } as any);
+      } as any)
+      .select()
+      .single();
 
     if (error) {
       console.error("Failed to send message:", error);
       toast.error("Could not send message.");
+      setMessages((prev) => prev.filter((m) => m.id !== optimisticGroupMsg.id));
+    } else if (insertedGroup) {
+      // Replace temp with real message (realtime may also fire but dedup handles it)
+      setMessages((prev) =>
+        prev.map((m) => m.id === optimisticGroupMsg.id ? { ...optimisticGroupMsg, id: (insertedGroup as any).id } : m)
+      );
     }
-    // Realtime subscription will append the message
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
