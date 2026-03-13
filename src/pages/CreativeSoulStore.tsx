@@ -393,7 +393,8 @@ const CreativeSoulStore = () => {
             </CardContent>
           </Card>
 
-          {/* Siddha Sound Alchemy Oracle (Admin Tool) */}
+          {/* Siddha Sound Alchemy Oracle — admin only until fully finished */}
+          {isAdmin && (
           <Card className="cs-store-card overflow-hidden mt-6">
             <CardHeader className="pb-4">
               <div className="flex items-start justify-between gap-4">
@@ -440,21 +441,16 @@ const CreativeSoulStore = () => {
                 </div>
               </div>
 
-              {isAdmin ? (
-                <Button
-                  onClick={() => navigate("/creative-soul/siddha-oracle")}
-                  className="w-full bg-[#D4AF37] hover:bg-[#f0d26a] text-black font-semibold tracking-[0.18em] uppercase text-[10px]"
-                >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Open Siddha Sound Alchemy Oracle
-                </Button>
-              ) : (
-                <p className="text-[10px] text-center text-white/45 tracking-[0.18em] uppercase">
-                  Admin-only creation console · visible here for roadmap clarity
-                </p>
-              )}
+              <Button
+                onClick={() => navigate("/creative-soul/siddha-oracle")}
+                className="w-full bg-[#D4AF37] hover:bg-[#f0d26a] text-black font-semibold tracking-[0.18em] uppercase text-[10px]"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                Open Siddha Sound Alchemy Oracle
+              </Button>
             </CardContent>
           </Card>
+          )}
           </div>
 
           {/* Bottom Quote */}
