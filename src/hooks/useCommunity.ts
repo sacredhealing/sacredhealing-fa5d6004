@@ -580,18 +580,32 @@ export const usePostComments = (postId: string) => {
 
 export const useAllUsers = () => {
   const { user } = useAuth();
-  const [users, setUsers] = useState<{ user_id: string; full_name: string | null; avatar_url: string | null; bio: string | null }[]>([]);
+  const [users, setUsers] = useState<{ user_id: string; full_name: string | null; avatar_url: string | null; bio: string | null; subscription_tier?: string | null }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchUsers = async () => {
       setIsLoading(true);
+
+      // Fetch admin user IDs to exclude them from the member list
+      const { data: adminRoles } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'admin');
+      const adminIds = new Set((adminRoles || []).map((r: any) => r.user_id));
+
       const { data } = await supabase
         .from('profiles')
-        .select('user_id, full_name, avatar_url, bio')
+        .select('user_id, full_name, avatar_url, bio, subscription_tier')
         .neq('user_id', user?.id || '');
 
-      setUsers(data || []);
+      // Exclude admin accounts from the DM user picker
+      const filtered = (data || []).filter((u: any) => {
+        if (adminIds.has(u.user_id)) return false;
+        const tier = (u.subscription_tier || '').toLowerCase();
+        return tier !== 'admin';
+      });
+      setUsers(filtered);
       setIsLoading(false);
     };
 

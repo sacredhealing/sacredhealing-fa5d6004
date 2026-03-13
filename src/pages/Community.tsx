@@ -803,10 +803,15 @@ const Community = () => {
   const isDmChannel = (id: string | null) => !!id && id.startsWith("dm-");
 
   const getDmPartnerId = (channelId: string, selfId: string): string | null => {
+    // Format: "dm-{uuidA}-{uuidB}" where UUIDs themselves contain hyphens.
+    // Strip the "dm-" prefix then split on the boundary between the two UUIDs.
+    // A UUID is exactly 36 chars: 8-4-4-4-12.
     if (!channelId.startsWith("dm-")) return null;
-    const parts = channelId.split("-");
-    if (parts.length !== 3) return null;
-    const [, a, b] = parts;
+    const rest = channelId.slice(3); // remove "dm-"
+    const UUID_LEN = 36;
+    if (rest.length < UUID_LEN * 2 + 1) return null;
+    const a = rest.slice(0, UUID_LEN);
+    const b = rest.slice(UUID_LEN + 1); // skip the "-" separator between the two UUIDs
     if (selfId === a) return b;
     if (selfId === b) return a;
     return null;
@@ -1020,6 +1025,13 @@ const Community = () => {
   useEffect(() => {
     const loadMembers = async () => {
       try {
+        // Fetch admin user IDs to exclude them from the members list
+        const { data: adminRoles } = await supabase
+          .from("user_roles")
+          .select("user_id")
+          .eq("role", "admin");
+        const adminIds = new Set((adminRoles || []).map((r: any) => r.user_id));
+
         const { data, error } = await supabase
           .from("profiles")
           .select("*")
@@ -1032,12 +1044,20 @@ const Community = () => {
         }
 
         const rows = (data as any[] | null) ?? [];
-        const mapped: Member[] = rows.map((row) => ({
-          id: (row.user_id != null ? row.user_id : row.id) as string,
-          full_name: (row.full_name ?? null) as string | null,
-          subscription_tier: (row.subscription_tier ?? row.role ?? null) as string | null,
-          avatar_url: (row.avatar_url ?? null) as string | null,
-        }));
+        const mapped: Member[] = rows
+          .filter((row) => {
+            const rowId = (row.user_id != null ? row.user_id : row.id) as string;
+            if (adminIds.has(rowId)) return false;
+            // Also filter by subscription_tier as a fallback
+            const tier = (row.subscription_tier || row.role || "").toLowerCase();
+            return tier !== "admin";
+          })
+          .map((row) => ({
+            id: (row.user_id != null ? row.user_id : row.id) as string,
+            full_name: (row.full_name ?? null) as string | null,
+            subscription_tier: (row.subscription_tier ?? row.role ?? null) as string | null,
+            avatar_url: (row.avatar_url ?? null) as string | null,
+          }));
 
         setMembers(mapped);
       } catch (e) {
@@ -2055,8 +2075,10 @@ const Community = () => {
               {(() => {
                 const query = memberSearch.trim().toLowerCase();
                 const filtered = members.filter((m) => {
-                  // Exclude current user from the list
+                  // Exclude current user and admin accounts from the list
                   if (user && m.id === user.id) return false;
+                  const tier = (m.subscription_tier || "").toLowerCase();
+                  if (tier === "admin") return false;
                   if (!query) return true;
                   const name = (m.full_name || "").toLowerCase();
                   const tier = (m.subscription_tier || "").toLowerCase();

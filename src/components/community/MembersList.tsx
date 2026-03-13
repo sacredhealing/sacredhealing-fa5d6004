@@ -11,14 +11,28 @@ export default function MembersList({ channelId, onlineCount, isAdmin }: {
   const [members, setMembers] = useState<any[]>([]);
 
   useEffect(() => {
-    supabase
-      .from('profiles')
-      .select('user_id, full_name, subscription_tier, avatar_url')
-      .limit(20)
-      .then(({ data }) => {
-        const filtered = (data || []).filter((m: any) => m.user_id !== user?.id);
-        setMembers(filtered);
+    const load = async () => {
+      // Fetch admin IDs to exclude from member list
+      const { data: adminRoles } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'admin');
+      const adminIds = new Set((adminRoles || []).map((r: any) => r.user_id));
+
+      const { data } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, subscription_tier, avatar_url')
+        .limit(50);
+
+      const filtered = (data || []).filter((m: any) => {
+        if (m.user_id === user?.id) return false;
+        if (adminIds.has(m.user_id)) return false;
+        const tier = (m.subscription_tier || '').toLowerCase();
+        return tier !== 'admin';
       });
+      setMembers(filtered);
+    };
+    load();
   }, [user?.id]);
 
   return (
