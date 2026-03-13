@@ -17,7 +17,8 @@ export interface MantraItem {
   repetitionsFixed: 108;
 }
 
-export async function getMantras(): Promise<MantraItem[]> {
+/** userRank: 0=free, 1=prana, 2=siddha, 3=akasha. Admin sees all. Free sees only is_premium=false. */
+export async function getMantras(options?: { userRank?: number; isAdmin?: boolean }): Promise<MantraItem[]> {
   try {
     const { data, error } = await supabase
       .from('mantras')
@@ -32,7 +33,14 @@ export async function getMantras(): Promise<MantraItem[]> {
 
     if (!data || data.length === 0) return [];
 
-    return data.map((row) => {
+    let rows = data;
+    const isAdmin = options?.isAdmin ?? false;
+    const userRank = options?.userRank ?? 0;
+    if (!isAdmin && userRank < 1) {
+      rows = rows.filter((r: any) => !r.is_premium);
+    }
+
+    return rows.map((row) => {
       // Fix duration — safely calculate minutes from seconds
       const rawMinutes = (row as any).duration_minutes;
       const rawSeconds = (row as any).duration_seconds;

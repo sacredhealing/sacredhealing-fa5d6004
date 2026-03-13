@@ -14,6 +14,9 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation as useI18nTranslation } from 'react-i18next';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/hooks/useAuth';
+import { useMembership } from '@/hooks/useMembership';
+import { useAdminRole } from '@/hooks/useAdminRole';
+import { getTierRank } from '@/lib/tierAccess';
 import { useSHCBalance } from '@/hooks/useSHCBalance';
 import { toast } from 'sonner';
 import { Play, Pause, RotateCcw, ChevronDown, Sparkles } from 'lucide-react';
@@ -328,6 +331,8 @@ const Mantras = () => {
   const { t: tI18n } = useI18nTranslation();
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { tier } = useMembership();
+  const { isAdmin } = useAdminRole();
   const { refreshBalance } = useSHCBalance();
 
   const [mantras, setMantras] = useState<MantraItem[]>([]);
@@ -387,7 +392,8 @@ const Mantras = () => {
   /* ── Load + sort mantras ── */
   useEffect(() => {
     let cancelled = false;
-    getMantras().then((data) => {
+    const userRank = getTierRank(tier);
+    getMantras({ userRank, isAdmin }).then((data) => {
       if (cancelled) return;
       const dayPlanet = getPlanetOfDay();
       const sorted = [...data].sort((a, b) => {
@@ -418,7 +424,7 @@ const Mantras = () => {
       }
     });
     return () => { cancelled = true; };
-  }, [jyotishRecommendation?.recommendedMantraId, dashaPlanet]);
+  }, [tier, isAdmin, jyotishRecommendation?.recommendedMantraId, dashaPlanet]);
 
   useEffect(() => {
     if (jyotishRecommendation?.recommendedMantraId && mantras.length > 0 && !selectedMantraId) {
