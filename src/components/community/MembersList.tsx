@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function MembersList({ channelId, onlineCount, isAdmin }: {
   channelId: string;
   onlineCount: number;
   isAdmin: boolean;
 }) {
+  const { user } = useAuth();
   const [members, setMembers] = useState<any[]>([]);
 
   useEffect(() => {
@@ -13,8 +15,11 @@ export default function MembersList({ channelId, onlineCount, isAdmin }: {
       .from('profiles')
       .select('user_id, full_name, subscription_tier, avatar_url')
       .limit(20)
-      .then(({ data }) => setMembers(data || []));
-  }, []);
+      .then(({ data }) => {
+        const filtered = (data || []).filter((m: any) => m.user_id !== user?.id);
+        setMembers(filtered);
+      });
+  }, [user?.id]);
 
   return (
     <aside className="sqi-members-panel">
