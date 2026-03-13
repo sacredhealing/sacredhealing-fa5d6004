@@ -792,9 +792,11 @@ const Community = () => {
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
   const [dmVideoUrl, setDmVideoUrl] = useState<string | null>(null);
 
+  const memberNameMapRef = useRef<Record<string, string>>({});
   const memberNameMap = useMemo(() => {
     const m: Record<string, string> = {};
     members.forEach((mem) => { if (mem.full_name) m[mem.id] = mem.full_name; });
+    memberNameMapRef.current = m;
     return m;
   }, [members]);
 
