@@ -1652,8 +1652,8 @@ const Community = () => {
                     <div className="c-chat-name">{currentChannel.name}</div>
                     <div className="c-chat-sub">{currentChannel.description}</div>
                   </div>
-                  {/* DM: video call button */}
-                  {isDmChannel(activeChannel) && !dmVideoUrl && (
+                  {/* DM: 1o1 video call button (admin only) */}
+                  {isDmChannel(activeChannel) && isAdmin && !dmVideoUrl && (
                     <button
                       className="c-video-call-btn"
                       onClick={handleDmVideoCall}
@@ -1662,7 +1662,7 @@ const Community = () => {
                       {daily.isCreating ? "⏳" : "📹"} VIDEO CALL
                     </button>
                   )}
-                  {isDmChannel(activeChannel) && dmVideoUrl && (
+                  {isDmChannel(activeChannel) && isAdmin && dmVideoUrl && (
                     <button
                       className="c-video-call-btn"
                       onClick={() => setDmVideoUrl(null)}
