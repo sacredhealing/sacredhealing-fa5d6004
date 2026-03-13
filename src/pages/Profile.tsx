@@ -103,6 +103,7 @@ const Profile: React.FC = () => {
     load();
   }, [user, vedicReading, generateReading]);
 
+  const [blueprintOpen, setBlueprintOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [appearanceOpen, setAppearanceOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
@@ -488,25 +489,59 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   const hrvGlowIntensity =
     scanPhase === 'done' ? 1 : scanPhase === 'scanning' ? 0.75 : 0.5;
 
+  // Tier halo config
+  const haloConfig = userRank === 0
+    ? null
+    : userRank === 1
+      ? { color: '#22D3EE', shadow: 'rgba(34,211,238,0.55)', label: 'Prana–Flow', badge: '◈' }
+      : userRank === 2
+        ? { color: '#a855f7', shadow: 'rgba(168,85,247,0.55)', label: 'Siddha–Quantum', badge: '◆' }
+        : { color: '#D4AF37', shadow: 'rgba(212,175,55,0.65)', label: 'Akasha–Infinity', badge: '∞' };
+
+  const tierBlueprintLine = userRank === 0
+    ? null
+    : userRank === 1
+      ? 'Prana–Flow · Sonic Vibration · Active'
+      : userRank === 2
+        ? 'Siddha–Quantum · Universal Field · Active'
+        : 'Akasha–Infinity · Master Access · Eternal';
+
   return (
     <>
     <style dangerouslySetInnerHTML={{__html: `
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Montserrat:wght@300;400;700;800;900&display=swap');
   .profile-wrap *,:root{--gold:#D4AF37;--black:#050505}
-  .hero{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;position:relative;padding:10vh 24px 20px;text-align:center}
-  .avatar-wrap{position:relative;display:inline-block;margin-bottom:22px;overflow:visible;padding:110px 110px 110px 110px}
-  .avatar-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,0.65) 0%,rgba(212,175,55,0.2) 40%,transparent 70%);filter:blur(22px);animation:glowBreathe 3s ease-in-out infinite;z-index:0;pointer-events:none}
-  .avatar-glow-2{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,0.15) 0%,transparent 65%);filter:blur(30px);animation:glowBreathe 4s ease-in-out infinite reverse;z-index:0;pointer-events:none}
-  .sri-yantra-avatar-shield{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:320px;height:320px;z-index:0;pointer-events:none;animation:pulseDeep 3s cubic-bezier(0.45,0.05,0.55,0.95) infinite}
-  .hero-name{font-family:'Cormorant Garamond',serif;font-weight:300;font-style:italic;font-size:clamp(2.8rem,6vw,4.5rem);letter-spacing:-0.02em;color:white;line-height:1;margin-bottom:10px;animation:fadeUp 0.8s ease both;text-shadow:0 2px 20px rgba(0,0,0,0.8)}
-  .soul-label{font-family:'Montserrat',sans-serif;font-weight:800;font-size:clamp(5.5px,1.8vw,8px);letter-spacing:clamp(0.15em,0.4vw,0.5em);text-transform:uppercase;color:rgba(212,175,55,0.8);margin-bottom:22px;white-space:nowrap;text-shadow:0 1px 12px rgba(0,0,0,0.9)}
+  /* ── HERO ── */
+  .hero{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;position:relative;padding:5vh 24px 0;text-align:center}
+  /* Avatar wrap — sized to the 272px Sri Yantra + padding */
+  .avatar-wrap{position:relative;display:inline-block;margin-bottom:14px;overflow:visible;padding:86px 86px 86px 86px}
+  /* Ambient glow layers */
+  .avatar-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,0.55) 0%,rgba(212,175,55,0.15) 40%,transparent 70%);filter:blur(20px);animation:glowBreathe 3s ease-in-out infinite;z-index:0;pointer-events:none}
+  .avatar-glow-2{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,0.1) 0%,transparent 65%);filter:blur(28px);animation:glowBreathe 4s ease-in-out infinite reverse;z-index:0;pointer-events:none}
+  /* Sri Yantra — 15% smaller than 320px = 272px */
+  .sri-yantra-avatar-shield{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:272px;height:272px;z-index:0;pointer-events:none;filter:drop-shadow(0 0 15px rgba(212,175,55,0.4));animation:pulseDeep 3s cubic-bezier(0.45,0.05,0.55,0.95) infinite}
+  /* Sovereign Halo ring around avatar */
+  .avatar-halo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:116px;height:116px;border-radius:50%;z-index:2;pointer-events:none}
+  /* Tier badge dot at bottom-right of avatar */
+  .avatar-tier-badge{position:absolute;bottom:2px;right:2px;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;border:2px solid #050505;z-index:3;cursor:default}
+  /* Name + labels */
+  .hero-name{font-family:'Cormorant Garamond',serif;font-weight:300;font-style:italic;font-size:clamp(2.6rem,6vw,4rem);letter-spacing:-0.02em;color:white;line-height:1;margin-bottom:6px;animation:fadeUp 0.8s ease both;text-shadow:0 2px 20px rgba(0,0,0,0.8)}
+  .tier-status-badge{display:inline-flex;align-items:center;gap:6px;font-family:'Montserrat',sans-serif;font-weight:800;font-size:7px;letter-spacing:0.4em;text-transform:uppercase;margin-bottom:6px;cursor:pointer;transition:opacity 0.2s}
+  .tier-status-badge:hover{opacity:0.8}
+  .tier-blueprint-expand{overflow:hidden;transition:max-height 0.35s ease,opacity 0.35s ease}
+  .soul-label{font-family:'Montserrat',sans-serif;font-weight:800;font-size:clamp(5.5px,1.8vw,8px);letter-spacing:clamp(0.15em,0.4vw,0.5em);text-transform:uppercase;color:rgba(212,175,55,0.8);margin-bottom:14px;white-space:nowrap;text-shadow:0 1px 12px rgba(0,0,0,0.9)}
   .soul-label span{color:rgba(255,255,255,0.25);margin:0 8px}
-  .stats-row{display:flex;gap:12px;flex-wrap:nowrap;justify-content:center;margin-bottom:40px;animation:fadeUp 1.1s ease both;width:100%;max-width:400px;margin-left:auto;margin-right:auto}
+  /* Stats */
+  .stats-row{display:flex;gap:12px;flex-wrap:nowrap;justify-content:center;margin-bottom:20px;animation:fadeUp 1.1s ease both;width:100%;max-width:400px;margin-left:auto;margin-right:auto}
   .stat-pill{background:rgba(5,5,5,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:100px;padding:12px 20px;text-align:center;flex:1 1 0;min-width:0;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
   .stat-value{font-weight:800;font-size:20px;color:#D4AF37;letter-spacing:-0.02em;display:block}
   .stat-label{font-weight:800;font-size:7px;letter-spacing:0.45em;text-transform:uppercase;color:rgba(255,255,255,0.35);display:block;margin-top:2px}
-  .scroll-hint{position:absolute;bottom:36px;font-weight:800;font-size:7px;letter-spacing:0.5em;text-transform:uppercase;color:rgba(255,255,255,0.15);display:flex;flex-direction:column;align-items:center;gap:8px}
-  .scroll-arrow{width:12px;height:12px;border-right:1.5px solid rgba(255,255,255,0.2);border-bottom:1.5px solid rgba(255,255,255,0.2);transform:rotate(45deg);animation:bounce 1.8s ease-in-out infinite}
+  /* About the Nexus block */
+  .nexus-block{max-width:480px;margin:0 auto 28px;background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.1);border-radius:20px;padding:22px 24px;backdrop-filter:blur(20px);text-align:left}
+  .nexus-block-label{font-weight:800;font-size:7px;letter-spacing:0.5em;text-transform:uppercase;color:rgba(212,175,55,0.45);margin-bottom:10px}
+  .nexus-block-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.92rem;color:rgba(255,255,255,0.38);line-height:1.85}
+  .nexus-block-text strong{color:rgba(212,175,55,0.6);font-weight:600;font-style:normal}
+  /* Sections */
   .section-wrap{max-width:780px;margin:0 auto;padding:32px 24px 0;text-align:center}
   .section-label{font-family:'Montserrat',sans-serif;font-weight:800;font-size:8px;letter-spacing:0.5em;text-transform:uppercase;color:rgba(212,175,55,0.5);margin-bottom:32px;display:flex;align-items:center;gap:12px;justify-content:center}
   .section-label::after{content:'';flex:1;height:1px;background:linear-gradient(to right,rgba(212,175,55,0.2),transparent)}
@@ -575,8 +610,12 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   .signout-btn{width:100%;background:transparent;border:1px solid rgba(255,255,255,0.06);border-radius:100px;padding:13px;font-family:'Montserrat',sans-serif;font-weight:800;font-size:8px;letter-spacing:0.35em;text-transform:uppercase;color:rgba(255,255,255,0.2);cursor:pointer;transition:all 0.2s;margin-top:8px}
   .signout-btn:hover{color:rgba(239,68,68,0.7);border-color:rgba(239,68,68,0.2)}
   .lang-selector{background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.12);border-radius:24px;padding:20px 24px;backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}
-  @keyframes pulseDeep{0%,100%{opacity:0.5;transform:translate(-50%,-50%) scale(1)}50%{opacity:0.9;transform:translate(-50%,-50%) scale(1.05)}}
+  /* ── KEYFRAMES ── */
+  @keyframes pulseDeep{0%,100%{opacity:0.15;transform:translate(-50%,-50%) scale(1)}50%{opacity:0.28;transform:translate(-50%,-50%) scale(1.05)}}
   .animate-pulse-deep{animation:pulseDeep 3s cubic-bezier(0.45,0.05,0.55,0.95) infinite}
+  @keyframes haloAkasha{0%,100%{box-shadow:0 0 0 2px #D4AF37,0 0 18px 4px rgba(212,175,55,0.5)}50%{box-shadow:0 0 0 2px #D4AF37,0 0 32px 8px rgba(212,175,55,0.8)}}
+  @keyframes haloPrana{0%,100%{box-shadow:0 0 0 2px #22D3EE,0 0 16px 3px rgba(34,211,238,0.45)}50%{box-shadow:0 0 0 2px #22D3EE,0 0 28px 6px rgba(34,211,238,0.7)}}
+  @keyframes haloSiddha{0%,100%{box-shadow:0 0 0 2px #a855f7,0 0 16px 3px rgba(168,85,247,0.45)}50%{box-shadow:0 0 0 2px #a855f7,0 0 28px 6px rgba(168,85,247,0.7)}}
   @keyframes sqPulse{0%{transform:scale(1);opacity:0.8}50%{transform:scale(1.04);opacity:0}100%{transform:scale(1.08);opacity:0}}
   @keyframes shimmer{0%{background-position:0% 50%}100%{background-position:300% 50%}}
   @keyframes btnGlow{0%,100%{box-shadow:0 0 20px rgba(212,175,55,0.4)}50%{box-shadow:0 0 40px rgba(212,175,55,0.7)}}
@@ -586,6 +625,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   @keyframes scanPulse{0%,100%{transform:scale(1);opacity:0.5}50%{transform:scale(1.12);opacity:1}}
   @keyframes siddhiSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
   @keyframes stardustMove{from{background-position:0 0}to{background-position:1000px 1000px}}
+  @keyframes syRotate{from{transform:translate(-50%,-50%) rotate(0deg) scale(1)}50%{transform:translate(-50%,-50%) rotate(180deg) scale(1.05)}to{transform:translate(-50%,-50%) rotate(360deg) scale(1)}}
 `}} />
 
     <div className="profile-wrap" style={{minHeight:'100vh',background:'#050505',overflowX:'hidden',fontFamily:'Montserrat,sans-serif',paddingBottom:'120px',position:'relative'}}>
@@ -601,54 +641,164 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
         <div className="avatar-wrap">
           <div className="avatar-glow" />
           <div className="avatar-glow-2" />
-          {/* Sri Yantra Shield — pulsating behind avatar */}
-          <svg className="sri-yantra-avatar-shield" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+
+          {/* Sri Yantra Shield — 272px (15% smaller), low-opacity pulse, rotates slowly for Akasha */}
+          <svg
+            className="sri-yantra-avatar-shield"
+            viewBox="0 0 400 400"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+            style={userRank >= 3 ? {animation:'syRotate 60s linear infinite'} : undefined}
+          >
             <defs>
               <filter id="syGlow" x="-50%" y="-50%" width="200%" height="200%">
                 <feGaussianBlur stdDeviation="3" result="blur"/>
                 <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
               </filter>
               <radialGradient id="syBg" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="rgba(212,175,55,0.06)"/>
+                <stop offset="0%" stopColor="rgba(212,175,55,0.05)"/>
                 <stop offset="100%" stopColor="rgba(212,175,55,0)"/>
               </radialGradient>
             </defs>
             <circle cx="200" cy="200" r="198" fill="url(#syBg)"/>
-            <circle cx="200" cy="200" r="190" stroke="rgba(212,175,55,0.12)" strokeWidth="0.6" fill="none"/>
-            <circle cx="200" cy="200" r="170" stroke="rgba(212,175,55,0.10)" strokeWidth="0.5" fill="none"/>
-            <circle cx="200" cy="200" r="148" stroke="rgba(212,175,55,0.14)" strokeWidth="0.7" fill="none" strokeDasharray="6 7"/>
-            <circle cx="200" cy="200" r="128" stroke="rgba(212,175,55,0.10)" strokeWidth="0.5" fill="none"/>
-            {/* Upward triangles */}
-            <polygon points="200,42 368,322 32,322" stroke="#D4AF37" strokeWidth="1.4" fill="none" opacity="0.75" filter="url(#syGlow)"/>
-            <polygon points="200,78 348,306 52,306" stroke="#D4AF37" strokeWidth="1.1" fill="none" opacity="0.58"/>
-            <polygon points="200,108 328,290 72,290" stroke="#D4AF37" strokeWidth="0.85" fill="none" opacity="0.42"/>
-            <polygon points="200,140 308,274 92,274" stroke="#D4AF37" strokeWidth="0.65" fill="none" opacity="0.28"/>
-            {/* Downward triangles */}
-            <polygon points="200,358 32,78 368,78" stroke="#D4AF37" strokeWidth="1.3" fill="none" opacity="0.70" filter="url(#syGlow)"/>
-            <polygon points="200,322 52,94 348,94" stroke="#D4AF37" strokeWidth="1.0" fill="none" opacity="0.54"/>
-            <polygon points="200,290 72,110 328,110" stroke="#D4AF37" strokeWidth="0.80" fill="none" opacity="0.38"/>
-            <polygon points="200,262 92,126 308,126" stroke="#D4AF37" strokeWidth="0.60" fill="none" opacity="0.24"/>
-            {/* Bindu — central point */}
-            <circle cx="200" cy="200" r="14" fill="rgba(212,175,55,0.10)" stroke="rgba(212,175,55,0.5)" strokeWidth="0.8"/>
-            <circle cx="200" cy="200" r="6" fill="rgba(212,175,55,0.80)" filter="url(#syGlow)"/>
+            <circle cx="200" cy="200" r="190" stroke="rgba(212,175,55,0.10)" strokeWidth="0.6" fill="none"/>
+            <circle cx="200" cy="200" r="170" stroke="rgba(212,175,55,0.08)" strokeWidth="0.5" fill="none"/>
+            <circle cx="200" cy="200" r="148" stroke="rgba(212,175,55,0.12)" strokeWidth="0.7" fill="none" strokeDasharray="6 7"/>
+            <circle cx="200" cy="200" r="128" stroke="rgba(212,175,55,0.08)" strokeWidth="0.5" fill="none"/>
+            <polygon points="200,42 368,322 32,322" stroke="#D4AF37" strokeWidth="1.4" fill="none" opacity="0.65" filter="url(#syGlow)"/>
+            <polygon points="200,78 348,306 52,306" stroke="#D4AF37" strokeWidth="1.1" fill="none" opacity="0.48"/>
+            <polygon points="200,108 328,290 72,290" stroke="#D4AF37" strokeWidth="0.85" fill="none" opacity="0.34"/>
+            <polygon points="200,140 308,274 92,274" stroke="#D4AF37" strokeWidth="0.65" fill="none" opacity="0.22"/>
+            <polygon points="200,358 32,78 368,78" stroke="#D4AF37" strokeWidth="1.3" fill="none" opacity="0.60" filter="url(#syGlow)"/>
+            <polygon points="200,322 52,94 348,94" stroke="#D4AF37" strokeWidth="1.0" fill="none" opacity="0.44"/>
+            <polygon points="200,290 72,110 328,110" stroke="#D4AF37" strokeWidth="0.80" fill="none" opacity="0.30"/>
+            <polygon points="200,262 92,126 308,126" stroke="#D4AF37" strokeWidth="0.60" fill="none" opacity="0.18"/>
+            <circle cx="200" cy="200" r="14" fill="rgba(212,175,55,0.08)" stroke="rgba(212,175,55,0.4)" strokeWidth="0.8"/>
+            <circle cx="200" cy="200" r="6" fill="rgba(212,175,55,0.70)" filter="url(#syGlow)"/>
             <circle cx="200" cy="200" r="2.5" fill="#D4AF37"/>
           </svg>
+
+          {/* Sovereign Halo ring — tier-colored glowing border */}
+          {haloConfig && (
+            <div
+              className="avatar-halo"
+              style={{
+                animation: userRank === 1 ? 'haloPrana 3s ease-in-out infinite'
+                  : userRank === 2 ? 'haloSiddha 3s ease-in-out infinite'
+                  : 'haloAkasha 3s ease-in-out infinite',
+              }}
+            />
+          )}
+
           <div style={{position:'relative',zIndex:1}}>
-            <Avatar style={{width:100,height:100,border:'2px solid rgba(212,175,55,0.45)',boxShadow:'0 0 40px rgba(212,175,55,0.15)'}}>
+            <Avatar style={{
+              width:100,height:100,
+              border: haloConfig
+                ? `2px solid ${haloConfig.color}`
+                : '2px solid rgba(212,175,55,0.45)',
+              boxShadow: haloConfig
+                ? `0 0 40px ${haloConfig.shadow}`
+                : '0 0 40px rgba(212,175,55,0.15)',
+            }}>
               <AvatarImage src={profile?.avatar_url || undefined} />
               <AvatarFallback style={{background:'rgba(212,175,55,0.08)',color:'white',fontSize:36}}>
                 {userName?.charAt(0) || '🧘'}
               </AvatarFallback>
             </Avatar>
           </div>
-          <button onClick={() => setProfileEditOpen(true)} style={{position:'absolute',bottom:0,right:0,width:30,height:30,borderRadius:'50%',background:'#D4AF37',border:'2px solid #050505',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',zIndex:2}}>
+
+          {/* Edit button */}
+          <button
+            onClick={() => setProfileEditOpen(true)}
+            style={{position:'absolute',bottom:haloConfig ? 6 : 0,right:haloConfig ? 6 : 0,width:30,height:30,borderRadius:'50%',background:'#D4AF37',border:'2px solid #050505',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',zIndex:4}}
+          >
             <Pencil size={11} color="#050505" />
           </button>
+
+          {/* Tier badge dot — bottom-right of avatar circle */}
+          {haloConfig && (
+            <div
+              className="avatar-tier-badge"
+              style={{
+                background: userRank === 1 ? 'rgba(34,211,238,0.15)'
+                  : userRank === 2 ? 'rgba(168,85,247,0.15)'
+                  : 'rgba(212,175,55,0.15)',
+                color: haloConfig.color,
+                boxShadow: `0 0 10px ${haloConfig.shadow}`,
+              }}
+              title={haloConfig.label}
+            >
+              {haloConfig.badge}
+            </div>
+          )}
         </div>
 
         <h1 className="hero-name">{userName}</h1>
-        <div className="soul-label">528Hz Resonance <span>·</span> {dashaCycle} Cycle Active</div>
 
+        {/* Minimalist tier status — single line, expandable */}
+        {tierBlueprintLine && (
+          <div style={{marginBottom:6}}>
+            <button
+              type="button"
+              className="tier-status-badge"
+              onClick={() => setBlueprintOpen(o => !o)}
+              style={{color: haloConfig?.color || '#D4AF37'}}
+            >
+              <span style={{fontSize:8}}>{haloConfig?.badge}</span>
+              <span>Tier: {tierBlueprintLine}</span>
+              <span style={{fontSize:8,opacity:0.6,transform:blueprintOpen?'rotate(180deg)':'none',display:'inline-block',transition:'transform 0.3s'}}>▾</span>
+            </button>
+            <div
+              className="tier-blueprint-expand"
+              style={{maxHeight:blueprintOpen?200:0,opacity:blueprintOpen?1:0}}
+            >
+              <div style={{
+                background:'rgba(255,255,255,0.02)',
+                border:`1px solid ${haloConfig?.color ? haloConfig.color + '33' : 'rgba(212,175,55,0.2)'}`,
+                borderRadius:16,padding:'14px 20px',margin:'8px auto 0',
+                maxWidth:320,textAlign:'left',
+              }}>
+                {userRank === 1 && (
+                  <ul className="tier-features" style={{margin:0}}>
+                    <li>Full Vedic Jyotish + Chat</li>
+                    <li>Full Ayurvedic Scan + Chat</li>
+                    <li>Vastu Guide for Home</li>
+                    <li>All Healing Music + Divine Transmission Audios</li>
+                    <li>Full Meditation & Mantra Library</li>
+                  </ul>
+                )}
+                {userRank === 2 && (
+                  <ul className="tier-features" style={{margin:0}}>
+                    <li>Digital Nadi Scanner (Bio-Sync)</li>
+                    <li>Practice Scantions (Printed Results)</li>
+                    <li>Siddha Portal Access</li>
+                    <li>Full Healing Audios & Transmissions</li>
+                    <li>Sri Yantra Universal Protection Shield</li>
+                  </ul>
+                )}
+                {userRank >= 3 && (
+                  <ul className="tier-features" style={{margin:0}}>
+                    <li>All Siddha–Quantum features</li>
+                    <li>Akashic Record Decoder</li>
+                    <li>Quantum Apothecary + Virtual Pilgrimage</li>
+                    <li>Siddha Portal Access</li>
+                    <li>Eternal — No Renewals</li>
+                  </ul>
+                )}
+                <button
+                  type="button"
+                  onClick={() => navigate(userRank===1?'/prana-flow':userRank===2?'/siddha-quantum':'/akasha-infinity')}
+                  style={{marginTop:12,display:'block',width:'100%',background:'transparent',color:haloConfig?.color||'#D4AF37',border:`1px solid ${haloConfig?.color||'#D4AF37'}44`,borderRadius:100,padding:'9px 16px',fontFamily:'Montserrat,sans-serif',fontWeight:800,fontSize:8,letterSpacing:'0.35em',textTransform:'uppercase',cursor:'pointer'}}
+                >
+                  ◈ Open Portal →
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="soul-label">528Hz Resonance <span>·</span> {dashaCycle} Cycle Active</div>
 
         <div className="stats-row">
           <div className="stat-pill">
@@ -665,10 +815,18 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           </div>
         </div>
 
+        {/* About the Nexus — visible without heavy scrolling */}
+        <div className="nexus-block">
+          <div className="nexus-block-label">◈ About the Nexus</div>
+          <p className="nexus-block-text">
+            The <strong>Sacred Healing Nexus</strong> is a living bio-digital field — a convergence of <strong>Vedic intelligence</strong>, sacred sound frequencies, and quantum resonance protocols. Every module is encoded with healing intention and activated through <strong>scalar transmission</strong> to open the Anahata field for all seekers who enter. Your presence here is not coincidence — it is a soul-level alignment.
+          </p>
+        </div>
+
       </section>
 
-      {/* ── TIERS ── */}
-      <div className="section-wrap">
+      {/* ── TIERS — hidden for paid members (they see the halo + blueprint instead) ── */}
+      {userRank === 0 && <div className="section-wrap">
         <div className="section-label">◈ Your Ascension Frequency</div>
         <div className="tier-grid">
 
@@ -828,7 +986,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
             {userRank >= 3 ? '◈ Field Active — Open Portal ∞' : '◈ Enter the Akashic Field ∞'}
           </button>
         </div>
-      </div>
+      </div>}
 
       {/* ── VEDIC SIDDHIS ── */}
       <div className="section-wrap">
