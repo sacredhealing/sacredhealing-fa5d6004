@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -64,5 +64,8 @@ export function useDailyLive() {
     return ((data as unknown) as DailySession[] | null) || [];
   }, []);
 
-  return { createRoom, endSession, fetchActiveSessions, activeSession, isCreating, setActiveSession };
+  return useMemo(
+    () => ({ createRoom, endSession, fetchActiveSessions, activeSession, isCreating, setActiveSession }),
+    [createRoom, endSession, fetchActiveSessions, activeSession, isCreating]
+  );
 }

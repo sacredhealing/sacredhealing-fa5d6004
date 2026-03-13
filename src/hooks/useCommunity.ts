@@ -314,6 +314,7 @@ export const useChatRoom = (roomId: string) => {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchMessages = async () => {
+    if (!roomId) return;
     const { data: messagesData, error } = await supabase
       .from('chat_messages')
       .select('*')
@@ -341,6 +342,7 @@ export const useChatRoom = (roomId: string) => {
   };
 
   useEffect(() => {
+    if (!roomId) return;
     fetchMessages();
 
     // Subscribe to realtime updates

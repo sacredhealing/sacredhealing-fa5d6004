@@ -272,6 +272,7 @@ export const useCircleMessages = (roomId: string) => {
   const optimisticMessagesRef = useRef<Map<string, CircleMessage>>(new Map());
 
   const fetchMessages = useCallback(async () => {
+    if (!roomId) return;
     const { data: messagesData, error } = await supabase
       .from('chat_messages')
       .select('*')
@@ -316,6 +317,7 @@ export const useCircleMessages = (roomId: string) => {
   }, [roomId]);
 
   useEffect(() => {
+    if (!roomId) return;
     fetchMessages();
 
     // Subscribe to realtime updates

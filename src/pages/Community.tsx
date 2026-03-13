@@ -694,29 +694,43 @@ const CSS = `
 .c-video-call-btn:hover { background:linear-gradient(135deg,rgba(34,211,238,.2),rgba(34,211,238,.3)); }
 .c-video-call-btn:disabled { opacity:.4; cursor:default; }
 
-/* ── JOIN LIVE BANNER ── */
-.c-live-banner {
+/* ── LIVE PILL (small, in header, max 36px, dismissible) ── */
+.c-live-pill-wrap {
   flex-shrink: 0;
-  margin: 0 14px 0;
-}
-.c-live-join-btn {
-  width: 100%;
-  padding: 12px 16px;
-  margin: 8px 0;
-  background: linear-gradient(135deg, rgba(255,59,48,.12), rgba(212,175,55,.12));
-  border: 1px solid rgba(255,59,48,.25);
-  border-radius: 16px;
-  color: #ff6b61;
-  font-weight: 800;
-  font-size: 13px;
-  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 10px;
-  transition: all .2s;
+  gap: 6px;
+  max-height: 36px;
+  margin-left: auto;
 }
-.c-live-join-btn:hover {
-  background: linear-gradient(135deg, rgba(255,59,48,.2), rgba(212,175,55,.18));
+.c-live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-height: 36px;
+  padding: 4px 10px;
+  background: linear-gradient(135deg, rgba(255,59,48,.15), rgba(212,175,55,.12));
+  border: 1px solid rgba(255,59,48,.3);
+  border-radius: 18px;
+  color: #ff6b61;
+  font-weight: 700;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all .2s;
+  white-space: nowrap;
+}
+.c-live-pill:hover {
+  background: linear-gradient(135deg, rgba(255,59,48,.25), rgba(212,175,55,.18));
+}
+.c-live-pill-dismiss {
+  padding: 2px 6px;
+  font-size: 12px;
+  color: rgba(255,255,255,.5);
+  cursor: pointer;
+  border-radius: 50%;
+}
+.c-live-pill-dismiss:hover {
+  color: rgba(255,255,255,.9);
 }
 
 /* ── LIVE IFRAME ── */
@@ -898,6 +912,7 @@ const Community = () => {
   const [likingPostId, setLikingPostId] = useState<string | null>(null);
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
   const [dmVideoUrl, setDmVideoUrl] = useState<string | null>(null);
+  const [dismissedLiveChannels, setDismissedLiveChannels] = useState<Set<string>>(new Set());
 
   const memberNameMapRef = useRef<Record<string, string>>({});
   const memberNameMap = useMemo(() => {
@@ -1389,8 +1404,10 @@ const Community = () => {
     }
 
     fetchMessages(activeChannel);
-    // Check for active live sessions once when channel changes
-    daily.fetchActiveSessions(activeChannel).then(setViewerSessions);
+    // Fetch live sessions once on mount, then poll every 30s (no infinite loop)
+    const fetchSessions = () => daily.fetchActiveSessions(activeChannel).then(setViewerSessions);
+    fetchSessions();
+    const pollInterval = setInterval(fetchSessions, 30000);
 
     // Realtime subscription for messages in this room
     const channel = supabase
@@ -1445,10 +1462,11 @@ const Community = () => {
       .subscribe();
 
     return () => {
+      clearInterval(pollInterval);
       supabase.removeChannel(channel);
       supabase.removeChannel(liveChannel);
     };
-  }, [activeChannel, fetchMessages, roomIds, daily, user]);
+  }, [activeChannel, fetchMessages, roomIds, daily.fetchActiveSessions, user]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -1861,6 +1879,31 @@ const Community = () => {
                       ⬛ END LIVE
                     </button>
                   )}
+                  {/* Live pill: small dismissible pill in header, max 36px, does not block chat */}
+                  {!isDmChannel(activeChannel) && !liveRoomUrl && viewerSessions.length > 0 && !dismissedLiveChannels.has(activeChannel) && (
+                    <div className="c-live-pill-wrap">
+                      {viewerSessions.slice(0, 1).map((s) => (
+                        <div key={s.id} className="c-live-pill">
+                          <span
+                            style={{ animation: "pulse 1.5s ease-in-out infinite" }}
+                            onClick={() => s.room_url && setLiveRoomUrl(s.room_url)}
+                          >
+                            🔴
+                          </span>
+                          <span onClick={() => s.room_url && setLiveRoomUrl(s.room_url)}>
+                            LIVE: {s.title.length > 20 ? s.title.slice(0, 20) + "…" : s.title}
+                          </span>
+                          <span
+                            className="c-live-pill-dismiss"
+                            onClick={() => setDismissedLiveChannels((prev) => new Set(prev).add(activeChannel!))}
+                            aria-label="Dismiss"
+                          >
+                            ✕
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* DM Video call iframe */}
@@ -1880,23 +1923,6 @@ const Community = () => {
                       src={liveRoomUrl}
                       allow="camera;microphone;fullscreen;display-capture"
                     />
-                  </div>
-                )}
-
-                {/* Viewer: active live session banner (group only, when not already watching) */}
-                {!isDmChannel(activeChannel) && !liveRoomUrl && viewerSessions.length > 0 && (
-                  <div className="c-live-banner">
-                    {viewerSessions.map((s) => (
-                      <button
-                        key={s.id}
-                        className="c-live-join-btn"
-                        onClick={() => s.room_url && setLiveRoomUrl(s.room_url)}
-                      >
-                        <span style={{ animation: "pulse 1.5s ease-in-out infinite" }}>🔴</span>
-                        LIVE NOW: {s.title}
-                        <span style={{ marginLeft: "auto", fontSize: "10px", color: "rgba(255,255,255,.4)" }}>TAP TO JOIN</span>
-                      </button>
-                    ))}
                   </div>
                 )}
 
