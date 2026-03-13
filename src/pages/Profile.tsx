@@ -1117,6 +1117,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
             </div>
             <span className="archive-cta">Enter Reading →</span>
           </div>
+          {hasFeatureAccess(isAdmin, tier, 2) ? (
           <div className="archive-card" onClick={() => navigate('/digital-nadi')}>
             <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
               <div style={{width:44,height:44,borderRadius:13,background:'rgba(212,175,55,0.06)',border:'1px solid rgba(212,175,55,0.18)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginBottom:14}}>
@@ -1133,6 +1134,20 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
             </div>
             <span className="archive-cta">Initiate Scan →</span>
           </div>
+          ) : (
+          <div className="archive-card" onClick={() => navigate('/siddha-quantum')} style={{ opacity: 0.9, borderColor: 'rgba(212,175,55,0.15)' }}>
+            <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
+              <div style={{width:44,height:44,borderRadius:13,background:'rgba(212,175,55,0.06)',border:'1px solid rgba(212,175,55,0.18)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginBottom:14,opacity:0.7}}>
+                <Lock size={18} color="rgba(212,175,55,0.5)" />
+              </div>
+              <div>
+                <span className="archive-title">Digital Nadi Scan</span>
+                <span className="archive-sub">72,000 Nadi Bio-Sync — Siddha Quantum+ only</span>
+              </div>
+            </div>
+            <span className="archive-cta">Upgrade to Siddha Quantum →</span>
+          </div>
+          )}
           <div className="archive-card" onClick={() => navigate('/life-book')}>
             <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
               <div style={{width:44,height:44,borderRadius:13,background:'rgba(212,175,55,0.06)',border:'1px solid rgba(212,175,55,0.18)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginBottom:14}}>
