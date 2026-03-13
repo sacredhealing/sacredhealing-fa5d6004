@@ -1258,7 +1258,7 @@ const Community = () => {
     };
 
     const loadRooms = async () => {
-      const { data, error } = await supabase.from("chat_rooms").select("id, name, type");
+      const { data, error } = await supabase.from("chat_rooms").select("id, name");
       if (error) {
         console.error("Error loading chat rooms:", error);
         return;
@@ -1278,16 +1278,9 @@ const Community = () => {
       const missingChannels = CHANNELS.filter((ch) => !map[ch.id]);
       if (missingChannels.length > 0) {
         const createPromises = missingChannels.map(async (ch) => {
-          const roomType = ch.id === "stargate" ? "stargate" : ch.id === "andlig-transformation" ? "andlig" : "community";
           const { data: created, error: createErr } = await supabase
             .from("chat_rooms")
-            .insert({
-              name: ch.name,
-              description: ch.description ?? "Community channel",
-              created_by: user.id,
-              type: roomType,
-              is_active: true,
-            } as any)
+            .insert({ name: ch.name, created_by: user.id })
             .select("id")
             .single();
           if (!createErr && created?.id) return { channelId: ch.id, roomId: (created as any).id };
@@ -1330,48 +1323,38 @@ const Community = () => {
     };
   }, [user?.id]);
 
-  // Ensure room exists for a channel (create if missing) — used when channel opens with no room
+  // Ensure room exists for a channel (create if missing) — chat_rooms has id, name, created_at only
   const ensureRoomForChannel = useCallback(
     async (channelId: string) => {
       if (!user || !channelId || isDmChannel(channelId)) return;
       if (roomIdsRef.current[channelId]) return;
       const logical = CHANNELS.find((c) => c.id === channelId);
-      const baseType =
-        logical?.id === "stargate"
-          ? "stargate"
-          : logical?.id === "andlig-transformation"
-          ? "andlig"
-          : "community";
+      const channelName = logical?.name || channelId;
       try {
-        const { data: created, error: createErr } = await supabase
+        // Query by name first
+        let { data: room } = await supabase
           .from("chat_rooms")
-          .insert({
-            name: logical?.name || channelId,
-            description: logical?.description ?? "Community channel",
-            created_by: user.id,
-            type: baseType,
-            is_active: true,
-          } as any)
           .select("id")
-          .single();
+          .eq("name", channelName)
+          .maybeSingle();
 
-        let roomId: string | null = null;
-        if (!createErr && created?.id) {
-          roomId = (created as any).id;
-        } else {
-          const channelName = logical?.name || channelId;
-          const { data: byName } = await supabase.from("chat_rooms").select("id").eq("name", channelName).limit(1);
-          if (byName && byName.length > 0) roomId = (byName[0] as any).id;
-          else {
-            const { data: byType } = await supabase.from("chat_rooms").select("id").eq("type", baseType).eq("is_active", true).limit(1);
-            if (byType && byType.length > 0) roomId = (byType[0] as any).id;
-            else {
-              const { data: anyRoom } = await supabase.from("chat_rooms").select("id").eq("is_active", true).limit(1);
-              if (anyRoom && anyRoom.length > 0) roomId = (anyRoom[0] as any).id;
-            }
+        if (!room) {
+          // Insert name only (created_by if schema requires it for RLS)
+          const { data: newRoom, error } = await supabase
+            .from("chat_rooms")
+            .insert({ name: channelName, created_by: user.id })
+            .select("id")
+            .single();
+          if (!error && newRoom) {
+            room = newRoom;
+          } else {
+            // Insert failed — re-query by name in case room exists
+            const { data: existing } = await supabase.from("chat_rooms").select("id").eq("name", channelName).maybeSingle();
+            if (existing) room = existing;
+            else console.error("Failed to create chat room:", error);
           }
         }
-        if (roomId) setRoomIds((prev) => ({ ...prev, [channelId]: roomId! }));
+        if (room?.id) setRoomIds((prev) => ({ ...prev, [channelId]: room!.id }));
       } catch (e) {
         console.warn("Could not ensure room for channel:", channelId, e);
       }
@@ -1806,68 +1789,29 @@ const Community = () => {
     if (!roomId) {
       try {
         const logical = CHANNELS.find((c) => c.id === activeChannel);
-        const baseType =
-          logical?.id === "stargate"
-            ? "stargate"
-            : logical?.id === "andlig-transformation"
-            ? "andlig"
-            : "community";
+        const channelName = logical?.name || activeChannel;
 
-        // Try to create the room
-        const { data: created, error: createError } = await supabase
-          .from("chat_rooms")
-          .insert({
-            name: logical?.name || activeChannel,
-            description: logical?.description || "Community channel",
-            created_by: user.id,
-            ...(typeof baseType === "string" && { type: baseType }),
-          } as any)
-          .select("id")
-          .single();
-
-        if (!createError && created?.id) {
-          roomId = created.id as string;
-        } else {
-          // Fallback: find existing room by name (try exact, then "Community Lounge" for main channel)
-          const channelName = logical?.name || activeChannel;
-          let { data: byName } = await supabase.from("chat_rooms").select("id").eq("name", channelName).eq("is_active", true).limit(1);
-          if ((!byName || byName.length === 0) && activeChannel === "divine-sangha") {
-            const fallback = await supabase.from("chat_rooms").select("id").eq("name", "Community Lounge").eq("is_active", true).limit(1);
-            byName = fallback.data;
-          }
-
-          if (byName && byName.length > 0) {
-            roomId = (byName[0] as any).id;
-          } else {
-            // Try by type
-            const { data: byType } = await supabase
-              .from("chat_rooms")
-              .select("id")
-              .eq("type", baseType)
-              .eq("is_active", true)
-              .limit(1);
-
-            if (byType && byType.length > 0) {
-              roomId = (byType[0] as any).id;
-            } else {
-              // Last resort: use ANY active community room so user can chat
-              const { data: anyRoom } = await supabase
-                .from("chat_rooms")
-                .select("id")
-                .eq("is_active", true)
-                .limit(1);
-              if (anyRoom && anyRoom.length > 0) {
-                roomId = (anyRoom[0] as any).id;
-              } else {
-                console.error("Failed to auto-create or find chat room:", createError);
-                toast.error("Could not set up this channel. Please try again.");
-                return;
-              }
-            }
+        // Query by name first
+        let { data: room } = await supabase.from("chat_rooms").select("id").eq("name", channelName).maybeSingle();
+        if (!room) {
+          const { data: newRoom, error } = await supabase
+            .from("chat_rooms")
+            .insert({ name: channelName, created_by: user.id })
+            .select("id")
+            .single();
+          if (!error && newRoom) room = newRoom;
+          else {
+            const { data: existing } = await supabase.from("chat_rooms").select("id").eq("name", channelName).maybeSingle();
+            if (existing) room = existing;
           }
         }
-
-        setRoomIds((prev) => ({ ...prev, [activeChannel]: roomId! }));
+        if (room?.id) {
+          roomId = room.id;
+          setRoomIds((prev) => ({ ...prev, [activeChannel]: roomId! }));
+        } else {
+          toast.error("Could not set up this channel. Please try again.");
+          return;
+        }
       } catch (e) {
         console.error("Error while ensuring chat room exists:", e);
         toast.error("Channel is not configured yet.");
