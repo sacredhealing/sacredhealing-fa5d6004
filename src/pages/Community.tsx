@@ -1175,10 +1175,9 @@ const Community = () => {
           // user_roles may not exist or RLS blocks; continue without admin list
         }
 
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("*")
-          .limit(500);
+        let query = supabase.from("profiles").select("*").limit(500);
+        if (user?.id) query = query.neq("user_id", user.id);
+        const { data, error } = await query;
 
         if (error) {
           console.error("Error loading members:", error);
@@ -1954,13 +1953,13 @@ const Community = () => {
                       const consecutive = prev && prev.user_id === msg.user_id;
                       return (
                         <div key={msg.id} className={`c-msg-row ${isMine ? "mine" : ""} ${consecutive ? "consecutive" : ""}`}>
-                          <div className={`c-avatar ${isMine ? "mine" : ""} ${consecutive ? "hidden" : ""}`}>
+                          <div className={`c-avatar ${isMine ? "mine" : ""} ${consecutive || isMine ? "hidden" : ""}`}>
                             {getInitials(msg.user_name || (isMine ? "ME" : undefined))}
                           </div>
                           <div className="c-msg-body">
-                            {!consecutive && (
+                            {!consecutive && !isMine && (
                               <div className="c-msg-meta">
-                                <span className="c-msg-author">{msg.user_name || (isMine ? "You" : "Member")}</span>
+                                <span className="c-msg-author">{msg.user_name || "Member"}</span>
                               </div>
                             )}
                             <div className={`c-bubble ${isMine ? "mine" : ""}`}>
