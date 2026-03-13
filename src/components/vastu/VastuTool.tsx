@@ -258,11 +258,12 @@ export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
     <div
       style={{
         display: 'flex',
+        flex: 1,
+        minHeight: 0,
         height: '100%',
-        minHeight: 'min(720px, 100vh - 32px)',
         position: 'relative',
         overflow: 'hidden',
-        borderRadius: '28px',
+        borderRadius: '16px',
         border: '1px solid rgba(212,175,55,0.15)',
         background: '#050505',
         boxShadow: '0 0 80px rgba(212,175,55,0.06), 0 40px 100px rgba(0,0,0,0.6)',
@@ -349,7 +350,7 @@ export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
         }}
-        className={`fixed md:relative z-50 md:z-auto top-0 left-0 h-full w-64 transition-transform duration-300 ${
+        className={`fixed md:relative z-50 md:z-auto top-0 left-0 h-full w-64 max-w-[85vw] transition-transform duration-300 ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
@@ -485,9 +486,10 @@ export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
       <div
         style={{
           flex: 1,
+          minHeight: 0,
+          minWidth: 0,
           display: 'flex',
           flexDirection: 'column',
-          minWidth: 0,
           position: 'relative',
           zIndex: 1,
         }}
@@ -497,8 +499,9 @@ export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '16px',
-            padding: '14px 20px',
+            gap: '12px',
+            padding: '12px 14px',
+            flexShrink: 0,
             background:
               'linear-gradient(135deg, rgba(212,175,55,0.08) 0%, rgba(255,255,255,0.02) 100%)',
             borderBottom: '1px solid rgba(212,175,55,0.12)',

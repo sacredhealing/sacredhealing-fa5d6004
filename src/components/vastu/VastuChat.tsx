@@ -61,14 +61,14 @@ const AudioTransmissionCard: React.FC<AudioTransmissionCardProps> = ({ id, title
 
   return (
     <div style={{
-      margin:'20px 0', background:'rgba(212,175,55,0.03)',
-      border:'1px solid rgba(212,175,55,0.18)', borderRadius:'28px',
+      margin:'16px 0', background:'rgba(212,175,55,0.03)',
+      border:'1px solid rgba(212,175,55,0.18)', borderRadius:'20px',
       overflow:'hidden', position:'relative',
     }}>
       <div aria-hidden style={{ position:'absolute', top:0, left:0, right:0, height:'1px',
         background:'linear-gradient(90deg,transparent,rgba(212,175,55,0.5),transparent)' }} />
-      <div style={{ padding:'22px', display:'flex', alignItems:'flex-start', gap:'16px' }}>
-        <div style={{ width:48, height:48, borderRadius:'16px', flexShrink:0,
+      <div style={{ padding:'16px', display:'flex', alignItems:'flex-start', gap:'12px', flexWrap:'wrap' }}>
+        <div style={{ width:44, height:44, borderRadius:'14px', flexShrink:0,
           background: GOLD_DIM, border:'1px solid rgba(212,175,55,0.3)',
           display:'flex', alignItems:'center', justifyContent:'center',
           fontSize:'22px', boxShadow:'0 0 20px rgba(212,175,55,0.15)' }}>🕉</div>
@@ -165,8 +165,8 @@ const renderMsgContent = (text: string): React.ReactNode => {
 const WelcomeScreen: React.FC<{onSendMessage:(t:string)=>void}> = ({onSendMessage}) => (
   <div style={{
     flex:1, display:'flex', flexDirection:'column', alignItems:'center',
-    justifyContent:'center', textAlign:'center', padding:'40px 24px',
-    maxWidth:'620px', margin:'0 auto', width:'100%',
+    justifyContent:'center', textAlign:'center', padding:'24px 16px',
+    maxWidth:'620px', margin:'0 auto', width:'100%', minHeight:0,
   }}>
     {/* Animated Yantra */}
     <div style={{position:'relative',width:130,height:130,marginBottom:'28px'}}>
@@ -228,8 +228,8 @@ const WelcomeScreen: React.FC<{onSendMessage:(t:string)=>void}> = ({onSendMessag
 
     {/* CTA cards */}
     <div style={{
-      display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(210px,1fr))',
-      gap:'12px', width:'100%', maxWidth:'490px',
+      display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,180px),1fr))',
+      gap:'10px', width:'100%', maxWidth:'490px',
     }}>
       {[
         { label:'Initiate Path →', title:'The Living Field', icon:'🏛️',
@@ -240,7 +240,7 @@ const WelcomeScreen: React.FC<{onSendMessage:(t:string)=>void}> = ({onSendMessag
           msg:'I have photos of my room from multiple angles. I request a holistic Diagnostic Darshan.' },
       ].map(card=>(
         <button key={card.label} onClick={()=>onSendMessage(card.msg)} style={{
-          padding:'22px 20px', textAlign:'left', cursor:'pointer',
+          padding:'18px 16px', textAlign:'left', cursor:'pointer',
           background: GLASS, border:`1px solid ${BORDER}`, borderRadius:'24px',
           fontFamily:'inherit', transition:'all 0.25s',
         }}
@@ -317,7 +317,7 @@ export const VastuChatWindow: React.FC<VastuChatWindowProps> = ({
   const canSubmit = (inputValue.trim() || selectedImages.length > 0) && !isThinking;
 
   return (
-    <div style={{display:'flex',flexDirection:'column',height:'100%',
+    <div style={{display:'flex',flexDirection:'column',flex:1,minHeight:0,
       background: AKASHA, overflow:'hidden', position:'relative'}}>
 
       {/* gold shimmer line top */}
@@ -328,8 +328,9 @@ export const VastuChatWindow: React.FC<VastuChatWindowProps> = ({
 
       {/* ── MESSAGES ── */}
       <div ref={scrollRef} style={{
-        flexGrow:1, overflowY:'auto', padding:'28px 20px',
-        display:'flex', flexDirection:'column', gap:'18px',
+        flex:1, minHeight:0, overflowY:'auto', overflowX:'hidden',
+        padding:'16px 12px', WebkitOverflowScrolling:'touch',
+        display:'flex', flexDirection:'column', gap:'14px',
         scrollbarWidth:'none',
       }}>
         {messages.length===0 && <WelcomeScreen onSendMessage={onSendMessage}/>}
@@ -350,7 +351,7 @@ export const VastuChatWindow: React.FC<VastuChatWindowProps> = ({
             )}
 
             <div style={{
-              maxWidth:'82%', padding:'18px 22px',
+              maxWidth:'min(82%, 320px)', padding:'14px 16px',
               background: msg.role==='user'
                 ? 'linear-gradient(135deg,rgba(212,175,55,0.15),rgba(212,175,55,0.07))'
                 : GLASS,
@@ -412,12 +413,12 @@ export const VastuChatWindow: React.FC<VastuChatWindowProps> = ({
 
       {/* ── INPUT AREA ── */}
       <div style={{
-        padding:'14px 18px 18px',
+        flexShrink:0, padding:'12px 14px 14px',
         background:'rgba(255,255,255,0.015)',
         borderTop:`1px solid ${BORDER}`,
         backdropFilter:'blur(30px)', WebkitBackdropFilter:'blur(30px)',
       }}>
-        <form onSubmit={handleSubmit} style={{maxWidth:'860px',margin:'0 auto'}}>
+        <form onSubmit={handleSubmit} style={{maxWidth:'860px',margin:'0 auto',width:'100%'}}>
           {selectedImages.length>0&&(
             <div style={{marginBottom:'12px',background:'rgba(212,175,55,0.04)',
               border:'1px solid rgba(212,175,55,0.15)',borderRadius:'18px',padding:'12px'}}>
@@ -449,10 +450,10 @@ export const VastuChatWindow: React.FC<VastuChatWindowProps> = ({
               </div>
             </div>)}
 
-          <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
+          <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
             <button type="button" onClick={()=>fileInputRef.current?.click()}
               title="Upload room photos for diagnostic"
-              style={{flexShrink:0,width:48,height:48,borderRadius:'16px',
+              style={{flexShrink:0,width:44,height:44,borderRadius:'14px',
                 background:GLASS,border:`1px solid ${BORDER}`,
                 color:'rgba(255,255,255,0.45)',fontSize:'20px',cursor:'pointer',
                 display:'flex',alignItems:'center',justifyContent:'center',
@@ -468,7 +469,7 @@ export const VastuChatWindow: React.FC<VastuChatWindowProps> = ({
                 placeholder="Direct your inquiry to the Architect…"
                 disabled={isThinking}
                 style={{width:'100%',background:GLASS,border:`1px solid ${BORDER}`,
-                  borderRadius:'16px',padding:'14px 60px 14px 20px',
+                  borderRadius:'14px',padding:'12px 52px 12px 16px',
                   fontSize:'13px',color:'#fff',outline:'none',
                   fontFamily:'inherit',boxSizing:'border-box',transition:'border-color 0.2s,box-shadow 0.2s'}}
                 onFocus={e=>{e.target.style.borderColor='rgba(212,175,55,0.4)';
@@ -489,8 +490,8 @@ export const VastuChatWindow: React.FC<VastuChatWindowProps> = ({
             </div>
           </div>
 
-          <div style={{display:'flex',justifyContent:'center',gap:'28px',
-            marginTop:'10px',overflowX:'auto'}}>
+          <div style={{display:'flex',justifyContent:'center',gap:'12px',
+            marginTop:'8px',overflowX:'auto',flexWrap:'wrap',paddingBottom:'4px'}}>
             {[['💧','Wealth (North)','#60a5fa'],['🔥','Energy (SE)','#f87171'],
               ['⛰','Stability (SW)',GOLD],['☀️','Grace (NE)','#fbbf24']].map(([icon,label,color])=>(
               <div key={label as string} style={{display:'flex',alignItems:'center',gap:'5px',
