@@ -157,6 +157,7 @@ const AkashaInfinity: React.FC = () => {
     'Quantum Apothecary (€888 value)',
     'Virtual Pilgrimage (€888 value)',
     'Palm Reading Portal',
+    'Siddha Portal Access',
     'Sri Yantra Universal Protection Shield',
     'Unlimited Vayu field (beyond 1 km)',
     'All future modules included',

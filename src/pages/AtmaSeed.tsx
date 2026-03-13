@@ -292,6 +292,7 @@ const AtmaSeed: React.FC = () => {
           {[
             { icon: 'flame', title: 'Free Meditations & Mantras', status: 'Active' },
             { icon: 'shield', title: 'Free Healing Audios', status: 'Active' },
+            { icon: 'signal', title: 'Free Divine Transmission Audios', status: 'Active' },
             { icon: 'clock', title: 'Free Breathing Protocols', status: 'Active' },
             { icon: 'globe', title: 'Vayu Scrubber — 1km', status: 'Running' },
             { icon: 'signal', title: 'Community Chat & Live', status: 'Active' },

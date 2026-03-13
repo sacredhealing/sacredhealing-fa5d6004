@@ -681,6 +681,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
             <ul className="tier-features">
               <li>Free Meditations & Mantras</li>
               <li>Free Healing Audios</li>
+              <li>Free Divine Transmission Audios</li>
               <li>Free Breathing Protocols</li>
               <li>Vayu Scrubber (1km)</li>
               <li>Community Chat & Live</li>
@@ -715,6 +716,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               <li>Full Ayurvedic Scan + Chat</li>
               <li>Vastu Guide for Home</li>
               <li>Access to All Healing Music</li>
+              <li>Divine Transmission Audios</li>
               <li>Full Meditation & Mantra Library</li>
             </ul>
             <button
@@ -798,6 +800,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           <ul className="tier-features" style={{margin:'20px 0',display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))'}}>
             <li>Akashic Decoder</li><li>Quantum Apothecary (€888 Value)</li>
             <li>Virtual Pilgrimage (€888 Value)</li><li>Palm Reading Portal</li>
+            <li>Siddha Portal Access</li>
             <li>Sri Yantra Universal Protection Shield</li>
           </ul>
           <button

@@ -149,6 +149,7 @@ const PranaFlow: React.FC = () => {
     { title: 'Full Ayurvedic Scan + Chat', desc: 'Prakriti and Vikriti assessment, Dosha balance analysis, seasonal and daily protocols, personalised diet and lifestyle guidance, and a Vaidya for questions about your body.', badge: 'Full Access' },
     { title: 'Vastu Guide for Home', desc: 'The science of sacred space. Sacred Vastu analysis of your home — identify energy blockages, optimise room directions, harmonise your living field with cosmic forces.', badge: 'Full Access' },
     { title: 'All Healing Music — Full Library', desc: 'Every sacred frequency in the library — Solfeggio tones, Raga healing sessions, Binaural Theta states, and planetary sound sequences composed for each dosha and moon phase.', badge: 'Full Library' },
+    { title: 'Divine Transmission Audios', desc: 'Sacred transmissions encoded with high-frequency healing intelligence — channelled sound sequences that activate dormant Nadi pathways and open the Anahata field.', badge: 'Full Access' },
     { title: 'Full Meditation & Mantra Library', desc: 'Guided meditations for every state — morning Sadhana, mid-day grounding, sleep Yoga Nidra. Plus the complete Mantra library with pronunciation guides and planetary correlations.', badge: 'Full Library' },
   ];
 
@@ -473,8 +474,8 @@ const PranaFlow: React.FC = () => {
                     <div className="pf-p-tagline">Full access. Cancel anytime. No lock-in.</div>
                     <ul className="pf-p-features">
                       <li>Full Vedic Jyotish Oracle</li><li>Guru Chat</li><li>Full Ayurvedic Scan</li><li>Vaidya Chat</li>
-                      <li>Vastu Home Analysis</li><li>All Healing Music</li><li>Full Mantra Library</li><li>Meditation Library</li>
-                      <li>Yoga Nidra Sessions</li><li>Soul Blueprint</li>
+                      <li>Vastu Home Analysis</li><li>All Healing Music</li><li>Divine Transmission Audios</li><li>Full Mantra Library</li>
+                      <li>Meditation Library</li><li>Yoga Nidra Sessions</li><li>Soul Blueprint</li>
                     </ul>
                     <button type="button" className="pf-cta-btn" onClick={handleSubscribe} disabled={checkoutLoading}>
                       {checkoutLoading ? (
