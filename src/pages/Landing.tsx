@@ -6,15 +6,16 @@ const styles = `
 
   .sqi-body { background: #050505; font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
   .sqi-gold { color: #D4AF37; }
-  .sqi-glass { background: rgba(255,255,255,0.02); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); border: 1px solid rgba(255,255,255,0.06); border-radius: 32px; }
-  .sqi-glass:hover { border-color: rgba(212,175,55,0.2); }
+  .sqi-glass { background: rgba(255,255,255,0.02); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); border: 1px solid rgba(255,255,255,0.05); border-radius: 40px; }
+  .sqi-glass:hover { border-color: rgba(212,175,55,0.15); }
   .sqi-serif { font-family: 'Cormorant Garamond', serif; }
   .sqi-label { font-size: 8px; font-weight: 800; letter-spacing: 0.5em; text-transform: uppercase; color: #D4AF37; opacity: 0.7; }
-  .sqi-btn-primary { background: #D4AF37; color: #050505; font-family: 'Montserrat',sans-serif; font-weight: 800; font-size: 9px; letter-spacing: 0.4em; text-transform: uppercase; padding: 18px 40px; border: none; border-radius: 100px; cursor: pointer; box-shadow: 0 0 30px rgba(212,175,55,0.3); transition: all 0.3s ease; }
-  .sqi-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 50px rgba(212,175,55,0.5); }
-  .sqi-btn-secondary { background: rgba(255,255,255,0.02); color: #D4AF37; font-family: 'Montserrat',sans-serif; font-weight: 700; font-size: 9px; letter-spacing: 0.4em; text-transform: uppercase; padding: 17px 40px; border: 1px solid rgba(212,175,55,0.3); border-radius: 100px; cursor: pointer; transition: all 0.3s ease; }
-  .sqi-btn-secondary:hover { background: rgba(212,175,55,0.08); transform: translateY(-2px); }
-  .sqi-module:hover { transform: translateY(-6px) scale(1.02); border-color: rgba(212,175,55,0.25); box-shadow: 0 20px 60px rgba(212,175,55,0.08); }
+  .sqi-btn-primary { background: #D4AF37; color: #050505; font-family: 'Montserrat',sans-serif; font-weight: 900; font-size: 9px; letter-spacing: 0.4em; text-transform: uppercase; padding: 18px 40px; border: none; border-radius: 40px; cursor: pointer; box-shadow: 0 0 30px rgba(212,175,55,0.3); transition: all 0.3s ease; }
+  .sqi-btn-primary:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 0 50px rgba(212,175,55,0.5); }
+  .sqi-btn-primary:active { transform: scale(0.97); }
+  .sqi-btn-secondary { background: rgba(255,255,255,0.02); color: #D4AF37; font-family: 'Montserrat',sans-serif; font-weight: 800; font-size: 9px; letter-spacing: 0.4em; text-transform: uppercase; padding: 17px 40px; border: 1px solid rgba(255,255,255,0.05); border-radius: 40px; cursor: pointer; transition: all 0.3s ease; backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); }
+  .sqi-btn-secondary:hover { background: rgba(212,175,55,0.06); transform: translateY(-2px); border-color: rgba(212,175,55,0.15); }
+  .sqi-module:hover { transform: translateY(-4px) scale(1.02); border-color: rgba(212,175,55,0.15); box-shadow: 0 20px 60px rgba(212,175,55,0.06); }
   .sqi-module { transition: all 0.4s cubic-bezier(0.23,1,0.32,1); }
   .sqi-divider { width: 1px; height: 80px; background: linear-gradient(to bottom, transparent, #D4AF37, transparent); margin: 0 auto; opacity: 0.3; }
   .sqi-scanline { position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px); pointer-events: none; z-index: 1000; }

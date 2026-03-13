@@ -493,18 +493,19 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
     <style dangerouslySetInnerHTML={{__html: `
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Montserrat:wght@300;400;700;800;900&display=swap');
   .profile-wrap *,:root{--gold:#D4AF37;--black:#050505}
-  .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:80px 24px 40px;text-align:center}
-  .hero::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:600px;background:radial-gradient(ellipse,rgba(212,175,55,0.08) 0%,transparent 65%);pointer-events:none}
-  .avatar-wrap{position:relative;display:inline-block;margin-bottom:28px}
+  .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;position:relative;padding:10vh 24px 40px;text-align:center}
+  .hero::before{content:'';position:absolute;top:30%;left:50%;transform:translate(-50%,-50%);width:600px;height:600px;background:radial-gradient(ellipse,rgba(212,175,55,0.06) 0%,transparent 65%);pointer-events:none}
+  .avatar-wrap{position:relative;display:inline-block;margin-bottom:22px}
   .avatar-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,0.65) 0%,rgba(212,175,55,0.2) 40%,transparent 70%);filter:blur(22px);animation:glowBreathe 3s ease-in-out infinite;z-index:0;pointer-events:none}
   .avatar-glow-2{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,0.15) 0%,transparent 65%);filter:blur(30px);animation:glowBreathe 4s ease-in-out infinite reverse;z-index:0;pointer-events:none}
-  .hero-name{font-family:'Cormorant Garamond',serif;font-weight:300;font-style:italic;font-size:clamp(2.8rem,6vw,4.5rem);letter-spacing:-0.02em;color:white;line-height:1;margin-bottom:12px;animation:fadeUp 0.8s ease both}
-  .soul-label{font-family:'Montserrat',sans-serif;font-weight:800;font-size:clamp(5.5px,1.8vw,8px);letter-spacing:clamp(0.15em,0.4vw,0.5em);text-transform:uppercase;color:rgba(212,175,55,0.7);margin-bottom:28px;white-space:nowrap}
+  .sri-yantra-avatar-shield{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:320px;height:320px;z-index:0;pointer-events:none;animation:pulseDeep 3s cubic-bezier(0.45,0.05,0.55,0.95) infinite}
+  .hero-name{font-family:'Cormorant Garamond',serif;font-weight:300;font-style:italic;font-size:clamp(2.8rem,6vw,4.5rem);letter-spacing:-0.02em;color:white;line-height:1;margin-bottom:10px;animation:fadeUp 0.8s ease both;text-shadow:0 2px 20px rgba(0,0,0,0.8)}
+  .soul-label{font-family:'Montserrat',sans-serif;font-weight:800;font-size:clamp(5.5px,1.8vw,8px);letter-spacing:clamp(0.15em,0.4vw,0.5em);text-transform:uppercase;color:rgba(212,175,55,0.8);margin-bottom:22px;white-space:nowrap;text-shadow:0 1px 12px rgba(0,0,0,0.9)}
   .soul-label span{color:rgba(255,255,255,0.25);margin:0 8px}
-   .stats-row{display:flex;gap:12px;flex-wrap:nowrap;justify-content:center;margin-bottom:48px;animation:fadeUp 1.1s ease both;width:100%;max-width:400px;margin-left:auto;margin-right:auto}
-   .stat-pill{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:100px;padding:12px 20px;text-align:center;flex:1 1 0;min-width:0}
+  .stats-row{display:flex;gap:12px;flex-wrap:nowrap;justify-content:center;margin-bottom:40px;animation:fadeUp 1.1s ease both;width:100%;max-width:400px;margin-left:auto;margin-right:auto}
+  .stat-pill{background:rgba(5,5,5,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:100px;padding:12px 20px;text-align:center;flex:1 1 0;min-width:0;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
   .stat-value{font-weight:800;font-size:20px;color:#D4AF37;letter-spacing:-0.02em;display:block}
-  .stat-label{font-weight:400;font-size:7px;letter-spacing:0.45em;text-transform:uppercase;color:rgba(255,255,255,0.25);display:block;margin-top:2px}
+  .stat-label{font-weight:800;font-size:7px;letter-spacing:0.45em;text-transform:uppercase;color:rgba(255,255,255,0.35);display:block;margin-top:2px}
   .scroll-hint{position:absolute;bottom:36px;font-weight:800;font-size:7px;letter-spacing:0.5em;text-transform:uppercase;color:rgba(255,255,255,0.15);display:flex;flex-direction:column;align-items:center;gap:8px}
   .scroll-arrow{width:12px;height:12px;border-right:1.5px solid rgba(255,255,255,0.2);border-bottom:1.5px solid rgba(255,255,255,0.2);transform:rotate(45deg);animation:bounce 1.8s ease-in-out infinite}
   .sri-yantra-section{width:100%;position:relative;height:clamp(380px,55vw,650px);overflow:hidden}
@@ -582,6 +583,8 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   .signout-btn{width:100%;background:transparent;border:1px solid rgba(255,255,255,0.06);border-radius:100px;padding:13px;font-family:'Montserrat',sans-serif;font-weight:800;font-size:8px;letter-spacing:0.35em;text-transform:uppercase;color:rgba(255,255,255,0.2);cursor:pointer;transition:all 0.2s;margin-top:8px}
   .signout-btn:hover{color:rgba(239,68,68,0.7);border-color:rgba(239,68,68,0.2)}
   .lang-selector{background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.12);border-radius:24px;padding:20px 24px;backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}
+  @keyframes pulseDeep{0%,100%{opacity:0.5;transform:translate(-50%,-50%) scale(1)}50%{opacity:0.9;transform:translate(-50%,-50%) scale(1.05)}}
+  .animate-pulse-deep{animation:pulseDeep 3s cubic-bezier(0.45,0.05,0.55,0.95) infinite}
   @keyframes sriYantraBreathe{0%,100%{filter:brightness(1) saturate(1)}50%{filter:brightness(1.2) saturate(1.3)}}
   @keyframes sriGlowPulse{0%,100%{opacity:0.2}50%{opacity:0.9}}
   @keyframes sqPulse{0%{transform:scale(1);opacity:0.8}50%{transform:scale(1.04);opacity:0}100%{transform:scale(1.08);opacity:0}}
@@ -616,6 +619,38 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
         <div className="avatar-wrap">
           <div className="avatar-glow" />
           <div className="avatar-glow-2" />
+          {/* Sri Yantra Shield — pulsating behind avatar */}
+          <svg className="sri-yantra-avatar-shield" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+              <filter id="syGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+              <radialGradient id="syBg" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="rgba(212,175,55,0.06)"/>
+                <stop offset="100%" stopColor="rgba(212,175,55,0)"/>
+              </radialGradient>
+            </defs>
+            <circle cx="200" cy="200" r="198" fill="url(#syBg)"/>
+            <circle cx="200" cy="200" r="190" stroke="rgba(212,175,55,0.12)" strokeWidth="0.6" fill="none"/>
+            <circle cx="200" cy="200" r="170" stroke="rgba(212,175,55,0.10)" strokeWidth="0.5" fill="none"/>
+            <circle cx="200" cy="200" r="148" stroke="rgba(212,175,55,0.14)" strokeWidth="0.7" fill="none" strokeDasharray="6 7"/>
+            <circle cx="200" cy="200" r="128" stroke="rgba(212,175,55,0.10)" strokeWidth="0.5" fill="none"/>
+            {/* Upward triangles */}
+            <polygon points="200,42 368,322 32,322" stroke="#D4AF37" strokeWidth="1.4" fill="none" opacity="0.75" filter="url(#syGlow)"/>
+            <polygon points="200,78 348,306 52,306" stroke="#D4AF37" strokeWidth="1.1" fill="none" opacity="0.58"/>
+            <polygon points="200,108 328,290 72,290" stroke="#D4AF37" strokeWidth="0.85" fill="none" opacity="0.42"/>
+            <polygon points="200,140 308,274 92,274" stroke="#D4AF37" strokeWidth="0.65" fill="none" opacity="0.28"/>
+            {/* Downward triangles */}
+            <polygon points="200,358 32,78 368,78" stroke="#D4AF37" strokeWidth="1.3" fill="none" opacity="0.70" filter="url(#syGlow)"/>
+            <polygon points="200,322 52,94 348,94" stroke="#D4AF37" strokeWidth="1.0" fill="none" opacity="0.54"/>
+            <polygon points="200,290 72,110 328,110" stroke="#D4AF37" strokeWidth="0.80" fill="none" opacity="0.38"/>
+            <polygon points="200,262 92,126 308,126" stroke="#D4AF37" strokeWidth="0.60" fill="none" opacity="0.24"/>
+            {/* Bindu — central point */}
+            <circle cx="200" cy="200" r="14" fill="rgba(212,175,55,0.10)" stroke="rgba(212,175,55,0.5)" strokeWidth="0.8"/>
+            <circle cx="200" cy="200" r="6" fill="rgba(212,175,55,0.80)" filter="url(#syGlow)"/>
+            <circle cx="200" cy="200" r="2.5" fill="#D4AF37"/>
+          </svg>
           <div style={{position:'relative',zIndex:1}}>
             <Avatar style={{width:100,height:100,border:'2px solid rgba(212,175,55,0.45)',boxShadow:'0 0 40px rgba(212,175,55,0.15)'}}>
               <AvatarImage src={profile?.avatar_url || undefined} />

@@ -52,21 +52,21 @@ export const AppLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen relative">
-      {/* Pure Midnight #030303 with Deep Indigo #1e1b4b radial in top-left */}
+      {/* SQI 2050 — Akasha-Black #050505 with subtle golden radial */}
       <div 
         className="fixed inset-0 -z-20"
         style={{
-          background: "radial-gradient(ellipse at 15% 20%, rgba(30, 27, 75, 0.7) 0%, transparent 50%), #030303",
+          background: "radial-gradient(ellipse at 15% 20%, rgba(212, 175, 55, 0.03) 0%, transparent 50%), #050505",
         }}
       />
       
-      {/* Animated ambient glow orbs */}
+      {/* SQI 2050 — Siddha-Gold ambient glow orbs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
         <motion.div
           className="absolute top-0 left-1/4 w-[500px] h-[500px] rounded-full"
           style={{
-            background: 'radial-gradient(circle, hsl(271 76% 53% / 0.15) 0%, transparent 70%)',
-            filter: 'blur(60px)',
+            background: 'radial-gradient(circle, rgba(212, 175, 55, 0.06) 0%, transparent 70%)',
+            filter: 'blur(80px)',
           }}
           animate={{
             x: [0, 30, 0],
@@ -74,7 +74,7 @@ export const AppLayout: React.FC = () => {
             scale: [1, 1.1, 1],
           }}
           transition={{
-            duration: 12,
+            duration: 16,
             repeat: Infinity,
             ease: 'easeInOut',
           }}
@@ -82,8 +82,8 @@ export const AppLayout: React.FC = () => {
         <motion.div
           className="absolute bottom-1/4 right-0 w-[400px] h-[400px] rounded-full"
           style={{
-            background: 'radial-gradient(circle, hsl(174 72% 56% / 0.12) 0%, transparent 70%)',
-            filter: 'blur(50px)',
+            background: 'radial-gradient(circle, rgba(212, 175, 55, 0.04) 0%, transparent 70%)',
+            filter: 'blur(70px)',
           }}
           animate={{
             x: [0, -25, 0],
@@ -91,7 +91,7 @@ export const AppLayout: React.FC = () => {
             scale: [1, 1.15, 1],
           }}
           transition={{
-            duration: 10,
+            duration: 14,
             repeat: Infinity,
             ease: 'easeInOut',
             delay: 2,
@@ -100,8 +100,8 @@ export const AppLayout: React.FC = () => {
         <motion.div
           className="absolute top-1/2 left-0 w-[350px] h-[350px] rounded-full"
           style={{
-            background: 'radial-gradient(circle, hsl(51 100% 50% / 0.08) 0%, transparent 70%)',
-            filter: 'blur(45px)',
+            background: 'radial-gradient(circle, rgba(212, 175, 55, 0.05) 0%, transparent 70%)',
+            filter: 'blur(60px)',
           }}
           animate={{
             x: [0, 20, 0],
@@ -109,7 +109,7 @@ export const AppLayout: React.FC = () => {
             scale: [1, 1.2, 1],
           }}
           transition={{
-            duration: 14,
+            duration: 18,
             repeat: Infinity,
             ease: 'easeInOut',
             delay: 4,
@@ -119,7 +119,7 @@ export const AppLayout: React.FC = () => {
       
       {/* Header bar with back button - reserves top space, content stays full width */}
       {showBackButton ? (
-        <header className="fixed top-0 left-0 right-0 h-14 z-[100] flex items-center px-4 bg-background/80 backdrop-blur-sm border-b border-border/20">
+        <header className="fixed top-0 left-0 right-0 h-14 z-[100] flex items-center px-4 border-b border-white/[0.05]" style={{ background: 'rgba(5, 5, 5, 0.85)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)' }}>
           <BackButton variant="inline" />
         </header>
       ) : null}
