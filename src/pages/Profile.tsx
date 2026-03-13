@@ -493,9 +493,8 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
     <style dangerouslySetInnerHTML={{__html: `
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Montserrat:wght@300;400;700;800;900&display=swap');
   .profile-wrap *,:root{--gold:#D4AF37;--black:#050505}
-  .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;position:relative;padding:10vh 24px 40px;text-align:center}
-  .hero::before{content:'';position:absolute;top:30%;left:50%;transform:translate(-50%,-50%);width:600px;height:600px;background:radial-gradient(ellipse,rgba(212,175,55,0.06) 0%,transparent 65%);pointer-events:none}
-  .avatar-wrap{position:relative;display:inline-block;margin-bottom:22px}
+  .hero{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;position:relative;padding:10vh 24px 20px;text-align:center}
+  .avatar-wrap{position:relative;display:inline-block;margin-bottom:22px;overflow:visible;padding:110px 110px 110px 110px}
   .avatar-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,0.65) 0%,rgba(212,175,55,0.2) 40%,transparent 70%);filter:blur(22px);animation:glowBreathe 3s ease-in-out infinite;z-index:0;pointer-events:none}
   .avatar-glow-2{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,0.15) 0%,transparent 65%);filter:blur(30px);animation:glowBreathe 4s ease-in-out infinite reverse;z-index:0;pointer-events:none}
   .sri-yantra-avatar-shield{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:320px;height:320px;z-index:0;pointer-events:none;animation:pulseDeep 3s cubic-bezier(0.45,0.05,0.55,0.95) infinite}
@@ -508,14 +507,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   .stat-label{font-weight:800;font-size:7px;letter-spacing:0.45em;text-transform:uppercase;color:rgba(255,255,255,0.35);display:block;margin-top:2px}
   .scroll-hint{position:absolute;bottom:36px;font-weight:800;font-size:7px;letter-spacing:0.5em;text-transform:uppercase;color:rgba(255,255,255,0.15);display:flex;flex-direction:column;align-items:center;gap:8px}
   .scroll-arrow{width:12px;height:12px;border-right:1.5px solid rgba(255,255,255,0.2);border-bottom:1.5px solid rgba(255,255,255,0.2);transform:rotate(45deg);animation:bounce 1.8s ease-in-out infinite}
-  .sri-yantra-section{width:100%;position:relative;height:clamp(380px,55vw,650px);overflow:hidden}
-  .sri-yantra-img{width:100%;height:100%;object-fit:cover;object-position:center center;display:block;animation:sriYantraBreathe 7s ease-in-out infinite}
-  .sri-yantra-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;height:90%;background:radial-gradient(ellipse,rgba(212,175,55,0.4) 0%,rgba(212,175,55,0.1) 40%,transparent 70%);filter:blur(40px);pointer-events:none;z-index:0;animation:sriGlowPulse 7s ease-in-out infinite}
-  .sri-yantra-svg-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#0a2040 0%,#050505 70%)}
-  .sri-yantra-fade-top{position:absolute;top:0;left:0;right:0;height:220px;background:linear-gradient(to bottom,#050505 0%,transparent 100%);pointer-events:none}
-  .sri-yantra-fade-bottom{position:absolute;bottom:0;left:0;right:0;height:220px;background:linear-gradient(to top,#050505 0%,transparent 100%);pointer-events:none}
-  .sri-yantra-label{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);font-weight:800;font-size:clamp(6px,1.8vw,8px);letter-spacing:clamp(0.1em,0.45em,0.45em);text-transform:uppercase;color:rgba(212,175,55,0.85);background:rgba(5,5,5,0.65);backdrop-filter:blur(12px);padding:10px 24px;border-radius:100px;border:1px solid rgba(212,175,55,0.2);max-width:92vw;overflow:hidden;text-overflow:ellipsis;z-index:3}
-  .section-wrap{max-width:780px;margin:0 auto;padding:80px 24px 0;text-align:center}
+  .section-wrap{max-width:780px;margin:0 auto;padding:32px 24px 0;text-align:center}
   .section-label{font-family:'Montserrat',sans-serif;font-weight:800;font-size:8px;letter-spacing:0.5em;text-transform:uppercase;color:rgba(212,175,55,0.5);margin-bottom:32px;display:flex;align-items:center;gap:12px;justify-content:center}
   .section-label::after{content:'';flex:1;height:1px;background:linear-gradient(to right,rgba(212,175,55,0.2),transparent)}
   .glass-card{background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.12);border-radius:24px;padding:32px;backdrop-filter:blur(20px);margin-bottom:16px}
@@ -585,8 +577,6 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   .lang-selector{background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.12);border-radius:24px;padding:20px 24px;backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}
   @keyframes pulseDeep{0%,100%{opacity:0.5;transform:translate(-50%,-50%) scale(1)}50%{opacity:0.9;transform:translate(-50%,-50%) scale(1.05)}}
   .animate-pulse-deep{animation:pulseDeep 3s cubic-bezier(0.45,0.05,0.55,0.95) infinite}
-  @keyframes sriYantraBreathe{0%,100%{filter:brightness(1) saturate(1)}50%{filter:brightness(1.2) saturate(1.3)}}
-  @keyframes sriGlowPulse{0%,100%{opacity:0.2}50%{opacity:0.9}}
   @keyframes sqPulse{0%{transform:scale(1);opacity:0.8}50%{transform:scale(1.04);opacity:0}100%{transform:scale(1.08);opacity:0}}
   @keyframes shimmer{0%{background-position:0% 50%}100%{background-position:300% 50%}}
   @keyframes btnGlow{0%,100%{box-shadow:0 0 20px rgba(212,175,55,0.4)}50%{box-shadow:0 0 40px rgba(212,175,55,0.7)}}
@@ -596,14 +586,6 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   @keyframes scanPulse{0%,100%{transform:scale(1);opacity:0.5}50%{transform:scale(1.12);opacity:1}}
   @keyframes siddhiSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
   @keyframes stardustMove{from{background-position:0 0}to{background-position:1000px 1000px}}
-  .sy-short{display:none}
-  .sy-full{display:inline}
-  @media(max-width:520px){
-    .sri-yantra-label{position:relative;bottom:auto;left:auto;transform:none;display:block;text-align:center;width:calc(100% - 48px);max-width:100%;margin:-1px auto 0;border-radius:0 0 20px 20px;border-top:none;padding:12px 20px;font-size:7px;letter-spacing:0.25em}
-    .sy-full{display:none}
-    .sy-short{display:inline}
-    .sri-yantra-section{overflow:visible}
-  }
 `}} />
 
     <div className="profile-wrap" style={{minHeight:'100vh',background:'#050505',overflowX:'hidden',fontFamily:'Montserrat,sans-serif',paddingBottom:'120px',position:'relative'}}>
@@ -683,44 +665,6 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           </div>
         </div>
 
-        <div className="scroll-hint">◈ Scroll to explore your field<div className="scroll-arrow" /></div>
-      </section>
-
-      {/* ── SRI YANTRA ── */}
-      <section className="sri-yantra-section">
-        <img className="sri-yantra-img"
-          src="/Gemini_Generated_Image_57v0zm57v0zm57v0.jpg"
-          style={{ animation: 'sriYantraBreathe 7s ease-in-out infinite' }}
-          onError={(e) => { e.currentTarget.style.display='none'; (e.currentTarget.nextElementSibling as HTMLElement).style.display='flex'; }}
-          alt="Sri Yantra" />
-        <div style={{
-          position:'absolute', top:'50%', left:'50%',
-          transform:'translate(-50%,-50%)',
-          width:'65%', height:'85%', borderRadius:'50%',
-          background:'radial-gradient(ellipse, rgba(212,175,55,0.22) 0%, rgba(212,175,55,0.07) 45%, transparent 70%)',
-          pointerEvents:'none',
-          animation:'sriGlowPulse 7s ease-in-out infinite',
-          zIndex:1
-        }} aria-hidden />
-        <div className="sri-yantra-svg-fallback" style={{display:'none'}}>
-          <svg width="420" height="420" viewBox="0 0 420 420" style={{animation:'siddhiSpin 180s linear infinite',opacity:0.7}}>
-            <circle cx="210" cy="210" r="200" fill="none" stroke="rgba(212,175,55,0.2)" strokeWidth="1"/>
-            <circle cx="210" cy="210" r="180" fill="none" stroke="rgba(212,175,55,0.15)" strokeWidth="0.5"/>
-            <polygon points="210,60 330,270 90,270" fill="none" stroke="rgba(212,175,55,0.6)" strokeWidth="1.5"/>
-            <polygon points="210,80 320,260 100,260" fill="none" stroke="rgba(212,175,55,0.4)" strokeWidth="1"/>
-            <polygon points="210,360 90,150 330,150" fill="none" stroke="rgba(212,175,55,0.6)" strokeWidth="1.5"/>
-            <polygon points="210,340 100,160 320,160" fill="none" stroke="rgba(212,175,55,0.4)" strokeWidth="1"/>
-            <circle cx="210" cy="210" r="6" fill="rgba(212,175,55,0.9)"/>
-            <circle cx="210" cy="210" r="12" fill="none" stroke="rgba(212,175,55,0.5)" strokeWidth="1"/>
-            <text x="210" y="218" textAnchor="middle" fill="rgba(212,175,55,0.7)" fontSize="20" fontFamily="serif">ॐ</text>
-          </svg>
-        </div>
-        <div className="sri-yantra-fade-top" />
-        <div className="sri-yantra-fade-bottom" />
-        <div className="sri-yantra-label">
-          <span className="sy-full">◈ Sri Yantra Shield · Akashic Field Active · 72,000 Nadis Mapped</span>
-          <span className="sy-short">◈ Sri Yantra Shield Active</span>
-        </div>
       </section>
 
       {/* ── TIERS ── */}
