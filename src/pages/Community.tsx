@@ -1494,28 +1494,20 @@ const Community = () => {
     const profile = members.find((m) => m.id === user.id);
     const senderName = profile?.full_name || "You";
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("chat_messages")
       .insert({
         room_id: roomId,
         user_id: user.id,
         content: text,
         user_name: senderName,
-      } as any)
-      .select("*")
-      .single();
+      } as any);
 
     if (error) {
       console.error("Failed to send message:", error);
       toast.error("Could not send message.");
-      return;
     }
-
-    const sentMsg: Message = {
-      ...(data as any),
-      user_name: "You",
-    };
-    setMessages((prev) => [...prev, sentMsg]);
+    // Realtime subscription will append the message
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
