@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { action, channel_id, title, description, session_id, allow_non_admin } = body;
+    const { action, channel_id, title, description, session_id, allow_non_admin, source } = body;
 
     // Admin check (DM video calls set allow_non_admin=true)
     if (!allow_non_admin) {
@@ -54,6 +54,7 @@ Deno.serve(async (req) => {
 
     if (action === "create") {
       // Create Daily.co room
+      const effectiveChannelId = source === "feed" ? "feed" : (channel_id || "divine-sangha");
       const roomRes = await fetch("https://api.daily.co/v1/rooms", {
         method: "POST",
         headers: {
@@ -66,6 +67,8 @@ Deno.serve(async (req) => {
             enable_screenshare: true,
             enable_recording: "cloud",
             exp: Math.floor(Date.now() / 1000) + 3600 * 4, // 4 hours
+            // Metadata for recording webhook: source + channel_id
+            metadata: JSON.stringify({ source: source || "channel", channel_id: effectiveChannelId }),
           },
         }),
       });
@@ -80,11 +83,11 @@ Deno.serve(async (req) => {
 
       const room = await roomRes.json();
 
-      // Save to DB
+      // Save to DB: source='feed' -> channel_id='feed'; source='channel' -> channel_id from request (for recordings context)
       const { data: session, error: dbError } = await supabase
         .from("community_live_sessions")
         .insert({
-          channel_id: channel_id || "divine-sangha",
+          channel_id: effectiveChannelId,
           host_user_id: user.id,
           title: title || "Live Session",
           description: description || "",

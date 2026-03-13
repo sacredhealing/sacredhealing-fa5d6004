@@ -21,12 +21,12 @@ export function useDailyLive() {
   const [isCreating, setIsCreating] = useState(false);
   const [activeSession, setActiveSession] = useState<DailySession | null>(null);
 
-  const createRoom = useCallback(async (channelId: string, title: string, description?: string, allowNonAdmin = false) => {
+  const createRoom = useCallback(async (channelId: string, title: string, description?: string, allowNonAdmin = false, source: 'channel' | 'feed' = 'channel') => {
     if (!user) { toast.error('Please sign in'); return null; }
     setIsCreating(true);
     try {
       const { data, error } = await supabase.functions.invoke('daily-room', {
-        body: { action: 'create', channel_id: channelId, title, description, allow_non_admin: allowNonAdmin },
+        body: { action: 'create', channel_id: source === 'feed' ? 'feed' : channelId, title, description, allow_non_admin: allowNonAdmin, source },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);

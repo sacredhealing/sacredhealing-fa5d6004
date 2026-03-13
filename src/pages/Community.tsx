@@ -799,7 +799,7 @@ type FeedComment = {
 };
 
 // DM chat using useCommunity's usePrivateChat (same as original app)
-function DMChatView({ partnerId, onBack }: { partnerId: string; onBack: () => void }) {
+function DMChatView({ partnerId, onBack, isAdmin, onVideoCall, dmVideoUrl, onEndVideoCall }: { partnerId: string; onBack: () => void; isAdmin?: boolean; onVideoCall?: () => void; dmVideoUrl?: string | null; onEndVideoCall?: () => void }) {
   const { user } = useAuth();
   const { messages, partnerProfile, isLoading, sendMessage } = usePrivateChat(partnerId);
   const [messageText, setMessageText] = useState("");
@@ -825,7 +825,29 @@ function DMChatView({ partnerId, onBack }: { partnerId: string; onBack: () => vo
           <div className="c-chat-name">{partnerProfile?.full_name || "Direct Message"}</div>
           <div className="c-chat-sub">Private 1-on-1 chat</div>
         </div>
+        {isAdmin && (dmVideoUrl ? (
+          <button
+            className="c-video-call-btn"
+            onClick={onEndVideoCall}
+            style={{ marginLeft: "auto", borderColor: "rgba(255,59,48,.4)", color: "#ff6b61" }}
+          >
+            ⬛ END CALL
+          </button>
+        ) : (
+          <button
+            className="c-video-call-btn"
+            onClick={onVideoCall}
+            style={{ marginLeft: "auto" }}
+          >
+            📹 VIDEO CALL
+          </button>
+        ))}
       </div>
+      {dmVideoUrl && (
+        <div className="c-live-frame">
+          <iframe src={dmVideoUrl} allow="camera;microphone;fullscreen;display-capture" />
+        </div>
+      )}
       <div className="c-messages">
         {isLoading ? (
           <div className="c-empty">
@@ -1248,6 +1270,55 @@ const Community = () => {
     };
   }, [user?.id]);
 
+  // Ensure room exists for a channel (create if missing) — used when channel opens with no room
+  const ensureRoomForChannel = useCallback(
+    async (channelId: string) => {
+      if (!user || !channelId || isDmChannel(channelId)) return;
+      if (roomIds[channelId]) return;
+      const logical = CHANNELS.find((c) => c.id === channelId);
+      const baseType =
+        logical?.id === "stargate"
+          ? "stargate"
+          : logical?.id === "andlig-transformation"
+          ? "andlig"
+          : "community";
+      try {
+        const { data: created, error: createErr } = await supabase
+          .from("chat_rooms")
+          .insert({
+            name: logical?.name || channelId,
+            description: logical?.description ?? "Community channel",
+            created_by: user.id,
+            type: baseType,
+            is_active: true,
+          } as any)
+          .select("id")
+          .single();
+
+        let roomId: string | null = null;
+        if (!createErr && created?.id) {
+          roomId = (created as any).id;
+        } else {
+          const channelName = logical?.name || channelId;
+          const { data: byName } = await supabase.from("chat_rooms").select("id").eq("name", channelName).limit(1);
+          if (byName && byName.length > 0) roomId = (byName[0] as any).id;
+          else {
+            const { data: byType } = await supabase.from("chat_rooms").select("id").eq("type", baseType).eq("is_active", true).limit(1);
+            if (byType && byType.length > 0) roomId = (byType[0] as any).id;
+            else {
+              const { data: anyRoom } = await supabase.from("chat_rooms").select("id").eq("is_active", true).limit(1);
+              if (anyRoom && anyRoom.length > 0) roomId = (anyRoom[0] as any).id;
+            }
+          }
+        }
+        if (roomId) setRoomIds((prev) => ({ ...prev, [channelId]: roomId! }));
+      } catch (e) {
+        console.warn("Could not ensure room for channel:", channelId, e);
+      }
+    },
+    [user, roomIds]
+  );
+
   // Map logical channel ids (like "divine-sangha") to real chat_rooms UUIDs
   // Auto-create any missing community rooms so chat always works
   useEffect(() => {
@@ -1399,6 +1470,7 @@ const Community = () => {
       setMessages([]);
       setViewerSessions([]);
       setLiveRoomUrl(null);
+      ensureRoomForChannel(activeChannel);
       return;
     }
 
@@ -1465,7 +1537,7 @@ const Community = () => {
       supabase.removeChannel(channel);
       supabase.removeChannel(liveChannel);
     };
-  }, [activeChannel, fetchMessages, roomIds, daily.fetchActiveSessions, user]);
+  }, [activeChannel, fetchMessages, roomIds, daily.fetchActiveSessions, user, ensureRoomForChannel]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -1474,7 +1546,7 @@ const Community = () => {
   const handleGoLiveForChannel = async (channelId: string, channelName: string) => {
     if (!user) return;
     setShowGoLiveOptions(false);
-    const result = await daily.createRoom(channelId, `Live in ${channelName}`);
+    const result = await daily.createRoom(channelId, `Live in ${channelName}`, undefined, false, "channel");
     if (result) {
       setLiveRoomUrl(result.room_url);
       // Also surface the live session in the community feed
@@ -1821,6 +1893,10 @@ const Community = () => {
                     <DMChatView
                       partnerId={dmPartnerId}
                       onBack={() => { setActiveChannel(null); setDmVideoUrl(null); setLiveRoomUrl(null); setMobileTab("members"); }}
+                      isAdmin={isAdmin}
+                      onVideoCall={handleDmVideoCall}
+                      dmVideoUrl={dmVideoUrl}
+                      onEndVideoCall={() => setDmVideoUrl(null)}
                     />
                   ) : (
                     <div className="c-chat-view">
@@ -1885,12 +1961,12 @@ const Community = () => {
                         <div key={s.id} className="c-live-pill">
                           <span
                             style={{ animation: "pulse 1.5s ease-in-out infinite" }}
-                            onClick={() => s.room_url && setLiveRoomUrl(s.room_url)}
+                            onClick={() => s.room_url && window.open(s.room_url, "_blank")}
                           >
                             🔴
                           </span>
-                          <span onClick={() => s.room_url && setLiveRoomUrl(s.room_url)}>
-                            LIVE: {s.title.length > 20 ? s.title.slice(0, 20) + "…" : s.title}
+                          <span onClick={() => s.room_url && window.open(s.room_url, "_blank")}>
+                            JOIN LIVE: {s.title.length > 18 ? s.title.slice(0, 18) + "…" : s.title}
                           </span>
                           <span
                             className="c-live-pill-dismiss"
@@ -2112,9 +2188,28 @@ const Community = () => {
                 </div>
                 <button
                   onClick={async () => {
-                    await handleGoLiveForChannel("divine-sangha", "Divine Sangha");
-                    setActiveChannel("divine-sangha");
-                    setMobileTab("chat");
+                    if (!user) return;
+                    setShowGoLiveOptions(false);
+                    const result = await daily.createRoom("feed", "Live from Divine Sangha", undefined, false, "feed");
+                    if (result) {
+                      setLiveRoomUrl(result.room_url);
+                      setActiveChannel("divine-sangha");
+                      setMobileTab("chat");
+                      try {
+                        await supabase.from("community_posts").insert({
+                          user_id: user.id,
+                          content: "🔴 Live now in Divine Sangha",
+                          post_type: "live",
+                          is_live_recording: true,
+                          live_recording_title: "Live from Divine Sangha",
+                          live_recording_description: "Streaming via Siddha Quantum Nexus",
+                          video_url: result.room_url,
+                        } as any);
+                        await fetchFeedPosts();
+                      } catch (err) {
+                        console.error("Failed to create live feed post:", err);
+                      }
+                    }
                   }}
                   disabled={daily.isCreating}
                   style={{
