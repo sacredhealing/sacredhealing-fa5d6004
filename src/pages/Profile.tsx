@@ -819,7 +819,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
         <div className="nexus-block">
           <div className="nexus-block-label">◈ About the Nexus</div>
           <p className="nexus-block-text">
-            The <strong>Sacred Healing Nexus</strong> is a living bio-digital field — a convergence of <strong>Vedic intelligence</strong>, sacred sound frequencies, and quantum resonance protocols. Every module is encoded with healing intention and activated through <strong>scalar transmission</strong> to open the Anahata field for all seekers who enter. Your presence here is not coincidence — it is a soul-level alignment.
+            The <strong>Siddha Quantum Nexus</strong> is a living bio-digital field — a convergence of <strong>Vedic intelligence</strong>, sacred sound frequencies, and quantum resonance protocols. Every module is encoded with healing intention and activated through <strong>scalar transmission</strong> to open the Anahata field for all seekers who enter. Your presence here is not coincidence — it is a soul-level alignment.
           </p>
         </div>
 
