@@ -6,7 +6,8 @@ import { Zap, RefreshCw, Lock, ChevronRight, ArrowLeft, Sparkles } from 'lucide-
 import DigitalNadiScanner from '@/components/soul-scan/DigitalNadiScanner';
 import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
-import { getTierRank } from '@/lib/tierAccess';
+import { useAdminRole } from '@/hooks/useAdminRole';
+import { getTierRank, hasFeatureAccess } from '@/lib/tierAccess';
 import type { ScanResults, SessionModality } from '@/types/soulScan';
 import { SESSION_MODALITIES } from '@/types/soulScan';
 
@@ -92,7 +93,9 @@ export default function SoulScan() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { tier } = useMembership();
+  const { isAdmin } = useAdminRole();
   const userRank = getTierRank(tier);
+  const hasSoulVaultAccess = hasFeatureAccess(isAdmin, tier, 2); // Siddha Quantum + Akasha Infinity only
   const canPostScan = userRank >= 2; // Siddha Quantum +
 
   // ── Flow phases ──
@@ -249,6 +252,32 @@ export default function SoulScan() {
         <div style={{ position: 'fixed', inset: 0, backgroundImage: "url('https://www.transparenttextures.com/patterns/stardust.png')", opacity: 0.18, pointerEvents: 'none', zIndex: 0, animation: 'ssStardust 180s linear infinite' }} />
 
         <div style={{ position: 'relative', zIndex: 1 }}>
+          {/* Soul Vault access: Siddha Quantum + Akasha Infinity only */}
+          {!hasSoulVaultAccess ? (
+            <div className="ss-hero" style={{ paddingTop: 80 }}>
+              <div className="ss-hero-eyebrow">◈ Siddha 2050 · Quantum Bio-Scanner</div>
+              <h1 className="ss-hero-title">Soul <span className="gold">Vault</span></h1>
+              <p className="ss-hero-desc" style={{ marginBottom: 32 }}>
+                The Soul Vault and Deep-Field Resonance reports are available for Siddha Quantum and Akasha Infinity members — a living record of your bio-digital evolution.
+              </p>
+              <div className="ss-lock" style={{ maxWidth: 400, margin: '0 auto' }}>
+                <Lock size={32} color="rgba(212,175,55,0.5)" style={{ margin: '0 auto 16px' }} />
+                <div style={{ fontWeight: 800, fontSize: 8, letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.6)', marginBottom: 12 }}>
+                  Soul Vault Locked
+                </div>
+                <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 24, lineHeight: 1.7 }}>
+                  Upgrade to Siddha Quantum or Akasha Infinity to access the Soul Scan and save Deep-Field Resonance reports to your Soul Vault.
+                </p>
+                <button type="button" className="ss-cta" onClick={() => navigate('/siddha-quantum')}>
+                  ◈ Upgrade to Siddha Quantum
+                </button>
+                <button type="button" className="ss-cta-ghost" style={{ marginTop: 12 }} onClick={() => navigate('/profile')}>
+                  ↩ Return to Profile
+                </button>
+              </div>
+            </div>
+          ) : (
+          <>
           {/* Top bar */}
           <div className="ss-topbar">
             <button type="button" className="ss-back-btn" onClick={() => navigate('/profile')} aria-label="Back">
@@ -634,6 +663,8 @@ export default function SoulScan() {
             )}
 
           </AnimatePresence>
+          </>
+          )}
         </div>
       </div>
     </>

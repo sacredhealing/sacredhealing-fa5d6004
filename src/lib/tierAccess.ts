@@ -39,6 +39,7 @@ export const FEATURE_TIER = {
   siddhaPortal: 2,
   digitalNadi: 2,
   sriYantraShield: 2,
+  soulVault: 2,
 
   // Free (rank 0) — Vayu Protocol for all users
   vayuProtocol: 0,

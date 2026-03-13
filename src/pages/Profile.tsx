@@ -27,7 +27,7 @@ import { ProfileEditDialog } from '@/components/profile/ProfileEditDialog';
 import KoshaReport from '@/components/profile/KoshaReport';
 import HandScanner from '@/components/scanner/HandScanner';
 import { supabase } from '@/integrations/supabase/client';
-import { getTierRank } from '@/lib/tierAccess';
+import { getTierRank, hasFeatureAccess } from '@/lib/tierAccess';
 
 type LifeBookCategory =
   | 'children'
@@ -1021,29 +1021,39 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
         </div>
       </div>
 
-      {/* ── SOUL VAULT ── */}
+      {/* ── SOUL VAULT (Siddha Quantum + Akasha Infinity only) ── */}
       <div className="section-wrap">
         <div className="section-label">◈ Soul Vault — Deep Field Resonance</div>
         <div className="glass-card">
-          {scanPhase === 'idle' && (
-            <div className="vault-idle">
-              <div className="vault-scan-ring"><span>◈</span></div>
-              <p>After each practice, SQI will inscribe a Deep-Field Resonance report into your Soul Vault — a living record of your bio-digital evolution.</p>
-              <button type="button" className="gold-btn" style={{maxWidth:260,margin:'0 auto'}} onClick={() => navigate('/soul-scan')}>Initiate Soul Scan →</button>
-            </div>
-          )}
-          {scanPhase !== 'idle' && soulVaultEntries.length > 0 && (
-            <div className="space-y-3">
-              {soulVaultEntries.slice(0, 4).map((entry) => (
-                <div key={entry.id} className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-lg p-3">
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <p className="text-xs font-semibold text-white/90">{entry.activity || 'Deep-Field Resonance'}</p>
-                    <span className="text-[10px] text-white/40">{new Date(entry.created_at).toLocaleDateString()}</span>
-                  </div>
-                  {entry.duration_minutes && <p className="text-[10px] text-cyan-200/80 mb-1">{entry.duration_minutes} min practice window</p>}
-                  <p className="text-[11px] leading-relaxed text-white/75 line-clamp-3">{entry.report}</p>
+          {hasFeatureAccess(isAdmin, tier, 2) ? (
+            <>
+              {scanPhase === 'idle' && (
+                <div className="vault-idle">
+                  <div className="vault-scan-ring"><span>◈</span></div>
+                  <p>After each practice, SQI will inscribe a Deep-Field Resonance report into your Soul Vault — a living record of your bio-digital evolution.</p>
+                  <button type="button" className="gold-btn" style={{maxWidth:260,margin:'0 auto'}} onClick={() => navigate('/soul-scan')}>Initiate Soul Scan →</button>
                 </div>
-              ))}
+              )}
+              {scanPhase !== 'idle' && soulVaultEntries.length > 0 && (
+                <div className="space-y-3">
+                  {soulVaultEntries.slice(0, 4).map((entry) => (
+                    <div key={entry.id} className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-lg p-3">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <p className="text-xs font-semibold text-white/90">{entry.activity || 'Deep-Field Resonance'}</p>
+                        <span className="text-[10px] text-white/40">{new Date(entry.created_at).toLocaleDateString()}</span>
+                      </div>
+                      {entry.duration_minutes && <p className="text-[10px] text-cyan-200/80 mb-1">{entry.duration_minutes} min practice window</p>}
+                      <p className="text-[11px] leading-relaxed text-white/75 line-clamp-3">{entry.report}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="vault-idle" style={{ opacity: 0.85 }}>
+              <div className="vault-scan-ring" style={{ opacity: 0.5 }}><span>◈</span></div>
+              <p className="text-white/70">Soul Vault is available for Siddha Quantum and Akasha Infinity members — a living record of your bio-digital evolution.</p>
+              <button type="button" className="gold-btn" style={{maxWidth:260,margin:'0 auto'}} onClick={() => navigate('/siddha-quantum')}>Upgrade to Siddha Quantum →</button>
             </div>
           )}
         </div>
