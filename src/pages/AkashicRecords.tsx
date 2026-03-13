@@ -44,37 +44,9 @@ const AkashicRecords: React.FC = () => {
     }
   };
 
-  // Admin: render full reading inline directly (no gate)
-  if (!adminLoading && isAdmin) {
+  // Admin or Akasha Infinity: full access (no €49 purchase required)
+  if (!adminLoading && (isAdmin || hasAkashaInfinity)) {
     return <AkashicReadingFull />;
-  }
-
-  // Akasha Infinity only — show upgrade gate for non-eligible users
-  if (!adminLoading && !hasAkashaInfinity) {
-    return (
-      <div className="min-h-screen bg-[#0a0a0a] text-[#D4AF37]">
-        <div className="sticky top-0 z-10 flex items-center gap-4 border-b border-[#D4AF37]/20 bg-[#0a0a0a]/95 backdrop-blur px-4 py-3">
-          <button type="button" onClick={() => navigate(-1)} className="text-[#D4AF37] text-xl font-serif" aria-label="Go back">←</button>
-          <h1 className="text-lg font-serif font-semibold tracking-wide">Akashic Decoder</h1>
-        </div>
-        <div className="flex flex-col items-center justify-center gap-6 p-8 min-h-[calc(100vh-120px)] text-center">
-          <h2 className="text-2xl font-serif font-bold">Akashic Records — Akasha Infinity Only</h2>
-          <p className="text-white/70 max-w-md">
-            The 12-page Soul Manuscript and Akashic Decoder are available exclusively for Akasha Infinity members.
-          </p>
-          <button
-            type="button"
-            onClick={() => navigate('/akasha-infinity')}
-            className="px-8 py-4 bg-[#D4AF37] text-black font-bold rounded-full text-lg hover:bg-[#D4AF37]/90 transition"
-          >
-            Upgrade to Akasha Infinity
-          </button>
-          <button type="button" onClick={() => navigate('/profile')} className="text-[#D4AF37]/70 text-sm hover:underline">
-            ← Return to Profile
-          </button>
-        </div>
-      </div>
-    );
   }
 
   // Show loading while checking — NEVER redirect or render content until loading is complete
@@ -135,10 +107,12 @@ const AkashicRecords: React.FC = () => {
       </div>
       <div className="p-4 pb-24">
         <AkashicReveal
+          tier={tier}
           isPremium={!!isPremium}
           discountedPrice={discountedPrice}
           onStripeCheckout={handleStripeCheckout}
           onCryptoClick={() => setCryptoModalOpen(true)}
+          onAkashaInfinityClick={() => navigate('/akasha-infinity')}
         />
         <AkashicCryptoModal
           open={cryptoModalOpen}
