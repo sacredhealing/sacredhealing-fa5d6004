@@ -843,6 +843,7 @@ const Community = () => {
             return;
           }
 
+          const nameMap = memberNameMapRef.current;
           const mapped: Message[] =
             (data as any[] | null)?.map((row) => ({
               id: row.id,
@@ -850,7 +851,7 @@ const Community = () => {
               user_id: row.sender_id,
               content: row.content,
               created_at: row.created_at,
-              user_name: row.sender_id === user.id ? "You" : (memberNameMap[row.sender_id] || "Member"),
+              user_name: row.sender_id === user.id ? "You" : (nameMap[row.sender_id] || "Member"),
             })) ?? [];
 
           setMessages(mapped);
@@ -860,7 +861,6 @@ const Community = () => {
         // Group channels use chat_messages with UUID room_id
         const roomId = roomIds[channelId];
         if (!roomId) {
-          // No backing room yet – show empty state instead of failing
           setMessages([]);
           return;
         }
@@ -878,17 +878,18 @@ const Community = () => {
           return;
         }
 
+        const nameMap = memberNameMapRef.current;
         const rows = (data as any[]) || [];
         const enriched: Message[] = rows.map((row) => ({
           ...row,
-          user_name: row.user_name || (row.user_id === user?.id ? "You" : (memberNameMap[row.user_id] || "Member")),
+          user_name: row.user_name || (row.user_id === user?.id ? "You" : (nameMap[row.user_id] || "Member")),
         }));
         setMessages(enriched);
       } finally {
         setLoading(false);
       }
     },
-    [roomIds, user, memberNameMap]
+    [roomIds, user]
   );
 
   // Fetch feed posts (admin posts); include likes/comments counts and current user's like state
