@@ -1413,31 +1413,19 @@ const Community = () => {
       const partnerId = getDmPartnerId(activeChannel, user.id);
       if (!partnerId) return;
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("private_messages")
         .insert({
           sender_id: user.id,
           receiver_id: partnerId,
           content: text,
-        })
-        .select("*")
-        .single();
+        });
 
       if (error) {
         console.error("Failed to send DM:", error);
         toast.error("Could not send message.");
-        return;
       }
-
-      const newMsg: Message = {
-        id: data.id,
-        channel_id: activeChannel,
-        user_id: data.sender_id,
-        content: data.content,
-        created_at: data.created_at,
-        user_name: "You",
-      };
-      setMessages((prev) => [...prev, newMsg]);
+      // Realtime subscription will append the message
       return;
     }
 
