@@ -1111,12 +1111,12 @@ const Community = () => {
               description: ch.description,
               created_by: user.id,
               type: roomType,
-            } as Record<string, unknown>)
+            } as any)
             .select("id")
             .single();
 
           if (!createErr && created?.id) {
-            map[ch.id] = created.id as string;
+            map[ch.id] = (created as any).id as string;
           } else {
             // Room may already exist under a different query timing; try to find it
             const { data: found } = await supabase
@@ -1448,7 +1448,7 @@ const Community = () => {
             description: logical?.description || "Community channel",
             created_by: user.id,
             ...(typeof baseType === "string" && { type: baseType }),
-          } as Record<string, unknown>)
+          } as any)
           .select("id")
           .single();
 

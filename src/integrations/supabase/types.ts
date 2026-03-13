@@ -2005,6 +2005,60 @@ export type Database = {
           },
         ]
       }
+      divine_transmissions: {
+        Row: {
+          audio_url_en: string | null
+          audio_url_sv: string | null
+          category: string
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          duration_seconds: number
+          id: string
+          is_free: boolean
+          published: boolean
+          required_tier: number
+          series_name: string | null
+          series_order: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          audio_url_en?: string | null
+          audio_url_sv?: string | null
+          category?: string
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number
+          id?: string
+          is_free?: boolean
+          published?: boolean
+          required_tier?: number
+          series_name?: string | null
+          series_order?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          audio_url_en?: string | null
+          audio_url_sv?: string | null
+          category?: string
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number
+          id?: string
+          is_free?: boolean
+          published?: boolean
+          required_tier?: number
+          series_name?: string | null
+          series_order?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_sequence_steps: {
         Row: {
           created_at: string
