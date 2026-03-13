@@ -105,6 +105,26 @@ export function runSoulScanLogic(
     { name: 'Crown', status: isHealerPresent ? 'Aligned' : 'Dormant' },
   ];
 
+  // Extended SoulScan metrics
+  const stressLevel = isHealerPresent
+    ? Math.round((5 + Math.random() * 15) * 10) / 10
+    : Math.round((45 + Math.random() * 35) * 10) / 10;
+  const bloodLevel = isHealerPresent
+    ? Math.round((78 + Math.random() * 18) * 10) / 10
+    : Math.round((52 + Math.random() * 22) * 10) / 10;
+  const mindLevel = isHealerPresent
+    ? Math.round((85 + Math.random() * 14) * 10) / 10
+    : Math.round((48 + Math.random() * 28) * 10) / 10;
+  const pastLifeClarity = isHealerPresent
+    ? Math.round((80 + Math.random() * 18) * 10) / 10
+    : Math.round((30 + Math.random() * 35) * 10) / 10;
+  const jyotishAlignment = isHealerPresent
+    ? Math.round((88 + Math.random() * 12) * 10) / 10
+    : Math.round((55 + Math.random() * 30) * 10) / 10;
+  const heartSync = isHealerPresent
+    ? Math.round((90 + Math.random() * 10) * 10) / 10
+    : Math.round((42 + Math.random() * 30) * 10) / 10;
+
   return {
     focus,
     summary,
@@ -121,6 +141,12 @@ export function runSoulScanLogic(
       presentKarma: isHealerPresent ? 'Cleared' : `Blockage: ${blockage}`,
       torusFieldDiameter: Math.round((isHealerPresent ? 10 + Math.random() * 5 : 3 + Math.random() * 4) * 10) / 10,
       karmicNodesExtracted: isHealerPresent ? Math.floor(Math.random() * 20) + 5 : undefined,
+      stressLevel,
+      bloodLevel,
+      mindLevel,
+      pastLifeClarity,
+      jyotishAlignment,
+      heartSync,
     },
   };
 }

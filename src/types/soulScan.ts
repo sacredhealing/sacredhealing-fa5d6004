@@ -46,6 +46,13 @@ export interface ScanResults {
     presentKarma: string;
     torusFieldDiameter: number;
     karmicNodesExtracted?: number;
+    // Extended SoulScan metrics
+    stressLevel: number;
+    bloodLevel: number;
+    mindLevel: number;
+    pastLifeClarity: number;
+    jyotishAlignment: number;
+    heartSync: number;
   };
 }
 
