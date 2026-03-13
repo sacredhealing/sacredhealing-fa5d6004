@@ -17,9 +17,11 @@
  */
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { supabase } from "@/integrations/supabase/client";
+import { requestNotificationPermission } from "@/services/NotificationService";
 import { useDailyLive, DailySession } from "@/hooks/useDailyLive";
 import { usePrivateChat } from "@/hooks/useCommunity";
 import { formatDistanceToNow } from "date-fns";
@@ -799,7 +801,7 @@ type FeedComment = {
 };
 
 // DM chat using useCommunity's usePrivateChat (same as original app)
-function DMChatView({ partnerId, onBack, isAdmin, onVideoCall, dmVideoUrl, onEndVideoCall }: { partnerId: string; onBack: () => void; isAdmin?: boolean; onVideoCall?: () => void; dmVideoUrl?: string | null; onEndVideoCall?: () => void }) {
+function DMChatView({ partnerId, onBack, isAdmin, onVideoCall, dmVideoUrl, onEndVideoCall, onDmSent }: { partnerId: string; onBack: () => void; isAdmin?: boolean; onVideoCall?: () => void; dmVideoUrl?: string | null; onEndVideoCall?: () => void; onDmSent?: (content: string, partnerId: string) => void }) {
   const { user } = useAuth();
   const { messages, partnerProfile, isLoading, sendMessage } = usePrivateChat(partnerId);
   const [messageText, setMessageText] = useState("");
@@ -809,6 +811,7 @@ function DMChatView({ partnerId, onBack, isAdmin, onVideoCall, dmVideoUrl, onEnd
     if (!text) return;
     setMessageText("");
     await sendMessage(text, "text");
+    if (isAdmin && onDmSent) onDmSent(text, partnerId);
   };
 
   const getInitials = (name?: string | null) => {
@@ -905,6 +908,7 @@ function DMChatView({ partnerId, onBack, isAdmin, onVideoCall, dmVideoUrl, onEnd
 const Community = () => {
   const { user } = useAuth();
   const { isAdmin } = useAdminRole();
+  const navigate = useNavigate();
   const daily = useDailyLive();
   console.log("[Community] isAdmin:", isAdmin);
 
@@ -936,6 +940,8 @@ const Community = () => {
   const [dmVideoUrl, setDmVideoUrl] = useState<string | null>(null);
   const [dismissedLiveChannels, setDismissedLiveChannels] = useState<Set<string>>(new Set());
   const [profilesMap, setProfilesMap] = useState<Record<string, { full_name: string | null; avatar_url?: string | null }>>({});
+  const [notifications, setNotifications] = useState<Array<{ id: string; type: string; title: string; body: string; channel_id: string | null; link: string | null; is_read: boolean; created_at: string }>>([]);
+  const [showNotifPanel, setShowNotifPanel] = useState(false);
   const profilesMapRef = useRef<Record<string, { full_name: string | null; avatar_url?: string | null }>>({});
   profilesMapRef.current = profilesMap;
 
@@ -1377,6 +1383,54 @@ const Community = () => {
     fetchFeedPosts();
   }, [fetchFeedPosts]);
 
+  // Fetch notifications + realtime subscription
+  useEffect(() => {
+    if (!user?.id) return;
+    const fetchNotifs = async () => {
+      const { data } = await supabase
+        .from("community_notifications")
+        .select("id, type, title, body, channel_id, link, is_read, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      setNotifications((data as any[]) || []);
+    };
+    fetchNotifs();
+    const channel = supabase
+      .channel(`notifs-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "community_notifications", filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          const n = payload.new as any;
+          setNotifications((prev) => [{ ...n }, ...prev.filter((p) => p.id !== n.id)]);
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
+
+  // Browser push permission prompt (ask once after 3s)
+  useEffect(() => {
+    const asked = typeof localStorage !== "undefined" ? localStorage.getItem("push-permission-asked") : null;
+    if (!asked && user?.id) {
+      if (typeof localStorage !== "undefined") localStorage.setItem("push-permission-asked", "1");
+      const t = setTimeout(async () => {
+        try {
+          const granted = await requestNotificationPermission();
+          if (granted) {
+            await supabase.from("profiles").update({ push_enabled: true }).eq("user_id", user.id);
+          }
+        } catch {
+          // ignore
+        }
+      }, 3000);
+      return () => clearTimeout(t);
+    }
+  }, [user?.id]);
+
   useEffect(() => {
     if (openCommentsPostId) fetchPostComments(openCommentsPostId);
   }, [openCommentsPostId, fetchPostComments]);
@@ -1560,7 +1614,7 @@ const Community = () => {
     const result = await daily.createRoom(channelId, `Live in ${channelName}`, undefined, false, "channel");
     if (result) {
       setLiveRoomUrl(result.room_url);
-      // Also surface the live session in the community feed
+      const adminName = memberNameMap[user.id] || "Admin";
       try {
         await supabase.from("community_posts").insert({
           user_id: user.id,
@@ -1571,8 +1625,18 @@ const Community = () => {
           live_recording_description: "Streaming via Siddha Quantum Nexus",
           video_url: result.room_url,
         } as any);
-        // Refresh feed so the LIVE card appears at the top
         await fetchFeedPosts();
+        await supabase.functions.invoke("notify-community", {
+          body: {
+            type: "live",
+            triggeredBy: adminName,
+            channelId,
+            channelName,
+            title: `🔴 ${adminName} is LIVE in ${channelName}`,
+            body: "A live session just started. Tap to join now.",
+            link: "/community",
+          },
+        });
       } catch (err) {
         console.error("Failed to create live feed post:", err);
       }
@@ -1664,10 +1728,25 @@ const Community = () => {
 
       if (error) throw error;
 
+      const adminName = memberNameMap[user.id] || "Admin";
+      const content = feedText.trim();
       setFeedText("");
       setFeedFile(null);
       await fetchFeedPosts();
       toast.success("Post shared to the Sangha feed.");
+      try {
+        await supabase.functions.invoke("notify-community", {
+          body: {
+            type: "post",
+            triggeredBy: adminName,
+            title: `✨ New post from ${adminName}`,
+            body: content.substring(0, 100) + (content.length > 100 ? "..." : ""),
+            link: "/community",
+          },
+        });
+      } catch (notifErr) {
+        console.warn("Notify community failed:", notifErr);
+      }
     } catch (e) {
       console.error("Failed to create feed post:", e);
       toast.error("Could not post to feed. Please try again.");
@@ -1825,15 +1904,39 @@ const Community = () => {
       console.error("Failed to send message:", error);
       toast.error("Could not send message.");
       setMessages((prev) => prev.filter((m) => m.id !== optimisticGroupMsg.id));
-    } else if (insertedGroup) {
-      // Replace optimistic with real message
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.id === optimisticGroupMsg.id
-            ? { ...(insertedGroup as any), user_name: "You", pending: false }
-            : m
-        )
-      );
+    } else {
+      if (insertedGroup) {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === optimisticGroupMsg.id
+              ? { ...(insertedGroup as any), user_name: "You", pending: false }
+              : m
+          )
+        );
+      }
+      // Notify members (1-hour silence to avoid spam)
+      try {
+        const lastKey = `last-notif-${activeChannel}`;
+        const lastNotified = typeof localStorage !== "undefined" ? localStorage.getItem(lastKey) : null;
+        const oneHour = 60 * 60 * 1000;
+        if (!lastNotified || Date.now() - parseInt(lastNotified, 10) > oneHour) {
+          if (typeof localStorage !== "undefined") localStorage.setItem(lastKey, Date.now().toString());
+          const ch = CHANNELS.find((c) => c.id === activeChannel);
+          await supabase.functions.invoke("notify-community", {
+            body: {
+              type: "message",
+              triggeredBy: senderName,
+              channelId: activeChannel,
+              channelName: ch?.name || activeChannel,
+              title: `💬 New message in ${ch?.name || activeChannel}`,
+              body: `${senderName}: ${text.substring(0, 80)}${text.length > 80 ? "…" : ""}`,
+              link: "/community",
+            },
+          });
+        }
+      } catch (notifErr) {
+        console.warn("Notify community failed:", notifErr);
+      }
     }
   };
 
@@ -1884,10 +1987,108 @@ const Community = () => {
     <>
       <style>{CSS}</style>
       <div className="c-root">
-        {/* Banner */}
-        <div className="c-banner">
-          <span className="c-pulse" />
-          {onlineCount} SOUL{onlineCount === 1 ? "" : "S"} CURRENTLY IN SACRED COMMUNITY
+        {/* Banner + Notification bell */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "10px 14px 0", gap: 10 }}>
+          <div className="c-banner" style={{ flex: 1, margin: 0 }}>
+            <span className="c-pulse" />
+            {onlineCount} SOUL{onlineCount === 1 ? "" : "S"} CURRENTLY IN SACRED COMMUNITY
+          </div>
+          <div style={{ position: "relative", flexShrink: 0 }}>
+            <button
+              onClick={() => {
+                setShowNotifPanel(!showNotifPanel);
+                if (!showNotifPanel && notifications.some((n) => !n.is_read)) {
+                  supabase
+                    .from("community_notifications")
+                    .update({ is_read: true })
+                    .eq("user_id", user?.id)
+                    .eq("is_read", false)
+                    .then(() => {
+                      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+                    });
+                }
+              }}
+              style={{
+                background: "rgba(255,255,255,.04)",
+                border: "1px solid rgba(212,175,55,.2)",
+                borderRadius: 12,
+                padding: "8px 12px",
+                cursor: "pointer",
+                fontSize: 18,
+              }}
+            >
+              🔔
+              {notifications.filter((n) => !n.is_read).length > 0 && (
+                <span
+                  style={{
+                    position: "absolute",
+                    top: -4,
+                    right: -4,
+                    background: "#D4AF37",
+                    color: "#000",
+                    borderRadius: "50%",
+                    width: 16,
+                    height: 16,
+                    fontSize: 9,
+                    fontWeight: 900,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  {notifications.filter((n) => !n.is_read).length > 9 ? "9+" : notifications.filter((n) => !n.is_read).length}
+                </span>
+              )}
+            </button>
+            {showNotifPanel && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "100%",
+                  right: 0,
+                  marginTop: 4,
+                  background: "#0a0a0a",
+                  border: "1px solid rgba(212,175,55,.25)",
+                  borderRadius: 12,
+                  boxShadow: "0 8px 24px rgba(0,0,0,.5)",
+                  minWidth: 280,
+                  maxWidth: 360,
+                  maxHeight: 320,
+                  overflowY: "auto",
+                  zIndex: 100,
+                }}
+              >
+                <div style={{ padding: 12, borderBottom: "1px solid rgba(255,255,255,.06)", fontWeight: 800, fontSize: 10, letterSpacing: "0.2em", color: "#D4AF37" }}>
+                  NOTIFICATIONS
+                </div>
+                {notifications.length === 0 ? (
+                  <div style={{ padding: 24, color: "rgba(255,255,255,.4)", fontSize: 13 }}>No notifications yet</div>
+                ) : (
+                  notifications.slice(0, 20).map((n) => (
+                    <div
+                      key={n.id}
+                      onClick={() => {
+                        if (n.link) navigate(n.link);
+                        setShowNotifPanel(false);
+                      }}
+                      style={{
+                        padding: 12,
+                        borderBottom: "1px solid rgba(255,255,255,.04)",
+                        cursor: "pointer",
+                        background: n.is_read ? "transparent" : "rgba(212,175,55,.06)",
+                      }}
+                    >
+                      <div style={{ fontWeight: 700, fontSize: 12, color: "rgba(255,255,255,.95)" }}>{n.title}</div>
+                      <div style={{ fontSize: 11, color: "rgba(255,255,255,.6)", marginTop: 2 }}>{n.body}</div>
+                      <div style={{ fontSize: 10, color: "rgba(255,255,255,.35)", marginTop: 4 }}>
+                        {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Mobile tabs */}
@@ -1913,6 +2114,23 @@ const Community = () => {
                       onVideoCall={handleDmVideoCall}
                       dmVideoUrl={dmVideoUrl}
                       onEndVideoCall={() => setDmVideoUrl(null)}
+                      onDmSent={async (content, partnerId) => {
+                        const adminName = memberNameMap[user?.id || ""] || "Admin";
+                        try {
+                          await supabase.functions.invoke("notify-community", {
+                            body: {
+                              type: "dm",
+                              triggeredBy: adminName,
+                              title: `💌 Message from ${adminName}`,
+                              body: content.substring(0, 100) + (content.length > 100 ? "…" : ""),
+                              link: "/community",
+                              targetUserIds: [partnerId],
+                            },
+                          });
+                        } catch (e) {
+                          console.warn("Notify DM failed:", e);
+                        }
+                      }}
                     />
                   ) : (
                     <div className="c-chat-view">
@@ -2211,6 +2429,7 @@ const Community = () => {
                       setLiveRoomUrl(result.room_url);
                       setActiveChannel("divine-sangha");
                       setMobileTab("chat");
+                      const adminName = memberNameMap[user.id] || "Admin";
                       try {
                         await supabase.from("community_posts").insert({
                           user_id: user.id,
@@ -2222,6 +2441,15 @@ const Community = () => {
                           video_url: result.room_url,
                         } as any);
                         await fetchFeedPosts();
+                        await supabase.functions.invoke("notify-community", {
+                          body: {
+                            type: "live",
+                            triggeredBy: adminName,
+                            title: `🔴 ${adminName} is LIVE`,
+                            body: "A live transmission has started on the Sacred Feed.",
+                            link: "/community",
+                          },
+                        });
                       } catch (err) {
                         console.error("Failed to create live feed post:", err);
                       }
