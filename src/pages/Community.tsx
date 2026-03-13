@@ -21,6 +21,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { supabase } from "@/integrations/supabase/client";
 import { useDailyLive, DailySession } from "@/hooks/useDailyLive";
+import { usePrivateChat } from "@/hooks/useCommunity";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { getTierRank } from "@/lib/tierAccess";
@@ -408,6 +409,22 @@ const CSS = `
   text-transform: uppercase;
   color: rgba(255,255,255,.25);
 }
+.c-skip-loading-btn {
+  margin-top: 16px;
+  padding: 10px 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #D4AF37;
+  background: rgba(212,175,55,.1);
+  border: 1px solid rgba(212,175,55,.3);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .2s, border-color .2s;
+}
+.c-skip-loading-btn:hover {
+  background: rgba(212,175,55,.2);
+  border-color: rgba(212,175,55,.5);
+}
 
 .c-date-divider {
   display: flex;
@@ -767,10 +784,93 @@ type FeedComment = {
   user_name?: string | null;
 };
 
+// DM chat using useCommunity's usePrivateChat (same as original app)
+function DMChatView({ partnerId, onBack }: { partnerId: string; onBack: () => void }) {
+  const { user } = useAuth();
+  const { messages, partnerProfile, isLoading, sendMessage } = usePrivateChat(partnerId);
+  const [messageText, setMessageText] = useState("");
+
+  const handleSend = async () => {
+    const text = messageText.trim();
+    if (!text) return;
+    setMessageText("");
+    await sendMessage(text, "text");
+  };
+
+  const getInitials = (name?: string | null) => {
+    if (!name) return "??";
+    return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
+  };
+
+  return (
+    <div className="c-chat-view">
+      <div className="c-chat-header">
+        <button className="c-back-btn" onClick={onBack}>←</button>
+        <div className="c-chat-icon">👤</div>
+        <div className="c-chat-title">
+          <div className="c-chat-name">{partnerProfile?.full_name || "Direct Message"}</div>
+          <div className="c-chat-sub">Private 1-on-1 chat</div>
+        </div>
+      </div>
+      <div className="c-messages">
+        {isLoading ? (
+          <div className="c-empty">
+            <div className="c-empty-icon">⏳</div>
+            <div className="c-empty-sub">LOADING MESSAGES</div>
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="c-empty">
+            <div className="c-empty-icon">👤</div>
+            <div className="c-empty-title">{partnerProfile?.full_name || "Direct Message"}</div>
+            <div className="c-empty-sub">BE THE FIRST TO SPEAK</div>
+          </div>
+        ) : (
+          messages.map((msg: any) => {
+            const isMine = msg.sender_id === user?.id;
+            return (
+              <div key={msg.id} className={`c-msg-row ${isMine ? "mine" : ""}`}>
+                <div className={`c-avatar ${isMine ? "mine" : ""}`}>
+                  {getInitials(isMine ? "You" : msg.sender_profile?.full_name)}
+                </div>
+                <div className="c-msg-body">
+                  <div className="c-msg-meta">
+                    <span className="c-msg-author">{isMine ? "You" : (msg.sender_profile?.full_name || "Member")}</span>
+                  </div>
+                  <div className={`c-bubble ${isMine ? "mine" : ""}`}>{msg.content}</div>
+                  <div className={`c-msg-time ${isMine ? "mine" : ""}`}>
+                    {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+      <div className="c-input-bar">
+        <div className="c-input-row">
+          <input
+            placeholder={`Message ${partnerProfile?.full_name || "them"}...`}
+            value={messageText}
+            onChange={(e) => setMessageText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
+          />
+          <button className="c-send-btn" onClick={handleSend} disabled={!messageText.trim()}>➤</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const Community = () => {
   const { user } = useAuth();
   const { isAdmin } = useAdminRole();
   const daily = useDailyLive();
+  console.log("[Community] isAdmin:", isAdmin);
 
   // UI state
   const [mobileTab, setMobileTab] = useState<"chat" | "feed" | "members">("chat");
@@ -778,6 +878,7 @@ const Community = () => {
   const [messageText, setMessageText] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingStuck, setLoadingStuck] = useState(false);
   const [showGoLiveOptions, setShowGoLiveOptions] = useState(false);
   const [liveRoomUrl, setLiveRoomUrl] = useState<string | null>(null);
   const [viewerSessions, setViewerSessions] = useState<DailySession[]>([]);
@@ -825,6 +926,16 @@ const Community = () => {
 
   const fetchInProgressRef = useRef<string | null>(null);
 
+  // Show "Start chatting anyway" after 2s if loading is stuck
+  useEffect(() => {
+    if (!loading) {
+      setLoadingStuck(false);
+      return;
+    }
+    const t = setTimeout(() => setLoadingStuck(true), 2000);
+    return () => clearTimeout(t);
+  }, [loading]);
+
   // Fetch messages for active channel (group rooms + DMs)
   const fetchMessages = useCallback(
     async (channelId: string) => {
@@ -839,14 +950,26 @@ const Community = () => {
             setMessages([]);
             return;
           }
-          // Two queries to avoid .or() syntax issues with complex filters
-          const [sentRes, receivedRes] = await Promise.all([
+          const timeoutMs = 4000;
+          const timeoutPromise = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error("DM fetch timeout")), timeoutMs)
+          );
+          const fetchPromise = Promise.all([
             supabase.from("private_messages").select("*").eq("sender_id", user.id).eq("receiver_id", partnerId).order("created_at", { ascending: true }),
             supabase.from("private_messages").select("*").eq("sender_id", partnerId).eq("receiver_id", user.id).order("created_at", { ascending: true }),
           ]);
+          let sentRes: any, receivedRes: any;
+          try {
+            const results = await Promise.race([fetchPromise, timeoutPromise]);
+            [sentRes, receivedRes] = results ?? [];
+          } catch (err) {
+            console.error("DM fetch error or timeout:", err);
+            if (fetchInProgressRef.current === channelId) setMessages([]);
+            return;
+          }
           if (fetchInProgressRef.current !== channelId) return;
-          const sent = (sentRes.data as any[] | null) ?? [];
-          const received = (receivedRes.data as any[] | null) ?? [];
+          const sent = ((sentRes?.data) as any[] | null) ?? [];
+          const received = ((receivedRes?.data) as any[] | null) ?? [];
           if (sentRes.error) console.error("Error loading DM sent:", sentRes.error);
           if (receivedRes.error) console.error("Error loading DM received:", receivedRes.error);
           const merged = [...sent, ...received].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
@@ -1051,6 +1174,8 @@ const Community = () => {
         const rows = (data as any[] | null) ?? [];
         const mapped: Member[] = rows
           .filter((row) => {
+            const uid = row.user_id != null ? row.user_id : row.id;
+            if (uid === user?.id) return false; // exclude current user
             const tier = (row.subscription_tier || row.role || "").toLowerCase();
             return tier !== "admin"; // exclude only if tier/role is literally "admin" (legacy)
           })
@@ -1672,6 +1797,24 @@ const Community = () => {
           {/* ─── CHANNEL LIST / CHAT ─── */}
           {(mobileTab === "chat" || isDesktop) ? (
             activeChannel && currentChannel ? (
+              isDmChannel(activeChannel) ? (
+                (() => {
+                  const dmPartnerId = getDmPartnerId(activeChannel, user?.id || "");
+                  return dmPartnerId ? (
+                    <DMChatView
+                      partnerId={dmPartnerId}
+                      onBack={() => { setActiveChannel(null); setDmVideoUrl(null); setLiveRoomUrl(null); setMobileTab("members"); }}
+                    />
+                  ) : (
+                    <div className="c-chat-view">
+                      <div className="c-chat-header">
+                        <button className="c-back-btn" onClick={() => { setActiveChannel(null); setDmVideoUrl(null); setLiveRoomUrl(null); }}>←</button>
+                        <div className="c-chat-title"><div className="c-chat-name">Invalid DM</div></div>
+                      </div>
+                    </div>
+                  );
+                })()
+              ) : (
               <div className="c-chat-view">
                 {/* Chat header */}
                 <div className="c-chat-header">
@@ -1763,6 +1906,14 @@ const Community = () => {
                     <div className="c-empty">
                       <div className="c-empty-icon">⏳</div>
                       <div className="c-empty-sub">LOADING MESSAGES</div>
+                      {loadingStuck && (
+                        <button
+                          className="c-skip-loading-btn"
+                          onClick={() => { setLoading(false); setLoadingStuck(false); setMessages([]); }}
+                        >
+                          Start chatting anyway
+                        </button>
+                      )}
                     </div>
                   ) : messages.length === 0 ? (
                     <div className="c-empty">
@@ -1816,12 +1967,13 @@ const Community = () => {
                   </div>
                 </div>
               </div>
+            )
             ) : (
               /* Channel list */
               <div className="c-channels-view">
                 <div className="c-section-label">OPEN CHANNELS</div>
                 {CHANNELS.filter((c) => c.access === "public").map((ch) => (
-                  <button key={ch.id} className="c-channel-row" onClick={() => setActiveChannel(ch.id)}>
+                  <button key={ch.id} className="c-channel-row" onClick={() => { console.log("[Community] Channel clicked:", ch.id); setActiveChannel(ch.id); setMobileTab("chat"); }}>
                     <div className="c-ch-icon">{ch.icon}</div>
                     <div className="c-ch-info">
                       <div className="c-ch-name">{ch.name}</div>
@@ -1843,7 +1995,9 @@ const Community = () => {
                       className={`c-channel-row ${!hasAccess ? "locked" : ""}`}
                       onClick={() => {
                         if (hasAccess) {
+                          console.log("[Community] Channel clicked:", ch.id);
                           setActiveChannel(ch.id);
+                          setMobileTab("chat");
                         } else {
                           toast.error("This space requires Siddha Quantum or Akasha Infinity membership.");
                         }
@@ -1867,7 +2021,7 @@ const Community = () => {
                       key={ch.id}
                       className={`c-channel-row ${locked ? "locked" : ""}`}
                       onClick={() => {
-                        if (!locked) setActiveChannel(ch.id);
+                        if (!locked) { console.log("[Community] Channel clicked:", ch.id); setActiveChannel(ch.id); setMobileTab("chat"); }
                       }}
                     >
                       <div className="c-ch-icon private">{ch.icon}</div>
