@@ -70,12 +70,8 @@ export default function BrainwaveSelector({
 }: BrainwaveSelectorProps) {
   const activePreset = BRAINWAVE_PRESETS.find(p => p.freq === activeFrequency);
 
-  // Default volume to 75% on mount if too low
-  React.useEffect(() => {
-    if (volume < 0.05) {
-      onVolumeChange(0.75);
-    }
-  }, []);
+  // Volume state is owned by parent (initialized at 0.75).
+  // No useEffect needed here.
 
   const categories = ['deep', 'meditative', 'flow', 'active', 'advanced'] as const;
 
@@ -104,11 +100,7 @@ export default function BrainwaveSelector({
 
         {/* Volume — default 75% */}
         <div>
-          {volume < 0.05 && (
-            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase', padding: '6px 12px', borderRadius: 10, marginBottom: 8, background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: '#fbbf24', display: 'flex', alignItems: 'center', gap: 6 }}>
-              ⚡ Move slider to activate frequency
-            </div>
-          )}
+          {/* No warning needed — volume starts at 75% */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 14, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
             <Volume2 size={14} style={{ color: activePreset?.color ?? '#a78bfa', flexShrink: 0 }} />
             <div style={{ flex: 1 }}>
