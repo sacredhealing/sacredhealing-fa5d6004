@@ -762,10 +762,11 @@ export default function CreativeSoulMeditationTool() {
       await engine?.startSolfeggio?.(healingFreq);
       await engine?.startBinaural?.(200, brainwaveFreq);
 
-      // Re-apply volumes AFTER start — startXxx resets gain from stale state
-      await new Promise(r => setTimeout(r, 80));
-      engine?.updateSolfeggioVolume?.(healingVolume);
-      engine?.updateBinauralVolume?.(brainwaveVolume);
+      // Re-apply volumes AFTER start — engine reads stale React state at start time
+      setTimeout(() => {
+        engine?.updateSolfeggioVolume?.(healingVolume);
+        engine?.updateBinauralVolume?.(brainwaveVolume);
+      }, 100);
 
       toast.success('Alchemy commenced — Anahata open');
     } catch (e) {
