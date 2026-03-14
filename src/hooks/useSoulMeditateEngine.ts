@@ -1206,19 +1206,21 @@ export function useSoulMeditateEngine() {
 
   const updateSolfeggioVolume = useCallback((vol: number) => {
     const safeVol = Math.min(OSCILLATOR_GAIN_MAX, vol * OSCILLATOR_BASE_GAIN);
-    if (solfeggioGainRef.current && frequencies.solfeggio.enabled) {
+    // Always apply when gain node exists — enabled check caused stale closure to skip volume (no sound)
+    if (solfeggioGainRef.current) {
       solfeggioGainRef.current.gain.value = safeVol;
     }
     setSolfeggioVolume(vol); // Store original for UI
-  }, [frequencies.solfeggio.enabled]);
+  }, []);
 
   const updateBinauralVolume = useCallback((vol: number) => {
     const safeVol = Math.min(OSCILLATOR_GAIN_MAX, vol * OSCILLATOR_BASE_GAIN);
-    if (binauralGainRef.current && frequencies.binaural.enabled) {
+    // Always apply when gain node exists — enabled check caused stale closure to skip volume (no sound)
+    if (binauralGainRef.current) {
       binauralGainRef.current.gain.value = safeVol;
     }
     setBinauralVolume(vol); // Store original for UI
-  }, [frequencies.binaural.enabled]);
+  }, []);
 
   const updateMasterVolume = useCallback((vol: number) => {
     const safeVol = clampVolume(vol, 0.95); // Master has limiter, allow higher
