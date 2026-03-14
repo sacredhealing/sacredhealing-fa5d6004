@@ -1,158 +1,316 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import React from 'react';
 import { Slider } from '@/components/ui/slider';
-import { Button } from '@/components/ui/button';
-import { Sparkles, Volume2, RefreshCw } from 'lucide-react';
+import { RefreshCw, Volume2 } from 'lucide-react';
+
+// ═══════════════════════════════════════════════════════
+//  SQI 2050 StyleGrid — Siddha-Gold palette, sacred glyphs
+//  Volume slider wired to engine.atmosphereLayer volume
+// ═══════════════════════════════════════════════════════
 
 export type MeditationStyle =
-  | 'indian'
-  | 'shamanic'
-  | 'mystic'
-  | 'tibetan'
-  | 'sufi'
-  | 'zen'
-  | 'nature'
-  | 'ocean'
-  | 'sound_bath'
-  | 'chakra'
-  | 'higher_consciousness'
-  | 'relaxing'
-  | 'forest'
-  | 'breath_focus'
-  | 'kundalini';
+  | 'indian' | 'shamanic' | 'mystic' | 'tibetan' | 'sufi'
+  | 'zen' | 'nature_healing' | 'ocean' | 'sound_bath' | 'chakra'
+  | 'higher_consciousness' | 'relaxing' | 'forest' | 'breath_focus' | 'kundalini';
 
-interface StyleConfig {
+interface StyleDef {
   id: MeditationStyle;
   label: string;
-  description: string;
-  icon: string;
+  sub: string;
   tags?: string[];
-  color: string;
+  glyph: string;          // SVG path or unicode sacred symbol
+  glyphColor: string;
+  glowColor: string;
 }
 
-const STYLE_CONFIGS: StyleConfig[] = [
-  { id: 'indian', label: 'Indian (Vedic)', description: 'Mantras, tanpura drones, temple bells', icon: '🕉️', tags: ['tanpura', 'indian drone'], color: 'from-purple-500/20 to-violet-500/20 border-purple-500/50' },
-  { id: 'shamanic', label: 'Shamanic', description: 'Frame drums, rattles, tribal rhythms', icon: '🪘', color: 'from-orange-500/20 to-amber-500/20 border-orange-500/30' },
-  { id: 'mystic', label: 'Mystic', description: 'Etheric pads, choirs, cosmic textures', icon: '✨', color: 'from-indigo-500/20 to-purple-500/20 border-indigo-500/30' },
-  { id: 'tibetan', label: 'Tibetan', description: 'Singing bowls, long horns, overtone chanting', icon: '🔔', color: 'from-yellow-500/20 to-amber-500/20 border-yellow-500/30' },
-  { id: 'sufi', label: 'Sufi', description: 'Whirling rhythms, ney flute, heart devotion', icon: '💫', color: 'from-rose-500/20 to-pink-500/20 border-rose-500/30' },
-  { id: 'zen', label: 'Zen (Japanese)', description: 'Minimal ambience, breath awareness', icon: '🎋', color: 'from-green-500/20 to-emerald-500/20 border-green-500/30' },
-  { id: 'nature', label: 'Nature Healing', description: 'Forest, birds, wind, water', icon: '🌿', color: 'from-emerald-500/20 to-teal-500/20 border-emerald-500/30' },
-  { id: 'ocean', label: 'Ocean / Water', description: 'Waves, flowing water, deep calming', icon: '🌊', color: 'from-cyan-500/20 to-blue-500/20 border-cyan-500/30' },
-  { id: 'sound_bath', label: 'Sound Bath', description: 'Gongs, crystal bowls, harmonic overtones', icon: '🎵', color: 'from-violet-500/20 to-fuchsia-500/20 border-violet-500/30' },
-  { id: 'chakra', label: 'Chakra Balancing', description: 'Layered tones for each chakra', icon: '🔮', color: 'from-fuchsia-500/20 to-pink-500/20 border-fuchsia-500/50' },
-  { id: 'higher_consciousness', label: 'Higher Consciousness', description: 'Cosmic tones, transcendence', icon: '🌌', color: 'from-purple-500/20 to-indigo-500/20 border-purple-500/30' },
-  { id: 'relaxing', label: 'Relaxing', description: 'Gentle ambient, stress relief', icon: '😌', color: 'from-teal-500/20 to-cyan-500/20 border-teal-500/30' },
-  { id: 'forest', label: 'Forest', description: 'Birdsong, rustling leaves, natural calm', icon: '🌲', color: 'from-green-500/20 to-lime-500/20 border-green-500/30' },
-  { id: 'breath_focus', label: 'Breath Focus', description: 'Breath cues, minimal ambience', icon: '🌬️', color: 'from-slate-500/20 to-gray-500/20 border-slate-500/30' },
-  { id: 'kundalini', label: 'Kundalini Energy', description: 'Rising energy, drone + subtle pulses', icon: '🐍', color: 'from-lime-500/20 to-green-500/20 border-lime-500/30' },
+const STYLES: StyleDef[] = [
+  {
+    id: 'indian',
+    label: 'Indian (Vedic)',
+    sub: 'Mantras, tanpura drones, temple bells',
+    tags: ['tanpura', 'indian drone'],
+    glyph: 'ॐ',
+    glyphColor: '#D4AF37',
+    glowColor: 'rgba(212,175,55,0.3)',
+  },
+  {
+    id: 'shamanic',
+    label: 'Shamanic',
+    sub: 'Frame drums, rattles, tribal rhythms',
+    glyph: '⬡',
+    glyphColor: '#fb923c',
+    glowColor: 'rgba(251,146,60,0.3)',
+  },
+  {
+    id: 'mystic',
+    label: 'Mystic',
+    sub: 'Etheric pads, choirs, cosmic textures',
+    glyph: '✦',
+    glyphColor: '#a78bfa',
+    glowColor: 'rgba(167,139,250,0.3)',
+  },
+  {
+    id: 'tibetan',
+    label: 'Tibetan',
+    sub: 'Singing bowls, long horns, overtones',
+    glyph: '◎',
+    glyphColor: '#fbbf24',
+    glowColor: 'rgba(251,191,36,0.3)',
+  },
+  {
+    id: 'sufi',
+    label: 'Sufi',
+    sub: 'Whirling rhythms, ney flute, heart devotion',
+    glyph: '☽',
+    glyphColor: '#34d399',
+    glowColor: 'rgba(52,211,153,0.3)',
+  },
+  {
+    id: 'zen',
+    label: 'Zen (Japanese)',
+    sub: 'Minimal ambience, breath awareness',
+    glyph: '⊕',
+    glyphColor: '#38bdf8',
+    glowColor: 'rgba(56,189,248,0.3)',
+  },
+  {
+    id: 'nature_healing',
+    label: 'Nature Healing',
+    sub: 'Forest, birds, wind, water',
+    glyph: '❋',
+    glyphColor: '#4ade80',
+    glowColor: 'rgba(74,222,128,0.3)',
+  },
+  {
+    id: 'ocean',
+    label: 'Ocean / Water',
+    sub: 'Waves, flowing water, deep calming',
+    glyph: '〜',
+    glyphColor: '#22d3ee',
+    glowColor: 'rgba(34,211,238,0.3)',
+  },
+  {
+    id: 'sound_bath',
+    label: 'Sound Bath',
+    sub: 'Gongs, crystal bowls, harmonic overtones',
+    glyph: '◉',
+    glyphColor: '#D4AF37',
+    glowColor: 'rgba(212,175,55,0.3)',
+  },
+  {
+    id: 'chakra',
+    label: 'Chakra Balancing',
+    sub: 'Layered tones for each chakra',
+    glyph: '⟁',
+    glyphColor: '#f472b6',
+    glowColor: 'rgba(244,114,182,0.3)',
+  },
+  {
+    id: 'higher_consciousness',
+    label: 'Higher Consciousness',
+    sub: 'Cosmic tones, transcendence',
+    glyph: '★',
+    glyphColor: '#818cf8',
+    glowColor: 'rgba(129,140,248,0.3)',
+  },
+  {
+    id: 'relaxing',
+    label: 'Relaxing',
+    sub: 'Gentle ambient, stress relief',
+    glyph: '∞',
+    glyphColor: '#6ee7b7',
+    glowColor: 'rgba(110,231,183,0.3)',
+  },
+  {
+    id: 'forest',
+    label: 'Forest',
+    sub: 'Birdsong, rustling leaves, natural calm',
+    glyph: '⵿',
+    glyphColor: '#86efac',
+    glowColor: 'rgba(134,239,172,0.3)',
+  },
+  {
+    id: 'breath_focus',
+    label: 'Breath Focus',
+    sub: 'Breath cues, minimal ambience',
+    glyph: '◈',
+    glyphColor: '#7dd3fc',
+    glowColor: 'rgba(125,211,252,0.3)',
+  },
+  {
+    id: 'kundalini',
+    label: 'Kundalini Energy',
+    sub: 'Rising energy, drone + subtle pulses',
+    glyph: '⚡',
+    glyphColor: '#fde68a',
+    glowColor: 'rgba(253,230,138,0.3)',
+  },
 ];
 
 interface StyleGridProps {
   activeStyle: MeditationStyle;
-  onStyleSelect: (style: MeditationStyle) => void;
-  /** Atmosphere (ambient) volume 0-1 */
-  atmosphereVolume?: number;
-  onAtmosphereVolumeChange?: (vol: number) => void;
-  /** Fetch a new random sound from the library for the selected style (no reload). Receives the active style id. */
-  onRefreshSound?: (styleId: MeditationStyle) => void;
-  /** True while loading a new sound */
-  isRefreshingSound?: boolean;
+  onStyleChange: (style: MeditationStyle) => void;
+  engine: any;
+  onRefreshSound: (style: MeditationStyle) => void;
+  isRefreshing: boolean;
+  volumes: { ambient: number; binaural: number; healing: number; user: number };
+  onVolumeChange: (key: string, value: number) => void;
 }
 
-export default function StyleGrid({
+export function StyleGrid({
   activeStyle,
-  onStyleSelect,
-  atmosphereVolume = 0.85,
-  onAtmosphereVolumeChange,
+  onStyleChange,
+  engine,
   onRefreshSound,
-  isRefreshingSound = false,
+  isRefreshing,
+  volumes,
+  onVolumeChange,
 }: StyleGridProps) {
-  return (
-    <Card className="bg-black/40 backdrop-blur-xl border-white/10">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <CardTitle className="text-lg flex items-center gap-2 text-white/90">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20">
-              <Sparkles className="w-5 h-5 text-purple-400" />
-            </div>
-            II. Meditation Style & Atmosphere
-          </CardTitle>
+  const active = STYLES.find(s => s.id === activeStyle) ?? STYLES[0];
 
-          <div className="flex items-center gap-3">
-            {/* Search new sound button */}
-            {onRefreshSound && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onRefreshSound(activeStyle)}
-                disabled={isRefreshingSound}
-                className="bg-white/5 border-white/20 text-cyan-400 hover:bg-cyan-500/20 hover:border-cyan-500/50"
-                title="Search for a new sound in the library"
-              >
-                {isRefreshingSound ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="w-4 h-4" />
-                )}
-                <span className="ml-2 hidden sm:inline">New Sound</span>
-              </Button>
-            )}
-            {/* Atmosphere Volume Slider */}
-            <div className="flex items-center gap-3 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
-              <Volume2 className="w-4 h-4 text-cyan-400" />
+  const handleVolumeChange = (val: number) => {
+    onVolumeChange('ambient', val);
+    // Wire directly to engine atmosphere volume
+    engine?.updateAtmosphereVolume?.(val / 100);
+  };
+
+  return (
+    <div>
+      {/* Header row with refresh + volume */}
+      <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          {/* Active style indicator */}
+          <span style={{ fontSize: 18, filter: `drop-shadow(0 0 8px ${active.glowColor})` }}>
+            {active.glyph}
+          </span>
+          <span className="text-[9px] font-extrabold uppercase tracking-[0.3em]" style={{ color: active.glyphColor }}>
+            {active.label}
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          {/* Atmosphere volume — wired to engine */}
+          <div className="flex items-center gap-2 px-3 py-2 rounded-2xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', minWidth: 160 }}>
+            <Volume2 size={12} style={{ color: 'rgba(212,175,55,0.6)', flexShrink: 0 }} />
+            <div className="flex-1">
+              <div className="flex justify-between text-[8px] mb-1">
+                <span className="text-white/40 font-bold uppercase tracking-[0.3em]">Atmosphere</span>
+                <span className="font-mono font-bold" style={{ color: '#D4AF37' }}>{volumes.ambient}%</span>
+              </div>
               <Slider
-                value={[atmosphereVolume]}
+                value={[volumes.ambient]}
                 min={0}
-                max={1}
-                step={0.01}
-                onValueChange={([v]) => onAtmosphereVolumeChange?.(v)}
-                className="w-24 [&_[role=slider]]:bg-cyan-400"
+                max={100}
+                step={1}
+                onValueChange={([v]) => handleVolumeChange(v)}
+                className="[&_[role=slider]]:bg-[#D4AF37] [&_[role=slider]]:border-0 [&_[role=slider]]:shadow-[0_0_8px_rgba(212,175,55,0.5)]"
               />
-              <span className="text-xs text-white/60 w-9 tabular-nums">
-                {Math.round(atmosphereVolume * 100)}%
-              </span>
             </div>
           </div>
+          {/* Refresh sound button */}
+          <button
+            onClick={() => onRefreshSound(activeStyle)}
+            disabled={isRefreshing}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-2xl text-[8px] font-extrabold uppercase tracking-[0.3em] cursor-pointer transition-all"
+            style={{ background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.25)', color: '#D4AF37' }}
+          >
+            <RefreshCw size={12} style={{ animation: isRefreshing ? 'spin 1s linear infinite' : 'none' }} />
+            New Sound
+          </button>
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-          {STYLE_CONFIGS.map((style) => {
-            const isActive = activeStyle === style.id;
-            return (
-              <button
-                key={style.id}
-                onClick={() => onStyleSelect(style.id)}
-                className={`p-3 rounded-xl text-left transition-all border ${
-                  isActive
-                    ? `bg-gradient-to-br ${style.color}`
-                    : 'bg-slate-900/50 border-slate-800 hover:border-slate-700 hover:bg-slate-800/50'
-                }`}
-              >
-                <div className="text-2xl mb-2">{style.icon}</div>
-                <div className={`text-sm font-medium mb-1 ${isActive ? 'text-white' : 'text-white/80'}`}>
+      </div>
+
+      {/* Style grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10 }}>
+        {STYLES.map(style => {
+          const isActive = activeStyle === style.id;
+          return (
+            <button
+              key={style.id}
+              onClick={() => onStyleChange(style.id)}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                gap: 8,
+                padding: '14px 16px',
+                borderRadius: 20,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                border: isActive
+                  ? `1px solid ${style.glyphColor}60`
+                  : '1px solid rgba(255,255,255,0.06)',
+                background: isActive
+                  ? `${style.glyphColor}10`
+                  : 'rgba(255,255,255,0.02)',
+                boxShadow: isActive
+                  ? `0 0 20px ${style.glowColor}, inset 0 0 20px ${style.glyphColor}05`
+                  : 'none',
+                textAlign: 'left',
+              }}
+            >
+              {/* Sacred glyph */}
+              <div style={{
+                width: 38,
+                height: 38,
+                borderRadius: 14,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 20,
+                background: isActive ? `${style.glyphColor}20` : 'rgba(255,255,255,0.05)',
+                border: `1px solid ${isActive ? style.glyphColor + '40' : 'rgba(255,255,255,0.08)'}`,
+                filter: isActive ? `drop-shadow(0 0 8px ${style.glowColor})` : 'none',
+                color: isActive ? style.glyphColor : 'rgba(255,255,255,0.5)',
+                flexShrink: 0,
+                transition: 'all 0.2s',
+              }}>
+                {style.glyph}
+              </div>
+
+              {/* Text */}
+              <div>
+                <div style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: isActive ? '#fff' : 'rgba(255,255,255,0.7)',
+                  letterSpacing: '-0.01em',
+                  marginBottom: 3,
+                }}>
                   {style.label}
                 </div>
-                <p className="text-xs text-white/50 line-clamp-2">{style.description}</p>
-                {style.tags && isActive && (
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {style.tags.map((tag) => (
-                      <Badge
-                        key={tag}
-                        variant="outline"
-                        className="text-[9px] px-1.5 py-0 border-cyan-500/50 text-cyan-400"
-                      >
+                <div style={{
+                  fontSize: 10,
+                  color: isActive ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.35)',
+                  lineHeight: 1.4,
+                }}>
+                  {style.sub}
+                </div>
+                {/* Tags for active */}
+                {isActive && style.tags && (
+                  <div className="flex gap-1 mt-2 flex-wrap">
+                    {style.tags.map(tag => (
+                      <span key={tag} style={{
+                        fontSize: 8,
+                        fontWeight: 700,
+                        letterSpacing: '0.15em',
+                        textTransform: 'uppercase',
+                        padding: '2px 7px',
+                        borderRadius: 8,
+                        background: `${style.glyphColor}20`,
+                        border: `1px solid ${style.glyphColor}40`,
+                        color: style.glyphColor,
+                      }}>
                         {tag}
-                      </Badge>
+                      </span>
                     ))}
                   </div>
                 )}
-              </button>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
+
+export default StyleGrid;

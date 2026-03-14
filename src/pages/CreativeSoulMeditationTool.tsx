@@ -802,11 +802,12 @@ export default function CreativeSoulMeditationTool() {
                   </div>
                   <StyleGrid
                     activeStyle={activeStyle}
-                    onStyleSelect={setActiveStyle}
-                    atmosphereVolume={volumes.ambient / 100}
-                    onAtmosphereVolumeChange={(v) => setVolumes(p => ({ ...p, ambient: Math.round(v * 100) }))}
+                    onStyleChange={setActiveStyle}
+                    engine={engine}
                     onRefreshSound={handleRefreshSound}
-                    isRefreshingSound={isRefreshingSound}
+                    isRefreshing={isRefreshingSound}
+                    volumes={volumes}
+                    onVolumeChange={(k, v) => setVolumes(p => ({ ...p, [k]: v }))}
                   />
                 </div>
               </div>
