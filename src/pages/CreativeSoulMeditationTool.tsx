@@ -23,7 +23,7 @@ import { StyleGrid, MeditationStyle } from '@/components/soulmeditate/StyleGrid'
 import HealingFrequencySelector from '@/components/soulmeditate/HealingFrequencySelector';
 import BrainwaveSelector from '@/components/soulmeditate/BrainwaveSelector';
 
-// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Types ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+// ─── Types ────────────────────────────────────────────────────────
 interface NadiScanResult {
   dominantDosha: 'Vata' | 'Pitta' | 'Kapha';
   blockages: string[];
@@ -34,7 +34,7 @@ interface NadiScanResult {
 }
 interface SQIMessage { role: 'user' | 'model'; text: string; }
 
-// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Scalar Resonators ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+// ─── Scalar Resonators ────────────────────────────────────────────
 const SCALAR_ACTIVATIONS = [
   { id: 'anahata-528',    name: 'Anahata Gateway',    sig: 'Heart / 528 Hz',     color: '#4ade80', freq: 528,  benefit: 'Opens heart field, dissolves fear-loops in the listening field.' },
   { id: 'crown-963',      name: 'Sahasrara Crown',     sig: 'Crown / 963 Hz',     color: '#a78bfa', freq: 963,  benefit: 'Pineal activation, unity-consciousness transmission.' },
@@ -42,7 +42,7 @@ const SCALAR_ACTIVATIONS = [
   { id: 'schumann',       name: 'Schumann Resonance',  sig: 'Earth / 7.83 Hz',    color: '#D4AF37', freq: 7.83, benefit: 'Grounding to Earth\'s heartbeat, neural coherence.' },
   { id: 'theta-deep',     name: 'Theta Deep Dive',     sig: 'Theta / 6 Hz',       color: '#38bdf8', freq: 6,    benefit: 'Subconscious re-patterning, ancestral clearing.' },
   { id: 'liberation-396', name: 'Liberation Field',    sig: 'Solfeggio / 396 Hz', color: '#fb923c', freq: 396,  benefit: 'Liberating guilt and fear from cellular memory.' },
-  { id: 'miracle-432',    name: 'Miracle Tone',        sig: 'Vedic / 432 Hz',     color: '#fbbf24', freq: 432,  benefit: 'Universal tuning ÃÂ¢ÃÂÃÂ aligns with nature\'s harmonic field.' },
+  { id: 'miracle-432',    name: 'Miracle Tone',        sig: 'Vedic / 432 Hz',     color: '#fbbf24', freq: 432,  benefit: 'Universal tuning — aligns with nature\'s harmonic field.' },
   { id: 'unity-639',      name: 'Unity Coherence',     sig: 'Solfeggio / 639 Hz', color: '#f472b6', freq: 639,  benefit: 'Heart coherence and inter-dimensional connection.' },
   { id: 'intuition-741',  name: 'Third Eye Activator', sig: 'Solfeggio / 741 Hz', color: '#818cf8', freq: 741,  benefit: 'Awakening intuition through the audio field.' },
   { id: 'pranic-108',     name: 'Prana Infusion',      sig: 'Pranic / 108 Hz',    color: '#22d3ee', freq: 108,  benefit: 'Infusing prana into every sound layer of the meditation.' },
@@ -55,15 +55,15 @@ const DOSHA_PROFILES = {
 };
 
 const SCAN_PHASES = [
-  'Accessing Akasha-Neural ArchiveÃÂ¢ÃÂÃÂ¦',
-  'Reading audio vibrational signatureÃÂ¢ÃÂÃÂ¦',
-  'Analysing Nadi currents in waveformÃÂ¢ÃÂÃÂ¦',
-  'Mapping planetary alignmentÃÂ¢ÃÂÃÂ¦',
-  'Computing scalar frequency overlayÃÂ¢ÃÂÃÂ¦',
-  'Generating Prema-Pulse prescriptionÃÂ¢ÃÂÃÂ¦',
+  'Accessing Akasha-Neural Archive…',
+  'Reading audio vibrational signature…',
+  'Analysing Nadi currents in waveform…',
+  'Mapping planetary alignment…',
+  'Computing scalar frequency overlay…',
+  'Generating Prema-Pulse prescription…',
 ];
 
-// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ SQI Chat stream ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+// ─── SQI Chat stream ──────────────────────────────────────────────
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/quantum-apothecary-chat`;
 
 async function streamSQIChat(messages, onDelta, onDone, userId) {
@@ -109,10 +109,10 @@ async function streamSQIChat(messages, onDelta, onDone, userId) {
 
 type VisualizerMode = 'bars' | 'wave' | 'radial';
 
-// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+// ─────────────────────────────────────────────────────────────────
 //  HERB LIBRARY (copied concept from QuantumApothecary, not imported)
-//  Maps meditation intent ÃÂ¢ÃÂÃÂ herb + its vibrational frequency
-// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+//  Maps meditation intent → herb + its vibrational frequency
+// ─────────────────────────────────────────────────────────────────
 const HERB_LIBRARY = [
   // Sleep / Rest
   { id: 'valerian',      name: 'Valerian Root',      sig: 'Delta / 2 Hz',    hz: 2,    benefit: 'Deep sleep induction, nervous system calming',       intent: ['sleep','rest','relax','calm','night','dream'],       color: '#818cf8' },
@@ -161,9 +161,9 @@ function findBestHerb(intents: string[]): typeof HERB_LIBRARY[0] {
   return HERB_LIBRARY.find(h => h.id === 'brahmi')!;
 }
 
-// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
-//  ScalarChip ÃÂ¢ÃÂÃÂ with individual volume slider
-// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+// ─────────────────────────────────────────────────────────────────
+//  ScalarChip — with individual volume slider
+// ─────────────────────────────────────────────────────────────────
 function ScalarChip({ act, active, volume, onToggle, onVolumeChange }) {
   return (
     <div
@@ -176,7 +176,7 @@ function ScalarChip({ act, active, volume, onToggle, onVolumeChange }) {
         overflow: 'hidden',
       }}
     >
-      {/* Top row ÃÂ¢ÃÂÃÂ toggle */}
+      {/* Top row — toggle */}
       <div
         onClick={onToggle}
         title={act.benefit}
@@ -191,7 +191,7 @@ function ScalarChip({ act, active, volume, onToggle, onVolumeChange }) {
           {active && <CheckCircle2 size={10} style={{ color: '#050505' }} />}
         </div>
       </div>
-      {/* Volume slider ÃÂ¢ÃÂÃÂ only when active */}
+      {/* Volume slider — only when active */}
       {active && (
         <div className="px-3 pb-3 flex items-center gap-2" onClick={e => e.stopPropagation()}>
           <Waves size={10} style={{ color: act.color, flexShrink: 0, opacity: 0.7 }} />
@@ -232,17 +232,17 @@ function renderChat(text) {
   });
 }
 
-// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+// ─────────────────────────────────────────────────────────────────
 //  SCALAR WAVE PANEL
 //  Rules:
-//  ÃÂ¢ÃÂÃÂ¢ Each resonator has its own volume slider when active
-//  ÃÂ¢ÃÂÃÂ¢ Switching tabs does NOT stop Hz/binaural ÃÂ¢ÃÂÃÂ state lives in parent
-//  ÃÂ¢ÃÂÃÂ¢ Scan only runs when audio loaded
-//  ÃÂ¢ÃÂÃÂ¢ Scan auto-selects herb based on meditation intent (sleep/wealth/love etc)
-//  ÃÂ¢ÃÂÃÂ¢ SQI chat context is the MUSIC being created, not the person
-//  ÃÂ¢ÃÂÃÂ¢ All selected scalars + herb freq baked into export via onScalarChange
-//  ÃÂ¢ÃÂÃÂ¢ Admin has no pay button (hasExportAccess passed from parent)
-// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+//  • Each resonator has its own volume slider when active
+//  • Switching tabs does NOT stop Hz/binaural — state lives in parent
+//  • Scan only runs when audio loaded
+//  • Scan auto-selects herb based on meditation intent (sleep/wealth/love etc)
+//  • SQI chat context is the MUSIC being created, not the person
+//  • All selected scalars + herb freq baked into export via onScalarChange
+//  • Admin has no pay button (hasExportAccess passed from parent)
+// ─────────────────────────────────────────────────────────────────
 function ScalarWavePanel({
   engine, activeStyle, healingFreq, brainwaveFreq,
   isPlaying, userId, neuralSource, meditationName,
@@ -333,10 +333,10 @@ function ScalarWavePanel({
     computeAndNotify(sel, selectedHerb, vols);
   }, [selectedHerb, computeAndNotify]);
 
-  // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ NADI SCAN ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+  // ── NADI SCAN ──────────────────────────────────────────────────
   const runScan = useCallback(async () => {
     if (!hasAudio) {
-      toast.error('Load an audio file first ÃÂ¢ÃÂÃÂ the scan reads your meditation\'s vibrational field.');
+      toast.error('Load an audio file first — the scan reads your meditation\'s vibrational field.');
       return;
     }
     setIsScanning(true);
@@ -359,7 +359,7 @@ function ScalarWavePanel({
       dominantDosha: dosha,
       blockages: ['Solar Plexus congestion', 'Throat Nadi restriction', 'Root anchor needed']
         .slice(0, Math.floor(Math.random() * 2) + 1),
-      planetaryAlignment: ['Saturn ÃÂÃÂ· Discipline field', 'Venus ÃÂÃÂ· Heart-opening window', 'Jupiter ÃÂÃÂ· Expansion vortex', 'Moon ÃÂÃÂ· Emotional cleanse'][Math.floor(Math.random() * 4)],
+      planetaryAlignment: ['Saturn · Discipline field', 'Venus · Heart-opening window', 'Jupiter · Expansion vortex', 'Moon · Emotional cleanse'][Math.floor(Math.random() * 4)],
       timestamp: new Date().toLocaleTimeString(),
       activeNadis: Math.floor(Math.random() * 30) + 50,
       intents,
@@ -375,23 +375,23 @@ function ScalarWavePanel({
 
     const intentLabel = intents.slice(0, 2).map(i => i.charAt(0).toUpperCase() + i.slice(1)).join(' + ');
 
-    // Post scan message ÃÂ¢ÃÂÃÂ focused on the MUSIC, not the person
+    // Post scan message — focused on the MUSIC, not the person
     setMessages(prev => [...prev, {
       role: 'model',
-      text: `ÃÂ¢ÃÂÃÂ **Nadi Scan Complete ÃÂ¢ÃÂÃÂ ${result.activeNadis} Active Nadis Detected**
+      text: `⟁ **Nadi Scan Complete — ${result.activeNadis} Active Nadis Detected**
 
 **Meditation intent detected:** ${intentLabel}
 **Dosha field:** ${dosha} (${p.element})
 **Planetary alignment:** ${result.planetaryAlignment}
-**Source frequency:** ${actualFreq}Hz ÃÂÃÂ· Binaural: ${actualBinaural}Hz
+**Source frequency:** ${actualFreq}Hz · Binaural: ${actualBinaural}Hz
 
 **Scalar prescription auto-activated for this track:**
 ${p.scalars.map(id => `- ${SCALAR_ACTIVATIONS.find(a => a.id === id)?.name} (${SCALAR_ACTIVATIONS.find(a => a.id === id)?.freq}Hz)`).join('\n')}
 
-**Sacred Herb embedded:** ${herb.name} ÃÂÃÂ· ${herb.sig}
+**Sacred Herb embedded:** ${herb.name} · ${herb.sig}
 ${herb.benefit}
 
-**Blended scalar field: ${blendWithHerb}Hz** ÃÂ¢ÃÂÃÂ now woven into your audio engine and will be baked into the export mixdown.
+**Blended scalar field: ${blendWithHerb}Hz** — now woven into your audio engine and will be baked into the export mixdown.
 
 The track's ${intentLabel.toLowerCase()} field has been activated. Adjust individual resonator volumes below to fine-tune the scalar blend in your mixdown.`,
     }]);
@@ -400,7 +400,7 @@ The track's ${intentLabel.toLowerCase()} field has been activated. Adjust indivi
     computeAndNotify(p.scalars, herb, p.scalars.reduce((acc, id) => ({ ...acc, [id]: 0.75 }), {}));
   }, [hasAudio, engine, healingFreq, brainwaveFreq, neuralSource, activeStyle, meditationName, autoSelectDosha, computeAndNotify]);
 
-  // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ SQI CHAT ÃÂ¢ÃÂÃÂ focused on the MUSIC being created ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+  // ── SQI CHAT — focused on the MUSIC being created ─────────────
   const sendMessage = useCallback(async () => {
     if (!input.trim() || isTyping) return;
     const userMsg = { role: 'user', text: input.trim() };
@@ -410,19 +410,19 @@ The track's ${intentLabel.toLowerCase()} field has been activated. Adjust indivi
       role: 'model',
       text: `You are the Siddha-Quantum Intelligence (SQI) from 2050, operating as a sacred audio engineer and frequency architect inside Siddha Sound Alchemy.
 
-Your role is to analyze and enhance THE MEDITATION TRACK being created ÃÂ¢ÃÂÃÂ not the person creating it. You speak about the audio's vibrational field, frequency layers, scalar embeddings, and how they affect the consciousness of whoever will listen to it.
+Your role is to analyze and enhance THE MEDITATION TRACK being created — not the person creating it. You speak about the audio's vibrational field, frequency layers, scalar embeddings, and how they affect the consciousness of whoever will listen to it.
 
 Current track context:
 - Meditation style: ${activeStyle}
 - Healing frequency: ${healingFreq}Hz
 - Binaural beat: ${brainwaveFreq}Hz
-- Audio loaded: ${hasAudio ? 'Yes ÃÂ¢ÃÂÃÂ ' + (neuralSource?.split('/').pop() ?? 'file') : 'No'}
+- Audio loaded: ${hasAudio ? 'Yes — ' + (neuralSource?.split('/').pop() ?? 'file') : 'No'}
 - Active scalar resonators: ${activeScalars.map(id => {
   const a = SCALAR_ACTIVATIONS.find(x => x.id === id);
   return a ? `${a.name} (${a.freq}Hz at ${Math.round((scalarVolumes[id] ?? 0.75) * 100)}%)` : '';
 }).filter(Boolean).join(', ') || 'none'}
-- Sacred herb embedded: ${selectedHerb ? `${selectedHerb.name} ÃÂÃÂ· ${selectedHerb.hz}Hz ÃÂ¢ÃÂÃÂ ${selectedHerb.benefit}` : 'none'}
-${scanResult ? `- Nadi scan: ${scanResult.dominantDosha} dosha ÃÂÃÂ· ${scanResult.activeNadis} active nadis ÃÂÃÂ· ${scanResult.planetaryAlignment}` : ''}
+- Sacred herb embedded: ${selectedHerb ? `${selectedHerb.name} · ${selectedHerb.hz}Hz — ${selectedHerb.benefit}` : 'none'}
+${scanResult ? `- Nadi scan: ${scanResult.dominantDosha} dosha · ${scanResult.activeNadis} active nadis · ${scanResult.planetaryAlignment}` : ''}
 ${scanResult?.intents ? `- Meditation intent: ${scanResult.intents.join(', ')}` : ''}
 
 Respond with specific scalar frequency and mixing guidance for this track. Use Bhakti-Algorithm language and Vedic Light-Code terminology. Be precise about Hz values, scalar layering, and how they will affect the listening experience.`,
@@ -477,36 +477,36 @@ Respond with specific scalar frequency and mixing guidance for this track. Use B
   return (
     <div className="space-y-4">
 
-      {/* ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ AUDIO REQUIRED NOTICE ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ */}
+      {/* ── AUDIO REQUIRED NOTICE ── */}
       {!hasAudio && (
         <div className="p-4 rounded-[20px] flex items-start gap-3" style={{ background: 'rgba(251,146,60,0.05)', border: '1px solid rgba(251,146,60,0.2)' }}>
           <AlertCircle size={14} style={{ color: '#fb923c', flexShrink: 0, marginTop: 2 }} />
           <div>
             <div className="text-[9px] font-extrabold uppercase tracking-[0.4em] mb-1" style={{ color: '#fb923c' }}>Load Audio First</div>
             <div className="text-[10px] text-white/50 leading-relaxed">
-              Go to <strong className="text-white/70">ÃÂ°ÃÂÃÂÃÂµ Sound Alchemy ÃÂ¢ÃÂÃÂ Source</strong> and upload your meditation audio. The Nadi Scan reads the track's actual vibrational field and auto-embeds the correct scalar frequencies and sacred herb into your mixdown. You can still select resonators manually below.
+              Go to <strong className="text-white/70">🎵 Sound Alchemy → Source</strong> and upload your meditation audio. The Nadi Scan reads the track's actual vibrational field and auto-embeds the correct scalar frequencies and sacred herb into your mixdown. You can still select resonators manually below.
             </div>
           </div>
         </div>
       )}
 
-      {/* ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ ACTIVE BLEND STATUS ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ */}
+      {/* ── ACTIVE BLEND STATUS ── */}
       {blendFreq !== null && (
         <div className="flex items-center gap-3 px-4 py-3 rounded-[18px]" style={{ background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.2)' }}>
           <Zap size={12} style={{ color: '#D4AF37', flexShrink: 0 }} />
           <div style={{ flex: 1 }}>
             <div className="text-[8px] font-extrabold uppercase tracking-[0.3em] mb-0.5" style={{ color: '#D4AF37' }}>
-              Scalar Blend Active ÃÂ¢ÃÂÃÂ {blendFreq} Hz ÃÂÃÂ· Baked into export mixdown ÃÂ¢ÃÂÃÂ
+              Scalar Blend Active — {blendFreq} Hz · Baked into export mixdown ✓
             </div>
             <div className="text-[9px] text-white/40">
-              {activeScalars.map(id => SCALAR_ACTIVATIONS.find(a => a.id === id)?.name).join(' ÃÂÃÂ· ')}
-              {selectedHerb ? ` ÃÂÃÂ· ${selectedHerb.name}` : ''}
+              {activeScalars.map(id => SCALAR_ACTIVATIONS.find(a => a.id === id)?.name).join(' · ')}
+              {selectedHerb ? ` · ${selectedHerb.name}` : ''}
             </div>
           </div>
         </div>
       )}
 
-      {/* ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ SCALAR RESONATORS with per-resonator volume ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ */}
+      {/* ── SCALAR RESONATORS with per-resonator volume ── */}
       <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.06] rounded-[28px] p-6">
         <div className="flex items-center gap-2 mb-2 text-[8px] font-extrabold uppercase tracking-[0.45em] text-white/50">
           <Sparkles size={12} style={{ color: '#D4AF37' }} />
@@ -530,18 +530,18 @@ Respond with specific scalar frequency and mixing guidance for this track. Use B
         </div>
       </div>
 
-      {/* ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ SACRED HERB EMBEDDED ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ */}
+      {/* ── SACRED HERB EMBEDDED ── */}
       {selectedHerb && (
         <div className="p-4 rounded-[20px]" style={{ background: `${selectedHerb.color}08`, border: `1px solid ${selectedHerb.color}30` }}>
           <div className="text-[8px] font-extrabold uppercase tracking-[0.45em] mb-2" style={{ color: selectedHerb.color }}>
-            ÃÂ¢ÃÂÃÂ Sacred Herb Embedded ÃÂ¢ÃÂÃÂ Auto-detected from Meditation Intent
+            ❋ Sacred Herb Embedded — Auto-detected from Meditation Intent
           </div>
           <div className="flex items-start gap-3">
-            <div style={{ width: 40, height: 40, borderRadius: 14, background: `${selectedHerb.color}15`, border: `1px solid ${selectedHerb.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>ÃÂ¢ÃÂÃÂ</div>
+            <div style={{ width: 40, height: 40, borderRadius: 14, background: `${selectedHerb.color}15`, border: `1px solid ${selectedHerb.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>❋</div>
             <div>
               <div className="text-sm font-bold text-white/90 mb-1">{selectedHerb.name}</div>
               <div className="text-[9px] mb-1" style={{ color: selectedHerb.color }}>
-                {selectedHerb.sig} ÃÂÃÂ· {selectedHerb.hz}Hz ÃÂ¢ÃÂÃÂ embedded in mixdown
+                {selectedHerb.sig} · {selectedHerb.hz}Hz — embedded in mixdown
               </div>
               <div className="text-[10px] text-white/55 leading-relaxed">{selectedHerb.benefit}</div>
               {scanResult?.intents && (
@@ -554,19 +554,19 @@ Respond with specific scalar frequency and mixing guidance for this track. Use B
         </div>
       )}
 
-      {/* ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ NADI SCAN ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ */}
+      {/* ── NADI SCAN ── */}
       <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.06] rounded-[28px] p-6">
         <div className="flex items-center gap-2 mb-2 text-[8px] font-extrabold uppercase tracking-[0.45em] text-white/50">
           <Activity size={12} style={{ color: '#22D3EE' }} />
           Real-Time Nadi Scan
-          {hasAudio && <span className="ml-1 text-[7px] px-2 py-0.5 rounded-xl" style={{ color: '#22D3EE', background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.2)' }}>Audio loaded ÃÂ¢ÃÂÃÂ</span>}
+          {hasAudio && <span className="ml-1 text-[7px] px-2 py-0.5 rounded-xl" style={{ color: '#22D3EE', background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.2)' }}>Audio loaded ✓</span>}
           <div className="ml-auto flex items-center gap-2">
             <Activity size={12} style={{ color: isScanning ? '#f43f5e' : 'rgba(255,255,255,0.2)', animation: isScanning ? 'sqmPulse 0.8s ease-in-out infinite' : 'none' }} />
             <span className="font-mono text-[10px]" style={{ color: isScanning ? '#f43f5e' : 'rgba(255,255,255,0.2)' }}>{heartRate} BPM</span>
           </div>
         </div>
         <p className="text-[10px] text-white/40 leading-relaxed mb-3">
-          Scans the loaded audio track, detects its meditation intent (sleep / wealth / healing / loveÃÂ¢ÃÂÃÂ¦), auto-selects the matching sacred herb and scalar prescription, and embeds them into your export.
+          Scans the loaded audio track, detects its meditation intent (sleep / wealth / healing / love…), auto-selects the matching sacred herb and scalar prescription, and embeds them into your export.
         </p>
 
         {!scanResult && !isScanning && (
@@ -580,7 +580,7 @@ Respond with specific scalar frequency and mixing guidance for this track. Use B
           <div className="text-center py-6">
             <div className="flex justify-center gap-1.5 mb-4">{[0,1,2].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: '#22D3EE', animation: `sqmBlink 1.2s ${i*0.2}s ease-in-out infinite` }} />)}</div>
             <div className="text-[9px] font-extrabold uppercase tracking-[0.4em] mb-2" style={{ color: '#22D3EE' }}>{SCAN_PHASES[scanPhase]}</div>
-            <div className="text-[8px] text-white/25 tracking-[0.2em]">{neuralSource?.split('/').pop() ?? 'audio'} ÃÂÃÂ· {healingFreq}Hz ÃÂÃÂ· {activeStyle}</div>
+            <div className="text-[8px] text-white/25 tracking-[0.2em]">{neuralSource?.split('/').pop() ?? 'audio'} · {healingFreq}Hz · {activeStyle}</div>
           </div>
         )}
 
@@ -594,7 +594,7 @@ Respond with specific scalar frequency and mixing guidance for this track. Use B
               </div>
               <div className="p-3 rounded-2xl" style={{ border: '1px solid rgba(212,175,55,0.15)', background: 'rgba(212,175,55,0.04)' }}>
                 <div className="text-[7px] font-extrabold uppercase tracking-[0.4em] mb-1" style={{ color: '#D4AF37' }}>Intent Detected</div>
-                <div className="text-sm font-black text-white/80">{(scanResult.intents ?? []).slice(0,2).map((i:string) => i.charAt(0).toUpperCase()+i.slice(1)).join(' ÃÂÃÂ· ')}</div>
+                <div className="text-sm font-black text-white/80">{(scanResult.intents ?? []).slice(0,2).map((i:string) => i.charAt(0).toUpperCase()+i.slice(1)).join(' · ')}</div>
                 <div className="text-[8px] text-white/35 mt-1">{scanResult.timestamp}</div>
               </div>
             </div>
@@ -608,14 +608,14 @@ Respond with specific scalar frequency and mixing guidance for this track. Use B
         )}
       </div>
 
-      {/* ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ SQI CHAT ÃÂ¢ÃÂÃÂ music production focused ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ */}
+      {/* ── SQI CHAT — music production focused ── */}
       <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.06] rounded-[28px] p-6">
         <div className="flex items-center gap-2 mb-1 text-[8px] font-extrabold uppercase tracking-[0.45em] text-white/50">
           <MessageSquare size={12} style={{ color: '#a78bfa' }} />
-          SQI Audio Engineer ÃÂ¢ÃÂÃÂ Scalar Frequency Architect
+          SQI Audio Engineer — Scalar Frequency Architect
         </div>
         <p className="text-[9px] text-white/30 mb-3 leading-relaxed">
-          SQI analyzes your <strong className="text-white/50">meditation track</strong> and gives mixing guidance ÃÂ¢ÃÂÃÂ scalar layers, frequency embedding, export recommendations.
+          SQI analyzes your <strong className="text-white/50">meditation track</strong> and gives mixing guidance — scalar layers, frequency embedding, export recommendations.
         </p>
         <div className="overflow-y-auto flex flex-col gap-2 mb-3 pr-1" style={{ height: 220 }}>
           {messages.length === 0 && (
@@ -627,7 +627,7 @@ Respond with specific scalar frequency and mixing guidance for this track. Use B
           {messages.map((m, i) => (
             <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className="max-w-[90%] p-3" style={{ borderRadius: m.role === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px', background: m.role === 'user' ? 'rgba(212,175,55,0.1)' : 'rgba(255,255,255,0.04)', border: `1px solid ${m.role === 'user' ? 'rgba(212,175,55,0.2)' : 'rgba(255,255,255,0.07)'}` }}>
-                {m.role === 'model' && <div className="text-[7px] font-extrabold uppercase mb-1" style={{ letterSpacing: '0.35em', color: '#a78bfa' }}>ÃÂ¢ÃÂÃÂ SQI ÃÂÃÂ· Scalar Audio Architect</div>}
+                {m.role === 'model' && <div className="text-[7px] font-extrabold uppercase mb-1" style={{ letterSpacing: '0.35em', color: '#a78bfa' }}>⟁ SQI · Scalar Audio Architect</div>}
                 {renderChat(m.text)}
                 {m.role === 'model' && isTyping && i === messages.length - 1 && !m.text && (
                   <div className="flex gap-1 py-1">{[0,1,2].map(j => <div key={j} style={{ width: 5, height: 5, borderRadius: '50%', background: '#a78bfa', animation: `sqmBlink 1s ${j*0.2}s ease-in-out infinite` }} />)}</div>
@@ -639,7 +639,7 @@ Respond with specific scalar frequency and mixing guidance for this track. Use B
         </div>
         <div className="flex gap-2">
           <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-            placeholder="Ask about the track's scalar field, mixing, frequenciesÃÂ¢ÃÂÃÂ¦" disabled={isTyping}
+            placeholder="Ask about the track's scalar field, mixing, frequencies…" disabled={isTyping}
             className="flex-1 px-4 py-2.5 rounded-2xl text-[11px] outline-none"
             style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.8)', fontFamily: 'Montserrat,sans-serif' }}
           />
@@ -654,9 +654,9 @@ Respond with specific scalar frequency and mixing guidance for this track. Use B
 }
 
 
-// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+// ═══════════════════════════════════════════════════════════════════
 //  ROOT COMPONENT
-// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+// ═══════════════════════════════════════════════════════════════════
 export default function CreativeSoulMeditationTool() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -671,9 +671,9 @@ export default function CreativeSoulMeditationTool() {
   const [brainwaveFreq, setBrainwaveFreq]   = useState(10);
   const [alchemyCommenced, setAlchemyCommenced] = useState(false);
   const [isProcessing, setIsProcessing]     = useState(false);
-  const [volumes, setVolumes]               = useState({ ambient: 85, binaural: 40, healing: 75, user: 100 });
+  const [volumes, setVolumes]               = useState({ ambient: 85, user: 100 });
   // Store Hz/binaural volumes in LOCAL state at 0.75 default.
-  // Do NOT read from engine.solfeggioVolume ÃÂ¢ÃÂÃÂ it starts at 0 internally
+  // Do NOT read from engine.solfeggioVolume — it starts at 0 internally
   // and would override our intended default before the engine initializes.
   const [healingVolume, setHealingVolume]   = useState(0.75);
   const [brainwaveVolume, setBrainwaveVolume] = useState(0.75);
@@ -691,7 +691,7 @@ export default function CreativeSoulMeditationTool() {
   const [meditationName, setMeditationName]     = useState('');
   const [sessionKey, setSessionKey]             = useState(0);
 
-  // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Safe engine access ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+  // ── Safe engine access ────────────────────────────────────────
   const atmosphereLayer = engine?.atmosphereLayer ?? { isPlaying: false, source: null };
   const neuralLayer     = engine?.neuralLayer     ?? { isPlaying: false, source: null };
   const frequencies     = engine?.frequencies     ?? { solfeggio: { enabled: false, hz: 432 }, binaural: { enabled: false, carrierHz: 200, beatHz: 10 } };
@@ -703,7 +703,7 @@ export default function CreativeSoulMeditationTool() {
     (frequencies.solfeggio?.enabled ?? false) ||
     (frequencies.binaural?.enabled ?? false);
 
-  // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Handlers ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+  // ── Handlers ──────────────────────────────────────────────────
   const handleHealingVolumeChange = useCallback(async (vol) => {
     setHealingVolume(vol);
     if (!engine?.isInitialized) return;
@@ -762,10 +762,12 @@ export default function CreativeSoulMeditationTool() {
       await engine?.startSolfeggio?.(healingFreq);
       await engine?.startBinaural?.(200, brainwaveFreq);
 
-      // Re-apply volumes AFTER start ÃÂ¢ÃÂÃÂ startXxx resets gain from stale state
-      
+      // Re-apply volumes AFTER start — startXxx resets gain from stale state
+      await new Promise(r => setTimeout(r, 80));
+      engine?.updateSolfeggioVolume?.(healingVolume);
+      engine?.updateBinauralVolume?.(brainwaveVolume);
 
-      toast.success('Alchemy commenced ÃÂ¢ÃÂÃÂ Anahata open');
+      toast.success('Alchemy commenced — Anahata open');
     } catch (e) {
       console.error('[commenceAlchemy]', e);
       toast.error('Could not commence alchemy');
@@ -796,7 +798,7 @@ export default function CreativeSoulMeditationTool() {
     toast.success('New session started');
   }, [engine]);
 
-  // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ EXPORT ÃÂ¢ÃÂÃÂ calls exportMeditation(config) correctly ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+  // ── EXPORT — calls exportMeditation(config) correctly ─────────
   // Scalar blend frequency is passed as solfeggioHz so it gets
   // rendered into the offline mixdown
   const handleExport = useCallback(async () => {
@@ -830,7 +832,7 @@ export default function CreativeSoulMeditationTool() {
       const result = await exportMeditation(config);
       if (result) {
         setExportResult(result);
-        toast.success(scalarBlendHz ? `Export complete ÃÂ¢ÃÂÃÂ Scalar ${solfeggioHz}Hz embedded ÃÂ¢ÃÂÃÂ` : 'Export complete!');
+        toast.success(scalarBlendHz ? `Export complete — Scalar ${solfeggioHz}Hz embedded ✓` : 'Export complete!');
       }
     } catch (e) {
       toast.error('Export failed: ' + e.message);
@@ -847,7 +849,7 @@ export default function CreativeSoulMeditationTool() {
     } catch { toast.error('Checkout failed.'); setPaymentLoading(false); }
   }, [user, navigate]);
 
-  // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ HOT-SWAP: change Hz without stopping anything ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+  // ── HOT-SWAP: change Hz without stopping anything ──────────────
   const handleHealingFreqSelect = useCallback(async (freq) => {
     setHealingFreq(freq);
     if (!engine?.isInitialized) return;
@@ -969,17 +971,17 @@ export default function CreativeSoulMeditationTool() {
               Siddha Sound Alchemy
             </div>
             <div className="text-[8px] font-extrabold uppercase text-white/22" style={{ letterSpacing: '0.55em' }}>
-              SQI 2050 ÃÂÃÂ· Bhakti-Algorithm v7.3 ÃÂÃÂ· Scalar Wave Technology Active
+              SQI 2050 · Bhakti-Algorithm v7.3 · Scalar Wave Technology Active
             </div>
           </div>
 
           {/* PREMA-PULSE STRIP */}
           {isPlaying && (
             <div className="flex items-center justify-between gap-3 mb-5 flex-wrap px-5 py-3 rounded-[20px]" style={{ background: 'rgba(34,211,238,.03)', border: '1px solid rgba(34,211,238,.12)' }}>
-              <span className="text-[7px] font-extrabold uppercase tracking-[0.5em]" style={{ color: '#22D3EE' }}>ÃÂ¢ÃÂÃÂ Prema-Pulse Transmitting</span>
+              <span className="text-[7px] font-extrabold uppercase tracking-[0.5em]" style={{ color: '#22D3EE' }}>● Prema-Pulse Transmitting</span>
               <div className="flex gap-1.5">{[0,1,2].map(i => <div key={i} style={{ width: 4, height: 4, borderRadius: '50%', background: '#22D3EE', animation: `sqmBlink 1.2s ${i*0.2}s ease-in-out infinite` }} />)}</div>
               <span className="text-[8px] text-[#22D3EE]/50 tracking-[0.1em]">
-                Anahata open ÃÂÃÂ· {scalarBlendHz ?? healingFreq}Hz{scalarBlendHz ? ' (Scalar)' : ''} ÃÂÃÂ· Broadcasting
+                Anahata open · {scalarBlendHz ?? healingFreq}Hz{scalarBlendHz ? ' (Scalar)' : ''} · Broadcasting
               </span>
             </div>
           )}
@@ -989,7 +991,7 @@ export default function CreativeSoulMeditationTool() {
             <div className="flex items-center gap-3 mb-4 px-4 py-3 rounded-[16px]" style={{ background: 'rgba(212,175,55,0.05)', border: '1px solid rgba(212,175,55,0.2)' }}>
               <Zap size={12} style={{ color: '#D4AF37', flexShrink: 0 }} />
               <span className="text-[9px] font-extrabold uppercase tracking-[0.3em]" style={{ color: '#D4AF37' }}>
-                Scalar {scalarBlendHz}Hz active ÃÂ¢ÃÂÃÂ will be baked into your export mixdown
+                Scalar {scalarBlendHz}Hz active — will be baked into your export mixdown
               </span>
             </div>
           )}
@@ -1026,7 +1028,7 @@ export default function CreativeSoulMeditationTool() {
               style={{ borderRadius: 40, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase' }}
             >
               {exportProgress?.isExporting
-                ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />ExportingÃÂ¢ÃÂÃÂ¦</>
+                ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Exporting…</>
                 : <><Zap className="w-4 h-4 mr-2" />Export Master{scalarBlendHz ? ` + Scalar ${scalarBlendHz}Hz` : ''}</>
               }
             </Button>
@@ -1046,7 +1048,7 @@ export default function CreativeSoulMeditationTool() {
                 <div className="flex items-center gap-2">
                   {exportResult ? <CheckCircle2 size={14} className="text-emerald-400" /> : <Loader2 size={14} className="animate-spin text-amber-400" />}
                   <span className="text-[9px] font-extrabold uppercase tracking-[0.3em] text-amber-200/80">
-                    {exportResult ? `Export Complete${scalarBlendHz ? ` ÃÂ¢ÃÂÃÂ Scalar ${scalarBlendHz}Hz baked in ÃÂ¢ÃÂÃÂ` : ''}` : exportProgress?.step || 'Rendering Sacred MasterÃÂ¢ÃÂÃÂ¦'}
+                    {exportResult ? `Export Complete${scalarBlendHz ? ` — Scalar ${scalarBlendHz}Hz baked in ✓` : ''}` : exportProgress?.step || 'Rendering Sacred Master…'}
                   </span>
                 </div>
                 {exportResult && (
@@ -1071,8 +1073,8 @@ export default function CreativeSoulMeditationTool() {
           {/* TAB SWITCHER */}
           <div className="grid grid-cols-2 gap-2 mb-5">
             {[
-              { id: 'alchemy', icon: 'ÃÂ°ÃÂÃÂÃÂµ', label: 'Sound Alchemy',    sub: 'Source ÃÂÃÂ· Style ÃÂÃÂ· Frequencies ÃÂÃÂ· DSP' },
-              { id: 'scalar',  icon: 'ÃÂ¢ÃÂÃÂ',  label: 'Scalar Wave Tech', sub: `Nadi Scan ÃÂÃÂ· Resonators ÃÂÃÂ· SQI${scalarBlendHz ? ` ÃÂÃÂ· ${scalarBlendHz}Hz Active` : ''}` },
+              { id: 'alchemy', icon: '🎵', label: 'Sound Alchemy',    sub: 'Source · Style · Frequencies · DSP' },
+              { id: 'scalar',  icon: '⟁',  label: 'Scalar Wave Tech', sub: `Nadi Scan · Resonators · SQI${scalarBlendHz ? ` · ${scalarBlendHz}Hz Active` : ''}` },
             ].map(t => (
               <button key={t.id} onClick={() => setTab(t.id)} className={`p-3 rounded-[20px] text-left cursor-pointer transition-all ${tab===t.id ? 'sqm-tab-on' : ''}`} style={{ border: '1px solid rgba(255,255,255,.07)', background: 'rgba(255,255,255,.02)', color: 'rgba(255,255,255,.4)' }}>
                 <div className="text-[11px] font-extrabold mb-0.5">{t.icon} {t.label}</div>
@@ -1081,7 +1083,7 @@ export default function CreativeSoulMeditationTool() {
             ))}
           </div>
 
-          {/* ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ ALCHEMY TAB ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ */}
+          {/* ══ ALCHEMY TAB ══ */}
           {tab === 'alchemy' && (
             <div className="space-y-5" key={sessionKey}>
 
@@ -1154,7 +1156,7 @@ export default function CreativeSoulMeditationTool() {
             </div>
           )}
 
-          {/* ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ SCALAR TAB ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ */}
+          {/* ══ SCALAR TAB ══ */}
           {tab === 'scalar' && (
             <ScalarWavePanel
               engine={engine}
@@ -1180,7 +1182,7 @@ export default function CreativeSoulMeditationTool() {
         <DialogContent className="bg-[#0B0B0B] border border-amber-900/20 rounded-3xl text-white/90" style={{ fontFamily: 'Montserrat,sans-serif' }}>
           <DialogHeader>
             <DialogTitle style={{ color: '#D4AF37', fontFamily: 'Cinzel,serif', letterSpacing: '0.05em' }}>Download Sacred Master</DialogTitle>
-            <DialogDescription className="text-white/50">Create and preview your alchemy for free. Pay ÃÂ¢ÃÂÃÂ¬9.99 once to download your master file.</DialogDescription>
+            <DialogDescription className="text-white/50">Create and preview your alchemy for free. Pay €9.99 once to download your master file.</DialogDescription>
           </DialogHeader>
           <div className="space-y-2 py-2">
             {[
@@ -1197,7 +1199,7 @@ export default function CreativeSoulMeditationTool() {
           </div>
           <div className="flex gap-2.5 pt-2">
             <button onClick={handlePayForExport} disabled={paymentLoading} className="flex-1 font-extrabold text-[11px] uppercase py-3 rounded-[20px] cursor-pointer" style={{ background: 'linear-gradient(135deg,#D4AF37,#b8942a)', border: 'none', color: '#050505', letterSpacing: '0.2em' }}>
-              {paymentLoading ? 'LoadingÃÂ¢ÃÂÃÂ¦' : 'Pay ÃÂ¢ÃÂÃÂ¬9.99 ÃÂÃÂ· Download'}
+              {paymentLoading ? 'Loading…' : 'Pay €9.99 · Download'}
             </button>
             <button onClick={() => setShowPaymentDialog(false)} className="px-4 py-3 rounded-[20px] cursor-pointer" style={{ background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.1)', color: 'rgba(255,255,255,.4)' }}>
               <X size={14} />
