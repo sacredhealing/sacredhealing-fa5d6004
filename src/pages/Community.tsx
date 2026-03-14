@@ -1839,8 +1839,7 @@ const Community = () => {
         room_id: roomId,
         user_id: user.id,
         content: text,
-        user_name: senderName,
-      } as any)
+      })
       .select()
       .single();
 
