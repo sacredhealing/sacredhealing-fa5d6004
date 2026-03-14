@@ -1156,6 +1156,33 @@ export function useSoulMeditateEngine() {
     stopBinaural,
   ]);
 
+  // Clear neural source (New Session) — stops playback, clears state, disconnects nodes
+  const clearNeuralSource = useCallback(() => {
+    stopAll();
+    if (neuralBufferGainRef.current) {
+      neuralBufferGainRef.current.disconnect();
+      neuralBufferGainRef.current = null;
+    }
+    if (neuralBufferSourceRef.current) {
+      try { neuralBufferSourceRef.current.stop(); } catch (_) {}
+      neuralBufferSourceRef.current.disconnect();
+      neuralBufferSourceRef.current = null;
+    }
+    if (neuralAudioRef.current) {
+      neuralAudioRef.current.pause();
+      neuralAudioRef.current.src = '';
+      neuralAudioRef.current = null;
+    }
+    if (neuralSourceRef.current) {
+      neuralSourceRef.current.disconnect();
+      neuralSourceRef.current = null;
+    }
+    setNeuralLayer({ isPlaying: false, volume: 0.7, source: null });
+    setAudioBuffer(null);
+    setDawRegions([]);
+    setDawCurrentTime(0);
+  }, [stopAll]);
+
   // Update volumes
   // Volume clamping helper to prevent distortion at max volume
   // Max 0.85 gives headroom for the limiter when multiple layers combine
@@ -1572,5 +1599,6 @@ export function useSoulMeditateEngine() {
     // Diagnostics
     playTestTone,
     stopAll,
+    clearNeuralSource,
   };
 }

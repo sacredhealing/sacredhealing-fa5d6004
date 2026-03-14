@@ -786,14 +786,16 @@ export default function CreativeSoulMeditationTool() {
 
   const handleNewSession = useCallback(() => {
     engine?.stopAll?.();
+    engine?.clearNeuralSource?.();  // Clear engine state so last uploaded audio is gone
     setAlchemyCommenced(false);
     setActiveStyle('indian');
     setHealingFreq(432);
     setBrainwaveFreq(10);
     setMeditationName('');
     setExportResult(null);
+    setScalarBlendHz(null);
     setTab('alchemy');
-    setSessionKey(k => k + 1);  // ← this forces NeuralSourceInput to remount/clear
+    setSessionKey(k => k + 1);  // Forces NeuralSourceInput to remount/clear
     toast.success('New session started');
   }, [engine]);
 
