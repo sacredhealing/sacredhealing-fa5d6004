@@ -298,8 +298,7 @@ function ScalarWavePanel({
       const primaryVol = volumes[scalars[0]] ?? 0.75;
       engine?.updateSolfeggioVolume?.(primaryVol);
       await new Promise(r => setTimeout(r, 50));
-      engine?.startSolfeggio?.(blend);
-      engine?.updateSolfeggioVolume?.(primaryVol);
+      engine?.startSolfeggio?.(blend, primaryVol);
     } else if (scalars.length === 0) {
       onScalarChange?.(null);
     }
@@ -453,8 +452,7 @@ Respond with specific scalar frequency and mixing guidance for this track. Use B
             const firstHz = parseInt(hzMatch[0]);
             if (firstHz >= 100 && firstHz <= 1200) {
               onScalarChange?.(firstHz);
-              engine?.updateSolfeggioVolume?.(0.6);
-              engine?.startSolfeggio?.(firstHz);
+              engine?.startSolfeggio?.(firstHz, 0.6);
             }
           }
         },
@@ -714,8 +712,7 @@ export default function CreativeSoulMeditationTool() {
     // If alchemy is running but solfeggio not yet started, start it now
     if (!frequencies.solfeggio?.enabled && alchemyCommenced) {
       await new Promise(r => setTimeout(r, 50));
-      await engine?.startSolfeggio?.(healingFreq);
-      engine?.updateSolfeggioVolume?.(vol); // re-apply after start
+      await engine?.startSolfeggio?.(healingFreq, vol);
     }
   }, [engine, healingFreq, frequencies, alchemyCommenced]);
 
@@ -727,8 +724,7 @@ export default function CreativeSoulMeditationTool() {
     engine?.updateBinauralVolume?.(vol);
     if (!frequencies.binaural?.enabled && alchemyCommenced) {
       await new Promise(r => setTimeout(r, 50));
-      await engine?.startBinaural?.(200, brainwaveFreq);
-      engine?.updateBinauralVolume?.(vol);
+      await engine?.startBinaural?.(200, brainwaveFreq, vol);
     }
   }, [engine, brainwaveFreq, frequencies, alchemyCommenced]);
 
@@ -758,15 +754,9 @@ export default function CreativeSoulMeditationTool() {
       // Wait for React state to settle
       await new Promise(r => setTimeout(r, 80));
 
-      // Start oscillators
-      await engine?.startSolfeggio?.(healingFreq);
-      await engine?.startBinaural?.(200, brainwaveFreq);
-
-      // Re-apply volumes AFTER start — engine reads stale React state at start time
-      setTimeout(() => {
-        engine?.updateSolfeggioVolume?.(healingVolume);
-        engine?.updateBinauralVolume?.(brainwaveVolume);
-      }, 100);
+      // Start oscillators — pass volume so engine uses correct values (avoids stale state)
+      await engine?.startSolfeggio?.(healingFreq, healingVolume);
+      await engine?.startBinaural?.(200, brainwaveFreq, brainwaveVolume);
 
       toast.success('Alchemy commenced — Anahata open');
     } catch (e) {
@@ -862,17 +852,14 @@ export default function CreativeSoulMeditationTool() {
       if (engine?.updateSolfeggioFrequency) {
         engine.updateSolfeggioFrequency(freq);
       } else {
-        // Set volume first, tick, then restart at new freq
         engine?.updateSolfeggioVolume?.(healingVolume);
         await new Promise(r => setTimeout(r, 50));
-        await engine?.startSolfeggio?.(freq);
-        engine?.updateSolfeggioVolume?.(healingVolume); // re-apply after start
+        await engine?.startSolfeggio?.(freq, healingVolume);
       }
     } else if (alchemyCommenced) {
       engine?.updateSolfeggioVolume?.(healingVolume);
       await new Promise(r => setTimeout(r, 50));
-      await engine?.startSolfeggio?.(freq);
-      engine?.updateSolfeggioVolume?.(healingVolume);
+      await engine?.startSolfeggio?.(freq, healingVolume);
     }
   }, [engine, healingVolume, alchemyCommenced, frequencies]);
 
@@ -886,16 +873,12 @@ export default function CreativeSoulMeditationTool() {
       if (engine?.updateBinauralFrequency) {
         engine.updateBinauralFrequency(200, freq);
       } else {
-        engine?.updateBinauralVolume?.(brainwaveVolume);
         await new Promise(r => setTimeout(r, 50));
-        await engine?.startBinaural?.(200, freq);
-        engine?.updateBinauralVolume?.(brainwaveVolume);
+        await engine?.startBinaural?.(200, freq, brainwaveVolume);
       }
     } else if (alchemyCommenced) {
-      engine?.updateBinauralVolume?.(brainwaveVolume);
       await new Promise(r => setTimeout(r, 50));
-      await engine?.startBinaural?.(200, freq);
-      engine?.updateBinauralVolume?.(brainwaveVolume);
+      await engine?.startBinaural?.(200, freq, brainwaveVolume);
     }
   }, [engine, brainwaveVolume, alchemyCommenced, frequencies]);
 

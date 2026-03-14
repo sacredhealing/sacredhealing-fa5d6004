@@ -941,8 +941,8 @@ export function useSoulMeditateEngine() {
     setAtmosphereLayer(prev => ({ ...prev, isPlaying: !prev.isPlaying }));
   }, [atmosphereLayer.isPlaying]);
 
-  // Start solfeggio oscillator
-  const startSolfeggio = useCallback(async (hz: number) => {
+  // Start solfeggio oscillator (volOverride: use parent's healingVolume when engine state is stale)
+  const startSolfeggio = useCallback(async (hz: number, volOverride?: number) => {
     if (!audioContextRef.current || !solfeggioGainRef.current) {
       console.error('[Solfeggio] Audio context or gain node missing');
       return;
@@ -967,9 +967,10 @@ export function useSoulMeditateEngine() {
     osc.frequency.value = hz;
     osc.connect(solfeggioGainRef.current);
     
-    // Boosted gain (0.7–0.8 range) so oscillators are audible; cap to avoid clip
-    const targetVolume = Math.min(OSCILLATOR_GAIN_MAX, solfeggioVolume * OSCILLATOR_BASE_GAIN);
-    console.log('[Solfeggio] Starting oscillator:', hz, 'Hz, volume:', solfeggioVolume, '->', targetVolume);
+    // Use volOverride when parent passes it (avoids stale React state); else use engine state
+    const vol = volOverride ?? solfeggioVolume;
+    const targetVolume = Math.min(OSCILLATOR_GAIN_MAX, vol * OSCILLATOR_BASE_GAIN);
+    console.log('[Solfeggio] Starting oscillator:', hz, 'Hz, volume:', vol, '->', targetVolume);
     
     // Set volume BEFORE starting to ensure immediate sound
     solfeggioGainRef.current.gain.cancelScheduledValues(0);
@@ -981,6 +982,7 @@ export function useSoulMeditateEngine() {
     console.log('[Solfeggio] Gain node value:', solfeggioGainRef.current.gain.value);
 
     solfeggioOscRef.current = osc;
+    if (volOverride != null) setSolfeggioVolume(volOverride);
     setFrequencies(prev => ({ ...prev, solfeggio: { enabled: true, hz } }));
 
     // Diagnostic chain verification
@@ -1007,8 +1009,8 @@ export function useSoulMeditateEngine() {
     setFrequencies(prev => ({ ...prev, solfeggio: { ...prev.solfeggio, enabled: false } }));
   }, []);
 
-  // Start binaural beats
-  const startBinaural = useCallback(async (carrierHz: number, beatHz: number) => {
+  // Start binaural beats (volOverride: use parent's brainwaveVolume when engine state is stale)
+  const startBinaural = useCallback(async (carrierHz: number, beatHz: number, volOverride?: number) => {
     if (!audioContextRef.current || !binauralGainRef.current || !binauralMergerRef.current) {
       console.error('[Binaural] Audio context or gain/merger nodes missing');
       return;
@@ -1028,9 +1030,10 @@ export function useSoulMeditateEngine() {
 
     const ctx = audioContextRef.current;
     
-    // Boosted gain (0.7–0.8 range) so binaural is audible; cap to avoid clip
-    const targetVolume = Math.min(OSCILLATOR_GAIN_MAX, binauralVolume * OSCILLATOR_BASE_GAIN);
-    console.log('[Binaural] Starting binaural beats:', carrierHz, 'Hz carrier,', beatHz, 'Hz beat, volume:', binauralVolume, '->', targetVolume);
+    // Use volOverride when parent passes it (avoids stale React state); else use engine state
+    const vol = volOverride ?? binauralVolume;
+    const targetVolume = Math.min(OSCILLATOR_GAIN_MAX, vol * OSCILLATOR_BASE_GAIN);
+    console.log('[Binaural] Starting binaural beats:', carrierHz, 'Hz carrier,', beatHz, 'Hz beat, volume:', vol, '->', targetVolume);
     
     // Set volume BEFORE creating oscillators
     binauralGainRef.current.gain.cancelScheduledValues(0);
@@ -1068,6 +1071,7 @@ export function useSoulMeditateEngine() {
     binauralLeftOscRef.current = leftOsc;
     binauralRightOscRef.current = rightOsc;
 
+    if (volOverride != null) setBinauralVolume(volOverride);
     setFrequencies(prev => ({ ...prev, binaural: { enabled: true, carrierHz, beatHz } }));
 
     // Diagnostic chain verification
