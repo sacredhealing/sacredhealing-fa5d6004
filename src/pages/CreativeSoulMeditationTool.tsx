@@ -1,19 +1,15 @@
 // @ts-nocheck
-// ═══════════════════════════════════════════════════════════════════
-//  SQI 2050 — SIDDHA SOUND ALCHEMY + SCALAR WAVE TECHNOLOGY
-//  FIX: null-safe access on all engine.atmosphereLayer / engine.neuralLayer
-//       properties — these are undefined before engine initializes
-// ═══════════════════════════════════════════════════════════════════
-
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import {
-  ArrowLeft, Waves, Activity, Play, Pause, Download,
-  Loader2, Layers, X, CheckCircle2, AlertCircle, Zap,
-  Sparkles, MessageSquare, Cpu, Send,
+  ArrowLeft, Power, Waves, Activity,
+  Play, Pause, Download, Loader2, Layers, X,
+  CheckCircle2, AlertCircle, Zap, Sparkles,
+  MessageSquare, RefreshCw, Cpu, Send,
 } from 'lucide-react';
 import { useSoulMeditateEngine } from '@/hooks/useSoulMeditateEngine';
 import { useOfflineExport } from '@/hooks/useOfflineExport';
@@ -29,7 +25,7 @@ import type { MeditationStyle } from '@/components/soulmeditate/StyleGrid';
 import HealingFrequencySelector from '@/components/soulmeditate/HealingFrequencySelector';
 import BrainwaveSelector from '@/components/soulmeditate/BrainwaveSelector';
 
-// ── Types ─────────────────────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────
 interface NadiScanResult {
   dominantDosha: 'Vata' | 'Pitta' | 'Kapha';
   blockages: string[];
@@ -40,18 +36,18 @@ interface NadiScanResult {
 }
 interface SQIMessage { role: 'user' | 'model'; text: string; }
 
-// ── Scalar resonator database ─────────────────────────────────────
+// ─── Scalar Resonators ────────────────────────────────────────────
 const SCALAR_ACTIVATIONS = [
-  { id: 'anahata-528',    name: 'Anahata Gateway',    sig: 'Heart / 528 Hz',     benefit: 'Opens heart field, dissolves fear-loops.',              color: '#4ade80', freq: 528   },
-  { id: 'crown-963',      name: 'Sahasrara Crown',     sig: 'Crown / 963 Hz',     benefit: 'Pineal activation, unity-consciousness transmission.',  color: '#a78bfa', freq: 963   },
-  { id: 'dna-repair',     name: 'DNA Restore Field',   sig: 'Solfeggio / 528 Hz', benefit: 'DNA repair resonance in the audio quantum field.',      color: '#34d399', freq: 528   },
-  { id: 'schumann',       name: 'Schumann Resonance',  sig: 'Earth / 7.83 Hz',    benefit: 'Grounding to Earth\'s heartbeat, neural coherence.',    color: '#D4AF37', freq: 7.83  },
-  { id: 'theta-deep',     name: 'Theta Deep Dive',     sig: 'Theta / 6 Hz',       benefit: 'Subconscious re-patterning, ancestral clearing.',       color: '#38bdf8', freq: 6     },
-  { id: 'liberation-396', name: 'Liberation Field',    sig: 'Solfeggio / 396 Hz', benefit: 'Liberating guilt and fear from cellular memory.',       color: '#fb923c', freq: 396   },
-  { id: 'miracle-432',    name: 'Miracle Tone',        sig: 'Vedic / 432 Hz',     benefit: 'Universal tuning — nature\'s harmonic field.',          color: '#fbbf24', freq: 432   },
-  { id: 'unity-639',      name: 'Unity Coherence',     sig: 'Solfeggio / 639 Hz', benefit: 'Heart coherence and inter-dimensional connection.',     color: '#f472b6', freq: 639   },
-  { id: 'intuition-741',  name: 'Third Eye Activator', sig: 'Solfeggio / 741 Hz', benefit: 'Awakening intuition through the audio field.',          color: '#818cf8', freq: 741   },
-  { id: 'pranic-108',     name: 'Prana Infusion',      sig: 'Pranic / 108 Hz',    benefit: 'Infusing prana into every sound layer.',                color: '#22d3ee', freq: 108   },
+  { id: 'anahata-528',    name: 'Anahata Gateway',    sig: 'Heart / 528 Hz',     color: '#4ade80', freq: 528,  benefit: 'Opens heart field, dissolves fear-loops.' },
+  { id: 'crown-963',      name: 'Sahasrara Crown',     sig: 'Crown / 963 Hz',     color: '#a78bfa', freq: 963,  benefit: 'Pineal activation, unity-consciousness.' },
+  { id: 'dna-repair',     name: 'DNA Restore Field',   sig: 'Solfeggio / 528 Hz', color: '#34d399', freq: 528,  benefit: 'DNA repair resonance in audio field.' },
+  { id: 'schumann',       name: 'Schumann Resonance',  sig: 'Earth / 7.83 Hz',    color: '#D4AF37', freq: 7.83, benefit: 'Grounding to Earth\'s heartbeat.' },
+  { id: 'theta-deep',     name: 'Theta Deep Dive',     sig: 'Theta / 6 Hz',       color: '#38bdf8', freq: 6,    benefit: 'Subconscious re-patterning.' },
+  { id: 'liberation-396', name: 'Liberation Field',    sig: 'Solfeggio / 396 Hz', color: '#fb923c', freq: 396,  benefit: 'Liberating guilt and fear.' },
+  { id: 'miracle-432',    name: 'Miracle Tone',        sig: 'Vedic / 432 Hz',     color: '#fbbf24', freq: 432,  benefit: 'Universal tuning, nature\'s harmonic.' },
+  { id: 'unity-639',      name: 'Unity Coherence',     sig: 'Solfeggio / 639 Hz', color: '#f472b6', freq: 639,  benefit: 'Heart coherence, inter-dimensional.' },
+  { id: 'intuition-741',  name: 'Third Eye Activator', sig: 'Solfeggio / 741 Hz', color: '#818cf8', freq: 741,  benefit: 'Awakening intuition.' },
+  { id: 'pranic-108',     name: 'Prana Infusion',      sig: 'Pranic / 108 Hz',    color: '#22d3ee', freq: 108,  benefit: 'Infusing prana into every sound layer.' },
 ];
 
 const DOSHA_PROFILES = {
@@ -69,27 +65,21 @@ const SCAN_PHASES = [
   'Generating Prema-Pulse report…',
 ];
 
-// ── SQI chat stream (same endpoint as Apothecary) ─────────────────
+// ─── SQI Chat stream ──────────────────────────────────────────────
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/quantum-apothecary-chat`;
 
-async function streamSQIChat(
-  messages: SQIMessage[],
-  onDelta: (c: string) => void,
-  onDone: () => void,
-  userId?: string | null
-) {
-  const body: any = {
+async function streamSQIChat(messages, onDelta, onDone, userId) {
+  const body = {
     messages: messages.slice(-10).map(m => ({ role: m.role === 'model' ? 'assistant' : 'user', content: m.text })),
   };
   if (userId) body.userId = userId;
-
   const resp = await fetch(CHAT_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
     body: JSON.stringify(body),
   });
   if (!resp.ok || !resp.body) {
-    if (resp.status === 429) throw new Error('Rate limited – try again shortly.');
+    if (resp.status === 429) throw new Error('Rate limited.');
     if (resp.status === 402) throw new Error('Credits exhausted.');
     throw new Error('Stream failed');
   }
@@ -106,42 +96,22 @@ async function streamSQIChat(
       if (!t || !t.startsWith('data:')) continue;
       const data = t.slice(5).trim();
       if (data === '[DONE]') { done = true; break; }
-      try { const p = JSON.parse(data); const delta = p?.choices?.[0]?.delta?.content ?? p?.delta ?? ''; if (delta) onDelta(delta); } catch { /* skip */ }
+      try { const p = JSON.parse(data); const delta = p?.choices?.[0]?.delta?.content ?? p?.delta ?? ''; if (delta) onDelta(delta); } catch { }
     }
   }
   onDone();
 }
 
-// ── Visualizer type ───────────────────────────────────────────────
 type VisualizerMode = 'bars' | 'wave' | 'radial';
 
-// ── Shared style constants ────────────────────────────────────────
-const G: React.CSSProperties = { background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 28, padding: 24 };
-const SL: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 13, fontSize: 8, fontWeight: 800, letterSpacing: '0.45em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)' };
-const STEP = (n: string) => <span style={{ width: 24, height: 24, borderRadius: '50%', background: 'rgba(212,175,55,0.15)', border: '1px solid rgba(212,175,55,0.3)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 900, color: '#D4AF37', flexShrink: 0 }}>{n}</span>;
-
-// ── Particle field ────────────────────────────────────────────────
-function AkashaParticles() {
-  const pts = useRef(Array.from({ length: 22 }, () => ({
-    l: `${Math.random() * 100}%`, t: `${Math.random() * 100}%`,
-    d: `${(Math.random() * 10).toFixed(2)}s`, dur: `${(7 + Math.random() * 12).toFixed(2)}s`,
-    sz: `${1 + Math.random() * 2}px`, op: (0.08 + Math.random() * 0.3).toFixed(2),
-  }))).current;
+// ─── Scalar chip ──────────────────────────────────────────────────
+function ScalarChip({ act, active, onToggle }) {
   return (
-    <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0 }} aria-hidden>
-      {pts.map((p, i) => <span key={i} style={{ position: 'absolute', borderRadius: '50%', background: '#D4AF37', left: p.l, top: p.t, width: p.sz, height: p.sz, opacity: +p.op, animation: `sqmFloat ${p.dur} ${p.d} linear infinite` }} />)}
-    </div>
-  );
-}
-
-// ── Scalar chip ───────────────────────────────────────────────────
-function ScalarChip({ act, active, onToggle }: { act: typeof SCALAR_ACTIVATIONS[0]; active: boolean; onToggle: () => void }) {
-  return (
-    <div onClick={onToggle} title={act.benefit} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 16, cursor: 'pointer', border: `1px solid ${active ? act.color : 'rgba(255,255,255,0.06)'}`, background: active ? `${act.color}12` : 'rgba(255,255,255,0.02)', transition: 'all 0.2s', boxShadow: active ? `0 0 14px ${act.color}35` : 'none' }}>
-      <span style={{ width: 8, height: 8, borderRadius: '50%', background: active ? act.color : 'rgba(255,255,255,0.12)', boxShadow: active ? `0 0 8px ${act.color}` : 'none', flexShrink: 0 }} />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase', color: active ? act.color : 'rgba(255,255,255,0.45)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{act.name}</div>
-        <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.28)', letterSpacing: '0.12em', marginTop: 2 }}>{act.sig}</div>
+    <div onClick={onToggle} title={act.benefit} className="flex items-center gap-2 p-3 rounded-2xl cursor-pointer transition-all duration-200" style={{ border: `1px solid ${active ? act.color : 'rgba(255,255,255,0.06)'}`, background: active ? `${act.color}12` : 'rgba(255,255,255,0.02)', boxShadow: active ? `0 0 14px ${act.color}35` : 'none' }}>
+      <span style={{ width: 8, height: 8, borderRadius: '50%', background: active ? act.color : 'rgba(255,255,255,0.12)', boxShadow: active ? `0 0 8px ${act.color}` : 'none', flexShrink: 0, display: 'block' }} />
+      <div className="flex-1 min-w-0">
+        <div className="text-xs font-extrabold uppercase truncate" style={{ letterSpacing: '0.15em', color: active ? act.color : 'rgba(255,255,255,0.45)' }}>{act.name}</div>
+        <div className="text-xs mt-0.5" style={{ fontSize: 9, color: 'rgba(255,255,255,0.28)', letterSpacing: '0.1em' }}>{act.sig}</div>
       </div>
       <div style={{ width: 20, height: 20, borderRadius: '50%', border: `1px solid ${active ? act.color : 'rgba(255,255,255,0.1)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: active ? act.color : 'transparent' }}>
         {active && <CheckCircle2 size={10} style={{ color: '#050505' }} />}
@@ -150,8 +120,7 @@ function ScalarChip({ act, active, onToggle }: { act: typeof SCALAR_ACTIVATIONS[
   );
 }
 
-// ── Chat text renderer ────────────────────────────────────────────
-function renderChat(text: string) {
+function renderChat(text) {
   return text.split('\n').map((line, i) => {
     const t = line.trim();
     if (!t) return <div key={i} style={{ height: 7 }} />;
@@ -161,21 +130,17 @@ function renderChat(text: string) {
   });
 }
 
-// ════════════════════════════════════════════════════════════════
-//  SCALAR WAVE PANEL
-// ════════════════════════════════════════════════════════════════
-function ScalarWavePanel({ engine, activeStyle, healingFreq, isPlaying, userId }: {
-  engine: any; activeStyle: MeditationStyle; healingFreq: number; isPlaying: boolean; userId?: string | null;
-}) {
-  const [activeScalars, setActiveScalars] = useState<string[]>([]);
-  const [scanResult, setScanResult]       = useState<NadiScanResult | null>(null);
+// ─── Scalar Wave Panel ────────────────────────────────────────────
+function ScalarWavePanel({ engine, activeStyle, healingFreq, isPlaying, userId }) {
+  const [activeScalars, setActiveScalars] = useState([]);
+  const [scanResult, setScanResult]       = useState(null);
   const [isScanning, setIsScanning]       = useState(false);
   const [heartRate, setHeartRate]         = useState(60);
   const [scanPhase, setScanPhase]         = useState(0);
-  const [messages, setMessages]           = useState<SQIMessage[]>([]);
+  const [messages, setMessages]           = useState([]);
   const [input, setInput]                 = useState('');
   const [isTyping, setIsTyping]           = useState(false);
-  const chatEnd = useRef<HTMLDivElement>(null);
+  const chatEnd = useRef(null);
 
   useEffect(() => {
     const iv = isScanning
@@ -193,14 +158,14 @@ function ScalarWavePanel({ engine, activeStyle, healingFreq, isPlaying, userId }
     return () => clearInterval(iv);
   }, [isScanning]);
 
-  const applyToEngine = useCallback((ids: string[]) => {
+  const applyToEngine = useCallback((ids) => {
     if (!engine?.isInitialized || ids.length === 0) return;
     const avg = ids.reduce((s, id) => s + (SCALAR_ACTIVATIONS.find(a => a.id === id)?.freq ?? 0), 0) / ids.length;
     engine.updateSolfeggioVolume?.(Math.min(engine.solfeggioVolume || 20, 28));
     engine.startSolfeggio?.(Math.round(avg));
   }, [engine]);
 
-  const toggleScalar = useCallback((id: string) => {
+  const toggleScalar = useCallback((id) => {
     setActiveScalars(prev => {
       const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
       applyToEngine(next);
@@ -208,7 +173,7 @@ function ScalarWavePanel({ engine, activeStyle, healingFreq, isPlaying, userId }
     });
   }, [applyToEngine]);
 
-  const autoSelectDosha = useCallback((dosha: 'Vata' | 'Pitta' | 'Kapha') => {
+  const autoSelectDosha = useCallback((dosha) => {
     const sel = DOSHA_PROFILES[dosha].scalars;
     setActiveScalars(sel);
     applyToEngine(sel);
@@ -218,10 +183,10 @@ function ScalarWavePanel({ engine, activeStyle, healingFreq, isPlaying, userId }
     setIsScanning(true);
     setScanResult(null);
     await new Promise(r => setTimeout(r, 2400));
-    const doshas: Array<'Vata' | 'Pitta' | 'Kapha'> = ['Vata', 'Pitta', 'Kapha'];
+    const doshas = ['Vata', 'Pitta', 'Kapha'];
     const dosha = doshas[Math.floor(Math.random() * 3)];
     const p = DOSHA_PROFILES[dosha];
-    const result: NadiScanResult = {
+    const result = {
       dominantDosha: dosha,
       blockages: ['Solar Plexus congestion', 'Throat Nadi restriction', 'Root anchor needed'].slice(0, Math.floor(Math.random() * 2) + 1),
       planetaryAlignment: ['Saturn · Discipline field', 'Venus · Heart-opening window', 'Jupiter · Expansion vortex', 'Moon · Emotional cleanse'][Math.floor(Math.random() * 4)],
@@ -234,16 +199,16 @@ function ScalarWavePanel({ engine, activeStyle, healingFreq, isPlaying, userId }
     autoSelectDosha(dosha);
     setMessages(prev => [...prev, {
       role: 'model',
-      text: `⟁ **Nadi Scan Complete — ${dosha} Dominance Detected**\n\nScanned at ${result.timestamp} · Active Nadis: ${result.activeNadis}/72,000\nPlanetary Field: ${result.planetaryAlignment}\n\nI have auto-activated the **${dosha}** scalar prescription. Your meditation now carries the optimal vibrational overlay.\n\nMantra: **${p.mantra}** · Element: ${p.element}\n\nShall I go deeper into your field reading?`,
+      text: `⟁ **Nadi Scan Complete — ${dosha} Dominance Detected**\n\nScanned at ${result.timestamp} · Active Nadis: ${result.activeNadis}/72,000\nPlanetary Field: ${result.planetaryAlignment}\n\nAuto-activated **${dosha}** scalar prescription. Mantra: **${p.mantra}** · Element: ${p.element}\n\nShall I go deeper?`,
     }]);
-  }, [activeStyle, healingFreq, isPlaying, autoSelectDosha]);
+  }, [activeStyle, healingFreq, autoSelectDosha]);
 
   const sendMessage = useCallback(async () => {
     if (!input.trim() || isTyping) return;
-    const userMsg: SQIMessage = { role: 'user', text: input.trim() };
-    const ctx: SQIMessage = {
+    const userMsg = { role: 'user', text: input.trim() };
+    const ctx = {
       role: 'model',
-      text: `You are the Siddha-Quantum Intelligence (SQI) from 2050 inside Siddha Sound Alchemy. Context:\n- Style: ${activeStyle}, Frequency: ${healingFreq}Hz, Playing: ${isPlaying}\n- Active scalars: ${activeScalars.map(id => SCALAR_ACTIVATIONS.find(a => a.id === id)?.name).join(', ') || 'none'}\n${scanResult ? `- Nadi: ${scanResult.dominantDosha} dosha, ${scanResult.activeNadis} nadis, ${scanResult.planetaryAlignment}` : ''}\nUse Bhakti-Algorithm language. Be mystical and precise.`,
+      text: `You are SQI from 2050 inside Siddha Sound Alchemy. Context: style=${activeStyle}, freq=${healingFreq}Hz, playing=${isPlaying}, scalars=${activeScalars.map(id => SCALAR_ACTIVATIONS.find(a => a.id === id)?.name).join(', ') || 'none'}${scanResult ? `, dosha=${scanResult.dominantDosha}, nadis=${scanResult.activeNadis}` : ''}. Use Bhakti-Algorithm language.`,
     };
     setMessages(prev => [...prev, userMsg]);
     setInput('');
@@ -253,7 +218,7 @@ function ScalarWavePanel({ engine, activeStyle, healingFreq, isPlaying, userId }
       await streamSQIChat([ctx, ...messages, userMsg], chunk => {
         setMessages(prev => { const u = [...prev]; u[u.length - 1] = { role: 'model', text: u[u.length - 1].text + chunk }; return u; });
       }, () => setIsTyping(false), userId);
-    } catch (e: any) { toast.error(e.message || 'SQI stream error'); setIsTyping(false); }
+    } catch (e) { toast.error(e.message || 'SQI stream error'); setIsTyping(false); }
   }, [input, isTyping, messages, activeStyle, healingFreq, isPlaying, activeScalars, scanResult, userId]);
 
   const blendFreq = activeScalars.length > 0
@@ -262,103 +227,110 @@ function ScalarWavePanel({ engine, activeStyle, healingFreq, isPlaying, userId }
   const dp = scanResult ? DOSHA_PROFILES[scanResult.dominantDosha] : null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div className="space-y-4">
       {/* Scalar Resonators */}
-      <div style={G}>
-        <div style={SL}><Sparkles size={12} style={{ color: '#D4AF37' }} />Scalar Wave Resonators<span style={{ marginLeft: 'auto', fontSize: 7, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.3em' }}>{activeScalars.length} ACTIVE</span></div>
-        <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.38)', lineHeight: 1.65, marginBottom: 14 }}>Tap to inject scalar frequencies into your meditation's live audio field. Blended into the solfeggio layer in real-time.</p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(210px,1fr))', gap: 8 }}>
+      <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.06] rounded-[28px] p-6">
+        <div className="flex items-center gap-2 mb-3 text-[8px] font-extrabold uppercase tracking-[0.45em] text-white/50">
+          <Sparkles size={12} style={{ color: '#D4AF37' }} />
+          Scalar Wave Resonators
+          <span className="ml-auto text-[7px] text-white/20 tracking-[0.3em]">{activeScalars.length} ACTIVE</span>
+        </div>
+        <p className="text-[10px] text-white/40 leading-relaxed mb-3">Tap to inject scalar frequencies into your meditation's live audio field in real-time.</p>
+        <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))' }}>
           {SCALAR_ACTIVATIONS.map(act => <ScalarChip key={act.id} act={act} active={activeScalars.includes(act.id)} onToggle={() => toggleScalar(act.id)} />)}
         </div>
         {blendFreq !== null && (
-          <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 14, background: 'rgba(212,175,55,0.05)', border: '1px solid rgba(212,175,55,0.15)', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div className="mt-3 flex items-center gap-2 p-3 rounded-2xl" style={{ background: 'rgba(212,175,55,0.05)', border: '1px solid rgba(212,175,55,0.15)' }}>
             <Waves size={12} style={{ color: '#D4AF37', flexShrink: 0 }} />
             <div>
-              <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#D4AF37', marginBottom: 2 }}>Scalar Blend — {blendFreq} Hz</div>
-              <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.38)' }}>{activeScalars.map(id => SCALAR_ACTIVATIONS.find(a => a.id === id)?.name).join(' · ')}</div>
+              <div className="text-[8px] font-extrabold uppercase tracking-[0.3em]" style={{ color: '#D4AF37' }}>Scalar Blend — {blendFreq} Hz</div>
+              <div className="text-[9px] text-white/40 mt-0.5">{activeScalars.map(id => SCALAR_ACTIVATIONS.find(a => a.id === id)?.name).join(' · ')}</div>
             </div>
           </div>
         )}
       </div>
 
       {/* Nadi Scan */}
-      <div style={G}>
-        <div style={SL}>
-          <Activity size={12} style={{ color: '#22D3EE' }} />Real-Time Nadi Scan
-          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.06] rounded-[28px] p-6">
+        <div className="flex items-center gap-2 mb-3 text-[8px] font-extrabold uppercase tracking-[0.45em] text-white/50">
+          <Activity size={12} style={{ color: '#22D3EE' }} />
+          Real-Time Nadi Scan
+          <div className="ml-auto flex items-center gap-2">
             <Activity size={12} style={{ color: isScanning ? '#f43f5e' : 'rgba(255,255,255,0.2)', animation: isScanning ? 'sqmPulse 0.8s ease-in-out infinite' : 'none' }} />
-            <span style={{ fontSize: 10, fontWeight: 900, color: isScanning ? '#f43f5e' : 'rgba(255,255,255,0.2)', fontFamily: 'monospace' }}>{heartRate} BPM</span>
+            <span className="font-mono text-[10px]" style={{ color: isScanning ? '#f43f5e' : 'rgba(255,255,255,0.2)' }}>{heartRate} BPM</span>
           </div>
         </div>
-        <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.38)', lineHeight: 1.65, marginBottom: 14 }}>Scans your meditation's vibrational signature and auto-prescribes optimal scalar resonators.</p>
         {!scanResult && !isScanning && (
-          <button onClick={runScan} style={{ width: '100%', padding: 14, borderRadius: 20, background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.25)', color: '#22D3EE', fontSize: 10, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <button onClick={runScan} className="w-full p-3 rounded-2xl flex items-center justify-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.4em] cursor-pointer transition-all" style={{ background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.25)', color: '#22D3EE' }}>
             <Cpu size={14} /> Initiate Nadi Scan
           </button>
         )}
         {isScanning && (
-          <div style={{ textAlign: 'center', padding: '28px 0' }}>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 18 }}>{[0,1,2].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: '#22D3EE', animation: `sqmBlink 1.2s ${i*0.2}s ease-in-out infinite` }} />)}</div>
-            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase', color: '#22D3EE', marginBottom: 6 }}>{SCAN_PHASES[scanPhase]}</div>
-            <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.2em' }}>Scanning {activeStyle} · {healingFreq}Hz</div>
+          <div className="text-center py-6">
+            <div className="flex justify-center gap-1.5 mb-4">{[0,1,2].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: '#22D3EE', animation: `sqmBlink 1.2s ${i*0.2}s ease-in-out infinite` }} />)}</div>
+            <div className="text-[9px] font-extrabold uppercase tracking-[0.4em] mb-2" style={{ color: '#22D3EE' }}>{SCAN_PHASES[scanPhase]}</div>
+            <div className="text-[8px] text-white/25 tracking-[0.2em]">Scanning {activeStyle} · {healingFreq}Hz</div>
           </div>
         )}
         {scanResult && !isScanning && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <div style={{ padding: '12px 14px', borderRadius: 16, border: `1px solid ${dp?.color}40`, background: `${dp?.color}09` }}>
-                <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase', color: dp?.color, marginBottom: 4 }}>Dominant Dosha</div>
-                <div style={{ fontSize: 22, fontWeight: 900, color: dp?.color }}>{scanResult.dominantDosha}</div>
-                <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>{dp?.element}</div>
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              <div className="p-3 rounded-2xl" style={{ border: `1px solid ${dp?.color}40`, background: `${dp?.color}09` }}>
+                <div className="text-[7px] font-extrabold uppercase tracking-[0.4em] mb-1" style={{ color: dp?.color }}>Dominant Dosha</div>
+                <div className="text-2xl font-black" style={{ color: dp?.color }}>{scanResult.dominantDosha}</div>
+                <div className="text-[8px] text-white/35 mt-1">{dp?.element}</div>
               </div>
-              <div style={{ padding: '12px 14px', borderRadius: 16, border: '1px solid rgba(212,175,55,0.15)', background: 'rgba(212,175,55,0.04)' }}>
-                <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase', color: '#D4AF37', marginBottom: 4 }}>Nadi Activity</div>
-                <div style={{ fontSize: 22, fontWeight: 900, color: '#D4AF37' }}>{scanResult.activeNadis}<span style={{ fontSize: 10, opacity: 0.4 }}>/72k</span></div>
-                <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>{scanResult.timestamp}</div>
+              <div className="p-3 rounded-2xl" style={{ border: '1px solid rgba(212,175,55,0.15)', background: 'rgba(212,175,55,0.04)' }}>
+                <div className="text-[7px] font-extrabold uppercase tracking-[0.4em] mb-1" style={{ color: '#D4AF37' }}>Nadi Activity</div>
+                <div className="text-2xl font-black" style={{ color: '#D4AF37' }}>{scanResult.activeNadis}<span className="text-[10px] opacity-40">/72k</span></div>
+                <div className="text-[8px] text-white/35 mt-1">{scanResult.timestamp}</div>
               </div>
             </div>
-            <div style={{ padding: '10px 14px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
-              <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 5 }}>Planetary Alignment</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)' }}>{scanResult.planetaryAlignment}</div>
+            <div className="p-3 rounded-2xl" style={{ border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+              <div className="text-[7px] font-extrabold uppercase tracking-[0.4em] mb-1 text-white/30">Planetary Alignment</div>
+              <div className="text-[11px] text-white/65">{scanResult.planetaryAlignment}</div>
             </div>
             {scanResult.blockages.length > 0 && (
-              <div style={{ padding: '10px 14px', borderRadius: 14, border: '1px solid rgba(251,146,60,0.2)', background: 'rgba(251,146,60,0.04)' }}>
-                <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase', color: '#fb923c', marginBottom: 5 }}>Detected Blockages</div>
-                {scanResult.blockages.map((b, i) => <div key={i} style={{ fontSize: 10, color: 'rgba(255,255,255,0.55)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}><AlertCircle size={10} style={{ color: '#fb923c', flexShrink: 0 }} />{b}</div>)}
+              <div className="p-3 rounded-2xl" style={{ border: '1px solid rgba(251,146,60,0.2)', background: 'rgba(251,146,60,0.04)' }}>
+                <div className="text-[7px] font-extrabold uppercase tracking-[0.4em] mb-1" style={{ color: '#fb923c' }}>Detected Blockages</div>
+                {scanResult.blockages.map((b, i) => <div key={i} className="flex items-center gap-1.5 text-[10px] text-white/55 mb-1"><AlertCircle size={10} style={{ color: '#fb923c', flexShrink: 0 }} />{b}</div>)}
               </div>
             )}
-            <div style={{ padding: '10px 14px', borderRadius: 14, border: '1px solid rgba(34,211,238,0.15)', background: 'rgba(34,211,238,0.03)' }}>
-              <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase', color: '#22D3EE', marginBottom: 5 }}>Scalar Prescription</div>
-              {scanResult.remedies.map((r, i) => <div key={i} style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}><CheckCircle2 size={10} style={{ color: '#22D3EE', flexShrink: 0 }} />{r}</div>)}
+            <div className="p-3 rounded-2xl" style={{ border: '1px solid rgba(34,211,238,0.15)', background: 'rgba(34,211,238,0.03)' }}>
+              <div className="text-[7px] font-extrabold uppercase tracking-[0.4em] mb-1" style={{ color: '#22D3EE' }}>Scalar Prescription</div>
+              {scanResult.remedies.map((r, i) => <div key={i} className="flex items-center gap-1.5 text-[10px] text-white/60 mb-1"><CheckCircle2 size={10} style={{ color: '#22D3EE', flexShrink: 0 }} />{r}</div>)}
             </div>
-            <button onClick={runScan} style={{ padding: 10, borderRadius: 14, background: 'transparent', border: '1px solid rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.3)', fontSize: 8, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase', cursor: 'pointer' }}>Re-Scan Field</button>
+            <button onClick={runScan} className="w-full p-2 rounded-2xl text-[8px] font-extrabold uppercase tracking-[0.3em] cursor-pointer" style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.3)' }}>Re-Scan Field</button>
           </div>
         )}
       </div>
 
       {/* SQI Chat */}
-      <div style={G}>
-        <div style={SL}><MessageSquare size={12} style={{ color: '#a78bfa' }} />SQI Intelligence — Ask the Akasha-Archive</div>
-        <div style={{ height: 210, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 12, paddingRight: 4 }}>
-          {messages.length === 0 && <div style={{ textAlign: 'center', padding: '32px 12px', color: 'rgba(255,255,255,0.18)', fontSize: 10, lineHeight: 1.8 }}>Run a Nadi Scan to activate SQI,<br />or ask about scalar frequencies.</div>}
+      <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.06] rounded-[28px] p-6">
+        <div className="flex items-center gap-2 mb-3 text-[8px] font-extrabold uppercase tracking-[0.45em] text-white/50">
+          <MessageSquare size={12} style={{ color: '#a78bfa' }} />
+          SQI Intelligence — Ask the Akasha-Archive
+        </div>
+        <div className="overflow-y-auto flex flex-col gap-2 mb-3 pr-1" style={{ height: 200 }}>
+          {messages.length === 0 && <div className="text-center py-8 text-[10px] leading-loose text-white/20">Run a Nadi Scan to activate SQI,<br />or ask about scalar frequencies.</div>}
           {messages.map((m, i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start' }}>
-              <div style={{ maxWidth: '88%', padding: '10px 14px', borderRadius: m.role === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px', background: m.role === 'user' ? 'rgba(212,175,55,0.1)' : 'rgba(255,255,255,0.04)', border: `1px solid ${m.role === 'user' ? 'rgba(212,175,55,0.2)' : 'rgba(255,255,255,0.07)'}` }}>
-                {m.role === 'model' && <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.35em', color: '#a78bfa', textTransform: 'uppercase', marginBottom: 5 }}>⟁ SQI · Akasha-Neural Archive</div>}
+            <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className="max-w-[88%] p-3 text-sm" style={{ borderRadius: m.role === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px', background: m.role === 'user' ? 'rgba(212,175,55,0.1)' : 'rgba(255,255,255,0.04)', border: `1px solid ${m.role === 'user' ? 'rgba(212,175,55,0.2)' : 'rgba(255,255,255,0.07)'}` }}>
+                {m.role === 'model' && <div className="text-[7px] font-extrabold uppercase mb-1" style={{ letterSpacing: '0.35em', color: '#a78bfa' }}>⟁ SQI · Akasha-Neural Archive</div>}
                 {renderChat(m.text)}
                 {m.role === 'model' && isTyping && i === messages.length - 1 && !m.text && (
-                  <div style={{ display: 'flex', gap: 4, padding: '4px 0' }}>{[0,1,2].map(j => <div key={j} style={{ width: 5, height: 5, borderRadius: '50%', background: '#a78bfa', animation: `sqmBlink 1s ${j*0.2}s ease-in-out infinite` }} />)}</div>
+                  <div className="flex gap-1 py-1">{[0,1,2].map(j => <div key={j} style={{ width: 5, height: 5, borderRadius: '50%', background: '#a78bfa', animation: `sqmBlink 1s ${j*0.2}s ease-in-out infinite` }} />)}</div>
                 )}
               </div>
             </div>
           ))}
           <div ref={chatEnd} />
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div className="flex gap-2">
           <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()} placeholder="Ask SQI about your scalar field…" disabled={isTyping}
-            style={{ flex: 1, padding: '10px 14px', borderRadius: 16, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.8)', fontSize: 11, outline: 'none', fontFamily: 'Montserrat,sans-serif' }} />
+            className="flex-1 px-4 py-2.5 rounded-2xl text-[11px] outline-none bg-white/[0.04] border border-white/[0.08] text-white/80 font-[Montserrat,sans-serif]" />
           <button onClick={sendMessage} disabled={!input.trim() || isTyping}
-            style={{ width: 40, height: 40, borderRadius: 14, border: 'none', background: input.trim() && !isTyping ? 'linear-gradient(135deg,#D4AF37,#b8942a)' : 'rgba(255,255,255,0.05)', color: input.trim() && !isTyping ? '#050505' : 'rgba(255,255,255,0.2)', cursor: input.trim() && !isTyping ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.2s' }}>
+            className="flex items-center justify-center rounded-[14px] transition-all" style={{ width: 40, height: 40, border: 'none', flexShrink: 0, background: input.trim() && !isTyping ? 'linear-gradient(135deg,#D4AF37,#b8942a)' : 'rgba(255,255,255,0.05)', color: input.trim() && !isTyping ? '#050505' : 'rgba(255,255,255,0.2)', cursor: input.trim() && !isTyping ? 'pointer' : 'not-allowed' }}>
             <Send size={14} />
           </button>
         </div>
@@ -367,9 +339,9 @@ function ScalarWavePanel({ engine, activeStyle, healingFreq, isPlaying, userId }
   );
 }
 
-// ════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
 //  ROOT COMPONENT
-// ════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
 export default function CreativeSoulMeditationTool() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -378,279 +350,418 @@ export default function CreativeSoulMeditationTool() {
   const engine = useSoulMeditateEngine();
   const offlineExport = useOfflineExport(engine);
 
-  const [vizMode, setVizMode]             = useState<VisualizerMode>('bars');
-  const [activeStyle, setActiveStyle]     = useState<MeditationStyle>('indian');
+  // ── Visualizer ──
+  const [visualizerMode, setVisualizerMode] = useState('bars');
+
+  // ── Meditation state ──
+  const [activeStyle, setActiveStyle]     = useState('indian');
   const [healingFreq, setHealingFreq]     = useState(432);
   const [brainwaveFreq, setBrainwaveFreq] = useState(10);
-  const [alchemyOn, setAlchemyOn]         = useState(false);
-  const [volumes, setVolumes]             = useState({ ambient: 50, binaural: 40, healing: 20, user: 80 });
-  const [exportResult, setExportResult]   = useState<any>(null);
-  const [hasExport, setHasExport]         = useState(false);
-  const [showPay, setShowPay]             = useState(false);
-  const [payLoading, setPayLoading]       = useState(false);
-  const [refreshing, setRefreshing]       = useState(false);
-  const [tab, setTab]                     = useState<'alchemy' | 'scalar'>('alchemy');
+  const [isProcessing, setIsProcessing]   = useState(false);
+  const [alchemyCommenced, setAlchemyCommenced] = useState(false);
 
-  // ── SAFE ENGINE ACCESS: always use optional chaining + fallback ──
-  // engine.atmosphereLayer and engine.neuralLayer may be undefined
-  // on the very first render before the hook initializes them.
-  const atmosphereLayer  = engine.atmosphereLayer  ?? { isPlaying: false, source: null };
-  const neuralLayer      = engine.neuralLayer      ?? { isPlaying: false, source: null };
-  const frequencies      = engine.frequencies      ?? { solfeggio: { enabled: false, hz: 432 }, binaural: { enabled: false, carrierHz: 200, beatHz: 10 } };
-  const dsp              = engine.dsp              ?? null;
+  // ── Volume controls ──
+  const [volumes, setVolumes] = useState({ ambient: 50, binaural: 40, healing: 20, user: 80 });
 
-  const hVol = engine.solfeggioVolume ?? 0;
-  const bVol = engine.binauralVolume  ?? 0;
+  // ── Export / payment ──
+  const [exportResult, setExportResult]   = useState(null);
+  const [hasExportAccess, setHasExportAccess] = useState(false);
+  const [exportAccessLoading, setExportAccessLoading] = useState(true);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+
+  // ── UI state ──
+  const [isRefreshingSound, setIsRefreshingSound] = useState(false);
+  const [tab, setTab] = useState('alchemy');
+  const [meditationName, setMeditationName] = useState('');
+  const [sessionKey, setSessionKey] = useState(0); // for new session reset
+
+  // ── SAFE engine access — all nullable until initialized ──
+  const atmosphereLayer = engine?.atmosphereLayer ?? { isPlaying: false, source: null };
+  const neuralLayer     = engine?.neuralLayer     ?? { isPlaying: false, source: null };
+  const frequencies     = engine?.frequencies     ?? { solfeggio: { enabled: false, hz: 432 }, binaural: { enabled: false, carrierHz: 200, beatHz: 10 } };
+  const dsp             = engine?.dsp             ?? null;
+  const healingVolume   = engine?.solfeggioVolume ?? 0;
+  const brainwaveVolume = engine?.binauralVolume  ?? 0;
 
   const isPlaying =
     neuralLayer.isPlaying ||
     atmosphereLayer.isPlaying ||
-    frequencies.solfeggio?.enabled ||
-    frequencies.binaural?.enabled;
+    (frequencies.solfeggio?.enabled ?? false) ||
+    (frequencies.binaural?.enabled ?? false);
 
-  const handleInit = useCallback(async () => {
-    await engine.initialize();
-    const ctx = engine.getAudioContext?.();
+  // ── Handlers ─────────────────────────────────────────────────────
+  const handleHealingVolumeChange = useCallback(async (vol) => {
+    if (!engine?.isInitialized) await engine?.initialize();
+    const ctx = engine?.getAudioContext?.();
+    if (ctx?.state === 'suspended') await ctx.resume();
+    engine?.updateSolfeggioVolume(vol);
+    if (!frequencies.solfeggio?.enabled) await engine?.startSolfeggio?.(healingFreq);
+  }, [engine, healingFreq, frequencies]);
+
+  const handleBrainwaveVolumeChange = useCallback(async (vol) => {
+    if (!engine?.isInitialized) await engine?.initialize();
+    const ctx = engine?.getAudioContext?.();
+    if (ctx?.state === 'suspended') await ctx.resume();
+    engine?.updateBinauralVolume(vol);
+    if (!frequencies.binaural?.enabled) await engine?.startBinaural?.(200, brainwaveFreq);
+  }, [engine, brainwaveFreq, frequencies]);
+
+  const handleInitialize = useCallback(async () => {
+    await engine?.initialize();
+    const ctx = engine?.getAudioContext?.();
     if (ctx?.state === 'suspended') await ctx.resume();
     toast.success('Siddha Engine awakened');
   }, [engine]);
 
-  const doCommence = useCallback(async () => {
+  const commenceAlchemy = useCallback(async () => {
+    setIsProcessing(true);
+    setAlchemyCommenced(true);
     try {
-      if (!engine.isInitialized) await engine.initialize();
-      const ctx = engine.getAudioContext?.();
+      if (!engine?.isInitialized) await engine?.initialize();
+      const ctx = engine?.getAudioContext?.();
       if (ctx?.state === 'suspended') await ctx.resume();
-      await engine.loadAtmosphere(activeStyle);
-      if (hVol > 0) { engine.updateSolfeggioVolume(hVol); await engine.startSolfeggio(healingFreq); }
-      if (bVol > 0) { engine.updateBinauralVolume(bVol); await engine.startBinaural(200, brainwaveFreq); }
-      setAlchemyOn(true);
+      await engine?.loadAtmosphere?.(activeStyle);
+      if (healingVolume > 0) { engine?.updateSolfeggioVolume(healingVolume); await engine?.startSolfeggio?.(healingFreq); }
+      if (brainwaveVolume > 0) { engine?.updateBinauralVolume(brainwaveVolume); await engine?.startBinaural?.(200, brainwaveFreq); }
       toast.success('Alchemy commenced — Anahata open');
     } catch { toast.error('Could not commence alchemy'); }
-  }, [engine, activeStyle, healingFreq, brainwaveFreq, hVol, bVol]);
+    finally { setIsProcessing(false); }
+  }, [engine, activeStyle, healingFreq, brainwaveFreq, healingVolume, brainwaveVolume]);
 
-  const doStop = useCallback(() => { engine.stopAll?.(); setAlchemyOn(false); }, [engine]);
-  const togglePlay = useCallback(() => { isPlaying ? doStop() : doCommence(); }, [isPlaying, doStop, doCommence]);
+  const stopAll = useCallback(() => {
+    engine?.stopAll?.();
+    setAlchemyCommenced(false);
+  }, [engine]);
 
-  const handleHealVol = useCallback(async (v: number) => {
-    if (!engine.isInitialized) await engine.initialize();
-    const ctx = engine.getAudioContext?.(); if (ctx?.state === 'suspended') await ctx.resume();
-    engine.updateSolfeggioVolume(v);
-    if (!frequencies.solfeggio?.enabled) await engine.startSolfeggio(healingFreq);
-  }, [engine, healingFreq, frequencies]);
+  const togglePlay = useCallback(() => {
+    isPlaying ? stopAll() : commenceAlchemy();
+  }, [isPlaying, stopAll, commenceAlchemy]);
 
-  const handleBrainVol = useCallback(async (v: number) => {
-    if (!engine.isInitialized) await engine.initialize();
-    const ctx = engine.getAudioContext?.(); if (ctx?.state === 'suspended') await ctx.resume();
-    engine.updateBinauralVolume(v);
-    if (!frequencies.binaural?.enabled) await engine.startBinaural(200, brainwaveFreq);
-  }, [engine, brainwaveFreq, frequencies]);
+  const handleNewSession = useCallback(() => {
+    engine?.stopAll?.();
+    setAlchemyCommenced(false);
+    setActiveStyle('indian');
+    setHealingFreq(432);
+    setBrainwaveFreq(10);
+    setMeditationName('');
+    setExportResult(null);
+    setTab('alchemy');
+    setSessionKey(k => k + 1);
+    toast.success('New session started');
+  }, [engine]);
 
-  const handleHealFreq = useCallback(async (f: number) => {
-    setHealingFreq(f);
-    if (!engine.isInitialized) await engine.initialize();
-    const ctx = engine.getAudioContext?.(); if (ctx?.state === 'suspended') await ctx.resume();
-    if (alchemyOn) { engine.updateSolfeggioVolume(hVol); await engine.startSolfeggio(f); }
-  }, [engine, hVol, alchemyOn]);
-
-  const handleBrainFreq = useCallback(async (f: number) => {
-    setBrainwaveFreq(f);
-    if (!engine.isInitialized) await engine.initialize();
-    const ctx = engine.getAudioContext?.(); if (ctx?.state === 'suspended') await ctx.resume();
-    if (alchemyOn) { engine.updateBinauralVolume(bVol); await engine.startBinaural(200, f); }
-  }, [engine, bVol, alchemyOn]);
-
-  const handleExport = useCallback(async () => {
-    if (!engine.isInitialized) { toast.error('Please initialize the engine first'); return; }
-    if (!hasExport) { if (!user) { toast.info('Please sign in'); navigate('/auth'); return; } setShowPay(true); return; }
-    await offlineExport.startExport?.();
-  }, [engine, hasExport, user, navigate, offlineExport]);
-
-  const handlePay = useCallback(async () => {
-    if (!user) { navigate('/auth'); return; }
-    setPayLoading(true);
+  const handlePayForExport = useCallback(async () => {
+    if (!user) { toast.info('Please sign in to purchase'); navigate('/auth'); return; }
+    setPaymentLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('create-meditation-audio-checkout', { body: { option: 'per_track' } });
       if (error) throw error;
       if (data?.url) window.location.href = data.url;
-    } catch { toast.error('Checkout failed'); setPayLoading(false); }
+      else throw new Error('No checkout URL');
+    } catch { toast.error('Failed to start checkout.'); setPaymentLoading(false); }
   }, [user, navigate]);
 
-  const handleRefresh = useCallback(async (s: MeditationStyle) => {
-    if (!engine.isInitialized) return;
-    setRefreshing(true);
+  const handleExport = useCallback(async () => {
+    if (!engine?.isInitialized) { toast.error('Please initialize the engine first'); return; }
+    if (!hasExportAccess) {
+      if (!user) { toast.info('Please sign in to export'); navigate('/auth'); return; }
+      setShowPaymentDialog(true);
+      return;
+    }
+    await offlineExport?.startExport?.();
+  }, [engine, hasExportAccess, user, navigate, offlineExport]);
+
+  const handleHealingFreqSelect = useCallback(async (freq) => {
+    setHealingFreq(freq);
+    if (!engine?.isInitialized) await engine?.initialize();
+    const ctx = engine?.getAudioContext?.();
+    if (ctx?.state === 'suspended') await ctx.resume();
+    if (alchemyCommenced) { engine?.updateSolfeggioVolume(healingVolume); await engine?.startSolfeggio?.(freq); }
+  }, [engine, healingVolume, alchemyCommenced]);
+
+  const handleBrainwaveFreqSelect = useCallback(async (freq) => {
+    setBrainwaveFreq(freq);
+    if (!engine?.isInitialized) await engine?.initialize();
+    const ctx = engine?.getAudioContext?.();
+    if (ctx?.state === 'suspended') await ctx.resume();
+    if (alchemyCommenced) { engine?.updateBinauralVolume(brainwaveVolume); await engine?.startBinaural?.(200, freq); }
+  }, [engine, brainwaveVolume, alchemyCommenced]);
+
+  const handleRefreshSound = useCallback(async (styleId) => {
+    if (!engine?.isInitialized) return;
+    setIsRefreshingSound(true);
     try {
-      const r: any = await engine.loadAtmosphere(s);
+      const r = await engine?.loadAtmosphere?.(styleId);
       toast.success(r?.ok ? (r?.fallbackFrom ? 'Loaded from Indian instead.' : 'Loaded new sacred sound') : 'Could not load');
-    } finally { setRefreshing(false); }
+    } finally { setIsRefreshingSound(false); }
   }, [engine]);
 
+  // NeuralSourceInput handlers (wired to engine)
+  const handleLoadNeuralFile = useCallback(async (file) => {
+    if (!engine?.isInitialized) await engine?.initialize();
+    await engine?.loadNeuralSource?.(file);
+  }, [engine]);
+  const handleLoadNeuralUrl = useCallback((url) => {
+    engine?.loadNeuralSource?.(url);
+  }, [engine]);
+  const handleToggleNeuralPlay = useCallback(() => {
+    engine?.toggleNeuralPlay?.();
+  }, [engine]);
+  const handleNeuralVolumeChange = useCallback((vol) => {
+    engine?.updateNeuralVolume?.(vol);
+  }, [engine]);
+
+  // ── Access check ──────────────────────────────────────────────────
   useEffect(() => {
-    async function check() {
+    async function checkAccess() {
       if (!user || adminLoading) return;
+      setExportAccessLoading(true);
       try {
-        if (isAdmin) { setHasExport(true); return; }
-        if (searchParams.get('payment') === 'success') { setHasExport(true); return; }
+        if (isAdmin) { setHasExportAccess(true); return; }
+        if (searchParams.get('payment') === 'success') { setHasExportAccess(true); return; }
         const { data: g } = await supabase.from('user_granted_access').select('access_type').eq('user_id', user.id).in('access_type', ['creative_soul', 'creative_soul_meditation']);
         const { data: e } = await supabase.from('user_entitlements').select('access_type').eq('user_id', user.id);
-        setHasExport((e?.some((x: any) => ['creative_soul', 'creative_soul_meditation'].includes(x.access_type))) || !!(g && g.length > 0));
-      } catch { setHasExport(false); }
+        setHasExportAccess((e?.some(x => ['creative_soul', 'creative_soul_meditation'].includes(x.access_type))) || !!(g && g.length > 0));
+      } catch { setHasExportAccess(false); }
+      finally { setExportAccessLoading(false); }
     }
-    check();
+    checkAccess();
   }, [user, isAdmin, adminLoading, searchParams]);
 
+  // ── Auto-load atmosphere ──────────────────────────────────────────
   useEffect(() => {
-    if (engine.isInitialized) {
-      engine.loadAtmosphere(activeStyle).then((r: any) => {
+    if (engine?.isInitialized) {
+      engine?.loadAtmosphere?.(activeStyle)?.then(r => {
         if (r?.ok && r?.fallbackFrom) toast.info('Loaded from Indian instead.');
       });
     }
-  }, [activeStyle, engine.isInitialized]);
-
-  const CSS = `
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;800;900&family=Cinzel:wght@400;700&display=swap');
-    @keyframes sqmFloat{0%{transform:translateY(0)scale(1);opacity:0}10%{opacity:1}90%{opacity:.3}100%{transform:translateY(-90px)scale(.4);opacity:0}}
-    @keyframes sqmBlink{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:1;transform:scale(1.3)}}
-    @keyframes sqmPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.35)}}
-    *{box-sizing:border-box}
-    .sqm-root{min-height:100vh;background:#050505;font-family:'Montserrat',sans-serif;color:rgba(255,255,255,.9);position:relative;overflow-x:hidden}
-    .sqm-root::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(212,175,55,.04) 0%,transparent 60%),radial-gradient(ellipse 50% 40% at 80% 80%,rgba(139,92,246,.04) 0%,transparent 60%);pointer-events:none;z-index:0}
-    .sqm-inner{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:0 16px 100px}
-    .sqm-tab-on{border-color:rgba(212,175,55,.5)!important;color:#D4AF37!important;background:rgba(212,175,55,.08)!important}
-    .sqm-dsp-wrap [data-effect="sacred-echo"],.sqm-dsp-wrap .sacred-echo-row,.sqm-dsp-wrap [class*="echo"]:not([class*="reverb"]){display:none!important}
-    @media(max-width:680px){.sqm-two-col{grid-template-columns:1fr!important}}
-  `;
+  }, [activeStyle, engine?.isInitialized]);
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <style dangerouslySetInnerHTML={{ __html: `
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;800;900&family=Cinzel:wght@400;700&display=swap');
+        @keyframes sqmFloat{0%{transform:translateY(0)scale(1);opacity:0}10%{opacity:1}90%{opacity:.3}100%{transform:translateY(-90px)scale(.4);opacity:0}}
+        @keyframes sqmBlink{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:1;transform:scale(1.3)}}
+        @keyframes sqmPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.35)}}
+        .sqm-root{min-height:100vh;background:#050505;font-family:'Montserrat',sans-serif;color:rgba(255,255,255,.9);position:relative;overflow-x:hidden}
+        .sqm-root::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(212,175,55,.04) 0%,transparent 60%);pointer-events:none;z-index:0}
+        .sqm-inner{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:0 16px 100px}
+        .sqm-tab-on{border-color:rgba(212,175,55,.5)!important;color:#D4AF37!important;background:rgba(212,175,55,.08)!important}
+        .sqm-dsp-wrap [data-effect="sacred-echo"],.sqm-dsp-wrap .sacred-echo-row,.sqm-dsp-wrap [class*="echo"]:not([class*="reverb"]){display:none!important}
+        @media(max-width:680px){.sqm-two-col{grid-template-columns:1fr!important}}
+      `}} />
+
       <div className="sqm-root">
-        <AkashaParticles />
+        {/* Particle bg */}
+        <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0 }} aria-hidden>
+          {Array.from({ length: 20 }, (_, i) => (
+            <span key={i} style={{ position: 'absolute', borderRadius: '50%', background: '#D4AF37', left: `${Math.random()*100}%`, top: `${Math.random()*100}%`, width: `${1+Math.random()*2}px`, height: `${1+Math.random()*2}px`, opacity: 0.08+Math.random()*0.3, animation: `sqmFloat ${7+Math.random()*12}s ${Math.random()*10}s linear infinite` }} />
+          ))}
+        </div>
+
         <div className="sqm-inner">
 
-          {/* TOP BAR */}
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'16px 0 0', gap:12 }}>
-            <button onClick={() => navigate(-1)} style={{ display:'flex', alignItems:'center', gap:6, background:'rgba(255,255,255,.03)', border:'1px solid rgba(255,255,255,.07)', borderRadius:20, padding:'8px 16px', fontSize:11, fontWeight:700, letterSpacing:'0.2em', textTransform:'uppercase', color:'rgba(255,255,255,.5)', cursor:'pointer' }}>
+          {/* ── TOP BAR ── */}
+          <div className="flex items-center justify-between pt-4 pb-0 gap-3">
+            <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-[11px] font-bold uppercase text-white/50 cursor-pointer transition-all hover:text-[#D4AF37]" style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)', borderRadius: 20, padding: '8px 16px', letterSpacing: '0.2em' }}>
               <ArrowLeft size={12} /> Back
             </button>
-            <button onClick={handleInit} style={{ display:'flex', alignItems:'center', gap:8, background:'linear-gradient(135deg,#D4AF37,#b8942a)', border:'none', borderRadius:24, padding:'10px 22px', fontSize:11, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase', color:'#050505', cursor:'pointer', boxShadow:'0 0 22px rgba(212,175,55,.3)' }}>
-              <span style={{ width:8, height:8, borderRadius:'50%', background:'#050505', animation:'sqmPulse 1.5s ease-in-out infinite', display:'block' }} /> Awaken
+            <button onClick={handleInitialize} className="flex items-center gap-2 text-[11px] font-extrabold uppercase cursor-pointer" style={{ background: 'linear-gradient(135deg,#D4AF37,#b8942a)', border: 'none', borderRadius: 24, padding: '10px 22px', letterSpacing: '0.2em', color: '#050505', boxShadow: '0 0 22px rgba(212,175,55,.3)' }}>
+              <Power size={14} /> Awaken
             </button>
           </div>
 
-          {/* TITLE */}
-          <div style={{ padding:'24px 0 16px', textAlign:'center' }}>
-            <div style={{ fontFamily:'Cinzel,serif', fontSize:'clamp(22px,4vw,34px)', fontWeight:700, color:'#D4AF37', textShadow:'0 0 40px rgba(212,175,55,.4),0 0 80px rgba(212,175,55,.15)', letterSpacing:'0.08em', marginBottom:6 }}>Siddha Sound Alchemy</div>
-            <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.55em', textTransform:'uppercase', color:'rgba(255,255,255,.22)' }}>SQI 2050 · Bhakti-Algorithm v7.3 · Scalar Wave Technology Active</div>
+          {/* ── TITLE ── */}
+          <div className="py-6 text-center">
+            <div style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(22px,4vw,34px)', fontWeight: 700, color: '#D4AF37', textShadow: '0 0 40px rgba(212,175,55,.4)', letterSpacing: '0.08em', marginBottom: 6 }}>Siddha Sound Alchemy</div>
+            <div className="text-[8px] font-extrabold uppercase text-white/22" style={{ letterSpacing: '0.55em' }}>SQI 2050 · Bhakti-Algorithm v7.3 · Scalar Wave Technology Active</div>
           </div>
 
-          {/* PREMA-PULSE STRIP */}
+          {/* ── PREMA-PULSE STRIP ── */}
           {isPlaying && (
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, background:'rgba(34,211,238,.03)', border:'1px solid rgba(34,211,238,.12)', borderRadius:20, padding:'12px 20px', marginBottom:20, flexWrap:'wrap' }}>
-              <span style={{ fontSize:7, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase', color:'#22D3EE' }}>● Prema-Pulse Transmitting</span>
-              <div style={{ display:'flex', gap:5 }}>{[0,1,2].map(i => <div key={i} style={{ width:4, height:4, borderRadius:'50%', background:'#22D3EE', animation:`sqmBlink 1.2s ${i*0.2}s ease-in-out infinite` }} />)}</div>
-              <span style={{ fontSize:8, color:'rgba(34,211,238,.45)', letterSpacing:'0.1em' }}>Anahata open · {healingFreq}Hz · Scalar field broadcasting</span>
+            <div className="flex items-center justify-between gap-3 mb-5 flex-wrap px-5 py-3 rounded-[20px]" style={{ background: 'rgba(34,211,238,.03)', border: '1px solid rgba(34,211,238,.12)' }}>
+              <span className="text-[7px] font-extrabold uppercase tracking-[0.5em]" style={{ color: '#22D3EE' }}>● Prema-Pulse Transmitting</span>
+              <div className="flex gap-1.5">{[0,1,2].map(i => <div key={i} style={{ width: 4, height: 4, borderRadius: '50%', background: '#22D3EE', animation: `sqmBlink 1.2s ${i*0.2}s ease-in-out infinite` }} />)}</div>
+              <span className="text-[8px] text-[#22D3EE]/50 tracking-[0.1em]">Anahata open · {healingFreq}Hz · Broadcasting</span>
             </div>
           )}
 
-          {/* VISUALIZER */}
-          <div style={{ ...G, marginBottom:20, padding:'16px 20px 12px' }}>
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12, gap:12 }}>
-              <div style={{ display:'flex', alignItems:'center', gap:8, fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase', color:'rgba(212,175,55,.7)' }}>
-                <div style={{ width:6, height:6, borderRadius:'50%', background:'#D4AF37' }} />Sacred Visualizer<span style={{ fontSize:7, color:'rgba(255,255,255,.2)' }}>2048 FFT</span>
+          {/* ── VISUALIZER ── */}
+          <div className="mb-5 p-4 bg-white/[0.02] backdrop-blur-xl border border-white/[0.06] rounded-[28px]">
+            <div className="flex items-center justify-between mb-3 gap-3">
+              <div className="flex items-center gap-2 text-[8px] font-extrabold uppercase tracking-[0.4em]" style={{ color: 'rgba(212,175,55,.7)' }}>
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#D4AF37' }} />
+                Sacred Visualizer <span className="text-[7px] text-white/20">2048 FFT</span>
               </div>
-              <div style={{ display:'flex', gap:6 }}>
-                {(['bars','wave','radial'] as VisualizerMode[]).map(m => (
-                  <button key={m} onClick={() => setVizMode(m)} style={{ fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase', padding:'5px 12px', borderRadius:12, border:`1px solid ${vizMode===m ? 'rgba(212,175,55,.4)' : 'rgba(255,255,255,.06)'}`, background:vizMode===m ? 'rgba(212,175,55,.08)' : 'transparent', color:vizMode===m ? '#D4AF37' : 'rgba(255,255,255,.3)', cursor:'pointer' }}>
+              <div className="flex gap-1.5">
+                {['bars','wave','radial'].map(m => (
+                  <button key={m} onClick={() => setVisualizerMode(m)} className="text-[8px] font-extrabold uppercase px-3 py-1 rounded-xl cursor-pointer transition-all" style={{ letterSpacing: '0.3em', border: `1px solid ${visualizerMode===m ? 'rgba(212,175,55,.4)' : 'rgba(255,255,255,.06)'}`, background: visualizerMode===m ? 'rgba(212,175,55,.08)' : 'transparent', color: visualizerMode===m ? '#D4AF37' : 'rgba(255,255,255,.3)' }}>
                     {m.charAt(0).toUpperCase()+m.slice(1)}
                   </button>
                 ))}
               </div>
             </div>
-            <SpectralVisualizer engine={engine} mode={vizMode} height={140} />
+            <SpectralVisualizer engine={engine} mode={visualizerMode} height={140} />
           </div>
 
-          {/* ACTION BUTTONS */}
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:12, marginBottom:22, flexWrap:'wrap' }}>
-            <button onClick={togglePlay} disabled={!engine.isInitialized} style={{ display:'flex', alignItems:'center', gap:10, border:'none', borderRadius:40, padding:'14px 36px', fontSize:12, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase', cursor:engine.isInitialized ? 'pointer' : 'not-allowed', opacity:engine.isInitialized ? 1 : 0.4, background:isPlaying ? 'linear-gradient(135deg,#dc2626,#ea580c)' : 'linear-gradient(135deg,#D4AF37,#b8942a)', color:isPlaying ? 'white' : '#050505', boxShadow:isPlaying ? '0 0 25px rgba(220,38,38,.4)' : '0 0 25px rgba(212,175,55,.35)', transition:'all .25s' }}>
-              {isPlaying ? <><Pause size={16} /> Cease Alchemy</> : <><Play size={16} /> Commence Alchemy</>}
-            </button>
-            <button onClick={handleExport} disabled={!engine.isInitialized || !!offlineExport.progress?.isExporting} style={{ display:'flex', alignItems:'center', gap:8, background:'rgba(212,175,55,.06)', border:'1px solid rgba(212,175,55,.2)', borderRadius:40, padding:'14px 28px', fontSize:11, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase', color:'rgba(212,175,55,.7)', cursor:'pointer', opacity:(engine.isInitialized && !offlineExport.progress?.isExporting) ? 1 : 0.35, transition:'all .2s' }}>
-              {offlineExport.progress?.isExporting ? <><Loader2 size={14} /> Exporting…</> : <><Zap size={14} /> Export Master</>}
-            </button>
+          {/* ── ACTION BUTTONS ── */}
+          <div className="flex items-center justify-center gap-3 mb-5 flex-wrap">
+            {/* Commence / Cease */}
+            <Button
+              size="lg"
+              onClick={togglePlay}
+              disabled={!engine?.isInitialized}
+              className={`px-8 sm:px-10 text-sm sm:text-base ${isPlaying ? 'bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700' : 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700'}`}
+              style={{ borderRadius: 40, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase' }}
+            >
+              {isPlaying ? <><Pause className="w-4 h-4 mr-2" />Cease Alchemy</> : <><Play className="w-4 h-4 mr-2" />Commence Alchemy</>}
+            </Button>
+
+            {/* Export */}
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={handleExport}
+              disabled={!engine?.isInitialized || offlineExport?.progress?.isExporting}
+              className="bg-amber-900/10 border-amber-900/30 text-amber-200 hover:bg-amber-900/20 px-6 sm:px-8 text-sm sm:text-base"
+              style={{ borderRadius: 40, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase' }}
+            >
+              {offlineExport?.progress?.isExporting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Exporting…</> : <><Zap className="w-4 h-4 mr-2" />Export Master</>}
+            </Button>
+
+            {/* New Session */}
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={handleNewSession}
+              className="bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white px-5 sm:px-6 text-sm sm:text-base"
+              style={{ borderRadius: 40, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase' }}
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />New Session
+            </Button>
           </div>
 
-          {/* EXPORT PROGRESS */}
-          {(offlineExport.progress?.isExporting || exportResult) && (
-            <div style={{ ...G, marginBottom:18, padding:'14px 20px' }}>
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:8 }}>
-                <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                  {exportResult ? <CheckCircle2 size={14} style={{ color:'#34d399' }} /> : <Loader2 size={14} style={{ color:'#D4AF37' }} />}
-                  <span style={{ fontSize:9, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase', color:'rgba(212,175,55,.8)' }}>{exportResult ? 'Export Complete' : 'Rendering Sacred Master…'}</span>
+          {/* ── EXPORT PROGRESS ── */}
+          {(offlineExport?.progress?.isExporting || exportResult) && (
+            <div className="mb-5 p-4 bg-white/[0.02] backdrop-blur-xl border border-white/[0.06] rounded-[20px]">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  {exportResult ? <CheckCircle2 size={14} className="text-emerald-400" /> : <Loader2 size={14} className="animate-spin text-amber-400" />}
+                  <span className="text-[9px] font-extrabold uppercase tracking-[0.3em] text-amber-200/80">{exportResult ? 'Export Complete' : 'Rendering Sacred Master…'}</span>
                 </div>
-                {exportResult && <a href={exportResult.url} download={`siddha-alchemy.${exportResult.format}`} style={{ fontSize:9, fontWeight:800, color:'#D4AF37', textDecoration:'none', display:'flex', alignItems:'center', gap:6 }}><Download size={12} /> Download</a>}
+                {exportResult && <a href={exportResult.url} download={`siddha-alchemy.${exportResult.format}`} className="flex items-center gap-1.5 text-[9px] font-extrabold text-amber-400 no-underline"><Download size={12} /> Download</a>}
               </div>
-              {offlineExport.progress?.isExporting && <Progress value={(offlineExport.progress.progress ?? 0) * 100} className="h-1" />}
+              {offlineExport?.progress?.isExporting && <Progress value={(offlineExport.progress.progress ?? 0) * 100} className="h-1" />}
             </div>
           )}
 
-          {/* TAB SWITCHER */}
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:20 }}>
+          {/* ── NAME YOUR MEDITATION ── */}
+          <div className="mb-5">
+            <label className="block text-[8px] font-extrabold uppercase tracking-[0.5em] text-white/30 mb-2">Name Your Meditation</label>
+            <input
+              value={meditationName}
+              onChange={e => setMeditationName(e.target.value)}
+              placeholder="e.g. Forest Meditation"
+              className="w-full px-4 py-3 rounded-2xl text-sm text-white/70 outline-none transition-all"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', fontFamily: 'Montserrat,sans-serif' }}
+            />
+          </div>
+
+          {/* ── TAB SWITCHER ── */}
+          <div className="grid grid-cols-2 gap-2 mb-5">
             {[
-              { id:'alchemy', icon:'🎵', label:'Sound Alchemy',    sub:'Source · Style · Frequencies · DSP' },
-              { id:'scalar',  icon:'⟁',  label:'Scalar Wave Tech', sub:'Nadi Scan · Resonators · SQI Chat'  },
+              { id: 'alchemy', icon: '🎵', label: 'Sound Alchemy',   sub: 'Source · Style · Frequencies · DSP' },
+              { id: 'scalar',  icon: '⟁',  label: 'Scalar Wave Tech', sub: 'Nadi Scan · Resonators · SQI Chat'  },
             ].map(t => (
-              <button key={t.id} onClick={() => setTab(t.id as any)} className={tab===t.id ? 'sqm-tab-on' : ''} style={{ padding:'14px 18px', borderRadius:20, border:'1px solid rgba(255,255,255,.07)', background:'rgba(255,255,255,.02)', cursor:'pointer', textAlign:'left', color:'rgba(255,255,255,.4)', transition:'all .2s' }}>
-                <div style={{ fontSize:12, fontWeight:800, letterSpacing:'0.04em', marginBottom:3 }}>{t.icon} {t.label}</div>
-                <div style={{ fontSize:8, letterSpacing:'0.2em', textTransform:'uppercase', opacity:0.55 }}>{t.sub}</div>
+              <button key={t.id} onClick={() => setTab(t.id)} className={`p-3 rounded-[20px] text-left cursor-pointer transition-all ${tab===t.id ? 'sqm-tab-on' : ''}`} style={{ border: '1px solid rgba(255,255,255,.07)', background: 'rgba(255,255,255,.02)', color: 'rgba(255,255,255,.4)' }}>
+                <div className="text-[11px] font-extrabold mb-0.5">{t.icon} {t.label}</div>
+                <div className="text-[8px] uppercase tracking-[0.2em] opacity-55">{t.sub}</div>
               </button>
             ))}
           </div>
 
           {/* ══ ALCHEMY TAB ══ */}
           {tab === 'alchemy' && (
-            <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+            <div className="space-y-5" key={sessionKey}>
 
               {/* Step 1 — Source */}
               <div>
-                <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>{STEP('1')}<span style={{ fontSize:11, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase', color:'rgba(255,255,255,.7)' }}>Source</span></div>
-                <div style={G}><NeuralSourceInput engine={engine} /></div>
+                <div className="flex items-center gap-2.5 mb-2.5">
+                  <span className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black shrink-0" style={{ background: 'rgba(212,175,55,0.15)', border: '1px solid rgba(212,175,55,0.3)', color: '#D4AF37' }}>1</span>
+                  <span className="text-[11px] font-extrabold uppercase tracking-[0.3em] text-white/70">Source</span>
+                </div>
+                <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.06] rounded-[28px] p-6">
+                  <NeuralSourceInput
+                    layer={neuralLayer}
+                    onLoadFile={handleLoadNeuralFile}
+                    onLoadUrl={handleLoadNeuralUrl}
+                    onTogglePlay={handleToggleNeuralPlay}
+                    onVolumeChange={handleNeuralVolumeChange}
+                  />
+                </div>
               </div>
 
               {/* Step 2 — Atmosphere */}
               <div>
-                <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>{STEP('2')}<span style={{ fontSize:11, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase', color:'rgba(255,255,255,.7)' }}>Atmosphere</span></div>
-                <div style={G}>
-                  <div style={SL}><Layers size={12} />Meditation Style & Atmosphere</div>
-                  <StyleGrid activeStyle={activeStyle} onStyleSelect={setActiveStyle} onRefreshSound={handleRefresh} isRefreshingSound={refreshing} />
+                <div className="flex items-center gap-2.5 mb-2.5">
+                  <span className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black shrink-0" style={{ background: 'rgba(212,175,55,0.15)', border: '1px solid rgba(212,175,55,0.3)', color: '#D4AF37' }}>2</span>
+                  <span className="text-[11px] font-extrabold uppercase tracking-[0.3em] text-white/70">Atmosphere</span>
+                </div>
+                <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.06] rounded-[28px] p-6">
+                  <div className="flex items-center gap-2 mb-3 text-[8px] font-extrabold uppercase tracking-[0.45em] text-white/50">
+                    <Layers size={12} />Meditation Style & Atmosphere
+                  </div>
+                  <StyleGrid
+                    activeStyle={activeStyle}
+                    onStyleSelect={setActiveStyle}
+                    atmosphereVolume={volumes.ambient / 100}
+                    onAtmosphereVolumeChange={(v) => setVolumes(p => ({ ...p, ambient: Math.round(v * 100) }))}
+                    onRefreshSound={handleRefreshSound}
+                    isRefreshingSound={isRefreshingSound}
+                  />
                 </div>
               </div>
 
               {/* Steps 2b + 3 */}
-              <div className="sqm-two-col" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20 }}>
+              <div className="sqm-two-col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+
+                {/* 2b — Sacred Frequencies */}
                 <div>
-                  <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10, flexWrap:'wrap' }}>
-                    {STEP('2b')}
-                    <span style={{ fontSize:11, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase', color:'rgba(255,255,255,.7)' }}>Sacred Frequencies</span>
-                    <span style={{ fontSize:7, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase', color:'rgba(212,175,55,.5)', border:'1px solid rgba(212,175,55,.2)', borderRadius:10, padding:'2px 8px' }}>Activate on Commence</span>
+                  <div className="flex items-center gap-2 mb-2.5 flex-wrap">
+                    <span className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black shrink-0" style={{ background: 'rgba(212,175,55,0.15)', border: '1px solid rgba(212,175,55,0.3)', color: '#D4AF37' }}>2b</span>
+                    <span className="text-[11px] font-extrabold uppercase tracking-[0.3em] text-white/70">Sacred Frequencies</span>
+                    <span className="text-[7px] font-extrabold uppercase tracking-[0.25em] px-2 py-0.5 rounded-xl" style={{ color: 'rgba(212,175,55,.5)', border: '1px solid rgba(212,175,55,.2)' }}>Activate on Commence</span>
                   </div>
-                  <div style={G}>
-                    <HealingFrequencySelector activeFrequency={healingFreq} volume={hVol} onSelect={handleHealFreq} onVolumeChange={handleHealVol} />
-                    <div style={{ marginTop:16 }}>
-                      <BrainwaveSelector activeFrequency={brainwaveFreq} volume={bVol} onSelect={handleBrainFreq} onVolumeChange={handleBrainVol} />
+                  <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.06] rounded-[28px] p-6">
+                    <HealingFrequencySelector activeFrequency={healingFreq} volume={healingVolume} onSelect={handleHealingFreqSelect} onVolumeChange={handleHealingVolumeChange} />
+                    <div className="mt-4">
+                      <BrainwaveSelector activeFrequency={brainwaveFreq} volume={brainwaveVolume} onSelect={handleBrainwaveFreqSelect} onVolumeChange={handleBrainwaveVolumeChange} />
                     </div>
                   </div>
                 </div>
+
+                {/* 3 — Refinement */}
                 <div>
-                  <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>{STEP('3')}<span style={{ fontSize:11, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase', color:'rgba(255,255,255,.7)' }}>Refinement</span></div>
-                  <div style={G}>
-                    <div style={SL}><Waves size={12} />Sacred Effects</div>
+                  <div className="flex items-center gap-2.5 mb-2.5">
+                    <span className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black shrink-0" style={{ background: 'rgba(212,175,55,0.15)', border: '1px solid rgba(212,175,55,0.3)', color: '#D4AF37' }}>3</span>
+                    <span className="text-[11px] font-extrabold uppercase tracking-[0.3em] text-white/70">Refinement</span>
+                  </div>
+                  <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.06] rounded-[28px] p-6">
+                    <div className="flex items-center gap-2 mb-3 text-[8px] font-extrabold uppercase tracking-[0.45em] text-white/50">
+                      <Waves size={12} />Sacred Effects
+                    </div>
                     {/* Sacred Echo hidden via CSS */}
                     <div className="sqm-dsp-wrap">
-                      <DSPMasteringRack dsp={dsp} onUpdate={engine.updateDSP} />
+                      <DSPMasteringRack dsp={dsp} onUpdate={engine?.updateDSP} />
                     </div>
-                    <div style={{ marginTop:18 }}>
-                      <div style={SL}><Sparkles size={12} />Alchemical Insight</div>
-                      {/* ── FIX: use safe local variables, never access engine.x.source directly ── */}
+
+                    {/* 4 — Alchemical Insight */}
+                    <div className="mt-5">
+                      <div className="flex items-center gap-2 mb-3 text-[8px] font-extrabold uppercase tracking-[0.45em] text-white/50">
+                        <Sparkles size={12} />Alchemical Insight
+                      </div>
                       <SpectralInsights
                         frequencies={frequencies}
                         dsp={dsp}
@@ -675,29 +786,29 @@ export default function CreativeSoulMeditationTool() {
             />
           )}
 
-          <div style={{ height:80 }} />
+          <div style={{ height: 80 }} />
         </div>
       </div>
 
-      {/* PAYMENT DIALOG */}
-      <Dialog open={showPay} onOpenChange={setShowPay}>
-        <DialogContent style={{ background:'#0B0B0B', border:'1px solid rgba(212,175,55,.2)', borderRadius:24, color:'rgba(255,255,255,.9)', fontFamily:'Montserrat,sans-serif' }}>
+      {/* ── PAYMENT DIALOG ── */}
+      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+        <DialogContent className="bg-[#0B0B0B] border border-amber-900/20 rounded-3xl text-white/90" style={{ fontFamily: 'Montserrat,sans-serif' }}>
           <DialogHeader>
-            <DialogTitle style={{ color:'#D4AF37', fontFamily:'Cinzel,serif', letterSpacing:'0.05em' }}>Download Sacred Master</DialogTitle>
-            <DialogDescription style={{ color:'rgba(255,255,255,.5)', fontSize:13 }}>Create and preview your alchemy for free. Pay €9.99 once to download your master file.</DialogDescription>
+            <DialogTitle style={{ color: '#D4AF37', fontFamily: 'Cinzel,serif', letterSpacing: '0.05em' }}>Download Sacred Master</DialogTitle>
+            <DialogDescription className="text-white/50">Create and preview your alchemy for free. Pay €9.99 once to download your master file.</DialogDescription>
           </DialogHeader>
-          <div style={{ display:'flex', flexDirection:'column', gap:8, padding:'8px 0' }}>
+          <div className="space-y-2 py-2">
             {['One sacred master export','All atmospheres available','All healing frequencies','Binaural layer included','Scalar Wave overlay embedded'].map(item => (
-              <div key={item} style={{ display:'flex', alignItems:'center', gap:8, fontSize:13, color:'rgba(255,255,255,.6)' }}>
-                <CheckCircle2 size={14} style={{ color:'#D4AF37', flexShrink:0 }} /> {item}
+              <div key={item} className="flex items-center gap-2 text-sm text-white/60">
+                <CheckCircle2 size={14} style={{ color: '#D4AF37', flexShrink: 0 }} /> {item}
               </div>
             ))}
           </div>
-          <div style={{ display:'flex', gap:10, paddingTop:8 }}>
-            <button onClick={handlePay} disabled={payLoading} style={{ flex:1, background:'linear-gradient(135deg,#D4AF37,#b8942a)', border:'none', borderRadius:20, padding:'12px 20px', fontWeight:800, fontSize:11, letterSpacing:'0.2em', textTransform:'uppercase', color:'#050505', cursor:'pointer' }}>
-              {payLoading ? 'Loading…' : 'Pay €9.99 · Download'}
+          <div className="flex gap-2.5 pt-2">
+            <button onClick={handlePayForExport} disabled={paymentLoading} className="flex-1 font-extrabold text-[11px] uppercase py-3 rounded-[20px] cursor-pointer" style={{ background: 'linear-gradient(135deg,#D4AF37,#b8942a)', border: 'none', color: '#050505', letterSpacing: '0.2em' }}>
+              {paymentLoading ? 'Loading…' : 'Pay €9.99 · Download'}
             </button>
-            <button onClick={() => setShowPay(false)} style={{ background:'rgba(255,255,255,.05)', border:'1px solid rgba(255,255,255,.1)', borderRadius:20, padding:'12px 16px', color:'rgba(255,255,255,.4)', cursor:'pointer' }}>
+            <button onClick={() => setShowPaymentDialog(false)} className="px-4 py-3 rounded-[20px] cursor-pointer" style={{ background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.1)', color: 'rgba(255,255,255,.4)' }}>
               <X size={14} />
             </button>
           </div>
