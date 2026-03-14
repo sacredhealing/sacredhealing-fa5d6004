@@ -794,7 +794,7 @@ export default function CreativeSoulMeditationTool() {
                     engine={engine}
                     onRefreshSound={handleRefreshSound}
                     isRefreshing={isRefreshingSound}
-                    volumes={volumes}
+                    volumes={{ ...volumes, binaural: Math.round(brainwaveVolume * 100), healing: Math.round(healingVolume * 100) }}
                     onVolumeChange={(k, v) => setVolumes(p => ({ ...p, [k]: v }))}
                   />
                 </div>
