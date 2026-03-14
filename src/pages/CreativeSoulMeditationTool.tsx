@@ -621,7 +621,7 @@ export default function CreativeSoulMeditationTool() {
                 <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>{STEP('2')}<span style={{ fontSize:11, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase', color:'rgba(255,255,255,.7)' }}>Atmosphere</span></div>
                 <div style={G}>
                   <div style={SL}><Layers size={12} />Meditation Style & Atmosphere</div>
-                  <StyleGrid activeStyle={activeStyle} onStyleChange={setActiveStyle} engine={engine} onRefreshSound={handleRefresh} isRefreshing={refreshing} volumes={volumes} onVolumeChange={(k, v) => setVolumes(p => ({ ...p, [k]: v }))} />
+                  <StyleGrid activeStyle={activeStyle} onStyleSelect={setActiveStyle} onRefreshSound={handleRefresh} isRefreshingSound={refreshing} />
                 </div>
               </div>
 
