@@ -1942,7 +1942,7 @@ const Community = () => {
               onClick={() => {
                 setShowNotifPanel(!showNotifPanel);
                 if (!showNotifPanel && notifications.some((n) => !n.is_read)) {
-                  supabase
+                  (supabase as any)
                     .from("community_notifications")
                     .update({ is_read: true })
                     .eq("user_id", user?.id)
