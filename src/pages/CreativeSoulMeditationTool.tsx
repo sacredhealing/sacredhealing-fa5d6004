@@ -539,21 +539,16 @@ export default function CreativeSoulMeditationTool() {
     }
   }, [engine, hasExportAccess, user, navigate, exportMeditation, scalarBlendHz, frequencies, healingFreq, healingVolume, brainwaveFreq, brainwaveVolume, dsp, neuralLayer, atmosphereLayer, volumes]);
 
-  // HOT-SWAP: change Hz without stopping — fixes stop-on-change bug
+  // HOT-SWAP: direct oscillator update — bypasses React state timing, works immediately
   const handleHealingFreqSelect = useCallback(async (freq) => {
     setHealingFreq(freq);
     if (!engine?.isInitialized) return;
     const ctx = engine?.getAudioContext?.();
     if (ctx?.state === 'suspended') await ctx.resume();
     if (frequencies.solfeggio?.enabled) {
-      if (engine?.updateSolfeggioFrequency) {
-        engine.updateSolfeggioFrequency(freq);
-      } else {
-        engine?.updateSolfeggioVolume(healingVolume);
-        await engine?.startSolfeggio?.(freq);
-      }
+      engine?.updateSolfeggioFrequency?.(freq);
     } else if (alchemyCommenced) {
-      engine?.updateSolfeggioVolume(healingVolume);
+      engine?.updateSolfeggioVolume?.(healingVolume);
       await engine?.startSolfeggio?.(freq);
     }
   }, [engine, healingVolume, alchemyCommenced, frequencies]);
@@ -564,14 +559,9 @@ export default function CreativeSoulMeditationTool() {
     const ctx = engine?.getAudioContext?.();
     if (ctx?.state === 'suspended') await ctx.resume();
     if (frequencies.binaural?.enabled) {
-      if (engine?.updateBinauralFrequency) {
-        engine.updateBinauralFrequency(200, freq);
-      } else {
-        engine?.updateBinauralVolume(brainwaveVolume);
-        await engine?.startBinaural?.(200, freq);
-      }
+      engine?.updateBinauralFrequency?.(200, freq);
     } else if (alchemyCommenced) {
-      engine?.updateBinauralVolume(brainwaveVolume);
+      engine?.updateBinauralVolume?.(brainwaveVolume);
       await engine?.startBinaural?.(200, freq);
     }
   }, [engine, brainwaveVolume, alchemyCommenced, frequencies]);
