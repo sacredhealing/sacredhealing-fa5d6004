@@ -394,7 +394,7 @@ export default function CreativeSoulMeditationTool() {
   const [alchemyCommenced, setAlchemyCommenced] = useState(false);
 
   // ── Volume controls ──
-  const [volumes, setVolumes] = useState({ ambient: 50, binaural: 40, healing: 20, user: 80 });
+  const [volumes, setVolumes] = useState({ ambient: 85, binaural: 40, healing: 75, user: 100 });
 
   // ── Export / payment ──
   const [exportResult, setExportResult]   = useState(null);
@@ -415,8 +415,8 @@ export default function CreativeSoulMeditationTool() {
   const neuralLayer     = engine?.neuralLayer     ?? { isPlaying: false, source: null };
   const frequencies     = engine?.frequencies     ?? { solfeggio: { enabled: false, hz: 432 }, binaural: { enabled: false, carrierHz: 200, beatHz: 10 } };
   const dsp             = engine?.dsp             ?? null;
-  const healingVolume   = engine?.solfeggioVolume ?? 0;
-  const brainwaveVolume = engine?.binauralVolume  ?? 0;
+  const healingVolume   = engine?.solfeggioVolume ?? 0.75;
+  const brainwaveVolume = engine?.binauralVolume  ?? 0.75;
 
   const isPlaying =
     neuralLayer.isPlaying ||
@@ -426,20 +426,20 @@ export default function CreativeSoulMeditationTool() {
 
   // ── Handlers ─────────────────────────────────────────────────────
   const handleHealingVolumeChange = useCallback(async (vol) => {
-    if (!engine?.isInitialized) await engine?.initialize();
+    if (!engine?.isInitialized) return;
     const ctx = engine?.getAudioContext?.();
     if (ctx?.state === 'suspended') await ctx.resume();
     engine?.updateSolfeggioVolume(vol);
-    if (!frequencies.solfeggio?.enabled) await engine?.startSolfeggio?.(healingFreq);
-  }, [engine, healingFreq, frequencies]);
+    if (!frequencies.solfeggio?.enabled && alchemyCommenced) await engine?.startSolfeggio?.(healingFreq);
+  }, [engine, healingFreq, frequencies, alchemyCommenced]);
 
   const handleBrainwaveVolumeChange = useCallback(async (vol) => {
-    if (!engine?.isInitialized) await engine?.initialize();
+    if (!engine?.isInitialized) return;
     const ctx = engine?.getAudioContext?.();
     if (ctx?.state === 'suspended') await ctx.resume();
     engine?.updateBinauralVolume(vol);
-    if (!frequencies.binaural?.enabled) await engine?.startBinaural?.(200, brainwaveFreq);
-  }, [engine, brainwaveFreq, frequencies]);
+    if (!frequencies.binaural?.enabled && alchemyCommenced) await engine?.startBinaural?.(200, brainwaveFreq);
+  }, [engine, brainwaveFreq, frequencies, alchemyCommenced]);
 
   const handleInitialize = useCallback(async () => {
     await engine?.initialize();
@@ -530,21 +530,42 @@ export default function CreativeSoulMeditationTool() {
     }
   }, [engine, hasExportAccess, user, navigate, exportMeditation, scalarBlendHz, frequencies, healingFreq, healingVolume, brainwaveFreq, brainwaveVolume, dsp, neuralLayer, atmosphereLayer, volumes]);
 
+  // HOT-SWAP: change Hz without stopping — fixes stop-on-change bug
   const handleHealingFreqSelect = useCallback(async (freq) => {
     setHealingFreq(freq);
-    if (!engine?.isInitialized) await engine?.initialize();
+    if (!engine?.isInitialized) return;
     const ctx = engine?.getAudioContext?.();
     if (ctx?.state === 'suspended') await ctx.resume();
-    if (alchemyCommenced) { engine?.updateSolfeggioVolume(healingVolume); await engine?.startSolfeggio?.(freq); }
-  }, [engine, healingVolume, alchemyCommenced]);
+    if (frequencies.solfeggio?.enabled) {
+      if (engine?.updateSolfeggioFrequency) {
+        engine.updateSolfeggioFrequency(freq);
+      } else {
+        engine?.updateSolfeggioVolume(healingVolume);
+        await engine?.startSolfeggio?.(freq);
+      }
+    } else if (alchemyCommenced) {
+      engine?.updateSolfeggioVolume(healingVolume);
+      await engine?.startSolfeggio?.(freq);
+    }
+  }, [engine, healingVolume, alchemyCommenced, frequencies]);
 
   const handleBrainwaveFreqSelect = useCallback(async (freq) => {
     setBrainwaveFreq(freq);
-    if (!engine?.isInitialized) await engine?.initialize();
+    if (!engine?.isInitialized) return;
     const ctx = engine?.getAudioContext?.();
     if (ctx?.state === 'suspended') await ctx.resume();
-    if (alchemyCommenced) { engine?.updateBinauralVolume(brainwaveVolume); await engine?.startBinaural?.(200, freq); }
-  }, [engine, brainwaveVolume, alchemyCommenced]);
+    if (frequencies.binaural?.enabled) {
+      if (engine?.updateBinauralFrequency) {
+        engine.updateBinauralFrequency(200, freq);
+      } else {
+        engine?.updateBinauralVolume(brainwaveVolume);
+        await engine?.startBinaural?.(200, freq);
+      }
+    } else if (alchemyCommenced) {
+      engine?.updateBinauralVolume(brainwaveVolume);
+      await engine?.startBinaural?.(200, freq);
+    }
+  }, [engine, brainwaveVolume, alchemyCommenced, frequencies]);
 
   const handleRefreshSound = useCallback(async (styleId) => {
     if (!engine?.isInitialized) return;
@@ -739,7 +760,7 @@ export default function CreativeSoulMeditationTool() {
           <div className="grid grid-cols-2 gap-2 mb-5">
             {[
               { id: 'alchemy', icon: '🎵', label: 'Sound Alchemy',   sub: 'Source · Style · Frequencies · DSP' },
-              { id: 'scalar',  icon: '⟁',  label: 'Scalar Wave Tech', sub: scalarBlendHz ? `Nadi Scan · Resonators · SQI · ${scalarBlendHz}Hz Active` : 'Nadi Scan · Resonators · SQI Chat'  },
+              { id: 'scalar',  icon: '⟁',  label: 'Scalar Wave Tech', sub: scalarBlendHz ? `Nadi Scan · Resonators · SQI · ${scalarBlendHz}Hz Active` : 'Nadi Scan · Resonators · SQI'  },
             ].map(t => (
               <button key={t.id} onClick={() => setTab(t.id)} className={`p-3 rounded-[20px] text-left cursor-pointer transition-all ${tab===t.id ? 'sqm-tab-on' : ''}`} style={{ border: '1px solid rgba(255,255,255,.07)', background: 'rgba(255,255,255,.02)', color: 'rgba(255,255,255,.4)' }}>
                 <div className="text-[11px] font-extrabold mb-0.5">{t.icon} {t.label}</div>
