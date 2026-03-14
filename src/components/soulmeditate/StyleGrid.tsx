@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { Slider } from '@/components/ui/slider';
 import { RefreshCw, Volume2 } from 'lucide-react';

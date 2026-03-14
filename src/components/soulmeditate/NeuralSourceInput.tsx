@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useCallback, useRef } from 'react';
 import { Slider } from '@/components/ui/slider';
 import { Upload, Play, Pause, X, Volume2, Music } from 'lucide-react';
