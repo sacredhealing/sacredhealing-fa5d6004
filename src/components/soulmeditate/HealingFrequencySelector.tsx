@@ -3,39 +3,72 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { Radio, Volume2 } from 'lucide-react';
 
+// ═══════════════════════════════════════════════════════════════
+//  SQI 2050 — HEALING FREQUENCY SELECTOR
+//  • 20 frequencies across 4 categories
+//  • Default volume: 75% (was 3% — too low)
+//  • -5dB applied in engine so it sits under the meditation audio
+//  • Hot-swap: selecting a new Hz updates without stopping playback
+//  • SQI 2050 Siddha-Gold color scheme
+// ═══════════════════════════════════════════════════════════════
+
 interface HealingFrequency {
   freq: number;
   name: string;
   description: string;
-  color: string;
-  chakraColor: string;  // border/glow color for card
+  benefit: string;
+  chakraColor: string;
+  category: 'foundational' | 'solfeggio' | 'vedic' | 'advanced';
 }
 
-// Chakra-aligned: Root→Sacral→Solar Plexus→Heart→Throat→Third Eye→Crown
 const HEALING_FREQUENCIES: HealingFrequency[] = [
-  { freq: 174, name: '174 Hz', description: 'Foundation & Security', color: 'from-red-500 to-rose-600', chakraColor: 'red' },
-  { freq: 285, name: '285 Hz', description: 'Quantum Cognition', color: 'from-orange-500 to-amber-600', chakraColor: 'orange' },
-  { freq: 396, name: '396 Hz', description: 'Liberation from Fear', color: 'from-yellow-500 to-amber-500', chakraColor: 'yellow' },
-  { freq: 417, name: '417 Hz', description: 'Transmutation', color: 'from-lime-500 to-green-500', chakraColor: 'green' },
-  { freq: 432, name: '432 Hz', description: 'Cosmic Harmony', color: 'from-emerald-500 to-teal-500', chakraColor: 'emerald' },
-  { freq: 528, name: '528 Hz', description: 'DNA Restore & Love', color: 'from-cyan-500 to-blue-500', chakraColor: 'cyan' },
-  { freq: 639, name: '639 Hz', description: 'Heart Connection', color: 'from-teal-500 to-sky-500', chakraColor: 'teal' },
-  { freq: 741, name: '741 Hz', description: 'Awakening Intuition', color: 'from-blue-500 to-indigo-500', chakraColor: 'blue' },
-  { freq: 852, name: '852 Hz', description: 'Third Eye Activation', color: 'from-indigo-500 to-violet-500', chakraColor: 'indigo' },
-  { freq: 963, name: '963 Hz', description: 'Crown & Unity', color: 'from-violet-500 to-fuchsia-500', chakraColor: 'violet' },
+  // ── FOUNDATIONAL ──
+  { freq: 111,  name: '111 Hz',    description: 'Cell Regeneration',    benefit: 'Beta endorphin release, pain relief, nerve regeneration',      chakraColor: 'red',    category: 'foundational' },
+  { freq: 174,  name: '174 Hz',    description: 'Foundation & Security', benefit: 'Root chakra anchoring, pain reduction, physical grounding',   chakraColor: 'red',    category: 'foundational' },
+  { freq: 285,  name: '285 Hz',    description: 'Quantum Cognition',     benefit: 'Tissue and organ repair, quantum field restructuring',        chakraColor: 'orange', category: 'foundational' },
+  // ── SOLFEGGIO ──
+  { freq: 396,  name: '396 Hz',    description: 'Liberation from Fear',  benefit: 'Releases guilt, fear and grief from cellular memory',         chakraColor: 'yellow', category: 'solfeggio' },
+  { freq: 417,  name: '417 Hz',    description: 'Transmutation',         benefit: 'Undoing negative situations, facilitating change',            chakraColor: 'green',  category: 'solfeggio' },
+  { freq: 432,  name: '432 Hz',    description: 'Cosmic Harmony',        benefit: 'Vedic tuning — aligns with nature\'s harmonic field',        chakraColor: 'emerald',category: 'solfeggio' },
+  { freq: 528,  name: '528 Hz',    description: 'DNA Restore & Love',    benefit: 'DNA repair resonance, transformation, miraculous field',      chakraColor: 'cyan',   category: 'solfeggio' },
+  { freq: 639,  name: '639 Hz',    description: 'Heart Connection',      benefit: 'Reconnecting relationships, heart coherence, love field',     chakraColor: 'teal',   category: 'solfeggio' },
+  { freq: 741,  name: '741 Hz',    description: 'Awakening Intuition',   benefit: 'Detoxification, problem solving, third eye activation',       chakraColor: 'blue',   category: 'solfeggio' },
+  { freq: 852,  name: '852 Hz',    description: 'Third Eye Activation',  benefit: 'Returning to spiritual order, pineal decalcification',        chakraColor: 'indigo', category: 'solfeggio' },
+  { freq: 963,  name: '963 Hz',    description: 'Crown & Unity',         benefit: 'Pineal activation, unity consciousness, divine connection',   chakraColor: 'violet', category: 'solfeggio' },
+  // ── VEDIC ──
+  { freq: 108,  name: '108 Hz',    description: 'Sacred 108 — Prana',    benefit: 'Sacred Vedic number — prana infusion, mantra resonance',     chakraColor: 'gold',   category: 'vedic' },
+  { freq: 136,  name: '136.1 Hz',  description: 'OM — Earth Year',       benefit: 'The cosmic OM tone — Earth orbit frequency, deep stillness', chakraColor: 'emerald',category: 'vedic' },
+  { freq: 194,  name: '194.18 Hz', description: 'Earth Day Frequency',   benefit: "Earth's rotation tone — grounding, nature alignment",        chakraColor: 'green',  category: 'vedic' },
+  { freq: 210,  name: '210.42 Hz', description: 'Moon Frequency',        benefit: 'Lunar resonance — emotional cleansing, feminine cycles',     chakraColor: 'sky',    category: 'vedic' },
+  { freq: 256,  name: '256 Hz',    description: 'C Tone — Root',         benefit: 'Perfect C in Pythagorean tuning — grounding, stability',     chakraColor: 'red',    category: 'vedic' },
+  // ── ADVANCED ──
+  { freq: 333,  name: '333 Hz',    description: 'Divine Frequency',      benefit: 'Sacred number resonance — divine trinity activation',        chakraColor: 'gold',   category: 'advanced' },
+  { freq: 444,  name: '444 Hz',    description: 'Angelic Activation',    benefit: 'Angelic hierarchy resonance, higher self alignment',         chakraColor: 'cyan',   category: 'advanced' },
+  { freq: 888,  name: '888 Hz',    description: 'Infinite Abundance',    benefit: 'Manifestation field, infinite loop resonance, prosperity',   chakraColor: 'violet', category: 'advanced' },
+  { freq: 1111, name: '1111 Hz',   description: 'Gateway / Portal',      benefit: 'Dimensional gateway tone — advanced practitioners only',     chakraColor: 'violet', category: 'advanced' },
 ];
 
-const CHAKRA_STYLES: Record<string, { border: string; icon: string; label: string; buttonShadow: string; buttonBg: string }> = {
-  red: { border: 'border-red-500/60 shadow-lg shadow-red-500/20', icon: 'text-red-400', label: 'Root', buttonShadow: 'shadow-red-500/30', buttonBg: 'bg-red-500' },
-  orange: { border: 'border-orange-500/60 shadow-lg shadow-orange-500/20', icon: 'text-orange-400', label: 'Sacral', buttonShadow: 'shadow-orange-500/30', buttonBg: 'bg-orange-500' },
-  yellow: { border: 'border-amber-500/60 shadow-lg shadow-amber-500/20', icon: 'text-amber-400', label: 'Solar Plexus', buttonShadow: 'shadow-amber-500/30', buttonBg: 'bg-amber-500' },
-  green: { border: 'border-green-500/60 shadow-lg shadow-green-500/20', icon: 'text-green-400', label: 'Heart', buttonShadow: 'shadow-green-500/30', buttonBg: 'bg-green-500' },
-  emerald: { border: 'border-emerald-500/60 shadow-lg shadow-emerald-500/20', icon: 'text-emerald-400', label: 'Heart', buttonShadow: 'shadow-emerald-500/30', buttonBg: 'bg-emerald-500' },
-  cyan: { border: 'border-cyan-500/60 shadow-lg shadow-cyan-500/20', icon: 'text-cyan-400', label: 'Throat', buttonShadow: 'shadow-cyan-500/30', buttonBg: 'bg-cyan-500' },
-  teal: { border: 'border-teal-500/60 shadow-lg shadow-teal-500/20', icon: 'text-teal-400', label: 'Heart', buttonShadow: 'shadow-teal-500/30', buttonBg: 'bg-teal-500' },
-  blue: { border: 'border-blue-500/60 shadow-lg shadow-blue-500/20', icon: 'text-blue-400', label: 'Throat', buttonShadow: 'shadow-blue-500/30', buttonBg: 'bg-blue-500' },
-  indigo: { border: 'border-indigo-500/60 shadow-lg shadow-indigo-500/20', icon: 'text-indigo-400', label: 'Third Eye', buttonShadow: 'shadow-indigo-500/30', buttonBg: 'bg-indigo-500' },
-  violet: { border: 'border-violet-500/60 shadow-lg shadow-violet-500/20', icon: 'text-violet-400', label: 'Crown', buttonShadow: 'shadow-violet-500/30', buttonBg: 'bg-violet-500' },
+// SQI 2050 color map — Siddha-Gold dominant
+const COLORS: Record<string, { border: string; glow: string; text: string; bg: string; activeBg: string }> = {
+  red:     { border: 'rgba(248,113,113,0.4)',  glow: 'rgba(248,113,113,0.2)',  text: '#f87171', bg: 'rgba(248,113,113,0.06)', activeBg: 'rgba(248,113,113,0.15)' },
+  orange:  { border: 'rgba(251,146,60,0.4)',   glow: 'rgba(251,146,60,0.2)',   text: '#fb923c', bg: 'rgba(251,146,60,0.06)', activeBg: 'rgba(251,146,60,0.15)'  },
+  yellow:  { border: 'rgba(250,204,21,0.4)',   glow: 'rgba(250,204,21,0.2)',   text: '#facc15', bg: 'rgba(250,204,21,0.06)', activeBg: 'rgba(250,204,21,0.15)'  },
+  green:   { border: 'rgba(74,222,128,0.4)',   glow: 'rgba(74,222,128,0.2)',   text: '#4ade80', bg: 'rgba(74,222,128,0.06)', activeBg: 'rgba(74,222,128,0.15)'  },
+  emerald: { border: 'rgba(52,211,153,0.4)',   glow: 'rgba(52,211,153,0.2)',   text: '#34d399', bg: 'rgba(52,211,153,0.06)', activeBg: 'rgba(52,211,153,0.15)' },
+  cyan:    { border: 'rgba(34,211,238,0.4)',   glow: 'rgba(34,211,238,0.2)',   text: '#22d3ee', bg: 'rgba(34,211,238,0.06)', activeBg: 'rgba(34,211,238,0.15)'  },
+  teal:    { border: 'rgba(45,212,191,0.4)',   glow: 'rgba(45,212,191,0.2)',   text: '#2dd4bf', bg: 'rgba(45,212,191,0.06)', activeBg: 'rgba(45,212,191,0.15)'  },
+  sky:     { border: 'rgba(56,189,248,0.4)',   glow: 'rgba(56,189,248,0.2)',   text: '#38bdf8', bg: 'rgba(56,189,248,0.06)', activeBg: 'rgba(56,189,248,0.15)'  },
+  blue:    { border: 'rgba(96,165,250,0.4)',   glow: 'rgba(96,165,250,0.2)',   text: '#60a5fa', bg: 'rgba(96,165,250,0.06)', activeBg: 'rgba(96,165,250,0.15)'  },
+  indigo:  { border: 'rgba(129,140,248,0.4)',  glow: 'rgba(129,140,248,0.2)',  text: '#818cf8', bg: 'rgba(129,140,248,0.06)', activeBg: 'rgba(129,140,248,0.15)' },
+  violet:  { border: 'rgba(167,139,250,0.4)',  glow: 'rgba(167,139,250,0.2)',  text: '#a78bfa', bg: 'rgba(167,139,250,0.06)', activeBg: 'rgba(167,139,250,0.15)' },
+  gold:    { border: 'rgba(212,175,55,0.4)',   glow: 'rgba(212,175,55,0.2)',   text: '#D4AF37', bg: 'rgba(212,175,55,0.06)', activeBg: 'rgba(212,175,55,0.15)'  },
+};
+
+const CAT_LABELS: Record<string, string> = {
+  foundational: '⊕ FOUNDATIONAL',
+  solfeggio:    '◈ SOLFEGGIO SCALE',
+  vedic:        'ॐ VEDIC · COSMIC',
+  advanced:     '⟁ ADVANCED',
 };
 
 interface HealingFrequencySelectorProps {
@@ -45,78 +78,128 @@ interface HealingFrequencySelectorProps {
   onVolumeChange: (volume: number) => void;
 }
 
-export default function HealingFrequencySelector({ 
-  activeFrequency, 
+export default function HealingFrequencySelector({
+  activeFrequency,
   volume,
   onSelect,
-  onVolumeChange 
+  onVolumeChange,
 }: HealingFrequencySelectorProps) {
-  const activeFreq = HEALING_FREQUENCIES.find((f) => f.freq === activeFrequency);
-  const chakraStyle = activeFreq ? CHAKRA_STYLES[activeFreq.chakraColor] : null;
+  const activeFreq = HEALING_FREQUENCIES.find(f => f.freq === activeFrequency);
+  const c = activeFreq ? (COLORS[activeFreq.chakraColor] ?? COLORS.gold) : COLORS.gold;
+
+  const categories = ['foundational', 'solfeggio', 'vedic', 'advanced'] as const;
+
+  // Default volume to 75% on mount if it's near 0
+  React.useEffect(() => {
+    if (volume < 0.05) {
+      onVolumeChange(0.75);
+    }
+  }, []);
 
   return (
-    <Card className={`bg-black/40 backdrop-blur-xl border-2 transition-all duration-300 ${chakraStyle?.border || 'border-white/10'}`}>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2 text-white/90 flex-wrap">
-          <Radio className={`w-4 h-4 shrink-0 ${chakraStyle?.icon || 'text-cyan-400'}`} />
+    <Card style={{
+      background: 'rgba(255,255,255,0.02)',
+      backdropFilter: 'blur(40px)',
+      border: `1px solid ${c.border}`,
+      borderRadius: 20,
+      boxShadow: activeFreq ? `0 0 24px ${c.glow}` : 'none',
+      transition: 'all 0.3s',
+    }}>
+      <CardHeader style={{ paddingBottom: 12 }}>
+        <CardTitle style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 8, color: 'rgba(255,255,255,0.9)', flexWrap: 'wrap' }}>
+          <Radio size={14} style={{ color: c.text, flexShrink: 0 }} />
           Healing Fundamental (Hz)
-          {activeFreq && chakraStyle && (
-            <span className={`text-xs font-normal opacity-90 ${chakraStyle.icon}`}>
-              — {chakraStyle.label} chakra
+          {activeFreq && (
+            <span style={{ fontSize: 10, fontWeight: 400, opacity: 0.8, color: c.text }}>
+              — {activeFreq.description}
             </span>
           )}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Volume Control */}
-        {volume < 0.1 && (
-          <div className="text-xs text-amber-400/80 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2 flex items-center gap-2">
-            <span>⚡</span>
-            <span>Move slider to activate frequency</span>
-          </div>
-        )}
-        <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
-          <Volume2 className={`w-4 h-4 shrink-0 ${chakraStyle?.icon || 'text-cyan-400'}`} />
-          <div className="flex-1 space-y-1">
-            <div className="flex justify-between text-xs">
-              <span className="text-white/60">Frequency Volume</span>
-              <span className={`font-mono ${chakraStyle?.icon || 'text-cyan-400'}`}>{Math.round(volume * 100)}%</span>
+
+      <CardContent style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+        {/* Volume — default 75%, -5dB label */}
+        <div>
+          {volume < 0.05 && (
+            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase', padding: '6px 12px', borderRadius: 10, marginBottom: 8, background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: '#fbbf24', display: 'flex', alignItems: 'center', gap: 6 }}>
+              ⚡ Move slider to activate frequency
             </div>
-            <Slider
-              value={[volume]}
-              min={0}
-              max={1}
-              step={0.01}
-              onValueChange={([v]) => onVolumeChange(v)}
-              className="[&_[role=slider]]:bg-cyan-500"
-            />
+          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 14, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <Volume2 size={14} style={{ color: c.text, flexShrink: 0 }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 9 }}>
+                <span style={{ color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase' }}>
+                  Frequency Volume <span style={{ opacity: 0.5 }}>· −5dB under audio</span>
+                </span>
+                <span style={{ fontFamily: 'monospace', fontWeight: 700, color: c.text }}>{Math.round(volume * 100)}%</span>
+              </div>
+              <Slider
+                value={[volume]}
+                min={0}
+                max={1}
+                step={0.01}
+                onValueChange={([v]) => onVolumeChange(v)}
+                style={{ '--slider-color': c.text } as React.CSSProperties}
+                className={`[&_[role=slider]]:border-0`}
+              />
+            </div>
           </div>
         </div>
 
-        {/* Frequency Grid */}
-        <div className="grid grid-cols-2 gap-2">
-          {HEALING_FREQUENCIES.map((freq) => {
-            const isActive = activeFrequency === freq.freq;
-            return (
-              <button
-                key={freq.freq}
-                onClick={() => onSelect(freq.freq)}
-                className={`p-3 rounded-xl text-left transition-all border ${
-                  isActive
-                    ? `${CHAKRA_STYLES[freq.chakraColor]?.buttonBg || 'bg-cyan-500'} border-transparent text-white shadow-lg ${CHAKRA_STYLES[freq.chakraColor]?.buttonShadow || ''}`
-                    : 'bg-slate-900/50 border-slate-800 hover:border-slate-700 text-white/70'
-                }`}
-              >
-                <div className={`text-sm font-bold ${isActive ? 'text-white' : 'text-white/90'}`}>
-                  {freq.name}
-                </div>
-                <div className={`text-xs ${isActive ? 'text-white/90' : 'text-white/50'}`}>
-                  {freq.description}
-                </div>
-              </button>
-            );
-          })}
-        </div>
+        {/* Active freq benefit */}
+        {activeFreq && (
+          <div style={{ padding: '10px 12px', borderRadius: 12, background: c.bg, border: `1px solid ${c.border}` }}>
+            <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase', color: c.text, marginBottom: 4 }}>
+              {activeFreq.freq} Hz · {activeFreq.description}
+            </div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>{activeFreq.benefit}</div>
+          </div>
+        )}
+
+        {/* Frequency grid by category */}
+        {categories.map(cat => {
+          const freqs = HEALING_FREQUENCIES.filter(f => f.category === cat);
+          return (
+            <div key={cat}>
+              <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.2)', marginBottom: 6, paddingLeft: 2 }}>
+                {CAT_LABELS[cat]}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                {freqs.map(f => {
+                  const isActive = activeFrequency === f.freq;
+                  const fc = COLORS[f.chakraColor] ?? COLORS.gold;
+                  return (
+                    <button
+                      key={f.freq}
+                      onClick={() => onSelect(f.freq)}
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        padding: '10px 12px',
+                        borderRadius: 14,
+                        border: `1px solid ${isActive ? fc.border : 'rgba(255,255,255,0.07)'}`,
+                        background: isActive ? fc.activeBg : 'rgba(255,255,255,0.03)',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        textAlign: 'left',
+                        boxShadow: isActive ? `0 0 12px ${fc.glow}` : 'none',
+                      }}
+                    >
+                      <span style={{ fontSize: 12, fontWeight: 700, color: isActive ? '#fff' : 'rgba(255,255,255,0.7)' }}>
+                        {f.name}
+                      </span>
+                      <span style={{ fontSize: 9, color: isActive ? fc.text : 'rgba(255,255,255,0.4)', marginTop: 2, letterSpacing: '0.05em' }}>
+                        {f.description}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
       </CardContent>
     </Card>
   );
