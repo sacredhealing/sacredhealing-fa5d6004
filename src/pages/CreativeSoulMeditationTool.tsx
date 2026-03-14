@@ -585,21 +585,6 @@ export default function CreativeSoulMeditationTool() {
     } finally { setIsRefreshingSound(false); }
   }, [engine]);
 
-  // NeuralSourceInput handlers (wired to engine)
-  const handleLoadNeuralFile = useCallback(async (file) => {
-    if (!engine?.isInitialized) await engine?.initialize();
-    await engine?.loadNeuralSource?.(file);
-  }, [engine]);
-  const handleLoadNeuralUrl = useCallback((url) => {
-    engine?.loadNeuralSource?.(url);
-  }, [engine]);
-  const handleToggleNeuralPlay = useCallback(() => {
-    engine?.toggleNeuralPlay?.();
-  }, [engine]);
-  const handleNeuralVolumeChange = useCallback((vol) => {
-    engine?.updateNeuralVolume?.(vol);
-  }, [engine]);
-
   // ── Access check ──────────────────────────────────────────────────
   useEffect(() => {
     async function checkAccess() {
@@ -789,13 +774,7 @@ export default function CreativeSoulMeditationTool() {
                   <span className="text-[11px] font-extrabold uppercase tracking-[0.3em] text-white/70">Source</span>
                 </div>
                 <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.06] rounded-[28px] p-6">
-                  <NeuralSourceInput
-                    layer={neuralLayer}
-                    onLoadFile={handleLoadNeuralFile}
-                    onLoadUrl={handleLoadNeuralUrl}
-                    onTogglePlay={handleToggleNeuralPlay}
-                    onVolumeChange={handleNeuralVolumeChange}
-                  />
+                  <NeuralSourceInput engine={engine} />
                 </div>
               </div>
 

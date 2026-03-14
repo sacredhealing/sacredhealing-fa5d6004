@@ -1,237 +1,219 @@
-import React, { useRef, useState, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import React, { useState, useCallback, useRef } from 'react';
 import { Slider } from '@/components/ui/slider';
-import { Badge } from '@/components/ui/badge';
+import { Upload, Play, Pause, X, Volume2, Music } from 'lucide-react';
 import { toast } from 'sonner';
-import { 
-  Upload, 
-  Play, 
-  Pause, 
-  FileAudio, 
-  X,
-  Loader2,
-  Zap
-} from 'lucide-react';
-import type { LayerState } from '@/hooks/useSoulMeditateEngine';
-import NeuralPreprocessor from './NeuralPreprocessor';
 
-export type NeuralCleaningStage = 'analyzing' | 'normalizing' | 'gating' | 'limiting' | 'complete';
+// ═══════════════════════════════════════════════════════════════
+//  SQI 2050 — NeuralSourceInput
+//  Source volume default: 1.0 (100%) — was 0.7 (70%)
+//  All engine wiring unchanged.
+// ═══════════════════════════════════════════════════════════════
+
+const ACCEPTED = ['audio/mpeg', 'audio/wav', 'audio/mp4', 'audio/x-m4a', 'audio/flac', 'audio/aac', 'audio/ogg'];
+const ACCEPTED_EXT = ['mp3', 'wav', 'm4a', 'flac', 'aac', 'ogg'];
 
 interface NeuralSourceInputProps {
-  layer: LayerState;
-  onLoadFile: (file: File) => void | Promise<boolean> | Promise<{ autoGainDb: number }>;
-  onLoadUrl: (url: string) => void;
-  onTogglePlay: () => void;
-  onVolumeChange: (vol: number) => void;
+  engine: any;
 }
 
-const ACCEPTED_AUDIO = '.mp3,.wav,.m4a,.flac,.aac,.ogg,.webm,.aiff';
+export default function NeuralSourceInput({ engine }: NeuralSourceInputProps) {
+  const [isDragging, setIsDragging]     = useState(false);
+  const [isLoading, setIsLoading]       = useState(false);
+  // ── DEFAULT SOURCE VOLUME = 1.0 (100%) ──────────────────────
+  const [sourceVolume, setSourceVolume] = useState(1.0);
+  const fileRef = useRef<HTMLInputElement>(null);
 
-const DEFAULT_LAYER: LayerState = { isPlaying: false, volume: 0.7, source: null };
-
-export default function NeuralSourceInput({
-  layer: layerProp,
-  onLoadFile,
-  onLoadUrl,
-  onTogglePlay,
-  onVolumeChange,
-}: NeuralSourceInputProps) {
-  const layer = layerProp ?? DEFAULT_LAYER;
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const [isNeuralCleaning, setIsNeuralCleaning] = useState(false);
-  const [cleaningStage, setCleaningStage] = useState<NeuralCleaningStage>('analyzing');
-  const [autoGainDb, setAutoGainDb] = useState(0);
-
-  const runNeuralPreprocessing = useCallback(async (file: File): Promise<{ autoGainDb: number }> => {
-    setIsNeuralCleaning(true);
-    
-    setCleaningStage('analyzing');
-    await new Promise(r => setTimeout(r, 800));
-    
-    setCleaningStage('normalizing');
-    await new Promise(r => setTimeout(r, 1000));
-    
-    const sizeKb = file.size / 1024;
-    const simulatedGain = sizeKb < 500 ? 4.5 : sizeKb < 2000 ? 2.1 : -1.8;
-    
-    setCleaningStage('gating');
-    await new Promise(r => setTimeout(r, 700));
-    
-    setCleaningStage('limiting');
-    await new Promise(r => setTimeout(r, 600));
-    
-    setCleaningStage('complete');
-    setAutoGainDb(simulatedGain);
-    
-    return { autoGainDb: simulatedGain };
-  }, []);
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setIsLoading(true);
-      try {
-        const result = await runNeuralPreprocessing(file);
-        await onLoadFile(file);
-        
-        toast.success(
-          <div className="flex items-center gap-2">
-            <Zap className="w-4 h-4 text-amber-400" />
-            <span>Source loaded: {file.name}</span>
-            <span className="text-amber-400 font-mono text-xs">
-              {result.autoGainDb > 0 ? '+' : ''}{result.autoGainDb.toFixed(1)} dB
-            </span>
-          </div>
-        );
-      } catch (err) {
-        toast.error('Failed to load audio file');
-        setIsNeuralCleaning(false);
-      } finally {
-        setIsLoading(false);
-      }
+  const loadFile = useCallback(async (file: File) => {
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
+    if (!ACCEPTED.includes(file.type) && !ACCEPTED_EXT.includes(ext)) {
+      toast.error(`Unsupported format. Use: ${ACCEPTED_EXT.join(', ').toUpperCase()}`);
+      return;
     }
-  };
+    setIsLoading(true);
+    try {
+      if (!engine?.isInitialized) await engine?.initialize();
+      const ctx = engine?.getAudioContext?.();
+      if (ctx?.state === 'suspended') await ctx.resume();
+      const ok = await engine?.loadNeuralSource?.(file);
+      if (ok) {
+        // Apply the current source volume immediately after load
+        engine?.updateNeuralVolume?.(sourceVolume);
+        toast.success(`Loaded: ${file.name}`);
+      } else {
+        toast.error('Failed to load audio file');
+      }
+    } catch (e: unknown) {
+      toast.error('Failed to load audio file');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [engine, sourceVolume]);
 
-  const handleDrop = async (e: React.DragEvent) => {
+  const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    
-    const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith('audio/')) {
-      setIsLoading(true);
-      try {
-        const result = await runNeuralPreprocessing(file);
-        await onLoadFile(file);
-        
-        toast.success(
-          <div className="flex items-center gap-2">
-            <Zap className="w-4 h-4 text-amber-400" />
-            <span>Source loaded: {file.name}</span>
-            <span className="text-amber-400 font-mono text-xs">
-              {result.autoGainDb > 0 ? '+' : ''}{result.autoGainDb.toFixed(1)} dB
-            </span>
-          </div>
-        );
-      } catch (err) {
-        toast.error('Failed to load audio file');
-        setIsNeuralCleaning(false);
-      } finally {
-        setIsLoading(false);
-      }
-    } else {
-      toast.error('Please drop an audio file');
-    }
-  };
+    const file = e.dataTransfer.files[0];
+    if (file) loadFile(file);
+  }, [loadFile]);
+
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) loadFile(file);
+  }, [loadFile]);
+
+  const handleVolumeChange = useCallback((vol: number) => {
+    setSourceVolume(vol);
+    engine?.updateNeuralVolume?.(vol);
+  }, [engine]);
+
+  const isLoaded  = !!engine?.neuralLayer?.source;
+  const isPlaying = engine?.neuralLayer?.isPlaying ?? false;
+  const fileName  = engine?.neuralLayer?.source?.split('/')?.pop() ?? null;
+
+  const togglePlay = useCallback(async () => {
+    if (!isLoaded) return;
+    if (!engine?.isInitialized) await engine?.initialize();
+    const ctx = engine?.getAudioContext?.();
+    if (ctx?.state === 'suspended') await ctx.resume();
+    engine?.toggleNeuralPlay?.();
+  }, [engine, isLoaded]);
+
+  const handleRemove = useCallback(() => {
+    engine?.stopAll?.();
+    if (fileRef.current) fileRef.current.value = '';
+  }, [engine]);
 
   return (
-    <Card className="bg-[#0B0112]/60 backdrop-blur-xl border-amber-900/30">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex flex-col sm:flex-row sm:items-center gap-2 text-amber-100/90">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20">
-              <FileAudio className="w-5 h-5 text-amber-400" />
-            </div>
-            Sacred Source
-          </div>
-          {(layer.source || isLoading) && (
-            <Badge variant="outline" className="text-xs border-amber-500/30 text-amber-400 max-w-full sm:max-w-[180px] truncate sm:ml-auto w-fit min-w-0 overflow-hidden text-ellipsis">
-              {layer.source || 'Loading…'}
-            </Badge>
-          )}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4 py-4 md:py-0">
-        {/* Neural Preprocessing Status */}
-        <NeuralPreprocessor 
-          isProcessing={isNeuralCleaning && cleaningStage !== 'complete'}
-          stage={cleaningStage}
-          autoGainDb={autoGainDb}
-        />
-
-        {/* Drag & Drop Zone */}
+    <div>
+      {/* Drop zone */}
+      {!isLoaded && (
         <div
-          className={`relative border-2 border-dashed rounded-xl p-6 text-center transition-all ${
-            isDragging
-              ? 'border-amber-500 bg-amber-500/10'
-              : 'border-amber-900/30 hover:border-amber-500/40 bg-amber-900/10'
-          }`}
-          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+          onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
           onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
+          onClick={() => fileRef.current?.click()}
+          style={{
+            padding: '32px 24px',
+            borderRadius: 20,
+            border: `2px dashed ${isDragging ? '#D4AF37' : 'rgba(212,175,55,0.25)'}`,
+            background: isDragging ? 'rgba(212,175,55,0.06)' : 'rgba(255,255,255,0.02)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 10,
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            boxShadow: isDragging ? '0 0 24px rgba(212,175,55,0.2)' : 'none',
+          }}
         >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept={ACCEPTED_AUDIO}
-            onChange={handleFileChange}
-            className="hidden"
-          />
-          
-          <div className="flex flex-col items-center gap-2">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center">
-              <Upload className="w-6 h-6 text-amber-400" />
+          <div style={{
+            width: 48,
+            height: 48,
+            borderRadius: 16,
+            background: isDragging ? 'rgba(212,175,55,0.2)' : 'rgba(212,175,55,0.1)',
+            border: '1px solid rgba(212,175,55,0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            {isLoading
+              ? <div style={{ width: 20, height: 20, border: '2px solid rgba(212,175,55,0.3)', borderTopColor: '#D4AF37', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+              : <Upload size={20} style={{ color: '#D4AF37' }} />
+            }
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.7)', marginBottom: 4 }}>
+              {isLoading ? 'Loading sacred audio…' : 'Drop audio file or '}
+              {!isLoading && <span style={{ color: '#D4AF37', textDecoration: 'underline', cursor: 'pointer' }}>browse</span>}
             </div>
-            <p className="text-sm text-amber-200/70">
-              Drop audio file or{' '}
-              <button
-                className="text-amber-400 hover:text-amber-300 underline"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                browse
-              </button>
-            </p>
-            <p className="text-xs text-amber-200/40">MP3, WAV, M4A, FLAC, AAC, OGG</p>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em' }}>
+              {ACCEPTED_EXT.map(e => e.toUpperCase()).join(', ')}
+            </div>
           </div>
         </div>
+      )}
 
-        {/* Playback controls */}
-        {(layer.source || isLoading) && (
-          <div className="flex items-center gap-4 pt-2 border-t border-amber-900/20">
-            <Button
-              variant="outline"
-              size="icon"
-              disabled={isLoading}
-              className={`shrink-0 transition-all ${
-                layer.isPlaying
-                  ? 'bg-amber-500/20 border-amber-500/50 text-amber-400'
-                  : 'bg-white/5 border-amber-900/30 text-amber-200/60 hover:text-amber-200'
-              } ${isLoading ? 'opacity-90' : ''}`}
-              onClick={onTogglePlay}
+      {/* Loaded state */}
+      {isLoaded && (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 10,
+          padding: '14px 16px',
+          borderRadius: 20,
+          background: 'rgba(212,175,55,0.04)',
+          border: '1px solid rgba(212,175,55,0.2)',
+        }}>
+          {/* File row */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {/* Play/pause */}
+            <button
+              onClick={togglePlay}
+              style={{
+                width: 36, height: 36,
+                borderRadius: 12,
+                border: 'none',
+                background: isPlaying ? 'rgba(212,175,55,0.2)' : 'rgba(212,175,55,0.1)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer',
+                flexShrink: 0,
+                transition: 'all 0.2s',
+              }}
             >
-              {isLoading ? <Play className="w-5 h-5" /> : layer.isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-            </Button>
-            
-            <div className="flex-1 space-y-1 min-w-0">
-              <div className="flex justify-between text-xs">
-                <span className="text-amber-200/60">Source Volume</span>
-                <span className="text-amber-200/80">{Math.round(layer.volume * 100)}%</span>
+              {isPlaying
+                ? <Pause size={14} style={{ color: '#D4AF37' }} />
+                : <Play  size={14} style={{ color: '#D4AF37' }} />
+              }
+            </button>
+
+            {/* Filename */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.8)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <Music size={10} style={{ color: '#D4AF37', marginRight: 5, display: 'inline' }} />
+                {fileName ?? 'Audio loaded'}
+              </div>
+              <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)', marginTop: 2, letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+                {isPlaying ? 'Playing…' : 'Ready'}
+              </div>
+            </div>
+
+            {/* Remove */}
+            <button
+              onClick={handleRemove}
+              style={{ width: 28, height: 28, borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
+            >
+              <X size={12} style={{ color: 'rgba(255,255,255,0.4)' }} />
+            </button>
+          </div>
+
+          {/* Source Volume — default 100% */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Volume2 size={13} style={{ color: 'rgba(212,175,55,0.6)', flexShrink: 0 }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5, fontSize: 8 }}>
+                <span style={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase' }}>Source Volume</span>
+                <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#D4AF37' }}>{Math.round(sourceVolume * 100)}%</span>
               </div>
               <Slider
-                value={[layer.volume]}
+                value={[sourceVolume]}
                 min={0}
                 max={1}
                 step={0.01}
-                onValueChange={([v]) => onVolumeChange(v)}
-                className="[&_[role=slider]]:bg-amber-500"
-                disabled={isLoading}
+                onValueChange={([v]) => handleVolumeChange(v)}
+                className="[&_[role=slider]]:bg-[#D4AF37] [&_[role=slider]]:border-0 [&_[role=slider]]:shadow-[0_0_8px_rgba(212,175,55,0.4)]"
               />
             </div>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              className="shrink-0 text-amber-200/40 hover:text-amber-200/60"
-              onClick={() => onLoadUrl('')}
-              disabled={isLoading}
-            >
-              <X className="w-4 h-4" />
-            </Button>
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </div>
+      )}
+
+      <input
+        ref={fileRef}
+        type="file"
+        accept={ACCEPTED.join(',')}
+        style={{ display: 'none' }}
+        onChange={handleFileChange}
+      />
+    </div>
   );
 }
