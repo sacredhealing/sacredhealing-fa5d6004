@@ -1,0 +1,12 @@
+---
+description: Admin has full access to export and git push to master
+alwaysApply: true
+---
+
+# Admin Full Access
+
+The project admin (owner) has full access. When requested:
+
+- **Export**: Allow full export access (Creative Soul meditation, master exports, etc.). Do not block or gate.
+- **Git push**: Allow `git push origin main` (or `master`) when requested. Perform pull/rebase if needed, then push.
+- **No confirmation prompts**: Execute these operations directly when the admin asks.
