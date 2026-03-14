@@ -1483,107 +1483,123 @@ const Community = () => {
       return;
     }
 
-    const roomId = roomIds[activeChannel];
-    if (!roomId) {
-      setMessages([]);
-      setViewerSessions([]);
-      setLiveRoomUrl(null);
-      ensureRoomForChannel(activeChannel);
-      return;
-    }
+    // Group channel logic — needs async for room creation
+    let cancelled = false;
+    let pollInterval: ReturnType<typeof setInterval> | null = null;
+    let realtimeChannel: any = null;
+    let liveChannel: any = null;
 
-    // PERF: Run messages + live sessions fetch IN PARALLEL (<500ms instead of 21s)
-    setLoading(true);
-    const fetchSessions = fetchActiveSessionsRef.current;
-    Promise.all([
-      (async () => {
-        fetchInProgressRef.current = activeChannel;
-        try {
-          const { data, error } = await supabase
-            .from("chat_messages")
-            .select("*")
-            .eq("room_id", roomId)
-            .order("created_at", { ascending: true })
-            .limit(100);
-          if (fetchInProgressRef.current !== activeChannel) return;
-          if (error) {
+    (async () => {
+      let roomId = roomIds[activeChannel];
+      if (!roomId) {
+        await ensureRoomForChannel(activeChannel);
+        roomId = roomIdsRef.current[activeChannel];
+        if (!roomId || cancelled) {
+          if (!cancelled) {
             setMessages([]);
-            return;
+            setViewerSessions([]);
+            setLiveRoomUrl(null);
           }
-          const nameMap = memberNameMapRef.current;
-          const rows = (data as any[]) || [];
-          setMessages(
-            rows.map((row) => ({
-              ...row,
-              user_name: row.user_name || (row.user_id === user?.id ? "You" : (nameMap[row.user_id] || "Member")),
-            }))
-          );
-        } finally {
-          if (fetchInProgressRef.current === activeChannel) fetchInProgressRef.current = null;
-          setLoading(false);
+          return;
         }
-      })(),
-      fetchSessions(activeChannel).then(setViewerSessions),
-    ]).catch(() => setLoading(false));
+      }
 
-    const pollInterval = setInterval(() => fetchSessions(activeChannel).then(setViewerSessions), 30000);
+      if (cancelled) return;
 
-    // Realtime subscription for messages in this room
-    const channel = supabase
-      .channel(`room-${roomId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "chat_messages",
-          filter: `room_id=eq.${roomId}`,
-        },
-        (payload) => {
-          const n = payload.new as any;
-          const nameMap = memberNameMapRef.current;
-          const msg: Message = {
-            ...n,
-            user_name: n.user_name || (n.user_id === user?.id ? "You" : (nameMap[n.user_id] || "Member")),
-          };
-          setMessages((prev) => {
-            // Skip if already present by real id
-            if (prev.some((m) => m.id === msg.id)) return prev;
-            // Replace matching temp optimistic message (same user + content)
-            const tempIdx = prev.findIndex(
-              (m) => m.id.startsWith("temp-") && m.user_id === n.user_id && m.content === n.content
-            );
-            if (tempIdx !== -1) {
-              const next = [...prev];
-              next[tempIdx] = msg;
-              return next;
+      // Fetch messages + live sessions in parallel
+      setLoading(true);
+      const fetchSessions = fetchActiveSessionsRef.current;
+      await Promise.all([
+        (async () => {
+          fetchInProgressRef.current = activeChannel;
+          try {
+            const { data, error } = await supabase
+              .from("chat_messages")
+              .select("*")
+              .eq("room_id", roomId)
+              .order("created_at", { ascending: true })
+              .limit(100);
+            if (cancelled || fetchInProgressRef.current !== activeChannel) return;
+            if (error) {
+              setMessages([]);
+              return;
             }
-            return [...prev, msg];
-          });
-        }
-      )
-      .subscribe();
+            const nameMap = memberNameMapRef.current;
+            const rows = (data as any[]) || [];
+            setMessages(
+              rows.map((row) => ({
+                ...row,
+                user_name: row.user_id === user?.id ? "You" : (nameMap[row.user_id] || "Member"),
+              }))
+            );
+          } finally {
+            if (fetchInProgressRef.current === activeChannel) fetchInProgressRef.current = null;
+            setLoading(false);
+          }
+        })(),
+        fetchSessions(activeChannel).then((s) => { if (!cancelled) setViewerSessions(s); }),
+      ]).catch(() => { if (!cancelled) setLoading(false); });
 
-    // Listen for live session changes in this channel
-    const liveChannel = supabase
-      .channel(`live-${activeChannel}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "community_live_sessions",
-        },
-        () => {
-          fetchActiveSessionsRef.current(activeChannel).then(setViewerSessions);
-        }
-      )
-      .subscribe();
+      if (cancelled) return;
+
+      pollInterval = setInterval(() => fetchSessions(activeChannel).then((s) => { if (!cancelled) setViewerSessions(s); }), 30000);
+
+      // Realtime subscription for messages in this room
+      realtimeChannel = supabase
+        .channel(`room-${roomId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "chat_messages",
+            filter: `room_id=eq.${roomId}`,
+          },
+          (payload) => {
+            const n = payload.new as any;
+            const nameMap = memberNameMapRef.current;
+            const msg: Message = {
+              ...n,
+              user_name: n.user_id === user?.id ? "You" : (nameMap[n.user_id] || "Member"),
+            };
+            setMessages((prev) => {
+              if (prev.some((m) => m.id === msg.id)) return prev;
+              const tempIdx = prev.findIndex(
+                (m) => m.id.startsWith("temp-") && m.user_id === n.user_id && m.content === n.content
+              );
+              if (tempIdx !== -1) {
+                const next = [...prev];
+                next[tempIdx] = msg;
+                return next;
+              }
+              return [...prev, msg];
+            });
+          }
+        )
+        .subscribe();
+
+      // Listen for live session changes
+      liveChannel = supabase
+        .channel(`live-${activeChannel}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "community_live_sessions",
+          },
+          () => {
+            fetchActiveSessionsRef.current(activeChannel).then((s) => { if (!cancelled) setViewerSessions(s); });
+          }
+        )
+        .subscribe();
+    })();
 
     return () => {
-      clearInterval(pollInterval);
-      supabase.removeChannel(channel);
-      supabase.removeChannel(liveChannel);
+      cancelled = true;
+      if (pollInterval) clearInterval(pollInterval);
+      if (realtimeChannel) supabase.removeChannel(realtimeChannel);
+      if (liveChannel) supabase.removeChannel(liveChannel);
     };
   }, [activeChannel, fetchMessages, roomIds, user, ensureRoomForChannel]);
 
@@ -1839,8 +1855,7 @@ const Community = () => {
         room_id: roomId,
         user_id: user.id,
         content: text,
-        user_name: senderName,
-      } as any)
+      })
       .select()
       .single();
 
