@@ -795,7 +795,8 @@ export default function CreativeSoulMeditationTool() {
   // rendered into the offline mixdown
   const handleExport = useCallback(async () => {
     if (!engine?.isInitialized) { toast.error('Please initialize the engine first'); return; }
-    if (!hasExportAccess) {
+    // Admin always has free access — bypass paywall
+    if (!isAdmin && !hasExportAccess) {
       if (!user) { toast.info('Please sign in to export'); navigate('/auth'); return; }
       setShowPaymentDialog(true);
       return;
@@ -829,7 +830,7 @@ export default function CreativeSoulMeditationTool() {
     } catch (e) {
       toast.error('Export failed: ' + e.message);
     }
-  }, [engine, hasExportAccess, user, navigate, exportMeditation, scalarBlendHz, frequencies, healingFreq, healingVolume, brainwaveFreq, brainwaveVolume, dsp, neuralLayer, atmosphereLayer, volumes]);
+  }, [engine, isAdmin, hasExportAccess, user, navigate, exportMeditation, scalarBlendHz, frequencies, healingFreq, healingVolume, brainwaveFreq, brainwaveVolume, dsp, neuralLayer, atmosphereLayer, volumes]);
 
   const handlePayForExport = useCallback(async () => {
     if (!user) { navigate('/auth'); return; }
