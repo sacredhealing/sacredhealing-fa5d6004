@@ -1404,7 +1404,7 @@ const Community = () => {
         try {
           const granted = await requestNotificationPermission();
           if (granted) {
-            await supabase.from("profiles").update({ push_enabled: true }).eq("user_id", user.id);
+            await (supabase as any).from("profiles").update({ push_enabled: true }).eq("user_id", user.id);
           }
         } catch {
           // ignore

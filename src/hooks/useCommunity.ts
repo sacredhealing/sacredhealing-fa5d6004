@@ -598,7 +598,7 @@ export const useAllUsers = () => {
 
       const { data } = await supabase
         .from('profiles')
-        .select('user_id, full_name, avatar_url, bio, subscription_tier')
+        .select('user_id, full_name, avatar_url, bio')
         .neq('user_id', user?.id || '');
 
       // Exclude admin accounts from the DM user picker

@@ -24,7 +24,8 @@ import SpectralVisualizer from '@/components/soulmeditate/SpectralVisualizer';
 import NeuralSourceInput from '@/components/soulmeditate/NeuralSourceInput';
 import DSPMasteringRack from '@/components/soulmeditate/DSPMasteringRack';
 import SpectralInsights from '@/components/soulmeditate/SpectralInsights';
-import { StyleGrid, MeditationStyle } from '@/components/soulmeditate/StyleGrid';
+import StyleGrid from '@/components/soulmeditate/StyleGrid';
+import type { MeditationStyle } from '@/components/soulmeditate/StyleGrid';
 import HealingFrequencySelector from '@/components/soulmeditate/HealingFrequencySelector';
 import BrainwaveSelector from '@/components/soulmeditate/BrainwaveSelector';
 

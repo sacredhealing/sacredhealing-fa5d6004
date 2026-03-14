@@ -505,7 +505,6 @@ export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
             background:
               'linear-gradient(135deg, rgba(212,175,55,0.08) 0%, rgba(255,255,255,0.02) 100%)',
             borderBottom: '1px solid rgba(212,175,55,0.12)',
-            flexShrink: 0,
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
           }}
