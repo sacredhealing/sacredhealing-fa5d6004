@@ -792,9 +792,8 @@ export default function CreativeSoulMeditationTool() {
     setBrainwaveFreq(10);
     setMeditationName('');
     setExportResult(null);
-    setScalarBlendHz(null);
     setTab('alchemy');
-    setSessionKey(k => k + 1);
+    setSessionKey(k => k + 1);  // ← this forces NeuralSourceInput to remount/clear
     toast.success('New session started');
   }, [engine]);
 
@@ -1094,7 +1093,7 @@ export default function CreativeSoulMeditationTool() {
                   <span className="text-[11px] font-extrabold uppercase tracking-[0.3em] text-white/70">Source</span>
                 </div>
                 <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.06] rounded-[28px] p-6">
-                  <NeuralSourceInput engine={engine} />
+                  <NeuralSourceInput engine={engine} key={sessionKey} />
                 </div>
               </div>
 
