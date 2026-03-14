@@ -1002,7 +1002,7 @@ export default function CreativeSoulMeditationTool() {
 
           {/* ACTION BUTTONS */}
           <div className="flex items-center justify-center gap-3 mb-5 flex-wrap">
-            <Button size="lg" onClick={togglePlay} disabled={!engine?.isInitialized}
+            <Button size="lg" onClick={togglePlay} disabled={!!isProcessing}
               className={`px-8 text-sm ${isPlaying ? 'bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700' : 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700'}`}
               style={{ borderRadius: 40, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase' }}
             >

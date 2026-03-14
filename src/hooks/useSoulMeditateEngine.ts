@@ -396,14 +396,17 @@ export function useSoulMeditateEngine() {
     warmthGainRef.current = ctx.createGain();
     warmthGainRef.current.gain.value = 1;
 
-    // Create soft-knee limiter as final stage for glassy professional finish
-    // More aggressive settings to prevent distortion at max volume
+    // Create soft-knee limiter — relaxed settings so oscillators are audible (was -6dB/20:1 killing signal)
     limiterRef.current = ctx.createDynamicsCompressor();
-    limiterRef.current.threshold.value = -6;  // -6 dB threshold (more headroom)
-    limiterRef.current.knee.value = 10;       // Wider soft knee for transparency
-    limiterRef.current.ratio.value = 20;      // High ratio for limiting
-    limiterRef.current.attack.value = 0.001;  // 1ms attack
-    limiterRef.current.release.value = 0.05;  // 50ms release (faster recovery)
+    limiterRef.current.threshold.value = 6;   // +6 dB — don't limit normal levels
+    limiterRef.current.knee.value = 6;       // Soft knee
+    limiterRef.current.ratio.value = 4;      // Gentle compression, not brick-wall
+    limiterRef.current.attack.value = 0.003;  // 3ms attack
+    limiterRef.current.release.value = 0.1;   // 100ms release
+
+    // Direct bypass: mixer -> master (guarantees oscillators reach output even if DSP chain has issues)
+    const directBypassGain = ctx.createGain();
+    directBypassGain.gain.value = 0.7;
 
     // Connect DSP chain
     // Create a mixer gain node to combine all sources before analyser
@@ -419,10 +422,14 @@ export function useSoulMeditateEngine() {
     // Mixer -> analyser (for visualization)
     mixerGainRef.current.connect(analyser);
     
-    // Mixer -> warmth -> limiter -> master (main audio path)
+    // Main path: mixer -> warmth -> limiter -> master
     mixerGainRef.current.connect(waveShaperRef.current);
     waveShaperRef.current.connect(limiterRef.current);
     limiterRef.current.connect(masterGain);
+
+    // Direct bypass: mixer -> master (ensures solfeggio/binaural always audible)
+    mixerGainRef.current.connect(directBypassGain);
+    directBypassGain.connect(masterGain);
 
     // Parallel reverb (connects to limiter)
     mixerGainRef.current.connect(convolver);
@@ -969,7 +976,8 @@ export function useSoulMeditateEngine() {
     
     // Use volOverride when parent passes it (avoids stale React state); else use engine state
     const vol = volOverride ?? solfeggioVolume;
-    const targetVolume = Math.min(OSCILLATOR_GAIN_MAX, vol * OSCILLATOR_BASE_GAIN);
+    const raw = vol * OSCILLATOR_BASE_GAIN;
+    const targetVolume = Math.max(0.5, Math.min(OSCILLATOR_GAIN_MAX, raw));  // Floor 0.5 so always audible
     console.log('[Solfeggio] Starting oscillator:', hz, 'Hz, volume:', vol, '->', targetVolume);
     
     // Set volume BEFORE starting to ensure immediate sound
@@ -1032,7 +1040,8 @@ export function useSoulMeditateEngine() {
     
     // Use volOverride when parent passes it (avoids stale React state); else use engine state
     const vol = volOverride ?? binauralVolume;
-    const targetVolume = Math.min(OSCILLATOR_GAIN_MAX, vol * OSCILLATOR_BASE_GAIN);
+    const raw = vol * OSCILLATOR_BASE_GAIN;
+    const targetVolume = Math.max(0.5, Math.min(OSCILLATOR_GAIN_MAX, raw));  // Floor 0.5 so always audible
     console.log('[Binaural] Starting binaural beats:', carrierHz, 'Hz carrier,', beatHz, 'Hz beat, volume:', vol, '->', targetVolume);
     
     // Set volume BEFORE creating oscillators
