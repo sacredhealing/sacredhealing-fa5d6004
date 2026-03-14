@@ -1080,6 +1080,32 @@ export function useSoulMeditateEngine() {
     );
   }, [binauralVolume]);
 
+  // Hot-swap: change Hz without stopping — zero gap, zero restart
+  const updateSolfeggioFrequency = useCallback((hz: number) => {
+    if (!solfeggioOscRef.current || !audioContextRef.current) return;
+    const ctx = audioContextRef.current;
+    solfeggioOscRef.current.frequency.cancelScheduledValues(ctx.currentTime);
+    solfeggioOscRef.current.frequency.setTargetAtTime(hz, ctx.currentTime, 0.05);
+    setFrequencies(prev => ({
+      ...prev,
+      solfeggio: { ...prev.solfeggio, hz },
+    }));
+  }, []);
+
+  const updateBinauralFrequency = useCallback((carrierHz: number, beatHz: number) => {
+    if (!binauralLeftOscRef.current || !binauralRightOscRef.current || !audioContextRef.current) return;
+    const ctx = audioContextRef.current;
+    const rampTime = 0.05;
+    binauralLeftOscRef.current.frequency.cancelScheduledValues(ctx.currentTime);
+    binauralLeftOscRef.current.frequency.setTargetAtTime(carrierHz, ctx.currentTime, rampTime);
+    binauralRightOscRef.current.frequency.cancelScheduledValues(ctx.currentTime);
+    binauralRightOscRef.current.frequency.setTargetAtTime(carrierHz + beatHz, ctx.currentTime, rampTime);
+    setFrequencies(prev => ({
+      ...prev,
+      binaural: { ...prev.binaural, carrierHz, beatHz },
+    }));
+  }, []);
+
   // Stop binaural
   const stopBinaural = useCallback(() => {
     if (binauralGainRef.current && audioContextRef.current) {
@@ -1519,7 +1545,9 @@ export function useSoulMeditateEngine() {
     updateNeuralVolume,
     updateAtmosphereVolume,
     updateSolfeggioVolume,
+    updateSolfeggioFrequency,
     updateBinauralVolume,
+    updateBinauralFrequency,
     updateMasterVolume,
     updateDSP,
     updateEQ,
