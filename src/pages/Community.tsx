@@ -1370,7 +1370,7 @@ const Community = () => {
   useEffect(() => {
     if (!user?.id) return;
     const fetchNotifs = async () => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("community_notifications")
         .select("id, type, title, body, channel_id, link, is_read, created_at")
         .eq("user_id", user.id)
@@ -1383,10 +1383,10 @@ const Community = () => {
       .channel(`notifs-${user.id}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "community_notifications", filter: `user_id=eq.${user.id}` },
-        (payload) => {
+        { event: "INSERT", schema: "public", table: "community_notifications", filter: `user_id=eq.${user.id}` } as any,
+        (payload: any) => {
           const n = payload.new as any;
-          setNotifications((prev) => [{ ...n }, ...prev.filter((p) => p.id !== n.id)]);
+          setNotifications((prev: any[]) => [{ ...n }, ...prev.filter((p: any) => p.id !== n.id)]);
         }
       )
       .subscribe();
@@ -1404,7 +1404,7 @@ const Community = () => {
         try {
           const granted = await requestNotificationPermission();
           if (granted) {
-            await supabase.from("profiles").update({ push_enabled: true }).eq("user_id", user.id);
+            await (supabase as any).from("profiles").update({ push_enabled: true }).eq("user_id", user.id);
           }
         } catch {
           // ignore
@@ -1942,7 +1942,7 @@ const Community = () => {
               onClick={() => {
                 setShowNotifPanel(!showNotifPanel);
                 if (!showNotifPanel && notifications.some((n) => !n.is_read)) {
-                  supabase
+                  (supabase as any)
                     .from("community_notifications")
                     .update({ is_read: true })
                     .eq("user_id", user?.id)
