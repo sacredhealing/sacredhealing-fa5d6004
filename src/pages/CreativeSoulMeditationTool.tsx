@@ -714,7 +714,7 @@ export default function CreativeSoulMeditationTool() {
     // If alchemy is running but solfeggio not yet started, start it now
     if (!frequencies.solfeggio?.enabled && alchemyCommenced) {
       await new Promise(r => setTimeout(r, 50));
-      await engine?.startSolfeggio?.(healingFreq);
+      await engine?.startSolfeggio?.(healingFreq, healingVolume);
       engine?.updateSolfeggioVolume?.(vol); // re-apply after start
     }
   }, [engine, healingFreq, frequencies, alchemyCommenced]);
@@ -727,7 +727,7 @@ export default function CreativeSoulMeditationTool() {
     engine?.updateBinauralVolume?.(vol);
     if (!frequencies.binaural?.enabled && alchemyCommenced) {
       await new Promise(r => setTimeout(r, 50));
-      await engine?.startBinaural?.(200, brainwaveFreq);
+      await engine?.startBinaural?.(200, brainwaveFreq, brainwaveVolume);
       engine?.updateBinauralVolume?.(vol);
     }
   }, [engine, brainwaveFreq, frequencies, alchemyCommenced]);
@@ -759,13 +759,11 @@ export default function CreativeSoulMeditationTool() {
       await new Promise(r => setTimeout(r, 80));
 
       // Start oscillators
-      await engine?.startSolfeggio?.(healingFreq);
-      await engine?.startBinaural?.(200, brainwaveFreq);
+      await engine?.startSolfeggio?.(healingFreq, healingVolume);
+      await engine?.startBinaural?.(200, brainwaveFreq, brainwaveVolume);
 
       // Re-apply volumes AFTER start — startXxx resets gain from stale state
-      await new Promise(r => setTimeout(r, 80));
-      engine?.updateSolfeggioVolume?.(healingVolume);
-      engine?.updateBinauralVolume?.(brainwaveVolume);
+      
 
       toast.success('Alchemy commenced — Anahata open');
     } catch (e) {
