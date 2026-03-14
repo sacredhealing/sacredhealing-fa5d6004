@@ -36,48 +36,48 @@ export interface AnalyserData {
 }
 
 const SOLFEGGIO_FREQUENCIES = [
-  { hz: 174, label: '174 Hz – Foundation', color: '#ef4444' },
-  { hz: 285, label: '285 Hz – Quantum Cognition', color: '#f97316' },
-  { hz: 396, label: '396 Hz – Liberation', color: '#eab308' },
-  { hz: 417, label: '417 Hz – Transmutation', color: '#22c55e' },
-  { hz: 432, label: '432 Hz – Cosmic Harmony', color: '#14b8a6' },
-  { hz: 528, label: '528 Hz – DNA Restore', color: '#06b6d4' },
-  { hz: 639, label: '639 Hz – Heart Coherence', color: '#3b82f6' },
-  { hz: 741, label: '741 Hz – Awakening', color: '#6366f1' },
-  { hz: 852, label: '852 Hz – Third Eye', color: '#8b5cf6' },
-  { hz: 963, label: '963 Hz – Crown Activation', color: '#a855f7' },
+  { hz: 174, label: '174 Hz â Foundation', color: '#ef4444' },
+  { hz: 285, label: '285 Hz â Quantum Cognition', color: '#f97316' },
+  { hz: 396, label: '396 Hz â Liberation', color: '#eab308' },
+  { hz: 417, label: '417 Hz â Transmutation', color: '#22c55e' },
+  { hz: 432, label: '432 Hz â Cosmic Harmony', color: '#14b8a6' },
+  { hz: 528, label: '528 Hz â DNA Restore', color: '#06b6d4' },
+  { hz: 639, label: '639 Hz â Heart Coherence', color: '#3b82f6' },
+  { hz: 741, label: '741 Hz â Awakening', color: '#6366f1' },
+  { hz: 852, label: '852 Hz â Third Eye', color: '#8b5cf6' },
+  { hz: 963, label: '963 Hz â Crown Activation', color: '#a855f7' },
 ];
 
 // III. Quantum Calibration is 5dB lower than II. Meditation Style & Neural Source
-const QUANTUM_CALIBRATION_LINEAR = Math.pow(10, -3 / 20); // ≈ 0.708 (was -5dB, now -3dB for louder oscillators)
-// Oscillator gain: 0.85–0.95 range for audible Hz/Binaural without clipping
+const QUANTUM_CALIBRATION_LINEAR = Math.pow(10, -3 / 20); // â 0.708 (was -5dB, now -3dB for louder oscillators)
+// Oscillator gain: 0.85â0.95 range for audible Hz/Binaural without clipping
 const OSCILLATOR_BASE_GAIN = 0.9;
 const OSCILLATOR_GAIN_MAX = 0.95;
 // Neural source +4dB to match oscillators in the same DSP rack
-const NEURAL_GAIN_BOOST_LINEAR = Math.pow(10, 4 / 20); // ≈ 1.585
+const NEURAL_GAIN_BOOST_LINEAR = Math.pow(10, 4 / 20); // â 1.585
 
 const BINAURAL_PRESETS = [
-  { beatHz: 0.5, label: 'Epsilon (0.5 Hz) – Transcendence' },
-  { beatHz: 2, label: 'Delta (2 Hz) – Deep Healing Sleep' },
-  { beatHz: 4, label: 'Theta (4 Hz) – Meditation' },
-  { beatHz: 6, label: 'Theta (6 Hz) – Creativity' },
-  { beatHz: 10, label: 'Alpha (10 Hz) – Relaxed Focus' },
-  { beatHz: 14, label: 'Beta (14 Hz) – Active Thinking' },
-  { beatHz: 40, label: 'Gamma (40 Hz) – Peak Cognition' },
+  { beatHz: 0.5, label: 'Epsilon (0.5 Hz) â Transcendence' },
+  { beatHz: 2, label: 'Delta (2 Hz) â Deep Healing Sleep' },
+  { beatHz: 4, label: 'Theta (4 Hz) â Meditation' },
+  { beatHz: 6, label: 'Theta (6 Hz) â Creativity' },
+  { beatHz: 10, label: 'Alpha (10 Hz) â Relaxed Focus' },
+  { beatHz: 14, label: 'Beta (14 Hz) â Active Thinking' },
+  { beatHz: 40, label: 'Gamma (40 Hz) â Peak Cognition' },
 ];
 
 const ATMOSPHERE_LIBRARY = [
-  { id: 'vedic', label: 'Vedic Temple', icon: '🕉️', description: 'Tanpura drones & temple bells' },
-  { id: 'shamanic', label: 'Shamanic Journey', icon: '🪘', description: 'Frame drums & rattles' },
-  { id: 'tibetan', label: 'Tibetan Monastery', icon: '🔔', description: 'Singing bowls & chants' },
-  { id: 'ocean', label: 'Ocean Depths', icon: '🌊', description: 'Deep waves & whale songs' },
-  { id: 'forest', label: 'Ancient Forest', icon: '🌲', description: 'Birds & rustling leaves' },
-  { id: 'cosmic', label: 'Cosmic Void', icon: '🌌', description: 'Space drones & stellar winds' },
-  { id: 'crystal', label: 'Crystal Cave', icon: '💎', description: 'Crystal bowls & resonance' },
-  { id: 'zen', label: 'Zen Garden', icon: '🎋', description: 'Wind chimes & flowing water' },
+  { id: 'vedic', label: 'Vedic Temple', icon: 'ðï¸', description: 'Tanpura drones & temple bells' },
+  { id: 'shamanic', label: 'Shamanic Journey', icon: 'ðª', description: 'Frame drums & rattles' },
+  { id: 'tibetan', label: 'Tibetan Monastery', icon: 'ð', description: 'Singing bowls & chants' },
+  { id: 'ocean', label: 'Ocean Depths', icon: 'ð', description: 'Deep waves & whale songs' },
+  { id: 'forest', label: 'Ancient Forest', icon: 'ð²', description: 'Birds & rustling leaves' },
+  { id: 'cosmic', label: 'Cosmic Void', icon: 'ð', description: 'Space drones & stellar winds' },
+  { id: 'crystal', label: 'Crystal Cave', icon: 'ð', description: 'Crystal bowls & resonance' },
+  { id: 'zen', label: 'Zen Garden', icon: 'ð', description: 'Wind chimes & flowing water' },
 ];
 
-/** Universal file reader: File or URL → ArrayBuffer for decodeAudioData (MP3, M4A, WAV, FLAC, etc.) */
+/** Universal file reader: File or URL â ArrayBuffer for decodeAudioData (MP3, M4A, WAV, FLAC, etc.) */
 async function readFileAsArrayBuffer(file: File | string, fileUrl: string, isUrl: boolean): Promise<ArrayBuffer> {
   if (isUrl) {
     const response = await fetch(fileUrl);
@@ -178,7 +178,7 @@ export function useSoulMeditateEngine() {
   const [binauralVolume, setBinauralVolume] = useState(0.5);
   const [dsp, setDSP] = useState<DSPSettings>({
     reverb: { enabled: true, decay: 2.5, wet: 0.3 },
-    // Sacred Echo (delay) removed globally – keep structure but force fully bypassed
+    // Sacred Echo (delay) removed globally â keep structure but force fully bypassed
     delay: { enabled: false, time: 0.4, feedback: 0, wet: 0 },
     warmth: { enabled: false, drive: 0.3, tone: 0.5 },
   });
@@ -460,7 +460,7 @@ export function useSoulMeditateEngine() {
       solfeggioGainRef.current = null;
       binauralGainRef.current = null;
       limiterRef.current = null;
-      // Do NOT set isInitialized = true — allow retry
+      // Do NOT set isInitialized = true â allow retry
     }
   }, [masterVolume, neuralLayer.volume, atmosphereLayer.volume, dsp]);
 
@@ -648,7 +648,7 @@ export function useSoulMeditateEngine() {
       console.error('Failed to upload neural source for export:', e);
     }
 
-    // Universal file reader: File → ArrayBuffer (format-agnostic; MP3, M4A, WAV, FLAC, etc.)
+    // Universal file reader: File â ArrayBuffer (format-agnostic; MP3, M4A, WAV, FLAC, etc.)
     try {
       const arrayBuffer = await readFileAsArrayBuffer(file, fileUrl, isUrl);
       const decodedBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
@@ -677,13 +677,13 @@ export function useSoulMeditateEngine() {
         noiseCompressorRef.current.ratio.value = 1.2;
         noiseCompressorRef.current.threshold.value = -12;
         noiseCompressorRef.current.knee.value = 30;
-        console.log(`[Transparent Mode] ON — DR: ${dynamicRangeDb.toFixed(1)}dB, RMS: ${rms.toFixed(3)} → ratio 1.2:1`);
+        console.log(`[Transparent Mode] ON â DR: ${dynamicRangeDb.toFixed(1)}dB, RMS: ${rms.toFixed(3)} â ratio 1.2:1`);
       } else if (noiseCompressorRef.current) {
         // Standard mode: full processing for raw recordings
         noiseCompressorRef.current.ratio.value = 4;
         noiseCompressorRef.current.threshold.value = -50;
         noiseCompressorRef.current.knee.value = 40;
-        console.log(`[Transparent Mode] OFF — DR: ${dynamicRangeDb.toFixed(1)}dB, RMS: ${rms.toFixed(3)} → ratio 4:1`);
+        console.log(`[Transparent Mode] OFF â DR: ${dynamicRangeDb.toFixed(1)}dB, RMS: ${rms.toFixed(3)} â ratio 4:1`);
       }
 
       console.log('Neural source buffer status: decoded, hit engine, duration', decodedBuffer.duration, 's');
@@ -846,7 +846,7 @@ export function useSoulMeditateEngine() {
     return { ok: true };
   }, [initialize, atmosphereLayer.source]);
 
-  // Play/pause neural layer — buffer playback uses same gain chain as Hz; new BufferSource each Play (one-shot)
+  // Play/pause neural layer â buffer playback uses same gain chain as Hz; new BufferSource each Play (one-shot)
   const toggleNeuralPlay = useCallback(async () => {
     const audioCtx = audioContextRef.current;
     if (!audioCtx) return;
@@ -872,7 +872,7 @@ export function useSoulMeditateEngine() {
       return;
     }
 
-    // Play: decoded buffer → [noise chain + EQ + gate] → neuralGain → mixer → Sacred Effects → master
+    // Play: decoded buffer â [noise chain + EQ + gate] â neuralGain â mixer â Sacred Effects â master
     const buffer = audioBuffer;
     if (buffer && neuralGainRef.current) {
       if (neuralBufferGainRef.current) {
@@ -967,7 +967,7 @@ export function useSoulMeditateEngine() {
     osc.frequency.value = hz;
     osc.connect(solfeggioGainRef.current);
     
-    // Boosted gain (0.7–0.8 range) so oscillators are audible; cap to avoid clip
+    // Boosted gain (0.7â0.8 range) so oscillators are audible; cap to avoid clip
     const targetVolume = Math.min(OSCILLATOR_GAIN_MAX, solfeggioVolume * OSCILLATOR_BASE_GAIN);
     console.log('[Solfeggio] Starting oscillator:', hz, 'Hz, volume:', solfeggioVolume, '->', targetVolume);
     
@@ -1028,7 +1028,7 @@ export function useSoulMeditateEngine() {
 
     const ctx = audioContextRef.current;
     
-    // Boosted gain (0.7–0.8 range) so binaural is audible; cap to avoid clip
+    // Boosted gain (0.7â0.8 range) so binaural is audible; cap to avoid clip
     const targetVolume = Math.min(OSCILLATOR_GAIN_MAX, binauralVolume * OSCILLATOR_BASE_GAIN);
     console.log('[Binaural] Starting binaural beats:', carrierHz, 'Hz carrier,', beatHz, 'Hz beat, volume:', binauralVolume, '->', targetVolume);
     
@@ -1080,7 +1080,7 @@ export function useSoulMeditateEngine() {
     );
   }, [binauralVolume]);
 
-  // Hot-swap: change Hz without stopping — zero gap, zero restart
+  // Hot-swap: change Hz without stopping â zero gap, zero restart
   const updateSolfeggioFrequency = useCallback((hz: number) => {
     if (!solfeggioOscRef.current || !audioContextRef.current) return;
     const ctx = audioContextRef.current;
@@ -1107,7 +1107,25 @@ export function useSoulMeditateEngine() {
   }, []);
 
   // Stop binaural
-  const stopBinaural = useCallback(() => {
+  const updateSolfeggioFrequency = useCallback((hz: number) => {
+    if (!solfegioOscRef.current || !audioContextRef.current) return;
+    const t = audioContextRef.current.currentTime;
+    solfegioOscRef.current.frequency.cancelScheduledValues(t);
+    solfegioOscRef.current.frequency.setTargetAtTime(hz, t, 0.05);
+    setFrequencies(prev => ({ ...prev, solfeggio: { ...prev.solfeggio, hz } }));
+  }, []);
+
+  const updateBinauralFrequency = useCallback((carrierHz: number, beatHz: number) => {
+    if (!binauralLeftOscRef.current || !binauralRightOscRef.current || !audioContextRef.current) return;
+    const t = audioContextRef.current.currentTime;
+    binauralLeftOscRef.current.frequency.cancelScheduledValues(t);
+    binauralLeftOscRef.current.frequency.setTargetAtTime(carrierHz, t, 0.05);
+    binauralRightOscRef.current.frequency.cancelScheduledValues(t);
+    binauralRightOscRef.current.frequency.setTargetAtTime(carrierHz + beatHz, t, 0.05);
+    setFrequencies(prev => ({ ...prev, binaural: { ...prev.binaural, carrierHz, beatHz } }));
+  }, []);
+
+    const stopBinaural = useCallback(() => {
     if (binauralGainRef.current && audioContextRef.current) {
       binauralGainRef.current.gain.cancelScheduledValues(0);
       binauralGainRef.current.gain.setTargetAtTime(0, audioContextRef.current.currentTime, 0.3);
@@ -1139,7 +1157,7 @@ export function useSoulMeditateEngine() {
     if (frequencies.binaural.enabled) {
       stopBinaural();
     }
-    // DAW preview playback (if active) — inlined to avoid forward-reference
+    // DAW preview playback (if active) â inlined to avoid forward-reference
     if (dawPlaybackRef.current) {
       dawPlaybackRef.current.source.stop();
       dawPlaybackRef.current = null;
@@ -1303,7 +1321,7 @@ export function useSoulMeditateEngine() {
         reverbGainRef.current.gain.value = updated.reverb.enabled ? updated.reverb.wet : 0;
       }
 
-      // Sacred Echo (delay) is removed – ignore any delay updates and keep it bypassed
+      // Sacred Echo (delay) is removed â ignore any delay updates and keep it bypassed
 
       // Apply warmth changes
       if (newDsp.warmth && waveShaperRef.current) {
@@ -1479,7 +1497,7 @@ export function useSoulMeditateEngine() {
     let ctx = audioContextRef.current;
     if (!ctx) {
       ctx = new AudioContext();
-      // Don't store — this is a throwaway test
+      // Don't store â this is a throwaway test
     }
     if (ctx.state === 'suspended') await ctx.resume();
     
@@ -1491,10 +1509,10 @@ export function useSoulMeditateEngine() {
     osc.frequency.value = 440;
     gain.gain.value = 0.3;
     osc.connect(gain);
-    gain.connect(ctx.destination); // DIRECT — no mixer, no waveshaper, no limiter
+    gain.connect(ctx.destination); // DIRECT â no mixer, no waveshaper, no limiter
     osc.start();
     osc.stop(ctx.currentTime + 2);
-    console.log('[TEST TONE] Playing 440 Hz for 2 seconds — DIRECT to destination');
+    console.log('[TEST TONE] Playing 440 Hz for 2 seconds â DIRECT to destination');
   }, []);
 
   // Toggle de-esser on/off
@@ -1547,6 +1565,8 @@ export function useSoulMeditateEngine() {
     updateSolfeggioVolume,
     updateSolfeggioFrequency,
     updateBinauralVolume,
+    updateSolfeggioFrequency,
+    updateBinauralFrequency,
     updateBinauralFrequency,
     updateMasterVolume,
     updateDSP,
