@@ -1483,13 +1483,17 @@ const Community = () => {
       return;
     }
 
-    const roomId = roomIds[activeChannel];
+    let roomId = roomIds[activeChannel];
     if (!roomId) {
-      setMessages([]);
-      setViewerSessions([]);
-      setLiveRoomUrl(null);
-      ensureRoomForChannel(activeChannel);
-      return;
+      // Create room and continue (don't return early — we want chat to render)
+      await ensureRoomForChannel(activeChannel);
+      roomId = roomIdsRef.current[activeChannel];
+      if (!roomId) {
+        setMessages([]);
+        setViewerSessions([]);
+        setLiveRoomUrl(null);
+        return;
+      }
     }
 
     // PERF: Run messages + live sessions fetch IN PARALLEL (<500ms instead of 21s)
