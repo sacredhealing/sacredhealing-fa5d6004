@@ -152,7 +152,7 @@ interface StyleGridProps {
   engine: any;
   onRefreshSound: (style: MeditationStyle) => void;
   isRefreshing: boolean;
-  volumes: { ambient: number; binaural: number; healing: number; user: number };
+  volumes: { ambient: number; user: number; binaural?: number; healing?: number };
   onVolumeChange: (key: string, value: number) => void;
 }
 

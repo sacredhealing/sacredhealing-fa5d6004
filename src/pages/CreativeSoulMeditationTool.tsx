@@ -394,7 +394,12 @@ export default function CreativeSoulMeditationTool() {
   const [alchemyCommenced, setAlchemyCommenced] = useState(false);
 
   // ── Volume controls ──
-  const [volumes, setVolumes] = useState({ ambient: 85, binaural: 40, healing: 75, user: 100 });
+  const [volumes, setVolumes] = useState({ ambient: 85, user: 100 });
+  // Store Hz/binaural volumes in LOCAL state at 0.75 default.
+  // Do NOT read from engine.solfeggioVolume — it starts at 0 internally
+  // and would override our intended default before the engine initializes.
+  const [healingVolume, setHealingVolume]   = useState(0.75);
+  const [brainwaveVolume, setBrainwaveVolume] = useState(0.75);
 
   // ── Export / payment ──
   const [exportResult, setExportResult]   = useState(null);
@@ -415,8 +420,6 @@ export default function CreativeSoulMeditationTool() {
   const neuralLayer     = engine?.neuralLayer     ?? { isPlaying: false, source: null };
   const frequencies     = engine?.frequencies     ?? { solfeggio: { enabled: false, hz: 432 }, binaural: { enabled: false, carrierHz: 200, beatHz: 10 } };
   const dsp             = engine?.dsp             ?? null;
-  const healingVolume   = engine?.solfeggioVolume ?? 0.75;
-  const brainwaveVolume = engine?.binauralVolume  ?? 0.75;
 
   const isPlaying =
     neuralLayer.isPlaying ||
@@ -426,6 +429,7 @@ export default function CreativeSoulMeditationTool() {
 
   // ── Handlers ─────────────────────────────────────────────────────
   const handleHealingVolumeChange = useCallback(async (vol) => {
+    setHealingVolume(vol);
     if (!engine?.isInitialized) return;
     const ctx = engine?.getAudioContext?.();
     if (ctx?.state === 'suspended') await ctx.resume();
@@ -434,6 +438,7 @@ export default function CreativeSoulMeditationTool() {
   }, [engine, healingFreq, frequencies, alchemyCommenced]);
 
   const handleBrainwaveVolumeChange = useCallback(async (vol) => {
+    setBrainwaveVolume(vol);
     if (!engine?.isInitialized) return;
     const ctx = engine?.getAudioContext?.();
     if (ctx?.state === 'suspended') await ctx.resume();
@@ -456,8 +461,10 @@ export default function CreativeSoulMeditationTool() {
       const ctx = engine?.getAudioContext?.();
       if (ctx?.state === 'suspended') await ctx.resume();
       await engine?.loadAtmosphere?.(activeStyle);
-      if (healingVolume > 0) { engine?.updateSolfeggioVolume(healingVolume); await engine?.startSolfeggio?.(healingFreq); }
-      if (brainwaveVolume > 0) { engine?.updateBinauralVolume(brainwaveVolume); await engine?.startBinaural?.(200, brainwaveFreq); }
+      engine?.updateSolfeggioVolume(healingVolume);
+      await engine?.startSolfeggio?.(healingFreq);
+      engine?.updateBinauralVolume(brainwaveVolume);
+      await engine?.startBinaural?.(200, brainwaveFreq);
       toast.success('Alchemy commenced — Anahata open');
     } catch { toast.error('Could not commence alchemy'); }
     finally { setIsProcessing(false); }
@@ -478,6 +485,8 @@ export default function CreativeSoulMeditationTool() {
     setActiveStyle('indian');
     setHealingFreq(432);
     setBrainwaveFreq(10);
+    setHealingVolume(0.75);
+    setBrainwaveVolume(0.75);
     setMeditationName('');
     setExportResult(null);
     setScalarBlendHz(null);
