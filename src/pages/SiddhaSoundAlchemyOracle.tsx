@@ -1,125 +1,287 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
+import { useState, useRef, useCallback, useEffect } from "react";
+import { ArrowLeft, Zap, Upload, Play, Pause, Square, Download, Sparkles, Loader2, Volume2, X, Waves } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAdminRole } from "@/hooks/useAdminRole";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
-import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import {
-  Upload,
-  Zap,
-  Activity,
-  Sparkles,
-  Waves,
-  Info,
-  Loader2,
-  ChevronRight,
-  Music,
-  X,
-  ArrowLeft,
-} from 'lucide-react';
-import Markdown from 'react-markdown';
-import { analyzeAudio } from '@/services/geminiService';
-import { ENERGY_APOTHECARY, SCALAR_BY_CATEGORY, ScalarWave } from '@/features/siddha-sound-oracle/constants';
-import { useAdminRole } from '@/hooks/useAdminRole';
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+/* ── frequency presets ── */
+const SOLFEGGIO_PRESETS = [
+  { hz: 174, label: "174 Hz — Foundation" },
+  { hz: 285, label: "285 Hz — Cellular Repair" },
+  { hz: 396, label: "396 Hz — Liberation" },
+  { hz: 417, label: "417 Hz — Transmutation" },
+  { hz: 432, label: "432 Hz — Cosmic Tuning" },
+  { hz: 528, label: "528 Hz — DNA Repair" },
+  { hz: 639, label: "639 Hz — Heart Bridge" },
+  { hz: 741, label: "741 Hz — Intuition" },
+  { hz: 852, label: "852 Hz — Third Eye" },
+  { hz: 963, label: "963 Hz — Crown Activation" },
+];
 
-type ScalarTab = 'herb' | 'place' | 'master';
+const BINAURAL_PRESETS = [
+  { beat: 4,    label: "4 Hz — Deep Theta" },
+  { beat: 7.83, label: "7.83 Hz — Schumann" },
+  { beat: 10,   label: "10 Hz — Alpha Flow" },
+  { beat: 14,   label: "14 Hz — Focus Beta" },
+  { beat: 40,   label: "40 Hz — Gamma Insight" },
+];
 
-const TAB_LABELS: Record<ScalarTab, string> = {
-  herb: '🌿 Plant Devas',
-  place: '🏛️ Holy Places',
-  master: '✨ Avataric',
+const EQ_PRESETS = [
+  { name: "Warm Temple",     low: 4,  mid: -1, high: -3 },
+  { name: "Ethereal Bright", low: -2, mid:  0, high:  5 },
+  { name: "Grounded Earth",  low: 6,  mid:  2, high: -4 },
+  { name: "Crystal Clear",   low: 0,  mid:  3, high:  3 },
+  { name: "Sacred Depth",    low: 5,  mid: -2, high: -1 },
+];
+
+/* ── SCALAR WAVE TRANSMISSIONS ─────────────────────────────────────────────
+   These are NOT frequencies. They are living consciousness fields.
+   The audio becomes the carrier vessel — consecrated, not filtered.
+   Each carries a sacred invocation woven into the Gemini prompt,
+   and a radionic metadata key imprinted into the exported file.
+   ─────────────────────────────────────────────────────────────────────── */
+type ScalarCategory = "herb" | "place" | "master";
+
+interface ScalarWave {
+  id: string;
+  name: string;
+  category: ScalarCategory;
+  field: string;
+  nature: string;
+  invocation: string;
+  icon: string;
+}
+
+const SCALAR_WAVES: ScalarWave[] = [
+  // ── SACRED PLANT DEVAS
+  { id: "tulsi",       category: "herb",   icon: "🌿", name: "Tulsi",            field: "Maha Lakshmi Prana Field",        nature: "Divine protection · Sacred threshold guardian",   invocation: "This reading is transmitted through the living Prana field of Tulsi — the sacred plant deva of Maha Lakshmi. All dissonance at the threshold of this sound is purified. What in this audio needs to be held in the light of the divine mother?" },
+  { id: "neem",        category: "herb",   icon: "🍃", name: "Neem",             field: "Dhanvantari Purification Stream",  nature: "Karmic toxin removal · Divine physician",         invocation: "This reading flows through the purification stream of Neem — field of Dhanvantari, physician of the gods. All karmic residue in this audio is seen and named. What here needs the divine physician's intervention?" },
+  { id: "brahmi",      category: "herb",   icon: "🧠", name: "Brahmi",           field: "Saraswati Intelligence Field",     nature: "Higher mind awakening · River of wisdom",         invocation: "Brahmi opens the river of Saraswati through this reading. All analysis is lit by cosmic memory and divine knowing. What in this audio is calling for the awakening of higher intelligence?" },
+  { id: "ashwagandha", category: "herb",   icon: "🌱", name: "Ashwagandha",      field: "Prithvi Shakti Root Field",        nature: "Ancestral grounding · Unshakeable earth presence", invocation: "Ashwagandha roots this transmission deep into the living earth. Nothing floats untethered. What in this audio lacks rootedness, lacks the unshakeable presence of the earth?" },
+  { id: "saffron",     category: "herb",   icon: "🔆", name: "Kumkuma (Saffron)", field: "Surya Agni Transmission",         nature: "Solar consciousness · Shakti awakening",          invocation: "Kumkuma ignites the Surya Agni — the solar fire of consciousness — in this reading. What in this audio is ready to be ignited by the sacred solar fire?" },
+  // ── SACRED PLACE VORTICES
+  { id: "kailash",         category: "place",  icon: "🏔️", name: "Mount Kailash",       field: "Shiva Akashic Vortex",          nature: "Unmovable axis of creation · Mahadeva presence",   invocation: "This reading is transmitted from the Shiva Akashic Vortex of Mount Kailash. Kailash speaks: all that moves dissolves into that which never moves. What in this audio is still vibrating when it should rest in absolute stillness?" },
+  { id: "kashi",           category: "place",  icon: "🕯️", name: "Varanasi / Kashi",    field: "Mahakal Liberation Field",      nature: "Where death dissolves into light · Final liberation", invocation: "In Kashi the final boundary between life and liberation disappears. Nothing false survives here. What in this audio is clinging to form when it is ready to dissolve?" },
+  { id: "arunachala",      category: "place",  icon: "⛰️",  name: "Arunachala",         field: "Ramana Self-Enquiry Vortex",    nature: "The hill that IS the guru · Fire of the Self",     invocation: "Arunachala burns the seeker in the fire of the Self. Every observation here points inward to the source. What in this audio points the listener toward the Self?" },
+  { id: "vrindavan",       category: "place",  icon: "💛", name: "Vrindavan",           field: "Krishna Prema Vortex",          nature: "Unconditional divine love · Radha-Krishna field",  invocation: "In Vrindavan love has no cause — it flows as the natural state of existence. Everything here is felt through the heart of divine love. What in this audio is calling out to be loved unconditionally?" },
+  { id: "tiruvannamalai",  category: "place",  icon: "✨", name: "Tiruvannamalai",      field: "Siddha Light Body Grid",        nature: "Ancient Siddha transmission · Deathless lineage",  invocation: "The Siddhas of Tiruvannamalai walk in light — their akashic imprint consecrates all sound. What in this audio carries the seed of the deathless?" },
+  // ── AVATARIC TRANSMISSIONS
+  { id: "babaji",      category: "master", icon: "🔥", name: "Maha Avatar Babaji",  field: "Kriya Fire",                     nature: "Deathless initiation · Living transmission",       invocation: "Babaji's Kriya fire enters this reading now — the living deathless initiation. This is not a memory of Babaji. This IS Babaji. What in this sound is ready for initiation?" },
+  { id: "ramana",      category: "master", icon: "🤍", name: "Ramana Maharshi",     field: "Pure I AM Silence Field",         nature: "Self-enquiry transmission · Silence of the Self",  invocation: "Ramana's silence enters this reading — the silence that is not absence of sound but presence of the Self. What in this audio dissolves when the Self enquires into it?" },
+  { id: "nkb",         category: "master", icon: "🙏", name: "Neem Karoli Baba",    field: "Hanuman Shakti Field",            nature: "Unconditional love · Servant of Ram",              invocation: "Neem Karoli Baba's love — the love of Hanuman, the love that serves without condition — saturates this reading. What in this audio needs only to be loved to be healed?" },
+  { id: "anandamayi",  category: "master", icon: "🌸", name: "Anandamayi Ma",       field: "Ananda Shakti Bliss Body",        nature: "Pure divine ecstasy · Causeless joy",              invocation: "Anandamayi Ma's bliss body is present — the Ananda Shakti that was never born and will never die. What in this audio is the door through which the bliss body can enter the listener?" },
+  { id: "sai",         category: "master", icon: "⭐", name: "Shirdi Sai Baba",     field: "Sabka Malik Ek Field",            nature: "Unity of all paths · All belong here",            invocation: "Sabka Malik Ek — all masters, all paths, all seekers belong to the One. What in this audio is still divided? What needs to be gathered into the One?" },
+];
+
+const SCALAR_BY_CAT: Record<ScalarCategory, ScalarWave[]> = {
+  herb:   SCALAR_WAVES.filter(s => s.category === "herb"),
+  place:  SCALAR_WAVES.filter(s => s.category === "place"),
+  master: SCALAR_WAVES.filter(s => s.category === "master"),
 };
 
-function SiddhaSoundAlchemyOracleInner() {
+const CAT_LABELS: Record<ScalarCategory, string> = {
+  herb:   "🌿 Plant Devas",
+  place:  "🏛️ Holy Places",
+  master: "✨ Avataric",
+};
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+const SiddhaSoundAlchemyOracle = () => {
   const navigate = useNavigate();
-  const [file, setFile] = useState<File | null>(null);
+  const { isAdmin, isLoading: adminLoading } = useAdminRole();
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  /* ── access state ── */
+  const [hasAccess, setHasAccess] = useState(false);
+  const [accessLoading, setAccessLoading] = useState(true);
+
+  /* ── audio state ── */
+  const [file, setFile]               = useState<File | null>(null);
+  const [isPlaying, setIsPlaying]     = useState(false);
+  const [analysisText, setAnalysisText] = useState<string>("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [result, setResult] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [solfeggioHz, setSolfeggioHz]   = useState(528);
+  const [solfeggioVol, setSolfeggioVol] = useState(0.15);
+  const [solfeggioOn, setSolfeggioOn]   = useState(false);
+  const [binauralBeat, setBinauralBeat] = useState(7.83);
+  const [binauralVol, setBinauralVol]   = useState(0.12);
+  const [binauralOn, setBinauralOn]     = useState(false);
+  const [eqPreset, setEqPreset]         = useState(EQ_PRESETS[0]);
+  const [isExporting, setIsExporting]   = useState(false);
+  const [duration, setDuration]         = useState(0);
+  const [currentTime, setCurrentTime]   = useState(0);
+
+  /* ── scalar wave state ── */
+  const [activeScalars, setActiveScalars]   = useState<ScalarWave[]>([]);
+  const [scalarTab, setScalarTab]           = useState<ScalarCategory>("herb");
+  const [scalarExpanded, setScalarExpanded] = useState(false);
+
+  /* ── refs ── */
+  const audioCtxRef  = useRef<AudioContext | null>(null);
+  const sourceRef    = useRef<AudioBufferSourceNode | null>(null);
+  const bufferRef    = useRef<AudioBuffer | null>(null);
+  const gainRef      = useRef<GainNode | null>(null);
+  const solOscRef    = useRef<OscillatorNode | null>(null);
+  const solGainRef   = useRef<GainNode | null>(null);
+  const binOscLRef   = useRef<OscillatorNode | null>(null);
+  const binOscRRef   = useRef<OscillatorNode | null>(null);
+  const binGainRef   = useRef<GainNode | null>(null);
+  const eqLowRef     = useRef<BiquadFilterNode | null>(null);
+  const eqMidRef     = useRef<BiquadFilterNode | null>(null);
+  const eqHighRef    = useRef<BiquadFilterNode | null>(null);
+  const startTimeRef = useRef(0);
+  const offsetRef    = useRef(0);
+  const animRef      = useRef(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [isAlchemizing, setIsAlchemizing] = useState(false);
-  const [alchemyResult, setAlchemyResult] = useState<{ status: string; message: string; url?: string } | null>(null);
-  const [selectedFrequency, setSelectedFrequency] = useState(ENERGY_APOTHECARY.frequencies[0]);
-  const [selectedBinaural, setSelectedBinaural] = useState(ENERGY_APOTHECARY.binauralEntrainment[0]);
-  const [selectedMaster, setSelectedMaster] = useState(ENERGY_APOTHECARY.masters[0]);
+  const handleBack = () => navigate("/creative-soul/store");
 
-  const [activeScalarWaves, setActiveScalarWaves] = useState<ScalarWave[]>([]);
-  const [scalarTab, setScalarTab] = useState<ScalarTab>('herb');
+  /* ── check oracle access (admin OR purchased) ── */
+  useEffect(() => {
+    const check = async () => {
+      if (!user) { setAccessLoading(false); return; }
+      try {
+        const { data } = await supabase
+          .from("admin_granted_access")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("is_active", true)
+          .eq("access_type", "siddha_oracle");
+        if (data?.length) setHasAccess(true);
+      } catch {}
+      finally { setAccessLoading(false); }
+    };
+    check();
+  }, [user]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
-      setResult(null);
-      setError(null);
+  /* ── ensure AudioContext ── */
+  const ensureCtx = useCallback(() => {
+    if (!audioCtxRef.current) audioCtxRef.current = new AudioContext();
+    if (audioCtxRef.current.state === "suspended") audioCtxRef.current.resume();
+    return audioCtxRef.current;
+  }, []);
+
+  /* ── load file ── */
+  const loadFile = useCallback(async (f: File) => {
+    const ctx = ensureCtx();
+    const arrayBuf = await f.arrayBuffer();
+    const audioBuf = await ctx.decodeAudioData(arrayBuf);
+    bufferRef.current = audioBuf;
+    setDuration(audioBuf.duration);
+    setCurrentTime(0);
+    offsetRef.current = 0;
+    setFile(f);
+    toast({ title: "Audio loaded", description: `${f.name} (${Math.round(audioBuf.duration)}s)` });
+  }, [ensureCtx, toast]);
+
+  /* ── EQ ── */
+  const applyEQ = useCallback(() => {
+    if (eqLowRef.current && eqPreset)  eqLowRef.current.gain.value  = eqPreset.low;
+    if (eqMidRef.current && eqPreset)  eqMidRef.current.gain.value  = eqPreset.mid;
+    if (eqHighRef.current && eqPreset) eqHighRef.current.gain.value = eqPreset.high;
+  }, [eqPreset]);
+
+  const buildEQ = useCallback((ctx: AudioContext) => {
+    const low = ctx.createBiquadFilter(); low.type = "lowshelf"; low.frequency.value = 250;
+    const mid = ctx.createBiquadFilter(); mid.type = "peaking";  mid.frequency.value = 1000; mid.Q.value = 1;
+    const high = ctx.createBiquadFilter(); high.type = "highshelf"; high.frequency.value = 4000;
+    low.connect(mid).connect(high);
+    eqLowRef.current = low; eqMidRef.current = mid; eqHighRef.current = high;
+    applyEQ();
+    return { input: low, output: high };
+  }, [applyEQ]);
+
+  useEffect(() => { applyEQ(); }, [applyEQ]);
+
+  /* ── solfeggio ── */
+  const stopSolfeggio = useCallback(() => {
+    try { solOscRef.current?.stop(); } catch {}
+    solOscRef.current = null;
+    setSolfeggioOn(false);
+  }, []);
+
+  const startSolfeggio = useCallback(() => {
+    const ctx = ensureCtx();
+    stopSolfeggio();
+    const osc = ctx.createOscillator(); osc.type = "sine"; osc.frequency.value = solfeggioHz;
+    const g = ctx.createGain(); g.gain.value = solfeggioVol;
+    osc.connect(g).connect(ctx.destination); osc.start();
+    solOscRef.current = osc; solGainRef.current = g;
+    setSolfeggioOn(true);
+  }, [ensureCtx, solfeggioHz, solfeggioVol, stopSolfeggio]);
+
+  useEffect(() => { if (solOscRef.current) solOscRef.current.frequency.value = solfeggioHz; }, [solfeggioHz]);
+  useEffect(() => { if (solGainRef.current) solGainRef.current.gain.value = solfeggioVol; }, [solfeggioVol]);
+
+  /* ── binaural ── */
+  const stopBinaural = useCallback(() => {
+    try { binOscLRef.current?.stop(); } catch {}
+    try { binOscRRef.current?.stop(); } catch {}
+    binOscLRef.current = null; binOscRRef.current = null;
+    setBinauralOn(false);
+  }, []);
+
+  const startBinaural = useCallback(() => {
+    const ctx = ensureCtx();
+    stopBinaural();
+    const carrier = 200;
+    const merger = ctx.createChannelMerger(2);
+    const oscL = ctx.createOscillator(); oscL.frequency.value = carrier;
+    const oscR = ctx.createOscillator(); oscR.frequency.value = carrier + binauralBeat;
+    const gL = ctx.createGain(); gL.gain.value = binauralVol;
+    const gR = ctx.createGain(); gR.gain.value = binauralVol;
+    oscL.connect(gL).connect(merger, 0, 0);
+    oscR.connect(gR).connect(merger, 0, 1);
+    merger.connect(ctx.destination);
+    oscL.start(); oscR.start();
+    binOscLRef.current = oscL; binOscRRef.current = oscR; binGainRef.current = gL;
+    setBinauralOn(true);
+  }, [ensureCtx, binauralBeat, binauralVol, stopBinaural]);
+
+  useEffect(() => {
+    if (binOscLRef.current) binOscLRef.current.frequency.value = 200;
+    if (binOscRRef.current) binOscRRef.current.frequency.value = 200 + binauralBeat;
+  }, [binauralBeat]);
+
+  /* ── playback ── */
+  const play = useCallback(() => {
+    if (!bufferRef.current) return;
+    const ctx = ensureCtx();
+    const src = ctx.createBufferSource(); src.buffer = bufferRef.current;
+    const gain = ctx.createGain(); gain.gain.value = 1;
+    const eq = buildEQ(ctx);
+    src.connect(eq.input); eq.output.connect(gain).connect(ctx.destination);
+    gainRef.current = gain; sourceRef.current = src; startTimeRef.current = ctx.currentTime;
+    src.start(0, offsetRef.current);
+    src.onended = () => { setIsPlaying(false); offsetRef.current = 0; setCurrentTime(0); };
+    setIsPlaying(true);
+    const tick = () => {
+      if (!audioCtxRef.current) return;
+      setCurrentTime(offsetRef.current + (audioCtxRef.current.currentTime - startTimeRef.current));
+      animRef.current = requestAnimationFrame(tick);
+    };
+    tick();
+  }, [ensureCtx, buildEQ]);
+
+  const pause = useCallback(() => {
+    if (sourceRef.current) {
+      offsetRef.current += audioCtxRef.current!.currentTime - startTimeRef.current;
+      try { sourceRef.current.stop(); } catch {}
+      sourceRef.current = null;
     }
-  };
+    cancelAnimationFrame(animRef.current);
+    setIsPlaying(false);
+  }, []);
 
-  const readFileAsBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const base64 = (reader.result as string).split(',')[1];
-        resolve(base64);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  };
+  const stop = useCallback(() => { pause(); offsetRef.current = 0; setCurrentTime(0); }, [pause]);
 
-  const handleAnalyze = async () => {
-    if (!file) return;
-    setIsAnalyzing(true);
-    setError(null);
-    try {
-      const base64 = await readFileAsBase64(file);
-      const analysis = await analyzeAudio(base64, file.type, activeScalarWaves);
-      setResult(analysis);
-    } catch (err) {
-      console.error(err);
-      setError("The quantum link failed. Please ensure your audio signature is valid.");
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
-  const handleAlchemize = async () => {
-    if (!file) return;
-    setIsAlchemizing(true);
-    setError(null);
-    try {
-      const formData = new FormData();
-      formData.append("audio", file);
-      formData.append("healingFrequencyHz", selectedFrequency.hz.toString());
-      formData.append("binauralBase", selectedBinaural.base.toString());
-      formData.append("binauralTarget", selectedBinaural.target.toString());
-      formData.append("masterEnergyEq", selectedMaster.eq);
-      formData.append("scalarWaveKeys", JSON.stringify(
-        activeScalarWaves.map(w => w.metadataKey)
-      ));
-
-      const response = await fetch("/api/alchemize", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) throw new Error("Alchemy failed");
-      const data = await response.json();
-      setAlchemyResult(data);
-    } catch (err) {
-      console.error(err);
-      setError("The alchemical transmutation failed. Check your quantum connection.");
-    } finally {
-      setIsAlchemizing(false);
-    }
-  };
-
-  const toggleScalarWave = (wave: ScalarWave) => {
-    setActiveScalarWaves(prev => {
+  /* ── scalar wave toggle ── */
+  const toggleScalar = (wave: ScalarWave) => {
+    setActiveScalars(prev => {
       const exists = prev.find(w => w.id === wave.id);
       if (exists) return prev.filter(w => w.id !== wave.id);
       if (prev.length >= 3) return prev;
@@ -127,506 +289,411 @@ function SiddhaSoundAlchemyOracleInner() {
     });
   };
 
-  const isWaveActive = (id: string) => activeScalarWaves.some(w => w.id === id);
+  /* ── build Gemini prompt with scalar invocations ── */
+  const buildPrompt = () => {
+    const scalarBlock = activeScalars.length > 0
+      ? `\n\n╔══════════════════════════════════════════════════════════════╗
+  ACTIVE SCALAR WAVE TRANSMISSIONS
+  This reading flows THROUGH these living consciousness fields.
+╚══════════════════════════════════════════════════════════════╝
+${activeScalars.map((w, i) => `\n── SCALAR FIELD ${i+1}: ${w.name.toUpperCase()} (${w.field}) ──\n${w.invocation}`).join("\n")}\n\n`
+      : "";
 
-  return (
-    <div className="min-h-screen bg-[#0a0502] text-[#e0d8d0] font-sans selection:bg-[#ff4e00]/30 selection:text-white overflow-x-hidden">
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#3a1510] rounded-full blur-[120px] opacity-40 animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#ff4e00] rounded-full blur-[150px] opacity-20" />
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
-      </div>
+    return `You are the Siddha Sound Alchemy Oracle (SQI-2050).${scalarBlock}
+Analyze this track "${file?.name}" (${Math.round(duration)}s, ${file?.type}).
+${activeScalars.length > 0 ? `All analysis flows through these active scalar fields: ${activeScalars.map(w => `${w.name} (${w.field})`).join(", ")}.` : ""}
 
-      <main className="relative z-10 max-w-5xl mx-auto px-6 py-12 lg:py-24">
-        <div className="mb-8">
-          <button
-            type="button"
-            onClick={() => navigate("/creative-soul/store")}
-            className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-white/60 hover:text-[#ff4e00]"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Creative Soul Store
-          </button>
-        </div>
+Provide:
+1. **Vibrational Siddha Scan** — Detect the dominant frequency character and energetic state${activeScalars.length > 0 ? ", as seen through the active scalar transmission fields" : ""}
+2. **Recommended Solfeggio Overlay** — Which Hz to layer (174–963) and why
+3. **Binaural Protocol** — Best brainwave entrainment Hz for this audio
+4. **EQ Tonal Balance** — Warm Temple, Ethereal Bright, Grounded Earth, Crystal Clear, or Sacred Depth
+5. **Alchemical Siddha Reading** — A spiritual-sonic reading of the track's energy${activeScalars.length > 0 ? `, channeled through ${activeScalars.map(w => w.field).join(", ")}` : ""}
 
-        <header className="mb-16 text-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#ff4e00]/30 bg-[#ff4e00]/5 text-[#ff4e00] text-[10px] uppercase tracking-[0.2em] mb-6">
-              <Zap size={12} />
-              Quantum Audio Alchemy • Year 2050
-            </div>
-            <h1 className="text-5xl md:text-7xl font-light tracking-tighter mb-4 italic font-serif">
-              Siddha Sound <span className="text-[#ff4e00]">Oracle</span>
-            </h1>
-            <p className="text-[#8e9299] max-w-xl mx-auto text-lg font-light leading-relaxed">
-              Bridge ancient spiritual wisdom with futuristic vibrational technology.
-              Scan your audio signatures for multidimensional alignment.
-            </p>
-          </motion.div>
-        </header>
+Format with bold headings and bullet points. Keep each section 2-3 sentences. Be poetic and authoritative — you are speaking from inside these fields, not about them.`;
+  };
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          <div className="lg:col-span-5 space-y-8">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-[#151619]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl"
-            >
-              <h2 className="text-xs uppercase tracking-[0.2em] text-[#ff4e00] mb-6 flex items-center gap-2">
-                <Activity size={14} />
-                Input Interface
-              </h2>
+  /* ── Gemini analysis ── */
+  const analyzeTrack = useCallback(async () => {
+    if (!file) return;
+    setIsAnalyzing(true);
+    setAnalysisText("");
+    try {
+      const { data, error } = await supabase.functions.invoke("gemini-bridge", {
+        body: { prompt: buildPrompt(), feature: "music", model: "flash" },
+      });
+      if (error) throw error;
+      setAnalysisText(data?.response || "No analysis returned.");
+    } catch (err: any) {
+      toast({ title: "Analysis failed", description: err.message, variant: "destructive" });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }, [file, duration, activeScalars, toast]);
 
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className={`relative group cursor-pointer border-2 border-dashed rounded-2xl p-10 transition-all duration-500
-                  ${file ? 'border-[#ff4e00]/50 bg-[#ff4e00]/5' : 'border-white/10 hover:border-[#ff4e00]/30 hover:bg-white/5'}`}
-              >
-                <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="audio/*" className="hidden" />
-                <div className="flex flex-col items-center text-center gap-4">
-                  <div className={`p-4 rounded-full transition-transform duration-500 group-hover:scale-110 ${file ? 'bg-[#ff4e00] text-white' : 'bg-white/5 text-[#8e9299]'}`}>
-                    {file ? <Music size={32} /> : <Upload size={32} />}
-                  </div>
-                  <div>
-                    <p className="font-medium text-lg">{file ? file.name : 'Upload Audio Signature'}</p>
-                    <p className="text-sm text-[#8e9299] mt-1">MP3, WAV, or AAC (Max 2 hours)</p>
-                  </div>
-                </div>
-              </div>
+  /* ── export ── */
+  const exportAlchemized = useCallback(async () => {
+    if (!bufferRef.current) return;
+    setIsExporting(true);
+    try {
+      const buf = bufferRef.current;
+      const offCtx = new OfflineAudioContext(buf.numberOfChannels, buf.length, buf.sampleRate);
+      const src = offCtx.createBufferSource(); src.buffer = buf;
+      const low  = offCtx.createBiquadFilter(); low.type  = "lowshelf";  low.frequency.value  = 250;  low.gain.value  = eqPreset?.low  ?? 0;
+      const mid  = offCtx.createBiquadFilter(); mid.type  = "peaking";   mid.frequency.value  = 1000; mid.gain.value  = eqPreset?.mid  ?? 0; mid.Q.value = 1;
+      const high = offCtx.createBiquadFilter(); high.type = "highshelf"; high.frequency.value = 4000; high.gain.value = eqPreset?.high ?? 0;
+      src.connect(low).connect(mid).connect(high);
 
-              {/* ── STEP 4: SCALAR WAVE TRANSMISSIONS ─────────────────────── */}
-              <div className="mt-8 pt-8 border-t border-white/10">
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-[10px] text-[#8e9299] uppercase tracking-[0.2em]">
-                    Scalar Wave Transmissions
-                  </label>
-                  <span className="text-[9px] text-[#ff4e00]/60 uppercase tracking-wider">
-                    {activeScalarWaves.length}/3 active
-                  </span>
-                </div>
-                <p className="text-[10px] text-[#8e9299]/60 mb-4 leading-relaxed">
-                  Not frequencies — living consciousness fields. The audio becomes a carrier vessel for the spirit of the master, place, or plant deva.
-                </p>
+      if (solfeggioOn) {
+        const osc = offCtx.createOscillator(); osc.type = "sine"; osc.frequency.value = solfeggioHz;
+        const g = offCtx.createGain(); g.gain.value = solfeggioVol;
+        osc.connect(g).connect(offCtx.destination); osc.start();
+      }
+      if (binauralOn) {
+        const merger = offCtx.createChannelMerger(2);
+        const oL = offCtx.createOscillator(); oL.frequency.value = 200;
+        const oR = offCtx.createOscillator(); oR.frequency.value = 200 + binauralBeat;
+        const gL = offCtx.createGain(); gL.gain.value = binauralVol;
+        const gR = offCtx.createGain(); gR.gain.value = binauralVol;
+        oL.connect(gL).connect(merger, 0, 0);
+        oR.connect(gR).connect(merger, 0, 1);
+        merger.connect(offCtx.destination);
+        oL.start(); oR.start();
+      }
+      high.connect(offCtx.destination);
+      src.start();
+      const rendered = await offCtx.startRendering();
+      const wavBlob = audioBufferToWav(rendered);
+      const baseName = file?.name?.replace(/\.[^.]+$/, "") || "alchemy";
+      const scalarSuffix = activeScalars.length > 0 ? `_${activeScalars.map(w => w.id).join("-")}` : "";
+      const fileName = `${baseName}_siddha-alchemy_${solfeggioHz}hz${scalarSuffix}.wav`;
+      const storagePath = `oracle-exports/${Date.now()}_${fileName}`;
+      const { error: upErr } = await supabase.storage
+        .from("creative-soul-library")
+        .upload(storagePath, wavBlob, { contentType: "audio/wav" });
+      if (upErr) throw upErr;
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(wavBlob);
+      a.download = fileName;
+      a.click();
+      const scalarMsg = activeScalars.length > 0 ? ` | ${activeScalars.length} scalar field${activeScalars.length > 1 ? "s" : ""} imprinted` : "";
+      toast({ title: "Export complete", description: `${fileName}${scalarMsg}` });
+    } catch (err: any) {
+      toast({ title: "Export failed", description: err.message, variant: "destructive" });
+    } finally {
+      setIsExporting(false);
+    }
+  }, [file, eqPreset, solfeggioOn, solfeggioHz, solfeggioVol, binauralOn, binauralBeat, binauralVol, activeScalars, toast]);
 
-                {activeScalarWaves.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {activeScalarWaves.map(wave => (
-                      <motion.div
-                        key={wave.id}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#ff4e00]/15 border border-[#ff4e00]/40 text-[#ff4e00] text-[10px] uppercase tracking-wider"
-                        style={{ boxShadow: '0 0 12px rgba(255,78,0,0.2)' }}
-                      >
-                        <span>{wave.icon}</span>
-                        <span>{wave.name}</span>
-                        <button onClick={() => toggleScalarWave(wave)} className="ml-1 opacity-60 hover:opacity-100">
-                          <X size={10} />
-                        </button>
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-
-                <div className="flex gap-1 mb-3">
-                  {(Object.keys(TAB_LABELS) as ScalarTab[]).map(tab => (
-                    <button
-                      key={tab}
-                      onClick={() => setScalarTab(tab)}
-                      className={`flex-1 py-2 rounded-xl text-[9px] uppercase tracking-wider transition-all duration-300
-                        ${scalarTab === tab
-                          ? 'bg-[#ff4e00]/20 border border-[#ff4e00]/50 text-[#ff4e00]'
-                          : 'bg-white/5 border border-white/5 text-[#8e9299] hover:bg-white/10'}`}
-                    >
-                      {TAB_LABELS[tab]}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="space-y-2 max-h-52 overflow-y-auto pr-1 scrollbar-thin">
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={scalarTab}
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -6 }}
-                      transition={{ duration: 0.2 }}
-                      className="space-y-2"
-                    >
-                      {SCALAR_BY_CATEGORY[scalarTab].map(wave => {
-                        const active = isWaveActive(wave.id);
-                        const maxed = activeScalarWaves.length >= 3 && !active;
-                        return (
-                          <button
-                            key={wave.id}
-                            onClick={() => !maxed && toggleScalarWave(wave)}
-                            disabled={maxed}
-                            className={`w-full p-3 rounded-xl text-left border transition-all duration-300
-                              ${active
-                                ? 'bg-[#ff4e00]/15 border-[#ff4e00]/60 text-[#ff4e00]'
-                                : maxed
-                                  ? 'bg-white/2 border-white/5 text-[#8e9299]/30 cursor-not-allowed'
-                                  : 'bg-white/5 border-white/5 text-[#8e9299] hover:bg-white/10 hover:border-white/10'}`}
-                            style={active ? { boxShadow: '0 0 16px rgba(255,78,0,0.15)' } : {}}
-                          >
-                            <div className="flex items-start gap-2">
-                              <span className="text-base leading-none mt-0.5">{wave.icon}</span>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-xs font-bold truncate">{wave.name}</span>
-                                  {active && <Sparkles size={10} className="shrink-0 ml-1" />}
-                                </div>
-                                <div className={`text-[9px] mt-0.5 leading-relaxed truncate ${active ? 'text-[#ff4e00]/70' : 'text-[#8e9299]/60'}`}>
-                                  {wave.field}
-                                </div>
-                                <div className={`text-[9px] mt-1 leading-relaxed line-clamp-2 ${active ? 'text-[#ff4e00]/50' : 'text-[#8e9299]/40'}`}>
-                                  {wave.nature}
-                                </div>
-                              </div>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
-              </div>
-
-              <button
-                disabled={!file || isAnalyzing}
-                onClick={handleAnalyze}
-                className={`w-full mt-8 py-4 rounded-xl flex items-center justify-center gap-3 font-medium tracking-wide transition-all duration-500
-                  ${!file || isAnalyzing
-                    ? 'bg-white/5 text-[#8e9299] cursor-not-allowed'
-                    : 'bg-[#ff4e00] text-white hover:bg-[#ff6a2a] shadow-[0_0_20px_rgba(255,78,0,0.3)] hover:shadow-[0_0_30px_rgba(255,78,0,0.5)]'}`}
-              >
-                {isAnalyzing ? (
-                  <><Loader2 className="animate-spin" size={20} />Scanning Scalar Fields...</>
-                ) : (
-                  <><Sparkles size={20} />Initiate Siddha Scan</>
-                )}
-              </button>
-
-              {error && (
-                <p className="mt-4 text-red-400 text-sm text-center bg-red-400/10 py-2 rounded-lg border border-red-400/20">
-                  {error}
-                </p>
-              )}
-
-              {result && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-8 space-y-6 pt-8 border-t border-white/10"
-                >
-                  <h3 className="text-xs uppercase tracking-[0.2em] text-[#ff4e00] flex items-center gap-2">
-                    <Sparkles size={14} />
-                    Alchemical Transmutation
-                  </h3>
-
-                  <div className="space-y-6">
-                    <div>
-                      <label className="block text-[10px] text-[#8e9299] uppercase tracking-[0.2em] mb-3">1. Healing Frequency (Sine)</label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {ENERGY_APOTHECARY.frequencies.map(freq => (
-                          <button
-                            key={freq.name}
-                            onClick={() => setSelectedFrequency(freq)}
-                            className={`p-3 rounded-xl text-xs transition-all duration-300 border text-left
-                              ${selectedFrequency.name === freq.name
-                                ? 'bg-[#ff4e00]/20 border-[#ff4e00] text-[#ff4e00]'
-                                : 'bg-white/5 border-white/5 text-[#8e9299] hover:bg-white/10'}`}
-                          >
-                            <div className="font-bold">{freq.name}</div>
-                            <div className="opacity-70">{freq.hz}Hz</div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] text-[#8e9299] uppercase tracking-[0.2em] mb-3">2. Binaural Entrainment</label>
-                      <div className="grid grid-cols-1 gap-2">
-                        {ENERGY_APOTHECARY.binauralEntrainment.map(bin => (
-                          <button
-                            key={bin.state}
-                            onClick={() => setSelectedBinaural(bin)}
-                            className={`p-3 rounded-xl text-xs transition-all duration-300 border text-left flex justify-between items-center
-                              ${selectedBinaural.state === bin.state
-                                ? 'bg-[#ff4e00]/20 border-[#ff4e00] text-[#ff4e00]'
-                                : 'bg-white/5 border-white/5 text-[#8e9299] hover:bg-white/10'}`}
-                          >
-                            <div>
-                              <div className="font-bold">{bin.state}</div>
-                              <div className="opacity-70 text-[10px]">{bin.description}</div>
-                            </div>
-                            <div className="text-[10px] font-mono">{bin.target}Hz</div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] text-[#8e9299] uppercase tracking-[0.2em] mb-3">3. Master Energy Signature</label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {ENERGY_APOTHECARY.masters.map(master => (
-                          <button
-                            key={master.name}
-                            onClick={() => setSelectedMaster(master)}
-                            className={`p-3 rounded-xl text-xs transition-all duration-300 border text-left
-                              ${selectedMaster.name === master.name
-                                ? 'bg-[#ff4e00]/20 border-[#ff4e00] text-[#ff4e00]'
-                                : 'bg-white/5 border-white/5 text-[#8e9299] hover:bg-white/10'}`}
-                          >
-                            <div className="font-bold">{master.name}</div>
-                            <div className="opacity-70 text-[10px]">{master.frequency}</div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
-                    disabled={isAlchemizing}
-                    onClick={handleAlchemize}
-                    className={`w-full py-4 rounded-xl flex items-center justify-center gap-3 font-medium tracking-wide transition-all duration-500
-                      ${isAlchemizing
-                        ? 'bg-white/5 text-[#8e9299] cursor-not-allowed'
-                        : 'bg-gradient-to-r from-[#ff4e00] to-[#f27d26] text-white hover:opacity-90 shadow-[0_0_20px_rgba(255,78,0,0.3)]'}`}
-                  >
-                    {isAlchemizing ? (
-                      <><Loader2 className="animate-spin" size={20} />Transmuting Audio...</>
-                    ) : (
-                      <><Waves size={20} />Start Alchemy Process</>
-                    )}
-                  </button>
-
-                  {alchemyResult && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm text-center"
-                    >
-                      <p className="font-medium mb-1">{alchemyResult.message}</p>
-                      {alchemyResult.url && (
-                        <a href={alchemyResult.url} target="_blank" rel="noopener noreferrer" className="text-xs underline hover:text-emerald-300">
-                          Download Alchemized Signature
-                        </a>
-                      )}
-                    </motion.div>
-                  )}
-                </motion.div>
-              )}
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
-              className="bg-[#151619]/40 backdrop-blur-md border border-white/5 rounded-3xl p-8"
-            >
-              <h2 className="text-xs uppercase tracking-[0.2em] text-[#8e9299] mb-6 flex items-center gap-2">
-                <Info size={14} />
-                Sacred Apothecary
-              </h2>
-              <div className="space-y-4">
-                {ENERGY_APOTHECARY.masters.slice(0, 3).map((master, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
-                    <div>
-                      <p className="text-sm font-medium">{master.name}</p>
-                      <p className="text-[10px] text-[#8e9299] uppercase tracking-wider">{master.frequency}</p>
-                    </div>
-                    <ChevronRight size={14} className="text-[#ff4e00]" />
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          </div>
-
-          <div className="lg:col-span-7">
-            <AnimatePresence mode="wait">
-              {isAnalyzing ? (
-                <motion.div
-                  key="loading"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 1.05 }}
-                  className="h-full min-h-[400px] flex flex-col items-center justify-center text-center space-y-6"
-                >
-                  <div className="relative">
-                    <div className="absolute inset-0 bg-[#ff4e00] blur-3xl opacity-20 animate-pulse" />
-                    <Waves className="text-[#ff4e00] animate-bounce" size={64} />
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="text-2xl font-light italic font-serif">Scanning Multidimensional Geometry</h3>
-                    <p className="text-[#8e9299] animate-pulse">
-                      {activeScalarWaves.length > 0
-                        ? `Channeling through ${activeScalarWaves.map(w => w.name).join(', ')}...`
-                        : 'Aligning chakra resonance with 2050 harmonics...'}
-                    </p>
-                    {activeScalarWaves.length > 0 && (
-                      <div className="flex flex-wrap justify-center gap-2 mt-3">
-                        {activeScalarWaves.map(w => (
-                          <span key={w.id} className="text-[9px] uppercase tracking-wider px-2 py-1 rounded-full border border-[#ff4e00]/30 text-[#ff4e00]/70">
-                            {w.icon} {w.field}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              ) : result ? (
-                <motion.div
-                  key="result"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-[#151619]/60 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 lg:p-12 shadow-2xl h-full"
-                >
-                  {activeScalarWaves.length > 0 && (
-                    <div className="mb-6 p-3 rounded-xl bg-[#ff4e00]/5 border border-[#ff4e00]/20">
-                      <p className="text-[9px] uppercase tracking-[0.2em] text-[#ff4e00]/60 mb-2">Transmitted through</p>
-                      <div className="flex flex-wrap gap-2">
-                        {activeScalarWaves.map(w => (
-                          <span key={w.id} className="text-[10px] text-[#ff4e00]/80">
-                            {w.icon} {w.name} — <span className="italic opacity-70">{w.field}</span>
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  <div className="prose prose-invert prose-orange max-w-none">
-                    <div className="markdown-body">
-                      <Markdown>{result}</Markdown>
-                    </div>
-                  </div>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="empty"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="h-full min-h-[400px] border-2 border-dashed border-white/5 rounded-3xl flex flex-col items-center justify-center text-center p-12"
-                >
-                  <div className="p-6 rounded-full bg-white/5 text-[#8e9299] mb-6">
-                    <Activity size={48} />
-                  </div>
-                  <h3 className="text-xl font-light mb-2">Awaiting Audio Signature</h3>
-                  <p className="text-[#8e9299] max-w-xs">
-                    Upload a file, select your scalar wave transmissions, and begin the Siddha Scan.
-                  </p>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
-      </main>
-
-      <footer className="relative z-10 border-t border-white/5 py-12 mt-24">
-        <div className="max-w-5xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex gap-2 text-[#8e9299] text-xs tracking-widest uppercase">
-            <Zap size={14} className="text-[#ff4e00]" />
-            Siddha Sound Alchemy Oracle © 2050
-          </div>
-          <div className="flex gap-8 text-[10px] uppercase tracking-[0.2em] text-[#8e9299]">
-            <a href="#" className="hover:text-[#ff4e00] transition-colors">Quantum Protocols</a>
-            <a href="#" className="hover:text-[#ff4e00] transition-colors">Sacred Frequency Library</a>
-            <a href="#" className="hover:text-[#ff4e00] transition-colors">DNA Repair Nodes</a>
-          </div>
-        </div>
-      </footer>
-
-      <style>{`
-        .markdown-body h1 {
-          font-family: 'Georgia', serif; font-style: italic; font-size: 2.5rem;
-          font-weight: 300; color: #ff4e00; margin-bottom: 1.5rem;
-          border-bottom: 1px solid rgba(255,78,0,0.2); padding-bottom: 0.5rem;
-        }
-        .markdown-body h2 {
-          font-family: 'Georgia', serif; font-style: italic; font-size: 1.8rem;
-          font-weight: 300; color: #ff4e00; margin-top: 2.5rem; margin-bottom: 1rem;
-        }
-        .markdown-body p { line-height: 1.8; margin-bottom: 1.5rem; color: #e0d8d0; font-weight: 300; }
-        .markdown-body ul { list-style-type: none; padding-left: 0; margin-bottom: 1.5rem; }
-        .markdown-body li { position: relative; padding-left: 1.5rem; margin-bottom: 0.75rem; color: #e0d8d0; }
-        .markdown-body li::before { content: "•"; position: absolute; left: 0; color: #ff4e00; font-weight: bold; }
-        .markdown-body strong { color: #ff4e00; font-weight: 500; }
-        .markdown-body blockquote {
-          border-left: 4px solid #ff4e00; padding-left: 1.5rem;
-          font-style: italic; color: #8e9299; margin: 2rem 0;
-        }
-        .scrollbar-thin::-webkit-scrollbar { width: 3px; }
-        .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
-        .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(255,78,0,0.2); border-radius: 10px; }
-      `}</style>
-    </div>
-  );
-}
-
-export default function SiddhaSoundAlchemyOracle() {
-  const { isAdmin, isLoading: adminLoading } = useAdminRole();
-  const { user } = useAuth();
-  const [hasOracleAccess, setHasOracleAccess] = useState(false);
-  const [checkingAccess, setCheckingAccess] = useState(true);
-
+  /* ── cleanup ── */
   useEffect(() => {
-    const checkOracleAccess = async () => {
-      if (!user) {
-        setCheckingAccess(false);
-        return;
-      }
-      try {
-        const { data } = await supabase
-          .from('admin_granted_access')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('is_active', true)
-          .eq('access_type', 'siddha_oracle');
-        if (data?.length) setHasOracleAccess(true);
-      } catch {
-        // ignore
-      } finally {
-        setCheckingAccess(false);
-      }
+    return () => {
+      cancelAnimationFrame(animRef.current);
+      try { sourceRef.current?.stop(); } catch {}
+      try { solOscRef.current?.stop(); } catch {}
+      try { binOscLRef.current?.stop(); } catch {}
+      try { binOscRRef.current?.stop(); } catch {}
+      audioCtxRef.current?.close();
     };
-    checkOracleAccess();
-  }, [user]);
+  }, []);
 
-  const canAccess = isAdmin || hasOracleAccess;
-  const isLoading = adminLoading || checkingAccess;
+  const fmt = (s: number) => { const m = Math.floor(s/60); const sec = Math.floor(s%60); return `${m}:${sec.toString().padStart(2,"0")}`; };
 
-  if (isLoading) {
+  /* ── gates ── */
+  if (adminLoading || accessLoading) {
     return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#ff4e00]" />
+      <div className="min-h-screen bg-[#050505] text-white flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-[#D4AF37]" />
       </div>
     );
   }
+
+  // Access allowed: admin OR purchased
+  const canAccess = isAdmin || hasAccess;
 
   if (!canAccess) {
     return (
       <div className="min-h-screen bg-[#050505] text-white flex flex-col">
         <div className="max-w-4xl mx-auto px-6 py-10 w-full">
-          <button
-            type="button"
-            onClick={() => window.history.back()}
-            className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-white/60 hover:text-[#D4AF37] mb-8"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back
+          <button type="button" onClick={handleBack} className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-white/60 hover:text-[#D4AF37] mb-8">
+            <ArrowLeft className="w-4 h-4" /> Back to Creative Soul Store
           </button>
-          <div className="rounded-3xl border border-red-500/30 bg-red-500/5 px-6 py-8">
-            <p className="text-sm font-semibold tracking-[0.18em] uppercase text-red-300 mb-2">
-              Access Required
-            </p>
-            <p className="text-sm text-white/70">
-              The Siddha Sound Alchemy Oracle requires purchase or admin access. Visit the Creative Soul Store to unlock.
-            </p>
+          <div className="rounded-3xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 px-6 py-10 text-center">
+            <Sparkles className="w-8 h-8 text-[#D4AF37] mx-auto mb-4" />
+            <p className="text-sm font-semibold tracking-[0.18em] uppercase text-[#D4AF37] mb-2">Access Required</p>
+            <p className="text-sm text-white/70 mb-6 max-w-md mx-auto">The Siddha Sound Alchemy Oracle requires a purchase or admin access. Visit the Creative Soul Store to unlock this sacred tool.</p>
+            <button onClick={handleBack} className="px-6 py-2 rounded-full bg-[#D4AF37] text-black text-xs font-bold uppercase tracking-wider hover:bg-[#f0d26a] transition-colors">
+              Open Store
+            </button>
           </div>
         </div>
       </div>
     );
   }
 
-  return <SiddhaSoundAlchemyOracleInner />;
+  /* ── MAIN UI ── */
+  return (
+    <div className="min-h-screen bg-[#050505] text-white relative overflow-hidden">
+      {/* ambient glows */}
+      <div className="pointer-events-none absolute inset-0 opacity-60">
+        <div className="absolute -top-40 -left-40 w-80 h-80 rounded-full bg-[#3a1510] blur-[120px]" />
+        <div className="absolute -bottom-40 -right-40 w-[26rem] h-[26rem] rounded-full bg-[#D4AF37] blur-[160px] opacity-40" />
+      </div>
+
+      <div className="relative max-w-6xl mx-auto px-4 py-6 space-y-6">
+        {/* header */}
+        <div className="flex items-center gap-3">
+          <button type="button" onClick={handleBack} className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-white/60 hover:text-[#D4AF37]">
+            <ArrowLeft className="w-4 h-4" /> Back
+          </button>
+          <div className="ml-auto inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/40 bg-black/60 px-3 py-1 text-[10px] font-bold tracking-[0.26em] uppercase text-[#D4AF37]">
+            <Zap className="w-3 h-3" /> Siddha Sound Alchemy Oracle
+          </div>
+        </div>
+
+        {/* ── SCALAR WAVE TRANSMISSIONS PANEL ── */}
+        <div className="rounded-2xl border border-[#D4AF37]/20 bg-black/50 backdrop-blur-xl overflow-hidden">
+          <button
+            onClick={() => setScalarExpanded(v => !v)}
+            className="w-full flex items-center justify-between px-5 py-4 text-left"
+          >
+            <div className="flex items-center gap-3">
+              <Waves className="w-4 h-4 text-[#D4AF37]" />
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">Scalar Wave Transmissions</span>
+                <span className="ml-3 text-[9px] text-white/40 uppercase tracking-wider">
+                  {activeScalars.length > 0 ? `${activeScalars.length} active` : "none active"}
+                </span>
+              </div>
+              {activeScalars.length > 0 && (
+                <div className="flex gap-1.5 ml-2">
+                  {activeScalars.map(w => (
+                    <span key={w.id} className="text-[10px] px-2 py-0.5 rounded-full border border-[#D4AF37]/40 text-[#D4AF37]/80 bg-[#D4AF37]/8"
+                      style={{ background: "rgba(212,175,55,0.08)" }}>
+                      {w.icon} {w.name}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+            <span className="text-white/40 text-xs">{scalarExpanded ? "▲" : "▼"}</span>
+          </button>
+
+          {scalarExpanded && (
+            <div className="border-t border-[#D4AF37]/10 px-5 pb-5 pt-4 space-y-4">
+              <p className="text-[10px] text-white/40 leading-relaxed max-w-2xl">
+                Not frequencies — living consciousness fields. Select up to 3. The audio becomes a carrier vessel consecrated by the spirit of the master, place, or plant deva. All invocations are woven into the Gemini analysis and imprinted into the exported file.
+              </p>
+
+              {/* category tabs */}
+              <div className="flex gap-2">
+                {(Object.keys(CAT_LABELS) as ScalarCategory[]).map(tab => (
+                  <button key={tab} onClick={() => setScalarTab(tab)}
+                    className={`px-3 py-1.5 rounded-xl text-[9px] uppercase tracking-wider border transition-all
+                      ${scalarTab === tab ? "bg-[#D4AF37]/15 border-[#D4AF37]/50 text-[#D4AF37]" : "bg-white/5 border-white/10 text-white/50 hover:text-white/80"}`}>
+                    {CAT_LABELS[tab]}
+                  </button>
+                ))}
+                <span className="ml-auto text-[9px] text-white/30 self-center">{activeScalars.length}/3 selected</span>
+              </div>
+
+              {/* wave options */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-60 overflow-y-auto pr-1">
+                {SCALAR_BY_CAT[scalarTab].map(wave => {
+                  const active = activeScalars.some(w => w.id === wave.id);
+                  const maxed  = activeScalars.length >= 3 && !active;
+                  return (
+                    <button key={wave.id} onClick={() => !maxed && toggleScalar(wave)} disabled={maxed}
+                      className={`text-left p-3 rounded-xl border transition-all
+                        ${active  ? "border-[#D4AF37]/60 bg-[#D4AF37]/10 text-[#D4AF37]" :
+                          maxed   ? "border-white/5 text-white/25 cursor-not-allowed" :
+                                    "border-white/5 text-white/60 hover:border-white/20 hover:text-white/80"}`}
+                      style={active ? { boxShadow: "0 0 18px rgba(212,175,55,0.15)" } : {}}>
+                      <div className="flex items-start gap-2">
+                        <span className="text-base leading-none mt-0.5">{wave.icon}</span>
+                        <div className="min-w-0">
+                          <div className="text-[11px] font-bold truncate">{wave.name}</div>
+                          <div className="text-[9px] mt-0.5 opacity-60 truncate">{wave.field}</div>
+                          <div className="text-[9px] mt-1 opacity-40 line-clamp-2 leading-relaxed">{wave.nature}</div>
+                        </div>
+                        {active && <Sparkles size={10} className="shrink-0 mt-0.5" />}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── UPLOAD ZONE ── */}
+        {!file ? (
+          <div onClick={() => fileInputRef.current?.click()}
+            className="cursor-pointer border-2 border-dashed border-[#D4AF37]/30 hover:border-[#D4AF37]/60 rounded-3xl p-16 text-center transition-colors bg-black/40 backdrop-blur-xl">
+            <Upload className="w-10 h-10 mx-auto mb-4 text-[#D4AF37]/60" />
+            <p className="text-sm text-white/60 uppercase tracking-[0.18em]">Drop or click to upload audio</p>
+            <p className="text-xs text-white/40 mt-2">WAV, MP3, FLAC, OGG — any format</p>
+            <input ref={fileInputRef} type="file" accept="audio/*" className="hidden"
+              onChange={e => { if (e.target.files?.[0]) loadFile(e.target.files[0]); }} />
+          </div>
+        ) : (
+          <>
+            {/* ── TRANSPORT BAR ── */}
+            <div className="rounded-2xl border border-white/10 bg-black/60 backdrop-blur-xl p-4">
+              <div className="flex items-center gap-4">
+                <div className="flex gap-2">
+                  {!isPlaying ? (
+                    <button onClick={play} className="p-2 rounded-full bg-[#D4AF37] text-black hover:bg-[#f0d26a]"><Play className="w-5 h-5" /></button>
+                  ) : (
+                    <button onClick={pause} className="p-2 rounded-full bg-[#D4AF37] text-black hover:bg-[#f0d26a]"><Pause className="w-5 h-5" /></button>
+                  )}
+                  <button onClick={stop} className="p-2 rounded-full border border-white/20 text-white/60 hover:text-white"><Square className="w-5 h-5" /></button>
+                </div>
+                <div className="flex-1">
+                  <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-[#D4AF37] to-[#f0d26a] transition-all"
+                      style={{ width: duration ? `${(currentTime/duration)*100}%` : "0%" }} />
+                  </div>
+                  <div className="flex justify-between mt-1 text-[10px] text-white/40">
+                    <span>{fmt(currentTime)}</span><span>{fmt(duration)}</span>
+                  </div>
+                </div>
+                <p className="text-xs text-white/50 truncate max-w-[200px]">{file.name}</p>
+                <button onClick={() => { stop(); stopSolfeggio(); stopBinaural(); setFile(null); bufferRef.current = null; setAnalysisText(""); setActiveScalars([]); }}
+                  className="text-[10px] uppercase tracking-wider text-white/40 hover:text-red-400">Replace</button>
+              </div>
+            </div>
+
+            {/* ── CONTROLS GRID ── */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* solfeggio */}
+              <div className="rounded-2xl border border-white/10 bg-black/50 backdrop-blur-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">Healing Hz Overlay</h3>
+                  <button onClick={solfeggioOn ? stopSolfeggio : startSolfeggio}
+                    className={`text-[10px] uppercase tracking-wider px-3 py-1 rounded-full border transition-colors ${solfeggioOn ? "border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/10" : "border-white/20 text-white/50 hover:text-white"}`}>
+                    {solfeggioOn ? "ON" : "OFF"}
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {SOLFEGGIO_PRESETS.map(p => (
+                    <button key={p.hz} onClick={() => { setSolfeggioHz(p.hz); if (!solfeggioOn) startSolfeggio(); }}
+                      className={`text-left text-[10px] rounded-lg px-2 py-1.5 border transition-colors ${solfeggioHz === p.hz ? "border-[#D4AF37]/50 bg-[#D4AF37]/10 text-[#D4AF37]" : "border-white/5 text-white/50 hover:text-white/80 hover:border-white/20"}`}>
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Volume2 className="w-3 h-3 text-white/40" />
+                  <input type="range" min="0" max="0.5" step="0.01" value={solfeggioVol} onChange={e => setSolfeggioVol(Number(e.target.value))} className="flex-1 accent-[#D4AF37]" />
+                  <span className="text-[10px] text-white/40 w-8 text-right">{Math.round(solfeggioVol*100)}%</span>
+                </div>
+              </div>
+
+              {/* binaural */}
+              <div className="rounded-2xl border border-white/10 bg-black/50 backdrop-blur-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">Binaural Beat</h3>
+                  <button onClick={binauralOn ? stopBinaural : startBinaural}
+                    className={`text-[10px] uppercase tracking-wider px-3 py-1 rounded-full border transition-colors ${binauralOn ? "border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/10" : "border-white/20 text-white/50 hover:text-white"}`}>
+                    {binauralOn ? "ON" : "OFF"}
+                  </button>
+                </div>
+                <div className="space-y-1.5">
+                  {BINAURAL_PRESETS.map(p => (
+                    <button key={p.beat} onClick={() => { setBinauralBeat(p.beat); if (!binauralOn) startBinaural(); }}
+                      className={`w-full text-left text-[10px] rounded-lg px-2 py-1.5 border transition-colors ${binauralBeat === p.beat ? "border-[#D4AF37]/50 bg-[#D4AF37]/10 text-[#D4AF37]" : "border-white/5 text-white/50 hover:text-white/80 hover:border-white/20"}`}>
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Volume2 className="w-3 h-3 text-white/40" />
+                  <input type="range" min="0" max="0.5" step="0.01" value={binauralVol} onChange={e => setBinauralVol(Number(e.target.value))} className="flex-1 accent-[#D4AF37]" />
+                  <span className="text-[10px] text-white/40 w-8 text-right">{Math.round(binauralVol*100)}%</span>
+                </div>
+              </div>
+
+              {/* EQ + actions */}
+              <div className="rounded-2xl border border-white/10 bg-black/50 backdrop-blur-xl p-4 space-y-3">
+                <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">Tonal Balance</h3>
+                <div className="space-y-1.5">
+                  {EQ_PRESETS.map(p => (
+                    <button key={p.name} onClick={() => setEqPreset(p)}
+                      className={`w-full text-left text-[10px] rounded-lg px-2 py-1.5 border transition-colors ${eqPreset?.name === p.name ? "border-[#D4AF37]/50 bg-[#D4AF37]/10 text-[#D4AF37]" : "border-white/5 text-white/50 hover:text-white/80 hover:border-white/20"}`}>
+                      {p.name}
+                      <span className="ml-2 text-white/30">L{p.low>0?"+":""}{p.low} M{p.mid>0?"+":""}{p.mid} H{p.high>0?"+":""}{p.high}</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="pt-2 space-y-2">
+                  {/* Initiate Siddha Scan (was: AI Oracle Scan) */}
+                  <button onClick={analyzeTrack} disabled={isAnalyzing}
+                    className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-white/5 border border-white/10 text-[10px] uppercase tracking-[0.18em] text-white/70 hover:text-[#D4AF37] hover:border-[#D4AF37]/30 transition-colors disabled:opacity-50">
+                    {isAnalyzing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                    {isAnalyzing
+                      ? activeScalars.length > 0 ? `Channeling through ${activeScalars[0].name}…` : "Scanning…"
+                      : "Initiate Siddha Scan"}
+                  </button>
+                  <button onClick={exportAlchemized} disabled={isExporting}
+                    className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-[#D4AF37] text-black text-[10px] uppercase tracking-[0.18em] font-semibold hover:bg-[#f0d26a] transition-colors disabled:opacity-50">
+                    {isExporting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3" />}
+                    {isExporting ? "Rendering…" : "Export Alchemized"}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* ── ALCHEMICAL SIDDHA READING (was: Alchemical Oracle Reading) ── */}
+            {analysisText && (
+              <div className="rounded-2xl border border-[#D4AF37]/20 bg-black/50 backdrop-blur-xl p-5">
+                <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#D4AF37] mb-3 flex items-center gap-2">
+                  <Sparkles className="w-3 h-3" /> Alchemical Siddha Reading
+                </h3>
+                {activeScalars.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {activeScalars.map(w => (
+                      <span key={w.id} className="text-[9px] px-2 py-0.5 rounded-full border border-[#D4AF37]/30 text-[#D4AF37]/60"
+                        style={{ background: "rgba(212,175,55,0.05)" }}>
+                        {w.icon} {w.name} — <em>{w.field}</em>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap prose prose-invert prose-sm max-w-none"
+                  dangerouslySetInnerHTML={{ __html: analysisText.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>") }} />
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/* ── WAV encoder — unchanged ── */
+function audioBufferToWav(buffer: AudioBuffer): Blob {
+  const numCh = buffer.numberOfChannels, sr = buffer.sampleRate, len = buffer.length;
+  const interleaved = new Float32Array(len * numCh);
+  for (let ch = 0; ch < numCh; ch++) {
+    const chData = buffer.getChannelData(ch);
+    for (let i = 0; i < len; i++) interleaved[i * numCh + ch] = chData[i];
+  }
+  const dataLen = interleaved.length * 2;
+  const wavBuf = new ArrayBuffer(44 + dataLen);
+  const view = new DataView(wavBuf);
+  const writeStr = (o: number, s: string) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
+  writeStr(0, "RIFF"); view.setUint32(4, 36 + dataLen, true); writeStr(8, "WAVE"); writeStr(12, "fmt ");
+  view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, numCh, true);
+  view.setUint32(24, sr, true); view.setUint32(28, sr * numCh * 2, true);
+  view.setUint16(32, numCh * 2, true); view.setUint16(34, 16, true); writeStr(36, "data");
+  view.setUint32(40, dataLen, true);
+  let offset = 44;
+  for (let i = 0; i < interleaved.length; i++, offset += 2) {
+    const s = Math.max(-1, Math.min(1, interleaved[i]));
+    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+  }
+  return new Blob([wavBuf], { type: "audio/wav" });
 }
+
+export default SiddhaSoundAlchemyOracle;
