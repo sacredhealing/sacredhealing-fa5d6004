@@ -707,14 +707,12 @@ export default function CreativeSoulMeditationTool() {
     if (!engine?.isInitialized) return;
     const ctx = engine?.getAudioContext?.();
     if (ctx?.state === 'suspended') await ctx.resume();
-    // Apply volume directly to gain node
     engine?.updateSolfeggioVolume?.(vol);
-    // If alchemy is running but solfeggio not yet started, start it now
-    if (!frequencies.solfeggio?.enabled && alchemyCommenced) {
+    if (!frequencies.solfeggio?.enabled) {
       await new Promise(r => setTimeout(r, 50));
       await engine?.startSolfeggio?.(healingFreq, vol);
     }
-  }, [engine, healingFreq, frequencies, alchemyCommenced]);
+  }, [engine, healingFreq, frequencies]);
 
   const handleBrainwaveVolumeChange = useCallback(async (vol) => {
     setBrainwaveVolume(vol);
@@ -722,11 +720,11 @@ export default function CreativeSoulMeditationTool() {
     const ctx = engine?.getAudioContext?.();
     if (ctx?.state === 'suspended') await ctx.resume();
     engine?.updateBinauralVolume?.(vol);
-    if (!frequencies.binaural?.enabled && alchemyCommenced) {
+    if (!frequencies.binaural?.enabled) {
       await new Promise(r => setTimeout(r, 50));
       await engine?.startBinaural?.(200, brainwaveFreq, vol);
     }
-  }, [engine, brainwaveFreq, frequencies, alchemyCommenced]);
+  }, [engine, brainwaveFreq, frequencies]);
 
   const handleInitialize = useCallback(async () => {
     await engine?.initialize();
@@ -845,43 +843,41 @@ export default function CreativeSoulMeditationTool() {
   // ── HOT-SWAP: change Hz without stopping anything ──────────────
   const handleHealingFreqSelect = useCallback(async (freq) => {
     setHealingFreq(freq);
-    if (!engine?.isInitialized) return;
+    // Auto-initialize engine if not yet started — self-activating behavior
+    if (!engine?.isInitialized) {
+      await engine?.initialize();
+    }
     const ctx = engine?.getAudioContext?.();
     if (ctx?.state === 'suspended') await ctx.resume();
+    engine?.updateSolfeggioVolume?.(healingVolume);
+    await new Promise(r => setTimeout(r, 50));
 
-    if (frequencies.solfeggio?.enabled) {
-      if (engine?.updateSolfeggioFrequency) {
-        engine.updateSolfeggioFrequency(freq);
-      } else {
-        engine?.updateSolfeggioVolume?.(healingVolume);
-        await new Promise(r => setTimeout(r, 50));
-        await engine?.startSolfeggio?.(freq, healingVolume);
-      }
-    } else if (alchemyCommenced) {
-      engine?.updateSolfeggioVolume?.(healingVolume);
-      await new Promise(r => setTimeout(r, 50));
+    if (frequencies.solfeggio?.enabled && engine?.updateSolfeggioFrequency) {
+      // Hot-swap: just change the Hz on the running oscillator
+      engine.updateSolfeggioFrequency(freq);
+    } else {
+      // Start oscillator (or restart with new Hz)
       await engine?.startSolfeggio?.(freq, healingVolume);
     }
-  }, [engine, healingVolume, alchemyCommenced, frequencies]);
+  }, [engine, healingVolume, frequencies]);
 
   const handleBrainwaveFreqSelect = useCallback(async (freq) => {
     setBrainwaveFreq(freq);
-    if (!engine?.isInitialized) return;
+    // Auto-initialize engine if not yet started — self-activating behavior
+    if (!engine?.isInitialized) {
+      await engine?.initialize();
+    }
     const ctx = engine?.getAudioContext?.();
     if (ctx?.state === 'suspended') await ctx.resume();
+    engine?.updateBinauralVolume?.(brainwaveVolume);
+    await new Promise(r => setTimeout(r, 50));
 
-    if (frequencies.binaural?.enabled) {
-      if (engine?.updateBinauralFrequency) {
-        engine.updateBinauralFrequency(200, freq);
-      } else {
-        await new Promise(r => setTimeout(r, 50));
-        await engine?.startBinaural?.(200, freq, brainwaveVolume);
-      }
-    } else if (alchemyCommenced) {
-      await new Promise(r => setTimeout(r, 50));
+    if (frequencies.binaural?.enabled && engine?.updateBinauralFrequency) {
+      engine.updateBinauralFrequency(200, freq);
+    } else {
       await engine?.startBinaural?.(200, freq, brainwaveVolume);
     }
-  }, [engine, brainwaveVolume, alchemyCommenced, frequencies]);
+  }, [engine, brainwaveVolume, frequencies]);
 
   const handleRefreshSound = useCallback(async (styleId) => {
     if (!engine?.isInitialized) return;
