@@ -720,11 +720,11 @@ export default function CreativeSoulMeditationTool() {
     const ctx = engine?.getAudioContext?.();
     if (ctx?.state === 'suspended') await ctx.resume();
     engine?.updateBinauralVolume?.(vol);
-    if (!frequencies.binaural?.enabled && alchemyCommenced) {
+    if (!frequencies.binaural?.enabled) {
       await new Promise(r => setTimeout(r, 50));
       await engine?.startBinaural?.(200, brainwaveFreq, vol);
     }
-  }, [engine, brainwaveFreq, frequencies, alchemyCommenced]);
+  }, [engine, brainwaveFreq, frequencies]);
 
   const handleInitialize = useCallback(async () => {
     await engine?.initialize();
