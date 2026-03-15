@@ -845,24 +845,23 @@ export default function CreativeSoulMeditationTool() {
   // ── HOT-SWAP: change Hz without stopping anything ──────────────
   const handleHealingFreqSelect = useCallback(async (freq) => {
     setHealingFreq(freq);
-    if (!engine?.isInitialized) return;
+    // Auto-initialize engine if not yet started — self-activating behavior
+    if (!engine?.isInitialized) {
+      await engine?.initialize();
+    }
     const ctx = engine?.getAudioContext?.();
     if (ctx?.state === 'suspended') await ctx.resume();
+    engine?.updateSolfeggioVolume?.(healingVolume);
+    await new Promise(r => setTimeout(r, 50));
 
-    if (frequencies.solfeggio?.enabled) {
-      if (engine?.updateSolfeggioFrequency) {
-        engine.updateSolfeggioFrequency(freq);
-      } else {
-        engine?.updateSolfeggioVolume?.(healingVolume);
-        await new Promise(r => setTimeout(r, 50));
-        await engine?.startSolfeggio?.(freq, healingVolume);
-      }
-    } else if (alchemyCommenced) {
-      engine?.updateSolfeggioVolume?.(healingVolume);
-      await new Promise(r => setTimeout(r, 50));
+    if (frequencies.solfeggio?.enabled && engine?.updateSolfeggioFrequency) {
+      // Hot-swap: just change the Hz on the running oscillator
+      engine.updateSolfeggioFrequency(freq);
+    } else {
+      // Start oscillator (or restart with new Hz)
       await engine?.startSolfeggio?.(freq, healingVolume);
     }
-  }, [engine, healingVolume, alchemyCommenced, frequencies]);
+  }, [engine, healingVolume, frequencies]);
 
   const handleBrainwaveFreqSelect = useCallback(async (freq) => {
     setBrainwaveFreq(freq);
