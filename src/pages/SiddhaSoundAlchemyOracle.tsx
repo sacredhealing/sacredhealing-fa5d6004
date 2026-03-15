@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -23,6 +23,8 @@ import Markdown from 'react-markdown';
 import { analyzeAudio } from '@/services/geminiService';
 import { ENERGY_APOTHECARY, SCALAR_BY_CATEGORY, ScalarWave } from '@/features/siddha-sound-oracle/constants';
 import { useAdminRole } from '@/hooks/useAdminRole';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 type ScalarTab = 'herb' | 'place' | 'master';
 
@@ -562,7 +564,36 @@ function SiddhaSoundAlchemyOracleInner() {
 }
 
 export default function SiddhaSoundAlchemyOracle() {
-  const { isAdmin, isLoading } = useAdminRole();
+  const { isAdmin, isLoading: adminLoading } = useAdminRole();
+  const { user } = useAuth();
+  const [hasOracleAccess, setHasOracleAccess] = useState(false);
+  const [checkingAccess, setCheckingAccess] = useState(true);
+
+  useEffect(() => {
+    const checkOracleAccess = async () => {
+      if (!user) {
+        setCheckingAccess(false);
+        return;
+      }
+      try {
+        const { data } = await supabase
+          .from('admin_granted_access')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+          .eq('access_type', 'siddha_oracle');
+        if (data?.length) setHasOracleAccess(true);
+      } catch {
+        // ignore
+      } finally {
+        setCheckingAccess(false);
+      }
+    };
+    checkOracleAccess();
+  }, [user]);
+
+  const canAccess = isAdmin || hasOracleAccess;
+  const isLoading = adminLoading || checkingAccess;
 
   if (isLoading) {
     return (
@@ -572,7 +603,7 @@ export default function SiddhaSoundAlchemyOracle() {
     );
   }
 
-  if (!isAdmin) {
+  if (!canAccess) {
     return (
       <div className="min-h-screen bg-[#050505] text-white flex flex-col">
         <div className="max-w-4xl mx-auto px-6 py-10 w-full">
@@ -586,11 +617,10 @@ export default function SiddhaSoundAlchemyOracle() {
           </button>
           <div className="rounded-3xl border border-red-500/30 bg-red-500/5 px-6 py-8">
             <p className="text-sm font-semibold tracking-[0.18em] uppercase text-red-300 mb-2">
-              Admin Only Field
+              Access Required
             </p>
             <p className="text-sm text-white/70">
-              The Siddha Sound Alchemy Oracle is a protected creation space and can only be opened
-              from an Administrator account.
+              The Siddha Sound Alchemy Oracle requires purchase or admin access. Visit the Creative Soul Store to unlock.
             </p>
           </div>
         </div>
