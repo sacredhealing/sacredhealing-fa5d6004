@@ -707,14 +707,12 @@ export default function CreativeSoulMeditationTool() {
     if (!engine?.isInitialized) return;
     const ctx = engine?.getAudioContext?.();
     if (ctx?.state === 'suspended') await ctx.resume();
-    // Apply volume directly to gain node
     engine?.updateSolfeggioVolume?.(vol);
-    // If alchemy is running but solfeggio not yet started, start it now
-    if (!frequencies.solfeggio?.enabled && alchemyCommenced) {
+    if (!frequencies.solfeggio?.enabled) {
       await new Promise(r => setTimeout(r, 50));
       await engine?.startSolfeggio?.(healingFreq, vol);
     }
-  }, [engine, healingFreq, frequencies, alchemyCommenced]);
+  }, [engine, healingFreq, frequencies]);
 
   const handleBrainwaveVolumeChange = useCallback(async (vol) => {
     setBrainwaveVolume(vol);
