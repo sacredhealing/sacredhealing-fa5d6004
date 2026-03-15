@@ -865,22 +865,21 @@ export default function CreativeSoulMeditationTool() {
 
   const handleBrainwaveFreqSelect = useCallback(async (freq) => {
     setBrainwaveFreq(freq);
-    if (!engine?.isInitialized) return;
+    // Auto-initialize engine if not yet started — self-activating behavior
+    if (!engine?.isInitialized) {
+      await engine?.initialize();
+    }
     const ctx = engine?.getAudioContext?.();
     if (ctx?.state === 'suspended') await ctx.resume();
+    engine?.updateBinauralVolume?.(brainwaveVolume);
+    await new Promise(r => setTimeout(r, 50));
 
-    if (frequencies.binaural?.enabled) {
-      if (engine?.updateBinauralFrequency) {
-        engine.updateBinauralFrequency(200, freq);
-      } else {
-        await new Promise(r => setTimeout(r, 50));
-        await engine?.startBinaural?.(200, freq, brainwaveVolume);
-      }
-    } else if (alchemyCommenced) {
-      await new Promise(r => setTimeout(r, 50));
+    if (frequencies.binaural?.enabled && engine?.updateBinauralFrequency) {
+      engine.updateBinauralFrequency(200, freq);
+    } else {
       await engine?.startBinaural?.(200, freq, brainwaveVolume);
     }
-  }, [engine, brainwaveVolume, alchemyCommenced, frequencies]);
+  }, [engine, brainwaveVolume, frequencies]);
 
   const handleRefreshSound = useCallback(async (styleId) => {
     if (!engine?.isInitialized) return;
