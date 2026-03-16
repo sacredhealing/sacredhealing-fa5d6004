@@ -1037,7 +1037,7 @@ export default function CreativeSoulMeditationTool() {
                   </span>
                 </div>
                 {exportResult && (
-                  <a href={exportResult.url} download={`${meditationName || 'siddha-alchemy'}.${exportResult.format}`} className="flex items-center gap-1.5 text-[9px] font-extrabold text-amber-400 no-underline">
+                  <a href={exportResult.url} download={`${meditationName || 'siddha-alchemy'}${healingFreq ? `_${healingFreq}hz` : ''}${brainwaveFreq ? `_${brainwaveFreq}hz` : ''}.${exportResult.format}`} className="flex items-center gap-1.5 text-[9px] font-extrabold text-amber-400 no-underline">
                     <Download size={12} /> Download
                   </a>
                 )}
