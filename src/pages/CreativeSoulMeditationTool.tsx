@@ -804,8 +804,11 @@ export default function CreativeSoulMeditationTool() {
     // If scalar blend is active, override the solfeggio Hz with the blend
     const solfeggioHz = scalarBlendHz ?? frequencies.solfeggio?.hz ?? healingFreq;
 
+    // Use the actual audio duration (from loaded neural audio or DAW regions), fallback to 5 min
+    const audioDuration = engine.getDawDuration?.() || 300;
+
     const config = {
-      durationSeconds: 300, // 5 min default
+      durationSeconds: audioDuration,
       neuralAudioUrl: neuralLayer?.exportInput?.directUrl ?? neuralLayer?.source ?? undefined,
       neuralSourceVolume: volumes.user / 100,
       atmosphereAudioUrl: atmosphereLayer?.exportInput?.directUrl ?? atmosphereLayer?.source ?? undefined,
@@ -1034,7 +1037,7 @@ export default function CreativeSoulMeditationTool() {
                   </span>
                 </div>
                 {exportResult && (
-                  <a href={exportResult.url} download={`${meditationName || 'siddha-alchemy'}.${exportResult.format}`} className="flex items-center gap-1.5 text-[9px] font-extrabold text-amber-400 no-underline">
+                  <a href={exportResult.url} download={`${meditationName || 'siddha-alchemy'}${healingFreq ? `_${healingFreq}hz` : ''}${brainwaveFreq ? `_${brainwaveFreq}hz` : ''}.${exportResult.format}`} className="flex items-center gap-1.5 text-[9px] font-extrabold text-amber-400 no-underline">
                     <Download size={12} /> Download
                   </a>
                 )}
