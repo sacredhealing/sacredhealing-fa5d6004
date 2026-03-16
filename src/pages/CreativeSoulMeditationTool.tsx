@@ -804,8 +804,11 @@ export default function CreativeSoulMeditationTool() {
     // If scalar blend is active, override the solfeggio Hz with the blend
     const solfeggioHz = scalarBlendHz ?? frequencies.solfeggio?.hz ?? healingFreq;
 
+    // Use the actual audio duration (from loaded neural audio or DAW regions), fallback to 5 min
+    const audioDuration = engine.getDawDuration?.() || 300;
+
     const config = {
-      durationSeconds: 300, // 5 min default
+      durationSeconds: audioDuration,
       neuralAudioUrl: neuralLayer?.exportInput?.directUrl ?? neuralLayer?.source ?? undefined,
       neuralSourceVolume: volumes.user / 100,
       atmosphereAudioUrl: atmosphereLayer?.exportInput?.directUrl ?? atmosphereLayer?.source ?? undefined,
