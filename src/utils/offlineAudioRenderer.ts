@@ -26,6 +26,7 @@ export interface DSPSettings {
   delay: number;
   warmth: number;
   compression?: number;
+  reverbDecay?: number;
 }
 
 export interface NoiseGateSettings {
