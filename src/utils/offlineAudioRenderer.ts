@@ -270,9 +270,7 @@ async function fetchAndDecode(ctx: OfflineAudioContext, url: string): Promise<Au
  *          -> lowCut(100) -> EQ(3-band) -> deEsser(7.2kHz) -> neuralGain(+3dB)
  *          -> destination (mixer)
  *
- * The live engine also has a noise gate AudioWorklet, but OfflineAudioContext
- * doesn't support worklets reliably, so we omit it -- the compressor already
- * handles the dynamic range the same way the user hears it.
+ * The live engine uses an AudioWorklet noise gate; for offline export we apply an equivalent gate directly to the decoded neural buffer before it enters the DSP chain so hiss does not feed the reverb send.
  */
 function scheduleLoopingBuffer(
   ctx: OfflineAudioContext,
