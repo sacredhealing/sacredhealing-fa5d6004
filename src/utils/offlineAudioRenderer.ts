@@ -26,6 +26,7 @@ export interface DSPSettings {
   delay: number;
   warmth: number;
   compression?: number;
+  reverbDecay?: number;
 }
 
 export interface NoiseGateSettings {
@@ -133,7 +134,12 @@ export async function renderOffline(config: OfflineRenderConfig): Promise<AudioB
   limiter.connect(masterGain);
 
   // Warmth (waveshaper) — same saturation curve as live engine
-  const warmthAmount = Math.max(0, Math.min(1, dsp.warmth));
+  const rawWarmth = dsp.warmth;
+  const warmthAmount = typeof rawWarmth === 'number'
+    ? Math.max(0, Math.min(1, rawWarmth))
+    : (typeof rawWarmth === 'object' && rawWarmth !== null)
+      ? Math.max(0, Math.min(1, (rawWarmth as any).drive ?? 0))
+      : 0;
   const waveshaper = offlineCtx.createWaveShaper();
   if (warmthAmount > 0) {
     const samples = 44100;
@@ -160,9 +166,20 @@ export async function renderOffline(config: OfflineRenderConfig): Promise<AudioB
   mixer.connect(waveshaper);
 
   // ─── Reverb: real ConvolverNode with generated IR (identical to live engine) ───
-  const reverbAmount = Math.max(0, Math.min(1, dsp.reverb));
+  // Handle both number and object shapes for backward compatibility
+  const rawReverb = dsp.reverb;
+  const reverbAmount = typeof rawReverb === 'number'
+    ? Math.max(0, Math.min(1, rawReverb))
+    : (typeof rawReverb === 'object' && rawReverb !== null)
+      ? Math.max(0, Math.min(1, (rawReverb as any).wet ?? 0.3))
+      : 0;
+  const reverbDecay = (dsp as any).reverbDecay
+    ?? (typeof rawReverb === 'object' && rawReverb !== null ? (rawReverb as any).decay : null)
+    ?? 2.5;
+
+  console.log(`[OfflineRender] Reverb: amount=${reverbAmount}, decay=${reverbDecay}s`);
+
   if (reverbAmount > 0) {
-    const reverbDecay = 2.5; // Match live default
     const convolver = offlineCtx.createConvolver();
     convolver.buffer = createReverbImpulse(offlineCtx, reverbDecay);
 

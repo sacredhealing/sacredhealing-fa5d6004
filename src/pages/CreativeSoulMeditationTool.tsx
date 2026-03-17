@@ -807,6 +807,17 @@ export default function CreativeSoulMeditationTool() {
     // Use the actual audio duration (from loaded neural audio or DAW regions), fallback to 5 min
     const audioDuration = engine.getDawDuration?.() || 300;
 
+    // Map the rich DSP object ({ reverb: { enabled, decay, wet }, ... }) to flat numbers
+    // that the offline renderer expects ({ reverb: number, delay: number, warmth: number })
+    const safeDsp = dsp ?? { reverb: { enabled: true, decay: 2.5, wet: 0.3 }, delay: { enabled: false, time: 0.4, feedback: 0, wet: 0 }, warmth: { enabled: false, drive: 0.3, tone: 0.5 } };
+    const flatDsp = {
+      reverb: (safeDsp.reverb?.enabled !== false) ? (safeDsp.reverb?.wet ?? 0.3) : 0,
+      delay:  (safeDsp.delay?.enabled)  ? (safeDsp.delay?.wet ?? 0) : 0,
+      warmth: (safeDsp.warmth?.enabled) ? (safeDsp.warmth?.drive ?? 0.3) : 0,
+      // Pass full reverb config so offline renderer can use the actual decay value
+      reverbDecay: safeDsp.reverb?.decay ?? 2.5,
+    };
+
     const config = {
       durationSeconds: audioDuration,
       neuralAudioUrl: neuralLayer?.exportInput?.directUrl ?? neuralLayer?.source ?? undefined,
@@ -818,8 +829,10 @@ export default function CreativeSoulMeditationTool() {
       binauralCarrierHz: frequencies.binaural?.carrierHz ?? 200,
       binauralBeatHz: frequencies.binaural?.beatHz ?? brainwaveFreq,
       binauralVolume: brainwaveVolume,
-      dsp: dsp ?? { reverb: { enabled: true, decay: 2.5, wet: 0.3 }, delay: { enabled: false, time: 0.4, feedback: 0, wet: 0 } },
+      dsp: flatDsp,
       masterVolume: volumes.user / 100,
+      noiseGate: engine?.noiseGate ?? undefined,
+      eq: engine?.eq ?? undefined,
     };
 
     try {
@@ -1037,9 +1050,19 @@ export default function CreativeSoulMeditationTool() {
                   </span>
                 </div>
                 {exportResult && (
-                  <a href={exportResult.url} download={`${meditationName || 'siddha-alchemy'}${healingFreq ? `_${healingFreq}hz` : ''}${brainwaveFreq ? `_${brainwaveFreq}hz` : ''}.${exportResult.format}`} className="flex items-center gap-1.5 text-[9px] font-extrabold text-amber-400 no-underline">
+                  <button
+                    onClick={() => {
+                      const a = document.createElement('a');
+                      a.href = exportResult.url;
+                      a.download = `${meditationName || 'siddha-alchemy'}${healingFreq ? `_${healingFreq}hz` : ''}${brainwaveFreq ? `_${brainwaveFreq}hz` : ''}.${exportResult.format}`;
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                    }}
+                    className="flex items-center gap-1.5 text-[9px] font-extrabold text-amber-400 hover:text-amber-300 transition-colors bg-transparent border-none cursor-pointer"
+                  >
                     <Download size={12} /> Download
-                  </a>
+                  </button>
                 )}
               </div>
               {exportProgress?.isExporting && <Progress value={(exportProgress.percent ?? 0)} className="h-1" />}
