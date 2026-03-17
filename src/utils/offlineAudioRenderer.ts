@@ -1,3 +1,5 @@
+import { applyOfflineNoiseGateToBuffer } from './offlineNoiseGate';
+
 /**
  * Offline Audio Renderer - "Ghost Engine"
  * Renders full meditation audio in seconds using OfflineAudioContext
@@ -33,6 +35,8 @@ export interface NoiseGateSettings {
   enabled: boolean;
   threshold: number;
   range: number;
+  attack?: number;
+  release?: number;
 }
 
 export interface EQSettings {
