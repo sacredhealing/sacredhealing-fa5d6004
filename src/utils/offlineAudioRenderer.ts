@@ -348,6 +348,18 @@ function scheduleLoopingBuffer(
       console.log(`[OfflineRender] Standard mode — DR: ${dynamicRangeDb.toFixed(1)}dB, RMS: ${rms.toFixed(3)}`);
     }
 
+    const gatedBuffer = noiseGate?.enabled
+      ? applyOfflineNoiseGateToBuffer(ctx, buffer, noiseGate)
+      : buffer;
+
+    if (noiseGate?.enabled) {
+      console.log(
+        `[OfflineRender] Noise gate active in export — threshold=${noiseGate.threshold}dB, attack=${noiseGate.attack ?? 5}ms, release=${noiseGate.release ?? 120}ms, range=${noiseGate.range}dB`
+      );
+    } else {
+      console.log('[OfflineRender] Noise gate bypassed in export');
+    }
+
     // ─── Low-cut 100Hz (identical to live engine lowCutFilterRef) ───
     const lowCut = ctx.createBiquadFilter();
     lowCut.type = 'highpass';
@@ -384,7 +396,8 @@ function scheduleLoopingBuffer(
     neuralGain.gain.value = Math.min(0.95, safeVolume * NEURAL_GAIN_BOOST_LINEAR);
 
     // ─── Chain: exact same order as live engine ───
-    // monoMerger -> HP -> LP -> compressor -> lowCut -> EQ -> deEsser -> neuralGain -> mixer
+    // Gate is pre-applied to the source buffer because OfflineAudioContext worklets are not reliable across browsers.
+    // gated source -> monoMerger -> HP -> LP -> compressor -> lowCut -> EQ -> deEsser -> neuralGain -> mixer
     monoMerger.connect(highPass);
     highPass.connect(lowPass);
     lowPass.connect(compressor);
@@ -398,14 +411,14 @@ function scheduleLoopingBuffer(
 
     outputNode = monoSplitter;
 
-    console.log('[OfflineRender] Neural chain: MONO -> HP(80) -> LP(12k) -> Comp(-50/4:1) -> LowCut(100) -> EQ -> DeEsser -> neuralGain(+3dB) -> mixer');
+    console.log('[OfflineRender] Neural chain: gate(buffer) -> MONO -> HP(80) -> LP(12k) -> Comp(-50/4:1) -> LowCut(100) -> EQ -> DeEsser -> neuralGain(+3dB) -> mixer');
 
     // Neural source uses neuralGain for volume, so skip the generic gain below
     const source = ctx.createBufferSource();
-    source.buffer = buffer;
+    source.buffer = gatedBuffer;
     source.loop = true;
     source.loopStart = 0;
-    source.loopEnd = buffer.duration;
+    source.loopEnd = gatedBuffer.duration;
 
     // Fade envelope (no extra volume scaling — neuralGain handles it)
     const fadeGain = ctx.createGain();
@@ -420,7 +433,7 @@ function scheduleLoopingBuffer(
     source.start(0);
     source.stop(durationSeconds);
 
-    console.log(`[OfflineRender] Neural source: ${buffer.duration}s buffer looping for ${durationSeconds}s (vol: ${safeVolume})`);
+    console.log(`[OfflineRender] Neural source: ${gatedBuffer.duration}s buffer looping for ${durationSeconds}s (vol: ${safeVolume})`);
     return;
   }
 
