@@ -814,9 +814,24 @@ export default function CreativeSoulMeditationTool() {
       reverb: (safeDsp.reverb?.enabled !== false) ? (safeDsp.reverb?.wet ?? 0.3) : 0,
       delay:  (safeDsp.delay?.enabled)  ? (safeDsp.delay?.wet ?? 0) : 0,
       warmth: (safeDsp.warmth?.enabled) ? (safeDsp.warmth?.drive ?? 0.3) : 0,
-      // Pass full reverb config so offline renderer can use the actual decay value
       reverbDecay: safeDsp.reverb?.decay ?? 2.5,
     };
+
+    const exportEqSettings = engine?.eqSettings;
+    const exportNoiseGate = exportEqSettings ? {
+      enabled: exportEqSettings.noiseGateEnabled,
+      threshold: exportEqSettings.noiseGateThreshold,
+      attack: exportEqSettings.noiseGateAttack,
+      release: exportEqSettings.noiseGateRelease,
+      range: exportEqSettings.noiseGateRange,
+    } : undefined;
+    const exportEq = exportEqSettings ? {
+      weight: exportEqSettings.weight,
+      presence: exportEqSettings.presence,
+      air: exportEqSettings.air,
+      lowCutEnabled: exportEqSettings.lowCutEnabled,
+      deEsserEnabled: true,
+    } : undefined;
 
     const config = {
       durationSeconds: audioDuration,
@@ -831,8 +846,8 @@ export default function CreativeSoulMeditationTool() {
       binauralVolume: brainwaveVolume,
       dsp: flatDsp,
       masterVolume: volumes.user / 100,
-      noiseGate: engine?.noiseGate ?? undefined,
-      eq: engine?.eq ?? undefined,
+      noiseGate: exportNoiseGate,
+      eq: exportEq,
     };
 
     try {

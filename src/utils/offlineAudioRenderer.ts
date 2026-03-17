@@ -1,3 +1,5 @@
+import { applyOfflineNoiseGateToBuffer } from './offlineNoiseGate';
+
 /**
  * Offline Audio Renderer - "Ghost Engine"
  * Renders full meditation audio in seconds using OfflineAudioContext
@@ -33,6 +35,8 @@ export interface NoiseGateSettings {
   enabled: boolean;
   threshold: number;
   range: number;
+  attack?: number;
+  release?: number;
 }
 
 export interface EQSettings {
@@ -266,9 +270,7 @@ async function fetchAndDecode(ctx: OfflineAudioContext, url: string): Promise<Au
  *          -> lowCut(100) -> EQ(3-band) -> deEsser(7.2kHz) -> neuralGain(+3dB)
  *          -> destination (mixer)
  *
- * The live engine also has a noise gate AudioWorklet, but OfflineAudioContext
- * doesn't support worklets reliably, so we omit it -- the compressor already
- * handles the dynamic range the same way the user hears it.
+ * The live engine uses an AudioWorklet noise gate; for offline export we apply an equivalent gate directly to the decoded neural buffer before it enters the DSP chain so hiss does not feed the reverb send.
  */
 function scheduleLoopingBuffer(
   ctx: OfflineAudioContext,
@@ -344,6 +346,18 @@ function scheduleLoopingBuffer(
       console.log(`[OfflineRender] Standard mode — DR: ${dynamicRangeDb.toFixed(1)}dB, RMS: ${rms.toFixed(3)}`);
     }
 
+    const gatedBuffer = noiseGate?.enabled
+      ? applyOfflineNoiseGateToBuffer(ctx, buffer, noiseGate)
+      : buffer;
+
+    if (noiseGate?.enabled) {
+      console.log(
+        `[OfflineRender] Noise gate active in export — threshold=${noiseGate.threshold}dB, attack=${noiseGate.attack ?? 5}ms, release=${noiseGate.release ?? 120}ms, range=${noiseGate.range}dB`
+      );
+    } else {
+      console.log('[OfflineRender] Noise gate bypassed in export');
+    }
+
     // ─── Low-cut 100Hz (identical to live engine lowCutFilterRef) ───
     const lowCut = ctx.createBiquadFilter();
     lowCut.type = 'highpass';
@@ -380,7 +394,8 @@ function scheduleLoopingBuffer(
     neuralGain.gain.value = Math.min(0.95, safeVolume * NEURAL_GAIN_BOOST_LINEAR);
 
     // ─── Chain: exact same order as live engine ───
-    // monoMerger -> HP -> LP -> compressor -> lowCut -> EQ -> deEsser -> neuralGain -> mixer
+    // Gate is pre-applied to the source buffer because OfflineAudioContext worklets are not reliable across browsers.
+    // gated source -> monoMerger -> HP -> LP -> compressor -> lowCut -> EQ -> deEsser -> neuralGain -> mixer
     monoMerger.connect(highPass);
     highPass.connect(lowPass);
     lowPass.connect(compressor);
@@ -394,14 +409,14 @@ function scheduleLoopingBuffer(
 
     outputNode = monoSplitter;
 
-    console.log('[OfflineRender] Neural chain: MONO -> HP(80) -> LP(12k) -> Comp(-50/4:1) -> LowCut(100) -> EQ -> DeEsser -> neuralGain(+3dB) -> mixer');
+    console.log('[OfflineRender] Neural chain: gate(buffer) -> MONO -> HP(80) -> LP(12k) -> Comp(-50/4:1) -> LowCut(100) -> EQ -> DeEsser -> neuralGain(+3dB) -> mixer');
 
     // Neural source uses neuralGain for volume, so skip the generic gain below
     const source = ctx.createBufferSource();
-    source.buffer = buffer;
+    source.buffer = gatedBuffer;
     source.loop = true;
     source.loopStart = 0;
-    source.loopEnd = buffer.duration;
+    source.loopEnd = gatedBuffer.duration;
 
     // Fade envelope (no extra volume scaling — neuralGain handles it)
     const fadeGain = ctx.createGain();
@@ -416,7 +431,7 @@ function scheduleLoopingBuffer(
     source.start(0);
     source.stop(durationSeconds);
 
-    console.log(`[OfflineRender] Neural source: ${buffer.duration}s buffer looping for ${durationSeconds}s (vol: ${safeVolume})`);
+    console.log(`[OfflineRender] Neural source: ${gatedBuffer.duration}s buffer looping for ${durationSeconds}s (vol: ${safeVolume})`);
     return;
   }
 
