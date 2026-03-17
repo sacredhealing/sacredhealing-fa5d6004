@@ -1050,9 +1050,19 @@ export default function CreativeSoulMeditationTool() {
                   </span>
                 </div>
                 {exportResult && (
-                  <a href={exportResult.url} download={`${meditationName || 'siddha-alchemy'}${healingFreq ? `_${healingFreq}hz` : ''}${brainwaveFreq ? `_${brainwaveFreq}hz` : ''}.${exportResult.format}`} className="flex items-center gap-1.5 text-[9px] font-extrabold text-amber-400 no-underline">
+                  <button
+                    onClick={() => {
+                      const a = document.createElement('a');
+                      a.href = exportResult.url;
+                      a.download = `${meditationName || 'siddha-alchemy'}${healingFreq ? `_${healingFreq}hz` : ''}${brainwaveFreq ? `_${brainwaveFreq}hz` : ''}.${exportResult.format}`;
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                    }}
+                    className="flex items-center gap-1.5 text-[9px] font-extrabold text-amber-400 hover:text-amber-300 transition-colors bg-transparent border-none cursor-pointer"
+                  >
                     <Download size={12} /> Download
-                  </a>
+                  </button>
                 )}
               </div>
               {exportProgress?.isExporting && <Progress value={(exportProgress.percent ?? 0)} className="h-1" />}
