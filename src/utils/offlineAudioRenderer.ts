@@ -134,7 +134,12 @@ export async function renderOffline(config: OfflineRenderConfig): Promise<AudioB
   limiter.connect(masterGain);
 
   // Warmth (waveshaper) — same saturation curve as live engine
-  const warmthAmount = Math.max(0, Math.min(1, dsp.warmth));
+  const rawWarmth = dsp.warmth;
+  const warmthAmount = typeof rawWarmth === 'number'
+    ? Math.max(0, Math.min(1, rawWarmth))
+    : (typeof rawWarmth === 'object' && rawWarmth !== null)
+      ? Math.max(0, Math.min(1, (rawWarmth as any).drive ?? 0))
+      : 0;
   const waveshaper = offlineCtx.createWaveShaper();
   if (warmthAmount > 0) {
     const samples = 44100;
