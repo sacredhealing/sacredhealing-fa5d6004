@@ -22,6 +22,7 @@ import SpectralInsights from '@/components/soulmeditate/SpectralInsights';
 import { StyleGrid, MeditationStyle } from '@/components/soulmeditate/StyleGrid';
 import HealingFrequencySelector from '@/components/soulmeditate/HealingFrequencySelector';
 import BrainwaveSelector from '@/components/soulmeditate/BrainwaveSelector';
+import { ScalarWavePanel as ConsciousnessScalarPanel, type ScalarWave } from '@/features/scalar/scalarWaves';
 
 // ─── Types ────────────────────────────────────────────────────────
 interface NadiScanResult {
@@ -689,6 +690,16 @@ export default function CreativeSoulMeditationTool() {
   const [meditationName, setMeditationName]     = useState('');
   const [sessionKey, setSessionKey]             = useState(0);
 
+  // consciousness-field scalars (Tulsi, Kailash, Babaji, etc.)
+  const [activeScalars, setActiveScalars]       = useState<ScalarWave[]>([]);
+  const toggleScalar = (wave: ScalarWave) => {
+    setActiveScalars(prev => {
+      if (prev.find(w => w.id === wave.id)) return prev.filter(w => w.id !== wave.id);
+      if (prev.length >= 3) return prev;
+      return [...prev, wave];
+    });
+  };
+
   // ── Safe engine access ────────────────────────────────────────
   const atmosphereLayer = engine?.atmosphereLayer ?? { isPlaying: false, source: null };
   const neuralLayer     = engine?.neuralLayer     ?? { isPlaying: false, source: null };
@@ -1025,6 +1036,11 @@ export default function CreativeSoulMeditationTool() {
               </div>
             </div>
             <SpectralVisualizer engine={engine} mode={visualizerMode} height={140} />
+          </div>
+
+          {/* Consciousness-field scalar waves (Tulsi, Kailash, Babaji, etc.) */}
+          <div className="mb-5">
+            <ConsciousnessScalarPanel activeScalars={activeScalars} onToggle={toggleScalar} />
           </div>
 
           {/* ACTION BUTTONS */}

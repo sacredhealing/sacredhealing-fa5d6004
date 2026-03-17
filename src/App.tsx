@@ -144,6 +144,8 @@ const SoulScan = React.lazy(() => import("./pages/SoulScan"));
 const VayuProtocol = React.lazy(() => import("./pages/VayuProtocol"));
 const SiddhaPortal = React.lazy(() => import("./pages/SiddhaPortal"));
 const SiddhaSoundAlchemyOracle = React.lazy(() => import("./pages/SiddhaSoundAlchemyOracle"));
+const SiddhaOracleAbout = React.lazy(() => import("./pages/SiddhaOracleAbout"));
+const CreativeSoulAbout = React.lazy(() => import("./pages/CreativeSoulAbout"));
 const ExploreAkasha = React.lazy(() => import("./pages/ExploreAkasha"));
 const AdminDivineTransmissions = React.lazy(() => import("./pages/AdminDivineTransmissions"));
 
@@ -317,6 +319,8 @@ function AppRoutes() {
                   <Route path="/creative-soul/tool" element={<CreativeSoulTool />} />
                   <Route path="/creative-soul/meditation" element={<MeditationToolWithBoundary />} />
                   <Route path="/creative-soul/siddha-oracle" element={<SiddhaSoundAlchemyOracle />} />
+                  <Route path="/siddha-oracle-about" element={<SiddhaOracleAbout />} />
+                  <Route path="/creative-soul-about" element={<CreativeSoulAbout />} />
                   {/* Legacy routes */}
                   <Route path="/creative-soul-tool" element={<CreativeSoulTool />} />
                   <Route path="/creative-soul-meditation-tool" element={<MeditationToolWithBoundary />} />

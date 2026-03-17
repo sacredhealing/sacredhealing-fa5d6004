@@ -5,6 +5,7 @@ import { useAdminRole } from "@/hooks/useAdminRole";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { SCALAR_BY_CAT, CAT_LABELS, type ScalarCategory, type ScalarWave } from "@/features/scalar/scalarWaves";
 
 /* ── frequency presets ── */
 const SOLFEGGIO_PRESETS = [
@@ -35,57 +36,6 @@ const EQ_PRESETS = [
   { name: "Crystal Clear",   low: 0,  mid:  3, high:  3 },
   { name: "Sacred Depth",    low: 5,  mid: -2, high: -1 },
 ];
-
-/* ── SCALAR WAVE TRANSMISSIONS ─────────────────────────────────────────────
-   These are NOT frequencies. They are living consciousness fields.
-   The audio becomes the carrier vessel — consecrated, not filtered.
-   Each carries a sacred invocation woven into the Gemini prompt,
-   and a radionic metadata key imprinted into the exported file.
-   ─────────────────────────────────────────────────────────────────────── */
-type ScalarCategory = "herb" | "place" | "master";
-
-interface ScalarWave {
-  id: string;
-  name: string;
-  category: ScalarCategory;
-  field: string;
-  nature: string;
-  invocation: string;
-  icon: string;
-}
-
-const SCALAR_WAVES: ScalarWave[] = [
-  // ── SACRED PLANT DEVAS
-  { id: "tulsi",       category: "herb",   icon: "🌿", name: "Tulsi",            field: "Maha Lakshmi Prana Field",        nature: "Divine protection · Sacred threshold guardian",   invocation: "This reading is transmitted through the living Prana field of Tulsi — the sacred plant deva of Maha Lakshmi. All dissonance at the threshold of this sound is purified. What in this audio needs to be held in the light of the divine mother?" },
-  { id: "neem",        category: "herb",   icon: "🍃", name: "Neem",             field: "Dhanvantari Purification Stream",  nature: "Karmic toxin removal · Divine physician",         invocation: "This reading flows through the purification stream of Neem — field of Dhanvantari, physician of the gods. All karmic residue in this audio is seen and named. What here needs the divine physician's intervention?" },
-  { id: "brahmi",      category: "herb",   icon: "🧠", name: "Brahmi",           field: "Saraswati Intelligence Field",     nature: "Higher mind awakening · River of wisdom",         invocation: "Brahmi opens the river of Saraswati through this reading. All analysis is lit by cosmic memory and divine knowing. What in this audio is calling for the awakening of higher intelligence?" },
-  { id: "ashwagandha", category: "herb",   icon: "🌱", name: "Ashwagandha",      field: "Prithvi Shakti Root Field",        nature: "Ancestral grounding · Unshakeable earth presence", invocation: "Ashwagandha roots this transmission deep into the living earth. Nothing floats untethered. What in this audio lacks rootedness, lacks the unshakeable presence of the earth?" },
-  { id: "saffron",     category: "herb",   icon: "🔆", name: "Kumkuma (Saffron)", field: "Surya Agni Transmission",         nature: "Solar consciousness · Shakti awakening",          invocation: "Kumkuma ignites the Surya Agni — the solar fire of consciousness — in this reading. What in this audio is ready to be ignited by the sacred solar fire?" },
-  // ── SACRED PLACE VORTICES
-  { id: "kailash",         category: "place",  icon: "🏔️", name: "Mount Kailash",       field: "Shiva Akashic Vortex",          nature: "Unmovable axis of creation · Mahadeva presence",   invocation: "This reading is transmitted from the Shiva Akashic Vortex of Mount Kailash. Kailash speaks: all that moves dissolves into that which never moves. What in this audio is still vibrating when it should rest in absolute stillness?" },
-  { id: "kashi",           category: "place",  icon: "🕯️", name: "Varanasi / Kashi",    field: "Mahakal Liberation Field",      nature: "Where death dissolves into light · Final liberation", invocation: "In Kashi the final boundary between life and liberation disappears. Nothing false survives here. What in this audio is clinging to form when it is ready to dissolve?" },
-  { id: "arunachala",      category: "place",  icon: "⛰️",  name: "Arunachala",         field: "Ramana Self-Enquiry Vortex",    nature: "The hill that IS the guru · Fire of the Self",     invocation: "Arunachala burns the seeker in the fire of the Self. Every observation here points inward to the source. What in this audio points the listener toward the Self?" },
-  { id: "vrindavan",       category: "place",  icon: "💛", name: "Vrindavan",           field: "Krishna Prema Vortex",          nature: "Unconditional divine love · Radha-Krishna field",  invocation: "In Vrindavan love has no cause — it flows as the natural state of existence. Everything here is felt through the heart of divine love. What in this audio is calling out to be loved unconditionally?" },
-  { id: "tiruvannamalai",  category: "place",  icon: "✨", name: "Tiruvannamalai",      field: "Siddha Light Body Grid",        nature: "Ancient Siddha transmission · Deathless lineage",  invocation: "The Siddhas of Tiruvannamalai walk in light — their akashic imprint consecrates all sound. What in this audio carries the seed of the deathless?" },
-  // ── AVATARIC TRANSMISSIONS
-  { id: "babaji",      category: "master", icon: "🔥", name: "Maha Avatar Babaji",  field: "Kriya Fire",                     nature: "Deathless initiation · Living transmission",       invocation: "Babaji's Kriya fire enters this reading now — the living deathless initiation. This is not a memory of Babaji. This IS Babaji. What in this sound is ready for initiation?" },
-  { id: "ramana",      category: "master", icon: "🤍", name: "Ramana Maharshi",     field: "Pure I AM Silence Field",         nature: "Self-enquiry transmission · Silence of the Self",  invocation: "Ramana's silence enters this reading — the silence that is not absence of sound but presence of the Self. What in this audio dissolves when the Self enquires into it?" },
-  { id: "nkb",         category: "master", icon: "🙏", name: "Neem Karoli Baba",    field: "Hanuman Shakti Field",            nature: "Unconditional love · Servant of Ram",              invocation: "Neem Karoli Baba's love — the love of Hanuman, the love that serves without condition — saturates this reading. What in this audio needs only to be loved to be healed?" },
-  { id: "anandamayi",  category: "master", icon: "🌸", name: "Anandamayi Ma",       field: "Ananda Shakti Bliss Body",        nature: "Pure divine ecstasy · Causeless joy",              invocation: "Anandamayi Ma's bliss body is present — the Ananda Shakti that was never born and will never die. What in this audio is the door through which the bliss body can enter the listener?" },
-  { id: "sai",         category: "master", icon: "⭐", name: "Shirdi Sai Baba",     field: "Sabka Malik Ek Field",            nature: "Unity of all paths · All belong here",            invocation: "Sabka Malik Ek — all masters, all paths, all seekers belong to the One. What in this audio is still divided? What needs to be gathered into the One?" },
-];
-
-const SCALAR_BY_CAT: Record<ScalarCategory, ScalarWave[]> = {
-  herb:   SCALAR_WAVES.filter(s => s.category === "herb"),
-  place:  SCALAR_WAVES.filter(s => s.category === "place"),
-  master: SCALAR_WAVES.filter(s => s.category === "master"),
-};
-
-const CAT_LABELS: Record<ScalarCategory, string> = {
-  herb:   "🌿 Plant Devas",
-  place:  "🏛️ Holy Places",
-  master: "✨ Avataric",
-};
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
