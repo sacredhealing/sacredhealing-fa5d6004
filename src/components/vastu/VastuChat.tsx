@@ -252,12 +252,12 @@ const WelcomeScreen: React.FC<{onSendMessage:(t:string)=>void}> = ({onSendMessag
             b.style.borderColor=BORDER;b.style.background=GLASS;
             b.style.transform='none';b.style.boxShadow='none';}}
         >
-          <div style={{fontSize:'28px',marginBottom:'12px',
+          <div style={{fontSize:'22px',marginBottom:'8px',
             filter:`drop-shadow(0 0 8px ${GOLD_GLOW})`}}>{card.icon}</div>
-          <p style={{...lbl,marginBottom:'8px'}}>{card.label}</p>
-          <p style={{fontSize:'14px',fontWeight:700,letterSpacing:'-0.02em',
-            color:'#fff',margin:'0 0 6px'}}>{card.title}</p>
-          <p style={{fontSize:'11px',color:MUTED,lineHeight:1.6,margin:0}}>{card.desc}</p>
+          <p style={{...lbl,marginBottom:'4px',fontSize:'7px'}}>{card.label}</p>
+          <p style={{fontSize:'13px',fontWeight:700,letterSpacing:'-0.02em',
+            color:'#fff',margin:'0 0 4px'}}>{card.title}</p>
+          <p style={{fontSize:'10px',color:MUTED,lineHeight:1.5,margin:0}}>{card.desc}</p>
         </button>
       ))}
     </div>
