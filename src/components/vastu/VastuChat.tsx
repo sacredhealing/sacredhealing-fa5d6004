@@ -222,9 +222,9 @@ const WelcomeScreen: React.FC<{onSendMessage:(t:string)=>void}> = ({onSendMessag
       textShadow:'0 0 60px rgba(212,175,55,0.2)',
     }}>The Siddha Architect</h2>
 
-    <p style={{fontSize:'14px',color:BODY_TEXT,lineHeight:1.8,margin:'0 0 36px',maxWidth:'400px'}}>
+    <p style={{fontSize:'13px',color:BODY_TEXT,lineHeight:1.7,margin:'0 0 20px',maxWidth:'400px'}}>
       Welcome, Initiate. We do not just decorate; we consecrate.
-      Prepare to align your physical realm with the currents of cosmic abundance.
+      Prepare to align your physical realm with cosmic abundance.
     </p>
 
     {/* CTA cards */}
