@@ -241,7 +241,7 @@ const WelcomeScreen: React.FC<{onSendMessage:(t:string)=>void}> = ({onSendMessag
           msg:'I have photos of my room from multiple angles. I request a holistic Diagnostic Darshan.' },
       ].map(card=>(
         <button key={card.label} onClick={()=>onSendMessage(card.msg)} style={{
-          padding:'18px 16px', textAlign:'left', cursor:'pointer',
+          padding:'14px 12px', textAlign:'left', cursor:'pointer',
           background: GLASS, border:`1px solid ${BORDER}`, borderRadius:'24px',
           fontFamily:'inherit', transition:'all 0.25s',
         }}
