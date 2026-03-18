@@ -165,11 +165,12 @@ const renderMsgContent = (text: string): React.ReactNode => {
 const WelcomeScreen: React.FC<{onSendMessage:(t:string)=>void}> = ({onSendMessage}) => (
   <div style={{
     flex:1, display:'flex', flexDirection:'column', alignItems:'center',
-    justifyContent:'center', textAlign:'center', padding:'24px 16px',
+    justifyContent:'flex-start', textAlign:'center', padding:'16px 16px',
     maxWidth:'620px', margin:'0 auto', width:'100%', minHeight:0,
+    overflowY:'auto',
   }}>
     {/* Animated Yantra */}
-    <div style={{position:'relative',width:130,height:130,marginBottom:'28px'}}>
+    <div style={{position:'relative',width:90,height:90,marginBottom:'16px',flexShrink:0}}>
       {[0,14,30].map((inset,i)=>(
         <div key={i} aria-hidden style={{
           position:'absolute', inset, borderRadius:'50%',
@@ -178,7 +179,7 @@ const WelcomeScreen: React.FC<{onSendMessage:(t:string)=>void}> = ({onSendMessag
         }}/>
       ))}
       <div style={{
-        position:'absolute', inset:40, borderRadius:'50%',
+        position:'absolute', inset:28, borderRadius:'50%',
         background:'radial-gradient(circle,rgba(212,175,55,0.15) 0%,transparent 70%)',
         border:'1px solid rgba(212,175,55,0.45)',
         boxShadow:'0 0 40px rgba(212,175,55,0.2),inset 0 0 20px rgba(212,175,55,0.07)',
@@ -204,7 +205,7 @@ const WelcomeScreen: React.FC<{onSendMessage:(t:string)=>void}> = ({onSendMessag
       fontSize:'8px', fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase',
       color: GOLD, background: GOLD_DIM,
       border:'1px solid rgba(212,175,55,0.22)', borderRadius:'100px',
-      padding:'7px 18px', marginBottom:'18px',
+      padding:'7px 18px', marginBottom:'12px',
     }}>
       <span style={{width:5,height:5,borderRadius:'50%',background:GOLD,
         boxShadow:`0 0 8px ${GOLD}`,display:'inline-block',animation:'sqiPulse 2s ease infinite'}}/>
@@ -215,21 +216,21 @@ const WelcomeScreen: React.FC<{onSendMessage:(t:string)=>void}> = ({onSendMessag
 
     {/* title */}
     <h2 style={{
-      fontFamily:'Georgia,serif', fontSize:'clamp(26px,5vw,38px)',
+      fontFamily:'Georgia,serif', fontSize:'clamp(22px,5vw,34px)',
       fontWeight:300, fontStyle:'italic', letterSpacing:'-0.02em',
-      color:'#fff', margin:'0 0 10px',
+      color:'#fff', margin:'0 0 8px',
       textShadow:'0 0 60px rgba(212,175,55,0.2)',
     }}>The Siddha Architect</h2>
 
-    <p style={{fontSize:'14px',color:BODY_TEXT,lineHeight:1.8,margin:'0 0 36px',maxWidth:'400px'}}>
+    <p style={{fontSize:'13px',color:BODY_TEXT,lineHeight:1.7,margin:'0 0 20px',maxWidth:'400px'}}>
       Welcome, Initiate. We do not just decorate; we consecrate.
-      Prepare to align your physical realm with the currents of cosmic abundance.
+      Prepare to align your physical realm with cosmic abundance.
     </p>
 
     {/* CTA cards */}
     <div style={{
-      display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,180px),1fr))',
-      gap:'10px', width:'100%', maxWidth:'490px',
+      display:'grid', gridTemplateColumns:'1fr 1fr',
+      gap:'8px', width:'100%', maxWidth:'490px',
     }}>
       {[
         { label:'Initiate Path →', title:'The Living Field', icon:'🏛️',
@@ -240,7 +241,7 @@ const WelcomeScreen: React.FC<{onSendMessage:(t:string)=>void}> = ({onSendMessag
           msg:'I have photos of my room from multiple angles. I request a holistic Diagnostic Darshan.' },
       ].map(card=>(
         <button key={card.label} onClick={()=>onSendMessage(card.msg)} style={{
-          padding:'18px 16px', textAlign:'left', cursor:'pointer',
+          padding:'14px 12px', textAlign:'left', cursor:'pointer',
           background: GLASS, border:`1px solid ${BORDER}`, borderRadius:'24px',
           fontFamily:'inherit', transition:'all 0.25s',
         }}
@@ -251,24 +252,24 @@ const WelcomeScreen: React.FC<{onSendMessage:(t:string)=>void}> = ({onSendMessag
             b.style.borderColor=BORDER;b.style.background=GLASS;
             b.style.transform='none';b.style.boxShadow='none';}}
         >
-          <div style={{fontSize:'28px',marginBottom:'12px',
+          <div style={{fontSize:'22px',marginBottom:'8px',
             filter:`drop-shadow(0 0 8px ${GOLD_GLOW})`}}>{card.icon}</div>
-          <p style={{...lbl,marginBottom:'8px'}}>{card.label}</p>
-          <p style={{fontSize:'14px',fontWeight:700,letterSpacing:'-0.02em',
-            color:'#fff',margin:'0 0 6px'}}>{card.title}</p>
-          <p style={{fontSize:'11px',color:MUTED,lineHeight:1.6,margin:0}}>{card.desc}</p>
+          <p style={{...lbl,marginBottom:'4px',fontSize:'7px'}}>{card.label}</p>
+          <p style={{fontSize:'13px',fontWeight:700,letterSpacing:'-0.02em',
+            color:'#fff',margin:'0 0 4px'}}>{card.title}</p>
+          <p style={{fontSize:'10px',color:MUTED,lineHeight:1.5,margin:0}}>{card.desc}</p>
         </button>
       ))}
     </div>
 
     {/* directional compass strip */}
-    <div style={{display:'flex',gap:'22px',marginTop:'36px',flexWrap:'wrap',
-      justifyContent:'center',opacity:.55}}>
-      {[['💧','Wealth · North','#60a5fa'],['🔥','Energy · SE','#f87171'],
+    <div style={{display:'flex',gap:'14px',marginTop:'16px',flexWrap:'wrap',
+      justifyContent:'center',opacity:.55}} className="hidden sm:flex">
+      {[['💧','Wealth · N','#60a5fa'],['🔥','Energy · SE','#f87171'],
         ['⛰','Stability · SW',GOLD],['☀️','Grace · NE','#fbbf24']].map(([icon,label,color])=>(
-        <div key={label as string} style={{display:'flex',alignItems:'center',gap:'5px'}}>
-          <span style={{fontSize:'12px',color:color as string}}>{icon}</span>
-          <span style={{fontSize:'8px',fontWeight:800,letterSpacing:'0.4em',
+        <div key={label as string} style={{display:'flex',alignItems:'center',gap:'4px'}}>
+          <span style={{fontSize:'11px',color:color as string}}>{icon}</span>
+          <span style={{fontSize:'7px',fontWeight:800,letterSpacing:'0.35em',
             textTransform:'uppercase',color:MUTED}}>{label}</span>
         </div>
       ))}
@@ -351,7 +352,7 @@ export const VastuChatWindow: React.FC<VastuChatWindowProps> = ({
             )}
 
             <div style={{
-              maxWidth:'min(82%, 320px)', padding:'14px 16px',
+              maxWidth:'min(85%, 340px)', padding:'12px 14px',
               background: msg.role==='user'
                 ? 'linear-gradient(135deg,rgba(212,175,55,0.15),rgba(212,175,55,0.07))'
                 : GLASS,
@@ -413,10 +414,11 @@ export const VastuChatWindow: React.FC<VastuChatWindowProps> = ({
 
       {/* ── INPUT AREA ── */}
       <div style={{
-        flexShrink:0, padding:'12px 14px 14px',
+        flexShrink:0, padding:'8px 10px 10px',
         background:'rgba(255,255,255,0.015)',
         borderTop:`1px solid ${BORDER}`,
         backdropFilter:'blur(30px)', WebkitBackdropFilter:'blur(30px)',
+        paddingBottom: 'max(10px, env(safe-area-inset-bottom))',
       }}>
         <form onSubmit={handleSubmit} style={{maxWidth:'860px',margin:'0 auto',width:'100%'}}>
           {selectedImages.length>0&&(
@@ -490,9 +492,9 @@ export const VastuChatWindow: React.FC<VastuChatWindowProps> = ({
             </div>
           </div>
 
-          <div style={{display:'flex',justifyContent:'center',gap:'12px',
+            <div className="hidden sm:flex" style={{display:'none',justifyContent:'center',gap:'12px',
             marginTop:'8px',overflowX:'auto',flexWrap:'wrap',paddingBottom:'4px'}}>
-            {[['💧','Wealth (North)','#60a5fa'],['🔥','Energy (SE)','#f87171'],
+            {[['💧','Wealth (N)','#60a5fa'],['🔥','Energy (SE)','#f87171'],
               ['⛰','Stability (SW)',GOLD],['☀️','Grace (NE)','#fbbf24']].map(([icon,label,color])=>(
               <div key={label as string} style={{display:'flex',alignItems:'center',gap:'5px',
                 opacity:.35,whiteSpace:'nowrap',cursor:'default',transition:'opacity 0.2s'}}
