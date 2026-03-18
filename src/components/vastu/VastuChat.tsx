@@ -170,7 +170,7 @@ const WelcomeScreen: React.FC<{onSendMessage:(t:string)=>void}> = ({onSendMessag
     overflowY:'auto',
   }}>
     {/* Animated Yantra */}
-    <div style={{position:'relative',width:130,height:130,marginBottom:'28px'}}>
+    <div style={{position:'relative',width:90,height:90,marginBottom:'16px',flexShrink:0}}>
       {[0,14,30].map((inset,i)=>(
         <div key={i} aria-hidden style={{
           position:'absolute', inset, borderRadius:'50%',
