@@ -165,8 +165,9 @@ const renderMsgContent = (text: string): React.ReactNode => {
 const WelcomeScreen: React.FC<{onSendMessage:(t:string)=>void}> = ({onSendMessage}) => (
   <div style={{
     flex:1, display:'flex', flexDirection:'column', alignItems:'center',
-    justifyContent:'center', textAlign:'center', padding:'24px 16px',
+    justifyContent:'flex-start', textAlign:'center', padding:'16px 16px',
     maxWidth:'620px', margin:'0 auto', width:'100%', minHeight:0,
+    overflowY:'auto',
   }}>
     {/* Animated Yantra */}
     <div style={{position:'relative',width:130,height:130,marginBottom:'28px'}}>
