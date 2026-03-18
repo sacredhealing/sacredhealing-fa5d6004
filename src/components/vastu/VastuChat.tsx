@@ -491,9 +491,9 @@ export const VastuChatWindow: React.FC<VastuChatWindowProps> = ({
             </div>
           </div>
 
-          <div style={{display:'flex',justifyContent:'center',gap:'12px',
+            <div className="hidden sm:flex" style={{display:'none',justifyContent:'center',gap:'12px',
             marginTop:'8px',overflowX:'auto',flexWrap:'wrap',paddingBottom:'4px'}}>
-            {[['💧','Wealth (North)','#60a5fa'],['🔥','Energy (SE)','#f87171'],
+            {[['💧','Wealth (N)','#60a5fa'],['🔥','Energy (SE)','#f87171'],
               ['⛰','Stability (SW)',GOLD],['☀️','Grace (NE)','#fbbf24']].map(([icon,label,color])=>(
               <div key={label as string} style={{display:'flex',alignItems:'center',gap:'5px',
                 opacity:.35,whiteSpace:'nowrap',cursor:'default',transition:'opacity 0.2s'}}

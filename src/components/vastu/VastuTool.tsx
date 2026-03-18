@@ -263,13 +263,13 @@ export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
         height: '100%',
         position: 'relative',
         overflow: 'hidden',
-        borderRadius: '16px',
-        border: '1px solid rgba(212,175,55,0.15)',
+        borderRadius: 0,
+        border: 'none',
         background: '#050505',
-        boxShadow: '0 0 80px rgba(212,175,55,0.06), 0 40px 100px rgba(0,0,0,0.6)',
+        boxShadow: 'none',
         colorScheme: 'dark',
       }}
-      className="vastu-sqi-root"
+      className="vastu-sqi-root md:!rounded-2xl md:!border md:!border-[rgba(212,175,55,0.15)] md:!shadow-[0_0_80px_rgba(212,175,55,0.06),0_40px_100px_rgba(0,0,0,0.6)]"
     >
       <style>{`
         .vastu-sqi-root, .vastu-sqi-root * {
