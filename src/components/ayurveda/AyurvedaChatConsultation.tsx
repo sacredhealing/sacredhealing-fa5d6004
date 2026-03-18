@@ -151,7 +151,7 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
 
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-0 md:items-center md:pt-0"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -165,14 +165,14 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
 
       {/* Chat container */}
       <motion.div
-        className="relative w-full max-w-2xl mx-4 rounded-3xl overflow-hidden flex flex-col"
+        className="relative w-full max-w-2xl mx-0 md:mx-4 rounded-none md:rounded-3xl overflow-hidden flex flex-col h-full md:h-auto"
         style={{
           background: 'linear-gradient(135deg, rgba(20,10,40,0.98), rgba(10,5,25,0.99))',
           border: '1px solid rgba(168,85,247,0.25)',
-          maxHeight: '85vh',
+          maxHeight: '100vh',
           boxShadow: '0 0 60px rgba(168,85,247,0.15)',
         }}
-        initial={{ scale: 0.9, y: 30 }}
+        initial={{ scale: 0.95, y: -20 }}
         animate={{ scale: 1, y: 0 }}
         transition={{ type: 'spring', damping: 25 }}
       >
