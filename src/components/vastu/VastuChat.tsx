@@ -205,7 +205,7 @@ const WelcomeScreen: React.FC<{onSendMessage:(t:string)=>void}> = ({onSendMessag
       fontSize:'8px', fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase',
       color: GOLD, background: GOLD_DIM,
       border:'1px solid rgba(212,175,55,0.22)', borderRadius:'100px',
-      padding:'7px 18px', marginBottom:'18px',
+      padding:'7px 18px', marginBottom:'12px',
     }}>
       <span style={{width:5,height:5,borderRadius:'50%',background:GOLD,
         boxShadow:`0 0 8px ${GOLD}`,display:'inline-block',animation:'sqiPulse 2s ease infinite'}}/>
