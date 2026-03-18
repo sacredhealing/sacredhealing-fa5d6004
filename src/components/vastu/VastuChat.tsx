@@ -229,8 +229,8 @@ const WelcomeScreen: React.FC<{onSendMessage:(t:string)=>void}> = ({onSendMessag
 
     {/* CTA cards */}
     <div style={{
-      display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,180px),1fr))',
-      gap:'10px', width:'100%', maxWidth:'490px',
+      display:'grid', gridTemplateColumns:'1fr 1fr',
+      gap:'8px', width:'100%', maxWidth:'490px',
     }}>
       {[
         { label:'Initiate Path →', title:'The Living Field', icon:'🏛️',
