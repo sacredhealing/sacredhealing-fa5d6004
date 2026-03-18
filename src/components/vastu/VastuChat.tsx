@@ -179,7 +179,7 @@ const WelcomeScreen: React.FC<{onSendMessage:(t:string)=>void}> = ({onSendMessag
         }}/>
       ))}
       <div style={{
-        position:'absolute', inset:40, borderRadius:'50%',
+        position:'absolute', inset:28, borderRadius:'50%',
         background:'radial-gradient(circle,rgba(212,175,55,0.15) 0%,transparent 70%)',
         border:'1px solid rgba(212,175,55,0.45)',
         boxShadow:'0 0 40px rgba(212,175,55,0.2),inset 0 0 20px rgba(212,175,55,0.07)',
