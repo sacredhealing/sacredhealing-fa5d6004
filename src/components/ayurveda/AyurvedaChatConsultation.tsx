@@ -165,11 +165,11 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
 
       {/* Chat container */}
       <motion.div
-        className="relative w-full max-w-2xl mx-0 md:mx-4 rounded-none md:rounded-3xl overflow-hidden flex flex-col h-full md:h-auto"
+        className="relative w-full max-w-2xl mx-0 md:mx-4 rounded-none md:rounded-3xl overflow-hidden flex flex-col self-start"
         style={{
           background: 'linear-gradient(135deg, rgba(20,10,40,0.98), rgba(10,5,25,0.99))',
           border: '1px solid rgba(168,85,247,0.25)',
-          maxHeight: '100vh',
+          maxHeight: '100svh',
           boxShadow: '0 0 60px rgba(168,85,247,0.15)',
         }}
         initial={{ scale: 0.95, y: -20 }}
@@ -196,7 +196,7 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
         </div>
 
         {/* Messages */}
-        <ScrollArea className="flex-1 p-5" ref={scrollRef}>
+        <ScrollArea className="p-5" ref={scrollRef} style={{ maxHeight: '42svh' }}>
           {messages.length === 0 && (
             <div className="text-center py-4">
               <div className="text-4xl mb-3">🙏</div>
