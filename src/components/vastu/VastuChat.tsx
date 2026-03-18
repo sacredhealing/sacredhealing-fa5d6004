@@ -263,13 +263,13 @@ const WelcomeScreen: React.FC<{onSendMessage:(t:string)=>void}> = ({onSendMessag
     </div>
 
     {/* directional compass strip */}
-    <div style={{display:'flex',gap:'22px',marginTop:'36px',flexWrap:'wrap',
-      justifyContent:'center',opacity:.55}}>
-      {[['💧','Wealth · North','#60a5fa'],['🔥','Energy · SE','#f87171'],
+    <div style={{display:'flex',gap:'14px',marginTop:'16px',flexWrap:'wrap',
+      justifyContent:'center',opacity:.55}} className="hidden sm:flex">
+      {[['💧','Wealth · N','#60a5fa'],['🔥','Energy · SE','#f87171'],
         ['⛰','Stability · SW',GOLD],['☀️','Grace · NE','#fbbf24']].map(([icon,label,color])=>(
-        <div key={label as string} style={{display:'flex',alignItems:'center',gap:'5px'}}>
-          <span style={{fontSize:'12px',color:color as string}}>{icon}</span>
-          <span style={{fontSize:'8px',fontWeight:800,letterSpacing:'0.4em',
+        <div key={label as string} style={{display:'flex',alignItems:'center',gap:'4px'}}>
+          <span style={{fontSize:'11px',color:color as string}}>{icon}</span>
+          <span style={{fontSize:'7px',fontWeight:800,letterSpacing:'0.35em',
             textTransform:'uppercase',color:MUTED}}>{label}</span>
         </div>
       ))}
