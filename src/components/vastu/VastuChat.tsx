@@ -216,9 +216,9 @@ const WelcomeScreen: React.FC<{onSendMessage:(t:string)=>void}> = ({onSendMessag
 
     {/* title */}
     <h2 style={{
-      fontFamily:'Georgia,serif', fontSize:'clamp(26px,5vw,38px)',
+      fontFamily:'Georgia,serif', fontSize:'clamp(22px,5vw,34px)',
       fontWeight:300, fontStyle:'italic', letterSpacing:'-0.02em',
-      color:'#fff', margin:'0 0 10px',
+      color:'#fff', margin:'0 0 8px',
       textShadow:'0 0 60px rgba(212,175,55,0.2)',
     }}>The Siddha Architect</h2>
 
