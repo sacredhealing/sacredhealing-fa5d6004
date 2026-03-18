@@ -352,7 +352,7 @@ export const VastuChatWindow: React.FC<VastuChatWindowProps> = ({
             )}
 
             <div style={{
-              maxWidth:'min(82%, 320px)', padding:'14px 16px',
+              maxWidth:'min(85%, 340px)', padding:'12px 14px',
               background: msg.role==='user'
                 ? 'linear-gradient(135deg,rgba(212,175,55,0.15),rgba(212,175,55,0.07))'
                 : GLASS,
