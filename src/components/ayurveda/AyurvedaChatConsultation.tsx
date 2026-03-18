@@ -196,17 +196,13 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
         </div>
 
         {/* Messages */}
-        <ScrollArea className="flex-1 p-5" ref={scrollRef} style={{ minHeight: '200px' }}>
+        <ScrollArea className="flex-1 p-5" ref={scrollRef}>
           {messages.length === 0 && (
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center py-12"
-            >
-              <div className="text-4xl mb-4">🙏</div>
-              <p className="text-lg font-serif text-purple-200 mb-2">Namaste, Seeker of Balance</p>
+            <div className="text-center py-4">
+              <div className="text-4xl mb-3">🙏</div>
+              <p className="text-lg font-serif text-purple-200 mb-1">Namaste, Seeker of Balance</p>
               <p className="text-purple-400/50 text-sm">The Divine Physician awaits your concern...</p>
-            </motion.div>
+            </div>
           )}
           
           <div className="space-y-4">
