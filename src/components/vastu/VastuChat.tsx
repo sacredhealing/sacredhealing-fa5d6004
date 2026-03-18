@@ -414,10 +414,11 @@ export const VastuChatWindow: React.FC<VastuChatWindowProps> = ({
 
       {/* ── INPUT AREA ── */}
       <div style={{
-        flexShrink:0, padding:'12px 14px 14px',
+        flexShrink:0, padding:'8px 10px 10px',
         background:'rgba(255,255,255,0.015)',
         borderTop:`1px solid ${BORDER}`,
         backdropFilter:'blur(30px)', WebkitBackdropFilter:'blur(30px)',
+        paddingBottom: 'max(10px, env(safe-area-inset-bottom))',
       }}>
         <form onSubmit={handleSubmit} style={{maxWidth:'860px',margin:'0 auto',width:'100%'}}>
           {selectedImages.length>0&&(
