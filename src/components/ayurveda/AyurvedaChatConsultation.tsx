@@ -196,7 +196,7 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
         </div>
 
         {/* Messages */}
-        <ScrollArea className="flex-1 p-5" ref={scrollRef} style={{ minHeight: '300px', maxHeight: '55vh' }}>
+        <ScrollArea className="flex-1 p-5" ref={scrollRef} style={{ minHeight: '200px' }}>
           {messages.length === 0 && (
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
