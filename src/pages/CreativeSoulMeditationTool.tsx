@@ -168,7 +168,7 @@ function findBestHerb(intents: string[]): typeof HERB_LIBRARY[0] {
 function ScalarChip({ act, active, volume, onToggle, onVolumeChange }) {
   return (
     <div
-      style={{
+          style={{
         borderRadius: 16,
         border: `1px solid ${active ? act.color : 'rgba(255,255,255,0.06)'}`,
         background: active ? `${act.color}10` : 'rgba(255,255,255,0.02)',
@@ -213,11 +213,11 @@ function ScalarChip({ act, active, volume, onToggle, onVolumeChange }) {
                 cursor: 'pointer',
               }}
             />
-          </div>
+    </div>
           <span style={{ fontSize: 8, fontWeight: 700, color: act.color, fontFamily: 'monospace', minWidth: 28, textAlign: 'right' }}>
             {Math.round(volume * 100)}%
           </span>
-        </div>
+      </div>
       )}
     </div>
   );
@@ -815,8 +815,25 @@ export default function CreativeSoulMeditationTool() {
     // If scalar blend is active, override the solfeggio Hz with the blend
     const solfeggioHz = scalarBlendHz ?? frequencies.solfeggio?.hz ?? healingFreq;
 
-    // Use the actual audio duration (from loaded neural audio or DAW regions), fallback to 5 min
-    const audioDuration = engine.getDawDuration?.() || 300;
+    // Use the actual audio duration (from loaded neural audio or DAW regions).
+    // When neural was loaded from URL, getDawDuration may be 0 — fetch the URL to get real duration.
+    let audioDuration = engine.getDawDuration?.() || 0;
+    if (audioDuration <= 0 && (neuralLayer?.exportInput?.directUrl ?? neuralLayer?.source)) {
+      const url = neuralLayer?.exportInput?.directUrl ?? (typeof neuralLayer?.source === 'string' ? neuralLayer.source : null);
+      if (url) {
+        try {
+          const resp = await fetch(url);
+          const buf = await resp.arrayBuffer();
+          const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+          const decoded = await ctx.decodeAudioData(buf);
+          audioDuration = Math.ceil(decoded.duration);
+          ctx.close();
+        } catch (e) {
+          console.warn('[Export] Could not fetch duration from neural URL', e);
+        }
+      }
+    }
+    if (audioDuration <= 0) audioDuration = 300; // fallback 5 min when no neural source
 
     // Map the rich DSP object ({ reverb: { enabled, decay, wet }, ... }) to flat numbers
     // that the offline renderer expects ({ reverb: number, delay: number, warmth: number })
@@ -864,7 +881,7 @@ export default function CreativeSoulMeditationTool() {
     try {
       const result = await exportMeditation(config);
       if (result) {
-        setExportResult(result);
+    setExportResult(result);
         toast.success(scalarBlendHz ? `Export complete — Scalar ${solfeggioHz}Hz embedded ✓` : 'Export complete!');
       }
     } catch (e) {
@@ -1007,7 +1024,7 @@ export default function CreativeSoulMeditationTool() {
               <span className="text-[8px] text-[#22D3EE]/50 tracking-[0.1em]">
                 Anahata open · {scalarBlendHz ?? healingFreq}Hz{scalarBlendHz ? ' (Scalar)' : ''} · Broadcasting
               </span>
-            </div>
+              </div>
           )}
 
           {/* SCALAR ACTIVE IN EXPORT NOTICE */}
@@ -1131,10 +1148,10 @@ export default function CreativeSoulMeditationTool() {
                 <div className="flex items-center gap-2.5 mb-2.5">
                   <span className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black shrink-0" style={{ background: 'rgba(212,175,55,0.15)', border: '1px solid rgba(212,175,55,0.3)', color: '#D4AF37' }}>1</span>
                   <span className="text-[11px] font-extrabold uppercase tracking-[0.3em] text-white/70">Source</span>
-                </div>
+              </div>
                 <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.06] rounded-[28px] p-6">
                   <NeuralSourceInput engine={engine} key={sessionKey} />
-                </div>
+            </div>
               </div>
 
               {/* Step 2 */}
@@ -1142,7 +1159,7 @@ export default function CreativeSoulMeditationTool() {
                 <div className="flex items-center gap-2.5 mb-2.5">
                   <span className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black shrink-0" style={{ background: 'rgba(212,175,55,0.15)', border: '1px solid rgba(212,175,55,0.3)', color: '#D4AF37' }}>2</span>
                   <span className="text-[11px] font-extrabold uppercase tracking-[0.3em] text-white/70">Atmosphere</span>
-                </div>
+              </div>
                 <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.06] rounded-[28px] p-6">
                   <div className="flex items-center gap-2 mb-3 text-[8px] font-extrabold uppercase tracking-[0.45em] text-white/50">
                     <Layers size={12} />Meditation Style & Atmosphere
@@ -1158,7 +1175,7 @@ export default function CreativeSoulMeditationTool() {
                     <span className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black shrink-0" style={{ background: 'rgba(212,175,55,0.15)', border: '1px solid rgba(212,175,55,0.3)', color: '#D4AF37' }}>2b</span>
                     <span className="text-[11px] font-extrabold uppercase tracking-[0.3em] text-white/70">Sacred Frequencies</span>
                     <span className="text-[7px] font-extrabold uppercase tracking-[0.25em] px-2 py-0.5 rounded-xl" style={{ color: 'rgba(212,175,55,.5)', border: '1px solid rgba(212,175,55,.2)' }}>Activate on Commence</span>
-                  </div>
+              </div>
                   <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.06] rounded-[28px] p-6">
                     <HealingFrequencySelector activeFrequency={healingFreq} volume={healingVolume} onSelect={handleHealingFreqSelect} onVolumeChange={handleHealingVolumeChange} />
                     <div className="mt-4">
@@ -1175,21 +1192,21 @@ export default function CreativeSoulMeditationTool() {
                     <div className="flex items-center gap-2 mb-3 text-[8px] font-extrabold uppercase tracking-[0.45em] text-white/50">
                       <Waves size={12} />Sacred Effects
                     </div>
-                    <div className="sqm-dsp-wrap">
+              <div className="sqm-dsp-wrap">
                       <DSPMasteringRack dsp={dsp} onUpdate={engine?.updateDSP} />
-                    </div>
+              </div>
                     <div className="mt-5">
                       <div className="flex items-center gap-2 mb-3 text-[8px] font-extrabold uppercase tracking-[0.45em] text-white/50">
                         <Sparkles size={12} />Alchemical Insight
-                      </div>
-                      <SpectralInsights
+                </div>
+                <SpectralInsights
                         frequencies={frequencies}
                         dsp={dsp}
                         atmosphereId={atmosphereLayer.source ?? null}
                         neuralSource={neuralLayer.source ?? null}
-                      />
-                    </div>
-                  </div>
+                />
+              </div>
+          </div>
                 </div>
               </div>
             </div>

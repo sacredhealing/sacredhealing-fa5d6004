@@ -69,7 +69,9 @@ interface AudioLayer {
   isNeuralSource?: boolean;
 }
 
-const MAX_RENDER_FRAMES = 20_000_000;
+// Allow exports up to ~3 hours at 22.05kHz (used for sessions > 5 min).
+// Previous 20M cap caused 15-min truncation when using 22.05kHz (20M/22050 ≈ 907s).
+const MAX_RENDER_FRAMES = 250_000_000;
 
 /**
  * Generate a reverb impulse response identical to the live engine's createReverbImpulse.
