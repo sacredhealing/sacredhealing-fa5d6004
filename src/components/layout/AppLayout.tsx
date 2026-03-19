@@ -119,7 +119,7 @@ export const AppLayout: React.FC = () => {
       </div>
       
       {/* Header bar with back button - reserves top space, content stays full width */}
-      {showBackButton ? (
+      {showBackButton && !isVastuRoute ? (
         <header className="fixed top-0 left-0 right-0 h-14 z-[100] flex items-center px-4 border-b border-white/[0.05]" style={{ background: 'rgba(5, 5, 5, 0.85)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)' }}>
           <BackButton variant="inline" />
         </header>
