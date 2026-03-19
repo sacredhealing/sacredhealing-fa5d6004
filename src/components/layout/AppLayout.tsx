@@ -140,7 +140,7 @@ export const AppLayout: React.FC = () => {
         </motion.main>
       </AnimatePresence>
       <NowPlayingBar />
-      <BottomNav />
+      {!isVastuRoute && <BottomNav />}
       <AnnouncementPopup />
       <PWAInstallPrompt />
     </div>
