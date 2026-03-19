@@ -339,20 +339,15 @@ export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
       {/* ── SIDEBAR ── */}
       <aside
         style={{
-          position: 'relative',
-          zIndex: 10,
-          width: '256px',
-          flexShrink: 0,
           display: 'flex',
           flexDirection: 'column',
-          background: 'rgba(255,255,255,0.015)',
           borderRight: '1px solid rgba(255,255,255,0.06)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
         }}
-        className={`fixed md:relative z-50 md:z-auto top-0 left-0 h-full w-64 max-w-[85vw] transition-transform duration-300 ${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-        }`}
+        className={`fixed inset-y-0 left-0 z-50 w-64 max-w-[85vw] bg-[rgba(5,5,5,0.97)] transition-transform duration-300 ${
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        } md:relative md:z-10 md:translate-x-0 md:w-64 md:flex-shrink-0 md:bg-[rgba(255,255,255,0.015)]`}
       >
         {/* Sidebar header */}
         <div
