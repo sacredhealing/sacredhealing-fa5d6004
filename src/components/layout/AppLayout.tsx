@@ -43,6 +43,7 @@ function isSessionRoute(pathname: string): boolean {
 export const AppLayout: React.FC = () => {
   const location = useLocation();
   const showBackButton = !BACK_BUTTON_HIDE_PATHS.includes(location.pathname);
+  const isVastuRoute = location.pathname === '/vastu';
 
   useEffect(() => {
     if (isSessionRoute(location.pathname)) {
@@ -118,7 +119,7 @@ export const AppLayout: React.FC = () => {
       </div>
       
       {/* Header bar with back button - reserves top space, content stays full width */}
-      {showBackButton ? (
+      {showBackButton && !isVastuRoute ? (
         <header className="fixed top-0 left-0 right-0 h-14 z-[100] flex items-center px-4 border-b border-white/[0.05]" style={{ background: 'rgba(5, 5, 5, 0.85)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)' }}>
           <BackButton variant="inline" />
         </header>
@@ -133,13 +134,13 @@ export const AppLayout: React.FC = () => {
           exit="exit"
           variants={pageVariants}
           transition={pageTransition}
-          className={`relative overflow-x-hidden w-full max-w-none ${showBackButton ? 'pt-14' : ''} ${['/community', '/vastu'].includes(location.pathname) ? 'min-w-full h-[calc(100vh-64px)] min-h-[280px] overflow-hidden pb-0' : 'pb-28'}`}
+          className={`relative overflow-x-hidden w-full max-w-none ${showBackButton && !isVastuRoute ? 'pt-14' : ''} ${isVastuRoute ? 'min-w-full h-[100svh] min-h-0 overflow-hidden pb-0' : location.pathname === '/community' ? 'min-w-full h-[calc(100vh-64px)] min-h-[280px] overflow-hidden pb-0' : 'pb-28'}`}
         >
           <Outlet />
         </motion.main>
       </AnimatePresence>
       <NowPlayingBar />
-      <BottomNav />
+      {!isVastuRoute && <BottomNav />}
       <AnnouncementPopup />
       <PWAInstallPrompt />
     </div>
