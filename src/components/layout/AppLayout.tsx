@@ -43,6 +43,7 @@ function isSessionRoute(pathname: string): boolean {
 export const AppLayout: React.FC = () => {
   const location = useLocation();
   const showBackButton = !BACK_BUTTON_HIDE_PATHS.includes(location.pathname);
+  const isVastuRoute = location.pathname === '/vastu';
 
   useEffect(() => {
     if (isSessionRoute(location.pathname)) {

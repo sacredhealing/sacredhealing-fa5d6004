@@ -294,9 +294,10 @@ export const VastuChatWindow: React.FC<VastuChatWindowProps> = ({
   const scrollRef    = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(()=>{
-    if(scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  },[messages,isThinking]);
+  useEffect(() => {
+    if (!scrollRef.current || (messages.length === 0 && !isThinking)) return;
+    scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [messages, isThinking]);
 
   /* handlers: LOGIC UNCHANGED */
   const handleSubmit = (e: React.FormEvent) => {
