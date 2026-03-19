@@ -33,7 +33,7 @@ const Vastu = () => {
   }
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-background md:relative md:h-full md:min-h-0 md:px-4 md:py-4">
+    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-background md:relative md:min-h-0 md:px-4 md:py-4">
       <VastuTool isAdmin={isAdmin} />
     </div>
   );
