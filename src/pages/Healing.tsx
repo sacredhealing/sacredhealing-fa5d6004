@@ -13,7 +13,6 @@ import { SriYantra } from '@/components/dashboard/SriYantra';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ReviewSection } from '@/components/reviews/ReviewSection';
-import { usePhantomWallet } from '@/hooks/usePhantomWallet';
 import { HealingProgressCard } from '@/components/healing/HealingProgressCard';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { IntentionThreshold, IntentionType } from '@/components/meditation/IntentionThreshold';
@@ -109,6 +108,27 @@ const HEALING_PLANS: HealingPlan[] = [
   { id: '14_day', name: '14 days', price: 147, days: 14 },
   { id: '30_day', name: '30 days', price: 197, days: 30 },
 ];
+
+/** Ongoing subscription — same Stripe/crypto flows as fixed-duration plans */
+const SUBSCRIPTION_PLAN: HealingPlan = {
+  id: 'subscription',
+  name: 'Ongoing Subscription',
+  price: 147,
+  days: 30,
+};
+
+function resolveStripeCheckoutUrl(data: unknown): string | null {
+  if (!data || typeof data !== 'object') return null;
+  const d = data as Record<string, unknown>;
+  const u = d.url ?? d.checkoutUrl;
+  return typeof u === 'string' && u.length > 0 ? u : null;
+}
+
+/** EVM treasury for USDC/USDT (set VITE_HEALING_CRYPTO_WALLET for production) */
+const HEALING_CRYPTO_TREASURY =
+  import.meta.env.VITE_HEALING_CRYPTO_WALLET ||
+  import.meta.env.VITE_PUBLIC_CRYPTO_WALLET ||
+  '0x0000000000000000000000000000000000000000';
 
 function formatEnergyExchange(priceUsd: number): string {
   const sek = Math.round(priceUsd * 11);
@@ -350,7 +370,6 @@ const Healing: React.FC = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { walletAddress, isPhantomInstalled, connectWallet } = usePhantomWallet();
   const { isAdmin } = useAdminRole();
   const { language, setLanguage } = useHealingMeditationLanguage();
   const { playUniversalAudio, currentAudio, isPlaying: playerIsPlaying } = useMusicPlayer();
@@ -364,8 +383,10 @@ const Healing: React.FC = () => {
   const [ownedAudioIds, setOwnedAudioIds] = useState<Set<string>>(new Set());
   const [hasHealingAccess, setHasHealingAccess] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<HealingPlan | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<HealingPlan | null>(HEALING_PLANS[1]);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [healingCryptoModalOpen, setHealingCryptoModalOpen] = useState(false);
+  const [healingCryptoPlan, setHealingCryptoPlan] = useState<HealingPlan | null>(null);
   const [showThreshold, setShowThreshold] = useState(false);
   const [pendingAudio, setPendingAudio] = useState<HealingAudio | null>(null);
   const [testimonialsExpanded, setTestimonialsExpanded] = useState(false);
@@ -414,66 +435,110 @@ const Healing: React.FC = () => {
   const openPaymentModal = (plan: HealingPlan) => { setSelectedPlan(plan); setPaymentModalOpen(true); };
 
   const handleStripePayment = async (planType: string) => {
-    setIsProcessing(true); setPaymentModalOpen(false);
+    setIsProcessing(true);
+    setPaymentModalOpen(false);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { toast({ title: 'Please sign in', variant: 'destructive' }); return; }
-      const { data, error } = await supabase.functions.invoke('create-healing-checkout', { body: { planType } });
+      if (!session) {
+        toast({ title: 'Please sign in', description: 'Log in to continue to checkout.', variant: 'destructive' });
+        return;
+      }
+      const { data, error } = await supabase.functions.invoke('create-healing-checkout', {
+        body: { planType, origin: window.location.origin },
+      });
       if (error) throw error;
-      if (data?.url) window.open(data.url, '_blank');
+      if (data && typeof data === 'object' && 'error' in data && (data as { error?: string }).error) {
+        throw new Error(String((data as { error: string }).error));
+      }
+      const url = resolveStripeCheckoutUrl(data);
+      if (!url) {
+        toast({
+          title: 'Checkout unavailable',
+          description: 'No payment link returned. Try again or contact support.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      window.location.assign(url);
     } catch (err: unknown) {
       toast({ title: 'Error', description: err instanceof Error ? err.message : 'Unknown error', variant: 'destructive' });
-    } finally { setIsProcessing(false); }
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
-  const handleCryptoPayment = async (plan: HealingPlan) => {
+  const handleCryptoPayment = (plan: HealingPlan) => {
     setPaymentModalOpen(false);
-    if (!isPhantomInstalled) {
-      toast({ title: 'Phantom Not Installed', description: 'Install Phantom wallet', variant: 'destructive' });
-      window.open('https://phantom.app/', '_blank'); return;
-    }
-    if (!walletAddress) { try { await connectWallet(); } catch { toast({ title: 'Connection Failed', variant: 'destructive' }); } return; }
+    setHealingCryptoPlan(plan);
+    setHealingCryptoModalOpen(true);
+  };
+
+  const handleHealingCryptoSubmitted = async () => {
+    if (!healingCryptoPlan) return;
     setIsProcessing(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { toast({ title: 'Please sign in', variant: 'destructive' }); return; }
-      const treasuryWallet = 'BAfPGN6DUAKYVwmmGkhMQxJyDv2cHEHRnfcbzy1GNy5j';
-      const solAmount = (plan.price * 0.005).toFixed(4);
-      toast({ title: 'Send SOL', description: `Send ${solAmount} SOL. Contact support after to activate.` });
-      window.open(`https://phantom.app/ul/v1/browse/https://solscan.io/account/${treasuryWallet}`, '_blank');
-    } catch (err: unknown) {
-      toast({ title: 'Payment Failed', description: err instanceof Error ? err.message : 'Failed', variant: 'destructive' });
-    } finally { setIsProcessing(false); }
-  };
-
-  const handleSubscriptionStripe = async () => {
-    setIsProcessing(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { toast({ title: 'Please sign in', variant: 'destructive' }); return; }
-      const { data, error } = await supabase.functions.invoke('create-healing-checkout', { body: { planType: 'subscription' } });
+      if (!user) {
+        toast({ title: 'Please sign in', variant: 'destructive' });
+        return;
+      }
+      const base = {
+        user_id: user.id,
+        amount: healingCryptoPlan.price,
+        currency: 'EUR',
+        status: 'pending',
+      };
+      let { error } = await (supabase as any).from('pending_crypto_payments').insert({
+        ...base,
+        notes: `healing_sacred_initiation:${healingCryptoPlan.id}`,
+      });
+      if (error) {
+        ({ error } = await (supabase as any).from('pending_crypto_payments').insert(base));
+      }
       if (error) throw error;
-      if (data?.url) window.open(data.url, '_blank');
+      toast({
+        title: 'Payment recorded',
+        description: 'We will activate your initiation after verification (usually within 24 hours).',
+      });
+      setHealingCryptoModalOpen(false);
+      setHealingCryptoPlan(null);
     } catch (err: unknown) {
-      toast({ title: 'Error', description: err instanceof Error ? err.message : 'Unknown error', variant: 'destructive' });
-    } finally { setIsProcessing(false); }
+      toast({
+        title: 'Could not record payment',
+        description: err instanceof Error ? err.message : 'Try again or contact support.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handlePurchaseAudio = async (audio: HealingAudio, method: 'shc' | 'stripe') => {
     setIsProcessing(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { toast({ title: 'Please sign in', variant: 'destructive' }); return; }
-      const { data, error } = await supabase.functions.invoke('purchase-healing-audio', { body: { audioId: audio.id, paymentMethod: method } });
+      if (!session) {
+        toast({ title: 'Please sign in', variant: 'destructive' });
+        return;
+      }
+      const { data, error } = await supabase.functions.invoke('purchase-healing-audio', {
+        body: { audioId: audio.id, paymentMethod: method },
+      });
       if (error) throw error;
-      if (data?.url) window.open(data.url, '_blank');
-      else if (data?.success) {
+      const checkoutUrl = resolveStripeCheckoutUrl(data);
+      if (checkoutUrl) {
+        window.location.assign(checkoutUrl);
+        return;
+      }
+      if (data && typeof data === 'object' && 'success' in data && (data as { success?: boolean }).success) {
         toast({ title: 'Purchase complete', description: `You now own ${audio.title}` });
         setOwnedAudioIds((prev) => new Set([...prev, audio.id]));
       }
     } catch (err: unknown) {
       toast({ title: 'Error', description: err instanceof Error ? err.message : 'Unknown error', variant: 'destructive' });
-    } finally { setIsProcessing(false); }
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const startPlayback = (audio: HealingAudio) => {
@@ -733,7 +798,12 @@ const Healing: React.FC = () => {
               ))}
             </div>
 
-            <button type="button" style={{ width: '100%', padding: 13, borderRadius: 100, fontSize: 12, fontWeight: 800, letterSpacing: '.04em', textTransform: 'uppercase', background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.06)', color: 'rgba(255,255,255,.45)', cursor: 'pointer', fontFamily: 'inherit', marginBottom: 20 }} onClick={handleSubscriptionStripe} disabled={isProcessing}>
+            <button
+              type="button"
+              style={{ width: '100%', padding: 13, borderRadius: 100, fontSize: 12, fontWeight: 800, letterSpacing: '.04em', textTransform: 'uppercase', background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.06)', color: 'rgba(255,255,255,.45)', cursor: 'pointer', fontFamily: 'inherit', marginBottom: 20 }}
+              onClick={() => openPaymentModal(SUBSCRIPTION_PLAN)}
+              disabled={isProcessing}
+            >
               {T.bookingOngoing} — €147/{lang === 'sv' ? 'mån' : lang === 'no' ? 'mnd' : lang === 'es' ? 'mes' : 'mo'}
             </button>
 
@@ -777,6 +847,40 @@ const Healing: React.FC = () => {
             </Button>
             <Button size="lg" className="w-full bg-white/10 text-white border border-white/20 hover:bg-white/20" onClick={() => selectedPlan && handleCryptoPayment(selectedPlan)} disabled={isProcessing}>
               <Wallet className="w-5 h-5 mr-2" />{T.payCrypto}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Crypto: USDC/USDT to treasury + record pending payment (same pattern as Akashic) */}
+      <Dialog open={healingCryptoModalOpen} onOpenChange={(o) => { setHealingCryptoModalOpen(o); if (!o) setHealingCryptoPlan(null); }}>
+        <DialogContent className="sm:max-w-md bg-[#0a0a0a] border-[#D4AF37]/30 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-[#D4AF37]">{T.payCrypto}</DialogTitle>
+            <DialogDescription className="text-white/50">
+              {healingCryptoPlan &&
+                (healingCryptoPlan.id === 'subscription'
+                  ? `${T.bookingOngoing} — €${healingCryptoPlan.price}`
+                  : `${healingCryptoPlan.days} ${T.days} — €${healingCryptoPlan.price}`)}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 text-sm py-2">
+            <p className="text-white/80">
+              Send <strong className="text-[#D4AF37]">€{healingCryptoPlan?.price.toFixed(2)}</strong> equivalent in{' '}
+              <strong className="text-[#D4AF37]">USDC or USDT</strong> (same network as the address below) to:
+            </p>
+            <div className="p-3 rounded-lg bg-black/50 font-mono text-xs break-all border border-[#D4AF37]/20 select-all">
+              {HEALING_CRYPTO_TREASURY}
+            </div>
+            <p className="text-white/50 text-xs">
+              Include your account email in the transaction memo if your wallet allows it. After sending, tap the button below so we can match your payment.
+            </p>
+            <Button
+              className="w-full bg-[#D4AF37] text-black hover:bg-[#D4AF37]/90 font-bold"
+              onClick={handleHealingCryptoSubmitted}
+              disabled={isProcessing || !healingCryptoPlan}
+            >
+              {isProcessing ? '…' : "I've sent payment — record my initiation"}
             </Button>
           </div>
         </DialogContent>
