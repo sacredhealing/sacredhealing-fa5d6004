@@ -52,7 +52,8 @@ const H_CSS = `
   .h-track:hover .h-play-btn { background: linear-gradient(135deg, #D4AF37, #B8960C); color: #050505; box-shadow: 0 0 18px rgba(212,175,55,.45); }
   .h-testimonial { padding: 18px 20px; background: rgba(255,255,255,.015); border: 1px solid rgba(255,255,255,.04); border-radius: 24px; }
   .h-pricing { background: linear-gradient(135deg, rgba(139,92,246,.08), rgba(212,175,55,.05)); border: 1px solid rgba(212,175,55,.18); border-radius: var(--r40); padding: 30px 24px 24px; text-align: center; position: relative; overflow: hidden; }
-  .h-pricing::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(212,175,55,.08), transparent 65%); }
+  /* Decorative layer must not capture taps (otherwise tier / CTA buttons feel dead). */
+  .h-pricing::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(212,175,55,.08), transparent 65%); pointer-events: none; }
   .h-tier-btn { flex: 1; min-width: 88px; padding: 12px 14px; border-radius: 100px; font-size: 12px; font-weight: 800; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08); color: rgba(255,255,255,.7); cursor: pointer; font-family: inherit; transition: all .22s; }
   .h-tier-btn:hover, .h-tier-btn.h-active { background: linear-gradient(135deg, rgba(212,175,55,.12), rgba(212,175,55,.04)); border-color: rgba(212,175,55,.3); color: #D4AF37; box-shadow: 0 0 16px rgba(212,175,55,.12); }
   .h-cta-btn { width: 100%; padding: 15px; border-radius: 100px; background: linear-gradient(135deg, #D4AF37, #B8960C); color: #050505; font-size: 13px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; border: none; cursor: pointer; font-family: inherit; box-shadow: 0 0 28px rgba(212,175,55,.4); transition: all .25s; display: flex; align-items: center; justify-content: center; gap: 9px; }
@@ -437,12 +438,15 @@ const Healing: React.FC = () => {
   const handleStripePayment = async (planType: string) => {
     setIsProcessing(true);
     setPaymentModalOpen(false);
+    const loadingId = 'healing-stripe-checkout';
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        toast({ title: 'Please sign in', description: 'Log in to continue to checkout.', variant: 'destructive' });
+        sonnerToast.error('Sign in to continue', { description: 'Log in or create an account to open checkout.' });
+        navigate('/auth');
         return;
       }
+      sonnerToast.loading('Opening secure checkout…', { id: loadingId });
       const { data, error } = await supabase.functions.invoke('create-healing-checkout', {
         body: { planType, origin: window.location.origin },
       });
@@ -452,23 +456,31 @@ const Healing: React.FC = () => {
       }
       const url = resolveStripeCheckoutUrl(data);
       if (!url) {
-        toast({
-          title: 'Checkout unavailable',
+        sonnerToast.error('Checkout unavailable', {
+          id: loadingId,
           description: 'No payment link returned. Try again or contact support.',
-          variant: 'destructive',
         });
         return;
       }
+      sonnerToast.success('Redirecting to Stripe…', { id: loadingId, duration: 2000 });
       window.location.assign(url);
     } catch (err: unknown) {
-      toast({ title: 'Error', description: err instanceof Error ? err.message : 'Unknown error', variant: 'destructive' });
+      sonnerToast.dismiss(loadingId);
+      sonnerToast.error(err instanceof Error ? err.message : 'Checkout failed');
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const handleCryptoPayment = (plan: HealingPlan) => {
+  const handleCryptoPayment = async (plan: HealingPlan) => {
     setPaymentModalOpen(false);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      sonnerToast.error('Sign in required', { description: 'Log in to use crypto payment instructions.' });
+      navigate('/auth');
+      return;
+    }
+    setSelectedPlan(plan);
     setHealingCryptoPlan(plan);
     setHealingCryptoModalOpen(true);
   };
@@ -786,13 +798,23 @@ const Healing: React.FC = () => {
       <section id="booking-section" style={{ padding: '0 22px 32px', scrollMarginTop: 32 }}>
         {!hasHealingAccess ? (
           <div className="h-pricing">
+            <div style={{ position: 'relative', zIndex: 1 }}>
             <div className="h-micro" style={{ marginBottom: 10 }}>Sacred Initiation · Stripe Checkout</div>
             <div className="h-section-title h-shimmer" style={{ marginBottom: 8 }}>{T.bookingTitle}</div>
             <div style={{ fontSize: 12, color: 'rgba(255,255,255,.45)', lineHeight: 1.7, marginBottom: 24, maxWidth: 300, margin: '0 auto 24px' }}>{T.bookingSub}</div>
 
             <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
               {HEALING_PLANS.map((plan) => (
-                <button key={plan.id} type="button" className={`h-tier-btn${selectedPlan?.id === plan.id ? ' h-active' : ''}`} onClick={() => openPaymentModal(plan)} disabled={isProcessing}>
+                <button
+                  key={plan.id}
+                  type="button"
+                  className={`h-tier-btn${selectedPlan?.id === plan.id ? ' h-active' : ''}`}
+                  onClick={() => {
+                    setSelectedPlan(plan);
+                    void handleStripePayment(plan.id);
+                  }}
+                  disabled={isProcessing}
+                >
                   {plan.days} {T.days} — €{plan.price}
                 </button>
               ))}
@@ -801,18 +823,50 @@ const Healing: React.FC = () => {
             <button
               type="button"
               style={{ width: '100%', padding: 13, borderRadius: 100, fontSize: 12, fontWeight: 800, letterSpacing: '.04em', textTransform: 'uppercase', background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.06)', color: 'rgba(255,255,255,.45)', cursor: 'pointer', fontFamily: 'inherit', marginBottom: 20 }}
-              onClick={() => openPaymentModal(SUBSCRIPTION_PLAN)}
+              onClick={() => {
+                setSelectedPlan(SUBSCRIPTION_PLAN);
+                void handleStripePayment('subscription');
+              }}
               disabled={isProcessing}
             >
               {T.bookingOngoing} — €147/{lang === 'sv' ? 'mån' : lang === 'no' ? 'mnd' : lang === 'es' ? 'mes' : 'mo'}
             </button>
 
-            <button type="button" className="h-cta-btn" onClick={() => openPaymentModal(selectedPlan ?? HEALING_PLANS[1])}>
+            <button
+              type="button"
+              className="h-cta-btn"
+              onClick={() => void handleStripePayment((selectedPlan ?? HEALING_PLANS[1]).id)}
+              disabled={isProcessing}
+            >
               <Sparkles size={15} className="h-nadi" />
               {T.bookingCta}
             </button>
 
-            <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,.2)', lineHeight: 1.6, marginTop: 14, position: 'relative', zIndex: 1 }}>{T.bookingDisclosure}</div>
+            <button
+              type="button"
+              disabled={isProcessing}
+              onClick={() => void handleCryptoPayment(selectedPlan ?? HEALING_PLANS[1])}
+              style={{
+                width: '100%',
+                marginTop: 12,
+                padding: 12,
+                borderRadius: 100,
+                fontSize: 11,
+                fontWeight: 800,
+                letterSpacing: '.08em',
+                textTransform: 'uppercase',
+                background: 'transparent',
+                border: '1px solid rgba(212,175,55,.28)',
+                color: 'rgba(212,175,55,.85)',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+              }}
+            >
+              Pay with crypto (USDC / USDT)
+            </button>
+
+            <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,.2)', lineHeight: 1.6, marginTop: 14 }}>{T.bookingDisclosure}</div>
+            </div>
           </div>
         ) : (
           <div style={{ padding: 18, background: 'rgba(16,185,129,.08)', border: '1px solid rgba(16,185,129,.25)', borderRadius: 40, display: 'flex', alignItems: 'center', gap: 12 }}>
