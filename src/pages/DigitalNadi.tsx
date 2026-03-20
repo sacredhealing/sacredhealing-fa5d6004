@@ -30,7 +30,8 @@ const SQI_STYLES = `
     background: #050505;
     color: #fff;
     min-height: 100vh;
-    padding-bottom: 120px;
+    /* App BottomNav + inner SQI pill + safe area — avoid clipped controls */
+    padding-bottom: calc(10.5rem + env(safe-area-inset-bottom, 0px));
     position: relative;
     overflow-x: hidden;
   }
@@ -200,13 +201,13 @@ const SQI_STYLES = `
     animation: sqi-orbit-rev 18s linear infinite;
   }
 
-  /* Nav */
+  /* Nav — above AppLayout BottomNav (z-50), clear home-indicator safe area */
   .sqi-nav {
     position: fixed;
-    bottom: 28px;
+    bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px));
     left: 50%;
     transform: translateX(-50%);
-    z-index: 50;
+    z-index: 60;
     display: flex;
     align-items: center;
     gap: 4px;
@@ -325,6 +326,25 @@ const SQI_STYLES = `
     line-height: 1;
   }
 `;
+
+/** Wait until ref is attached (Strict Mode / paint timing). */
+function waitForVideoRef(videoRef, maxMs = 5000) {
+  return new Promise((resolve) => {
+    const start = performance.now();
+    const tick = () => {
+      if (videoRef.current) {
+        resolve(videoRef.current);
+        return;
+      }
+      if (performance.now() - start >= maxMs) {
+        resolve(null);
+        return;
+      }
+      requestAnimationFrame(tick);
+    };
+    tick();
+  });
+}
 
 // ─── rPPG ENGINE ──────────────────────────────────────────────────────────────
 class RPPGEngine {
@@ -566,6 +586,7 @@ function DigitalNadiInner() {
   const streamRef = useRef(null);
   const animRef = useRef(null);
   const timerRef = useRef(null);
+  const scanGenerationRef = useRef(0);
 
   const tapEngine = useTapBPM();
 
@@ -587,7 +608,45 @@ function DigitalNadiInner() {
     engineRef.current.reset();
   }, []);
 
+  const bpmRef = useRef(null);
+  useEffect(() => {
+    bpmRef.current = bpm;
+  }, [bpm]);
+
+  const switchToTapMode = useCallback(() => {
+    stopCamera();
+    setUsedFallback(true);
+    setPhase("manual");
+    tapEngine.resetTap();
+  }, [stopCamera, tapEngine]);
+
+  /** Stuck in "initializing" (e.g. ref never ready, play() hang). */
+  useEffect(() => {
+    if (phase !== "initializing") return undefined;
+    const id = window.setTimeout(() => {
+      scanGenerationRef.current += 1;
+      stopCamera();
+      setPhase("idle");
+      setCameraError("Scanner did not start in time. Try again — or use tap pulse when prompted.");
+    }, 14000);
+    return () => window.clearTimeout(id);
+  }, [phase, stopCamera]);
+
+  /** Camera rPPG often never locks BPM; auto-switch to tap pulse mode. */
+  useEffect(() => {
+    if (phase !== "scanning" && phase !== "reading") return undefined;
+    const id = window.setTimeout(() => {
+      if (bpmRef.current != null) return;
+      stopCamera();
+      setUsedFallback(true);
+      setPhase("manual");
+    }, 32000);
+    return () => window.clearTimeout(id);
+  }, [phase, stopCamera]);
+
   const startScan = useCallback(async () => {
+    scanGenerationRef.current += 1;
+    const gen = scanGenerationRef.current;
     setCameraError(null);
     setPhase("initializing");
     setBpm(null); setHrv(null); setSignal([]); setQuality(0); setElapsed(0);
@@ -597,11 +656,34 @@ function DigitalNadiInner() {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "user", width: { ideal: 320 }, height: { ideal: 240 } },
       });
+      if (gen !== scanGenerationRef.current) {
+        stream.getTracks().forEach((t) => t.stop());
+        return;
+      }
       streamRef.current = stream;
-      const video = videoRef.current;
-      if (!video) return;
+      const video = await waitForVideoRef(videoRef, 5000);
+      if (gen !== scanGenerationRef.current) {
+        stream.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
+        return;
+      }
+      if (!video) {
+        stream.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
+        setUsedFallback(true);
+        setPhase("manual");
+        return;
+      }
+      video.setAttribute("playsinline", "true");
+      video.playsInline = true;
+      video.muted = true;
       video.srcObject = stream;
       await video.play();
+      if (gen !== scanGenerationRef.current) {
+        stream.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
+        return;
+      }
       const canvas = canvasRef.current;
       const ctx = canvas.getContext("2d", { willReadFrequently: true });
       canvas.width = 320; canvas.height = 240;
@@ -832,6 +914,18 @@ function DigitalNadiInner() {
               <p style={{ color: "#D4AF37", fontSize: 12, letterSpacing: "0.3em", textTransform: "uppercase" }}>
                 Calibrating Nāḍī Scanner
               </p>
+              <button
+                type="button"
+                onClick={() => {
+                  scanGenerationRef.current += 1;
+                  stopCamera();
+                  setPhase("idle");
+                }}
+                className="btn-ghost"
+                style={{ marginTop: 24 }}
+              >
+                Cancel
+              </button>
             </div>
           )}
 
@@ -873,18 +967,37 @@ function DigitalNadiInner() {
               )}
 
               <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-                <button onClick={() => { stopCamera(); setPhase("idle"); }} className="btn-ghost">
+                <button
+                  type="button"
+                  onClick={() => {
+                    scanGenerationRef.current += 1;
+                    stopCamera();
+                    setPhase("idle");
+                  }}
+                  className="btn-ghost"
+                >
                   Cancel
                 </button>
                 {bpm && (
-                  <button onClick={finishScan} className="btn-cyan">
+                  <button type="button" onClick={finishScan} className="btn-cyan">
                     View Reading →
                   </button>
                 )}
               </div>
 
+              {!bpm && elapsed >= 8 && (
+                <div style={{ marginTop: 20, padding: "14px 16px", borderRadius: 16, border: "1px solid rgba(212,175,55,0.15)", background: "rgba(255,255,255,0.02)" }}>
+                  <p className="sqi-body" style={{ fontSize: 12, marginBottom: 12, lineHeight: 1.6 }}>
+                    Pulse lock still calibrating. Hold still, face the camera, and add soft front light — or use tap mode for an immediate reading.
+                  </p>
+                  <button type="button" onClick={switchToTapMode} className="btn-gold" style={{ width: "100%" }}>
+                    Use tap pulse instead →
+                  </button>
+                </div>
+              )}
+
               {bpm && (
-                <button onClick={() => setActiveTab("breathing")} className="btn-ghost" style={{ marginTop: 12 }}>
+                <button type="button" onClick={() => setActiveTab("breathing")} className="btn-ghost" style={{ marginTop: 12 }}>
                   Begin Prāṇāyāma →
                 </button>
               )}
