@@ -1,4 +1,8 @@
 // @ts-nocheck
+/**
+ * Digital Nāḍī — SQI-2050. Results: live <NadiRecommendations> (Supabase);
+ * hardcoded Raga/sound-bath text cards removed. rPPG, tap fallback, gating unchanged.
+ */
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Navigate } from "react-router-dom";
 import { Heart, Wind, Sparkles, Fingerprint, RefreshCw } from "lucide-react";
@@ -265,23 +269,6 @@ const SQI_STYLES = `
     text-transform: uppercase;
   }
 
-  /* Result cards */
-  .result-card {
-    text-align: left;
-    padding: 20px 24px;
-    background: rgba(255,255,255,0.02);
-    border-radius: 20px;
-    cursor: pointer;
-    color: #fff;
-    width: 100%;
-    transition: all 0.25s ease;
-    border: 1px solid rgba(255,255,255,0.04);
-  }
-  .result-card:hover {
-    background: rgba(255,255,255,0.04);
-    transform: translateY(-2px);
-  }
-
   /* Tap BPM button */
   .tap-zone {
     position: relative;
@@ -447,8 +434,8 @@ class RPPGEngine {
   }
 }
 
-// ─── RECOMMENDATION ENGINE ────────────────────────────────────────────────────
-function getRecommendation(bpm, hrv) {
+// ─── Dosha + stress (feeds NadiRecommendations; static text cards removed) ───
+function calcNadiReading(bpm, hrv) {
   const stressBpm = Math.max(0, Math.min(1, (bpm - 55) / 60));
   const stressHrv = hrv !== null ? Math.max(0, Math.min(1, 1 - (hrv - 10) / 80)) : 0.5;
   const stress = stressBpm * 0.5 + stressHrv * 0.5;
@@ -456,37 +443,7 @@ function getRecommendation(bpm, hrv) {
   if (bpm > 85 && (hrv === null || hrv < 40)) dosha = "Pitta";
   else if (bpm < 65 && hrv !== null && hrv > 60) dosha = "Kapha";
   else if (hrv !== null && hrv > 50) dosha = "Vāta";
-
-  const sections = [
-    { id: "music", title: "Healing Music", sanskrit: "संगीत चिकित्सा", icon: "♪", color: "#FF6B4A", priority: 0, reason: "", recommendation: "" },
-    { id: "mantra", title: "Mantra Chanting", sanskrit: "मन्त्र जप", icon: "ॐ", color: "#FFB84A", priority: 0, reason: "", recommendation: "" },
-    { id: "meditation", title: "Guided Meditation", sanskrit: "ध्यान", icon: "◎", color: "#B084FF", priority: 0, reason: "", recommendation: "" },
-    { id: "soundbath", title: "Sound Bath", sanskrit: "नाद स्नान", icon: "∿", color: "#5AE4A8", priority: 0, reason: "", recommendation: "" },
-  ];
-
-  if (stress > 0.65) {
-    sections[3].priority = 4; sections[3].reason = "Your nervous system needs deep restoration"; sections[3].recommendation = "Tibetan Singing Bowls — 432Hz Binaural";
-    sections[0].priority = 3; sections[0].reason = "Slow ragas to bring down elevated heart rate"; sections[0].recommendation = "Raga Yaman — evening calming raga";
-    sections[2].priority = 2; sections[2].reason = "Yoga Nidra for full body-mind reset"; sections[2].recommendation = "30-min Yoga Nidra body scan";
-    sections[1].priority = 1; sections[1].reason = "Cooling mantras to pacify inner fire"; sections[1].recommendation = "Om Shanti — peace invocation, 108 repetitions";
-  } else if (stress > 0.35) {
-    sections[2].priority = 4; sections[2].reason = "Mindfulness to dissolve building tension"; sections[2].recommendation = "15-min breath-awareness meditation";
-    sections[1].priority = 3; sections[1].reason = "Rhythmic chanting to regulate your breath"; sections[1].recommendation = "Gayatri Mantra — 21 repetitions";
-    sections[0].priority = 2; sections[0].reason = "Balancing frequencies to stabilize mood"; sections[0].recommendation = "Raga Bhairav — morning grounding raga";
-    sections[3].priority = 1; sections[3].reason = "Crystal bowls for subtle energy alignment"; sections[3].recommendation = "Crystal Bowl Chakra Sweep — 20 min";
-  } else {
-    sections[1].priority = 4; sections[1].reason = "Your calm state is perfect for deep practice"; sections[1].recommendation = "So Hum — breath-synchronized mantra";
-    sections[2].priority = 3; sections[2].reason = "Deepen this stillness with witness meditation"; sections[2].recommendation = "Vipassana — 20-min insight observation";
-    sections[3].priority = 2; sections[3].reason = "Amplify this peace with harmonic resonance"; sections[3].recommendation = "Gong Bath — full spectrum overtones";
-    sections[0].priority = 1; sections[0].reason = "Ambient soundscapes to sustain the flow"; sections[0].recommendation = "Raga Darbari — contemplative night raga";
-  }
-
-  if (dosha === "Pitta") { const m = sections.find(s => s.id === "music"); m.recommendation = "Raga Malkauns — cooling moonlight raga"; m.reason = "Pitta-pacifying frequencies to cool inner fire"; }
-  else if (dosha === "Vāta") { const sb = sections.find(s => s.id === "soundbath"); sb.recommendation = "Didgeridoo Drone — deep grounding vibration"; sb.reason = "Root-chakra tones to anchor scattered Vāta energy"; }
-  else if (dosha === "Kapha") { const mt = sections.find(s => s.id === "mantra"); mt.recommendation = "Agni Mantra — Ram Ram — fire activation"; mt.reason = "Energizing vibration to awaken sluggish Kapha"; }
-
-  sections.sort((a, b) => b.priority - a.priority);
-  return { sections, stress: Math.round(stress * 100), dosha };
+  return { dosha, stress: Math.round(stress * 100) };
 }
 
 // ─── TAP BPM ENGINE ───────────────────────────────────────────────────────────
@@ -578,7 +535,6 @@ function DigitalNadiInner() {
   const [quality, setQuality] = useState(0);
   const [elapsed, setElapsed] = useState(0);
   const [cameraError, setCameraError] = useState(null);
-  const [activeSection, setActiveSection] = useState(null);
   const [usedFallback, setUsedFallback] = useState(false);
 
   const videoRef = useRef(null);
@@ -742,14 +698,9 @@ function DigitalNadiInner() {
     tapEngine.resetTap();
   }, [tapEngine]);
 
-  const handleNavigateSection = useCallback(section => {
-    setActiveSection(section); setPage("section");
-  }, []);
-
   useEffect(() => () => stopCamera(), [stopCamera]);
 
   const formatTime = s => `${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;
-  const recommendation = bpm ? getRecommendation(bpm, hrv) : null;
 
   // ─── BOTTOM NAV ──────────────────────────────────────────────────────────
   const navBtn = (tab: TabType, label: string, Icon: React.ComponentType<{size?: number}>) => (
@@ -1149,21 +1100,20 @@ function DigitalNadiInner() {
     );
   }
 
-  // ─── RESULTS PAGE ────────────────────────────────────────────────────────
-  if (page === "results" && recommendation) {
+  // ─── RESULTS PAGE — live Supabase recommendations only ─────────────────
+  if (page === "results" && bpm) {
+    const { dosha, stress } = calcNadiReading(bpm, hrv);
     const doshaColors = { Pitta: "#FF6B4A", Kapha: "#5AE4A8", Vāta: "#B084FF", Balanced: "#D4AF37" };
-    const doshaColor = doshaColors[recommendation.dosha] || "#D4AF37";
+    const doshaColor = doshaColors[dosha] || "#D4AF37";
 
     return (
       <div className="sqi-page">
         <style>{SQI_STYLES}</style>
         <div style={{ maxWidth: 440, margin: "0 auto", padding: "48px 24px", position: "relative", zIndex: 1 }}>
 
-          {/* Header */}
-          <div style={{ textAlign: "center", marginBottom: 40 }}>
+          <div style={{ textAlign: "center", marginBottom: 36 }}>
             <p className="sqi-label" style={{ marginBottom: 12 }}>Nāḍī Reading Complete</p>
 
-            {/* Vitals row */}
             <div style={{ display: "flex", justifyContent: "center", gap: 24, marginBottom: 20 }}>
               <div className="vital-stat">
                 <span className="vital-number gold-glow">{bpm}</span>
@@ -1180,19 +1130,18 @@ function DigitalNadiInner() {
               )}
               <div style={{ width: 1, background: "rgba(255,255,255,0.06)", alignSelf: "stretch" }} />
               <div className="vital-stat">
-                <span className="vital-number" style={{ fontSize: 48, fontWeight: 300 }}>{recommendation.stress}%</span>
+                <span className="vital-number" style={{ fontSize: 48, fontWeight: 300 }}>{stress}%</span>
                 <p className="sqi-label" style={{ color: "rgba(255,255,255,0.4)" }}>STRESS</p>
               </div>
             </div>
 
-            {/* Dosha badge */}
             <span className="dosha-badge" style={{
               background: `${doshaColor}14`,
               border: `1px solid ${doshaColor}33`,
               color: doshaColor,
               boxShadow: `0 0 16px ${doshaColor}15`
             }}>
-              {recommendation.dosha} Dosha
+              {dosha} Dosha
             </span>
 
             {usedFallback && (
@@ -1202,39 +1151,14 @@ function DigitalNadiInner() {
             )}
           </div>
 
-          {/* Recommendation Cards */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {recommendation.sections.map((sec, i) => (
-              <button
-                key={sec.id}
-                onClick={() => handleNavigateSection(sec)}
-                className="result-card"
-                style={{ borderColor: `${sec.color}18` }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
-                  <span style={{ fontSize: 20, color: sec.color, minWidth: 24 }}>{sec.icon}</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.04em" }}>{sec.title}</span>
-                  <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.2em", color: "rgba(255,255,255,0.2)", marginLeft: "auto", textTransform: "uppercase" }}>
-                    #{i + 1}
-                  </span>
-                </div>
-                <p className="sqi-body" style={{ fontSize: 12, marginBottom: 4 }}>{sec.reason}</p>
-                <p style={{ fontSize: 11, color: sec.color, opacity: 0.8, fontWeight: 500 }}>→ {sec.recommendation}</p>
-              </button>
-            ))}
-          </div>
+          <NadiRecommendations
+            bpm={bpm}
+            hrv={hrv}
+            dosha={dosha}
+            stress={stress}
+          />
 
-          <div style={{ marginTop: 36 }}>
-            <NadiRecommendations
-              bpm={bpm}
-              hrv={hrv}
-              dosha={recommendation.dosha}
-              stress={recommendation.stress}
-            />
-          </div>
-
-          {/* Actions */}
-          <div style={{ textAlign: "center", marginTop: 36, display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+          <div style={{ textAlign: "center", marginTop: 32, display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <button onClick={handleRescan} className="btn-ghost">
               <RefreshCw size={12} style={{ marginRight: 6 }} /> Re-scan
             </button>
@@ -1242,49 +1166,6 @@ function DigitalNadiInner() {
               Begin Prāṇāyāma →
             </button>
           </div>
-        </div>
-
-        <BottomNav />
-      </div>
-    );
-  }
-
-  // ─── SECTION DETAIL PAGE ─────────────────────────────────────────────────
-  if (page === "section" && activeSection) {
-    return (
-      <div className="sqi-page">
-        <style>{SQI_STYLES}</style>
-        <div style={{ maxWidth: 440, margin: "0 auto", padding: "48px 24px", textAlign: "center", position: "relative", zIndex: 1 }}>
-          <button onClick={() => setPage("results")} className="btn-ghost" style={{ marginBottom: 36 }}>
-            ← Back
-          </button>
-
-          <span style={{ fontSize: 52, display: "block", marginBottom: 16, color: activeSection.color, filter: `drop-shadow(0 0 16px ${activeSection.color}55)` }}>
-            {activeSection.icon}
-          </span>
-
-          <h2 className="sqi-title" style={{ fontSize: 22, marginBottom: 4 }}>{activeSection.title}</h2>
-          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic", marginBottom: 32 }}>
-            {activeSection.sanskrit}
-          </p>
-
-          <div style={{
-            padding: "24px",
-            background: `${activeSection.color}06`,
-            border: `1px solid ${activeSection.color}18`,
-            borderRadius: 20,
-            textAlign: "left",
-            marginBottom: 24
-          }}>
-            <p className="sqi-body" style={{ fontSize: 13, marginBottom: 12 }}>{activeSection.reason}</p>
-            <p style={{ fontSize: 14, color: activeSection.color, fontWeight: 600 }}>
-              {activeSection.recommendation}
-            </p>
-          </div>
-
-          <p className="sqi-body" style={{ fontSize: 11, lineHeight: 1.8, maxWidth: 320, margin: "0 auto" }}>
-            This Prema-Pulse Transmission was generated from your live biometric reading. For best results, practice during the time of day aligned with your dominant dosha rhythm.
-          </p>
         </div>
 
         <BottomNav />
