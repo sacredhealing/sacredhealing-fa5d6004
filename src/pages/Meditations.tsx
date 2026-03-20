@@ -22,7 +22,7 @@
  * ALL LOGIC is preserved exactly (hooks, Stripe, AffiliateID, language toggle, play counts).
  */
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Play, Pause, Clock, Sparkles, ArrowLeft, Loader2, Globe, Lock } from 'lucide-react';
@@ -52,6 +52,7 @@ import { useMembership } from '@/hooks/useMembership';
 import { useAIVedicReading } from '@/hooks/useAIVedicReading';
 import type { UserProfile } from '@/lib/vedicTypes';
 import type { ContentLanguage } from '@/utils/contentLanguage';
+import { startPranaMonthlyCheckout } from '@/features/membership/startPranaMonthlyCheckout';
 
 /* ─────────────────────────────────────────────────────────────────
    SQI-2050 CSS  (complete — all missing pieces added)
@@ -662,6 +663,7 @@ const Meditations: React.FC = () => {
   const [currentIntention, setCurrentIntention] = useState<IntentionType | null>(null);
   const [selectedPlaylist, setSelectedPlaylist] = useState<CuratedPlaylist | null>(null);
   const [playlistMeditations, setPlaylistMeditations] = useState<MeditationFull[]>([]);
+  const pranaUpgradeLockRef = useRef(false);
   const { reading: vedicReading, generateReading } = useAIVedicReading();
   const userDailyState = useUserDailyState();
   const startNowItem = useMemo(() => selectStartNowItem(meditations, { dayPhase: getDayPhase(), userState: (userDailyState?.userState ?? 'calm') as any, language }), [meditations, userDailyState, language]);
@@ -755,11 +757,25 @@ const Meditations: React.FC = () => {
     playUniversalAudio({ id: med.id, title: med.title, audio_url: audioUrl, artist: '', cover_image_url: null, duration_seconds: 0, shc_reward: 0, contentType: 'meditation' });
   };
 
-  const handleLock = () => {
-    toast('+ Upgrade to Prana Flow to unlock this transmission', {
-      description: 'Access the full Akasha library.',
-    });
-  };
+  const handleLock = useCallback(async () => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+    if (pranaUpgradeLockRef.current) return;
+    pranaUpgradeLockRef.current = true;
+    try {
+      await startPranaMonthlyCheckout({
+        successPath: '/meditations?membership_success=true',
+        sourcePage: 'meditations-prana-upgrade',
+      });
+    } catch (e: unknown) {
+      pranaUpgradeLockRef.current = false;
+      toast.error(
+        e instanceof Error ? e.message : t('meditations.checkoutFailed', 'Could not start checkout'),
+      );
+    }
+  }, [user, navigate, t]);
 
   const handleIntentionSelected = (intention: IntentionType) => {
     setCurrentIntention(intention);

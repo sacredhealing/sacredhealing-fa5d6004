@@ -2,8 +2,8 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { startPranaMonthlyCheckout } from '@/features/membership/startPranaMonthlyCheckout';
 
 const PranaFlow: React.FC = () => {
   const navigate = useNavigate();
@@ -92,43 +92,18 @@ const PranaFlow: React.FC = () => {
 
     setCheckoutLoading(true);
     try {
-      const affiliateRef =
-        searchParams.get('ref') ||
-        (() => {
-          try {
-            return sessionStorage.getItem('affiliate_ref');
-          } catch {
-            return null;
-          }
-        })() ||
-        'direct';
-
-      const { data: tierData, error: tierError } = await supabase
-        .from('membership_tiers')
-        .select('stripe_price_id, slug')
-        .eq('slug', 'prana-monthly')
-        .single();
-
-      if (tierError || !tierData?.stripe_price_id) {
-        toast.error('Tier not available — contact support');
-        return;
+      const ref = searchParams.get('ref');
+      if (ref) {
+        try {
+          sessionStorage.setItem('affiliate_ref', ref);
+        } catch {
+          /* ignore */
+        }
       }
-
-      const { data, error } = await supabase.functions.invoke('create-membership-checkout', {
-        body: {
-          priceId: tierData.stripe_price_id,
-          tierSlug: 'prana-monthly',
-          affiliate_id: affiliateRef,
-          successPath: '/prana-flow',
-          metadata: {
-            tier_name: 'Prana–Flow',
-            source_page: 'prana-flow',
-          },
-        },
+      await startPranaMonthlyCheckout({
+        successPath: '/prana-flow',
+        sourcePage: 'prana-flow',
       });
-
-      if (error) throw error;
-      if (data?.url) window.location.href = data.url;
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : 'Checkout failed — please try again');
     } finally {
