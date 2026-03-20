@@ -174,7 +174,7 @@ const SIDEBAR_ITEMS = [
   { Icon: Infinity, label: "Akasha"         },
 ];
 
-function Sidebar() {
+function Sidebar({ onSelect }: { onSelect?: (label: string) => void }) {
   const [hovered, setHovered] = useState<number | null>(null);
   return (
     <div style={{
@@ -202,12 +202,14 @@ function Sidebar() {
             <motion.button
               type="button"
               whileHover={{ scale: 1.15 }}
+              whileTap={{ scale: 0.92 }}
               onHoverStart={() => setHovered(i)}
               onHoverEnd={() => setHovered(null)}
+              onClick={() => onSelect?.(label)}
               style={{
                 color: hovered === i ? GOLD : "rgba(255,255,255,0.28)",
                 background: "none", border: "none",
-                cursor: "default", padding: 4,
+                cursor: "pointer", padding: 4,
                 transition: "color 0.2s",
                 filter: hovered === i ? `drop-shadow(0 0 6px ${GOLD})` : "none",
               }}
@@ -587,7 +589,13 @@ export default function WealthBeacon() {
       {/* ─── Fixed chrome ─── */}
       <VedicTicker />
       <NadiScan />
-      <Sidebar />
+      <Sidebar
+        onSelect={(label) =>
+          toast.message(label, {
+            description: "Wealth Beacon channel acknowledged — field held in local coherence.",
+          })
+        }
+      />
       <TransmissionLog extra={transmissionExtras} />
       <HudBar />
 
@@ -797,15 +805,27 @@ export default function WealthBeacon() {
         {particles.map((p) => (
           <motion.div
             key={p.id}
-            initial={{ x: `${p.x}%`, y: `${p.y}%`, opacity: 0 }}
-            animate={{ y: ["0%", "-14%"], opacity: [0, 0.55, 0] }}
-            transition={{ duration: p.duration, repeat: Infinity, ease: "linear" }}
             style={{
               position: "absolute",
-              width: p.size, height: p.size,
+              left: `${p.x}%`,
+              top: `${p.y}%`,
+              width: p.size,
+              height: p.size,
               borderRadius: "50%",
               background: p.color,
               filter: `blur(1.5px) drop-shadow(0 0 3px ${p.color})`,
+            }}
+            animate={{
+              y: [0, -90 - (p.id % 5) * 12, 0],
+              x: [0, (p.id % 2 === 0 ? 1 : -1) * (18 + (p.id % 4) * 6), 0],
+              opacity: [0.12, 0.62, 0.12],
+              scale: [1, 1.35, 1],
+            }}
+            transition={{
+              duration: p.duration,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: p.id * 0.08,
             }}
           />
         ))}
