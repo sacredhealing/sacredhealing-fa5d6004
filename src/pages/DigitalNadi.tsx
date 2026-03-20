@@ -8,6 +8,7 @@ import { useAdminRole } from "@/hooks/useAdminRole";
 import { hasFeatureAccess, FEATURE_TIER } from "@/lib/tierAccess";
 import { BreathingGuide } from "@/components/digital-nadi/BreathingGuide";
 import { MeditationPlayer } from "@/components/digital-nadi/MeditationPlayer";
+import { NadiRecommendations } from "@/components/digital-nadi/NadiRecommendations";
 
 // ─── SQI 2050 GLOBAL STYLES ───────────────────────────────────────────────────
 const SQI_STYLES = `
@@ -1221,6 +1222,15 @@ function DigitalNadiInner() {
                 <p style={{ fontSize: 11, color: sec.color, opacity: 0.8, fontWeight: 500 }}>→ {sec.recommendation}</p>
               </button>
             ))}
+          </div>
+
+          <div style={{ marginTop: 36 }}>
+            <NadiRecommendations
+              bpm={bpm}
+              hrv={hrv}
+              dosha={recommendation.dosha}
+              stress={recommendation.stress}
+            />
           </div>
 
           {/* Actions */}
