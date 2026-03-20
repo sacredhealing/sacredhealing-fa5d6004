@@ -33,6 +33,7 @@ import {
   getPlanetOfDay, getDailyMantraFromChart, type Planet
 } from '@/lib/jyotishMantraLogic';
 import { getPlanetEmoji } from '@/lib/vedicTypes';
+import { audioEngine } from '@/lib/audioEngine';
 import { getPalmScanResult } from '@/lib/palmScanStore';
 import BhriguCard from '@/components/BhriguCard';
 
@@ -344,7 +345,6 @@ const Mantras = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [completed, setCompleted] = useState(false);
 
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const currentMantraIdRef = useRef<string | null>(null);
 
   const reps = MANTRA_REPETITIONS;
@@ -433,6 +433,12 @@ const Mantras = () => {
     }
   }, [jyotishRecommendation?.recommendedMantraId, mantras, selectedMantraId]);
 
+  useEffect(() => {
+    return () => {
+      audioEngine.stop();
+    };
+  }, []);
+
   /* ── Pre-fetch remedy audio ── */
   useEffect(() => {
     if (!dashaPlanet || mantras.length === 0) return;
@@ -475,29 +481,32 @@ const Mantras = () => {
   const playNextRep = (mantra: MantraItem) => {
     if (!mantra.audio_url) return;
     const url = getPlayableUrl(mantra.audio_url);
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.src = '';
-    }
-    const audio = new Audio(url);
-    audioRef.current = audio;
     currentMantraIdRef.current = mantra.id;
-    audio.addEventListener('ended', () => {
+
+    const onEnded = () => {
       setCount((c) => {
         const next = c + 1;
         if (next >= reps) {
           setIsPlaying(false);
           setCompleted(true);
           currentMantraIdRef.current = null;
-          if (user && currentMantra) awardMantraReward(currentMantra);
+          audioEngine.stop();
+          if (user) void awardMantraReward(mantra);
           return reps;
         }
-        audio.currentTime = 0;
-        audio.play().catch(() => {});
+        const el = audioEngine.getCurrent();
+        if (el) {
+          el.currentTime = 0;
+          void el.play().catch(() => {});
+        }
         return next;
       });
+    };
+
+    audioEngine.play(url, onEnded, {
+      endedEveryRepeat: true,
+      onPlayError: () => toast.error(t('error_audio_play', 'Could not play audio.')),
     });
-    audio.play().catch(() => toast.error(t('error_audio_play', 'Could not play audio.')));
   };
 
   const handleStart = () => {
@@ -506,9 +515,14 @@ const Mantras = () => {
       return;
     }
     if (count >= reps) setCount(0);
-    if (audioRef.current && currentMantraIdRef.current === currentMantra.id && count < reps) {
+    if (
+      audioEngine.getCurrent() &&
+      currentMantraIdRef.current === currentMantra.id &&
+      count < reps
+    ) {
+      if (audioEngine.isPlaying()) return;
       setIsPlaying(true);
-      audioRef.current.play().catch(() => {});
+      audioEngine.resume();
       return;
     }
     setIsPlaying(true);
@@ -517,13 +531,12 @@ const Mantras = () => {
   };
 
   const handlePause = () => {
-    audioRef.current?.pause();
+    audioEngine.pause();
     setIsPlaying(false);
   };
 
   const handleReset = () => {
-    audioRef.current?.pause();
-    audioRef.current = null;
+    audioEngine.stop();
     currentMantraIdRef.current = null;
     setCount(0);
     setIsPlaying(false);
@@ -540,10 +553,11 @@ const Mantras = () => {
 
   const handleMantraSelect = (m: MantraItem) => {
     setSelectedMantraId(m.id);
-    if (isPlaying) {
-      audioRef.current?.pause();
-      setIsPlaying(false);
+    if (audioEngine.isPlaying() || audioEngine.getCurrent()) {
+      audioEngine.stop();
     }
+    setIsPlaying(false);
+    currentMantraIdRef.current = null;
     setCount(0);
     setCompleted(false);
   };
@@ -572,7 +586,6 @@ const Mantras = () => {
   return (
     <div className="sqi-mantras">
       <style>{SQI_CSS}</style>
-      <audio ref={audioRef} className="hidden" />
 
       {/* ── HERO ── */}
       <div className="m-hero">
@@ -852,7 +865,8 @@ const Mantras = () => {
                   type="button"
                   className={`m-btn-start${isPlaying ? ' m-paused' : ''}`}
                   onClick={() => {
-                    handleStart();
+                    if (isPlaying) handlePause();
+                    else handleStart();
                     if ('vibrate' in navigator) navigator.vibrate(15);
                   }}
                 >
