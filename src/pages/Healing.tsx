@@ -22,6 +22,7 @@ import { useHealingMeditationLanguage } from '@/hooks/useHealingMeditationLangua
 import { HealingLanguageToggle } from '@/features/healing/HealingLanguageToggle';
 import { getHealingSessions, type HealingSessionItem } from '@/features/healing/getHealingSessions';
 import { useJyotishProfile } from '@/hooks/useJyotishProfile';
+import { navigateToStripeCheckout, resolveStripeCheckoutUrl } from '@/lib/stripeCheckoutNavigation';
 
 /* ─── SQI-2050 INLINE STYLES ─── */
 const H_CSS = `
@@ -117,13 +118,6 @@ const SUBSCRIPTION_PLAN: HealingPlan = {
   price: 147,
   days: 30,
 };
-
-function resolveStripeCheckoutUrl(data: unknown): string | null {
-  if (!data || typeof data !== 'object') return null;
-  const d = data as Record<string, unknown>;
-  const u = d.url ?? d.checkoutUrl;
-  return typeof u === 'string' && u.length > 0 ? u : null;
-}
 
 /** EVM treasury for USDC/USDT (set VITE_HEALING_CRYPTO_WALLET for production) */
 const HEALING_CRYPTO_TREASURY =
@@ -462,8 +456,25 @@ const Healing: React.FC = () => {
         });
         return;
       }
-      sonnerToast.success('Redirecting to Stripe…', { id: loadingId, duration: 2000 });
-      window.location.assign(url);
+      const nav = navigateToStripeCheckout(url);
+      if (nav === 'invalid_url') {
+        sonnerToast.error('Checkout unavailable', {
+          id: loadingId,
+          description: 'Invalid payment link. Contact support.',
+        });
+        return;
+      }
+      if (nav === 'popup_blocked') {
+        sonnerToast.error('Pop-up blocked', {
+          id: loadingId,
+          description: 'Allow pop-ups for this site, or open the app outside the preview iframe.',
+        });
+        return;
+      }
+      sonnerToast.success(
+        nav === 'opened_new_tab' ? 'Checkout opened in a new tab' : 'Redirecting to Stripe…',
+        { id: loadingId, duration: 2500 }
+      );
     } catch (err: unknown) {
       sonnerToast.dismiss(loadingId);
       sonnerToast.error(err instanceof Error ? err.message : 'Checkout failed');
@@ -539,7 +550,12 @@ const Healing: React.FC = () => {
       if (error) throw error;
       const checkoutUrl = resolveStripeCheckoutUrl(data);
       if (checkoutUrl) {
-        window.location.assign(checkoutUrl);
+        const nav = navigateToStripeCheckout(checkoutUrl);
+        if (nav === 'popup_blocked') {
+          toast({ title: 'Pop-up blocked', description: 'Allow pop-ups to open Stripe checkout.', variant: 'destructive' });
+        } else if (nav === 'invalid_url') {
+          toast({ title: 'Invalid checkout link', variant: 'destructive' });
+        }
         return;
       }
       if (data && typeof data === 'object' && 'success' in data && (data as { success?: boolean }).success) {

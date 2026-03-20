@@ -1,11 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-
-function resolveCheckoutUrl(data: unknown): string | null {
-  if (!data || typeof data !== 'object') return null;
-  const d = data as Record<string, unknown>;
-  const u = d.url ?? d.checkoutUrl;
-  return typeof u === 'string' && u.length > 0 ? u : null;
-}
+import { navigateToStripeCheckout, resolveStripeCheckoutUrl } from '@/lib/stripeCheckoutNavigation';
 
 /**
  * Stripe subscription checkout for Prana–Flow monthly (`prana-monthly`).
@@ -56,7 +50,13 @@ export async function startPranaMonthlyCheckout(opts?: {
   if (data && typeof data === 'object' && 'error' in data && (data as { error?: string }).error) {
     throw new Error(String((data as { error: string }).error));
   }
-  const url = resolveCheckoutUrl(data);
+  const url = resolveStripeCheckoutUrl(data);
   if (!url) throw new Error('No checkout URL returned');
-  window.location.assign(url);
+  const nav = navigateToStripeCheckout(url);
+  if (nav === 'popup_blocked') {
+    throw new Error('Pop-up blocked — allow pop-ups or open the app in a full window');
+  }
+  if (nav === 'invalid_url') {
+    throw new Error('Invalid checkout URL — contact support');
+  }
 }
