@@ -1,7 +1,7 @@
 // SQI-2050 | SIDDHA CHAMBER OF JYOTISH
 // Bhakti-Algorithm v7.2 | Vedic Light-Code Architecture
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,7 +17,9 @@ import { useMembership } from '@/hooks/useMembership';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { BirthDetailsForm } from '@/components/vedic/BirthDetailsForm';
-import { AIVedicDashboard } from '@/components/vedic/AIVedicDashboard';
+const AIVedicDashboard = lazy(() =>
+  import('@/components/vedic/AIVedicDashboard').then((m) => ({ default: m.AIVedicDashboard }))
+);
 import { DailyVedicInsight } from '@/components/vedic/DailyVedicInsight';
 import { IncenseSmoke } from '@/components/vedic/IncenseSmoke';
 import { SacredHeader } from '@/components/vedic/SacredHeader';
@@ -664,8 +666,8 @@ const UpgradeDialogContent: React.FC<{ onUpgrade: () => void }> = ({ onUpgrade }
         Unlock the Bhrigu Nadi Oracle
       </h2>
       <p className="sqi-body" style={{ fontSize: '0.8rem', maxWidth: 320, margin: '0 auto' }}>
-        Access AI-powered Vedic readings, Soul Blueprint analysis, Yoga Activators,
-        and the full Jyotish Chamber. Transmitted for Prana Flow members.
+        Access Full Jyotish readings, Soul Blueprint analysis, Yoga Activators,
+        and the complete Jyotish Chamber. Transmitted for Prana Flow members.
       </p>
     </div>
 
@@ -673,7 +675,7 @@ const UpgradeDialogContent: React.FC<{ onUpgrade: () => void }> = ({ onUpgrade }
 
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10, margin: '16px 0 24px' }}>
       {[
-        'AI Guru Chat · Bhrigu Rishi Oracle',
+        'Guru Chat · Bhrigu Rishi Oracle',
         'Soul Blueprint & Karma Analysis',
         'Planetary Yoga Activation Protocols',
         'Real-Time Hora Transmissions',
@@ -967,7 +969,7 @@ const VedicAstrology: React.FC = () => {
                     color: SQI.gold,
                   }}
                 >
-                  Prana Flow · Jyotish AI
+                  Prana Flow · Full Jyotish
                 </span>
               </div>
             )}
@@ -1186,7 +1188,7 @@ const VedicAstrology: React.FC = () => {
                     size={10}
                     style={{ display: 'inline', marginRight: 5, verticalAlign: 'middle' }}
                   />
-                  AI-Powered
+                  Full Jyotish
                   {!isPaid && (
                     <span style={{ marginLeft: 6, fontSize: 8, opacity: 0.7 }}>
                       <Lock
@@ -1210,7 +1212,7 @@ const VedicAstrology: React.FC = () => {
 
               <div className="sqi-label" style={{ opacity: 0.5, fontSize: 7 }}>
                 {useAIMode
-                  ? '⚡ Bhrigu Nadi Oracle · Prana Flow Transmission'
+                  ? '⚡ Full Jyotish · Bhrigu Nadi · Prana Flow'
                   : '✦ Classic Jyotish · Free Access'}
               </div>
             </motion.div>
@@ -1272,12 +1274,45 @@ const VedicAstrology: React.FC = () => {
                       </div>
                     </div>
                     <div style={{ padding: 0 }}>
-                      <AIVedicDashboard
-                        user={userProfile}
-                        userId={user?.id}
-                        onEditDetails={() => setBirthDetailsDialogOpen(true)}
-                        onUpgrade={() => navigate('/membership')}
-                      />
+                      <Suspense
+                        fallback={
+                          <div
+                            style={{
+                              minHeight: 360,
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: 16,
+                              padding: 32,
+                              color: 'rgba(212,175,55,0.55)',
+                              fontSize: 12,
+                              letterSpacing: '0.2em',
+                              textTransform: 'uppercase' as const,
+                            }}
+                          >
+                            <motion.div
+                              style={{
+                                width: 40,
+                                height: 40,
+                                borderRadius: '50%',
+                                border: '2px solid rgba(212,175,55,0.25)',
+                                borderTopColor: 'rgba(212,175,55,0.85)',
+                              }}
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 0.9, repeat: Infinity, ease: 'linear' }}
+                            />
+                            <span>Loading Full Jyotish chamber…</span>
+                          </div>
+                        }
+                      >
+                        <AIVedicDashboard
+                          user={userProfile}
+                          userId={user?.id}
+                          onEditDetails={() => setBirthDetailsDialogOpen(true)}
+                          onUpgrade={() => navigate('/membership')}
+                        />
+                      </Suspense>
                     </div>
                   </div>
                 ) : (
@@ -1301,7 +1336,7 @@ const VedicAstrology: React.FC = () => {
                         style={{ marginTop: 20 }}
                       >
                         <div className="sqi-label" style={{ marginBottom: 8 }}>
-                          Prana Flow · AI-Powered Jyotish
+                          Prana Flow · Full Jyotish
                         </div>
                         <h3
                           style={{
@@ -1318,7 +1353,7 @@ const VedicAstrology: React.FC = () => {
                           className="sqi-body"
                           style={{ fontSize: '0.8rem', maxWidth: 360, margin: '0 auto 20px' }}
                         >
-                          AI Guru Chat, Soul Blueprint, Nakshatra Dasha analysis, and
+                          Guru Chat, Soul Blueprint, Nakshatra Dasha analysis, and
                           real-time Hora transmissions — all included in Prana Flow.
                         </p>
                         <button className="sqi-btn-gold" onClick={() => navigate('/membership')}>

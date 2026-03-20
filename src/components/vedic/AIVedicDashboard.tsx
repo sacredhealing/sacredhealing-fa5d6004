@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useMemo, lazy, Suspense } from 'react';
+import React, { useLayoutEffect, useState, useRef, useMemo, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Zap, Star, Sparkles, CheckCircle, AlertCircle, Quote, Crown, Compass, 
@@ -33,31 +33,33 @@ interface AIVedicDashboardProps {
 }
 
 const LoadingSpinner = () => (
-  <div className="flex flex-col items-center justify-center min-h-[500px] space-y-8">
+  <div className="flex flex-col items-center justify-center min-h-[420px] space-y-6 px-4">
     <div className="relative w-24 h-24">
-      <div className="absolute inset-0 border-[3px] border-purple-500/10 rounded-full" />
-      <motion.div 
-        className="absolute inset-0 border-[3px] border-purple-500 border-t-transparent rounded-full"
+      <div className="absolute inset-0 border-[3px] border-amber-500/15 rounded-full" />
+      <motion.div
+        className="absolute inset-0 border-[3px] border-amber-500/80 border-t-transparent rounded-full"
         animate={{ rotate: 360 }}
-        transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+        transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
       />
-      <div className="absolute inset-4 border-[3px] border-indigo-400/20 rounded-full" />
-      <motion.div 
-        className="absolute inset-4 border-[3px] border-indigo-400 border-b-transparent rounded-full"
+      <div className="absolute inset-4 border-[3px] border-amber-400/15 rounded-full" />
+      <motion.div
+        className="absolute inset-4 border-[3px] border-amber-400/70 border-b-transparent rounded-full"
         animate={{ rotate: -360 }}
-        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+        transition={{ duration: 1.7, repeat: Infinity, ease: 'linear' }}
       />
       <div className="absolute inset-0 flex items-center justify-center">
-        <motion.div 
-          className="w-2 h-2 bg-white rounded-full shadow-[0_0_15px_rgba(255,255,255,0.8)]"
+        <motion.div
+          className="w-2 h-2 bg-amber-200 rounded-full shadow-[0_0_15px_rgba(212,175,55,0.9)]"
           animate={{ scale: [1, 1.5, 1] }}
           transition={{ duration: 1, repeat: Infinity }}
         />
       </div>
     </div>
-    <div className="text-center space-y-2">
-      <h3 className="text-xl font-serif text-foreground animate-pulse">Syncing Hora Watch...</h3>
-      <p className="text-muted-foreground text-xs font-mono uppercase tracking-[0.3em]">Calculating Planetary Success Ratings</p>
+    <div className="text-center space-y-2 max-w-sm">
+      <h3 className="text-lg font-serif text-amber-100/90 animate-pulse">Opening Full Jyotish…</h3>
+      <p className="text-muted-foreground text-[11px] leading-relaxed uppercase tracking-[0.2em]">
+        Loading saved reading if available, then Bhrigu Nadi transmission
+      </p>
     </div>
   </div>
 );
@@ -185,9 +187,10 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
     return { age, active, next };
   }, [user.birthDate]);
 
-  useEffect(() => {
+  // useLayoutEffect: apply cached reading synchronously before paint; avoids long blank screen
+  useLayoutEffect(() => {
     if (user.birthDate && user.birthTime && user.birthPlace && !timezoneLoading) {
-      generateReading(user, timeOffset, timezone, userId);
+      void generateReading(user, timeOffset, timezone, userId);
       try {
         const targetTime = new Date(Date.now() + timeOffset * 60000);
         setLastSync(targetTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: timezone }));
@@ -195,7 +198,7 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
         setLastSync(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }));
       }
     }
-  }, [user.plan, user.birthDate, user.birthTime, user.birthPlace, timeOffset, timezone, timezoneLoading, userId]);
+  }, [user.plan, user.birthDate, user.birthTime, user.birthPlace, timeOffset, timezone, timezoneLoading, userId, generateReading]);
 
   const handleTimeOffsetChange = (value: number[]) => setTimeOffset(value[0]);
 
@@ -222,11 +225,15 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
           <Sparkles className="w-12 h-12 text-primary mx-auto mb-4 opacity-50" />
           <h3 className="text-lg font-semibold text-foreground mb-2">Birth Details Required</h3>
           <p className="text-muted-foreground text-sm mb-4">
-            Add your complete birth details to generate your personalized AI-powered Vedic reading.
+            Add your complete birth details to open your personalized Full Jyotish reading.
           </p>
         </CardContent>
       </Card>
     );
+  }
+
+  if (timezoneLoading) {
+    return <LoadingSpinner />;
   }
 
   if (error) {
@@ -242,7 +249,9 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
     );
   }
 
-  if (!reading) return null;
+  if (isLoading || !reading) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-12 relative">
