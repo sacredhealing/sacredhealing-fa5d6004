@@ -148,6 +148,8 @@ const Dashboard: React.FC = () => {
   const [flowState, setFlowState] = useState<HomeFlowState>('idle');
   const [activeGuidance, setActiveGuidance] = useState<DailyGuidance | null>(null);
   const [isContinuationCompletion, setIsContinuationCompletion] = useState(false);
+  /** SHC earned for this completion — snapshotted because completeSlot can change after cache invalidation */
+  const [completionShcGift, setCompletionShcGift] = useState<number | null>(null);
 
   // Live time display
   const [liveTime, setLiveTime] = useState(() => {
@@ -222,9 +224,20 @@ const Dashboard: React.FC = () => {
 
   const handleSessionComplete = () => {
     if (!isContinuationCompletion) {
-      if (completeSlot === 'morning') completeMorning.mutate(undefined);
-      else if (completeSlot === 'midday') completeMidday.mutate(undefined);
-      else if (completeSlot === 'evening') completeEvening.mutate({});
+      if (completeSlot === 'morning') {
+        completeMorning.mutate(undefined);
+        setCompletionShcGift(15);
+      } else if (completeSlot === 'midday') {
+        completeMidday.mutate(undefined);
+        setCompletionShcGift(10);
+      } else if (completeSlot === 'evening') {
+        completeEvening.mutate({});
+        setCompletionShcGift(20);
+      } else {
+        setCompletionShcGift(null);
+      }
+    } else {
+      setCompletionShcGift(null);
     }
     setFlowState('completed');
   };
@@ -241,6 +254,7 @@ const Dashboard: React.FC = () => {
     setFlowState('idle');
     setActiveGuidance(null);
     setIsContinuationCompletion(false);
+    setCompletionShcGift(null);
   }, [isContinuationCompletion, markDayClosed]);
 
   const completedSession = activeGuidance
@@ -288,6 +302,7 @@ const Dashboard: React.FC = () => {
             onDone={handleDone}
             completedSession={completedSession}
             variant={isContinuationCompletion ? 'closing' : 'standard'}
+            shcGift={completionShcGift}
           />
         </div>
       )}

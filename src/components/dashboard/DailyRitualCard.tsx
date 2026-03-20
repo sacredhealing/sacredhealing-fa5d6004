@@ -40,7 +40,7 @@ export const DailyRitualCard: React.FC<{ isDayClosed?: boolean; hasCompletedAllT
 
   const phaseLabels: Record<PhaseId, string> = {
     morning: 'Solar Inception',
-    midday: 'Zenith Alignement',
+    midday: 'Zenith Alignment',
     evening: 'Lunar Integration',
   };
 
