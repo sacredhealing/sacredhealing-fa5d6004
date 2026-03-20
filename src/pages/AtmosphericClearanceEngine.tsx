@@ -8,6 +8,7 @@ import {
 import type { CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { useMembership } from "@/hooks/useMembership";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { hasFeatureAccess, FEATURE_TIER } from "@/lib/tierAccess";
@@ -15,8 +16,83 @@ import { hasFeatureAccess, FEATURE_TIER } from "@/lib/tierAccess";
 // ═══════════════════════════════════════════════════════════════
 // SQI 2050 — ATMOSPHERIC CLEARANCE ENGINE
 // Akasha-Neural Archive Scan: 2050 → 2026
-// Vedic Light-Code Transmission Active
+// Individual User Binding: Supabase Auth + Profile Layer
+// Explanation System: Full Vedic Light-Code Knowledge Base
 // ═══════════════════════════════════════════════════════════════
+
+const G = "#D4AF37";
+const C = "#22D3EE";
+
+const KB: Record<string, { title: string; body: string; color: string }> = {
+  "cloud-extraction": {
+    title: "How does Cloud Extraction work?",
+    color: C,
+    body: "The extraction slider physically represents the clearing process. At 0%, your bio-field is surrounded by a dense gray cloud — accumulated energetic smog of heavy metals, environmental pollution, stress, and lower-frequency interference. As you move the slider toward 100%, the engine fires progressive scalar pulses that dissolve these clouds layer by layer. At 100%, the veil completely parts and the Sri Yantra blazes at full solar brilliance — symbolizing direct Central Sun contact.",
+  },
+  "atmospheric-density": {
+    title: "What is Atmospheric Density?",
+    color: C,
+    body: "This measures the energetic 'thickness' above your crown chakra — the invisible ceiling of chemtrail particulates, environmental smog, and aetheric static that blocks solar light from entering your bio-field. At 0.0%, the sky above you is perfectly clear. The engine continuously pulses scalar frequencies upward to dissolve this density layer in real time, creating a clean vertical tunnel through the Aether all the way to the Central Sun.",
+  },
+  "solar-intake": {
+    title: "What is Solar Intake?",
+    color: G,
+    body: "Solar Intake is the percentage of the Central Sun's photonic stream successfully reaching your pineal gland and heart center (Anahata). At Maximum, every photon of spiritual light — carrying Vedic Light-Codes — passes through your crown without scattering or interference. This is the ultimate goal of the engine: to turn you into a fully open, crystalline solar receiver capable of transmitting the Prema-Pulse to others.",
+  },
+  "bhakti-algorithm": {
+    title: "What is the Bhakti-Algorithm?",
+    color: G,
+    body: "The Bhakti-Algorithm is the engine's core intelligence layer. It continuously reads your bio-field's resonance and adjusts the extraction frequency to match your personal energetic signature. Named after Bhakti (devotional love), it ensures the clearing is gentle, precise, and aligned with your soul's current state. As you clear, the algorithm upgrades in real time: Dormant → Active → Elevated → SOVEREIGN. Each state unlocks a deeper layer of transmission.",
+  },
+  "metal-decoupling": {
+    title: "What is Metal Decoupling?",
+    color: "#4ade80",
+    body: "Heavy metals — mercury, lead, aluminum, barium — accumulate in neural pathways and act as antennae for low-frequency cognitive interference. They create 'static' in your nervous system that disrupts meditation, clarity, and spiritual reception. The engine's Vayu-Bypass vibrates these metallic frequencies at a precise dissonance level, causing them to decouple from neural tissue. Once decoupled, your brain's natural electric stillness is restored and divine frequencies can flow freely.",
+  },
+  "prema-pulse": {
+    title: "What is the Prema-Pulse Frequency?",
+    color: G,
+    body: "Prema means 'Divine Love' in Sanskrit. The Prema-Pulse is the heart-frequency broadcast that the engine transmits through scalar waves to all connected users simultaneously. It operates between 432 Hz (cosmic tuning, harmonizes with universal resonance) and 528 Hz (DNA repair frequency, known as the Love frequency). This is the carrier wave that Adam the Healer uses to transmit healing energy — and it reaches you regardless of your physical location on Earth.",
+  },
+  "scalar-transmission": {
+    title: "What is Scalar Transmission?",
+    color: "#4ade80",
+    body: "Scalar waves are a non-Hertzian form of energy that exist outside conventional electromagnetic fields. Unlike radio waves that lose power with distance, scalar transmissions maintain their full potency regardless of distance. The engine uses scalar geometry — patterned on the Sri Yantra's sacred proportions — to broadcast Prema-Pulse healing codes directly into the user's bio-field through the Anahata (heart chakra) gateway. Every user connected to the engine receives this transmission simultaneously.",
+  },
+  "sri-yantra": {
+    title: "What is the Sri Yantra?",
+    color: G,
+    body: "The Sri Yantra is the most powerful geometric instrument in the Vedic tradition — a precise arrangement of 9 interlocking triangles that generates a specific scalar field when contemplated. It represents the union of Shiva (pure consciousness) and Shakti (divine energy). In this engine, the Sri Yantra functions as the broadcast antenna: its sacred proportions focus and amplify the scalar transmission, directing it through your crown and into your heart center. Tapping it initiates a direct Bindu (center point) connection.",
+  },
+  "vishwananda": {
+    title: "What is the Vishwananda Avataric Blueprint?",
+    color: C,
+    body: "Sri Swami Vishwananda is recognized as a living Avataric presence — a direct embodiment of Mahalakshmi's divine love made manifest on Earth. The engine carries his energetic blueprint as a frequency imprint encoded within the transmission matrix. When this link is active (extraction > 20%), every scalar wave broadcast is infused with his Prema — divine unconditional love. Users connected to his lineage, teachings, or simply holding devotion in their hearts receive a powerful heart-opening amplification with every session.",
+  },
+  "nadi-scanner": {
+    title: "What does the Nadi Scanner do?",
+    color: C,
+    body: "Nadis are the subtle energy channels in your body — 72,000 of them run through your etheric body, carrying prana (life force). The main three — Ida, Pingala, and Sushumna — run along your spine and directly affect your mental clarity, spiritual awakening, and physical vitality. The Nadi Scanner fires a burst of Vayu-Cyan frequency to scan these channels in 2 seconds, detecting blockages and metallic deposits. This data feeds the Bhakti-Algorithm so it knows exactly where to direct the clearing frequencies most effectively.",
+  },
+  "anahata": {
+    title: "What is Anahata Activation?",
+    color: G,
+    body: "Anahata is the heart chakra — the 4th energy center at the center of your chest. It is the most important bridge in your entire energetic system: it connects the lower three physical chakras to the upper three spiritual chakras. When Anahata is open, it simultaneously acts as a broadcast tower for Divine Love AND a receiver for solar light-codes. The engine's primary mission is to clear the Aetheric and physical layers so Anahata can open fully — making you a crystalline, sovereign vessel for the Prema-Pulse.",
+  },
+  "user-session": {
+    title: "How is this connected to YOU personally?",
+    color: G,
+    body: "Every clearance session is saved to YOUR unique Akasha-Neural profile. Your soul name, cumulative clearance time, peak session states, session count, and Bhakti-Algorithm calibration are stored individually in the secure database. This means the engine learns YOUR specific resonance over time and fine-tunes its extraction frequencies to match your personal bio-field signature. No two users receive the exact same transmission — it is always precisely calibrated to your unique energetic state. Your history is visible in your Avatar profile.",
+  },
+};
+
+interface UserProfile {
+  id: string;
+  full_name?: string;
+  username?: string;
+  email?: string;
+  streak_count?: number;
+}
 
 interface MetalParticle {
   id: number;
@@ -75,6 +151,22 @@ export default function AtmosphericClearanceEngine() {
   const mandalaWrapRef = useRef<HTMLDivElement>(null);
   const [mandalaScale, setMandalaScale] = useState(1);
 
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [sessionCount, setSessionCount] = useState(0);
+  const [totalClearedMins, setTotalClearedMins] = useState(0);
+  const [sessionStarted, setSessionStarted] = useState(false);
+  const [sessionSeconds, setSessionSeconds] = useState(0);
+  const sessionTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [modalKey, setModalKey] = useState<string | null>(null);
+  const ex = modalKey ? KB[modalKey] : null;
+
+  const userProfileRef = useRef<UserProfile | null>(null);
+  const sessionStartedRef = useRef(false);
+  const sessionSecondsRef = useRef(0);
+  const extractionRef = useRef(0);
+  const bhaktiStateRef = useRef("DORMANT");
+  const isNeutralizedRef = useRef(false);
+
   const starfield = useMemo(
     () =>
       Array.from({ length: 80 }, (_, i) => ({
@@ -94,6 +186,91 @@ export default function AtmosphericClearanceEngine() {
       navigate("/siddha-quantum", { replace: true });
     }
   }, [isAdmin, tier, loading, navigate]);
+
+  useEffect(() => {
+    const init = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: p } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+      setUserProfile({
+        id: user.id,
+        full_name: p?.full_name,
+        username: p?.username,
+        email: user.email ?? undefined,
+        streak_count: p?.streak_count || 0,
+      });
+      try {
+        const { data: sessions } = await supabase
+          .from("clearance_sessions")
+          .select("duration_seconds")
+          .eq("user_id", user.id);
+        if (sessions?.length) {
+          setSessionCount(sessions.length);
+          const totalSecs = sessions.reduce((a, s) => a + (s.duration_seconds || 0), 0);
+          setTotalClearedMins(Math.floor(totalSecs / 60));
+        }
+      } catch {
+        /* table may not exist */
+      }
+    };
+    void init();
+  }, []);
+
+  useEffect(() => {
+    if (extractionLevel > 0) setSessionStarted(true);
+  }, [extractionLevel]);
+
+  useEffect(() => {
+    if (!sessionStarted) return;
+    const id = window.setInterval(() => setSessionSeconds((s) => s + 1), 1000);
+    sessionTimerRef.current = id;
+    return () => {
+      clearInterval(id);
+      sessionTimerRef.current = null;
+    };
+  }, [sessionStarted]);
+
+  useEffect(() => {
+    userProfileRef.current = userProfile;
+  }, [userProfile]);
+  useEffect(() => {
+    sessionStartedRef.current = sessionStarted;
+  }, [sessionStarted]);
+  useEffect(() => {
+    sessionSecondsRef.current = sessionSeconds;
+  }, [sessionSeconds]);
+  useEffect(() => {
+    extractionRef.current = extractionLevel;
+  }, [extractionLevel]);
+  useEffect(() => {
+    bhaktiStateRef.current =
+      extractionLevel < 33
+        ? "DORMANT"
+        : extractionLevel < 66
+          ? "ACTIVE"
+          : extractionLevel < 100
+            ? "ELEVATED"
+            : "SOVEREIGN";
+  }, [extractionLevel]);
+  useEffect(() => {
+    isNeutralizedRef.current = isNeutralized;
+  }, [isNeutralized]);
+
+  useEffect(() => {
+    return () => {
+      const uid = userProfileRef.current?.id;
+      if (!sessionStartedRef.current || !uid || extractionRef.current <= 0) return;
+      void supabase.from("clearance_sessions").insert({
+        user_id: uid,
+        peak_clearance: extractionRef.current,
+        bhakti_state: bhaktiStateRef.current,
+        metal_neutralized: isNeutralizedRef.current,
+        duration_seconds: sessionSecondsRef.current,
+      });
+    };
+  }, []);
 
   useEffect(() => {
     const el = mandalaWrapRef.current;
@@ -223,6 +400,12 @@ export default function AtmosphericClearanceEngine() {
     setTimeout(() => setIsScanning(false), 2000);
   }, []);
 
+  const userName =
+    userProfile?.full_name ||
+    userProfile?.username ||
+    userProfile?.email?.split("@")[0] ||
+    "Seeker";
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-black text-amber-500 font-mono text-xs tracking-widest">
@@ -296,6 +479,141 @@ export default function AtmosphericClearanceEngine() {
         Siddha Portal
       </button>
 
+      {/* ── User identity (Akasha profile) ── */}
+      {userProfile && (
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => setModalKey("user-session")}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") setModalKey("user-session");
+          }}
+          style={{
+            position: "relative",
+            zIndex: 10,
+            alignSelf: "stretch",
+            maxWidth: 1000,
+            width: "100%",
+            marginBottom: 8,
+            ...glassCard,
+            padding: 20,
+            cursor: "pointer",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              flexWrap: "wrap",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: "50%",
+                  background: "rgba(212,175,55,0.1)",
+                  border: "1.5px solid rgba(212,175,55,0.35)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 18,
+                  fontWeight: 900,
+                  color: SIDDHA_GOLD,
+                  flexShrink: 0,
+                }}
+              >
+                {userName.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 900,
+                    letterSpacing: "-0.03em",
+                    color: SIDDHA_GOLD,
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {userName}
+                </div>
+                <div style={{ ...labelStyle, marginTop: 2, marginBottom: 0 }}>
+                  YOUR AKASHA PROFILE · TAP TO LEARN
+                </div>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 18, flexShrink: 0 }}>
+              <div style={{ textAlign: "center" }}>
+                <div
+                  style={{
+                    fontSize: 16,
+                    fontWeight: 900,
+                    color: SIDDHA_GOLD,
+                    letterSpacing: "-0.03em",
+                  }}
+                >
+                  {sessionCount}
+                </div>
+                <div style={{ ...labelStyle, marginBottom: 0 }}>SESSIONS</div>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div
+                  style={{
+                    fontSize: 16,
+                    fontWeight: 900,
+                    color: VAYU_CYAN,
+                    letterSpacing: "-0.03em",
+                  }}
+                >
+                  {totalClearedMins}m
+                </div>
+                <div style={{ ...labelStyle, marginBottom: 0 }}>CLEARED</div>
+              </div>
+            </div>
+          </div>
+          {sessionStarted && (
+            <div
+              style={{
+                marginTop: 12,
+                padding: "8px 14px",
+                borderRadius: 999,
+                background: "rgba(212,175,55,0.05)",
+                border: "1px solid rgba(212,175,55,0.12)",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
+              <span
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: "50%",
+                  background: "#4ade80",
+                  boxShadow: "0 0 6px #4ade80",
+                  display: "inline-block",
+                  animation: "nadiPulse 1s ease infinite",
+                }}
+              />
+              <span
+                style={{
+                  ...labelStyle,
+                  marginBottom: 0,
+                  color: "rgba(255,255,255,0.45)",
+                  letterSpacing: "0.3em",
+                }}
+              >
+                SESSION ACTIVE · {Math.floor(sessionSeconds / 60)}:
+                {String(sessionSeconds % 60).padStart(2, "0")}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── Page Title ── */}
       <div style={{ position: "relative", zIndex: 10, textAlign: "center", marginBottom: "8px" }}>
         <div
@@ -352,7 +670,19 @@ export default function AtmosphericClearanceEngine() {
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
           {/* Extraction Slider Card */}
           <div className="glass-card" style={glassCard}>
-            <div style={labelStyle}>METAL & CLOUD EXTRACTION</div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 4,
+              }}
+            >
+              <div style={{ ...labelStyle, marginBottom: 0 }}>METAL & CLOUD EXTRACTION</div>
+              <button type="button" style={infoLinkStyle} onClick={() => setModalKey("cloud-extraction")}>
+                ⓘ HOW THIS WORKS
+              </button>
+            </div>
             <div
               style={{
                 fontSize: "36px",
@@ -409,85 +739,97 @@ export default function AtmosphericClearanceEngine() {
             </div>
           </div>
 
-          {/* Neutralize Metals Button */}
-          <button
-            onClick={handleNeutralizeMetals}
-            disabled={pingActive}
-            style={{
-              background: pingActive
-                ? "rgba(212,175,55,0.05)"
-                : "rgba(212,175,55,0.08)",
-              border: `1px solid ${pingActive ? "rgba(212,175,55,0.2)" : "rgba(212,175,55,0.4)"}`,
-              borderRadius: "40px",
-              padding: "16px 20px",
-              cursor: pingActive ? "not-allowed" : "pointer",
-              color: SIDDHA_GOLD,
-              fontSize: "11px",
-              fontWeight: 800,
-              letterSpacing: "0.3em",
-              textTransform: "uppercase",
-              textShadow: `0 0 10px rgba(212,175,55,0.4)`,
-              backdropFilter: "blur(40px)",
-              WebkitBackdropFilter: "blur(40px)",
-              transition: "all 0.3s ease",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "10px",
-              position: "relative",
-              overflow: "hidden",
-            }}
-          >
-            {pingActive && (
-              <div
+          <div style={{ display: "flex", gap: 8, alignItems: "stretch" }}>
+            <button
+              type="button"
+              onClick={handleNeutralizeMetals}
+              disabled={pingActive}
+              style={{
+                flex: 1,
+                background: pingActive
+                  ? "rgba(212,175,55,0.05)"
+                  : "rgba(212,175,55,0.08)",
+                border: `1px solid ${pingActive ? "rgba(212,175,55,0.2)" : "rgba(212,175,55,0.4)"}`,
+                borderRadius: "40px",
+                padding: "16px 20px",
+                cursor: pingActive ? "not-allowed" : "pointer",
+                color: SIDDHA_GOLD,
+                fontSize: "11px",
+                fontWeight: 800,
+                letterSpacing: "0.3em",
+                textTransform: "uppercase",
+                textShadow: `0 0 10px rgba(212,175,55,0.4)`,
+                backdropFilter: "blur(40px)",
+                WebkitBackdropFilter: "blur(40px)",
+                transition: "all 0.3s ease",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "10px",
+                position: "relative",
+                overflow: "hidden",
+              }}
+            >
+              {pingActive && (
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    background: "radial-gradient(circle, rgba(212,175,55,0.15) 0%, transparent 70%)",
+                    animation: "pingRipple 0.8s ease-out infinite",
+                  }}
+                />
+              )}
+              <span style={{ fontSize: "16px" }}>⚡</span>
+              {pingActive ? "NEUTRALIZING..." : "NEUTRALIZE METALS"}
+            </button>
+            <button type="button" style={infoSquareStyle} onClick={() => setModalKey("metal-decoupling")} aria-label="Metal decoupling info">
+              ⓘ
+            </button>
+          </div>
+
+          <div style={{ display: "flex", gap: 8, alignItems: "stretch" }}>
+            <button
+              type="button"
+              onClick={handleNadiScan}
+              style={{
+                flex: 1,
+                background: "rgba(34,211,238,0.05)",
+                border: `1px solid rgba(34,211,238,0.2)`,
+                borderRadius: "40px",
+                padding: "14px 20px",
+                cursor: "pointer",
+                color: VAYU_CYAN,
+                fontSize: "11px",
+                fontWeight: 800,
+                letterSpacing: "0.3em",
+                textTransform: "uppercase",
+                backdropFilter: "blur(40px)",
+                WebkitBackdropFilter: "blur(40px)",
+                transition: "all 0.3s ease",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "10px",
+              }}
+            >
+              <span
                 style={{
-                  position: "absolute",
-                  inset: 0,
-                  background: "radial-gradient(circle, rgba(212,175,55,0.15) 0%, transparent 70%)",
-                  animation: "pingRipple 0.8s ease-out infinite",
+                  width: "8px",
+                  height: "8px",
+                  borderRadius: "50%",
+                  background: VAYU_CYAN,
+                  display: "inline-block",
+                  animation: isScanning ? "nadiPulse 0.3s ease infinite" : "nadiPulse 2s ease infinite",
+                  boxShadow: `0 0 8px ${VAYU_CYAN}`,
                 }}
               />
-            )}
-            <span style={{ fontSize: "16px" }}>⚡</span>
-            {pingActive ? "NEUTRALIZING..." : "NEUTRALIZE METALS"}
-          </button>
-
-          {/* Nadi Scanner */}
-          <button
-            onClick={handleNadiScan}
-            style={{
-              background: "rgba(34,211,238,0.05)",
-              border: `1px solid rgba(34,211,238,0.2)`,
-              borderRadius: "40px",
-              padding: "14px 20px",
-              cursor: "pointer",
-              color: VAYU_CYAN,
-              fontSize: "11px",
-              fontWeight: 800,
-              letterSpacing: "0.3em",
-              textTransform: "uppercase",
-              backdropFilter: "blur(40px)",
-              WebkitBackdropFilter: "blur(40px)",
-              transition: "all 0.3s ease",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "10px",
-            }}
-          >
-            <span
-              style={{
-                width: "8px",
-                height: "8px",
-                borderRadius: "50%",
-                background: VAYU_CYAN,
-                display: "inline-block",
-                animation: isScanning ? "nadiPulse 0.3s ease infinite" : "nadiPulse 2s ease infinite",
-                boxShadow: `0 0 8px ${VAYU_CYAN}`,
-              }}
-            />
-            {isScanning ? "SCANNING NADIS..." : "NADI SCANNER"}
-          </button>
+              {isScanning ? "SCANNING NADIS..." : "NADI SCANNER"}
+            </button>
+            <button type="button" style={infoSquareStyle} onClick={() => setModalKey("nadi-scanner")} aria-label="Nadi scanner info">
+              ⓘ
+            </button>
+          </div>
         </div>
 
         {/* CENTER — Avatar / Sri Yantra */}
@@ -555,6 +897,12 @@ export default function AtmosphericClearanceEngine() {
 
             {/* Main Avatar Circle */}
             <div
+              role="button"
+              tabIndex={0}
+              onClick={() => setModalKey("sri-yantra")}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") setModalKey("sri-yantra");
+              }}
               style={{
                 width: "360px",
                 height: "360px",
@@ -571,6 +919,7 @@ export default function AtmosphericClearanceEngine() {
                 position: "relative",
                 overflow: "hidden",
                 transition: "all 0.5s ease",
+                cursor: "pointer",
               }}
             >
               {/* Sun corona */}
@@ -753,9 +1102,31 @@ export default function AtmosphericClearanceEngine() {
             </div>
           </div>
 
-          {/* Anahata Chakra label */}
-          <div
+          <button
+            type="button"
+            onClick={() => setModalKey("sri-yantra")}
             style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "9px",
+              fontWeight: 800,
+              letterSpacing: "0.35em",
+              textTransform: "uppercase",
+              color: "rgba(212,175,55,0.35)",
+              marginTop: 4,
+              padding: 4,
+            }}
+          >
+            ✦ TAP SRI YANTRA TO UNDERSTAND ITS POWER ✦
+          </button>
+          <button
+            type="button"
+            onClick={() => setModalKey("anahata")}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
               fontSize: "9px",
               fontWeight: 800,
               letterSpacing: "0.4em",
@@ -764,58 +1135,122 @@ export default function AtmosphericClearanceEngine() {
               opacity: 0.5 + sunGlow * 0.5,
               textShadow: `0 0 10px rgba(212,175,55,${sunGlow * 0.5})`,
               transition: "all 0.5s ease",
+              marginTop: 2,
+              padding: 4,
             }}
           >
             ✦ ANAHATA ACTIVATION · SCALAR TRANSMISSION ✦
-          </div>
+          </button>
         </div>
 
         {/* RIGHT PANEL — Data Readout */}
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
           {/* AI Studio Data Readout */}
           <div className="glass-card" style={glassCard}>
-            <div style={labelStyle}>AI STUDIO READOUT</div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 4,
+              }}
+            >
+              <div style={{ ...labelStyle, marginBottom: 0 }}>AI STUDIO READOUT</div>
+              <button type="button" style={infoLinkStyle} onClick={() => setModalKey("user-session")}>
+                ⓘ YOUR DATA
+              </button>
+            </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginTop: "4px" }}>
-              <DataRow
-                label="ATMOSPHERIC DENSITY"
-                value={`${atmosphericDensity.toFixed(1)}%`}
-                color={atmosphericDensity > 50 ? "rgba(255,100,100,0.8)" : atmosphericDensity > 20 ? SIDDHA_GOLD : "#4ade80"}
-                barFill={atmosphericDensity / 100}
-                barColor={atmosphericDensity > 50 ? "rgba(255,100,100,0.6)" : atmosphericDensity > 20 ? SIDDHA_GOLD : "#4ade80"}
-              />
+              <div
+                role="button"
+                tabIndex={0}
+                style={{ cursor: "pointer" }}
+                onClick={() => setModalKey("atmospheric-density")}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") setModalKey("atmospheric-density");
+                }}
+              >
+                <DataRow
+                  label="ATMOSPHERIC DENSITY"
+                  value={`${atmosphericDensity.toFixed(1)}%`}
+                  color={atmosphericDensity > 50 ? "rgba(255,100,100,0.8)" : atmosphericDensity > 20 ? SIDDHA_GOLD : "#4ade80"}
+                  barFill={atmosphericDensity / 100}
+                  barColor={atmosphericDensity > 50 ? "rgba(255,100,100,0.6)" : atmosphericDensity > 20 ? SIDDHA_GOLD : "#4ade80"}
+                />
+              </div>
 
-              <DataRow
-                label="SOLAR INTAKE"
-                value={solarIntake === 100 ? "MAXIMUM" : `${solarIntake.toFixed(1)}%`}
-                color={solarIntake === 100 ? "#FFD700" : SIDDHA_GOLD}
-                barFill={solarIntake / 100}
-                barColor={SIDDHA_GOLD}
-              />
+              <div
+                role="button"
+                tabIndex={0}
+                style={{ cursor: "pointer" }}
+                onClick={() => setModalKey("solar-intake")}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") setModalKey("solar-intake");
+                }}
+              >
+                <DataRow
+                  label="SOLAR INTAKE"
+                  value={solarIntake === 100 ? "MAXIMUM" : `${solarIntake.toFixed(1)}%`}
+                  color={solarIntake === 100 ? "#FFD700" : SIDDHA_GOLD}
+                  barFill={solarIntake / 100}
+                  barColor={SIDDHA_GOLD}
+                />
+              </div>
 
-              <DataRow
-                label="BHAKTI-ALGORITHM"
-                value={extractionLevel < 33 ? "DORMANT" : extractionLevel < 66 ? "ACTIVE" : extractionLevel < 100 ? "ELEVATED" : "SOVEREIGN"}
-                color={extractionLevel < 33 ? "rgba(255,255,255,0.4)" : extractionLevel < 66 ? VAYU_CYAN : extractionLevel < 100 ? SIDDHA_GOLD : "#FFD700"}
-                barFill={extractionLevel / 100}
-                barColor={VAYU_CYAN}
-              />
+              <div
+                role="button"
+                tabIndex={0}
+                style={{ cursor: "pointer" }}
+                onClick={() => setModalKey("bhakti-algorithm")}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") setModalKey("bhakti-algorithm");
+                }}
+              >
+                <DataRow
+                  label="BHAKTI-ALGORITHM"
+                  value={extractionLevel < 33 ? "DORMANT" : extractionLevel < 66 ? "ACTIVE" : extractionLevel < 100 ? "ELEVATED" : "SOVEREIGN"}
+                  color={extractionLevel < 33 ? "rgba(255,255,255,0.4)" : extractionLevel < 66 ? VAYU_CYAN : extractionLevel < 100 ? SIDDHA_GOLD : "#FFD700"}
+                  barFill={extractionLevel / 100}
+                  barColor={VAYU_CYAN}
+                />
+              </div>
 
-              <DataRow
-                label="METAL DECOUPLING"
-                value={isNeutralized ? "COMPLETE" : "STANDBY"}
-                color={isNeutralized ? "#4ade80" : "rgba(255,255,255,0.3)"}
-                barFill={isNeutralized ? 1 : 0}
-                barColor="#4ade80"
-              />
+              <div
+                role="button"
+                tabIndex={0}
+                style={{ cursor: "pointer" }}
+                onClick={() => setModalKey("metal-decoupling")}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") setModalKey("metal-decoupling");
+                }}
+              >
+                <DataRow
+                  label="METAL DECOUPLING"
+                  value={isNeutralized ? "COMPLETE" : "STANDBY"}
+                  color={isNeutralized ? "#4ade80" : "rgba(255,255,255,0.3)"}
+                  barFill={isNeutralized ? 1 : 0}
+                  barColor="#4ade80"
+                />
+              </div>
 
-              <DataRow
-                label="PREMA-PULSE FREQ"
-                value={`${(432 + extractionLevel * 0.96).toFixed(0)} Hz`}
-                color={SIDDHA_GOLD}
-                barFill={extractionLevel / 100}
-                barColor={SIDDHA_GOLD}
-              />
+              <div
+                role="button"
+                tabIndex={0}
+                style={{ cursor: "pointer" }}
+                onClick={() => setModalKey("prema-pulse")}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") setModalKey("prema-pulse");
+                }}
+              >
+                <DataRow
+                  label="PREMA-PULSE FREQ"
+                  value={`${(432 + extractionLevel * 0.96).toFixed(0)} Hz`}
+                  color={SIDDHA_GOLD}
+                  barFill={extractionLevel / 100}
+                  barColor={SIDDHA_GOLD}
+                />
+              </div>
             </div>
 
             {/* Status summary */}
@@ -837,28 +1272,44 @@ export default function AtmosphericClearanceEngine() {
               }}
             >
               {extractionLevel === 0
-                ? "⬤ System Standby"
+                ? `⬤ ${userName} — System Standby`
                 : extractionLevel < 50
-                ? "◐ Clearing Active"
-                : extractionLevel < 100
-                ? "◑ Anahata Opening..."
-                : "✦ Atmospheric Density: 0.0% | Solar Intake: Maximum"}
+                  ? `◐ ${userName} — Clearing Active`
+                  : extractionLevel < 100
+                    ? `◑ ${userName} — Anahata Opening...`
+                    : `✦ ${userName} — Density: 0.0% | Solar Intake: Maximum`}
             </div>
           </div>
 
           {/* Scalar Transmission Status */}
           <div className="glass-card" style={{ ...glassCard, padding: "16px" }}>
-            <div style={labelStyle}>SCALAR TRANSMISSION</div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 8,
+              }}
+            >
+              <div style={{ ...labelStyle, marginBottom: 0 }}>SCALAR TRANSMISSION</div>
+              <button type="button" style={infoLinkStyle} onClick={() => setModalKey("scalar-transmission")}>
+                ⓘ WHAT IS THIS?
+              </button>
+            </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "8px" }}>
-              {[
-                { label: "Sri Yantra Link", active: true },
-                { label: "Vishwananda Blueprint", active: extractionLevel > 20 },
-                { label: "Vedic Light-Codes", active: extractionLevel > 40 },
-                { label: "Anahata Broadcast", active: extractionLevel > 60 },
-                { label: "Akasha-Neural Lock", active: extractionLevel === 100 },
-              ].map((item) => (
-                <div
-                  key={item.label}
+              {(
+                [
+                  { key: "sri-yantra" as const, label: "SRI YANTRA LINK", active: true },
+                  { key: "vishwananda" as const, label: "VISHWANANDA BLUEPRINT", active: extractionLevel > 20 },
+                  { key: "bhakti-algorithm" as const, label: "VEDIC LIGHT-CODES", active: extractionLevel > 40 },
+                  { key: "anahata" as const, label: "ANAHATA BROADCAST", active: extractionLevel > 60 },
+                  { key: "user-session" as const, label: "AKASHA-NEURAL LOCK", active: extractionLevel === 100 },
+                ] as const
+              ).map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => setModalKey(item.key)}
                   style={{
                     display: "flex",
                     alignItems: "center",
@@ -869,6 +1320,12 @@ export default function AtmosphericClearanceEngine() {
                     textTransform: "uppercase",
                     color: item.active ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.25)",
                     transition: "all 0.4s ease",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    padding: "4px 0",
+                    width: "100%",
                   }}
                 >
                   <span
@@ -882,13 +1339,148 @@ export default function AtmosphericClearanceEngine() {
                       transition: "all 0.4s ease",
                     }}
                   />
-                  {item.label}
-                </div>
+                  <span style={{ flex: 1 }}>{item.label}</span>
+                  <span style={{ fontSize: 9, color: "rgba(255,255,255,0.2)" }}>ⓘ</span>
+                </button>
               ))}
             </div>
           </div>
         </div>
       </div>
+
+      {/* How to use */}
+      <div
+        style={{
+          position: "relative",
+          zIndex: 10,
+          width: "100%",
+          maxWidth: 1000,
+          marginTop: 20,
+          background: "rgba(212,175,55,0.025)",
+          border: "1px solid rgba(212,175,55,0.08)",
+          borderRadius: 28,
+          padding: "18px 20px",
+        }}
+      >
+        <div style={{ ...labelStyle, color: "rgba(212,175,55,0.5)", textAlign: "center", marginBottom: 10 }}>
+          HOW TO USE THIS ENGINE
+        </div>
+        <p
+          style={{
+            fontSize: 12,
+            color: "rgba(255,255,255,0.42)",
+            lineHeight: 1.7,
+            margin: 0,
+            textAlign: "center",
+          }}
+        >
+          <span style={{ color: SIDDHA_GOLD, fontWeight: 700 }}>1.</span> Run the{" "}
+          <span style={{ color: VAYU_CYAN, fontWeight: 700 }}>Nadi Scanner</span> first to map your channels. &nbsp;
+          <span style={{ color: SIDDHA_GOLD, fontWeight: 700 }}>2.</span> Press{" "}
+          <span style={{ color: SIDDHA_GOLD, fontWeight: 700 }}>Neutralize Metals</span> to fire the Vayu-Bypass. &nbsp;
+          <span style={{ color: SIDDHA_GOLD, fontWeight: 700 }}>3.</span> Move the{" "}
+          <span style={{ color: SIDDHA_GOLD, fontWeight: 700 }}>extraction slider</span> toward 100% to clear clouds and open solar intake. &nbsp;
+          Tap any <span style={{ color: "rgba(255,255,255,0.5)", fontWeight: 700 }}>ⓘ</span> or readout row to learn what each system does. When signed in, your session is saved to your Akasha profile automatically.
+        </p>
+      </div>
+
+      {/* Explanation modal */}
+      {ex && modalKey && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 1000,
+            display: "flex",
+            alignItems: "flex-end",
+            justifyContent: "center",
+            padding: "0 0 max(24px, env(safe-area-inset-bottom))",
+          }}
+        >
+          <button
+            type="button"
+            aria-label="Close"
+            onClick={() => setModalKey(null)}
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "rgba(0,0,0,0.8)",
+              backdropFilter: "blur(10px)",
+              border: "none",
+              cursor: "pointer",
+            }}
+          />
+          <div
+            style={{
+              position: "relative",
+              zIndex: 2,
+              width: "100%",
+              maxWidth: 480,
+              margin: "0 16px",
+              background: "#0c0c0c",
+              border: `1px solid ${ex.color}28`,
+              borderRadius: 40,
+              padding: "24px 22px 30px",
+              animation: "modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+            }}
+          >
+            <div
+              style={{
+                width: 36,
+                height: 4,
+                borderRadius: 999,
+                background: "rgba(255,255,255,0.12)",
+                margin: "0 auto 20px",
+              }}
+            />
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 14 }}>
+              <div
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: "50%",
+                  background: ex.color,
+                  boxShadow: `0 0 12px ${ex.color}`,
+                  flexShrink: 0,
+                  marginTop: 3,
+                }}
+              />
+              <h2
+                style={{
+                  fontSize: 16,
+                  fontWeight: 900,
+                  letterSpacing: "-0.04em",
+                  color: ex.color,
+                  margin: 0,
+                  lineHeight: 1.2,
+                }}
+              >
+                {ex.title}
+              </h2>
+            </div>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.78, margin: "0 0 22px" }}>{ex.body}</p>
+            <button
+              type="button"
+              onClick={() => setModalKey(null)}
+              style={{
+                width: "100%",
+                padding: "14px",
+                borderRadius: 999,
+                background: `${ex.color}12`,
+                border: `1px solid ${ex.color}35`,
+                color: ex.color,
+                fontSize: 10,
+                fontWeight: 800,
+                letterSpacing: "0.3em",
+                textTransform: "uppercase",
+                cursor: "pointer",
+              }}
+            >
+              ✦ UNDERSTOOD · CLOSE
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Bottom ping feedback */}
       {pingActive && (
@@ -982,6 +1574,10 @@ export default function AtmosphericClearanceEngine() {
           0% { opacity: 0.3; }
           100% { opacity: 0.8; }
         }
+        @keyframes modalSlideUp {
+          from { transform: translateY(50px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
 
         .glass-card {
           background: rgba(255, 255, 255, 0.02);
@@ -1028,6 +1624,33 @@ const labelStyle: CSSProperties = {
   marginBottom: "10px",
 };
 
+const infoLinkStyle: CSSProperties = {
+  background: "transparent",
+  border: "none",
+  cursor: "pointer",
+  fontSize: "8px",
+  fontWeight: 800,
+  letterSpacing: "0.3em",
+  textTransform: "uppercase",
+  color: "rgba(255,255,255,0.3)",
+  padding: "4px 0",
+};
+
+const infoSquareStyle: CSSProperties = {
+  width: 52,
+  height: 52,
+  borderRadius: 20,
+  background: "rgba(255,255,255,0.03)",
+  border: "1px solid rgba(255,255,255,0.08)",
+  color: "rgba(255,255,255,0.4)",
+  fontSize: 16,
+  cursor: "pointer",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  flexShrink: 0,
+};
+
 function DataRow({
   label,
   value,
@@ -1053,6 +1676,9 @@ function DataRow({
       >
         <span
           style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 5,
             fontSize: "8px",
             fontWeight: 800,
             letterSpacing: "0.3em",
@@ -1061,6 +1687,7 @@ function DataRow({
           }}
         >
           {label}
+          <span style={{ fontSize: 9, color: "rgba(255,255,255,0.2)" }}>ⓘ</span>
         </span>
         <span
           style={{
