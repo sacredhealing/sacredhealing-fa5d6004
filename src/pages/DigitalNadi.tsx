@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Navigate } from "react-router-dom";
-import { Heart, Wind, Sparkles } from "lucide-react";
+import { Heart, Wind, Sparkles, Fingerprint, RefreshCw } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useMembership } from "@/hooks/useMembership";
 import { useAdminRole } from "@/hooks/useAdminRole";
@@ -9,7 +9,324 @@ import { hasFeatureAccess, FEATURE_TIER } from "@/lib/tierAccess";
 import { BreathingGuide } from "@/components/digital-nadi/BreathingGuide";
 import { MeditationPlayer } from "@/components/digital-nadi/MeditationPlayer";
 
-// rPPG ENGINE — Remote Photoplethysmography Signal Processing
+// ─── SQI 2050 GLOBAL STYLES ───────────────────────────────────────────────────
+const SQI_STYLES = `
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap');
+
+  :root {
+    --siddha-gold: #D4AF37;
+    --akasha-black: #050505;
+    --glass-base: rgba(255,255,255,0.02);
+    --glass-border: rgba(255,255,255,0.05);
+    --vayu-cyan: #22D3EE;
+    --coral: #FF6B4A;
+    --amber: #FFB84A;
+    --sage: #5AE4A8;
+    --violet: #B084FF;
+  }
+
+  .sqi-page {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: #050505;
+    color: #fff;
+    min-height: 100vh;
+    padding-bottom: 120px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  .sqi-page::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 50% -10%, rgba(212,175,55,0.06) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 30% at 80% 80%, rgba(34,211,238,0.03) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .glass-card {
+    background: rgba(255,255,255,0.02);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 40px;
+  }
+
+  .glass-card-sharp {
+    background: rgba(255,255,255,0.02);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 16px;
+  }
+
+  .gold-glow {
+    text-shadow: 0 0 20px rgba(212,175,55,0.4);
+    color: #D4AF37;
+  }
+
+  .gold-border {
+    border: 1px solid rgba(212,175,55,0.2);
+    box-shadow: 0 0 20px rgba(212,175,55,0.05), inset 0 0 20px rgba(212,175,55,0.02);
+  }
+
+  .sqi-label {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 800;
+    font-size: 8px;
+    letter-spacing: 0.5em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+  }
+
+  .sqi-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 900;
+    letter-spacing: -0.05em;
+  }
+
+  .sqi-body {
+    font-weight: 400;
+    line-height: 1.6;
+    color: rgba(255,255,255,0.6);
+  }
+
+  .btn-gold {
+    padding: 14px 36px;
+    background: rgba(212,175,55,0.08);
+    border: 1px solid rgba(212,175,55,0.3);
+    border-radius: 9999px;
+    color: #D4AF37;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 800;
+    font-size: 10px;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 20px rgba(212,175,55,0.05);
+  }
+  .btn-gold:hover {
+    background: rgba(212,175,55,0.15);
+    box-shadow: 0 0 30px rgba(212,175,55,0.15);
+    border-color: rgba(212,175,55,0.5);
+  }
+
+  .btn-ghost {
+    padding: 12px 28px;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 9999px;
+    color: rgba(255,255,255,0.4);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 700;
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  .btn-ghost:hover {
+    border-color: rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.7);
+  }
+
+  .btn-cyan {
+    padding: 12px 28px;
+    background: rgba(34,211,238,0.08);
+    border: 1px solid rgba(34,211,238,0.25);
+    border-radius: 9999px;
+    color: #22D3EE;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 800;
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  .btn-cyan:hover {
+    background: rgba(34,211,238,0.14);
+    box-shadow: 0 0 20px rgba(34,211,238,0.1);
+  }
+
+  /* Pulse ring animation for scan state */
+  @keyframes sqi-pulse-ring {
+    0% { transform: scale(0.92); opacity: 0.8; }
+    50% { transform: scale(1.08); opacity: 0.3; }
+    100% { transform: scale(0.92); opacity: 0.8; }
+  }
+
+  @keyframes sqi-orbit {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes sqi-orbit-rev {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(-360deg); }
+  }
+
+  @keyframes sqi-fade-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes sqi-waveform {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+
+  @keyframes tap-ripple {
+    0% { transform: scale(0.8); opacity: 0.8; }
+    100% { transform: scale(2.5); opacity: 0; }
+  }
+
+  .animate-fade-in {
+    animation: sqi-fade-in 0.5s ease both;
+  }
+
+  .nadi-pulse-ring {
+    animation: sqi-pulse-ring 3s ease-in-out infinite;
+  }
+
+  .nadi-orbit {
+    animation: sqi-orbit 25s linear infinite;
+  }
+
+  .nadi-orbit-rev {
+    animation: sqi-orbit-rev 18s linear infinite;
+  }
+
+  /* Nav */
+  .sqi-nav {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px;
+    border-radius: 9999px;
+    background: rgba(5,5,5,0.7);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba(255,255,255,0.07);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.7), 0 0 0 1px rgba(212,175,55,0.04);
+  }
+
+  .sqi-nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 22px;
+    border-radius: 9999px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    border: none;
+  }
+
+  .sqi-nav-btn.active {
+    background: rgba(212,175,55,0.12);
+    color: #D4AF37;
+    box-shadow: 0 0 16px rgba(212,175,55,0.1);
+    border: 1px solid rgba(212,175,55,0.2);
+  }
+
+  .sqi-nav-btn.inactive {
+    background: transparent;
+    color: rgba(255,255,255,0.3);
+    border: 1px solid transparent;
+  }
+
+  .sqi-nav-btn.inactive:hover {
+    color: rgba(255,255,255,0.6);
+  }
+
+  /* Dosha badge */
+  .dosha-badge {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 9999px;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+  }
+
+  /* Result cards */
+  .result-card {
+    text-align: left;
+    padding: 20px 24px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 20px;
+    cursor: pointer;
+    color: #fff;
+    width: 100%;
+    transition: all 0.25s ease;
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+  .result-card:hover {
+    background: rgba(255,255,255,0.04);
+    transform: translateY(-2px);
+  }
+
+  /* Tap BPM button */
+  .tap-zone {
+    position: relative;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: rgba(212,175,55,0.05);
+    border: 1px solid rgba(212,175,55,0.25);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.1s ease;
+    overflow: hidden;
+    margin: 0 auto;
+  }
+  .tap-zone:active {
+    transform: scale(0.95);
+    background: rgba(212,175,55,0.1);
+  }
+  .tap-zone .ripple {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: rgba(212,175,55,0.15);
+    animation: tap-ripple 0.6s ease-out forwards;
+    pointer-events: none;
+  }
+
+  /* Vital stats display */
+  .vital-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .vital-number {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 300;
+    font-size: 48px;
+    letter-spacing: -0.04em;
+    line-height: 1;
+  }
+`;
+
+// ─── rPPG ENGINE ──────────────────────────────────────────────────────────────
 class RPPGEngine {
   constructor() {
     this.buffer = [];
@@ -18,7 +335,6 @@ class RPPGEngine {
     this.bpmHistory = [];
     this.signalQuality = 0;
   }
-
   addSample(r, g, b, timestamp) {
     const chrominance = 3 * g - 2 * r;
     this.buffer.push(chrominance);
@@ -28,7 +344,6 @@ class RPPGEngine {
       this.timestamps.shift();
     }
   }
-
   getSignalQuality() {
     if (this.buffer.length < 64) return 0;
     const recent = this.buffer.slice(-64);
@@ -39,65 +354,49 @@ class RPPGEngine {
     this.signalQuality = Math.min(1, Math.max(0, 1 - snr * 0.3));
     return this.signalQuality;
   }
-
   bandpassFilter(signal) {
     if (signal.length < 32) return signal;
     const n = signal.length;
-    const dt =
-      this.timestamps.length > 1
-        ? (this.timestamps[this.timestamps.length - 1] - this.timestamps[0]) /
-          (this.timestamps.length - 1)
-        : 33.33;
+    const dt = this.timestamps.length > 1
+      ? (this.timestamps[this.timestamps.length - 1] - this.timestamps[0]) / (this.timestamps.length - 1)
+      : 33.33;
     const fs = 1000 / dt;
     const windowLow = Math.max(2, Math.round(fs / 0.7));
     const windowHigh = Math.max(2, Math.round(fs / 3.5));
     const filtered = new Array(n).fill(0);
     for (let i = 0; i < n; i++) {
-      let sumLow = 0,
-        countLow = 0;
+      let sumLow = 0, countLow = 0;
       for (let j = Math.max(0, i - windowLow); j <= Math.min(n - 1, i + windowLow); j++) {
-        sumLow += signal[j];
-        countLow++;
+        sumLow += signal[j]; countLow++;
       }
       filtered[i] = signal[i] - sumLow / countLow;
     }
     const smoothed = new Array(n).fill(0);
     for (let i = 0; i < n; i++) {
-      let sum = 0,
-        count = 0;
+      let sum = 0, count = 0;
       for (let j = Math.max(0, i - windowHigh); j <= Math.min(n - 1, i + windowHigh); j++) {
-        sum += filtered[j];
-        count++;
+        sum += filtered[j]; count++;
       }
       smoothed[i] = sum / count;
     }
     return smoothed;
   }
-
   computeFFTBPM() {
     if (this.buffer.length < 128) return null;
     const signal = this.bandpassFilter([...this.buffer]);
     const n = signal.length;
     const dt = (this.timestamps[this.timestamps.length - 1] - this.timestamps[0]) / (n - 1);
     const fs = 1000 / dt;
-    let bestLag = 0,
-      bestCorr = -Infinity;
+    let bestLag = 0, bestCorr = -Infinity;
     const minLag = Math.round(fs / 3.5);
     const maxLag = Math.round(fs / 0.7);
     const mean = signal.reduce((a, b) => a + b, 0) / n;
     const centered = signal.map((s) => s - mean);
     for (let lag = minLag; lag <= Math.min(maxLag, n - 1); lag++) {
-      let corr = 0,
-        count = 0;
-      for (let i = 0; i < n - lag; i++) {
-        corr += centered[i] * centered[i + lag];
-        count++;
-      }
+      let corr = 0, count = 0;
+      for (let i = 0; i < n - lag; i++) { corr += centered[i] * centered[i + lag]; count++; }
       corr /= count;
-      if (corr > bestCorr) {
-        bestCorr = corr;
-        bestLag = lag;
-      }
+      if (corr > bestCorr) { bestCorr = corr; bestLag = lag; }
     }
     if (bestLag === 0) return null;
     const bpm = (fs / bestLag) * 60;
@@ -108,7 +407,6 @@ class RPPGEngine {
     }
     return null;
   }
-
   computeHRV() {
     if (this.bpmHistory.length < 5) return null;
     const rr = this.bpmHistory.map((b) => 60000 / b);
@@ -116,12 +414,10 @@ class RPPGEngine {
     const variance = rr.reduce((a, b) => a + (b - mean) ** 2, 0) / rr.length;
     return Math.round(Math.sqrt(variance));
   }
-
   getFilteredSignal() {
     if (this.buffer.length < 32) return this.buffer;
     return this.bandpassFilter([...this.buffer]);
   }
-
   reset() {
     this.buffer = [];
     this.timestamps = [];
@@ -130,125 +426,131 @@ class RPPGEngine {
   }
 }
 
-// RECOMMENDATION ENGINE
+// ─── RECOMMENDATION ENGINE ────────────────────────────────────────────────────
 function getRecommendation(bpm, hrv) {
   const stressBpm = Math.max(0, Math.min(1, (bpm - 55) / 60));
   const stressHrv = hrv !== null ? Math.max(0, Math.min(1, 1 - (hrv - 10) / 80)) : 0.5;
   const stress = stressBpm * 0.5 + stressHrv * 0.5;
-
   let dosha = "Balanced";
   if (bpm > 85 && (hrv === null || hrv < 40)) dosha = "Pitta";
   else if (bpm < 65 && hrv !== null && hrv > 60) dosha = "Kapha";
   else if (hrv !== null && hrv > 50) dosha = "Vāta";
 
   const sections = [
-    {
-      id: "music",
-      title: "Healing Music",
-      sanskrit: "संगीत चिकित्सा",
-      icon: "♪",
-      color: "#FF6B4A",
-      priority: 0,
-      reason: "",
-      recommendation: "",
-    },
-    {
-      id: "mantra",
-      title: "Mantra Chanting",
-      sanskrit: "मन्त्र जप",
-      icon: "ॐ",
-      color: "#FFB84A",
-      priority: 0,
-      reason: "",
-      recommendation: "",
-    },
-    {
-      id: "meditation",
-      title: "Guided Meditation",
-      sanskrit: "ध्यान",
-      icon: "◎",
-      color: "#B084FF",
-      priority: 0,
-      reason: "",
-      recommendation: "",
-    },
-    {
-      id: "soundbath",
-      title: "Sound Bath",
-      sanskrit: "नाद स्नान",
-      icon: "∿",
-      color: "#5AE4A8",
-      priority: 0,
-      reason: "",
-      recommendation: "",
-    },
+    { id: "music", title: "Healing Music", sanskrit: "संगीत चिकित्सा", icon: "♪", color: "#FF6B4A", priority: 0, reason: "", recommendation: "" },
+    { id: "mantra", title: "Mantra Chanting", sanskrit: "मन्त्र जप", icon: "ॐ", color: "#FFB84A", priority: 0, reason: "", recommendation: "" },
+    { id: "meditation", title: "Guided Meditation", sanskrit: "ध्यान", icon: "◎", color: "#B084FF", priority: 0, reason: "", recommendation: "" },
+    { id: "soundbath", title: "Sound Bath", sanskrit: "नाद स्नान", icon: "∿", color: "#5AE4A8", priority: 0, reason: "", recommendation: "" },
   ];
 
   if (stress > 0.65) {
-    sections[3].priority = 4;
-    sections[3].reason = "Your nervous system needs deep restoration";
-    sections[3].recommendation = "Tibetan Singing Bowls — 432Hz Binaural";
-    sections[0].priority = 3;
-    sections[0].reason = "Slow ragas to bring down elevated heart rate";
-    sections[0].recommendation = "Raga Yaman — evening calming raga";
-    sections[2].priority = 2;
-    sections[2].reason = "Yoga Nidra for full body-mind reset";
-    sections[2].recommendation = "30-min Yoga Nidra body scan";
-    sections[1].priority = 1;
-    sections[1].reason = "Cooling mantras to pacify inner fire";
-    sections[1].recommendation = "Om Shanti — peace invocation, 108 repetitions";
+    sections[3].priority = 4; sections[3].reason = "Your nervous system needs deep restoration"; sections[3].recommendation = "Tibetan Singing Bowls — 432Hz Binaural";
+    sections[0].priority = 3; sections[0].reason = "Slow ragas to bring down elevated heart rate"; sections[0].recommendation = "Raga Yaman — evening calming raga";
+    sections[2].priority = 2; sections[2].reason = "Yoga Nidra for full body-mind reset"; sections[2].recommendation = "30-min Yoga Nidra body scan";
+    sections[1].priority = 1; sections[1].reason = "Cooling mantras to pacify inner fire"; sections[1].recommendation = "Om Shanti — peace invocation, 108 repetitions";
   } else if (stress > 0.35) {
-    sections[2].priority = 4;
-    sections[2].reason = "Mindfulness to dissolve building tension";
-    sections[2].recommendation = "15-min breath-awareness meditation";
-    sections[1].priority = 3;
-    sections[1].reason = "Rhythmic chanting to regulate your breath";
-    sections[1].recommendation = "Gayatri Mantra — 21 repetitions";
-    sections[0].priority = 2;
-    sections[0].reason = "Balancing frequencies to stabilize mood";
-    sections[0].recommendation = "Raga Bhairav — morning grounding raga";
-    sections[3].priority = 1;
-    sections[3].reason = "Crystal bowls for subtle energy alignment";
-    sections[3].recommendation = "Crystal Bowl Chakra Sweep — 20 min";
+    sections[2].priority = 4; sections[2].reason = "Mindfulness to dissolve building tension"; sections[2].recommendation = "15-min breath-awareness meditation";
+    sections[1].priority = 3; sections[1].reason = "Rhythmic chanting to regulate your breath"; sections[1].recommendation = "Gayatri Mantra — 21 repetitions";
+    sections[0].priority = 2; sections[0].reason = "Balancing frequencies to stabilize mood"; sections[0].recommendation = "Raga Bhairav — morning grounding raga";
+    sections[3].priority = 1; sections[3].reason = "Crystal bowls for subtle energy alignment"; sections[3].recommendation = "Crystal Bowl Chakra Sweep — 20 min";
   } else {
-    sections[1].priority = 4;
-    sections[1].reason = "Your calm state is perfect for deep practice";
-    sections[1].recommendation = "So Hum — breath-synchronized mantra";
-    sections[2].priority = 3;
-    sections[2].reason = "Deepen this stillness with witness meditation";
-    sections[2].recommendation = "Vipassana — 20-min insight observation";
-    sections[3].priority = 2;
-    sections[3].reason = "Amplify this peace with harmonic resonance";
-    sections[3].recommendation = "Gong Bath — full spectrum overtones";
-    sections[0].priority = 1;
-    sections[0].reason = "Ambient soundscapes to sustain the flow";
-    sections[0].recommendation = "Raga Darbari — contemplative night raga";
+    sections[1].priority = 4; sections[1].reason = "Your calm state is perfect for deep practice"; sections[1].recommendation = "So Hum — breath-synchronized mantra";
+    sections[2].priority = 3; sections[2].reason = "Deepen this stillness with witness meditation"; sections[2].recommendation = "Vipassana — 20-min insight observation";
+    sections[3].priority = 2; sections[3].reason = "Amplify this peace with harmonic resonance"; sections[3].recommendation = "Gong Bath — full spectrum overtones";
+    sections[0].priority = 1; sections[0].reason = "Ambient soundscapes to sustain the flow"; sections[0].recommendation = "Raga Darbari — contemplative night raga";
   }
 
-  if (dosha === "Pitta") {
-    const m = sections.find((s) => s.id === "music");
-    m.recommendation = "Raga Malkauns — cooling moonlight raga";
-    m.reason = "Pitta-pacifying frequencies to cool inner fire";
-  } else if (dosha === "Vāta") {
-    const sb = sections.find((s) => s.id === "soundbath");
-    sb.recommendation = "Didgeridoo Drone — deep grounding vibration";
-    sb.reason = "Root-chakra tones to anchor scattered Vāta energy";
-  } else if (dosha === "Kapha") {
-    const mt = sections.find((s) => s.id === "mantra");
-    mt.recommendation = "Agni Mantra — Ram Ram — fire activation";
-    mt.reason = "Energizing vibration to awaken sluggish Kapha";
-  }
+  if (dosha === "Pitta") { const m = sections.find(s => s.id === "music"); m.recommendation = "Raga Malkauns — cooling moonlight raga"; m.reason = "Pitta-pacifying frequencies to cool inner fire"; }
+  else if (dosha === "Vāta") { const sb = sections.find(s => s.id === "soundbath"); sb.recommendation = "Didgeridoo Drone — deep grounding vibration"; sb.reason = "Root-chakra tones to anchor scattered Vāta energy"; }
+  else if (dosha === "Kapha") { const mt = sections.find(s => s.id === "mantra"); mt.recommendation = "Agni Mantra — Ram Ram — fire activation"; mt.reason = "Energizing vibration to awaken sluggish Kapha"; }
 
   sections.sort((a, b) => b.priority - a.priority);
   return { sections, stress: Math.round(stress * 100), dosha };
 }
 
-// MAIN APP — DIGITAL NĀḌĪ (inner, ungated)
+// ─── TAP BPM ENGINE ───────────────────────────────────────────────────────────
+// Used as camera fallback — user taps their pulse rhythm for 10 seconds
+function useTapBPM() {
+  const [tapBpm, setTapBpm] = useState(null);
+  const [tapCount, setTapCount] = useState(0);
+  const [tapPhase, setTapPhase] = useState("idle"); // idle | tapping | done
+  const [tapElapsed, setTapElapsed] = useState(0);
+  const [ripples, setRipples] = useState([]);
+  const tapTimestamps = useRef([]);
+  const timerRef = useRef(null);
+  const TAP_DURATION = 10;
+
+  const finalizeTaps = useCallback(() => {
+    const ts = tapTimestamps.current;
+    if (ts.length < 3) return;
+    const intervals = [];
+    for (let i = 1; i < ts.length; i++) intervals.push(ts[i] - ts[i - 1]);
+    const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+    const bpm = Math.round(60000 / avgInterval);
+    if (bpm >= 40 && bpm <= 200) setTapBpm(bpm);
+  }, []);
+
+  const startTapping = useCallback(() => {
+    tapTimestamps.current = [];
+    setTapCount(0);
+    setTapBpm(null);
+    setTapElapsed(0);
+    setTapPhase("tapping");
+    timerRef.current = setInterval(() => {
+      setTapElapsed((t) => {
+        if (t + 1 >= TAP_DURATION) {
+          clearInterval(timerRef.current);
+          finalizeTaps();
+          setTapPhase("done");
+          return TAP_DURATION;
+        }
+        return t + 1;
+      });
+    }, 1000);
+  }, [finalizeTaps]);
+
+  const recordTap = useCallback(() => {
+    if (tapPhase !== "tapping") return;
+    const now = performance.now();
+    tapTimestamps.current.push(now);
+    setTapCount(c => c + 1);
+    // Add ripple
+    const id = Date.now();
+    setRipples(r => [...r, id]);
+    setTimeout(() => setRipples(r => r.filter(x => x !== id)), 600);
+    // Live BPM preview from last 3+ taps
+    const ts = tapTimestamps.current;
+    if (ts.length >= 3) {
+      const intervals = [];
+      for (let i = 1; i < ts.length; i++) intervals.push(ts[i] - ts[i-1]);
+      const avgInterval = intervals.reduce((a,b)=>a+b,0)/intervals.length;
+      const liveBpm = Math.round(60000 / avgInterval);
+      if (liveBpm >= 40 && liveBpm <= 200) setTapBpm(liveBpm);
+    }
+  }, [tapPhase]);
+
+  const resetTap = useCallback(() => {
+    clearInterval(timerRef.current);
+    tapTimestamps.current = [];
+    setTapCount(0);
+    setTapBpm(null);
+    setTapElapsed(0);
+    setTapPhase("idle");
+    setRipples([]);
+  }, []);
+
+  useEffect(() => () => clearInterval(timerRef.current), []);
+
+  return { tapBpm, tapCount, tapPhase, tapElapsed, ripples, startTapping, recordTap, resetTap, TAP_DURATION };
+}
+
+// ─── INNER APP ────────────────────────────────────────────────────────────────
 type TabType = "sensor" | "breathing" | "meditation";
+
 function DigitalNadiInner() {
   const [activeTab, setActiveTab] = useState<TabType>("sensor");
   const [page, setPage] = useState("scan");
-  const [phase, setPhase] = useState("idle");
+  const [phase, setPhase] = useState("idle"); // idle | initializing | scanning | reading | manual | manualDone
   const [bpm, setBpm] = useState(null);
   const [hrv, setHrv] = useState(null);
   const [signal, setSignal] = useState([]);
@@ -256,6 +558,7 @@ function DigitalNadiInner() {
   const [elapsed, setElapsed] = useState(0);
   const [cameraError, setCameraError] = useState(null);
   const [activeSection, setActiveSection] = useState(null);
+  const [usedFallback, setUsedFallback] = useState(false);
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -264,11 +567,21 @@ function DigitalNadiInner() {
   const animRef = useRef(null);
   const timerRef = useRef(null);
 
+  const tapEngine = useTapBPM();
+
+  const [showNavLabels, setShowNavLabels] = useState(true);
+  useEffect(() => {
+    const mq = () => setShowNavLabels(typeof window !== "undefined" && window.innerWidth > 400);
+    mq();
+    window.addEventListener("resize", mq);
+    return () => window.removeEventListener("resize", mq);
+  }, []);
+
   const stopCamera = useCallback(() => {
     if (animRef.current) cancelAnimationFrame(animRef.current);
     if (timerRef.current) clearInterval(timerRef.current);
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current.getTracks().forEach(t => t.stop());
       streamRef.current = null;
     }
     engineRef.current.reset();
@@ -277,11 +590,7 @@ function DigitalNadiInner() {
   const startScan = useCallback(async () => {
     setCameraError(null);
     setPhase("initializing");
-    setBpm(null);
-    setHrv(null);
-    setSignal([]);
-    setQuality(0);
-    setElapsed(0);
+    setBpm(null); setHrv(null); setSignal([]); setQuality(0); setElapsed(0);
     engineRef.current.reset();
 
     try {
@@ -293,165 +602,94 @@ function DigitalNadiInner() {
       if (!video) return;
       video.srcObject = stream;
       await video.play();
-
       const canvas = canvasRef.current;
       const ctx = canvas.getContext("2d", { willReadFrequently: true });
-      canvas.width = 320;
-      canvas.height = 240;
+      canvas.width = 320; canvas.height = 240;
       setPhase("scanning");
-
-      timerRef.current = setInterval(() => setElapsed((t) => t + 1), 1000);
+      timerRef.current = setInterval(() => setElapsed(t => t + 1), 1000);
 
       const processFrame = () => {
         if (!streamRef.current) return;
         ctx.drawImage(video, 0, 0, 320, 240);
         const img = ctx.getImageData(100, 40, 120, 60);
         const d = img.data;
-        let rS = 0,
-          gS = 0,
-          bS = 0;
+        let rS = 0, gS = 0, bS = 0;
         const px = 120 * 60;
-        for (let i = 0; i < d.length; i += 4) {
-          rS += d[i];
-          gS += d[i + 1];
-          bS += d[i + 2];
-        }
+        for (let i = 0; i < d.length; i += 4) { rS += d[i]; gS += d[i+1]; bS += d[i+2]; }
         const engine = engineRef.current;
-        engine.addSample(rS / px, gS / px, bS / px, performance.now());
+        engine.addSample(rS/px, gS/px, bS/px, performance.now());
         setQuality(engine.getSignalQuality());
         const currentBpm = engine.computeFFTBPM();
-        if (currentBpm) {
-          setBpm(currentBpm);
-          setPhase("reading");
-          setHrv(engine.computeHRV());
-        }
+        if (currentBpm) { setBpm(currentBpm); setPhase("reading"); setHrv(engine.computeHRV()); }
         setSignal([...engine.getFilteredSignal()]);
         animRef.current = requestAnimationFrame(processFrame);
       };
       animRef.current = requestAnimationFrame(processFrame);
+
     } catch (err) {
-      setCameraError(err.message || "Camera access denied");
-      setPhase("idle");
+      // ─── CAMERA FALLBACK: Activate Manual Tap BPM ───────────────────────
+      const isAccessError = err.name === 'NotAllowedError' || err.name === 'NotFoundError'
+        || err.name === 'PermissionDeniedError' || err.message?.includes('device not found')
+        || err.message?.includes('Permission denied');
+
+      if (isAccessError) {
+        setUsedFallback(true);
+        setPhase("manual");
+        setCameraError(null); // suppress raw error — show friendly UI instead
+      } else {
+        setCameraError(err.message || "Camera access denied");
+        setPhase("idle");
+      }
     }
   }, []);
 
-  const finishScan = useCallback(() => {
-    stopCamera();
-    setPage("results");
-  }, [stopCamera]);
+  const acceptManualBpm = useCallback(() => {
+    if (tapEngine.tapBpm) {
+      setBpm(tapEngine.tapBpm);
+      setHrv(null);
+      setPhase("manualDone");
+    }
+  }, [tapEngine.tapBpm]);
+
+  const finishScan = useCallback(() => { stopCamera(); setPage("results"); }, [stopCamera]);
 
   const handleRescan = useCallback(() => {
-    setPage("scan");
-    setPhase("idle");
-    setBpm(null);
-    setHrv(null);
-    setSignal([]);
-    setQuality(0);
-    setElapsed(0);
-  }, []);
+    setPage("scan"); setPhase("idle"); setBpm(null); setHrv(null);
+    setSignal([]); setQuality(0); setElapsed(0); setUsedFallback(false);
+    tapEngine.resetTap();
+  }, [tapEngine]);
 
-  const handleNavigateSection = useCallback((section) => {
-    setActiveSection(section);
-    setPage("section");
+  const handleNavigateSection = useCallback(section => {
+    setActiveSection(section); setPage("section");
   }, []);
 
   useEffect(() => () => stopCamera(), [stopCamera]);
 
-  const formatTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
-
+  const formatTime = s => `${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;
   const recommendation = bpm ? getRecommendation(bpm, hrv) : null;
 
-  // ─── Bottom Nav (Sensor | Breath | Mantra) ───
-  const navStyle = {
-    position: "fixed" as const,
-    bottom: 32,
-    left: "50%",
-    transform: "translateX(-50%)",
-    zIndex: 50,
-    display: "flex",
-    alignItems: "center",
-    gap: 8,
-    padding: 8,
-    borderRadius: 9999,
-    background: "rgba(0,0,0,0.4)",
-    backdropFilter: "blur(24px)",
-    border: "1px solid rgba(255,255,255,0.1)",
-    boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
-  };
-  const navBtn = (tab: TabType, label: string, Icon: React.ComponentType<{ size?: number }>) => (
+  // ─── BOTTOM NAV ──────────────────────────────────────────────────────────
+  const navBtn = (tab: TabType, label: string, Icon: React.ComponentType<{size?: number}>) => (
     <button
       key={tab}
       onClick={() => setActiveTab(tab)}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 8,
-        padding: "12px 24px",
-        borderRadius: 9999,
-        fontSize: 12,
-        fontWeight: 600,
-        letterSpacing: "0.15em",
-        textTransform: "uppercase",
-        cursor: "pointer",
-        transition: "all 0.3s",
-        ...(activeTab === tab
-          ? { background: "#FF6B4A", color: "#fff" }
-          : { background: "transparent", color: "rgba(255,255,255,0.4)" }),
-      }}
+      className={`sqi-nav-btn ${activeTab === tab ? 'active' : 'inactive'}`}
     >
-      <Icon size={18} />
-      <span className="hidden sm:inline">{label}</span>
+      <Icon size={15} />
+      <span style={{ display: showNavLabels ? "inline" : "none" }}>{label}</span>
     </button>
   );
+
   const BottomNav = () => (
-    <nav style={navStyle}>
-      {navBtn("sensor", "Sensor", Heart)}
-      {navBtn("breathing", "Breath", Wind)}
-      {navBtn("meditation", "Mantra", Sparkles)}
+    <nav className="sqi-nav">
+      {navBtn("sensor", "Nāḍī", Heart)}
+      {navBtn("breathing", "Prāṇa", Wind)}
+      {navBtn("meditation", "Dhyāna", Sparkles)}
     </nav>
   );
 
-  // ─── BREATHING TAB ───
-  if (activeTab === "breathing") {
-    return (
-      <div style={{ fontFamily: "'Cormorant Garamond', serif", background: "#050505", color: "#fff", minHeight: "100vh", paddingBottom: 120 }}>
-        <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap');`}</style>
-        <div style={{ maxWidth: 440, margin: "0 auto", padding: "48px 24px", textAlign: "center" }}>
-          <p style={{ fontSize: 11, letterSpacing: "0.35em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 8 }}>Pranayama</p>
-          <h1 style={{ fontSize: 28, fontWeight: 300, letterSpacing: "0.12em", margin: "0 0 6px" }}>Breath is the bridge</h1>
-          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", letterSpacing: "0.2em", marginBottom: 32 }}>between body and spirit.</p>
-          <BreathingGuide bpm={bpm} />
-          <button
-            onClick={() => setActiveTab("meditation")}
-            style={{ marginTop: 24, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", background: "none", border: "none", cursor: "pointer" }}
-          >
-            Skip to Meditation →
-          </button>
-        </div>
-        <BottomNav />
-      </div>
-    );
-  }
-
-  // ─── MEDITATION TAB ───
-  if (activeTab === "meditation") {
-    return (
-      <div style={{ fontFamily: "'Cormorant Garamond', serif", background: "#050505", color: "#fff", minHeight: "100vh", paddingBottom: 120 }}>
-        <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap');`}</style>
-        <div style={{ maxWidth: 480, margin: "0 auto", padding: "48px 24px" }}>
-          <p style={{ fontSize: 11, letterSpacing: "0.35em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 8, textAlign: "center" }}>Mantra & Dhyana</p>
-          <h1 style={{ fontSize: 28, fontWeight: 300, letterSpacing: "0.12em", margin: "0 0 6px", textAlign: "center" }}>Resonating with peace</h1>
-          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", letterSpacing: "0.2em", marginBottom: 32, textAlign: "center" }}>The frequency of stillness.</p>
-          <MeditationPlayer bpm={bpm} hrv={hrv} />
-        </div>
-        <BottomNav />
-      </div>
-    );
-  }
-
-  // ─── SENSOR TAB (scan / results / section) ───
-  // Waveform mini-canvas ───
-  const WaveformCanvas = ({ data, width = 280, height = 60 }) => {
+  // ─── WAVEFORM CANVAS ─────────────────────────────────────────────────────
+  const WaveformCanvas = ({ data, width = 280, height = 56 }) => {
     const ref = useRef(null);
     useEffect(() => {
       const c = ref.current;
@@ -460,8 +698,15 @@ function DigitalNadiInner() {
       ctx.clearRect(0, 0, width, height);
       const step = Math.max(1, Math.floor(data.length / width));
       const mid = height / 2;
-      ctx.strokeStyle = "#5AE4A8";
+      // Gradient stroke
+      const grad = ctx.createLinearGradient(0, 0, width, 0);
+      grad.addColorStop(0, "rgba(212,175,55,0.2)");
+      grad.addColorStop(0.5, "#22D3EE");
+      grad.addColorStop(1, "rgba(212,175,55,0.2)");
+      ctx.strokeStyle = grad;
       ctx.lineWidth = 1.5;
+      ctx.shadowBlur = 6;
+      ctx.shadowColor = "#22D3EE";
       ctx.beginPath();
       for (let i = 0; i < width; i++) {
         const idx = Math.min(i * step, data.length - 1);
@@ -470,300 +715,455 @@ function DigitalNadiInner() {
       }
       ctx.stroke();
     }, [data, width, height]);
-    return <canvas ref={ref} width={width} height={height} style={{ display: "block", margin: "0 auto" }} />;
+    return <canvas ref={ref} width={width} height={height} style={{ display: "block", margin: "0 auto", opacity: 0.85 }} />;
   };
 
-  // ─── SCAN PAGE ───
-  if (page === "scan") {
+  // ─── SCAN PAGE ───────────────────────────────────────────────────────────
+  if (activeTab === "breathing") {
     return (
-      <div style={{ fontFamily: "'Cormorant Garamond', serif", background: "#050505", color: "#fff", minHeight: "100vh" }}>
-        <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap');`}</style>
-        <video ref={videoRef} style={{ display: "none" }} playsInline muted />
-        <canvas ref={canvasRef} style={{ display: "none" }} />
-
-        <div style={{ maxWidth: 440, margin: "0 auto", padding: "48px 24px", textAlign: "center" }}>
-          {/* Header */}
-          <p style={{ fontSize: 11, letterSpacing: "0.35em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 8 }}>
-            रक्त नाडी परीक्षा
-          </p>
-          <h1 style={{ fontSize: 28, fontWeight: 300, letterSpacing: "0.12em", margin: "0 0 6px" }}>
-            DIGITAL NĀḌĪ
-          </h1>
-          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", letterSpacing: "0.2em" }}>
-            Remote Photoplethysmography
-          </p>
-
-          {/* Status */}
-          <div style={{ margin: "48px 0 32px" }}>
-            {phase === "idle" && (
-              <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.7 }}>
-                Position your face within camera view.<br />
-                Ensure even, natural lighting — avoid direct sunlight.
-              </p>
-            )}
-            {phase === "initializing" && (
-              <p style={{ fontSize: 14, color: "#FFB84A" }}>Initializing camera…</p>
-            )}
-            {(phase === "scanning" || phase === "reading") && (
-              <div>
-                <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", letterSpacing: "0.2em", marginBottom: 16 }}>
-                  {phase === "scanning" ? "ACQUIRING SIGNAL" : "READING PULSE"}　·　{formatTime(elapsed)}
-                </p>
-
-                {/* Signal quality bar */}
-                <div style={{ margin: "0 auto 20px", width: 200, height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2 }}>
-                  <div style={{
-                    width: `${quality * 100}%`,
-                    height: "100%",
-                    borderRadius: 2,
-                    background: quality > 0.5 ? "#5AE4A8" : "#FF6B4A",
-                    transition: "width 0.3s",
-                  }} />
-                </div>
-
-                {/* Waveform */}
-                <WaveformCanvas data={signal} />
-
-                {/* BPM display */}
-                {bpm && (
-                  <div style={{ marginTop: 24 }}>
-                    <span style={{ fontSize: 56, fontWeight: 300, letterSpacing: "0.05em" }}>{bpm}</span>
-                    <span style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", marginLeft: 8 }}>BPM</span>
-                    {hrv !== null && (
-                      <p style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 4 }}>
-                        HRV {hrv} ms
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-            {cameraError && (
-              <p style={{ fontSize: 13, color: "#FF6B4A", marginTop: 12 }}>{cameraError}</p>
-            )}
-          </div>
-
-          {/* Actions */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center" }}>
-            <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-              {phase === "idle" && (
-                <button
-                  onClick={startScan}
-                  style={{
-                    padding: "14px 36px",
-                    background: "rgba(255,255,255,0.06)",
-                    border: "1px solid rgba(255,255,255,0.12)",
-                    color: "#fff",
-                    fontSize: 13,
-                    letterSpacing: "0.2em",
-                    cursor: "pointer",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Begin Scan
-                </button>
-              )}
-              {(phase === "scanning" || phase === "reading") && (
-                <>
-                  <button
-                    onClick={() => { stopCamera(); setPhase("idle"); }}
-                    style={{
-                      padding: "12px 28px",
-                      background: "transparent",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      color: "rgba(255,255,255,0.5)",
-                      fontSize: 12,
-                      letterSpacing: "0.15em",
-                      cursor: "pointer",
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    Cancel
-                  </button>
-                  {bpm && (
-                    <button
-                      onClick={finishScan}
-                      style={{
-                        padding: "12px 28px",
-                        background: "rgba(90,228,168,0.12)",
-                        border: "1px solid rgba(90,228,168,0.3)",
-                        color: "#5AE4A8",
-                        fontSize: 12,
-                        letterSpacing: "0.15em",
-                        cursor: "pointer",
-                        textTransform: "uppercase",
-                      }}
-                    >
-                      View Results
-                    </button>
-                  )}
-                </>
-              )}
-            </div>
-            {bpm && (
-              <button
-                onClick={() => setActiveTab("breathing")}
-                style={{
-                  padding: "12px 28px",
-                  background: "rgba(255,107,74,0.15)",
-                  border: "1px solid rgba(255,107,74,0.35)",
-                  color: "#FF6B4A",
-                  fontSize: 12,
-                  letterSpacing: "0.15em",
-                  cursor: "pointer",
-                  textTransform: "uppercase",
-                }}
-              >
-                Begin Breathing →
-              </button>
-            )}
-          </div>
+      <div className="sqi-page">
+        <style>{SQI_STYLES}</style>
+        <div style={{ maxWidth: 440, margin: "0 auto", padding: "48px 24px", textAlign: "center", position: "relative", zIndex: 1 }}>
+          <p className="sqi-label" style={{ marginBottom: 10 }}>Prāṇāyāma · Vedic Light-Code</p>
+          <h1 className="sqi-title" style={{ fontSize: 26, marginBottom: 6 }}>Breath is the bridge</h1>
+          <p className="sqi-body" style={{ fontSize: 13, marginBottom: 36, letterSpacing: "0.1em" }}>between body and spirit.</p>
+          <BreathingGuide bpm={bpm} />
+          <button onClick={() => setActiveTab("meditation")} className="btn-ghost" style={{ marginTop: 28 }}>
+            Continue to Dhyāna →
+          </button>
         </div>
         <BottomNav />
       </div>
     );
   }
 
-  // ─── RESULTS PAGE ───
-  if (page === "results" && recommendation) {
+  if (activeTab === "meditation") {
     return (
-      <div style={{ fontFamily: "'Cormorant Garamond', serif", background: "#050505", color: "#fff", minHeight: "100vh" }}>
-        <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap');`}</style>
-        <div style={{ maxWidth: 440, margin: "0 auto", padding: "48px 24px" }}>
-          {/* Vitals Summary */}
-          <div style={{ textAlign: "center", marginBottom: 40 }}>
-            <p style={{ fontSize: 11, letterSpacing: "0.35em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 12 }}>
-              Nāḍī Reading Complete
-            </p>
-            <div style={{ display: "flex", justifyContent: "center", gap: 32, marginBottom: 16 }}>
-              <div>
-                <span style={{ fontSize: 42, fontWeight: 300 }}>{bpm}</span>
-                <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: "0.15em" }}>BPM</p>
+      <div className="sqi-page">
+        <style>{SQI_STYLES}</style>
+        <div style={{ maxWidth: 480, margin: "0 auto", padding: "48px 24px", position: "relative", zIndex: 1 }}>
+          <div style={{ textAlign: "center", marginBottom: 36 }}>
+            <p className="sqi-label" style={{ marginBottom: 10 }}>Mantra · Dhyāna · Transmission</p>
+            <h1 className="sqi-title" style={{ fontSize: 26, marginBottom: 6 }}>Resonating with peace</h1>
+            <p className="sqi-body" style={{ fontSize: 13, letterSpacing: "0.1em" }}>The frequency of stillness.</p>
+          </div>
+          <MeditationPlayer bpm={bpm} hrv={hrv} />
+        </div>
+        <BottomNav />
+      </div>
+    );
+  }
+
+  // ─── SENSOR TAB ──────────────────────────────────────────────────────────
+
+  // SCAN PAGE
+  if (page === "scan") {
+    return (
+      <div className="sqi-page">
+        <style>{SQI_STYLES}</style>
+        <video ref={videoRef} style={{ display: "none" }} playsInline muted />
+        <canvas ref={canvasRef} style={{ display: "none" }} />
+
+        <div style={{ maxWidth: 440, margin: "0 auto", padding: "56px 24px", textAlign: "center", position: "relative", zIndex: 1 }}>
+
+          {/* ── Header ── */}
+          <p className="sqi-label" style={{ marginBottom: 12 }}>रक्त नाडी परीक्षा</p>
+          <h1 className="sqi-title gold-glow" style={{ fontSize: 32, marginBottom: 8 }}>
+            DIGITAL NĀḌĪ
+          </h1>
+          <p className="sqi-body" style={{ fontSize: 11, letterSpacing: "0.25em", textTransform: "uppercase", marginBottom: 48 }}>
+            {phase === "manual" || phase === "manualDone"
+              ? "Bhakti-Algorithm · Tap-Pulse Mode"
+              : "Remote Photoplethysmography"}
+          </p>
+
+          {/* ── IDLE STATE ── */}
+          {phase === "idle" && (
+            <div className="animate-fade-in">
+              {/* Orb visualization */}
+              <div style={{ position: "relative", width: 200, height: 200, margin: "0 auto 40px" }}>
+                <div style={{
+                  position: "absolute", inset: 0, borderRadius: "50%",
+                  background: "radial-gradient(circle, rgba(212,175,55,0.06) 0%, transparent 70%)",
+                  border: "1px solid rgba(212,175,55,0.12)"
+                }} className="nadi-pulse-ring" />
+                <div style={{
+                  position: "absolute", inset: 20, borderRadius: "50%",
+                  border: "1px solid rgba(212,175,55,0.08)"
+                }} className="nadi-orbit" />
+                <div style={{
+                  position: "absolute", inset: 40, borderRadius: "50%",
+                  border: "1px solid rgba(34,211,238,0.06)"
+                }} className="nadi-orbit-rev" />
+                <div style={{
+                  position: "absolute", inset: "50%", transform: "translate(-50%,-50%)",
+                  width: 48, height: 48, display: "flex", alignItems: "center", justifyContent: "center"
+                }}>
+                  <Heart size={24} color="#D4AF37" opacity={0.6} />
+                </div>
               </div>
-              {hrv !== null && (
-                <div>
-                  <span style={{ fontSize: 42, fontWeight: 300 }}>{hrv}</span>
-                  <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: "0.15em" }}>HRV ms</p>
+
+              <p className="sqi-body" style={{ fontSize: 13, lineHeight: 1.8, marginBottom: 32, maxWidth: 300, margin: "0 auto 32px" }}>
+                Position your face within camera view.<br />
+                Ensure even, natural lighting — avoid direct sunlight.
+              </p>
+              <button onClick={startScan} className="btn-gold">
+                Begin Scan
+              </button>
+            </div>
+          )}
+
+          {/* ── INITIALIZING ── */}
+          {phase === "initializing" && (
+            <div className="animate-fade-in">
+              <div style={{ position: "relative", width: 160, height: 160, margin: "0 auto 32px" }}>
+                <div style={{
+                  position: "absolute", inset: 0, borderRadius: "50%",
+                  border: "1px solid rgba(212,175,55,0.2)"
+                }} className="nadi-orbit" />
+                <div style={{
+                  position: "absolute", inset: "50%", transform: "translate(-50%,-50%)",
+                  color: "#D4AF37", fontSize: 13, fontWeight: 800, letterSpacing: "0.2em",
+                  whiteSpace: "nowrap"
+                }}>
+                  INIT…
+                </div>
+              </div>
+              <p style={{ color: "#D4AF37", fontSize: 12, letterSpacing: "0.3em", textTransform: "uppercase" }}>
+                Calibrating Nāḍī Scanner
+              </p>
+            </div>
+          )}
+
+          {/* ── SCANNING / READING ── */}
+          {(phase === "scanning" || phase === "reading") && (
+            <div className="animate-fade-in">
+              <p className="sqi-label" style={{ marginBottom: 16 }}>
+                {phase === "scanning" ? "Acquiring Prema-Pulse" : "Reading Nāḍī"} · {formatTime(elapsed)}
+              </p>
+
+              {/* Signal quality bar */}
+              <div style={{ margin: "0 auto 20px", width: 220, height: 3, background: "rgba(255,255,255,0.05)", borderRadius: 2 }}>
+                <div style={{
+                  width: `${quality * 100}%`, height: "100%", borderRadius: 2,
+                  background: quality > 0.5
+                    ? "linear-gradient(90deg, #22D3EE, #5AE4A8)"
+                    : "linear-gradient(90deg, #FF6B4A, #FFB84A)",
+                  transition: "width 0.3s",
+                  boxShadow: quality > 0.5 ? "0 0 8px rgba(34,211,238,0.4)" : "0 0 8px rgba(255,107,74,0.4)"
+                }} />
+              </div>
+
+              {/* Waveform */}
+              <div style={{ margin: "0 0 20px" }}>
+                <WaveformCanvas data={signal} />
+              </div>
+
+              {/* BPM display */}
+              {bpm && (
+                <div style={{ marginBottom: 24 }}>
+                  <div className="vital-number gold-glow">{bpm}</div>
+                  <p className="sqi-label" style={{ color: "rgba(255,255,255,0.4)", marginTop: 4 }}>BPM</p>
+                  {hrv !== null && (
+                    <p style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 8, letterSpacing: "0.2em" }}>
+                      HRV · {hrv} ms
+                    </p>
+                  )}
                 </div>
               )}
-              <div>
-                <span style={{ fontSize: 42, fontWeight: 300 }}>{recommendation.stress}%</span>
-                <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: "0.15em" }}>STRESS</p>
+
+              <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+                <button onClick={() => { stopCamera(); setPhase("idle"); }} className="btn-ghost">
+                  Cancel
+                </button>
+                {bpm && (
+                  <button onClick={finishScan} className="btn-cyan">
+                    View Reading →
+                  </button>
+                )}
+              </div>
+
+              {bpm && (
+                <button onClick={() => setActiveTab("breathing")} className="btn-ghost" style={{ marginTop: 12 }}>
+                  Begin Prāṇāyāma →
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* ─────────────────────────────────────────────────────────────────
+              ✦ MANUAL TAP-BPM FALLBACK (Camera unavailable / iframe blocked)
+              Bhakti-Algorithm Mode — Finger Tap Pulse Detection
+          ───────────────────────────────────────────────────────────────── */}
+          {(phase === "manual" || phase === "manualDone") && (
+            <div className="animate-fade-in">
+              {/* Info banner */}
+              <div className="glass-card-sharp" style={{
+                padding: "14px 20px", marginBottom: 32,
+                border: "1px solid rgba(212,175,55,0.12)",
+                textAlign: "left", display: "flex", gap: 12, alignItems: "flex-start"
+              }}>
+                <Fingerprint size={18} color="#D4AF37" style={{ flexShrink: 0, marginTop: 2 }} />
+                <div>
+                  <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.3em", color: "#D4AF37", textTransform: "uppercase", marginBottom: 4 }}>
+                    Bhakti-Algorithm Mode
+                  </p>
+                  <p className="sqi-body" style={{ fontSize: 12 }}>
+                    Camera not available in this environment. Tap to the rhythm of your heartbeat for 10 seconds.
+                  </p>
+                </div>
+              </div>
+
+              {/* Tap zone */}
+              {tapEngine.tapPhase === "idle" && phase === "manual" && (
+                <div>
+                  <div className="tap-zone" onClick={tapEngine.startTapping}>
+                    <Fingerprint size={36} color="rgba(212,175,55,0.6)" />
+                    <p style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.3em", color: "rgba(212,175,55,0.5)", textTransform: "uppercase", marginTop: 10 }}>
+                      Tap to Begin
+                    </p>
+                  </div>
+                  <p className="sqi-body" style={{ fontSize: 12, marginTop: 20 }}>
+                    Tap 10× in the rhythm of your pulse
+                  </p>
+                </div>
+              )}
+
+              {tapEngine.tapPhase === "tapping" && (
+                <div>
+                  {/* Progress arc */}
+                  <div style={{ position: "relative", marginBottom: 20 }}>
+                    <div
+                      className="tap-zone"
+                      onClick={tapEngine.recordTap}
+                      style={{
+                        borderColor: "rgba(212,175,55,0.5)",
+                        boxShadow: "0 0 30px rgba(212,175,55,0.1)"
+                      }}
+                    >
+                      {tapEngine.ripples.map(id => (
+                        <div key={id} className="ripple" />
+                      ))}
+                      <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.2em", color: "rgba(212,175,55,0.4)", textTransform: "uppercase", marginBottom: 6 }}>
+                        TAP YOUR PULSE
+                      </p>
+                      {tapEngine.tapBpm ? (
+                        <>
+                          <div className="vital-number gold-glow" style={{ fontSize: 36 }}>{tapEngine.tapBpm}</div>
+                          <p className="sqi-label">BPM</p>
+                        </>
+                      ) : (
+                        <p style={{ fontSize: 28, color: "rgba(212,175,55,0.5)", fontWeight: 300 }}>
+                          {tapEngine.tapCount}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Progress bar */}
+                  <div style={{ width: 200, height: 3, background: "rgba(255,255,255,0.05)", borderRadius: 2, margin: "0 auto 8px" }}>
+                    <div style={{
+                      width: `${(tapEngine.tapElapsed / tapEngine.TAP_DURATION) * 100}%`,
+                      height: "100%", background: "linear-gradient(90deg, #D4AF37, #22D3EE)",
+                      borderRadius: 2, transition: "width 1s linear",
+                      boxShadow: "0 0 8px rgba(212,175,55,0.3)"
+                    }} />
+                  </div>
+                  <p className="sqi-label">{tapEngine.tapElapsed}s / {tapEngine.TAP_DURATION}s</p>
+                </div>
+              )}
+
+              {(tapEngine.tapPhase === "done" || phase === "manualDone") && tapEngine.tapBpm && (
+                <div>
+                  <div style={{
+                    padding: "28px 32px",
+                    background: "rgba(212,175,55,0.04)",
+                    border: "1px solid rgba(212,175,55,0.15)",
+                    borderRadius: 24, marginBottom: 24
+                  }}>
+                    <p className="sqi-label" style={{ marginBottom: 12 }}>Pulse Reading</p>
+                    <div className="vital-number gold-glow" style={{ fontSize: 56 }}>{tapEngine.tapBpm}</div>
+                    <p className="sqi-label" style={{ marginTop: 8, color: "rgba(255,255,255,0.4)" }}>BPM</p>
+                  </div>
+
+                  {phase !== "manualDone" ? (
+                    <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+                      <button onClick={tapEngine.resetTap} className="btn-ghost">
+                        <RefreshCw size={12} style={{ marginRight: 6 }} /> Retry
+                      </button>
+                      <button onClick={acceptManualBpm} className="btn-gold">
+                        Accept Reading →
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+                      <button onClick={finishScan} className="btn-gold">
+                        View Nāḍī Reading →
+                      </button>
+                      <button onClick={() => setActiveTab("breathing")} className="btn-ghost">
+                        Begin Prāṇāyāma →
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {tapEngine.tapPhase === "done" && !tapEngine.tapBpm && (
+                <div>
+                  <p className="sqi-body" style={{ fontSize: 13, marginBottom: 20 }}>
+                    Not enough taps detected. Please try again.
+                  </p>
+                  <button onClick={tapEngine.resetTap} className="btn-ghost">↺ Retry</button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Camera error (non-access errors only) */}
+          {cameraError && (
+            <div style={{ marginTop: 16, padding: "12px 20px", borderRadius: 12, background: "rgba(255,107,74,0.06)", border: "1px solid rgba(255,107,74,0.15)" }}>
+              <p style={{ fontSize: 12, color: "#FF6B4A" }}>{cameraError}</p>
+              <button onClick={() => { setCameraError(null); setPhase("idle"); }} className="btn-ghost" style={{ marginTop: 12 }}>
+                Try Again
+              </button>
+            </div>
+          )}
+        </div>
+
+        <BottomNav />
+      </div>
+    );
+  }
+
+  // ─── RESULTS PAGE ────────────────────────────────────────────────────────
+  if (page === "results" && recommendation) {
+    const doshaColors = { Pitta: "#FF6B4A", Kapha: "#5AE4A8", Vāta: "#B084FF", Balanced: "#D4AF37" };
+    const doshaColor = doshaColors[recommendation.dosha] || "#D4AF37";
+
+    return (
+      <div className="sqi-page">
+        <style>{SQI_STYLES}</style>
+        <div style={{ maxWidth: 440, margin: "0 auto", padding: "48px 24px", position: "relative", zIndex: 1 }}>
+
+          {/* Header */}
+          <div style={{ textAlign: "center", marginBottom: 40 }}>
+            <p className="sqi-label" style={{ marginBottom: 12 }}>Nāḍī Reading Complete</p>
+
+            {/* Vitals row */}
+            <div style={{ display: "flex", justifyContent: "center", gap: 24, marginBottom: 20 }}>
+              <div className="vital-stat">
+                <span className="vital-number gold-glow">{bpm}</span>
+                <p className="sqi-label" style={{ color: "rgba(255,255,255,0.4)" }}>BPM</p>
+              </div>
+              {hrv !== null && (
+                <div style={{ width: 1, background: "rgba(255,255,255,0.06)", alignSelf: "stretch" }} />
+              )}
+              {hrv !== null && (
+                <div className="vital-stat">
+                  <span className="vital-number" style={{ fontSize: 48, fontWeight: 300 }}>{hrv}</span>
+                  <p className="sqi-label" style={{ color: "rgba(255,255,255,0.4)" }}>HRV ms</p>
+                </div>
+              )}
+              <div style={{ width: 1, background: "rgba(255,255,255,0.06)", alignSelf: "stretch" }} />
+              <div className="vital-stat">
+                <span className="vital-number" style={{ fontSize: 48, fontWeight: 300 }}>{recommendation.stress}%</span>
+                <p className="sqi-label" style={{ color: "rgba(255,255,255,0.4)" }}>STRESS</p>
               </div>
             </div>
-            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>
-              Dominant Dosha: <span style={{ color: "#FFB84A" }}>{recommendation.dosha}</span>
-            </p>
+
+            {/* Dosha badge */}
+            <span className="dosha-badge" style={{
+              background: `${doshaColor}14`,
+              border: `1px solid ${doshaColor}33`,
+              color: doshaColor,
+              boxShadow: `0 0 16px ${doshaColor}15`
+            }}>
+              {recommendation.dosha} Dosha
+            </span>
+
+            {usedFallback && (
+              <p style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", marginTop: 12, letterSpacing: "0.15em" }}>
+                * Reading via Bhakti-Algorithm tap mode
+              </p>
+            )}
           </div>
 
           {/* Recommendation Cards */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {recommendation.sections.map((sec, i) => (
               <button
                 key={sec.id}
                 onClick={() => handleNavigateSection(sec)}
-                style={{
-                  textAlign: "left",
-                  padding: "20px 24px",
-                  background: "rgba(255,255,255,0.03)",
-                  border: `1px solid ${sec.color}22`,
-                  borderRadius: 2,
-                  cursor: "pointer",
-                  color: "#fff",
-                  width: "100%",
-                }}
+                className="result-card"
+                style={{ borderColor: `${sec.color}18` }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
-                  <span style={{ fontSize: 20, color: sec.color }}>{sec.icon}</span>
-                  <span style={{ fontSize: 14, fontWeight: 500, letterSpacing: "0.08em" }}>{sec.title}</span>
-                  <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginLeft: "auto" }}>#{i + 1}</span>
+                  <span style={{ fontSize: 20, color: sec.color, minWidth: 24 }}>{sec.icon}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.04em" }}>{sec.title}</span>
+                  <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.2em", color: "rgba(255,255,255,0.2)", marginLeft: "auto", textTransform: "uppercase" }}>
+                    #{i + 1}
+                  </span>
                 </div>
-                <p style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: 1.5, margin: "0 0 4px" }}>
-                  {sec.reason}
-                </p>
-                <p style={{ fontSize: 11, color: sec.color, opacity: 0.8 }}>
-                  → {sec.recommendation}
-                </p>
+                <p className="sqi-body" style={{ fontSize: 12, marginBottom: 4 }}>{sec.reason}</p>
+                <p style={{ fontSize: 11, color: sec.color, opacity: 0.8, fontWeight: 500 }}>→ {sec.recommendation}</p>
               </button>
             ))}
           </div>
 
-          {/* Re-scan button */}
-          <div style={{ textAlign: "center", marginTop: 40 }}>
-            <button
-              onClick={handleRescan}
-              style={{
-                padding: "12px 32px",
-                background: "transparent",
-                border: "1px solid rgba(255,255,255,0.1)",
-                color: "rgba(255,255,255,0.5)",
-                fontSize: 12,
-                letterSpacing: "0.15em",
-                cursor: "pointer",
-                textTransform: "uppercase",
-              }}
-            >
-              Re-scan
+          {/* Actions */}
+          <div style={{ textAlign: "center", marginTop: 36, display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+            <button onClick={handleRescan} className="btn-ghost">
+              <RefreshCw size={12} style={{ marginRight: 6 }} /> Re-scan
+            </button>
+            <button onClick={() => setActiveTab("breathing")} className="btn-gold">
+              Begin Prāṇāyāma →
             </button>
           </div>
         </div>
+
         <BottomNav />
       </div>
     );
   }
 
-  // ─── SECTION DETAIL PAGE ───
+  // ─── SECTION DETAIL PAGE ─────────────────────────────────────────────────
   if (page === "section" && activeSection) {
     return (
-      <div style={{ fontFamily: "'Cormorant Garamond', serif", background: "#050505", color: "#fff", minHeight: "100vh" }}>
-        <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap');`}</style>
-        <div style={{ maxWidth: 440, margin: "0 auto", padding: "48px 24px", textAlign: "center" }}>
-          <button
-            onClick={() => setPage("results")}
-            style={{
-              background: "none",
-              border: "none",
-              color: "rgba(255,255,255,0.4)",
-              fontSize: 12,
-              letterSpacing: "0.15em",
-              cursor: "pointer",
-              marginBottom: 32,
-              textTransform: "uppercase",
-            }}
-          >
-            ← Back to Results
+      <div className="sqi-page">
+        <style>{SQI_STYLES}</style>
+        <div style={{ maxWidth: 440, margin: "0 auto", padding: "48px 24px", textAlign: "center", position: "relative", zIndex: 1 }}>
+          <button onClick={() => setPage("results")} className="btn-ghost" style={{ marginBottom: 36 }}>
+            ← Back
           </button>
 
-          <span style={{ fontSize: 48, display: "block", marginBottom: 16, color: activeSection.color }}>
+          <span style={{ fontSize: 52, display: "block", marginBottom: 16, color: activeSection.color, filter: `drop-shadow(0 0 16px ${activeSection.color}55)` }}>
             {activeSection.icon}
           </span>
-          <h2 style={{ fontSize: 22, fontWeight: 400, letterSpacing: "0.1em", margin: "0 0 4px" }}>
-            {activeSection.title}
-          </h2>
-          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", marginBottom: 32 }}>
+
+          <h2 className="sqi-title" style={{ fontSize: 22, marginBottom: 4 }}>{activeSection.title}</h2>
+          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic", marginBottom: 32 }}>
             {activeSection.sanskrit}
           </p>
 
           <div style={{
             padding: "24px",
-            background: "rgba(255,255,255,0.03)",
-            border: `1px solid ${activeSection.color}22`,
-            borderRadius: 2,
+            background: `${activeSection.color}06`,
+            border: `1px solid ${activeSection.color}18`,
+            borderRadius: 20,
             textAlign: "left",
-            marginBottom: 24,
+            marginBottom: 24
           }}>
-            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.7, marginBottom: 12 }}>
-              {activeSection.reason}
-            </p>
-            <p style={{ fontSize: 14, color: activeSection.color, fontWeight: 500 }}>
+            <p className="sqi-body" style={{ fontSize: 13, marginBottom: 12 }}>{activeSection.reason}</p>
+            <p style={{ fontSize: 14, color: activeSection.color, fontWeight: 600 }}>
               {activeSection.recommendation}
             </p>
           </div>
 
-          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", lineHeight: 1.7, maxWidth: 320, margin: "0 auto" }}>
-            This recommendation was generated from your live biometric reading. For best results, practice during the time of day aligned with your dominant dosha rhythm.
+          <p className="sqi-body" style={{ fontSize: 11, lineHeight: 1.8, maxWidth: 320, margin: "0 auto" }}>
+            This Prema-Pulse Transmission was generated from your live biometric reading. For best results, practice during the time of day aligned with your dominant dosha rhythm.
           </p>
         </div>
+
         <BottomNav />
       </div>
     );
@@ -771,16 +1171,16 @@ function DigitalNadiInner() {
 
   // Fallback
   return (
-    <div style={{ fontFamily: "'Cormorant Garamond', serif", background: "#050505", color: "#fff", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap');`}</style>
+    <div className="sqi-page" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <style>{SQI_STYLES}</style>
       <video ref={videoRef} style={{ display: "none" }} playsInline muted />
       <canvas ref={canvasRef} style={{ display: "none" }} />
-      <p style={{ fontSize: 14, color: "rgba(255,255,255,0.4)" }}>Loading…</p>
+      <p className="sqi-label">Loading Digital Nāḍī…</p>
     </div>
   );
 }
 
-// Export with membership/admin gating
+// ─── EXPORT with membership/admin gating (UNCHANGED) ─────────────────────────
 export default function DigitalNadi() {
   const { user, isLoading: authLoading } = useAuth();
   const { tier, loading: membershipLoading } = useMembership();
@@ -796,14 +1196,8 @@ export default function DigitalNadi() {
     );
   }
 
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
-
-  if (!hasFeatureAccess(isAdmin, tier, FEATURE_TIER.digitalNadi)) {
-    return <Navigate to="/siddha-quantum" replace />;
-  }
+  if (!user) return <Navigate to="/auth" replace />;
+  if (!hasFeatureAccess(isAdmin, tier, FEATURE_TIER.digitalNadi)) return <Navigate to="/siddha-quantum" replace />;
 
   return <DigitalNadiInner />;
 }
-
