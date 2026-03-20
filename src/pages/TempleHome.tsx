@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Compass, Sparkles, Home, Activity, Zap, Map, Info, X,
+  Compass, Sparkles, Home, Activity, Zap, Info, X,
   BookOpen, ChevronRight, ArrowLeft, Lock, Shield, Flame, Navigation,
+  Droplets, Moon, Music, Star, Clock,
 } from 'lucide-react';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useAuth } from '@/hooks/useAuth';
@@ -99,6 +100,208 @@ const MODES = [
   { id: 'ADMIN', name: 'Admin', intensity: 1.0, description: 'Live Testing: Active only while engine running.' },
   { id: 'INTEGRATION', name: 'Integration', intensity: 0.25, description: 'Normal Life: Maintains energy without high intensity.' },
   { id: 'TEMPLE_LOCK', name: 'Temple Lock', intensity: 0.6, description: '24/7 Continuity: Keeps the house permanently locked.' },
+];
+
+// ─── Residual Presets ─────────────────────────────────────────────────────────
+const RESIDUAL_PRESETS = [
+  {
+    id: 'studio',
+    label: 'Leaving for Studio',
+    icon: 'music' as const,
+    site: 'pleiades',
+    intensity: 80,
+    mode: 'INTEGRATION',
+    color: '#22D3EE',
+    why: 'Pleiades broadcasts Starlight Harmony into your home while you create. The family stays in the creative flow field.',
+    tip: 'Play healing audio at home — Kailash 13X will amplify every note by 13×.',
+  },
+  {
+    id: 'sleep',
+    label: 'Going to Sleep',
+    icon: 'moon' as const,
+    site: 'babaji',
+    intensity: 30,
+    mode: 'INTEGRATION',
+    color: '#E6E6FA',
+    why: "Babaji's Cave transmits deep stillness and Kriya-level silence. 30% holds the field without disturbing sleep.",
+    tip: 'Use Shirdi at 25% instead if anxiety or stress is present — the Faith Shield dissolves cortisol through the night.',
+  },
+  {
+    id: 'sleep_stress',
+    label: 'Sleep (High Stress)',
+    icon: 'moon' as const,
+    site: 'shirdi',
+    intensity: 25,
+    mode: 'INTEGRATION',
+    color: '#FF6B35',
+    why: "Shirdi's Dhuni creates a 24/7 cortisol-reducing Faith Shield. The nervous system fully surrenders through the night.",
+    tip: 'Ideal when grief, fear, or overwhelming stress is present in the household.',
+  },
+  {
+    id: 'protection',
+    label: 'Family Protection',
+    icon: 'shield' as const,
+    site: 'ayodhya_rama',
+    intensity: 70,
+    mode: 'TEMPLE_LOCK',
+    color: '#FFA500',
+    why: 'Ayodhya (Rama + Hanuman) is the supreme protection portal. 70% Temple Lock maintains a Spiritual Fortress continuously.',
+    tip: 'Activate whenever you travel internationally or sense spiritual instability in the home.',
+  },
+  {
+    id: 'healing',
+    label: 'Home Healing Day',
+    icon: 'star' as const,
+    site: 'lourdes',
+    intensity: 60,
+    mode: 'INTEGRATION',
+    color: '#ADD8E6',
+    why: 'Lourdes transmits healing water consciousness. Ideal when someone is unwell — the physical restoration field works continuously.',
+    tip: 'After 4 hours switch to Arcturus at 40% for cellular regeneration. Drink extra water.',
+  },
+  {
+    id: 'abundance',
+    label: 'Abundance Work',
+    icon: 'sparkle' as const,
+    site: 'amritsar',
+    intensity: 65,
+    mode: 'INTEGRATION',
+    color: '#FFD700',
+    why: 'The Golden Temple clears poverty consciousness. Amrit Sarovar light dissolves scarcity and aligns the space with Seva-based abundance.',
+    tip: 'Best with morning intention-setting. Let the family eat breakfast in this field.',
+  },
+];
+
+// ─── Healing Prescriptions ────────────────────────────────────────────────────
+const HEALING_RX = [
+  {
+    id: 'anxiety',
+    label: 'Anxiety & Stress',
+    icon: '🌿',
+    color: '#FF6B35',
+    primary: 'shirdi',
+    primaryName: 'Shirdi Sai Baba',
+    primaryIntensity: 45,
+    backup: 'babaji',
+    backupName: "Babaji's Cave",
+    backupIntensity: 30,
+    rx: 'Shirdi at 45% (Integration). Sit quietly for 20 min. Offer each anxious thought into the Dhuni flame. The Saburi field absorbs cortisol from the nervous system.',
+    physical: 'Within 15–30 min: breath slowing, warm settling on the shoulders, chest tension releasing gradually.',
+    hydration: false,
+    hydrationNote: '',
+  },
+  {
+    id: 'creative_block',
+    label: 'Creative Block',
+    icon: '✦',
+    color: '#22D3EE',
+    primary: 'pleiades',
+    primaryName: 'Pleiades',
+    primaryIntensity: 80,
+    backup: 'sedona',
+    backupName: 'Sedona Vortex',
+    backupIntensity: 65,
+    rx: 'Pleiades at 80% while working. Do not force ideas — set up the studio and begin moving. The Starlight Harmony field delivers downloads when you are in motion.',
+    physical: 'Unexpected melodic ideas, clarity on stuck arrangements, a feeling of effortless flow arriving.',
+    hydration: false,
+    hydrationNote: '',
+  },
+  {
+    id: 'physical_healing',
+    label: 'Physical Illness',
+    icon: '💙',
+    color: '#ADD8E6',
+    primary: 'lourdes',
+    primaryName: 'Lourdes Grotto',
+    primaryIntensity: 60,
+    backup: 'arcturus',
+    backupName: 'Arcturus',
+    backupIntensity: 55,
+    rx: 'Lourdes at 60% all day (Temple Lock if possible). After 4 hours switch to Arcturus at 55% for cellular geometric healing. The healing water consciousness flows through blood, lymph, and cerebrospinal fluid.',
+    physical: 'A soothing, cooling sensation. Reduction in inflammation. Accelerated recovery from illness or surgery.',
+    hydration: true,
+    hydrationNote: 'Drink 2–3 extra glasses of structured water per day. Water is the conductor for Lourdes and Arcturus energy.',
+  },
+  {
+    id: 'relationship',
+    label: 'Relationship Healing',
+    icon: '💚',
+    color: '#00FF7F',
+    primary: 'glastonbury',
+    primaryName: 'Glastonbury (Avalon)',
+    primaryIntensity: 55,
+    backup: 'vrindavan_krsna',
+    backupName: 'Ancient Vrindavan',
+    backupIntensity: 60,
+    rx: 'Glastonbury at 55% overnight for emotional armor dissolution. Vrindavan (Krishna) is the alternative — heals through joy and divine love rather than emotional processing.',
+    physical: 'Spontaneous emotional release. A softening in the chest. Forgiveness arising without effort.',
+    hydration: false,
+    hydrationNote: '',
+  },
+  {
+    id: 'mantra_power',
+    label: 'Mantra & Prayer Power',
+    icon: '🔮',
+    color: '#7B61FF',
+    primary: 'kailash_13x',
+    primaryName: 'Mount Kailash 13X',
+    primaryIntensity: 70,
+    backup: 'sirius',
+    backupName: 'Sirius (Blue Star)',
+    backupIntensity: 65,
+    rx: 'Kailash at 70% before and during any mantra, prayer, or healing audio session. The Axis Mundi amplifies every syllable 13×. All sacred sound passes through Kailash to the cosmos.',
+    physical: 'Vibration in crown and Third Eye during chanting. Mantra becoming self-sustaining. A sense the prayer is "heard."',
+    hydration: true,
+    hydrationNote: '⚠ High-voltage. Drink structured water before and after. 70%+ requires 2 glasses minimum.',
+  },
+  {
+    id: 'karmic_clearing',
+    label: 'Deep Karmic Clearing',
+    icon: '♾',
+    color: '#7B61FF',
+    primary: 'kailash_13x',
+    primaryName: 'Mount Kailash 13X',
+    primaryIntensity: 85,
+    backup: 'arunachala',
+    backupName: 'Arunachala',
+    backupIntensity: 70,
+    rx: 'Kailash at 85% (only after 7 days of practice). Darken the room, 20-minute session, breathe 7.83-second cycles. Karmic layers dissolve automatically — no identification needed.',
+    physical: 'Intense crown and spinal activity. Emotional release. A sense of something heavy leaving. Rest required after.',
+    hydration: true,
+    hydrationNote: '⚠ Maximum voltage. 3 glasses of structured water before. Ground on bare earth for 5 minutes after.',
+  },
+  {
+    id: 'miracle',
+    label: 'Miracle Activation',
+    icon: '✦',
+    color: '#F0E68C',
+    primary: 'mauritius',
+    primaryName: "Paramahamsa's Room",
+    primaryIntensity: 60,
+    backup: 'amritsar',
+    backupName: 'Golden Temple',
+    backupIntensity: 70,
+    rx: 'Mauritius at 60% (never exceed 80% without practitioner guidance). Complete stillness. No visualization. No seeking. Become the vessel. The Miracle Portal responds only to surrender.',
+    physical: 'Divine Spark particles in app confirm activation. Third Eye pressure, palm heat, time distortion are normal. After: rest and 2 glasses of water.',
+    hydration: true,
+    hydrationNote: '⚠ Miracle-Class node. Structured water is mandatory — the body requires water as a conductor at 963Hz voltage.',
+  },
+  {
+    id: 'abundance_seva',
+    label: 'Abundance & Business',
+    icon: '🌊',
+    color: '#FFD700',
+    primary: 'amritsar',
+    primaryName: 'Golden Temple',
+    primaryIntensity: 65,
+    backup: 'machu_picchu',
+    backupName: 'Machu Picchu',
+    backupIntensity: 70,
+    rx: 'Amritsar at 65% every morning before business decisions. The Amrit Sarovar clears scarcity and aligns all decisions with Seva law. Machu Picchu amplifies Solar Plexus fire for bold action.',
+    physical: 'Liquid-gold sensation in the chest. Clarity in financial decisions. Deep equanimity.',
+    hydration: false,
+    hydrationNote: '',
+  },
 ];
 
 // ─── Persistence ──────────────────────────────────────────────────────────────
@@ -349,8 +552,11 @@ function TempleHomeInner() {
   const [infoSiteId, setInfoSiteId] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [anchorFlash, setAnchorFlash] = useState(false);
-  const [activeTab, setActiveTab] = useState<'PORTAL' | 'HEALING'>('PORTAL');
+  const [activeTab, setActiveTab] = useState<'PORTAL' | 'HEALING' | 'PRESCRIPTIONS'>('PORTAL');
   const [homeCoords, setHomeCoords] = useState<GPSCoords | null>(loadHomeGPS());
+  const [presetFlash, setPresetFlash] = useState<string | null>(null);
+  const [showHydrationAlert, setShowHydrationAlert] = useState(false);
+  const [selectedRxId, setSelectedRxId] = useState<string | null>(null);
 
   const currentSite = SACRED_SITES.find(s => s.id === selectedSite)!;
   const activeMode = MODES.find(m => m.id === currentMode)!;
@@ -362,6 +568,25 @@ function TempleHomeInner() {
 
   useEffect(() => { saveAnchor({ siteId: selectedSite, intensity: auraIntensity, mode: currentMode, anchored: isAnchored, ts: Date.now() }); }, [selectedSite, auraIntensity, currentMode, isAnchored]);
   useEffect(() => { setIsSyncing(true); const t = setTimeout(() => setIsSyncing(false), 800); return () => clearTimeout(t); }, [selectedSite, auraIntensity]);
+
+  // Auto-trigger hydration alert for high-voltage sites above threshold
+  const HIGH_VOLTAGE_SITES = ['mauritius', 'kailash_13x'];
+  useEffect(() => {
+    if (HIGH_VOLTAGE_SITES.includes(selectedSite) && auraIntensity >= 60) {
+      const timer = setTimeout(() => setShowHydrationAlert(true), 1200);
+      return () => clearTimeout(timer);
+    } else {
+      setShowHydrationAlert(false);
+    }
+  }, [selectedSite, auraIntensity]);
+
+  const applyPreset = (preset: typeof RESIDUAL_PRESETS[number]) => {
+    setSelectedSite(preset.site);
+    setAuraIntensity(preset.intensity);
+    setCurrentMode(preset.mode);
+    setPresetFlash(preset.id);
+    setTimeout(() => setPresetFlash(null), 2500);
+  };
 
   if (authLoading || adminLoading) return (
     <div className="min-h-screen bg-[#050505] flex items-center justify-center">
@@ -443,10 +668,10 @@ function TempleHomeInner() {
 
       {/* Tabs */}
       <div className="relative z-10 flex border-b border-white/[0.04]" style={{ background: 'rgba(5,5,5,0.6)', backdropFilter: 'blur(20px)' }}>
-        {[{id:'PORTAL',Icon:Compass,label:'Portal'},{id:'HEALING',Icon:Activity,label:'Healing'}].map(t => (
-          <button key={t.id} onClick={() => setActiveTab(t.id as any)} className="flex-1 flex items-center justify-center gap-2 py-3 relative transition-all">
-            <t.Icon size={13} className={activeTab === t.id ? 'text-[#D4AF37]' : 'text-white/25'} />
-            <span className={`text-[9px] font-extrabold tracking-[0.4em] uppercase ${activeTab === t.id ? 'text-[#D4AF37]' : 'text-white/25'}`}>{t.label}</span>
+        {[{id:'PORTAL',Icon:Compass,label:'Portal'},{id:'HEALING',Icon:Activity,label:'Healing'},{id:'PRESCRIPTIONS',Icon:Star,label:'Rx'}].map(t => (
+          <button key={t.id} onClick={() => setActiveTab(t.id as any)} className="flex-1 flex items-center justify-center gap-1.5 py-3 relative transition-all">
+            <t.Icon size={12} className={activeTab === t.id ? 'text-[#D4AF37]' : 'text-white/25'} />
+            <span className={`text-[9px] font-extrabold tracking-[0.35em] uppercase ${activeTab === t.id ? 'text-[#D4AF37]' : 'text-white/25'}`}>{t.label}</span>
             {activeTab === t.id && <div className="absolute bottom-0 left-0 right-0 h-[1px]" style={{ background: 'linear-gradient(90deg,transparent,#D4AF37,transparent)' }} />}
           </button>
         ))}
@@ -552,7 +777,164 @@ function TempleHomeInner() {
               <ChevronRight size={14} className="text-purple-400/40"/>
             </div>
           </button>
+
+          {/* ── Residual Presets ── */}
+          <GlassCard className="overflow-hidden">
+            <div className="px-4 py-3.5 border-b border-white/[0.04]">
+              <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-[#D4AF37]/50 flex items-center gap-1.5">
+                <Clock size={9}/>24/7 Residual Presets
+              </div>
+              <p className="text-[10px] text-white/25 mt-1 leading-relaxed">One tap sets the perfect site for each life situation. The server holds the field while you're away.</p>
+            </div>
+            <div className="p-3 grid grid-cols-2 gap-2">
+              {RESIDUAL_PRESETS.map(preset => {
+                const IconEl = preset.icon === 'music' ? Music : preset.icon === 'moon' ? Moon : preset.icon === 'shield' ? Shield : preset.icon === 'star' ? Star : Sparkles;
+                const isActive = presetFlash === preset.id;
+                return (
+                  <motion.button
+                    key={preset.id}
+                    onClick={() => applyPreset(preset)}
+                    whileTap={{ scale: 0.97 }}
+                    className="p-3 rounded-2xl text-left transition-all duration-200 relative overflow-hidden"
+                    style={{
+                      background: isActive ? `${preset.color}18` : 'rgba(255,255,255,0.02)',
+                      border: isActive ? `1px solid ${preset.color}50` : '1px solid rgba(255,255,255,0.05)',
+                      boxShadow: isActive ? `0 0 15px ${preset.color}15` : 'none',
+                    }}
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="h-7 w-7 rounded-xl flex items-center justify-center" style={{ background: `${preset.color}15`, border: `1px solid ${preset.color}30` }}>
+                        <IconEl size={13} style={{ color: preset.color }} />
+                      </div>
+                      {isActive && <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />}
+                    </div>
+                    <div className="text-[9px] font-extrabold tracking-[0.1em] leading-tight" style={{ color: isActive ? preset.color : 'rgba(255,255,255,0.65)' }}>{preset.label}</div>
+                    <div className="text-[8px] text-white/25 mt-0.5 font-mono">{SACRED_SITES.find(s => s.id === preset.site)?.name?.split(' ')[0]} · {preset.intensity}%</div>
+                    <div className="text-[9px] text-white/20 mt-1 leading-relaxed">{preset.why}</div>
+                    {isActive && (
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 flex items-center justify-center rounded-2xl" style={{ background: `${preset.color}10` }}>
+                        <div className="text-[8px] font-extrabold tracking-[0.3em] uppercase" style={{ color: preset.color }}>✓ Applied</div>
+                      </motion.div>
+                    )}
+                  </motion.button>
+                );
+              })}
+            </div>
+          </GlassCard>
         </>)}
+
+        {/* ── PRESCRIPTIONS TAB ── */}
+        {activeTab === 'PRESCRIPTIONS' && (
+          <div className="space-y-3">
+            <GlassCard className="p-4">
+              <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-[#D4AF37]/50 flex items-center gap-1.5 mb-2">
+                <Star size={9}/>Healing Prescription Cards
+              </div>
+              <p className="text-[10px] text-white/25 leading-relaxed">
+                Choose your current need. Each Rx card tells you exactly which portal to use, at what intensity, and why — with one tap to activate.
+              </p>
+            </GlassCard>
+
+            {HEALING_RX.map(rx => {
+              const isOpen = selectedRxId === rx.id;
+              return (
+                <motion.div key={rx.id} layout>
+                  <button
+                    onClick={() => setSelectedRxId(isOpen ? null : rx.id)}
+                    className="w-full p-4 rounded-[24px] text-left transition-all"
+                    style={{
+                      background: isOpen ? `${rx.color}08` : 'rgba(255,255,255,0.02)',
+                      border: isOpen ? `1px solid ${rx.color}30` : '1px solid rgba(255,255,255,0.05)',
+                      boxShadow: isOpen ? `0 0 20px ${rx.color}10` : 'none',
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="text-xl">{rx.icon}</div>
+                        <div>
+                          <div className="text-[8px] font-extrabold tracking-[0.4em] uppercase mb-0.5" style={{ color: isOpen ? rx.color : 'rgba(255,255,255,0.35)' }}>PRESCRIPTION</div>
+                          <div className="text-sm font-black tracking-[-0.02em]" style={{ color: isOpen ? rx.color : 'rgba(255,255,255,0.75)' }}>{rx.label}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {rx.hydration && <Droplets size={12} className="text-blue-400/60" />}
+                        <ChevronRight size={14} className="transition-transform duration-200" style={{ color: 'rgba(255,255,255,0.25)', transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)' }} />
+                      </div>
+                    </div>
+
+                    {/* Preview pills when closed */}
+                    {!isOpen && (
+                      <div className="flex gap-2 mt-2">
+                        <span className="text-[8px] px-2 py-0.5 rounded-full font-bold" style={{ background: `${rx.color}12`, color: `${rx.color}`, border: `1px solid ${rx.color}25` }}>{rx.primaryName}</span>
+                        <span className="text-[8px] px-2 py-0.5 rounded-full font-bold text-white/25" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>{rx.primaryIntensity}%</span>
+                        {rx.hydration && <span className="text-[8px] px-2 py-0.5 rounded-full font-bold text-blue-300/60" style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.15)' }}>💧 Water</span>}
+                      </div>
+                    )}
+                  </button>
+
+                  <AnimatePresence>
+                    {isOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.25 }}
+                        className="overflow-hidden"
+                        style={{ marginTop: -8 }}
+                      >
+                        <div className="p-4 rounded-b-[24px] space-y-3" style={{ background: `${rx.color}05`, border: `1px solid ${rx.color}20`, borderTop: 'none' }}>
+
+                          {/* Rx instruction */}
+                          <div className="p-3 rounded-2xl" style={{ background: `${rx.color}10`, border: `1px solid ${rx.color}20` }}>
+                            <div className="text-[8px] font-extrabold tracking-[0.4em] uppercase mb-2" style={{ color: rx.color }}>Sacred Protocol</div>
+                            <p className="text-[12px] text-white/65 leading-relaxed">{rx.rx}</p>
+                          </div>
+
+                          {/* Physical experience */}
+                          <div className="p-3 rounded-2xl" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <div className="text-[8px] font-extrabold tracking-[0.4em] uppercase text-white/30 mb-2">What You Will Feel</div>
+                            <p className="text-[11px] text-white/45 leading-relaxed italic">↳ {rx.physical}</p>
+                          </div>
+
+                          {/* Hydration warning */}
+                          {rx.hydration && (
+                            <div className="p-3 rounded-2xl flex items-start gap-2.5" style={{ background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.2)' }}>
+                              <Droplets size={14} className="text-blue-400 shrink-0 mt-0.5" />
+                              <div>
+                                <div className="text-[8px] font-extrabold tracking-[0.4em] uppercase text-blue-400/70 mb-1">Hydration Alert</div>
+                                <p className="text-[11px] text-blue-300/60 leading-relaxed">{rx.hydrationNote}</p>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Two activate buttons */}
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              onClick={() => { setSelectedSite(rx.primary); setAuraIntensity(rx.primaryIntensity); setActiveTab('PORTAL'); setSelectedRxId(null); }}
+                              className="py-3 rounded-2xl text-[9px] font-extrabold tracking-[0.2em] uppercase transition-all hover:scale-[1.02]"
+                              style={{ background: `${rx.color}18`, border: `1px solid ${rx.color}40`, color: rx.color }}
+                            >
+                              {rx.icon} {rx.primaryName}
+                              <div className="text-[8px] opacity-60 mt-0.5">{rx.primaryIntensity}% · Primary</div>
+                            </button>
+                            <button
+                              onClick={() => { const s = SACRED_SITES.find(x => x.id === rx.backup); if (s) { setSelectedSite(rx.backup); setAuraIntensity(rx.backupIntensity); setActiveTab('PORTAL'); setSelectedRxId(null); } }}
+                              className="py-3 rounded-2xl text-[9px] font-extrabold tracking-[0.2em] uppercase transition-all hover:scale-[1.02]"
+                              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.45)' }}
+                            >
+                              Alt: {rx.backupName.split(' ')[0]}
+                              <div className="text-[8px] opacity-60 mt-0.5">{rx.backupIntensity}% · Backup</div>
+                            </button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
 
         {activeTab === 'HEALING' && (
           <div className="space-y-3">
@@ -626,6 +1008,34 @@ function TempleHomeInner() {
           <motion.div initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10, scale: 0.95 }} className="fixed bottom-28 left-4 right-4 z-50 mx-auto max-w-sm rounded-2xl px-5 py-3.5 flex items-center gap-3" style={{ background: 'rgba(52,211,153,0.08)', backdropFilter: 'blur(40px)', border: '1px solid rgba(52,211,153,0.25)' }}>
             <Shield size={16} className="text-emerald-400 shrink-0"/>
             <div><p className="text-[11px] font-black tracking-[0.2em] uppercase text-emerald-300">24/7 Continuity Active</p><p className="text-[9px] text-emerald-400/50 mt-0.5">Resonance server Phase-Lock engaged</p></div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Hydration Alert ── */}
+      <AnimatePresence>
+        {showHydrationAlert && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            className="fixed top-20 left-4 right-4 z-50 mx-auto max-w-sm"
+          >
+            <div className="rounded-2xl px-4 py-3.5 flex items-start gap-3" style={{ background: 'rgba(5,5,5,0.95)', backdropFilter: 'blur(40px)', border: '1px solid rgba(59,130,246,0.3)', boxShadow: '0 4px 30px rgba(59,130,246,0.15)' }}>
+              <Droplets size={18} className="text-blue-400 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <div className="text-[9px] font-extrabold tracking-[0.4em] uppercase text-blue-400/80 mb-1">
+                  Hydration Alert — High-Voltage Portal
+                </div>
+                <p className="text-[11px] text-white/60 leading-relaxed">
+                  <span className="font-bold text-white/80">{currentSite.name}</span> at {auraIntensity}% is a high-voltage node. Your body requires structured water as a conductor.
+                </p>
+                <p className="text-[10px] text-blue-300/50 italic mt-1">↳ Drink 2–3 glasses of structured water before and during this session.</p>
+              </div>
+              <button onClick={() => setShowHydrationAlert(false)} className="p-1 hover:bg-white/5 rounded-lg">
+                <X size={13} className="text-white/30" />
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
