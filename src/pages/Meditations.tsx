@@ -48,6 +48,7 @@ import type { MeditationSectionKey } from '@/features/meditations/groupAndFilter
 import { BackToTopFab } from '@/features/meditations/BackToTopFab';
 import { useJyotishProfile } from '@/hooks/useJyotishProfile';
 import { useAuth } from '@/hooks/useAuth';
+import { useMembership } from '@/hooks/useMembership';
 import { useAIVedicReading } from '@/hooks/useAIVedicReading';
 import type { UserProfile } from '@/lib/vedicTypes';
 import type { ContentLanguage } from '@/utils/contentLanguage';
@@ -480,13 +481,12 @@ const MeditationRowSQI: React.FC<{
   currentAudio: UniversalAudioItem | null;
   isPlaying: boolean;
   playerProgress: number;
-  userTier: string;
+  hasMeditationAccess: boolean;
   onPlay: (med: Meditation, lang: ContentLanguage) => void;
   onLock: () => void;
-}> = ({ med, lang, currentAudio, isPlaying, playerProgress, userTier, onPlay, onLock }) => {
+}> = ({ med, lang, currentAudio, isPlaying, playerProgress, hasMeditationAccess, onPlay, onLock }) => {
   const isActive = currentAudio?.id === med.id;
-  const isLocked = (med.is_premium || med.tier === 'prana_flow') &&
-    !['prana_flow', 'soma', 'brahman', 'admin'].includes(userTier);
+  const isLocked = (med.is_premium || med.tier === 'prana_flow') && !hasMeditationAccess;
   const isFree = !med.is_premium && med.tier !== 'prana_flow';
   const hasBilingual = !!(med.audio_url && med.audio_url_sv);
   const displayTitle = lang === 'sv' && med.title_sv ? med.title_sv : med.title;
@@ -576,10 +576,10 @@ const MeditationRowSQI: React.FC<{
 const MeditationSectionSQI: React.FC<{
   title: string; subtitle?: string; meditations: Meditation[];
   lang: ContentLanguage; currentAudio: UniversalAudioItem | null;
-  isPlaying: boolean; playerProgress: number; userTier: string;
+  isPlaying: boolean; playerProgress: number; hasMeditationAccess: boolean;
   onPlay: (med: Meditation, lang: ContentLanguage) => void;
   onLock: () => void; defaultOpen?: boolean;
-}> = ({ title, subtitle, meditations, lang, currentAudio, isPlaying, playerProgress, userTier, onPlay, onLock, defaultOpen = false }) => {
+}> = ({ title, subtitle, meditations, lang, currentAudio, isPlaying, playerProgress, hasMeditationAccess, onPlay, onLock, defaultOpen = false }) => {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="glass-card" style={{ marginBottom: 12, overflow: 'hidden' }}>
@@ -604,7 +604,7 @@ const MeditationSectionSQI: React.FC<{
               <MeditationRowSQI
                 med={med} lang={lang}
                 currentAudio={currentAudio} isPlaying={isPlaying}
-                playerProgress={playerProgress} userTier={userTier}
+                playerProgress={playerProgress} hasMeditationAccess={hasMeditationAccess}
                 onPlay={onPlay} onLock={onLock}
               />
               {i < meditations.length - 1 && (
@@ -649,6 +649,7 @@ const Meditations: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  const { isAdmin, adminGranted, isPremium, tier: membershipTier } = useMembership();
   const { language, setLanguage } = useMeditationContentLanguage();
   const { playUniversalAudio, currentAudio, isPlaying, togglePlay, progress: playerProgress } =
     useMusicPlayer();
@@ -704,7 +705,15 @@ const Meditations: React.FC = () => {
     load();
   }, [user, vedicReading, generateReading]);
 
-  const userTier = (user as any)?.subscription_tier || 'free';
+  /** Admin + paying members + legacy tier slugs on profile — not only JWT `subscription_tier` (often unset for admins). */
+  const legacyTier = ((user as { subscription_tier?: string } | null)?.subscription_tier ?? membershipTier ?? 'free')
+    .toString()
+    .toLowerCase();
+  const tierSlugUnlocks =
+    ['prana_flow', 'soma', 'brahman', 'admin', 'lifetime'].includes(legacyTier) ||
+    legacyTier.includes('premium');
+  const hasMeditationLibraryAccess =
+    !!user && (isAdmin || adminGranted || isPremium || tierSlugUnlocks);
 
   const filtered = useMemo(() => filterByMeditationLanguage(meditations, language), [meditations, language]);
   const sectionsArray = useMemo(() => {
@@ -809,7 +818,7 @@ const Meditations: React.FC = () => {
                     <MeditationRowSQI
                       med={med} lang={language}
                       currentAudio={currentAudio} isPlaying={isPlaying}
-                      playerProgress={playerProgress ?? 0} userTier={userTier}
+                      playerProgress={playerProgress ?? 0} hasMeditationAccess={hasMeditationLibraryAccess}
                       onPlay={initiatePlay} onLock={handleLock}
                     />
                     {i < playlistMeditations.length - 1 && (
@@ -900,7 +909,7 @@ const Meditations: React.FC = () => {
         <JyotishMeditationCard />
 
         {/* ✅ FIX 5: MeditationMembershipBanner with glass wrapper */}
-        {userTier === 'free' && (
+        {user && !hasMeditationLibraryAccess && (
           <div style={{ padding: '0 20px 20px' }}>
             <MeditationMembershipBanner />
           </div>
@@ -952,7 +961,7 @@ const Meditations: React.FC = () => {
                 currentAudio={currentAudio}
                 isPlaying={isPlaying}
                 playerProgress={playerProgress ?? 0}
-                userTier={userTier}
+                hasMeditationAccess={hasMeditationLibraryAccess}
                 onPlay={initiatePlay}
                 onLock={handleLock}
                 defaultOpen={i === 0}
