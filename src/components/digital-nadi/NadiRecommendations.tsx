@@ -12,7 +12,7 @@
  */
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { Play, Pause, Clock, Loader2, ExternalLink, RefreshCw } from 'lucide-react';
+import { Play, Pause, Clock, Loader2, ExternalLink, RefreshCw, Square } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useMusicPlayer, UniversalAudioItem, type Track } from '@/contexts/MusicPlayerContext';
 import { useNavigate } from 'react-router-dom';
@@ -607,7 +607,7 @@ const NadiSection: React.FC<{
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export const NadiRecommendations: React.FC<Props> = ({ bpm, hrv: _hrv, dosha, stress }) => {
-  const { playUniversalAudio, playTrack, currentAudio, currentTrack, isPlaying } = useMusicPlayer();
+  const { playUniversalAudio, playTrack, currentAudio, currentTrack, isPlaying, stopTrack } = useMusicPlayer();
   const navigate = useNavigate();
 
   const [meditations, setMeditations] = useState<NadiTrack[]>([]);
@@ -748,19 +748,42 @@ export const NadiRecommendations: React.FC<Props> = ({ bpm, hrv: _hrv, dosha, st
             Curated from your live Nāḍī reading
           </p>
         </div>
-        <button
-          onClick={loadAll}
-          style={{
-            width: 32, height: 32, borderRadius: '50%',
-            background: 'rgba(212,175,55,0.06)',
-            border: '1px solid rgba(212,175,55,0.15)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer',
-          }}
-          title="Refresh recommendations"
-        >
-          <RefreshCw size={13} color="rgba(212,175,55,0.5)" />
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {(currentAudio || currentTrack) && (
+            <button
+              type="button"
+              onClick={() => stopTrack()}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '6px 12px', borderRadius: 999,
+                background: 'rgba(239,68,68,0.08)',
+                border: '1px solid rgba(239,68,68,0.25)',
+                cursor: 'pointer',
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                fontSize: 9, fontWeight: 800, letterSpacing: '0.2em',
+                textTransform: 'uppercase', color: 'rgba(248,113,113,0.95)',
+              }}
+              title="Stop playback and clear the player"
+            >
+              <Square size={10} fill="currentColor" />
+              Stop
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={loadAll}
+            style={{
+              width: 32, height: 32, borderRadius: '50%',
+              background: 'rgba(212,175,55,0.06)',
+              border: '1px solid rgba(212,175,55,0.15)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer',
+            }}
+            title="Refresh recommendations"
+          >
+            <RefreshCw size={13} color="rgba(212,175,55,0.5)" />
+          </button>
+        </div>
       </div>
 
       {/* Sections */}

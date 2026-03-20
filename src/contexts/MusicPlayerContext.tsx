@@ -367,21 +367,24 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   }, [currentTrack, isPlaying, volume, isSubscribed, purchasedIds, purchasedAlbumTrackIds, isLoop, isShuffle, queue, currentQueueIndex, addOptimisticBalance, toast]);
 
   const togglePlay = useCallback(() => {
-    if (!audioRef.current || !currentTrack) return;
+    if (!audioRef.current) return;
+    // Music uses currentTrack; meditations/healing from Nadi & library use currentAudio only
+    if (!currentTrack && !currentAudio) return;
     if (isPlaying) {
       audioRef.current.pause();
       setIsPlaying(false);
     } else {
-      audioRef.current.play();
+      void audioRef.current.play().catch(() => setIsPlaying(false));
       setIsPlaying(true);
     }
-  }, [isPlaying, currentTrack]);
+  }, [isPlaying, currentTrack, currentAudio]);
 
   const seekTo = useCallback((percent: number) => {
-    if (!audioRef.current || !currentTrack) return;
+    if (!audioRef.current) return;
+    if (!currentTrack && !currentAudio) return;
     const seekTime = (percent / 100) * audioRef.current.duration;
     
-    if (!hasAccess(currentTrack) && seekTime > PREVIEW_LIMIT) {
+    if (currentTrack && !hasAccess(currentTrack) && seekTime > PREVIEW_LIMIT) {
       toast({ title: "Preview limit", description: "Subscribe to seek past 30 seconds." });
       return;
     }
@@ -389,7 +392,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     audioRef.current.currentTime = seekTime;
     setProgress(percent);
     setCurrentTime(seekTime);
-  }, [currentTrack, hasAccess, toast]);
+  }, [currentTrack, currentAudio, hasAccess, toast]);
 
   const setVolume = useCallback((vol: number) => {
     setVolumeState(vol);
