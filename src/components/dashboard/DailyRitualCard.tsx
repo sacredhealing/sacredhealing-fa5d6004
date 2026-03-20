@@ -1,5 +1,6 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '@/hooks/useAuth';
 import { useDailyJourney } from '@/hooks/useDailyJourney';
 import {
   getPhaseStates,
@@ -7,6 +8,20 @@ import {
   type PhaseState,
   type PhaseId,
 } from '@/lib/dailyPhaseUtils';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { SomaHealingCoinPanel } from '@/components/dashboard/SomaHealingCoinPanel';
+
+const PHASE_SHC: Record<PhaseId, number> = {
+  morning: 15,
+  midday: 10,
+  evening: 20,
+};
+
+function somaClaimStorageKey(userId: string): string {
+  const today = new Date().toISOString().split('T')[0];
+  return `sq_sadhana_soma_claimed_${userId}_${today}`;
+}
 
 const GATE_EMOJI: Record<PhaseId, string> = {
   morning: '☀️',
@@ -19,12 +34,40 @@ export const DailyRitualCard: React.FC<{ isDayClosed?: boolean; hasCompletedAllT
   hasCompletedAllThree = false,
 }) => {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const { getJourneyData, isLoading } = useDailyJourney();
   const [claimedPhases, setClaimedPhases] = useState<Set<PhaseId>>(() => new Set());
+  const [somaDialogPhase, setSomaDialogPhase] = useState<PhaseId | null>(null);
 
-  const claimPhase = useCallback((phaseId: PhaseId) => {
-    setClaimedPhases((prev) => new Set(prev).add(phaseId));
-  }, []);
+  useEffect(() => {
+    if (!user?.id) return;
+    try {
+      const raw = sessionStorage.getItem(somaClaimStorageKey(user.id));
+      if (raw) {
+        const arr = JSON.parse(raw) as PhaseId[];
+        if (Array.isArray(arr)) setClaimedPhases(new Set(arr));
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [user?.id]);
+
+  const persistClaim = useCallback(
+    (phaseId: PhaseId) => {
+      setClaimedPhases((prev) => {
+        const next = new Set(prev).add(phaseId);
+        if (user?.id) {
+          try {
+            sessionStorage.setItem(somaClaimStorageKey(user.id), JSON.stringify([...next]));
+          } catch {
+            /* ignore */
+          }
+        }
+        return next;
+      });
+    },
+    [user?.id]
+  );
 
   const journey = getJourneyData();
   const currentHour = new Date().getHours();
@@ -72,6 +115,33 @@ export const DailyRitualCard: React.FC<{ isDayClosed?: boolean; hasCompletedAllT
 
   return (
     <div>
+      <Dialog open={somaDialogPhase !== null} onOpenChange={(open) => !open && setSomaDialogPhase(null)}>
+        <DialogContent className="sm:max-w-md border border-amber-500/25 bg-zinc-950/98 text-foreground shadow-[0_0_40px_rgba(212,175,55,0.12)]">
+          <DialogHeader>
+            <DialogTitle className="text-center font-serif text-base tracking-wide text-amber-200/90">
+              {t('dailyRitual.somaGiftTitle', 'Daily Sadhana — gift received')}
+            </DialogTitle>
+          </DialogHeader>
+          {somaDialogPhase != null && (
+            <div className="rounded-xl border border-amber-500/15 bg-amber-500/[0.06] px-4 py-5">
+              <SomaHealingCoinPanel shcAmount={PHASE_SHC[somaDialogPhase]} />
+            </div>
+          )}
+          <DialogFooter className="sm:justify-center pt-2">
+            <Button
+              type="button"
+              className="w-full bg-amber-500 hover:bg-amber-400 text-black font-bold tracking-wide"
+              onClick={() => {
+                if (somaDialogPhase) persistClaim(somaDialogPhase);
+                setSomaDialogPhase(null);
+              }}
+            >
+              {t('dailyRitual.somaGiftConfirm', 'Receive')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <div className="sq-sadhana-header">
         <div className="sq-sadhana-title">{dateStr}</div>
         <div className="sq-sadhana-complete">{completedCount} / 3 COMPLETE</div>
@@ -105,7 +175,7 @@ export const DailyRitualCard: React.FC<{ isDayClosed?: boolean; hasCompletedAllT
                 isClaimed ? (
                   <div className="sq-gate-state">Complete</div>
                 ) : (
-                  <button type="button" className="sq-shc-btn" onClick={() => claimPhase(phase.id)}>
+                  <button type="button" className="sq-shc-btn" onClick={() => setSomaDialogPhase(phase.id)}>
                     + {phase.reward} SOMA-HARMONIC CREDITS
                   </button>
                 )

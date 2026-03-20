@@ -226,13 +226,32 @@ export function useDailyGuidance() {
       }
     : defaultGuidance;
 
-  /** Which practice slot to mark when this guidance session is completed */
+  /**
+   * Which daily-activity slot to mark complete + SHC when the user finishes the current guidance session.
+   * Must use today's completion flags — the old logic used `!lastCompleted` only, which is false as soon
+   * as *any* phase is done (e.g. midday breath after morning) and hid the Soma gift + skipped DB updates.
+   */
   const completeSlot: 'morning' | 'midday' | 'evening' | null = (() => {
-    if (guidance.session_type === 'morning_ritual' || (guidance.session_type === 'path_day' && timeOfDay === 'morning' && !lastCompleted)) return 'morning';
-    if (guidance.session_type === 'evening_reflection') return 'evening';
-    if (guidance.session_type === 'breathing_reset' && timeOfDay === 'midday' && !lastCompleted) return 'midday';
-    if (guidance.session_type === 'breathing_reset' && timeOfDay === 'morning' && !lastCompleted) return 'morning';
-    if (guidance.session_type === 'meditation' && !lastCompleted) return timeOfDay === 'morning' ? 'morning' : timeOfDay === 'evening' ? 'evening' : 'midday';
+    const m = !!activity?.morning_completed;
+    const d = !!activity?.midday_completed;
+    const e = !!activity?.evening_completed;
+    const st = guidance.session_type;
+
+    if (st === 'morning_ritual') return m ? null : 'morning';
+    if (st === 'evening_reflection') return e ? null : 'evening';
+    if (st === 'path_day') {
+      if (timeOfDay === 'morning' && !m) return 'morning';
+      return null;
+    }
+    if (st === 'journal') return null;
+
+    if (st === 'breathing_reset' || st === 'meditation') {
+      if (timeOfDay === 'morning' && !m) return 'morning';
+      if (timeOfDay === 'midday' && !d) return 'midday';
+      if (timeOfDay === 'evening' && !e) return 'evening';
+      return null;
+    }
+
     return null;
   })();
 

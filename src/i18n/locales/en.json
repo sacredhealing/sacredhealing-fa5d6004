@@ -660,7 +660,9 @@
     "upcoming": "Upcoming",
     "passedGently": "Passed gently",
     "arrivingLater": "Arriving later",
-    "claim": "Claim"
+    "claim": "Claim",
+    "somaGiftTitle": "Daily Sadhana — gift received",
+    "somaGiftConfirm": "Receive"
   },
   "quickActions": {
     "meditate": "Meditate",
