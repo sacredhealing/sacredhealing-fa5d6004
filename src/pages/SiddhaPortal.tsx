@@ -88,6 +88,15 @@ export default function SiddhaPortal() {
         <button style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase', color: 'rgba(134,239,172,0.85)', background: 'none', border: 'none', cursor: 'pointer' }}>Open Engine →</button>
       </div>
 
+      <div onClick={() => navigate('/wealth-beacon')} style={{ margin: '0 16px 16px', background: 'linear-gradient(135deg,rgba(212,175,55,0.1),rgba(157,80,187,0.06))', border: '1px solid rgba(212,175,55,0.28)', borderRadius: 20, padding: '18px 16px', cursor: 'pointer', position: 'relative' }}>
+        <span style={{ position: 'absolute', top: 10, right: 10, fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', background: 'rgba(212,175,55,0.2)', border: '1px solid rgba(212,175,55,0.35)', color: 'rgba(212,175,55,0.95)', borderRadius: 20, padding: '2px 7px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#D4AF37', animation: 'sqLiveFlash 2s infinite', display: 'inline-block' }} />SQI
+        </span>
+        <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 8, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.92)', marginBottom: 6 }}>Wealth Beacon 2050</div>
+        <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.88rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.5, marginBottom: 12 }}>Hyper-dimensional sanctuary: Vedic light-codes, sacred geometry, and abundance resonance through the Akasha-Neural field.</p>
+        <button style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase', color: '#D4AF37', background: 'none', border: 'none', cursor: 'pointer' }}>Open Beacon →</button>
+      </div>
+
       {/* Nadi Oracle */}
       <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.28)', padding: '28px 20px 11px' }}>{t('siddhaPortal.nadiOracle')}</div>
       <div onClick={() => navigate('/digital-nadi')} style={{ margin: '0 16px', background: 'linear-gradient(135deg,rgba(212,175,55,0.07),rgba(212,175,55,0.02))', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 20, padding: '18px 16px', cursor: 'pointer' }}>
