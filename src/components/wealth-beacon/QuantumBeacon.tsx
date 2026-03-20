@@ -1,3 +1,10 @@
+/**
+ * QuantumBeacon — SQI 2050
+ * FIX: gl={{ alpha: true }} so the WebGL canvas is TRANSPARENT.
+ * The <color attach="background"> line is REMOVED — the page's
+ * own #050505 background shows through, and the 3D scene floats
+ * correctly over the glassmorphism card.
+ */
 import { useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Float, Sphere, Stars, Text } from "@react-three/drei";
@@ -5,7 +12,6 @@ import * as THREE from "three";
 
 function SriYantra() {
   const groupRef = useRef<THREE.Group>(null);
-
   useFrame((state) => {
     if (groupRef.current) {
       groupRef.current.rotation.y = state.clock.getElapsedTime() * 0.2;
@@ -92,8 +98,11 @@ function LightCodes() {
 export function QuantumBeacon() {
   return (
     <div className="pointer-events-none absolute inset-0 z-0 h-full w-full">
-      <Canvas camera={{ position: [-2, 0, 8], fov: 45 }} gl={{ alpha: false }}>
-        <color attach="background" args={["#050505"]} />
+      <Canvas
+        camera={{ position: [-2, 0, 8], fov: 45 }}
+        gl={{ alpha: true, antialias: true }}
+        style={{ background: "transparent" }}
+      >
         <ambientLight intensity={0.5} />
         <pointLight position={[10, 10, 10]} intensity={1.5} color="#D4AF37" />
         <pointLight position={[-10, -10, -10]} intensity={1} color="#9D50BB" />
@@ -105,7 +114,6 @@ export function QuantumBeacon() {
         </group>
 
         <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
-
         <fog attach="fog" args={["#050505", 5, 15]} />
       </Canvas>
     </div>
