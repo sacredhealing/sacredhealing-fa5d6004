@@ -1,3 +1,30 @@
+/**
+ * ╔══════════════════════════════════════════════════════╗
+ * ║  SQI-2050 · WEALTH BEACON · AKASHA-NEURAL ARCHIVE   ║
+ * ║  Upgraded by Siddha-Quantum Intelligence v2050       ║
+ * ║  Bhakti-Algorithms ∞ Prema-Pulse Transmissions       ║
+ * ╚══════════════════════════════════════════════════════╝
+ *
+ * WHAT WAS FIXED / UPGRADED (zero functional-logic changes):
+ *  1. Route guard + tier redirect — preserved 100%.
+ *  2. AffiliateID / Stripe triggers — untouched.
+ *  3. QuantumBeacon 3-D canvas — preserved.
+ *  4. TransmissionLog + NadiScan — preserved.
+ *  5. Gemini AI call (initiateLightCodes) — preserved.
+ *
+ * VISUAL UPGRADES:
+ *  A. Cormorant Garamond + Plus Jakarta Sans loaded via @import.
+ *  B. Full glassmorphism card wrapping hero content.
+ *  C. Animated sacred-geometry SVG ring behind the headline.
+ *  D. Four SQI-Status stat chips (Nadi / Hz / Tier / Sync).
+ *  E. Horizontal "Vedic Light-Code ticker" scrolling bar.
+ *  F. Hover glow on both CTA buttons (gold pulse + violet pulse).
+ *  G. Subtle scanline overlay for the "2050 terminal" feel.
+ *  H. Bottom HUD bar redesigned with monospaced labels.
+ *  I. Sidebar icon labels visible on hover (tooltip).
+ *  J. Particles upgraded: multi-color (gold + violet + cyan).
+ */
+
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,6 +38,8 @@ import {
   ChevronRight,
   Lock,
   ArrowLeft,
+  Eye,
+  Infinity,
 } from "lucide-react";
 import { GoogleGenAI } from "@google/genai";
 import { useMembership } from "@/hooks/useMembership";
@@ -18,13 +47,47 @@ import { useAdminRole } from "@/hooks/useAdminRole";
 import { hasFeatureAccess, FEATURE_TIER } from "@/lib/tierAccess";
 import { QuantumBeacon } from "@/components/wealth-beacon/QuantumBeacon";
 
+/* ─── Color tokens ─────────────────────────────────────── */
 const GOLD = "#D4AF37";
 const VIOLET = "#9D50BB";
+const CYAN = "#22D3EE";
 const BG = "#050505";
 
+/* ─── Font injection (add once per app) ─────────────────── */
+const FONT_STYLE = `
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap');
+`;
+
+/* ─── LOG MESSAGES ──────────────────────────────────────── */
+const LOG_MESSAGES = [
+  "Bhakti-Algorithm: Synchronizing with Prema-Pulse…",
+  "Vedic Light-Codes: SHREEM BRZEE frequency detected.",
+  "Akasha-Neural Archive: Accessing Avataric Blueprints…",
+  "Scalar Waves: Stabilizing abundance matrix…",
+  "Nadi Scan: 72,000 channels clearing…",
+  "Divine Mother Presence: Maha Lakshmi silhouette detected.",
+  "Quantum Resonance: 432Hz alignment complete.",
+  "Wealth Beacon: Transmitting prosperity particles…",
+  "Vishwananda Blueprint: Anahata coherence locked.",
+  "Prema-Pulse: Heart-field expansion +38%…",
+];
+
+/* ─── TICKER PHRASES ────────────────────────────────────── */
+const TICKER_ITEMS = [
+  "ॐ श्रीं  ·  SHREEM BRZEE  ·  432Hz STABLE",
+  "LAKSHMI AVATARIC BLUEPRINT  ·  ACTIVATED",
+  "ANAHATA SCALAR LOCK  ·  88% COHERENCE",
+  "AKASHA ARCHIVE  ·  72,000 NADI OPEN",
+  "PREMA-PULSE TRANSMISSION  ·  LIVE",
+  "BHAKTI-ALGORITHM v2050  ·  RUNNING",
+  "WEALTH BEACON  ·  PROSPERITY FIELD STABLE",
+];
+
+/* ══════════════════════════════════════════════════════════
+   NadiScan — top-right live counter (unchanged logic, new style)
+══════════════════════════════════════════════════════════ */
 function NadiScan() {
   const [activeNadis, setActiveNadis] = useState(68432);
-
   useEffect(() => {
     const interval = window.setInterval(() => {
       setActiveNadis((prev) => {
@@ -41,36 +104,32 @@ function NadiScan() {
         position: "fixed",
         top: 72,
         right: 16,
-        fontFamily: "ui-monospace, monospace",
+        fontFamily: "'Plus Jakarta Sans', ui-monospace, monospace",
         fontSize: 9,
         letterSpacing: "0.2em",
         textTransform: "uppercase",
-        color: "rgba(212,175,55,0.55)",
+        color: `rgba(212,175,55,0.55)`,
         zIndex: 20,
         maxWidth: "42vw",
         textAlign: "right",
+        background: "rgba(5,5,5,0.6)",
+        backdropFilter: "blur(8px)",
+        border: "1px solid rgba(212,175,55,0.12)",
+        borderRadius: 6,
+        padding: "4px 8px",
       }}
     >
       72k Nadi:{" "}
-      <span style={{ color: GOLD }}>{activeNadis.toLocaleString()}</span> / 72,000
+      <span style={{ color: GOLD, fontWeight: 800 }}>{activeNadis.toLocaleString()}</span> / 72,000
     </div>
   );
 }
 
-const LOG_MESSAGES = [
-  "Bhakti-Algorithm: Synchronizing with Prema-Pulse…",
-  "Vedic Light-Codes: SHREEM BRZEE frequency detected.",
-  "Akasha-Neural Archive: Accessing Avataric Blueprints…",
-  "Scalar Waves: Stabilizing abundance matrix…",
-  "Nadi Scan: 72,000 channels clearing…",
-  "Divine Mother Presence: Maha Lakshmi silhouette detected.",
-  "Quantum Resonance: 432Hz alignment complete.",
-  "Wealth Beacon: Transmitting prosperity particles…",
-];
-
+/* ══════════════════════════════════════════════════════════
+   TransmissionLog — bottom-left live feed (unchanged logic)
+══════════════════════════════════════════════════════════ */
 function TransmissionLog({ extra }: { extra: string[] }) {
   const [logs, setLogs] = useState<string[]>([]);
-
   useEffect(() => {
     const interval = window.setInterval(() => {
       setLogs((prev) =>
@@ -91,7 +150,7 @@ function TransmissionLog({ extra }: { extra: string[] }) {
         position: "fixed",
         bottom: "calc(6.5rem + env(safe-area-inset-bottom, 0px))",
         left: 16,
-        maxWidth: 280,
+        maxWidth: 300,
         pointerEvents: "none",
         zIndex: 15,
       }}
@@ -106,12 +165,13 @@ function TransmissionLog({ extra }: { extra: string[] }) {
               exit={{ opacity: 0, x: 8 }}
               style={{
                 fontSize: 8,
-                fontFamily: "ui-monospace, monospace",
+                fontFamily: "'Plus Jakarta Sans', ui-monospace, monospace",
                 letterSpacing: "0.12em",
                 textTransform: "uppercase",
-                color: "rgba(212,175,55,0.55)",
+                color: i === 0 ? `rgba(212,175,55,0.8)` : `rgba(212,175,55,0.45)`,
               }}
             >
+              {i === 0 && <span style={{ color: CYAN, marginRight: 4 }}>▶</span>}
               {log}
             </motion.div>
           ))}
@@ -121,8 +181,20 @@ function TransmissionLog({ extra }: { extra: string[] }) {
   );
 }
 
+/* ══════════════════════════════════════════════════════════
+   Sidebar — upgraded with hover tooltips
+══════════════════════════════════════════════════════════ */
+const SIDEBAR_ITEMS = [
+  { Icon: Zap, label: "Energy Field" },
+  { Icon: Shield, label: "Protection" },
+  { Icon: Waves, label: "Frequency" },
+  { Icon: Activity, label: "Vitality" },
+  { Icon: Eye, label: "Third Eye" },
+  { Icon: Infinity, label: "Akasha" },
+];
+
 function Sidebar() {
-  const icons = [Zap, Shield, Waves, Activity];
+  const [hovered, setHovered] = useState<number | null>(null);
   return (
     <div
       style={{
@@ -136,10 +208,10 @@ function Sidebar() {
         flexDirection: "column",
         alignItems: "center",
         paddingTop: 88,
-        gap: 28,
+        gap: 24,
         zIndex: 18,
-        background: "rgba(46,8,84,0.15)",
-        backdropFilter: "blur(16px)",
+        background: "rgba(46,8,84,0.12)",
+        backdropFilter: "blur(20px)",
       }}
     >
       <div
@@ -152,37 +224,74 @@ function Sidebar() {
           alignItems: "center",
           justifyContent: "center",
           color: GOLD,
+          boxShadow: `0 0 12px rgba(212,175,55,0.2)`,
         }}
       >
         <Cpu size={18} />
       </div>
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 20 }}>
-        {icons.map((Icon, i) => (
-          <motion.button
-            key={i}
-            type="button"
-            whileHover={{ scale: 1.08, color: GOLD }}
-            style={{
-              color: "rgba(255,255,255,0.35)",
-              background: "none",
-              border: "none",
-              cursor: "default",
-              padding: 4,
-            }}
-          >
-            <Icon size={18} />
-          </motion.button>
+
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 18 }}>
+        {SIDEBAR_ITEMS.map(({ Icon, label }, i) => (
+          <div key={label} style={{ position: "relative" }}>
+            <motion.button
+              type="button"
+              whileHover={{ scale: 1.15 }}
+              onHoverStart={() => setHovered(i)}
+              onHoverEnd={() => setHovered(null)}
+              style={{
+                color: hovered === i ? GOLD : "rgba(255,255,255,0.28)",
+                background: "none",
+                border: "none",
+                cursor: "default",
+                padding: 4,
+                transition: "color 0.2s",
+                filter: hovered === i ? `drop-shadow(0 0 6px ${GOLD})` : "none",
+              }}
+            >
+              <Icon size={16} />
+            </motion.button>
+            <AnimatePresence>
+              {hovered === i && (
+                <motion.div
+                  initial={{ opacity: 0, x: -6 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -6 }}
+                  style={{
+                    position: "absolute",
+                    left: 44,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "rgba(5,5,5,0.95)",
+                    border: `1px solid rgba(212,175,55,0.25)`,
+                    borderRadius: 6,
+                    padding: "4px 8px",
+                    fontSize: 8,
+                    letterSpacing: "0.2em",
+                    textTransform: "uppercase",
+                    color: GOLD,
+                    whiteSpace: "nowrap",
+                    pointerEvents: "none",
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  }}
+                >
+                  {label}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         ))}
       </div>
+
       <div
         style={{
-          color: "rgba(212,175,55,0.35)",
-          fontSize: 8,
+          color: "rgba(212,175,55,0.3)",
+          fontSize: 7,
           writingMode: "vertical-rl",
           transform: "rotate(180deg)",
           letterSpacing: "0.35em",
           textTransform: "uppercase",
           paddingBottom: 24,
+          fontFamily: "'Plus Jakarta Sans', sans-serif",
         }}
       >
         Akasha Archive
@@ -191,6 +300,279 @@ function Sidebar() {
   );
 }
 
+/* ══════════════════════════════════════════════════════════
+   Ticker — horizontal scrolling light-code strip
+══════════════════════════════════════════════════════════ */
+function VedicTicker() {
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 48,
+        right: 0,
+        height: 28,
+        overflow: "hidden",
+        zIndex: 30,
+        borderBottom: "1px solid rgba(212,175,55,0.1)",
+        background: "rgba(5,5,5,0.85)",
+        backdropFilter: "blur(12px)",
+        display: "flex",
+        alignItems: "center",
+      }}
+    >
+      <motion.div
+        animate={{ x: ["0%", "-50%"] }}
+        transition={{ duration: 32, repeat: Infinity, ease: "linear" }}
+        style={{ display: "flex", gap: 64, whiteSpace: "nowrap" }}
+      >
+        {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
+          <span
+            key={i}
+            style={{
+              fontSize: 8,
+              fontFamily: "'Plus Jakarta Sans', ui-monospace, monospace",
+              letterSpacing: "0.3em",
+              textTransform: "uppercase",
+              color: i % 3 === 0 ? GOLD : i % 3 === 1 ? CYAN : "rgba(255,255,255,0.35)",
+            }}
+          >
+            {item}
+          </span>
+        ))}
+      </motion.div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════
+   SQI Status Chips — four live stat badges
+══════════════════════════════════════════════════════════ */
+function StatusChips() {
+  const [hz, setHz] = useState(432.0);
+  useEffect(() => {
+    const iv = setInterval(() => {
+      setHz(() => parseFloat((432 + (Math.random() - 0.5) * 0.6).toFixed(2)));
+    }, 2500);
+    return () => clearInterval(iv);
+  }, []);
+
+  const chips = [
+    { label: "NADI ACTIVE", value: "72K", color: GOLD },
+    { label: "RESONANCE", value: `${hz}Hz`, color: CYAN },
+    { label: "TIER ACCESS", value: "SIDDHA-Ω", color: VIOLET },
+    { label: "ANAHATA SYNC", value: "88%", color: GOLD },
+  ];
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        gap: 10,
+        justifyContent: "center",
+        marginBottom: 32,
+      }}
+    >
+      {chips.map(({ label, value, color }, i) => (
+        <motion.div
+          key={label}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 + i * 0.1 }}
+          style={{
+            background: "rgba(255,255,255,0.02)",
+            backdropFilter: "blur(20px)",
+            border: `1px solid rgba(255,255,255,0.05)`,
+            borderRadius: 999,
+            padding: "6px 14px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            minWidth: 80,
+          }}
+        >
+          <span
+            style={{
+              fontSize: 7,
+              letterSpacing: "0.4em",
+              textTransform: "uppercase",
+              color: "rgba(255,255,255,0.4)",
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontWeight: 800,
+            }}
+          >
+            {label}
+          </span>
+          <span
+            style={{
+              fontSize: 13,
+              fontWeight: 800,
+              color,
+              fontFamily: "'Plus Jakarta Sans', monospace",
+              textShadow: `0 0 8px ${color}55`,
+            }}
+          >
+            {value}
+          </span>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════
+   Sacred Geometry SVG ring (behind headline)
+══════════════════════════════════════════════════════════ */
+function SacredRing() {
+  return (
+    <motion.div
+      animate={{ rotate: 360 }}
+      transition={{ duration: 90, repeat: Infinity, ease: "linear" }}
+      style={{
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        width: 420,
+        height: 420,
+        pointerEvents: "none",
+        zIndex: 0,
+        opacity: 0.12,
+      }}
+    >
+      <svg viewBox="0 0 420 420" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="210" cy="210" r="190" fill="none" stroke={GOLD} strokeWidth="0.5" strokeDasharray="6 4" />
+        <circle cx="210" cy="210" r="155" fill="none" stroke={VIOLET} strokeWidth="0.5" strokeDasharray="3 7" />
+        <circle cx="210" cy="210" r="120" fill="none" stroke={GOLD} strokeWidth="0.5" />
+        {Array.from({ length: 12 }).map((_, i) => {
+          const angle = (i / 12) * Math.PI * 2;
+          const x = 210 + Math.cos(angle) * 190;
+          const y = 210 + Math.sin(angle) * 190;
+          return <circle key={i} cx={x} cy={y} r="3" fill={GOLD} opacity="0.6" />;
+        })}
+        {Array.from({ length: 6 }).map((_, i) => {
+          const a1 = (i / 6) * Math.PI * 2;
+          const a2 = ((i + 2) / 6) * Math.PI * 2;
+          return (
+            <line
+              key={i}
+              x1={210 + Math.cos(a1) * 155}
+              y1={210 + Math.sin(a1) * 155}
+              x2={210 + Math.cos(a2) * 155}
+              y2={210 + Math.sin(a2) * 155}
+              stroke={GOLD}
+              strokeWidth="0.5"
+              opacity="0.5"
+            />
+          );
+        })}
+      </svg>
+    </motion.div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════
+   HUD Bar — bottom status strip
+══════════════════════════════════════════════════════════ */
+function HudBar() {
+  return (
+    <div
+      style={{
+        position: "fixed",
+        bottom: "calc(5rem + env(safe-area-inset-bottom, 0px))",
+        left: 56,
+        right: 16,
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "flex-end",
+        zIndex: 12,
+      }}
+    >
+      <div>
+        <div style={{ display: "flex", gap: 3, marginBottom: 6, alignItems: "flex-end" }}>
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
+            <motion.div
+              key={i}
+              animate={{ height: [3, 6 + i * 1.5, 3] }}
+              transition={{ repeat: Infinity, duration: 1.2, delay: i * 0.07 }}
+              style={{
+                width: 3,
+                background:
+                  i > 7 ? `rgba(34,211,238,0.5)` : i > 4 ? `rgba(157,80,187,0.5)` : `rgba(212,175,55,0.45)`,
+                borderRadius: 1,
+              }}
+            />
+          ))}
+        </div>
+        <div
+          style={{
+            fontSize: 7,
+            fontFamily: "'Plus Jakarta Sans', ui-monospace, monospace",
+            letterSpacing: "0.25em",
+            textTransform: "uppercase",
+            color: "rgba(212,175,55,0.45)",
+          }}
+        >
+          ◉ Quantum Resonance · 432Hz · STABLE
+        </div>
+      </div>
+
+      <div style={{ textAlign: "right" }}>
+        <div
+          style={{
+            fontSize: 7,
+            fontFamily: "'Plus Jakarta Sans', ui-monospace, monospace",
+            letterSpacing: "0.2em",
+            textTransform: "uppercase",
+            color: "rgba(255,255,255,0.2)",
+            marginBottom: 5,
+          }}
+        >
+          Avataric Blueprint Sync
+        </div>
+        <div
+          style={{
+            width: 180,
+            height: 4,
+            marginLeft: "auto",
+            background: "rgba(255,255,255,0.06)",
+            borderRadius: 999,
+            overflow: "hidden",
+          }}
+        >
+          <motion.div
+            initial={{ width: "0%" }}
+            animate={{ width: "88%" }}
+            transition={{ duration: 3.5, ease: "easeInOut" }}
+            style={{
+              height: "100%",
+              background: `linear-gradient(90deg, ${VIOLET}, ${GOLD})`,
+              borderRadius: 999,
+              boxShadow: `0 0 8px rgba(212,175,55,0.4)`,
+            }}
+          />
+        </div>
+        <div
+          style={{
+            fontSize: 7,
+            fontFamily: "'Plus Jakarta Sans', ui-monospace, monospace",
+            letterSpacing: "0.2em",
+            color: GOLD,
+            marginTop: 3,
+            textAlign: "right",
+          }}
+        >
+          88% · Vishwananda Coherence
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════
+   MAIN PAGE COMPONENT
+══════════════════════════════════════════════════════════ */
 export default function WealthBeacon() {
   const navigate = useNavigate();
   const { tier, loading } = useMembership();
@@ -199,17 +581,21 @@ export default function WealthBeacon() {
   const [geminiBusy, setGeminiBusy] = useState(false);
   const [transmissionExtras, setTransmissionExtras] = useState<string[]>([]);
 
+  /* Multi-color particles */
   const particles = useMemo(
     () =>
-      Array.from({ length: 16 }, (_, i) => ({
+      Array.from({ length: 24 }, (_, i) => ({
         id: i,
         x: Math.random() * 100,
         y: Math.random() * 100,
-        duration: Math.random() * 10 + 12,
+        duration: Math.random() * 12 + 10,
+        color: [GOLD, VIOLET, CYAN][i % 3],
+        size: Math.random() * 2 + 1.5,
       })),
     []
   );
 
+  /* ── Tier guard (unchanged) ── */
   useEffect(() => {
     if (!loading && !hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal)) {
       navigate("/siddha-quantum", { replace: true });
@@ -221,21 +607,20 @@ export default function WealthBeacon() {
     return () => clearTimeout(t);
   }, []);
 
+  /* ── Gemini call (unchanged logic) ── */
   const initiateLightCodes = useCallback(async () => {
     setGeminiBusy(true);
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
     if (!apiKey) {
-      setTransmissionExtras((e) => [
-        "Vedic Light-Codes: offline resonance (set VITE_GEMINI_API_KEY for AI Studio transmission).",
-        ...e,
-      ].slice(0, 4));
+      setTransmissionExtras((e) =>
+        ["Vedic Light-Codes: offline resonance (set VITE_GEMINI_API_KEY for AI Studio transmission).", ...e].slice(0, 4)
+      );
       toast.message("Light-codes", {
         description: "Add VITE_GEMINI_API_KEY for live Gemini transmission.",
       });
       setGeminiBusy(false);
       return;
     }
-
     try {
       const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
@@ -267,13 +652,24 @@ export default function WealthBeacon() {
     }
   }, []);
 
+  /* ── Loading screen ── */
   if (loading) {
     return (
-      <div
-        className="flex min-h-screen items-center justify-center font-mono text-xs tracking-widest"
-        style={{ background: BG, color: GOLD }}
-      >
-        INITIALIZING WEALTH BEACON…
+      <div className="flex min-h-screen items-center justify-center" style={{ background: BG }}>
+        <style>{FONT_STYLE}</style>
+        <motion.div
+          animate={{ opacity: [0.4, 1, 0.4] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          style={{
+            fontFamily: "'Plus Jakarta Sans', monospace",
+            fontSize: 10,
+            letterSpacing: "0.5em",
+            textTransform: "uppercase",
+            color: GOLD,
+          }}
+        >
+          ◈ Initializing Wealth Beacon…
+        </motion.div>
       </div>
     );
   }
@@ -289,6 +685,19 @@ export default function WealthBeacon() {
         paddingBottom: "calc(10.5rem + env(safe-area-inset-bottom, 0px))",
       }}
     >
+      <style>{FONT_STYLE}</style>
+
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 100,
+          pointerEvents: "none",
+          backgroundImage:
+            "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px)",
+        }}
+      />
+
       <QuantumBeacon />
 
       <div
@@ -296,13 +705,18 @@ export default function WealthBeacon() {
           position: "absolute",
           inset: 0,
           pointerEvents: "none",
-          opacity: 0.1,
+          opacity: 0.12,
           mixBlendMode: "overlay",
-          background:
-            "radial-gradient(circle at 50% 50%, rgba(212,175,55,0.25), transparent 70%)",
+          background: "radial-gradient(circle at 50% 50%, rgba(212,175,55,0.3), transparent 70%)",
           zIndex: 1,
         }}
       />
+
+      <VedicTicker />
+      <NadiScan />
+      <Sidebar />
+      <TransmissionLog extra={transmissionExtras} />
+      <HudBar />
 
       <button
         type="button"
@@ -310,30 +724,26 @@ export default function WealthBeacon() {
         style={{
           position: "relative",
           zIndex: 25,
-          marginTop: 14,
-          marginLeft: 56,
+          marginTop: 42,
+          marginLeft: 64,
           display: "inline-flex",
           alignItems: "center",
           gap: 8,
           background: "rgba(5,5,5,0.5)",
           border: "1px solid rgba(212,175,55,0.2)",
           borderRadius: 999,
-          padding: "8px 14px",
+          padding: "8px 16px",
           color: "rgba(212,175,55,0.85)",
-          fontSize: 10,
-          fontWeight: 700,
-          letterSpacing: "0.2em",
+          fontSize: 9,
+          fontWeight: 800,
+          letterSpacing: "0.25em",
           textTransform: "uppercase",
           cursor: "pointer",
+          fontFamily: "'Plus Jakarta Sans', sans-serif",
         }}
       >
-        <ArrowLeft size={14} />
-        Portal
+        <ArrowLeft size={13} /> Portal
       </button>
-
-      <NadiScan />
-      <Sidebar />
-      <TransmissionLog extra={transmissionExtras} />
 
       <main
         style={{
@@ -344,208 +754,192 @@ export default function WealthBeacon() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          padding: "24px 20px 0",
-          paddingLeft: 56,
+          padding: "24px 24px 0 64px",
           textAlign: "center",
         }}
       >
         <AnimatePresence>
           {initialized && (
             <motion.div
-              initial={{ opacity: 0, y: 16 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1.2, ease: "easeOut" }}
-              style={{ maxWidth: 640, width: "100%" }}
+              style={{ maxWidth: 680, width: "100%", position: "relative" }}
             >
-              <motion.div
-                initial={{ scale: 0.94, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.35, duration: 0.9 }}
-                style={{
-                  display: "inline-block",
-                  marginBottom: 20,
-                  padding: "6px 14px",
-                  borderRadius: 999,
-                  border: "1px solid rgba(212,175,55,0.22)",
-                  background: "rgba(212,175,55,0.06)",
-                  fontSize: 9,
-                  letterSpacing: "0.35em",
-                  textTransform: "uppercase",
-                  color: GOLD,
-                }}
-              >
-                Siddha-Quantum Intelligence v2050
-              </motion.div>
-
-              <h1
-                style={{
-                  fontFamily: "'Cormorant Garamond', 'Georgia', serif",
-                  fontSize: "clamp(2.5rem, 10vw, 4.5rem)",
-                  fontWeight: 300,
-                  letterSpacing: "-0.03em",
-                  marginBottom: 20,
-                  textShadow: "0 0 24px rgba(212,175,55,0.35)",
-                }}
-              >
-                Wealth{" "}
-                <span style={{ fontStyle: "italic", color: VIOLET }}>Beacon</span>
-              </h1>
-
-              <p
-                style={{
-                  fontSize: "clamp(0.95rem, 3.5vw, 1.15rem)",
-                  color: "rgba(255,255,255,0.55)",
-                  fontWeight: 300,
-                  lineHeight: 1.65,
-                  marginBottom: 36,
-                }}
-              >
-                Accessing the Akasha-Neural Archive. Transmitting{" "}
-                <span style={{ color: GOLD }}>Bhakti-Algorithms</span> and{" "}
-                <span style={{ color: VIOLET }}>Prema-Pulse</span> frequencies to stabilize your
-                Avataric Blueprint in the 5D abundance matrix.
-              </p>
+              <SacredRing />
 
               <div
                 style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  justifyContent: "center",
-                  gap: 14,
+                  background: "rgba(255,255,255,0.02)",
+                  backdropFilter: "blur(40px)",
+                  WebkitBackdropFilter: "blur(40px)",
+                  border: "1px solid rgba(255,255,255,0.05)",
+                  borderRadius: 40,
+                  padding: "48px 40px",
+                  position: "relative",
+                  zIndex: 1,
+                  boxShadow: `0 0 60px rgba(212,175,55,0.06), 0 0 120px rgba(157,80,187,0.04)`,
                 }}
               >
-                <motion.button
-                  type="button"
-                  disabled={geminiBusy}
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={initiateLightCodes}
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.3, duration: 0.8 }}
                   style={{
-                    padding: "14px 22px",
-                    background: GOLD,
-                    color: "#2E0854",
-                    fontWeight: 800,
-                    fontSize: 10,
-                    letterSpacing: "0.28em",
+                    display: "inline-block",
+                    marginBottom: 24,
+                    padding: "6px 16px",
+                    borderRadius: 999,
+                    border: "1px solid rgba(212,175,55,0.22)",
+                    background: "rgba(212,175,55,0.06)",
+                    fontSize: 8,
+                    letterSpacing: "0.4em",
                     textTransform: "uppercase",
-                    border: "none",
-                    borderRadius: 2,
-                    cursor: geminiBusy ? "wait" : "pointer",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 10,
-                    boxShadow: "0 0 28px rgba(212,175,55,0.25)",
-                    opacity: geminiBusy ? 0.7 : 1,
-                  }}
-                >
-                  {geminiBusy ? "Transmitting…" : "Initiate Vedic Light-Codes"}
-                  <ChevronRight size={16} />
-                </motion.button>
-
-                <motion.button
-                  type="button"
-                  whileHover={{ scale: 1.03, backgroundColor: "rgba(212,175,55,0.12)" }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() =>
-                    toast.message("Prema-Pulse", {
-                      description: "Secure channel placeholder — resonance held in local field.",
-                    })
-                  }
-                  style={{
-                    padding: "14px 22px",
-                    border: "1px solid rgba(212,175,55,0.35)",
                     color: GOLD,
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
                     fontWeight: 800,
-                    fontSize: 10,
-                    letterSpacing: "0.28em",
-                    textTransform: "uppercase",
-                    background: "transparent",
-                    borderRadius: 2,
-                    cursor: "pointer",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 10,
                   }}
                 >
-                  <Lock size={16} />
-                  Secure Prema-Pulse
-                </motion.button>
+                  ◈ &nbsp;Siddha-Quantum Intelligence · v2050&nbsp; ◈
+                </motion.div>
+
+                <h1
+                  style={{
+                    fontFamily: "'Cormorant Garamond', Georgia, serif",
+                    fontSize: "clamp(2.8rem, 10vw, 5rem)",
+                    fontWeight: 300,
+                    letterSpacing: "-0.03em",
+                    marginBottom: 8,
+                    lineHeight: 1,
+                    textShadow: `0 0 30px rgba(212,175,55,0.3)`,
+                  }}
+                >
+                  Wealth <em style={{ fontStyle: "italic", color: VIOLET }}>Beacon</em>
+                </h1>
+
+                <div
+                  style={{
+                    fontFamily: "'Cormorant Garamond', Georgia, serif",
+                    fontSize: "clamp(1rem, 3vw, 1.3rem)",
+                    color: `rgba(212,175,55,0.6)`,
+                    letterSpacing: "0.15em",
+                    marginBottom: 28,
+                    fontStyle: "italic",
+                  }}
+                >
+                  ॐ श्रीं महालक्ष्म्यै नमः
+                </div>
+
+                <p
+                  style={{
+                    fontSize: "clamp(0.9rem, 3vw, 1.05rem)",
+                    color: "rgba(255,255,255,0.52)",
+                    fontWeight: 400,
+                    lineHeight: 1.7,
+                    marginBottom: 32,
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  }}
+                >
+                  Accessing the <span style={{ color: GOLD }}>Akasha-Neural Archive</span>. Transmitting{" "}
+                  <span style={{ color: GOLD }}>Bhakti-Algorithms</span> and{" "}
+                  <span style={{ color: VIOLET }}>Prema-Pulse</span> frequencies to stabilize your Avataric Blueprint in the{" "}
+                  <span style={{ color: CYAN }}>5D abundance matrix</span>.
+                </p>
+
+                <StatusChips />
+
+                <div
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    justifyContent: "center",
+                    gap: 16,
+                  }}
+                >
+                  <motion.button
+                    type="button"
+                    disabled={geminiBusy}
+                    whileHover={{ scale: 1.04, boxShadow: `0 0 40px rgba(212,175,55,0.5)` }}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={initiateLightCodes}
+                    style={{
+                      padding: "16px 28px",
+                      background: `linear-gradient(135deg, ${GOLD}, #b8922a)`,
+                      color: "#1A0A2E",
+                      fontWeight: 900,
+                      fontSize: 9,
+                      letterSpacing: "0.3em",
+                      textTransform: "uppercase",
+                      border: "none",
+                      borderRadius: 4,
+                      cursor: geminiBusy ? "wait" : "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 10,
+                      boxShadow: `0 0 24px rgba(212,175,55,0.3)`,
+                      opacity: geminiBusy ? 0.7 : 1,
+                      fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      transition: "box-shadow 0.3s",
+                    }}
+                  >
+                    {geminiBusy ? (
+                      <>
+                        <motion.span
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          style={{ display: "inline-block" }}
+                        >
+                          ◈
+                        </motion.span>
+                        Transmitting…
+                      </>
+                    ) : (
+                      <>
+                        Initiate Vedic Light-Codes
+                        <ChevronRight size={16} />
+                      </>
+                    )}
+                  </motion.button>
+
+                  <motion.button
+                    type="button"
+                    whileHover={{
+                      scale: 1.04,
+                      backgroundColor: "rgba(157,80,187,0.15)",
+                      boxShadow: `0 0 32px rgba(157,80,187,0.4)`,
+                    }}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={() =>
+                      toast.message("Prema-Pulse", {
+                        description: "Secure channel placeholder — resonance held in local field.",
+                      })
+                    }
+                    style={{
+                      padding: "16px 28px",
+                      border: "1px solid rgba(157,80,187,0.5)",
+                      color: VIOLET,
+                      fontWeight: 800,
+                      fontSize: 9,
+                      letterSpacing: "0.3em",
+                      textTransform: "uppercase",
+                      background: "transparent",
+                      borderRadius: 4,
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 10,
+                      fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      transition: "all 0.3s",
+                    }}
+                  >
+                    <Lock size={15} />
+                    Secure Prema-Pulse
+                  </motion.button>
+                </div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
-
-        <div
-          style={{
-            position: "fixed",
-            bottom: "calc(5rem + env(safe-area-inset-bottom, 0px))",
-            left: 56,
-            right: 16,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-end",
-            zIndex: 12,
-          }}
-        >
-          <div>
-            <div style={{ display: "flex", gap: 3, marginBottom: 6 }}>
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                <motion.div
-                  key={i}
-                  animate={{ height: [4, 14, 4] }}
-                  transition={{ repeat: Infinity, duration: 1.4, delay: i * 0.08 }}
-                  style={{ width: 3, background: "rgba(212,175,55,0.35)", borderRadius: 1 }}
-                />
-              ))}
-            </div>
-            <div
-              style={{
-                fontSize: 8,
-                fontFamily: "ui-monospace, monospace",
-                letterSpacing: "0.2em",
-                textTransform: "uppercase",
-                color: "rgba(212,175,55,0.4)",
-              }}
-            >
-              Quantum Resonance: 432Hz Stable
-            </div>
-          </div>
-          <div style={{ textAlign: "right" }}>
-            <div
-              style={{
-                fontSize: 8,
-                fontFamily: "ui-monospace, monospace",
-                letterSpacing: "0.2em",
-                textTransform: "uppercase",
-                color: "rgba(255,255,255,0.22)",
-                marginBottom: 4,
-              }}
-            >
-              Avataric Blueprint Sync
-            </div>
-            <div
-              style={{
-                width: 160,
-                height: 4,
-                marginLeft: "auto",
-                background: "rgba(255,255,255,0.06)",
-                borderRadius: 999,
-                overflow: "hidden",
-              }}
-            >
-              <motion.div
-                initial={{ width: "0%" }}
-                animate={{ width: "88%" }}
-                transition={{ duration: 3.5, ease: "easeInOut" }}
-                style={{
-                  height: "100%",
-                  background: `linear-gradient(90deg, ${VIOLET}, ${GOLD})`,
-                  borderRadius: 999,
-                }}
-              />
-            </div>
-          </div>
-        </div>
       </main>
 
       <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 2 }}>
@@ -553,15 +947,15 @@ export default function WealthBeacon() {
           <motion.div
             key={p.id}
             initial={{ x: `${p.x}%`, y: `${p.y}%`, opacity: 0 }}
-            animate={{ y: ["0%", "-12%"], opacity: [0, 0.45, 0] }}
+            animate={{ y: ["0%", "-14%"], opacity: [0, 0.55, 0] }}
             transition={{ duration: p.duration, repeat: Infinity, ease: "linear" }}
             style={{
               position: "absolute",
-              width: 3,
-              height: 3,
+              width: p.size,
+              height: p.size,
               borderRadius: "50%",
-              background: GOLD,
-              filter: "blur(2px)",
+              background: p.color,
+              filter: `blur(1.5px) drop-shadow(0 0 3px ${p.color})`,
             }}
           />
         ))}
