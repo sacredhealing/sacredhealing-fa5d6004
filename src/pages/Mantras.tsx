@@ -327,6 +327,13 @@ function formatDurationMinutes(minutes: number): string {
   return rounded === 1 ? '1 min' : `${rounded} min`;
 }
 
+/** Above typical single-chant loop length → one file holds ~108 chants; advance counter with playback position. */
+const SINGLE_FILE_108_MIN_DURATION_SEC = 25;
+
+function isSingleFile108Track(durationSec: number): boolean {
+  return Number.isFinite(durationSec) && durationSec >= SINGLE_FILE_108_MIN_DURATION_SEC;
+}
+
 const Mantras = () => {
   const navigate = useNavigate();
   const { t: tI18n } = useI18nTranslation();
@@ -346,6 +353,12 @@ const Mantras = () => {
   const [completed, setCompleted] = useState(false);
 
   const currentMantraIdRef = useRef<string | null>(null);
+  const mantraPlaybackCleanupRef = useRef<(() => void) | null>(null);
+
+  const clearMantraPlaybackListeners = () => {
+    mantraPlaybackCleanupRef.current?.();
+    mantraPlaybackCleanupRef.current = null;
+  };
 
   const reps = MANTRA_REPETITIONS;
   const currentMantra = selectedMantraId ? mantras.find((m) => m.id === selectedMantraId) : null;
@@ -435,6 +448,7 @@ const Mantras = () => {
 
   useEffect(() => {
     return () => {
+      clearMantraPlaybackListeners();
       audioEngine.stop();
     };
   }, []);
@@ -480,33 +494,92 @@ const Mantras = () => {
 
   const playNextRep = (mantra: MantraItem) => {
     if (!mantra.audio_url) return;
+    clearMantraPlaybackListeners();
     const url = getPlayableUrl(mantra.audio_url);
     currentMantraIdRef.current = mantra.id;
 
-    const onEnded = () => {
-      setCount((c) => {
-        const next = c + 1;
-        if (next >= reps) {
+    const el = audioEngine.play(url, undefined, {
+      onPlayError: () => toast.error(t('error_audio_play', 'Could not play audio.')),
+    });
+
+    let modeAttached = false;
+    let lastSyncedCount = -1;
+    const bundle: { modeDetach?: () => void } = {};
+
+    const attachPlaybackMode = () => {
+      if (modeAttached) return;
+      const d = el.duration;
+      if (!Number.isFinite(d) || d <= 0) return;
+      modeAttached = true;
+      el.removeEventListener('loadedmetadata', attachPlaybackMode);
+      el.removeEventListener('durationchange', attachPlaybackMode);
+
+      if (isSingleFile108Track(d)) {
+        const onTime = () => {
+          if (!Number.isFinite(el.duration) || el.duration <= 0) return;
+          const n = Math.min(reps - 1, Math.floor((el.currentTime / el.duration) * reps));
+          if (n !== lastSyncedCount) {
+            lastSyncedCount = n;
+            setCount(n);
+          }
+        };
+        const onFullEnd = () => {
+          clearMantraPlaybackListeners();
+          lastSyncedCount = reps;
+          setCount(reps);
           setIsPlaying(false);
           setCompleted(true);
           currentMantraIdRef.current = null;
           audioEngine.stop();
           if (user) void awardMantraReward(mantra);
-          return reps;
-        }
-        const el = audioEngine.getCurrent();
-        if (el) {
-          el.currentTime = 0;
-          void el.play().catch(() => {});
-        }
-        return next;
-      });
+        };
+        el.addEventListener('timeupdate', onTime);
+        el.addEventListener('ended', onFullEnd, { once: true });
+        bundle.modeDetach = () => {
+          el.removeEventListener('timeupdate', onTime);
+          el.removeEventListener('ended', onFullEnd);
+        };
+        onTime();
+      } else {
+        const onShortEnded = () => {
+          setCount((c) => {
+            const next = c + 1;
+            if (next >= reps) {
+              setIsPlaying(false);
+              setCompleted(true);
+              currentMantraIdRef.current = null;
+              clearMantraPlaybackListeners();
+              audioEngine.stop();
+              if (user) void awardMantraReward(mantra);
+              return reps;
+            }
+            const cur = audioEngine.getCurrent();
+            if (cur) {
+              cur.currentTime = 0;
+              void cur.play().catch(() => {});
+            }
+            return next;
+          });
+        };
+        el.addEventListener('ended', onShortEnded);
+        bundle.modeDetach = () => {
+          el.removeEventListener('ended', onShortEnded);
+        };
+      }
     };
 
-    audioEngine.play(url, onEnded, {
-      endedEveryRepeat: true,
-      onPlayError: () => toast.error(t('error_audio_play', 'Could not play audio.')),
-    });
+    mantraPlaybackCleanupRef.current = () => {
+      bundle.modeDetach?.();
+      bundle.modeDetach = undefined;
+      el.removeEventListener('loadedmetadata', attachPlaybackMode);
+      el.removeEventListener('durationchange', attachPlaybackMode);
+    };
+
+    el.addEventListener('loadedmetadata', attachPlaybackMode);
+    el.addEventListener('durationchange', attachPlaybackMode);
+    if (el.readyState >= HTMLMediaElement.HAVE_METADATA) {
+      queueMicrotask(attachPlaybackMode);
+    }
   };
 
   const handleStart = () => {
@@ -536,6 +609,7 @@ const Mantras = () => {
   };
 
   const handleReset = () => {
+    clearMantraPlaybackListeners();
     audioEngine.stop();
     currentMantraIdRef.current = null;
     setCount(0);
@@ -553,6 +627,7 @@ const Mantras = () => {
 
   const handleMantraSelect = (m: MantraItem) => {
     setSelectedMantraId(m.id);
+    clearMantraPlaybackListeners();
     if (audioEngine.isPlaying() || audioEngine.getCurrent()) {
       audioEngine.stop();
     }
@@ -818,7 +893,10 @@ const Mantras = () => {
             {[
               tI18n('mantras.instructions.step1', 'Sit comfortably.'),
               tI18n('mantras.instructions.step2', 'Press Start.'),
-              tI18n('mantras.instructions.step3', 'Repeat with the recording — 108 times.'),
+              tI18n(
+                'mantras.instructions.step3',
+                'Follow the recording — the counter tracks your progress through 108 repetitions.'
+              ),
             ].map((step, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 12.5, color: 'rgba(255,255,255,.5)', lineHeight: 1.5, marginBottom: i < 2 ? 7 : 0 }}>
                 <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(212,175,55,.07)', border: '1px solid rgba(212,175,55,.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: 'rgba(212,175,55,.55)', flexShrink: 0, marginTop: 1 }}>
