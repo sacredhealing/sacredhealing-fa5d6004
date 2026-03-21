@@ -155,35 +155,85 @@ const AdminScripturalBooks = () => {
             <p className="text-muted-foreground">No books yet. Create your first scriptural book!</p>
           </Card>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-5">
             {books.map((book) => (
-              <Card
+              <div
                 key={book.id}
-                className="cursor-pointer hover:bg-muted/50 transition-colors"
+                role="button"
+                tabIndex={0}
                 onClick={() => navigate(`/admin/books/${book.id}`)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    navigate(`/admin/books/${book.id}`);
+                  }
+                }}
+                className="cursor-pointer group relative overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-amber-500/40"
+                style={{
+                  background: 'rgba(255,255,255,0.02)',
+                  backdropFilter: 'blur(40px)',
+                  border: '1px solid rgba(255,255,255,0.05)',
+                  borderRadius: '40px',
+                  padding: '32px',
+                }}
               >
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg font-heading">{book.title}</CardTitle>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {book.total_chapters} chapters • {book.total_verses} verses
-                      </p>
-                    </div>
-                    <span
-                      className={`px-2 py-1 rounded text-xs font-medium ${
-                        book.status === 'completed'
-                          ? 'bg-green-500/20 text-green-400'
-                          : book.status === 'processing'
-                          ? 'bg-yellow-500/20 text-yellow-400'
-                          : 'bg-muted text-muted-foreground'
-                      }`}
+                <div
+                  className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-50"
+                  aria-hidden
+                />
+
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <p
+                      style={{
+                        fontWeight: 800,
+                        letterSpacing: '0.5em',
+                        textTransform: 'uppercase',
+                        fontSize: '8px',
+                        color: 'rgba(212,175,55,0.6)',
+                      }}
                     >
-                      {book.status}
-                    </span>
+                      SCRIPTURAL BOOK
+                    </p>
+                    <h2
+                      className="cinzel"
+                      style={{
+                        fontWeight: 900,
+                        letterSpacing: '-0.05em',
+                        color: '#D4AF37',
+                        fontSize: '1.25rem',
+                        marginTop: '8px',
+                        textShadow: '0 0 15px rgba(212,175,55,0.3)',
+                      }}
+                    >
+                      {book.title}
+                    </h2>
+                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', marginTop: '8px' }}>
+                      {book.total_chapters} kapitel · {book.total_verses} verser
+                    </p>
                   </div>
-                </CardHeader>
-              </Card>
+
+                  <span
+                    style={{
+                      padding: '4px 16px',
+                      borderRadius: '999px',
+                      fontSize: '10px',
+                      fontWeight: 800,
+                      letterSpacing: '0.3em',
+                      background:
+                        book.status === 'completed' ? 'rgba(212,175,55,0.1)' : 'rgba(255,255,255,0.05)',
+                      color: book.status === 'completed' ? '#D4AF37' : 'rgba(255,255,255,0.4)',
+                      border: `1px solid ${
+                        book.status === 'completed' ? 'rgba(212,175,55,0.3)' : 'rgba(255,255,255,0.1)'
+                      }`,
+                      textTransform: 'uppercase',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {book.status}
+                  </span>
+                </div>
+              </div>
             ))}
           </div>
         )}

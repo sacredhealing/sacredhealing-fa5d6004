@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,9 +10,14 @@ import { ProjectState, VedicBook, LibraryArchive } from '@/types/vedicTranslatio
 import { INITIAL_ARCHIVE } from '@/data/vedicManuscript';
 import { downloadVedicManuscript } from '@/utils/vedicExport';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { resolveStargateCourseId } from '@/constants/stargateCourse';
+import { buildBookChapterRowsFromManuscript } from '@/utils/vedicArchiveToBookChapters';
 
 const AdminVedicTranslation: React.FC = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [state, setState] = useState<ProjectState>({
     currentBook: VedicBook.BHAGAVAD_GITA,
     chapter: 1,
@@ -24,6 +29,7 @@ const AdminVedicTranslation: React.FC = () => {
   const [archive, setArchive] = useState<LibraryArchive>(INITIAL_ARCHIVE);
   const [archiveVisible, setArchiveVisible] = useState(false);
   const [allInteractions, setAllInteractions] = useState<Parameters<typeof ArchitectConsole>[0]['interactions']>([]);
+  const [publishingToStargate, setPublishingToStargate] = useState(false);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -92,6 +98,103 @@ const AdminVedicTranslation: React.FC = () => {
     });
   };
 
+  const handlePublishToStargate = useCallback(async () => {
+    if (!user) {
+      toast({ title: 'Fel', description: 'Du måste vara inloggad.', variant: 'destructive' });
+      return;
+    }
+    setPublishingToStargate(true);
+    try {
+      const manuscript = archive[state.currentBook];
+      const stats = buildBookChapterRowsFromManuscript('pending', manuscript);
+      const courseId = await resolveStargateCourseId(supabase as any);
+      if (!courseId) {
+        toast({
+          title: 'Stargate-kurs hittades inte',
+          description:
+            'Sätt VITE_STARGATE_COURSE_ID till kursens UUID eller publicera en kurs med "Stargate" i titeln.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const bookTitle = `${state.currentBook} — Vishwananda Edition`;
+      const metadata = {
+        source: 'vedic_translation_tool',
+        tone_filter: 'vishwananda',
+        vedic_book: state.currentBook,
+      };
+
+      const { data: existing, error: exErr } = await (supabase as any)
+        .from('scriptural_books')
+        .select('id')
+        .eq('author_id', user.id)
+        .eq('title', bookTitle)
+        .maybeSingle();
+      if (exErr) throw exErr;
+
+      let bookId: string;
+      const bookPayload = {
+        title: bookTitle,
+        status: 'completed',
+        total_chapters: stats.totalChapters,
+        total_verses: stats.totalVerses,
+        metadata,
+        updated_at: new Date().toISOString(),
+      };
+
+      if (existing?.id) {
+        bookId = existing.id;
+        const { error: upErr } = await (supabase as any).from('scriptural_books').update(bookPayload).eq('id', bookId);
+        if (upErr) throw upErr;
+      } else {
+        const { data: inserted, error: insErr } = await (supabase as any)
+          .from('scriptural_books')
+          .insert({
+            ...bookPayload,
+            author_id: user.id,
+            audio_url: null,
+            transcription_url: null,
+          })
+          .select('id')
+          .single();
+        if (insErr) throw insErr;
+        bookId = inserted.id;
+      }
+
+      const { rows: chapterRows } = buildBookChapterRowsFromManuscript(bookId, manuscript);
+      await (supabase as any).from('book_chapters').delete().eq('book_id', bookId);
+      if (chapterRows.length > 0) {
+        const { error: chErr } = await (supabase as any).from('book_chapters').insert(chapterRows);
+        if (chErr) throw chErr;
+      }
+
+      const materialTitle = `📖 ${bookTitle}`;
+      await (supabase as any).from('course_materials').delete().eq('course_id', courseId).eq('title', materialTitle);
+      const { error: matErr } = await (supabase as any).from('course_materials').insert({
+        course_id: courseId,
+        lesson_id: null,
+        title: materialTitle,
+        file_url: bookId,
+        file_type: 'scriptural_book',
+        order_index: 99,
+      });
+      if (matErr) throw matErr;
+
+      toast({
+        title: '🌟 Publicerad!',
+        description: `${state.currentBook} finns i /admin/books och som material i Stargate-kursen.`,
+        duration: 6000,
+      });
+    } catch (e: unknown) {
+      console.error(e);
+      const msg = e && typeof e === 'object' && 'message' in e ? String((e as Error).message) : 'Kunde inte publicera till Stargate';
+      toast({ title: 'Fel', description: msg, variant: 'destructive' });
+    } finally {
+      setPublishingToStargate(false);
+    }
+  }, [archive, state.currentBook, toast, user]);
+
   return (
     <div className="min-h-screen flex flex-col selection:bg-amber-500/30 selection:text-white transition-colors duration-1000 vedic-translation" style={{ background: 'var(--theme-bg)' }}>
       <div className="absolute top-4 left-4 z-50">
@@ -134,7 +237,13 @@ const AdminVedicTranslation: React.FC = () => {
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-6 grid grid-cols-1 lg:grid-cols-4 gap-12">
         <aside className="lg:col-span-1 space-y-8">
-          <StateMonitor state={state} onOpenArchive={() => setArchiveVisible(true)} onExportToFile={handleExportToFile} />
+          <StateMonitor
+            state={state}
+            onOpenArchive={() => setArchiveVisible(true)}
+            onExportToFile={handleExportToFile}
+            onPublishToStargate={handlePublishToStargate}
+            publishingToStargate={publishingToStargate}
+          />
           <div className="bg-gradient-to-br from-black/40 to-black/60 p-8 rounded-2xl border border-white/10 shadow-2xl relative overflow-hidden backdrop-blur-xl">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[var(--theme-accent)] to-transparent opacity-50" />
             <h3 className="cinzel font-bold mb-6 flex items-center text-[var(--theme-accent)] tracking-widest text-sm uppercase">

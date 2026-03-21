@@ -118,6 +118,7 @@ const AdminContentRoadmap = React.lazy(() => import("./pages/AdminContentRoadmap
 const AdminVedicTranslation = React.lazy(() => import("./pages/AdminVedicTranslation"));
 const AdminScripturalBooks = React.lazy(() => import("./pages/AdminScripturalBooks"));
 const AdminScripturalBookView = React.lazy(() => import("./pages/AdminScripturalBookView"));
+const ScripturalBookLibraryView = React.lazy(() => import("./pages/ScripturalBookLibraryView"));
 const PostSession = React.lazy(() => import("./pages/PostSession"));
 const CreativeSoulSales = React.lazy(() => import("./pages/CreativeSoulSales"));
 const CreativeSoulTool = React.lazy(() => import("./pages/CreativeSoulTool"));
@@ -319,6 +320,7 @@ function AppRoutes() {
                   <Route path="/wealth-beacon" element={<WealthBeacon />} />
                   <Route path="/prompt-library" element={<PromptLibrary />} />
                   <Route path="/explore-akasha" element={<ExploreAkasha />} />
+                  <Route path="/library/scriptural/:id" element={<ScripturalBookLibraryView />} />
                   <Route path="/creative-soul" element={<Navigate to="/creative-soul/store" replace />} />
                   <Route path="/creative-soul-hub" element={<CreativeSoulHub />} />
                   {/* ROUTE DEFINITION: /creative-soul/store renders CreativeSoulStore.tsx */}
