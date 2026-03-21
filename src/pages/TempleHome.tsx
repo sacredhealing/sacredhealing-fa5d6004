@@ -229,8 +229,37 @@ const ANCHOR_KEY = 'sh:temple_home_anchor';
 const CRYSTAL_KEY = 'sh:crystal_setup_done';
 
 interface AnchorState { siteId: string; intensity: number; mode: string; anchored: boolean; ts: number; }
+
+const DEFAULT_SITE_ID = 'giza';
+
+function isKnownSiteId(id: unknown): id is string {
+  return typeof id === 'string' && SACRED_SITES.some(s => s.id === id);
+}
+function isKnownMode(id: unknown): id is string {
+  return typeof id === 'string' && MODES.some(m => m.id === id);
+}
+
 function loadAnchor(): AnchorState | null {
-  try { const r = localStorage.getItem(ANCHOR_KEY); return r ? JSON.parse(r) : null; } catch { return null; }
+  try {
+    const r = localStorage.getItem(ANCHOR_KEY);
+    if (!r) return null;
+    const raw = JSON.parse(r) as Partial<AnchorState>;
+    const siteId = isKnownSiteId(raw.siteId) ? raw.siteId : DEFAULT_SITE_ID;
+    const mode = isKnownMode(raw.mode) ? raw.mode : 'INTEGRATION';
+    const intensity =
+      typeof raw.intensity === 'number' && raw.intensity >= 0 && raw.intensity <= 100
+        ? raw.intensity
+        : 100;
+    return {
+      siteId,
+      mode,
+      intensity,
+      anchored: !!raw.anchored,
+      ts: typeof raw.ts === 'number' ? raw.ts : Date.now(),
+    };
+  } catch {
+    return null;
+  }
 }
 function saveAnchor(s: AnchorState) { try { localStorage.setItem(ANCHOR_KEY, JSON.stringify(s)); } catch {} }
 function loadCrystalDone(): boolean {
@@ -643,8 +672,15 @@ function TempleHomeInner() {
   const [crystalDone, setCrystalDone] = useState(loadCrystalDone());
   const [showCrystalSetup, setShowCrystalSetup] = useState(false);
 
-  const currentSite = SACRED_SITES.find(s => s.id === selectedSite)!;
-  const activeMode = MODES.find(m => m.id === currentMode)!;
+  useEffect(() => {
+    if (!isKnownSiteId(selectedSite)) setSelectedSite(DEFAULT_SITE_ID);
+  }, [selectedSite]);
+  useEffect(() => {
+    if (!isKnownMode(currentMode)) setCurrentMode('INTEGRATION');
+  }, [currentMode]);
+
+  const currentSite = SACRED_SITES.find(s => s.id === selectedSite) ?? SACRED_SITES[0];
+  const activeMode = MODES.find(m => m.id === currentMode) ?? MODES[1];
   const infoSite = infoSiteId ? SITE_DB[infoSiteId] : null;
   const cat = getSiteCategory(selectedSite);
   const isMiracle = ['amritsar','mauritius','shirdi'].includes(selectedSite);
@@ -1150,7 +1186,12 @@ export default function TempleHome() {
   const { user, isLoading: authLoading } = useAuth();
   const { tier, loading: membershipLoading } = useMembership();
   const { isAdmin } = useAdminRole();
-  if (authLoading || membershipLoading) return (<div className="flex min-h-screen items-center justify-center bg-[#050505]"><div className="h-8 w-8 rounded-full border-2 border-[#D4AF37]/20 border-t-[#D4AF37]/80 animate-spin"/></div>);
+  if (authLoading || membershipLoading) return (
+    <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#050505] px-6">
+      <div className="h-8 w-8 rounded-full border-2 border-[#D4AF37]/20 border-t-[#D4AF37]/80 animate-spin" />
+      <p className="text-center text-[10px] font-medium uppercase tracking-[0.35em] text-[#D4AF37]/55">Loading Temple Home</p>
+    </div>
+  );
   if (!user) return <Navigate to="/auth" replace />;
   if (!hasFeatureAccess(isAdmin, tier, FEATURE_TIER.virtualPilgrimage)) return <Navigate to="/akasha-infinity" replace />;
   return <TempleHomeInner />;

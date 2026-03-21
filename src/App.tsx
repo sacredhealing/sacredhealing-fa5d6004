@@ -242,6 +242,9 @@ function AppRoutes() {
       <Route element={<ProtectedRoute />}>
                   <Route path="/hand-analyzer" element={<HandAnalyzer />} />
                   <Route path="/sacred-space" element={<SacredSpace />} />
+                  {/* Full-screen experience: must not sit under AppLayout motion.main or fixed layers break */}
+                  <Route path="/temple-home" element={<TempleHome />} />
+                  <Route path="/temple-home/" element={<Navigate to="/temple-home" replace />} />
                   <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/explore" element={<Explore />} />
@@ -309,8 +312,6 @@ function AppRoutes() {
                   <Route path="/quantum-apothecary" element={<QuantumApothecary />} />
                   <Route path="/life-book" element={<LifeBook />} />
                   <Route path="/sri-yantra-shield" element={<SriYantraShield />} />
-                  <Route path="/temple-home" element={<TempleHome />} />
-                  <Route path="/temple-home/" element={<Navigate to="/temple-home" replace />} />
                   <Route path="/digital-nadi" element={<DigitalNadi />} />
                   <Route path="/soul-scan" element={<SoulScan />} />
                   <Route path="/vayu-protocol" element={<VayuProtocol />} />
