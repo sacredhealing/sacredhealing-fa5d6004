@@ -280,6 +280,20 @@ function calcMotionSaturation(variance: number, intensity: number): number {
   return Math.round(intensity * (0.3 + 0.7 * stillness));
 }
 
+// ─── Motion scanner pure helpers (outside component to avoid dep issues) ─────
+function getMotionZone(sat: number): string {
+  if (sat > 90) return 'CORE — You are at the Anchor';
+  if (sat > 70) return 'HIGH COHERENCE';
+  if (sat > 45) return 'INTEGRATION';
+  return 'PERIPHERAL — Move toward Center';
+}
+function getMotionZoneColor(sat: number): string {
+  if (sat > 90) return '#D4AF37';
+  if (sat > 70) return '#22D3EE';
+  if (sat > 45) return '#A78BFA';
+  return 'rgba(255,255,255,0.35)';
+}
+
 // ─── Device Motion Scanner (no GPS required) ─────────────────────────────────
 function MotionNadiScanner({ intensity }: { intensity: number }) {
   const [motionState, setMotionState] = useState<'idle' | 'active' | 'unavailable'>('idle');
@@ -288,20 +302,26 @@ function MotionNadiScanner({ intensity }: { intensity: number }) {
   const [zone, setZone] = useState<string>('');
   const samplesRef = useRef<number[]>([]);
   const listenerRef = useRef<((e: DeviceMotionEvent) => void) | null>(null);
+  const intensityRef = useRef(intensity);
 
-  const getZone = (sat: number) => {
-    if (sat > 90) return 'CORE — You are at the Anchor';
-    if (sat > 70) return 'HIGH COHERENCE';
-    if (sat > 45) return 'INTEGRATION';
-    return 'PERIPHERAL — Move toward Center';
-  };
-  const getZoneColor = (sat: number) => sat > 90 ? '#D4AF37' : sat > 70 ? '#22D3EE' : sat > 45 ? '#A78BFA' : 'rgba(255,255,255,0.35)';
+  // Keep intensityRef current so the event listener always uses latest value
+  useEffect(() => { intensityRef.current = intensity; }, [intensity]);
+
+  // When intensity changes while active, recompute
+  useEffect(() => {
+    if (motionState === 'active') {
+      const sat = calcMotionSaturation(variance, intensity);
+      setSaturation(sat);
+      setZone(getMotionZone(sat));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [intensity]);
 
   const startScan = useCallback(async () => {
     if (typeof DeviceMotionEvent === 'undefined') {
       setMotionState('unavailable'); return;
     }
-    // iOS 13+ requires permission
+    // iOS 13+ requires explicit permission
     if (typeof (DeviceMotionEvent as any).requestPermission === 'function') {
       try {
         const perm = await (DeviceMotionEvent as any).requestPermission();
@@ -311,39 +331,34 @@ function MotionNadiScanner({ intensity }: { intensity: number }) {
     setMotionState('active');
     samplesRef.current = [];
 
-    listenerRef.current = (e: DeviceMotionEvent) => {
+    const handler = (e: DeviceMotionEvent) => {
       const acc = e.accelerationIncludingGravity;
       if (!acc) return;
       const mag = Math.sqrt((acc.x ?? 0) ** 2 + (acc.y ?? 0) ** 2 + (acc.z ?? 0) ** 2);
       samplesRef.current.push(mag);
       if (samplesRef.current.length > 20) samplesRef.current.shift();
-      // Compute variance of last 20 samples
       const mean = samplesRef.current.reduce((a, b) => a + b, 0) / samplesRef.current.length;
       const vr = samplesRef.current.reduce((a, b) => a + (b - mean) ** 2, 0) / samplesRef.current.length;
       const smoothV = Math.min(vr, 10);
       setVariance(smoothV);
-      const sat = calcMotionSaturation(smoothV, intensity);
+      const sat = calcMotionSaturation(smoothV, intensityRef.current);
       setSaturation(sat);
-      setZone(getZone(sat));
+      setZone(getMotionZone(sat));
     };
-    window.addEventListener('devicemotion', listenerRef.current);
-  }, [intensity]);
-
-  useEffect(() => {
-    if (motionState === 'active' && saturation !== null) {
-      const sat = calcMotionSaturation(variance, intensity);
-      setSaturation(sat);
-      setZone(getZone(sat));
-    }
-  }, [intensity]);
+    listenerRef.current = handler;
+    window.addEventListener('devicemotion', handler);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     return () => {
-      if (listenerRef.current) window.removeEventListener('devicemotion', listenerRef.current);
+      if (listenerRef.current) {
+        window.removeEventListener('devicemotion', listenerRef.current);
+      }
     };
   }, []);
 
-  const zoneColor = saturation !== null ? getZoneColor(saturation) : '#D4AF37';
+  const zoneColor = saturation !== null ? getMotionZoneColor(saturation) : '#D4AF37';
 
   return (
     <div className="space-y-3">
@@ -651,8 +666,10 @@ function getSiteCategory(id: string): { label: string; color: string } {
 }
 
 // ─── TempleHomeInner ──────────────────────────────────────────────────────────
-function TempleHomeInner({ isAdmin }: { isAdmin: boolean }) {
+function TempleHomeInner() {
   const navigate = useNavigate();
+  const { isAdmin, isLoading: adminLoading } = useAdminRole();
+  const { isLoading: authLoading } = useAuth();
   const saved = loadAnchor();
 
   const [selectedSite, setSelectedSite] = useState(saved?.siteId || 'giza');
@@ -704,6 +721,15 @@ function TempleHomeInner({ isAdmin }: { isAdmin: boolean }) {
     setPresetFlash(preset.id);
     setTimeout(() => setPresetFlash(null), 2500);
   };
+
+  if (authLoading || adminLoading) return (
+    <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <div className="h-10 w-10 rounded-full border-2 border-[#D4AF37]/30 border-t-[#D4AF37] animate-spin" />
+        <p className="text-[8px] tracking-[0.5em] uppercase text-[#D4AF37]/40">Accessing Akasha-Neural Archive</p>
+      </div>
+    </div>
+  );
 
   if (!isAdmin) return (
     <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center p-8 relative overflow-hidden">
@@ -1192,5 +1218,5 @@ export default function TempleHome() {
     return <Navigate to="/akasha-infinity" replace />;
   }
 
-  return <TempleHomeInner isAdmin={isAdmin} />;
+  return <TempleHomeInner />;
 }
