@@ -125,6 +125,7 @@ const CreativeSoulLanding = React.lazy(() => import("./pages/CreativeSoulLanding
 const CreativeSoulHub = React.lazy(() => import("./pages/CreativeSoulHub"));
 // Eager load meditation tool so it never fails from chunk load (e.g. CDN/base path issues)
 import CreativeSoulMeditationTool from "./pages/CreativeSoulMeditationTool";
+import TempleHome from "./pages/TempleHome";
 const CreativeSoulStore = React.lazy(() => import("./pages/CreativeSoulStore"));
 const InviteFriends = React.lazy(() => import("./pages/InviteFriends"));
 const VedicAstrology = React.lazy(() => import("./pages/VedicAstrology"));
@@ -138,7 +139,6 @@ const AkashicReadingFull = React.lazy(() => import("./pages/AkashicReadingFull")
 const QuantumApothecary = React.lazy(() => import("./pages/QuantumApothecary"));
 const LifeBook = React.lazy(() => import("./pages/LifeBook"));
 const SriYantraShield = React.lazy(() => import("./pages/SriYantraShield"));
-const TempleHome = React.lazy(() => import("./pages/TempleHome"));
 const DigitalNadi = React.lazy(() => import("./pages/DigitalNadi"));
 const SoulScan = React.lazy(() => import("./pages/SoulScan"));
 const VayuProtocol = React.lazy(() => import("./pages/VayuProtocol"));
@@ -309,6 +309,7 @@ function AppRoutes() {
                   <Route path="/life-book" element={<LifeBook />} />
                   <Route path="/sri-yantra-shield" element={<SriYantraShield />} />
                   <Route path="/temple-home" element={<TempleHome />} />
+                  <Route path="/temple-home/" element={<Navigate to="/temple-home" replace />} />
                   <Route path="/digital-nadi" element={<DigitalNadi />} />
                   <Route path="/soul-scan" element={<SoulScan />} />
                   <Route path="/vayu-protocol" element={<VayuProtocol />} />

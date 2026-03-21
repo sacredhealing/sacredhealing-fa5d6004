@@ -1082,8 +1082,8 @@ function TempleHomeInner() {
 export default function TempleHome() {
   const { user, isLoading: authLoading } = useAuth();
   const { tier, loading: membershipLoading } = useMembership();
-  const { isAdmin } = useAdminRole();
-  if (authLoading || membershipLoading) return (<div className="flex min-h-screen items-center justify-center bg-[#050505]"><div className="h-8 w-8 rounded-full border-2 border-[#D4AF37]/20 border-t-[#D4AF37]/80 animate-spin"/></div>);
+  const { isAdmin, isLoading: adminLoading } = useAdminRole();
+  if (authLoading || membershipLoading || adminLoading) return (<div className="flex min-h-screen items-center justify-center bg-[#050505]"><div className="h-8 w-8 rounded-full border-2 border-[#D4AF37]/20 border-t-[#D4AF37]/80 animate-spin"/></div>);
   if (!user) return <Navigate to="/auth" replace />;
   if (!hasFeatureAccess(isAdmin, tier, FEATURE_TIER.virtualPilgrimage)) return <Navigate to="/akasha-infinity" replace />;
   return <TempleHomeInner />;
