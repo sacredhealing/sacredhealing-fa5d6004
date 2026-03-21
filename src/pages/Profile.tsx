@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 import { Flame, Flower2, Star, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield, Scale, LayoutDashboard, Megaphone, Crown, Pencil, Banknote, Lock, FileText, BookOpen, Hand, Globe, ChevronDown } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LanguageSelector } from '@/components/LanguageSelector';
@@ -71,7 +71,7 @@ const Profile: React.FC = () => {
   const { user, signOut } = useAuth();
   const { walletAddress, connectWallet } = usePhantomWallet();
   const { balance, profile: shcProfile } = useSHC();
-  const { profile, updatePreferredLanguage } = useProfile();
+  const { profile, updatePreferredLanguage, isLoading: profileLoading } = useProfile();
   const { toast } = useToast();
   const { isAdmin } = useAdminRole();
   const { certificates, isLoading: certificatesLoading, downloadCertificate, shareCertificate } = useCertificates();
@@ -120,15 +120,17 @@ const Profile: React.FC = () => {
   const [selectedPractice, setSelectedPractice] = useState<string | null>(null);
   const [practiceDuration, setPracticeDuration] = useState<string>('30');
 
-  /* SQI 2050: Updated practice protocols */
-  const practiceProtocols = [
-    { id: 'mantra', label: 'Mantra', icon: '🕉️' },
-    { id: 'atma-kriya', label: 'Atma Kriya', icon: '💠' },
-    { id: 'healing-30', label: '30 Days Healing', icon: '⏳' },
-    { id: 'andlig', label: 'Andlig Transformation', icon: '✨' },
-    { id: 'transmission-2', label: '2 Day Transmission', icon: '⚡' },
-    { id: 'breathwork', label: 'Breathwork', icon: '💨' },
-  ];
+  const practiceProtocols = useMemo(
+    () => [
+      { id: 'mantra', label: t('profilePage.practiceMantra'), icon: '🕉️' },
+      { id: 'atma-kriya', label: t('profilePage.practiceAtmaKriya'), icon: '💠' },
+      { id: 'healing-30', label: t('profilePage.practiceHealing30'), icon: '⏳' },
+      { id: 'andlig', label: t('profilePage.practiceAndlig'), icon: '✨' },
+      { id: 'transmission-2', label: t('profilePage.practiceTransmission2'), icon: '⚡' },
+      { id: 'breathwork', label: t('profilePage.practiceBreathwork'), icon: '💨' },
+    ],
+    [t, i18n.language]
+  );
 
   const badges = [
     { id: 1, emoji: '🧘', titleKey: 'badges.firstMeditation', earned: true },
@@ -196,7 +198,6 @@ const Profile: React.FC = () => {
   }, []);
 
   const dashaCycle = vedicReading?.personalCompass?.currentDasha?.period?.split(' ')[0] || 'Rahu';
-  const soulLabel = t('profile.soulRecordLabel', `Age 42 • ${dashaCycle} Cycle Active • Soul Frequency: 528Hz`);
 
   useEffect(() => {
     const loadLifeBook = async () => {
@@ -285,8 +286,8 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
       if (error || !data?.response) {
         console.error('Soul Vault Gemini error', error);
         toast({
-          title: 'Transmission interrupted',
-          description: 'The Deep-Field Resonance could not be received. Please try again.',
+          title: t('profilePage.toastTransmissionInterrupted'),
+          description: t('profilePage.toastTransmissionInterruptedDesc'),
           variant: 'destructive',
         });
         setScanPhase('question');
@@ -321,8 +322,8 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
       if (insertError) {
         console.error('Soul Vault insert error', insertError);
         toast({
-          title: 'Could not save to Soul Vault',
-          description: 'The report was generated but not stored. Please try again.',
+          title: t('profilePage.toastSoulVaultSaveFailed'),
+          description: t('profilePage.toastSoulVaultSaveFailedDesc'),
           variant: 'destructive',
         });
         setScanPhase('question');
@@ -332,14 +333,14 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
       setSoulVaultEntries((prev) => [inserted as SoulVaultEntry, ...prev]);
       setScanPhase('done');
       toast({
-        title: 'Deep-Field Resonance saved',
-        description: 'Your Soul Vault has been updated.',
+        title: t('profilePage.toastDeepFieldSaved'),
+        description: t('profilePage.toastDeepFieldSavedDesc'),
       });
     } catch (err) {
       console.error('Soul Vault unexpected error', err);
       toast({
-        title: 'Transmission error',
-        description: 'Something went wrong while contacting SQI.',
+        title: t('profilePage.toastTransmissionError'),
+        description: t('profilePage.toastTransmissionErrorDesc'),
         variant: 'destructive',
       });
       setScanPhase('question');
@@ -476,35 +477,68 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
     { icon: Settings, label: t('profile.settings'), sublabel: t('profile.appPreferences'), onClick: () => setSettingsOpen(true) },
   ];
 
-  const langs = [
-    { flag: '🇬🇧', label: 'English', code: 'en' },
-    { flag: '🇸🇪', label: 'Svenska', code: 'sv' },
-    { flag: '🇪🇸', label: 'Español', code: 'es' },
-    { flag: '🇳🇴', label: 'Norsk', code: 'no' },
-  ];
-  const activeLangIdx = Math.max(0, langs.findIndex((l) => (i18n.language || '').split('-')[0] === l.code));
+  const langs = useMemo(
+    () => [
+      { flag: '🇬🇧', label: t('profilePage.langEnglish'), code: 'en' },
+      { flag: '🇸🇪', label: t('profilePage.langSwedish'), code: 'sv' },
+      { flag: '🇪🇸', label: t('profilePage.langSpanish'), code: 'es' },
+      { flag: '🇳🇴', label: t('profilePage.langNorwegian'), code: 'no' },
+    ],
+    [t, i18n.language]
+  );
+
+  const resolvedUiLang = useMemo(() => {
+    if (user && !profileLoading && profile?.preferred_language) {
+      const base = profile.preferred_language.split('-')[0];
+      if (['en', 'es', 'sv', 'no'].includes(base)) return base;
+    }
+    return (i18n.language || 'en').split('-')[0];
+  }, [user, profileLoading, profile?.preferred_language, i18n.language]);
+
+  const dateLocale = useMemo(() => {
+    const m: Record<string, string> = { en: 'en-US', sv: 'sv-SE', es: 'es-ES', no: 'nb-NO' };
+    return m[resolvedUiLang] || 'en-US';
+  }, [resolvedUiLang]);
+
+  const activeLangIdx = Math.max(0, langs.findIndex((l) => l.code === resolvedUiLang));
 
   const userName = user?.user_metadata?.full_name || t('dashboard.sacredSoul');
   const userEmail = user?.email || '';
   const hrvGlowIntensity =
     scanPhase === 'done' ? 1 : scanPhase === 'scanning' ? 0.75 : 0.5;
 
-  // Tier halo config
-  const haloConfig = userRank === 0
-    ? null
-    : userRank === 1
-      ? { color: '#22D3EE', shadow: 'rgba(34,211,238,0.55)', label: 'Prana–Flow', badge: '◈' }
-      : userRank === 2
-        ? { color: '#a855f7', shadow: 'rgba(168,85,247,0.55)', label: 'Siddha–Quantum', badge: '◆' }
-        : { color: '#D4AF37', shadow: 'rgba(212,175,55,0.65)', label: 'Akasha–Infinity', badge: '∞' };
+  const haloConfig = useMemo(() => {
+    if (userRank === 0) return null;
+    if (userRank === 1) {
+      return {
+        color: '#22D3EE',
+        shadow: 'rgba(34,211,238,0.55)',
+        label: t('profilePage.tierHaloPrana'),
+        badge: '◈',
+      };
+    }
+    if (userRank === 2) {
+      return {
+        color: '#a855f7',
+        shadow: 'rgba(168,85,247,0.55)',
+        label: t('profilePage.tierHaloSiddha'),
+        badge: '◆',
+      };
+    }
+    return {
+      color: '#D4AF37',
+      shadow: 'rgba(212,175,55,0.65)',
+      label: t('profilePage.tierHaloAkasha'),
+      badge: '∞',
+    };
+  }, [userRank, t, i18n.language]);
 
-  const tierBlueprintLine = userRank === 0
-    ? null
-    : userRank === 1
-      ? 'Prana–Flow · Sonic Vibration · Active'
-      : userRank === 2
-        ? 'Siddha–Quantum · Universal Field · Active'
-        : 'Akasha–Infinity · Master Access · Eternal';
+  const tierBlueprintLine = useMemo(() => {
+    if (userRank === 0) return null;
+    if (userRank === 1) return t('profilePage.tierBlueprintPrana');
+    if (userRank === 2) return t('profilePage.tierBlueprintSiddha');
+    return t('profilePage.tierBlueprintAkasha');
+  }, [userRank, t, i18n.language]);
 
   return (
     <>
@@ -628,7 +662,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   @keyframes syRotate{from{transform:translate(-50%,-50%) rotate(0deg) scale(1)}50%{transform:translate(-50%,-50%) rotate(180deg) scale(1.05)}to{transform:translate(-50%,-50%) rotate(360deg) scale(1)}}
 `}} />
 
-    <div className="profile-wrap" style={{minHeight:'100vh',background:'#050505',overflowX:'hidden',fontFamily:'Montserrat,sans-serif',paddingBottom:'120px',position:'relative'}}>
+    <div className="profile-wrap" lang={resolvedUiLang} style={{minHeight:'100vh',background:'#050505',overflowX:'hidden',fontFamily:'Montserrat,sans-serif',paddingBottom:'120px',position:'relative'}}>
 
       <div style={{position:'fixed',inset:0,backgroundImage:"url('https://www.transparenttextures.com/patterns/stardust.png')",opacity:0.25,pointerEvents:'none',zIndex:0,animation:'stardustMove 180s linear infinite'}} />
 
@@ -746,7 +780,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               style={{color: haloConfig?.color || '#D4AF37'}}
             >
               <span style={{fontSize:8}}>{haloConfig?.badge}</span>
-              <span>Tier: {tierBlueprintLine}</span>
+              <span>{t('profilePage.tierPrefix')} {tierBlueprintLine}</span>
               <span style={{fontSize:8,opacity:0.6,transform:blueprintOpen?'rotate(180deg)':'none',display:'inline-block',transition:'transform 0.3s'}}>▾</span>
             </button>
             <div
@@ -761,29 +795,29 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               }}>
                 {userRank === 1 && (
                   <ul className="tier-features" style={{margin:0}}>
-                    <li>Full Vedic Jyotish + Chat</li>
-                    <li>Full Ayurvedic Scan + Chat</li>
-                    <li>Vastu Guide for Home</li>
-                    <li>All Healing Music + Divine Transmission Audios</li>
-                    <li>Full Meditation & Mantra Library</li>
+                    <li>{t('profilePage.expandPranaF1')}</li>
+                    <li>{t('profilePage.expandPranaF2')}</li>
+                    <li>{t('profilePage.expandPranaF3')}</li>
+                    <li>{t('profilePage.expandPranaF4')}</li>
+                    <li>{t('profilePage.expandPranaF5')}</li>
                   </ul>
                 )}
                 {userRank === 2 && (
                   <ul className="tier-features" style={{margin:0}}>
-                    <li>Digital Nadi Scanner (Bio-Sync)</li>
-                    <li>Practice Scantions (Printed Results)</li>
-                    <li>Siddha Portal Access</li>
-                    <li>Full Healing Audios & Transmissions</li>
-                    <li>Sri Yantra Universal Protection Shield</li>
+                    <li>{t('profilePage.expandSiddhaF1')}</li>
+                    <li>{t('profilePage.expandSiddhaF2')}</li>
+                    <li>{t('profilePage.expandSiddhaF3')}</li>
+                    <li>{t('profilePage.expandSiddhaF4')}</li>
+                    <li>{t('profilePage.expandSiddhaF5')}</li>
                   </ul>
                 )}
                 {userRank >= 3 && (
                   <ul className="tier-features" style={{margin:0}}>
-                    <li>All Siddha–Quantum features</li>
-                    <li>Akashic Record Decoder</li>
-                    <li>Quantum Apothecary + Virtual Pilgrimage</li>
-                    <li>Siddha Portal Access</li>
-                    <li>Eternal — No Renewals</li>
+                    <li>{t('profilePage.expandAkashaF1')}</li>
+                    <li>{t('profilePage.expandAkashaF2')}</li>
+                    <li>{t('profilePage.expandAkashaF3')}</li>
+                    <li>{t('profilePage.expandAkashaF4')}</li>
+                    <li>{t('profilePage.expandAkashaF5')}</li>
                   </ul>
                 )}
                 <button
@@ -791,35 +825,35 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                   onClick={() => navigate(userRank===1?'/prana-flow':userRank===2?'/siddha-quantum':'/akasha-infinity')}
                   style={{marginTop:12,display:'block',width:'100%',background:'transparent',color:haloConfig?.color||'#D4AF37',border:`1px solid ${haloConfig?.color||'#D4AF37'}44`,borderRadius:100,padding:'9px 16px',fontFamily:'Montserrat,sans-serif',fontWeight:800,fontSize:8,letterSpacing:'0.35em',textTransform:'uppercase',cursor:'pointer'}}
                 >
-                  ◈ Open Portal →
+                  {t('profilePage.openPortal')}
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        <div className="soul-label">528Hz Resonance <span>·</span> {dashaCycle} Cycle Active</div>
+        <div className="soul-label">{t('profilePage.soulResonanceLine', { dasha: dashaCycle })}</div>
 
         <div className="stats-row">
           <div className="stat-pill">
             <span className="stat-value">{shcProfile?.streak_days || 0}</span>
-            <span className="stat-label">Streak</span>
+            <span className="stat-label">{t('profile.streak')}</span>
           </div>
           <div className="stat-pill">
             <span className="stat-value"><AnimatedCounter value={balance?.balance ?? 0} /></span>
-            <span className="stat-label">Balance</span>
+            <span className="stat-label">{t('profile.balance')}</span>
           </div>
           <div className="stat-pill">
             <span className="stat-value">{badges.filter(b => b.earned).length}</span>
-            <span className="stat-label">Badges</span>
+            <span className="stat-label">{t('profile.badges')}</span>
           </div>
         </div>
 
         {/* About the Nexus — visible without heavy scrolling */}
         <div className="nexus-block">
-          <div className="nexus-block-label">◈ About the Nexus</div>
+          <div className="nexus-block-label">{t('profilePage.aboutNexusTitle')}</div>
           <p className="nexus-block-text">
-            The <strong>Siddha Quantum Nexus</strong> is a living bio-digital field — a convergence of <strong>Vedic intelligence</strong>, sacred sound frequencies, and quantum resonance protocols. Every module is encoded with healing intention and activated through <strong>scalar transmission</strong> to open the Anahata field for all seekers who enter. Your presence here is not coincidence — it is a soul-level alignment.
+            <Trans i18nKey="profilePage.aboutNexusBody" components={{ bold: <strong /> }} />
           </p>
         </div>
 
@@ -827,23 +861,23 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
 
       {/* ── TIERS — hidden for paid members (they see the halo + blueprint instead) ── */}
       {userRank === 0 && <div className="section-wrap">
-        <div className="section-label">◈ Your Ascension Frequency</div>
+        <div className="section-label">{t('profilePage.sectionAscension')}</div>
         <div className="tier-grid">
 
           <div className={`tier-card${userRank === 0 ? ' active-tier' : ''}`}>
             <div className="tier-header">
-              <span className="tier-name">Atma–Seed</span>
-              <div className="tier-sub">Sovereign Entry Node</div>
+              <span className="tier-name">{t('profilePage.tierAtmaName')}</span>
+              <div className="tier-sub">{t('profilePage.tierAtmaSub')}</div>
             </div>
-            <div className="tier-price">Free</div>
+            <div className="tier-price">{t('profilePage.tierFree')}</div>
             <ul className="tier-features">
-              <li>Free Meditations & Mantras</li>
-              <li>Free Healing Audios</li>
-              <li>Free Divine Transmission Audios</li>
-              <li>Free Breathing Protocols</li>
-              <li>Vayu Scrubber (1km)</li>
-              <li>Community Chat & Live</li>
-              <li>Basic Ayurveda & Jyotish</li>
+              <li>{t('profilePage.tierAtmaF1')}</li>
+              <li>{t('profilePage.tierAtmaF2')}</li>
+              <li>{t('profilePage.tierAtmaF3')}</li>
+              <li>{t('profilePage.tierAtmaF4')}</li>
+              <li>{t('profilePage.tierAtmaF5')}</li>
+              <li>{t('profilePage.tierAtmaF6')}</li>
+              <li>{t('profilePage.tierAtmaF7')}</li>
             </ul>
             <button
               onClick={() => navigate('/atma-seed')}
@@ -859,23 +893,23 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                 cursor:'pointer', transition:'all 0.2s'
               }}
             >
-              {userRank === 0 ? '◈ Current Tier' : '◈ Free Tier'}
+              {userRank === 0 ? t('profilePage.tierCtaCurrent') : t('profilePage.tierCtaFree')}
             </button>
           </div>
 
           <div className={`tier-card${userRank === 1 ? ' active-tier' : ''}`}>
             <div className="tier-header">
-              <span className="tier-name">Prana–Flow</span>
-              <div className="tier-sub">Sonic Vibration</div>
+              <span className="tier-name">{t('profilePage.tierPranaName')}</span>
+              <div className="tier-sub">{t('profilePage.tierPranaSub')}</div>
             </div>
-            <div className="tier-price">19€ <small>/ mo</small></div>
+            <div className="tier-price">19€ <small>{t('profilePage.tierPerMo')}</small></div>
             <ul className="tier-features">
-              <li>Full Vedic Jyotish + Chat</li>
-              <li>Full Ayurvedic Scan + Chat</li>
-              <li>Vastu Guide for Home</li>
-              <li>Access to All Healing Music</li>
-              <li>Divine Transmission Audios</li>
-              <li>Full Meditation & Mantra Library</li>
+              <li>{t('profilePage.tierPranaF1')}</li>
+              <li>{t('profilePage.tierPranaF2')}</li>
+              <li>{t('profilePage.tierPranaF3')}</li>
+              <li>{t('profilePage.tierPranaF4')}</li>
+              <li>{t('profilePage.tierPranaF5')}</li>
+              <li>{t('profilePage.tierPranaF6')}</li>
             </ul>
             <button
               type="button"
@@ -896,26 +930,26 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               }}
             >
               {userRank >= 1
-                ? (userRank === 1 ? '◈ Current Tier' : '◈ Included in Your Plan')
-                : '◈ Activate Vibration'}
+                ? (userRank === 1 ? t('profilePage.tierCtaCurrent') : t('profilePage.tierCtaIncludedPlan'))
+                : t('profilePage.tierCtaActivateVibration')}
             </button>
           </div>
 
           <div className={`tier-card featured siddha-quantum-card${userRank === 2 ? ' active-tier' : ''}`}>
             <div className="sq-aura sq-aura-1" /><div className="sq-aura sq-aura-2" /><div className="sq-aura sq-aura-3" />
             <div style={{position:'relative',zIndex:1}}>
-              <div className="tier-badge sq-badge">◈ Universal Path</div>
+              <div className="tier-badge sq-badge">{t('profilePage.tierSqBadge')}</div>
               <div className="tier-header">
-                <span className="tier-name" style={{fontSize:18,textShadow:'0 0 20px rgba(212,175,55,0.6)'}}>Siddha–Quantum</span>
-                <div className="tier-sub">Universal Field Node</div>
+                <span className="tier-name" style={{fontSize:18,textShadow:'0 0 20px rgba(212,175,55,0.6)'}}>{t('profilePage.tierSiddhaName')}</span>
+                <div className="tier-sub">{t('profilePage.tierSiddhaSub')}</div>
               </div>
-              <div className="tier-price" style={{textShadow:'0 0 30px rgba(212,175,55,0.3)'}}>45€ <small>/ mo</small></div>
+              <div className="tier-price" style={{textShadow:'0 0 30px rgba(212,175,55,0.3)'}}>45€ <small>{t('profilePage.tierPerMo')}</small></div>
               <ul className="tier-features">
-                <li>Digital Nadi Scanner (Bio-Sync)</li>
-                <li>Practice Scantions (Printed Results)</li>
-                <li>Siddha Portal Access</li>
-                <li>Full Healing Audios & Transmissions</li>
-                <li>Sri Yantra Universal Protection Shield</li>
+                <li>{t('profilePage.tierSiddhaF1')}</li>
+                <li>{t('profilePage.tierSiddhaF2')}</li>
+                <li>{t('profilePage.tierSiddhaF3')}</li>
+                <li>{t('profilePage.tierSiddhaF4')}</li>
+                <li>{t('profilePage.tierSiddhaF5')}</li>
               </ul>
               <button
                 onClick={() => navigate('/siddha-quantum')}
@@ -931,8 +965,8 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                 }}
               >
                 {userRank >= 2
-                  ? (userRank === 2 ? '◈ Current Tier — Active' : '◈ Included in Your Plan')
-                  : '◈ Activate Universal Field'}
+                  ? (userRank === 2 ? t('profilePage.tierCtaCurrentActive') : t('profilePage.tierCtaIncludedPlan'))
+                  : t('profilePage.tierCtaActivateUniversal')}
               </button>
             </div>
           </div>
@@ -941,25 +975,25 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
         <div className="glass-card" style={{borderColor:'rgba(212,175,55,0.2)'}}>
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:16}}>
             <div>
-              <div style={{fontWeight:800,fontSize:8,letterSpacing:'0.4em',color:'rgba(212,175,55,0.5)',textTransform:'uppercase',marginBottom:8}}>◈ Eternal Node Activation</div>
-              <div style={{fontWeight:800,fontSize:17,letterSpacing:'0.2em',color:'#D4AF37'}}>Akasha–Infinity</div>
-              <div style={{fontSize:8,letterSpacing:'0.35em',color:'rgba(255,255,255,0.2)',textTransform:'uppercase',marginTop:4}}>Lifetime Transmission</div>
+              <div style={{fontWeight:800,fontSize:8,letterSpacing:'0.4em',color:'rgba(212,175,55,0.5)',textTransform:'uppercase',marginBottom:8}}>{t('profilePage.tierAkashaCardLabel')}</div>
+              <div style={{fontWeight:800,fontSize:17,letterSpacing:'0.2em',color:'#D4AF37'}}>{t('profilePage.tierAkashaInfinityName')}</div>
+              <div style={{fontSize:8,letterSpacing:'0.35em',color:'rgba(255,255,255,0.2)',textTransform:'uppercase',marginTop:4}}>{t('profilePage.tierAkashaLifetimeSub')}</div>
               {userRank >= 3 && (
                 <span style={{
                   display:'inline-block',
                   fontWeight:800, fontSize:6.5, letterSpacing:'0.4em', textTransform:'uppercase',
                   color:'#050505', background:'#D4AF37', borderRadius:100, padding:'3px 9px',
                   marginTop:6
-                }}>◈ Active · Eternal</span>
+                }}>{t('profilePage.tierAkashaActiveEternal')}</span>
               )}
             </div>
             <div style={{fontFamily:"'Cormorant Garamond',serif",fontWeight:300,fontStyle:'italic',fontSize:'2.8rem',color:'white'}}>€1111</div>
           </div>
           <ul className="tier-features" style={{margin:'20px 0',display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))'}}>
-            <li>Akashic Decoder</li><li>Quantum Apothecary (€888 Value)</li>
-            <li>Virtual Pilgrimage (€888 Value)</li><li>Palm Reading Portal</li>
-            <li>Siddha Portal Access</li>
-            <li>Sri Yantra Universal Protection Shield</li>
+            <li>{t('profilePage.tierAkashaF1')}</li><li>{t('profilePage.tierAkashaF2')}</li>
+            <li>{t('profilePage.tierAkashaF3')}</li><li>{t('profilePage.tierAkashaF4')}</li>
+            <li>{t('profilePage.tierAkashaF5')}</li>
+            <li>{t('profilePage.tierAkashaF6')}</li>
           </ul>
           <button
             type="button"
@@ -983,14 +1017,14 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               boxShadow: '0 0 32px rgba(212,175,55,0.3), 0 0 64px rgba(212,175,55,0.08)',
             }}
           >
-            {userRank >= 3 ? '◈ Field Active — Open Portal ∞' : '◈ Enter the Akashic Field ∞'}
+            {userRank >= 3 ? t('profilePage.tierCtaFieldActive') : t('profilePage.tierCtaEnterAkashic')}
           </button>
         </div>
       </div>}
 
       {/* ── VEDIC SIDDHIS ── */}
       <div className="section-wrap">
-        <div className="section-label">◈ Vedic Siddhis</div>
+        <div className="section-label">{t('profilePage.sectionVedicSiddhis')}</div>
         <div className="siddhis-scroll">
           {badges.map((badge, idx) => {
             const SvgIcon = badge.id === 1 ? (/* Gold Bindu */
@@ -1023,15 +1057,15 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
 
       {/* ── SOUL VAULT (Siddha Quantum + Akasha Infinity only) ── */}
       <div className="section-wrap">
-        <div className="section-label">◈ Soul Vault — Deep Field Resonance</div>
+        <div className="section-label">{t('profilePage.sectionSoulVault')}</div>
         <div className="glass-card">
           {hasFeatureAccess(isAdmin, tier, 2) ? (
             <>
               {scanPhase === 'idle' && (
                 <div className="vault-idle">
                   <div className="vault-scan-ring"><span>◈</span></div>
-                  <p>After each practice, SQI will inscribe a Deep-Field Resonance report into your Soul Vault — a living record of your bio-digital evolution.</p>
-                  <button type="button" className="gold-btn" style={{maxWidth:260,margin:'0 auto'}} onClick={() => navigate('/soul-scan')}>Initiate Soul Scan →</button>
+                  <p>{t('profilePage.soulVaultIdleDesc')}</p>
+                  <button type="button" className="gold-btn" style={{maxWidth:260,margin:'0 auto'}} onClick={() => navigate('/soul-scan')}>{t('profilePage.soulVaultInitiateScan')}</button>
                 </div>
               )}
               {scanPhase !== 'idle' && soulVaultEntries.length > 0 && (
@@ -1039,10 +1073,10 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                   {soulVaultEntries.slice(0, 4).map((entry) => (
                     <div key={entry.id} className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-lg p-3">
                       <div className="flex items-center justify-between gap-2 mb-1">
-                        <p className="text-xs font-semibold text-white/90">{entry.activity || 'Deep-Field Resonance'}</p>
-                        <span className="text-[10px] text-white/40">{new Date(entry.created_at).toLocaleDateString()}</span>
+                        <p className="text-xs font-semibold text-white/90">{entry.activity || t('profilePage.soulVaultActivityFallback')}</p>
+                        <span className="text-[10px] text-white/40">{new Date(entry.created_at).toLocaleDateString(dateLocale)}</span>
                       </div>
-                      {entry.duration_minutes && <p className="text-[10px] text-cyan-200/80 mb-1">{entry.duration_minutes} min practice window</p>}
+                      {entry.duration_minutes && <p className="text-[10px] text-cyan-200/80 mb-1">{t('profilePage.soulVaultPracticeWindow', { n: entry.duration_minutes })}</p>}
                       <p className="text-[11px] leading-relaxed text-white/75 line-clamp-3">{entry.report}</p>
                     </div>
                   ))}
@@ -1052,8 +1086,8 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           ) : (
             <div className="vault-idle" style={{ opacity: 0.85 }}>
               <div className="vault-scan-ring" style={{ opacity: 0.5 }}><span>◈</span></div>
-              <p className="text-white/70">Soul Vault is available for Siddha Quantum and Akasha Infinity members — a living record of your bio-digital evolution.</p>
-              <button type="button" className="gold-btn" style={{maxWidth:260,margin:'0 auto'}} onClick={() => navigate('/siddha-quantum')}>Upgrade to Siddha Quantum →</button>
+              <p className="text-white/70">{t('profilePage.soulVaultLockedDesc')}</p>
+              <button type="button" className="gold-btn" style={{maxWidth:260,margin:'0 auto'}} onClick={() => navigate('/siddha-quantum')}>{t('profilePage.soulVaultUpgrade')}</button>
             </div>
           )}
         </div>
@@ -1061,7 +1095,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
 
       {/* ── AKASHIC ARCHIVE ── */}
       <div className="section-wrap">
-        <div className="section-label">◈ Akashic Archive</div>
+        <div className="section-label">{t('profilePage.sectionAkashicArchive')}</div>
         <div className="archive-grid">
           {hasFeatureAccess(isAdmin, tier, 3) ? (
           <div className="archive-card" onClick={() => navigate('/akashic-records')}>
@@ -1078,11 +1112,11 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                 </svg>
               </div>
               <div>
-                <span className="archive-title">Akashic Record</span>
-                <span className="archive-sub">12-page Soul Manuscript</span>
+                <span className="archive-title">{t('profilePage.archiveRecordTitle')}</span>
+                <span className="archive-sub">{t('profilePage.archiveRecordSub')}</span>
               </div>
             </div>
-            <span className="archive-cta">View Manuscript →</span>
+            <span className="archive-cta">{t('profilePage.archiveCtaView')}</span>
           </div>
           ) : (
           <div className="archive-card" onClick={() => navigate('/akasha-infinity')} style={{ opacity: 0.9, borderColor: 'rgba(212,175,55,0.15)' }}>
@@ -1091,11 +1125,11 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                 <Lock size={18} color="rgba(212,175,55,0.5)" />
               </div>
               <div>
-                <span className="archive-title">Akashic Record</span>
-                <span className="archive-sub">12-page Soul Manuscript — Akasha Infinity only</span>
+                <span className="archive-title">{t('profilePage.archiveRecordTitle')}</span>
+                <span className="archive-sub">{t('profilePage.archiveRecordSubLocked')}</span>
               </div>
             </div>
-            <span className="archive-cta">Upgrade to Akasha Infinity →</span>
+            <span className="archive-cta">{t('profilePage.archiveCtaUpgradeAkasha')}</span>
           </div>
           )}
           <div className="archive-card" onClick={() => navigate('/vedic-astrology')}>
@@ -1111,11 +1145,11 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                 </svg>
               </div>
               <div>
-                <span className="archive-title">Life Reading</span>
-                <span className="archive-sub">Jyotish · Stars meet the Soul</span>
+                <span className="archive-title">{t('profilePage.archiveLifeTitle')}</span>
+                <span className="archive-sub">{t('profilePage.archiveLifeSub')}</span>
               </div>
             </div>
-            <span className="archive-cta">Enter Reading →</span>
+            <span className="archive-cta">{t('profilePage.archiveCtaEnter')}</span>
           </div>
           {hasFeatureAccess(isAdmin, tier, 2) ? (
           <div className="archive-card" onClick={() => navigate('/digital-nadi')}>
@@ -1128,11 +1162,11 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                 </svg>
               </div>
               <div>
-                <span className="archive-title">Digital Nadi Scan</span>
-                <span className="archive-sub">72,000 Nadi Bio-Sync</span>
+                <span className="archive-title">{t('profilePage.archiveNadiTitle')}</span>
+                <span className="archive-sub">{t('profilePage.archiveNadiSub')}</span>
               </div>
             </div>
-            <span className="archive-cta">Initiate Scan →</span>
+            <span className="archive-cta">{t('profilePage.archiveCtaInitiate')}</span>
           </div>
           ) : (
           <div className="archive-card" onClick={() => navigate('/siddha-quantum')} style={{ opacity: 0.9, borderColor: 'rgba(212,175,55,0.15)' }}>
@@ -1141,11 +1175,11 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                 <Lock size={18} color="rgba(212,175,55,0.5)" />
               </div>
               <div>
-                <span className="archive-title">Digital Nadi Scan</span>
-                <span className="archive-sub">72,000 Nadi Bio-Sync — Siddha Quantum+ only</span>
+                <span className="archive-title">{t('profilePage.archiveNadiTitle')}</span>
+                <span className="archive-sub">{t('profilePage.archiveNadiSubLocked')}</span>
               </div>
             </div>
-            <span className="archive-cta">Upgrade to Siddha Quantum →</span>
+            <span className="archive-cta">{t('profilePage.archiveCtaUpgradeSiddha')}</span>
           </div>
           )}
           <div className="archive-card" onClick={() => navigate('/life-book')}>
@@ -1161,35 +1195,35 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                 </svg>
               </div>
               <div>
-                <span className="archive-title">Quantum Apothecary</span>
-                <span className="archive-sub">Remedies from the Field · Your SQI Life Book</span>
+                <span className="archive-title">{t('profilePage.archiveApothecaryTitle')}</span>
+                <span className="archive-sub">{t('profilePage.archiveApothecarySub')}</span>
               </div>
             </div>
-            <span className="archive-cta">Open saved chats →</span>
+            <span className="archive-cta">{t('profilePage.archiveCtaOpenChats')}</span>
           </div>
         </div>
       </div>
 
       {/* ── ABUNDANCE & LINEAGE ── */}
       <div className="section-wrap">
-        <div className="section-label">◈ Abundance & Lineage</div>
+        <div className="section-label">{t('profilePage.sectionAbundanceLineage')}</div>
         <div className="abundance-grid">
           <div className="abundance-card" onClick={() => navigate('/income-streams')}>
             <div className="abundance-icon-wrap"><Wallet size={22} color="#D4AF37" /></div>
-            <span className="abundance-label">Wallet & Earnings</span>
+            <span className="abundance-label">{t('profilePage.abundanceWallet')}</span>
           </div>
           <div className="abundance-card" onClick={() => navigate('/income-streams/affiliate')}>
             <div className="abundance-icon-wrap"><Megaphone size={22} color="#D4AF37" /></div>
-            <span className="abundance-label">Promote & Earn</span>
+            <span className="abundance-label">{t('profilePage.abundancePromote')}</span>
           </div>
           <div className="abundance-card" onClick={connectWallet}>
             <div className="abundance-icon-wrap"><Moon size={22} color="#D4AF37" /></div>
-            <span className="abundance-label">Connect Wallet</span>
+            <span className="abundance-label">{t('profilePage.abundanceConnect')}</span>
           </div>
           {isAdmin && (
             <div className="abundance-card" onClick={() => navigate('/admin')}>
               <div className="abundance-icon-wrap"><Crown size={22} color="#D4AF37" /></div>
-              <span className="abundance-label">Admin Panel</span>
+              <span className="abundance-label">{t('profilePage.abundanceAdmin')}</span>
             </div>
           )}
         </div>
@@ -1197,7 +1231,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
 
       {/* ── SETTINGS ── */}
       <div className="section-wrap">
-        <div className="section-label">◈ Physical Sanctuary</div>
+        <div className="section-label">{t('profilePage.sectionPhysicalSanctuary')}</div>
         <div style={{marginBottom:16}}>
           <div onClick={() => setLangOpen((o) => !o)} style={{
             background:'rgba(255,255,255,0.02)',
@@ -1220,7 +1254,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               <div>
                 <span style={{fontWeight:800,fontSize:7,letterSpacing:'0.4em',
                   textTransform:'uppercase',color:'rgba(255,255,255,0.2)',
-                  display:'block',marginBottom:4}}>Language</span>
+                  display:'block',marginBottom:4}}>{t('profile.language')}</span>
                 <div style={{display:'flex',alignItems:'center',gap:8,fontSize:14,fontWeight:600,color:'rgba(255,255,255,0.7)'}}>
                   <span style={{fontSize:20}}>{langs[activeLangIdx].flag}</span>
                   <span>{langs[activeLangIdx].label}</span>
@@ -1257,14 +1291,14 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           )}
         </div>
         <div className="settings-row" style={{marginTop:20}}>
-          <button type="button" className="settings-btn" onClick={() => setNotificationsOpen(true)}>Notifications</button>
-          <button type="button" className="settings-btn" onClick={() => setAppearanceOpen(true)}>Appearance</button>
-          <button type="button" className="settings-btn" onClick={() => setPrivacyOpen(true)}>Privacy</button>
+          <button type="button" className="settings-btn" onClick={() => setNotificationsOpen(true)}>{t('profile.notifications')}</button>
+          <button type="button" className="settings-btn" onClick={() => setAppearanceOpen(true)}>{t('profile.appearance')}</button>
+          <button type="button" className="settings-btn" onClick={() => setPrivacyOpen(true)}>{t('profile.privacy')}</button>
         </div>
         <div className="settings-row">
-          <button type="button" className="settings-btn" onClick={() => setSettingsOpen(true)}>Settings</button>
+          <button type="button" className="settings-btn" onClick={() => setSettingsOpen(true)}>{t('profile.settings')}</button>
         </div>
-        <button type="button" className="signout-btn" onClick={handleSignOut}>Sign Out</button>
+        <button type="button" className="signout-btn" onClick={handleSignOut}>{t('profile.signOut')}</button>
       </div>
 
       </div>{/* end z-index wrapper */}
@@ -1274,7 +1308,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6 backdrop-blur-md bg-black/40">
           <div className="w-full max-w-xl bg-[#030712] rounded-[40px] border border-cyan-500/20 p-10 shadow-[0_0_50px_rgba(6,182,212,0.1)]">
             <div className="text-right mb-4">
-              <button type="button" onClick={handleCloseScanner} className="text-white/40 text-xs hover:text-white">Close</button>
+              <button type="button" onClick={handleCloseScanner} className="text-white/40 text-xs hover:text-white">{t('profilePage.scannerClose')}</button>
             </div>
             {scanPhase === 'scanning' && (
               <HandScanner onComplete={() => setScanPhase('question')} />
@@ -1282,9 +1316,9 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
             {scanPhase === 'question' && (
               <>
                 <div className="text-center mb-10">
-                  <p className="text-cyan-400/60 text-[10px] font-black tracking-[0.4em] uppercase mb-4">2050 Deep-Field Capture</p>
-                  <h3 className="text-white text-xl font-bold mb-2">What is your current practice?</h3>
-                  <p className="text-white/40 text-[10px]">SQI will tune your report based on the field you just generated.</p>
+                  <p className="text-cyan-400/60 text-[10px] font-black tracking-[0.4em] uppercase mb-4">{t('profilePage.scannerCaptureLabel')}</p>
+                  <h3 className="text-white text-xl font-bold mb-2">{t('profilePage.scannerPracticeQuestion')}</h3>
+                  <p className="text-white/40 text-[10px]">{t('profilePage.scannerPracticeHint')}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-3 mb-8">
                   {practiceProtocols.map((p) => (
@@ -1296,20 +1330,20 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                   ))}
                 </div>
                 <div className="mb-8">
-                  <label className="text-white/40 text-[8px] uppercase tracking-widest block mb-2 px-2">Approximate duration (minutes)</label>
+                  <label className="text-white/40 text-[8px] uppercase tracking-widest block mb-2 px-2">{t('profilePage.scannerDurationLabel')}</label>
                   <input type="number" value={practiceDuration} onChange={(e) => setPracticeDuration(e.target.value)}
                     className="w-full bg-black/40 border border-white/10 rounded-xl py-4 px-6 text-white text-sm focus:border-cyan-500/50 outline-none" />
                 </div>
                 <button type="button" disabled={!selectedPractice} onClick={handleGenerateSoulReport}
                   className="w-full py-5 rounded-2xl bg-[#D4AF37] text-[#050505] text-[11px] font-black uppercase tracking-[0.2em] shadow-[0_0_28px_rgba(212,175,55,0.45),0_0_60px_rgba(212,175,55,0.15)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity">
-                  Generate Deep-Field Resonance
+                  {t('profilePage.scannerGenerate')}
                 </button>
               </>
             )}
             {scanPhase === 'saving' && (
               <div className="space-y-4 pt-6 pb-4 text-center">
-                <p className="text-[11px] uppercase tracking-[0.25em] text-cyan-200/80">Committing to Soul Vault…</p>
-                <p className="text-xs text-muted-foreground">SQI is writing your Deep-Field Resonance Report into your Soul Vault.</p>
+                <p className="text-[11px] uppercase tracking-[0.25em] text-cyan-200/80">{t('profilePage.scannerCommitting')}</p>
+                <p className="text-xs text-muted-foreground">{t('profilePage.scannerCommittingDesc')}</p>
               </div>
             )}
             {scanPhase === 'done' && (

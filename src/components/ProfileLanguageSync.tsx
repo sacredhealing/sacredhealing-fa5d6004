@@ -13,22 +13,28 @@ const LS_KEY = 'i18nextLng';
  */
 export const ProfileLanguageSync: React.FC = () => {
   const { user } = useAuth();
-  const { profile } = useProfile();
+  const { profile, isLoading: profileLoading } = useProfile();
 
   useEffect(() => {
     if (user) {
+      // Do not assume English while profile is still loading — that overwrote
+      // localStorage / detector language before preferred_language arrived.
+      if (profileLoading) return;
+
       const profileLang = profile?.preferred_language;
-      const lang = (profileLang || 'en').split('-')[0];
-      if (SUPPORTED_LANGS.includes(lang)) {
-        const currentBase = i18n.language?.split('-')[0] || 'en';
-        if (currentBase !== lang) {
-          i18n.changeLanguage(lang);
-        }
-        try {
-          localStorage.setItem(LS_KEY, lang);
-        } catch {
-          // ignore
-        }
+      if (!profileLang) return;
+
+      const lang = profileLang.split('-')[0];
+      if (!SUPPORTED_LANGS.includes(lang)) return;
+
+      const currentBase = i18n.language?.split('-')[0] || 'en';
+      if (currentBase !== lang) {
+        void i18n.changeLanguage(lang);
+      }
+      try {
+        localStorage.setItem(LS_KEY, lang);
+      } catch {
+        // ignore
       }
       return;
     }
@@ -45,7 +51,7 @@ export const ProfileLanguageSync: React.FC = () => {
     } catch {
       i18n.changeLanguage('en');
     }
-  }, [user, profile?.preferred_language]);
+  }, [user, profileLoading, profile?.preferred_language]);
 
   return null;
 };
