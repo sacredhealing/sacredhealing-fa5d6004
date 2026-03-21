@@ -70,7 +70,7 @@ export const BottomNav: React.FC = () => {
                   }}
                   title={t(item.labelKey, item.label)}
                 >
-                  {item.label}
+                  {t(item.labelKey, item.label)}
                 </span>
               </>
             )}

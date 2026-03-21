@@ -1,4 +1,5 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -48,15 +49,18 @@ const timeOptions = [
   '21:00', '21:30', '22:00', '22:30', '23:00'
 ];
 
-const formatTime = (time: string) => {
-  const [hours, minutes] = time.split(':');
-  const hour = parseInt(hours);
-  const ampm = hour >= 12 ? 'PM' : 'AM';
-  const displayHour = hour % 12 || 12;
-  return `${displayHour}:${minutes} ${ampm}`;
-};
-
 export const NotificationsDialog: React.FC<NotificationsDialogProps> = ({ open, onOpenChange }) => {
+  const { t, i18n } = useTranslation();
+
+  const formatTime = useMemo(
+    () => (time: string) => {
+      const [hours, minutes] = time.split(':').map((x) => parseInt(x, 10));
+      const d = new Date(2000, 0, 1, hours, minutes);
+      return d.toLocaleTimeString(i18n.language || 'en', { hour: 'numeric', minute: '2-digit' });
+    },
+    [i18n.language]
+  );
+
   const [preferences, setPreferences] = React.useState<NotificationPreferences>(() => {
     const saved = localStorage.getItem('notification-preferences');
     const parsed = saved ? JSON.parse(saved) : {};
@@ -86,90 +90,46 @@ export const NotificationsDialog: React.FC<NotificationsDialogProps> = ({ open, 
         const hasPermission = await requestNotificationPermission();
         if (hasPermission) {
           await scheduleNotification(key, setting.time);
-          toast.success('Reminder scheduled');
+          toast.success(t('notificationsDialog.toastScheduled'));
         } else {
           // Revert if permission denied
           setPreferences(prev => ({
             ...prev,
             [key]: { ...prev[key], enabled: false }
           }));
-          toast.error('Notification permission denied');
+          toast.error(t('notificationsDialog.toastPermissionDenied'));
         }
       } else {
         // Cancel notification
         await cancelNotification(key);
-        toast.success('Reminder cancelled');
+        toast.success(t('notificationsDialog.toastCancelled'));
       }
     } else if (field === 'time' && setting.enabled) {
       // Reschedule with new time
       await scheduleNotification(key, value as string);
-      toast.success('Reminder time updated');
+      toast.success(t('notificationsDialog.toastTimeUpdated'));
     }
-  }, [preferences]);
+  }, [preferences, t]);
 
   // Initialize notifications on mount
   useEffect(() => {
     rescheduleAllNotifications();
   }, []);
 
-  const reminderTypes = [
-    {
-      key: 'dailyMantra' as const,
-      icon: Leaf,
-      title: 'Daily Mantra',
-      description: 'Return to your center with your sacred mantra',
-      defaultTime: 'Morning',
-    },
-    {
-      key: 'dailyAffirmations' as const,
-      icon: Sparkles,
-      title: 'Daily Affirmations',
-      description: 'Plant positive seeds within your mind',
-      defaultTime: 'Late morning',
-    },
-    {
-      key: 'dailyMeditation' as const,
-      icon: Moon,
-      title: 'Daily Meditation',
-      description: 'A few minutes of stillness to restore your energy',
-      defaultTime: 'Evening',
-    },
-    {
-      key: 'morningPractice' as const,
-      icon: Sun,
-      title: 'Morning Practice',
-      description: 'Begin the day with presence and intention',
-      defaultTime: 'Morning',
-    },
-    {
-      key: 'eveningPractice' as const,
-      icon: Moon,
-      title: 'Evening Practice',
-      description: 'Release the day and rest inward',
-      defaultTime: 'Evening',
-    },
-    {
-      key: 'healingJourney' as const,
-      icon: Heart,
-      title: 'Healing Journey',
-      description: 'Gentle reflection on your healing path',
-      defaultTime: '1-3 times weekly',
-    },
-    {
-      key: 'mindfulnessCheckin' as const,
-      icon: Brain,
-      title: 'Mindfulness Check-in',
-      description: 'Observe your mind with kindness',
-      defaultTime: 'Optional',
-    },
-    {
-      key: 'siddhaWisdom' as const,
-      icon: ScrollText,
-      title: 'Siddha Wisdom',
-      description: 'Daily aphorism from the 18 Siddhars',
-      defaultTime: 'Morning',
-    },
-  ];
+  const reminderTypes = useMemo(
+    () =>
+      [
+        { key: 'dailyMantra' as const, icon: Leaf, titleKey: 'notificationsDialog.dailyMantraTitle', descKey: 'notificationsDialog.dailyMantraDesc' },
+        { key: 'dailyAffirmations' as const, icon: Sparkles, titleKey: 'notificationsDialog.dailyAffirmationsTitle', descKey: 'notificationsDialog.dailyAffirmationsDesc' },
+        { key: 'dailyMeditation' as const, icon: Moon, titleKey: 'notificationsDialog.dailyMeditationTitle', descKey: 'notificationsDialog.dailyMeditationDesc' },
+        { key: 'morningPractice' as const, icon: Sun, titleKey: 'notificationsDialog.morningPracticeTitle', descKey: 'notificationsDialog.morningPracticeDesc' },
+        { key: 'eveningPractice' as const, icon: Moon, titleKey: 'notificationsDialog.eveningPracticeTitle', descKey: 'notificationsDialog.eveningPracticeDesc' },
+        { key: 'healingJourney' as const, icon: Heart, titleKey: 'notificationsDialog.healingJourneyTitle', descKey: 'notificationsDialog.healingJourneyDesc' },
+        { key: 'mindfulnessCheckin' as const, icon: Brain, titleKey: 'notificationsDialog.mindfulnessCheckinTitle', descKey: 'notificationsDialog.mindfulnessCheckinDesc' },
+        { key: 'siddhaWisdom' as const, icon: ScrollText, titleKey: 'notificationsDialog.siddhaWisdomTitle', descKey: 'notificationsDialog.siddhaWisdomDesc' },
+      ] as const,
+    []
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -177,10 +137,10 @@ export const NotificationsDialog: React.FC<NotificationsDialogProps> = ({ open, 
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-foreground">
             <Bell size={20} className="text-primary" />
-            Gentle Reminders
+            {t('notificationsDialog.title')}
           </DialogTitle>
           <p className="text-sm text-muted-foreground mt-1">
-            Soft nudges to support your practice — all optional, never demanding
+            {t('notificationsDialog.subtitle')}
           </p>
         </DialogHeader>
         
@@ -213,10 +173,10 @@ export const NotificationsDialog: React.FC<NotificationsDialogProps> = ({ open, 
                           htmlFor={`${reminder.key}-toggle`}
                           className="text-foreground font-medium cursor-pointer"
                         >
-                          {reminder.title}
+                          {t(reminder.titleKey)}
                         </Label>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          {reminder.description}
+                          {t(reminder.descKey)}
                         </p>
                       </div>
                     </div>
@@ -231,7 +191,7 @@ export const NotificationsDialog: React.FC<NotificationsDialogProps> = ({ open, 
                     <div className="mt-3 pt-3 border-t border-border/50">
                       <div className="flex items-center gap-2">
                         <Clock size={14} className="text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">Remind me at</span>
+                        <span className="text-xs text-muted-foreground">{t('notificationsDialog.remindMeAt')}</span>
                         <Select 
                           value={pref.time}
                           onValueChange={(value) => handlePreferenceChange(reminder.key, 'time', value)}
@@ -257,7 +217,7 @@ export const NotificationsDialog: React.FC<NotificationsDialogProps> = ({ open, 
             {/* Gentle footer message */}
             <div className="text-center pt-4 pb-2">
               <p className="text-xs text-muted-foreground italic">
-                "A soft tap on the shoulder from awareness itself"
+                &ldquo;{t('notificationsDialog.footerQuote')}&rdquo;
               </p>
             </div>
           </div>
