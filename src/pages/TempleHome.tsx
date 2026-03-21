@@ -651,10 +651,8 @@ function getSiteCategory(id: string): { label: string; color: string } {
 }
 
 // ─── TempleHomeInner ──────────────────────────────────────────────────────────
-function TempleHomeInner() {
+function TempleHomeInner({ isAdmin }: { isAdmin: boolean }) {
   const navigate = useNavigate();
-  const { isAdmin, isLoading: adminLoading } = useAdminRole();
-  const { isLoading: authLoading } = useAuth();
   const saved = loadAnchor();
 
   const [selectedSite, setSelectedSite] = useState(saved?.siteId || 'giza');
@@ -706,15 +704,6 @@ function TempleHomeInner() {
     setPresetFlash(preset.id);
     setTimeout(() => setPresetFlash(null), 2500);
   };
-
-  if (authLoading || adminLoading) return (
-    <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-      <div className="flex flex-col items-center gap-4">
-        <div className="h-10 w-10 rounded-full border-2 border-[#D4AF37]/30 border-t-[#D4AF37] animate-spin" />
-        <p className="text-[8px] tracking-[0.5em] uppercase text-[#D4AF37]/40">Accessing Akasha-Neural Archive</p>
-      </div>
-    </div>
-  );
 
   if (!isAdmin) return (
     <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center p-8 relative overflow-hidden">
@@ -1185,14 +1174,23 @@ function TempleHomeInner() {
 export default function TempleHome() {
   const { user, isLoading: authLoading } = useAuth();
   const { tier, loading: membershipLoading } = useMembership();
-  const { isAdmin } = useAdminRole();
-  if (authLoading || membershipLoading) return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#050505] px-6">
-      <div className="h-8 w-8 rounded-full border-2 border-[#D4AF37]/20 border-t-[#D4AF37]/80 animate-spin" />
-      <p className="text-center text-[10px] font-medium uppercase tracking-[0.35em] text-[#D4AF37]/55">Loading Temple Home</p>
-    </div>
-  );
+  const { isAdmin, isLoading: adminLoading } = useAdminRole();
+
+  if (authLoading || membershipLoading || adminLoading) {
+    return (
+      <div className="flex min-h-screen min-h-[100dvh] flex-col items-center justify-center gap-5 bg-[#050505] px-6">
+        <div className="h-12 w-12 rounded-full border-2 border-[#D4AF37]/25 border-t-[#D4AF37] animate-spin" />
+        <p className="text-center text-sm font-medium text-[#D4AF37]/90">Temple Home</p>
+        <p className="text-center text-xs text-white/50">Checking access…</p>
+      </div>
+    );
+  }
+
   if (!user) return <Navigate to="/auth" replace />;
-  if (!hasFeatureAccess(isAdmin, tier, FEATURE_TIER.virtualPilgrimage)) return <Navigate to="/akasha-infinity" replace />;
-  return <TempleHomeInner />;
+
+  if (!hasFeatureAccess(isAdmin, tier, FEATURE_TIER.virtualPilgrimage)) {
+    return <Navigate to="/akasha-infinity" replace />;
+  }
+
+  return <TempleHomeInner isAdmin={isAdmin} />;
 }
