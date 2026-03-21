@@ -36,40 +36,161 @@ export const AcademyCertification: React.FC = () => {
   const progress = (modules.filter(m => !!m.content).length / 12) * 100;
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex flex-col selection:bg-teal-500/40 academy-certification">
-      {/* Header - Sacred Branding */}
-      <header className="flex-none glass border-b border-white/10 py-5 px-6 md:px-12 flex items-center justify-between z-50">
+    <div
+      className="h-[calc(100vh-8rem)] flex flex-col academy-certification"
+      style={{ background: '#050505', fontFamily: "'Plus Jakarta Sans', 'Montserrat', sans-serif" }}
+    >
+      {/* ── HEADER ── */}
+      <header
+        className="flex-none py-5 px-6 md:px-12 flex items-center justify-between z-50"
+        style={{
+          background: 'rgba(5,5,5,0.85)',
+          backdropFilter: 'blur(40px)',
+          WebkitBackdropFilter: 'blur(40px)',
+          borderBottom: '1px solid rgba(212,175,55,0.12)',
+        }}
+      >
+        {/* Logo + Title */}
         <div className="flex items-center gap-4 group cursor-pointer">
-          <div className="w-12 h-12 md:w-14 md:h-14 bg-turquoise-gradient rounded-2xl flex items-center justify-center text-slate-900 font-serif text-3xl md:text-4xl font-bold shadow-[0_0_40px_rgba(45,212,191,0.4)] transition-all duration-700 group-hover:rotate-[360deg]">
+          {/* Siddha-Gold Sigil */}
+          <div
+            style={{
+              width: 48,
+              height: 48,
+              background: 'linear-gradient(135deg, #D4AF37 0%, #F5D06A 50%, #B8960C 100%)',
+              borderRadius: 14,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 22,
+              fontWeight: 900,
+              color: '#050505',
+              boxShadow: '0 0 24px rgba(212,175,55,0.45), 0 0 48px rgba(212,175,55,0.15)',
+              transition: 'all 0.7s ease',
+              letterSpacing: '-0.05em',
+            }}
+            className="group-hover:rotate-[360deg]"
+          >
             S
           </div>
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white leading-none mb-1 serif">Siddha Quantum Nexus</h1>
-            <p className="text-[8px] md:text-[10px] font-black tracking-[0.4em] text-teal-400 uppercase opacity-90">Academy Certification</p>
+            <h1
+              style={{
+                fontSize: 22,
+                fontWeight: 900,
+                letterSpacing: '-0.05em',
+                color: '#FFFFFF',
+                lineHeight: 1,
+                marginBottom: 3,
+              }}
+            >
+              Siddha Quantum Nexus
+            </h1>
+            <p
+              style={{
+                fontSize: 8,
+                fontWeight: 800,
+                letterSpacing: '0.5em',
+                textTransform: 'uppercase',
+                color: '#D4AF37',
+                opacity: 0.9,
+              }}
+            >
+              Academy Certification
+            </p>
           </div>
         </div>
 
-        <LanguageToggle language={language} onToggle={setLanguage} />
-      </header>
-
-      {/* Main Container - Dashboard Layout */}
-      <main className="flex-1 flex flex-col md:flex-row overflow-hidden">
-        {/* Sidebar - Path of Mastery */}
-        <aside className="w-full md:w-[400px] flex-none bg-black/40 md:border-r border-white/10 flex flex-col h-[40vh] md:h-full">
-          <div className="p-8 md:p-10 border-b border-white/10 bg-white/[0.03]">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Mastery Path</h2>
-              <span className="text-xs font-black text-teal-400 tracking-widest">{modules.filter(m => !!m.content).length} / 12</span>
-            </div>
-            <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden border border-white/5">
+        {/* Progress Pill + Language Toggle */}
+        <div className="flex items-center gap-6">
+          {/* Progress indicator */}
+          <div style={{ textAlign: 'right' }}>
+            <p
+              style={{
+                fontSize: 8,
+                fontWeight: 800,
+                letterSpacing: '0.5em',
+                textTransform: 'uppercase',
+                color: 'rgba(255,255,255,0.4)',
+                marginBottom: 6,
+              }}
+            >
+              Modules Activated
+            </p>
+            <div
+              style={{
+                width: 140,
+                height: 4,
+                background: 'rgba(255,255,255,0.05)',
+                borderRadius: 999,
+                overflow: 'hidden',
+              }}
+            >
               <div
-                className="bg-turquoise-gradient h-full transition-all duration-1000 ease-out shadow-[0_0_20px_rgba(45,212,191,0.6)]"
-                style={{ width: `${progress}%` }}
+                style={{
+                  height: '100%',
+                  width: `${progress}%`,
+                  background: 'linear-gradient(90deg, #B8960C, #D4AF37, #F5D06A)',
+                  borderRadius: 999,
+                  boxShadow: '0 0 12px rgba(212,175,55,0.6)',
+                  transition: 'width 1s ease-out',
+                }}
               />
             </div>
+            <p
+              style={{
+                fontSize: 10,
+                fontWeight: 700,
+                color: '#D4AF37',
+                marginTop: 4,
+                textShadow: '0 0 10px rgba(212,175,55,0.4)',
+              }}
+            >
+              {Math.round(progress)}% Complete
+            </p>
+          </div>
+          <LanguageToggle language={language} onToggle={setLanguage} />
+        </div>
+      </header>
+
+      {/* ── MAIN LAYOUT ── */}
+      <main className="flex flex-1 overflow-hidden">
+
+        {/* ── SIDEBAR — Module List ── */}
+        <aside
+          style={{
+            width: 280,
+            flexShrink: 0,
+            background: 'rgba(255,255,255,0.015)',
+            backdropFilter: 'blur(40px)',
+            WebkitBackdropFilter: 'blur(40px)',
+            borderRight: '1px solid rgba(212,175,55,0.08)',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          {/* Sidebar Header */}
+          <div
+            style={{
+              padding: '20px 20px 14px',
+              borderBottom: '1px solid rgba(255,255,255,0.05)',
+            }}
+          >
+            <p
+              style={{
+                fontSize: 8,
+                fontWeight: 800,
+                letterSpacing: '0.5em',
+                textTransform: 'uppercase',
+                color: 'rgba(255,255,255,0.35)',
+              }}
+            >
+              12-Month Curriculum
+            </p>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-4 custom-scrollbar">
+          {/* Module Cards */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
             {modules.map((m) => (
               <ModuleCard
                 key={m.id}
@@ -81,67 +202,221 @@ export const AcademyCertification: React.FC = () => {
             ))}
           </div>
 
+          {/* Error Banner */}
           {error && (
-            <div className="m-6 p-4 bg-red-950/40 text-red-400 text-[9px] font-black uppercase tracking-[0.2em] rounded-2xl border border-red-500/30 animate-pulse">
+            <div
+              style={{
+                margin: '0 16px 16px',
+                padding: '12px 16px',
+                background: 'rgba(239,68,68,0.08)',
+                border: '1px solid rgba(239,68,68,0.2)',
+                borderRadius: 16,
+                fontSize: 9,
+                fontWeight: 800,
+                letterSpacing: '0.2em',
+                textTransform: 'uppercase',
+                color: '#FCA5A5',
+              }}
+              className="animate-pulse"
+            >
               {error}
             </div>
           )}
         </aside>
 
-        {/* Content Area - Transmission Portal */}
-        <section className="flex-1 overflow-y-auto custom-scrollbar relative bg-black/10">
-          <div className="max-w-5xl mx-auto px-6 py-12 md:px-16 md:py-24 relative z-10">
+        {/* ── CONTENT AREA ── */}
+        <section
+          className="flex-1 overflow-y-auto custom-scrollbar"
+          style={{ background: 'rgba(0,0,0,0.3)', position: 'relative' }}
+        >
+          {/* Ambient gold glow top-right */}
+          <div
+            style={{
+              position: 'absolute',
+              top: -100,
+              right: -100,
+              width: 400,
+              height: 400,
+              background: 'radial-gradient(circle, rgba(212,175,55,0.06) 0%, transparent 70%)',
+              pointerEvents: 'none',
+              zIndex: 0,
+            }}
+          />
+
+          <div
+            style={{ maxWidth: 900, margin: '0 auto', padding: '48px 40px', position: 'relative', zIndex: 1 }}
+          >
             {activeModule.content ? (
               <ContentSection
                 content={activeModule.content}
                 language={language}
               />
             ) : (
-              <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in zoom-in duration-1000">
-                <div className="w-32 h-32 glass rounded-[3rem] flex items-center justify-center mb-10 text-teal-400 group relative">
-                  <div className="absolute inset-0 bg-turquoise-gradient blur-3xl opacity-10 group-hover:opacity-30 transition-all duration-1000" />
-                  <svg className="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                  </svg>
+              /* ── EMPTY STATE — Await Transmission ── */
+              <div
+                className="flex flex-col items-center justify-center animate-in fade-in zoom-in duration-1000"
+                style={{ minHeight: '60vh', textAlign: 'center' }}
+              >
+                {/* Sacred Geometry Icon */}
+                <div style={{ position: 'relative', marginBottom: 32 }}>
+                  <div
+                    style={{
+                      width: 96,
+                      height: 96,
+                      borderRadius: '50%',
+                      background: 'radial-gradient(circle, rgba(212,175,55,0.15) 0%, transparent 70%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: '1px solid rgba(212,175,55,0.2)',
+                      boxShadow: '0 0 40px rgba(212,175,55,0.1)',
+                    }}
+                  >
+                    {/* Animated ring */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        inset: -8,
+                        borderRadius: '50%',
+                        border: '1px solid rgba(212,175,55,0.15)',
+                        animation: 'spin 8s linear infinite',
+                      }}
+                    />
+                    <svg
+                      width={40}
+                      height={40}
+                      fill="none"
+                      stroke="#D4AF37"
+                      viewBox="0 0 24 24"
+                      style={{ opacity: 0.8 }}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1}
+                        d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                      />
+                    </svg>
+                  </div>
                 </div>
 
-                <h2 className="text-4xl md:text-6xl font-bold text-white mb-6 serif italic tracking-tight">
+                <h2
+                  style={{
+                    fontSize: 36,
+                    fontWeight: 900,
+                    letterSpacing: '-0.05em',
+                    color: '#FFFFFF',
+                    marginBottom: 16,
+                    textShadow: '0 0 40px rgba(212,175,55,0.15)',
+                  }}
+                >
                   {activeModule.topic.split(':')[0]}
                 </h2>
 
-                <p className="text-slate-400 max-w-xl mb-12 text-lg md:text-2xl font-light leading-relaxed italic px-4">
+                <p
+                  style={{
+                    fontSize: 8,
+                    fontWeight: 800,
+                    letterSpacing: '0.5em',
+                    textTransform: 'uppercase',
+                    color: '#D4AF37',
+                    marginBottom: 12,
+                    opacity: 0.8,
+                  }}
+                >
+                  Month {activeModule.month} · Vedic Light-Code Awaiting
+                </p>
+
+                <p
+                  style={{
+                    color: 'rgba(255,255,255,0.4)',
+                    fontSize: 16,
+                    fontWeight: 400,
+                    lineHeight: 1.6,
+                    maxWidth: 480,
+                    marginBottom: 40,
+                    fontStyle: 'italic',
+                  }}
+                >
                   The energetic blueprint for Month {activeModule.month} is awaiting transmission.
                   Channel the bilingual curriculum for this professional certification.
                 </p>
 
+                {/* ── ACTIVATE BUTTON ── */}
                 <button
                   type="button"
                   onClick={() => handleGenerateContent(activeModule.id)}
                   disabled={isGenerating}
-                  className="relative group px-12 py-6 md:px-16 md:py-7 rounded-[2rem] transition-all duration-500 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    position: 'relative',
+                    padding: '14px 36px',
+                    borderRadius: 16,
+                    border: 'none',
+                    cursor: isGenerating ? 'not-allowed' : 'pointer',
+                    opacity: isGenerating ? 0.6 : 1,
+                    background: 'linear-gradient(135deg, #B8960C 0%, #D4AF37 50%, #F5D06A 100%)',
+                    color: '#050505',
+                    fontSize: 10,
+                    fontWeight: 800,
+                    letterSpacing: '0.3em',
+                    textTransform: 'uppercase',
+                    boxShadow: isGenerating
+                      ? 'none'
+                      : '0 0 30px rgba(212,175,55,0.4), 0 0 60px rgba(212,175,55,0.15)',
+                    transition: 'all 0.5s ease',
+                    transform: 'scale(1)',
+                  }}
+                  onMouseEnter={e => {
+                    if (!isGenerating) {
+                      (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.05)';
+                      (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                        '0 0 40px rgba(212,175,55,0.6), 0 0 80px rgba(212,175,55,0.2)';
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)';
+                    (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                      '0 0 30px rgba(212,175,55,0.4), 0 0 60px rgba(212,175,55,0.15)';
+                  }}
                 >
-                  <div className="absolute inset-0 bg-turquoise-gradient rounded-[2rem] shadow-[0_20px_50px_rgba(45,212,191,0.4)] group-hover:shadow-[0_25px_60px_rgba(45,212,191,0.6)]" />
-                  <div className="relative flex items-center gap-4 text-slate-900 font-black uppercase tracking-[0.3em] text-[10px] md:text-xs">
-                    {isGenerating ? (
-                      <>
-                        <div className="animate-spin h-5 w-5 border-3 border-slate-900 border-t-transparent rounded-full" />
-                        <span>Channeling Wisdom...</span>
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                        <span>Activate Curriculum</span>
-                      </>
-                    )}
-                  </div>
+                  {isGenerating ? (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span
+                        style={{
+                          display: 'inline-block',
+                          width: 16,
+                          height: 16,
+                          border: '2px solid rgba(5,5,5,0.3)',
+                          borderTop: '2px solid #050505',
+                          borderRadius: '50%',
+                          animation: 'spin 0.8s linear infinite',
+                        }}
+                      />
+                      Channeling Wisdom...
+                    </span>
+                  ) : (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <svg width={16} height={16} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      Activate Curriculum
+                    </span>
+                  )}
                 </button>
               </div>
             )}
           </div>
         </section>
       </main>
+
+      {/* Global spin keyframe */}
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.2); border-radius: 999px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(212,175,55,0.4); }
+      `}</style>
     </div>
   );
 };
