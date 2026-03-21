@@ -7,11 +7,9 @@ import { BookOpen, Sparkles } from 'lucide-react';
 interface BookReaderProps {
   chapters: BookChapter[];
   bookTitle: string;
-  /** Side-by-side Devanagari + Swedish/translation (SQI admin / library). */
-  verseLayout?: 'stacked' | 'split';
 }
 
-export const BookReader: React.FC<BookReaderProps> = ({ chapters, bookTitle, verseLayout = 'stacked' }) => {
+export const BookReader: React.FC<BookReaderProps> = ({ chapters, bookTitle }) => {
   return (
     <div className="min-h-screen bg-background pb-8">
       {/* Book Header */}
@@ -58,48 +56,7 @@ export const BookReader: React.FC<BookReaderProps> = ({ chapters, bookTitle, ver
             <CardContent className="space-y-6">
               {chapter.content.map((segment, idx) => (
                 <div key={idx}>
-                  {segment.type === 'VERSE' && verseLayout === 'split' ? (
-                    <div
-                      className="grid gap-4 md:grid-cols-2 md:gap-6 rounded-[28px] p-5 md:p-6"
-                      style={{
-                        background: 'rgba(255,255,255,0.02)',
-                        border: '1px solid rgba(255,255,255,0.06)',
-                        backdropFilter: 'blur(40px)',
-                      }}
-                    >
-                      <div className="min-w-0">
-                        <p
-                          className="text-[8px] font-extrabold tracking-[0.35em] uppercase mb-2"
-                          style={{ color: 'rgba(212,175,55,0.5)' }}
-                        >
-                          Devanagari
-                        </p>
-                        <div
-                          className="text-xl sm:text-2xl font-serif leading-relaxed"
-                          style={{ color: 'rgba(253, 230, 138, 0.95)' }}
-                          dir="ltr"
-                        >
-                          {segment.devanagari?.trim() || segment.content || '—'}
-                        </div>
-                        {segment.devanagari && segment.content && segment.content !== segment.devanagari && (
-                          <p className="mt-3 text-xs font-mono italic text-white/35">{segment.content}</p>
-                        )}
-                      </div>
-                      <div className="min-w-0 border-t border-white/[0.06] pt-4 md:border-t-0 md:border-l md:pl-6 md:pt-0">
-                        <p
-                          className="text-[8px] font-extrabold tracking-[0.35em] uppercase mb-2"
-                          style={{ color: 'rgba(212,175,55,0.5)' }}
-                        >
-                          Svensk översättning
-                        </p>
-                        <p className="text-sm sm:text-base leading-relaxed text-white/65 whitespace-pre-wrap">
-                          {segment.translation?.trim() || (
-                            <span className="text-white/30 italic">Översättning läggs till vid import från Siddha-Scribe.</span>
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  ) : segment.type === 'VERSE' ? (
+                  {segment.type === 'VERSE' ? (
                     <SanskritVerse
                       content={segment.content}
                       devanagari={segment.devanagari}

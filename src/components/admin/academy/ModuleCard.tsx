@@ -16,156 +16,40 @@ export const ModuleCard: React.FC<ModuleCardProps> = ({ module, language, onClic
     <button
       type="button"
       onClick={onClick}
-      className="group w-full text-left outline-none"
-      style={{
-        position: 'relative',
-        padding: '14px 16px',
-        borderRadius: 16,
-        border: isActive
-          ? '1px solid rgba(212,175,55,0.35)'
-          : '1px solid rgba(255,255,255,0.04)',
-        background: isActive
-          ? 'rgba(212,175,55,0.06)'
-          : 'rgba(255,255,255,0.015)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        boxShadow: isActive
-          ? '0 0 20px rgba(212,175,55,0.12), inset 0 0 20px rgba(212,175,55,0.04)'
-          : 'none',
-        cursor: 'pointer',
-        transition: 'all 0.4s ease',
-        overflow: 'hidden',
-      }}
-      onMouseEnter={e => {
-        if (!isActive) {
-          (e.currentTarget as HTMLButtonElement).style.border = '1px solid rgba(212,175,55,0.15)';
-          (e.currentTarget as HTMLButtonElement).style.background = 'rgba(212,175,55,0.03)';
-        }
-      }}
-      onMouseLeave={e => {
-        if (!isActive) {
-          (e.currentTarget as HTMLButtonElement).style.border = '1px solid rgba(255,255,255,0.04)';
-          (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.015)';
-        }
-      }}
+      className={`w-full text-left p-6 rounded-[2rem] transition-all duration-500 relative group overflow-hidden outline-none ${
+        isActive
+          ? 'bg-white/10 border-teal-500/40 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.6)] border'
+          : 'bg-white/[0.02] border-white/5 hover:bg-white/[0.05] border'
+      }`}
     >
-      {/* Active left-edge gold bar */}
       {isActive && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: 3,
-            height: '100%',
-            background: 'linear-gradient(180deg, #F5D06A, #D4AF37, #B8960C)',
-            boxShadow: '0 0 12px rgba(212,175,55,0.8)',
-            borderRadius: '999px 0 0 999px',
-          }}
-        />
+        <div className="absolute top-0 left-0 w-1 h-full bg-turquoise-gradient shadow-[0_0_20px_rgba(45,212,191,1)]" />
       )}
 
-      {/* Row 1: Month label + Status dot */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-        <span
-          style={{
-            fontSize: 8,
-            fontWeight: 800,
-            letterSpacing: '0.5em',
-            textTransform: 'uppercase',
-            color: isActive ? '#D4AF37' : 'rgba(255,255,255,0.3)',
-            transition: 'color 0.3s ease',
-          }}
-        >
+      <div className="flex items-center justify-between mb-3">
+        <span className={`text-[9px] font-black tracking-[0.25em] uppercase transition-colors ${isActive ? 'text-teal-400' : 'text-slate-600 group-hover:text-slate-400'}`}>
           Month {module.month}
         </span>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div className="flex items-center gap-2">
           {!isGenerated && (
-            <span
-              style={{
-                fontSize: 7,
-                fontWeight: 800,
-                letterSpacing: '0.3em',
-                textTransform: 'uppercase',
-                color: 'rgba(139,92,246,0.8)',
-                background: 'rgba(139,92,246,0.08)',
-                border: '1px solid rgba(139,92,246,0.15)',
-                padding: '2px 6px',
-                borderRadius: 999,
-              }}
-            >
+            <span className="text-[7px] bg-purple-900/40 text-purple-300 px-2 py-0.5 rounded-full uppercase font-black tracking-widest border border-purple-500/10">
               Planned
             </span>
           )}
-          {/* Status indicator dot */}
-          <div
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
-              background: isActive
-                ? '#D4AF37'
-                : isGenerated
-                  ? 'rgba(212,175,55,0.4)'
-                  : 'rgba(255,255,255,0.12)',
-              boxShadow: isActive ? '0 0 8px rgba(212,175,55,0.8)' : 'none',
-              transition: 'all 0.4s ease',
-            }}
-          />
+          <div className={`h-2.5 w-2.5 rounded-full transition-all duration-500 ${isActive ? 'bg-teal-400 shadow-[0_0_12px_#2dd4bf]' : isGenerated ? 'bg-purple-500' : 'bg-slate-800'}`} />
         </div>
       </div>
 
-      {/* Row 2: Module Title */}
-      <h3
-        style={{
-          fontSize: 13,
-          fontWeight: 700,
-          letterSpacing: '-0.02em',
-          color: isActive ? '#FFFFFF' : 'rgba(255,255,255,0.55)',
-          marginBottom: 6,
-          lineHeight: 1.3,
-          transition: 'color 0.3s ease',
-        }}
-      >
+      <h3 className={`text-xl font-bold mb-2 leading-tight transition-colors duration-300 ${isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'}`}>
         {displayTitle}
       </h3>
 
-      {/* Row 3: Objective preview */}
-      <p
-        style={{
-          fontSize: 11,
-          lineHeight: 1.5,
-          color: isActive ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.25)',
-          fontStyle: 'italic',
-          fontWeight: 400,
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical',
-          overflow: 'hidden',
-          transition: 'color 0.3s ease',
-        }}
-      >
+      <p className={`text-[11px] line-clamp-2 font-medium leading-relaxed italic transition-colors ${isActive ? 'text-slate-300' : 'text-slate-500'}`}>
         {module.content?.objective?.[language] || 'Wisdom transmission awaiting generation...'}
       </p>
 
-      {/* Hover: SELECT PATH arrow — only for generated non-active */}
       {isGenerated && !isActive && (
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 12,
-            right: 14,
-            fontSize: 8,
-            fontWeight: 800,
-            letterSpacing: '0.2em',
-            color: '#D4AF37',
-            opacity: 0,
-            transform: 'translateX(-4px)',
-            transition: 'all 0.3s ease',
-          }}
-          className="group-hover:opacity-100 group-hover:translate-x-0"
-        >
+        <div className="absolute bottom-4 right-6 text-teal-400 text-[8px] font-black tracking-[0.2em] opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
           SELECT PATH →
         </div>
       )}

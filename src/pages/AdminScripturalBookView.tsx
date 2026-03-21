@@ -51,7 +51,7 @@ const AdminScripturalBookView = () => {
 
       {/* Book Reader */}
       {chapters.length > 0 ? (
-        <BookReader chapters={chapters} bookTitle={book.title} verseLayout="split" />
+        <BookReader chapters={chapters} bookTitle={book.title} />
       ) : (
         <div className="flex items-center justify-center py-12">
           <p className="text-muted-foreground">No chapters yet. Book is still processing...</p>

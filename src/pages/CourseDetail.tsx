@@ -723,13 +723,7 @@ const CourseDetail: React.FC = () => {
                           {actionableMaterials.map((material) => {
                             const isAudio = material.file_type?.toLowerCase() === 'audio' || 
                                            material.file_url?.match(/\.(mp3|wav|m4a|ogg|aac)$/i);
-                            const isScripturalBook = material.file_type?.toLowerCase() === 'scriptural_book';
                             const handleMaterialClick = () => {
-                              const ft = material.file_type?.toLowerCase() ?? '';
-                              if (ft === 'scriptural_book' && material.file_url?.trim()) {
-                                navigate(`/library/scriptural/${material.file_url.trim()}`);
-                                return;
-                              }
                               if (isAudio && playUniversalAudio) {
                                 // Play audio in music player
                                 playUniversalAudio({
@@ -758,13 +752,7 @@ const CourseDetail: React.FC = () => {
                                 className="gap-2"
                               >
                                 {isAudio ? <Music className="w-4 h-4" /> : <BookOpen className="w-4 h-4" />}
-                                {actionableMaterials.length === 1
-                                  ? isScripturalBook
-                                    ? 'Öppna heliga boken'
-                                    : 'Sacred Material'
-                                  : isScripturalBook
-                                    ? material.title
-                                    : `Sacred Material: ${material.title}`}
+                                {actionableMaterials.length === 1 ? 'Sacred Material' : `Sacred Material: ${material.title}`}
                               </Button>
                             );
                           })}
