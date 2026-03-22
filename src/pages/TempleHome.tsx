@@ -102,6 +102,29 @@ const MODES = [
   { id: 'TEMPLE_LOCK', name: 'Temple Lock', intensity: 0.6, description: '24/7 Continuity: Keeps the house permanently locked.' },
 ];
 
+const CRYSTAL_STEPS = [
+  { id: 0, corner: 'North-West', label: 'First Crystal', instruction: 'Place a Clear Quartz crystal in the furthest North-West corner of your home. Point facing up or toward the center of the room.' },
+  { id: 1, corner: 'North-East', label: 'Second Crystal', instruction: 'Place the second Clear Quartz crystal in the furthest North-East corner. The crystal anchors the second node of the field boundary.' },
+  { id: 2, corner: 'South-East', label: 'Third Crystal', instruction: 'Place the third Clear Quartz crystal in the furthest South-East corner. Three corners now form a triangular energy field.' },
+  { id: 3, corner: 'South-West', label: 'Fourth Crystal', instruction: 'Place the final crystal in the furthest South-West corner. All four corners now form a sealed energetic square — the Temple perimeter.' },
+];
+
+const CRYSTAL_KEY = 'sh:crystal_setup_done';
+function loadCrystalDone(): boolean {
+  try {
+    return localStorage.getItem(CRYSTAL_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+function saveCrystalDone(): void {
+  try {
+    localStorage.setItem(CRYSTAL_KEY, '1');
+  } catch {
+    /* noop */
+  }
+}
+
 // ─── Residual Presets ─────────────────────────────────────────────────────────
 const RESIDUAL_PRESETS = [
   {
@@ -537,6 +560,149 @@ function LiveNadiScanner({ intensity, homeCoords, onSetHome }: {
   );
 }
 
+function CrystalSetupFlow({ onComplete }: { onComplete: () => void }) {
+  const [step, setStep] = useState(0);
+  const [confirmed, setConfirmed] = useState<Set<number>>(new Set());
+  const allDone = confirmed.size === CRYSTAL_STEPS.length;
+
+  const confirmStep = (idx: number) => {
+    setConfirmed((prev) => {
+      const n = new Set(prev);
+      n.add(idx);
+      return n;
+    });
+    if (idx < CRYSTAL_STEPS.length - 1) {
+      setTimeout(() => setStep(idx + 1), 500);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="text-center py-2">
+        <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-[#D4AF37]/50 mb-2">Crystal Grid Activation</div>
+        <p className="text-[11px] text-white/35 leading-relaxed max-w-xs mx-auto">
+          Place 4 Clear Quartz crystals in the four corners of your home to seal the Temple perimeter. Confirm each one as you place it.
+        </p>
+      </div>
+
+      <div className="flex justify-center gap-3 py-1">
+        {CRYSTAL_STEPS.map((s, i) => (
+          <div key={s.id} className="flex flex-col items-center gap-1">
+            <div
+              className="h-8 w-8 rounded-xl flex items-center justify-center transition-all duration-500"
+              style={{
+                background: confirmed.has(i) ? 'rgba(74,222,128,0.15)' : step === i ? 'rgba(212,175,55,0.12)' : 'rgba(255,255,255,0.03)',
+                border: confirmed.has(i) ? '1px solid rgba(74,222,128,0.4)' : step === i ? '1px solid rgba(212,175,55,0.35)' : '1px solid rgba(255,255,255,0.05)',
+              }}
+            >
+              {confirmed.has(i) ? (
+                <span className="text-emerald-400 text-sm">✓</span>
+              ) : (
+                <span className="text-[10px] font-black" style={{ color: step === i ? '#D4AF37' : 'rgba(255,255,255,0.2)' }}>
+                  {i + 1}
+                </span>
+              )}
+            </div>
+            <span
+              className="text-[7px] tracking-widest uppercase"
+              style={{ color: confirmed.has(i) ? 'rgba(74,222,128,0.6)' : step === i ? 'rgba(212,175,55,0.5)' : 'rgba(255,255,255,0.15)' }}
+            >
+              {s.corner.split('-')[0]}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={step}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.25 }}
+          className="rounded-[24px] p-5 space-y-3"
+          style={{ background: 'rgba(212,175,55,0.04)', border: '1px solid rgba(212,175,55,0.15)' }}
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className="h-10 w-10 rounded-[14px] flex items-center justify-center text-lg"
+              style={{ background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.25)' }}
+            >
+              💎
+            </div>
+            <div>
+              <div className="text-[8px] font-extrabold tracking-[0.4em] uppercase text-[#D4AF37]/50">Crystal {step + 1} of 4</div>
+              <div className="text-sm font-black text-white/80">{CRYSTAL_STEPS[step].label}</div>
+              <div className="text-[9px] font-bold tracking-widest uppercase text-[#D4AF37]/40">{CRYSTAL_STEPS[step].corner} Corner</div>
+            </div>
+          </div>
+          <p className="text-[12px] text-white/50 leading-relaxed">{CRYSTAL_STEPS[step].instruction}</p>
+          {!confirmed.has(step) ? (
+            <button
+              type="button"
+              onClick={() => confirmStep(step)}
+              className="w-full py-3 rounded-2xl text-[10px] font-extrabold tracking-[0.3em] uppercase transition-all hover:scale-[1.01]"
+              style={{
+                background: 'linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.08))',
+                border: '1px solid rgba(212,175,55,0.35)',
+                color: '#D4AF37',
+              }}
+            >
+              ✓ Crystal Placed — Confirm
+            </button>
+          ) : (
+            <div
+              className="w-full py-3 rounded-2xl text-[10px] font-extrabold tracking-[0.3em] uppercase text-center"
+              style={{ background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.3)', color: '#4ADE80' }}
+            >
+              ✓ Anchored
+            </div>
+          )}
+        </motion.div>
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {allDone && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="rounded-[24px] p-5 text-center space-y-3"
+            style={{ background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.25)' }}
+          >
+            <div className="text-2xl">🔮</div>
+            <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-emerald-400/70">Perimeter Sealed</div>
+            <p className="text-[11px] text-white/45 leading-relaxed">
+              All 4 crystal nodes confirmed. Your Temple Home perimeter is established. Now activate the Anchor to begin the 24/7 Phase-Lock.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                saveCrystalDone();
+                onComplete();
+              }}
+              className="w-full py-3.5 rounded-2xl text-[11px] font-extrabold tracking-[0.3em] uppercase text-black transition-all hover:scale-[1.01]"
+              style={{ background: 'linear-gradient(135deg,#4ADE80,#22C55E)', boxShadow: '0 0 20px rgba(74,222,128,0.3)' }}
+            >
+              Seal the Temple — Begin Activation
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <button
+        type="button"
+        onClick={() => {
+          saveCrystalDone();
+          onComplete();
+        }}
+        className="w-full text-center text-[9px] text-white/20 hover:text-white/40 tracking-[0.3em] uppercase transition-colors py-1"
+      >
+        Crystals already placed — skip setup
+      </button>
+    </div>
+  );
+}
+
 // ─── TempleHomeInner ──────────────────────────────────────────────────────────
 function TempleHomeInner() {
   const navigate = useNavigate();
@@ -557,6 +723,8 @@ function TempleHomeInner() {
   const [presetFlash, setPresetFlash] = useState<string | null>(null);
   const [showHydrationAlert, setShowHydrationAlert] = useState(false);
   const [selectedRxId, setSelectedRxId] = useState<string | null>(null);
+  const [crystalDone, setCrystalDone] = useState(() => loadCrystalDone());
+  const [showCrystalSetup, setShowCrystalSetup] = useState(false);
 
   const currentSite = SACRED_SITES.find(s => s.id === selectedSite)!;
   const activeMode = MODES.find(m => m.id === currentMode)!;
@@ -631,7 +799,15 @@ function TempleHomeInner() {
   const mauritiusSpark = selectedSite === 'mauritius' && auraIntensity > 50;
   const shirdiDhuni = selectedSite === 'shirdi' && auraIntensity > 30;
 
-  const handleAnchor = () => { setIsAnchored(true); setAnchorFlash(true); setTimeout(() => setAnchorFlash(false), 3000); };
+  const handleAnchor = () => {
+    if (!crystalDone) {
+      setShowCrystalSetup(true);
+      return;
+    }
+    setIsAnchored(true);
+    setAnchorFlash(true);
+    setTimeout(() => setAnchorFlash(false), 3000);
+  };
   const handleModeChange = (id: string) => { setCurrentMode(id); const m = MODES.find(x => x.id === id); if (m) setAuraIntensity(m.intensity * 100); };
 
   const CATS = ['MIRACLE-CLASS','GALACTIC','TEMPORAL','ANCIENT','SUPREME','EARTH'];
@@ -663,7 +839,32 @@ function TempleHomeInner() {
             <p className="text-[8px] tracking-[0.4em] uppercase text-white/30">{isSyncing ? 'Syncing…' : isAnchored ? '24/7 Phase-Lock Active' : 'Resonance Ready'}</p>
           </div>
         </div>
-        {isAnchored && (<div className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.2)' }}><Shield size={11} className="text-emerald-400 animate-pulse" /><span className="text-[8px] tracking-[0.3em] uppercase text-emerald-400/80">Locked</span></div>)}
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => setShowCrystalSetup(true)}
+            className="flex items-center gap-1 px-2 py-1 rounded-lg transition-all"
+            style={
+              crystalDone
+                ? { background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.2)' }
+                : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }
+            }
+          >
+            <span style={{ fontSize: 10 }}>💎</span>
+            <span
+              className="text-[7px] font-extrabold tracking-widest uppercase"
+              style={{ color: crystalDone ? 'rgba(212,175,55,0.7)' : 'rgba(255,255,255,0.25)' }}
+            >
+              {crystalDone ? 'Sealed' : 'Setup'}
+            </span>
+          </button>
+          {isAnchored && (
+            <div className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.2)' }}>
+              <Shield size={11} className="text-emerald-400 animate-pulse" />
+              <span className="text-[8px] tracking-[0.3em] uppercase text-emerald-400/80">Locked</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Tabs */}
@@ -713,6 +914,23 @@ function TempleHomeInner() {
         </GlassCard>
 
         {activeTab === 'PORTAL' && (<>
+          {!crystalDone && (
+            <button
+              type="button"
+              onClick={() => setShowCrystalSetup(true)}
+              className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all hover:scale-[1.01]"
+              style={{ background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.22)' }}
+            >
+              <span className="text-xl">💎</span>
+              <div className="flex-1 text-left">
+                <div className="text-[8px] font-extrabold tracking-[0.4em] uppercase text-[#D4AF37]/60 mb-0.5">Step 1 — Required Before Activation</div>
+                <div className="text-sm font-bold text-white/70">Crystal Grid Setup</div>
+                <div className="text-[10px] text-white/30">Place 4 Clear Quartz crystals to seal the Temple perimeter</div>
+              </div>
+              <ChevronRight size={16} className="text-[#D4AF37]/40" />
+            </button>
+          )}
+
           {/* Mode */}
           <GlassCard className="p-4">
             <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-[#D4AF37]/50 flex items-center gap-1.5 mb-3"><Zap size={9}/>Resonance Mode</div>
@@ -995,10 +1213,30 @@ function TempleHomeInner() {
         )}
 
         {/* Anchor */}
-        <button onClick={handleAnchor} className="w-full py-4 rounded-[24px] font-black text-[11px] tracking-[0.3em] uppercase text-black transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2.5"
-          style={{ background: isAnchored ? 'linear-gradient(135deg,#4ADE80,#22C55E)' : 'linear-gradient(135deg,#D4AF37,#F0C040,#D4AF37)', boxShadow: isAnchored ? '0 0 30px rgba(74,222,128,0.3)' : '0 0 30px rgba(212,175,55,0.3)' }}>
-          {isAnchored ? <Shield size={15}/> : <Home size={15}/>}
-          {isAnchored ? 'Temple Locked 24/7 — Phase-Lock Active' : 'Anchor Temple to House'}
+        <button
+          type="button"
+          onClick={handleAnchor}
+          className="w-full py-4 rounded-[24px] font-black text-[11px] tracking-[0.3em] uppercase transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2.5"
+          style={{
+            background: isAnchored
+              ? 'linear-gradient(135deg,#4ADE80,#22C55E)'
+              : crystalDone
+                ? 'linear-gradient(135deg,#D4AF37,#F0C040,#D4AF37)'
+                : 'rgba(212,175,55,0.25)',
+            boxShadow: isAnchored
+              ? '0 0 30px rgba(74,222,128,0.3)'
+              : crystalDone
+                ? '0 0 30px rgba(212,175,55,0.3)'
+                : 'none',
+            color: crystalDone ? '#000' : 'rgba(255,255,255,0.4)',
+          }}
+        >
+          {isAnchored ? <Shield size={15} /> : crystalDone ? <Home size={15} /> : <span style={{ fontSize: 14 }}>💎</span>}
+          {isAnchored
+            ? 'Temple Locked 24/7 — Phase-Lock Active'
+            : crystalDone
+              ? 'Anchor Temple to House'
+              : 'Complete Crystal Setup First'}
         </button>
       </div>
 
@@ -1071,6 +1309,55 @@ function TempleHomeInner() {
                 <div className="text-[11px] font-mono text-[#D4AF37]/50 tracking-wider">{infoSite.signature}</div>
               </div>
               <button onClick={() => setInfoSiteId(null)} className="w-full py-3.5 rounded-2xl text-[10px] font-extrabold tracking-[0.3em] uppercase transition-all hover:scale-[1.01]" style={{ background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.2)', color: '#D4AF37' }}>Return to Meditation</button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showCrystalSetup && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-end justify-center p-4"
+          >
+            <div
+              role="presentation"
+              className="absolute inset-0 bg-black/75"
+              style={{ backdropFilter: 'blur(12px)' }}
+              onClick={() => {
+                if (crystalDone) setShowCrystalSetup(false);
+              }}
+            />
+            <motion.div
+              initial={{ y: 50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 50, opacity: 0 }}
+              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+              className="relative w-full max-w-md rounded-[32px] p-6 max-h-[85vh] overflow-y-auto"
+              style={{
+                background: 'rgba(6,4,2,0.96)',
+                backdropFilter: 'blur(60px)',
+                border: '1px solid rgba(212,175,55,0.15)',
+              }}
+            >
+              <div className="w-8 h-1 rounded-full bg-white/10 mx-auto -mt-2 mb-4" />
+              {crystalDone && (
+                <button
+                  type="button"
+                  onClick={() => setShowCrystalSetup(false)}
+                  className="absolute top-5 right-5 p-1.5 rounded-xl hover:bg-white/5"
+                >
+                  <X size={16} className="text-white/30" />
+                </button>
+              )}
+              <CrystalSetupFlow
+                onComplete={() => {
+                  setCrystalDone(true);
+                  setShowCrystalSetup(false);
+                }}
+              />
             </motion.div>
           </motion.div>
         )}
