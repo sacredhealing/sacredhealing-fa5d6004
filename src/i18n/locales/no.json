@@ -457,10 +457,22 @@
       }
     },
     "adaptiveCta": {
-      "busy": { "button": "2-minutters reset", "message": "Rask reset." },
-      "heavy": { "button": "5-minutters trøst", "message": "Myk støtte når du trenger det." },
-      "calm": { "button": "Daglig reise", "message": "Praksisen din venter." },
-      "engaged": { "button": "Dypere økt", "message": "Gå dypere." }
+      "busy": {
+        "button": "2-minutters reset",
+        "message": "Rask reset."
+      },
+      "heavy": {
+        "button": "5-minutters trøst",
+        "message": "Myk støtte når du trenger det."
+      },
+      "calm": {
+        "button": "Daglig reise",
+        "message": "Praksisen din venter."
+      },
+      "engaged": {
+        "button": "Dypere økt",
+        "message": "Gå dypere."
+      }
     }
   },
   "pathDetail": {
@@ -497,26 +509,96 @@
         "title": "Indre fred-veien",
         "description": "En 21-dagers reise for å finne varig ro gjennom daglige øvelser fokusert på ro og stressavlastning.",
         "days": {
-          "1": { "title": "Finne stillhet", "description": "Begynn reisen din ved å koble til stillheten inni deg.", "affirmation": "Jeg er i fred med meg selv og verden rundt meg.", "journalPrompt": "Hva betyr indre fred for deg?" },
-          "2": { "title": "Pustevitenskap", "description": "Oppdag den beroligende kraften i bevisst pusting.", "affirmation": "Med hvert pust inviterer jeg ro og slipper uro.", "journalPrompt": "Hvordan påvirker pusten din emosjonelle tilstand?" },
-          "3": { "title": "Slippe spenning", "description": "Lær å frigjøre fysisk og mental spenning.", "affirmation": "Jeg slipper det som ikke lenger tjener meg med kjærlighet.", "journalPrompt": "Hvor holder du spenning i kroppen?" },
-          "4": { "title": "Nåværende øyeblikk", "description": "Finn fred i øyeblikk av stillhet og ensomhet.", "affirmation": "I stillhet finner jeg mitt sanne jeg.", "journalPrompt": "Hva oppstår når du sitter i stillhet?" },
-          "5": { "title": "Selvmedfølelse", "description": "Fred begynner med hvordan vi behandler oss selv. I dag dyrker vi dyp selvmedfølelse.", "affirmation": "Jeg er verdig kjærlighet og vennlighet. Jeg behandler meg selv med samme medfølelse jeg tilbyr andre.", "journalPrompt": "Hva ville du si til ditt yngre jeg?" },
-          "6": { "title": "Jordnær nærvær", "description": "Jord deg i det nåværende øyeblikket.", "affirmation": "Jeg er jordet, sentrert og trygg.", "journalPrompt": "Hva hjelper deg å føle deg jordet?" },
-          "7": { "title": "Fredelig integrasjon", "description": "Integrer læringene dine i hverdagen.", "affirmation": "Fred flyter gjennom meg i hvert øyeblikk.", "journalPrompt": "Hvordan vil du opprettholde fred i hverdagen?" }
+          "1": {
+            "title": "Finne stillhet",
+            "description": "Begynn reisen din ved å koble til stillheten inni deg.",
+            "affirmation": "Jeg er i fred med meg selv og verden rundt meg.",
+            "journalPrompt": "Hva betyr indre fred for deg?"
+          },
+          "2": {
+            "title": "Pustevitenskap",
+            "description": "Oppdag den beroligende kraften i bevisst pusting.",
+            "affirmation": "Med hvert pust inviterer jeg ro og slipper uro.",
+            "journalPrompt": "Hvordan påvirker pusten din emosjonelle tilstand?"
+          },
+          "3": {
+            "title": "Slippe spenning",
+            "description": "Lær å frigjøre fysisk og mental spenning.",
+            "affirmation": "Jeg slipper det som ikke lenger tjener meg med kjærlighet.",
+            "journalPrompt": "Hvor holder du spenning i kroppen?"
+          },
+          "4": {
+            "title": "Nåværende øyeblikk",
+            "description": "Finn fred i øyeblikk av stillhet og ensomhet.",
+            "affirmation": "I stillhet finner jeg mitt sanne jeg.",
+            "journalPrompt": "Hva oppstår når du sitter i stillhet?"
+          },
+          "5": {
+            "title": "Selvmedfølelse",
+            "description": "Fred begynner med hvordan vi behandler oss selv. I dag dyrker vi dyp selvmedfølelse.",
+            "affirmation": "Jeg er verdig kjærlighet og vennlighet. Jeg behandler meg selv med samme medfølelse jeg tilbyr andre.",
+            "journalPrompt": "Hva ville du si til ditt yngre jeg?"
+          },
+          "6": {
+            "title": "Jordnær nærvær",
+            "description": "Jord deg i det nåværende øyeblikket.",
+            "affirmation": "Jeg er jordet, sentrert og trygg.",
+            "journalPrompt": "Hva hjelper deg å føle deg jordet?"
+          },
+          "7": {
+            "title": "Fredelig integrasjon",
+            "description": "Integrer læringene dine i hverdagen.",
+            "affirmation": "Fred flyter gjennom meg i hvert øyeblikk.",
+            "journalPrompt": "Hvordan vil du opprettholde fred i hverdagen?"
+          }
         }
       },
       "inner_peace_7day": {
         "title": "Indre fred-veien",
         "description": "7-dagers reise for å finne stillhet og ro gjennom daglige øvelser.",
         "days": {
-          "1": { "title": "Finne stillhet", "description": "Begynn reisen din ved å koble til stillheten inni deg.", "affirmation": "Jeg er i fred med meg selv og verden rundt meg.", "journalPrompt": "Hva betyr indre fred for deg?" },
-          "2": { "title": "Fredens pust", "description": "Oppdag den beroligende kraften i bevisst pusting.", "affirmation": "Med hvert pust inviterer jeg ro og slipper uro.", "journalPrompt": "Hvordan påvirker pusten din emosjonelle tilstand?" },
-          "3": { "title": "Slippe spenning", "description": "Lær å frigjøre fysisk og mental spenning.", "affirmation": "Jeg slipper det som ikke lenger tjener meg med kjærlighet.", "journalPrompt": "Hvor holder du spenning i kroppen?" },
-          "4": { "title": "Omfavne stillhet", "description": "Finn fred i øyeblikk av stillhet og ensomhet.", "affirmation": "I stillhet finner jeg mitt sanne jeg.", "journalPrompt": "Hva oppstår når du sitter i stillhet?" },
-          "5": { "title": "Hjertets åpning", "description": "Åpne hjertet ditt for kjærlighet og medfølelse.", "affirmation": "Hjertet mitt er åpent for å gi og motta kjærlighet.", "journalPrompt": "Hva ville du si til ditt yngre jeg?" },
-          "6": { "title": "Jordnær nærvær", "description": "Jord deg i det nåværende øyeblikket.", "affirmation": "Jeg er jordet, sentrert og trygg.", "journalPrompt": "Hva hjelper deg å føle deg jordet?" },
-          "7": { "title": "Fredelig integrasjon", "description": "Integrer læringene dine i hverdagen.", "affirmation": "Fred flyter gjennom meg i hvert øyeblikk.", "journalPrompt": "Hvordan vil du opprettholde fred i hverdagen?" }
+          "1": {
+            "title": "Finne stillhet",
+            "description": "Begynn reisen din ved å koble til stillheten inni deg.",
+            "affirmation": "Jeg er i fred med meg selv og verden rundt meg.",
+            "journalPrompt": "Hva betyr indre fred for deg?"
+          },
+          "2": {
+            "title": "Fredens pust",
+            "description": "Oppdag den beroligende kraften i bevisst pusting.",
+            "affirmation": "Med hvert pust inviterer jeg ro og slipper uro.",
+            "journalPrompt": "Hvordan påvirker pusten din emosjonelle tilstand?"
+          },
+          "3": {
+            "title": "Slippe spenning",
+            "description": "Lær å frigjøre fysisk og mental spenning.",
+            "affirmation": "Jeg slipper det som ikke lenger tjener meg med kjærlighet.",
+            "journalPrompt": "Hvor holder du spenning i kroppen?"
+          },
+          "4": {
+            "title": "Omfavne stillhet",
+            "description": "Finn fred i øyeblikk av stillhet og ensomhet.",
+            "affirmation": "I stillhet finner jeg mitt sanne jeg.",
+            "journalPrompt": "Hva oppstår når du sitter i stillhet?"
+          },
+          "5": {
+            "title": "Hjertets åpning",
+            "description": "Åpne hjertet ditt for kjærlighet og medfølelse.",
+            "affirmation": "Hjertet mitt er åpent for å gi og motta kjærlighet.",
+            "journalPrompt": "Hva ville du si til ditt yngre jeg?"
+          },
+          "6": {
+            "title": "Jordnær nærvær",
+            "description": "Jord deg i det nåværende øyeblikket.",
+            "affirmation": "Jeg er jordet, sentrert og trygg.",
+            "journalPrompt": "Hva hjelper deg å føle deg jordet?"
+          },
+          "7": {
+            "title": "Fredelig integrasjon",
+            "description": "Integrer læringene dine i hverdagen.",
+            "affirmation": "Fred flyter gjennom meg i hvert øyeblikk.",
+            "journalPrompt": "Hvordan vil du opprettholde fred i hverdagen?"
+          }
         }
       },
       "deep_healing": {
@@ -828,17 +910,35 @@
     "hours": "timer"
   },
   "auth": {
-    "signIn": "Logg inn",
-    "signUp": "Registrer deg",
-    "email": "E-post",
+    "welcomeBack": "Velkommen tilbake, vakre sjel",
+    "beginJourney": "Start din helingsreise",
+    "yourName": "Ditt navn",
+    "emailAddress": "E-postadresse",
     "password": "Passord",
-    "forgotPassword": "Glemt passord?",
-    "fullName": "Fullt navn",
+    "signIn": "Logg inn",
     "createAccount": "Opprett konto",
-    "alreadyHaveAccount": "Har du allerede en konto?",
-    "noAccount": "Har du ikke en konto?",
     "orContinueWith": "eller fortsett med",
-    "referralBonus": "Du ble henvist! Du får 50 SHC-bonus ved registrering."
+    "connectPhantomWallet": "Koble til Phantom-lommebok",
+    "noAccount": "Har du ikke en konto?",
+    "haveAccount": "Har du allerede en konto?",
+    "signUp": "Registrer deg",
+    "missingFields": "Manglende felt",
+    "enterEmailPassword": "Vennligst skriv inn e-post og passord",
+    "signInFailed": "Pålogging mislyktes",
+    "welcomeBackMessage": "Du har logget inn",
+    "missingName": "Navn mangler",
+    "enterName": "Vennligst skriv inn navnet ditt",
+    "signUpFailed": "Registrering mislyktes",
+    "welcomeReferral": "Du har mottatt 50 SHC velkomstbonus! Referenten din fikk 100 SHC også!",
+    "welcomeBonus": "Du har mottatt 50 SHC som velkomstbonus!",
+    "youveBeenInvited": "Du er blitt invitert!",
+    "signUpBonus": "Registrer deg nå og få 50 SHC bonus",
+    "walletConnected": "Lommebok tilkoblet",
+    "createAccountFirst": "Vennligst opprett også en konto for å bruke appen",
+    "error": "Feil",
+    "somethingWrong": "Noe gikk galt. Prøv igjen.",
+    "resetEmailTitle": "Sjekk e-posten din",
+    "resetEmailDescription": "En lenke for å tilbakestille passordet er sendt til e-posten din."
   },
   "admin": {
     "title": "Adminpanel",
@@ -1289,37 +1389,6 @@
     "continuePayment": "Fortsett til betaling",
     "signInRequired": "Logg inn for å bestille meditasjonen din"
   },
-  "auth": {
-    "welcomeBack": "Velkommen tilbake, vakre sjel",
-    "beginJourney": "Start din helingsreise",
-    "yourName": "Ditt navn",
-    "emailAddress": "E-postadresse",
-    "password": "Passord",
-    "signIn": "Logg inn",
-    "createAccount": "Opprett konto",
-    "orContinueWith": "eller fortsett med",
-    "connectPhantomWallet": "Koble til Phantom-lommebok",
-    "noAccount": "Har du ikke en konto?",
-    "haveAccount": "Har du allerede en konto?",
-    "signUp": "Registrer deg",
-    "missingFields": "Manglende felt",
-    "enterEmailPassword": "Vennligst skriv inn e-post og passord",
-    "signInFailed": "Pålogging mislyktes",
-    "welcomeBackMessage": "Du har logget inn",
-    "missingName": "Navn mangler",
-    "enterName": "Vennligst skriv inn navnet ditt",
-    "signUpFailed": "Registrering mislyktes",
-    "welcomeReferral": "Du har mottatt 50 SHC velkomstbonus! Referenten din fikk 100 SHC også!",
-    "welcomeBonus": "Du har mottatt 50 SHC som velkomstbonus!",
-    "youveBeenInvited": "Du er blitt invitert!",
-    "signUpBonus": "Registrer deg nå og få 50 SHC bonus",
-    "walletConnected": "Lommebok tilkoblet",
-    "createAccountFirst": "Vennligst opprett også en konto for å bruke appen",
-    "error": "Feil",
-    "somethingWrong": "Noe gikk galt. Prøv igjen.",
-    "resetEmailTitle": "Sjekk e-posten din",
-    "resetEmailDescription": "En lenke for å tilbakestille passordet er sendt til e-posten din."
-  },
   "breathing": {
     "title": "Pusteøvelser",
     "subtitle": "Ro & energi",
@@ -1527,7 +1596,7 @@
     "intent": {
       "calm": "Ro sinnet",
       "calmDesc": "Reduser stress og angst",
-"heal": "Myk hjertet",
+      "heal": "Myk hjertet",
       "healDesc": "Frigjør, nære og gjenopprett",
       "energy": "Øk min energi",
       "energyDesc": "Motivasjon og kraft",
@@ -1574,9 +1643,6 @@
     "all": "Alle",
     "healing": "Healing",
     "meditation": "Meditasjon",
-    "music": "Musikk",
-    "courses": "Kurs",
-    "community": "Fellesskap",
     "yourProgress": "Din fremgang",
     "totalListeningTime": "Total lyttetid",
     "meditationsCompleted": "Meditasjoner fullført",
@@ -1945,5 +2011,153 @@
     "abundancePromote": "Promoter & tjen",
     "abundanceConnect": "Koble lommebok",
     "abundanceAdmin": "Adminpanel"
+  },
+  "converge": {
+    "headerMicro": "◈ Hellig felt",
+    "title": "Konvergens",
+    "tagline": "Hver portal. Hvert verktøy. Hver dimensjon.",
+    "secSiddhaPortal": "◈ Siddha-portalen",
+    "secPranic": "◈ Prāṇisk pust",
+    "secExploreAkasha": "◈ Utforsk Akasha",
+    "secSacredTools": "◈ Hellige verktøy",
+    "secVedic": "◈ Vedisk visdom",
+    "secAbundance": "◈ Overflod & skapelse",
+    "secVideos": "◈ Videoer · Hellig kanal",
+    "secDeepen": "◈ Fordyp praksisen",
+    "secConnect": "◈ Koble til",
+    "badgeActive": "Aktiv",
+    "badgeSecret": "Hemmelig",
+    "badgePremium": "Premium",
+    "badgeLive": "Live",
+    "siddhaPortalTitle": "Siddha-portalen",
+    "siddhaPortalSub": "18 mestere · Nāḍī-orakel · Kvantefelt",
+    "price45mo": "45€/mnd",
+    "siddhaEnter": "Gå inn i portalen →",
+    "siddhaUnlock": "Lås opp Siddha-Quantum for å gå inn →",
+    "tile18Masters": "18\nMestere",
+    "tileNadiOracle": "Nāḍī-\norakel",
+    "tileYantraShield": "Yantra-\nskold",
+    "tileQuantumField": "Kvante-\nfelt",
+    "pranicTitle": "Prāṇisk pust",
+    "pranicSub": "Gammel Siddha-pustevitenskap",
+    "pranicTileKumbhaka": "Kumbhaka\nprāṇāyāma",
+    "pranicTileNadi": "Nāḍī\nśodhana",
+    "pranicTileAgni": "Agni\nprāṇa",
+    "pranicBody": "Aktiver livskraft gjennom Siddha-pust. Kumbhaka, Nāḍī-rensing og Agni-vekking.",
+    "beginPractice": "Start praksis →",
+    "akashaCardTitle": "Utforsk Akasha",
+    "akashaCardSub": "Visdomsarkivet",
+    "akashaTileDivine": "Guddommelige\ntransmisjoner",
+    "akashaTileOracle": "Orakel-\nsamtaler",
+    "akashaTileSeries": "Hellige\nserier",
+    "akashaBody": "Tidløse lærdommer, dypere transmisjoner og hellige frekvenssamtaler. Engelsk og svensk lyd.",
+    "enterArchive": "Gå inn i arkivet →",
+    "toolQuantumTitle": "Quantum-\napotek",
+    "toolQuantumSub": "Siddha-bioresonansplattform",
+    "toolVirtualTitle": "Virtuell\npilegrimsferd",
+    "toolVirtualSub": "Anker for hellig sted-resonans",
+    "toolDecoderTitle": "Akashisk dekoder",
+    "toolDecoderSub": "15-siders sjelsskrift-transmisjon",
+    "toolDecoderBody": "Lås opp din personlige transmisjon — tidligere liv, dharma-kontrakter og sjelens formål via Akasha-feltet.",
+    "toolDecoderCta": "Be om din lesning →",
+    "toolVayuTitle": "Vayu-\nprotokoll",
+    "toolVayuSub": "Gylden torus · Safir-ikosaeder",
+    "toolYantraTitle": "Sri Yantra-\nskold",
+    "toolYantraSub": "Kvantefluks · GLOBALT",
+    "toolPalmTitle": "Håndflate & Akashisk orakel",
+    "toolPalmSub": "Håndlinjer → Akashisk dom",
+    "vedicOracleTitle": "Vedisk orakel",
+    "vedicOracleSub": "Jyotish · Dasha · Hora · Akashiske arkiver",
+    "vedicSampleLine": "Merkur dasha aktiv. Venus hora — gunstig for kreative og relasjonelle grep denne uken.",
+    "vedicOpenReading": "Åpne full lesning →",
+    "wisdomAyurveda": "Ayurveda",
+    "wisdomAyurvedaSub": "Vata-Pitta · Daglig veiledning",
+    "wisdomVastu": "Vastu",
+    "wisdomVastuSub": "Overflodens arkitekt",
+    "wisdomMantras": "Mantraer",
+    "wisdomMantrasSub": "Helligt lydbibliotek",
+    "wisdomGita": "Bhagavad Gita",
+    "wisdomGitaSub": "Dagens vers · Planetarisk transit",
+    "abundanceTitle": "Overflod",
+    "abundanceSub": "Indre rikdom & livsstøtte",
+    "abundanceBody": "Rikdomsbevissthet, velstandsaktivering og økonomisk klargjøring — i tråd med Vedisk diagram og dharmavei.",
+    "abundanceBadge1": "Velstandskoder",
+    "abundanceBadge2": "Pengeblokkeringer",
+    "abundanceBadge3": "Lakshmi-sadhana",
+    "creativeSoulTitle": "Creative Soul",
+    "creativeSoulSub": "Skap med AI · Hellig kunst",
+    "healingClothesTitle": "Helbredende\nklær",
+    "healingClothesSub": "Lailas hellige kolleksjon",
+    "videoWatchEarn": "Se & tjen 100 SHC",
+    "videoShcBonus": "+100 SHC",
+    "allVideos": "Alle videoer →",
+    "videoFooter": "Se & tjen 100 SHC per video",
+    "deepenAvataric": "Avatariske innvielsesstier",
+    "deepenAvataricSub": "Fordyp praksisen",
+    "deepenMentorship": "Siddha-Quantum mentorprogram",
+    "deepenMentorshipSub": "6-måneders program",
+    "deepenNeural": "1-mot-1 Neural-Sync",
+    "deepenNeuralSub": "1-mot-1 med Adam eller Laila",
+    "deepenAetheric": "Eteriske kodeharmonikker",
+    "deepenAethericSub": "Personlig tilpasset",
+    "deepenCert": "Lineage Guardian-sertifisering",
+    "deepenCertSub": "Bli sertifisert på 12 måneder",
+    "connectStargate": "Stargate",
+    "connectStargateSub": "Suveren tilgang · Ukentlige liveøkter",
+    "connectSangha": "Divine Sangha Nexus",
+    "connectSanghaSub": "Koble til guider og medlemmer",
+    "connectPodcast": "Vedisk-frekvens sendinger",
+    "connectPodcastSub": "Strømmer på Spotify",
+    "connectLeaderboard": "Dharma-stigning",
+    "connectLeaderboardSub": "Topp tjenere vinner hver måned",
+    "connectAffiliate": "Biofelt-ekspansjon",
+    "connectAffiliateSub": "30 % affiliate-provisjon",
+    "badgeSwedish": "Svensk",
+    "badge5kShc": "5 000 SHC",
+    "badge30pct": "30 %"
+  },
+  "exploreAkasha": {
+    "back": "Tilbake",
+    "headerMicro": "◈ Utforsk Akasha",
+    "title": "Visdomsarkivet",
+    "subtitle": "Tidløse lærdommer, dypere transmisjoner, hellige frekvenssamtaler",
+    "archivePreparing": "Arkivet forberedes...",
+    "free": "GRATIS",
+    "audioEnglishOnly": "(Kun engelsk)",
+    "audioSwedishOnly": "(Kun svensk)",
+    "langEn": "🇬🇧 Engelsk",
+    "langSv": "🇸🇪 Svensk",
+    "cat_divine_transmissions": "Guddommelige transmisjoner",
+    "cat_oracle_talks": "Orakelsamtaler",
+    "cat_nadi_series": "Serien De 7 Nāḍīene",
+    "cat_frequency_teachings": "Frekvenslærdommer",
+    "cat_siddha_wisdom": "Siddha-visdom",
+    "cat_kundalini_talks": "Kundalini-samtaler"
+  },
+  "exploreFrequencies": {
+    "rishiLabel": "Rishi-anbefaling",
+    "venusBathTitle": "Venus lydbad",
+    "venusBathSub": "Dagens linje favoriserer overflod og kreativ flyt.",
+    "playNow": "Spill nå",
+    "gitaHeader": "Herrens sang (Gita)",
+    "gitaTapPreview": "Trykk for å lese dagens vers · Kapittel {{chapter}}, vers {{verse}}",
+    "gitaChapterVerse": "Kapittel {{chapter}}, vers {{verse}}",
+    "rishiInsightPrefix": "Rishi-innsikt:",
+    "rishiInsightBody": "Dette verset stemmer med din {{mahadasha}}-transitt og gir den mentale frekvensen som trengs for å forvandle dagens karmiske last.",
+    "exploreFrequenciesTitle": "Utforsk frekvenser",
+    "catDeepFocus": "Dyp fokus",
+    "catDeepFocusFreq": "432 Hz",
+    "catDeepFocusDesc": "Klarhet & visdom",
+    "catHeart": "Hjerteåpning",
+    "catHeartFreq": "528 Hz",
+    "catHeartDesc": "Kjærlighet & reparasjon",
+    "catAstral": "Astral reise",
+    "catAstralFreq": "963 Hz",
+    "catAstralDesc": "Guddommelig kontakt",
+    "catPhysical": "Fysisk helbredelse",
+    "catPhysicalFreq": "174 Hz",
+    "catPhysicalDesc": "Smertelindring",
+    "communityQuote": "Å bli med i sirkelen forsterker resonansen.",
+    "openCommunity": "Åpne fellesskap"
   }
 }

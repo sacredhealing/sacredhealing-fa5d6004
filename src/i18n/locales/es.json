@@ -121,7 +121,7 @@
     "howItWorks": "Cómo funciona la sanación sagrada",
     "bookPrivate": "Reservar sesión privada",
     "privateDesc": "Sesiones transformadoras 1-a-1 con Adam o Laila.",
-    "dailySessions": "Sesiones de sanación diarias",
+    "dailySessions": "Sesiones guiadas diarias",
     "dailyDesc": "Meditaciones guiadas y transmisiones de energía para alinear tus chakras.",
     "frequencyHealing": "Sanación por frecuencia",
     "frequencyDesc": "Pistas de audio especiales infundidas con frecuencias de sanación.",
@@ -136,7 +136,6 @@
     "thirtyDays": "30 días",
     "fullAccess": "Acceso completo por 30 días",
     "allTracks": "Todas las pistas de audio de sanación",
-    "dailySessions": "Sesiones guiadas diarias",
     "noCommitment": "Sin compromiso",
     "startJourney": "Comienza tu viaje",
     "monthlyHealing": "Sanación mensual",
@@ -608,10 +607,22 @@
       }
     },
     "adaptiveCta": {
-      "busy": { "button": "Reset de 2 minutos", "message": "Un reset rápido." },
-      "heavy": { "button": "5 minutos de confort", "message": "Apoyo suave cuando lo necesitas." },
-      "calm": { "button": "Viaje diario", "message": "Tu práctica te espera." },
-      "engaged": { "button": "Sesión más profunda", "message": "Ve más profundo." }
+      "busy": {
+        "button": "Reset de 2 minutos",
+        "message": "Un reset rápido."
+      },
+      "heavy": {
+        "button": "5 minutos de confort",
+        "message": "Apoyo suave cuando lo necesitas."
+      },
+      "calm": {
+        "button": "Viaje diario",
+        "message": "Tu práctica te espera."
+      },
+      "engaged": {
+        "button": "Sesión más profunda",
+        "message": "Ve más profundo."
+      }
     }
   },
   "pathDetail": {
@@ -648,26 +659,96 @@
         "title": "Camino de paz interior",
         "description": "Un viaje de 21 días para encontrar tranquilidad duradera a través de prácticas diarias centradas en la calma y el alivio del estrés.",
         "days": {
-          "1": { "title": "Encontrar la quietud", "description": "Comienza tu viaje conectando con la quietud interior.", "affirmation": "Estoy en paz conmigo mismo y el mundo que me rodea.", "journalPrompt": "¿Qué significa para ti la paz interior?" },
-          "2": { "title": "Conciencia de la respiración", "description": "Descubre el poder calmante de la respiración consciente.", "affirmation": "Con cada respiración, invito la calma y libero la preocupación.", "journalPrompt": "¿Cómo afecta tu respiración tu estado emocional?" },
-          "3": { "title": "Soltar la tensión", "description": "Aprende a liberar la tensión física y mental.", "affirmation": "Libero con amor lo que ya no me sirve.", "journalPrompt": "¿Dónde guardas tensión en tu cuerpo?" },
-          "4": { "title": "Momento presente", "description": "Encuentra paz en momentos de silencio y soledad.", "affirmation": "En el silencio encuentro mi verdadero yo.", "journalPrompt": "¿Qué surge cuando te sientas en silencio?" },
-          "5": { "title": "Autocompasión", "description": "La paz comienza con cómo nos tratamos a nosotros mismos. Hoy cultivamos profunda autocompasión.", "affirmation": "Merezco amor y amabilidad. Me trato con la misma compasión que ofrezco a otros.", "journalPrompt": "¿Qué le dirías a tu yo más joven?" },
-          "6": { "title": "Presencia enraizada", "description": "Enraízate en el momento presente.", "affirmation": "Estoy enraizado, centrado y seguro.", "journalPrompt": "¿Qué te ayuda a sentirte enraizado?" },
-          "7": { "title": "Integración pacífica", "description": "Integra tus aprendizajes en la vida diaria.", "affirmation": "La paz fluye a través de mí en cada momento.", "journalPrompt": "¿Cómo mantendrás la paz en la vida diaria?" }
+          "1": {
+            "title": "Encontrar la quietud",
+            "description": "Comienza tu viaje conectando con la quietud interior.",
+            "affirmation": "Estoy en paz conmigo mismo y el mundo que me rodea.",
+            "journalPrompt": "¿Qué significa para ti la paz interior?"
+          },
+          "2": {
+            "title": "Conciencia de la respiración",
+            "description": "Descubre el poder calmante de la respiración consciente.",
+            "affirmation": "Con cada respiración, invito la calma y libero la preocupación.",
+            "journalPrompt": "¿Cómo afecta tu respiración tu estado emocional?"
+          },
+          "3": {
+            "title": "Soltar la tensión",
+            "description": "Aprende a liberar la tensión física y mental.",
+            "affirmation": "Libero con amor lo que ya no me sirve.",
+            "journalPrompt": "¿Dónde guardas tensión en tu cuerpo?"
+          },
+          "4": {
+            "title": "Momento presente",
+            "description": "Encuentra paz en momentos de silencio y soledad.",
+            "affirmation": "En el silencio encuentro mi verdadero yo.",
+            "journalPrompt": "¿Qué surge cuando te sientas en silencio?"
+          },
+          "5": {
+            "title": "Autocompasión",
+            "description": "La paz comienza con cómo nos tratamos a nosotros mismos. Hoy cultivamos profunda autocompasión.",
+            "affirmation": "Merezco amor y amabilidad. Me trato con la misma compasión que ofrezco a otros.",
+            "journalPrompt": "¿Qué le dirías a tu yo más joven?"
+          },
+          "6": {
+            "title": "Presencia enraizada",
+            "description": "Enraízate en el momento presente.",
+            "affirmation": "Estoy enraizado, centrado y seguro.",
+            "journalPrompt": "¿Qué te ayuda a sentirte enraizado?"
+          },
+          "7": {
+            "title": "Integración pacífica",
+            "description": "Integra tus aprendizajes en la vida diaria.",
+            "affirmation": "La paz fluye a través de mí en cada momento.",
+            "journalPrompt": "¿Cómo mantendrás la paz en la vida diaria?"
+          }
         }
       },
       "inner_peace_7day": {
         "title": "Camino de paz interior",
         "description": "Viaje de 7 días para encontrar quietud y calma a través de prácticas diarias.",
         "days": {
-          "1": { "title": "Encontrar la quietud", "description": "Comienza tu viaje conectando con la quietud interior.", "affirmation": "Estoy en paz conmigo mismo y el mundo que me rodea.", "journalPrompt": "¿Qué significa para ti la paz interior?" },
-          "2": { "title": "Aliento de paz", "description": "Descubre el poder calmante de la respiración consciente.", "affirmation": "Con cada respiración, invito la calma y libero la preocupación.", "journalPrompt": "¿Cómo afecta tu respiración tu estado emocional?" },
-          "3": { "title": "Soltar la tensión", "description": "Aprende a liberar la tensión física y mental.", "affirmation": "Libero con amor lo que ya no me sirve.", "journalPrompt": "¿Dónde guardas tensión en tu cuerpo?" },
-          "4": { "title": "Abrazar el silencio", "description": "Encuentra paz en momentos de silencio y soledad.", "affirmation": "En el silencio encuentro mi verdadero yo.", "journalPrompt": "¿Qué surge cuando te sientas en silencio?" },
-          "5": { "title": "Apertura del corazón", "description": "Abre tu corazón al amor y la compasión.", "affirmation": "Mi corazón está abierto para dar y recibir amor.", "journalPrompt": "¿Qué le dirías a tu yo más joven?" },
-          "6": { "title": "Presencia enraizada", "description": "Enraízate en el momento presente.", "affirmation": "Estoy enraizado, centrado y seguro.", "journalPrompt": "¿Qué te ayuda a sentirte enraizado?" },
-          "7": { "title": "Integración pacífica", "description": "Integra tus aprendizajes en la vida diaria.", "affirmation": "La paz fluye a través de mí en cada momento.", "journalPrompt": "¿Cómo mantendrás la paz en la vida diaria?" }
+          "1": {
+            "title": "Encontrar la quietud",
+            "description": "Comienza tu viaje conectando con la quietud interior.",
+            "affirmation": "Estoy en paz conmigo mismo y el mundo que me rodea.",
+            "journalPrompt": "¿Qué significa para ti la paz interior?"
+          },
+          "2": {
+            "title": "Aliento de paz",
+            "description": "Descubre el poder calmante de la respiración consciente.",
+            "affirmation": "Con cada respiración, invito la calma y libero la preocupación.",
+            "journalPrompt": "¿Cómo afecta tu respiración tu estado emocional?"
+          },
+          "3": {
+            "title": "Soltar la tensión",
+            "description": "Aprende a liberar la tensión física y mental.",
+            "affirmation": "Libero con amor lo que ya no me sirve.",
+            "journalPrompt": "¿Dónde guardas tensión en tu cuerpo?"
+          },
+          "4": {
+            "title": "Abrazar el silencio",
+            "description": "Encuentra paz en momentos de silencio y soledad.",
+            "affirmation": "En el silencio encuentro mi verdadero yo.",
+            "journalPrompt": "¿Qué surge cuando te sientas en silencio?"
+          },
+          "5": {
+            "title": "Apertura del corazón",
+            "description": "Abre tu corazón al amor y la compasión.",
+            "affirmation": "Mi corazón está abierto para dar y recibir amor.",
+            "journalPrompt": "¿Qué le dirías a tu yo más joven?"
+          },
+          "6": {
+            "title": "Presencia enraizada",
+            "description": "Enraízate en el momento presente.",
+            "affirmation": "Estoy enraizado, centrado y seguro.",
+            "journalPrompt": "¿Qué te ayuda a sentirte enraizado?"
+          },
+          "7": {
+            "title": "Integración pacífica",
+            "description": "Integra tus aprendizajes en la vida diaria.",
+            "affirmation": "La paz fluye a través de mí en cada momento.",
+            "journalPrompt": "¿Cómo mantendrás la paz en la vida diaria?"
+          }
         }
       },
       "deep_healing": {
@@ -1615,7 +1696,7 @@
     "intent": {
       "calm": "Calmar mi mente",
       "calmDesc": "Reduce el estrés y la ansiedad",
-"heal": "Suaviza el corazón",
+      "heal": "Suaviza el corazón",
       "healDesc": "Libera, nutre y restaura",
       "energy": "Aumentar mi energía",
       "energyDesc": "Motivación y poder",
@@ -1663,9 +1744,6 @@
     "all": "Todos",
     "healing": "Sanación",
     "meditation": "Meditación",
-    "music": "Música",
-    "courses": "Cursos",
-    "community": "Comunidad",
     "yourProgress": "Tu Progreso",
     "totalListeningTime": "Tiempo Total de Escucha",
     "meditationsCompleted": "Meditaciones Completadas",
@@ -2033,5 +2111,153 @@
     "abundancePromote": "Promocionar y ganar",
     "abundanceConnect": "Conectar cartera",
     "abundanceAdmin": "Panel de administración"
+  },
+  "converge": {
+    "headerMicro": "◈ Campo sagrado",
+    "title": "Convergencia",
+    "tagline": "Cada portal. Cada herramienta. Cada dimensión.",
+    "secSiddhaPortal": "◈ Portal Siddha",
+    "secPranic": "◈ Respiración prāṇica",
+    "secExploreAkasha": "◈ Explorar Akasha",
+    "secSacredTools": "◈ Herramientas sagradas",
+    "secVedic": "◈ Sabiduría védica",
+    "secAbundance": "◈ Abundancia y creación",
+    "secVideos": "◈ Videos · Canal sagrado",
+    "secDeepen": "◈ Profundiza tu práctica",
+    "secConnect": "◈ Conectar",
+    "badgeActive": "Activo",
+    "badgeSecret": "Secreto",
+    "badgePremium": "Premium",
+    "badgeLive": "En vivo",
+    "siddhaPortalTitle": "Portal Siddha",
+    "siddhaPortalSub": "18 Maestros · Oráculo Nāḍī · Campo cuántico",
+    "price45mo": "45€/mes",
+    "siddhaEnter": "Entrar al portal →",
+    "siddhaUnlock": "Desbloquea Siddha-Quantum para entrar →",
+    "tile18Masters": "18\nMaestros",
+    "tileNadiOracle": "Oráculo\nNāḍī",
+    "tileYantraShield": "Escudo\nYantra",
+    "tileQuantumField": "Campo\ncuántico",
+    "pranicTitle": "Respiración prāṇica",
+    "pranicSub": "Ciencia ancestral del aliento Siddha",
+    "pranicTileKumbhaka": "Kumbhaka\nprāṇāyāma",
+    "pranicTileNadi": "Nāḍī\nśodhana",
+    "pranicTileAgni": "Agni\nprāṇa",
+    "pranicBody": "Activa la fuerza vital con la ciencia del aliento Siddha. Retención kumbhaka, purificación Nāḍī y despertar de Agni.",
+    "beginPractice": "Comenzar práctica →",
+    "akashaCardTitle": "Explorar Akasha",
+    "akashaCardSub": "El archivo de sabiduría",
+    "akashaTileDivine": "Transmisiones\ndivinas",
+    "akashaTileOracle": "Charlas del\noráculo",
+    "akashaTileSeries": "Series\nsagradas",
+    "akashaBody": "Enseñanzas atemporales, transmisiones profundas y charlas de frecuencia sagrada. Audio en inglés y sueco.",
+    "enterArchive": "Entrar al archivo →",
+    "toolQuantumTitle": "Quantum\nApothecary",
+    "toolQuantumSub": "Plataforma de biorresonancia Siddha",
+    "toolVirtualTitle": "Peregrinación\nvirtual",
+    "toolVirtualSub": "Ancla de resonancia de sitios sagrados",
+    "toolDecoderTitle": "Decodificador akáshico",
+    "toolDecoderSub": "Transmisión manuscrita del alma (15 páginas)",
+    "toolDecoderBody": "Desbloquea tu transmisión personal — vidas pasadas, contratos de dharma y propósito del alma vía el campo akáshico.",
+    "toolDecoderCta": "Solicitar tu lectura →",
+    "toolVayuTitle": "Protocolo\nVayu",
+    "toolVayuSub": "Toro dorado · Icosaedro zafiro",
+    "toolYantraTitle": "Escudo Sri Yantra",
+    "toolYantraSub": "Flujo cuántico · GLOBAL",
+    "toolPalmTitle": "Oráculo de palma y Akasha",
+    "toolPalmSub": "Líneas de la mano → veredicto akáshico",
+    "vedicOracleTitle": "Oráculo védico",
+    "vedicOracleSub": "Jyotish · Dasha · Hora · Registros akáshicos",
+    "vedicSampleLine": "Dasha de Mercurio activa. Hora de Venus — propicia para emprendimientos creativos y relacionales esta semana.",
+    "vedicOpenReading": "Abrir lectura completa →",
+    "wisdomAyurveda": "Ayurveda",
+    "wisdomAyurvedaSub": "Vata-Pitta · Guía diaria",
+    "wisdomVastu": "Vastu",
+    "wisdomVastuSub": "Arquitecto de la abundancia",
+    "wisdomMantras": "Mantras",
+    "wisdomMantrasSub": "Biblioteca de sonido sagrado",
+    "wisdomGita": "Bhagavad Gita",
+    "wisdomGitaSub": "Verso del día · Tránsito planetario",
+    "abundanceTitle": "Abundancia",
+    "abundanceSub": "Riqueza interior y sistema de apoyo vital",
+    "abundanceBody": "Conciencia de riqueza, activación de prosperidad y liberación financiera — alineado con tu carta védica y camino de dharma.",
+    "abundanceBadge1": "Códigos de prosperidad",
+    "abundanceBadge2": "Bloqueos con el dinero",
+    "abundanceBadge3": "Sadhana de Lakshmi",
+    "creativeSoulTitle": "Creative Soul",
+    "creativeSoulSub": "Crea con IA · Arte sagrado",
+    "healingClothesTitle": "Ropa de\nsanación",
+    "healingClothesSub": "Colección sagrada de Laila",
+    "videoWatchEarn": "Mira y gana 100 SHC",
+    "videoShcBonus": "+100 SHC",
+    "allVideos": "Todos los videos →",
+    "videoFooter": "Mira y gana 100 SHC por video",
+    "deepenAvataric": "Caminos de iniciación avatarica",
+    "deepenAvataricSub": "Profundiza tu práctica",
+    "deepenMentorship": "Mentoría Siddha-Quantum",
+    "deepenMentorshipSub": "Programa de 6 meses",
+    "deepenNeural": "Neural-Sync 1 a 1",
+    "deepenNeuralSub": "1 a 1 con Adam o Laila",
+    "deepenAetheric": "Armónicos de código etérico",
+    "deepenAethericSub": "Personalizado para ti",
+    "deepenCert": "Certificación Lineage Guardian",
+    "deepenCertSub": "Certifícate en 12 meses",
+    "connectStargate": "Stargate",
+    "connectStargateSub": "Acceso soberano · Sesiones en vivo semanales",
+    "connectSangha": "Divine Sangha Nexus",
+    "connectSanghaSub": "Conecta con guías y miembros",
+    "connectPodcast": "Emisiones frecuencia védica",
+    "connectPodcastSub": "En Spotify",
+    "connectLeaderboard": "Ascenso del dharma",
+    "connectLeaderboardSub": "Los mejores ganan cada mes",
+    "connectAffiliate": "Expansión del biocampo",
+    "connectAffiliateSub": "30 % de comisión de afiliado",
+    "badgeSwedish": "Sueco",
+    "badge5kShc": "5.000 SHC",
+    "badge30pct": "30 %"
+  },
+  "exploreAkasha": {
+    "back": "Volver",
+    "headerMicro": "◈ Explorar Akasha",
+    "title": "Archivo de sabiduría",
+    "subtitle": "Enseñanzas atemporales, transmisiones profundas, charlas de frecuencia sagrada",
+    "archivePreparing": "El archivo se está preparando...",
+    "free": "GRATIS",
+    "audioEnglishOnly": "(Solo inglés)",
+    "audioSwedishOnly": "(Solo sueco)",
+    "langEn": "🇬🇧 Inglés",
+    "langSv": "🇸🇪 Sueco",
+    "cat_divine_transmissions": "Transmisiones divinas",
+    "cat_oracle_talks": "Charlas del oráculo",
+    "cat_nadi_series": "La serie de los 7 Nāḍī",
+    "cat_frequency_teachings": "Enseñanzas de frecuencia",
+    "cat_siddha_wisdom": "Sabiduría Siddha",
+    "cat_kundalini_talks": "Charlas de kundalini"
+  },
+  "exploreFrequencies": {
+    "rishiLabel": "Recomendación del Rishi",
+    "venusBathTitle": "Baño de sonido de Venus",
+    "venusBathSub": "La alineación de hoy favorece la abundancia y el flujo creativo.",
+    "playNow": "Reproducir ahora",
+    "gitaHeader": "El canto del Señor (Gita)",
+    "gitaTapPreview": "Toca para leer el verso de hoy · Capítulo {{chapter}}, verso {{verse}}",
+    "gitaChapterVerse": "Capítulo {{chapter}}, verso {{verse}}",
+    "rishiInsightPrefix": "Visión del Rishi:",
+    "rishiInsightBody": "Este verso se alinea con tu tránsito de {{mahadasha}}, aportando la frecuencia mental necesaria para transmutar la carga kármica de hoy.",
+    "exploreFrequenciesTitle": "Explorar frecuencias",
+    "catDeepFocus": "Enfoque profundo",
+    "catDeepFocusFreq": "432 Hz",
+    "catDeepFocusDesc": "Claridad y sabiduría",
+    "catHeart": "Apertura del corazón",
+    "catHeartFreq": "528 Hz",
+    "catHeartDesc": "Amor y reparación",
+    "catAstral": "Viaje astral",
+    "catAstralFreq": "963 Hz",
+    "catAstralDesc": "Conexión divina",
+    "catPhysical": "Sanación física",
+    "catPhysicalFreq": "174 Hz",
+    "catPhysicalDesc": "Alivio del dolor",
+    "communityQuote": "Unirse al círculo potencia la resonancia.",
+    "openCommunity": "Abrir comunidad"
   }
 }

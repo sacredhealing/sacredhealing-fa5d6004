@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Play, Pause, Lock, Globe } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useMembership } from '@/hooks/useMembership';
@@ -23,15 +24,6 @@ interface Transmission {
   published: boolean;
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
-  divine_transmissions: 'Divine Transmissions',
-  oracle_talks: 'Oracle Talks',
-  nadi_series: 'The 7 Nāḍīs Series',
-  frequency_teachings: 'Frequency Teachings',
-  siddha_wisdom: 'Siddha Wisdom',
-  kundalini_talks: 'Kundalini Talks',
-};
-
 const CATEGORY_ICONS: Record<string, string> = {
   divine_transmissions: '🔱',
   oracle_talks: '🔮',
@@ -48,6 +40,7 @@ const fmtDuration = (s: number): string => {
 };
 
 export default function ExploreAkasha() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { tier } = useMembership();
   const { user } = useAuth();
@@ -137,11 +130,11 @@ export default function ExploreAkasha() {
       {/* ── HEADER ── */}
       <div style={{ padding: '52px 20px 0', animation: 'sqFadeUp 0.35s ease both' }}>
         <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', color: gold(0.5), cursor: 'pointer', padding: 0, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6, fontFamily: "'Montserrat',sans-serif", fontSize: 11, letterSpacing: '0.15em' }}>
-          <ArrowLeft size={14} /> Back
+          <ArrowLeft size={14} /> {t('exploreAkasha.back')}
         </button>
-        <p style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: gold(0.3), marginBottom: 6 }}>◈ Explore Akasha</p>
-        <h1 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: '2.1rem', fontWeight: 600, color: white(0.9), lineHeight: 1.1, margin: 0 }}>Wisdom Archive</h1>
-        <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.95rem', color: white(0.28), marginTop: 7 }}>Timeless teachings, deeper transmissions, sacred frequency talks</p>
+        <p style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: gold(0.3), marginBottom: 6 }}>{t('exploreAkasha.headerMicro')}</p>
+        <h1 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: '2.1rem', fontWeight: 600, color: white(0.9), lineHeight: 1.1, margin: 0 }}>{t('exploreAkasha.title')}</h1>
+        <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.95rem', color: white(0.28), marginTop: 7 }}>{t('exploreAkasha.subtitle')}</p>
       </div>
 
       {/* ── LANGUAGE TOGGLE ── */}
@@ -167,7 +160,7 @@ export default function ExploreAkasha() {
             }}
           >
             <Globe size={12} />
-            {l === 'en' ? '🇬🇧 English' : '🇸🇪 Svenska'}
+            {l === 'en' ? t('exploreAkasha.langEn') : t('exploreAkasha.langSv')}
           </button>
         ))}
       </div>
@@ -179,7 +172,7 @@ export default function ExploreAkasha() {
         </div>
       ) : items.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-          <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '1.1rem', color: white(0.3) }}>The archive is being prepared...</p>
+          <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '1.1rem', color: white(0.3) }}>{t('exploreAkasha.archivePreparing')}</p>
         </div>
       ) : (
         Array.from(grouped.entries()).map(([cat, catItems], ci) => (
@@ -188,22 +181,22 @@ export default function ExploreAkasha() {
             <div style={{ padding: '28px 20px 10px', display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontSize: 18 }}>{CATEGORY_ICONS[cat] || '📖'}</span>
               <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: gold(0.4) }}>
-                {CATEGORY_LABELS[cat] || cat}
+                {t(`exploreAkasha.cat_${cat}`, { defaultValue: cat })}
               </span>
             </div>
 
             {/* Vertical cards */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '0 16px' }}>
-              {catItems.map((t, i) => {
-                const locked = !canAccess(t);
-                const isPlaying = playingId === t.id;
-                const hasLangAudio = lang === 'sv' ? !!t.audio_url_sv : !!t.audio_url_en;
-                const fallbackAvailable = lang === 'sv' ? !!t.audio_url_en : !!t.audio_url_sv;
+              {catItems.map((item, i) => {
+                const locked = !canAccess(item);
+                const isPlaying = playingId === item.id;
+                const hasLangAudio = lang === 'sv' ? !!item.audio_url_sv : !!item.audio_url_en;
+                const fallbackAvailable = lang === 'sv' ? !!item.audio_url_en : !!item.audio_url_sv;
 
                 return (
                   <div
-                    key={t.id}
-                    onClick={() => playAudio(t)}
+                    key={item.id}
+                    onClick={() => playAudio(item)}
                     style={{
                       position: 'relative',
                       overflow: 'hidden',
@@ -235,12 +228,12 @@ export default function ExploreAkasha() {
                     {/* Cover */}
                     <div style={{
                       width: 80, minHeight: 80, flexShrink: 0,
-                      background: t.cover_image_url ? `url(${t.cover_image_url}) center/cover` : gold(0.06),
+                      background: item.cover_image_url ? `url(${item.cover_image_url}) center/cover` : gold(0.06),
                       borderRadius: '18px 0 0 18px',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       position: 'relative',
                     }}>
-                      {!t.cover_image_url && <span style={{ fontSize: 28, opacity: 0.5 }}>🔱</span>}
+                      {!item.cover_image_url && <span style={{ fontSize: 28, opacity: 0.5 }}>🔱</span>}
                       {locked && (
                         <div style={{
                           position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)',
@@ -256,21 +249,21 @@ export default function ExploreAkasha() {
                     <div style={{ flex: 1, padding: '12px 14px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 12, fontWeight: 700, color: white(0.88), lineHeight: 1.3 }}>
-                          {t.series_order != null && <span style={{ color: gold(0.6), marginRight: 4 }}>#{t.series_order}</span>}
-                          {t.title}
+                          {item.series_order != null && <span style={{ color: gold(0.6), marginRight: 4 }}>#{item.series_order}</span>}
+                          {item.title}
                         </span>
                       </div>
-                      {t.description && (
+                      {item.description && (
                         <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.78rem', color: white(0.35), lineHeight: 1.4, margin: 0 }}>
-                          {t.description.length > 80 ? t.description.slice(0, 80) + '...' : t.description}
+                          {item.description.length > 80 ? item.description.slice(0, 80) + '...' : item.description}
                         </p>
                       )}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
-                        <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 9, color: white(0.3) }}>{fmtDuration(t.duration_seconds)}</span>
-                        {t.is_free && <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.1em', background: 'rgba(80,200,120,0.15)', color: 'rgba(80,200,120,0.85)', padding: '1px 6px', borderRadius: 8 }}>FREE</span>}
+                        <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 9, color: white(0.3) }}>{fmtDuration(item.duration_seconds)}</span>
+                        {item.is_free && <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.1em', background: 'rgba(80,200,120,0.15)', color: 'rgba(80,200,120,0.85)', padding: '1px 6px', borderRadius: 8 }}>{t('exploreAkasha.free')}</span>}
                         {!hasLangAudio && fallbackAvailable && (
                           <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, color: gold(0.4) }}>
-                            {lang === 'sv' ? '(English only)' : '(Svenska only)'}
+                            {lang === 'sv' ? t('exploreAkasha.audioEnglishOnly') : t('exploreAkasha.audioSwedishOnly')}
                           </span>
                         )}
                       </div>
