@@ -3,7 +3,7 @@ import { useNavigate, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Compass, Sparkles, Home, Activity, Zap, Info, X,
-  BookOpen, ChevronRight, ArrowLeft, Lock, Shield, Flame, Navigation,
+  BookOpen, ChevronRight, ArrowLeft, Lock, Shield, Flame,
   Droplets, Moon, Music, Star, Clock,
 } from 'lucide-react';
 import { useAdminRole } from '@/hooks/useAdminRole';
@@ -329,33 +329,11 @@ const HEALING_RX = [
 
 // ─── Persistence ──────────────────────────────────────────────────────────────
 const ANCHOR_KEY = 'sh:temple_home_anchor';
-const HOME_GPS_KEY = 'sh:temple_home_gps';
 interface AnchorState { siteId: string; intensity: number; mode: string; anchored: boolean; ts: number; }
-interface GPSCoords { lat: number; lon: number; accuracy: number; }
 function loadAnchor(): AnchorState | null {
   try { const r = localStorage.getItem(ANCHOR_KEY); return r ? JSON.parse(r) : null; } catch { return null; }
 }
 function saveAnchor(s: AnchorState) { try { localStorage.setItem(ANCHOR_KEY, JSON.stringify(s)); } catch {} }
-function loadHomeGPS(): GPSCoords | null {
-  try { const r = localStorage.getItem(HOME_GPS_KEY); return r ? JSON.parse(r) : null; } catch { return null; }
-}
-function saveHomeGPS(c: GPSCoords) { try { localStorage.setItem(HOME_GPS_KEY, JSON.stringify(c)); } catch {} }
-
-function calcDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371e3;
-  const p1 = lat1 * Math.PI / 180, p2 = lat2 * Math.PI / 180;
-  const dp = (lat2 - lat1) * Math.PI / 180, dl = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dp / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-function calcSaturation(distMeters: number, intensity: number): number {
-  if (distMeters < 5) return intensity;
-  if (distMeters < 100) return Math.round(intensity * (1 - distMeters / 300));
-  if (distMeters < 1000) return Math.round(intensity * 0.65 * (1 - distMeters / 2000));
-  if (distMeters < 10000) return Math.round(intensity * 0.35);
-  return Math.max(5, Math.round(intensity * 0.1));
-}
 
 function getSiteCategory(id: string): { label: string; color: string } {
   if (['pleiades','sirius','arcturus','lyra'].includes(id)) return { label: 'GALACTIC', color: '#22D3EE' };
@@ -428,132 +406,217 @@ function GlassCard({ children, className = '', glow = false, style = {} }: { chi
   );
 }
 
-// ─── Live GPS Nadi Scanner ────────────────────────────────────────────────────
-function LiveNadiScanner({ intensity, homeCoords, onSetHome }: {
-  intensity: number;
-  homeCoords: GPSCoords | null;
-  onSetHome: (c: GPSCoords) => void;
-}) {
-  const [pos, setPos] = useState<GPSCoords | null>(null);
-  const [gpsState, setGpsState] = useState<'idle' | 'requesting' | 'active' | 'error'>('idle');
-  const watchRef = useRef<number | null>(null);
+// ─── Motion-based Nadi Scanner (no GPS) ───────────────────────────────────────
+function motionZoneLabel(sat: number): string {
+  if (sat > 90) return 'CORE — You are at the Anchor';
+  if (sat > 70) return 'HIGH COHERENCE';
+  if (sat > 45) return 'INTEGRATION';
+  return 'PERIPHERAL — Move toward Center';
+}
+function motionZoneColor(sat: number): string {
+  if (sat > 90) return '#D4AF37';
+  if (sat > 70) return '#22D3EE';
+  if (sat > 45) return '#A78BFA';
+  return 'rgba(255,255,255,0.35)';
+}
+function calcMotionSat(variance: number, intensity: number): number {
+  const stillness = Math.max(0, 1 - variance / 10);
+  return Math.round(intensity * (0.3 + 0.7 * stillness));
+}
 
-  const startWatch = useCallback(() => {
-    if (!navigator.geolocation) { setGpsState('error'); return; }
-    setGpsState('requesting');
-    watchRef.current = navigator.geolocation.watchPosition(
-      (p) => {
-        const coords = { lat: p.coords.latitude, lon: p.coords.longitude, accuracy: Math.round(p.coords.accuracy) };
-        setPos(coords);
-        setGpsState('active');
-      },
-      () => setGpsState('error'),
-      { enableHighAccuracy: true, maximumAge: 2000, timeout: 8000 }
-    );
-  }, []);
+function MotionNadiScanner({ intensity }: { intensity: number }) {
+  const [motionState, setMotionState] = useState<'idle' | 'active' | 'unavailable'>('idle');
+  const [variance, setVariance] = useState(0);
+  const [saturation, setSaturation] = useState<number | null>(null);
+  const [zone, setZone] = useState('');
+  const samplesRef = useRef<number[]>([]);
+  const handlerRef = useRef<((e: Event) => void) | null>(null);
+  const intensityRef = useRef(intensity);
+
+  useEffect(() => { intensityRef.current = intensity; }, [intensity]);
 
   useEffect(() => {
-    return () => { if (watchRef.current !== null) navigator.geolocation.clearWatch(watchRef.current); };
+    if (motionState === 'active') {
+      const sat = calcMotionSat(variance, intensity);
+      setSaturation(sat);
+      setZone(motionZoneLabel(sat));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [intensity]);
+
+  useEffect(() => {
+    return () => {
+      if (handlerRef.current) {
+        window.removeEventListener('devicemotion', handlerRef.current);
+      }
+    };
   }, []);
 
-  const distToHome = pos && homeCoords ? calcDistance(pos.lat, pos.lon, homeCoords.lat, homeCoords.lon) : null;
-  const saturation = distToHome !== null ? calcSaturation(distToHome, intensity) : null;
-  const state = saturation !== null ? (saturation > 85 ? 'CORE PEAK' : saturation > 60 ? 'HIGH COHERENCE' : saturation > 30 ? 'INTEGRATION' : 'DISTANT') : null;
-  const stateColor = (s: string | null) => s === 'CORE PEAK' ? '#D4AF37' : s === 'HIGH COHERENCE' ? '#22D3EE' : s === 'INTEGRATION' ? '#A78BFA' : 'rgba(255,255,255,0.3)';
+  const startScan = useCallback(async () => {
+    const win = window as Record<string, unknown>;
+    if (!('DeviceMotionEvent' in win)) {
+      setMotionState('unavailable');
+      return;
+    }
+    const DME = win['DeviceMotionEvent'] as { requestPermission?: () => Promise<string> };
+    if (typeof DME.requestPermission === 'function') {
+      try {
+        const result = await DME.requestPermission();
+        if (result !== 'granted') { setMotionState('unavailable'); return; }
+      } catch {
+        setMotionState('unavailable');
+        return;
+      }
+    }
+    setMotionState('active');
+    samplesRef.current = [];
 
-  const formatDist = (m: number) => m < 1000 ? `${Math.round(m)}m` : `${(m / 1000).toFixed(1)}km`;
+    const handler = (e: Event) => {
+      const me = e as Event & {
+        accelerationIncludingGravity?: { x: number | null; y: number | null; z: number | null };
+      };
+      const acc = me.accelerationIncludingGravity;
+      if (!acc) return;
+      const mag = Math.sqrt((acc.x ?? 0) ** 2 + (acc.y ?? 0) ** 2 + (acc.z ?? 0) ** 2);
+      samplesRef.current.push(mag);
+      if (samplesRef.current.length > 20) samplesRef.current.shift();
+      const mean = samplesRef.current.reduce((a, b) => a + b, 0) / samplesRef.current.length;
+      const vr = Math.min(
+        samplesRef.current.reduce((a, b) => a + (b - mean) ** 2, 0) / samplesRef.current.length,
+        10
+      );
+      setVariance(vr);
+      const sat = calcMotionSat(vr, intensityRef.current);
+      setSaturation(sat);
+      setZone(motionZoneLabel(sat));
+    };
+    handlerRef.current = handler;
+    window.addEventListener('devicemotion', handler);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const zoneColor = saturation !== null ? motionZoneColor(saturation) : '#D4AF37';
 
   return (
     <div className="space-y-3">
-      {/* Status bar */}
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
-          <div className={`h-2 w-2 rounded-full ${gpsState === 'active' ? 'bg-emerald-400 animate-pulse' : gpsState === 'requesting' ? 'bg-amber-400 animate-pulse' : gpsState === 'error' ? 'bg-red-400' : 'bg-white/20'}`} />
+          <div
+            className={`h-2 w-2 rounded-full ${
+              motionState === 'active'
+                ? 'bg-emerald-400 animate-pulse'
+                : motionState === 'unavailable'
+                ? 'bg-red-400'
+                : 'bg-white/20'
+            }`}
+          />
           <span className="text-[9px] tracking-[0.3em] uppercase text-white/30">
-            {gpsState === 'active' ? 'GPS Active' : gpsState === 'requesting' ? 'Requesting GPS…' : gpsState === 'error' ? 'GPS Unavailable' : 'Nadi Scanner'}
+            {motionState === 'active'
+              ? 'Motion Scanner Active'
+              : motionState === 'unavailable'
+              ? 'Motion Unavailable'
+              : 'Nadi Scanner — No GPS Required'}
           </span>
         </div>
-        {pos && <span className="text-[9px] text-white/20 font-mono">±{pos.accuracy}m</span>}
+        {motionState === 'active' && (
+          <span className="text-[9px] font-mono text-white/20">σ²={variance.toFixed(2)}</span>
+        )}
       </div>
 
-      {/* Main field reading */}
-      {gpsState === 'active' && pos && (
-        <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(212,175,55,0.03)', border: '1px solid rgba(212,175,55,0.12)' }}>
+      {motionState === 'active' && saturation !== null && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-2xl p-4 space-y-3"
+          style={{ background: 'rgba(212,175,55,0.03)', border: '1px solid rgba(212,175,55,0.12)' }}
+        >
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-[8px] tracking-[0.4em] uppercase text-white/25 mb-1">Your Live Position</div>
-              <div className="font-mono text-[11px] text-white/50">{pos.lat.toFixed(5)}° N, {pos.lon.toFixed(5)}° E</div>
-            </div>
-            {distToHome !== null && (
-              <div className="text-right">
-                <div className="text-[8px] tracking-[0.4em] uppercase text-white/25 mb-1">From Home Anchor</div>
-                <div className="text-base font-black" style={{ color: stateColor(state) }}>{formatDist(distToHome)}</div>
+              <div className="text-[8px] tracking-[0.4em] uppercase text-white/25 mb-1">Field Saturation Here</div>
+              <div className="text-3xl font-black tabular-nums" style={{ color: zoneColor, textShadow: `0 0 20px ${zoneColor}50` }}>
+                {saturation}%
               </div>
+            </div>
+            <div className="text-right">
+              <div className="text-[8px] tracking-[0.4em] uppercase text-white/25 mb-1">Zone</div>
+              <div className="text-[11px] font-extrabold" style={{ color: zoneColor }}>
+                {zone.split('—')[0].trim()}
+              </div>
+            </div>
+          </div>
+          <div>
+            <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+              <motion.div
+                className="h-full rounded-full"
+                animate={{ width: `${saturation}%` }}
+                transition={{ duration: 0.6, ease: 'easeOut' }}
+                style={{ background: `linear-gradient(90deg, ${zoneColor}50, ${zoneColor})` }}
+              />
+            </div>
+            {zone.includes('—') && (
+              <p className="text-[9px] text-white/30 mt-1 italic">{zone.split('—')[1]?.trim()}</p>
             )}
           </div>
-
-          {saturation !== null && (
-            <div>
-              <div className="flex justify-between mb-1.5">
-                <span className="text-[8px] tracking-[0.35em] uppercase text-white/30">Field Saturation at Your Location</span>
-                <span className="text-[11px] font-bold" style={{ color: stateColor(state) }}>{saturation}%</span>
-              </div>
-              <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
-                <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${saturation}%`, background: `linear-gradient(90deg,${stateColor(state)}50,${stateColor(state)})` }} />
-              </div>
-              <div className="flex justify-between mt-1">
-                <span className="text-[8px] tracking-[0.2em] uppercase" style={{ color: stateColor(state) }}>{state}</span>
-                <span className="text-[8px] text-white/20">{distToHome !== null ? `${formatDist(distToHome)} from anchor` : ''}</span>
-              </div>
-            </div>
-          )}
-        </div>
+          <div className="pt-1 border-t border-white/[0.04]">
+            <p className="text-[10px] text-white/30 leading-relaxed">
+              {variance < 1
+                ? '✓ Still — maximum field depth. Sit and receive.'
+                : variance < 3
+                ? '◎ Slight movement — breathe slowly to settle.'
+                : '↺ Moving — walk slowly toward the center of your home.'}
+            </p>
+          </div>
+        </motion.div>
       )}
 
-      {/* Home anchor button */}
-      {gpsState === 'active' && pos && (
-        <div className="flex gap-2">
-          <button
-            onClick={() => { if (pos) { saveHomeGPS(pos); onSetHome(pos); } }}
-            className="flex-1 py-2.5 rounded-2xl text-[9px] font-extrabold tracking-[0.2em] uppercase transition-all"
-            style={homeCoords ? { background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)', color: '#4ADE80' } : { background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.3)', color: '#D4AF37' }}
-          >
-            {homeCoords ? '✓ Home Anchor Set' : 'Set This as Home Anchor'}
-          </button>
-        </div>
-      )}
-
-      {/* Distance zones */}
-      {gpsState === 'active' && homeCoords && distToHome !== null && (
-        <div className="space-y-2">
+      {motionState === 'active' && (
+        <div className="space-y-1.5">
           {[
-            { label: 'Core Zone', range: '0–5m', active: distToHome < 5, color: '#D4AF37' },
-            { label: 'High Coherence', range: '5–100m', active: distToHome >= 5 && distToHome < 100, color: '#22D3EE' },
-            { label: 'Integration', range: '100m–1km', active: distToHome >= 100 && distToHome < 1000, color: '#A78BFA' },
-            { label: 'Distant Field', range: '1km+', active: distToHome >= 1000, color: 'rgba(255,255,255,0.3)' },
-          ].map(zone => (
-            <div key={zone.label} className="flex items-center justify-between px-3 py-2.5 rounded-2xl" style={{ background: zone.active ? `${zone.color}10` : 'rgba(255,255,255,0.01)', border: zone.active ? `1px solid ${zone.color}30` : '1px solid rgba(255,255,255,0.03)' }}>
+            { label: 'Core — Anchor Point', range: 'Completely still', color: '#D4AF37', active: variance < 1 },
+            { label: 'High Coherence', range: 'Minimal movement', color: '#22D3EE', active: variance >= 1 && variance < 3 },
+            { label: 'Integration', range: 'Slow walking', color: '#A78BFA', active: variance >= 3 && variance < 6 },
+            { label: 'Peripheral', range: 'Active movement', color: 'rgba(255,255,255,0.3)', active: variance >= 6 },
+          ].map(z => (
+            <div
+              key={z.label}
+              className="flex items-center justify-between px-3 py-2 rounded-xl"
+              style={{
+                background: z.active ? `${z.color}10` : 'rgba(255,255,255,0.01)',
+                border: z.active ? `1px solid ${z.color}30` : '1px solid rgba(255,255,255,0.03)',
+              }}
+            >
               <div className="flex items-center gap-2">
-                <div className="h-1.5 w-1.5 rounded-full" style={{ background: zone.active ? zone.color : 'rgba(255,255,255,0.15)' }} />
-                <span className="text-[11px] font-medium" style={{ color: zone.active ? zone.color : 'rgba(255,255,255,0.3)' }}>{zone.label}</span>
+                <div className="h-1.5 w-1.5 rounded-full" style={{ background: z.active ? z.color : 'rgba(255,255,255,0.12)' }} />
+                <span className="text-[10px] font-medium" style={{ color: z.active ? z.color : 'rgba(255,255,255,0.28)' }}>
+                  {z.label}
+                </span>
               </div>
-              <span className="text-[9px] font-mono" style={{ color: zone.active ? zone.color : 'rgba(255,255,255,0.2)' }}>{zone.range}</span>
+              <span className="text-[8px] font-mono" style={{ color: z.active ? z.color : 'rgba(255,255,255,0.18)' }}>
+                {z.range}
+              </span>
             </div>
           ))}
         </div>
       )}
 
-      {/* Start GPS */}
-      {gpsState === 'idle' && (
-        <button onClick={startWatch} className="w-full py-3 rounded-2xl text-[10px] font-extrabold tracking-[0.25em] uppercase transition-all" style={{ background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.2)', color: '#22D3EE' }}>
-          <Navigation size={12} className="inline mr-2" />
-          Activate Live GPS Scanner
+      {motionState === 'idle' && (
+        <button
+          type="button"
+          onClick={() => { void startScan(); }}
+          className="w-full py-3 rounded-2xl text-[10px] font-extrabold tracking-[0.25em] uppercase transition-all"
+          style={{ background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.2)', color: '#22D3EE' }}
+        >
+          Activate Nadi Scanner — No GPS
         </button>
       )}
-      {gpsState === 'error' && (
-        <div className="py-3 px-4 rounded-2xl text-center" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
-          <p className="text-[11px] text-white/35">GPS unavailable in this environment.</p>
-          <p className="text-[10px] text-white/20 mt-1">Use the app on your phone for live field tracking.</p>
+
+      {motionState === 'unavailable' && (
+        <div
+          className="py-3 px-4 rounded-2xl text-center"
+          style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}
+        >
+          <p className="text-[11px] text-white/35">Motion sensor unavailable in this environment.</p>
+          <p className="text-[10px] text-white/20 mt-1">Use on a physical phone with motion sensors enabled.</p>
         </div>
       )}
     </div>
@@ -719,7 +782,6 @@ function TempleHomeInner() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [anchorFlash, setAnchorFlash] = useState(false);
   const [activeTab, setActiveTab] = useState<'PORTAL' | 'HEALING' | 'PRESCRIPTIONS'>('PORTAL');
-  const [homeCoords, setHomeCoords] = useState<GPSCoords | null>(loadHomeGPS());
   const [presetFlash, setPresetFlash] = useState<string | null>(null);
   const [showHydrationAlert, setShowHydrationAlert] = useState(false);
   const [selectedRxId, setSelectedRxId] = useState<string | null>(null);
@@ -964,25 +1026,50 @@ function TempleHomeInner() {
             </div>
           </GlassCard>
 
-          {/* Live GPS Nadi Scanner */}
-          <GlassCard className="overflow-hidden">
-            <button onClick={() => setShowSpatialMap(!showSpatialMap)} className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-white/[0.02] transition-colors">
+          {/* Field Strength Scanner — motion-based, no GPS */}
+          <div
+            className="rounded-[28px] overflow-hidden"
+            style={{
+              background: 'rgba(255,255,255,0.02)',
+              backdropFilter: 'blur(40px)',
+              WebkitBackdropFilter: 'blur(40px)',
+              border: '1px solid rgba(255,255,255,0.05)',
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setShowSpatialMap(!showSpatialMap)}
+              className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-white/[0.02] transition-colors"
+            >
               <div className="flex items-center gap-2">
-                <Navigation size={10} className="text-[#22D3EE]/60"/>
-                <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-[#22D3EE]/60">Live GPS — Nadi Scanner</div>
+                <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-[#22D3EE]/60">
+                  Field Strength Scanner — No GPS
+                </div>
               </div>
-              <span className="text-[9px] text-[#22D3EE]/40 tracking-[0.2em]">{showSpatialMap ? 'CLOSE' : 'SCAN'}</span>
+              <span className="text-[9px] text-[#22D3EE]/40 tracking-[0.2em]">
+                {showSpatialMap ? 'CLOSE' : 'SCAN'}
+              </span>
             </button>
             <AnimatePresence>
               {showSpatialMap && (
-                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden">
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden"
+                >
                   <div className="px-4 pb-4 border-t border-white/[0.04] pt-3">
-                    <LiveNadiScanner intensity={auraIntensity} homeCoords={homeCoords} onSetHome={(c) => setHomeCoords(c)} />
+                    <p className="text-[9px] text-white/25 leading-relaxed mb-3">
+                      Hold your phone and move through your home.
+                      Still = at the anchor core. Moving = farther from center.
+                    </p>
+                    <MotionNadiScanner intensity={auraIntensity} />
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
-          </GlassCard>
+          </div>
 
           {/* Akasha Infinity link */}
           <button onClick={() => navigate('/akasha-infinity')} className="w-full flex items-center justify-between px-5 py-3.5 rounded-2xl transition-all hover:scale-[1.01]" style={{ background: 'rgba(139,92,246,0.05)', border: '1px solid rgba(139,92,246,0.15)' }}>
