@@ -2267,6 +2267,8 @@
     "soulVaultLockedDesc": "Soul Vault is available for Siddha Quantum and Akasha Infinity members — a living record of your bio-digital evolution.",
     "soulVaultUpgrade": "Upgrade to Siddha Quantum →",
     "soulVaultActivityFallback": "Deep-Field session",
+    "soulVaultUserContextMinutes": "{{count}} minutes",
+    "soulVaultUserContextUnspecified": "unspecified duration",
     "soulVaultPracticeWindow": "{{n}} min practice window",
     "sectionAkashicArchive": "◈ Akashic Archive",
     "archiveRecordTitle": "Akashic Record",

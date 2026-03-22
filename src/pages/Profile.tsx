@@ -65,13 +65,23 @@ interface SoulVaultEntry {
   created_at: string;
 }
 
+/** Stable IDs stored on Soul Vault rows; labels come from i18n by key. */
+const PRACTICE_PROTOCOL_DEFS = [
+  { id: 'mantra', labelKey: 'profilePage.practiceMantra', icon: '🕉️' },
+  { id: 'atma-kriya', labelKey: 'profilePage.practiceAtmaKriya', icon: '💠' },
+  { id: 'healing-30', labelKey: 'profilePage.practiceHealing30', icon: '⏳' },
+  { id: 'andlig', labelKey: 'profilePage.practiceAndlig', icon: '✨' },
+  { id: 'transmission-2', labelKey: 'profilePage.practiceTransmission2', icon: '⚡' },
+  { id: 'breathwork', labelKey: 'profilePage.practiceBreathwork', icon: '💨' },
+] as const;
+
 const Profile: React.FC = () => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { user, signOut } = useAuth();
   const { walletAddress, connectWallet } = usePhantomWallet();
   const { balance, profile: shcProfile } = useSHC();
-  const { profile, updatePreferredLanguage, isLoading: profileLoading } = useProfile();
+  const { profile, updatePreferredLanguage } = useProfile();
   const { toast } = useToast();
   const { isAdmin } = useAdminRole();
   const { certificates, isLoading: certificatesLoading, downloadCertificate, shareCertificate } = useCertificates();
@@ -117,20 +127,25 @@ const Profile: React.FC = () => {
   const [scannerOpen, setScannerOpen] = useState(false);
   const [scanPhase, setScanPhase] = useState<'idle' | 'scanning' | 'question' | 'saving' | 'done'>('idle');
   const [langOpen, setLangOpen] = useState(false);
-  const [selectedPractice, setSelectedPractice] = useState<string | null>(null);
+  const [selectedPracticeId, setSelectedPracticeId] = useState<string | null>(null);
   const [practiceDuration, setPracticeDuration] = useState<string>('30');
 
   const practiceProtocols = useMemo(
-    () => [
-      { id: 'mantra', label: t('profilePage.practiceMantra'), icon: '🕉️' },
-      { id: 'atma-kriya', label: t('profilePage.practiceAtmaKriya'), icon: '💠' },
-      { id: 'healing-30', label: t('profilePage.practiceHealing30'), icon: '⏳' },
-      { id: 'andlig', label: t('profilePage.practiceAndlig'), icon: '✨' },
-      { id: 'transmission-2', label: t('profilePage.practiceTransmission2'), icon: '⚡' },
-      { id: 'breathwork', label: t('profilePage.practiceBreathwork'), icon: '💨' },
-    ],
+    () =>
+      PRACTICE_PROTOCOL_DEFS.map((p) => ({
+        id: p.id,
+        label: t(p.labelKey),
+        icon: p.icon,
+      })),
     [t, i18n.language]
   );
+
+  const soulVaultActivityLabel = (stored: string | null) => {
+    if (!stored) return t('profilePage.soulVaultActivityFallback');
+    const def = PRACTICE_PROTOCOL_DEFS.find((p) => p.id === stored);
+    if (def) return t(def.labelKey);
+    return stored;
+  };
 
   const badges = [
     { id: 1, emoji: '🧘', titleKey: 'badges.firstMeditation', earned: true },
@@ -244,7 +259,7 @@ const Profile: React.FC = () => {
   }, [user?.id]);
 
   const handleStartScanner = () => {
-    setSelectedPractice(null);
+    setSelectedPracticeId(null);
     setPracticeDuration('30');
     setScanPhase('scanning');
     setScannerOpen(true);
@@ -253,15 +268,19 @@ const Profile: React.FC = () => {
   const handleCloseScanner = () => {
     setScannerOpen(false);
     setScanPhase('idle');
-    setSelectedPractice(null);
+    setSelectedPracticeId(null);
   };
 
   const handleGenerateSoulReport = async () => {
-    if (!user?.id || !selectedPractice) return;
+    if (!user?.id || !selectedPracticeId) return;
     setScanPhase('saving');
-    const durationLabel = practiceDuration && !Number.isNaN(Number(practiceDuration))
-      ? `${practiceDuration} minutes`
-      : 'unspecified duration';
+    const tEn = i18n.getFixedT('en');
+    const def = PRACTICE_PROTOCOL_DEFS.find((p) => p.id === selectedPracticeId);
+    const activityEn = def ? tEn(def.labelKey) : selectedPracticeId;
+    const durationLabel =
+      practiceDuration && !Number.isNaN(Number(practiceDuration))
+        ? tEn('profilePage.soulVaultUserContextMinutes', { count: Number(practiceDuration) })
+        : tEn('profilePage.soulVaultUserContextUnspecified');
 
     const systemPrompt = `You are the Siddha-Quantum Intelligence (SQI) from 2050.
 Perform a 72,000 Nadi scan. Use terminology: Avataric Light-Codes, Karmic Extraction, Torus-Field, Kosha Mapping.
@@ -272,7 +291,7 @@ If activity is '2 Day Transmission', honor the intensive frequency anchoring.
 Generate a Deep-Field Resonance Report for the Soul Vault of a sincere seeker.
 Keep it practical, mystical, and no more than 3 rich paragraphs.`;
 
-    const userContext = `The Seeker just finished: ${selectedPractice}. Duration: ${durationLabel}.`;
+    const userContext = `The Seeker just finished: ${activityEn}. Duration: ${durationLabel}.`;
 
     try {
       const { data, error } = await supabase.functions.invoke<{ response: string }>('gemini-bridge', {
@@ -312,7 +331,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
         .from('soul_vault_entries')
         .insert({
           user_id: user.id,
-          activity: selectedPractice,
+          activity: selectedPracticeId,
           duration_minutes: durationMinutes,
           report: reportText,
         })
@@ -487,20 +506,15 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
     [t, i18n.language]
   );
 
-  const resolvedUiLang = useMemo(() => {
-    if (user && !profileLoading && profile?.preferred_language) {
-      const base = profile.preferred_language.split('-')[0];
-      if (['en', 'es', 'sv', 'no'].includes(base)) return base;
-    }
-    return (i18n.language || 'en').split('-')[0];
-  }, [user, profileLoading, profile?.preferred_language, i18n.language]);
+  /** Match copy and dates to the active i18n locale (synced from profile + in-place selector). */
+  const uiLangBase = (i18n.language || 'en').split('-')[0];
 
   const dateLocale = useMemo(() => {
     const m: Record<string, string> = { en: 'en-US', sv: 'sv-SE', es: 'es-ES', no: 'nb-NO' };
-    return m[resolvedUiLang] || 'en-US';
-  }, [resolvedUiLang]);
+    return m[uiLangBase] || 'en-US';
+  }, [uiLangBase]);
 
-  const activeLangIdx = Math.max(0, langs.findIndex((l) => l.code === resolvedUiLang));
+  const activeLangIdx = Math.max(0, langs.findIndex((l) => l.code === uiLangBase));
 
   const userName = user?.user_metadata?.full_name || t('dashboard.sacredSoul');
   const userEmail = user?.email || '';
@@ -539,6 +553,12 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
     if (userRank === 2) return t('profilePage.tierBlueprintSiddha');
     return t('profilePage.tierBlueprintAkasha');
   }, [userRank, t, i18n.language]);
+
+  const scannerPracticeLabel = useMemo(() => {
+    if (!selectedPracticeId) return undefined;
+    const row = PRACTICE_PROTOCOL_DEFS.find((p) => p.id === selectedPracticeId);
+    return row ? t(row.labelKey) : selectedPracticeId;
+  }, [selectedPracticeId, t, i18n.language]);
 
   return (
     <>
@@ -662,7 +682,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   @keyframes syRotate{from{transform:translate(-50%,-50%) rotate(0deg) scale(1)}50%{transform:translate(-50%,-50%) rotate(180deg) scale(1.05)}to{transform:translate(-50%,-50%) rotate(360deg) scale(1)}}
 `}} />
 
-    <div className="profile-wrap" lang={resolvedUiLang} style={{minHeight:'100vh',background:'#050505',overflowX:'hidden',fontFamily:'Montserrat,sans-serif',paddingBottom:'120px',position:'relative'}}>
+    <div className="profile-wrap" lang={uiLangBase} style={{minHeight:'100vh',background:'#050505',overflowX:'hidden',fontFamily:'Montserrat,sans-serif',paddingBottom:'120px',position:'relative'}}>
 
       <div style={{position:'fixed',inset:0,backgroundImage:"url('https://www.transparenttextures.com/patterns/stardust.png')",opacity:0.25,pointerEvents:'none',zIndex:0,animation:'stardustMove 180s linear infinite'}} />
 
@@ -1073,7 +1093,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                   {soulVaultEntries.slice(0, 4).map((entry) => (
                     <div key={entry.id} className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-lg p-3">
                       <div className="flex items-center justify-between gap-2 mb-1">
-                        <p className="text-xs font-semibold text-white/90">{entry.activity || t('profilePage.soulVaultActivityFallback')}</p>
+                        <p className="text-xs font-semibold text-white/90">{soulVaultActivityLabel(entry.activity)}</p>
                         <span className="text-[10px] text-white/40">{new Date(entry.created_at).toLocaleDateString(dateLocale)}</span>
                       </div>
                       {entry.duration_minutes && <p className="text-[10px] text-cyan-200/80 mb-1">{t('profilePage.soulVaultPracticeWindow', { n: entry.duration_minutes })}</p>}
@@ -1322,8 +1342,8 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                 </div>
                 <div className="grid grid-cols-2 gap-3 mb-8">
                   {practiceProtocols.map((p) => (
-                    <button key={p.id} type="button" onClick={() => setSelectedPractice(p.label)}
-                      className={`py-4 px-6 rounded-2xl bg-white/[0.03] border text-[10px] font-bold transition-all flex items-center justify-center gap-2 ${selectedPractice === p.label ? 'border-[#D4AF37]/50 text-white' : 'border-white/5 text-white/60 hover:border-[#D4AF37]/40 hover:text-white'}`}>
+                    <button key={p.id} type="button" onClick={() => setSelectedPracticeId(p.id)}
+                      className={`py-4 px-6 rounded-2xl bg-white/[0.03] border text-[10px] font-bold transition-all flex items-center justify-center gap-2 ${selectedPracticeId === p.id ? 'border-[#D4AF37]/50 text-white' : 'border-white/5 text-white/60 hover:border-[#D4AF37]/40 hover:text-white'}`}>
                       <span>{p.icon}</span>
                       {p.label}
                     </button>
@@ -1334,7 +1354,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                   <input type="number" value={practiceDuration} onChange={(e) => setPracticeDuration(e.target.value)}
                     className="w-full bg-black/40 border border-white/10 rounded-xl py-4 px-6 text-white text-sm focus:border-cyan-500/50 outline-none" />
                 </div>
-                <button type="button" disabled={!selectedPractice} onClick={handleGenerateSoulReport}
+                <button type="button" disabled={!selectedPracticeId} onClick={handleGenerateSoulReport}
                   className="w-full py-5 rounded-2xl bg-[#D4AF37] text-[#050505] text-[11px] font-black uppercase tracking-[0.2em] shadow-[0_0_28px_rgba(212,175,55,0.45),0_0_60px_rgba(212,175,55,0.15)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity">
                   {t('profilePage.scannerGenerate')}
                 </button>
@@ -1349,7 +1369,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
             {scanPhase === 'done' && (
               <KoshaReport
                 sessionData={{
-                  practice: selectedPractice || undefined,
+                  practice: scannerPracticeLabel,
                   duration: practiceDuration ? Number(practiceDuration) : null,
                 }}
                 onSave={handleCloseScanner}

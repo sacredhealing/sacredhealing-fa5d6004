@@ -1,8 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { useTranslation } from '@/hooks/useTranslation';
-import TempleGateIcon from '@/components/icons/TempleGateIcon';
 import MerkabaIcon from '@/components/icons/MerkabaIcon';
 import ThirdEyeIcon from '@/components/icons/ThirdEyeIcon';
 import MalaBeadsIcon from '@/components/icons/MalaBeadsIcon';
@@ -10,18 +8,17 @@ import PalmLeafIcon from '@/components/icons/PalmLeafIcon';
 import StarPentagramIcon from '@/components/icons/StarPentagramIcon';
 import AtmaIcon from '@/components/icons/AtmaIcon';
 
+/** Bottom labels stay fixed (brand names); they do not follow UI locale. */
 const NAV_ITEMS = [
-  { to: '/dashboard', icon: MerkabaIcon, labelKey: 'nav_home', label: 'Nexus' },
-  { to: '/meditations', icon: ThirdEyeIcon, labelKey: 'nav_meditate', label: 'Dhyana' },
-  { to: '/mantras', icon: MalaBeadsIcon, labelKey: 'nav_mantras', label: 'Nada' },
-  { to: '/explore', icon: PalmLeafIcon, labelKey: 'nav_library', label: 'Akasha' },
-  { to: '/healing', icon: StarPentagramIcon, labelKey: 'header_healing', label: 'Soma' },
-  { to: '/profile', icon: AtmaIcon, labelKey: 'nav_profile', label: 'Avatar' },
+  { to: '/dashboard', icon: MerkabaIcon, label: 'Nexus' },
+  { to: '/meditations', icon: ThirdEyeIcon, label: 'Dhyana' },
+  { to: '/mantras', icon: MalaBeadsIcon, label: 'Nada' },
+  { to: '/explore', icon: PalmLeafIcon, label: 'Akasha' },
+  { to: '/healing', icon: StarPentagramIcon, label: 'Soma' },
+  { to: '/profile', icon: AtmaIcon, label: 'Avatar' },
 ];
 
 export const BottomNav: React.FC = () => {
-  const { t } = useTranslation();
-
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/[0.05] safe-area-bottom" style={{ background: 'rgba(5, 5, 5, 0.92)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)' }}>
       <div
@@ -68,9 +65,9 @@ export const BottomNav: React.FC = () => {
                     letterSpacing: '0.15em',
                     textTransform: 'uppercase' as const,
                   }}
-                  title={t(item.labelKey, item.label)}
+                  title={item.label}
                 >
-                  {t(item.labelKey, item.label)}
+                  {item.label}
                 </span>
               </>
             )}
