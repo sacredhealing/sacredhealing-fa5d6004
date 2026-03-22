@@ -13,6 +13,7 @@ export async function streamChatWithSQI(
   onDone: () => void,
   userImage?: UserImagePayload,
   userId?: string | null,
+  language?: string,
 ) {
   // Only send the last 10 messages for context to keep prompts efficient
   const recent = messages.slice(-10);
@@ -22,15 +23,23 @@ export async function streamChatWithSQI(
     content: m.text,
   }));
 
-  const body: { messages: typeof apiMessages; userImage?: UserImagePayload; userId?: string | null } = {
+  const body: {
+    messages: typeof apiMessages;
+    userImage?: UserImagePayload;
+    userId?: string | null;
+    language?: string;
+  } = {
     messages: apiMessages,
   };
   if (userImage?.base64 && userImage?.mimeType) {
     body.userImage = userImage;
   }
-   if (userId) {
-     body.userId = userId;
-   }
+  if (userId) {
+    body.userId = userId;
+  }
+  if (language) {
+    body.language = language;
+  }
 
   const resp = await fetch(CHAT_URL, {
     method: 'POST',

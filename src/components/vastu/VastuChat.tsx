@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { TRANSMISSION_SCRIPTS } from './vastuConstants';
+import { useTranslation } from '@/hooks/useTranslation';
 
 // ─────────────────────────────────────────────────────────────────
 // SQI 2050 · VASTU CHAT
@@ -38,6 +39,7 @@ const lbl: React.CSSProperties = {
 interface AudioTransmissionCardProps { id: number; title: string; }
 
 const AudioTransmissionCard: React.FC<AudioTransmissionCardProps> = ({ id, title }) => {
+  const { t } = useTranslation();
   const [showScript, setShowScript]     = useState(false);
   const [isRecording, setIsRecording]   = useState(false);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
@@ -52,7 +54,7 @@ const AudioTransmissionCard: React.FC<AudioTransmissionCardProps> = ({ id, title
       mr.ondataavailable = e => { if (e.data.size > 0) chunks.current.push(e.data); };
       mr.onstop = () => { setRecordedBlob(new Blob(chunks.current,{type:'audio/webm'})); stream.getTracks().forEach(t=>t.stop()); };
       mr.start(); setIsRecording(true);
-    } catch { alert('Microphone access is required to record your transmission.'); }
+    } catch { alert(t('vastuChat.micRequired', 'Microphone access is required to record your transmission.')); }
   };
   const stopRecording = () => { if (mrRef.current && isRecording) { mrRef.current.stop(); setIsRecording(false); } };
   const playRecording = () => { if (recordedBlob) new Audio(URL.createObjectURL(recordedBlob)).play(); };
@@ -73,46 +75,46 @@ const AudioTransmissionCard: React.FC<AudioTransmissionCardProps> = ({ id, title
           display:'flex', alignItems:'center', justifyContent:'center',
           fontSize:'22px', boxShadow:'0 0 20px rgba(212,175,55,0.15)' }}>🕉</div>
         <div style={{ flexGrow:1 }}>
-          <p style={{ ...lbl, marginBottom:'6px' }}>Sound Alchemy Layer: {id}</p>
+          <p style={{ ...lbl, marginBottom:'6px' }}>{t('vastuChat.soundAlchemyLayer', { defaultValue: 'Sound Alchemy Layer: {{lid}}', lid: String(id) })}</p>
           <h3 style={{ fontFamily:'Georgia,serif', fontSize:'18px', fontWeight:600,
             color:'#fff', letterSpacing:'-0.01em', margin:'0 0 8px' }}>{title}</h3>
           <p style={{ fontSize:'12px', color: BODY_TEXT, lineHeight:1.7, margin:'0 0 16px' }}>
-            Record the Beeja Mantras into this sanctuary. Vibrate your intention into the physical walls.
+            {t('vastuChat.recordBeejaDesc', 'Record the Beeja Mantras into this sanctuary. Vibrate your intention into the physical walls.')}
           </p>
           <div style={{ display:'flex', flexWrap:'wrap', gap:'8px' }}>
             <button onClick={() => setShowScript(v=>!v)} style={{
               padding:'8px 18px', borderRadius:'100px', cursor:'pointer',
               fontSize:'10px', fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase',
               background: GLASS, border:`1px solid ${BORDER}`, color:'rgba(255,255,255,0.65)', fontFamily:'inherit',
-            }}>{showScript ? '📖 Seal Script' : '📜 Unveil Script'}</button>
+            }}>{showScript ? `📖 ${t('vastuChat.sealScript', 'Seal Script')}` : `📜 ${t('vastuChat.unveilScript', 'Unveil Script')}`}</button>
             {!isRecording
               ? <button onClick={startRecording} style={{
                   padding:'8px 18px', borderRadius:'100px', cursor:'pointer',
                   fontSize:'10px', fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase',
                   background:`linear-gradient(135deg,${GOLD},#b8962a)`, border:'none',
                   color: AKASHA, fontFamily:'inherit', boxShadow:`0 0 20px ${GOLD_GLOW}` }}>
-                  🔴 Perform Transmission</button>
+                  🔴 {t('vastuChat.performTransmission', 'Perform Transmission')}</button>
               : <button onClick={stopRecording} style={{
                   padding:'8px 18px', borderRadius:'100px', cursor:'pointer',
                   fontSize:'10px', fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase',
                   background:'rgba(239,68,68,0.12)', border:'1px solid rgba(239,68,68,0.4)',
                   color:'#ef4444', fontFamily:'inherit', animation:'sqiPulse 1.5s ease infinite' }}>
-                  ⏹ Seal Recording</button>}
+                  ⏹ {t('vastuChat.sealRecording', 'Seal Recording')}</button>}
             {recordedBlob && !isRecording && (
               <button onClick={playRecording} style={{
                 padding:'8px 18px', borderRadius:'100px', cursor:'pointer',
                 fontSize:'10px', fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase',
                 background:'rgba(34,211,238,0.08)', border:'1px solid rgba(34,211,238,0.3)',
-                color:'#22D3EE', fontFamily:'inherit' }}>▶ Review Frequency</button>)}
+                color:'#22D3EE', fontFamily:'inherit' }}>▶ {t('vastuChat.reviewFrequency', 'Review Frequency')}</button>)}
           </div>
         </div>
       </div>
       {showScript && scriptData && (
         <div style={{ background:'rgba(212,175,55,0.03)', borderTop:'1px solid rgba(212,175,55,0.12)', padding:'20px' }}>
-          <p style={{ ...lbl, marginBottom:'12px' }}>📜 Sacred Script</p>
+          <p style={{ ...lbl, marginBottom:'12px' }}>📜 {t('vastuChat.sacredScript', 'Sacred Script')}</p>
           <p style={{ fontFamily:'Georgia,serif', fontSize:'14px', fontStyle:'italic',
             color:'rgba(255,255,255,0.7)', lineHeight:1.8, margin:'0 0 14px' }}>"{scriptData.script}"</p>
-          <p style={{ ...lbl, color: MUTED }}>Speak slowly. Let the sound emerge from your heart center.</p>
+          <p style={{ ...lbl, color: MUTED }}>{t('vastuChat.speakSlowly', 'Speak slowly. Let the sound emerge from your heart center.')}</p>
         </div>)}
     </div>
   );
@@ -162,7 +164,25 @@ const renderMsgContent = (text: string): React.ReactNode => {
 /* ─────────────────────────────────────────────────────────────── */
 /* WELCOME SCREEN — SQI 2050 full drama                           */
 /* ─────────────────────────────────────────────────────────────── */
-const WelcomeScreen: React.FC<{onSendMessage:(t:string)=>void}> = ({onSendMessage}) => (
+const WelcomeScreen: React.FC<{onSendMessage:(t:string)=>void}> = ({onSendMessage}) => {
+  const { t } = useTranslation();
+  const ctaCards = [
+    {
+      label: t('vastuChat.welcomeCard1Label', 'Initiate Path →'),
+      title: t('vastuChat.welcomeCard1Title', 'The Living Field'),
+      icon: '🏛️',
+      desc: t('vastuChat.welcomeCard1Desc', "Begin Module 1: Overview of your home's energetic anatomy."),
+      msg: t('vastuChat.welcomeCard1Msg', 'Architect, I am ready to begin the transformation. Open the first module.'),
+    },
+    {
+      label: t('vastuChat.welcomeCard2Label', 'Third Eye Audit →'),
+      title: t('vastuChat.welcomeCard2Title', '360° Diagnostic'),
+      icon: '👁️',
+      desc: t('vastuChat.welcomeCard2Desc', 'Upload multiple photos for complete spatial synthesis.'),
+      msg: t('vastuChat.welcomeCard2Msg', 'I have photos of my room from multiple angles. I request a holistic Diagnostic Darshan.'),
+    },
+  ];
+  return (
   <div style={{
     flex:1, display:'flex', flexDirection:'column', alignItems:'center',
     justifyContent:'flex-start', textAlign:'center', padding:'16px 16px',
@@ -209,7 +229,7 @@ const WelcomeScreen: React.FC<{onSendMessage:(t:string)=>void}> = ({onSendMessag
     }}>
       <span style={{width:5,height:5,borderRadius:'50%',background:GOLD,
         boxShadow:`0 0 8px ${GOLD}`,display:'inline-block',animation:'sqiPulse 2s ease infinite'}}/>
-      Akasha-Neural Archive · Active
+      {t('vastuChat.welcomeEyebrow', 'Akasha-Neural Archive · Active')}
       <span style={{width:5,height:5,borderRadius:'50%',background:GOLD,
         boxShadow:`0 0 8px ${GOLD}`,display:'inline-block',animation:'sqiPulse 2s 1s ease infinite'}}/>
     </div>
@@ -265,8 +285,12 @@ const WelcomeScreen: React.FC<{onSendMessage:(t:string)=>void}> = ({onSendMessag
     {/* directional compass strip */}
     <div style={{display:'flex',gap:'14px',marginTop:'16px',flexWrap:'wrap',
       justifyContent:'center',opacity:.55}} className="hidden sm:flex">
-      {[['💧','Wealth · N','#60a5fa'],['🔥','Energy · SE','#f87171'],
-        ['⛰','Stability · SW',GOLD],['☀️','Grace · NE','#fbbf24']].map(([icon,label,color])=>(
+      {[
+        ['💧', t('vastuChat.compassWealthN', 'Wealth · N'), '#60a5fa'],
+        ['🔥', t('vastuChat.compassEnergySE', 'Energy · SE'), '#f87171'],
+        ['⛰', t('vastuChat.compassStabilitySW', 'Stability · SW'), GOLD],
+        ['☀️', t('vastuChat.compassGraceNE', 'Grace · NE'), '#fbbf24'],
+      ].map(([icon,label,color])=>(
         <div key={label as string} style={{display:'flex',alignItems:'center',gap:'4px'}}>
           <span style={{fontSize:'11px',color:color as string}}>{icon}</span>
           <span style={{fontSize:'7px',fontWeight:800,letterSpacing:'0.35em',
@@ -275,7 +299,8 @@ const WelcomeScreen: React.FC<{onSendMessage:(t:string)=>void}> = ({onSendMessag
       ))}
     </div>
   </div>
-);
+  );
+};
 
 /* ─────────────────────────────────────────────────────────────── */
 /* MAIN CHAT WINDOW                                                */
@@ -289,6 +314,7 @@ interface VastuChatWindowProps {
 export const VastuChatWindow: React.FC<VastuChatWindowProps> = ({
   messages, onSendMessage, isThinking,
 }) => {
+  const { t } = useTranslation();
   const [inputValue,setInputValue]         = useState('');
   const [selectedImages,setSelectedImages] = useState<string[]>([]);
   const scrollRef    = useRef<HTMLDivElement>(null);
@@ -370,7 +396,7 @@ export const VastuChatWindow: React.FC<VastuChatWindowProps> = ({
                   {msg.images.map((img,i)=>(
                     <div key={i} style={{borderRadius:'14px',overflow:'hidden',
                       border:'1px solid rgba(212,175,55,0.15)'}}>
-                      <img src={img} alt={`Space ${i+1}`}
+                      <img src={img} alt={t('vastuChat.spaceImageAlt', { defaultValue: 'Space {{n}}', n: i + 1 })}
                         style={{width:'100%',height:'120px',objectFit:'cover'}}/>
                     </div>))}
                 </div>)}
@@ -383,7 +409,7 @@ export const VastuChatWindow: React.FC<VastuChatWindowProps> = ({
 
               <div style={{fontSize:'8px',fontWeight:800,letterSpacing:'0.3em',
                 textTransform:'uppercase',color:MUTED,textAlign:'right',marginTop:'10px'}}>
-                {new Date(msg.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})} · Transmission
+                {new Date(msg.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})} · {t('vastuChat.transmissionStamp', 'Transmission')}
               </div>
             </div>
           </motion.div>
@@ -406,7 +432,7 @@ export const VastuChatWindow: React.FC<VastuChatWindowProps> = ({
               </div>
               <span style={{fontSize:'9px',fontWeight:800,letterSpacing:'0.35em',
                 textTransform:'uppercase',color:MUTED}}>
-                Siddha Third Eye is analyzing your field…
+                {t('vastuChat.analyzingField', 'Siddha Third Eye is analyzing your field…')}
               </span>
             </div>
           </div>
@@ -426,11 +452,11 @@ export const VastuChatWindow: React.FC<VastuChatWindowProps> = ({
             <div style={{marginBottom:'12px',background:'rgba(212,175,55,0.04)',
               border:'1px solid rgba(212,175,55,0.15)',borderRadius:'18px',padding:'12px'}}>
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'8px'}}>
-                <p style={{...lbl}}>Multi-View Diagnostic Ready</p>
+                <p style={{...lbl}}>{t('vastuChat.multiViewReady', 'Multi-View Diagnostic Ready')}</p>
                 <button type="button" onClick={()=>setSelectedImages([])} style={{
                   fontSize:'8px',fontWeight:800,letterSpacing:'0.3em',textTransform:'uppercase',
                   color:'rgba(239,68,68,0.8)',background:'none',border:'none',cursor:'pointer',fontFamily:'inherit'}}>
-                  Clear All</button>
+                  {t('vastuChat.clearAll', 'Clear All')}</button>
               </div>
               <div style={{display:'flex',flexWrap:'wrap',gap:'8px'}}>
                 {selectedImages.map((img,i)=>(
@@ -455,7 +481,7 @@ export const VastuChatWindow: React.FC<VastuChatWindowProps> = ({
 
           <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
             <button type="button" onClick={()=>fileInputRef.current?.click()}
-              title="Upload room photos for diagnostic"
+              title={t('vastuChat.uploadPhotosTitle', 'Upload room photos for diagnostic')}
               style={{flexShrink:0,width:44,height:44,borderRadius:'14px',
                 background:GLASS,border:`1px solid ${BORDER}`,
                 color:'rgba(255,255,255,0.45)',fontSize:'20px',cursor:'pointer',
@@ -469,7 +495,7 @@ export const VastuChatWindow: React.FC<VastuChatWindowProps> = ({
             <div style={{flexGrow:1,position:'relative'}}>
               <input type="text" value={inputValue}
                 onChange={e=>setInputValue(e.target.value)}
-                placeholder="Direct your inquiry to the Architect…"
+                placeholder={t('vastuChat.inputPlaceholder', 'Direct your inquiry to the Architect…')}
                 disabled={isThinking}
                 style={{width:'100%',background:GLASS,border:`1px solid ${BORDER}`,
                   borderRadius:'14px',padding:'12px 52px 12px 16px',
@@ -495,8 +521,12 @@ export const VastuChatWindow: React.FC<VastuChatWindowProps> = ({
 
             <div className="hidden sm:flex" style={{display:'none',justifyContent:'center',gap:'12px',
             marginTop:'8px',overflowX:'auto',flexWrap:'wrap',paddingBottom:'4px'}}>
-            {[['💧','Wealth (N)','#60a5fa'],['🔥','Energy (SE)','#f87171'],
-              ['⛰','Stability (SW)',GOLD],['☀️','Grace (NE)','#fbbf24']].map(([icon,label,color])=>(
+            {[
+              ['💧', t('vastuChat.quickWealthN', 'Wealth (N)'), '#60a5fa'],
+              ['🔥', t('vastuChat.quickEnergySE', 'Energy (SE)'), '#f87171'],
+              ['⛰', t('vastuChat.quickStabilitySW', 'Stability (SW)'), GOLD],
+              ['☀️', t('vastuChat.quickGraceNE', 'Grace (NE)'), '#fbbf24'],
+            ].map(([icon,label,color])=>(
               <div key={label as string} style={{display:'flex',alignItems:'center',gap:'5px',
                 opacity:.35,whiteSpace:'nowrap',cursor:'default',transition:'opacity 0.2s'}}
                 onMouseEnter={e=>(e.currentTarget as HTMLDivElement).style.opacity='0.85'}

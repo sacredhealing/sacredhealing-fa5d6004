@@ -12,6 +12,7 @@ import { useCuratedPlaylists, CuratedPlaylist } from '@/hooks/useCuratedPlaylist
 import { useAuth } from '@/hooks/useAuth';
 import { selectTrackForMood, type MoodKey, getTrackIdSafe, getTrackLabel } from '@/features/music/selectTrackForMood';
 import { useJyotishProfile } from '@/hooks/useJyotishProfile';
+import { useTranslation } from '@/hooks/useTranslation';
 
 // SQI 2050 — Sacred Sound Portal styles
 const styles = `
@@ -530,6 +531,7 @@ const styles = `
 `;
 
 const JyotishMusicCard = () => {
+  const { t } = useTranslation();
   const jyotish = useJyotishProfile();
   if (jyotish.isLoading) return null;
   return (
@@ -537,14 +539,17 @@ const JyotishMusicCard = () => {
       <div className="flex items-center gap-2 mb-2">
         <span className="text-indigo-400">🎵</span>
         <span className="text-sm font-serif text-amber-300 uppercase tracking-wider">
-          Cosmic Sound Prescription
+          {t('music.portal.jyotishTitle', 'Cosmic Sound Prescription')}
         </span>
       </div>
       <p className="text-sm text-amber-100/70">
-        Your <strong className="text-amber-200">{jyotish.mahadasha}</strong> period resonates with{' '}
-        <strong className="text-amber-200">{jyotish.musicRaga}</strong> and{' '}
+        {t('music.portal.jyotishBodyPrefix', 'Your')}{' '}
+        <strong className="text-amber-200">{jyotish.mahadasha}</strong>{' '}
+        {t('music.portal.jyotishBodyMid', 'period resonates with')}{' '}
+        <strong className="text-amber-200">{jyotish.musicRaga}</strong>{' '}
+        {t('music.portal.jyotishBodyAnd', 'and')}{' '}
         <strong className="text-amber-200">{jyotish.musicFrequency}</strong>.{' '}
-        Listen to these to balance your {jyotish.primaryDosha} energy.
+        {t('music.portal.jyotishBodySuffix', { defaultValue: 'Listen to these to balance your {{dosha}} energy.', dosha: jyotish.primaryDosha })}
       </p>
     </div>
   );
@@ -570,38 +575,6 @@ interface Album {
 }
 
 const GENRES = ['all', 'beats', 'meditation', 'mystic', 'reggae', 'hip-hop', 'reggaeton', 'indian', 'shamanic'];
-
-const MOODS = [
-  { value: 'all', label: 'All Moods' },
-  { value: 'calm', label: 'Calm' },
-  { value: 'energizing', label: 'Energizing' },
-  { value: 'healing', label: 'Healing' },
-  { value: 'meditative', label: 'Meditative' },
-  { value: 'grounding', label: 'Grounding' },
-];
-
-const SPIRITUAL_PATHS = [
-  { value: 'all', label: 'All Paths' },
-  { value: 'inner_peace', label: 'Inner Peace' },
-  { value: 'focus', label: 'Focus' },
-  { value: 'sleep', label: 'Sleep Sanctuary' },
-  { value: 'healing', label: 'Deep Healing' },
-  { value: 'awakening', label: 'Awakening' },
-];
-
-// Mood cards for SQI hero grid
-const MOOD_CARDS = [
-  { hz: '432 HZ', title: 'Calm my thoughts',  trackLabel: 'HARE KRISHNA SLOW (Beat)',       tag: 'Calming', moodKey: 'calm' as MoodKey },
-  { hz: '528 HZ', title: 'Feel comfort',      trackLabel: 'ABUNDANCE ACTIVATION',           tag: 'Healing', moodKey: 'comfort' as MoodKey },
-  { hz: '417 HZ', title: 'More energy',       trackLabel: 'DISCIPLE 2 DISCIPLINE (Beat)',   tag: 'Energizing', moodKey: 'energy' as MoodKey },
-  { hz: '396 HZ', title: 'Deep rest',         trackLabel: 'DEVI MARYADA (Beat)',            tag: 'Rest', moodKey: 'rest' as MoodKey },
-  { hz: '432 HZ', title: 'Silent background', trackLabel: 'SCRIPTUREZ OF GIZA (Beat)',      tag: 'Focus', moodKey: 'background' as MoodKey, full: true },
-];
-
-const RECENT_PLACEHOLDERS = [
-  { hz: '432 Hz', title: 'Continue listening' },
-  { hz: '528 Hz', title: 'Recent track' },
-];
 
 function MiniWave() {
   return (
@@ -646,6 +619,7 @@ function timeOfDayKey() {
 }
 
 const Music: React.FC = () => {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -687,6 +661,49 @@ const Music: React.FC = () => {
     background: null,
   });
 
+  const moods = useMemo(
+    () => [
+      { value: 'all', label: t('music.portal.moodAll', 'All Moods') },
+      { value: 'calm', label: t('music.portal.moodCalm', 'Calm') },
+      { value: 'energizing', label: t('music.portal.moodEnergizing', 'Energizing') },
+      { value: 'healing', label: t('music.portal.moodHealing', 'Healing') },
+      { value: 'meditative', label: t('music.portal.moodMeditative', 'Meditative') },
+      { value: 'grounding', label: t('music.portal.moodGrounding', 'Grounding') },
+    ],
+    [t]
+  );
+
+  const spiritualPaths = useMemo(
+    () => [
+      { value: 'all', label: t('music.portal.pathAll', 'All Paths') },
+      { value: 'inner_peace', label: t('music.portal.pathInnerPeace', 'Inner Peace') },
+      { value: 'focus', label: t('music.portal.pathFocus', 'Focus') },
+      { value: 'sleep', label: t('music.portal.pathSleep', 'Sleep Sanctuary') },
+      { value: 'healing', label: t('music.portal.pathDeepHealing', 'Deep Healing') },
+      { value: 'awakening', label: t('music.portal.pathAwakening', 'Awakening') },
+    ],
+    [t]
+  );
+
+  const moodCards = useMemo(
+    () => [
+      { hz: '432 HZ', title: t('music.portal.cardCalmThoughts', 'Calm my thoughts'), trackLabel: 'HARE KRISHNA SLOW (Beat)', tag: t('music.portal.tagCalming', 'Calming'), moodKey: 'calm' as MoodKey },
+      { hz: '528 HZ', title: t('music.portal.cardComfort', 'Feel comfort'), trackLabel: 'ABUNDANCE ACTIVATION', tag: t('music.portal.tagHealing', 'Healing'), moodKey: 'comfort' as MoodKey },
+      { hz: '417 HZ', title: t('music.portal.cardEnergy', 'More energy'), trackLabel: 'DISCIPLE 2 DISCIPLINE (Beat)', tag: t('music.portal.tagEnergizing', 'Energizing'), moodKey: 'energy' as MoodKey },
+      { hz: '396 HZ', title: t('music.portal.cardRest', 'Deep rest'), trackLabel: 'DEVI MARYADA (Beat)', tag: t('music.portal.tagRest', 'Rest'), moodKey: 'rest' as MoodKey },
+      { hz: '432 HZ', title: t('music.portal.cardBackground', 'Silent background'), trackLabel: 'SCRIPTUREZ OF GIZA (Beat)', tag: t('music.portal.tagFocus', 'Focus'), moodKey: 'background' as MoodKey, full: true },
+    ],
+    [t]
+  );
+
+  const recentPlaceholders = useMemo(
+    () => [
+      { hz: '432 Hz', title: t('music.portal.continueListening', 'Continue listening') },
+      { hz: '528 Hz', title: t('music.portal.recentTrack', 'Recent track') },
+    ],
+    [t]
+  );
+
   useEffect(() => {
     if (!starsRef.current) return;
     const frag = document.createDocumentFragment();
@@ -716,11 +733,11 @@ const Music: React.FC = () => {
     const membershipSuccess = searchParams.get('membership_success');
     const albumSuccess = searchParams.get('album_success');
     if (membershipSuccess) {
-      toast({ title: "Subscription active!", description: "Enjoy unlimited music streaming." });
+      toast({ title: t('music.portal.toastSubActive', 'Subscription active!'), description: t('music.portal.toastSubDesc', 'Enjoy unlimited music streaming.') });
       checkSubscription();
     }
     if (albumSuccess) {
-      toast({ title: "Album purchased!", description: "You now have full access to all tracks in this album." });
+      toast({ title: t('music.portal.toastAlbumPurchased', 'Album purchased!'), description: t('music.portal.toastAlbumDesc', 'You now have full access to all tracks in this album.') });
       fetchPurchasedAlbums();
       refreshPurchases();
     }
@@ -767,7 +784,7 @@ const Music: React.FC = () => {
       if (error) throw error;
       if (data?.url) window.open(data.url, '_blank');
     } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: t('common.error', 'Error'), description: error.message, variant: "destructive" });
     }
   };
 
@@ -798,7 +815,7 @@ const Music: React.FC = () => {
       if (error) throw error;
       if (data?.url) window.open(data.url, '_blank');
     } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: t('common.error', 'Error'), description: error.message, variant: "destructive" });
     }
   };
 
@@ -810,7 +827,7 @@ const Music: React.FC = () => {
       if (error) throw error;
       if (data?.checkoutUrl) window.open(data.checkoutUrl, '_blank');
     } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: t('common.error', 'Error'), description: error.message, variant: "destructive" });
     }
   };
 
@@ -822,7 +839,7 @@ const Music: React.FC = () => {
     await supabase.from('user_playlists').insert({ user_id: user.id, name: newPlaylistName.trim() });
     setNewPlaylistName('');
     fetchPlaylists();
-    toast({ title: "Playlist created" });
+    toast({ title: t('music.portal.playlistCreated', 'Playlist created') });
   };
 
   const renamePlaylist = async (id: string) => {
@@ -842,7 +859,7 @@ const Music: React.FC = () => {
     const maxOrder = playlistTracks.length;
     await supabase.from('playlist_tracks').insert({ playlist_id: playlistId, track_id: trackId, order_index: maxOrder });
     fetchPlaylistTracks(playlistId);
-    toast({ title: "Added to playlist" });
+    toast({ title: t('music.portal.addedToPlaylist', 'Added to playlist') });
   };
 
   const removeFromPlaylist = async (playlistId: string, trackId: string) => {
@@ -880,12 +897,12 @@ const Music: React.FC = () => {
     const used: string[] = [];
 
     const pickMood = (mood: MoodKey) => {
-      const t = selectTrackForMood(tracks as any[], mood, {
+      const picked = selectTrackForMood(tracks as any[], mood, {
         seed: `${baseSeed}:${mood}`,
         excludeIds: used,
       }) as Track | null;
-      if (t) used.push(getTrackIdSafe(t as any));
-      picks[mood] = t;
+      if (picked) used.push(getTrackIdSafe(picked as any));
+      picks[mood] = picked;
     };
 
     pickMood('calm');
@@ -900,7 +917,7 @@ const Music: React.FC = () => {
   const onMoodClick = (mood: MoodKey) => {
     const track = dailyPicks[mood];
     if (!track) {
-      toast({ title: 'No tracks available', description: 'Music sessions are coming soon.' });
+      toast({ title: t('music.portal.toastNoTracksTitle', 'No tracks available'), description: t('music.portal.toastNoTracksDesc', 'Music sessions are coming soon.') });
       return;
     }
     playTrack(track, tracks);
@@ -938,21 +955,21 @@ const Music: React.FC = () => {
           <button className="sqi-back-btn" onClick={() => navigate(-1)}>
             ←
           </button>
-          <div className="sqi-page-title">♪ Sacred Sound Portal</div>
+          <div className="sqi-page-title">{t('music.portal.pageTitle', '♪ Sacred Sound Portal')}</div>
         </div>
 
         <div className="planetary-hero">
-          <div className="hero-eyebrow">Current Planetary Sound</div>
+          <div className="hero-eyebrow">{t('music.portal.heroEyebrow', 'Current Planetary Sound')}</div>
           <div className="hero-title">
-            Sacred
+            {t('music.portal.heroTitle1', 'Sacred')}
             <br />
-            Frequencies
+            {t('music.portal.heroTitle2', 'Frequencies')}
           </div>
           <HeroWave />
           <div className="hero-meta">
             <div className="hero-freq-tag">
               <div className="nadi-dot" />
-              963 Hz · Live Transmission
+              {t('music.portal.heroLiveTransmission', '963 Hz · Live Transmission')}
             </div>
             <button className="hero-play-btn" onClick={playForMe}>
               ▶
@@ -963,11 +980,10 @@ const Music: React.FC = () => {
         <div className="prescription-card">
           <div className="presc-header">
             <span style={{ color: 'var(--gold)' }}>♫</span>
-            <span className="presc-label">Cosmic Sound Prescription</span>
+            <span className="presc-label">{t('music.portal.prescriptionLabel', 'Cosmic Sound Prescription')}</span>
           </div>
           <div className="presc-text">
-            Your <strong>Jupiter</strong> period resonates with <strong>Raga Yaman</strong> and{' '}
-            <strong>963Hz (divine connection)</strong>. Listen to these to balance your Kapha energy.
+            {t('music.portal.prescriptionCopy', 'Your Jupiter period resonates with Raga Yaman and 963Hz (divine connection). Listen to these to balance your Kapha energy.')}
           </div>
         </div>
 
@@ -980,19 +996,19 @@ const Music: React.FC = () => {
           <div className="pf-inner">
             <div className="pf-crown">👑</div>
             <div className="pf-content">
-              <div className="pf-tier-label">Pranaflow Tier</div>
-              <div className="pf-name">Music Member</div>
-              <div className="pf-desc">Unlimited streaming · 33 SHC/track · Renews soon</div>
+              <div className="pf-tier-label">{t('music.portal.pranaflowTier', 'Pranaflow Tier')}</div>
+              <div className="pf-name">{t('music.portal.musicMember', 'Music Member')}</div>
+              <div className="pf-desc">{t('music.portal.pranaflowDesc', 'Unlimited streaming · 33 SHC/track · Renews soon')}</div>
             </div>
-            <div className="pf-badge">19€/mo</div>
+            <div className="pf-badge">{t('music.portal.pranaflowPrice', '19€/mo')}</div>
           </div>
         </div>
 
         <div className="mastering-card" onClick={() => navigate('/mastering')}>
           <div className="mastering-icon">🎛</div>
           <div style={{ flex: 1 }}>
-            <div className="mastering-title">Music Mastering Service</div>
-            <div className="mastering-sub">Professional audio mastering from €147</div>
+            <div className="mastering-title">{t('music.portal.masteringTitle', 'Music Mastering Service')}</div>
+            <div className="mastering-sub">{t('music.portal.masteringSub', 'Professional audio mastering from €147')}</div>
           </div>
           <span style={{ color: 'var(--text-muted)', fontSize: 18 }}>›</span>
         </div>
@@ -1001,8 +1017,8 @@ const Music: React.FC = () => {
 
         <div className="section-header">
           <div>
-            <div className="section-title">What do you need right now?</div>
-            <div className="section-sub">One tap — the sound meets you where you are.</div>
+            <div className="section-title">{t('music.portal.sectionNeedTitle', 'What do you need right now?')}</div>
+            <div className="section-sub">{t('music.portal.sectionNeedSub', 'One tap — the sound meets you where you are.')}</div>
           </div>
           <button
             className="shuffle-btn"
@@ -1017,12 +1033,12 @@ const Music: React.FC = () => {
               });
             }}
           >
-            ⇄ Shuffle
+            ⇄ {t('music.portal.shuffle', 'Shuffle')}
           </button>
         </div>
 
         <div className="mood-grid">
-          {MOOD_CARDS.map((m) => (
+          {moodCards.map((m) => (
             <div
               key={m.title}
               className={`mood-card${m.full ? ' full-width' : ''}`}
@@ -1045,8 +1061,8 @@ const Music: React.FC = () => {
 
         <div className="section-header">
           <div>
-            <div className="section-title">Your Sound Path</div>
-            <div className="section-sub">The sounds you've returned to recently.</div>
+            <div className="section-title">{t('music.portal.soundPathTitle', 'Your Sound Path')}</div>
+            <div className="section-sub">{t('music.portal.soundPathSub', "The sounds you've returned to recently.")}</div>
           </div>
         </div>
 
@@ -1054,7 +1070,7 @@ const Music: React.FC = () => {
           <div className="path-card" onClick={() => playTrack(lastPlayed, tracks)}>
             <div className="path-freq-badge">432 Hz</div>
             <div style={{ flex: 1 }}>
-              <div className="path-title">Continue listening</div>
+              <div className="path-title">{t('music.portal.continueListening', 'Continue listening')}</div>
               <div className="path-sub">{lastPlayed.title}</div>
             </div>
             <div className="path-play">▶</div>
@@ -1077,12 +1093,12 @@ const Music: React.FC = () => {
 
         {!lastPlayed && historyTracks.length === 0 && (
           <>
-            {RECENT_PLACEHOLDERS.map((r) => (
+            {recentPlaceholders.map((r) => (
               <div key={r.title} className="path-card">
                 <div className="path-freq-badge">{r.hz}</div>
                 <div style={{ flex: 1 }}>
                   <div className="path-title">{r.title}</div>
-                  <div className="path-sub">Soon this will show your listening.</div>
+                  <div className="path-sub">{t('music.portal.soonListening', 'Soon this will show your listening.')}</div>
                 </div>
                 <div className="path-play">▶</div>
               </div>
@@ -1093,9 +1109,9 @@ const Music: React.FC = () => {
         <div className="time-matched" style={{ marginTop: 8 }} onClick={playForMe}>
           <div className="time-icon">🕐</div>
           <div style={{ flex: 1 }}>
-            <div className="time-label">Nadi Scanner · Time-Matched</div>
-            <div className="time-title">The sound that fits now</div>
-            <div className="time-sub">Matched to your time of day — no thinking required.</div>
+            <div className="time-label">{t('music.portal.nadiScanner', 'Nadi Scanner · Time-Matched')}</div>
+            <div className="time-title">{t('music.portal.timeMatchedTitle', 'The sound that fits now')}</div>
+            <div className="time-sub">{t('music.portal.timeMatchedSub', 'Matched to your time of day — no thinking required.')}</div>
           </div>
           <span style={{ color: 'var(--cyan)', fontSize: 16 }}>›</span>
         </div>
@@ -1108,8 +1124,8 @@ const Music: React.FC = () => {
             }}
           >
             <div>
-              <div className="browse-title">Browse All Sounds</div>
-              <div className="browse-sub">Only if you feel like exploring.</div>
+              <div className="browse-title">{t('music.portal.browseTitle', 'Browse All Sounds')}</div>
+              <div className="browse-sub">{t('music.portal.browseSub', 'Only if you feel like exploring.')}</div>
             </div>
             <div className="browse-chevron">{openLibrary ? '∧' : '∨'}</div>
           </div>
@@ -1136,7 +1152,10 @@ const Music: React.FC = () => {
                     }`}
                   >
                     {tab === 'albums' && <Disc size={14} className="inline mr-1" />}
-                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                    {tab === 'browse' && t('music.portal.tabBrowse', 'Browse')}
+                    {tab === 'albums' && t('music.portal.tabAlbums', 'Albums')}
+                    {tab === 'playlists' && t('music.portal.tabPlaylists', 'Playlists')}
+                    {tab === 'history' && t('music.portal.tabHistory', 'History')}
                   </button>
                 ))}
               </div>
@@ -1148,7 +1167,7 @@ const Music: React.FC = () => {
                     <>
                       <div className="flex items-center gap-2 mb-4">
                         <Button variant="ghost" size="sm" onClick={() => setSelectedAlbum(null)}>
-                          ← Back
+                          ← {t('common.back', 'Back')}
                         </Button>
                       </div>
 
@@ -1169,14 +1188,14 @@ const Music: React.FC = () => {
                           <h2 className="text-xl font-bold">{selectedAlbum.title}</h2>
                           <p className="text-sm text-muted-foreground">{selectedAlbum.artist}</p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {albumTracksMap[selectedAlbum.id]?.length || 0} tracks
+                            {t('music.portal.trackCount', { defaultValue: '{{count}} tracks', count: String(albumTracksMap[selectedAlbum.id]?.length || 0) })}
                           </p>
 
                           {hasAlbumAccess(selectedAlbum.id) ? (
-                            <span className="text-xs text-primary mt-2 inline-block">✓ Full access</span>
+                            <span className="text-xs text-primary mt-2 inline-block">{t('music.portal.fullAccess', '✓ Full access')}</span>
                           ) : (
                             <Button size="sm" className="mt-2" onClick={() => handlePurchaseAlbum(selectedAlbum)}>
-                              Buy Album ${selectedAlbum.price_usd}
+                              {t('music.portal.buyAlbum', `Buy Album $${selectedAlbum.price_usd}`)}
                             </Button>
                           )}
                         </div>
@@ -1223,10 +1242,10 @@ const Music: React.FC = () => {
                           <p className="text-xs text-muted-foreground truncate">{album.artist}</p>
                           <div className="flex items-center justify-between mt-1">
                             <span className="text-xs text-muted-foreground">
-                              {albumTracksMap[album.id]?.length || 0} tracks
+                              {t('music.portal.trackCount', { defaultValue: '{{count}} tracks', count: String(albumTracksMap[album.id]?.length || 0) })}
                             </span>
                             {hasAlbumAccess(album.id) ? (
-                              <span className="text-xs text-primary">✓ Owned</span>
+                              <span className="text-xs text-primary">{t('music.owned', '✓ Owned')}</span>
                             ) : (
                               <span className="text-xs text-primary font-medium">${album.price_usd}</span>
                             )}
@@ -1235,7 +1254,7 @@ const Music: React.FC = () => {
                       ))}
                       {albums.length === 0 && (
                         <p className="col-span-2 text-muted-foreground text-sm text-center py-8">
-                          No albums available yet
+                          {t('music.portal.noAlbums', 'No albums available yet')}
                         </p>
                       )}
                     </div>
@@ -1257,7 +1276,7 @@ const Music: React.FC = () => {
                             setCuratedPlaylistTracks([]);
                           }}
                         >
-                          <ArrowLeft size={16} className="mr-1" /> Back
+                          <ArrowLeft size={16} className="mr-1" /> {t('common.back', 'Back')}
                         </Button>
                       </div>
 
@@ -1312,7 +1331,7 @@ const Music: React.FC = () => {
                       {/* Curated Playlists Section */}
                       {curatedPlaylists.length > 0 && (
                         <div className="mb-6">
-                          <h2 className="text-lg font-semibold mb-3">Featured Playlists</h2>
+                          <h2 className="text-lg font-semibold mb-3">{t('music.portal.featuredPlaylists', 'Featured Playlists')}</h2>
                           <div className="grid grid-cols-2 gap-3">
                             {curatedPlaylists.map((playlist) => (
                               <CuratedPlaylistCard
@@ -1330,11 +1349,11 @@ const Music: React.FC = () => {
                       )}
 
                       {/* Filters Section */}
-                      <h2 className="text-lg font-semibold mb-3">All Tracks</h2>
+                      <h2 className="text-lg font-semibold mb-3">{t('music.portal.allTracks', 'All Tracks')}</h2>
 
                       {/* Genre Filter */}
                       <div className="mb-3">
-                        <p className="text-xs text-muted-foreground mb-2">Genre</p>
+                        <p className="text-xs text-muted-foreground mb-2">{t('music.portal.genre', 'Genre')}</p>
                         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                           {GENRES.map((g) => (
                             <button
@@ -1347,7 +1366,7 @@ const Music: React.FC = () => {
                               }`}
                             >
                               {g === 'all'
-                                ? 'All'
+                                ? t('music.portal.filterAll', 'All')
                                 : g.charAt(0).toUpperCase() + g.slice(1).replace('-', ' ')}
                             </button>
                           ))}
@@ -1356,9 +1375,9 @@ const Music: React.FC = () => {
 
                       {/* Mood Filter */}
                       <div className="mb-3">
-                        <p className="text-xs text-muted-foreground mb-2">Mood</p>
+                        <p className="text-xs text-muted-foreground mb-2">{t('music.portal.moodFilter', 'Mood')}</p>
                         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                          {MOODS.map((m) => (
+                          {moods.map((m) => (
                             <button
                               key={m.value}
                               onClick={() => setSelectedMood(m.value)}
@@ -1376,9 +1395,9 @@ const Music: React.FC = () => {
 
                       {/* Spiritual Path Filter */}
                       <div className="mb-4">
-                        <p className="text-xs text-muted-foreground mb-2">Spiritual Path</p>
+                        <p className="text-xs text-muted-foreground mb-2">{t('music.portal.spiritualPath', 'Spiritual Path')}</p>
                         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                          {SPIRITUAL_PATHS.map((p) => (
+                          {spiritualPaths.map((p) => (
                             <button
                               key={p.value}
                               onClick={() => setSelectedPath(p.value)}
@@ -1408,7 +1427,7 @@ const Music: React.FC = () => {
                         ))}
                         {filteredTracks.length === 0 && (
                           <p className="text-muted-foreground text-sm text-center py-8">
-                            No tracks in this genre yet
+                            {t('music.portal.noTracksGenre', 'No tracks in this genre yet')}
                           </p>
                         )}
                       </div>
@@ -1425,7 +1444,7 @@ const Music: React.FC = () => {
                     <Input
                       value={newPlaylistName}
                       onChange={(e) => setNewPlaylistName(e.target.value)}
-                      placeholder="New playlist name"
+                      placeholder={t('music.portal.newPlaylistPlaceholder', 'New playlist name')}
                       className="flex-1"
                       onKeyDown={(e) => e.key === 'Enter' && createPlaylist()}
                     />
@@ -1438,7 +1457,7 @@ const Music: React.FC = () => {
                     <>
                       <div className="flex items-center gap-2 mb-4">
                         <Button variant="ghost" size="sm" onClick={() => setSelectedPlaylist(null)}>
-                          ← Back
+                          ← {t('common.back', 'Back')}
                         </Button>
                         <span className="font-semibold">
                           {playlists.find((p) => p.id === selectedPlaylist)?.name}
@@ -1466,7 +1485,7 @@ const Music: React.FC = () => {
                         ))}
                         {playlistTracksList.length === 0 && (
                           <p className="text-muted-foreground text-sm text-center py-8">
-                            No tracks in this playlist yet
+                            {t('music.portal.noPlaylistTracks', 'No tracks in this playlist yet')}
                           </p>
                         )}
                       </div>
@@ -1520,7 +1539,7 @@ const Music: React.FC = () => {
                       ))}
                       {playlists.length === 0 && (
                         <p className="text-muted-foreground text-sm text-center py-8">
-                          Create your first playlist
+                          {t('music.portal.createFirstPlaylist', 'Create your first playlist')}
                         </p>
                       )}
                     </div>
@@ -1531,7 +1550,7 @@ const Music: React.FC = () => {
               {/* History Tab */}
               {activeTab === 'history' && (
                 <div>
-                  <h2 className="text-lg font-semibold mb-3">Most Played</h2>
+                  <h2 className="text-lg font-semibold mb-3">{t('music.portal.mostPlayed', 'Most Played')}</h2>
                   <div className="space-y-2">
                     {historyTracks.map((track, i) => (
                       <div key={track.id} className="flex items-center gap-2">
@@ -1548,13 +1567,13 @@ const Music: React.FC = () => {
                           />
                         </div>
                         <span className="text-xs text-muted-foreground shrink-0">
-                          {playHistory.find((h) => h.track_id === track.id)?.play_count} plays
+                          {t('music.portal.plays', { defaultValue: '{{count}} plays', count: String(playHistory.find((h) => h.track_id === track.id)?.play_count ?? 0) })}
                         </span>
                       </div>
                     ))}
                     {historyTracks.length === 0 && (
                       <p className="text-muted-foreground text-sm text-center py-8">
-                        No play history yet
+                        {t('music.portal.noPlayHistory', 'No play history yet')}
                       </p>
                     )}
                   </div>
@@ -1567,12 +1586,12 @@ const Music: React.FC = () => {
 
       <nav className="bottom-nav">
         {[
-          { icon: '⌂', label: 'Home' },
-          { icon: '◎', label: 'Meditate' },
-          { icon: '✦', label: 'Mantras' },
-          { icon: '♪', label: 'Music', active: true },
-          { icon: '❋', label: 'Healing' },
-          { icon: '◯', label: 'Profile' },
+          { icon: '⌂', label: t('music.portal.navHome', 'Home') },
+          { icon: '◎', label: t('music.portal.navMeditate', 'Meditate') },
+          { icon: '✦', label: t('music.portal.navMantras', 'Mantras') },
+          { icon: '♪', label: t('music.portal.navMusic', 'Music'), active: true },
+          { icon: '❋', label: t('music.portal.navHealing', 'Healing') },
+          { icon: '◯', label: t('music.portal.navProfile', 'Profile') },
         ].map((n) => (
           <div key={n.label} className={`nav-item${n.active ? ' active' : ''}`}>
             <div className="nav-icon">{n.icon}</div>
@@ -1582,7 +1601,7 @@ const Music: React.FC = () => {
       </nav>
 
       <button className="float-btn" onClick={playForMe}>
-        🎵 Play something for me
+        🎵 {t('music.portal.floatPlayForMe', 'Play something for me')}
       </button>
     </div>
   );

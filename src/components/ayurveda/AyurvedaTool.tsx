@@ -33,7 +33,7 @@ import { AyurvedaChatConsultation } from './AyurvedaChatConsultation';
 import { AyurvedaLiveDoctor } from './AyurvedaLiveDoctor';
 import { useAyurvedaAnalysis } from '@/hooks/useAyurvedaAnalysis';
 import type { AyurvedaUserProfile, AyurvedaMembershipLevel } from '@/lib/ayurvedaTypes';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 
 // ─── SQI 2050 DESIGN TOKENS ──────────────────────────────────────────────────
 const SQI = {

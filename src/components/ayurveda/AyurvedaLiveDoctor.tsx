@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import type { AyurvedaUserProfile, DoshaProfile } from '@/lib/ayurvedaTypes';
+import { useTranslation } from '@/hooks/useTranslation';
+import { chatSpeechLocale } from '@/lib/chatSpeechLocale';
 
 // Web Speech API type declarations
 interface SpeechRecognitionEvent extends Event {
@@ -45,6 +47,7 @@ interface AyurvedaLiveDoctorProps {
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ayurveda-chat`;
 
 export const AyurvedaLiveDoctor: React.FC<AyurvedaLiveDoctorProps> = ({ profile, dosha }) => {
+  const { t, language } = useTranslation();
   const [isActive, setIsActive] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -71,15 +74,16 @@ export const AyurvedaLiveDoctor: React.FC<AyurvedaLiveDoctorProps> = ({ profile,
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 0.9;
       utterance.pitch = 1;
+      const speechLocale = chatSpeechLocale(language);
+      utterance.lang = speechLocale;
       
-      // Try to find a calming voice
+      // Prefer a voice matching the session language
       const voices = window.speechSynthesis.getVoices();
-      const preferredVoice = voices.find(v => 
-        v.name.includes('Samantha') || 
-        v.name.includes('Karen') || 
-        v.name.includes('Google UK English Female') ||
-        v.lang.includes('en')
-      );
+      const langPrefix = speechLocale.split('-')[0];
+      const preferredVoice =
+        voices.find((v) => v.lang.startsWith(speechLocale)) ||
+        voices.find((v) => v.lang.startsWith(langPrefix)) ||
+        voices.find((v) => v.name.includes('Samantha') || v.name.includes('Karen') || v.lang.includes('en'));
       if (preferredVoice) {
         utterance.voice = preferredVoice;
       }
@@ -101,7 +105,7 @@ export const AyurvedaLiveDoctor: React.FC<AyurvedaLiveDoctorProps> = ({ profile,
       synthRef.current = utterance;
       window.speechSynthesis.speak(utterance);
     }
-  }, [isActive]);
+  }, [isActive, language]);
 
   const sendToDoctor = useCallback(async (userText: string) => {
     if (!userText.trim()) return;
@@ -120,6 +124,7 @@ export const AyurvedaLiveDoctor: React.FC<AyurvedaLiveDoctorProps> = ({ profile,
           messages: messagesRef.current,
           profile,
           dosha,
+          language,
         }),
       });
 
@@ -180,11 +185,11 @@ export const AyurvedaLiveDoctor: React.FC<AyurvedaLiveDoctorProps> = ({ profile,
       }
     } catch (error) {
       console.error('Doctor error:', error);
-      const errorMsg = 'Forgive me, my connection was interrupted. Please speak again.';
+      const errorMsg = t('ayurvedaLive.connectionInterrupted', 'Forgive me, my connection was interrupted. Please speak again.');
       setTranscription(prev => [...prev, { role: 'doctor', text: errorMsg }]);
       speakText(errorMsg);
     }
-  }, [profile, dosha, speakText]);
+  }, [profile, dosha, speakText, language, t]);
 
   const startSession = useCallback(async () => {
     setIsConnecting(true);
@@ -193,7 +198,7 @@ export const AyurvedaLiveDoctor: React.FC<AyurvedaLiveDoctorProps> = ({ profile,
       // Check for speech recognition support
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognition) {
-        toast.error('Speech recognition is not supported in this browser. Please use Chrome.');
+        toast.error(t('ayurvedaLive.speechNotSupported', 'Speech recognition is not supported in this browser. Please use Chrome.'));
         setIsConnecting(false);
         return;
       }
@@ -210,7 +215,7 @@ export const AyurvedaLiveDoctor: React.FC<AyurvedaLiveDoctorProps> = ({ profile,
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
-      recognition.lang = 'en-US';
+      recognition.lang = chatSpeechLocale(language);
 
       recognition.onstart = () => {
         setIsListening(true);
@@ -255,7 +260,7 @@ export const AyurvedaLiveDoctor: React.FC<AyurvedaLiveDoctorProps> = ({ profile,
       recognition.onerror = (event) => {
         console.error('Speech recognition error:', event.error);
         if (event.error === 'not-allowed') {
-          toast.error('Microphone access denied. Please allow microphone access.');
+          toast.error(t('ayurvedaLive.micDenied', 'Microphone access denied. Please allow microphone access.'));
         }
       };
 
@@ -267,9 +272,15 @@ export const AyurvedaLiveDoctor: React.FC<AyurvedaLiveDoctorProps> = ({ profile,
       messagesRef.current = [];
       
       // Send initial greeting
-      const greeting = `Namaste ${profile?.name || 'dear seeker'}! I am your Ayurvedic doctor. ${
-        dosha?.primary ? `I see you have a ${dosha.primary} constitution. ` : ''
-      }How may I guide you on your healing journey today?`;
+      const name = profile?.name || t('ayurvedaLive.dearSeeker', 'dear seeker');
+      const doshaLine = dosha?.primary
+        ? t('ayurvedaLive.greetingDosha', { defaultValue: 'I see you have a {{primary}} constitution. ', primary: dosha.primary })
+        : '';
+      const greeting = t('ayurvedaLive.greetingFull', {
+        defaultValue: 'Namaste {{name}}! I am your Ayurvedic doctor. {{doshaLine}}How may I guide you on your healing journey today?',
+        name,
+        doshaLine,
+      });
       
       setTranscription([{ role: 'doctor', text: greeting }]);
       messagesRef.current = [{ role: 'assistant', content: greeting }];
@@ -277,14 +288,14 @@ export const AyurvedaLiveDoctor: React.FC<AyurvedaLiveDoctorProps> = ({ profile,
       // Speak greeting and start listening after
       speakText(greeting);
       
-      toast.success('Connected to Live Doctor');
+      toast.success(t('ayurvedaLive.connected', 'Connected to Live Doctor'));
     } catch (error) {
       console.error('Failed to start session:', error);
-      toast.error('Could not start session. Please grant microphone permission and try again.');
+      toast.error(t('ayurvedaLive.startSessionFail', 'Could not start session. Please grant microphone permission and try again.'));
     } finally {
       setIsConnecting(false);
     }
-  }, [profile, dosha, speakText, sendToDoctor, isActive, isSpeaking]);
+  }, [profile, dosha, speakText, sendToDoctor, isActive, isSpeaking, language, t]);
 
   const endSession = useCallback(() => {
     // Stop speech recognition
@@ -303,8 +314,8 @@ export const AyurvedaLiveDoctor: React.FC<AyurvedaLiveDoctorProps> = ({ profile,
     setIsSpeaking(false);
     setCurrentUserText('');
     
-    toast.info('Session ended. Namaste 🙏');
-  }, []);
+    toast.info(t('ayurvedaLive.sessionEnded', 'Session ended. Namaste 🙏'));
+  }, [t]);
 
   const handleToggleSession = () => {
     if (isActive) {
@@ -321,11 +332,11 @@ export const AyurvedaLiveDoctor: React.FC<AyurvedaLiveDoctorProps> = ({ profile,
         <div className="bg-gradient-to-r from-amber-600 to-amber-700 p-6 text-white text-center">
           <Badge className="bg-white/20 text-white border-white/30 mb-4">
             <Sparkles className="w-3 h-3 mr-1" />
-            Lifetime Exclusive
+            {t('ayurvedaLive.badgeLifetime', 'Lifetime Exclusive')}
           </Badge>
-          <h2 className="text-2xl font-serif mb-2">Live Audio Consultation</h2>
+          <h2 className="text-2xl font-serif mb-2">{t('ayurvedaLive.liveTitle', 'Live Audio Consultation')}</h2>
           <p className="text-sm opacity-80">
-            Real-time voice session with your AI Ayurvedic Doctor
+            {t('ayurvedaLive.liveSubtitle', 'Real-time voice session with your AI Ayurvedic Doctor')}
           </p>
           {profile && dosha && (
             <div className="mt-4 p-3 bg-white/10 rounded-xl inline-block">
@@ -378,7 +389,13 @@ export const AyurvedaLiveDoctor: React.FC<AyurvedaLiveDoctorProps> = ({ profile,
 
             {/* Status Text */}
             <p className="mt-6 text-lg font-medium text-foreground">
-              {isConnecting ? 'Connecting...' : isActive ? (isSpeaking ? 'Doctor Speaking...' : 'Listening...') : 'Tap to Begin'}
+              {isConnecting
+                ? t('ayurvedaLive.statusConnecting', 'Connecting...')
+                : isActive
+                  ? isSpeaking
+                    ? t('ayurvedaLive.statusDoctorSpeaking', 'Doctor Speaking...')
+                    : t('ayurvedaLive.statusListening', 'Listening...')
+                  : t('ayurvedaLive.statusTapToBegin', 'Tap to Begin')}
             </p>
 
             {/* Current User Speech */}
@@ -401,11 +418,11 @@ export const AyurvedaLiveDoctor: React.FC<AyurvedaLiveDoctorProps> = ({ profile,
               >
                 <div className={`flex items-center gap-2 ${isListening ? 'text-emerald-600' : 'text-muted-foreground'}`}>
                   {isListening ? <Mic className="w-4 h-4 animate-pulse" /> : <MicOff className="w-4 h-4" />}
-                  <span className="text-xs">{isListening ? 'Listening' : 'Paused'}</span>
+                  <span className="text-xs">{isListening ? t('ayurvedaLive.labelListening', 'Listening') : t('ayurvedaLive.labelPaused', 'Paused')}</span>
                 </div>
                 <div className={`flex items-center gap-2 ${isSpeaking ? 'text-amber-600' : 'text-muted-foreground'}`}>
                   <Volume2 className={`w-4 h-4 ${isSpeaking ? 'animate-pulse' : ''}`} />
-                  <span className="text-xs">{isSpeaking ? 'Speaking' : 'Silent'}</span>
+                  <span className="text-xs">{isSpeaking ? t('ayurvedaLive.labelSpeaking', 'Speaking') : t('ayurvedaLive.labelSilent', 'Silent')}</span>
                 </div>
               </motion.div>
             )}
@@ -414,13 +431,13 @@ export const AyurvedaLiveDoctor: React.FC<AyurvedaLiveDoctorProps> = ({ profile,
           {/* Live Transcription */}
           <div className="mt-8">
             <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-4 text-center">
-              Live Transcription
+              {t('ayurvedaLive.liveTranscription', 'Live Transcription')}
             </h3>
             <ScrollArea className="h-[200px]">
               <div ref={scrollRef} className="bg-muted/50 rounded-2xl p-4 min-h-[180px]">
                 {transcription.length === 0 ? (
                   <p className="text-center text-muted-foreground/50 text-sm py-8">
-                    Session not started...
+                    {t('ayurvedaLive.sessionNotStarted', 'Session not started...')}
                   </p>
                 ) : (
                   <div className="space-y-3">
@@ -436,7 +453,7 @@ export const AyurvedaLiveDoctor: React.FC<AyurvedaLiveDoctorProps> = ({ profile,
                         }`}
                       >
                         <span className="font-medium">
-                          {item.role === 'user' ? 'You: ' : 'Doctor: '}
+                          {item.role === 'user' ? `${t('ayurvedaLive.roleYou', 'You')}: ` : `${t('ayurvedaLive.roleDoctor', 'Doctor')}: `}
                         </span>
                         {item.text}
                       </motion.div>
@@ -451,7 +468,7 @@ export const AyurvedaLiveDoctor: React.FC<AyurvedaLiveDoctorProps> = ({ profile,
         {/* Security Footer */}
         <div className="p-4 bg-muted/30 border-t border-border flex items-center justify-center gap-2 text-muted-foreground">
           <Shield className="w-4 h-4" />
-          <span className="text-xs">Encrypted & Private Live Session</span>
+          <span className="text-xs">{t('ayurvedaLive.encryptedFooter', 'Encrypted & Private Live Session')}</span>
         </div>
       </CardContent>
     </Card>

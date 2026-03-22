@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { VastuChatWindow, VastuMessage } from './VastuChat';
 import { MODULES } from './vastuConstants';
 import { toast } from 'sonner';
+import { useTranslation } from '@/hooks/useTranslation';
 
 // ─────────────────────────────────────────────
 // SQI 2050 Design Tokens (inline for portability)
@@ -26,7 +27,10 @@ const ModuleButton: React.FC<{
   isCompleted: boolean;
   isAvailable: boolean;
   onClick: () => void;
-}> = ({ module, isCurrent, isCompleted, isAvailable, onClick }) => (
+}> = ({ module, isCurrent, isCompleted, isAvailable, onClick }) => {
+  const { t } = useTranslation();
+  const title = t(`vastuChat.moduleTitles.${module.id}`, module.title);
+  return (
   <button
     disabled={!isAvailable}
     onClick={onClick}
@@ -96,7 +100,7 @@ const ModuleButton: React.FC<{
           whiteSpace: 'nowrap',
         }}
       >
-        {module.title}
+        {title}
       </p>
       {isCurrent && (
         <span
@@ -110,7 +114,7 @@ const ModuleButton: React.FC<{
             color: '#D4AF37',
           }}
         >
-          Current Focus
+          {t('vastuChat.currentFocus', 'Current Focus')}
         </span>
       )}
       {!isAvailable && (
@@ -125,14 +129,16 @@ const ModuleButton: React.FC<{
             color: 'rgba(255,255,255,0.25)',
           }}
         >
-          🔒 Locked
+          🔒 {t('vastuChat.locked', 'Locked')}
         </span>
       )}
     </div>
   </button>
-);
+  );
+};
 
 export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
+  const { t, language } = useTranslation();
   const [currentModule, setCurrentModule] = useState(1);
   const [messages, setMessages] = useState<VastuMessage[]>([]);
   const [isThinking, setIsThinking] = useState(false);
@@ -159,13 +165,13 @@ export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
         const response = await fetch(CHAT_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: apiMessages, images }),
+          body: JSON.stringify({ messages: apiMessages, images, language }),
         });
         if (!response.ok || !response.body) {
           if (response.status === 429) {
-            toast.error('Rate limit exceeded. Please try again in a moment.');
+            toast.error(t('vastuChat.rateLimit', 'Rate limit exceeded. Please try again in a moment.'));
           } else {
-            toast.error('The cosmic connection was interrupted. Please try again.');
+            toast.error(t('vastuChat.connectionError', 'The cosmic connection was interrupted. Please try again.'));
           }
           setIsThinking(false);
           return;
@@ -229,7 +235,7 @@ export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
           ...prev,
           {
             role: 'model',
-            text: 'The cosmic connection was interrupted. Please try again.',
+            text: t('vastuChat.connectionInterrupted', 'The cosmic connection was interrupted. Please try again.'),
             timestamp: Date.now(),
           },
         ]);
@@ -237,7 +243,7 @@ export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
         setIsThinking(false);
       }
     },
-    [messages]
+    [messages, language, t]
   );
 
   const handleModuleClick = (id: number) => {
@@ -247,9 +253,17 @@ export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
     if (!isAvailable) return;
     setIsSidebarOpen(false);
     setCurrentModule(id);
-    const moduleTitle = MODULES.find((m) => m.id === id)?.title;
+    const moduleTitle = t(
+      `vastuChat.moduleTitles.${id}`,
+      MODULES.find((m) => m.id === id)?.title ?? ''
+    );
     handleSendMessage(
-      `Architect, I would like to jump directly to Module ${id}: ${moduleTitle}. Please introduce this module, provide the diagnostics, and the abundance guidelines for this space.`
+      t('vastuChat.jumpToModulePrompt', {
+        defaultValue:
+          'Architect, I would like to jump directly to Module {{mid}}: {{mtitle}}. Please introduce this module, provide the diagnostics, and the abundance guidelines for this space.',
+        mid: String(id),
+        mtitle: moduleTitle,
+      })
     );
   };
 
@@ -370,7 +384,7 @@ export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
                 margin: 0,
               }}
             >
-              Your Journey
+              {t('vastuChat.yourJourney', 'Your Journey')}
             </h3>
             <p
               style={{
@@ -382,7 +396,7 @@ export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
                 margin: '3px 0 0',
               }}
             >
-              10-Module Path
+              {t('vastuChat.tenModulePath', '10-Module Path')}
             </p>
           </div>
           {/* Rotating yantra glyph */}
@@ -443,7 +457,7 @@ export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
               marginBottom: '8px',
             }}
           >
-            Dev Tools
+            {t('vastuChat.devTools', 'Dev Tools')}
           </p>
           <button
             onClick={() => setIsMasterUnlocked((v) => !v)}
@@ -549,7 +563,7 @@ export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
                     color: '#fff',
                   }}
                 >
-                  Vastu
+                  {t('vastuChat.brandVastu', 'Vastu')}
                 </span>
                 <span
                   style={{
@@ -561,7 +575,7 @@ export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
                     textShadow: '0 0 12px rgba(212,175,55,0.4)',
                   }}
                 >
-                  Abundance Architect
+                  {t('vastuChat.abundanceArchitect', 'Abundance Architect')}
                 </span>
               </div>
               <p
@@ -574,7 +588,7 @@ export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
                   margin: 0,
                 }}
               >
-                Conscious Space Design
+                {t('vastuChat.consciousSpaceDesign', 'Conscious Space Design')}
               </p>
             </div>
           </div>
@@ -591,7 +605,7 @@ export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
                 margin: '0 0 2px',
               }}
             >
-              Module
+              {t('vastuChat.moduleLabel', 'Module')}
             </p>
             <p
               style={{

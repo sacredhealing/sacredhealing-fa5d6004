@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import type { UserProfile } from '@/lib/vedicTypes';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -94,8 +94,7 @@ function playChime() {
 export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, onUpgrade }) => {
   const { user: authUser } = useAuth();
   const navigate = useNavigate();
-  const { i18n, t } = useTranslation();
-  const userLanguage = (user as UserProfile & { language?: string }).language || i18n.language || 'en';
+  const { t, language: userLanguage } = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);

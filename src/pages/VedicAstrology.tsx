@@ -27,7 +27,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePersistedState } from '@/features/vedic/usePersistedState';
 import type { MembershipTier, UserProfile } from '@/lib/vedicTypes';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 
 // ── Tier mapping (unchanged) ────────────────────────────────────
 const mapToAITier = (dbTier: 'basic' | 'premium' | 'master'): MembershipTier => {

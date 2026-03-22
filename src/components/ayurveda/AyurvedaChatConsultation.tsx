@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import type { AyurvedaUserProfile, DoshaProfile } from '@/lib/ayurvedaTypes';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -21,7 +22,9 @@ interface AyurvedaChatConsultationProps {
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ayurveda-chat`;
 
 /* ─── PULSE READING ANIMATION ─── */
-const PulseReadingAnimation = () => (
+const PulseReadingAnimation = () => {
+  const { t } = useTranslation();
+  return (
   <div className="flex flex-col items-center gap-4 py-6">
     <div className="relative">
       {[0, 1, 2].map(i => (
@@ -51,11 +54,13 @@ const PulseReadingAnimation = () => (
         <span className="text-2xl">🔮</span>
       </motion.div>
     </div>
-    <p className="text-purple-300/60 text-xs italic mt-4">The Divine Physician reads your pulse...</p>
+    <p className="text-purple-300/60 text-xs italic mt-4">{t('ayurvedaChat.pulseReading', 'The Divine Physician reads your pulse...')}</p>
   </div>
-);
+  );
+};
 
 export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> = ({ profile, dosha, onClose }) => {
+  const { t, language } = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -86,13 +91,14 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
           messages: [...messages, userMsg].map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content })),
           profile,
           dosha,
+          language,
         }),
       });
 
       if (!response.ok || !response.body) {
-        if (response.status === 429) toast.error('Rate limit exceeded. Please try again in a moment.');
-        else if (response.status === 402) toast.error('Usage limits reached. Please try again later.');
-        else toast.error('Failed to connect to the healer. Please try again.');
+        if (response.status === 429) toast.error(t('ayurvedaChat.rateLimit', 'Rate limit exceeded. Please try again in a moment.'));
+        else if (response.status === 402) toast.error(t('ayurvedaChat.usageLimit', 'Usage limits reached. Please try again later.'));
+        else toast.error(t('ayurvedaChat.connectFail', 'Failed to connect to the healer. Please try again.'));
         setIsLoading(false);
         return;
       }
@@ -142,7 +148,7 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
       console.error('Chat error:', error);
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: 'Forgive me, my connection to the ether is interrupted. Please try again.' 
+        content: t('ayurvedaChat.connectionInterrupted', 'Forgive me, my connection to the ether is interrupted. Please try again.') 
       }]);
     } finally {
       setIsLoading(false);
@@ -183,9 +189,9 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
             <span className="text-lg">🏥</span>
           </div>
           <div className="flex-1">
-            <h3 className="font-serif text-lg text-white">Dhanvantari — Divine Physician</h3>
+            <h3 className="font-serif text-lg text-white">{t('ayurvedaChat.headerTitle', 'Dhanvantari — Divine Physician')}</h3>
             <p className="text-[10px] uppercase text-purple-400/50 tracking-[0.2em] font-bold">
-              Bhrigu Nadi Enhanced • {dosha?.primary || 'Unknown'} Protocol
+              {t('ayurvedaChat.headerSubtitle', { defaultValue: 'Bhrigu Nadi Enhanced • {{protocol}} Protocol', protocol: dosha?.primary || t('ayurvedaChat.unknownProtocol', 'Unknown') })}
             </p>
           </div>
           {onClose && (
@@ -200,8 +206,8 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
           {messages.length === 0 && (
             <div className="text-center py-4">
               <div className="text-4xl mb-3">🙏</div>
-              <p className="text-lg font-serif text-purple-200 mb-1">Namaste, Seeker of Balance</p>
-              <p className="text-purple-400/50 text-sm">The Divine Physician awaits your concern...</p>
+              <p className="text-lg font-serif text-purple-200 mb-1">{t('ayurvedaChat.namasteTitle', 'Namaste, Seeker of Balance')}</p>
+              <p className="text-purple-400/50 text-sm">{t('ayurvedaChat.namasteSub', 'The Divine Physician awaits your concern...')}</p>
             </div>
           )}
           
@@ -226,7 +232,7 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
                   <div className="flex items-center gap-2 mb-1">
                     {msg.role === 'assistant' && <Sparkles className="w-3 h-3 text-amber-400" />}
                     <span className="text-[10px] uppercase tracking-wider text-purple-400/50">
-                      {msg.role === 'user' ? 'You' : 'Dhanvantari'}
+                      {msg.role === 'user' ? t('ayurvedaChat.roleYou', 'You') : t('ayurvedaChat.roleDhanvantari', 'Dhanvantari')}
                     </span>
                   </div>
                   <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
@@ -245,7 +251,7 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Describe your concern to the Divine Physician..."
+            placeholder={t('ayurvedaChat.inputPlaceholder', 'Describe your concern to the Divine Physician...')}
             className="flex-1 rounded-xl bg-white/5 border-purple-500/15 text-white placeholder:text-purple-400/30 focus:border-purple-400/40"
             disabled={isLoading}
           />

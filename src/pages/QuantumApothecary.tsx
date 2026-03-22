@@ -17,7 +17,9 @@ import {
 import { Activation, NadiScanResult, Message, ActivationType } from '@/features/quantum-apothecary/types';
 import { ACTIVATIONS, PLANETARY_DATA } from '@/features/quantum-apothecary/constants';
 import { streamChatWithSQI } from '@/features/quantum-apothecary/chatService';
+import { chatSpeechLocale } from '@/lib/chatSpeechLocale';
 import { useAdminRole } from '@/hooks/useAdminRole';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
 import { hasFeatureAccess, FEATURE_TIER } from '@/lib/tierAccess';
@@ -96,6 +98,7 @@ function QuantumApothecaryInner() {
   const location = useLocation();
   const { isAdmin, isLoading: adminLoading } = useAdminRole();
   const { user } = useAuth();
+  const { language, t } = useTranslation();
   const [scanResult, setScanResult] = useState<NadiScanResult | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [selectedActivations, setSelectedActivations] = useState<Activation[]>([]);
@@ -296,7 +299,7 @@ function QuantumApothecaryInner() {
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = 'en-US';
+    recognition.lang = chatSpeechLocale(language);
 
     recognition.onresult = (event: any) => {
       let interim = '';
