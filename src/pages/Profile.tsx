@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation, Trans } from 'react-i18next';
 import { Flame, Flower2, Star, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield, Scale, LayoutDashboard, Megaphone, Crown, Pencil, Banknote, Lock, FileText, BookOpen, Hand, Globe, ChevronDown } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LanguageSelector } from '@/components/LanguageSelector';
 import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
 import { usePhantomWallet } from '@/hooks/usePhantomWallet';
@@ -316,15 +315,16 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
       const geminiReport = data.response.trim();
       const durationMinutes = Number.isNaN(Number(practiceDuration)) ? null : Number(practiceDuration);
 
-      /* SQI 2050: Kosha Mapping — append to Deep-Field report */
-      const koshaMapping = `
----
-◈ Nadi Alignment: 41,760 / 72,000 Aligned
-◈ Kosha Mapping:
-• Manomaya: Emotional Frequency Stabilized
-• Vijnanamaya: Ancient Egypt Karmic Clear
-• Anandamaya: Samadhi 98% Sync
-`;
+      /* SQI 2050: Kosha Mapping — append to Deep-Field report (follows active UI locale) */
+      const koshaMapping = [
+        '',
+        '---',
+        t('profilePage.soulVaultReportNadiAlignment'),
+        t('profilePage.soulVaultReportKoshaHeading'),
+        t('profilePage.soulVaultReportKoshaManomaya'),
+        t('profilePage.soulVaultReportKoshaVijnanamaya'),
+        t('profilePage.soulVaultReportKoshaAnandamaya'),
+      ].join('\n');
       const reportText = geminiReport + koshaMapping;
 
       const { data: inserted, error: insertError } = await supabase
@@ -486,7 +486,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
     { icon: Shield, label: t('profile.privacy'), sublabel: t('profile.dataAndSecurity'), onClick: () => setPrivacyOpen(true) },
   ];
   const abundanceLineage = [
-    { icon: Banknote, label: t('profile.walletEarningsAdvanced', 'Wallet & Earnings (Advanced)'), sublabel: t('profile.walletEarningsDesc', 'SHC, affiliate, income streams'), onClick: () => navigate('/income-streams') },
+    { icon: Banknote, label: t('profile.walletEarningsAdvanced'), sublabel: t('profile.walletEarningsDesc'), onClick: () => navigate('/income-streams') },
     { icon: Megaphone, label: t('profile.promoteEarn'), sublabel: t('profile.promoteEarnDesc'), onClick: () => navigate('/income-streams/affiliate') },
     { icon: Wallet, label: t('wallet.connectWallet'), sublabel: walletAddress ? `${walletAddress.slice(0,4)}...${walletAddress.slice(-4)}` : t('profile.web3Wallet'), onClick: connectWallet },
     ...(isAdmin ? [{ icon: LayoutDashboard, label: t('admin.title'), sublabel: t('admin.manageContent'), onClick: () => navigate('/admin') }] : []),
@@ -764,6 +764,8 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
 
           {/* Edit button */}
           <button
+            type="button"
+            aria-label={t('profile.editProfile')}
             onClick={() => setProfileEditOpen(true)}
             style={{position:'absolute',bottom:haloConfig ? 6 : 0,right:haloConfig ? 6 : 0,width:30,height:30,borderRadius:'50%',background:'#D4AF37',border:'2px solid #050505',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',zIndex:4}}
           >

@@ -1909,6 +1909,20 @@
     "scannerDurationLabel": "Omtrentlig varighet (minutter)",
     "scannerGenerate": "Generer dypfeltresonans",
     "scannerCommitting": "Lagrer i Soul Vault…",
-    "openPortal": "◈ Åpne portal →"
+    "openPortal": "◈ Åpne portal →",
+    "soulVaultUserContextMinutes": "{{count}} minutter",
+    "soulVaultUserContextUnspecified": "uspesifisert varighet",
+    "soulVaultReportNadiAlignment": "◈ Nadi-justering: 41 760 / 72 000 justert",
+    "soulVaultReportKoshaHeading": "◈ Kosha-kartlegging:",
+    "soulVaultReportKoshaManomaya": "• Manomaya: Emosjonell frekvens stabilisert",
+    "soulVaultReportKoshaVijnanamaya": "• Vijnanamaya: Karmisk klarning (det gamle Egypt)",
+    "soulVaultReportKoshaAnandamaya": "• Anandamaya: Samadhi 98 % synk",
+    "handScannerMappingNadi": "Kartlegger Nādī-nettverket…",
+    "handScannerPlaceHands": "Plasser hendene i bildet for å begynne",
+    "handScannerAlignment": "Justering",
+    "handScannerChannelsLabel": "{{progress}} / 72 000 kanaler",
+    "handScannerBegin": "Start skanning",
+    "handScannerCameraDenied": "Kameratilgang nektet. Du kan likevel starte skanningen.",
+    "scannerCaptureLabel": "2050 dypfeltregistrering"
   }
 }

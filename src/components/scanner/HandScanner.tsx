@@ -1,15 +1,23 @@
 /* SQI 2050: HAND-MOTION NADI SCANNER */
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface HandScannerProps {
   onComplete: () => void;
 }
 
 const HandScanner: React.FC<HandScannerProps> = ({ onComplete }) => {
+  const { t, i18n } = useTranslation();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [progress, setProgress] = useState(0);
   const [isScanning, setIsScanning] = useState(false);
-  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [cameraDenied, setCameraDenied] = useState(false);
+
+  const numberLocale = useMemo(() => {
+    const m: Record<string, string> = { en: 'en-US', sv: 'sv-SE', es: 'es-ES', no: 'nb-NO' };
+    const base = (i18n.language || 'en').split('-')[0];
+    return m[base] || 'en-US';
+  }, [i18n.language]);
 
   // Initialize Camera Stream
   useEffect(() => {
@@ -20,10 +28,10 @@ const HandScanner: React.FC<HandScannerProps> = ({ onComplete }) => {
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
-        setCameraError(null);
+        setCameraDenied(false);
       } catch (err) {
         console.error('[HandScanner] Camera error:', err);
-        setCameraError('Camera access denied. You can still begin the scan.');
+        setCameraDenied(true);
       }
     }
     setupCamera();
@@ -63,16 +71,18 @@ const HandScanner: React.FC<HandScannerProps> = ({ onComplete }) => {
           }`}
         />
         <p className="mt-4 text-[#D4AF37] text-[10px] font-black tracking-[0.4em] uppercase">
-          {isScanning ? 'Mapping Nādī Network...' : 'Place Hands in View to Begin'}
+          {isScanning ? t('profilePage.handScannerMappingNadi') : t('profilePage.handScannerPlaceHands')}
         </p>
       </div>
 
       {/* 3. Progress Bar */}
       <div className="absolute bottom-8 left-8 right-8">
         <div className="flex justify-between text-[8px] text-white/40 mb-2 uppercase tracking-widest">
-          <span>Alignment</span>
+          <span>{t('profilePage.handScannerAlignment')}</span>
           <span>
-            {progress.toLocaleString()} / 72,000 Channels
+            {t('profilePage.handScannerChannelsLabel', {
+              progress: progress.toLocaleString(numberLocale),
+            })}
           </span>
         </div>
         <div className="h-1 bg-white/10 rounded-full overflow-hidden">
@@ -84,8 +94,10 @@ const HandScanner: React.FC<HandScannerProps> = ({ onComplete }) => {
       </div>
 
       {/* Camera fallback message */}
-      {cameraError && !isScanning && (
-        <p className="absolute top-4 left-4 right-4 text-[9px] text-white/50 text-center">{cameraError}</p>
+      {cameraDenied && !isScanning && (
+        <p className="absolute top-4 left-4 right-4 text-[9px] text-white/50 text-center">
+          {t('profilePage.handScannerCameraDenied')}
+        </p>
       )}
 
       {/* Start Button */}
@@ -95,7 +107,7 @@ const HandScanner: React.FC<HandScannerProps> = ({ onComplete }) => {
           onClick={() => setIsScanning(true)}
           className="absolute inset-0 m-auto w-32 h-32 rounded-full bg-[#D4AF37]/10 backdrop-blur-md border border-[#D4AF37]/50 text-[#D4AF37] text-xs font-black uppercase hover:bg-[#D4AF37]/20 transition-colors"
         >
-          Begin Scan
+          {t('profilePage.handScannerBegin')}
         </button>
       )}
     </div>

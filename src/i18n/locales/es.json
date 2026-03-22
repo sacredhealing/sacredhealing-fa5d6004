@@ -1997,6 +1997,20 @@
     "scannerDurationLabel": "Duración aproximada (minutos)",
     "scannerGenerate": "Generar resonancia de campo profundo",
     "scannerCommitting": "Guardando en Soul Vault…",
-    "openPortal": "◈ Abrir portal →"
+    "openPortal": "◈ Abrir portal →",
+    "soulVaultUserContextMinutes": "{{count}} minutos",
+    "soulVaultUserContextUnspecified": "duración no especificada",
+    "soulVaultReportNadiAlignment": "◈ Alineación Nadi: 41.760 / 72.000 alineados",
+    "soulVaultReportKoshaHeading": "◈ Mapeo de Koshas:",
+    "soulVaultReportKoshaManomaya": "• Manomaya: frecuencia emocional estabilizada",
+    "soulVaultReportKoshaVijnanamaya": "• Vijnanamaya: karma del antiguo Egipto disuelto",
+    "soulVaultReportKoshaAnandamaya": "• Anandamaya: Samadhi 98 % sincronizado",
+    "handScannerMappingNadi": "Mapeando la red Nādī…",
+    "handScannerPlaceHands": "Coloca las manos en el encuadre para comenzar",
+    "handScannerAlignment": "Alineación",
+    "handScannerChannelsLabel": "{{progress}} / 72.000 canales",
+    "handScannerBegin": "Iniciar escaneo",
+    "handScannerCameraDenied": "Acceso a la cámara denegado. Aún puedes comenzar el escaneo.",
+    "scannerCaptureLabel": "Captura de campo profundo 2050"
   }
 }
