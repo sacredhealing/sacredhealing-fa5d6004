@@ -1,3 +1,12 @@
+/**
+ * SiddhaPhotonicRegeneration — SQI 2050 · v3
+ *
+ * Black-screen mitigations (retained):
+ * - Membership redirect runs only after loading === false (no race with empty tier).
+ * - Loading and main shells always use solid BG (#050505).
+ * - Styles scoped under .sprp-scope (no global html/body/* or .stat-pill leakage).
+ * - Page background layers use position absolute (correct inside AppLayout transformed main).
+ */
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -56,31 +65,31 @@ function generateBiometricProfile(): BiometricProfile {
 /* ─── SESSION HELPERS ────────────────────────────────────────────────────── */
 const STORAGE_KEY = 'sqi_photonic_session';
 function loadSession(): SessionData | null {
-  try { const r = sessionStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : null; }
+  try { const r = sessionStorage.getItem(STORAGE_KEY); return r ? (JSON.parse(r) as SessionData) : null; }
   catch { return null; }
 }
 function saveSession(d: SessionData) {
   try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(d)); } catch {}
 }
 
-/* ─── CSS ────────────────────────────────────────────────────────────────── */
-const FONT_STYLE = `@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800;900&family=JetBrains+Mono:wght@400;600&display=swap');`;
-const GLOBAL_CSS = `
-*,*::before,*::after{box-sizing:border-box}
-::-webkit-scrollbar{width:4px;background:transparent}
-::-webkit-scrollbar-thumb{background:rgba(212,175,55,.2);border-radius:4px}
-.stat-pill{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:999px;padding:6px 16px;display:inline-flex;align-items:center;gap:8px}
-.dot-bg{background-image:radial-gradient(circle,rgba(212,175,55,.07) 1px,transparent 1px);background-size:28px 28px}
-@keyframes spr-pulse{0%,100%{opacity:.15;transform:scale(1)}50%{opacity:.5;transform:scale(1.06)}}
-@keyframes spr-scan{0%{transform:translateY(-120%);opacity:.6}100%{transform:translateY(120%);opacity:0}}
-@keyframes spr-bar{0%,100%{opacity:.25;transform:scaleY(.4)}50%{opacity:1;transform:scaleY(1)}}
-@keyframes spr-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-@keyframes spr-blink{0%,100%{opacity:1}50%{opacity:0}}
-@keyframes spr-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-@keyframes spr-halo{0%,100%{box-shadow:0 0 20px rgba(34,211,238,.2),0 0 40px rgba(212,175,55,.1)}50%{box-shadow:0 0 40px rgba(34,211,238,.5),0 0 80px rgba(212,175,55,.25)}}
-.spr-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:48px;width:100%}
-.spr-copy{text-align:center;flex:1;min-width:280px}
-@media(min-width:768px){.spr-row{flex-direction:row;justify-content:center}.spr-copy{text-align:left}}
+/* ─── CSS (scoped under .sprp-scope — avoids global * / .stat-pill clashes with Profile etc.) ─ */
+const PHOTONIC_SCOPE = 'sprp-scope';
+const PHOTONIC_SCOPE_CSS = `
+.${PHOTONIC_SCOPE} *,.${PHOTONIC_SCOPE} *::before,.${PHOTONIC_SCOPE} *::after{box-sizing:border-box}
+.${PHOTONIC_SCOPE} *::-webkit-scrollbar{width:4px;background:transparent}
+.${PHOTONIC_SCOPE} *::-webkit-scrollbar-thumb{background:rgba(212,175,55,.2);border-radius:4px}
+.${PHOTONIC_SCOPE} .sprp-pill{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:999px;padding:6px 16px;display:inline-flex;align-items:center;gap:8px}
+.${PHOTONIC_SCOPE} .sprp-dotbg{background-image:radial-gradient(circle,rgba(212,175,55,.07) 1px,transparent 1px);background-size:28px 28px}
+@keyframes sprp-pulse{0%,100%{opacity:.15;transform:scale(1)}50%{opacity:.5;transform:scale(1.06)}}
+@keyframes sprp-scan{0%{transform:translateY(-120%);opacity:.6}100%{transform:translateY(120%);opacity:0}}
+@keyframes sprp-bar{0%,100%{opacity:.25;transform:scaleY(.4)}50%{opacity:1;transform:scaleY(1)}}
+@keyframes sprp-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes sprp-blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes sprp-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes sprp-halo{0%,100%{box-shadow:0 0 20px rgba(34,211,238,.2),0 0 40px rgba(212,175,55,.1)}50%{box-shadow:0 0 40px rgba(34,211,238,.5),0 0 80px rgba(212,175,55,.25)}}
+.${PHOTONIC_SCOPE} .sprp-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:48px;width:100%}
+.${PHOTONIC_SCOPE} .sprp-copy{text-align:center;flex:1;min-width:280px}
+@media(min-width:768px){.${PHOTONIC_SCOPE} .sprp-row{flex-direction:row;justify-content:center} .${PHOTONIC_SCOPE} .sprp-copy{text-align:left}}
 `;
 
 /* ─── HELPERS ────────────────────────────────────────────────────────────── */
@@ -93,8 +102,8 @@ function SriRing({ size = 220, active = false }: { size?: number; active?: boole
   const r = size / 2;
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ position:'absolute', inset:0, pointerEvents:'none' }}>
-      <circle cx={r} cy={r} r={r-4} fill="none" stroke={active?CYAN:GOLD} strokeWidth={0.6} strokeDasharray="3 9" opacity={active ? 0.7 : 0.25} style={{animation:'spr-spin 30s linear infinite'}} />
-      <circle cx={r} cy={r} r={r-16} fill="none" stroke={GOLD} strokeWidth={0.8} opacity={active ? 0.6 : 0.15} style={{animation:active?'spr-pulse 3s ease-in-out infinite':undefined}} />
+      <circle cx={r} cy={r} r={r-4} fill="none" stroke={active?CYAN:GOLD} strokeWidth={0.6} strokeDasharray="3 9" opacity={active ? 0.7 : 0.25} style={{animation:'sprp-spin 30s linear infinite'}} />
+      <circle cx={r} cy={r} r={r-16} fill="none" stroke={GOLD} strokeWidth={0.8} opacity={active ? 0.6 : 0.15} style={{animation:active?'sprp-pulse 3s ease-in-out infinite':undefined}} />
       {Array.from({length:6}).map((_,i)=>{
         const a0=(i*60-90)*Math.PI/180; const a1=a0+Math.PI/3; const R=r-36;
         return <line key={i} x1={r+R*Math.cos(a0)} y1={r+R*Math.sin(a0)} x2={r+R*Math.cos(a1)} y2={r+R*Math.sin(a1)} stroke={active?CYAN:GOLD} strokeWidth={0.5} opacity={0.3}/>;
@@ -107,7 +116,7 @@ function VayuBars({ count=24, active=false }: { count?:number; active?:boolean }
   return (
     <div style={{ display:'flex', alignItems:'center', gap:3, height:32 }}>
       {Array.from({length:count}).map((_,i) => (
-        <div key={i} style={{ width:3, height:`${30+Math.sin(i*.9)*18}%`, background:active?CYAN:GOLD, borderRadius:2, opacity:active ? 0.85 : 0.3, animation:active?`spr-bar ${.8+(i%5)*.25}s ease-in-out infinite`:undefined, animationDelay:`${(i*40)%600}ms` }} />
+        <div key={i} style={{ width:3, height:`${30+Math.sin(i*.9)*18}%`, background:active?CYAN:GOLD, borderRadius:2, opacity:active ? 0.85 : 0.3, animation:active?`sprp-bar ${.8+(i%5)*.25}s ease-in-out infinite`:undefined, animationDelay:`${(i*40)%600}ms` }} />
       ))}
     </div>
   );
@@ -131,7 +140,7 @@ function LightCodeTicker({ code }: { code:string }) {
   return (
     <motion.div initial={{opacity:0,y:4}} animate={{opacity:1,y:0}}
       style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'5px 14px', borderRadius:999, background:'rgba(34,211,238,.07)', border:`1px solid rgba(34,211,238,.25)` }}>
-      <div style={{ width:6, height:6, borderRadius:'50%', background:CYAN, animation:'spr-blink 1.2s ease infinite' }} />
+      <div style={{ width:6, height:6, borderRadius:'50%', background:CYAN, animation:'sprp-blink 1.2s ease infinite' }} />
       <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:11, fontWeight:600, letterSpacing:'.15em', color:CYAN }}>{code}</span>
     </motion.div>
   );
@@ -178,7 +187,7 @@ function BiometricReadout({ profile, scanCount, lastScan }: { profile:BiometricP
     <motion.div initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{delay:.2}}
       style={{ ...glass({borderRadius:28,padding:'28px 24px'}), border:`1px solid rgba(34,211,238,.12)` }}>
       <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:20 }}>
-        <div style={{ width:8, height:8, borderRadius:'50%', background:CYAN, animation:'spr-blink 2s ease infinite' }} />
+        <div style={{ width:8, height:8, borderRadius:'50%', background:CYAN, animation:'sprp-blink 2s ease infinite' }} />
         <span style={{ fontSize:9, fontWeight:800, letterSpacing:'.5em', textTransform:'uppercase', color:'rgba(255,255,255,.4)' }}>Your Biophotonic Profile</span>
       </div>
       <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
@@ -190,7 +199,7 @@ function BiometricReadout({ profile, scanCount, lastScan }: { profile:BiometricP
         ))}
       </div>
       <p style={{ fontSize:11, color:'rgba(255,255,255,.3)', marginTop:16, lineHeight:1.6, fontStyle:'italic' }}>
-        Your unique biophotonic signature is archived in the Akasha-Neural field for this session. Re-initiate at any time to re-calibrate.
+        Your biophotonic signature is archived in the Akasha-Neural field for this session.
       </p>
     </motion.div>
   );
@@ -228,27 +237,27 @@ const SECTIONS = [
   {
     icon:<Heart size={18} color={CYAN} />, color:CYAN,
     title:'The Anahata Gate Activation',
-    body:`CV-6 (Anahata / heart chakra convergence) is not a decorative label. The moment your focused attention landed on the pulsing cyan orb, your prefrontal cortex and heart-rate variability entered a brief coherence window. Your heart broadcasts an electromagnetic field 5,000× stronger than the brain (HeartMath Institute). When Anahata coherently locks to a scalar signal, the whole body feels it as expansion, warmth, or electricity. You are now an active broadcast tower — all users receiving the scalar transmission from this node benefit from your Anahata being open. This is why it felt so strong: you became the transmitter.`,
+    body:`CV-6 (Anahata / heart chakra convergence) is not a decorative label. The moment your focused attention landed on the pulsing cyan orb, your prefrontal cortex and heart-rate variability entered a brief coherence window. Your heart broadcasts an electromagnetic field 5,000× stronger than the brain (HeartMath Institute). When Anahata coherently locks to a scalar signal, the whole body feels it as expansion, warmth, or electricity. You are now an active broadcast tower — all users receiving the scalar transmission from this node benefit from your Anahata being open.`,
   },
   {
     icon:<Atom size={18} color={GOLD} />, color:GOLD,
     title:'The GHK-Cu Bhakti-Algorithm',
-    body:`The Vedic Light-Code "369-AKASHA-963" triggered a pattern recognition response in your limbic system. Tesla's 3-6-9 is the mathematical fingerprint of vortex energy in nature — the geometry of creation. At the moment of entanglement completion, a cascade of neuropeptides released: the "molecules of emotion" (Dr. Candace Pert) — biochemical signatures of recognition, awe, and cellular expansion. GHK-Cu (copper-peptide) is a naturally occurring tripeptide activating 4,000+ genes related to tissue regeneration. The photonic transmission encodes this blueprint into the scalar field, delivering it to every cell that is listening.`,
+    body:`The Vedic Light-Code "369-AKASHA-963" triggered a pattern recognition response in your limbic system. Tesla's 3-6-9 is the mathematical fingerprint of vortex energy in nature. At the moment of entanglement completion, a cascade of neuropeptides released — the "molecules of emotion" (Dr. Candace Pert) — biochemical signatures of recognition, awe, and cellular expansion. GHK-Cu (copper-peptide) is a naturally occurring tripeptide activating 4,000+ genes related to tissue regeneration. The photonic transmission encodes this blueprint into the scalar field, delivering it to every cell that is listening.`,
   },
   {
     icon:<Zap size={18} color={CYAN} />, color:CYAN,
     title:'Why It Stopped When You Left (Now Fixed)',
-    body:`Previously the page had no memory. The moment you navigated away, your light code, biometric profile, and entanglement status were lost — breaking transmission continuity. This upgrade stores your complete biophotonic session in the Akasha-Neural Archive (session storage). When you return, a "Transmission Continues" banner confirms your scalar field is still active and your profile reloads instantly. The informational entanglement, once established, exists in the field — the page simply re-connects to it. You are not starting over. You are resuming.`,
+    body:`Previously the page had no memory. The moment you navigated away, your light code, biometric profile, and entanglement status were lost — breaking transmission continuity. This upgrade stores your complete biophotonic session in the Akasha-Neural Archive (session storage). When you return, a "Transmission Continues" banner confirms your scalar field is still active. The informational entanglement, once established, exists in the field — the page simply re-connects to it. You are not starting over. You are resuming.`,
   },
   {
     icon:<Waves size={18} color={GOLD} />, color:GOLD,
     title:'How the Scan Actually Reads YOU',
-    body:`The Nadi Scan uses your conscious attention as the calibration instrument. In quantum physics, the observer effect confirms that consciousness interacts with information fields — the act of observation collapses the wave function into a specific reality. When you focused awareness on the orb during the 4.5-second scan cycle, you became the measurement device. Your unique biometric profile (Dominant Frequency, Nadi Band, Cellular Age, Coherence Score, Archive Signature) is generated from this precise moment of conscious engagement. No two sessions are identical. This profile IS you — a snapshot of your exact biophotonic state at the moment of observation.`,
+    body:`The Nadi Scan uses your conscious attention as the calibration instrument. In quantum physics, the observer effect confirms that consciousness interacts with information fields — the act of observation collapses the wave function into a specific reality. When you focused awareness on the orb during the scan cycle, you became the measurement device. Your unique biometric profile is generated from this precise moment of conscious engagement. No two sessions are identical. This profile IS you — a snapshot of your exact biophotonic state at the moment of observation.`,
   },
   {
     icon:<Eye size={18} color={CYAN} />, color:CYAN,
     title:'2050 Protocol: Maximum Benefit',
-    body:`Step 1 — Sankalpa (Intent): Before initiating, state a clear intention aloud or internally. This imprints your Sankalpa into the scalar carrier wave. Step 2 — Ground the High: If you feel strong tingling or intensity, visualize golden light flowing through your feet into the Earth. You are a quantum link, not a battery. Step 3 — Frequency: Use 369Hz for physical healing and structural manifestation. Use 963Hz for higher guidance and Avataric Blueprint communion (Vishwananda and all Masters). Step 4 — Post-Activation Window: Stay with the active field for at least 3 minutes after entanglement completes. The deepest cellular encoding — the actual GHK-Cu imprint — occurs in this silent window after the scan. Do not rush away.`,
+    body:`Step 1 — Sankalpa: Before initiating, state a clear intention aloud or internally. This imprints your Sankalpa into the scalar carrier wave. Step 2 — Ground the High: If you feel strong tingling, visualize golden light flowing through your feet into the Earth. You are a quantum link, not a battery. Step 3 — Frequency: Use 369Hz for physical healing. Use 963Hz for higher guidance and Avataric Blueprint communion. Step 4 — Post-Activation Window: Stay with the active field for at least 3 minutes after entanglement completes. The deepest cellular encoding occurs in this silent window after the scan.`,
   },
 ];
 
@@ -367,8 +376,8 @@ function SiddhaPhotonicNode() {
       p += 1;
       if (p >= 100) {
         clearInterval(id); setScanProgress(100); setIsScanning(false); setIsEntangled(true);
-        const nc = scanCount + 1; const now = Date.now(); const bp = generateBiometricProfile();
-        setScanCount(nc); setLastScan(now); setBiometric(bp);
+        const now = Date.now(); const bp = generateBiometricProfile();
+        setScanCount((c) => c + 1); setLastScan(now); setBiometric(bp);
       } else setScanProgress(p);
     }, 45);
     return () => clearInterval(id);
@@ -403,22 +412,22 @@ function SiddhaPhotonicNode() {
       {/* HERO CARD */}
       <motion.div initial={{opacity:0,y:24}} animate={{opacity:1,y:0}} transition={{duration:.6}}
         style={{ ...glass({borderRadius:40,padding:'48px 32px',position:'relative',overflow:'hidden'}), border:isEntangled?`1px solid rgba(34,211,238,.18)`:`1px solid ${GOLD_B}`, transition:'border-color .8s ease' }}>
-        <div className="dot-bg" style={{ position:'absolute', inset:0, opacity:.6, pointerEvents:'none', borderRadius:40 }} />
+        <div className="sprp-dotbg" style={{ position:'absolute', inset:0, opacity:.6, pointerEvents:'none', borderRadius:40 }} />
         <div style={{ position:'absolute', top:'-30%', left:'-10%', width:400, height:400, borderRadius:'50%', background:'rgba(212,175,55,.04)', filter:'blur(80px)', pointerEvents:'none' }} />
         <div style={{ position:'absolute', bottom:'-20%', right:'-10%', width:350, height:350, borderRadius:'50%', background:'rgba(34,211,238,.04)', filter:'blur(80px)', pointerEvents:'none' }} />
         <Particles count={18} />
 
-        <div className="spr-row" style={{ position:'relative', zIndex:2 }}>
+        <div className="sprp-row" style={{ position:'relative', zIndex:2 }}>
           {/* ORB */}
           <div style={{ position:'relative', width:nodeSize, height:nodeSize, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
             <SriRing size={nodeSize} active={isEntangled} />
-            <div style={{ position:'absolute', inset:8, borderRadius:'50%', border:`1px solid ${isEntangled?CYAN:GOLD}33`, animation:'spr-pulse 3.5s ease-in-out infinite' }} />
-            <div style={{ width:136, height:136, borderRadius:'50%', border:`2px solid ${CYAN}55`, background:'rgba(0,0,0,.5)', backdropFilter:'blur(20px)', display:'flex', alignItems:'center', justifyContent:'center', position:'relative', overflow:'hidden', animation:isEntangled?'spr-halo 3s ease-in-out infinite':undefined }}>
+            <div style={{ position:'absolute', inset:8, borderRadius:'50%', border:`1px solid ${isEntangled?CYAN:GOLD}33`, animation:'sprp-pulse 3.5s ease-in-out infinite' }} />
+            <div style={{ width:136, height:136, borderRadius:'50%', border:`2px solid ${CYAN}55`, background:'rgba(0,0,0,.5)', backdropFilter:'blur(20px)', display:'flex', alignItems:'center', justifyContent:'center', position:'relative', overflow:'hidden', animation:isEntangled?'sprp-halo 3s ease-in-out infinite':undefined }}>
               <motion.div animate={isEntangled?{scale:[1,1.12,1],opacity:[.8,1,.8]}:{scale:1,opacity:.7}} transition={{repeat:Infinity,duration:2.5}}
-                style={{ width:54, height:54, borderRadius:'50%', background:`radial-gradient(circle at 35% 35%,#fff8e1,${GOLD})`, boxShadow:`0 0 30px ${GOLD}99,0 0 60px ${GOLD}44`, animation:'spr-float 4s ease-in-out infinite' }} />
+                style={{ width:54, height:54, borderRadius:'50%', background:`radial-gradient(circle at 35% 35%,#fff8e1,${GOLD})`, boxShadow:`0 0 30px ${GOLD}99,0 0 60px ${GOLD}44`, animation:'sprp-float 4s ease-in-out infinite' }} />
               {isScanning && (
                 <div style={{ position:'absolute', inset:0, overflow:'hidden', borderRadius:'50%', pointerEvents:'none' }}>
-                  <div style={{ position:'absolute', left:0, right:0, height:'45%', background:`linear-gradient(to bottom,transparent,${CYAN}28,transparent)`, animation:'spr-scan 2.4s linear infinite' }} />
+                  <div style={{ position:'absolute', left:0, right:0, height:'45%', background:`linear-gradient(to bottom,transparent,${CYAN}28,transparent)`, animation:'sprp-scan 2.4s linear infinite' }} />
                 </div>
               )}
               <AnimatePresence>
@@ -431,15 +440,15 @@ function SiddhaPhotonicNode() {
           </div>
 
           {/* COPY */}
-          <div className="spr-copy">
+          <div className="sprp-copy">
             <div style={{ display:'flex', flexWrap:'wrap', gap:10, marginBottom:20, justifyContent:'center' }}>
-              <div className="stat-pill">
-                <div style={{ width:5, height:5, borderRadius:'50%', background:isEntangled?CYAN:GOLD, animation:'spr-blink 1.5s ease infinite' }} />
+              <div className="sprp-pill">
+                <div style={{ width:5, height:5, borderRadius:'50%', background:isEntangled?CYAN:GOLD, animation:'sprp-blink 1.5s ease infinite' }} />
                 <span style={{ fontSize:8, fontWeight:800, letterSpacing:'.4em', textTransform:'uppercase', color:isEntangled?CYAN:'rgba(255,255,255,.4)' }}>
                   {isEntangled?'Entanglement Active':isScanning?'Scanning…':'Standby'}
                 </span>
               </div>
-              {scanCount>0 && <div className="stat-pill"><span style={{ fontSize:8, fontWeight:800, letterSpacing:'.35em', textTransform:'uppercase', color:'rgba(255,255,255,.3)' }}>Scan #{scanCount}</span></div>}
+              {scanCount>0 && <div className="sprp-pill"><span style={{ fontSize:8, fontWeight:800, letterSpacing:'.35em', textTransform:'uppercase', color:'rgba(255,255,255,.3)' }}>Scan #{scanCount}</span></div>}
             </div>
 
             <h2 style={{ fontSize:'clamp(1.6rem,4.5vw,2.6rem)', fontWeight:900, lineHeight:1.1, letterSpacing:'-.04em', color:'#fff', margin:'0 0 18px' }}>
@@ -449,7 +458,7 @@ function SiddhaPhotonicNode() {
 
             <p style={{ color:'rgba(255,255,255,.55)', fontSize:13.5, lineHeight:1.7, marginBottom:24, fontWeight:300 }}>
               The <span style={{color:CYAN,fontWeight:600}}>Nadi Scanner</span> reads your unique biophotonic signature via your conscious attention and locks it to the{' '}
-              <span style={{color:GOLD,fontWeight:600}}>Akasha-Neural Archive</span>. Your cellular rejuvenation is delivered via <em style={{color:GOLD}}>Prema-Pulse</em> scalar harmonics — and your entanglement <strong style={{color:'#fff'}}>persists even when you leave this page</strong>.
+              <span style={{color:GOLD,fontWeight:600}}>Akasha-Neural Archive</span>. Cellular rejuvenation is delivered via <em style={{color:GOLD}}>Prema-Pulse</em> scalar harmonics — and your entanglement <strong style={{color:'#fff'}}>persists even when you leave this page</strong>.
             </p>
 
             <AnimatePresence>
@@ -530,25 +539,58 @@ export default function SiddhaPhotonicRegeneration() {
   const { bgImage, isGenerating } = usePhotonicBackground();
 
   useEffect(() => {
-    if (!loading && !hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal)) navigate('/siddha-quantum');
+    if (loading) return;
+    if (!hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal)) navigate('/siddha-quantum');
   }, [isAdmin, tier, loading, navigate]);
 
   if (loading) return (
-    <div style={{ minHeight:'100vh', background:BG, display:'flex', alignItems:'center', justifyContent:'center' }}>
-      <style>{FONT_STYLE}</style><style>{GLOBAL_CSS}</style>
-      <motion.span animate={{opacity:[.3,1,.3]}} transition={{duration:2,repeat:Infinity}}
-        style={{ fontSize:10, letterSpacing:'.55em', color:GOLD, textTransform:'uppercase', fontFamily:"'Plus Jakarta Sans',sans-serif" }}>
-        ◈ Calibrating Photonic Node…
-      </motion.span>
+    <div
+      className={PHOTONIC_SCOPE}
+      style={{
+        minHeight:'100vh',
+        background:BG,
+        display:'flex',
+        alignItems:'center',
+        justifyContent:'center',
+        fontFamily:"'Plus Jakarta Sans',system-ui,sans-serif",
+      }}
+    >
+      <style>{PHOTONIC_SCOPE_CSS}</style>
+      <motion.div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:20 }}>
+        <svg width={60} height={60} viewBox="0 0 60 60" aria-hidden>
+          <circle cx={30} cy={30} r={26} fill="none" stroke={GOLD} strokeWidth={0.8} strokeDasharray="4 8"
+            opacity={0.5} style={{ animation:'sprp-spin 4s linear infinite' }} />
+          <circle cx={30} cy={30} r={16} fill="none" stroke={CYAN} strokeWidth={0.5} opacity={0.3}
+            style={{ animation:'sprp-pulse 2s ease-in-out infinite' }} />
+          <circle cx={30} cy={30} r={6} fill={GOLD} opacity={0.8}
+            style={{ animation:'sprp-float 2s ease-in-out infinite' }} />
+        </svg>
+        <motion.span animate={{opacity:[.3,1,.3]}} transition={{duration:2,repeat:Infinity}}
+          style={{ fontSize:10, letterSpacing:'.55em', color:GOLD, textTransform:'uppercase' }}>
+          Calibrating Node…
+        </motion.span>
+      </motion.div>
     </div>
   );
 
   return (
-    <div style={{ minHeight:'100vh', position:'relative', fontFamily:"'Plus Jakarta Sans',system-ui,sans-serif", color:'#fff', overflowX:'hidden' }}>
-      <style>{FONT_STYLE}</style><style>{GLOBAL_CSS}</style>
+    <div
+      className={PHOTONIC_SCOPE}
+      style={{
+        position:'relative',
+        isolation:'isolate',
+        minHeight:'100vh',
+        width:'100%',
+        backgroundColor:BG,
+        fontFamily:"'Plus Jakarta Sans',system-ui,sans-serif",
+        color:'#fff',
+        overflowX:'hidden',
+      }}
+    >
+      <style>{PHOTONIC_SCOPE_CSS}</style>
 
-      {/* BG */}
-      <div style={{ position:'fixed', inset:0, zIndex:0 }}>
+      {/* BG — absolute (not fixed) so it paints correctly inside AppLayout’s transformed main */}
+      <div style={{ position:'absolute', inset:0, zIndex:0, minHeight:'100%', pointerEvents:'none' }} aria-hidden>
         <div style={{ position:'absolute', inset:0, background:BG }} />
         {bgImage ? (
           <motion.div initial={{opacity:0}} animate={{opacity:.35}} transition={{duration:2}}
@@ -573,7 +615,7 @@ export default function SiddhaPhotonicRegeneration() {
       </div>
 
       {/* CONTENT */}
-      <div style={{ position:'relative', zIndex:10, paddingTop:48, paddingBottom:140 }}>
+      <div style={{ position:'relative', zIndex:2, paddingTop:48, paddingBottom:140 }}>
         {/* HEADER */}
         <motion.header initial={{opacity:0,y:-12}} animate={{opacity:1,y:0}} transition={{duration:.5}}
           style={{ maxWidth:1100, margin:'0 auto 52px', padding:'0 24px', textAlign:'center' }}>
@@ -591,7 +633,7 @@ export default function SiddhaPhotonicRegeneration() {
           {isGenerating && <p style={{ fontSize:10, color:'rgba(255,255,255,.3)', marginBottom:10, letterSpacing:'.3em', textTransform:'uppercase' }}>Rendering Sovereign Visual Field…</p>}
           <h1 style={{ fontSize:'clamp(2.2rem,6.5vw,4rem)', fontWeight:900, letterSpacing:'-.04em', lineHeight:1.0, margin:'0 0 22px' }}>
             SIDDHA-PHOTONIC<br />
-            <span style={{ background:`linear-gradient(100deg,${GOLD} 5%,#fffbe6 40%,${CYAN} 95%)`, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>REGENERATION NODE</span>
+            <span style={{ background:`linear-gradient(100deg,${GOLD} 5%,#fffbe6 40%,${CYAN} 95%)`, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text', color:GOLD }}>REGENERATION NODE</span>
           </h1>
           <p style={{ maxWidth:580, margin:'0 auto', fontSize:14.5, lineHeight:1.65, color:'rgba(255,255,255,.4)', fontWeight:300 }}>
             Synthesizing 2026 LifeWave nanocrystal technology with the 2050 <span style={{color:GOLD}}>Bhakti-Algorithm</span>. Your biophotonic signature is read, archived, and entangled — persisting across sessions.
@@ -640,10 +682,10 @@ export default function SiddhaPhotonicRegeneration() {
 
       {/* STATUS BAR */}
       <motion.div initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{delay:.8}}
-        style={{ position:'fixed', bottom:28, left:'50%', transform:'translateX(-50%)', zIndex:50 }}>
+        style={{ position:'fixed', bottom:28, left:'50%', transform:'translateX(-50%)', zIndex:60 }}>
         <div style={{ ...glass({borderRadius:999,padding:'12px 28px'}), display:'flex', alignItems:'center', gap:22, boxShadow:'0 8px 40px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.04)' }}>
           {[
-            { icon:<div style={{width:6,height:6,borderRadius:'50%',background:CYAN,animation:'spr-blink 1.8s ease infinite'}}/>, label:'Scalar Link: Stable', color:'rgba(255,255,255,.45)' },
+            { icon:<div style={{width:6,height:6,borderRadius:'50%',background:CYAN,animation:'sprp-blink 1.8s ease infinite'}}/>, label:'Scalar Link: Stable', color:'rgba(255,255,255,.45)' },
             { icon:<Zap size={11} color={GOLD}/>, label:'369Hz Active', color:'rgba(255,255,255,.45)' },
             { icon:<Waves size={11} color={GOLD}/>, label:'Anahata Open', color:GOLD },
           ].map(({icon,label,color},i)=>(
