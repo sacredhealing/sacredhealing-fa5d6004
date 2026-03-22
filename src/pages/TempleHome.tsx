@@ -96,6 +96,67 @@ const SITE_DB: Record<string, {
   lyra: { title: 'Lyra (The Felines)', primaryBenefit: 'Original Sound — Frequency of Creation', instruction: 'Merge with pure white light. This is the original sound — before all other sounds. Do not direct it. Become it.', experience: 'White light fire. The feeling of touching the original creative frequency from which all exists.', signature: 'WHITE_LIGHT_FIRE', bio: 'The Original Sound and Frequency of Creation. The deepest and most primordial portal in the registry.' },
 };
 
+const SITE_BG: Record<string, { gradient: string; overlay?: string; scene: string }> = {
+  kailash_13x: {
+    gradient: 'radial-gradient(ellipse 120% 80% at 50% 100%, #1a0533 0%, #2d0d5c 35%, #0d0520 60%, #050505 100%)',
+    overlay: 'linear-gradient(180deg, rgba(123,97,255,0.12) 0%, rgba(212,175,55,0.06) 60%, transparent 100%)',
+    scene: 'Snow-capped peak · Violet-gold Schumann sky',
+  },
+  amritsar: {
+    gradient: 'radial-gradient(ellipse 120% 60% at 50% 100%, #1a1000 0%, #2d1f00 30%, #0d0a00 60%, #050505 100%)',
+    overlay: 'linear-gradient(180deg, transparent 40%, rgba(212,175,55,0.18) 80%, rgba(212,175,55,0.28) 100%)',
+    scene: 'Golden Temple night · Amrit Sarovar reflection',
+  },
+  ayodhya_rama: {
+    gradient: 'radial-gradient(ellipse 100% 70% at 50% 80%, #2d1000 0%, #4a1e00 35%, #1a0800 60%, #050505 100%)',
+    overlay: 'linear-gradient(180deg, rgba(255,140,0,0.06) 0%, rgba(205,90,0,0.14) 60%, transparent 100%)',
+    scene: 'Grand Vedic temple · Saffron celestial aura',
+  },
+  vrindavan_krsna: {
+    gradient: 'radial-gradient(ellipse 110% 70% at 50% 60%, #001428 0%, #001e3d 35%, #00091a 60%, #050505 100%)',
+    overlay: 'linear-gradient(180deg, rgba(30,144,255,0.08) 0%, rgba(0,80,40,0.10) 60%, transparent 100%)',
+    scene: 'Mystical forest twilight · Blue lotus & peacock sky',
+  },
+  glastonbury: {
+    gradient: 'radial-gradient(ellipse 110% 70% at 50% 70%, #001a0a 0%, #003318 35%, #000f07 60%, #050505 100%)',
+    overlay: 'linear-gradient(180deg, rgba(0,255,127,0.04) 0%, rgba(0,180,80,0.10) 60%, transparent 100%)',
+    scene: 'Green hills of Avalon · Emerald mist rising',
+  },
+  giza: {
+    gradient: 'radial-gradient(ellipse 120% 80% at 50% 100%, #0d0900 0%, #1a1200 35%, #0a0700 60%, #050505 100%)',
+    overlay: 'linear-gradient(180deg, rgba(0,0,20,0.7) 0%, rgba(20,15,0,0.3) 70%, rgba(212,175,55,0.05) 100%)',
+    scene: 'Cosmic night sky · Milky Way · Ancient torsion',
+  },
+  sedona: {
+    gradient: 'radial-gradient(ellipse 110% 70% at 50% 80%, #2a0800 0%, #4a1200 35%, #1a0500 60%, #050505 100%)',
+    overlay: 'linear-gradient(180deg, rgba(255,69,0,0.07) 0%, rgba(180,40,0,0.16) 60%, transparent 100%)',
+    scene: 'Red rock vortex · Fiery sunset · Energy spirals',
+  },
+  pleiades: {
+    gradient: 'radial-gradient(ellipse 120% 90% at 50% 40%, #00101e 0%, #001828 35%, #000a14 60%, #050505 100%)',
+    overlay: 'linear-gradient(180deg, rgba(224,255,255,0.04) 0%, rgba(65,105,225,0.07) 60%, transparent 100%)',
+    scene: 'Deep space nebula · Diamond-white stardust',
+  },
+  sirius: {
+    gradient: 'radial-gradient(ellipse 120% 80% at 50% 40%, #000820 0%, #000d30 35%, #000510 60%, #050505 100%)',
+    scene: 'The Blue Star · Initiation light field',
+  },
+  arcturus: {
+    gradient: 'radial-gradient(ellipse 110% 80% at 50% 40%, #0d0020 0%, #1a0035 35%, #08001a 60%, #050505 100%)',
+    scene: 'Violet regeneration grid · Geometric light fields',
+  },
+  mauritius: {
+    gradient: 'radial-gradient(ellipse 110% 70% at 50% 40%, #0a0a00 0%, #141400 35%, #070700 60%, #050505 100%)',
+    overlay: 'linear-gradient(180deg, rgba(240,230,140,0.05) 0%, rgba(200,190,80,0.03) 60%, transparent 100%)',
+    scene: 'Miracle Room · Divine Spark field',
+  },
+  shirdi: {
+    gradient: 'radial-gradient(ellipse 100% 80% at 50% 100%, #1a0800 0%, #2a1200 35%, #0f0600 60%, #050505 100%)',
+    overlay: 'linear-gradient(180deg, transparent 55%, rgba(255,107,53,0.10) 80%, rgba(255,107,53,0.18) 100%)',
+    scene: 'Dhuni eternal flame · Sacred fire of surrender',
+  },
+};
+
 const MODES = [
   { id: 'ADMIN', name: 'Admin', intensity: 1.0, description: 'Live Testing: Active only while engine running.' },
   { id: 'INTEGRATION', name: 'Integration', intensity: 0.25, description: 'Normal Life: Maintains energy without high intensity.' },
@@ -371,15 +432,99 @@ function DivineSparks() {
   return <canvas ref={ref} className="fixed inset-0 pointer-events-none z-[1]" style={{ mixBlendMode: 'screen' }} />;
 }
 
-// ─── Cosmic Background ────────────────────────────────────────────────────────
-function CosmicBG({ siteId, siteColor, intensity }: { siteId: string; siteColor: string; intensity: number }) {
+// ─── Cinematic site backgrounds ───────────────────────────────────────────────
+function CinematicBackground({ siteId, siteColor, intensity }: {
+  siteId: string;
+  siteColor: string;
+  intensity: number;
+}) {
+  const bg = SITE_BG[siteId];
+  const opHex = Math.min(255, Math.round(intensity * 0.18)).toString(16).padStart(2, '0');
+  const gradient = bg?.gradient
+    ?? `radial-gradient(ellipse 80% 60% at 50% 30%, ${siteColor}18 0%, #050505 70%)`;
+
   return (
     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-      <div className="absolute inset-0 bg-[#050505]" />
-      {siteId === 'shirdi' && <div className="absolute bottom-0 left-0 right-0 h-2/3" style={{ background: 'radial-gradient(ellipse 80% 40% at 50% 100%,rgba(178,34,34,0.12) 0%,transparent 70%)', animation: 'dhuni 3s ease-in-out infinite' }} />}
-      {siteId === 'amritsar' && <div className="absolute bottom-0 left-0 right-0 h-1/3" style={{ background: 'linear-gradient(to top,rgba(212,175,55,0.10) 0%,transparent 100%)' }} />}
-      <div className="absolute inset-0 transition-all duration-[2000ms]" style={{ background: `radial-gradient(ellipse 80% 60% at 50% 30%,${siteColor}18 0%,transparent 70%)` }} />
-      <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse 40% 30% at 50% 20%,rgba(212,175,55,${intensity / 600}) 0%,transparent 60%)` }} />
+      <div
+        className="absolute inset-0"
+        style={{ background: gradient, transition: 'all 2.5s ease' }}
+      />
+      {bg?.overlay && (
+        <div
+          className="absolute inset-0"
+          style={{ background: bg.overlay, transition: 'all 2.5s ease' }}
+        />
+      )}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: `radial-gradient(ellipse 60% 30% at 50% 15%, ${siteColor}${opHex} 0%, transparent 65%)`,
+          transition: 'all 1.5s ease',
+        }}
+      />
+      {siteId === 'amritsar' && (
+        <div
+          className="absolute bottom-0 left-0 right-0 h-40"
+          style={{
+            background: 'linear-gradient(to top, rgba(212,175,55,0.18) 0%, rgba(212,175,55,0.06) 60%, transparent 100%)',
+            animation: 'amrit-ripple 4s ease-in-out infinite',
+          }}
+        />
+      )}
+      {siteId === 'shirdi' && (
+        <div
+          className="absolute bottom-0 left-0 right-0 h-64"
+          style={{
+            background: 'radial-gradient(ellipse 80% 40% at 50% 100%, rgba(255,107,53,0.15) 0%, transparent 70%)',
+            animation: 'dhuni-flicker 3s ease-in-out infinite',
+          }}
+        />
+      )}
+      {siteId === 'kailash_13x' && (
+        <div
+          className="absolute top-0 left-0 right-0 h-32"
+          style={{
+            background: 'linear-gradient(180deg, rgba(123,97,255,0.12) 0%, transparent 100%)',
+            animation: 'schumann-pulse 7.83s ease-in-out infinite',
+          }}
+        />
+      )}
+      {siteId === 'pleiades' && (
+        <div
+          className="absolute inset-0"
+          style={{
+            opacity: 0.06,
+            backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
+            backgroundSize: '28px 28px',
+          }}
+        />
+      )}
+      {siteId === 'glastonbury' && (
+        <div
+          className="absolute bottom-0 left-0 right-0 h-1/2"
+          style={{
+            background: 'radial-gradient(ellipse 100% 50% at 50% 100%, rgba(0,180,80,0.1) 0%, transparent 70%)',
+          }}
+        />
+      )}
+      {siteId === 'sedona' && (
+        <div
+          className="absolute top-0 right-0 w-64 h-64"
+          style={{
+            opacity: 0.08,
+            background: 'radial-gradient(circle at 80% 20%, rgba(255,69,0,0.6) 0%, transparent 60%)',
+            animation: 'sedona-spiral 14s linear infinite',
+          }}
+        />
+      )}
+      {siteId === 'vrindavan_krsna' && (
+        <div
+          className="absolute inset-0"
+          style={{
+            background: 'radial-gradient(ellipse 80% 50% at 50% 60%, rgba(30,144,255,0.07) 0%, transparent 70%)',
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -829,7 +974,7 @@ function TempleHomeInner() {
 
   if (!isAdmin) return (
     <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center p-8 relative overflow-hidden">
-      <CosmicBG siteId="giza" siteColor="#D4AF37" intensity={30} />
+      <CinematicBackground siteId="giza" siteColor="#D4AF37" intensity={30} />
       <div className="relative z-10 flex flex-col items-center gap-6 max-w-sm text-center">
         <div className="h-16 w-16 rounded-full border border-[#D4AF37]/20 flex items-center justify-center" style={{ background: 'rgba(212,175,55,0.05)', boxShadow: '0 0 40px rgba(212,175,55,0.1)' }}>
           <Lock className="h-7 w-7 text-[#D4AF37]/60" />
@@ -876,13 +1021,16 @@ function TempleHomeInner() {
 
   return (
     <div className="min-h-screen bg-[#050505] text-white relative overflow-hidden">
-      <CosmicBG siteId={selectedSite} siteColor={currentSite.color} intensity={auraIntensity} />
+      <CinematicBackground siteId={selectedSite} siteColor={currentSite.color} intensity={auraIntensity} />
       {selectedSite === 'mauritius' && <DivineSparks />}
 
       <style>{`
         @keyframes spin{to{transform:rotate(360deg)}}
         @keyframes spin-reverse{to{transform:rotate(-360deg)}}
-        @keyframes dhuni{0%,100%{opacity:.6}33%{opacity:1}66%{opacity:.75}}
+        @keyframes amrit-ripple{0%,100%{opacity:.7;transform:scaleX(1)}50%{opacity:1;transform:scaleX(1.03)}}
+        @keyframes dhuni-flicker{0%,100%{opacity:.6}33%{opacity:1}66%{opacity:.75}}
+        @keyframes schumann-pulse{0%,100%{opacity:.6}50%{opacity:1}}
+        @keyframes sedona-spiral{to{transform:rotate(360deg) scale(1.1)}}
         @keyframes shimmer{0%{background-position:200% center}100%{background-position:-200% center}}
         .gold-shimmer{background:linear-gradient(90deg,#CFB53B,#FFF8DC,#FFD700,#FFF8DC,#CFB53B);background-size:200% auto;animation:shimmer 4s linear infinite;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
         .site-select option{background:#0a0602;color:#fff}
@@ -948,6 +1096,22 @@ function TempleHomeInner() {
             <div>
               <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase mb-1" style={{ color: cat.color }}>{cat.label} · SITE ENERGY ACTIVE</div>
               <h2 className={`text-lg font-black tracking-[-0.03em] leading-tight ${selectedSite === 'amritsar' ? 'gold-shimmer' : 'text-white/90'}`}>{currentSite.name}</h2>
+              {SITE_BG[selectedSite]?.scene && (
+                <div
+                  className="mb-2 mt-1.5 px-3 py-1.5 rounded-xl inline-flex items-center gap-1.5"
+                  style={{
+                    background: `${currentSite.color}0a`,
+                    border: `1px solid ${currentSite.color}20`,
+                  }}
+                >
+                  <span
+                    className="text-[8px] font-mono tracking-widest"
+                    style={{ color: `${currentSite.color}80` }}
+                  >
+                    {SITE_BG[selectedSite].scene}
+                  </span>
+                </div>
+              )}
               <p className="text-[11px] text-white/40 mt-0.5">{currentSite.focus}</p>
             </div>
             <button onClick={() => setInfoSiteId(selectedSite)} className="p-2 rounded-xl hover:bg-white/5" style={{ border: '1px solid rgba(255,255,255,0.05)' }}><Info size={14} className="text-[#D4AF37]/50" /></button>
