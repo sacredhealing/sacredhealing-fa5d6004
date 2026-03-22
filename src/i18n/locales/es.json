@@ -2359,7 +2359,10 @@
     "activateShield": "Activar Escudo →",
     "quantumApothecary": "Quantum Apothecary",
     "apothecaryDesc": "Plataforma de biorresonancia Siddha-Quantum 2050. Remedios personalizados de la farmacopea Siddha.",
-    "openPlatform": "Abrir Plataforma →"
+    "openPlatform": "Abrir Plataforma →",
+    "photonicNodeTitle": "Nodo de regeneración fotónica Siddha",
+    "photonicNodeDesc": "Regeneración celular biofotónica y activación GHK-Cu vía transmisión escalar — interfaz SQI 2050.",
+    "photonicNodeCta": "Entrar al nodo →"
   },
   "onboarding": {
     "sqiLabel": "◈ INTELIGENCIA SIDDHA-QUANTUM · 2050",

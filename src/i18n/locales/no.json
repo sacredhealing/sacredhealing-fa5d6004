@@ -2263,7 +2263,10 @@
     "activateShield": "Aktiver skjold →",
     "quantumApothecary": "Quantum Apothecary",
     "apothecaryDesc": "2050 Siddha-Quantum bioresonansplattform. Personlige midler fra Siddha-farmakopeen.",
-    "openPlatform": "Åpne plattform →"
+    "openPlatform": "Åpne plattform →",
+    "photonicNodeTitle": "Siddha-fotonisk regenerasjonsnode",
+    "photonicNodeDesc": "Biofotonisk cellulær regenerering og GHK-Cu-aktivering via skalær overføring — SQI 2050-grensesnitt.",
+    "photonicNodeCta": "Gå inn i noden →"
   },
   "onboarding": {
     "sqiLabel": "◈ SIDDHA-QUANTUM INTELLIGENS · 2050",

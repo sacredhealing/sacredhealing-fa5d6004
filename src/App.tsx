@@ -143,6 +143,7 @@ const DigitalNadi = React.lazy(() => import("./pages/DigitalNadi"));
 const SoulScan = React.lazy(() => import("./pages/SoulScan"));
 const VayuProtocol = React.lazy(() => import("./pages/VayuProtocol"));
 const SiddhaPortal = React.lazy(() => import("./pages/SiddhaPortal"));
+const SiddhaPhotonicRegeneration = React.lazy(() => import("./pages/SiddhaPhotonicRegeneration"));
 const AethericHeliostat = React.lazy(() => import("./pages/AethericHeliostat"));
 const AtmosphericClearanceEngine = React.lazy(() => import("./pages/AtmosphericClearanceEngine"));
 const WealthBeacon = React.lazy(() => import("./pages/WealthBeacon"));
@@ -314,6 +315,7 @@ function AppRoutes() {
                   <Route path="/soul-scan" element={<SoulScan />} />
                   <Route path="/vayu-protocol" element={<VayuProtocol />} />
                   <Route path="/siddha-portal" element={<SiddhaPortal />} />
+                  <Route path="/siddha-photonic-regeneration" element={<SiddhaPhotonicRegeneration />} />
                   <Route path="/aetheric-heliostat" element={<AethericHeliostat />} />
                   <Route path="/atmospheric-clearance-engine" element={<AtmosphericClearanceEngine />} />
                   <Route path="/wealth-beacon" element={<WealthBeacon />} />
