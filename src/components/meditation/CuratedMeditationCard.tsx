@@ -1,5 +1,6 @@
 import React from 'react';
 import { Play, Clock, Sparkles } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface CuratedPlaylist {
   id: string;
@@ -20,19 +21,23 @@ interface CuratedMeditationCardProps {
   onClick: () => void;
 }
 
-const formatDuration = (seconds: number): string => {
+function formatDuration(
+  seconds: number,
+  t: (key: string, opts?: Record<string, unknown>) => string
+): string {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   if (hours > 0) {
-    return `${hours}h ${minutes}m`;
+    return t('meditations.curatedDurationHoursMins', { hours, minutes });
   }
-  return `${minutes} min`;
-};
+  return t('meditations.curatedDurationMins', { minutes });
+}
 
 export const CuratedMeditationCard: React.FC<CuratedMeditationCardProps> = ({
   playlist,
   onClick,
 }) => {
+  const { t } = useTranslation();
   return (
     <button
       onClick={onClick}
@@ -83,10 +88,14 @@ export const CuratedMeditationCard: React.FC<CuratedMeditationCardProps> = ({
         <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
             <Clock size={12} />
-            {formatDuration(playlist.total_duration)}
+            {formatDuration(playlist.total_duration, t)}
           </span>
           <span>•</span>
-          <span>{playlist.track_count} sessions</span>
+          <span>
+            {playlist.track_count === 1
+              ? t('meditations.playlistSessionOne')
+              : t('meditations.playlistSessions', { count: playlist.track_count })}
+          </span>
         </div>
       </div>
     </button>

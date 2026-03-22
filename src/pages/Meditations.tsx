@@ -24,7 +24,7 @@
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { Play, Pause, Clock, Sparkles, ArrowLeft, Loader2, Globe, Lock } from 'lucide-react';
 import BabajiShadow from '@/components/meditation/BabajiShadow';
 import { Button } from '@/components/ui/button';
@@ -39,7 +39,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useCuratedPlaylists, CuratedPlaylist } from '@/hooks/useCuratedPlaylists';
 import { useMusicPlayer, UniversalAudioItem } from '@/contexts/MusicPlayerContext';
 import { useUserDailyState } from '@/hooks/useUserDailyState';
-import { getDayPhase } from '@/utils/postSessionContext';
+import { getDayPhase, type DayPhase } from '@/utils/postSessionContext';
 import { LanguageToggle } from '@/features/meditations/LanguageToggle';
 import { useMeditationContentLanguage } from '@/features/meditations/useContentLanguage';
 import { selectStartNowItem } from '@/features/meditations/startNowSelector';
@@ -446,20 +446,21 @@ const StarfieldCanvas: React.FC = () => {
    JYOTISH MEDITATION CARD  (emerald glass treatment)
 ───────────────────────────────────────────────────────────────── */
 const JyotishMeditationCard: React.FC = () => {
+  const { t } = useTranslation();
   const jyotish = useJyotishProfile();
   if (jyotish.isLoading || !jyotish.mahadasha) return null;
   return (
     <div className="jyotish-banner">
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
         <span style={{ fontSize: 16 }}>⚕</span>
-        <span className="micro-label">JYOTISH MEDITATION GUIDANCE</span>
+        <span className="micro-label">{t('meditations.jyotishGuidanceLabel')}</span>
       </div>
       <p style={{ fontSize: 13, color: 'rgba(255,255,255,1)', lineHeight: 1.6, margin: 0 }}>
-        Your{' '}
-        <strong style={{ color: '#D4AF37' }}>{jyotish.mahadasha} Mahadasha</strong>{' '}
-        period recommends{' '}
-        <strong style={{ color: '#D4AF37' }}>{jyotish.meditationType}</strong>.
-        {' '}Focus on {jyotish.karmaFocus} for deepest benefit.
+        {t('meditations.jyotishGuidanceBody', {
+          mahadasha: jyotish.mahadasha,
+          meditationType: jyotish.meditationType,
+          karmaFocus: jyotish.karmaFocus,
+        })}
       </p>
     </div>
   );
@@ -486,6 +487,7 @@ const MeditationRowSQI: React.FC<{
   onPlay: (med: Meditation, lang: ContentLanguage) => void;
   onLock: () => void;
 }> = ({ med, lang, currentAudio, isPlaying, playerProgress, hasMeditationAccess, onPlay, onLock }) => {
+  const { t } = useTranslation();
   const isActive = currentAudio?.id === med.id;
   const isLocked = (med.is_premium || med.tier === 'prana_flow') && !hasMeditationAccess;
   const isFree = !med.is_premium && med.tier !== 'prana_flow';
@@ -533,15 +535,15 @@ const MeditationRowSQI: React.FC<{
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           {med.duration_minutes && (
             <span style={{ fontSize: 10, color: 'rgba(255,255,255,.35)', display: 'flex', alignItems: 'center', gap: 3 }}>
-              <Clock size={10} /> {med.duration_minutes} min
+              <Clock size={10} /> {med.duration_minutes} {t('meditations.duration')}
             </span>
           )}
           {med.shc_reward && (
             <span style={{ fontSize: 10, color: 'rgba(212,175,55,.6)', display: 'flex', alignItems: 'center', gap: 3 }}>
-              ✦ +{med.shc_reward} SHC
+              ✦ {t('meditations.shcRewardLine', { amount: med.shc_reward })}
             </span>
           )}
-          {hasBilingual && <span className="badge-bilingual">SV+EN</span>}
+          {hasBilingual && <span className="badge-bilingual">{t('meditations.bilingualBadge')}</span>}
         </div>
         {/* Progress bar when playing */}
         {isActive && isPlaying && playerProgress !== undefined && (
@@ -554,8 +556,8 @@ const MeditationRowSQI: React.FC<{
       {/* Badge */}
       <div style={{ flexShrink: 0 }}>
         {isFree
-          ? <span className="badge-free">FREE</span>
-          : <span className="badge-premium">{isLocked ? '🔒' : '+'} PRANA+</span>}
+          ? <span className="badge-free">{t('meditations.badgeFree')}</span>
+          : <span className="badge-premium">{isLocked ? '🔒' : '+'} {t('meditations.badgePranaPlus')}</span>}
       </div>
 
       {/* Lock overlay */}
@@ -563,7 +565,7 @@ const MeditationRowSQI: React.FC<{
         <div className="lock-overlay">
           <Lock size={18} color="#D4AF37" style={{ margin: '0 auto 4px' }} />
           <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: '#D4AF37' }}>
-            Upgrade
+            {t('meditations.upgradeLabel')}
           </span>
         </div>
       )}
@@ -581,13 +583,14 @@ const MeditationSectionSQI: React.FC<{
   onPlay: (med: Meditation, lang: ContentLanguage) => void;
   onLock: () => void; defaultOpen?: boolean;
 }> = ({ title, subtitle, meditations, lang, currentAudio, isPlaying, playerProgress, hasMeditationAccess, onPlay, onLock, defaultOpen = false }) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="glass-card" style={{ marginBottom: 12, overflow: 'hidden' }}>
       <div className="section-header" onClick={() => setOpen(o => !o)}>
         <div>
           {/* Gold micro-label above section name */}
-          <div className="sqi-micro" style={{ marginBottom: 4 }}>PREMA-PULSE TRANSMISSIONS</div>
+          <div className="sqi-micro" style={{ marginBottom: 4 }}>{t('meditations.sectionMicroLabel')}</div>
           <div style={{ fontWeight: 800, fontSize: 15, letterSpacing: '-0.01em', color: 'rgba(255,255,255,0.9)' }}>
             {title}
           </div>
@@ -666,7 +669,9 @@ const Meditations: React.FC = () => {
   const pranaUpgradeLockRef = useRef(false);
   const { reading: vedicReading, generateReading } = useAIVedicReading();
   const userDailyState = useUserDailyState();
-  const startNowItem = useMemo(() => selectStartNowItem(meditations, { dayPhase: getDayPhase(), userState: (userDailyState?.userState ?? 'calm') as any, language }), [meditations, userDailyState, language]);
+  const dayPhase: DayPhase = getDayPhase();
+  const dayPhaseLabel = t(`meditations.dayPhase.${dayPhase}`);
+  const startNowItem = useMemo(() => selectStartNowItem(meditations, { dayPhase, userState: (userDailyState?.userState ?? 'calm') as any, language }), [meditations, userDailyState, language, dayPhase]);
 
   // Stripe success toasts (preserved)
   useEffect(() => {
@@ -675,10 +680,10 @@ const Meditations: React.FC = () => {
     const cancelled = searchParams.get('cancelled');
     const membershipSuccess = searchParams.get('membership_success');
     const membershipCancelled = searchParams.get('membership_cancelled');
-    if (success === 'true') toast.success(t('meditations.paymentSuccess', 'Payment successful! Adam will begin channeling your meditation.'));
-    else if (wealthSuccess === 'true') toast.success(t('meditations.wealthSuccess', 'Payment successful! Check your email for the 108 affirmations.'));
-    else if (membershipSuccess === 'true') toast.success(t('meditations.membershipSuccess', 'Welcome to Meditation Membership! Your subscription is now active.'));
-    else if (cancelled === 'true' || membershipCancelled === 'true') toast.info(t('meditations.paymentCancelled', 'Payment was cancelled.'));
+    if (success === 'true') toast.success(t('meditations.paymentSuccess'));
+    else if (wealthSuccess === 'true') toast.success(t('meditations.wealthSuccess'));
+    else if (membershipSuccess === 'true') toast.success(t('meditations.membershipSuccess'));
+    else if (cancelled === 'true' || membershipCancelled === 'true') toast.info(t('meditations.paymentCancelled'));
   }, [searchParams, t]);
 
   // Fetch meditations
@@ -772,7 +777,7 @@ const Meditations: React.FC = () => {
     } catch (e: unknown) {
       pranaUpgradeLockRef.current = false;
       toast.error(
-        e instanceof Error ? e.message : t('meditations.checkoutFailed', 'Could not start checkout'),
+        e instanceof Error ? e.message : t('meditations.checkoutFailed'),
       );
     }
   }, [user, navigate, t]);
@@ -794,7 +799,7 @@ const Meditations: React.FC = () => {
         <style>{SQI_STYLES}</style>
         <BabajiShadow />
         <Loader2 size={28} className="nadi-pulse" style={{ margin: '0 auto 12px', display: 'block', color: '#22D3EE' }} />
-        <div className="sqi-micro">Accessing Akasha Archive…</div>
+        <div className="sqi-micro">{t('meditations.loadingArchive')}</div>
       </div>
     );
   }
@@ -806,7 +811,7 @@ const Meditations: React.FC = () => {
         <style>{SQI_STYLES}</style>
         <div className="sqi-content" style={{ padding: '48px 20px 20px 32px' }}>
           <Button variant="ghost" size="sm" onClick={() => { setSelectedPlaylist(null); setPlaylistMeditations([]); }} className="mb-4">
-            <ArrowLeft size={16} className="mr-1" />{t('common.back', 'Back')}
+            <ArrowLeft size={16} className="mr-1" />{t('common.back')}
           </Button>
           <div className="glass-card" style={{ padding: 24, marginBottom: 24 }}>
             {selectedPlaylist.cover_image_url && (
@@ -819,7 +824,11 @@ const Meditations: React.FC = () => {
             {selectedPlaylist.description && (
               <p style={{ fontSize: 13, color: 'rgba(255,255,255,.5)', marginBottom: 8 }}>{selectedPlaylist.description}</p>
             )}
-            <p style={{ fontSize: 12, color: 'rgba(255,255,255,.35)' }}>{selectedPlaylist.track_count} sessions</p>
+            <p style={{ fontSize: 12, color: 'rgba(255,255,255,.35)' }}>
+              {selectedPlaylist.track_count === 1
+                ? t('meditations.playlistSessionOne')
+                : t('meditations.playlistSessions', { count: selectedPlaylist.track_count })}
+            </p>
           </div>
           <div className="glass-card" style={{ overflow: 'hidden' }}>
             {playlistMeditations.length === 0 ? (
@@ -868,19 +877,19 @@ const Meditations: React.FC = () => {
 
           {/* ✅ FIX 1: Cinzel shimmer title */}
           <div className="sqi-micro" style={{ marginBottom: 8 }}>
-            AKASHA-NEURAL ARCHIVE · MEDITATION TRANSMISSIONS
+            {t('meditations.heroMicro')}
           </div>
           <h1 className="sqi-shimmer-title">
-            {t('meditations.hallOfStillness', 'The Hall of Stillness')}
+            {t('meditations.hallOfStillness')}
           </h1>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,.42)', marginTop: 8, marginBottom: 20, lineHeight: 1.6 }}>
-            {t('meditations.subtitle', 'Curated by intention. Expand when you feel ready.')}
+            {t('meditations.heroSubtitle')}
           </p>
 
           {/* ✅ FIX 2: Language toggle — proper glass pill */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 0 }}>
             <Globe size={14} style={{ color: 'rgba(255,255,255,.35)' }} />
-            <span className="sqi-micro" style={{ marginBottom: 0 }}>AUDIO LANGUAGE</span>
+            <span className="sqi-micro" style={{ marginBottom: 0 }}>{t('meditations.audioLanguageLabel').toUpperCase()}</span>
             <LanguageToggle language={language} setLanguage={setLanguage} />
           </div>
         </div>
@@ -911,11 +920,11 @@ const Meditations: React.FC = () => {
                     : startNowItem.title}
                 </div>
                 <div style={{ fontSize: 11, color: 'rgba(255,255,255,.35)' }}>
-                  {getDayPhase()} · {t('meditations.startComfort', 'Start comfort')}
+                  {dayPhaseLabel} · {t('meditations.startComfort')}
                 </div>
               </div>
               {(startNowItem as MeditationFull).audio_url_sv && (
-                <span className="badge-bilingual">SV+EN</span>
+                <span className="badge-bilingual">{t('meditations.bilingualBadge')}</span>
               )}
             </div>
           </div>
@@ -935,7 +944,7 @@ const Meditations: React.FC = () => {
         {curatedPlaylists.length > 0 && (
           <div style={{ padding: '0 20px 24px' }}>
             <div className="sqi-micro" style={{ marginBottom: 8, color: 'rgba(212,175,55,.5)' }}>
-              {t('meditations.featuredCollections', 'Featured collections')}
+              {t('meditations.featuredCollections')}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               {curatedPlaylists.map(playlist => (
@@ -956,9 +965,9 @@ const Meditations: React.FC = () => {
         {/* ✅ FIX 7: Section list header with gold label */}
         <div style={{ padding: '0 20px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <div className="sqi-micro" style={{ marginBottom: 4 }}>PREMA-PULSE TRANSMISSIONS</div>
+            <div className="sqi-micro" style={{ marginBottom: 4 }}>{t('meditations.sectionMicroLabel')}</div>
             <div style={{ fontWeight: 800, fontSize: 17, letterSpacing: '-0.02em', color: 'rgba(255,255,255,.9)' }}>
-              {t('meditations.allMeditations', 'All meditations')}
+              {t('meditations.allMeditations')}
             </div>
           </div>
           <LanguageToggle language={language} setLanguage={setLanguage} compact />
@@ -988,12 +997,12 @@ const Meditations: React.FC = () => {
 
         {/* ✅ FIX 9: Sacred Commissions — glass card treatment */}
         <div style={{ padding: '8px 20px 20px' }}>
-          <div className="sqi-micro" style={{ marginBottom: 6 }}>SACRED COMMISSIONS</div>
+          <div className="sqi-micro" style={{ marginBottom: 6 }}>{t('meditations.sacredCommissionsMicro').toUpperCase()}</div>
           <div style={{ fontWeight: 800, fontSize: 17, letterSpacing: '-0.02em', color: 'rgba(255,255,255,.9)', marginBottom: 4 }}>
-            {t('meditations.personalTransmissions', 'Personal Transmissions')}
+            {t('meditations.personalTransmissions')}
           </div>
           <div style={{ fontSize: 12, color: 'rgba(255,255,255,.35)', lineHeight: 1.5, marginBottom: 16 }}>
-            {t('meditations.sacredCommissionsDesc', 'When you want something channeled for you alone.')}
+            {t('meditations.sacredCommissionsDesc')}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -1009,10 +1018,10 @@ const Meditations: React.FC = () => {
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(212,175,55,.5)', marginBottom: 3 }}>€47</div>
                 <div style={{ fontWeight: 700, fontSize: 14, color: 'rgba(255,255,255,.88)', marginBottom: 2 }}>
-                  {t('meditations.wealthTitle', '108 Wealth Reprogramming Meditation')}
+                  {t('meditations.wealthTitle')}
                 </div>
                 <div style={{ fontSize: 11, color: 'rgba(255,255,255,.35)' }}>
-                  {t('meditations.wealthSub', 'Wealth Activation')}
+                  {t('meditations.wealthSub')}
                 </div>
               </div>
               <div style={{ color: 'rgba(212,175,55,.4)', fontSize: 16 }}>›</div>
@@ -1029,10 +1038,10 @@ const Meditations: React.FC = () => {
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(212,175,55,.5)', marginBottom: 3 }}>€20–€97</div>
                 <div style={{ fontWeight: 700, fontSize: 14, color: 'rgba(255,255,255,.88)', marginBottom: 2 }}>
-                  {t('meditations.bookingTitle', 'Custom Channeled Meditation')}
+                  {t('meditations.bookingTitle')}
                 </div>
                 <div style={{ fontSize: 11, color: 'rgba(255,255,255,.35)' }}>
-                  {t('meditations.bookingSub', 'Personalized Experience')}
+                  {t('meditations.bookingSub')}
                 </div>
               </div>
               <div style={{ color: 'rgba(212,175,55,.4)', fontSize: 16 }}>›</div>
@@ -1049,10 +1058,10 @@ const Meditations: React.FC = () => {
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(212,175,55,.5)', marginBottom: 3 }}>€97–€197</div>
                 <div style={{ fontWeight: 700, fontSize: 14, color: 'rgba(255,255,255,.88)', marginBottom: 2 }}>
-                  {t('meditations.creationTitle', 'Custom Meditation Creation')}
+                  {t('meditations.creationTitle')}
                 </div>
                 <div style={{ fontSize: 11, color: 'rgba(255,255,255,.35)' }}>
-                  {t('meditations.creationSub', 'For Creators & Healers')}
+                  {t('meditations.creationSub')}
                 </div>
               </div>
               <div style={{ color: 'rgba(212,175,55,.4)', fontSize: 16 }}>›</div>

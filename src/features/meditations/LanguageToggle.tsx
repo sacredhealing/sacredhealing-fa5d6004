@@ -1,6 +1,7 @@
 import type { ContentLanguage } from "@/utils/contentLanguage";
 import { LotusIcon } from "@/components/icons/LotusIcon";
 import { Leaf } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 type Props = {
   language: ContentLanguage;
@@ -11,11 +12,12 @@ type Props = {
 
 /** Meditation content filter. Compact = elegant lotus/leaf icons for Temple aesthetic. */
 export function LanguageToggle({ language, setLanguage, compact }: Props) {
+  const { t } = useTranslation();
   if (compact) {
     return (
       <div className="flex items-center gap-1 shrink-0">
         <button
-          aria-label="Svenska"
+          aria-label={t("meditations.langSvAria")}
           className={`p-2 rounded-lg transition ${
             language === "sv" ? "text-[#D4AF37] bg-[#D4AF37]/15" : "text-muted-foreground hover:text-foreground/80"
           }`}
@@ -24,7 +26,7 @@ export function LanguageToggle({ language, setLanguage, compact }: Props) {
           <LotusIcon size={20} />
         </button>
         <button
-          aria-label="English"
+          aria-label={t("meditations.langEnAria")}
           className={`p-2 rounded-lg transition ${
             language === "en" ? "text-[#D4AF37] bg-[#D4AF37]/15" : "text-muted-foreground hover:text-foreground/80"
           }`}
@@ -45,7 +47,7 @@ export function LanguageToggle({ language, setLanguage, compact }: Props) {
           }`}
           onClick={() => setLanguage("sv")}
         >
-          Svenska
+          {t("meditations.langSv")}
         </button>
         <button
           className={`px-4 py-2 rounded-full text-sm transition ${
@@ -53,7 +55,7 @@ export function LanguageToggle({ language, setLanguage, compact }: Props) {
           }`}
           onClick={() => setLanguage("en")}
         >
-          English
+          {t("meditations.langEn")}
         </button>
       </div>
     </div>

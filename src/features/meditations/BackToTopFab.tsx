@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export function BackToTopFab() {
   const { t } = useTranslation();
@@ -19,7 +19,7 @@ export function BackToTopFab() {
       onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
       className="fixed bottom-24 right-4 z-50 rounded-full border border-border bg-muted/80 backdrop-blur-sm px-4 py-3 text-sm text-foreground hover:bg-muted transition shadow-lg"
     >
-      {t("meditations.backToTop", "↑ Top")}
+      {t("meditations.backToTop")}
     </button>
   );
 }

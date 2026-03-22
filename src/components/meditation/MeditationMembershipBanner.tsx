@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { Loader2, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -68,7 +68,7 @@ const MeditationMembershipBanner: React.FC = () => {
         window.open(data.url, '_blank');
       }
     } catch (error: any) {
-      toast.error(error.message || 'Failed to start checkout');
+      toast.error(error.message || t('meditations.membershipCheckoutFailed'));
     } finally {
       setSubscribing(null);
     }
