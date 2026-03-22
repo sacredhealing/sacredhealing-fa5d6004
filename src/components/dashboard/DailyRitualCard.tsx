@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/hooks/useAuth';
 import { useDailyJourney } from '@/hooks/useDailyJourney';
 import {
@@ -33,7 +33,7 @@ export const DailyRitualCard: React.FC<{ isDayClosed?: boolean; hasCompletedAllT
   isDayClosed = false,
   hasCompletedAllThree = false,
 }) => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const { user } = useAuth();
   const { getJourneyData, isLoading } = useDailyJourney();
   const [claimedPhases, setClaimedPhases] = useState<Set<PhaseId>>(() => new Set());
@@ -82,9 +82,9 @@ export const DailyRitualCard: React.FC<{ isDayClosed?: boolean; hasCompletedAllT
   const activePhaseId = getActivePhaseId(currentHour);
 
   const phaseLabels: Record<PhaseId, string> = {
-    morning: 'Solar Inception',
-    midday: 'Zenith Alignment',
-    evening: 'Lunar Integration',
+    morning: t('dashboard.sadhanaPhaseMorning'),
+    midday: t('dashboard.sadhanaPhaseMidday'),
+    evening: t('dashboard.sadhanaPhaseEvening'),
   };
 
   if (isLoading) {
@@ -109,8 +109,10 @@ export const DailyRitualCard: React.FC<{ isDayClosed?: boolean; hasCompletedAllT
   const phases: PhaseState[] = [phaseStates.morning, phaseStates.midday, phaseStates.evening];
   const completedCount = phases.filter((p) => p.status === 'completed').length;
 
+  const localeTag =
+    language === 'sv' ? 'sv-SE' : language === 'no' ? 'nb-NO' : language === 'es' ? 'es-ES' : 'en-GB';
   const dateStr = new Date()
-    .toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+    .toLocaleDateString(localeTag, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
     .replace(/, /g, ' · ');
 
   return (
@@ -119,7 +121,7 @@ export const DailyRitualCard: React.FC<{ isDayClosed?: boolean; hasCompletedAllT
         <DialogContent className="sm:max-w-md border border-amber-500/25 bg-zinc-950/98 text-foreground shadow-[0_0_40px_rgba(212,175,55,0.12)]">
           <DialogHeader>
             <DialogTitle className="text-center font-serif text-base tracking-wide text-amber-200/90">
-              {t('dailyRitual.somaGiftTitle', 'Daily Sadhana — gift received')}
+              {t('dailyRitual.somaGiftTitle')}
             </DialogTitle>
           </DialogHeader>
           {somaDialogPhase != null && (
@@ -136,7 +138,7 @@ export const DailyRitualCard: React.FC<{ isDayClosed?: boolean; hasCompletedAllT
                 setSomaDialogPhase(null);
               }}
             >
-              {t('dailyRitual.somaGiftConfirm', 'Receive')}
+              {t('dailyRitual.somaGiftConfirm')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -144,7 +146,7 @@ export const DailyRitualCard: React.FC<{ isDayClosed?: boolean; hasCompletedAllT
 
       <div className="sq-sadhana-header">
         <div className="sq-sadhana-title">{dateStr}</div>
-        <div className="sq-sadhana-complete">{completedCount} / 3 COMPLETE</div>
+        <div className="sq-sadhana-complete">{t('dashboard.sadhanaCompleteProgress', { count: completedCount, total: 3 })}</div>
       </div>
       <div className="sq-sadhana-gates">
         {phases.map((phase) => {
@@ -173,16 +175,16 @@ export const DailyRitualCard: React.FC<{ isDayClosed?: boolean; hasCompletedAllT
               </div>
               {isDone ? (
                 isClaimed ? (
-                  <div className="sq-gate-state">Complete</div>
+                  <div className="sq-gate-state">{t('dashboard.gateComplete')}</div>
                 ) : (
                   <button type="button" className="sq-shc-btn" onClick={() => setSomaDialogPhase(phase.id)}>
-                    + {phase.reward} SOMA-HARMONIC CREDITS
+                    {t('dashboard.somaHarmonicCredits', { amount: phase.reward })}
                   </button>
                 )
               ) : phase.status === 'closed' ? (
-                <div className="sq-gate-state">{t('dailyRitual.passedGently', 'Passed gently')}</div>
+                <div className="sq-gate-state">{t('dailyRitual.passedGently')}</div>
               ) : phase.status === 'upcoming' ? (
-                <div className="sq-gate-state">{t('dailyRitual.arrivingLater', 'Arriving later')}</div>
+                <div className="sq-gate-state">{t('dailyRitual.arrivingLater')}</div>
               ) : null}
             </div>
           );

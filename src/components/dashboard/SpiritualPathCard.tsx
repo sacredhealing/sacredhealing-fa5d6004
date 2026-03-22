@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useSpiritualPaths } from '@/hooks/useSpiritualPaths';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -39,18 +39,15 @@ export const SpiritualPathCard: React.FC = () => {
         activePath.slug === 'inner-peace-path' ||
         activePath.slug === 'inner-peace' ||
         pathTitle.toLowerCase().includes('inner peace');
-      const displayLabel = isInnerPeace ? 'SHANTI - SATTVA PROTOCOOL' : pathLabel;
-      const displayTitle = isInnerPeace ? 'Equilibrium Mastery' : pathTitle;
-      const continueLabel = t('spiritualPath.continueDayWithNumber', {
-        day: activeProgress.current_day,
-        defaultValue: `Resume Transmission: Cycle ${activeProgress.current_day}`,
-      });
+      const displayLabel = isInnerPeace ? t('spiritualPath.innerPeaceLabel') : pathLabel;
+      const displayTitle = isInnerPeace ? t('spiritualPath.innerPeaceEquilibriumTitle') : pathTitle;
+      const continueLabel = t('spiritualPath.resumeTransmissionCycle', { day: activeProgress.current_day });
 
       return (
         <Link to={`/paths/${activePath.slug}`} className="sq-path-card block text-inherit no-underline" style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(212,175,55,0.13)' }}>
           <div className="sq-path-header">
             <div className="sq-path-title">{displayLabel}</div>
-            <div className="sq-path-day">Day {activeProgress.current_day} / {activePath.duration_days}</div>
+            <div className="sq-path-day">{t('spiritualPath.daySlashTotal', { current: activeProgress.current_day, total: activePath.duration_days })}</div>
           </div>
           <div className="sq-path-name">{displayTitle}</div>
           <div className="sq-path-desc">{pathDesc}</div>
@@ -58,7 +55,7 @@ export const SpiritualPathCard: React.FC = () => {
             <div className="sq-path-bar" style={{ width: `${progressPercent}%` }} />
           </div>
           <div className="sq-path-footer">
-            <div className="sq-path-pct">{progressPercent}% complete</div>
+            <div className="sq-path-pct">{t('spiritualPath.progressComplete', { percent: progressPercent })}</div>
             <span className="sq-path-btn">▷ {continueLabel}</span>
           </div>
         </Link>
@@ -77,7 +74,7 @@ export const SpiritualPathCard: React.FC = () => {
     <Link to={`/paths/${recommendedPath.slug}`} className="sq-path-card block text-inherit no-underline" style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(212,175,55,0.13)' }}>
       <div className="sq-path-header">
         <div className="sq-path-title">{pathLabel}</div>
-        <div className="sq-path-day">Day 0 / {recommendedPath.duration_days}</div>
+        <div className="sq-path-day">{t('spiritualPath.daySlashTotal', { current: 0, total: recommendedPath.duration_days })}</div>
       </div>
       <div className="sq-path-name">{pathTitle}</div>
       <div className="sq-path-desc">{pathDesc}</div>
@@ -85,8 +82,8 @@ export const SpiritualPathCard: React.FC = () => {
         <div className="sq-path-bar" style={{ width: '0%' }} />
       </div>
       <div className="sq-path-footer">
-        <div className="sq-path-pct">0% complete</div>
-        <span className="sq-path-btn">▷ {t('spiritualPath.startJourney', 'Start Journey')}</span>
+        <div className="sq-path-pct">{t('spiritualPath.progressComplete', { percent: 0 })}</div>
+        <span className="sq-path-btn">▷ {t('spiritualPath.startJourney')}</span>
       </div>
     </Link>
   );

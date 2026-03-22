@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Sparkles } from 'lucide-react';
@@ -9,21 +9,21 @@ import { SessionRecommendationCards } from './SessionRecommendationCards';
 import { SomaHealingCoinPanel } from './SomaHealingCoinPanel';
 import type { CompletedSession } from '@/lib/recommendationEngine';
 
-const REFLECTIONS = [
-  "Well done. You've taken a step for your wellbeing.",
-  "You showed up. That matters.",
-  "Your practice is complete. Honor this moment.",
-  "One breath at a time. You did it.",
-];
+const REFLECTION_KEYS = [
+  'dashboard.completionReflection1',
+  'dashboard.completionReflection2',
+  'dashboard.completionReflection3',
+  'dashboard.completionReflection4',
+] as const;
 
-const AFFIRMATIONS = [
-  "I am present. I am enough.",
-  "I choose peace. I choose clarity.",
-  "I am worthy of rest and renewal.",
-  "My practice nourishes my soul.",
-];
+const AFFIRMATION_KEYS = [
+  'dashboard.completionAffirmation1',
+  'dashboard.completionAffirmation2',
+  'dashboard.completionAffirmation3',
+  'dashboard.completionAffirmation4',
+] as const;
 
-const pickRandom = <T,>(arr: T[]): T =>
+const pickRandom = <T,>(arr: readonly T[]): T =>
   arr[Math.floor(Math.random() * arr.length)];
 
 interface CompletionResponseProps {
@@ -43,11 +43,11 @@ export const CompletionResponse: React.FC<CompletionResponseProps> = ({
 }) => {
   const { t } = useTranslation();
   const reflection = variant === 'closing'
-    ? t('dashboard.closingTitle', 'One breath at a time.')
-    : pickRandom(REFLECTIONS);
+    ? t('dashboard.closingTitle')
+    : t(pickRandom(REFLECTION_KEYS));
   const affirmation = variant === 'closing'
-    ? t('dashboard.closingQuote', 'I am present. I am enough.')
-    : pickRandom(AFFIRMATIONS);
+    ? t('dashboard.closingQuote')
+    : t(pickRandom(AFFIRMATION_KEYS));
 
   const recommendations = useMemo(
     () => (variant === 'closing' ? [] : getFallbackRecommendations(completedSession ?? null)),
@@ -55,8 +55,8 @@ export const CompletionResponse: React.FC<CompletionResponseProps> = ({
   );
 
   const buttonLabel = variant === 'closing'
-    ? t('dashboard.closingFinish', 'Finish')
-    : t('dashboard.done', 'Done');
+    ? t('dashboard.closingFinish')
+    : t('dashboard.done');
 
   return (
     <motion.div

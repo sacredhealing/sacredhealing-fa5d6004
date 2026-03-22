@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useHoraWatch } from '@/hooks/useHoraWatch';
@@ -13,7 +13,7 @@ import { useDayClosed } from '@/hooks/useDayClosed';
 import { useReturnVisit } from '@/hooks/useReturnVisit';
 import { useDashboardAutostart } from '@/hooks/useDashboardAutostart';
 import { AmbientSoundToggle } from '@/components/audio/AmbientSoundToggle';
-import { getSuccessWindowPhrase } from '@/lib/horaPhrases';
+import { getLocalizedSuccessWindowPhrase } from '@/lib/horaPhrases';
 import { InlineSessionPlayer } from '@/components/dashboard/InlineSessionPlayer';
 import { CompletionResponse } from '@/components/dashboard/CompletionResponse';
 import { mapSessionTypeToCompleted } from '@/lib/recommendationEngine';
@@ -30,9 +30,20 @@ import { translateAchievement } from '@/lib/translateAchievement';
 import { Award, Flame, Target, Share2, Users, Star, Sparkles, Heart, Crown, Calendar, Droplet, Clock, Shield, Pentagon } from 'lucide-react';
 import type { DailyGuidance } from '@/hooks/useDailyGuidance';
 import type { SessionLike } from '@/hooks/useDashboardAutostart';
+import type { TFunction } from 'i18next';
 
 const ACHIEVEMENT_ICON_MAP: Record<string, React.ComponentType<{ className?: string; size?: string | number }>> = {
   Award, Flame, Target, Share2, Users, Star, Sparkles, Heart, Crown, Calendar, Droplet, Clock, Shield, Pentagon,
+};
+
+/** Optional SQI display aliases when DB slug matches */
+const ACHIEVEMENT_SLUG_DISPLAY: Record<string, string> = {
+  first_steps: 'dashboard.achAltInitiationSpark',
+  'first-steps': 'dashboard.achAltInitiationSpark',
+  building_momentum: 'dashboard.achAltKineticSurge',
+  'building-momentum': 'dashboard.achAltKineticSurge',
+  week_warrior: 'dashboard.achAltSovereignWarrior',
+  'week-warrior': 'dashboard.achAltSovereignWarrior',
 };
 
 export type HomeFlowState = 'idle' | 'in_session' | 'completed';
@@ -171,12 +182,17 @@ const Dashboard: React.FC = () => {
       const ms = horaWatch.remainingMs ?? 0;
       const mins = Math.floor(ms / 60000);
       const secs = Math.floor((ms % 60000) / 1000);
-      setHoraCountdown(`${mins}:${String(secs).padStart(2, '0')} left`);
+      setHoraCountdown(
+        t('dashboard.horaCountdownLeft', {
+          minutes: String(mins),
+          seconds: String(secs).padStart(2, '0'),
+        })
+      );
     };
     update();
     const id = setInterval(update, 1000);
     return () => clearInterval(id);
-  }, [horaWatch.remainingMs]);
+  }, [horaWatch.remainingMs, t]);
 
   // Smart upgrade banner logic based on tier
   const showUpgradeBanner = tier !== 'lifetime';
@@ -185,9 +201,9 @@ const Dashboard: React.FC = () => {
     tier === 'prana-monthly'   ? '/siddha-quantum' :
                                  '/akasha-infinity';
   const upgradeLabel =
-    tier === 'free'            ? '◈ Activate Prana–Flow — Begin Your Sacred Journey' :
-    tier === 'prana-monthly'   ? '◈ Activate Siddha–Quantum — Full Universal Field' :
-                                 '◈ Unlock Akasha–Infinity — One Payment, Eternal Access';
+    tier === 'free'            ? t('dashboard.upgradeBannerFree') :
+    tier === 'prana-monthly'   ? t('dashboard.upgradeBannerPranaMonthly') :
+                                 t('dashboard.upgradeBannerDefault');
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -267,7 +283,7 @@ const Dashboard: React.FC = () => {
       )
     : null;
 
-  const userName = userProfile?.full_name?.split(' ')[0] || 'Adam';
+  const userName = userProfile?.full_name?.split(' ')[0] || t('dashboard.defaultGreetingName');
   const dashaCycle = vedicReading?.personalCompass?.currentDasha?.period?.split(' ')[0] || 'Rahu';
   const horaPlanet = horaWatch.calculation?.currentHora?.planet || 'Venus';
   const horaDurationMs = horaWatch.calculation?.currentHora?.durationMinutes
@@ -314,7 +330,7 @@ const Dashboard: React.FC = () => {
           <header style={{ padding: '52px 20px 0', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', animation: 'sqFadeUp 0.5s ease both' }}>
             <div>
               <p style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.48em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.55)', marginBottom: 4 }}>
-                {timePhase === 'morning' ? 'Good Morning' : timePhase === 'midday' ? 'Good Afternoon' : 'Good Evening'}
+                {t(greetingKey)}
               </p>
               <h1 style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '1.6rem', fontWeight: 600, color: 'rgba(255,255,255,0.88)', lineHeight: 1.1, margin: 0 }}>
                 {userName}
@@ -369,12 +385,12 @@ const Dashboard: React.FC = () => {
               <div style={{ position: 'absolute', bottom: 14, right: 14, width: 8, height: 8, borderRadius: '50%', background: '#D4AF37', boxShadow: '0 0 12px rgba(212,175,55,0.9)', animation: 'sqDotPulse 2s ease-in-out infinite' }} />
             </div>
 
-            <p style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.3)', textAlign: 'center', marginBottom: 10 }}>◈ The Roots of Your Success</p>
+            <p style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.3)', textAlign: 'center', marginBottom: 10 }}>{t('dashboard.heroTagline')}</p>
             <p style={{ fontFamily: 'Cormorant Garamond,serif', fontStyle: 'italic', fontSize: '1.12rem', color: 'rgba(255,255,255,0.72)', lineHeight: 1.55, textAlign: 'center', marginBottom: 14, maxWidth: 300 }}>
-              {vedicReading?.todayInfluence?.wisdomQuote || `As you move through your ${dashaCycle} cycle, the ${horaPlanet} Hora illuminates karmic completion.`}
+              {vedicReading?.todayInfluence?.wisdomQuote || t('dashboard.wisdomFallback', { dasha: dashaCycle, planet: horaPlanet })}
             </p>
             <button onClick={() => navigate('/vedic-astrology')} style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 8, fontWeight: 800, letterSpacing: '0.42em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.55)', background: 'none', border: 'none', cursor: 'pointer' }}>
-              Receive Transmission →
+              {t('dashboard.receiveTransmission')}
             </button>
           </div>
 
@@ -386,9 +402,9 @@ const Dashboard: React.FC = () => {
           >
             <div style={{ position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(212,175,55,0.06),transparent)', animation: 'sqShimmer 4s ease-in-out infinite', pointerEvents: 'none' }} />
             {[
-              { icon: '☽', lbl: 'Dasha', val: dashaCycle, sub: 'Active cycle' },
-              { icon: '⏱', lbl: 'Hora Now', val: horaPlanet, sub: horaCountdown },
-              { icon: '✦', lbl: 'Alignment', val: `${successWindowPct}%`, sub: getSuccessWindowPhrase(horaPlanet) },
+              { icon: '☽', lbl: t('dashboard.cosmicStripDasha'), val: dashaCycle, sub: t('dashboard.activeCycle') },
+              { icon: '⏱', lbl: t('dashboard.cosmicStripHoraNow'), val: horaPlanet, sub: horaCountdown },
+              { icon: '✦', lbl: t('dashboard.cosmicStripAlignment'), val: `${successWindowPct}%`, sub: getLocalizedSuccessWindowPhrase(horaPlanet, t) },
             ].map(({ icon, lbl, val, sub }, i) => (
               <React.Fragment key={i}>
                 {i > 0 && <div style={{ width: 1, height: '70%', background: 'rgba(212,175,55,0.08)', alignSelf: 'center' }} />}
@@ -403,7 +419,7 @@ const Dashboard: React.FC = () => {
           </div>
 
           {/* ══ ZONE 4: MODULE GRID (Sacred Portals) — light on hover/touch per tile ══ */}
-          <SectionLabel label="◈ Sacred Portals" delay="0.2s" />
+          <SectionLabel label={t('dashboard.sectionSacredPortals')} delay="0.2s" />
           <div style={{ padding: '0 16px', animation: 'sqFadeUp 0.5s 0.2s ease both' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             <SQTile featured onClick={() => navigate('/vedic-astrology')}>
@@ -419,15 +435,15 @@ const Dashboard: React.FC = () => {
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 8 }}>
                     <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#D4AF37', boxShadow: '0 0 6px rgba(212,175,55,0.8)', animation: 'sqDotPulse 2s infinite' }} />
-                    <span style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.5)' }}>Real-Time Transmission</span>
+                    <span style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.5)' }}>{t('dashboard.vedicRealTimeTransmission')}</span>
                   </div>
-                  <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 8.5, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.8)', marginBottom: 6 }}>Vedic Oracle</div>
+                  <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 8.5, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.8)', marginBottom: 6 }}>{t('dashboard.vedicOracle')}</div>
                   <p style={{ fontFamily: 'Cormorant Garamond,serif', fontStyle: 'italic', fontSize: '0.9rem', color: 'rgba(255,255,255,0.52)', lineHeight: 1.4, margin: '0 0 10px' }}>
                     {vedicReading?.personalCompass?.currentDasha
-                      ? `Your ${dashaCycle} Dasha peaks — consult the Bhrigu Guru now.`
-                      : 'Your cosmic chart awaits — open your Jyotish reading.'}
+                      ? t('dashboard.vedicTileBodyWithDasha', { dasha: dashaCycle })
+                      : t('dashboard.vedicTileBodyAwait')}
                   </p>
-                  <button style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase' as const, color: '#D4AF37', background: 'none', border: 'none', cursor: 'pointer' }}>Open Jyotish →</button>
+                  <button style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase' as const, color: '#D4AF37', background: 'none', border: 'none', cursor: 'pointer' }}>{t('dashboard.openJyotish')}</button>
                 </div>
               </div>
               <div style={{ position: 'absolute', top: 12, right: 12, width: 6, height: 6, borderRadius: '50%', background: '#D4AF37', boxShadow: '0 0 8px rgba(212,175,55,0.8)', animation: 'sqDotPulse 2.5s infinite' }} />
@@ -440,11 +456,11 @@ const Dashboard: React.FC = () => {
                 <line x1="8" y1="10" x2="12" y2="8" stroke="rgba(212,175,55,0.25)" strokeWidth="0.7"/>
                 <line x1="16" y1="10" x2="12" y2="8" stroke="rgba(212,175,55,0.25)" strokeWidth="0.7"/>
               </svg>
-              <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.7)', marginBottom: 4 }}>Ayurveda</div>
+              <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.7)', marginBottom: 4 }}>{t('dashboard.portalsAyurveda')}</div>
               <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.42)' }}>
                 {(vedicReading as unknown as { ayurvedicProfile?: { dominantDosha?: string } })?.ayurvedicProfile?.dominantDosha
-                  ? `${(vedicReading as unknown as { ayurvedicProfile: { dominantDosha: string } }).ayurvedicProfile.dominantDosha} dominance`
-                  : 'Bio-Signature Scan'}
+                  ? t('dashboard.ayurvedaDominance', { dosha: (vedicReading as unknown as { ayurvedicProfile: { dominantDosha: string } }).ayurvedicProfile.dominantDosha })
+                  : t('dashboard.ayurvedaBioScan')}
               </div>
               <span style={{ position: 'absolute', bottom: 13, right: 13, color: 'rgba(212,175,55,0.25)', fontSize: 11 }}>→</span>
             </SQTile>
@@ -455,8 +471,8 @@ const Dashboard: React.FC = () => {
                 <circle cx="7" cy="18" r="2.5" stroke="rgba(212,175,55,0.6)" strokeWidth="1.2" fill="rgba(212,175,55,0.08)"/>
                 <circle cx="17" cy="16" r="2.5" stroke="rgba(212,175,55,0.5)" strokeWidth="1.2" fill="rgba(212,175,55,0.06)"/>
               </svg>
-              <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.7)', marginBottom: 4 }}>Soma Acoustic Sync</div>
-              <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.42)' }}>528Hz ready</div>
+              <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.7)', marginBottom: 4 }}>{t('dashboard.somaAcousticSync')}</div>
+              <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.42)' }}>{t('dashboard.soma528Ready')}</div>
               <span style={{ position: 'absolute', bottom: 13, right: 13, color: 'rgba(212,175,55,0.25)', fontSize: 11 }}>→</span>
             </SQTile>
 
@@ -467,8 +483,8 @@ const Dashboard: React.FC = () => {
                 <line x1="9" y1="22" x2="9" y2="14" stroke="rgba(212,175,55,0.3)" strokeWidth="1"/>
                 <line x1="15" y1="22" x2="15" y2="14" stroke="rgba(212,175,55,0.3)" strokeWidth="1"/>
               </svg>
-              <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.7)', marginBottom: 4 }}>Vastu</div>
-              <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.42)' }}>Dimensional Harmonization</div>
+              <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.7)', marginBottom: 4 }}>{t('dashboard.portalsVastu')}</div>
+              <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.42)' }}>{t('dashboard.vastuSubtitle')}</div>
               <span style={{ position: 'absolute', bottom: 13, right: 13, color: 'rgba(212,175,55,0.25)', fontSize: 11 }}>→</span>
             </SQTile>
 
@@ -477,8 +493,8 @@ const Dashboard: React.FC = () => {
                 <text x="20" y="28" fontSize="26" textAnchor="middle" fill="none" stroke="rgba(212,175,55,0.65)" strokeWidth="0.8" fontFamily="serif" fontStyle="italic">ॐ</text>
                 <text x="20" y="28" fontSize="26" textAnchor="middle" fill="rgba(212,175,55,0.45)" fontFamily="serif" fontStyle="italic">ॐ</text>
               </svg>
-              <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.7)', marginBottom: 4 }}>Mantras</div>
-              <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.42)' }}>Sonic-Code Activation</div>
+              <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.7)', marginBottom: 4 }}>{t('dashboard.portalsMantras')}</div>
+              <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.42)' }}>{t('dashboard.mantrasSonicActivation')}</div>
               <span style={{ position: 'absolute', bottom: 13, right: 13, color: 'rgba(212,175,55,0.25)', fontSize: 11 }}>→</span>
             </SQTile>
 
@@ -489,9 +505,9 @@ const Dashboard: React.FC = () => {
                     <polygon points="13,2 4,14 11,14 11,22 20,10 13,10" stroke="rgba(255,255,255,0.5)" strokeWidth="1.3" strokeLinejoin="round" fill="rgba(255,255,255,0.05)"/>
                   </svg>
                   <div>
-                    <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 8.5, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.18)', marginBottom: 6 }}>Siddha Portal</div>
-                    <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.18)', lineHeight: 1.4, marginBottom: 8 }}>18 Siddha Masters · Nāḍī Scanner · Universal Shield</div>
-                    <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.28)' }}>Unlock Siddha-Quantum · 45€/mo →</div>
+                    <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 8.5, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.18)', marginBottom: 6 }}>{t('dashboard.siddhaPortal')}</div>
+                    <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.18)', lineHeight: 1.4, marginBottom: 8 }}>{t('dashboard.siddhaPortalSub')}</div>
+                    <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.28)' }}>{t('dashboard.siddhaUnlockCta')}</div>
                   </div>
                 </div>
                 <span style={{ position: 'absolute', bottom: 12, right: 12, fontSize: 11, color: 'rgba(255,255,255,0.15)' }}>🔒</span>
@@ -501,27 +517,27 @@ const Dashboard: React.FC = () => {
           </div>
 
           {/* ══ ZONE 5: DAILY SADHANA (match preview) ══ */}
-          <SectionLabel label="◈ Daily Sadhana" delay="0.27s" />
+          <SectionLabel label={t('dashboard.sectionDailySadhana')} delay="0.27s" />
           <div className="sq-sadhana-card" style={{ margin: '12px 16px 0', background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(212,175,55,0.13)', animation: 'sqFadeUp 0.5s 0.27s ease both' }}>
             <DailyRitualCard isDayClosed={isDayClosed} hasCompletedAllThree={hasCompletedAllThree} />
           </div>
 
           {/* ══ ZONE 6: DHARMA PATH (match preview) ══ */}
-          <SectionLabel label="◈ Dharma Path" delay="0.32s" />
+          <SectionLabel label={t('dashboard.sectionDharmaPath')} delay="0.32s" />
           <div style={{ margin: '10px 16px 0', animation: 'sqFadeUp 0.5s 0.32s ease both' }}>
             <SpiritualPathCard />
           </div>
 
           {/* ══ ZONE 7: SOUL FIELD — stats + achievements only (no separate achievements section below) ══ */}
-          <SectionLabel label="◈ Soul Field" delay="0.35s" />
+          <SectionLabel label={t('dashboard.sectionSoulField')} delay="0.35s" />
           <div style={{ margin: '0 16px', animation: 'sqFadeUp 0.5s 0.35s ease both' }}>
             {/* Row 1: 4 stat cards — Day Streak, SHC, Presence, Min */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
               {([
-                { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2C12 2 7 8 7 13a5 5 0 0010 0c0-5-5-11-5-11z" stroke="rgba(212,175,55,0.7)" strokeWidth="1.4" fill="rgba(212,175,55,0.08)"/><circle cx="12" cy="14" r="2" fill="rgba(212,175,55,0.5)"/></svg>, val: streakDays ?? 0, lbl: 'Continuity Loops' },
-                { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><polygon points="12,2 14.5,9 22,9 16,14 18.5,21 12,17 5.5,21 8,14 2,9 9.5,9" stroke="rgba(212,175,55,0.7)" strokeWidth="1.3" strokeLinejoin="round" fill="rgba(212,175,55,0.07)"/><circle cx="12" cy="12" r="2" fill="rgba(212,175,55,0.45)"/></svg>, val: userAchievements.length * 25, lbl: 'Soma Resonance' },
-                { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="rgba(212,175,55,0.55)" strokeWidth="1.2" fill="none"/><circle cx="12" cy="12" r="5" stroke="rgba(212,175,55,0.35)" strokeWidth="1" fill="none"/><circle cx="12" cy="12" r="2" fill="rgba(212,175,55,0.6)"/></svg>, val: userAchievements.length, lbl: 'Coherence Peaks' },
-                { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="rgba(212,175,55,0.5)" strokeWidth="1.2" fill="none"/><line x1="12" y1="6" x2="12" y2="12" stroke="rgba(212,175,55,0.7)" strokeWidth="1.5" strokeLinecap="round"/><line x1="12" y1="12" x2="16" y2="14" stroke="rgba(212,175,55,0.5)" strokeWidth="1.3" strokeLinecap="round"/><circle cx="12" cy="12" r="1.5" fill="rgba(212,175,55,0.7)"/></svg>, val: successWindowPct, lbl: 'Depth Cycles' },
+                { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2C12 2 7 8 7 13a5 5 0 0010 0c0-5-5-11-5-11z" stroke="rgba(212,175,55,0.7)" strokeWidth="1.4" fill="rgba(212,175,55,0.08)"/><circle cx="12" cy="14" r="2" fill="rgba(212,175,55,0.5)"/></svg>, val: streakDays ?? 0, lbl: t('dashboard.statContinuityLoops') },
+                { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><polygon points="12,2 14.5,9 22,9 16,14 18.5,21 12,17 5.5,21 8,14 2,9 9.5,9" stroke="rgba(212,175,55,0.7)" strokeWidth="1.3" strokeLinejoin="round" fill="rgba(212,175,55,0.07)"/><circle cx="12" cy="12" r="2" fill="rgba(212,175,55,0.45)"/></svg>, val: userAchievements.length * 25, lbl: t('dashboard.statSomaResonance') },
+                { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="rgba(212,175,55,0.55)" strokeWidth="1.2" fill="none"/><circle cx="12" cy="12" r="5" stroke="rgba(212,175,55,0.35)" strokeWidth="1" fill="none"/><circle cx="12" cy="12" r="2" fill="rgba(212,175,55,0.6)"/></svg>, val: userAchievements.length, lbl: t('dashboard.statCoherencePeaks') },
+                { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="rgba(212,175,55,0.5)" strokeWidth="1.2" fill="none"/><line x1="12" y1="6" x2="12" y2="12" stroke="rgba(212,175,55,0.7)" strokeWidth="1.5" strokeLinecap="round"/><line x1="12" y1="12" x2="16" y2="14" stroke="rgba(212,175,55,0.5)" strokeWidth="1.3" strokeLinecap="round"/><circle cx="12" cy="12" r="1.5" fill="rgba(212,175,55,0.7)"/></svg>, val: successWindowPct, lbl: t('dashboard.statDepthCycles') },
               ] as { icon: React.ReactNode; val: string | number; lbl: string }[]).map(({ icon, val, lbl }, i) => (
                 <div key={i} className="sq-stat-chip">
                   <div style={{ marginBottom: 6 }}>{icon}</div>
@@ -535,16 +551,15 @@ const Dashboard: React.FC = () => {
               <div className="sq-ach-strip" style={{ marginTop: 10 }}>
                 {achievements.slice(0, 6).map((achievement) => {
                   const progress = getAchievementProgress(achievement);
-                  const translated = translateAchievement(achievement.slug, t, achievement.name, achievement.description || '');
+                  const translated = translateAchievement(achievement.slug, t as TFunction, achievement.name, achievement.description || '');
+                  const slugDisplayKey = ACHIEVEMENT_SLUG_DISPLAY[achievement.slug];
                   const nameUpper = (translated.name || achievement.name || '').toUpperCase().replace(/\s+/g, ' ');
-                  const displayNameUpper =
-                    nameUpper === 'FIRST STEPS'
-                      ? 'INITIATION SPARK'
-                      : nameUpper === 'BUILDING MOMENTUM'
-                      ? 'KINETIC SURGE'
-                      : nameUpper === 'WEEK WARRIOR'
-                      ? 'SOVEREIGN WARRIOR'
-                      : nameUpper;
+                  let displayNameUpper = slugDisplayKey ? t(slugDisplayKey) : nameUpper;
+                  if (!slugDisplayKey) {
+                    if (nameUpper === 'FIRST STEPS') displayNameUpper = t('dashboard.achAltInitiationSpark');
+                    else if (nameUpper === 'BUILDING MOMENTUM') displayNameUpper = t('dashboard.achAltKineticSurge');
+                    else if (nameUpper === 'WEEK WARRIOR') displayNameUpper = t('dashboard.achAltSovereignWarrior');
+                  }
                   const IconComponent = ACHIEVEMENT_ICON_MAP[achievement.icon_name] || Award;
                   return (
                     <div
@@ -559,11 +574,11 @@ const Dashboard: React.FC = () => {
                         {displayNameUpper.length > 20 ? '…' : ''}
                       </div>
                       {progress.unlocked && achievement.shc_reward != null && achievement.shc_reward > 0 ? (
-                        <div className="sq-ach-pts">+{achievement.shc_reward} SHC</div>
+                        <div className="sq-ach-pts">{t('meditations.shcRewardLine', { amount: achievement.shc_reward })}</div>
                       ) : progress.progressText ? (
                         <div className="sq-ach-pts sq-ach-pts-muted">{progress.progressText}</div>
                       ) : achievement.shc_reward != null && achievement.shc_reward > 0 ? (
-                        <div className="sq-ach-pts sq-ach-pts-muted">+{achievement.shc_reward} SHC</div>
+                        <div className="sq-ach-pts sq-ach-pts-muted">{t('meditations.shcRewardLine', { amount: achievement.shc_reward })}</div>
                       ) : null}
                     </div>
                   );
@@ -586,9 +601,9 @@ const Dashboard: React.FC = () => {
               </div>
               {tier === 'prana-monthly' && (
                 <p style={{ margin: '8px 0 0', fontFamily: 'Cormorant Garamond,serif', fontStyle: 'italic', fontSize: '0.78rem', color: 'rgba(212,175,55,0.3)' }}>
-                  or{' '}
+                  {t('dashboard.upgradeOrAkashaPrefix')}{' '}
                   <button type="button" onClick={(e) => { e.stopPropagation(); navigate('/akasha-infinity'); }} style={{ color: 'rgba(212,175,55,0.45)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: 'inherit', fontFamily: 'inherit', fontStyle: 'inherit' }}>
-                    unlock everything forever with Akasha–Infinity →
+                    {t('dashboard.upgradeAkashaForever')}
                   </button>
                 </p>
               )}

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Play, Wind, Moon, Sun, Heart, BookOpen } from 'lucide-react';
 import type { RecommendedSession } from '@/lib/recommendationEngine';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface SessionRecommendationCardsProps {
   recommendations: RecommendedSession[];
@@ -20,11 +21,12 @@ const getIconForRoute = (route: string) => {
 export const SessionRecommendationCards: React.FC<SessionRecommendationCardsProps> = ({
   recommendations,
 }) => {
+  const { t } = useTranslation();
   if (!recommendations || recommendations.length === 0) return null;
 
   return (
     <div className="space-y-3">
-      <p className="text-sm font-medium text-muted-foreground">Your next step</p>
+      <p className="text-sm font-medium text-muted-foreground">{t('dashboard.nextStepTitle')}</p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {recommendations.map((session, index) => {
           const Icon = getIconForRoute(session.route);
