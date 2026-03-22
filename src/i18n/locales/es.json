@@ -2011,6 +2011,26 @@
     "handScannerChannelsLabel": "{{progress}} / 72.000 canales",
     "handScannerBegin": "Iniciar escaneo",
     "handScannerCameraDenied": "Acceso a la cámara denegado. Aún puedes comenzar el escaneo.",
-    "scannerCaptureLabel": "Captura de campo profundo 2050"
+    "scannerCaptureLabel": "Captura de campo profundo 2050",
+    "archiveRecordTitle": "Registro akáshico",
+    "archiveRecordSub": "Manuscrito del alma de 12 páginas",
+    "archiveRecordSubLocked": "Manuscrito del alma de 12 páginas — solo Akasha Infinity",
+    "archiveCtaView": "Ver manuscrito →",
+    "archiveCtaUpgradeAkasha": "Mejorar a Akasha Infinity →",
+    "archiveLifeTitle": "Lectura de vida",
+    "archiveLifeSub": "Jyotish · Las estrellas encuentran el alma",
+    "archiveCtaEnter": "Entrar a la lectura →",
+    "archiveNadiTitle": "Escaneo Nadi digital",
+    "archiveNadiSub": "Bio-sincronización de 72.000 Nadis",
+    "archiveNadiSubLocked": "Bio-sincronización de 72.000 Nadis — solo Siddha Quantum+",
+    "archiveCtaInitiate": "Iniciar escaneo →",
+    "archiveCtaUpgradeSiddha": "Mejorar a Siddha Quantum →",
+    "archiveApothecaryTitle": "Botica cuántica",
+    "archiveApothecarySub": "Remedios del campo · Tu libro de vida SQI",
+    "archiveCtaOpenChats": "Abrir chats guardados →",
+    "abundanceWallet": "Cartera e ingresos",
+    "abundancePromote": "Promocionar y ganar",
+    "abundanceConnect": "Conectar cartera",
+    "abundanceAdmin": "Panel de administración"
   }
 }

@@ -2110,6 +2110,26 @@
     "handScannerChannelsLabel": "{{progress}} / 72 000 kanaler",
     "handScannerBegin": "Starta skanning",
     "handScannerCameraDenied": "Kameraåtkomst nekad. Du kan ändå påbörja skanningen.",
-    "scannerCaptureLabel": "2050 djupfältsregistrering"
+    "scannerCaptureLabel": "2050 djupfältsregistrering",
+    "archiveRecordTitle": "Akashiskt register",
+    "archiveRecordSub": "12-sidigt själmanuskript",
+    "archiveRecordSubLocked": "12-sidigt själmanuskript — endast Akasha Infinity",
+    "archiveCtaView": "Visa manuskript →",
+    "archiveCtaUpgradeAkasha": "Uppgradera till Akasha Infinity →",
+    "archiveLifeTitle": "Livsläsning",
+    "archiveLifeSub": "Jyotish · Stjärnorna möter själen",
+    "archiveCtaEnter": "Öppna läsning →",
+    "archiveNadiTitle": "Digital Nadi-skanning",
+    "archiveNadiSub": "72 000 Nadi bio-synk",
+    "archiveNadiSubLocked": "72 000 Nadi bio-synk — endast Siddha Quantum+",
+    "archiveCtaInitiate": "Starta skanning →",
+    "archiveCtaUpgradeSiddha": "Uppgradera till Siddha Quantum →",
+    "archiveApothecaryTitle": "Kvantapotek",
+    "archiveApothecarySub": "Botemedel från fältet · din SQI livsbok",
+    "archiveCtaOpenChats": "Öppna sparade chattar →",
+    "abundanceWallet": "Plånbok & intäkter",
+    "abundancePromote": "Marknadsför & tjäna",
+    "abundanceConnect": "Anslut plånbok",
+    "abundanceAdmin": "Adminpanel"
   }
 }
