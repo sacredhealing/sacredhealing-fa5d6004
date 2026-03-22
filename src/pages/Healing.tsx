@@ -197,6 +197,7 @@ const tx: Record<LangKey, Record<string, string>> = {
     choosePayment: 'Choose payment method',
     payCard: 'Pay with card',
     payCrypto: 'Pay with crypto',
+    payCryptoUsdcUsdt: 'Pay with crypto (USDC / USDT)',
     days: 'days',
     seeMore: 'See more testimonials',
     seeLess: 'See less',
@@ -264,6 +265,7 @@ const tx: Record<LangKey, Record<string, string>> = {
     choosePayment: 'Välj betalningsmetod',
     payCard: 'Betala med kort',
     payCrypto: 'Betala med crypto',
+    payCryptoUsdcUsdt: 'Betala med krypto (USDC / USDT)',
     days: 'dagar',
     seeMore: 'Se fler omdömen',
     seeLess: 'Se färre',
@@ -309,7 +311,7 @@ const tx: Record<LangKey, Record<string, string>> = {
     activeAccess: 'Din Helbredelsesportal Er Aktiv', owned: 'Eid',
     directTitle: 'Direkte Helbredende Transmisjon', directSub: 'Personlig Alkymisk Lydhelbredelse med Adam.',
     directCta: 'Bestill Din Økt', choosePayment: 'Velg betalingsmetode',
-    payCard: 'Betal med kort', payCrypto: 'Betal med krypto', days: 'dager',
+    payCard: 'Betal med kort', payCrypto: 'Betal med krypto', payCryptoUsdcUsdt: 'Betal med krypto (USDC / USDT)', days: 'dager',
     seeMore: 'Se flere', seeLess: 'Se færre', noSessions: 'Ingen økter på dette språket ennå.', viewAll: 'Vis alle økter',
   },
   es: {
@@ -348,7 +350,7 @@ const tx: Record<LangKey, Record<string, string>> = {
     activeAccess: 'Tu Portal de Sanación Está Activo', owned: 'Adquirido',
     directTitle: 'Transmisión de Sanación Directa', directSub: 'Sanación Sonora Alquímica personalizada con Adam.',
     directCta: 'Reserva Tu Sesión', choosePayment: 'Elige método de pago',
-    payCard: 'Pagar con tarjeta', payCrypto: 'Pagar con crypto', days: 'días',
+    payCard: 'Pagar con tarjeta', payCrypto: 'Pagar con crypto', payCryptoUsdcUsdt: 'Pagar con cripto (USDC / USDT)', days: 'días',
     seeMore: 'Ver más', seeLess: 'Ver menos', noSessions: 'No hay sesiones en este idioma aún.', viewAll: 'Ver todas las sesiones',
   },
 };
@@ -876,13 +878,13 @@ const Healing: React.FC = () => {
                 letterSpacing: '.08em',
                 textTransform: 'uppercase',
                 background: 'transparent',
-                border: '1px solid rgba(212,175,55,.28)',
-                color: 'rgba(212,175,55,.85)',
+                border: '1px solid rgba(212,175,55,.38)',
+                color: '#D4AF37',
                 cursor: 'pointer',
                 fontFamily: 'inherit',
               }}
             >
-              Pay with crypto (USDC / USDT)
+              {T.payCryptoUsdcUsdt}
             </button>
 
             <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,.2)', lineHeight: 1.6, marginTop: 14 }}>{T.bookingDisclosure}</div>
@@ -919,8 +921,8 @@ const Healing: React.FC = () => {
             <Button size="lg" className="w-full bg-[#D4AF37] text-black font-bold" onClick={() => selectedPlan && handleStripePayment(selectedPlan.id)} disabled={isProcessing}>
               <CreditCard className="w-5 h-5 mr-2" />{T.payCard}
             </Button>
-            <Button size="lg" className="w-full bg-white/10 text-white border border-white/20 hover:bg-white/20" onClick={() => selectedPlan && handleCryptoPayment(selectedPlan)} disabled={isProcessing}>
-              <Wallet className="w-5 h-5 mr-2" />{T.payCrypto}
+            <Button size="lg" className="w-full bg-white/[0.03] text-[#D4AF37] border border-[#D4AF37]/35 hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/45" onClick={() => selectedPlan && handleCryptoPayment(selectedPlan)} disabled={isProcessing}>
+              <Wallet className="w-5 h-5 mr-2" />{T.payCryptoUsdcUsdt}
             </Button>
           </div>
         </DialogContent>
