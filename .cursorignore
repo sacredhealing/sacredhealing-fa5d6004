@@ -1,0 +1,16 @@
+node_modules/
+dist/
+build/
+public/
+docs/
+bun.lockb
+package-lock.json
+*.sql
+*.md
+audio-worker/
+railway-worker/
+supabase/
+.env
+.env.*
+*.lock
+*.lockb
