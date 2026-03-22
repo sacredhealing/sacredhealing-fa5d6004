@@ -146,6 +146,7 @@ const SiddhaPortal = React.lazy(() => import("./pages/SiddhaPortal"));
 const AethericHeliostat = React.lazy(() => import("./pages/AethericHeliostat"));
 const AtmosphericClearanceEngine = React.lazy(() => import("./pages/AtmosphericClearanceEngine"));
 const WealthBeacon = React.lazy(() => import("./pages/WealthBeacon"));
+const VajraSkyBreaker = React.lazy(() => import("./pages/VajraSkyBreaker"));
 const SiddhaSoundAlchemyOracle = React.lazy(() => import("./pages/SiddhaSoundAlchemyOracle"));
 const SiddhaOracleAbout = React.lazy(() => import("./pages/SiddhaOracleAbout"));
 const CreativeSoulAbout = React.lazy(() => import("./pages/CreativeSoulAbout"));
@@ -316,6 +317,7 @@ function AppRoutes() {
                   <Route path="/aetheric-heliostat" element={<AethericHeliostat />} />
                   <Route path="/atmospheric-clearance-engine" element={<AtmosphericClearanceEngine />} />
                   <Route path="/wealth-beacon" element={<WealthBeacon />} />
+                  <Route path="/vajra-sky-breaker" element={<VajraSkyBreaker />} />
                   <Route path="/prompt-library" element={<PromptLibrary />} />
                   <Route path="/explore-akasha" element={<ExploreAkasha />} />
                   <Route path="/creative-soul" element={<Navigate to="/creative-soul/store" replace />} />
