@@ -134,7 +134,7 @@ export const AppLayout: React.FC = () => {
           exit="exit"
           variants={pageVariants}
           transition={pageTransition}
-          className={`relative overflow-x-hidden w-full max-w-none ${showBackButton && !isVastuRoute ? 'pt-14' : ''} ${isVastuRoute ? 'min-w-full h-[100svh] min-h-0 overflow-hidden pb-0' : location.pathname === '/community' ? 'min-w-full h-[calc(100vh-64px)] min-h-[280px] overflow-hidden pb-0' : location.pathname === '/digital-nadi' || location.pathname === '/atmospheric-clearance-engine' || location.pathname === '/wealth-beacon' || location.pathname === '/siddha-photonic-regeneration' || location.pathname === '/siddha-hair-growth' ? 'pb-[10.5rem]' : 'pb-28'}`}
+          className={`relative overflow-x-hidden w-full max-w-none ${showBackButton && !isVastuRoute ? 'pt-14' : ''} ${isVastuRoute ? 'min-w-full h-[100svh] min-h-0 overflow-hidden pb-0' : location.pathname === '/community' ? 'min-w-full h-[calc(100vh-64px)] min-h-[280px] overflow-hidden pb-0' : location.pathname === '/digital-nadi' || location.pathname === '/atmospheric-clearance-engine' || location.pathname === '/wealth-beacon' ? 'pb-[10.5rem]' : 'pb-28'}`}
         >
           <Outlet />
         </motion.main>
