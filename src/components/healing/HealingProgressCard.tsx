@@ -20,8 +20,8 @@ export const HealingProgressCard: React.FC<HealingProgressCardProps> = ({ varian
 
   if (isLoading) {
     return (
-      <Card className="p-4 bg-gradient-to-br from-purple-500/20 to-pink-500/10 border-purple-500/30 animate-pulse">
-        <div className="h-24 bg-muted/30 rounded" />
+      <Card className="p-4 bg-white/[0.02] border border-white/[0.06] animate-pulse">
+        <div className="h-24 bg-muted/30 rounded-xl" />
       </Card>
     );
   }
@@ -37,11 +37,11 @@ export const HealingProgressCard: React.FC<HealingProgressCardProps> = ({ varian
   if (variant === 'compact') {
     return (
       <Link to="/healing">
-        <Card className="p-4 bg-gradient-to-br from-purple-500/20 via-pink-500/10 to-amber-500/10 border-purple-500/30 hover:border-purple-500/50 transition-all">
+        <Card className="p-4 bg-white/[0.02] border border-white/[0.06] hover:border-[#D4AF37]/25 transition-all backdrop-blur-md">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <div className="p-2 rounded-lg bg-purple-500/20">
-                <Heart className="w-5 h-5 text-purple-400" />
+              <div className="p-2 rounded-lg bg-[#D4AF37]/12 border border-[#D4AF37]/20">
+                <Heart className="w-5 h-5 text-[#D4AF37]" />
               </div>
               <div>
                 <h3 className="font-semibold text-foreground text-sm">{tSafe('healing.journeyTitle', 'Your journey')}</h3>
@@ -72,7 +72,7 @@ export const HealingProgressCard: React.FC<HealingProgressCardProps> = ({ varian
 
   // Full variant for Healing page
   return (
-    <Card className="p-6 bg-gradient-to-br from-purple-500/20 via-pink-500/10 to-amber-500/10 border-purple-500/30">
+    <Card className="p-6 bg-white/[0.02] border border-white/[0.06] backdrop-blur-md">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-heading font-semibold text-foreground">{tSafe('healing.journeyTitle', 'Your journey')}</h2>
         <div className="flex items-center gap-2 bg-accent/20 rounded-full px-3 py-1">
@@ -84,7 +84,7 @@ export const HealingProgressCard: React.FC<HealingProgressCardProps> = ({ varian
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <Target className="w-5 h-5 text-purple-400" />
+            <Target className="w-5 h-5 text-[#D4AF37]" />
             <span className="font-medium text-foreground">{healingLevel === 1 ? tSafe('healing.initiationLevel', 'Initiation Level') : `${tSafe('healing.level', 'Level')} ${healingLevel}`}</span>
           </div>
           <span className="text-sm text-muted-foreground">{progressToNextLevel.toFixed(0)}%</span>
@@ -110,7 +110,7 @@ export const HealingProgressCard: React.FC<HealingProgressCardProps> = ({ varian
         </div>
         <div className="bg-muted/30 rounded-xl p-3 text-center">
           <div className="flex items-center justify-center gap-1 mb-1">
-            <Music className="w-4 h-4 text-purple-400" />
+            <Music className="w-4 h-4 text-[#D4AF37]/90" />
             <span className="text-xl font-bold text-foreground">{progress.totalMantras}</span>
           </div>
           <p className="text-xs text-muted-foreground">{tSafe('healing.mantrasLabel', 'Mantras')}</p>
@@ -132,18 +132,20 @@ export const HealingProgressCard: React.FC<HealingProgressCardProps> = ({ varian
       </div>
 
       {nextRecommendation && (
-        <div className="bg-gradient-healing rounded-xl p-4">
+        <div className="rounded-xl p-4 border border-[#D4AF37]/22 bg-gradient-to-br from-[#D4AF37]/10 via-[#D4AF37]/04 to-transparent">
           <div className="flex items-center gap-2 mb-2">
-            <TrendingUp className="w-4 h-4 text-foreground" />
+            <TrendingUp className="w-4 h-4 text-[#D4AF37]" />
             <span className="text-sm font-medium text-foreground">{tSafe('healing.recommendedNextLabel', 'Recommended Next')}</span>
           </div>
           <h3 className="font-semibold text-foreground mb-1">{nextRecommendation.title}</h3>
-          <div className="flex items-center gap-3 text-sm text-foreground/80 mb-3">
-            {nextRecommendation.duration && <span>{nextRecommendation.duration} min</span>}
-            {nextRecommendation.reward && (
-              <span className="flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-accent" />
-                +{nextRecommendation.reward} SHC
+          <div className="flex items-center gap-3 text-sm text-muted-foreground mb-3">
+            {nextRecommendation.duration != null && (
+              <span>{t('healing.minutesShort', { count: nextRecommendation.duration, defaultValue: '{{count}} min' })}</span>
+            )}
+            {nextRecommendation.reward != null && (
+              <span className="flex items-center gap-1 text-[#D4AF37]/90">
+                <Sparkles className="w-3 h-3 text-[#D4AF37]" />
+                {t('healing.shcRewardShort', { count: nextRecommendation.reward, defaultValue: '+{{count}} SHC' })}
               </span>
             )}
           </div>

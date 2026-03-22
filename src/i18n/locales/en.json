@@ -113,6 +113,8 @@
     "daysActiveLabel": "Days Active",
     "shcEarnedLabel": "SHC Earned",
     "recommendedNextLabel": "Recommended Next",
+    "minutesShort": "{{count}} min",
+    "shcRewardShort": "+{{count}} SHC",
     "startSessionButton": "Start Session",
     "shortSessions": "Short Sessions",
     "deepSessions": "Deep Sessions",

@@ -1,6 +1,32 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+
+type MeditationCatalogLang = 'en' | 'sv';
+
+const MEDITATION_PICK_COLUMNS =
+  'id, title, title_sv, description, duration_minutes, shc_reward, category, language' as const;
+
+function catalogLangFromAppLanguage(appLanguage: string): MeditationCatalogLang {
+  return appLanguage.split('-')[0].toLowerCase() === 'sv' ? 'sv' : 'en';
+}
+
+/** Match Meditations page: Swedish UI prefers `title_sv` when present; otherwise primary `title` (English). */
+function pickMeditationDisplayTitle(
+  row: { title: string; title_sv?: string | null },
+  appLanguage: string
+): string {
+  const base = appLanguage.split('-')[0].toLowerCase();
+  if (base === 'sv' && row.title_sv) return row.title_sv;
+  return row.title;
+}
+
+function completedMeditationNotInFilter(completedIds: string[]) {
+  return completedIds.length > 0
+    ? `(${completedIds.join(',')})`
+    : '(00000000-0000-0000-0000-000000000000)';
+}
 
 interface HealingProgress {
   totalMeditations: number;
@@ -27,6 +53,7 @@ interface NextRecommendation {
 
 export const useHealingProgress = () => {
   const { user } = useAuth();
+  const { i18n } = useTranslation();
   const [progress, setProgress] = useState<HealingProgress | null>(null);
   const [nextRecommendation, setNextRecommendation] = useState<NextRecommendation | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -129,17 +156,19 @@ export const useHealingProgress = () => {
         })) || []
       });
 
-      // Fetch next recommendation
-      await fetchNextRecommendation(user.id);
+      // Fetch next recommendation (catalog language + display title follow app UI language)
+      await fetchNextRecommendation(user.id, i18n.language);
     } catch (error) {
       console.error('Error fetching healing progress:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, i18n.language]);
 
-  const fetchNextRecommendation = async (userId: string) => {
+  const fetchNextRecommendation = async (userId: string, appLanguage: string) => {
     try {
+      const catalogLang = catalogLangFromAppLanguage(appLanguage);
+
       // Get IDs of completed meditations
       const { data: completedMeditations } = await supabase
         .from('meditation_completions')
@@ -147,46 +176,68 @@ export const useHealingProgress = () => {
         .eq('user_id', userId);
 
       const completedIds = completedMeditations?.map(c => c.meditation_id) || [];
+      const notIn = completedMeditationNotInFilter(completedIds);
 
-      // Try to find an uncompleted meditation first
+      // Prefer an uncompleted meditation in the user's catalog language (en / sv), then any language
       let { data: meditation } = await supabase
         .from('meditations')
-        .select('id, title, description, duration_minutes, shc_reward, category')
-        .not('id', 'in', completedIds.length > 0 ? `(${completedIds.join(',')})` : '(00000000-0000-0000-0000-000000000000)')
+        .select(MEDITATION_PICK_COLUMNS)
+        .not('id', 'in', notIn)
+        .eq('language', catalogLang)
         .order('play_count', { ascending: false })
         .limit(1)
         .maybeSingle();
+
+      if (!meditation) {
+        ({ data: meditation } = await supabase
+          .from('meditations')
+          .select(MEDITATION_PICK_COLUMNS)
+          .not('id', 'in', notIn)
+          .order('play_count', { ascending: false })
+          .limit(1)
+          .maybeSingle());
+      }
 
       if (meditation) {
         setNextRecommendation({
           type: 'meditation',
           id: meditation.id,
-          title: meditation.title,
+          title: pickMeditationDisplayTitle(meditation, appLanguage),
           description: meditation.description || undefined,
-          duration: meditation.duration_minutes,
-          reward: meditation.shc_reward,
-          category: meditation.category
+          duration: meditation.duration_minutes ?? undefined,
+          reward: meditation.shc_reward ?? undefined,
+          category: meditation.category ?? undefined
         });
         return;
       }
 
-      // If all meditations completed, suggest a popular one
-      const { data: popularMeditation } = await supabase
+      // If all meditations completed, suggest a popular one (same language preference)
+      let { data: popularMeditation } = await supabase
         .from('meditations')
-        .select('id, title, description, duration_minutes, shc_reward, category')
+        .select(MEDITATION_PICK_COLUMNS)
+        .eq('language', catalogLang)
         .order('play_count', { ascending: false })
         .limit(1)
         .maybeSingle();
+
+      if (!popularMeditation) {
+        ({ data: popularMeditation } = await supabase
+          .from('meditations')
+          .select(MEDITATION_PICK_COLUMNS)
+          .order('play_count', { ascending: false })
+          .limit(1)
+          .maybeSingle());
+      }
 
       if (popularMeditation) {
         setNextRecommendation({
           type: 'meditation',
           id: popularMeditation.id,
-          title: popularMeditation.title,
+          title: pickMeditationDisplayTitle(popularMeditation, appLanguage),
           description: popularMeditation.description || undefined,
-          duration: popularMeditation.duration_minutes,
-          reward: popularMeditation.shc_reward,
-          category: popularMeditation.category
+          duration: popularMeditation.duration_minutes ?? undefined,
+          reward: popularMeditation.shc_reward ?? undefined,
+          category: popularMeditation.category ?? undefined
         });
         return;
       }

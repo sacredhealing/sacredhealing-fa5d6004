@@ -988,6 +988,8 @@
     "daysActiveLabel": "Aktiva dagar",
     "shcEarnedLabel": "SHC tjänat",
     "recommendedNextLabel": "Rekommenderat nästa",
+    "minutesShort": "{{count}} min",
+    "shcRewardShort": "+{{count}} SHC",
     "startSessionButton": "Starta session",
     "shortSessions": "Korta sessioner",
     "deepSessions": "Djupa sessioner",
