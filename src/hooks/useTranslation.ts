@@ -9,13 +9,18 @@ import { useTranslation as useI18nTranslation } from 'react-i18next';
 export const useTranslation = () => {
   const { t: i18nT, i18n } = useI18nTranslation();
 
-  // Wrap i18next `t` to match the old (key, fallback?) signature
+  // Supports t(key), t(key, fallback), or t(key, { defaultValue, ...interpolation })
   const t = useCallback(
-    (key: string, fallback?: string): string => {
-      const result = i18nT(key, fallback ?? key);
-      // If i18next returns the key itself (missing translation), show fallback or key
-      if (result === key && fallback) return fallback;
-      return result as string;
+    (key: string, fallbackOrOptions?: string | Record<string, unknown>): string => {
+      if (fallbackOrOptions === undefined) {
+        return i18nT(key) as string;
+      }
+      if (typeof fallbackOrOptions === 'string') {
+        const result = i18nT(key, { defaultValue: fallbackOrOptions });
+        if (result === key) return fallbackOrOptions;
+        return result as string;
+      }
+      return i18nT(key, fallbackOrOptions) as string;
     },
     [i18nT]
   );

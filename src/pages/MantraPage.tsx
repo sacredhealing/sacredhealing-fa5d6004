@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const MantraPage = () => {
+  const { t } = useTranslation();
   const [count, setCount] = useState(0);
 
   return (
@@ -14,8 +16,8 @@ const MantraPage = () => {
       >
         <div className="flex justify-between items-center relative z-10">
           <div>
-            <h2 className="text-[#D4AF37] text-xs tracking-widest uppercase mb-1">Din Heliga Timme</h2>
-            <p className="text-2xl font-bold">Venus Hora • 80% Success</p>
+            <h2 className="text-[#D4AF37] text-xs tracking-widest uppercase mb-1">{t('mantras.ritual.sacredHour')}</h2>
+            <p className="text-2xl font-bold">{t('mantras.ritual.demoHora', { planet: 'Venus', pct: 80 })}</p>
           </div>
           <div className="text-4xl animate-pulse">♀️</div>
         </div>
@@ -48,7 +50,7 @@ const MantraPage = () => {
           </svg>
           <div className="text-center">
             <span className="text-7xl font-light text-[#D4AF37]">{count}</span>
-            <p className="text-white/40 uppercase tracking-widest text-xs mt-2">of 108</p>
+            <p className="text-white/40 uppercase tracking-widest text-xs mt-2">{t('mantras.of108')}</p>
           </div>
         </div>
       </div>
@@ -63,11 +65,11 @@ const MantraPage = () => {
         onClick={() => setCount(prev => (prev < 108 ? prev + 1 : 0))}
         className="w-full py-5 rounded-2xl bg-[#D4AF37] text-[#0f051a] font-bold text-xl uppercase tracking-widest mb-10"
       >
-        Starta Ritual
+        {t('mantras.ritual.startRitual')}
       </motion.button>
 
       {/* MANTRA LIST */}
-      <h3 className="text-white/60 mb-4 text-sm uppercase tracking-widest">Select Frequency</h3>
+      <h3 className="text-white/60 mb-4 text-sm uppercase tracking-widest">{t('mantras.ritual.selectFrequency')}</h3>
       <div className="space-y-4">
         {['Om Shukraya Namah', 'Om Gurave Namah', 'Om Namah Shivaya'].map((m, i) => (
           <div key={i} className={`p-5 rounded-2xl border ${i === 0 ? 'border-[#D4AF37] bg-white/5' : 'border-white/5 bg-transparent'}`}>

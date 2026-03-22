@@ -55,7 +55,7 @@ export interface BhriguCardProps {
   activeDasha: Planet | null;
   prescribedText: string | null;
   onPlayRemedy: (planet: Planet) => void;
-  t: (key: string, fallback?: string) => string;
+  t: (key: string, fallbackOrOptions?: string | Record<string, unknown>) => string;
   heartLineLeak?: boolean;
   onPlayHeartHealing?: () => void;
   heartHealingMantraTitle?: string | null;
@@ -95,7 +95,7 @@ const BhriguCard: React.FC<BhriguCardProps> = ({
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
         <Sparkles size={18} style={{ color: '#D4AF37' }} />
         <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#D4AF37' }}>
-          Bhrigu Samhita
+          {t('mantras.bhriguSamhita')}
         </span>
       </div>
 
@@ -106,10 +106,10 @@ const BhriguCard: React.FC<BhriguCardProps> = ({
           background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.25)',
         }}>
           <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(244,63,94,0.8)', marginBottom: 4 }}>
-            From your palm scan
+            {t('mantras.bhriguFromPalmScan')}
           </p>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', marginBottom: 10 }}>
-            432Hz Heart-Healing (Anahata) Mantra recommended
+            {t('mantras.bhriguHeartHealingLine')}
           </p>
           {onPlayHeartHealing && (
             <button
@@ -122,7 +122,9 @@ const BhriguCard: React.FC<BhriguCardProps> = ({
               }}
             >
               <Play size={12} />
-              {heartHealingMantraTitle ? `Play ${heartHealingMantraTitle}` : 'Play Heart-Healing Mantra'}
+              {heartHealingMantraTitle
+                ? t('mantras.bhriguPlayHeartHealingNamed', { title: heartHealingMantraTitle })
+                : t('mantras.bhriguPlayHeartHealing')}
             </button>
           )}
         </div>
@@ -131,16 +133,16 @@ const BhriguCard: React.FC<BhriguCardProps> = ({
       {/* Siddha verdict */}
       {handAnalysisComplete && (
         <p style={{ fontSize: 11, color: 'rgba(212,175,55,0.7)', fontStyle: 'italic', marginBottom: 8 }}>
-          Siddha Verdict: Based on your Palm Mandala and current Dasha, this frequency is your required medicine.
+          {t('mantras.bhriguSiddhaVerdict')}
         </p>
       )}
 
       {/* Holy Remedy */}
       <h2 style={{ fontSize: 20, fontWeight: 800, color: 'white', marginBottom: 6 }}>
-        Holy Remedy
+        {t('mantras.bhriguHolyRemedy')}
       </h2>
       <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>
-        {revealed.planet} Remedy
+        {t('mantras.bhriguPlanetRemedy', { planet: revealed.planet })}
       </p>
 
       {/* Mantra text with shimmer */}
@@ -194,7 +196,7 @@ const BhriguCard: React.FC<BhriguCardProps> = ({
         }}
       >
         <Play size={14} />
-        Play {revealed.planet} Remedy
+        {t('mantras.bhriguPlayPlanetRemedy', { planet: revealed.planet })}
       </button>
     </div>
   );

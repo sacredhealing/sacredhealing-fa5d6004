@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { LotusIcon } from '@/components/icons/LotusIcon';
 import { toast } from 'sonner';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface MantraGraphicProps {
   mantra: string;
@@ -97,7 +98,7 @@ export const MantraGraphic: React.FC<MantraGraphicProps> = ({
           )}
           {shcReward && (
             <span className="flex items-center gap-1">
-              ✨ +{shcReward} SHC
+              ✨ {t('mantras.share.shcLine', { amount: shcReward })}
             </span>
           )}
         </div>
@@ -105,7 +106,7 @@ export const MantraGraphic: React.FC<MantraGraphicProps> = ({
         {/* Branding */}
         <div className="flex items-center justify-center gap-2 mb-4">
           <LotusIcon size={20} className="text-amber-400" />
-          <span className="text-sm font-medium text-amber-400">Siddha Quantum Nexus</span>
+          <span className="text-sm font-medium text-amber-400">{t('mantras.share.brand')}</span>
         </div>
 
         {/* Share Button */}
@@ -115,7 +116,7 @@ export const MantraGraphic: React.FC<MantraGraphicProps> = ({
           className="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30"
         >
           <Share2 className="w-4 h-4 mr-2" />
-          Share Mantra
+          {t('mantras.share.button')}
         </Button>
       </div>
     </Card>

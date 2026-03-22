@@ -11,7 +11,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation as useI18nTranslation } from 'react-i18next';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
@@ -321,12 +320,6 @@ function findHeartHealingMantra(mantras: MantraItem[]): MantraItem | undefined {
   return mantras.find((m) => /heart|anahata|432.*heart/i.test(m.title) || (m.description && /heart|anahata/i.test(m.description)));
 }
 
-function formatDurationMinutes(minutes: number): string {
-  if (!Number.isFinite(minutes) || minutes <= 0) return '';
-  const rounded = Math.round(minutes);
-  return rounded === 1 ? '1 min' : `${rounded} min`;
-}
-
 /** Above typical single-chant loop length → one file holds ~108 chants; advance counter with playback position. */
 const SINGLE_FILE_108_MIN_DURATION_SEC = 25;
 
@@ -336,7 +329,6 @@ function isSingleFile108Track(durationSec: number): boolean {
 
 const Mantras = () => {
   const navigate = useNavigate();
-  const { t: tI18n } = useI18nTranslation();
   const { t } = useTranslation();
   const { user } = useAuth();
   const { tier } = useMembership();
@@ -358,6 +350,12 @@ const Mantras = () => {
   const clearMantraPlaybackListeners = () => {
     mantraPlaybackCleanupRef.current?.();
     mantraPlaybackCleanupRef.current = null;
+  };
+
+  const formatDurationMinutes = (minutes: number): string => {
+    if (!Number.isFinite(minutes) || minutes <= 0) return '';
+    const rounded = Math.round(minutes);
+    return rounded === 1 ? t('mantras.durationMin') : t('mantras.durationMins', { count: rounded });
   };
 
   const reps = MANTRA_REPETITIONS;
@@ -432,7 +430,7 @@ const Mantras = () => {
       setLoading(false);
     }).catch((err) => {
       if (!cancelled) {
-        toast.error(t('error_mantras_fetch', 'Could not load mantras right now.'));
+        toast.error(t('mantras.errorFetch'));
         setLoading(false);
       }
     });
@@ -484,7 +482,7 @@ const Mantras = () => {
         await supabase.from('user_balances').update({ balance: bal.balance + mantra.shc_reward, total_earned: bal.total_earned + mantra.shc_reward }).eq('user_id', user.id);
       }
       await supabase.from('shc_transactions').insert({ user_id: user.id, type: 'earned', amount: mantra.shc_reward, description: `Mantra: ${mantra.title}`, status: 'completed' });
-      toast.success(`+${mantra.shc_reward} SHC ${tI18n('mantras.earned', 'earned')}`);
+      toast.success(t('mantras.shcEarnedToast', { amount: mantra.shc_reward }));
       refreshBalance();
       if ('vibrate' in navigator) navigator.vibrate([10, 50, 10]);
     } catch (e) {
@@ -499,7 +497,7 @@ const Mantras = () => {
     currentMantraIdRef.current = mantra.id;
 
     const el = audioEngine.play(url, undefined, {
-      onPlayError: () => toast.error(t('error_audio_play', 'Could not play audio.')),
+      onPlayError: () => toast.error(t('mantras.errorAudioPlay')),
     });
 
     let modeAttached = false;
@@ -584,7 +582,7 @@ const Mantras = () => {
 
   const handleStart = () => {
     if (!currentMantra?.audio_url) {
-      toast.error(t('error_no_audio', 'No audio available.'));
+      toast.error(t('mantras.noAudio'));
       return;
     }
     if (count >= reps) setCount(0);
@@ -648,7 +646,7 @@ const Mantras = () => {
         <style>{SQI_CSS}</style>
         <div style={{ textAlign: 'center' }}>
           <div className="nadi" style={{ fontSize: 28, marginBottom: 12 }}>✦</div>
-          <div className="m-micro">Accessing Vedic Light-Codes…</div>
+          <div className="m-micro">{t('mantras.loading')}</div>
         </div>
       </div>
     );
@@ -678,13 +676,13 @@ const Mantras = () => {
         </div>
 
         <div className="m-micro" style={{ marginBottom: 8 }}>
-          Akasha-Neural Archive · Vedic Light-Code Transmissions
+          {t('mantras.heroMicro')}
         </div>
         <h1 className="m-hero-title m-shimmer">
-          {tI18n('mantras.title', 'Sacred Mantra Chamber')}
+          {t('mantras.title')}
         </h1>
         <p style={{ fontSize: 13, color: 'rgba(255,255,255,.42)', lineHeight: 1.6, marginBottom: 0 }}>
-          {tI18n('mantras.subtitle', 'Choose one mantra. Repeat it 108 times. Let the Bhakti-Algorithm align your frequency.')}
+          {t('mantras.subtitle')}
         </p>
       </div>
 
@@ -700,10 +698,10 @@ const Mantras = () => {
             if (remedyMantra) {
               handleMantraSelect(remedyMantra);
               if (remedyMantra.audio_url) setTimeout(() => handleStart(), 300);
-              else toast.error(t('mantras_no_audio', 'Audio not available for this mantra.'));
+              else toast.error(t('mantras.errorMantraNoAudio'));
             } else {
               const prescribedText = DASHA_MANTRA_DISPLAY[planet] ?? null;
-              if (prescribedText) toast.info(`${prescribedText} — ${t('mantras_find_mantra', 'Find this mantra in the list below.')}`);
+              if (prescribedText) toast.info(`${prescribedText} — ${t('mantras.findMantraHint')}`);
             }
           }}
           t={t}
@@ -713,7 +711,7 @@ const Mantras = () => {
               ? () => {
                   handleMantraSelect(heartHealingMantra);
                   if (heartHealingMantra.audio_url) setTimeout(() => handleStart(), 300);
-                  else toast.error(t('mantras_no_audio', 'Audio not available for this mantra.'));
+                  else toast.error(t('mantras.errorMantraNoAudio'));
                 }
               : undefined
           }
@@ -728,10 +726,10 @@ const Mantras = () => {
             <span style={{ fontSize: 18 }}>✨</span>
             <div>
               <div style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,.9)', marginBottom: 2 }}>
-                {t('mantras_celestial_match', 'Himlakonstellation Match!')}
+                {t('mantras.celestialMatchTitle')}
               </div>
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,.5)' }}>
-                {t('mantras_celestial_message', `Your Hora (${currentHoraPlanet}) matches your Dasha (${dashaPlanet}). Powerful time for practice.`)}
+                {t('mantras.celestialMatchBody', { hora: currentHoraPlanet, dasha: dashaPlanet })}
               </div>
             </div>
           </div>
@@ -747,9 +745,9 @@ const Mantras = () => {
                 🌙
               </div>
               <div>
-                <div className="m-micro" style={{ marginBottom: 2 }}>{tI18n('mantras.din_heliga', 'Din Heliga Timme')}</div>
+                <div className="m-micro" style={{ marginBottom: 2 }}>{t('mantras.sacredHourMicro')}</div>
                 <div style={{ fontSize: 14, fontWeight: 800, letterSpacing: '-.01em' }}>
-                  {tI18n('mantras.current_hora', 'Nuvarande Hora')}
+                  {t('mantras.currentHoraTitle')}
                 </div>
               </div>
             </div>
@@ -761,17 +759,17 @@ const Mantras = () => {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 12, color: 'rgba(255,255,255,.42)' }}>{tI18n('mantras.current_hora_time', 'Nuvarande Hora:')}</span>
+              <span style={{ fontSize: 12, color: 'rgba(255,255,255,.42)' }}>{t('mantras.currentHoraLabel')}</span>
               <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,.85)' }}>{horaRange}</span>
             </div>
             <div style={{ height: 1, background: 'linear-gradient(90deg,transparent,rgba(212,175,55,.08),transparent)' }} />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: 12, color: 'rgba(255,255,255,.42)' }}>{tI18n('mantras.remaining', 'Återstående:')}</span>
+              <span style={{ fontSize: 12, color: 'rgba(255,255,255,.42)' }}>{t('mantras.remaining')}</span>
               <span className="m-hora-timer">{horaWatch.remainingTimeStr}</span>
             </div>
             {horaWatch.calculation.dayRuler && (
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 12, color: 'rgba(255,255,255,.42)' }}>{tI18n('mantras.day_ruler', 'Dagens Herskare:')}</span>
+                <span style={{ fontSize: 12, color: 'rgba(255,255,255,.42)' }}>{t('mantras.dayRuler')}</span>
                 <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,.85)' }}>
                   {PLANET_SYMBOLS[horaWatch.calculation.dayRuler] ?? getPlanetEmoji(horaWatch.calculation.dayRuler)} {horaWatch.calculation.dayRuler}
                 </span>
@@ -791,7 +789,7 @@ const Mantras = () => {
           >
             <div>
               <div className="m-micro" style={{ marginBottom: 2 }}>
-                {tI18n('mantras.choose', 'Choose a mantra')}
+                {t('mantras.choose')}
               </div>
             </div>
             <ChevronDown
@@ -804,7 +802,7 @@ const Mantras = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {mantras.length === 0 && (
                 <p style={{ fontSize: 12, color: 'rgba(255,255,255,.35)', textAlign: 'center', padding: '16px 0' }}>
-                  {tI18n('mantras.comingSoon', 'More mantras coming soon.')}
+                  {t('mantras.comingSoon')}
                 </p>
               )}
               {mantras.map((m) => {
@@ -869,34 +867,31 @@ const Mantras = () => {
         <div className="m-practice">
           <div className="m-mantra-banner">
             <div className="m-mantra-name m-shimmer">
-              {currentMantra?.title ?? tI18n('mantras.select_prompt', 'Select a Mantra')}
+              {currentMantra?.title ?? t('mantras.selectPrompt')}
             </div>
             <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
               {mantraPlanet && (
                 <span className="m-tag" style={{ background: 'rgba(212,175,55,.07)', border: '1px solid rgba(212,175,55,.22)', color: '#D4AF37' }}>
-                  {planetSymbol} {mantraPlanet} Mantra
+                  {planetSymbol} {t('mantras.planetMantraTag', { planet: mantraPlanet })}
                 </span>
               )}
               <span className="m-tag" style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)', color: 'rgba(255,255,255,.4)' }}>
-                ✦ Sacred Reverb
+                ✦ {t('mantras.sacredReverb')}
               </span>
             </div>
             <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,.4)', textAlign: 'center' }}>
-              {tI18n('mantras.voice_only', 'Voice only')}
+              {t('mantras.guidanceVoice')}
             </div>
           </div>
 
           <div style={{ margin: '16px 16px 0', background: 'rgba(255,255,255,.015)', border: '1px solid rgba(255,255,255,.04)', borderRadius: 20, padding: '16px 18px' }}>
             <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(212,175,55,.45)', marginBottom: 10 }}>
-              {tI18n('mantras.instructions.title', 'How to practice')}
+              {t('mantras.instructions.title')}
             </div>
             {[
-              tI18n('mantras.instructions.step1', 'Sit comfortably.'),
-              tI18n('mantras.instructions.step2', 'Press Start.'),
-              tI18n(
-                'mantras.instructions.step3',
-                'Follow the recording — the counter tracks your progress through 108 repetitions.'
-              ),
+              t('mantras.instructions.step1'),
+              t('mantras.instructions.step2'),
+              t('mantras.instructions.step3'),
             ].map((step, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 12.5, color: 'rgba(255,255,255,.5)', lineHeight: 1.5, marginBottom: i < 2 ? 7 : 0 }}>
                 <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(212,175,55,.07)', border: '1px solid rgba(212,175,55,.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: 'rgba(212,175,55,.55)', flexShrink: 0, marginTop: 1 }}>
@@ -933,7 +928,7 @@ const Mantras = () => {
                     {count}
                   </div>
                   <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.3em', textTransform: 'uppercase', color: 'rgba(212,175,55,.4)', marginTop: 4 }}>
-                    /108
+                    {t('mantras.slash108')}
                   </div>
                 </div>
               </div>
@@ -949,9 +944,9 @@ const Mantras = () => {
                   }}
                 >
                   {isPlaying ? <Pause size={14} /> : <Play size={14} />}
-                  {isPlaying ? tI18n('mantras.pause', 'PAUSE') : tI18n('mantras.start', 'START')}
+                  {isPlaying ? t('mantras.pauseUpper') : t('mantras.startUpper')}
                 </button>
-                <button type="button" className="m-btn-reset" onClick={() => { handleReset(); if ('vibrate' in navigator) navigator.vibrate([10, 20, 10]); }} title="Reset">
+                <button type="button" className="m-btn-reset" onClick={() => { handleReset(); if ('vibrate' in navigator) navigator.vibrate([10, 20, 10]); }} title={t('mantras.resetAria')}>
                   <RotateCcw size={16} />
                 </button>
                 {count > 0 && (
@@ -964,7 +959,7 @@ const Mantras = () => {
                       if ('vibrate' in navigator) navigator.vibrate(10);
                     }}
                   >
-                    {tI18n('mantras.restartFrom1', 'Restart from 1')}
+                    {t('mantras.restartFrom1')}
                   </button>
                 )}
               </div>
@@ -973,10 +968,10 @@ const Mantras = () => {
             <div style={{ margin: 16, background: 'linear-gradient(135deg,rgba(212,175,55,.1),rgba(212,175,55,.04))', border: '1px solid rgba(212,175,55,.3)', borderRadius: 20, padding: 20, textAlign: 'center' }}>
               <div style={{ fontSize: 32, marginBottom: 8 }}>🕉</div>
               <div style={{ fontSize: 15, fontWeight: 900, letterSpacing: '-.02em', color: '#D4AF37', marginBottom: 4 }}>
-                {tI18n('mantras.completed', '108 Repetitions Complete')}
+                {t('mantras.completed108Title')}
               </div>
               <div style={{ fontSize: 12, color: 'rgba(255,255,255,.4)', marginBottom: 16 }}>
-                {tI18n('mantras.completed_sub', 'The Bhakti-Algorithm has recorded your transmission.')}
+                {t('mantras.completed108Sub')}
               </div>
               <button
                 type="button"
@@ -989,7 +984,7 @@ const Mantras = () => {
                   if ('vibrate' in navigator) navigator.vibrate([15, 50, 15]);
                 }}
               >
-                {tI18n('mantras.practice_again', 'Practice Again')}
+                {t('mantras.practiceAgain')}
               </button>
             </div>
           )}
@@ -1002,14 +997,14 @@ const Mantras = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
             <span style={{ fontSize: 15 }}>🔭</span>
             <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: '-.01em' }}>
-              Vedic Light-Code Recommendations
+              {t('mantras.jyotishTitle')}
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {jyotishRecommendation.dayPlanet && (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: 11, color: 'rgba(255,255,255,.4)' }}>
-                  {tI18n('mantras_day_mantra', 'Day Mantra')} ({jyotishRecommendation.dayPlanet}):
+                  {t('mantras.recommendationDay', { planet: jyotishRecommendation.dayPlanet })}
                 </span>
                 <span style={{ fontSize: 12.5, fontWeight: 700, color: 'rgba(255,255,255,.8)' }}>
                   {jyotishRecommendation.dayMantraId ? mantras.find((m) => m.id === jyotishRecommendation.dayMantraId)?.title ?? '–' : '–'}
@@ -1021,7 +1016,7 @@ const Mantras = () => {
                 <div style={{ height: 1, background: 'linear-gradient(90deg,transparent,rgba(212,175,55,.07),transparent)' }} />
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: 11, color: 'rgba(255,255,255,.4)' }}>
-                    {tI18n('mantras_period_mantra', 'Period Mantra')} ({jyotishRecommendation.periodPlanet}):
+                    {t('mantras.recommendationPeriod', { planet: jyotishRecommendation.periodPlanet })}
                   </span>
                   <span style={{ fontSize: 12.5, fontWeight: 700, color: 'rgba(255,255,255,.8)' }}>
                     {jyotishRecommendation.periodMantraId ? mantras.find((m) => m.id === jyotishRecommendation.periodMantraId)?.title ?? '–' : '–'}
@@ -1034,7 +1029,7 @@ const Mantras = () => {
                 <div style={{ height: 1, background: 'linear-gradient(90deg,transparent,rgba(212,175,55,.07),transparent)' }} />
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: 11, color: 'rgba(255,255,255,.4)' }}>
-                    {tI18n('mantras_hora_mantra', 'Hora Mantra')} ({jyotishRecommendation.horaPlanet}):
+                    {t('mantras.recommendationHora', { planet: jyotishRecommendation.horaPlanet })}
                   </span>
                   <span style={{ fontSize: 12.5, fontWeight: 700, color: 'rgba(255,255,255,.8)' }}>
                     {jyotishRecommendation.horaMantraId ? mantras.find((m) => m.id === jyotishRecommendation.horaMantraId)?.title ?? '–' : '–'}
