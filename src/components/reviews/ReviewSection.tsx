@@ -113,13 +113,13 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
               </div>
               <Button 
                 size="sm"
-                className="shrink-0 w-full sm:w-auto bg-[#D4AF37] text-black font-bold hover:bg-[#c4a030] border-0"
+                className="shrink-0 w-full sm:w-auto bg-[#D4AF37] text-[#050505] font-semibold hover:bg-[#c9a227] border border-[#D4AF37]/35 !shadow-none hover:!shadow-[0_4px_18px_rgba(212,175,55,0.22)] hover:!scale-[1.01] active:!scale-100"
                 onClick={() => setShowForm(true)}
               >
                 {contentType === 'healing' ? (
                   <>
                     <Feather className="w-4 h-4 mr-2 shrink-0" />
-                    Share your Transmission
+                    {t('reviews.shareTransmission')}
                   </>
                 ) : (
                   t('reviews.writeReview')
@@ -138,7 +138,7 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
               {contentType === 'healing' ? (
                 <>
                   <Feather className="w-4 h-4 text-[#D4AF37]" />
-                  Share your Transmission
+                  {t('reviews.shareTransmission')}
                 </>
               ) : (
                 t('reviews.writeReview')
@@ -172,7 +172,7 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
                 <Button 
                   type="submit" 
                   disabled={isSubmitting || !comment.trim()}
-                  className="bg-[#D4AF37] text-black font-bold hover:bg-[#c4a030] border-0"
+                  className="bg-[#D4AF37] text-[#050505] font-semibold hover:bg-[#c9a227] border border-[#D4AF37]/35 !shadow-none hover:!shadow-[0_4px_18px_rgba(212,175,55,0.22)] hover:!scale-[1.01] active:!scale-100"
                 >
                   {isSubmitting ? t('common.loading') : t('reviews.submit')}
                 </Button>

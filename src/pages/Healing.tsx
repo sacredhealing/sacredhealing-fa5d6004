@@ -170,6 +170,7 @@ const tx: Record<LangKey, Record<string, string>> = {
     medEncoded: 'Encoded with Atma Kriya frequencies and Siddha Mantras',
     testimTitle: 'Miracle Logs',
     testimSub: 'Everyone experiences it differently.',
+    testimMicro: 'Transmission Testimonials · Verified Field Reports',
     faqTitle: 'The Science of Grace',
     faq1Q: 'How can you heal me if we aren\'t talking on the phone?',
     faq1A: 'In the dimensions of the Siddhas, distance is an illusion. I work within the Akasha — the unified field where all consciousness is connected. Just as a radio captures a signal from miles away, your energy body receives the transmission I release during my daily Atma Kriya Yoga.',
@@ -236,6 +237,7 @@ const tx: Record<LangKey, Record<string, string>> = {
     medEncoded: 'Kodad med Atma Kriya-frekvenser och Siddha-Mantran',
     testimTitle: 'Mirakelloggar',
     testimSub: 'Alla upplever det olika.',
+    testimMicro: 'Transmissionsvittnesmål · Verifierade fältrapporter',
     faqTitle: 'Nådens Vetenskap',
     faq1Q: 'Hur kan du hela mig om vi inte pratar på telefon?',
     faq1A: 'I Siddhornas dimensioner är avstånd en illusion. Jag arbetar inom Akasha — det enhetliga fältet där allt medvetande är sammankopplat.',
@@ -292,6 +294,7 @@ const tx: Record<LangKey, Record<string, string>> = {
     medCat3: 'Akashisk Portal', medCat3Desc: 'Høyfrekvente transmisjoner for åndelig oppvåkning.',
     medEncoded: 'Kodet med Atma Kriya-frekvenser og Siddha-Mantraer',
     testimTitle: 'Mirakellogger', testimSub: 'Alle opplever det forskjellig.',
+    testimMicro: 'Transmisjonst vitnesbyrd · Verifiserte feltrapporter',
     faqTitle: 'Nådens Vitenskap',
     faq1Q: 'Hvordan kan du helbrede meg uten å snakke med meg?', faq1A: 'I Siddhaenes dimensjoner er avstand en illusjon. Jeg jobber i Akasha — det enhetlige feltet.',
     faq2Q: 'Hvorfor er programmet 30 dager?', faq2A: 'Det tar ca. 30 dager for nervesystemet å integrere en frekvensskift.',
@@ -330,6 +333,7 @@ const tx: Record<LangKey, Record<string, string>> = {
     medCat3: 'Portal Akáshico', medCat3Desc: 'Transmisiones de alta frecuencia para el despertar espiritual.',
     medEncoded: 'Codificado con frecuencias de Atma Kriya y Mantras Siddha',
     testimTitle: 'Registros de Milagros', testimSub: 'Cada uno lo experimenta de manera diferente.',
+    testimMicro: 'Testimonios de transmisión · Informes de campo verificados',
     faqTitle: 'La Ciencia de la Gracia',
     faq1Q: '¿Cómo puedes sanarme sin hablar conmigo?', faq1A: 'En las dimensiones de los Siddhas, la distancia es una ilusión. Trabajo en el Akasha.',
     faq2Q: '¿Por qué el programa dura 30 días?', faq2A: 'El sistema nervioso necesita 30 días para integrar un cambio de frecuencia.',
@@ -758,7 +762,7 @@ const Healing: React.FC = () => {
       {/* Miracle Logs / Testimonials */}
       <section style={{ padding: '0 22px 32px' }}>
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <div className="h-micro" style={{ marginBottom: 6 }}>Transmission Testimonials · Verified Field Reports</div>
+          <div className="h-micro" style={{ marginBottom: 6 }}>{T.testimMicro}</div>
           <div className="h-section-title h-shimmer">{T.testimTitle}</div>
           <div style={{ fontSize: 12, color: 'rgba(255,255,255,.4)', marginTop: 6 }}>{T.testimSub}</div>
         </div>
