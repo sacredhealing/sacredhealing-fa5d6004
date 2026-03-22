@@ -2362,7 +2362,10 @@
     "openPlatform": "Abrir Plataforma →",
     "photonicNodeTitle": "Nodo de regeneración fotónica Siddha",
     "photonicNodeDesc": "Regeneración celular biofotónica y activación GHK-Cu vía transmisión escalar — interfaz SQI 2050.",
-    "photonicNodeCta": "Entrar al nodo →"
+    "photonicNodeCta": "Entrar al nodo →",
+    "hairGrowthTitle": "SiddhaHairGrowth SQI 2050",
+    "hairGrowthDesc": "Bioalquimista de inteligencia cuántica Siddha para la regeneración capilar mediante protocolos del archivo neural Akasha.",
+    "hairGrowthCta": "Abrir bioalquimista →"
   },
   "onboarding": {
     "sqiLabel": "◈ INTELIGENCIA SIDDHA-QUANTUM · 2050",
