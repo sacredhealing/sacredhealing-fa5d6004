@@ -101,45 +101,44 @@ function renderChatText(text: string) {
   const lines = text.split('\n');
   return lines.map((line, i) => {
     const trimmed = line.trim();
-    if (!trimmed) return <div key={i} style={{ height: '10px' }} />;
-    // #### / ##### → bold section labels (gold, small uppercase)
+    if (!trimmed) return <div key={i} style={{ height: '4px' }} />;
     if (trimmed.startsWith('##### ')) return (
       <p key={i} style={{ color: '#D4AF37', fontWeight: 800, fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginTop: '12px', marginBottom: '4px', opacity: 0.8 }}>
         {renderInline(trimmed.slice(6))}
       </p>
     );
     if (trimmed.startsWith('#### ')) return (
-      <p key={i} style={{ color: '#D4AF37', fontWeight: 800, fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase' as const, marginTop: '14px', marginBottom: '5px' }}>
+      <p key={i} style={{ color: '#D4AF37', fontWeight: 800, fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase' as const, marginTop: '10px', marginBottom: '4px' }}>
         {renderInline(trimmed.slice(5))}
       </p>
     );
     if (trimmed.startsWith('### ')) return (
-      <h3 key={i} style={{ color: '#D4AF37', fontWeight: 800, fontSize: '12px', letterSpacing: '0.06em', textTransform: 'uppercase' as const, marginTop: '16px', marginBottom: '6px' }}>
+      <h3 key={i} style={{ color: '#D4AF37', fontWeight: 800, fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase' as const, marginTop: '10px', marginBottom: '4px' }}>
         {renderInline(trimmed.slice(4))}
       </h3>
     );
     if (trimmed.startsWith('## ')) return (
-      <h2 key={i} style={{ color: '#ffffff', fontWeight: 900, fontSize: '16px', letterSpacing: '-0.02em', marginTop: '18px', marginBottom: '8px' }}>
+      <h2 key={i} style={{ color: '#ffffff', fontWeight: 900, fontSize: '14px', letterSpacing: '-0.02em', marginTop: '12px', marginBottom: '5px' }}>
         {renderInline(trimmed.slice(3))}
       </h2>
     );
     if (trimmed.startsWith('# ')) return (
-      <h1 key={i} style={{ color: '#ffffff', fontWeight: 900, fontSize: '18px', letterSpacing: '-0.03em', marginTop: '20px', marginBottom: '10px' }}>
+      <h1 key={i} style={{ color: '#ffffff', fontWeight: 900, fontSize: '15px', letterSpacing: '-0.02em', marginTop: '12px', marginBottom: '5px' }}>
         {renderInline(trimmed.slice(2))}
       </h1>
     );
     if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) return (
-      <li key={i} style={{ marginLeft: '18px', listStyleType: 'disc', fontSize: '14px', lineHeight: '1.65', color: 'rgba(255,255,255,0.88)', marginBottom: '6px' }}>
+      <li key={i} style={{ marginLeft: '16px', listStyleType: 'disc', fontSize: '13px', lineHeight: '1.5', color: 'rgba(255,255,255,0.88)', marginBottom: '4px' }}>
         {renderInline(trimmed.slice(2))}
       </li>
     );
     if (/^\d+\.\s/.test(trimmed)) return (
-      <li key={i} style={{ marginLeft: '18px', listStyleType: 'decimal', fontSize: '14px', lineHeight: '1.65', color: 'rgba(255,255,255,0.88)', marginBottom: '6px' }}>
+      <li key={i} style={{ marginLeft: '16px', listStyleType: 'decimal', fontSize: '13px', lineHeight: '1.5', color: 'rgba(255,255,255,0.88)', marginBottom: '4px' }}>
         {renderInline(trimmed.replace(/^\d+\.\s/, ''))}
       </li>
     );
     return (
-      <p key={i} style={{ fontSize: '14px', lineHeight: '1.7', color: 'rgba(255,255,255,0.85)', marginBottom: '10px' }}>
+      <p key={i} style={{ fontSize: '13px', lineHeight: '1.55', color: 'rgba(255,255,255,0.85)', marginBottom: '6px' }}>
         {renderInline(trimmed)}
       </p>
     );
@@ -220,6 +219,10 @@ function QuantumApothecaryInner() {
     const count = messages.length;
     const last = messages[count - 1];
     if (!last) return;
+    if (count < prevMsgCountRef.current) {
+      prevMsgCountRef.current = count;
+      return;
+    }
     if (count > prevMsgCountRef.current) {
       prevMsgCountRef.current = count;
       if (last.role === 'user') {
@@ -292,12 +295,67 @@ function QuantumApothecaryInner() {
 
   const runNadiScan = async () => {
     setIsScanning(true);
+    setScanResult(null);
+
+    let stream: MediaStream;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-      streamRef.current = stream;
-      if (videoRef.current) videoRef.current.srcObject = stream;
-    } catch {}
-    setTimeout(() => {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } },
+      });
+    } catch {
+      setIsScanning(false);
+      setMessages(prev => [...prev, {
+        role: 'model',
+        text: '**Camera Access Required.**\n\nThe 72,000 Nadi Scan reads the bioelectric field from your hand via the camera.\n\n**To proceed:**\n- Allow camera access when prompted\n- Place your **palm flat** 10–20cm in front of the camera\n- Hold still — scan takes 5 seconds\n\nTap **Initiate Nadi Scan** again and grant camera permission.',
+      }]);
+      return;
+    }
+
+    streamRef.current = stream;
+    if (videoRef.current) {
+      videoRef.current.srcObject = stream;
+      await videoRef.current.play().catch(() => {});
+    }
+
+    const HAND_BRIGHTNESS_THRESHOLD = 30;
+    const SCAN_DURATION_MS = 5000;
+    const HAND_TIMEOUT_MS = 20000;
+    const CHECK_INTERVAL_MS = 300;
+    let handDetected = false;
+    let scanTimeoutId: ReturnType<typeof setTimeout> | null = null;
+    let handCheckInterval: ReturnType<typeof setInterval> | null = null;
+    let handWaitTimeout: ReturnType<typeof setTimeout> | null = null;
+
+    const stopStream = () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(t => t.stop());
+        streamRef.current = null;
+      }
+      if (handCheckInterval) clearInterval(handCheckInterval);
+      if (handWaitTimeout) clearTimeout(handWaitTimeout);
+      if (scanTimeoutId) clearTimeout(scanTimeoutId);
+    };
+
+    const getFrameBrightness = (): number => {
+      if (!videoRef.current || videoRef.current.readyState < 2) return 0;
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = 80;
+        canvas.height = 60;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return 0;
+        ctx.drawImage(videoRef.current, 0, 0, 80, 60);
+        const data = ctx.getImageData(0, 0, 80, 60).data;
+        let total = 0;
+        for (let i = 0; i < data.length; i += 16) total += data[i]!;
+        return total / (data.length / 16);
+      } catch {
+        return 0;
+      }
+    };
+
+    const completeScan = () => {
+      stopStream();
       const now = new Date();
       const doshas: ('Vata' | 'Pitta' | 'Kapha')[] = ['Vata', 'Pitta', 'Kapha'];
       const nadis = ['Throat/Vishuddhi Nadi', 'Root/Muladhara Nadi', 'Heart/Anahata Nadi', '3rd Eye/Ajna Nadi', 'Solar Plexus/Manipura Nadi'];
@@ -314,9 +372,33 @@ function QuantumApothecaryInner() {
       };
       setScanResult(result);
       setIsScanning(false);
-      if (streamRef.current) { streamRef.current.getTracks().forEach(t => t.stop()); streamRef.current = null; }
-      setMessages(prev => [...prev, { role: 'model', text: `**Siddha-Quantum Sync Complete.**\n\n- Active Nadis: **${result.activeNadis}/${result.totalNadis}**\n- Dominant Dosha: **${result.dominantDosha}**\n- Blockage: **${result.blockages[0]}**\n- Alignment: **${result.planetaryAlignment}**\n- Herb of Today: **${result.herbOfToday}**\n\n**Quantum Remedies prepared:**\n${result.remedies.map(r => `- ${r}`).join('\n')}\n\nShall we transmit these light-codes?` }]);
-    }, 5000);
+      setMessages(prev => [...prev, {
+        role: 'model',
+        text: `**Siddha-Quantum Sync Complete.**\n\n- Active Nadis: **${result.activeNadis}/${result.totalNadis}**\n- Dominant Dosha: **${result.dominantDosha}**\n- Blockage: **${result.blockages[0]}**\n- Alignment: **${result.planetaryAlignment}**\n- Herb of Today: **${result.herbOfToday}**\n\n**Quantum Remedies prepared:**\n${result.remedies.map(r => `- ${r}`).join('\n')}\n\nShall we transmit these light-codes?`,
+      }]);
+    };
+
+    handWaitTimeout = setTimeout(() => {
+      if (!handDetected) {
+        stopStream();
+        setIsScanning(false);
+        setMessages(prev => [...prev, {
+          role: 'model',
+          text: '**No Biofield Detected.**\n\nThe camera opened but no hand was placed in front of it. The scan requires physical presence to read your biofield.\n\n**Try again:**\n- Hold your **palm flat** 10–20cm from the camera\n- Ensure good lighting on your hand\n- Hold still for 5 seconds\n\nTap **Initiate Nadi Scan** when ready.',
+        }]);
+      }
+    }, HAND_TIMEOUT_MS);
+
+    await new Promise(resolve => setTimeout(resolve, 800));
+    handCheckInterval = setInterval(() => {
+      if (handDetected) return;
+      if (getFrameBrightness() >= HAND_BRIGHTNESS_THRESHOLD) {
+        handDetected = true;
+        if (handCheckInterval) clearInterval(handCheckInterval);
+        if (handWaitTimeout) clearTimeout(handWaitTimeout);
+        scanTimeoutId = setTimeout(completeScan, SCAN_DURATION_MS);
+      }
+    }, CHECK_INTERVAL_MS);
   };
 
   const handleSendMessage = async (overrideText?: string) => {
@@ -356,7 +438,7 @@ function QuantumApothecaryInner() {
       } catch (err) { console.error('Failed to persist SQI session', err); }
     };
     try {
-      await streamChatWithSQI(allMsgs, upsert, async () => { setIsTyping(false); await persistMessages([...allMsgs, { role: 'model', text: assistantSoFar }]); }, imageToSend, user?.id ?? null);
+      await streamChatWithSQI(allMsgs, upsert, async () => { setIsTyping(false); await persistMessages([...allMsgs, { role: 'model', text: assistantSoFar }]); }, imageToSend, user?.id ?? null, language);
     } catch (e) {
       console.error(e);
       setMessages(prev => [...prev, { role: 'model', text: 'Transmission error. The Quantum Link is unstable.' }]);
@@ -458,7 +540,7 @@ function QuantumApothecaryInner() {
      CHAT PANEL — Logic 100% preserved, UI upgraded to SQI-2050
      ══════════════════════════════════════════════════════ */
   const renderChatPanel = () => (
-    <div className="glass-card overflow-hidden flex flex-col" style={{ minHeight: '75vh', height: '75vh' }}>
+    <div className="glass-card overflow-hidden flex flex-col" style={{ minHeight: '70vh' }}>
       {/* Chat Header */}
       <div className="px-5 py-4 border-b border-white/[0.05] flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -489,7 +571,7 @@ function QuantumApothecaryInner() {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-        <div className="flex flex-col justify-end min-h-full space-y-3">
+        <div className="flex flex-col justify-end min-h-full space-y-2">
           {messages.map((msg, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
               className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -497,7 +579,7 @@ function QuantumApothecaryInner() {
                 msg.role === 'user'
                   ? 'bg-[#D4AF37]/10 border border-[#D4AF37]/25 rounded-br-sm'
                   : 'bg-white/[0.03] border border-white/[0.06] rounded-bl-sm w-full'
-              }`}>
+              }`} style={{ padding: '10px 14px' }}>
                 <div className="markdown-body">{renderChatText(msg.text)}</div>
               </div>
             </motion.div>
@@ -677,10 +759,20 @@ function QuantumApothecaryInner() {
                 <div className="text-center py-8 space-y-5">
                   {isScanning ? (
                     <>
-                      <div className="relative w-full h-40 rounded-2xl overflow-hidden bg-black/40 border border-[#D4AF37]/10">
-                        <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover opacity-30" />
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <Activity size={28} className="text-[#D4AF37] animate-pulse" style={{ filter: 'drop-shadow(0 0 12px rgba(212,175,55,0.8))' }} />
+                      <div className="relative w-full h-48 rounded-2xl overflow-hidden bg-black/60 border border-[#D4AF37]/20">
+                        <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 flex flex-col items-center justify-between p-4 pointer-events-none">
+                          <div className="flex items-center gap-2 bg-black/70 rounded-full px-3 py-1.5">
+                            <div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-ping" style={{ boxShadow: '0 0 6px rgba(212,175,55,0.8)' }} />
+                            <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-[#D4AF37]">Scanning biofield…</span>
+                          </div>
+                          <div className="border-2 border-dashed border-[#D4AF37]/50 rounded-2xl w-36 h-24 flex items-center justify-center">
+                            <span className="text-[9px] font-bold text-[#D4AF37]/60 uppercase tracking-widest text-center leading-relaxed">Place<br/>palm here</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 bg-black/70 rounded-full px-3 py-1">
+                            <Activity size={10} className="text-[#D4AF37]" />
+                            <span className="text-[9px] font-black text-[#D4AF37]">{heartRate} BPM</span>
+                          </div>
                         </div>
                       </div>
                     </>
