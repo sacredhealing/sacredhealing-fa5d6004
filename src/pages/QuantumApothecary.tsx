@@ -81,16 +81,15 @@ function renderChatText(text: string) {
 function renderInline(text: string): React.ReactNode {
   const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g);
   return parts.map((p, i) => {
-    // **bold** = Siddha gold (matches SQI-2050 v6)
+    // **bold** inherits line color — gold only inside #/## headings, white in body/lists
     if (p.startsWith('**') && p.endsWith('**')) return (
-      <strong key={i} style={{ color: '#D4AF37', fontWeight: 700 }}>{p.slice(2, -2)}</strong>
+      <strong key={i} style={{ color: 'inherit', fontWeight: 700 }}>{p.slice(2, -2)}</strong>
     );
     if (p.startsWith('*') && p.endsWith('*')) return (
       <em key={i} style={{ fontStyle: 'italic', color: 'rgba(255,255,255,0.75)' }}>{p.slice(1, -1)}</em>
     );
-    // backtick code = gold only for technical/code terms
     if (p.startsWith('`') && p.endsWith('`')) return (
-      <code key={i} style={{ background: 'rgba(212,175,55,0.12)', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', fontFamily: 'monospace', color: '#D4AF37' }}>
+      <code key={i} style={{ background: 'rgba(255,255,255,0.08)', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', fontFamily: 'monospace', color: 'inherit' }}>
         {p.slice(1, -1)}
       </code>
     );
