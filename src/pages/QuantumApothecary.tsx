@@ -8,7 +8,7 @@
 // ║  i18n language passed to SQI chat + voice recognition.            ║
 // ╚══════════════════════════════════════════════════════════════════╝
 
-import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
+import React, { useState, useEffect, useRef, useMemo, Suspense, lazy } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -164,6 +164,12 @@ function QuantumApothecaryInner() {
   const [scanError, setScanError] = useState<string | null>(null);
   const [scanPhase, setScanPhase] = useState<'idle' | 'camera' | 'analyzing' | 'done'>('idle');
 
+  /** One string for scan prompt + chat edge: exact Frequency Library names (incl. full LimbicArc bioenergetic list). */
+  const canonicalActivationNameLines = useMemo(
+    () => ACTIVATIONS.map((a) => a.name).join('\n'),
+    [],
+  );
+
   // ── ALL useEffects UNCHANGED ──
   // ── Scroll: stay at user message, never jump to bottom ──
   const prevMsgCountRef = useRef(0);
@@ -315,6 +321,20 @@ function QuantumApothecaryInner() {
       `- Today herb: ${todayHerb}
 
 ` +
+      `STEP 3 — QUANTUM APOTHECARY REMEDIES (must match Frequency Library + full LimbicArc bioenergetic archive):
+` +
+      `- Each string in the JSON "remedies" array MUST be copied character-for-character from the canonical name list below (exact spelling).
+` +
+      `- Choose five distinct names that fit the palm reading; include bioenergetic frequencies when the field calls for micronutrient, enzyme, botanical, or LimbicArc-style signatures.
+` +
+      `- Do not invent names that are not on this list.
+
+` +
+      `CANONICAL NAMES (one per line):
+` +
+      `${canonicalActivationNameLines}
+
+` +
       `Respond ONLY with valid JSON — no other text:
 ` +
       `{"handDetected":true,"activeNadis":<integer 58000-71500>,"dominantDosha":"<Vata|Pitta|Kapha>",` +
@@ -332,6 +352,7 @@ function QuantumApothecaryInner() {
         { base64: capturedBase64, mimeType: 'image/jpeg' },
         user?.id ?? null,
         language,
+        undefined,
       );
 
       // Extract JSON from response
@@ -434,7 +455,7 @@ ${result.remedies.map((r: string) => `- ${r}`).join('\n')}\n\nShall we transmit 
       } catch (err) { console.error('Failed to persist SQI session', err); }
     };
     try {
-      await streamChatWithSQI(allMsgs, upsert, async () => { setIsTyping(false); await persistMessages([...allMsgs, { role: 'model', text: assistantSoFar }]); }, imageToSend, user?.id ?? null, language);
+      await streamChatWithSQI(allMsgs, upsert, async () => { setIsTyping(false); await persistMessages([...allMsgs, { role: 'model', text: assistantSoFar }]); }, imageToSend, user?.id ?? null, language, canonicalActivationNameLines);
     } catch (e) {
       console.error(e);
       setMessages(prev => [...prev, { role: 'model', text: 'Transmission error. The Quantum Link is unstable.' }]);

@@ -213,7 +213,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, userImage, userId } = await req.json();
+    const { messages, userImage, userId, canonicalActivationNames } = await req.json();
     const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
     if (!GEMINI_API_KEY) {
       throw new Error("GEMINI_API_KEY is not configured. Add it in Supabase → Project Settings → Edge Functions → Secrets.");
@@ -238,13 +238,25 @@ serve(async (req) => {
       };
     });
 
+    const catalogAppendix =
+      typeof canonicalActivationNames === "string" && canonicalActivationNames.trim().length > 0
+        ? `
+
+CANONICAL QUANTUM APOTHECARY NAMES (appendix — does not replace core SQI identity above)
+The live Frequency Library includes Siddha Soma, Sacred Plants, Essential Oils, Ayurvedic Herbs, Minerals, Mushrooms, Adaptogens, and the full LimbicArc Bioenergetic archive (~1259 entries). When you name specific frequency remedies, scalar activations, or library picks, use EXACT spellings from this list so they match the app:
+
+${canonicalActivationNames.trim()}`
+        : "";
+
+    const systemText = (SYSTEM_INSTRUCTION.trim() + catalogAppendix).trim();
+
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:streamGenerateContent?key=${GEMINI_API_KEY}&alt=sse`;
 
     const response = await fetch(apiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        system_instruction: { parts: [{ text: SYSTEM_INSTRUCTION.trim() }] },
+        system_instruction: { parts: [{ text: systemText }] },
         contents: geminiMessages,
         generationConfig: {
           temperature: 0.9,
