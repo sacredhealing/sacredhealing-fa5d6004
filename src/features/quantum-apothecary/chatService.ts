@@ -14,8 +14,6 @@ export async function streamChatWithSQI(
   userImage?: UserImagePayload,
   userId?: string | null,
   language?: string,
-  /** Newline-separated ACTIVATIONS names (incl. LimbicArc bioenergetic) — edge function appends to system text without altering SQI core copy. */
-  canonicalActivationNames?: string,
 ) {
   // Only send the last 10 messages for context to keep prompts efficient
   const recent = messages.slice(-10);
@@ -30,7 +28,6 @@ export async function streamChatWithSQI(
     userImage?: UserImagePayload;
     userId?: string | null;
     language?: string;
-    canonicalActivationNames?: string;
   } = {
     messages: apiMessages,
   };
@@ -42,9 +39,6 @@ export async function streamChatWithSQI(
   }
   if (language) {
     body.language = language;
-  }
-  if (canonicalActivationNames?.trim()) {
-    body.canonicalActivationNames = canonicalActivationNames;
   }
 
   const resp = await fetch(CHAT_URL, {

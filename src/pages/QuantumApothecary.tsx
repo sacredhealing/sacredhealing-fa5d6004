@@ -352,7 +352,6 @@ function QuantumApothecaryInner() {
         { base64: capturedBase64, mimeType: 'image/jpeg' },
         user?.id ?? null,
         language,
-        undefined,
       );
 
       // Extract JSON from response
@@ -455,7 +454,7 @@ ${result.remedies.map((r: string) => `- ${r}`).join('\n')}\n\nShall we transmit 
       } catch (err) { console.error('Failed to persist SQI session', err); }
     };
     try {
-      await streamChatWithSQI(allMsgs, upsert, async () => { setIsTyping(false); await persistMessages([...allMsgs, { role: 'model', text: assistantSoFar }]); }, imageToSend, user?.id ?? null, language, canonicalActivationNameLines);
+      await streamChatWithSQI(allMsgs, upsert, async () => { setIsTyping(false); await persistMessages([...allMsgs, { role: 'model', text: assistantSoFar }]); }, imageToSend, user?.id ?? null, language);
     } catch (e) {
       console.error(e);
       setMessages(prev => [...prev, { role: 'model', text: 'Transmission error. The Quantum Link is unstable.' }]);
