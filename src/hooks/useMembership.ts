@@ -79,11 +79,12 @@ export const useMembership = () => {
       return;
     }
 
-    // Serve from cache instantly if available
+    // Show cached tier immediately (no flash) but always refetch so admin grants apply right away.
     const cached = loadFromCache(user.id);
     if (cached) {
       setStatus({ ...cached, loading: false });
-      return;
+    } else {
+      setStatus(prev => ({ ...prev, loading: true }));
     }
 
     try {
@@ -139,6 +140,16 @@ export const useMembership = () => {
 
     const interval = setInterval(checkSubscription, 60000);
     return () => clearInterval(interval);
+  }, [user, authLoading, checkSubscription]);
+
+  // When the user returns to the tab, refetch so admin grants show up without waiting on cache TTL.
+  useEffect(() => {
+    if (!user || authLoading) return;
+    const onVis = () => {
+      if (document.visibilityState === 'visible') void checkSubscription();
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
   }, [user, authLoading, checkSubscription]);
 
   const isPremium = status.isAdmin || (status.tier !== 'free' && status.subscribed);
