@@ -841,21 +841,20 @@ function usePhotonicBackground() {
    ══════════════════════════════════════════════════════════════════════════ */
 export default function SiddhaPhotonicRegeneration() {
   const navigate              = useNavigate();
-  const { tier, loading: membershipLoading } = useMembership();
-  const { isAdmin, isLoading: adminLoading }  = useAdminRole();
+  const { tier, loading }     = useMembership();
+  const { isAdmin }           = useAdminRole();
   const { bgImage, isGenerating } = usePhotonicBackground();
   const nodeRef = React.useRef<HTMLDivElement>(null);
 
   /* UNCHANGED guard from live file */
   useEffect(() => {
-    if (membershipLoading || adminLoading) return;
-    if (!hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal)) {
-      navigate('/siddha-quantum', { replace: true });
+    if (!loading && !hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal)) {
+      navigate('/siddha-quantum');
     }
-  }, [isAdmin, tier, membershipLoading, adminLoading, navigate]);
+  }, [isAdmin, tier, loading, navigate]);
 
   /* UNCHANGED loading screen from live file */
-  if (membershipLoading || adminLoading) {
+  if (loading) {
     return (
       <div style={{ minHeight: '100vh', background: BG, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <style>{FONT_STYLE}</style>

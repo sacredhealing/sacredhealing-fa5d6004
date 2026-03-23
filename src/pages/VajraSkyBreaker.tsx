@@ -408,8 +408,8 @@ function RadarMap({ active, sovereigntyOn, pulseIntensity }: { active: boolean; 
 export default function VajraSkyBreaker() {
   const navigate          = useNavigate();
   const { t }             = useTranslation();
-  const { tier, loading: membershipLoading } = useMembership();
-  const { isAdmin, isLoading: adminLoading } = useAdminRole();
+  const { tier, loading } = useMembership();
+  const { isAdmin }       = useAdminRole();
 
   // ── Existing state (untouched) ────────────────────────────────────
   const [isActivating,   setIsActivating]   = useState(false);
@@ -432,11 +432,10 @@ export default function VajraSkyBreaker() {
 
   // ── Tier gate (untouched) ─────────────────────────────────────────
   useEffect(() => {
-    if (membershipLoading || adminLoading) return;
-    if (!hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal)) {
-      navigate('/siddha-quantum', { replace: true });
+    if (!loading && !hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal)) {
+      navigate('/siddha-quantum');
     }
-  }, [isAdmin, tier, membershipLoading, adminLoading, navigate]);
+  }, [isAdmin, tier, loading, navigate]);
 
   useEffect(() => {
     requestNotifications();

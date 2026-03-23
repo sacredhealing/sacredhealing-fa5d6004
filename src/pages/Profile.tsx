@@ -27,7 +27,6 @@ import KoshaReport from '@/components/profile/KoshaReport';
 import HandScanner from '@/components/scanner/HandScanner';
 import { supabase } from '@/integrations/supabase/client';
 import { getTierRank, hasFeatureAccess } from '@/lib/tierAccess';
-import { APP_HOW_IT_WORKS_YOUTUBE_URL } from '@/lib/marketingUrls';
 
 type LifeBookCategory =
   | 'children'
@@ -1319,13 +1318,6 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           <button type="button" className="settings-btn" onClick={() => setPrivacyOpen(true)}>{t('profile.privacy')}</button>
         </div>
         <div className="settings-row">
-          <button
-            type="button"
-            className="settings-btn"
-            onClick={() => window.open(APP_HOW_IT_WORKS_YOUTUBE_URL, '_blank', 'noopener,noreferrer')}
-          >
-            {t('profile.howAppWorksVideo')}
-          </button>
           <button type="button" className="settings-btn" onClick={() => setSettingsOpen(true)}>{t('profile.settings')}</button>
         </div>
         <button type="button" className="signout-btn" onClick={handleSignOut}>{t('profile.signOut')}</button>

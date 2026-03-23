@@ -468,8 +468,8 @@ function HudBar() {
 ══════════════════════════════════════════════════════════ */
 export default function WealthBeacon() {
   const navigate   = useNavigate();
-  const { tier, loading: membershipLoading } = useMembership();
-  const { isAdmin, isLoading: adminLoading } = useAdminRole();
+  const { tier, loading } = useMembership();
+  const { isAdmin }       = useAdminRole();
   const [initialized, setInitialized]     = useState(false);
   const [geminiBusy, setGeminiBusy]       = useState(false);
   const [transmissionExtras, setTransmissionExtras] = useState<string[]>([]);
@@ -489,11 +489,10 @@ export default function WealthBeacon() {
 
   /* ── Tier guard (unchanged) ── */
   useEffect(() => {
-    if (membershipLoading || adminLoading) return;
-    if (!hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal)) {
+    if (!loading && !hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal)) {
       navigate("/siddha-quantum", { replace: true });
     }
-  }, [isAdmin, tier, membershipLoading, adminLoading, navigate]);
+  }, [isAdmin, tier, loading, navigate]);
 
   useEffect(() => {
     const t = window.setTimeout(() => setInitialized(true), 800);
@@ -541,7 +540,7 @@ export default function WealthBeacon() {
   }, []);
 
   /* ── Loading screen ── */
-  if (membershipLoading || adminLoading) {
+  if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center" style={{ background: BG }}>
         <style>{FONT_STYLE}</style>

@@ -15,8 +15,8 @@ export async function streamChatWithSQI(
   userId?: string | null,
   language?: string,
 ) {
-  // Last 15 messages — matches quantum-apothecary-chat Layer 3 window
-  const recent = messages.slice(-15);
+  // Only send the last 10 messages for context to keep prompts efficient
+  const recent = messages.slice(-10);
 
   const apiMessages = recent.map(m => ({
     role: m.role === 'model' ? 'assistant' : 'user',

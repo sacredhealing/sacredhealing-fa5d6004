@@ -12,7 +12,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getTierRank, getSalesPageForRank } from '@/lib/tierAccess';
 
 interface Profile {
   id: string;
@@ -60,22 +59,10 @@ const ACCESS_TYPES = [
   { value: 'transformation', label: 'Transformation Programs', icon: Zap },
 ];
 
-/**
- * Stored `tier` must satisfy getTierRank() in tierAccess.ts so the app gates features correctly:
- * rank 1 — prana / premium / month / annual / year
- * rank 2 — siddha
- * rank 3 — lifetime / akasha
- * Include legacy slugs so old admin_granted_access rows still label correctly.
- */
-const MEMBERSHIP_TIERS: { value: string; label: string }[] = [
-  { value: 'prana-monthly', label: 'Prana–Flow · Monthly (~€19) — rank 1' },
-  { value: 'prana-annual', label: 'Prana–Flow · Annual — rank 1' },
-  { value: 'siddha-quantum', label: 'Siddha–Quantum (~€45/mo) — rank 2' },
-  { value: 'lifetime', label: 'Akasha–Infinity · Lifetime — rank 3' },
-  { value: 'premium-monthly', label: 'Legacy: premium-monthly (rank 1)' },
-  { value: 'premium-annual', label: 'Legacy: premium-annual (rank 1)' },
-  { value: 'premium_monthly', label: 'Legacy: premium_monthly (rank 1)' },
-  { value: 'premium_annual', label: 'Legacy: premium_annual (rank 1)' },
+const MEMBERSHIP_TIERS = [
+  { value: 'premium_monthly', label: 'Premium Monthly' },
+  { value: 'premium_annual', label: 'Premium Annual' },
+  { value: 'lifetime', label: 'Lifetime' },
 ];
 
 const AdminAccessGrantTab = () => {
@@ -89,7 +76,7 @@ const AdminAccessGrantTab = () => {
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
   const [accessType, setAccessType] = useState<string>('membership');
   const [accessId, setAccessId] = useState<string>('');
-  const [tier, setTier] = useState<string>('prana-monthly');
+  const [tier, setTier] = useState<string>('premium_monthly');
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -123,13 +110,7 @@ const AdminAccessGrantTab = () => {
 
   const getAccessLabel = (access: GrantedAccess) => {
     if (access.access_type === 'membership') {
-      const label = MEMBERSHIP_TIERS.find(t => t.value === access.tier)?.label;
-      if (label) return label;
-      if (access.tier) {
-        const r = getTierRank(access.tier);
-        return `${access.tier} (rank ${r})`;
-      }
-      return '—';
+      return MEMBERSHIP_TIERS.find(t => t.value === access.tier)?.label || access.tier;
     }
     if (access.access_type === 'course') {
       return courses.find(c => c.id === access.access_id)?.title || access.access_id || 'All Courses';
@@ -339,16 +320,6 @@ const AdminAccessGrantTab = () => {
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Aligned with <code className="text-[10px] bg-muted px-1 rounded">src/lib/tierAccess.ts</code>:{' '}
-                <span className="font-medium text-foreground">Prana–Flow</span> (rank 1 — Ayurveda, Vastu, full Jyotish, meditations, mantras, healing),{' '}
-                <span className="font-medium text-foreground">Siddha–Quantum</span> (rank 2 — Siddha Portal, Digital Nāḍī, Sri Yantra, Soul Vault),{' '}
-                <span className="font-medium text-foreground">Akasha–Infinity</span> (rank 3 — Quantum Apothecary, Temple / virtual pilgrimage, Palm Oracle, Akashic decoder).{' '}
-                Vayu Protocol stays rank 0 (all signed-in users). Sales paths:{' '}
-                <code className="text-[10px] bg-muted px-1 rounded">{getSalesPageForRank(1)}</code>,{' '}
-                <code className="text-[10px] bg-muted px-1 rounded">{getSalesPageForRank(2)}</code>,{' '}
-                <code className="text-[10px] bg-muted px-1 rounded">{getSalesPageForRank(3)}</code>.
-              </p>
             </div>
           )}
 

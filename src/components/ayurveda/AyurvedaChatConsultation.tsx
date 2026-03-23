@@ -1,8 +1,9 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Send, X, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import type { AyurvedaUserProfile, DoshaProfile } from '@/lib/ayurvedaTypes';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -19,14 +20,6 @@ interface AyurvedaChatConsultationProps {
 }
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ayurveda-chat`;
-
-/** Scroll a child so its top aligns with the top of the scroll container (read from start of reply). */
-function scrollChildTopIntoView(container: HTMLElement, child: HTMLElement) {
-  const cRect = container.getBoundingClientRect();
-  const chRect = child.getBoundingClientRect();
-  const nextTop = container.scrollTop + (chRect.top - cRect.top);
-  container.scrollTo({ top: Math.max(0, nextTop), behavior: 'smooth' });
-}
 
 /* ─── PULSE READING ANIMATION ─── */
 const PulseReadingAnimation = () => {
@@ -71,33 +64,13 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const lastBubbleRef = useRef<HTMLDivElement>(null);
-  const prevMessageCountRef = useRef(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const scrollLatestAssistantToTop = useCallback(() => {
-    const container = scrollContainerRef.current;
-    const bubble = lastBubbleRef.current;
-    if (!container || !bubble) return;
-    requestAnimationFrame(() => {
-      scrollChildTopIntoView(container, bubble);
-    });
-  }, []);
-
-  /** New message bubble only — not every streaming token — and anchor top of Dhanvantari reply for reading. */
   useEffect(() => {
-    const n = messages.length;
-    if (n < prevMessageCountRef.current) {
-      prevMessageCountRef.current = n;
-      return;
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-    if (n <= prevMessageCountRef.current) return;
-    prevMessageCountRef.current = n;
-    const last = messages[n - 1];
-    if (last?.role === 'assistant') {
-      scrollLatestAssistantToTop();
-    }
-  }, [messages, scrollLatestAssistantToTop]);
+  }, [messages]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -198,10 +171,11 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
 
       {/* Chat container */}
       <motion.div
-        className="relative w-full max-w-2xl mx-0 md:mx-4 rounded-none md:rounded-3xl overflow-hidden flex flex-col self-stretch md:self-center h-[100dvh] md:h-auto md:max-h-[min(90dvh,820px)] min-h-0"
+        className="relative w-full max-w-2xl mx-0 md:mx-4 rounded-none md:rounded-3xl overflow-hidden flex flex-col self-start"
         style={{
           background: 'linear-gradient(135deg, rgba(20,10,40,0.98), rgba(10,5,25,0.99))',
           border: '1px solid rgba(168,85,247,0.25)',
+          maxHeight: '100svh',
           boxShadow: '0 0 60px rgba(168,85,247,0.15)',
         }}
         initial={{ scale: 0.95, y: -20 }}
@@ -209,7 +183,7 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
         transition={{ type: 'spring', damping: 25 }}
       >
         {/* Header */}
-        <div className="shrink-0 p-5 flex items-center gap-4" style={{ borderBottom: '1px solid rgba(168,85,247,0.15)' }}>
+        <div className="p-5 flex items-center gap-4" style={{ borderBottom: '1px solid rgba(168,85,247,0.15)' }}>
           <div className="w-10 h-10 rounded-xl flex items-center justify-center"
             style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.3), rgba(79,70,229,0.2))' }}>
             <span className="text-lg">🏥</span>
@@ -227,11 +201,8 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
           )}
         </div>
 
-        {/* Messages — native scroll so ref + scrollTop work; no auto-scroll on stream chunks */}
-        <div
-          ref={scrollContainerRef}
-          className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-5 [scrollbar-width:thin]"
-        >
+        {/* Messages */}
+        <ScrollArea className="p-5" ref={scrollRef} style={{ maxHeight: '42svh' }}>
           {messages.length === 0 && (
             <div className="text-center py-4">
               <div className="text-4xl mb-3">🙏</div>
@@ -244,7 +215,6 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
             {messages.map((msg, i) => (
               <motion.div
                 key={i}
-                ref={i === messages.length - 1 ? lastBubbleRef : undefined}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
@@ -256,8 +226,8 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
                 }`} style={{
                   background: msg.role === 'user'
                     ? 'linear-gradient(135deg, rgba(168,85,247,0.4), rgba(79,70,229,0.3))'
-                    : 'rgba(255,255,255,0.07)',
-                  border: 'none',
+                    : 'rgba(255,255,255,0.04)',
+                  border: `1px solid ${msg.role === 'user' ? 'rgba(168,85,247,0.3)' : 'rgba(255,255,255,0.06)'}`,
                 }}>
                   <div className="flex items-center gap-2 mb-1">
                     {msg.role === 'assistant' && <Sparkles className="w-3 h-3 text-amber-400" />}
@@ -274,10 +244,10 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
               <PulseReadingAnimation />
             )}
           </div>
-        </div>
+        </ScrollArea>
 
         {/* Input */}
-        <form onSubmit={handleSend} className="shrink-0 p-4 flex gap-2" style={{ borderTop: '1px solid rgba(168,85,247,0.1)' }}>
+        <form onSubmit={handleSend} className="p-4 flex gap-2" style={{ borderTop: '1px solid rgba(168,85,247,0.1)' }}>
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}

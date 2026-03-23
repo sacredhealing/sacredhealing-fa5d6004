@@ -1067,7 +1067,6 @@
     "darkMode": "Mörkt läge",
     "privacy": "Integritet",
     "dataAndSecurity": "Data & säkerhet",
-    "howAppWorksVideo": "Så här fungerar appen",
     "appPreferences": "App-inställningar",
     "dailyReminders": "Dagliga påminnelser",
     "web3Wallet": "Web3 plånbok",
@@ -2477,10 +2476,7 @@
     "autoDownloadDesc": "Ladda ner innehåll via WiFi",
     "clearCache": "Rensa cache",
     "clearCacheTitle": "Cache rensad",
-    "clearCacheDesc": "All cachad data har rensats.",
-    "howAppWorksTitle": "Så här fungerar appen",
-    "howAppWorksDesc": "Kort genomgång av Sacred Healing på YouTube.",
-    "watchOnYoutube": "Titta på YouTube"
+    "clearCacheDesc": "All cachad data har rensats."
   },
   "privacyDialog": {
     "title": "Integritet & säkerhet",

@@ -1,28 +1,21 @@
-import React from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMembership } from '@/hooks/useMembership';
 import { useAdminRole } from '@/hooks/useAdminRole';
-import { hasSiddhaPortalHubAccess } from '@/lib/tierAccess';
+import { hasFeatureAccess, FEATURE_TIER } from '@/lib/tierAccess';
 
 export default function SiddhaPortal() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { tier, loading: membershipLoading } = useMembership();
-  const { isAdmin, isLoading: adminLoading } = useAdminRole();
+  const { tier, loading } = useMembership();
+  const { isAdmin } = useAdminRole();
 
-  const resolvingAccess = membershipLoading || adminLoading;
-  if (resolvingAccess) {
-    return (
-      <div style={{ background: '#050505', minHeight: '100vh', maxWidth: 430, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 8, fontWeight: 800, letterSpacing: '0.45em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.35)', margin: 0 }}>◈</p>
-      </div>
-    );
-  }
-
-  if (!hasSiddhaPortalHubAccess(isAdmin, tier)) {
-    return <Navigate to="/siddha-quantum" replace />;
-  }
+  useEffect(() => {
+    if (!loading && !hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal)) {
+      navigate('/siddha-quantum');
+    }
+  }, [isAdmin, tier, loading, navigate]);
 
   const masters = [
     { titleKey: 'siddhaPortal.agastyaMuni',  subKey: 'siddhaPortal.agastyaDesc',    badge: 'LIVE', href: '/digital-nadi' },

@@ -658,8 +658,8 @@ function PermanentActivationBadge({ active }: { active: boolean }) {
 /* ─── Main Page ──────────────────────────────────────────────────── */
 export default function AethericHeliostat() {
   const navigate = useNavigate();
-  const { tier, loading: membershipLoading } = useMembership();
-  const { isAdmin, isLoading: adminLoading } = useAdminRole();
+  const { tier, loading } = useMembership();
+  const { isAdmin } = useAdminRole();
 
   // ── Interface state (UNCHANGED functional logic) ──
   const [state, setState] = useState<InterfaceState>("STANDBY");
@@ -679,15 +679,14 @@ export default function AethericHeliostat() {
 
   // ─── Feature gate (UNCHANGED) ───────────────────────────────────
   useEffect(() => {
-    if (membershipLoading || adminLoading) return;
-    if (!hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal)) {
+    if (!loading && !hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal)) {
       navigate("/siddha-quantum", { replace: true });
     }
-  }, [isAdmin, tier, membershipLoading, adminLoading, navigate]);
+  }, [isAdmin, tier, loading, navigate]);
 
   // ─── Restore scalar beam + ACTIVE state from session (same tab) ─
   useEffect(() => {
-    if (membershipLoading || adminLoading) return;
+    if (loading) return;
     try {
       if (sessionStorage.getItem(SESSION_BEAM_KEY) === "1") {
         setScalarBeamActive(true);
@@ -697,7 +696,7 @@ export default function AethericHeliostat() {
     } catch {
       /* ignore */
     }
-  }, [membershipLoading, adminLoading]);
+  }, [loading]);
 
   // ─── Log scroll (UNCHANGED) ─────────────────────────────────────
   useEffect(() => {
@@ -835,7 +834,7 @@ Use numeric values only for pranaFlux (GW) and solarRadiance (Hz).`;
   };
 
   // ── Loading screen (UNCHANGED) ───────────────────────────────────
-  if (membershipLoading || adminLoading) {
+  if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-black text-amber-500 font-mono text-xs tracking-widest">
         INITIALIZING SCALAR BUS…
