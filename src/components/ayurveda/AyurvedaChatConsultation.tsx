@@ -256,8 +256,8 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
                 }`} style={{
                   background: msg.role === 'user'
                     ? 'linear-gradient(135deg, rgba(168,85,247,0.4), rgba(79,70,229,0.3))'
-                    : 'rgba(255,255,255,0.04)',
-                  border: `1px solid ${msg.role === 'user' ? 'rgba(168,85,247,0.3)' : 'rgba(255,255,255,0.06)'}`,
+                    : 'rgba(255,255,255,0.07)',
+                  border: 'none',
                 }}>
                   <div className="flex items-center gap-2 mb-1">
                     {msg.role === 'assistant' && <Sparkles className="w-3 h-3 text-amber-400" />}

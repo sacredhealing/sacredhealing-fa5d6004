@@ -124,7 +124,7 @@ const AudioTransmissionCard: React.FC<AudioTransmissionCardProps> = ({ id, title
 /* MARKDOWN — logic unchanged, SQI 2050 colours                   */
 /* ─────────────────────────────────────────────────────────────── */
 const inlineMd = (text: string): React.ReactNode => text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g).map((p,i)=>{
-  if (p.startsWith('**')&&p.endsWith('**')) return <strong key={i} style={{fontWeight:800,color:GOLD,textDecoration:'underline',textDecorationColor:'rgba(212,175,55,0.3)'}}>{p.slice(2,-2)}</strong>;
+  if (p.startsWith('**')&&p.endsWith('**')) return <strong key={i} style={{fontWeight:800,color:GOLD}}>{p.slice(2,-2)}</strong>;
   if (p.startsWith('*')&&p.endsWith('*')) return <em key={i} style={{fontStyle:'italic',color:'rgba(255,255,255,0.8)'}}>{p.slice(1,-1)}</em>;
   if (p.startsWith('`')&&p.endsWith('`')) return <code key={i} style={{background:'rgba(212,175,55,0.08)',border:'1px solid rgba(212,175,55,0.2)',padding:'1px 6px',borderRadius:'6px',fontSize:'11px',fontFamily:'monospace',color:GOLD}}>{p.slice(1,-1)}</code>;
   return p;
@@ -381,13 +381,13 @@ export const VastuChatWindow: React.FC<VastuChatWindowProps> = ({
             <div style={{
               maxWidth:'min(85%, 340px)', padding:'12px 14px',
               background: msg.role==='user'
-                ? 'linear-gradient(135deg,rgba(212,175,55,0.15),rgba(212,175,55,0.07))'
-                : GLASS,
-              border:`1px solid ${msg.role==='user'?'rgba(212,175,55,0.28)':BORDER}`,
+                ? 'linear-gradient(135deg,rgba(212,175,55,0.18),rgba(212,175,55,0.07))'
+                : 'rgba(255,255,255,0.06)',
+              border: 'none',
               borderRadius: msg.role==='user' ? '22px 22px 4px 22px' : '22px 22px 22px 4px',
               boxShadow: msg.role==='user'
-                ? '0 4px 24px rgba(212,175,55,0.12)'
-                : '0 4px 24px rgba(0,0,0,0.35)',
+                ? '0 4px 20px rgba(212,175,55,0.06)'
+                : 'none',
               backdropFilter:'blur(20px)', WebkitBackdropFilter:'blur(20px)',
             }}>
               {msg.images&&msg.images.length>0&&(
@@ -422,7 +422,7 @@ export const VastuChatWindow: React.FC<VastuChatWindowProps> = ({
               display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
               <Loader2 style={{width:16,height:16,color:GOLD,animation:'sqiSpin 1s linear infinite'}}/>
             </div>
-            <div style={{padding:'14px 20px',background:GLASS,border:`1px solid ${BORDER}`,
+            <div style={{padding:'14px 20px',background:'rgba(255,255,255,0.06)',border:'none',
               borderRadius:'20px 20px 20px 4px',display:'flex',alignItems:'center',gap:'12px',
               backdropFilter:'blur(20px)'}}>
               <div style={{display:'flex',gap:'4px'}}>

@@ -575,10 +575,10 @@ function QuantumApothecaryInner() {
           {messages.map((msg, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
               className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[95%] p-4 rounded-2xl ${
+              <div className={`max-w-[95%] p-4 rounded-2xl border-0 ${
                 msg.role === 'user'
-                  ? 'bg-[#D4AF37]/10 border border-[#D4AF37]/25 rounded-br-sm'
-                  : 'bg-white/[0.03] border border-white/[0.06] rounded-bl-sm w-full'
+                  ? 'bg-[#D4AF37]/12 rounded-br-sm'
+                  : 'bg-white/[0.07] rounded-bl-sm w-full'
               }`} style={{ padding: '10px 14px' }}>
                 <div className="markdown-body">{renderChatText(msg.text)}</div>
               </div>
@@ -586,7 +586,7 @@ function QuantumApothecaryInner() {
           ))}
           {isTyping && (
             <div className="flex justify-start">
-              <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl rounded-bl-sm p-3">
+              <div className="bg-white/[0.07] border-0 rounded-2xl rounded-bl-sm p-3">
                 <div className="flex gap-1">
                   {[0, 0.15, 0.3].map((delay, i) => (
                     <div key={i} className="w-1.5 h-1.5 bg-[#D4AF37] rounded-full animate-bounce" style={{ animationDelay: `${delay}s`, boxShadow: '0 0 6px rgba(212,175,55,0.6)' }} />
