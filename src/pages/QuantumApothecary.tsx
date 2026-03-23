@@ -61,17 +61,17 @@ function renderChatText(text: string) {
       </h1>
     );
     if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) return (
-      <li key={i} style={{ marginLeft: '16px', listStyleType: 'disc', fontSize: '13px', lineHeight: '1.5', color: 'rgba(255,255,255,0.88)', marginBottom: '4px' }}>
+      <li key={i} style={{ marginLeft: '16px', listStyleType: 'disc', fontSize: '13px', lineHeight: '1.5', color: 'rgba(255,255,255,0.92)', marginBottom: '4px' }}>
         {renderInline(trimmed.slice(2))}
       </li>
     );
     if (/^\d+\.\s/.test(trimmed)) return (
-      <li key={i} style={{ marginLeft: '16px', listStyleType: 'decimal', fontSize: '13px', lineHeight: '1.5', color: 'rgba(255,255,255,0.88)', marginBottom: '4px' }}>
+      <li key={i} style={{ marginLeft: '16px', listStyleType: 'decimal', fontSize: '13px', lineHeight: '1.5', color: 'rgba(255,255,255,0.92)', marginBottom: '4px' }}>
         {renderInline(trimmed.replace(/^\d+\.\s/, ''))}
       </li>
     );
     return (
-      <p key={i} style={{ fontSize: '13px', lineHeight: '1.55', color: 'rgba(255,255,255,0.85)', marginBottom: '6px' }}>
+      <p key={i} style={{ fontSize: '13px', lineHeight: '1.55', color: 'rgba(255,255,255,0.92)', marginBottom: '6px' }}>
         {renderInline(trimmed)}
       </p>
     );
@@ -81,9 +81,9 @@ function renderChatText(text: string) {
 function renderInline(text: string): React.ReactNode {
   const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g);
   return parts.map((p, i) => {
-    // **bold** = pure bright white — maximum contrast, easy to read
+    // **bold** = Siddha gold (matches SQI-2050 v6)
     if (p.startsWith('**') && p.endsWith('**')) return (
-      <strong key={i} style={{ color: '#ffffff', fontWeight: 700 }}>{p.slice(2, -2)}</strong>
+      <strong key={i} style={{ color: '#D4AF37', fontWeight: 700 }}>{p.slice(2, -2)}</strong>
     );
     if (p.startsWith('*') && p.endsWith('*')) return (
       <em key={i} style={{ fontStyle: 'italic', color: 'rgba(255,255,255,0.75)' }}>{p.slice(1, -1)}</em>
@@ -514,7 +514,7 @@ ${result.remedies.map((r: string) => `- ${r}`).join('\n')}\n\nShall we transmit 
   const renderChatPanel = () => (
     <div
       className="glass-card overflow-hidden flex flex-col"
-      style={{ minHeight: '70vh', background: 'rgba(5,5,5,0.95)', backdropFilter: 'blur(40px)' }}
+      style={{ minHeight: '70vh', background: '#050505', border: '1px solid rgba(212,175,55,0.1)' }}
     >
       {/* Chat Header */}
       <div className="px-5 py-4 border-b border-white/[0.05] flex items-center justify-between">
@@ -545,7 +545,7 @@ ${result.remedies.map((r: string) => `- ${r}`).join('\n')}\n\nShall we transmit 
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto custom-scrollbar" style={{ padding: '16px', background: '#050505' }}>
         <div className="flex flex-col justify-end min-h-full space-y-2">
           {messages.map((msg, i) => {
             const isLastUser = msg.role === 'user' && !messages.slice(i + 1).some(m => m.role === 'user');
@@ -559,12 +559,12 @@ ${result.remedies.map((r: string) => `- ${r}`).join('\n')}\n\nShall we transmit 
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[95%] rounded-2xl ${
+                  className={`max-w-[95%] ${
                     msg.role === 'user'
-                      ? 'bg-[#D4AF37]/10 border border-[#D4AF37]/25 rounded-br-sm'
-                      : 'border border-white/[0.06] rounded-bl-sm w-full'
+                      ? 'rounded-2xl rounded-br-sm bg-[#D4AF37]/10 border border-[#D4AF37]/25'
+                      : 'w-full'
                   }`}
-                  style={{ padding: '10px 12px', background: msg.role === 'user' ? undefined : 'transparent' }}
+                  style={{ padding: msg.role === 'user' ? '10px 12px' : '4px 0' }}
                 >
                   <div className="markdown-body">{renderChatText(msg.text)}</div>
                 </div>
@@ -573,7 +573,7 @@ ${result.remedies.map((r: string) => `- ${r}`).join('\n')}\n\nShall we transmit 
           })}
           {isTyping && (
             <div className="flex justify-start">
-              <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl rounded-bl-sm p-3">
+              <div className="rounded-2xl rounded-bl-sm p-3" style={{ background: 'transparent' }}>
                 <div className="flex gap-1">
                   {[0, 0.15, 0.3].map((delay, i) => (
                     <div key={i} className="w-1.5 h-1.5 bg-[#D4AF37] rounded-full animate-bounce" style={{ animationDelay: `${delay}s`, boxShadow: '0 0 6px rgba(212,175,55,0.6)' }} />
@@ -761,7 +761,7 @@ ${result.remedies.map((r: string) => `- ${r}`).join('\n')}\n\nShall we transmit 
                           </div>
                           <div className="border-2 border-dashed border-[#D4AF37]/50 rounded-2xl w-36 h-24 flex items-center justify-center">
                             <span className="text-[9px] font-bold text-[#D4AF37]/60 uppercase tracking-widest text-center leading-relaxed">
-                              {scanPhase === 'camera' ? <>Place<br />palm here</> : <>Analyzing<br />biofield…</>}
+                              {scanPhase === 'camera' ? <>Place<br/>palm here</> : <>Analyzing<br/>biofield…</>}
                             </span>
                           </div>
                           <div className="flex items-center gap-1.5 bg-black/70 rounded-full px-3 py-1">
