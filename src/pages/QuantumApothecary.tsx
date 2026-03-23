@@ -4,6 +4,8 @@
 // ║  All logic, hooks, Stripe triggers, AffiliateID tracking        ║
 // ║  and function signatures are UNTOUCHED.                         ║
 // ║  Only className strings and CSS have been upgraded.             ║
+// ║  Baseline: SQI2050_7 export — tier gate, i18n, headline-only    ║
+// ║  gold (inherit inline **/`code`) remain app-specific.          ║
 // ╚══════════════════════════════════════════════════════════════════╝
 
 import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
@@ -741,28 +743,34 @@ ${result.remedies.map((r: string) => `- ${r}`).join('\n')}\n\nShall we transmit 
                 </div>
               ) : (
                 <div className="text-center py-8 space-y-5">
+                  {/* Error — no hand detected */}
                   {scanError && (
                     <div className="rounded-2xl p-4 border border-red-500/30 bg-red-950/20 mb-3">
                       <p className="text-[12px] font-bold text-red-400 leading-relaxed">{scanError}</p>
                     </div>
                   )}
 
+                  {/* Camera live feed */}
                   {(scanPhase === 'camera' || scanPhase === 'analyzing') ? (
                     <>
                       <div className="relative w-full h-48 rounded-2xl overflow-hidden bg-black/60 border border-[#D4AF37]/20">
+                        {/* Full brightness — user needs to see their hand */}
                         <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
                         <div className="absolute inset-0 flex flex-col items-center justify-between p-4 pointer-events-none">
+                          {/* Top badge */}
                           <div className="flex items-center gap-2 bg-black/70 rounded-full px-3 py-1.5">
                             <div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-ping" style={{ boxShadow: '0 0 6px rgba(212,175,55,0.8)' }} />
                             <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-[#D4AF37]">
                               {scanPhase === 'camera' ? 'Hold palm to camera…' : 'Reading your biofield…'}
                             </span>
                           </div>
+                          {/* Center guide box */}
                           <div className="border-2 border-dashed border-[#D4AF37]/50 rounded-2xl w-36 h-24 flex items-center justify-center">
                             <span className="text-[9px] font-bold text-[#D4AF37]/60 uppercase tracking-widest text-center leading-relaxed">
                               {scanPhase === 'camera' ? <>Place<br/>palm here</> : <>Analyzing<br/>biofield…</>}
                             </span>
                           </div>
+                          {/* BPM */}
                           <div className="flex items-center gap-1.5 bg-black/70 rounded-full px-3 py-1">
                             <Activity size={10} className="text-[#D4AF37]" />
                             <span className="text-[9px] font-black text-[#D4AF37]">{heartRate} BPM</span>
@@ -778,6 +786,7 @@ ${result.remedies.map((r: string) => `- ${r}`).join('\n')}\n\nShall we transmit 
                     </div>
                   )}
 
+                  {/* Scan button — disabled while scanning/analyzing */}
                   <button
                     onClick={runNadiScan}
                     disabled={scanPhase === 'camera' || scanPhase === 'analyzing'}
