@@ -51,12 +51,12 @@ function renderChatText(text: string) {
       </h3>
     );
     if (trimmed.startsWith('## ')) return (
-      <h2 key={i} style={{ color: '#ffffff', fontWeight: 900, fontSize: '14px', letterSpacing: '-0.02em', marginTop: '12px', marginBottom: '5px' }}>
+      <h2 key={i} style={{ color: '#D4AF37', fontWeight: 900, fontSize: '14px', letterSpacing: '-0.02em', marginTop: '12px', marginBottom: '5px' }}>
         {renderInline(trimmed.slice(3))}
       </h2>
     );
     if (trimmed.startsWith('# ')) return (
-      <h1 key={i} style={{ color: '#ffffff', fontWeight: 900, fontSize: '15px', letterSpacing: '-0.02em', marginTop: '12px', marginBottom: '5px' }}>
+      <h1 key={i} style={{ color: '#D4AF37', fontWeight: 900, fontSize: '15px', letterSpacing: '-0.02em', marginTop: '12px', marginBottom: '5px' }}>
         {renderInline(trimmed.slice(2))}
       </h1>
     );
@@ -147,6 +147,8 @@ function QuantumApothecaryInner() {
   const voiceTranscriptRef = useRef('');
   const [pendingImage, setPendingImage] = useState<{ base64: string; mimeType: string } | null>(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [scanError, setScanError] = useState<string | null>(null);
+  const [scanPhase, setScanPhase] = useState<'idle' | 'camera' | 'analyzing' | 'done'>('idle');
 
   // ── Scroll: anchor new user / SQI bubbles at top of chat (streaming chunks do not scroll) ──
   useEffect(() => {
@@ -205,111 +207,170 @@ function QuantumApothecaryInner() {
   const openChatFullscreenIfMobile = () => { return; };
 
   const runNadiScan = async () => {
-    setIsScanning(true);
+    setScanError(null);
     setScanResult(null);
+    setScanPhase('camera');
+    setIsScanning(true);
 
-    let stream: MediaStream;
+    let cameraStream: MediaStream | null = null;
     try {
-      stream = await navigator.mediaDevices.getUserMedia({
+      cameraStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } },
       });
     } catch {
+      try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      } catch {
+        setScanError('Camera access denied. Please allow camera to initiate scan.');
+        setIsScanning(false);
+        setScanPhase('idle');
+        return;
+      }
+    }
+
+    streamRef.current = cameraStream;
+    if (videoRef.current) {
+      videoRef.current.srcObject = cameraStream;
+      try {
+        await videoRef.current.play();
+      } catch {
+        /* ignore */
+      }
+    }
+
+    await new Promise(res => setTimeout(res, 4000));
+
+    let capturedBase64 = '';
+    try {
+      const canvas = document.createElement('canvas');
+      const vid = videoRef.current!;
+      canvas.width = vid.videoWidth || 640;
+      canvas.height = vid.videoHeight || 480;
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
+      capturedBase64 = canvas.toDataURL('image/jpeg', 0.92).split(',')[1]!;
+    } catch {
+      setScanError('Failed to capture image. Please try again.');
       setIsScanning(false);
-      setMessages(prev => [...prev, {
-        role: 'model',
-        text: '**Camera Access Required.**\n\nThe 72,000 Nadi Scan reads the bioelectric field from your hand via the camera.\n\n**To proceed:**\n- Allow camera access when prompted\n- Place your **palm flat** 10–20cm in front of the camera\n- Hold still — scan takes 5 seconds\n\nTap **Initiate Nadi Scan** again and grant camera permission.',
-      }]);
+      setScanPhase('idle');
+      cameraStream.getTracks().forEach(t => t.stop());
+      streamRef.current = null;
       return;
     }
 
-    streamRef.current = stream;
-    if (videoRef.current) {
-      videoRef.current.srcObject = stream;
-      await videoRef.current.play().catch(() => {});
-    }
+    cameraStream.getTracks().forEach(t => t.stop());
+    streamRef.current = null;
 
-    const HAND_BRIGHTNESS_THRESHOLD = 30;
-    const SCAN_DURATION_MS = 5000;
-    const HAND_TIMEOUT_MS = 20000;
-    const CHECK_INTERVAL_MS = 300;
-    let handDetected = false;
-    let scanTimeoutId: ReturnType<typeof setTimeout> | null = null;
-    let handCheckInterval: ReturnType<typeof setInterval> | null = null;
-    let handWaitTimeout: ReturnType<typeof setTimeout> | null = null;
+    setScanPhase('analyzing');
 
-    const stopStream = () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(t => t.stop());
-        streamRef.current = null;
+    const now = new Date();
+    const todayPlanet = PLANETARY_DATA[now.getDay()].planet;
+    const todayHerb = PLANETARY_DATA[now.getDay()].herb;
+
+    const scanPrompt =
+      `You are the SQI-2050 performing a real 72,000 Nadi biofield scan on this image.
+
+` +
+      `STEP 1: Look at the image. Is there a visible hand, palm, or wrist?
+` +
+      `- If NO hand/palm visible → respond ONLY with this JSON: {"handDetected":false}
+` +
+      `- If YES → continue to step 2.
+
+` +
+      `STEP 2: Analyze the hand/palm carefully:
+` +
+      `- Examine skin tone, palm lines, coloration, visible veins, energy signature
+` +
+      `- Determine dominant dosha from visual cues (Vata=dry/thin, Pitta=reddish/medium, Kapha=moist/full)
+` +
+      `- Identify which Nadi channel appears blocked based on palm lines
+` +
+      `- Today planetary alignment: ${todayPlanet}
+` +
+      `- Today herb: ${todayHerb}
+
+` +
+      `Respond ONLY with valid JSON — no other text:
+` +
+      `{"handDetected":true,"activeNadis":<integer 58000-71500>,"dominantDosha":"<Vata|Pitta|Kapha>",` +
+      `"blockage":"<specific Nadi e.g. Heart/Anahata Nadi>",` +
+      `"planetaryAlignment":"${todayPlanet}","herbOfToday":"${todayHerb}",` +
+      `"remedies":["<name1>","<name2>","<name3>","<name4>","<name5>"],` +
+      `"bioReading":"<2-3 sentences describing what you see in the palm that led to this reading>"}`;
+
+    try {
+      let fullResponse = '';
+      await streamChatWithSQI(
+        [{ role: 'user', text: scanPrompt }],
+        (chunk: string) => {
+          fullResponse += chunk;
+        },
+        async () => {},
+        { base64: capturedBase64, mimeType: 'image/jpeg' },
+        user?.id ?? null,
+        language,
+      );
+
+      const jsonMatch = fullResponse.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error('No JSON returned from scan');
+      const parsed = JSON.parse(jsonMatch[0]);
+
+      if (!parsed.handDetected) {
+        setScanError('No hand detected. Hold your palm clearly up to the camera and try again.');
+        setIsScanning(false);
+        setScanPhase('idle');
+        return;
       }
-      if (handCheckInterval) clearInterval(handCheckInterval);
-      if (handWaitTimeout) clearTimeout(handWaitTimeout);
-      if (scanTimeoutId) clearTimeout(scanTimeoutId);
-    };
 
-    const getFrameBrightness = (): number => {
-      if (!videoRef.current || videoRef.current.readyState < 2) return 0;
-      try {
-        const canvas = document.createElement('canvas');
-        canvas.width = 80;
-        canvas.height = 60;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return 0;
-        ctx.drawImage(videoRef.current, 0, 0, 80, 60);
-        const data = ctx.getImageData(0, 0, 80, 60).data;
-        let total = 0;
-        for (let j = 0; j < data.length; j += 16) total += data[j]!;
-        return total / (data.length / 16);
-      } catch {
-        return 0;
-      }
-    };
-
-    const completeScan = () => {
-      stopStream();
-      const now = new Date();
-      const doshas: ('Vata' | 'Pitta' | 'Kapha')[] = ['Vata', 'Pitta', 'Kapha'];
-      const nadis = ['Throat/Vishuddhi Nadi', 'Root/Muladhara Nadi', 'Heart/Anahata Nadi', '3rd Eye/Ajna Nadi', 'Solar Plexus/Manipura Nadi'];
-      const shuffled = [...ACTIVATIONS].sort(() => 0.5 - Math.random());
       const result: NadiScanResult = {
-        dominantDosha: doshas[Math.floor(Math.random() * doshas.length)],
-        blockages: [nadis[Math.floor(Math.random() * nadis.length)]],
-        planetaryAlignment: PLANETARY_DATA[now.getDay()].planet,
-        herbOfToday: PLANETARY_DATA[now.getDay()].herb,
+        dominantDosha: parsed.dominantDosha || 'Vata',
+        blockages: [parsed.blockage || 'Heart/Anahata Nadi'],
+        planetaryAlignment: parsed.planetaryAlignment || todayPlanet,
+        herbOfToday: parsed.herbOfToday || todayHerb,
         timestamp: now.toISOString(),
-        activeNadis: Math.floor(Math.random() * 10000) + 60000,
+        activeNadis: Number(parsed.activeNadis) || 67000,
         totalNadis: 72000,
-        remedies: shuffled.slice(0, 5).map(a => a.name),
+        remedies: Array.isArray(parsed.remedies)
+          ? parsed.remedies.slice(0, 5)
+          : ACTIVATIONS.sort(() => 0.5 - Math.random())
+            .slice(0, 5)
+            .map(a => a.name),
       };
+
       setScanResult(result);
+      setScanPhase('done');
       setIsScanning(false);
+
       setMessages(prev => [...prev, {
         role: 'model',
-        text: `**Siddha-Quantum Sync Complete.**\n\n- Active Nadis: **${result.activeNadis}/${result.totalNadis}**\n- Dominant Dosha: **${result.dominantDosha}**\n- Blockage: **${result.blockages[0]}**\n- Alignment: **${result.planetaryAlignment}**\n- Herb of Today: **${result.herbOfToday}**\n\n**Quantum Remedies prepared:**\n${result.remedies.map(r => `- ${r}`).join('\n')}\n\nShall we transmit these light-codes?`,
+        text:
+          `**Siddha-Quantum Sync Complete.**
+
+` +
+          (parsed.bioReading ? `**Bio-Reading:** ${parsed.bioReading}
+
+` : '') +
+          `- Active Nadis: **${result.activeNadis}/${result.totalNadis}**
+` +
+          `- Dominant Dosha: **${result.dominantDosha}**
+` +
+          `- Blockage: **${result.blockages[0]}**
+` +
+          `- Alignment: **${result.planetaryAlignment}**
+` +
+          `- Herb of Today: **${result.herbOfToday}**
+
+` +
+          `**Quantum Remedies prepared:**
+${result.remedies.map((r: string) => `- ${r}`).join('\n')}\n\nShall we transmit these light-codes?`,
       }]);
-    };
-
-    handWaitTimeout = setTimeout(() => {
-      if (!handDetected) {
-        stopStream();
-        setIsScanning(false);
-        setMessages(prev => [...prev, {
-          role: 'model',
-          text: '**No Biofield Detected.**\n\nThe camera opened but no hand was placed in front of it. The scan requires physical presence to read your biofield.\n\n**Try again:**\n- Hold your **palm flat** 10–20cm from the camera\n- Ensure good lighting on your hand\n- Hold still for 5 seconds\n\nTap **Initiate Nadi Scan** when ready.',
-        }]);
-      }
-    }, HAND_TIMEOUT_MS);
-
-    await new Promise(resolve => setTimeout(resolve, 800));
-    handCheckInterval = setInterval(() => {
-      if (handDetected) return;
-      if (getFrameBrightness() >= HAND_BRIGHTNESS_THRESHOLD) {
-        handDetected = true;
-        if (handCheckInterval) clearInterval(handCheckInterval);
-        if (handWaitTimeout) clearTimeout(handWaitTimeout);
-        scanTimeoutId = setTimeout(completeScan, SCAN_DURATION_MS);
-      }
-    }, CHECK_INTERVAL_MS);
+    } catch (err) {
+      console.error('Nadi scan analysis error:', err);
+      setScanError('Biofield analysis failed. Please try the scan again.');
+      setIsScanning(false);
+      setScanPhase('idle');
+    }
   };
 
   const handleSendMessage = async (overrideText?: string) => {
@@ -451,7 +512,10 @@ function QuantumApothecaryInner() {
      CHAT PANEL — Logic 100% preserved, UI upgraded to SQI-2050
      ══════════════════════════════════════════════════════ */
   const renderChatPanel = () => (
-    <div className="glass-card overflow-hidden flex flex-col" style={{ minHeight: '70vh' }}>
+    <div
+      className="glass-card overflow-hidden flex flex-col"
+      style={{ minHeight: '70vh', background: 'rgba(5,5,5,0.95)', backdropFilter: 'blur(40px)' }}
+    >
       {/* Chat Header */}
       <div className="px-5 py-4 border-b border-white/[0.05] flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -495,12 +559,12 @@ function QuantumApothecaryInner() {
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[95%] p-4 rounded-2xl ${
+                  className={`max-w-[95%] rounded-2xl ${
                     msg.role === 'user'
                       ? 'bg-[#D4AF37]/10 border border-[#D4AF37]/25 rounded-br-sm'
-                      : 'bg-white/[0.03] border border-white/[0.06] rounded-bl-sm w-full'
+                      : 'border border-white/[0.06] rounded-bl-sm w-full'
                   }`}
-                  style={{ padding: '10px 14px' }}
+                  style={{ padding: '10px 12px', background: msg.role === 'user' ? undefined : 'transparent' }}
                 >
                   <div className="markdown-body">{renderChatText(msg.text)}</div>
                 </div>
@@ -678,17 +742,27 @@ function QuantumApothecaryInner() {
                 </div>
               ) : (
                 <div className="text-center py-8 space-y-5">
-                  {isScanning ? (
+                  {scanError && (
+                    <div className="rounded-2xl p-4 border border-red-500/30 bg-red-950/20 mb-3">
+                      <p className="text-[12px] font-bold text-red-400 leading-relaxed">{scanError}</p>
+                    </div>
+                  )}
+
+                  {(scanPhase === 'camera' || scanPhase === 'analyzing') ? (
                     <>
                       <div className="relative w-full h-48 rounded-2xl overflow-hidden bg-black/60 border border-[#D4AF37]/20">
                         <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
                         <div className="absolute inset-0 flex flex-col items-center justify-between p-4 pointer-events-none">
                           <div className="flex items-center gap-2 bg-black/70 rounded-full px-3 py-1.5">
                             <div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-ping" style={{ boxShadow: '0 0 6px rgba(212,175,55,0.8)' }} />
-                            <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-[#D4AF37]">Scanning biofield…</span>
+                            <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-[#D4AF37]">
+                              {scanPhase === 'camera' ? 'Hold palm to camera…' : 'Reading your biofield…'}
+                            </span>
                           </div>
                           <div className="border-2 border-dashed border-[#D4AF37]/50 rounded-2xl w-36 h-24 flex items-center justify-center">
-                            <span className="text-[9px] font-bold text-[#D4AF37]/60 uppercase tracking-widest text-center leading-relaxed">Place<br />palm here</span>
+                            <span className="text-[9px] font-bold text-[#D4AF37]/60 uppercase tracking-widest text-center leading-relaxed">
+                              {scanPhase === 'camera' ? <>Place<br />palm here</> : <>Analyzing<br />biofield…</>}
+                            </span>
                           </div>
                           <div className="flex items-center gap-1.5 bg-black/70 rounded-full px-3 py-1">
                             <Activity size={10} className="text-[#D4AF37]" />
@@ -701,10 +775,20 @@ function QuantumApothecaryInner() {
                     <div className="space-y-3 py-4">
                       <Globe size={32} className="mx-auto text-white/10" />
                       <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-white/25">Awaiting Handshake</p>
+                      <p className="text-[9px] text-white/20 text-center">Hold your palm up to the camera</p>
                     </div>
                   )}
-                  <button onClick={runNadiScan} disabled={isScanning} className="sqi-btn-primary w-full py-3.5 text-xs disabled:opacity-40">
-                    {isScanning ? `Scanning… HR: ${heartRate}bpm` : 'Initiate Nadi Scan'}
+
+                  <button
+                    onClick={runNadiScan}
+                    disabled={scanPhase === 'camera' || scanPhase === 'analyzing'}
+                    className="sqi-btn-primary w-full py-3.5 text-xs disabled:opacity-40"
+                  >
+                    {scanPhase === 'camera'
+                      ? `Scanning… ${heartRate}bpm`
+                      : scanPhase === 'analyzing'
+                        ? 'Analyzing Biofield…'
+                        : 'Initiate Nadi Scan'}
                   </button>
                 </div>
               )}
@@ -965,6 +1049,11 @@ function QuantumApothecaryInner() {
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.15); border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(212,175,55,0.3); }
+
+        @keyframes scan-line {
+          0%   { background-position: 0 -100%; }
+          100% { background-position: 0 200%; }
+        }
       `}</style>
     </div>
   );
