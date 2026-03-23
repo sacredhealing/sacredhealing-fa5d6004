@@ -1,4 +1,9 @@
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║  ActiveTransmissionsSection-SQI2050.tsx                        ║
+// ║  → src/features/quantum-apothecary/ActiveTransmissionsSection.tsx ║
+// ╚══════════════════════════════════════════════════════════════════╝
 import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, ShieldCheck, X } from 'lucide-react';
 import type { Activation } from '@/features/quantum-apothecary/types';
 
@@ -7,58 +12,93 @@ interface Props {
   setActiveTransmissions: React.Dispatch<React.SetStateAction<Activation[]>>;
 }
 
-export default function ActiveTransmissionsSection({
-  activeTransmissions,
-  setActiveTransmissions,
-}: Props) {
+export default function ActiveTransmissionsSection({ activeTransmissions, setActiveTransmissions }: Props) {
   return (
-    <div className="rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] p-5">
-      <div className="flex justify-between items-center mb-3">
-        <div className="flex items-center gap-2">
-          <Zap size={14} className="text-[#ff4e00]" />
-          <h2 className="text-sm font-bold">Active Transmissions</h2>
+    <div style={{
+      background: 'rgba(5,5,5,0.6)',
+      backdropFilter: 'blur(40px)',
+      border: '1px solid rgba(212,175,55,0.12)',
+      borderRadius: 28,
+      overflow: 'hidden',
+    }}>
+      {/* Header */}
+      <div style={{ padding: '16px 20px', borderBottom: activeTransmissions.length > 0 ? '1px solid rgba(255,255,255,0.05)' : 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Zap size={14} style={{ color: '#D4AF37', filter: 'drop-shadow(0 0 6px rgba(212,175,55,0.6))' }} />
+          <h2 style={{ fontSize: 14, fontWeight: 900, letterSpacing: '-0.03em', color: '#fff' }}>Active Transmissions</h2>
         </div>
-        <span className="text-[10px] px-2 py-1 rounded-full bg-green-500/20 text-green-400 border border-green-500/30 animate-pulse">
-          24/7 Live
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 10px', background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: 100 }}>
+          <div style={{ width: 5, height: 5, background: '#34d399', borderRadius: '50%', boxShadow: '0 0 6px #34d399', animation: 'pulse 2s infinite' }} />
+          <span style={{ fontSize: 8, fontWeight: 900, letterSpacing: '0.35em', textTransform: 'uppercase', color: '#34d399' }}>24/7 Live</span>
+        </div>
       </div>
-      <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+
+      {/* Transmissions */}
+      <div style={{ padding: activeTransmissions.length > 0 ? '12px 16px 16px' : '0', maxHeight: 220, overflowY: 'auto', scrollbarWidth: 'thin' }}>
         {activeTransmissions.length === 0 ? (
-          <div className="text-center py-4 text-white/20">
-            <ShieldCheck size={20} className="mx-auto mb-1" />
-            <p className="text-[10px]">No Active Frequencies</p>
+          <div style={{ padding: '28px 20px', textAlign: 'center' }}>
+            <ShieldCheck size={24} style={{ margin: '0 auto 10px', color: 'rgba(255,255,255,0.1)', display: 'block' }} />
+            <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.2)' }}>No Active Frequencies</p>
+            <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.15)', marginTop: 4 }}>Select activations from the library above</p>
           </div>
         ) : (
-          activeTransmissions.map(act => (
-            <div
-              key={act.id}
-              className="flex items-center justify-between p-2 rounded-xl bg-white/[0.02] border border-white/5 group"
-            >
-              <div className="flex items-center gap-2">
-                <div className="relative">
-                  <div className="w-3 h-3 rounded-full" style={{ background: act.color }} />
-                  <div
-                    className="absolute inset-0 rounded-full animate-ping"
-                    style={{ background: act.color, opacity: 0.3 }}
-                  />
-                </div>
-                <div>
-                  <p className="text-xs font-medium">{act.name}</p>
-                  <p className="text-[9px] text-white/30">Resonating...</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setActiveTransmissions(t => t.filter(x => x.id !== act.id))}
-                className="p-1 text-white/20 hover:text-red-400 transition"
-                title="Dissolve"
-              >
-                <X size={12} />
-              </button>
-            </div>
-          ))
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <AnimatePresence>
+              {activeTransmissions.map(act => (
+                <motion.div
+                  key={act.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10, height: 0, marginBottom: 0 }}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '10px 12px',
+                    background: `${act.color}08`,
+                    border: `1px solid ${act.color}25`,
+                    borderRadius: 14,
+                    gap: 10,
+                  }}
+                >
+                  {/* Pulsing dot */}
+                  <div style={{ position: 'relative', flexShrink: 0 }}>
+                    <div style={{ width: 10, height: 10, borderRadius: '50%', background: act.color, boxShadow: `0 0 8px ${act.color}` }} />
+                    <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: act.color, opacity: 0.4, animation: 'ping 1.5s infinite' }} />
+                  </div>
+
+                  {/* Info */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: 12, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{act.name}</p>
+                    <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: act.color, opacity: 0.7, marginTop: 1 }}>Transmitting 24/7</p>
+                  </div>
+
+                  {/* Dissolve */}
+                  <button
+                    onClick={() => setActiveTransmissions(t => t.filter(x => x.id !== act.id))}
+                    style={{
+                      width: 24, height: 24, borderRadius: '50%',
+                      background: 'rgba(255,255,255,0.04)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      cursor: 'pointer', color: 'rgba(255,255,255,0.3)',
+                      transition: 'all 0.2s', flexShrink: 0,
+                    }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.15)'; (e.currentTarget as HTMLElement).style.color = '#f87171'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(239,68,68,0.3)'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.3)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)'; }}
+                    title="Dissolve frequency"
+                  >
+                    <X size={11} />
+                  </button>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
         )}
       </div>
+
+      <style>{`
+        @keyframes ping { 75%, 100% { transform: scale(2); opacity: 0; } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+      `}</style>
     </div>
   );
 }
-
