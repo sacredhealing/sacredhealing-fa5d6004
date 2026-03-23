@@ -4,8 +4,8 @@
 // ║  All logic, hooks, Stripe triggers, AffiliateID tracking        ║
 // ║  and function signatures are UNTOUCHED.                         ║
 // ║  Only className strings and CSS have been upgraded.             ║
-// ║  Baseline: SQI2050_7 export — tier gate, i18n, headline-only    ║
-// ║  gold (inherit inline **/`code`) remain app-specific.          ║
+// ║  SQI2050_8 + prod: tier gate stays in outer wrapper only;       ║
+// ║  i18n language passed to SQI chat + voice recognition.            ║
 // ╚══════════════════════════════════════════════════════════════════╝
 
 import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
@@ -20,8 +20,8 @@ import { Activation, NadiScanResult, Message } from '@/features/quantum-apotheca
 import { ACTIVATIONS, PLANETARY_DATA } from '@/features/quantum-apothecary/constants';
 import { streamChatWithSQI } from '@/features/quantum-apothecary/chatService';
 import { chatSpeechLocale } from '@/lib/chatSpeechLocale';
-import { useAdminRole } from '@/hooks/useAdminRole';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAdminRole } from '@/hooks/useAdminRole';
 import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
 import { hasFeatureAccess, FEATURE_TIER } from '@/lib/tierAccess';
@@ -37,6 +37,7 @@ function renderChatText(text: string) {
   return lines.map((line, i) => {
     const trimmed = line.trim();
     if (!trimmed) return <div key={i} style={{ height: '4px' }} />;
+    // #### and ##### → treated as bold section labels (gold, small uppercase)
     if (trimmed.startsWith('##### ')) return (
       <p key={i} style={{ color: '#D4AF37', fontWeight: 800, fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginTop: '12px', marginBottom: '4px', opacity: 0.8 }}>
         {renderInline(trimmed.slice(6))}
@@ -83,15 +84,16 @@ function renderChatText(text: string) {
 function renderInline(text: string): React.ReactNode {
   const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g);
   return parts.map((p, i) => {
-    // **bold** inherits line color — gold only inside #/## headings, white in body/lists
+    // **bold** = pure bright white — maximum contrast, easy to read
     if (p.startsWith('**') && p.endsWith('**')) return (
-      <strong key={i} style={{ color: 'inherit', fontWeight: 700 }}>{p.slice(2, -2)}</strong>
+      <strong key={i} style={{ color: '#D4AF37', fontWeight: 700 }}>{p.slice(2, -2)}</strong>
     );
     if (p.startsWith('*') && p.endsWith('*')) return (
       <em key={i} style={{ fontStyle: 'italic', color: 'rgba(255,255,255,0.75)' }}>{p.slice(1, -1)}</em>
     );
+    // backtick code = gold only for technical/code terms
     if (p.startsWith('`') && p.endsWith('`')) return (
-      <code key={i} style={{ background: 'rgba(255,255,255,0.08)', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', fontFamily: 'monospace', color: 'inherit' }}>
+      <code key={i} style={{ background: 'rgba(212,175,55,0.12)', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', fontFamily: 'monospace', color: '#D4AF37' }}>
         {p.slice(1, -1)}
       </code>
     );
@@ -137,9 +139,6 @@ function QuantumApothecaryInner() {
   const [sessionsOpen, setSessionsOpen] = useState(false);
   const [loadingSessions, setLoadingSessions] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const lastUserMsgRef = useRef<HTMLDivElement>(null);
-  const lastSqiMsgRef = useRef<HTMLDivElement>(null);
-  const prevMsgCountRef = useRef(0);
   const chatPanelRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -148,26 +147,36 @@ function QuantumApothecaryInner() {
   const voiceTranscriptRef = useRef('');
   const [pendingImage, setPendingImage] = useState<{ base64: string; mimeType: string } | null>(null);
   const [isRecording, setIsRecording] = useState(false);
+  // ── Real scan state ──
   const [scanError, setScanError] = useState<string | null>(null);
   const [scanPhase, setScanPhase] = useState<'idle' | 'camera' | 'analyzing' | 'done'>('idle');
 
-  // ── Scroll: anchor new user / SQI bubbles at top of chat (streaming chunks do not scroll) ──
+  // ── ALL useEffects UNCHANGED ──
+  // ── Scroll: stay at user message, never jump to bottom ──
+  const prevMsgCountRef = useRef(0);
+  const lastUserMsgRef = useRef<HTMLDivElement>(null);
+  const lastSqiMsgRef  = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const count = messages.length;
-    const last = messages[count - 1];
+    const last  = messages[count - 1];
     if (!last) return;
     if (count > prevMsgCountRef.current) {
+      // A brand-new bubble was added
       prevMsgCountRef.current = count;
       if (last.role === 'user') {
+        // Scroll user's own message into view at the TOP of the chat area
+        // so they can read the SQI response that appears right below it
         setTimeout(() => {
           lastUserMsgRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 60);
       } else {
+        // SQI bubble just appeared — scroll so its TOP is visible
         setTimeout(() => {
           lastSqiMsgRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 60);
       }
     }
+    // Streaming chunk updates → do NOT scroll — user reads in place
   }, [messages]);
   useEffect(() => { localStorage.setItem('active_resonators', JSON.stringify(activeTransmissions)); }, [activeTransmissions]);
   useEffect(() => {
@@ -213,6 +222,7 @@ function QuantumApothecaryInner() {
     setScanPhase('camera');
     setIsScanning(true);
 
+    // ── Step 1: Open camera ──
     let cameraStream: MediaStream | null = null;
     try {
       cameraStream = await navigator.mediaDevices.getUserMedia({
@@ -232,20 +242,18 @@ function QuantumApothecaryInner() {
     streamRef.current = cameraStream;
     if (videoRef.current) {
       videoRef.current.srcObject = cameraStream;
-      try {
-        await videoRef.current.play();
-      } catch {
-        /* ignore */
-      }
+      try { await videoRef.current.play(); } catch {}
     }
 
+    // ── Step 2: Wait 4 seconds — user holds palm to camera ──
     await new Promise(res => setTimeout(res, 4000));
 
+    // ── Step 3: Capture real frame from video ──
     let capturedBase64 = '';
     try {
       const canvas = document.createElement('canvas');
       const vid = videoRef.current!;
-      canvas.width = vid.videoWidth || 640;
+      canvas.width  = vid.videoWidth  || 640;
       canvas.height = vid.videoHeight || 480;
       const ctx = canvas.getContext('2d')!;
       ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
@@ -259,14 +267,16 @@ function QuantumApothecaryInner() {
       return;
     }
 
+    // Stop camera — we have the frame
     cameraStream.getTracks().forEach(t => t.stop());
     streamRef.current = null;
 
+    // ── Step 4: Send to SQI vision for real biofield analysis ──
     setScanPhase('analyzing');
 
     const now = new Date();
     const todayPlanet = PLANETARY_DATA[now.getDay()].planet;
-    const todayHerb = PLANETARY_DATA[now.getDay()].herb;
+    const todayHerb   = PLANETARY_DATA[now.getDay()].herb;
 
     const scanPrompt =
       `You are the SQI-2050 performing a real 72,000 Nadi biofield scan on this image.
@@ -304,19 +314,19 @@ function QuantumApothecaryInner() {
       let fullResponse = '';
       await streamChatWithSQI(
         [{ role: 'user', text: scanPrompt }],
-        (chunk: string) => {
-          fullResponse += chunk;
-        },
+        (chunk: string) => { fullResponse += chunk; },
         async () => {},
         { base64: capturedBase64, mimeType: 'image/jpeg' },
         user?.id ?? null,
         language,
       );
 
+      // Extract JSON from response
       const jsonMatch = fullResponse.match(/\{[\s\S]*\}/);
       if (!jsonMatch) throw new Error('No JSON returned from scan');
       const parsed = JSON.parse(jsonMatch[0]);
 
+      // ── Step 5: No hand = no results ──
       if (!parsed.handDetected) {
         setScanError('No hand detected. Hold your palm clearly up to the camera and try again.');
         setIsScanning(false);
@@ -324,6 +334,7 @@ function QuantumApothecaryInner() {
         return;
       }
 
+      // ── Step 6: Set REAL scan result ──
       const result: NadiScanResult = {
         dominantDosha: parsed.dominantDosha || 'Vata',
         blockages: [parsed.blockage || 'Heart/Anahata Nadi'],
@@ -334,9 +345,7 @@ function QuantumApothecaryInner() {
         totalNadis: 72000,
         remedies: Array.isArray(parsed.remedies)
           ? parsed.remedies.slice(0, 5)
-          : ACTIVATIONS.sort(() => 0.5 - Math.random())
-            .slice(0, 5)
-            .map(a => a.name),
+          : ACTIVATIONS.sort(() => 0.5 - Math.random()).slice(0, 5).map(a => a.name),
       };
 
       setScanResult(result);
@@ -366,6 +375,7 @@ function QuantumApothecaryInner() {
           `**Quantum Remedies prepared:**
 ${result.remedies.map((r: string) => `- ${r}`).join('\n')}\n\nShall we transmit these light-codes?`,
       }]);
+
     } catch (err) {
       console.error('Nadi scan analysis error:', err);
       setScanError('Biofield analysis failed. Please try the scan again.');
@@ -437,50 +447,23 @@ ${result.remedies.map((r: string) => `- ${r}`).join('\n')}\n\nShall we transmit 
   const startVoiceInput = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
-
-    // Tap again to stop listening manually
-    if (isRecording && recognitionRef.current) {
-      recognitionRef.current.stop();
-      return;
-    }
-
+    if (isRecording && recognitionRef.current) { recognitionRef.current.stop(); return; }
     voiceTranscriptRef.current = input;
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = chatSpeechLocale(language);
-
     recognition.onresult = (event: any) => {
-      let interim = '';
+      let final = ''; let interim = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i].transcript;
-        if (event.results[i].isFinal) {
-          // Accumulate all final segments into one long utterance
-          voiceTranscriptRef.current = (voiceTranscriptRef.current + ' ' + transcript).trim();
-        } else {
-          interim += transcript;
-        }
+        if (event.results[i].isFinal) final += transcript; else interim += transcript;
       }
-
-      const combined = (voiceTranscriptRef.current + (interim ? ' ' + interim : '')).trim();
-      setInput(combined);
+      if (final) { voiceTranscriptRef.current = (voiceTranscriptRef.current + final).trim(); setInput(voiceTranscriptRef.current); recognition.stop(); setIsRecording(false); recognitionRef.current = null; const textToSend = voiceTranscriptRef.current; if (textToSend) setTimeout(() => handleSendMessage(textToSend), 0); }
+      else if (interim) { setInput(voiceTranscriptRef.current + interim); }
     };
-
-    recognition.onend = () => {
-      setIsRecording(false);
-      recognitionRef.current = null;
-      const textToSend = voiceTranscriptRef.current.trim();
-      if (textToSend) {
-        // Send the full accumulated utterance after the user stops speaking
-        setTimeout(() => handleSendMessage(textToSend), 0);
-      }
-    };
-
-    recognition.onerror = () => {
-      setIsRecording(false);
-      recognitionRef.current = null;
-    };
-
+    recognition.onend = () => { setIsRecording(false); recognitionRef.current = null; };
+    recognition.onerror = () => { setIsRecording(false); recognitionRef.current = null; };
     recognition.start();
     recognitionRef.current = recognition;
     setIsRecording(true);
@@ -513,10 +496,7 @@ ${result.remedies.map((r: string) => `- ${r}`).join('\n')}\n\nShall we transmit 
      CHAT PANEL — Logic 100% preserved, UI upgraded to SQI-2050
      ══════════════════════════════════════════════════════ */
   const renderChatPanel = () => (
-    <div
-      className="glass-card overflow-hidden flex flex-col"
-      style={{ minHeight: '70vh', background: '#050505', border: '1px solid rgba(212,175,55,0.1)' }}
-    >
+    <div className="glass-card overflow-hidden flex flex-col" style={{ minHeight: '70vh', background: '#050505', border: '1px solid rgba(212,175,55,0.1)' }}>
       {/* Chat Header */}
       <div className="px-5 py-4 border-b border-white/[0.05] flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -549,29 +529,22 @@ ${result.remedies.map((r: string) => `- ${r}`).join('\n')}\n\nShall we transmit 
       <div className="flex-1 overflow-y-auto custom-scrollbar" style={{ padding: '16px', background: '#050505' }}>
         <div className="flex flex-col justify-end min-h-full space-y-2">
           {messages.map((msg, i) => {
-            const isLastUser = msg.role === 'user' && !messages.slice(i + 1).some(m => m.role === 'user');
-            const isLastSqi = msg.role === 'model' && !messages.slice(i + 1).some(m => m.role === 'model');
-            return (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
+              const isLastUser = msg.role === 'user'  && !messages.slice(i + 1).some(m => m.role === 'user');
+              const isLastSqi  = msg.role === 'model' && !messages.slice(i + 1).some(m => m.role === 'model');
+              return (
+              <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
                 ref={isLastUser ? lastUserMsgRef : isLastSqi ? lastSqiMsgRef : undefined}
-                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[95%] ${
-                    msg.role === 'user'
-                      ? 'rounded-2xl rounded-br-sm bg-[#D4AF37]/10 border border-[#D4AF37]/25'
-                      : 'w-full'
-                  }`}
-                  style={{ padding: msg.role === 'user' ? '10px 12px' : '4px 0' }}
-                >
+                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[95%] ${
+                  msg.role === 'user'
+                    ? 'rounded-2xl rounded-br-sm bg-[#D4AF37]/10 border border-[#D4AF37]/25'
+                    : 'w-full'
+                }`} style={{ padding: msg.role === 'user' ? '10px 12px' : '4px 0' }}>
                   <div className="markdown-body">{renderChatText(msg.text)}</div>
                 </div>
               </motion.div>
-            );
-          })}
+              );
+            })}
           {isTyping && (
             <div className="flex justify-start">
               <div className="rounded-2xl rounded-bl-sm p-3" style={{ background: 'transparent' }}>
@@ -640,7 +613,7 @@ ${result.remedies.map((r: string) => `- ${r}`).join('\n')}\n\nShall we transmit 
 
       {/* ── Star Field ── */}
       <div className="fixed inset-0 z-0 pointer-events-none" style={{
-        backgroundImage: 'radial-gradient(1px 1px at 15% 25%, rgba(212,175,55,0.4) 0%, transparent 100%), radial-gradient(1px 1px at 55% 15%, rgba(255,255,255,0.2) 0%, transparent 100%), radial-gradient(1px 1px at 85% 45%, rgba(212,175,55,0.3) 0%, transparent 100%), radial-gradient(1px 1px at 35% 75%, rgba(255,255,255,0.15) 0%, transparent 100%), radial-gradient(1px 1px at 70% 85%, rgba(212,175,55,0.25) 0%, transparent 100%)',
+        backgroundImage: 'radial-gradient(1px 1px at 15% 25%, rgba(212,175,55,0.4) 0%, transparent 100%), radial-gradient(1px 1px at 55% 15%, rgba(255,255,255,0.2) 0%, transparent 100%), radial-gradient(1px 1px at 85% 45%, rgba(212,175,55,0.3) 0%, transparent 100%), radial-gradient(1px 1px at 35% 75%, rgba(255,255,255,0.15) 0%, transparent 100%), radial-gradient(1px 1px at 70% 85%, rgba(212,175,55,0.25) 0%, transparent 100%), radial-gradient(1.5px 1.5px at 22% 60%, rgba(212,175,55,0.35) 0%, transparent 100%), radial-gradient(1px 1px at 90% 30%, rgba(255,255,255,0.2) 0%, transparent 100%)',
       }} />
 
       {/* ── Nadi SVG Overlay ── */}
@@ -686,31 +659,48 @@ ${result.remedies.map((r: string) => `- ${r}`).join('\n')}\n\nShall we transmit 
         </div>
 
         {/* ── Two-column grid ── */}
+        {/* ── Gold divider ── */}
+        <div style={{ height:1, background:'linear-gradient(90deg,transparent,rgba(212,175,55,0.3),transparent)', marginBottom:16, borderRadius:1 }} />
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
           {/* ════ LEFT COLUMN ════ */}
           <div className="space-y-5">
 
             {/* ── Digital Nadi Scan ── */}
-            <div className="glass-card p-6">
+            <div className="glass-card p-6 qa-card-hover" style={{ background: 'rgba(5,5,5,0.7)', border: '1px solid rgba(212,175,55,0.1)' }}>
+              {/* Decorative top bar */}
+              <div style={{ height: 2, background: 'linear-gradient(90deg,transparent,#D4AF37,transparent)', marginBottom: 20, opacity: 0.4, borderRadius: 1 }} />
               <div className="flex justify-between items-center mb-5">
                 <div>
-                  <h2 className="text-sm font-black tracking-[-0.03em]">Digital Nadi Scan</h2>
-                  <p className="text-[9px] font-bold uppercase tracking-[0.35em] text-white/30 mt-0.5">72,000 Channels Monitoring</p>
+                  <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
+                    <div style={{ width:28, height:28, background:'linear-gradient(135deg,#D4AF37,#B8940A)', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 0 12px rgba(212,175,55,0.3)' }}>
+                      <Activity size={14} className="text-black" />
+                    </div>
+                    <h2 className="text-sm font-black tracking-[-0.03em]">Digital Nadi Scan</h2>
+                  </div>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.35em] text-white/30">72,000 Channels Monitoring</p>
                 </div>
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20">
-                  <Activity size={12} className="text-[#D4AF37]" />
-                  <span className="text-xs font-black text-[#D4AF37] tracking-tight">{heartRate} BPM</span>
+                <div style={{ textAlign:'right' }}>
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20">
+                    <div style={{ width:6, height:6, background:'#D4AF37', borderRadius:'50%', boxShadow:'0 0 6px #D4AF37', animation:'qa-pulse 2s infinite' }} />
+                    <span className="text-xs font-black text-[#D4AF37] tracking-tight">{heartRate} BPM</span>
+                  </div>
                 </div>
               </div>
 
               {scanResult ? (
                 <div className="space-y-4">
-                  <div className="flex items-center gap-4 p-4 rounded-2xl bg-[#D4AF37]/5 border border-[#D4AF37]/15">
-                    <div className="text-center">
-                      <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30">Active Nadis</p>
-                      <p className="text-3xl font-black text-[#D4AF37] mt-1" style={{ textShadow: '0 0 20px rgba(212,175,55,0.4)' }}>{scanResult.activeNadis}</p>
-                      <p className="text-[9px] text-white/25 font-bold">/ 72,000</p>
+                  <div className="p-4 rounded-2xl bg-[#D4AF37]/5 border border-[#D4AF37]/15" style={{ position:'relative', overflow:'hidden' }}>
+                    <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse at 50% 100%, rgba(212,175,55,0.06) 0%, transparent 70%)', pointerEvents:'none' }} />
+                    <div style={{ textAlign:'center', position:'relative' }}>
+                      <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30 mb-1">Active Nadis</p>
+                      <p className="font-black text-[#D4AF37]" style={{ fontSize:42, lineHeight:1, textShadow:'0 0 30px rgba(212,175,55,0.5)', letterSpacing:'-0.02em' }}>{scanResult.activeNadis.toLocaleString()}</p>
+                      <p className="text-[9px] text-white/25 font-bold mt-1">of 72,000 channels active</p>
+                      {/* Progress bar */}
+                      <div style={{ marginTop:10, height:3, background:'rgba(255,255,255,0.06)', borderRadius:2, overflow:'hidden' }}>
+                        <div style={{ height:'100%', width:`${(scanResult.activeNadis/72000)*100}%`, background:'linear-gradient(90deg,#D4AF37,#fbbf24)', borderRadius:2, boxShadow:'0 0 8px rgba(212,175,55,0.6)' }} />
+                      </div>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
@@ -787,26 +777,32 @@ ${result.remedies.map((r: string) => `- ${r}`).join('\n')}\n\nShall we transmit 
                   )}
 
                   {/* Scan button — disabled while scanning/analyzing */}
-                  <button
-                    onClick={runNadiScan}
+                  <button onClick={runNadiScan}
                     disabled={scanPhase === 'camera' || scanPhase === 'analyzing'}
-                    className="sqi-btn-primary w-full py-3.5 text-xs disabled:opacity-40"
-                  >
+                    className="sqi-btn-primary w-full py-3.5 text-xs disabled:opacity-40">
                     {scanPhase === 'camera'
                       ? `Scanning… ${heartRate}bpm`
                       : scanPhase === 'analyzing'
-                        ? 'Analyzing Biofield…'
-                        : 'Initiate Nadi Scan'}
+                      ? 'Analyzing Biofield…'
+                      : 'Initiate Nadi Scan'}
                   </button>
                 </div>
               )}
             </div>
 
             {/* ── Aetheric Mixer ── */}
-            <div className="glass-card p-6">
+            <div className="glass-card p-6 qa-card-hover" style={{ background:'rgba(5,5,5,0.7)', border:'1px solid rgba(212,175,55,0.1)' }}>
+              <div style={{ height:2, background:'linear-gradient(90deg,transparent,#D4AF37,transparent)', marginBottom:20, opacity:0.4, borderRadius:1 }} />
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-sm font-black tracking-[-0.03em]">Aetheric Mixer</h2>
-                <span className="text-[9px] font-bold uppercase tracking-[0.35em] text-white/30">{selectedActivations.length}/5 Slots</span>
+                <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                  <div style={{ width:28, height:28, background:'rgba(212,175,55,0.12)', border:'1px solid rgba(212,175,55,0.25)', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>⚗</div>
+                  <h2 className="text-sm font-black tracking-[-0.03em]">Aetheric Mixer</h2>
+                </div>
+                <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                  {[0,1,2,3,4].map(i => (
+                    <div key={i} style={{ width:8, height:8, borderRadius:'50%', background: i < selectedActivations.length ? '#D4AF37' : 'rgba(255,255,255,0.08)', boxShadow: i < selectedActivations.length ? '0 0 6px #D4AF37' : 'none', transition:'all 0.3s' }} />
+                  ))}
+                </div>
               </div>
               <div className="min-h-[64px] rounded-2xl bg-white/[0.02] border border-dashed border-[#D4AF37]/15 p-3 mb-4">
                 {selectedActivations.length === 0 ? (
@@ -1057,11 +1053,19 @@ ${result.remedies.map((r: string) => `- ${r}`).join('\n')}\n\nShall we transmit 
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.15); border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(212,175,55,0.3); }
-
-        @keyframes scan-line {
-          0%   { background-position: 0 -100%; }
-          100% { background-position: 0 200%; }
-        }
+  @keyframes scan-line {
+    0%   { background-position: 0 -100%; }
+    100% { background-position: 0 200%; }
+  }
+  @keyframes qa-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+  @keyframes qa-glow-pulse { 0%,100%{opacity:0.15} 50%{opacity:0.35} }
+  @keyframes qa-shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+  @keyframes qa-spin-slow { to{transform:rotate(360deg)} }
+  @keyframes qa-ping-gold { 75%,100%{transform:scale(2.2);opacity:0} }
+  .qa-card-hover { transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s !important; }
+  .qa-card-hover:hover { border-color: rgba(212,175,55,0.25) !important; box-shadow: 0 0 40px rgba(212,175,55,0.08) !important; transform: translateY(-2px) !important; }
+  .qa-btn-shine { position:relative; overflow:hidden; }
+  .qa-btn-shine::after { content:''; position:absolute; inset:0; background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.15) 50%,transparent 60%); background-size:200% 100%; animation:qa-shimmer 3s infinite; }
       `}</style>
     </div>
   );
@@ -1091,4 +1095,3 @@ export default function QuantumApothecary() {
 
   return <QuantumApothecaryInner />;
 }
-
