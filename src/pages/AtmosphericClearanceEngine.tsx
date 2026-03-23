@@ -124,8 +124,8 @@ const MANDALA_BASE = 360;
 
 export default function AtmosphericClearanceEngine() {
   const navigate = useNavigate();
-  const { tier, loading } = useMembership();
-  const { isAdmin } = useAdminRole();
+  const { tier, loading: membershipLoading } = useMembership();
+  const { isAdmin, isLoading: adminLoading } = useAdminRole();
 
   const [extractionLevel, setExtractionLevel] = useState(0);
   const [metalParticles, setMetalParticles] = useState<MetalParticle[]>([]);
@@ -406,7 +406,7 @@ export default function AtmosphericClearanceEngine() {
     userProfile?.email?.split("@")[0] ||
     "Seeker";
 
-  if (loading) {
+  if (membershipLoading || adminLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-black text-amber-500 font-mono text-xs tracking-widest">
         INITIALIZING SCALAR BUS…

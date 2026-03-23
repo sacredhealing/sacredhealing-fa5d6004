@@ -35,7 +35,7 @@ export const FEATURE_TIER = {
   fullMantras: 1,
   fullHealing: 1,
 
-  // Siddha-Quantum (rank 2)
+  /** Siddha Portal hub + SQI tools linked from it: rank ≥ 2 only (Siddha–Quantum, Akasha–Infinity), not Prana–Flow */
   siddhaPortal: 2,
   digitalNadi: 2,
   sriYantraShield: 2,
@@ -66,4 +66,16 @@ export function hasFeatureAccess(
 ): boolean {
   if (isAdmin) return true;
   return getTierRank(tier) >= requiredRank;
+}
+
+/**
+ * Siddha Portal (`/siddha-portal`) and its satellite SQI routes:
+ * admins, or membership tier rank ≥ 2 (Siddha–Quantum, Akasha–Infinity).
+ * Prana–Flow (rank 1) and free users are excluded.
+ */
+export function hasSiddhaPortalHubAccess(
+  isAdmin: boolean,
+  tier: string | undefined | null
+): boolean {
+  return hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal);
 }
