@@ -4,7 +4,6 @@ import { Mic, MicOff, Phone, PhoneOff, Shield, Sparkles, Volume2, Loader2 } from
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import type { AyurvedaUserProfile, DoshaProfile } from '@/lib/ayurvedaTypes';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -46,6 +45,13 @@ interface AyurvedaLiveDoctorProps {
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ayurveda-chat`;
 
+function scrollChildTopIntoView(container: HTMLElement, child: HTMLElement) {
+  const cRect = container.getBoundingClientRect();
+  const chRect = child.getBoundingClientRect();
+  const nextTop = container.scrollTop + (chRect.top - cRect.top);
+  container.scrollTo({ top: Math.max(0, nextTop), behavior: 'smooth' });
+}
+
 export const AyurvedaLiveDoctor: React.FC<AyurvedaLiveDoctorProps> = ({ profile, dosha }) => {
   const { t, language } = useTranslation();
   const [isActive, setIsActive] = useState(false);
@@ -57,13 +63,25 @@ export const AyurvedaLiveDoctor: React.FC<AyurvedaLiveDoctorProps> = ({ profile,
   
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const synthRef = useRef<SpeechSynthesisUtterance | null>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const lastLineRef = useRef<HTMLDivElement>(null);
+  const prevTranscriptionLenRef = useRef(0);
   const messagesRef = useRef<{ role: 'user' | 'assistant'; content: string }[]>([]);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    const n = transcription.length;
+    if (n < prevTranscriptionLenRef.current) {
+      prevTranscriptionLenRef.current = n;
+      return;
     }
+    if (n <= prevTranscriptionLenRef.current) return;
+    prevTranscriptionLenRef.current = n;
+    const last = transcription[n - 1];
+    if (last?.role !== 'doctor') return;
+    const container = scrollContainerRef.current;
+    const line = lastLineRef.current;
+    if (!container || !line) return;
+    requestAnimationFrame(() => scrollChildTopIntoView(container, line));
   }, [transcription]);
 
   const speakText = useCallback((text: string) => {
@@ -433,8 +451,11 @@ export const AyurvedaLiveDoctor: React.FC<AyurvedaLiveDoctorProps> = ({ profile,
             <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-4 text-center">
               {t('ayurvedaLive.liveTranscription', 'Live Transcription')}
             </h3>
-            <ScrollArea className="h-[200px]">
-              <div ref={scrollRef} className="bg-muted/50 rounded-2xl p-4 min-h-[180px]">
+            <div
+              ref={scrollContainerRef}
+              className="h-[200px] overflow-y-auto overscroll-contain rounded-2xl [scrollbar-width:thin]"
+            >
+              <div className="bg-muted/50 rounded-2xl p-4 min-h-[180px]">
                 {transcription.length === 0 ? (
                   <p className="text-center text-muted-foreground/50 text-sm py-8">
                     {t('ayurvedaLive.sessionNotStarted', 'Session not started...')}
@@ -444,6 +465,7 @@ export const AyurvedaLiveDoctor: React.FC<AyurvedaLiveDoctorProps> = ({ profile,
                     {transcription.map((item, i) => (
                       <motion.div
                         key={i}
+                        ref={i === transcription.length - 1 ? lastLineRef : undefined}
                         initial={{ opacity: 0, x: item.role === 'user' ? 10 : -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         className={`text-sm ${
@@ -461,7 +483,7 @@ export const AyurvedaLiveDoctor: React.FC<AyurvedaLiveDoctorProps> = ({ profile,
                   </div>
                 )}
               </div>
-            </ScrollArea>
+            </div>
           </div>
         </div>
 
