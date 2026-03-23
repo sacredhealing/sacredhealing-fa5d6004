@@ -1148,6 +1148,7 @@
     "darkMode": "Modo oscuro",
     "privacy": "Privacidad",
     "dataAndSecurity": "Datos y seguridad",
+    "howAppWorksVideo": "Cómo funciona la app",
     "appPreferences": "Preferencias de la app",
     "dailyReminders": "Recordatorios diarios",
     "web3Wallet": "Cartera Web3",
@@ -2426,7 +2427,10 @@
     "autoDownloadDesc": "Descargar contenido por WiFi",
     "clearCache": "Borrar caché",
     "clearCacheTitle": "Caché borrada",
-    "clearCacheDesc": "Se ha borrado toda la caché."
+    "clearCacheDesc": "Se ha borrado toda la caché.",
+    "howAppWorksTitle": "Cómo funciona la app",
+    "howAppWorksDesc": "Vídeo corto sobre Sacred Healing en YouTube.",
+    "watchOnYoutube": "Ver en YouTube"
   },
   "privacyDialog": {
     "title": "Privacidad y seguridad",
