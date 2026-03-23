@@ -31,72 +31,85 @@ import { supabase } from '@/integrations/supabase/client';
 const FrequencyLibrarySection = lazy(() => import('@/features/quantum-apothecary/FrequencyLibrarySection'));
 const ActiveTransmissionsSection = lazy(() => import('@/features/quantum-apothecary/ActiveTransmissionsSection'));
 
-/* ──── Markdown-ish renderer for chat ──── LOGIC UNCHANGED ──── */
+/* ──── Markdown-ish renderer: gold (#D4AF37) only on # / ## / ### / #### / ##### lines ──── */
+type InlineVariant = 'heading' | 'body';
+
 function renderChatText(text: string) {
   const lines = text.split('\n');
   return lines.map((line, i) => {
     const trimmed = line.trim();
     if (!trimmed) return <div key={i} style={{ height: '4px' }} />;
-    // #### and ##### → treated as bold section labels (gold, small uppercase)
     if (trimmed.startsWith('##### ')) return (
       <p key={i} style={{ color: '#D4AF37', fontWeight: 800, fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginTop: '12px', marginBottom: '4px', opacity: 0.8 }}>
-        {renderInline(trimmed.slice(6))}
+        {renderInline(trimmed.slice(6), 'heading')}
       </p>
     );
     if (trimmed.startsWith('#### ')) return (
       <p key={i} style={{ color: '#D4AF37', fontWeight: 800, fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase' as const, marginTop: '10px', marginBottom: '4px' }}>
-        {renderInline(trimmed.slice(5))}
+        {renderInline(trimmed.slice(5), 'heading')}
       </p>
     );
     if (trimmed.startsWith('### ')) return (
       <h3 key={i} style={{ color: '#D4AF37', fontWeight: 800, fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase' as const, marginTop: '10px', marginBottom: '4px' }}>
-        {renderInline(trimmed.slice(4))}
+        {renderInline(trimmed.slice(4), 'heading')}
       </h3>
     );
     if (trimmed.startsWith('## ')) return (
       <h2 key={i} style={{ color: '#D4AF37', fontWeight: 900, fontSize: '14px', letterSpacing: '-0.02em', marginTop: '12px', marginBottom: '5px' }}>
-        {renderInline(trimmed.slice(3))}
+        {renderInline(trimmed.slice(3), 'heading')}
       </h2>
     );
     if (trimmed.startsWith('# ')) return (
       <h1 key={i} style={{ color: '#D4AF37', fontWeight: 900, fontSize: '15px', letterSpacing: '-0.02em', marginTop: '12px', marginBottom: '5px' }}>
-        {renderInline(trimmed.slice(2))}
+        {renderInline(trimmed.slice(2), 'heading')}
       </h1>
     );
     if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) return (
       <li key={i} style={{ marginLeft: '16px', listStyleType: 'disc', fontSize: '13px', lineHeight: '1.5', color: 'rgba(255,255,255,0.92)', marginBottom: '4px' }}>
-        {renderInline(trimmed.slice(2))}
+        {renderInline(trimmed.slice(2), 'body')}
       </li>
     );
     if (/^\d+\.\s/.test(trimmed)) return (
       <li key={i} style={{ marginLeft: '16px', listStyleType: 'decimal', fontSize: '13px', lineHeight: '1.5', color: 'rgba(255,255,255,0.92)', marginBottom: '4px' }}>
-        {renderInline(trimmed.replace(/^\d+\.\s/, ''))}
+        {renderInline(trimmed.replace(/^\d+\.\s/, ''), 'body')}
       </li>
     );
     return (
       <p key={i} style={{ fontSize: '13px', lineHeight: '1.55', color: 'rgba(255,255,255,0.92)', marginBottom: '6px' }}>
-        {renderInline(trimmed)}
+        {renderInline(trimmed, 'body')}
       </p>
     );
   });
 }
 
-function renderInline(text: string): React.ReactNode {
+function renderInline(text: string, variant: InlineVariant = 'body'): React.ReactNode {
   const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g);
   return parts.map((p, i) => {
-    // **bold** = pure bright white — maximum contrast, easy to read
-    if (p.startsWith('**') && p.endsWith('**')) return (
-      <strong key={i} style={{ color: '#D4AF37', fontWeight: 700 }}>{p.slice(2, -2)}</strong>
-    );
-    if (p.startsWith('*') && p.endsWith('*')) return (
-      <em key={i} style={{ fontStyle: 'italic', color: 'rgba(255,255,255,0.75)' }}>{p.slice(1, -1)}</em>
-    );
-    // backtick code = gold only for technical/code terms
-    if (p.startsWith('`') && p.endsWith('`')) return (
-      <code key={i} style={{ background: 'rgba(212,175,55,0.12)', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', fontFamily: 'monospace', color: '#D4AF37' }}>
-        {p.slice(1, -1)}
-      </code>
-    );
+    if (p.startsWith('**') && p.endsWith('**')) {
+      const inner = p.slice(2, -2);
+      if (variant === 'heading') {
+        return <strong key={i} style={{ color: 'inherit', fontWeight: 700 }}>{inner}</strong>;
+      }
+      return <strong key={i} style={{ color: 'rgba(255,255,255,0.98)', fontWeight: 700 }}>{inner}</strong>;
+    }
+    if (p.startsWith('*') && p.endsWith('*')) {
+      return <em key={i} style={{ fontStyle: 'italic', color: variant === 'heading' ? 'inherit' : 'rgba(255,255,255,0.78)' }}>{p.slice(1, -1)}</em>;
+    }
+    if (p.startsWith('`') && p.endsWith('`')) {
+      const inner = p.slice(1, -1);
+      if (variant === 'heading') {
+        return (
+          <code key={i} style={{ background: 'rgba(212,175,55,0.15)', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', fontFamily: 'monospace', color: 'inherit' }}>
+            {inner}
+          </code>
+        );
+      }
+      return (
+        <code key={i} style={{ background: 'rgba(255,255,255,0.08)', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', fontFamily: 'monospace', color: 'rgba(255,255,255,0.88)' }}>
+          {inner}
+        </code>
+      );
+    }
     return p;
   });
 }
