@@ -50,7 +50,10 @@ export default function AdminGrantAccess() {
               Grant Access
             </h1>
             <p className="text-muted-foreground">
-              Give users free access to courses, membership, Sri Yantra, Creative Soul, Stargate, and more—without payment.
+              Grant courses, paths, Sri Yantra, Creative Soul, Stargate, and membership tiers that match the live app:{' '}
+              <span className="text-foreground font-medium">Prana–Flow</span> (rank 1),{' '}
+              <span className="text-foreground font-medium">Siddha–Quantum</span> (rank 2),{' '}
+              <span className="text-foreground font-medium">Akasha–Infinity</span> (lifetime, rank 3)—without payment.
             </p>
           </div>
         </div>
