@@ -102,8 +102,19 @@ function renderChatText(text: string) {
   return lines.map((line, i) => {
     const trimmed = line.trim();
     if (!trimmed) return <div key={i} style={{ height: '10px' }} />;
+    // #### / ##### → bold section labels (gold, small uppercase)
+    if (trimmed.startsWith('##### ')) return (
+      <p key={i} style={{ color: '#D4AF37', fontWeight: 800, fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginTop: '12px', marginBottom: '4px', opacity: 0.8 }}>
+        {renderInline(trimmed.slice(6))}
+      </p>
+    );
+    if (trimmed.startsWith('#### ')) return (
+      <p key={i} style={{ color: '#D4AF37', fontWeight: 800, fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase' as const, marginTop: '14px', marginBottom: '5px' }}>
+        {renderInline(trimmed.slice(5))}
+      </p>
+    );
     if (trimmed.startsWith('### ')) return (
-      <h3 key={i} style={{ color: '#D4AF37', fontWeight: 800, fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase' as const, marginTop: '16px', marginBottom: '6px' }}>
+      <h3 key={i} style={{ color: '#D4AF37', fontWeight: 800, fontSize: '12px', letterSpacing: '0.06em', textTransform: 'uppercase' as const, marginTop: '16px', marginBottom: '6px' }}>
         {renderInline(trimmed.slice(4))}
       </h3>
     );
@@ -203,8 +214,21 @@ function QuantumApothecaryInner() {
   const [pendingImage, setPendingImage] = useState<{ base64: string; mimeType: string } | null>(null);
   const [isRecording, setIsRecording] = useState(false);
 
-  // ── ALL useEffects UNCHANGED ──
-  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+  /** Only scroll when a new message bubble is added — not on every streaming chunk */
+  const prevMsgCountRef = useRef(0);
+  useEffect(() => {
+    const count = messages.length;
+    const last = messages[count - 1];
+    if (!last) return;
+    if (count > prevMsgCountRef.current) {
+      prevMsgCountRef.current = count;
+      if (last.role === 'user') {
+        chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      } else {
+        chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+  }, [messages]);
   useEffect(() => { localStorage.setItem('active_resonators', JSON.stringify(activeTransmissions)); }, [activeTransmissions]);
   useEffect(() => {
     const focusChat = (location.state as { focusChat?: boolean } | null)?.focusChat;
