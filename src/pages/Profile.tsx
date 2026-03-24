@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation, Trans } from 'react-i18next';
-import { Flame, Flower2, Star, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield, Scale, LayoutDashboard, Megaphone, Crown, Pencil, Banknote, Lock, FileText, BookOpen, Hand, Globe, ChevronDown } from 'lucide-react';
+import { Flame, Flower2, Star, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield, Scale, LayoutDashboard, Megaphone, Crown, Pencil, Banknote, Lock, FileText, BookOpen, Hand, Globe, ChevronDown, Play } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
@@ -1312,6 +1312,61 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
             </div>
           )}
         </div>
+        <a
+          href="https://www.youtube.com/watch?v=9dtcEjXA8e0"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            marginTop: 16,
+            marginBottom: 0,
+            background: 'rgba(255,255,255,0.02)',
+            border: '1px solid rgba(212,175,55,0.12)',
+            borderRadius: 16,
+            padding: '16px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            textDecoration: 'none',
+            transition: 'all 0.2s',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 12,
+                background: 'rgba(212,175,55,0.06)',
+                border: '1px solid rgba(212,175,55,0.15)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <Play size={18} color="#D4AF37" fill="rgba(212,175,55,0.25)" />
+            </div>
+            <div>
+              <span
+                style={{
+                  fontWeight: 800,
+                  fontSize: 7,
+                  letterSpacing: '0.4em',
+                  textTransform: 'uppercase',
+                  color: 'rgba(255,255,255,0.2)',
+                  display: 'block',
+                  marginBottom: 4,
+                }}
+              >
+                {t('profile.howAppWorks')}
+              </span>
+              <span style={{ fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.75)' }}>
+                {t('profile.howAppWorksVideoLink')}
+              </span>
+            </div>
+          </div>
+          <ChevronRight size={18} color="rgba(212,175,55,0.45)" />
+        </a>
         <div className="settings-row" style={{marginTop:20}}>
           <button type="button" className="settings-btn" onClick={() => setNotificationsOpen(true)}>{t('profile.notifications')}</button>
           <button type="button" className="settings-btn" onClick={() => setAppearanceOpen(true)}>{t('profile.appearance')}</button>

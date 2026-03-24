@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ACTIVATIONS } from '@/features/quantum-apothecary/constants';
 import type { Activation } from '@/features/quantum-apothecary/types';
 
@@ -9,55 +9,167 @@ interface Props {
   addActivation: (act: Activation) => void;
 }
 
+// ── ONE LINE CHANGE vs live version:
+// Added 'Bioenergetic' to this array — this is the ONLY diff needed
+const CATEGORIES = [
+  'All',
+  'Sacred Plant',
+  'Siddha Soma',
+  'Bioenergetic',      // ← THIS WAS MISSING — exposes all 1,259 LimbicArc entries
+  'Essential Oil',
+  'Ayurvedic Herb',
+  'Mineral',
+  'Mushroom',
+  'Adaptogen',
+];
+
+const CAT_COLOR: Record<string, string> = {
+  'All':            '#D4AF37',
+  'Sacred Plant':   '#4ade80',
+  'Siddha Soma':    '#D4AF37',
+  'Bioenergetic':   '#60a5fa',
+  'Essential Oil':  '#f472b6',
+  'Ayurvedic Herb': '#fb923c',
+  'Mineral':        '#94a3b8',
+  'Mushroom':       '#b45309',
+  'Adaptogen':      '#34d399',
+};
+
 export default function FrequencyLibrarySection({
   activeCategory,
   setActiveCategory,
   selectedActivations,
   addActivation,
 }: Props) {
+  const [search, setSearch] = useState('');
+
+  const filtered = ACTIVATIONS.filter(act => {
+    const matchCat  = activeCategory === 'All' || act.type === activeCategory;
+    const matchSearch = !search ||
+      act.name.toLowerCase().includes(search.toLowerCase()) ||
+      act.benefit.toLowerCase().includes(search.toLowerCase());
+    return matchCat && matchSearch;
+  });
+
   return (
-    <div className="rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] p-5">
-      <div className="mb-3">
-        <h2 className="text-sm font-bold">Frequency Library</h2>
-        <p className="text-[10px] text-white/40">Select essences for your transmission</p>
+    <div
+      className="rounded-3xl backdrop-blur-2xl p-5"
+      style={{
+        background: 'rgba(5,5,5,0.6)',
+        border: '1px solid rgba(212,175,55,0.12)',
+      }}
+    >
+      {/* ── Header + Search ── */}
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <h2 className="text-sm font-black tracking-[-0.03em]">Frequency Library</h2>
+          <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30 mt-0.5">
+            {filtered.length} essences available
+          </p>
+        </div>
+        <input
+          type="text"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Search..."
+          className="bg-white/[0.04] border border-white/[0.08] rounded-xl py-1.5 px-3 text-[11px] text-white/70 outline-none w-28 focus:border-[#D4AF37]/30 transition"
+        />
       </div>
-      <div className="flex flex-wrap gap-1.5 mb-3">
-        {['All', 'Sacred Plant', 'Siddha Soma', 'Essential Oil', 'Ayurvedic Herb', 'Mineral', 'Mushroom', 'Adaptogen'].map(
-          type => (
+
+      {/* ── Category pills ── */}
+      <div
+        className="flex gap-1.5 mb-3 pb-1"
+        style={{ overflowX: 'auto', scrollbarWidth: 'none' }}
+      >
+        {CATEGORIES.map(cat => {
+          const active = activeCategory === cat;
+          const col    = CAT_COLOR[cat] ?? '#D4AF37';
+          return (
             <button
-              key={type}
-              onClick={() => setActiveCategory(type)}
-              className={`text-[9px] uppercase tracking-tight px-2.5 py-1.5 border rounded-md transition ${
-                activeCategory === type
-                  ? 'bg-[#ff4e00] border-[#ff4e00] text-white shadow-[0_0_15px_rgba(255,78,0,0.3)]'
-                  : 'bg-white/5 border-white/10 opacity-60 hover:opacity-100'
-              }`}
+              key={cat}
+              type="button"
+              onClick={() => setActiveCategory(cat)}
+              className="shrink-0 text-[8px] uppercase tracking-[0.2em] font-black px-3 py-1 rounded-full border transition-all"
+              style={{
+                background:   active ? `${col}18` : 'transparent',
+                borderColor:  active ? col        : 'rgba(255,255,255,0.08)',
+                color:        active ? col        : 'rgba(255,255,255,0.4)',
+                boxShadow:    active ? `0 0 10px ${col}30` : 'none',
+              }}
             >
-              {type}
+              {cat}
             </button>
-          ),
-        )}
+          );
+        })}
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto custom-scrollbar">
-        {ACTIVATIONS.filter(act => activeCategory === 'All' || act.type === activeCategory).map(act => (
-          <button
-            key={act.id}
-            onClick={() => addActivation(act)}
-            disabled={!!selectedActivations.find(a => a.id === act.id)}
-            className="text-left p-3 bg-white/5 border border-white/5 hover:border-[#ff4e00]/40 hover:bg-[#ff4e00]/5 transition rounded-2xl disabled:opacity-30 relative overflow-hidden"
-          >
-            <div
-              className="absolute top-0 right-0 w-16 h-16 rounded-full opacity-10"
-              style={{ background: act.color, filter: 'blur(20px)' }}
-            />
-            <p className="text-xs font-bold relative">{act.name}</p>
-            <p className="text-[10px] text-white/40 relative mt-0.5">
-              {act.benefit}
-            </p>
-          </button>
-        ))}
+
+      {/* ── Grid ── */}
+      <div
+        className="grid grid-cols-2 gap-2"
+        style={{ maxHeight: 280, overflowY: 'auto', scrollbarWidth: 'thin' }}
+      >
+        {filtered.map(act => {
+          const selected = !!selectedActivations.find(a => a.id === act.id);
+          return (
+            <button
+              key={act.id}
+              type="button"
+              onClick={() => addActivation(act)}
+              disabled={selected}
+              className="text-left p-3 rounded-2xl border relative overflow-hidden transition-all disabled:opacity-30"
+              style={{
+                background:   selected ? `${act.color}10` : 'rgba(255,255,255,0.02)',
+                borderColor:  selected ? `${act.color}40` : 'rgba(255,255,255,0.05)',
+              }}
+              onMouseEnter={e => {
+                if (!selected) {
+                  (e.currentTarget as HTMLElement).style.borderColor = `${act.color}50`;
+                  (e.currentTarget as HTMLElement).style.background  = `${act.color}08`;
+                }
+              }}
+              onMouseLeave={e => {
+                if (!selected) {
+                  (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.05)';
+                  (e.currentTarget as HTMLElement).style.background  = 'rgba(255,255,255,0.02)';
+                }
+              }}
+            >
+              {/* colour glow */}
+              <div
+                className="absolute top-0 right-0 w-10 h-10 rounded-full"
+                style={{ background: act.color, opacity: 0.08, filter: 'blur(12px)' }}
+              />
+              {/* dot + name */}
+              <div className="flex items-start gap-2 mb-1 relative">
+                <div
+                  className="w-2 h-2 rounded-full shrink-0 mt-0.5"
+                  style={{ background: act.color, boxShadow: `0 0 5px ${act.color}80` }}
+                />
+                <p className="text-[11px] font-black text-white leading-tight line-clamp-2">
+                  {act.name}
+                </p>
+              </div>
+              {/* benefit */}
+              <p className="text-[9px] text-white/38 leading-snug line-clamp-2 relative">
+                {act.benefit}
+              </p>
+              {/* type badge */}
+              <p
+                className="text-[7px] font-black uppercase tracking-[0.15em] mt-1.5 relative"
+                style={{ color: act.color, opacity: 0.7 }}
+              >
+                {act.type}
+              </p>
+            </button>
+          );
+        })}
+
+        {filtered.length === 0 && (
+          <div className="col-span-2 text-center py-8 text-white/20 text-[11px]">
+            No essences found
+          </div>
+        )}
       </div>
     </div>
   );
 }
-

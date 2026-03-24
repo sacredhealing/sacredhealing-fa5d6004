@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { adminGrantedFeatureOr } from "@/lib/adminGrantedAccess";
 import { toast } from "sonner";
 
 const SQI_STORE_STYLES = `
@@ -187,7 +188,7 @@ const CreativeSoulStore = () => {
           .select('*')
           .eq('user_id', user.id)
           .eq('is_active', true)
-          .eq('access_type', 'creative_soul_meditation');
+          .or(adminGrantedFeatureOr('creative_soul_meditation'));
 
         if (grantedAccess?.length) setHasMeditationAccess(true);
 
@@ -197,7 +198,7 @@ const CreativeSoulStore = () => {
           .select('*')
           .eq('user_id', user.id)
           .eq('is_active', true)
-          .eq('access_type', 'siddha_oracle');
+          .or(adminGrantedFeatureOr('siddha_oracle'));
 
         if (oracleEntitlements?.length) setHasOracleAccess(true);
 

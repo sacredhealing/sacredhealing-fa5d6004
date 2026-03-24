@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { supabase } from "@/integrations/supabase/client";
+import { adminGrantedFeatureOr } from "@/lib/adminGrantedAccess";
 import { toast } from "sonner";
 
 const MEDITATION_FEATURES = [
@@ -93,7 +94,7 @@ export default function CreativeSoulLanding() {
           .select("*")
           .eq("user_id", user.id)
           .eq("is_active", true)
-          .in("access_type", ["creative_soul", "creative_soul_meditation"]);
+          .or(adminGrantedFeatureOr("creative_soul", "creative_soul_meditation"));
 
         const hasEntitlement = entitlements?.some(hasValidEntitlement) ?? false;
         setHasMeditationAccess(hasEntitlement || (grantedAccess?.length ?? 0) > 0);

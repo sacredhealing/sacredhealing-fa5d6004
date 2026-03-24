@@ -17,14 +17,13 @@ import {
 import { Activation, NadiScanResult, Message, ActivationType } from '@/features/quantum-apothecary/types';
 import { ACTIVATIONS, PLANETARY_DATA } from '@/features/quantum-apothecary/constants';
 import { streamChatWithSQI } from '@/features/quantum-apothecary/chatService';
-import { chatSpeechLocale } from '@/lib/chatSpeechLocale';
 import { useAdminRole } from '@/hooks/useAdminRole';
-import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
 import { hasFeatureAccess, FEATURE_TIER } from '@/lib/tierAccess';
 import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const FrequencyLibrarySection = lazy(() => import('@/features/quantum-apothecary/FrequencyLibrarySection'));
 const ActiveTransmissionsSection = lazy(() => import('@/features/quantum-apothecary/ActiveTransmissionsSection'));
@@ -34,34 +33,36 @@ function renderChatText(text: string) {
   const lines = text.split('\n');
   return lines.map((line, i) => {
     const trimmed = line.trim();
-    if (!trimmed) return <div key={i} style={{ height: '10px' }} />;
+    if (!trimmed) return <div key={i} style={{ height: '6px' }} />;
     if (trimmed.startsWith('### ')) return (
-      <h3 key={i} style={{ color: '#D4AF37', fontWeight: 800, fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase' as const, marginTop: '16px', marginBottom: '6px' }}>
+      <h3 key={i} style={{ color: '#D4AF37', fontWeight: 800, fontSize: '10px', letterSpacing: '0.06em', textTransform: 'uppercase' as const, marginTop: '10px', marginBottom: '4px' }}>
         {renderInline(trimmed.slice(4))}
       </h3>
     );
     if (trimmed.startsWith('## ')) return (
-      <h2 key={i} style={{ color: '#ffffff', fontWeight: 900, fontSize: '16px', letterSpacing: '-0.02em', marginTop: '18px', marginBottom: '8px' }}>
+      <h2 key={i} style={{ color: '#f5f0e6', fontWeight: 800, fontSize: '12px', letterSpacing: '-0.01em', marginTop: '10px', marginBottom: '4px' }}>
         {renderInline(trimmed.slice(3))}
       </h2>
     );
     if (trimmed.startsWith('# ')) return (
-      <h1 key={i} style={{ color: '#ffffff', fontWeight: 900, fontSize: '18px', letterSpacing: '-0.03em', marginTop: '20px', marginBottom: '10px' }}>
+      <h1 key={i} style={{ color: '#f5f0e6', fontWeight: 800, fontSize: '13px', letterSpacing: '-0.02em', marginTop: '10px', marginBottom: '4px' }}>
         {renderInline(trimmed.slice(2))}
       </h1>
     );
     if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) return (
-      <li key={i} style={{ marginLeft: '18px', listStyleType: 'disc', fontSize: '13px', lineHeight: '1.6', color: 'rgba(255,255,255,0.88)', marginBottom: '6px' }}>
-        {renderInline(trimmed.slice(2))}
-      </li>
+      <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', fontSize: '12px', lineHeight: '1.5', color: 'rgba(255,255,255,0.82)', marginBottom: '4px' }}>
+        <span style={{ color: '#D4AF37', opacity: 0.85, flexShrink: 0 }}>·</span>
+        <span>{renderInline(trimmed.slice(2))}</span>
+      </div>
     );
     if (/^\d+\.\s/.test(trimmed)) return (
-      <li key={i} style={{ marginLeft: '18px', listStyleType: 'decimal', fontSize: '13px', lineHeight: '1.6', color: 'rgba(255,255,255,0.88)', marginBottom: '6px' }}>
-        {renderInline(trimmed.replace(/^\d+\.\s/, ''))}
-      </li>
+      <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', fontSize: '12px', lineHeight: '1.5', color: 'rgba(255,255,255,0.82)', marginBottom: '4px' }}>
+        <span style={{ color: '#D4AF37', opacity: 0.7, flexShrink: 0, minWidth: '1em' }}>{trimmed.match(/^\d+/)?.[0]}</span>
+        <span>{renderInline(trimmed.replace(/^\d+\.\s/, ''))}</span>
+      </div>
     );
     return (
-      <p key={i} style={{ fontSize: '13px', lineHeight: '1.6', color: 'rgba(255,255,255,0.85)', marginBottom: '8px' }}>
+      <p key={i} style={{ fontSize: '12px', lineHeight: '1.55', color: 'rgba(255,255,255,0.82)', marginBottom: '6px' }}>
         {renderInline(trimmed)}
       </p>
     );
@@ -80,7 +81,7 @@ function renderInline(text: string): React.ReactNode {
     );
     // backtick code = gold only for technical/code terms
     if (p.startsWith('`') && p.endsWith('`')) return (
-      <code key={i} style={{ background: 'rgba(212,175,55,0.12)', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', fontFamily: 'monospace', color: '#D4AF37' }}>
+      <code key={i} style={{ background: 'rgba(212,175,55,0.08)', padding: '0 4px', borderRadius: '3px', fontSize: '11px', fontFamily: 'ui-monospace, monospace', color: '#D4AF37' }}>
         {p.slice(1, -1)}
       </code>
     );
@@ -98,7 +99,6 @@ function QuantumApothecaryInner() {
   const location = useLocation();
   const { isAdmin, isLoading: adminLoading } = useAdminRole();
   const { user } = useAuth();
-  const { language, t } = useTranslation();
   const [scanResult, setScanResult] = useState<NadiScanResult | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [selectedActivations, setSelectedActivations] = useState<Activation[]>([]);
@@ -130,6 +130,8 @@ function QuantumApothecaryInner() {
   const chatPanelRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const nadiScanIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const nadiScanTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<{ stop: () => void } | null>(null);
   const voiceTranscriptRef = useRef('');
@@ -162,6 +164,23 @@ function QuantumApothecaryInner() {
       return () => clearInterval(iv);
     }
   }, [isScanning]);
+  useEffect(() => {
+    return () => {
+      if (nadiScanIntervalRef.current) {
+        clearInterval(nadiScanIntervalRef.current);
+        nadiScanIntervalRef.current = null;
+      }
+      if (nadiScanTimeoutRef.current) {
+        clearTimeout(nadiScanTimeoutRef.current);
+        nadiScanTimeoutRef.current = null;
+      }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(t => t.stop());
+        streamRef.current = null;
+      }
+    };
+  }, []);
+
   useEffect(() => {
     const fetchSessions = async () => {
       if (!user) { setSessions([]); return; }
@@ -197,13 +216,91 @@ function QuantumApothecaryInner() {
   );
 
   const runNadiScan = async () => {
+    if (nadiScanIntervalRef.current) {
+      clearInterval(nadiScanIntervalRef.current);
+      nadiScanIntervalRef.current = null;
+    }
+    if (nadiScanTimeoutRef.current) {
+      clearTimeout(nadiScanTimeoutRef.current);
+      nadiScanTimeoutRef.current = null;
+    }
+
     setIsScanning(true);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+      });
       streamRef.current = stream;
       if (videoRef.current) videoRef.current.srcObject = stream;
-    } catch {}
-    setTimeout(() => {
+    } catch {
+      toast.error('Camera access is required. Allow the camera, then try the Nadi scan again.');
+      setIsScanning(false);
+      return;
+    }
+
+    let skinPositiveSamples = 0;
+
+    const samplePalmSkinRatio = (video: HTMLVideoElement): number => {
+      const canvas = document.createElement('canvas');
+      const w = 160;
+      const h = 120;
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      if (!ctx || video.readyState < 2) return 0;
+      try {
+        ctx.drawImage(video, 0, 0, w, h);
+      } catch {
+        return 0;
+      }
+      const cx0 = Math.floor(w * 0.2);
+      const cy0 = Math.floor(h * 0.2);
+      const cw = Math.floor(w * 0.6);
+      const ch = Math.floor(h * 0.6);
+      const { data } = ctx.getImageData(cx0, cy0, cw, ch);
+      let skin = 0;
+      const total = cw * ch;
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const cb = 128 - 0.168736 * r - 0.331364 * g + 0.5 * b;
+        const cr = 128 + 0.5 * r - 0.418688 * g - 0.081312 * b;
+        if (cb >= 70 && cb <= 138 && cr >= 125 && cr <= 185 && r + g + b > 75) skin++;
+      }
+      return skin / total;
+    };
+
+    nadiScanIntervalRef.current = setInterval(() => {
+      const vid = videoRef.current;
+      if (!vid) return;
+      const ratio = samplePalmSkinRatio(vid);
+      if (ratio >= 0.065) skinPositiveSamples++;
+    }, 350);
+
+    const SCAN_MS = 5200;
+    const MIN_SKIN_SAMPLES = 4;
+
+    nadiScanTimeoutRef.current = setTimeout(() => {
+      if (nadiScanIntervalRef.current) {
+        clearInterval(nadiScanIntervalRef.current);
+        nadiScanIntervalRef.current = null;
+      }
+      nadiScanTimeoutRef.current = null;
+
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(t => t.stop());
+        streamRef.current = null;
+      }
+      if (videoRef.current) videoRef.current.srcObject = null;
+
+      setIsScanning(false);
+
+      if (skinPositiveSamples < MIN_SKIN_SAMPLES) {
+        toast.error('Palm not detected. Center your open hand in the camera until the scan completes.');
+        return;
+      }
+
       const now = new Date();
       const doshas: ('Vata' | 'Pitta' | 'Kapha')[] = ['Vata', 'Pitta', 'Kapha'];
       const nadis = ['Throat/Vishuddhi Nadi', 'Root/Muladhara Nadi', 'Heart/Anahata Nadi', '3rd Eye/Ajna Nadi', 'Solar Plexus/Manipura Nadi'];
@@ -219,10 +316,8 @@ function QuantumApothecaryInner() {
         remedies: shuffled.slice(0, 5).map(a => a.name),
       };
       setScanResult(result);
-      setIsScanning(false);
-      if (streamRef.current) { streamRef.current.getTracks().forEach(t => t.stop()); streamRef.current = null; }
       setMessages(prev => [...prev, { role: 'model', text: `**Siddha-Quantum Sync Complete.**\n\n- Active Nadis: **${result.activeNadis}/${result.totalNadis}**\n- Dominant Dosha: **${result.dominantDosha}**\n- Blockage: **${result.blockages[0]}**\n- Alignment: **${result.planetaryAlignment}**\n- Herb of Today: **${result.herbOfToday}**\n\n**Quantum Remedies prepared:**\n${result.remedies.map(r => `- ${r}`).join('\n')}\n\nShall we transmit these light-codes?` }]);
-    }, 5000);
+    }, SCAN_MS);
   };
 
   const handleSendMessage = async (overrideText?: string) => {
@@ -288,50 +383,23 @@ function QuantumApothecaryInner() {
   const startVoiceInput = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
-
-    // Tap again to stop listening manually
-    if (isRecording && recognitionRef.current) {
-      recognitionRef.current.stop();
-      return;
-    }
-
+    if (isRecording && recognitionRef.current) { recognitionRef.current.stop(); return; }
     voiceTranscriptRef.current = input;
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = chatSpeechLocale(language);
-
+    recognition.lang = 'en-US';
     recognition.onresult = (event: any) => {
-      let interim = '';
+      let final = ''; let interim = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i].transcript;
-        if (event.results[i].isFinal) {
-          // Accumulate all final segments into one long utterance
-          voiceTranscriptRef.current = (voiceTranscriptRef.current + ' ' + transcript).trim();
-        } else {
-          interim += transcript;
-        }
+        if (event.results[i].isFinal) final += transcript; else interim += transcript;
       }
-
-      const combined = (voiceTranscriptRef.current + (interim ? ' ' + interim : '')).trim();
-      setInput(combined);
+      if (final) { voiceTranscriptRef.current = (voiceTranscriptRef.current + final).trim(); setInput(voiceTranscriptRef.current); recognition.stop(); setIsRecording(false); recognitionRef.current = null; const textToSend = voiceTranscriptRef.current; if (textToSend) setTimeout(() => handleSendMessage(textToSend), 0); }
+      else if (interim) { setInput(voiceTranscriptRef.current + interim); }
     };
-
-    recognition.onend = () => {
-      setIsRecording(false);
-      recognitionRef.current = null;
-      const textToSend = voiceTranscriptRef.current.trim();
-      if (textToSend) {
-        // Send the full accumulated utterance after the user stops speaking
-        setTimeout(() => handleSendMessage(textToSend), 0);
-      }
-    };
-
-    recognition.onerror = () => {
-      setIsRecording(false);
-      recognitionRef.current = null;
-    };
-
+    recognition.onend = () => { setIsRecording(false); recognitionRef.current = null; };
+    recognition.onerror = () => { setIsRecording(false); recognitionRef.current = null; };
     recognition.start();
     recognitionRef.current = recognition;
     setIsRecording(true);
@@ -365,12 +433,8 @@ function QuantumApothecaryInner() {
      ══════════════════════════════════════════════════════ */
   const renderChatPanel = () => (
     <div
-      className="glass-card overflow-hidden flex flex-col"
-      style={{
-        // Give the SQI Online text container more breathing room on all devices
-        minHeight: '88vh',
-        height: 'auto',
-      }}
+      className="sqi-chat-shell glass-card overflow-hidden flex flex-col border border-[#D4AF37]/12"
+      style={{ minHeight: 'min(68dvh, 520px)', maxHeight: 'min(72dvh, 580px)', height: 'min(68dvh, 520px)' }}
     >
       {/* Chat Header */}
       <div className="px-5 py-4 border-b border-white/[0.05] flex items-center justify-between">
@@ -401,51 +465,23 @@ function QuantumApothecaryInner() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-        <div className="flex flex-col justify-end min-h-full space-y-3">
+      <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 custom-scrollbar bg-[#060606]/95">
+        <div className="flex flex-col justify-end min-h-full space-y-2.5">
           {messages.map((msg, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              style={
-                msg.role === 'model'
-                  ? {
-                      marginLeft: '-1rem',
-                      marginRight: '-1rem',
-                    }
-                  : undefined
-              }
-            >
-              <div
-                className={`w-full max-w-full p-4 ${
-                  msg.role === 'user'
-                    ? 'rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/25 rounded-br-sm'
-                    : 'border border-white/[0.06] w-full'
-                }`}
-                style={
-                  msg.role === 'model'
-                    ? {
-                        width: '100%',
-                        paddingBottom: '120px',
-                        minHeight: '80vh',
-                        backgroundColor: 'rgba(5,5,5,0.85)',
-                        backdropFilter: 'blur(20px)',
-                        borderLeft: 'none',
-                        borderRight: 'none',
-                        borderRadius: 0,
-                      }
-                    : undefined
-                }
-              >
-                <div className="markdown-body">{renderChatText(msg.text)}</div>
+            <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[92%] px-3 py-2.5 rounded-2xl ${
+                msg.role === 'user'
+                  ? 'bg-[#D4AF37]/12 border border-[#D4AF37]/28 rounded-br-md'
+                  : 'bg-[#0c0c0c] border border-[#D4AF37]/12 rounded-bl-md'
+              }`}>
+                <div className="sqi-chat-text">{renderChatText(msg.text)}</div>
               </div>
             </motion.div>
           ))}
           {isTyping && (
             <div className="flex justify-start">
-              <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl rounded-bl-sm p-3">
+              <div className="bg-[#0c0c0c] border border-[#D4AF37]/12 rounded-2xl rounded-bl-md p-3">
                 <div className="flex gap-1">
                   {[0, 0.15, 0.3].map((delay, i) => (
                     <div key={i} className="w-1.5 h-1.5 bg-[#D4AF37] rounded-full animate-bounce" style={{ animationDelay: `${delay}s`, boxShadow: '0 0 6px rgba(212,175,55,0.6)' }} />
@@ -459,7 +495,7 @@ function QuantumApothecaryInner() {
       </div>
 
       {/* Chat Input */}
-      <div className="p-4 border-t border-white/[0.05]" style={isChatFullscreen ? { paddingBottom: 'env(safe-area-inset-bottom, 16px)' } : undefined}>
+      <div className="p-3 sm:p-4 border-t border-[#D4AF37]/10 bg-[#050505] shrink-0" style={isChatFullscreen ? { paddingBottom: 'env(safe-area-inset-bottom, 16px)' } : undefined}>
         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
         {pendingImage && (
           <div className="flex items-center gap-2 mb-3 p-2 rounded-xl bg-[#D4AF37]/5 border border-[#D4AF37]/15">
@@ -502,7 +538,7 @@ function QuantumApothecaryInner() {
      MAIN RENDER — SQI-2050 Visual Layer
      ══════════════════════════════════════════════════════ */
   return (
-    <div className="relative min-h-screen text-white/90 overflow-x-hidden pb-24" style={{ background: '#050505' }}>
+    <div className="qa-apothecary relative min-h-screen text-white/90 overflow-x-hidden pb-24" style={{ background: '#050505' }}>
 
       {/* ── Akasha Deep Space Background ── */}
       <div className="fixed inset-0 z-0 pointer-events-none" style={{
@@ -616,10 +652,15 @@ function QuantumApothecaryInner() {
                 <div className="text-center py-8 space-y-5">
                   {isScanning ? (
                     <>
-                      <div className="relative w-full h-40 rounded-2xl overflow-hidden bg-black/40 border border-[#D4AF37]/10">
-                        <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover opacity-30" />
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <Activity size={28} className="text-[#D4AF37] animate-pulse" style={{ filter: 'drop-shadow(0 0 12px rgba(212,175,55,0.8))' }} />
+                      <div className="relative w-full h-44 rounded-2xl overflow-hidden bg-black border border-[#D4AF37]/20">
+                        <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
+                        <div className="absolute inset-x-0 bottom-0 py-2 px-3 bg-gradient-to-t from-black/90 to-transparent">
+                          <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]/90 text-center">
+                            Center your open palm — scan reads skin signature
+                          </p>
+                        </div>
+                        <div className="absolute top-2 right-2 flex items-center gap-1.5 rounded-full bg-black/60 px-2 py-1 border border-[#D4AF37]/25">
+                          <Activity size={14} className="text-[#D4AF37] animate-pulse" />
                         </div>
                       </div>
                     </>
@@ -781,7 +822,7 @@ function QuantumApothecaryInner() {
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-2">
-                {loadingSessions && <div className="text-[10px] font-bold uppercase tracking-widest text:white/25">Loading sessions…</div>}
+                {loadingSessions && <div className="text-[10px] font-bold uppercase tracking-widest text-white/25">Loading sessions…</div>}
                 {!loadingSessions && sessions.length === 0 && (
                   <div className="text-[10px] text-white/25 leading-relaxed">
                     No prior SQI conversations yet. Your next transmission will be stored here.
@@ -794,7 +835,7 @@ function QuantumApothecaryInner() {
                       const { data, error } = await supabase.from('sqi_sessions').select('messages').eq('id', s.id).eq('user_id', user.id).single();
                       if (!error && data && Array.isArray(data.messages)) { setCurrentSessionId(s.id); setMessages(data.messages as Message[]); setSessionsOpen(false); }
                     }}
-                    className={`w-full text-left p-3.5 rounded-2xl border bg-white/[0.02] hover:bg:white/[0.05] transition ${currentSessionId === s.id ? 'border-[#D4AF37]/40' : 'border-white/[0.05]'}`}>
+                    className={`w-full text-left p-3.5 rounded-2xl border bg-white/[0.02] hover:bg-white/[0.05] transition ${currentSessionId === s.id ? 'border-[#D4AF37]/40' : 'border-white/[0.05]'}`}>
                     <p className="text-[11px] font-black truncate">{s.title || 'Untitled SQI Session'}</p>
                     {s.updated_at && <p className="text-[9px] text-white/30 mt-1 font-bold">{new Date(s.updated_at).toLocaleString()}</p>}
                   </button>
@@ -811,7 +852,16 @@ function QuantumApothecaryInner() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800;900&display=swap');
 
-        * { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .qa-apothecary {
+          font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+        }
+
+        /* Scoped chat typography — avoids host/Lovable .markdown-body brown cards & borders */
+        .sqi-chat-text {
+          background: transparent;
+          border: none;
+          box-shadow: none;
+        }
 
         /* ── SQI-2050 Glassmorphism Standard ── */
         .glass-card {
@@ -907,7 +957,7 @@ export default function QuantumApothecary() {
 
   if (authLoading || membershipLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#050505] text:white">
+      <div className="flex min-h-screen items-center justify-center bg-[#050505] text-white">
         <span className="text-[10px] uppercase tracking-[0.5em] text-[#D4AF37]/40">Initializing SQI…</span>
       </div>
     );
@@ -920,4 +970,3 @@ export default function QuantumApothecary() {
 
   return <QuantumApothecaryInner />;
 }
-
