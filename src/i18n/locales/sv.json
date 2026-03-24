@@ -1054,6 +1054,8 @@
     "badges": "Märken",
     "settings": "Inställningar",
     "language": "Språk",
+    "howAppWorks": "Så här fungerar appen",
+    "howAppWorksVideoLink": "Se genomgång på YouTube",
     "notifications": "Notifikationer",
     "premium": "Premium",
     "help": "Hjälp & Support",
@@ -2446,10 +2448,10 @@
     "checkingSession": "Kontrollerar session..."
   },
   "nav_home": "Nexus",
-  "nav_meditate": "Meditation",
-  "nav_mantras": "Mantra",
-  "nav_library": "Bibliotek",
-  "nav_profile": "Profil",
+  "nav_meditate": "Dhyana",
+  "nav_mantras": "Nada",
+  "nav_library": "Akasha",
+  "nav_profile": "Avatar",
   "header_healing": "Soma",
   "koshaReport": {
     "title": "Resonansrapport",

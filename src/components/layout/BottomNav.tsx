@@ -1,7 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { useTranslation } from '@/hooks/useTranslation';
 import MerkabaIcon from '@/components/icons/MerkabaIcon';
 import ThirdEyeIcon from '@/components/icons/ThirdEyeIcon';
 import MalaBeadsIcon from '@/components/icons/MalaBeadsIcon';
@@ -9,19 +8,25 @@ import PalmLeafIcon from '@/components/icons/PalmLeafIcon';
 import StarPentagramIcon from '@/components/icons/StarPentagramIcon';
 import AtmaIcon from '@/components/icons/AtmaIcon';
 
+/** SQI tab names — fixed English; not driven by i18n so profile language never changes this bar. */
 const NAV_ITEMS = [
-  { to: '/dashboard', icon: MerkabaIcon, labelKey: 'nav_home' as const },
-  { to: '/meditations', icon: ThirdEyeIcon, labelKey: 'nav_meditate' as const },
-  { to: '/mantras', icon: MalaBeadsIcon, labelKey: 'nav_mantras' as const },
-  { to: '/explore', icon: PalmLeafIcon, labelKey: 'nav_library' as const },
-  { to: '/healing', icon: StarPentagramIcon, labelKey: 'header_healing' as const },
-  { to: '/profile', icon: AtmaIcon, labelKey: 'nav_profile' as const },
-];
+  { to: '/dashboard', icon: MerkabaIcon, label: 'Nexus' },
+  { to: '/meditations', icon: ThirdEyeIcon, label: 'Dhyana' },
+  { to: '/mantras', icon: MalaBeadsIcon, label: 'Nada' },
+  { to: '/explore', icon: PalmLeafIcon, label: 'Akasha' },
+  { to: '/healing', icon: StarPentagramIcon, label: 'Soma' },
+  { to: '/profile', icon: AtmaIcon, label: 'Avatar' },
+] as const;
 
-export const BottomNav: React.FC = () => {
-  const { t } = useTranslation();
+function BottomNavInner() {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/[0.05] safe-area-bottom" style={{ background: 'rgba(5, 5, 5, 0.92)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)' }}>
+    <nav
+      lang="en"
+      translate="no"
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/[0.05] safe-area-bottom"
+      style={{ background: 'rgba(5, 5, 5, 0.92)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)' }}
+      aria-label="Main navigation"
+    >
       <div
         className="grid grid-cols-6 w-full px-0 py-1 gap-0"
         style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}
@@ -66,9 +71,9 @@ export const BottomNav: React.FC = () => {
                     letterSpacing: '0.15em',
                     textTransform: 'uppercase' as const,
                   }}
-                  title={t(item.labelKey)}
+                  title={item.label}
                 >
-                  {t(item.labelKey)}
+                  {item.label}
                 </span>
               </>
             )}
@@ -77,4 +82,7 @@ export const BottomNav: React.FC = () => {
       </div>
     </nav>
   );
-};
+}
+
+/** Memoized: does not subscribe to i18n; `lang="en"` keeps typography stable vs document locale. */
+export const BottomNav = React.memo(BottomNavInner);
