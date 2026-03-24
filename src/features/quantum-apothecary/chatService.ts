@@ -14,9 +14,9 @@ export async function streamChatWithSQI(
   userImage?: UserImagePayload,
   userId?: string | null,
   language?: string,
+  canonicalActivationNames?: string,
 ) {
-  // Only send the last 10 messages for context to keep prompts efficient
-  const recent = messages.slice(-10);
+  const recent = messages.slice(-15);
 
   const apiMessages = recent.map(m => ({
     role: m.role === 'model' ? 'assistant' : 'user',
@@ -28,6 +28,7 @@ export async function streamChatWithSQI(
     userImage?: UserImagePayload;
     userId?: string | null;
     language?: string;
+    canonicalActivationNames?: string;
   } = {
     messages: apiMessages,
   };
@@ -39,6 +40,9 @@ export async function streamChatWithSQI(
   }
   if (language) {
     body.language = language;
+  }
+  if (canonicalActivationNames?.trim()) {
+    body.canonicalActivationNames = canonicalActivationNames.trim();
   }
 
   const resp = await fetch(CHAT_URL, {
