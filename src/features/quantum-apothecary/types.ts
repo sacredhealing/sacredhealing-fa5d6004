@@ -25,6 +25,10 @@ export interface NadiScanResult {
   timestamp: string;
   activeNadis: number;
   totalNadis: number;
+  /** Subtle sub-Nadi channels (0–350,000) when the vision model returns them */
+  activeSubNadis?: number;
+  /** 0–100 primary Nadi restriction when returned */
+  blockagePercentage?: number;
   remedies: string[];
 }
 

@@ -235,9 +235,24 @@ function QuantumApothecaryInner() {
   // ── ALL HANDLERS UNCHANGED ──
   const openChatFullscreenIfMobile = () => { return; };
 
+  const pickCanonicalRemedies = (raw: unknown): string[] => {
+    const valid = new Set(ACTIVATIONS.map((a) => a.name));
+    const out: string[] = [];
+    if (Array.isArray(raw)) {
+      for (const item of raw) {
+        const s = String(item).trim();
+        if (valid.has(s) && !out.includes(s)) out.push(s);
+      }
+    }
+    const pool = ACTIVATIONS.map((a) => a.name).filter((n) => !out.includes(n));
+    while (out.length < 5 && pool.length > 0) {
+      out.push(pool.shift()!);
+    }
+    return out.slice(0, 5);
+  };
+
   const runNadiScan = async () => {
     setScanError(null);
-    setScanResult(null);
     setScanPhase('camera');
     setIsScanning(true);
 
@@ -265,14 +280,14 @@ function QuantumApothecaryInner() {
     }
 
     // ── Step 2: Wait 4 seconds — user holds palm to camera ──
-    await new Promise(res => setTimeout(res, 4000));
+    await new Promise((res) => setTimeout(res, 4000));
 
     // ── Step 3: Capture real frame from video ──
     let capturedBase64 = '';
     try {
       const canvas = document.createElement('canvas');
       const vid = videoRef.current!;
-      canvas.width  = vid.videoWidth  || 640;
+      canvas.width = vid.videoWidth || 640;
       canvas.height = vid.videoHeight || 480;
       const ctx = canvas.getContext('2d')!;
       ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
@@ -281,67 +296,58 @@ function QuantumApothecaryInner() {
       setScanError('Failed to capture image. Please try again.');
       setIsScanning(false);
       setScanPhase('idle');
-      cameraStream.getTracks().forEach(t => t.stop());
+      cameraStream.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
       return;
     }
 
-    // Stop camera — we have the frame
-    cameraStream.getTracks().forEach(t => t.stop());
+    cameraStream.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
 
-    // ── Step 4: Send to SQI vision for real biofield analysis ──
     setScanPhase('analyzing');
 
     const now = new Date();
     const todayPlanet = PLANETARY_DATA[now.getDay()].planet;
-    const todayHerb   = PLANETARY_DATA[now.getDay()].herb;
+    const todayHerb = PLANETARY_DATA[now.getDay()].herb;
 
     const scanPrompt =
-      `You are the SQI-2050 performing a real 72,000 Nadi biofield scan on this image.
-
-` +
-      `STEP 1: Look at the image. Is there a visible hand, palm, or wrist?
-` +
-      `- If NO hand/palm visible → respond ONLY with this JSON: {"handDetected":false}
-` +
-      `- If YES → continue to step 2.
-
-` +
-      `STEP 2: Analyze the hand/palm carefully:
-` +
-      `- Examine skin tone, palm lines, coloration, visible veins, energy signature
-` +
-      `- Determine dominant dosha from visual cues (Vata=dry/thin, Pitta=reddish/medium, Kapha=moist/full)
-` +
-      `- Identify which Nadi channel appears blocked based on palm lines
-` +
-      `- Today planetary alignment: ${todayPlanet}
-` +
-      `- Today herb: ${todayHerb}
-
-` +
-      `STEP 3 — QUANTUM APOTHECARY REMEDIES (must match Frequency Library + full LimbicArc bioenergetic archive):
-` +
-      `- Each string in the JSON "remedies" array MUST be copied character-for-character from the canonical name list below (exact spelling).
-` +
-      `- Choose five distinct names that fit the palm reading; include bioenergetic frequencies when the field calls for micronutrient, enzyme, botanical, or LimbicArc-style signatures.
-` +
-      `- Do not invent names that are not on this list.
-
-` +
-      `CANONICAL NAMES (one per line):
-` +
-      `${canonicalActivationNameLines}
-
-` +
-      `Respond ONLY with valid JSON — no other text:
-` +
-      `{"handDetected":true,"activeNadis":<integer 58000-71500>,"dominantDosha":"<Vata|Pitta|Kapha>",` +
-      `"blockage":"<specific Nadi e.g. Heart/Anahata Nadi>",` +
-      `"planetaryAlignment":"${todayPlanet}","herbOfToday":"${todayHerb}",` +
+      `You are the SQI-2050 performing a complete Siddha biofield scan of this palm image.\n\n` +
+      `NADI SCIENCE CONTEXT:\n` +
+      `The human biofield contains:\n` +
+      `- 72,000 GROSS NADIS (main energy channels) — range: 0 to 72,000 active\n` +
+      `- 350,000 SUBTLE SUB-NADIS (fine branches of the gross Nadis) — range: 0 to 350,000 active\n` +
+      `A healthy, spiritually active person may have 60,000–71,000 gross Nadis active.\n` +
+      `A person under stress, illness or blockage may have only 8,000–30,000 active.\n` +
+      `Sub-Nadis always outnumber gross Nadis but reflect deeper subtle body state.\n\n` +
+      `STEP 1: Is there a visible hand, palm, or wrist in the image?\n` +
+      `- If NO → respond ONLY: {"handDetected":false}\n` +
+      `- If YES → continue.\n\n` +
+      `STEP 2: HONESTLY read the palm. Do NOT default to high numbers. Read what is actually there:\n` +
+      `- Deep clear lines with pink/warm skin = more Nadis active (60,000–71,000 range)\n` +
+      `- Faint shallow lines, pale or dry skin = fewer Nadis active (15,000–40,000 range)\n` +
+      `- Very faint lines, grey/bluish tone, visible tension = severely reduced (5,000–15,000 range)\n` +
+      `- Sub-Nadis: examine skin texture and micro-capillaries. Dense texture = more sub-Nadis active.\n` +
+      `- Dosha: Vata=dry/thin/light lines, Pitta=reddish/medium/clear lines, Kapha=moist/full/deep lines\n` +
+      `- Today planetary alignment: ${todayPlanet}\n` +
+      `- Today herb: ${todayHerb}\n\n` +
+      `STEP 3 — REMEDIES (Quantum Apothecary Frequency Library):\n` +
+      `- Each string in "remedies" MUST be copied character-for-character from the canonical list below (exact spelling).\n` +
+      `- Choose five distinct names that fit the reading. Do not invent names not on the list.\n\n` +
+      `CANONICAL NAMES (one per line):\n` +
+      `${canonicalActivationNameLines}\n\n` +
+      `Respond ONLY with valid JSON — no other text, no markdown:\n` +
+      `{` +
+      `"handDetected":true,` +
+      `"activeNadis":<integer 0-72000 — your HONEST reading of this specific palm>,` +
+      `"activeSubNadis":<integer 0-350000 — your HONEST reading of the subtle body>,` +
+      `"dominantDosha":"<Vata|Pitta|Kapha>",` +
+      `"blockage":"<the most blocked specific Nadi, e.g. Heart/Anahata Nadi or Root/Muladhara Nadi>",` +
+      `"blockagePercentage":<integer 0-100 — how blocked is the primary Nadi>,` +
+      `"planetaryAlignment":"${todayPlanet}",` +
+      `"herbOfToday":"${todayHerb}",` +
       `"remedies":["<name1>","<name2>","<name3>","<name4>","<name5>"],` +
-      `"bioReading":"<2-3 sentences describing what you see in the palm that led to this reading>"}`;
+      `"bioReading":"<3-4 sentences: what you actually see in the palm — skin tone, line depth, colour, texture — and what that means for this person's biofield RIGHT NOW>"` +
+      `}`;
 
     try {
       let fullResponse = '';
@@ -354,12 +360,16 @@ function QuantumApothecaryInner() {
         language,
       );
 
-      // Extract JSON from response
       const jsonMatch = fullResponse.match(/\{[\s\S]*\}/);
       if (!jsonMatch) throw new Error('No JSON returned from scan');
-      const parsed = JSON.parse(jsonMatch[0]);
 
-      // ── Step 5: No hand = no results ──
+      let parsed: Record<string, unknown>;
+      try {
+        parsed = JSON.parse(jsonMatch[0]) as Record<string, unknown>;
+      } catch {
+        throw new Error('Invalid JSON from scan');
+      }
+
       if (!parsed.handDetected) {
         setScanError('No hand detected. Hold your palm clearly up to the camera and try again.');
         setIsScanning(false);
@@ -367,48 +377,59 @@ function QuantumApothecaryInner() {
         return;
       }
 
-      // ── Step 6: Set REAL scan result ──
+      const activeNadis = Math.max(0, Math.min(72000, Math.round(Number(parsed.activeNadis) || 0)));
+      const activeSubNadis = Math.max(0, Math.min(350000, Math.round(Number(parsed.activeSubNadis) || 0)));
+      const blockagePct = Math.max(0, Math.min(100, Math.round(Number(parsed.blockagePercentage) || 0)));
+
+      const rawDosha = String(parsed.dominantDosha || 'Vata');
+      const dominantDosha: NadiScanResult['dominantDosha'] =
+        rawDosha === 'Pitta' || rawDosha === 'Kapha' || rawDosha === 'Vata' ? rawDosha : 'Vata';
+
       const result: NadiScanResult = {
-        dominantDosha: parsed.dominantDosha || 'Vata',
-        blockages: [parsed.blockage || 'Heart/Anahata Nadi'],
-        planetaryAlignment: parsed.planetaryAlignment || todayPlanet,
-        herbOfToday: parsed.herbOfToday || todayHerb,
+        dominantDosha,
+        blockages: [String(parsed.blockage || 'Heart/Anahata Nadi')],
+        planetaryAlignment: String(parsed.planetaryAlignment || todayPlanet),
+        herbOfToday: String(parsed.herbOfToday || todayHerb),
         timestamp: now.toISOString(),
-        activeNadis: Number(parsed.activeNadis) || 67000,
+        activeNadis,
         totalNadis: 72000,
-        remedies: Array.isArray(parsed.remedies)
-          ? parsed.remedies.slice(0, 5)
-          : ACTIVATIONS.sort(() => 0.5 - Math.random()).slice(0, 5).map(a => a.name),
+        activeSubNadis,
+        blockagePercentage: blockagePct,
+        remedies: pickCanonicalRemedies(parsed.remedies),
       };
 
       setScanResult(result);
       setScanPhase('done');
       setIsScanning(false);
 
-      setMessages(prev => [...prev, {
+      const mainPct = Math.round((activeNadis / 72000) * 100);
+      const subPct = Math.round((activeSubNadis / 350000) * 100);
+      const statusWord = activeNadis > 60000
+        ? 'Highly Active'
+        : activeNadis > 40000
+          ? 'Moderately Active'
+          : activeNadis > 20000
+            ? 'Partially Blocked'
+            : 'Severely Restricted';
+
+      setMessages((prev) => [...prev, {
         role: 'model',
         text:
-          `**Siddha-Quantum Sync Complete.**
-
-` +
-          (parsed.bioReading ? `**Bio-Reading:** ${parsed.bioReading}
-
-` : '') +
-          `- Active Nadis: **${result.activeNadis}/${result.totalNadis}**
-` +
-          `- Dominant Dosha: **${result.dominantDosha}**
-` +
-          `- Blockage: **${result.blockages[0]}**
-` +
-          `- Alignment: **${result.planetaryAlignment}**
-` +
-          `- Herb of Today: **${result.herbOfToday}**
-
-` +
-          `**Quantum Remedies prepared:**
-${result.remedies.map((r: string) => `- ${r}`).join('\n')}\n\nShall we transmit these light-codes?`,
+          `**Siddha-Quantum Nadi Scan Complete.**\n\n` +
+          (parsed.bioReading ? `**Bio-Reading:** ${String(parsed.bioReading)}\n\n` : '') +
+          `#### Gross Nadi Reading (72,000 channels)\n` +
+          `- Active: **${activeNadis.toLocaleString()} / 72,000** (${mainPct}%) — ${statusWord}\n\n` +
+          `#### Subtle Sub-Nadi Reading (350,000 channels)\n` +
+          `- Active: **${activeSubNadis.toLocaleString()} / 350,000** (${subPct}%)\n\n` +
+          `#### Biofield Diagnostics\n` +
+          `- Dominant Dosha: **${result.dominantDosha}**\n` +
+          `- Primary Blockage: **${result.blockages[0]}** (${blockagePct}% restricted)\n` +
+          `- Planetary Alignment: **${result.planetaryAlignment}**\n` +
+          `- Herb of Today: **${result.herbOfToday}**\n\n` +
+          `**Quantum Remedies prepared for your specific reading:**\n` +
+          `${result.remedies.map((r) => `- ${r}`).join('\n')}\n\n` +
+          `Shall we transmit these light-codes into your biofield?`,
       }]);
-
     } catch (err) {
       console.error('Nadi scan analysis error:', err);
       setScanError('Biofield analysis failed. Please try the scan again.');
@@ -732,10 +753,37 @@ ${result.remedies.map((r: string) => `- ${r}`).join('\n')}\n\nShall we transmit 
                       <p className="text-[9px] text-white/25 font-bold mt-1">of 72,000 channels active</p>
                       {/* Progress bar */}
                       <div style={{ marginTop:10, height:3, background:'rgba(255,255,255,0.06)', borderRadius:2, overflow:'hidden' }}>
-                        <div style={{ height:'100%', width:`${(scanResult.activeNadis/72000)*100}%`, background:'linear-gradient(90deg,#D4AF37,#fbbf24)', borderRadius:2, boxShadow:'0 0 8px rgba(212,175,55,0.6)' }} />
+                        <div style={{ height:'100%', width:`${Math.min(100, (scanResult.activeNadis / 72000) * 100)}%`, background:'linear-gradient(90deg,#D4AF37,#fbbf24)', borderRadius:2, boxShadow:'0 0 8px rgba(212,175,55,0.6)' }} />
                       </div>
                     </div>
                   </div>
+                  {typeof scanResult.activeSubNadis === 'number' && (
+                    <div className="rounded-2xl p-4 bg-white/[0.02] border border-white/[0.05]">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30 mb-1">Subtle Sub-Nadi (350,000)</p>
+                      <p className="text-sm font-black tracking-tight text-white/90">
+                        {scanResult.activeSubNadis.toLocaleString()}
+                        <span className="text-[9px] font-bold text-white/30 ml-1">/ 350,000</span>
+                      </p>
+                      <p className="text-[9px] text-white/25 font-bold mt-1">
+                        {Math.round((scanResult.activeSubNadis / 350000) * 100)}% subtle body activated
+                      </p>
+                      <div style={{ marginTop: 8, height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${Math.min(100, (scanResult.activeSubNadis / 350000) * 100)}%`, background: 'linear-gradient(90deg,#D4AF37,#fbbf24)', borderRadius: 2, boxShadow: '0 0 8px rgba(212,175,55,0.35)' }} />
+                      </div>
+                    </div>
+                  )}
+                  {scanResult.blockagePercentage != null && scanResult.blockagePercentage > 0 && (
+                    <div className="rounded-2xl p-4 bg-white/[0.02] border border-white/[0.05]">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30 mb-1">Primary Blockage</p>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-black tracking-tight text-white/90 truncate">{scanResult.blockages[0]}</p>
+                        <p className="text-sm font-black text-white/70 shrink-0">{scanResult.blockagePercentage}%</p>
+                      </div>
+                      <div style={{ marginTop: 8, height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${scanResult.blockagePercentage}%`, background: 'linear-gradient(90deg,#D4AF37,#fbbf24)', borderRadius: 2 }} />
+                      </div>
+                    </div>
+                  )}
                   <div className="grid grid-cols-2 gap-3">
                     {[
                       { label: 'Dosha', value: scanResult.dominantDosha },
