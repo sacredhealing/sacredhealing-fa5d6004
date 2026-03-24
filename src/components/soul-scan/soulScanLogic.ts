@@ -47,9 +47,9 @@ const REMEDY_NAMES = [
   'Systemic Fortification',
   'Core Gravity Alignment',
   'Deep Sleep Harmonic',
-  'NMN + Resveratrol Cellular Battery',
+  'NMN Cellular Battery',
   'Rose Heart Bloom',
-  'Frankincense (Boswellia)',
+  'Frankincense',
 ];
 
 function shuffle<T>(arr: T[]): T[] {

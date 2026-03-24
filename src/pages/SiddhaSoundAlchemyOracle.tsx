@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { adminGrantedFeatureOr } from "@/lib/adminGrantedAccess";
 import { useToast } from "@/hooks/use-toast";
 import { SCALAR_BY_CAT, CAT_LABELS, type ScalarCategory, type ScalarWave } from "@/features/scalar/scalarWaves";
 
@@ -101,7 +100,7 @@ const SiddhaSoundAlchemyOracle = () => {
           .select("*")
           .eq("user_id", user.id)
           .eq("is_active", true)
-          .or(adminGrantedFeatureOr("siddha_oracle"));
+          .eq("access_type", "siddha_oracle");
         if (data?.length) setHasAccess(true);
       } catch {}
       finally { setAccessLoading(false); }

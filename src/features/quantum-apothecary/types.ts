@@ -1,12 +1,4 @@
-export type ActivationType =
-  | 'Sacred Plant'
-  | 'Siddha Soma'
-  | 'Bioenergetic'
-  | 'Essential Oil'
-  | 'Mineral'
-  | 'Ayurvedic Herb'
-  | 'Mushroom'
-  | 'Adaptogen';
+export type ActivationType = 'Sacred Plant' | 'Siddha Soma' | 'Essential Oil' | 'Mineral' | 'Ayurvedic Herb' | 'Mushroom' | 'Adaptogen';
 
 export interface Activation {
   id: string;
