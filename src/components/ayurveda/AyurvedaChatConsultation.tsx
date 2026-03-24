@@ -1,13 +1,14 @@
 /**
  * ████████████████████████████████████████████████████████████████
  *  SQI 2050 — DIVINE PHYSICIAN CHAT (AyurvedaChatConsultation)
- *  FIX: z-index raised above bottom nav, full-viewport lock,
- *       proper scroll area height, gold SQI aesthetic
+ *  FIX: createPortal → document.body (escapes tall relative parents),
+ *       z-index 999999, flex column: messages flex:1 min-height:0, input flex-shrink:0
  *  FUNCTIONAL LOGIC: 100% PRESERVED — stream, fetch, messages
  * ████████████████████████████████████████████████████████████████
  */
 
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { Send, X, Sparkles, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -167,15 +168,12 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
   };
   // ── END FUNCTIONAL LOGIC ─────────────────────────────────────────
 
-  return (
+  const overlay = (
     <motion.div
-      // ★ KEY FIX: z-index 9999 ensures it's above bottom nav (z-50) AND top nav
-      // ★ KEY FIX: items-end so panel anchors to BOTTOM of screen on mobile
-      // ★ KEY FIX: pt-0 removed, panel fills full viewport height correctly
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 9999,             // ← CRITICAL: was z-50 (50), now 9999 to clear bottom nav
+        zIndex: 999999,
         display: 'flex',
         alignItems: 'flex-end',   // ← panel slides up from bottom, always accessible
         justifyContent: 'center',
@@ -308,6 +306,7 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
           ref={scrollRef}
           style={{
             flex: 1,
+            minHeight: 0,
             overflowY: 'auto',
             padding: '20px 20px',
             display: 'flex', flexDirection: 'column', gap: 16,
@@ -483,4 +482,7 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
       `}</style>
     </motion.div>
   );
+
+  if (typeof document === 'undefined') return null;
+  return createPortal(overlay, document.body);
 };
