@@ -19,44 +19,12 @@ const PRODUCT_TO_TIER: Record<string, string> = {
   'prod_TjLb4aw139HcPU': 'lifetime',
 };
 
-// Map admin-granted tier column values → canonical tier slugs (must match getTierRank() in app)
+// Map admin-granted tier names to tier slugs
 const ADMIN_TIER_MAP: Record<string, string> = {
-  premium_monthly: "premium-monthly",
-  premium_annual: "premium-annual",
-  prana_flow_monthly: "premium-monthly",
-  prana_flow_annual: "premium-annual",
-  siddha_quantum: "siddha-quantum",
-  "siddha-quantum": "siddha-quantum",
-  lifetime: "lifetime",
-  akasha_infinity: "akasha-infinity",
-  akasha_infinity_lifetime: "akasha-infinity",
-  "akasha-infinity": "akasha-infinity",
+  'premium_monthly': 'premium-monthly',
+  'premium_annual': 'premium-annual',
+  'lifetime': 'lifetime',
 };
-
-function slugFromAdminTier(raw: string | null): string {
-  if (!raw) return "premium-monthly";
-  const k = raw.trim();
-  if (ADMIN_TIER_MAP[k]) return ADMIN_TIER_MAP[k];
-  const underscored = k.replace(/-/g, "_");
-  if (ADMIN_TIER_MAP[underscored]) return ADMIN_TIER_MAP[underscored];
-  return k;
-}
-
-/** Rank must stay aligned with src/lib/tierAccess.ts getTierRank */
-function tierSlugRank(slug: string): number {
-  const s = slug.toLowerCase();
-  if (s.includes("akasha") || s.includes("life")) return 3;
-  if (s.includes("siddha")) return 2;
-  if (
-    s.includes("premium") ||
-    s.includes("prana") ||
-    s.includes("month") ||
-    s.includes("annual") ||
-    s.includes("year")
-  )
-    return 1;
-  return 0;
-}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -105,45 +73,30 @@ serve(async (req) => {
       });
     }
 
-    // FIRST: Admin-granted membership (bypasses Stripe). If multiple rows, use highest tier rank.
-    const { data: adminRows } = await supabaseClient
-      .from("admin_granted_access")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("access_type", "membership")
-      .eq("is_active", true)
-      .or("expires_at.is.null,expires_at.gt.now()");
+    // FIRST: Check for admin-granted membership access (bypasses Stripe entirely)
+    const { data: adminAccess } = await supabaseClient
+      .from('admin_granted_access')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('access_type', 'membership')
+      .eq('is_active', true)
+      .or('expires_at.is.null,expires_at.gt.now()')
+      .limit(1)
+      .single();
 
-    if (adminRows && adminRows.length > 0) {
-      let best = adminRows[0];
-      let bestSlug = slugFromAdminTier(best.tier);
-      let bestRank = tierSlugRank(bestSlug);
-      for (let i = 1; i < adminRows.length; i++) {
-        const row = adminRows[i];
-        const slug = slugFromAdminTier(row.tier);
-        const r = tierSlugRank(slug);
-        const rowTime = new Date(row.granted_at || 0).getTime();
-        const bestTime = new Date(best.granted_at || 0).getTime();
-        if (r > bestRank || (r === bestRank && rowTime > bestTime)) {
-          best = row;
-          bestSlug = slug;
-          bestRank = r;
-        }
-      }
-      logStep("Admin-granted access found", { tier: bestSlug, expiresAt: best.expires_at, rows: adminRows.length });
-
-      return new Response(
-        JSON.stringify({
-          subscribed: true,
-          tier: bestSlug,
-          subscription_end: best.expires_at,
-          admin_granted: true,
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        }
-      );
+    if (adminAccess) {
+      const adminTier = ADMIN_TIER_MAP[adminAccess.tier || ''] || adminAccess.tier || 'premium-monthly';
+      logStep("Admin-granted access found", { tier: adminTier, expiresAt: adminAccess.expires_at });
+      
+      return new Response(JSON.stringify({
+        subscribed: true,
+        tier: adminTier,
+        subscription_end: adminAccess.expires_at,
+        admin_granted: true
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
     }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });

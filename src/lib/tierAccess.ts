@@ -1,16 +1,13 @@
 /**
  * Tier Access Utility
- *
+ * 
  * Maps raw membership tier strings to a numeric rank for access control.
- *
- * Canonical slugs (Stripe + admin grant + edge function):
- *   premium-monthly, premium-annual, siddha-quantum, lifetime, akasha-infinity, free
- *
+ * 
  * Tier hierarchy:
  *   0 = Free (Atma-Seed)
  *   1 = Prana-Flow (€19/mo)
  *   2 = Siddha-Quantum (€45/mo)
- *   3 = Akasha-Infinity (lifetime / €1111)
+ *   3 = Akasha-Infinity (€1111 lifetime)
  */
 
 export function getTierRank(tier: string | undefined | null): number {
