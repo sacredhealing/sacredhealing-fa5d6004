@@ -1,31 +1,29 @@
 /**
  * ████████████████████████████████████████████████████████████████
- *  SQI 2050 — DIVINE PHYSICIAN CHAT (AyurvedaChatConsultation)
- *  FIX: z-index raised above bottom nav, full-viewport lock,
- *       proper scroll area height, gold SQI aesthetic
- *  FUNCTIONAL LOGIC: 100% PRESERVED — stream, fetch, messages
+ *  SQI 2050 — AyurvedaChatConsultation.tsx
+ *  ROOT FIX: Uses ReactDOM.createPortal to render DIRECTLY into
+ *  document.body — escapes the fixed(position:relative) wrapper
+ *  that was pushing the panel 1620px below the viewport.
+ *
+ *  THE BUG: The parent z-9999 wrapper had position:relative and
+ *  height:2506px. The chat panel was position:relative inside it,
+ *  so it landed at top:1620px — below the fold, invisible.
+ *
+ *  THE FIX: createPortal(content, document.body) renders the
+ *  overlay at the true document root, not inside the layout tree.
+ *  z-index:9999 then correctly overlays everything.
  * ████████████████████████████████████████████████████████████████
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { createPortal } from 'react-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Send, X, Sparkles, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { AyurvedaUserProfile, DoshaProfile } from '@/lib/ayurvedaTypes';
 import { useTranslation } from '@/hooks/useTranslation';
 
-// ── SQI Design tokens ────────────────────────────────────────────
-const G = {
-  gold:       '#D4AF37',
-  goldBorder: 'rgba(212,175,55,0.25)',
-  goldStrong: 'rgba(212,175,55,0.5)',
-  goldGlow:   'rgba(212,175,55,0.18)',
-  glass:      'rgba(255,255,255,0.03)',
-  bg:         'rgba(5,5,5,0.97)',
-  w60:        'rgba(255,255,255,0.6)',
-  w40:        'rgba(255,255,255,0.4)',
-  w20:        'rgba(255,255,255,0.2)',
-};
+const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ayurveda-chat`;
 
 interface ChatMessage { role: 'user' | 'assistant'; content: string; }
 interface AyurvedaChatConsultationProps {
@@ -34,66 +32,194 @@ interface AyurvedaChatConsultationProps {
   onClose?: () => void;
 }
 
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ayurveda-chat`;
+// Inject styles once
+const STYLES = `
+  .sqi-chat-portal {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 999999 !important;
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: center !important;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  .sqi-chat-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(3, 1, 8, 0.94);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+  .sqi-chat-panel {
+    position: relative;
+    width: 100%;
+    max-width: 680px;
+    height: 100dvh;
+    max-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(170deg, rgba(10,6,2,0.99) 0%, rgba(5,3,1,0.99) 100%);
+    border: 1px solid rgba(212,175,55,0.25);
+    border-radius: 40px 40px 0 0;
+    overflow: hidden;
+    box-shadow: 0 -24px 80px rgba(212,175,55,0.12);
+  }
+  .sqi-chat-topbar {
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #D4AF37, transparent);
+    opacity: 0.6;
+    flex-shrink: 0;
+  }
+  .sqi-chat-header {
+    padding: 18px 20px 16px;
+    border-bottom: 1px solid rgba(212,175,55,0.15);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(212,175,55,0.025);
+    flex-shrink: 0;
+  }
+  .sqi-dv-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: radial-gradient(circle, rgba(212,175,55,0.2), rgba(212,175,55,0.04));
+    border: 1px solid rgba(212,175,55,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+    box-shadow: 0 0 16px rgba(212,175,55,0.14);
+  }
+  .sqi-chat-name { font-size: 15px; font-weight: 900; letter-spacing: -0.03em; color: #D4AF37; }
+  .sqi-chat-sub  { font-size: 8px; font-weight: 800; letter-spacing: 0.45em; text-transform: uppercase; color: rgba(212,175,55,0.45); margin-top: 2px; }
+  .sqi-live-pill {
+    display: flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 999px;
+    background: rgba(212,175,55,0.07); border: 1px solid rgba(212,175,55,0.2);
+  }
+  .sqi-live-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: #D4AF37; box-shadow: 0 0 6px #D4AF37;
+    animation: sqiGP 2s ease-in-out infinite;
+  }
+  .sqi-live-lbl { font-size: 8px; font-weight: 800; letter-spacing: 0.4em; text-transform: uppercase; color: #D4AF37; }
+  .sqi-close {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(212,175,55,0.2);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: rgba(255,255,255,0.35); flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .sqi-close:hover { background: rgba(212,175,55,0.12); color: #D4AF37; }
+  /* MESSAGES: flex:1 gives it all remaining space */
+  .sqi-msgs {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(212,175,55,0.15) transparent;
+    min-height: 0; /* critical for flex children to scroll */
+  }
+  .sqi-welcome { text-align: center; padding: 28px 12px; }
+  .sqi-welcome-emoji { font-size: 48px; margin-bottom: 14px; }
+  .sqi-welcome-title { font-size: 20px; font-weight: 900; letter-spacing: -0.04em; color: #D4AF37; margin-bottom: 8px; }
+  .sqi-welcome-sub { font-size: 13px; color: rgba(255,255,255,0.38); line-height: 1.65; margin-bottom: 20px; }
+  .sqi-sugg { display: flex; flex-direction: column; gap: 7px; max-width: 360px; margin: 0 auto; }
+  .sqi-sugg-btn {
+    padding: 9px 14px; border-radius: 12px;
+    background: rgba(212,175,55,0.05); border: 1px solid rgba(212,175,55,0.18);
+    color: rgba(255,255,255,0.5); font-family: inherit; font-size: 12px;
+    cursor: pointer; text-align: left; transition: all 0.2s;
+  }
+  .sqi-sugg-btn:hover { border-color: rgba(212,175,55,0.5); color: #D4AF37; }
+  .sqi-msg-row { display: flex; }
+  .sqi-msg-row.user { justify-content: flex-end; }
+  .sqi-msg-row.ai   { justify-content: flex-start; }
+  .sqi-bubble { max-width: 82%; padding: 11px 15px; font-size: 13px; line-height: 1.65; white-space: pre-wrap; }
+  .sqi-bubble.user { background: linear-gradient(135deg, rgba(212,175,55,0.22), rgba(212,175,55,0.1)); border: 1px solid rgba(212,175,55,0.5); border-radius: 18px 18px 4px 18px; color: rgba(255,255,255,0.9); box-shadow: 0 0 14px rgba(212,175,55,0.12); }
+  .sqi-bubble.ai   { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 18px 18px 18px 4px; color: rgba(255,255,255,0.78); }
+  .sqi-role { font-size: 8px; font-weight: 800; letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 5px; display: flex; align-items: center; gap: 5px; }
+  /* INPUT BAR: flex-shrink:0 always pinned to bottom */
+  .sqi-input-bar {
+    flex-shrink: 0;
+    padding: 12px 14px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
+    border-top: 1px solid rgba(212,175,55,0.15);
+    display: flex;
+    gap: 9px;
+    align-items: center;
+    background: rgba(5,3,1,0.98);
+  }
+  .sqi-input {
+    flex: 1; padding: 13px 18px; border-radius: 20px;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(212,175,55,0.2);
+    color: rgba(255,255,255,0.88); font-size: 14px; font-family: inherit;
+    outline: none; transition: border-color 0.2s;
+  }
+  .sqi-input:focus { border-color: rgba(212,175,55,0.55); }
+  .sqi-input::placeholder { color: rgba(212,175,55,0.3); }
+  .sqi-send {
+    width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, #D4AF37, #B8960C);
+    border: 1px solid #D4AF37; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; box-shadow: 0 0 18px rgba(212,175,55,0.18);
+    transition: all 0.2s;
+  }
+  .sqi-send:hover { box-shadow: 0 0 28px rgba(212,175,55,0.4); transform: scale(1.06); }
+  .sqi-send:disabled { background: rgba(255,255,255,0.06); border-color: rgba(212,175,55,0.2); box-shadow: none; cursor: not-allowed; transform: none; }
+  .sqi-nadi-pulse { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 20px 0; }
+  @keyframes sqiGP { 0%,100% { box-shadow: 0 0 0 0 rgba(212,175,55,0.5); } 50% { box-shadow: 0 0 0 8px rgba(212,175,55,0); } }
+  @keyframes sqiSpin { to { transform: rotate(360deg); } }
+`;
 
-/* ─── NADI PULSE ANIMATION (replaces purple circles) ─── */
-const NadiPulseAnimation = () => {
+const NadiPulse = () => {
   const { t } = useTranslation();
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '24px 0' }}>
-      <div style={{ position: 'relative', width: 80, height: 80 }}>
+    <div className="sqi-nadi-pulse">
+      <div style={{ position: 'relative', width: 52, height: 52 }}>
         {[0, 1, 2].map(i => (
-          <motion.div
-            key={i}
-            style={{
-              position: 'absolute',
-              borderRadius: '50%',
-              border: `1px solid ${i === 0 ? G.goldStrong : G.goldBorder}`,
-              width: 40 + i * 20, height: 40 + i * 20,
-              top: -(i * 10), left: -(i * 10),
-            }}
-            animate={{ scale: [1, 1.4, 1], opacity: [0.6, 0.1, 0.6] }}
-            transition={{ duration: 2, repeat: Infinity, delay: i * 0.35 }}
-          />
+          <motion.div key={i} style={{ position: 'absolute', borderRadius: '50%', border: `1px solid ${i === 0 ? 'rgba(212,175,55,0.6)' : 'rgba(212,175,55,0.2)'}`, width: 24 + i * 14, height: 24 + i * 14, top: -(i * 7), left: -(i * 7) }}
+            animate={{ scale: [1, 1.4, 1], opacity: [0.6, 0.1, 0.6] }} transition={{ duration: 2, repeat: Infinity, delay: i * 0.35 }} />
         ))}
-        <motion.div
-          style={{
-            position: 'relative', width: 40, height: 40,
-            borderRadius: '50%', zIndex: 1,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: `radial-gradient(circle, rgba(212,175,55,0.3), rgba(212,175,55,0.05))`,
-            boxShadow: `0 0 20px ${G.goldGlow}`,
-            border: `1px solid ${G.goldBorder}`,
-          }}
-          animate={{ scale: [1, 1.07, 1] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
-        >
-          <span style={{ fontSize: 18 }}>🔱</span>
-        </motion.div>
+        <div style={{ position: 'relative', width: 24, height: 24, borderRadius: '50%', background: 'radial-gradient(circle,rgba(212,175,55,0.3),rgba(212,175,55,0.05))', border: '1px solid rgba(212,175,55,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>🔱</div>
       </div>
-      <p style={{ color: G.w40, fontSize: 11, fontStyle: 'italic', letterSpacing: '0.1em' }}>
+      <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, fontStyle: 'italic', letterSpacing: '0.1em' }}>
         {t('ayurvedaChat.pulseReading', 'Dhanvantari reads your Nadi pulse…')}
       </p>
     </div>
   );
 };
 
-export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> = ({
-  profile, dosha, onClose
-}) => {
+export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> = ({ profile, dosha, onClose }) => {
   const { t, language } = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const msgsRef = useRef<HTMLDivElement>(null);
+
+  // Inject styles once
+  useEffect(() => {
+    const id = 'sqi-chat-styles';
+    if (!document.getElementById(id)) {
+      const el = document.createElement('style');
+      el.id = id;
+      el.textContent = STYLES;
+      document.head.appendChild(el);
+    }
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight;
   }, [messages]);
 
-  // ── FUNCTIONAL LOGIC: UNTOUCHED ──────────────────────────────────
+  // ── FUNCTIONAL LOGIC: PRESERVED ─────────────────────────────
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
@@ -111,15 +237,16 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
             role: m.role === 'assistant' ? 'assistant' : 'user',
             content: m.content,
           })),
-          profile, dosha, language,
+          profile,
+          dosha,
+          language,
         }),
       });
       if (!response.ok || !response.body) {
-        if (response.status === 429) toast.error(t('ayurvedaChat.rateLimit', 'Rate limit exceeded. Please try again in a moment.'));
-        else if (response.status === 402) toast.error(t('ayurvedaChat.usageLimit', 'Usage limits reached. Please try again later.'));
-        else toast.error(t('ayurvedaChat.connectFail', 'Failed to connect to the healer. Please try again.'));
-        setIsLoading(false);
-        return;
+        if (response.status === 429) toast.error(t('ayurvedaChat.rateLimit', 'Rate limit exceeded.'));
+        else if (response.status === 402) toast.error(t('ayurvedaChat.usageLimit', 'Usage limits reached.'));
+        else toast.error(t('ayurvedaChat.connectFail', 'Failed to connect. Please try again.'));
+        setIsLoading(false); return;
       }
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
@@ -129,358 +256,98 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
         const { done, value } = await reader.read();
         if (done) break;
         textBuffer += decoder.decode(value, { stream: true });
-        let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf('\n')) !== -1) {
-          let line = textBuffer.slice(0, newlineIndex);
-          textBuffer = textBuffer.slice(newlineIndex + 1);
+        let idx: number;
+        while ((idx = textBuffer.indexOf('\n')) !== -1) {
+          let line = textBuffer.slice(0, idx);
+          textBuffer = textBuffer.slice(idx + 1);
           if (line.endsWith('\r')) line = line.slice(0, -1);
           if (line.startsWith(':') || line.trim() === '') continue;
           if (!line.startsWith('data: ')) continue;
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === '[DONE]') break;
+          const json = line.slice(6).trim();
+          if (json === '[DONE]') break;
           try {
-            const parsed = JSON.parse(jsonStr);
+            const parsed = JSON.parse(json);
             const content = parsed.choices?.[0]?.delta?.content as string | undefined;
             if (content) {
               assistantContent += content;
-              setMessages(prev => {
-                const newMessages = [...prev];
-                newMessages[newMessages.length - 1] = { role: 'assistant', content: assistantContent };
-                return newMessages;
-              });
+              setMessages(prev => { const n = [...prev]; n[n.length - 1] = { role: 'assistant', content: assistantContent }; return n; });
             }
-          } catch {
-            textBuffer = line + '\n' + textBuffer;
-            break;
-          }
+          } catch { textBuffer = line + '\n' + textBuffer; break; }
         }
       }
-    } catch (error) {
-      console.error('Chat error:', error);
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: t('ayurvedaChat.connectionInterrupted', 'Forgive me, my connection to the ether is interrupted. Please try again.'),
-      }]);
-    } finally {
-      setIsLoading(false);
-    }
+    } catch (err) {
+      console.error(err);
+      setMessages(prev => [...prev, { role: 'assistant', content: t('ayurvedaChat.connectionInterrupted', 'Forgive me, my connection to the ether is interrupted. Please try again.') }]);
+    } finally { setIsLoading(false); }
   };
-  // ── END FUNCTIONAL LOGIC ─────────────────────────────────────────
 
-  return (
-    <motion.div
-      // ★ KEY FIX: z-index 9999 ensures it's above bottom nav (z-50) AND top nav
-      // ★ KEY FIX: items-end so panel anchors to BOTTOM of screen on mobile
-      // ★ KEY FIX: pt-0 removed, panel fills full viewport height correctly
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 9999,             // ← CRITICAL: was z-50 (50), now 9999 to clear bottom nav
-        display: 'flex',
-        alignItems: 'flex-end',   // ← panel slides up from bottom, always accessible
-        justifyContent: 'center',
-      }}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-    >
-      {/* Backdrop */}
-      <div
-        style={{
-          position: 'absolute', inset: 0,
-          background: 'rgba(5,2,10,0.93)',
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
-        }}
-        onClick={onClose}
-      />
+  const suggestions = ['How do I balance my Vata dosha?', 'What herbs help anxiety and insomnia?', 'Create my daily Dinacharya routine'];
 
-      {/* Chat panel */}
-      <motion.div
-        style={{
-          position: 'relative',
-          width: '100%',
-          maxWidth: 680,
-          marginLeft: 'auto',
-          marginRight: 'auto',
-          // ★ KEY FIX: height is 100svh minus safe area, NOT fixed maxHeight that clips
-          height: '100svh',
-          maxHeight: '100svh',
-          display: 'flex',
-          flexDirection: 'column',
-          background: 'linear-gradient(170deg, rgba(12,8,4,0.99) 0%, rgba(5,5,5,0.99) 100%)',
-          border: `1px solid ${G.goldBorder}`,
-          borderRadius: '40px 40px 0 0',    // ← rounded only top, sits flush at bottom
-          overflow: 'hidden',
-          boxShadow: `0 -20px 80px ${G.goldGlow}, 0 0 0 1px ${G.goldBorder}`,
-        }}
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        exit={{ y: '100%' }}
-        transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-      >
-        {/* ── Top shimmer bar ── */}
-        <div style={{
-          height: 2,
-          background: `linear-gradient(90deg, transparent 0%, ${G.gold} 50%, transparent 100%)`,
-          opacity: 0.5,
-        }} />
+  const overlay = (
+    <AnimatePresence>
+      <motion.div className="sqi-chat-portal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} key="chat-portal">
+        <div className="sqi-chat-backdrop" onClick={onClose} />
+        <motion.div className="sqi-chat-panel" initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', damping: 28, stiffness: 260 }}>
+          <div className="sqi-chat-topbar" />
 
-        {/* ── Header ── */}
-        <div style={{
-          padding: '20px 24px 18px',
-          borderBottom: `1px solid ${G.goldBorder}`,
-          display: 'flex', alignItems: 'center', gap: 14,
-          background: 'rgba(212,175,55,0.03)',
-          flexShrink: 0,
-        }}>
-          {/* Dhanvantari icon */}
-          <div style={{
-            width: 44, height: 44, borderRadius: 14,
-            background: `radial-gradient(circle, rgba(212,175,55,0.2), rgba(212,175,55,0.04))`,
-            border: `1px solid ${G.goldBorder}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 20, flexShrink: 0,
-            boxShadow: `0 0 16px ${G.goldGlow}`,
-          }}>
-            🏥
+          {/* Header */}
+          <div className="sqi-chat-header">
+            <div className="sqi-dv-icon">🏥</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="sqi-chat-name">{t('ayurvedaChat.headerTitle', 'Dhanvantari — Divine Physician')}</div>
+              <div className="sqi-chat-sub">{t('ayurvedaChat.headerSubtitle', { defaultValue: 'Bhrigu Nadi Enhanced • {{protocol}} Protocol', protocol: dosha?.primary || t('ayurvedaChat.unknownProtocol', 'Unknown') })}</div>
+            </div>
+            <div className="sqi-live-pill"><div className="sqi-live-dot" /><span className="sqi-live-lbl">Live</span></div>
+            {onClose && <button type="button" className="sqi-close" onClick={onClose}><X style={{ width: 15, height: 15 }} /></button>}
           </div>
 
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-              fontSize: 15, fontWeight: 900, letterSpacing: '-0.03em',
-              color: G.gold,
-            }}>
-              {t('ayurvedaChat.headerTitle', 'Dhanvantari — Divine Physician')}
-            </div>
-            <div style={{
-              fontSize: 8, fontWeight: 800, letterSpacing: '0.45em',
-              textTransform: 'uppercase', color: 'rgba(212,175,55,0.5)',
-              marginTop: 2,
-            }}>
-              {t('ayurvedaChat.headerSubtitle', {
-                defaultValue: 'Bhrigu Nadi Enhanced • {{protocol}} Protocol',
-                protocol: dosha?.primary || t('ayurvedaChat.unknownProtocol', 'Unknown'),
-              })}
-            </div>
-          </div>
-
-          {/* Nadi live indicator */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: '4px 12px', borderRadius: 999,
-            background: 'rgba(212,175,55,0.08)',
-            border: `1px solid ${G.goldBorder}`,
-          }}>
-            <div style={{
-              width: 5, height: 5, borderRadius: '50%',
-              background: G.gold, boxShadow: `0 0 6px ${G.gold}`,
-              animation: 'sqiGoldPulse 2s ease-in-out infinite',
-            }} />
-            <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.4em', color: G.gold, textTransform: 'uppercase' }}>
-              Live
-            </span>
-          </div>
-
-          {onClose && (
-            <button
-              onClick={onClose}
-              style={{
-                width: 36, height: 36, borderRadius: '50%',
-                background: 'rgba(255,255,255,0.04)',
-                border: `1px solid ${G.goldBorder}`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', color: G.w40, flexShrink: 0,
-                transition: 'all 0.2s',
-              }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(212,175,55,0.12)'; (e.currentTarget as HTMLElement).style.color = G.gold; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; (e.currentTarget as HTMLElement).style.color = G.w40; }}
-            >
-              <X style={{ width: 16, height: 16 }} />
-            </button>
-          )}
-        </div>
-
-        {/* ── Messages scroll area ── */}
-        {/* ★ KEY FIX: flex:1 + overflow-y:auto means it fills EXACTLY the remaining space */}
-        <div
-          ref={scrollRef}
-          style={{
-            flex: 1,
-            overflowY: 'auto',
-            padding: '20px 20px',
-            display: 'flex', flexDirection: 'column', gap: 16,
-            // Custom scrollbar
-            scrollbarWidth: 'thin',
-            scrollbarColor: `${G.goldBorder} transparent`,
-          }}
-        >
-          {/* Welcome state */}
-          {messages.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '32px 16px' }}>
-              <div style={{ fontSize: 48, marginBottom: 16 }}>🙏</div>
-              <div style={{
-                fontSize: 20, fontWeight: 900, letterSpacing: '-0.04em',
-                color: G.gold, marginBottom: 8,
-              }}>
-                {t('ayurvedaChat.namasteTitle', 'Namaste, Seeker of Balance')}
-              </div>
-              <p style={{ fontSize: 13, color: G.w40, lineHeight: 1.65 }}>
-                {t('ayurvedaChat.namasteSub', 'The Divine Physician awaits your concern…')}
-              </p>
-
-              {/* Suggested questions */}
-              <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {[
-                  'How can I balance my Vata dosha?',
-                  'What herbs help with stress and anxiety?',
-                  'Design my daily Dinacharya routine',
-                ].map((q, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setInput(q)}
-                    style={{
-                      padding: '10px 16px', borderRadius: 12,
-                      background: 'rgba(212,175,55,0.05)',
-                      border: `1px solid ${G.goldBorder}`,
-                      color: G.w60, fontSize: 12, fontFamily: "'Plus Jakarta Sans', sans-serif",
-                      cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s',
-                    }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = G.goldStrong; (e.currentTarget as HTMLElement).style.color = G.gold; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = G.goldBorder; (e.currentTarget as HTMLElement).style.color = G.w60; }}
-                  >
-                    ✦ {q}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Message list */}
-          {messages.map((msg, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              style={{
-                display: 'flex',
-                justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
-              }}
-            >
-              <div style={{
-                maxWidth: '82%',
-                padding: '12px 16px',
-                borderRadius: msg.role === 'user' ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
-                background: msg.role === 'user'
-                  ? `linear-gradient(135deg, rgba(212,175,55,0.25), rgba(212,175,55,0.12))`
-                  : 'rgba(255,255,255,0.04)',
-                border: `1px solid ${msg.role === 'user' ? G.goldStrong : 'rgba(255,255,255,0.06)'}`,
-                boxShadow: msg.role === 'user' ? `0 0 16px ${G.goldGlow}` : 'none',
-              }}>
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: 6,
-                  marginBottom: 6,
-                }}>
-                  {msg.role === 'assistant' && (
-                    <Sparkles style={{ width: 10, height: 10, color: G.gold }} />
-                  )}
-                  <span style={{
-                    fontSize: 8, fontWeight: 800, letterSpacing: '0.4em',
-                    textTransform: 'uppercase',
-                    color: msg.role === 'user' ? G.gold : 'rgba(212,175,55,0.5)',
-                  }}>
-                    {msg.role === 'user'
-                      ? t('ayurvedaChat.roleYou', 'You')
-                      : t('ayurvedaChat.roleDhanvantari', 'Dhanvantari')
-                    }
-                  </span>
+          {/* Messages */}
+          <div className="sqi-msgs" ref={msgsRef}>
+            {messages.length === 0 && (
+              <div className="sqi-welcome">
+                <div className="sqi-welcome-emoji">🙏</div>
+                <div className="sqi-welcome-title">{t('ayurvedaChat.namasteTitle', 'Namaste, Seeker of Balance')}</div>
+                <p className="sqi-welcome-sub">{t('ayurvedaChat.namasteSub', 'The Divine Physician awaits your concern…')}</p>
+                <div className="sqi-sugg">
+                  {suggestions.map(s => <button key={s} type="button" className="sqi-sugg-btn" onClick={() => setInput(s)}>✦ {s}</button>)}
                 </div>
-                <p style={{
-                  fontSize: 14, lineHeight: 1.65, margin: 0,
-                  color: msg.role === 'user' ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.78)',
-                  whiteSpace: 'pre-wrap',
-                }}>
-                  {msg.content}
-                </p>
               </div>
-            </motion.div>
-          ))}
+            )}
+            {messages.map((msg, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className={`sqi-msg-row ${msg.role === 'user' ? 'user' : 'ai'}`}>
+                <div className={`sqi-bubble ${msg.role === 'user' ? 'user' : 'ai'}`}>
+                  <div className="sqi-role" style={{ color: msg.role === 'user' ? '#D4AF37' : 'rgba(212,175,55,0.5)' }}>
+                    {msg.role === 'assistant' && <Sparkles style={{ width: 9, height: 9 }} />}
+                    {msg.role === 'user' ? t('ayurvedaChat.roleYou', 'You') : t('ayurvedaChat.roleDhanvantari', 'Dhanvantari')}
+                  </div>
+                  {msg.content}
+                </div>
+              </motion.div>
+            ))}
+            {isLoading && messages[messages.length - 1]?.role !== 'assistant' && <NadiPulse />}
+          </div>
 
-          {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
-            <NadiPulseAnimation />
-          )}
-        </div>
-
-        {/* ── Input form ── */}
-        {/* ★ KEY FIX: paddingBottom includes safe area for iOS notch bars */}
-        <form
-          onSubmit={handleSend}
-          style={{
-            padding: '12px 16px',
-            paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
-            borderTop: `1px solid ${G.goldBorder}`,
-            display: 'flex', gap: 10, alignItems: 'center',
-            background: 'rgba(5,5,5,0.98)',
-            flexShrink: 0,
-          }}
-        >
-          <div style={{ flex: 1, position: 'relative' }}>
+          {/* Input — always visible at bottom */}
+          <form className="sqi-input-bar" onSubmit={handleSend}>
             <input
+              className="sqi-input"
               value={input}
               onChange={e => setInput(e.target.value)}
               placeholder={t('ayurvedaChat.inputPlaceholder', 'Describe your concern to the Divine Physician…')}
               disabled={isLoading}
-              style={{
-                width: '100%',
-                padding: '14px 20px',
-                borderRadius: 20,
-                background: 'rgba(255,255,255,0.04)',
-                border: `1px solid ${G.goldBorder}`,
-                color: 'rgba(255,255,255,0.88)',
-                fontSize: 14,
-                fontFamily: "'Plus Jakarta Sans', sans-serif",
-                outline: 'none',
-                transition: 'border-color 0.2s',
-              }}
-              onFocus={e => e.currentTarget.style.borderColor = G.goldStrong}
-              onBlur={e => e.currentTarget.style.borderColor = G.goldBorder}
             />
-          </div>
-          <button
-            type="submit"
-            disabled={isLoading || !input.trim()}
-            style={{
-              width: 50, height: 50, borderRadius: '50%',
-              background: input.trim() && !isLoading
-                ? `linear-gradient(135deg, ${G.gold}, #B8960C)`
-                : 'rgba(255,255,255,0.06)',
-              border: `1px solid ${input.trim() && !isLoading ? G.gold : G.goldBorder}`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: input.trim() && !isLoading ? 'pointer' : 'not-allowed',
-              transition: 'all 0.2s',
-              boxShadow: input.trim() && !isLoading ? `0 0 20px ${G.goldGlow}` : 'none',
-              flexShrink: 0,
-            }}
-          >
-            {isLoading
-              ? <Loader2 style={{ width: 18, height: 18, color: G.gold, animation: 'spin 1s linear infinite' }} />
-              : <Send style={{ width: 18, height: 18, color: input.trim() ? '#050505' : G.w40 }} />
-            }
-          </button>
-        </form>
+            <button type="submit" className="sqi-send" disabled={isLoading || !input.trim()}>
+              {isLoading
+                ? <Loader2 style={{ width: 18, height: 18, color: '#D4AF37', animation: 'sqiSpin 1s linear infinite' }} />
+                : <Send style={{ width: 17, height: 17, color: '#050505' }} />
+              }
+            </button>
+          </form>
+        </motion.div>
       </motion.div>
-
-      {/* Inline keyframes for pulse */}
-      <style>{`
-        @keyframes sqiGoldPulse {
-          0%,100% { box-shadow: 0 0 0 0 rgba(212,175,55,0.5); }
-          50%      { box-shadow: 0 0 0 6px rgba(212,175,55,0); }
-        }
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
-    </motion.div>
+    </AnimatePresence>
   );
+
+  if (typeof document === 'undefined') return null;
+  return createPortal(overlay, document.body);
 };
