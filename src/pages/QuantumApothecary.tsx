@@ -8,7 +8,7 @@
 // ║  i18n language passed to SQI chat + voice recognition.            ║
 // ╚══════════════════════════════════════════════════════════════════╝
 
-import React, { useState, useEffect, useRef, useMemo, Suspense, lazy } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback, Suspense, lazy } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -30,6 +30,9 @@ import { supabase } from '@/integrations/supabase/client';
 
 const FrequencyLibrarySection = lazy(() => import('@/features/quantum-apothecary/FrequencyLibrarySection'));
 const ActiveTransmissionsSection = lazy(() => import('@/features/quantum-apothecary/ActiveTransmissionsSection'));
+
+/** Max messages kept in localStorage (aligned with flush + safety nets). */
+const SQI_PERSIST_MSG_CAP = 100;
 
 /* ──── Markdown-ish renderer: gold (#D4AF37) only on # / ## / ### / #### / ##### lines ──── */
 type InlineVariant = 'heading' | 'body';
@@ -124,7 +127,15 @@ function QuantumApothecaryInner() {
   const location = useLocation();
   const { user } = useAuth();
   const { language } = useTranslation();
-  const [scanResult, setScanResult] = useState<NadiScanResult | null>(null);
+
+  const [scanResult, setScanResult] = useState<NadiScanResult | null>(() => {
+    try {
+      const s = localStorage.getItem('sqi_scan_result');
+      return s ? (JSON.parse(s) as NadiScanResult) : null;
+    } catch {
+      return null;
+    }
+  });
   const [isScanning, setIsScanning] = useState(false);
   const [selectedActivations, setSelectedActivations] = useState<Activation[]>([]);
   const [activeTransmissions, setActiveTransmissions] = useState<Activation[]>(() => {
@@ -132,6 +143,13 @@ function QuantumApothecaryInner() {
     catch { return []; }
   });
   const [messages, setMessages] = useState<Message[]>(() => {
+    try {
+      const saved = localStorage.getItem('sqi_chat_messages');
+      if (saved) {
+        const parsed = JSON.parse(saved) as Message[];
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch { /* ignore */ }
     const today = new Date();
     const formattedDate = today.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     return [{
@@ -147,7 +165,13 @@ function QuantumApothecaryInner() {
   const [showKnowledge, setShowKnowledge] = useState(false);
   const [heartRate, setHeartRate] = useState(60);
   const [isChatFullscreen, setIsChatFullscreen] = useState(false);
-  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem('sqi_current_session_id');
+    } catch {
+      return null;
+    }
+  });
   const [sessions, setSessions] = useState<{ id: string; title: string | null; updated_at: string | null }[]>([]);
   const [sessionsOpen, setSessionsOpen] = useState(false);
   const [loadingSessions, setLoadingSessions] = useState(false);
@@ -175,6 +199,47 @@ function QuantumApothecaryInner() {
   const prevMsgCountRef = useRef(0);
   const lastUserMsgRef = useRef<HTMLDivElement>(null);
   const lastSqiMsgRef  = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    prevMsgCountRef.current = messages.length;
+  }, []);
+
+  const flushSqiLocalStorage = useCallback(() => {
+    try {
+      if (messages.length > 0) {
+        localStorage.setItem('sqi_chat_messages', JSON.stringify(messages.slice(-SQI_PERSIST_MSG_CAP)));
+      }
+      if (scanResult) {
+        localStorage.setItem('sqi_scan_result', JSON.stringify(scanResult));
+      }
+      if (currentSessionId) {
+        localStorage.setItem('sqi_current_session_id', currentSessionId);
+      }
+    } catch { /* ignore quota / private mode */ }
+  }, [messages, scanResult, currentSessionId]);
+
+  useEffect(() => {
+    flushSqiLocalStorage();
+  }, [flushSqiLocalStorage]);
+
+  useEffect(() => {
+    const onBeforeUnload = () => {
+      flushSqiLocalStorage();
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [flushSqiLocalStorage]);
+
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        flushSqiLocalStorage();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+  }, [flushSqiLocalStorage]);
+
   useEffect(() => {
     const count = messages.length;
     const last  = messages[count - 1];
