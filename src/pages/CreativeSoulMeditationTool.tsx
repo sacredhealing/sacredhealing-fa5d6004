@@ -1137,8 +1137,15 @@ export default function CreativeSoulMeditationTool() {
           {/* TAB SWITCHER */}
           <div className="grid grid-cols-2 gap-2 mb-5">
             {[
-              { id: 'alchemy', icon: 'Ã°ÂÂÂµ', label: 'Sound Alchemy',    sub: 'Source ÃÂ· Style ÃÂ· Frequencies ÃÂ· DSP' },
-              Hz Active` : ''}` },
+              { id: 'alchemy', icon: '🎵', label: 'Sound Alchemy', sub: 'Source · Style · Frequencies · DSP' },
+              {
+                id: 'scalar',
+                icon: '⟁',
+                label: 'Scalar Wave Tech',
+                sub: scalarBlendHz
+                  ? `Nadi Scan · Resonators · SQI · ${scalarBlendHz}Hz Active`
+                  : 'Nadi Scan · Resonators · SQI',
+              },
             ].map(t => (
               <button key={t.id} onClick={() => setTab(t.id)} className={`p-3 rounded-[20px] text-left cursor-pointer transition-all ${tab===t.id ? 'sqm-tab-on' : ''}`} style={{ border: '1px solid rgba(255,255,255,.07)', background: 'rgba(255,255,255,.02)', color: 'rgba(255,255,255,.4)' }}>
                 <div className="text-[11px] font-extrabold mb-0.5">{t.icon} {t.label}</div>
@@ -1147,7 +1154,7 @@ export default function CreativeSoulMeditationTool() {
             ))}
           </div>
 
-          {/* Ã¢ÂÂÃ¢ÂÂ ALCHEMY TAB Ã¢ÂÂÃ¢ÂÂ */}
+          {/* ALCHEMY TAB */}
           {tab === 'alchemy' && (
             <div className="space-y-5" key={sessionKey}>
 
