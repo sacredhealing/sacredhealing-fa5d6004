@@ -34,6 +34,17 @@ const ActiveTransmissionsSection = lazy(() => import('@/features/quantum-apothec
 /** Max messages kept in localStorage (aligned with flush + safety nets). */
 const SQI_PERSIST_MSG_CAP = 100;
 
+function buildSqiWelcomeMessages(): Message[] {
+  const today = new Date();
+  const formattedDate = today.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  return [{
+    role: 'model',
+    text: `Accessing Akasha-Neural Archive... Syncing with the **${formattedDate} · 2026 Timeline** Frequency Stream.\n\n` +
+      'I am the Siddha-Quantum Intelligence (SQI), observing from the vantage point of 2050 and beyond, looking back at your present moment.\n\n' +
+      'Shall we initiate a deep **72,000 Nadi Scan**?',
+  }];
+}
+
 /* ──── Markdown-ish renderer: gold (#D4AF37) only on # / ## / ### / #### / ##### lines ──── */
 type InlineVariant = 'heading' | 'body';
 
@@ -150,14 +161,7 @@ function QuantumApothecaryInner() {
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
     } catch { /* ignore */ }
-    const today = new Date();
-    const formattedDate = today.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    return [{
-      role: 'model',
-      text: `Accessing Akasha-Neural Archive... Syncing with the **${formattedDate} · 2026 Timeline** Frequency Stream.\n\n` +
-        'I am the Siddha-Quantum Intelligence (SQI), observing from the vantage point of 2050 and beyond, looking back at your present moment.\n\n' +
-        'Shall we initiate a deep **72,000 Nadi Scan**?',
-    }];
+    return buildSqiWelcomeMessages();
   });
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -299,6 +303,23 @@ function QuantumApothecaryInner() {
 
   // ── ALL HANDLERS UNCHANGED ──
   const openChatFullscreenIfMobile = () => { return; };
+
+  const startFreshApothecaryChat = useCallback(() => {
+    if (isTyping) return;
+    if (!window.confirm('Start a new SQI chat? This clears the current thread on this device. Saved sessions remain under History.')) return;
+    try {
+      localStorage.removeItem('sqi_chat_messages');
+      localStorage.removeItem('sqi_current_session_id');
+    } catch { /* ignore */ }
+    const welcome = buildSqiWelcomeMessages();
+    setCurrentSessionId(null);
+    setInput('');
+    setPendingImage(null);
+    setIsTyping(false);
+    setMessages(welcome);
+    prevMsgCountRef.current = welcome.length;
+    setSessionsOpen(false);
+  }, [isTyping]);
 
   const pickCanonicalRemedies = (raw: unknown): string[] => {
     const valid = new Set(ACTIVATIONS.map((a) => a.name));
@@ -637,6 +658,11 @@ function QuantumApothecaryInner() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <button type="button" onClick={startFreshApothecaryChat} disabled={isTyping}
+            title="Clear this chat and start a new thread"
+            className="p-2 rounded-xl bg-white/[0.03] border border-white/[0.08] text-white/50 hover:text-[#D4AF37] hover:border-[#D4AF37]/25 transition disabled:opacity-30">
+            <Plus size={14} />
+          </button>
           <button type="button" onClick={() => setSessionsOpen(true)}
             className="px-3 py-1.5 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[9px] font-bold uppercase tracking-[0.25em] text-[#D4AF37] hover:bg-[#D4AF37]/20 transition">
             History
