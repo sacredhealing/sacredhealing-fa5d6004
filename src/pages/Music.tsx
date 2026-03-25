@@ -807,16 +807,9 @@ const Music: React.FC = () => {
     if (data) setPlaylistTracks(data.map(pt => pt.track_id));
   };
 
-  const handleSubscribe = async () => {
-    try {
-      const { data, error } = await supabase.functions.invoke('create-music-membership-checkout', {
-        body: { planType: 'monthly' }
-      });
-      if (error) throw error;
-      if (data?.url) window.open(data.url, '_blank');
-    } catch (error: any) {
-      toast({ title: t('common.error', 'Error'), description: error.message, variant: "destructive" });
-    }
+  const handleSubscribe = () => {
+    // ◈ SQI 2050 — All music access is via Prana-Flow tier (19€/mo)
+    navigate('/prana-flow');
   };
 
   const handlePurchaseTrack = async (track: Track) => {

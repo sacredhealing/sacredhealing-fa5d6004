@@ -174,30 +174,39 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const checkSubscription = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        setIsSubscribed(false);
-        return;
-      }
+      if (!session) { setIsSubscribed(false); return; }
 
-      // First check if user is admin - admins get full access
-      const { data: isAdminData } = await supabase.rpc('has_role', { 
-        _user_id: session.user.id, 
-        _role: 'admin' 
+      const { data: isAdminData } = await supabase.rpc('has_role', {
+        _user_id: session.user.id,
+        _role: 'admin'
       });
-      
-      if (isAdminData === true) {
-        setIsSubscribed(true);
-        return;
-      }
+      if (isAdminData === true) { setIsSubscribed(true); return; }
 
-      const { data, error } = await supabase.functions.invoke('check-music-membership', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-      
-      if (error) throw error;
-      setIsSubscribed(data?.hasMembership || false);
+      // ◈ SQI 2050 — Music access via unified membership tiers (join slug from membership_tiers)
+      const { data: rows } = await supabase
+        .from('user_memberships')
+        .select('membership_tiers(slug)')
+        .eq('user_id', session.user.id)
+        .eq('status', 'active');
+
+      const paidTiers = [
+        'prana-monthly', 'prana-flow',
+        'premium-monthly', 'premium-annual',
+        'siddha-quantum', 'siddha-quantum-monthly',
+        'lifetime', 'akasha-infinity',
+        'music-monthly', 'music-yearly',
+        'meditation-monthly', 'meditation-yearly',
+      ];
+
+      const slugs = (rows ?? [])
+        .map((row: { membership_tiers?: { slug?: string } | { slug?: string }[] | null }) => {
+          const mt = row.membership_tiers;
+          const s = Array.isArray(mt) ? mt[0]?.slug : mt?.slug;
+          return s?.toLowerCase() ?? '';
+        })
+        .filter(Boolean);
+
+      setIsSubscribed(slugs.some((s) => paidTiers.includes(s)));
     } catch (error) {
       console.error('Error checking subscription:', error);
       setIsSubscribed(false);

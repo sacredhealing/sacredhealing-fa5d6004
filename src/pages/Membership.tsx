@@ -1,98 +1,101 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { Crown, Check, Sparkles, Star, Zap, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { Loader2 } from 'lucide-react';
 import { useMembership } from '@/hooks/useMembership';
-import { useMembershipTier } from '@/features/membership/useMembershipTier';
-import type { MembershipTier } from '@/features/membership/tier';
 import { useFreeTrial } from '@/hooks/useFreeTrial';
-import { TrialBanner } from '@/components/offers/TrialBanner';
-import { PromoCodeInput } from '@/components/offers/PromoCodeInput';
 import { MembershipHub } from '@/features/membership/MembershipHub';
 import { toast } from 'sonner';
 
-interface PlanTier {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  price_eur: number;
-  billing_interval: string | null;
-  features: string[];
-  order_index: number;
-  stripe_price_id: string | null;
-  stripe_product_id: string | null;
-}
+// ◈ SQI 2050 — Only 3 tiers:
+//   /prana-flow      → 19€/mo   (prana-monthly)
+//   /siddha-quantum  → 45€/mo   (siddha-quantum-monthly)
+//   /akasha-infinity → €1111    (lifetime)
+// Annual and old premium-monthly/premium-annual plans REMOVED from hub marketing.
 
-const tierIcons: Record<string, React.ElementType> = {
-  free: Star,
-  'premium-monthly': Zap,
-  'premium-annual': Sparkles,
-  lifetime: Crown,
-};
+const CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Montserrat:wght@400;700;800;900&display=swap');
 
-const tierColors: Record<string, string> = {
-  free: 'from-muted to-muted/50',
-  'premium-monthly': 'from-blue-500/20 to-blue-600/10',
-  'premium-annual': 'from-purple-500/20 to-purple-600/10',
-  lifetime: 'from-amber-500/20 to-amber-600/10',
-};
+.mem-wrap { min-height: 100vh; background: #050505; color: white; font-family: 'Montserrat', sans-serif; padding-bottom: 120px; }
+.mem-hero { text-align: center; padding: 52px 24px 40px; position: relative; }
+.mem-hero::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 120px; height: 1px; background: linear-gradient(to right, transparent, rgba(212,175,55,0.25), transparent); }
+.mem-eyebrow { font-weight: 800; font-size: 7px; letter-spacing: 0.55em; text-transform: uppercase; color: rgba(212,175,55,0.38); margin-bottom: 14px; }
+.mem-title { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-style: italic; font-size: clamp(2.4rem, 8vw, 3.8rem); line-height: 0.95; color: white; margin-bottom: 16px; text-shadow: 0 0 60px rgba(212,175,55,0.12); }
+.mem-title .gold { color: #D4AF37; }
+.mem-subtitle { font-weight: 800; font-size: 7px; letter-spacing: 0.45em; text-transform: uppercase; color: rgba(255,255,255,0.18); }
+.mem-tiers { padding: 40px 20px 0; display: flex; flex-direction: column; gap: 12px; max-width: 520px; margin: 0 auto; }
+.mem-card { border-radius: 28px; overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; position: relative; }
+.mem-card:hover { transform: translateY(-3px); }
+.mem-card-prana { background: rgba(212,175,55,0.03); border: 1px solid rgba(212,175,55,0.18); }
+.mem-card-prana:hover { box-shadow: 0 0 40px rgba(212,175,55,0.12); border-color: rgba(212,175,55,0.35); }
+.mem-card-siddha { background: linear-gradient(140deg, rgba(212,175,55,0.08) 0%, rgba(5,5,5,0.98) 55%); border: 1px solid rgba(212,175,55,0.32); box-shadow: 0 0 30px rgba(212,175,55,0.08); }
+.mem-card-siddha:hover { box-shadow: 0 0 50px rgba(212,175,55,0.18); border-color: rgba(212,175,55,0.55); }
+.mem-card-akasha { background: linear-gradient(140deg, rgba(139,92,246,0.06) 0%, rgba(212,175,55,0.04) 50%, rgba(5,5,5,0.99) 100%); border: 1px solid rgba(212,175,55,0.22); }
+.mem-card-akasha:hover { box-shadow: 0 0 50px rgba(139,92,246,0.12), 0 0 80px rgba(212,175,55,0.06); border-color: rgba(212,175,55,0.45); }
+.mem-card-top-line { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 50%; height: 1px; }
+.mem-card-prana .mem-card-top-line { background: linear-gradient(to right, transparent, rgba(212,175,55,0.2), transparent); }
+.mem-card-siddha .mem-card-top-line { background: linear-gradient(to right, transparent, rgba(212,175,55,0.5), transparent); }
+.mem-card-akasha .mem-card-top-line { background: linear-gradient(to right, transparent, rgba(139,92,246,0.4), transparent); }
+.mem-card-inner { padding: 26px 24px 22px; }
+.mem-card-badge { position: absolute; top: 16px; right: 16px; font-weight: 800; font-size: 6.5px; letter-spacing: 0.3em; text-transform: uppercase; padding: 5px 10px; border-radius: 100px; }
+.mem-badge-featured { background: rgba(212,175,55,0.15); border: 1px solid rgba(212,175,55,0.4); color: #D4AF37; }
+.mem-badge-ultimate { background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.35); color: rgba(167,139,250,0.9); }
+.mem-tier-label { font-weight: 800; font-size: 7px; letter-spacing: 0.45em; text-transform: uppercase; color: rgba(212,175,55,0.4); margin-bottom: 6px; }
+.mem-tier-name { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-style: italic; font-size: 2rem; color: white; margin-bottom: 4px; line-height: 1; }
+.mem-tier-name .gold { color: #D4AF37; }
+.mem-tier-tagline { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 0.85rem; color: rgba(255,255,255,0.28); margin-bottom: 20px; line-height: 1.5; }
+.mem-price-row { display: flex; align-items: baseline; gap: 6px; margin-bottom: 18px; }
+.mem-price { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-style: italic; font-size: 3rem; color: white; line-height: 1; text-shadow: 0 0 30px rgba(212,175,55,0.2); }
+.mem-price-period { font-weight: 800; font-size: 7px; letter-spacing: 0.35em; text-transform: uppercase; color: rgba(255,255,255,0.25); }
+.mem-features { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-bottom: 20px; }
+@media (max-width: 380px) { .mem-features { grid-template-columns: 1fr; } }
+.mem-feature { font-size: 10px; color: rgba(255,255,255,0.38); padding: 4px 0; display: flex; align-items: center; gap: 7px; }
+.mem-feature::before { content: '◈'; color: #D4AF37; font-size: 6px; flex-shrink: 0; }
+.mem-cta { width: 100%; border: none; border-radius: 100px; padding: 15px 24px; font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 8.5px; letter-spacing: 0.38em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.mem-cta-prana { background: rgba(212,175,55,0.08); border: 1px solid rgba(212,175,55,0.25) !important; color: #D4AF37; }
+.mem-cta-prana:hover { background: rgba(212,175,55,0.14); }
+.mem-cta-siddha { background: #D4AF37; color: #050505; box-shadow: 0 0 28px rgba(212,175,55,0.45); }
+.mem-cta-siddha:hover { opacity: 0.88; box-shadow: 0 0 40px rgba(212,175,55,0.6); }
+.mem-cta-akasha { background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(212,175,55,0.12)); border: 1px solid rgba(212,175,55,0.3) !important; color: white; }
+.mem-cta-akasha:hover { border-color: rgba(212,175,55,0.55) !important; }
+.mem-divider { display: flex; align-items: center; gap: 14px; padding: 0 20px; max-width: 520px; margin: 8px auto; }
+.mem-divider::before, .mem-divider::after { content: ''; flex: 1; height: 1px; background: linear-gradient(to right, transparent, rgba(212,175,55,0.08), transparent); }
+.mem-divider span { font-weight: 800; font-size: 6.5px; letter-spacing: 0.4em; text-transform: uppercase; color: rgba(255,255,255,0.1); white-space: nowrap; }
+.mem-note { text-align: center; font-weight: 800; font-size: 6.5px; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(255,255,255,0.08); margin-top: 24px; padding: 0 24px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+`;
 
 const Membership = () => {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user } = useAuth();
-  const { tier: currentTier, refresh: refreshMembership } = useMembership();
-  const tier = useMembershipTier();
-  const { isTrialActive, canStartTrial, refetch: refetchTrial } = useFreeTrial();
-  const [tiers, setTiers] = useState<PlanTier[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
-  const [portalLoading, setPortalLoading] = useState(false);
-  const [appliedPromo, setAppliedPromo] = useState<{
-    id: string;
-    name: string;
-    code: string;
-    discount_type: string;
-    discount_value: number;
-  } | null>(null);
+  const { refresh: refreshMembership, loading, isPremium } = useMembership();
+  const { isTrialActive } = useFreeTrial();
 
-  // Store product intent for post-checkout redirect (e.g. Akashic Deep Reading, Digital Nāḍī)
   useEffect(() => {
     const product = searchParams.get('product');
     if (product === 'akashic' || product === 'digital-nadi') {
-      try { sessionStorage.setItem('membership_product_intent', product); } catch {}
+      try { sessionStorage.setItem('membership_product_intent', product); } catch { /* ignore */ }
     }
   }, [searchParams]);
 
-  // Handle success/cancel from Stripe
   useEffect(() => {
     const success = searchParams.get('success');
     const canceled = searchParams.get('canceled');
-    const tierParam = searchParams.get('tier');
-
     if (success === 'true') {
       const productIntent = (() => { try { return sessionStorage.getItem('membership_product_intent'); } catch { return null; } })();
       if (productIntent === 'akashic') {
-        try { sessionStorage.removeItem('membership_product_intent'); } catch {}
+        try { sessionStorage.removeItem('membership_product_intent'); } catch { /* ignore */ }
         refreshMembership();
-        toast.success('Your Akashic Record is now unlocked. Download your Certificate of Origin.');
+        toast.success('Your Akashic Record is now unlocked.');
         navigate('/akashic-reading/initiating');
         return;
       } else if (productIntent === 'digital-nadi') {
-        try { sessionStorage.removeItem('membership_product_intent'); } catch {}
+        try { sessionStorage.removeItem('membership_product_intent'); } catch { /* ignore */ }
         refreshMembership();
-        toast.success('Your Premium Membership is active. Digital Nāḍī is now unlocked.');
+        toast.success('Your membership is active. Digital Nāḍī is now unlocked.');
         navigate('/digital-nadi');
         return;
       }
-      toast.success(`Welcome to ${tierParam || 'Premium'}! Your membership is now active.`);
+      toast.success('◈ Field Activated — Welcome to the SQI Ecosystem');
       refreshMembership();
       window.history.replaceState({}, '', '/membership');
     } else if (canceled === 'true') {
@@ -101,301 +104,113 @@ const Membership = () => {
     }
   }, [searchParams, refreshMembership, navigate]);
 
-  useEffect(() => {
-    fetchTiers();
-  }, []);
-
-  const fetchTiers = async () => {
-    const { data, error } = await supabase
-      .from('membership_tiers')
-      .select('*')
-      .eq('is_active', true)
-      .order('order_index');
-
-    if (data) {
-      setTiers(data.map(tier => ({
-        ...tier,
-        features: tier.features as string[]
-      })));
-    }
-    if (error) {
-      console.error('Error fetching tiers:', error);
-    }
-    setLoading(false);
-  };
-
-  const handleSubscribe = async (tier: PlanTier) => {
-    if (!user) {
-      navigate('/auth');
-      return;
-    }
-
-    if (tier.slug === 'free') {
-      toast.success('You are on the Free plan!');
-      return;
-    }
-
-    if (!tier.stripe_price_id) {
-      toast.error('This tier is not available for purchase yet.');
-      return;
-    }
-
-    setCheckoutLoading(tier.id);
-
-    const affiliateRef =
-      (() => { try { return sessionStorage.getItem('affiliate_ref'); } catch { return null; } })() ||
-      (typeof localStorage !== 'undefined' ? localStorage.getItem('sqi_affiliate_id') : null) ||
-      'direct';
-
-    try {
-      const { data, error } = await supabase.functions.invoke('create-membership-checkout', {
-        body: {
-          priceId: tier.stripe_price_id,
-          tierSlug: tier.slug,
-          affiliate_id: affiliateRef,
-        },
-      });
-
-      if (error) throw error;
-
-      if (data?.url) {
-        window.open(data.url, '_blank');
-      }
-    } catch (error) {
-      console.error('Checkout error:', error);
-      toast.error('Failed to start checkout. Please try again.');
-    } finally {
-      setCheckoutLoading(null);
-    }
-  };
-
-  const handleManageSubscription = async () => {
-    setPortalLoading(true);
-
-    try {
-      const { data, error } = await supabase.functions.invoke('customer-portal');
-
-      if (error) throw error;
-
-      if (data?.url) {
-        window.open(data.url, '_blank');
-      }
-    } catch (error) {
-      console.error('Portal error:', error);
-      toast.error('Failed to open subscription management. Please try again.');
-    } finally {
-      setPortalLoading(false);
-    }
-  };
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div style={{ minHeight: '100vh', background: '#050505', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Loader2 className="h-8 w-8 animate-spin" style={{ color: '#D4AF37' }} />
       </div>
     );
   }
 
-  const membershipTier = tier as MembershipTier;
+  if (isPremium || isTrialActive) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#050505' }}>
+        <MembershipHub onManage={async () => {
+          try {
+            const { supabase } = await import('@/integrations/supabase/client');
+            const { data, error } = await supabase.functions.invoke('customer-portal');
+            if (error) throw error;
+            if (data?.url) window.open(data.url, '_blank');
+          } catch {
+            toast.error('Failed to open subscription management. Please try again.');
+          }
+        }} />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-background pb-24">
-      {membershipTier === "free" && !isTrialActive ? (
-        <>
-          {/* Header - free users only */}
-          <div className="bg-gradient-to-br from-primary/20 via-background to-accent/10 px-4 py-6 sm:py-8 text-center">
-            <Crown className="w-10 h-10 sm:w-12 sm:h-12 text-amber-500 mx-auto mb-3 sm:mb-4" />
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-2">Choose Your Path</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">Unlock your full spiritual potential</p>
-          </div>
-
-          {/* Trial Banner - show if user can start trial */}
-          {canStartTrial && (
-            <div className="px-3 sm:px-4 py-3 sm:py-4">
-              <TrialBanner onTrialStarted={() => {
-                refetchTrial();
-                refreshMembership();
-              }} />
+    <div className="mem-wrap">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <div style={{ position: 'fixed', top: '-10%', left: '50%', transform: 'translateX(-50%)', width: 700, height: 400, background: 'radial-gradient(ellipse, rgba(212,175,55,0.04) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        <div className="mem-hero">
+          <div className="mem-eyebrow">◈ Siddha–Quantum Intelligence · 2050</div>
+          <h1 className="mem-title">Choose Your<br /><span className="gold">Field</span></h1>
+          <div className="mem-subtitle">Three Tiers · One Path · Infinite Depth</div>
+        </div>
+        <div className="mem-tiers">
+          {/* TIER 1 — Prana-Flow */}
+          <div className="mem-card mem-card-prana" onClick={() => navigate('/prana-flow')}>
+            <div className="mem-card-top-line" />
+            <div className="mem-card-inner">
+              <div className="mem-tier-label">◈ First Tier · Monthly</div>
+              <div className="mem-tier-name">Prana–<span className="gold">Flow</span></div>
+              <div className="mem-tier-tagline">Vedic intelligence · Sacred sound library · Full meditation access</div>
+              <div className="mem-price-row">
+                <span className="mem-price">19€</span>
+                <span className="mem-price-period">/ month</span>
+              </div>
+              <div className="mem-features">
+                {['Full Vedic Jyotish Oracle','Guru Chat','Ayurvedic Scan','Vastu Guide',
+                  'All Healing Music','Mantra Library','Meditation Library','Cancel anytime'].map(f => (
+                  <div key={f} className="mem-feature">{f}</div>
+                ))}
+              </div>
+              <button className="mem-cta mem-cta-prana" type="button">◈ Activate Prana–Flow</button>
             </div>
-          )}
-
-          {/* Promo Code Input - free users only */}
-          <div className="px-3 sm:px-4 pb-3 sm:pb-4">
-            <PromoCodeInput
-              onPromoApplied={setAppliedPromo}
-              onPromoRemoved={() => setAppliedPromo(null)}
-            />
-            {appliedPromo && (
-              <p className="text-xs sm:text-sm text-primary mt-2 text-center">
-                {appliedPromo.discount_type === 'percent' 
-                  ? `${appliedPromo.discount_value}% off will be applied at checkout`
-                  : `€${appliedPromo.discount_value} off will be applied at checkout`
-                }
-              </p>
-            )}
           </div>
 
-          {/* Tiers - free users only: Annual (primary) + Lifetime, Monthly as small link */}
-          <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-3 sm:space-y-4">
-            {[tiers.find((t) => t.slug === 'premium-annual'), tiers.find((t) => t.slug === 'lifetime')]
-              .filter((t): t is NonNullable<typeof t> => t != null)
-              .map((planTier) => {
-              const Icon = tierIcons[planTier.slug] || Star;
-              const isCurrentPlan = currentTier === planTier.slug;
-              const isRecommended = planTier.slug === 'premium-annual';
-              const isBestValue = planTier.slug === 'lifetime';
+          <div className="mem-divider"><span>◈ or go deeper</span></div>
 
-              return (
-                <Card 
-                  key={planTier.id} 
-                  className={`p-4 sm:p-5 relative overflow-hidden bg-gradient-to-br ${tierColors[planTier.slug]} border ${isCurrentPlan ? 'border-primary ring-2 ring-primary/20' : 'border-border'}`}
-                >
-                  {/* Badges - positioned responsively */}
-                  {isRecommended && !isCurrentPlan && (
-                    <Badge className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-primary text-primary-foreground text-[10px] sm:text-xs">
-                      Recommended
-                    </Badge>
-                  )}
-                  {isBestValue && !isCurrentPlan && (
-                    <Badge className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-amber-500 text-white text-[10px] sm:text-xs">
-                      Best Value
-                    </Badge>
-                  )}
-                  {isCurrentPlan && (
-                    <Badge className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-green-500 text-white text-[10px] sm:text-xs">
-                      Your Plan
-                    </Badge>
-                  )}
-
-                  <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
-                    <div className={`p-2 sm:p-3 rounded-xl self-start ${planTier.slug === 'lifetime' ? 'bg-amber-500/20' : 'bg-primary/10'}`}>
-                      <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${planTier.slug === 'lifetime' ? 'text-amber-500' : 'text-primary'}`} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-base sm:text-lg text-foreground pr-16 sm:pr-24">{planTier.name}</h3>
-                      <p className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3 line-clamp-2">{planTier.description}</p>
-                      
-                      <div className="flex items-baseline gap-1 mb-3 sm:mb-4">
-                        <span className="text-2xl sm:text-3xl font-bold text-foreground">€{planTier.price_eur}</span>
-                        {planTier.billing_interval && (
-                          <span className="text-sm text-muted-foreground">/{planTier.billing_interval}</span>
-                        )}
-                        {planTier.slug === 'lifetime' && (
-                          <span className="text-xs sm:text-sm text-muted-foreground ml-1 sm:ml-2">one-time</span>
-                        )}
-                      </div>
-
-                      {planTier.slug === 'premium-annual' && (
-                        <div className="mb-2 sm:mb-3 text-xs sm:text-sm text-green-600 dark:text-green-400 font-medium">
-                          Save €119.88 compared to monthly!
-                        </div>
-                      )}
-
-                      <ul className="space-y-1.5 sm:space-y-2 mb-3 sm:mb-4">
-                        {planTier.features.slice(0, 4).map((feature, idx) => (
-                          <li key={idx} className="flex items-start gap-2 text-xs sm:text-sm text-foreground">
-                            <Check className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 flex-shrink-0 mt-0.5" />
-                            <span className="line-clamp-2">{feature}</span>
-                          </li>
-                        ))}
-                        {planTier.features.length > 4 && (
-                          <li className="text-xs text-muted-foreground pl-5 sm:pl-6">
-                            +{planTier.features.length - 4} more features
-                          </li>
-                        )}
-                      </ul>
-
-                      <Button 
-                        onClick={() => handleSubscribe(planTier)}
-                        className="w-full text-sm sm:text-base"
-                        size="sm"
-                        variant={isCurrentPlan ? 'outline' : planTier.slug === 'lifetime' ? 'default' : 'secondary'}
-                        disabled={isCurrentPlan || checkoutLoading === planTier.id}
-                      >
-                        {checkoutLoading === planTier.id ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Processing...
-                          </>
-                        ) : isCurrentPlan ? (
-                          'Current Plan'
-                        ) : planTier.price_eur === 0 ? (
-                          'Get Started'
-                        ) : (
-                          'Subscribe Now'
-                        )}
-                      </Button>
-                      {planTier.slug === 'lifetime' && (
-                        <p style={{ textAlign: 'center', marginTop: 8 }}>
-                          <button
-                            type="button"
-                            onClick={() => navigate('/akasha-infinity')}
-                            style={{
-                              fontSize: 11,
-                              color: 'rgba(212,175,55,0.6)',
-                              background: 'none',
-                              border: 'none',
-                              cursor: 'pointer',
-                              textDecoration: 'underline',
-                              textUnderlineOffset: 3,
-                              fontFamily: 'inherit',
-                            }}
-                          >
-                            See everything Akasha–Infinity includes →
-                          </button>
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </Card>
-              );
-            })}
-            {/* Monthly as small "try it" link */}
-            {(() => {
-              const monthlyTier = tiers.find((t) => t.slug === 'premium-monthly');
-              if (!monthlyTier || currentTier === 'premium-monthly') return null;
-              return (
-                <p className="text-center pt-2">
-                  <button
-                    type="button"
-                    onClick={() => handleSubscribe(monthlyTier)}
-                    disabled={checkoutLoading === monthlyTier.id}
-                    className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
-                  >
-                    {checkoutLoading === monthlyTier.id ? (
-                      <>
-                        <Loader2 className="inline h-3 w-3 mr-1 animate-spin" />
-                        Processing...
-                      </>
-                    ) : (
-                      'Prefer monthly? Try it'
-                    )}
-                  </button>
-                </p>
-              );
-            })()}
-            <p style={{ textAlign: 'center', marginTop: 8 }}>
-              <button
-                type="button"
-                onClick={() => navigate('/siddha-quantum')}
-                style={{
-                  fontSize: 11,
-                  color: 'rgba(212,175,55,0.6)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  textDecoration: 'underline',
-                  textUnderlineOffset: 3,
-                }}
-              >
-                See what Siddha–Quantum includes →
-              </button>
-            </p>
+          {/* TIER 2 — Siddha-Quantum */}
+          <div className="mem-card mem-card-siddha" onClick={() => navigate('/siddha-quantum')}>
+            <div className="mem-card-top-line" />
+            <div className="mem-card-badge mem-badge-featured">◈ Most Popular</div>
+            <div className="mem-card-inner">
+              <div className="mem-tier-label">◈ Second Tier · Monthly</div>
+              <div className="mem-tier-name">Siddha–<span className="gold">Quantum</span></div>
+              <div className="mem-tier-tagline">Everything in Prana-Flow + bio-energetic scanning, Nadi analysis & protection tools</div>
+              <div className="mem-price-row">
+                <span className="mem-price">45€</span>
+                <span className="mem-price-period">/ month</span>
+              </div>
+              <div className="mem-features">
+                {['Everything in Prana–Flow','Digital Nadi Scanner','Sri Yantra Shield · EMF','All 6 Vedic Siddhis',
+                  'Siddha Portal Access','Bio-field Clearing','Advanced Protection Tools','Priority Support'].map(f => (
+                  <div key={f} className="mem-feature">{f}</div>
+                ))}
+              </div>
+              <button className="mem-cta mem-cta-siddha" type="button">◈ Activate Siddha–Quantum</button>
+            </div>
           </div>
-        </>
-      ) : (
-        <MembershipHub onManage={handleManageSubscription} />
-      )}
+
+          <div className="mem-divider"><span>◈ or go infinite</span></div>
+
+          {/* TIER 3 — Akasha-Infinity */}
+          <div className="mem-card mem-card-akasha" onClick={() => navigate('/akasha-infinity')}>
+            <div className="mem-card-top-line" />
+            <div className="mem-card-badge mem-badge-ultimate">◈ Lifetime</div>
+            <div className="mem-card-inner">
+              <div className="mem-tier-label">◈ Third Tier · One-Time</div>
+              <div className="mem-tier-name">Akasha–<span className="gold">Infinity</span></div>
+              <div className="mem-tier-tagline">Everything, forever. One sacred investment — unlimited access across all dimensions of the SQI ecosystem</div>
+              <div className="mem-price-row">
+                <span className="mem-price">€1111</span>
+                <span className="mem-price-period">one-time</span>
+              </div>
+              <div className="mem-features">
+                {['Everything in Siddha–Quantum','Akashic Records Access','Hand Analyzer','All Future Features',
+                  'VIP Community Badge','Direct Practitioner Access','Lifetime Updates','No Recurring Fees'].map(f => (
+                  <div key={f} className="mem-feature">{f}</div>
+                ))}
+              </div>
+              <button className="mem-cta mem-cta-akasha" type="button">◈ Enter Akasha–Infinity</button>
+            </div>
+          </div>
+        </div>
+        <p className="mem-note">◈ Affiliate Program · 30% Commission on All Referrals · Cancel Anytime (Monthly Tiers)</p>
+      </div>
     </div>
   );
 };

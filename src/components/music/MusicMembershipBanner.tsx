@@ -1,192 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import { useTranslation } from '@/hooks/useTranslation';
-import { Crown, Music2, Loader2, Check, Sparkles } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
-import { toast } from 'sonner';
+// ◈ SQI 2050 — Legacy €4.99 music plan REMOVED.
+// All music access is now via Prana-Flow (19€/mo) or higher.
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PromoBanner } from '@/components/ui/promo-banner';
-
-interface MembershipStatus {
-  hasMembership: boolean;
-  planType: string | null;
-  subscriptionEnd: string | null;
-}
 
 const MusicMembershipBanner: React.FC = () => {
-  const { t } = useTranslation();
-  const { user } = useAuth();
   const navigate = useNavigate();
-  const [membership, setMembership] = useState<MembershipStatus | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [subscribing, setSubscribing] = useState<'monthly' | 'yearly' | null>(null);
-
-  useEffect(() => {
-    // Always check membership - for logged out users, show the banner immediately
-    checkMembership();
-  }, [user]);
-
-  const checkMembership = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        // No session - show subscription options for non-logged-in users
-        setMembership({ hasMembership: false, planType: null, subscriptionEnd: null });
-        setLoading(false);
-        return;
-      }
-
-      const { data, error } = await supabase.functions.invoke('check-music-membership', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-      
-      if (error) throw error;
-      setMembership(data);
-    } catch (error) {
-      console.error('Error checking membership:', error);
-      // On error, still show the banner (non-member state)
-      setMembership({ hasMembership: false, planType: null, subscriptionEnd: null });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubscribe = async (planType: 'monthly' | 'yearly') => {
-    if (!user) {
-      navigate('/auth');
-      return;
-    }
-
-    setSubscribing(planType);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-music-membership-checkout', {
-        body: { planType }
-      });
-
-      if (error) throw error;
-      if (data?.url) {
-        window.open(data.url, '_blank');
-      }
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to start checkout');
-    } finally {
-      setSubscribing(null);
-    }
-  };
-
-  if (loading) {
-    return (
-      <Card className="p-6 mb-6 bg-gradient-to-br from-amber-500/10 via-primary/5 to-purple-500/10 border-amber-500/30">
-        <div className="flex items-center justify-center py-4">
-          <Loader2 className="w-6 h-6 animate-spin text-primary" />
-        </div>
-      </Card>
-    );
-  }
-
-  // Show active membership badge
-  if (membership?.hasMembership) {
-    return (
-      <Card className="p-4 mb-6 bg-gradient-to-br from-amber-500/20 via-primary/10 to-purple-500/20 border-amber-500/50">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-full bg-amber-500/20">
-            <Crown className="w-5 h-5 text-amber-500" />
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-foreground">{t('membership.musicMember')}</span>
-              <Badge className="bg-amber-500 text-white text-xs">
-                {membership.planType === 'yearly' ? t('membership.yearly') : t('membership.monthly')}
-              </Badge>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {t('membership.unlimitedStreaming')} • 33 SHC {t('membership.perTrack')} • {t('membership.renews')} {membership.subscriptionEnd ? new Date(membership.subscriptionEnd).toLocaleDateString() : t('membership.soon')}
-            </p>
-          </div>
-          <Sparkles className="w-5 h-5 text-amber-500" />
-        </div>
-      </Card>
-    );
-  }
-
-  // Show subscription options using PromoBanner layout
-  const features = [
-    { icon: Check, text: t('membership.allTracks') },
-    { icon: Check, text: `33 SHC/${t('membership.stream')}` },
-    { icon: Check, text: t('membership.downloads') },
-    { icon: Check, text: t('membership.cancelAnytime') },
-  ];
-
   return (
-    <div className="mb-6">
-      <div className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-amber-500/10 via-primary/5 to-purple-500/10 border border-amber-500/30">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl -mr-16 -mt-16" />
-        
-        <div className="relative">
-          <div className="flex items-center gap-2 mb-3">
-            <Crown className="w-6 h-6 text-amber-500" />
-            <h3 className="text-xl font-heading font-bold text-foreground">{t('membership.musicMembership')}</h3>
-            <Badge className="bg-amber-500 text-white">{t('common.new')}</Badge>
-          </div>
-          
-          <p className="text-sm text-muted-foreground mb-4">
-            {t('membership.musicDescription')}
-          </p>
-
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            {/* Monthly Plan */}
-            <div className="p-3 rounded-xl border border-border/50 bg-background/50">
-              <p className="text-xs text-muted-foreground mb-1">{t('membership.monthly')}</p>
-              <p className="text-xl font-bold text-foreground">€4.99<span className="text-sm font-normal text-muted-foreground">/{t('membership.mo')}</span></p>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                className="w-full mt-2"
-                onClick={() => handleSubscribe('monthly')}
-                disabled={subscribing !== null}
-              >
-                {subscribing === 'monthly' ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  t('membership.subscribe')
-                )}
-              </Button>
-            </div>
-
-            {/* Yearly Plan */}
-            <div className="p-3 rounded-xl border-2 border-amber-500/50 bg-amber-500/5 relative">
-              <Badge className="absolute -top-2 -right-2 bg-green-500 text-white text-[10px]">{t('membership.save10')}</Badge>
-              <p className="text-xs text-muted-foreground mb-1">{t('membership.yearly')}</p>
-              <p className="text-xl font-bold text-foreground">€49<span className="text-sm font-normal text-muted-foreground">/{t('membership.yr')}</span></p>
-              <Button 
-                size="sm" 
-                className="w-full mt-2 bg-amber-500 hover:bg-amber-600 text-white"
-                onClick={() => handleSubscribe('yearly')}
-                disabled={subscribing !== null}
-              >
-                {subscribing === 'yearly' ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  t('membership.subscribe')
-                )}
-              </Button>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-            {features.map((feature, index) => (
-              <span key={index} className="flex items-center gap-1">
-                <Check className="w-3 h-3 text-green-500" />
-                {feature.text}
-              </span>
-            ))}
-          </div>
-        </div>
+    <div
+      onClick={() => navigate('/prana-flow')}
+      style={{
+        background: 'linear-gradient(135deg, rgba(212,175,55,0.08) 0%, rgba(5,5,5,0.98) 60%)',
+        border: '1px solid rgba(212,175,55,0.25)',
+        borderRadius: 24,
+        padding: '24px 22px',
+        cursor: 'pointer',
+        position: 'relative',
+        overflow: 'hidden',
+        marginBottom: 24,
+      }}
+    >
+      <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: '60%', height: 1, background: 'linear-gradient(to right, transparent, rgba(212,175,55,0.3), transparent)' }} />
+      <div style={{ fontWeight: 800, fontSize: 7, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.45)', marginBottom: 8 }}>◈ Prana–Flow · 19€/mo</div>
+      <div style={{ fontFamily: 'Cormorant Garamond, serif', fontStyle: 'italic', fontSize: '1.4rem', color: 'white', marginBottom: 6 }}>Unlock the Full Healing Music Library</div>
+      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', lineHeight: 1.6, marginBottom: 14 }}>Solfeggio tones · Planetary Ragas · Binaural states · Sacred frequencies</div>
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#D4AF37', color: '#050505', borderRadius: 100, padding: '10px 22px', fontWeight: 800, fontSize: 8, letterSpacing: '0.35em', textTransform: 'uppercase' }}>
+        ◈ Activate Prana–Flow
       </div>
     </div>
   );
