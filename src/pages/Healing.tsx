@@ -1006,11 +1006,28 @@ function SessionRow({ audio, isPlaying, onTogglePlay, formatDuration, isAdmin, o
         {hasAccess && isPlaying ? <Pause size={14} /> : <Play size={14} style={{ marginLeft: 2 }} />}
       </button>
       <div className="flex-1 min-w-0">
-        <div style={{ fontSize: 13.5, fontWeight: 700, letterSpacing: '-.01em', marginBottom: 3 }}>{audio.title}</div>
+        <div
+          style={{
+            fontFamily: "'Cinzel', serif",
+            fontSize: 13,
+            fontWeight: 500,
+            letterSpacing: '.02em',
+            color: isPlaying ? '#D4AF37' : 'rgba(255,255,255,0.88)',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical' as const,
+            lineHeight: 1.35,
+            marginBottom: 3,
+          }}
+        >
+          {audio.title}
+        </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 10.5, color: 'rgba(255,255,255,.4)' }}>
           <span>⏱ {formatDuration(audio.duration_seconds)}</span>
           {hasAccess ? (
-            <span style={{ color: '#10B981', fontSize: 9, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase' }}>● {T.owned}</span>
+            <span style={{ color: '#D4AF37', fontSize: 9, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase' }}>● {T.owned}</span>
           ) : (
             <span style={{ color: '#D4AF37' }}>• {priceLabel}</span>
           )}
