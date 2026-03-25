@@ -14,7 +14,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Zap, Activity, MessageSquare,
   Plus, Trash2, Send, Cpu, Globe,
-  Info, X, ArrowLeft, Camera, Mic,
+  Info, X, ArrowLeft, Camera, Mic, Hand,
 } from 'lucide-react';
 import { Activation, NadiScanResult, Message } from '@/features/quantum-apothecary/types';
 import { ACTIVATIONS, PLANETARY_DATA } from '@/features/quantum-apothecary/constants';
@@ -191,6 +191,8 @@ function QuantumApothecaryInner() {
   // ── Real scan state ──
   const [scanError, setScanError] = useState<string | null>(null);
   const [scanPhase, setScanPhase] = useState<'idle' | 'camera' | 'analyzing' | 'done'>('idle');
+  /** Front camera = palm toward you; rear = environment / outward scan. */
+  const [nadiScanFacing, setNadiScanFacing] = useState<'user' | 'environment'>('user');
 
   /** One string for scan prompt + chat edge: exact Frequency Library names (incl. full LimbicArc bioenergetic list). */
   const canonicalActivationNameLines = useMemo(
@@ -337,17 +339,29 @@ function QuantumApothecaryInner() {
     return out.slice(0, 5);
   };
 
-  const runNadiScan = async () => {
+  const runNadiScan = async (overrideFacing?: 'user' | 'environment') => {
+    if (isScanning) return;
+    const facing = overrideFacing ?? nadiScanFacing;
+    if (overrideFacing) setNadiScanFacing(overrideFacing);
+
     setScanError(null);
     setScanPhase('camera');
     setIsScanning(true);
+    // Drop previous reading so the live camera UI shows (otherwise results stay on screen during capture).
+    setScanResult(null);
+    try {
+      localStorage.removeItem('sqi_scan_result');
+    } catch { /* ignore */ }
 
     // ── Step 1: Open camera ──
     let cameraStream: MediaStream | null = null;
+    const videoConstraint: MediaTrackConstraints = {
+      facingMode: facing === 'user' ? 'user' : 'environment',
+      width: { ideal: 640 },
+      height: { ideal: 480 },
+    };
     try {
-      cameraStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } },
-      });
+      cameraStream = await navigator.mediaDevices.getUserMedia({ video: videoConstraint });
     } catch {
       try {
         cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -899,9 +913,25 @@ function QuantumApothecaryInner() {
                       ))}
                     </div>
                   </div>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/25 text-center pt-1">Get a fresh reading</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button type="button" onClick={() => runNadiScan('user')} disabled={isScanning}
+                      className="sqi-btn-ghost py-3 text-[9px] flex flex-col items-center gap-1.5 disabled:opacity-35">
+                      <Hand size={16} className="text-[#D4AF37]/80" />
+                      <span>New · palm / front</span>
+                    </button>
+                    <button type="button" onClick={() => runNadiScan('environment')} disabled={isScanning}
+                      className="sqi-btn-ghost py-3 text-[9px] flex flex-col items-center gap-1.5 disabled:opacity-35">
+                      <Camera size={16} className="text-[#D4AF37]/80" />
+                      <span>New · rear cam</span>
+                    </button>
+                  </div>
+                  <button type="button" onClick={() => runNadiScan()} disabled={isScanning}
+                    className="sqi-btn-primary w-full py-3 text-[10px] disabled:opacity-35">
+                    New scan · same camera as last
+                  </button>
                   <div className="flex gap-3">
-                    <button onClick={applyRemedies} className="sqi-btn-primary flex-1 py-3 text-xs">Apply Remedies</button>
-                    <button onClick={runNadiScan} className="sqi-btn-ghost flex-1 py-3 text-xs">Rescan</button>
+                    <button type="button" onClick={applyRemedies} className="sqi-btn-primary flex-1 py-3 text-xs">Apply Remedies</button>
                   </div>
                 </div>
               ) : (
@@ -924,13 +954,19 @@ function QuantumApothecaryInner() {
                           <div className="flex items-center gap-2 bg-black/70 rounded-full px-3 py-1.5">
                             <div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-ping" style={{ boxShadow: '0 0 6px rgba(212,175,55,0.8)' }} />
                             <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-[#D4AF37]">
-                              {scanPhase === 'camera' ? 'Hold palm to camera…' : 'Reading your biofield…'}
+                              {scanPhase === 'camera'
+                                ? (nadiScanFacing === 'user' ? 'Front cam · show your palm…' : 'Rear cam · frame your palm…')
+                                : 'Reading your biofield…'}
                             </span>
                           </div>
                           {/* Center guide box */}
                           <div className="border-2 border-dashed border-[#D4AF37]/50 rounded-2xl w-36 h-24 flex items-center justify-center">
                             <span className="text-[9px] font-bold text-[#D4AF37]/60 uppercase tracking-widest text-center leading-relaxed">
-                              {scanPhase === 'camera' ? <>Place<br/>palm here</> : <>Analyzing<br/>biofield…</>}
+                              {scanPhase === 'camera'
+                                ? (nadiScanFacing === 'user'
+                                  ? <>Hold palm<br />to screen</>
+                                  : <>Aim camera<br />at palm</>)
+                                : <>Analyzing<br/>biofield…</>}
                             </span>
                           </div>
                           {/* BPM */}
@@ -945,19 +981,48 @@ function QuantumApothecaryInner() {
                     <div className="space-y-3 py-4">
                       <Globe size={32} className="mx-auto text-white/10" />
                       <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-white/25">Awaiting Handshake</p>
-                      <p className="text-[9px] text-white/20 text-center">Hold your palm up to the camera</p>
+                      <p className="text-[9px] text-white/20 text-center px-2">
+                        {nadiScanFacing === 'user'
+                          ? 'Front camera: hold your palm toward the screen.'
+                          : 'Rear camera: point the phone at your palm.'}
+                      </p>
+                    </div>
+                  )}
+
+                  {scanPhase === 'idle' && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <button type="button" onClick={() => setNadiScanFacing('user')}
+                        className={`rounded-2xl py-3 px-2 text-[9px] font-black uppercase tracking-[0.12em] border transition flex flex-col items-center gap-1.5 ${
+                          nadiScanFacing === 'user'
+                            ? 'border-[#D4AF37]/45 bg-[#D4AF37]/12 text-[#D4AF37]'
+                            : 'border-white/[0.08] bg-white/[0.02] text-white/35 hover:border-[#D4AF37]/25'
+                        }`}>
+                        <Hand size={18} />
+                        Palm · front
+                      </button>
+                      <button type="button" onClick={() => setNadiScanFacing('environment')}
+                        className={`rounded-2xl py-3 px-2 text-[9px] font-black uppercase tracking-[0.12em] border transition flex flex-col items-center gap-1.5 ${
+                          nadiScanFacing === 'environment'
+                            ? 'border-[#D4AF37]/45 bg-[#D4AF37]/12 text-[#D4AF37]'
+                            : 'border-white/[0.08] bg-white/[0.02] text-white/35 hover:border-[#D4AF37]/25'
+                        }`}>
+                        <Camera size={18} />
+                        Rear camera
+                      </button>
                     </div>
                   )}
 
                   {/* Scan button — disabled while scanning/analyzing */}
-                  <button onClick={runNadiScan}
+                  <button type="button" onClick={() => runNadiScan()}
                     disabled={scanPhase === 'camera' || scanPhase === 'analyzing'}
                     className="sqi-btn-primary w-full py-3.5 text-xs disabled:opacity-40">
                     {scanPhase === 'camera'
                       ? `Scanning… ${heartRate}bpm`
                       : scanPhase === 'analyzing'
                       ? 'Analyzing Biofield…'
-                      : 'Initiate Nadi Scan'}
+                      : nadiScanFacing === 'user'
+                        ? 'Start Nadi scan · palm (front cam)'
+                        : 'Start Nadi scan · rear camera'}
                   </button>
                 </div>
               )}
