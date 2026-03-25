@@ -25,7 +25,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/hooks/useTranslation';
-import { Play, Pause, Clock, Sparkles, ArrowLeft, Loader2, Globe, Lock } from 'lucide-react';
+import { Play, Pause, Sparkles, ArrowLeft, Loader2, Globe, Lock } from 'lucide-react';
 import BabajiShadow from '@/components/meditation/BabajiShadow';
 import { Button } from '@/components/ui/button';
 import CustomMeditationBooking from '@/components/meditation/CustomMeditationBooking';
@@ -234,9 +234,9 @@ const SQI_STYLES = `
   }
   .meditation-row:hover { background: rgba(212,175,55,.04); }
 
-  /* ── Play button ── */
+  /* ── Play button (match Healing /h-track h-play-btn) ── */
   .play-btn {
-    width: 44px; height: 44px;
+    width: 40px; height: 40px;
     border-radius: 50%;
     background: linear-gradient(135deg, rgba(212,175,55,.12), rgba(212,175,55,.04));
     border: 1px solid rgba(212,175,55,.25);
@@ -369,9 +369,15 @@ const SQI_STYLES = `
   .np-track { flex: 1; min-width: 0; }
   .np-title {
     font-size: 12px; font-weight: 800; letter-spacing: -.01em;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    color: rgba(255,255,255,.9);
     font-family: 'Cinzel', serif;
+    color: rgba(255,255,255,.9);
+    line-height: 1.35;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
   }
   .np-bar-track { height: 2px; background: rgba(255,255,255,.08); border-radius: 2px; margin-top: 5px; }
   .np-bar-fill  { height: 100%; background: linear-gradient(90deg, #D4AF37, #F5E17A); border-radius: 2px; transition: width .5s; }
@@ -509,37 +515,35 @@ const MeditationRowSQI: React.FC<{
       <div style={{ position: 'relative', flexShrink: 0 }}>
         <div className={`play-btn${isActive && isPlaying ? ' playing' : ''}`}>
           {isActive && isPlaying
-            ? <Pause size={16} />
-            : <Play size={16} style={{ marginLeft: 2 }} />}
+            ? <Pause size={14} />
+            : <Play size={14} style={{ marginLeft: 2 }} />}
         </div>
         {isActive && isPlaying && <div className="scalar-ring" />}
       </div>
 
-      {/* Track info */}
+      {/* Track info — title wraps like Healing /healing SessionRow; gold only while playing */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{
-          fontFamily: "'Cinzel', serif",
-          fontSize: 13, fontWeight: 500,
-          letterSpacing: '.02em',
-          color: isActive ? '#D4AF37' : 'rgba(255,255,255,0.88)',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical' as const,
-          lineHeight: 1.35,
-          marginBottom: 3,
-        }}>
+        <div
+          style={{
+            fontFamily: "'Cinzel', serif",
+            fontSize: 13,
+            fontWeight: 500,
+            letterSpacing: '.02em',
+            color: isActive && isPlaying ? '#D4AF37' : 'rgba(255,255,255,0.88)',
+            lineHeight: 1.35,
+            marginBottom: 3,
+            wordBreak: 'break-word',
+            overflowWrap: 'anywhere',
+          }}
+        >
           {displayTitle}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-          {med.duration_minutes && (
-            <span style={{ fontSize: 10, color: 'rgba(255,255,255,.35)', display: 'flex', alignItems: 'center', gap: 3 }}>
-              <Clock size={10} /> {med.duration_minutes} {t('meditations.duration')}
-            </span>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', fontSize: 10.5, color: 'rgba(255,255,255,.4)' }}>
+          {med.duration_minutes != null && med.duration_minutes > 0 && (
+            <span>⏱ {med.duration_minutes} {t('meditations.duration')}</span>
           )}
-          {med.shc_reward && (
-            <span style={{ fontSize: 10, color: 'rgba(212,175,55,.6)', display: 'flex', alignItems: 'center', gap: 3 }}>
+          {med.shc_reward != null && med.shc_reward > 0 && (
+            <span style={{ color: '#D4AF37' }}>
               ✦ {t('meditations.shcRewardLine', { amount: med.shc_reward })}
             </span>
           )}
@@ -910,11 +914,23 @@ const Meditations: React.FC = () => {
             >
               <div style={{ position: 'relative', flexShrink: 0 }}>
                 <div className="play-btn playing">
-                  <Play size={16} style={{ marginLeft: 2 }} />
+                  <Play size={14} style={{ marginLeft: 2 }} />
                 </div>
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, fontWeight: 500, color: '#D4AF37', marginBottom: 4 }}>
+                <div
+                  style={{
+                    fontFamily: "'Cinzel', serif",
+                    fontSize: 13,
+                    fontWeight: 500,
+                    letterSpacing: '.02em',
+                    color: '#D4AF37',
+                    marginBottom: 4,
+                    lineHeight: 1.35,
+                    wordBreak: 'break-word',
+                    overflowWrap: 'anywhere',
+                  }}
+                >
                   {language === 'sv' && (startNowItem as MeditationFull).title_sv
                     ? (startNowItem as MeditationFull).title_sv
                     : startNowItem.title}
