@@ -16,7 +16,7 @@ interface Props {
   addActivation: (act: Activation) => void;
 }
 
-const CATEGORIES = ['All', 'Sacred Plant', 'Siddha Soma', 'Bioenergetic', 'Essential Oil', 'Ayurvedic Herb', 'Mineral', 'Mushroom', 'Adaptogen'];
+const CATEGORIES = ['All', 'Sacred Plant', 'Siddha Soma', 'Bioenergetic', 'Essential Oil', 'Ayurvedic Herb', 'Mineral', 'Mushroom', 'Adaptogen', 'avataric', 'plant_deva'];
 
 const CAT_COLORS: Record<string, string> = {
   'Sacred Plant':   '#4ade80',
@@ -27,6 +27,8 @@ const CAT_COLORS: Record<string, string> = {
   'Mineral':        '#94a3b8',
   'Mushroom':       '#b45309',
   'Adaptogen':      '#34d399',
+  avataric:         '#D4AF37',
+  plant_deva:       '#86efac',
 };
 
 export default function FrequencyLibrarySection({

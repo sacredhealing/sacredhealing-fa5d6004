@@ -6,7 +6,9 @@ export type ActivationType =
   | 'Mineral'
   | 'Ayurvedic Herb'
   | 'Mushroom'
-  | 'Adaptogen';
+  | 'Adaptogen'
+  | 'avataric'
+  | 'plant_deva';
 
 export interface Activation {
   id: string;

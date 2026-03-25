@@ -86,6 +86,16 @@ const BASE_ACTIVATIONS: Activation[] = [
   { id: 'rose-bloom', name: 'Rose Heart Bloom', vibrationalSignature: 'Love/Frequency', type: 'Ayurvedic Herb', benefit: 'Opening the heart-gate to the frequency of pure love.', color: '#f472b6' },
   { id: 'myrrh-structure', name: 'Myrrh Structural Integrity', vibrationalSignature: 'Ancient Structure', type: 'Ayurvedic Herb', benefit: 'Reinforcing the ancient structural codes of the body.', color: '#78350f' },
 
+  // ── AVATARIC MASTERS ───────────────────────────────────────────
+  { id: 'master-sri-yukteswar-giri', name: 'Sri Yukteswar Giri', vibrationalSignature: '✦ Gyana · Stellar Fire · Cosmic Order', type: 'avataric', benefit: '✦ Gyana · Stellar Fire · Cosmic Order', color: '#D4AF37' },
+  { id: 'master-paramahamsa-vishwananda', name: 'Paramahamsa Vishwananda', vibrationalSignature: '❤ Bhakti · Divine Love · Atma Kriya', type: 'avataric', benefit: '❤ Bhakti · Divine Love · Atma Kriya', color: '#f472b6' },
+  { id: 'master-lahiri-mahasaya', name: 'Lahiri Mahasaya', vibrationalSignature: 'ॐ Kriya · Babaji Grace · Householder Liberation', type: 'avataric', benefit: 'ॐ Kriya · Babaji Grace · Householder Liberation', color: '#eab308' },
+
+  // ── PLANT DEVAS / HERBS ───────────────────────────────────────
+  { id: 'plant-deva-sandalwood-chandan', name: 'Sandalwood (Chandan)', vibrationalSignature: '🪵 Crown · Divine Presence · Pineal Activation', type: 'plant_deva', benefit: '🪵 Crown · Divine Presence · Pineal Activation', color: '#d4a574' },
+  { id: 'plant-deva-chandanam-paste', name: 'Chandanam Paste', vibrationalSignature: '🌿 Third Eye · Shiva Consciousness · Cooling', type: 'plant_deva', benefit: '🌿 Third Eye · Shiva Consciousness · Cooling', color: '#86efac' },
+  { id: 'plant-deva-kumkum-sacred-red', name: 'Kumkum (Sacred Red)', vibrationalSignature: '🔴 Root · Shakti · Devi Grace · Liberation', type: 'plant_deva', benefit: '🔴 Root · Shakti · Devi Grace · Liberation', color: '#ef4444' },
+
   // ── BIOENERGETIC — LIMBICARC FULL ARCHIVE (1,259) ───────────────
   ...LIMBICARC_BIOENERGETIC_ACTIVATIONS,
 
