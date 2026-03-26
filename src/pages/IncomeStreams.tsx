@@ -83,7 +83,45 @@ const IncomeStreams: React.FC = () => {
       .order('order_index', { ascending: true });
 
     if (data) {
-      setStreams(data as unknown as IncomeStream[]);
+      const fetched = data as unknown as IncomeStream[];
+
+      // Ensure the Polymarket Bot stream exists even if DB row isn't created yet
+      // (UI-only fallback; does not modify affiliate/Stripe logic)
+      const hasPolymarketBot = fetched.some((s) => s.internal_slug === 'polymarket-bot' || s.link === '/income-streams/polymarket-bot');
+      const polymarketFallback: IncomeStream = {
+        id: 'polymarket-bot-fallback',
+        title: 'Polymarket Bot',
+        title_sv: null,
+        title_es: null,
+        title_no: null,
+        description: 'Sovereign HFT terminal. Paper-first. Live when approved. Polygon + USDC.e.',
+        description_sv: null,
+        description_es: null,
+        description_no: null,
+        link: '/income-streams/polymarket-bot',
+        category: 'AI',
+        potential_earnings: 'Latency edge + micro-arbitrage',
+        potential_earnings_sv: null,
+        potential_earnings_es: null,
+        potential_earnings_no: null,
+        is_featured: true,
+        image_url: null,
+        order_index: -1,
+        icon_name: 'Bot',
+        badge_text: 'NEW • SQI 2050',
+        badge_text_sv: null,
+        badge_text_es: null,
+        badge_text_no: null,
+        color_from: null,
+        color_to: null,
+        internal_slug: 'polymarket-bot',
+        cta_button_text: 'Open Terminal',
+        cta_button_text_sv: null,
+        cta_button_text_es: null,
+        cta_button_text_no: null,
+      };
+
+      setStreams(hasPolymarketBot ? fetched : [polymarketFallback, ...fetched]);
     }
     if (error) console.error('Error fetching streams:', error);
     setIsLoading(false);
@@ -120,7 +158,7 @@ const IncomeStreams: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen pb-24 w-full max-w-full overflow-x-hidden">
+    <div className="min-h-screen pb-24 w-full max-w-full overflow-x-hidden bg-[#050505]">
       {/* SHC Balance Banner */}
       <div className="px-4 pt-6 pb-4">
         <SHCBalanceCard />
@@ -129,7 +167,7 @@ const IncomeStreams: React.FC = () => {
       {/* Wallet Button */}
       <div className="px-4 pb-4">
         <Link to="/wallet">
-          <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-extrabold text-base py-6 shadow-[0_0_30px_rgba(0,242,254,0.4)]">
+          <Button className="w-full bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-[#050505] font-black text-base py-6 rounded-[40px] shadow-[0_0_35px_rgba(212,175,55,0.25)]">
             <Wallet className="w-5 h-5 mr-2" />
             {t('nav.wallet', 'Wallet')}
           </Button>
@@ -139,12 +177,16 @@ const IncomeStreams: React.FC = () => {
       {/* Header */}
       <div className="px-4 pt-2 pb-6">
         <div className="flex items-center gap-3 mb-2">
-          <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20">
-            <DollarSign className="h-6 w-6 text-primary" />
+          <div className="p-3 rounded-[24px] glass-card gold-border">
+            <DollarSign className="h-6 w-6 text-[#D4AF37]" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">{t('incomeStreams.title', 'Income Streams')}</h1>
-            <p className="text-sm text-muted-foreground">{t('incomeStreams.subtitle', 'Choose your path to financial growth')}</p>
+            <div className="text-[10px] font-extrabold tracking-[0.5em] uppercase text-white/50">
+              {t('incomeStreams.subtitle', 'Choose your path to financial growth')}
+            </div>
+            <h1 className="text-3xl font-black tracking-[-0.05em] text-white gold-glow">
+              {t('incomeStreams.title', 'Income Streams')}
+            </h1>
           </div>
         </div>
       </div>
@@ -169,46 +211,49 @@ const IncomeStreams: React.FC = () => {
             const colorTo = stream.color_to || 'primary/70';
 
             const cardContent = (
-              <Card className="bg-card/50 backdrop-blur-sm border-border/50 overflow-hidden transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 group cursor-pointer w-full max-w-full">
+              <Card className="glass-card gold-border overflow-hidden transition-all duration-300 hover:border-[#D4AF37]/25 hover:shadow-[0_0_30px_rgba(212,175,55,0.10)] group cursor-pointer w-full max-w-full">
                 <CardContent className="p-0">
-                  <div className="flex items-start sm:items-center gap-3 sm:gap-4 p-3 sm:p-4">
+                  <div className="flex items-start sm:items-center gap-3 sm:gap-4 p-4">
                     {/* Icon */}
                     <div 
-                      className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-${colorFrom} to-${colorTo} flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform`}
+                      className="w-14 h-14 rounded-[24px] flex items-center justify-center shrink-0 group-hover:scale-[1.03] transition-transform"
                       style={{
-                        background: `linear-gradient(to bottom right, var(--${colorFrom.replace('/', '-').replace('-500', '')}, hsl(var(--primary))), var(--${colorTo.replace('/', '-').replace('-600', '').replace('-500', '')}, hsl(var(--primary) / 0.7)))`
+                        background: stream.internal_slug === 'polymarket-bot'
+                          ? 'linear-gradient(135deg, rgba(212,175,55,0.20) 0%, rgba(34,211,238,0.10) 100%)'
+                          : `linear-gradient(135deg, rgba(212,175,55,0.14) 0%, rgba(255,255,255,0.03) 100%)`,
+                        border: '1px solid rgba(212,175,55,0.16)'
                       }}
                     >
-                      <IconComponent className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                      <IconComponent className="w-7 h-7 text-[#D4AF37]" />
                     </div>
                     
                     {/* Content */}
                     <div className="flex-1 min-w-0 overflow-hidden">
-                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1">
-                        <h3 className="font-semibold text-foreground truncate text-sm sm:text-base">{title}</h3>
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
+                        <h3 className="font-black tracking-[-0.02em] text-white truncate text-base">{title}</h3>
                         {badge && (
-                          <Badge variant="secondary" className="text-[10px] sm:text-xs shrink-0">
+                          <Badge variant="secondary" className="text-[10px] shrink-0 bg-white/5 border border-white/10 text-white/70 rounded-full">
                             {badge}
                           </Badge>
                         )}
                         {stream.is_featured && (
-                          <Badge className="bg-amber-500/20 text-amber-400 text-[10px] sm:text-xs shrink-0">
-                            ⭐
+                          <Badge className="bg-[#D4AF37]/15 text-[#D4AF37] text-[10px] shrink-0 rounded-full border border-[#D4AF37]/20">
+                            SOVEREIGN
                           </Badge>
                         )}
                       </div>
-                      <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 break-words">
+                      <p className="text-sm text-white/60 line-clamp-2 break-words leading-relaxed">
                         {description || t('incomeStreams.exploreOpportunity', 'Explore this opportunity')}
                       </p>
                       {earnings && (
-                        <p className="text-[10px] sm:text-xs text-primary mt-1 truncate">
-                          💰 {earnings}
+                        <p className="text-[10px] font-extrabold tracking-[0.35em] uppercase text-[#D4AF37]/80 mt-2 truncate">
+                          {earnings}
                         </p>
                       )}
                     </div>
                     
                     {/* Arrow */}
-                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all shrink-0 mt-1 sm:mt-0" />
+                    <ArrowRight className="w-5 h-5 text-white/30 group-hover:text-[#D4AF37] group-hover:translate-x-1 transition-all shrink-0 mt-1 sm:mt-0" />
                   </div>
                 </CardContent>
               </Card>

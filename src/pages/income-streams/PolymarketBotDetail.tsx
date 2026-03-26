@@ -31,12 +31,33 @@ import {
 import type { LogEntry, TradeSignal, PolymarketMarket } from '@/types/polymarket';
 
 // RPC endpoints for Polygon
-const RPC_POOL = [
-  'https://polygon-bor-rpc.publicnode.com',
-  'https://polygon.meowrpc.com',
-  'https://1rpc.io/matic',
-  'https://rpc.ankr.com/polygon'
-];
+const getRpcPool = (): string[] => {
+  // Vite env (preferred)
+  const viteUrls = [
+    import.meta.env.VITE_RPC_URL_1,
+    import.meta.env.VITE_RPC_URL_2,
+    import.meta.env.VITE_RPC_URL_3,
+    import.meta.env.VITE_POLYGON_RPC_URL_1,
+    import.meta.env.VITE_POLYGON_RPC_URL_2,
+    import.meta.env.VITE_POLYGON_RPC_URL_3,
+    // If you mirrored Next-style vars into Vite env, support them too
+    (import.meta.env as any).VITE_NEXT_PUBLIC_RPC_URL_1,
+    (import.meta.env as any).VITE_NEXT_PUBLIC_RPC_URL_2,
+    (import.meta.env as any).VITE_NEXT_PUBLIC_RPC_URL_3,
+  ].filter((u): u is string => !!u);
+
+  if (viteUrls.length > 0) return Array.from(new Set(viteUrls));
+
+  // Public fallback
+  return [
+    'https://polygon-bor-rpc.publicnode.com',
+    'https://polygon.meowrpc.com',
+    'https://1rpc.io/matic',
+    'https://rpc.ankr.com/polygon'
+  ];
+};
+
+const RPC_POOL = getRpcPool();
 
 // ERC20 ABI for balance checks
 const ERC20_ABI = [
