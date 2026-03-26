@@ -823,9 +823,12 @@ export default function CreativeSoulMeditationTool() {
     // If scalar blend is active, override the solfeggio Hz with the blend
     const solfeggioHz = scalarBlendHz ?? frequencies.solfeggio?.hz ?? healingFreq;
 
-    // Use the actual audio duration (from loaded neural audio or DAW regions).
-    // When neural was loaded from URL, getDawDuration may be 0 Ã¢ÂÂ fetch the URL to get real duration.
+    // Use the actual audio duration (DAW regions, decoded buffer, or fetch URL).
+    // URL-only neural loads now decode into audioBuffer in the engine; this + fetch covers all cases.
     let audioDuration = engine.getDawDuration?.() || 0;
+    if (audioDuration <= 0 && engine?.audioBuffer) {
+      audioDuration = Math.ceil(engine.audioBuffer.duration);
+    }
     if (audioDuration <= 0 && (neuralLayer?.exportInput?.directUrl ?? neuralLayer?.source)) {
       const url = neuralLayer?.exportInput?.directUrl ?? (typeof neuralLayer?.source === 'string' ? neuralLayer.source : null);
       if (url) {
@@ -841,7 +844,14 @@ export default function CreativeSoulMeditationTool() {
         }
       }
     }
-    if (audioDuration <= 0) audioDuration = 300; // fallback 5 min when no neural source
+    const neuralExportUrl =
+      neuralLayer?.exportInput?.directUrl ??
+      (typeof neuralLayer?.source === 'string' && /^https?:\/\//.test(neuralLayer.source) ? neuralLayer.source : undefined);
+    if (audioDuration <= 0 && neuralExportUrl) {
+      toast.error('Could not read your meditation length. Re-upload the audio or reload the page, then export again.');
+      return;
+    }
+    if (audioDuration <= 0) audioDuration = 300; // fallback when exporting tones/atmosphere without a neural file
 
     // Map the rich DSP object ({ reverb: { enabled, decay, wet }, ... }) to flat numbers
     // that the offline renderer expects ({ reverb: number, delay: number, warmth: number })
@@ -988,7 +998,6 @@ export default function CreativeSoulMeditationTool() {
     .sqm-root::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(212,175,55,.04) 0%,transparent 60%);pointer-events:none;z-index:0}
     .sqm-inner{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:0 16px 100px}
     .sqm-tab-on{border-color:rgba(212,175,55,.5)!important;color:#D4AF37!important;background:rgba(212,175,55,.08)!important}
-    .sqm-dsp-wrap [data-effect="sacred-echo"],.sqm-dsp-wrap .sacred-echo-row,.sqm-dsp-wrap [class*="echo"]:not([class*="reverb"]){display:none!important}
     @media(max-width:680px){.sqm-two-col{grid-template-columns:1fr!important}}
   `;
 

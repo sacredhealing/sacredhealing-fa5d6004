@@ -607,48 +607,47 @@ export function useSoulMeditateEngine() {
           displayName: file.split('/').pop() || file,
         },
       }));
-      return true;
-    }
-
-    // Local file: upload to storage so backend can fetch it for mastering
-    setNeuralLayer((prev) => ({
-      ...prev,
-      source: file.name,
-      exportInput: { displayName: file.name },
-    }));
-
-    try {
-      const { data: auth, error: authError } = await supabase.auth.getUser();
-      if (authError || !auth?.user) throw authError || new Error('Not signed in');
-
-      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-      const storagePath = `creative-soul-uploads/${auth.user.id}/${Date.now()}-${safeName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('creative-soul-library')
-        .upload(storagePath, file, {
-          upsert: true,
-          contentType: file.type || 'audio/mpeg',
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage.from('creative-soul-library').getPublicUrl(storagePath);
-
+    } else {
+      // Local file: upload to storage so backend can fetch it for mastering
       setNeuralLayer((prev) => ({
         ...prev,
-        exportInput: {
-          ...(prev.exportInput || {}),
-          uploadPath: storagePath,
-          directUrl: data.publicUrl,
-          displayName: file.name,
-        },
+        source: file.name,
+        exportInput: { displayName: file.name },
       }));
-    } catch (e) {
-      console.error('Failed to upload neural source for export:', e);
+
+      try {
+        const { data: auth, error: authError } = await supabase.auth.getUser();
+        if (authError || !auth?.user) throw authError || new Error('Not signed in');
+
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const storagePath = `creative-soul-uploads/${auth.user.id}/${Date.now()}-${safeName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('creative-soul-library')
+          .upload(storagePath, file, {
+            upsert: true,
+            contentType: file.type || 'audio/mpeg',
+          });
+
+        if (uploadError) throw uploadError;
+
+        const { data } = supabase.storage.from('creative-soul-library').getPublicUrl(storagePath);
+
+        setNeuralLayer((prev) => ({
+          ...prev,
+          exportInput: {
+            ...(prev.exportInput || {}),
+            uploadPath: storagePath,
+            directUrl: data.publicUrl,
+            displayName: file.name,
+          },
+        }));
+      } catch (e) {
+        console.error('Failed to upload neural source for export:', e);
+      }
     }
 
-    // Universal file reader: File → ArrayBuffer (format-agnostic; MP3, M4A, WAV, FLAC, etc.)
+    // Universal reader: URL or File → ArrayBuffer → DAW buffer + regions (export length matches full track)
     try {
       const arrayBuffer = await readFileAsArrayBuffer(file, fileUrl, isUrl);
       const decodedBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
